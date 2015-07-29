@@ -82,6 +82,9 @@ public class Data {
         + "<body><h1>" + "Hello stranger!" + "</h1><p>Looking for <a href=\"../swagger-ui\">API?</a></p></body>" + "</html> ";
   }
 
+  
+  
+  
   @GET
   @Produces("application/ld+json")
   @ApiOperation(value = "Get model from service", notes = "More notes about this method")
@@ -114,9 +117,8 @@ public class Data {
                 Object context = LDHelper.getDescriptionContext();        
 
                 // BUG FIX == https://issues.apache.org/jira/browse/JENA-794
-              /*  JsonObject json = JSON.parse(response.getEntityInputStream());
+                /*  JsonObject json = JSON.parse(response.getEntityInputStream());
                 json.remove("@id");
-
                 System.out.println(json.toString());
                 */
                 
@@ -222,84 +224,4 @@ public class Data {
         return Response.status(400).build();
     }
   }
-  
-  /*
- public HashMapnewPrefixedContext(oldContext) {
-		var namespaces = [];
-		var nameSpaces = {};
-		var newContext = {};
-		
-		for(var res in oldContext) {
-			if(typeof oldContext[res] === 'string') {
-				var char = oldContext[res].charAt(oldContext[res].length-1);
-				if(char=="#" || char=="/") {
-					var o = {prefix:res, namespace:oldContext[res]};
-					namespaces.push(o);
-					newContext[res] = oldContext[res];
-					
-				}	
-			}
-		}
-		
-		// Loop context and adds prefixed property names to newContext
-		for(var res in oldContext) {
-			if(typeof oldContext[res] != undefined) {
-				for(var n in namespaces) {
-					if(oldContext[res]["@id"]) {
-						if(oldContext[res]["@id"].indexOf(namespaces[n].namespace) == 0) {
-							newContext[namespaces[n].prefix+":"+res] = oldContext[res];
-							$scope.columns.push({"name":res,"field":namespaces[n].prefix+":"+res,"enableCellEdit": true });
-							break;
-						} 
-					} else {
-						if(namespaces[n].namespace!==oldContext[res] && oldContext[res].indexOf(namespaces[n].namespace) == 0) {
-							newContext[namespaces[n].prefix+":"+res] = oldContext[res];
-							$scope.columns.push({"name":res,"field":namespaces[n].prefix+":"+res,"enableCellEdit": true });
-							break;
-						}
-					}
-				} 
-			}
-		}
-		
-		$scope.namespaces = namespaces;
-		return newContext;
-		
-	}
-  */
-  
-
-  
-  
-  /*
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response json(@QueryParam("service") String service,@QueryParam("graph") String graph) {
-    
-    DatasetAccessor du = DatasetAccessorFactory.createHTTP(service);
-    
-    final Model model = du.getModel(graph);
-    
-    JSONLD.
-    
-    Object compact = JsonLdProcessor.compact(jsonObject, context, options);
-// Print out the result (or don't, it's your call!)
-    System.out.println(JsonUtils.toPrettyString(compact));
-    
-    
-    StreamingOutput stream = new StreamingOutput() {
-    @Override
-    public void write(OutputStream os) throws IOException,
-    WebApplicationException {
-      Writer writer = new BufferedWriter(new OutputStreamWriter(os));
-
-      model.write(writer);
-    
-      writer.flush();
-    }
-  };
-    
-        return Response.ok().entity( stream ).type(MediaType.APPLICATION_JSON).build();   
-    }
- */
 }

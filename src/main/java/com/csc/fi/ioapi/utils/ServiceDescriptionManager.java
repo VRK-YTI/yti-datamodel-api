@@ -5,6 +5,9 @@
  */
 package com.csc.fi.ioapi.utils;
 
+import com.hp.hpl.jena.datatypes.RDFDatatype;
+import com.hp.hpl.jena.datatypes.xsd.XSDDatatype;
+import com.hp.hpl.jena.query.ParameterizedSparqlString;
 import com.hp.hpl.jena.update.UpdateExecutionFactory;
 import com.hp.hpl.jena.update.UpdateFactory;
 import com.hp.hpl.jena.update.UpdateProcessor;
@@ -29,21 +32,28 @@ public class ServiceDescriptionManager {
         
         System.out.println(timestamp);
         
-        String query = LDHelper.prefix +
+        String query =
                 "DELETE { "+
                 " ?graph dcterms:modified ?date . "+
                 "} "+
                 "INSERT { "+
-                " ?graph dcterms:modified '"+timestamp+"'^^xsd:dateTime . "+
+                " ?graph dcterms:modified ?timestamp "+
                 "} WHERE {"+
                 " ?service a sd:Service . "+
                 " ?service sd:defaultDataset ?dataset . "+
                 " ?dataset sd:namedGraph ?graph . "+
-                " ?graph sd:name <"+graph+"> . "+
+                " ?graph sd:name ?graphName . "+
                 " OPTIONAL {?graph dcterms:modified ?date . }"+
                 "}";
        
-        UpdateRequest queryObj=UpdateFactory.create(query);
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+
+        pss.setLiteral("graphName", graph);
+        pss.setLiteral("timestamp", timestamp,XSDDatatype.XSDdateTime);
+        pss.setCommandText(query);
+
+        UpdateRequest queryObj = pss.asUpdate();
         UpdateProcessor qexec=UpdateExecutionFactory.createRemoteForm(queryObj,service);
         qexec.execute();
       
@@ -52,46 +62,56 @@ public class ServiceDescriptionManager {
         public static void createGraphDescription(String service, String graph) {
 
         String timestamp = fmt.format(new Date());
-       
-        String query = LDHelper.prefix +
-                "INSERT { "+
-                " ?dataset sd:namedGraph _:graph . "+
+        
+         String query = "INSERT { ?dataset sd:namedGraph _:graph . "+
                 " _:graph a sd:NamedGraph . "+
-                " _:graph sd:name <"+graph+"> . "+
-                " _:graph dcterms:created '"+timestamp+"'^^xsd:dateTime . "+
+                " _:graph sd:name ?graphName . "+
+                " _:graph dcterms:created ?timestamp . "+
                 "} WHERE {"+
                 " ?service a sd:Service . "+
                 " ?service sd:defaultDataset ?dataset . "+
                 " FILTER NOT EXISTS { "+
                 " ?dataset sd:namedGraph ?graph . "+
-                " ?graph sd:name <"+graph+"> . "+
+                " ?graph sd:name ?graphName . "+
                 "}}";
-        
-        System.out.println(query);
-       
-        UpdateRequest queryObj=UpdateFactory.create(query);
+         
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+
+        pss.setLiteral("graphName", graph);
+        pss.setLiteral("timestamp", timestamp,XSDDatatype.XSDdateTime);
+        pss.setCommandText(query);
+
+        UpdateRequest queryObj = pss.asUpdate();
         UpdateProcessor qexec=UpdateExecutionFactory.createRemoteForm(queryObj,service);
         qexec.execute();
-      
-    }
         
+ 
+    }
         
     public static void deleteGraphDescription(String service, String graph) {
         
-        String query = LDHelper.prefix +
+        String query = 
                 "DELETE { "+
                 " ?graph ?p ?o "+
                 "} WHERE {"+
                 " ?service a sd:Service . "+
                 " ?service sd:defaultDataset ?dataset . "+
                 " ?dataset sd:namedGraph ?graph . "+
-                " ?graph sd:name <"+graph+"> . "+
+                " ?graph sd:name ?graphName . "+
                 " ?graph ?p ?o "+
                 "}";
        
-        UpdateRequest queryObj=UpdateFactory.create(query);
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+
+        pss.setLiteral("graphName", graph);
+        pss.setCommandText(query);
+
+        UpdateRequest queryObj = pss.asUpdate();
         UpdateProcessor qexec=UpdateExecutionFactory.createRemoteForm(queryObj,service);
         qexec.execute();
+        
       
     }
     

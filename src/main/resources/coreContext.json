@@ -1,0 +1,50 @@
+{ "@context": {
+    "versionInfo": "http://www.w3.org/2002/07/owl#versionInfo",
+    "predicate": "http://www.w3.org/ns/shacl#predicate",
+    "label": "http://www.w3.org/2000/01/rdf-schema#label",
+    "identifier": "http://purl.org/dc/terms/identifier",
+    "range": {
+      "@id": "http://www.w3.org/2000/01/rdf-schema#range",
+      "@type": "@id"
+    },
+    "property": {
+      "@id": "http://www.w3.org/ns/shacl#property",
+      "@type": "@id"
+    },
+    "imports": {
+      "@id": "http://www.w3.org/2002/07/owl#imports",
+      "@type": "@id"
+    },
+    "subPropertyOf": {
+      "@id": "http://www.w3.org/2000/01/rdf-schema#subPropertyOf",
+      "@type": "@id"
+    },
+"dc": "http://purl.org/dc/elements/1.1/",
+    "ex": "http://purl.csc.fi/core/example#",
+    "foaf": "http://xmlns.com/foaf/0.1/",
+    "adms-stat": "http://purl.org/adms/status/",
+    "sh" : "http://www.w3.org/ns/shacl#",
+    "sd": "http://www.w3.org/ns/sparql-service-description#",
+    "void": "http://rdfs.org/ns/void#",
+    "vann": "http://purl.org/vocab/vann/",
+    "ent": "http://www.w3.org/ns/entailment/",
+    "ext": "http://whatever.com/examples/",
+    "dcterms": "http://purl.org/dc/terms/",
+    "adms": "http://www.w3.org/ns/adms#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "prof": "http://www.w3.org/ns/owl-profile/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "owl": "http://www.w3.org/2002/07/owl#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "usr": "http://purl.csc.fi/usr#",
+    "exf": "http://whatever.com/examples/"
+},
+"@type":"sh:ShapeClass",
+    "property":{
+        "predicate":{
+            "range":{
+                "@explicit": true
+                }
+            }
+    }
+}

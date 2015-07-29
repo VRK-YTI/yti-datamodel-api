@@ -1,42 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <web-app id="WebApp_ID" version="3.0" xmlns="http://java.sun.com/xml/ns/javaee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd">
     <display-name>Demo</display-name>
-    <context-param>
-        <param-name>UserDataEndpoint</param-name>
-        <param-value>http://localhost:3030/users/data</param-value>
-    </context-param>
-    <context-param>
-        <param-name>UserSparqlUpdateEndpoint</param-name>
-        <param-value>http://localhost:3030/users/update</param-value>
-    </context-param>
-    <context-param>
-        <param-name>UserSparqlEndpoint</param-name>
-        <param-value>http://localhost:3030/users/sparql</param-value>
-    </context-param>
-    <context-param>
-        <param-name>DataEndpoint</param-name>
-        <param-value>http://localhost:3030/core/data</param-value>
-    </context-param>
-    <context-param>
-        <param-name>ModelDataEndpoint</param-name>
-        <param-value>http://localhost:3030/core/data</param-value>
-    </context-param>
-    <context-param>
-        <param-name>ModelSparqlUpdateEndpoint</param-name>
-        <param-value>http://localhost:3030/core/update</param-value>
-    </context-param>
-    <context-param>
-        <param-name>ProfileDataEndpoint</param-name>
-        <param-value>http://localhost:3030/profile/data</param-value>
-    </context-param>
-    <context-param>
-        <param-name>ProfileSparqlUpdateEndpoint</param-name>
-        <param-value>http://localhost:3030/profile/update</param-value>
-    </context-param>
-    <context-param>
-        <param-name>SparqlUpdateEndpoint</param-name>
-        <param-value>http://localhost:3030/core/update</param-value>
-    </context-param>
     <listener>
         <listener-class>com.csc.fi.ioapi.config.StartUpListener</listener-class>
     </listener>

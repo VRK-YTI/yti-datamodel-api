@@ -10,6 +10,7 @@ package com.csc.fi.ioapi.profile;
  *
  * @author malonen
  */
+import com.csc.fi.ioapi.config.Endpoint;
 import com.csc.fi.ioapi.utils.LDHelper;
 import com.csc.fi.ioapi.model.*;
 import com.sun.jersey.api.client.Client;
@@ -70,7 +71,7 @@ public class ProfileData {
     @Context ServletContext context;
         
     public String ProfileDataEndpoint() {
-       return context.getInitParameter("ProfileDataEndpoint");
+      return Endpoint.getEndpoint()+"/profile/data";
     }
     
   @GET
@@ -108,22 +109,24 @@ public class ProfileData {
                 Object context = LDHelper.getDescriptionContext();        
 
                 Object data;
-                try {
+                              try{
                     data = JsonUtils.fromInputStream(response.getEntityInputStream());
 
+                     rb = Response.status(response.getStatus()); 
+                try {
                     JsonLdOptions options = new JsonLdOptions();
-
-                    Object framed = JsonLdProcessor.frame(data, context, options);
-
-                    rb = Response.status(response.getStatus()); 
-
-                    rb.entity(JsonUtils.toString(framed));
-                    
+                    Object framed = JsonLdProcessor.frame(data, context, options);                   
+                    rb.entity(JsonUtils.toString(framed));   
+                } catch (NullPointerException ex) {
+                    Logger.getLogger(ModelData.class.getName()).log(Level.WARNING, null, "DEFAULT GRAPH IS NULL!");
+                     return rb.entity(JsonUtils.toString(data)).build();
                 } catch (JsonLdError ex) {
-                    Logger.getLogger(ProfileData.class.getName()).log(Level.SEVERE, null, ex);
+                    Logger.getLogger(ModelData.class.getName()).log(Level.SEVERE, null, ex);
                      return Response.serverError().entity("{}").build();
+                }
+                  
                 } catch (IOException ex) {
-                    Logger.getLogger(ProfileData.class.getName()).log(Level.SEVERE, null, ex);
+                    Logger.getLogger(ModelData.class.getName()).log(Level.SEVERE, null, ex);
                      return Response.serverError().entity("{}").build();
                 }
                 

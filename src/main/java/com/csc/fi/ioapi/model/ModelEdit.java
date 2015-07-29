@@ -5,6 +5,7 @@
  */
 package com.csc.fi.ioapi.model;
 
+import com.csc.fi.ioapi.config.Endpoint;
 import com.csc.fi.ioapi.utils.ServiceDescriptionManager;
 import com.csc.fi.ioapi.genericapi.Data;
 import com.sun.jersey.api.client.Client;
@@ -40,11 +41,12 @@ public class ModelEdit {
     @Context ServletContext context;
         
     public String ModelSparqlUpdateEndpoint() {
-       return context.getInitParameter("ModelSparqlUpdateEndpoint");
+       return Endpoint.getEndpoint()+"/core/update";
     }
+   
     
     public String ModelDataEndpoint() {
-       return context.getInitParameter("ModelDataEndpoint");
+       return Endpoint.getEndpoint()+"/core/data";
     }
         
     /**
@@ -66,26 +68,24 @@ public class ModelEdit {
           @QueryParam("graph") 
                 String graph) {
       
-       if(graph.equals("default")) {
+       if(graph.equals("default") || graph.equals("undefined")) {
             return Response.status(403).build();
        } 
        try {
 
            String service = ModelDataEndpoint();
-
-           if(!(graph.equals("undefined") || graph.equals("default"))) {
-               ServiceDescriptionManager.updateGraphDescription(ModelSparqlUpdateEndpoint(), graph);
-           }
-
+           
+           ServiceDescriptionManager.updateGraphDescription(ModelSparqlUpdateEndpoint(), graph);
+          
             Client client = Client.create();
 
-            WebResource webResource = client.resource(service)
-                                      .queryParam("graph", graph);
+            WebResource webResource = client.resource(service).queryParam("graph", graph);
 
             WebResource.Builder builder = webResource.header("Content-type", "application/ld+json");
+            
             ClientResponse response = builder.put(ClientResponse.class,body);
 
-            if (response.getStatus() != 204) {
+            if (response.getStatus() != 204 && response.getStatus() != 200) {
                Logger.getLogger(ModelEdit.class.getName()).log(Level.WARNING, graph+" was not updated! Status "+response.getStatus());
                return Response.status(response.getStatus()).build();
             }
@@ -104,6 +104,7 @@ public class ModelEdit {
   @ApiResponses(value = {
       @ApiResponse(code = 201, message = "Graph is created"),
       @ApiResponse(code = 204, message = "Graph is saved"),
+      @ApiResponse(code = 405, message = "Update not allowed"),
       @ApiResponse(code = 403, message = "Illegal graph parameter"),
       @ApiResponse(code = 400, message = "Invalid graph supplied"),
       @ApiResponse(code = 500, message = "Bad data?") 
@@ -118,11 +119,12 @@ public class ModelEdit {
        if(graph.equals("default")) {
            return Response.status(403).build();
        }
+       
        try {
+ 
+           String service = ModelDataEndpoint();
 
-            String service = ModelDataEndpoint();
-
-           if(!(graph.equals("undefined") || graph.equals("default"))) {
+           if(!graph.equals("undefined")) {
                ServiceDescriptionManager.createGraphDescription(ModelSparqlUpdateEndpoint(), graph);
            }
 
@@ -161,9 +163,9 @@ public class ModelEdit {
           @QueryParam("graph") 
                 String graph) {
       
-       if(graph.equals("default")) {
+   /*    if(graph.equals("default")) {
            return Response.status(403).build();
-       }
+       } */
 
        try {
 

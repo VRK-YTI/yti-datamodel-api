@@ -47,7 +47,7 @@
     "ex": "http://purl.csc.fi/core/example#",
     "foaf": "http://xmlns.com/foaf/0.1/",
     "adms-stat": "http://purl.org/adms/status/",
-    "ldom": "http://www.w3.org/ns/ldom/core#",
+    "sh" : "http://www.w3.org/ns/shacl#",
     "sd": "http://www.w3.org/ns/sparql-service-description#",
     "void": "http://rdfs.org/ns/void#",
     "vann": "http://purl.org/vocab/vann/",

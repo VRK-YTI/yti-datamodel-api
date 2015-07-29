@@ -1,5 +1,6 @@
 package com.csc.fi.ioapi.usermanagement;
 
+import com.csc.fi.ioapi.config.Endpoint;
 import com.csc.fi.ioapi.genericapi.Data;
 import com.csc.fi.ioapi.utils.LDHelper;
 import com.csc.fi.ioapi.usermanagement.User;
@@ -72,15 +73,15 @@ public class Group {
     @Context ServletContext context;
 
     public String userEndpoint() {
-       return context.getInitParameter("UserDataEndpoint");
+       return Endpoint.getEndpoint() + "/users/data";
     }
     
     public String userSparqlEndpoint() {
-       return context.getInitParameter("UserSparqlEndpoint");
+       return Endpoint.getEndpoint() + "/users/sparql";
     }
     
     public String userSparqlUpdateEndpoint() {
-       return context.getInitParameter("UserSparqlUpdateEndpoint");
+       return Endpoint.getEndpoint() + "/users/update";
     }
     
     @POST
@@ -190,8 +191,7 @@ public class Group {
          Client client = Client.create();
          String service = userEndpoint();
          
-            WebResource webResource = client.resource(service)
-                                      .queryParam("graph", "urn:csc:groups");
+            WebResource webResource = client.resource(service).queryParam("graph", "urn:csc:groups");
 
             WebResource.Builder builder = webResource.accept("application/ld+json");
 
@@ -229,45 +229,6 @@ public class Group {
                 }
                 
            return rb.build();
-        
-        /*
-        String queryString = LDHelper.prefix+"CONSTRUCT { GRAPH <urn:groups> { ?id a foaf:Group . ?id rdfs:label ?label . ?id foaf:member ?member . } } WHERE { GRAPH <urn:groups> { ?id a foaf:Group . ?id rdfs:label ?label . OPTIONAL { ?id foaf:member ?member . } } }";
-      
-        Client client = Client.create();
-
-        WebResource webResource = client.resource(userSparqlEndpoint())
-                                  .queryParam("query", UriComponent.encode(queryString,UriComponent.Type.QUERY));
-
-        WebResource.Builder builder = webResource.accept("application/ld+json");
-
-        ClientResponse response = builder.get(ClientResponse.class);
-
-        Object context = LDHelper.getGroupContext();
-        
-            ResponseBuilder rb;   
-            Object data;
-            
-                try {
-                    data = JsonUtils.fromInputStream(response.getEntityInputStream());
-
-                    JsonLdOptions options = new JsonLdOptions();
-                    
-                    Object framed = JsonLdProcessor.frame(data, context, options);
-
-                    rb = Response.status(response.getStatus()); 
-
-                    rb.entity(JsonUtils.toString(framed));
-                    
-                } catch (JsonLdError ex) {
-                    Logger.getLogger(Data.class.getName()).log(Level.SEVERE, null, ex);
-                     return Response.serverError().entity("{}").build();
-                } catch (IOException ex) {
-                    Logger.getLogger(Data.class.getName()).log(Level.SEVERE, null, ex);
-                    return Response.serverError().entity("{}").build();
-                }
-
-            return rb.build();
-*/
 
     }
     

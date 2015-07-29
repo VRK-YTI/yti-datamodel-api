@@ -10,6 +10,7 @@
     <name>IOAPI</name>
 
     <properties>
+        <project.endpoint>http://localhost:3030</project.endpoint>
         <endorsed.dir>${project.build.directory}/endorsed</endorsed.dir>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
@@ -81,6 +82,12 @@
     </dependencies>
 
     <build>
+    <resources>
+        <resource>
+            <directory>src/main/resources</directory>
+            <filtering>true</filtering>
+        </resource>
+    </resources>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

@@ -10,6 +10,7 @@ package com.csc.fi.ioapi.model;
  *
  * @author malonen
  */
+import com.csc.fi.ioapi.config.Endpoint;
 import com.csc.fi.ioapi.utils.LDHelper;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
@@ -41,7 +42,9 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.io.UnsupportedEncodingException;
 import java.io.Writer;
+import java.net.URLDecoder;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
@@ -69,7 +72,7 @@ public class ModelData {
     @Context ServletContext context;
         
     public String ModelDataEndpoint() {
-       return context.getInitParameter("ModelDataEndpoint");
+       return Endpoint.getEndpoint()+"/core/data";
     }
     
   @GET
@@ -82,7 +85,9 @@ public class ModelData {
   })
   public Response json(@ApiParam(value = "Requested resource", defaultValue="default") @QueryParam("graph") String graph) {
  
+      
       String service = ModelDataEndpoint();
+      System.out.println(service);
       
       try {
             Client client = Client.create();
@@ -107,20 +112,25 @@ public class ModelData {
                 Object context = LDHelper.getDescriptionContext();        
 
                 Object data;
-                try {
+                
+               try{
                     data = JsonUtils.fromInputStream(response.getEntityInputStream());
-
-                    JsonLdOptions options = new JsonLdOptions();
-
-                    Object framed = JsonLdProcessor.frame(data, context, options);
-
-                    rb = Response.status(response.getStatus()); 
-
-                    rb.entity(JsonUtils.toString(framed));
                     
+                    System.out.println(JsonUtils.toString(data));
+                    
+                     rb = Response.status(response.getStatus()); 
+                try {
+                    JsonLdOptions options = new JsonLdOptions();
+                    Object framed = JsonLdProcessor.frame(data, context, options);                   
+                    rb.entity(JsonUtils.toString(framed));   
+                } catch (NullPointerException ex) {
+                    Logger.getLogger(ModelData.class.getName()).log(Level.WARNING, null, "DEFAULT GRAPH IS NULL!");
+                     return rb.entity(JsonUtils.toString(data)).build();
                 } catch (JsonLdError ex) {
                     Logger.getLogger(ModelData.class.getName()).log(Level.SEVERE, null, ex);
                      return Response.serverError().entity("{}").build();
+                }
+                  
                 } catch (IOException ex) {
                     Logger.getLogger(ModelData.class.getName()).log(Level.SEVERE, null, ex);
                      return Response.serverError().entity("{}").build();
@@ -138,7 +148,7 @@ public class ModelData {
       } catch(UniformInterfaceException | ClientHandlerException ex) {
           Logger.getLogger(ModelData.class.getName()).log(Level.WARNING, "Expect the unexpected!", ex);
           return Response.serverError().entity("{}").build();
-      } 
+      }
 
   }
   
@@ -175,7 +185,13 @@ public class ModelData {
             // Object data = JsonUtils.fromInputStream(response.getEntityInputStream());
             Object context = JsonUtils.fromString(inputContext);
 
-            Object data = JsonUtils.fromInputStream(response.getEntityInputStream());
+            // BUG FIX == https://issues.apache.org/jira/browse/JENA-794
+            JsonObject json = JSON.parse(response.getEntityInputStream());
+            JsonValue jsonGraph = json.get("@graph");
+            JsonValue jsonContext = json.get("@context");
+            json.remove("@id");
+            
+            Object data = JsonUtils.fromString(json.toString()); //JsonUtils.fromInputStream(response.getEntityInputStream());
 
             JsonLdOptions options = new JsonLdOptions();
             options.format = "application/ld+json";
@@ -183,7 +199,6 @@ public class ModelData {
             options.setUseNativeTypes(true);
             options.setCompactArrays(true);
 
-           // Object compact = JsonLdProcessor.compact(data, context, options); 
             Object framed = JsonLdProcessor.frame(data, context, options); 
 
             ResponseBuilder rb = Response.status(response.getStatus()); 

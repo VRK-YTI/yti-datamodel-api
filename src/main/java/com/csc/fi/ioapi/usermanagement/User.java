@@ -5,6 +5,7 @@
  */
 package com.csc.fi.ioapi.usermanagement;
 
+import com.csc.fi.ioapi.config.Endpoint;
 import com.csc.fi.ioapi.genericapi.Data;
 import com.csc.fi.ioapi.utils.LDHelper;
 import com.github.jsonldjava.core.JsonLdError;
@@ -58,6 +59,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response.ResponseBuilder;
+import org.apache.jena.atlas.json.JSON;
+import org.apache.jena.atlas.json.JsonObject;
+import org.apache.jena.atlas.json.JsonValue;
 
 /**
  * REST Web Service
@@ -71,15 +75,15 @@ public class User {
     @Context ServletContext context;
 
     public String userEndpoint() {
-       return context.getInitParameter("UserDataEndpoint");
+       return Endpoint.getEndpoint() + "/users/data";
     }
     
     public String userSparqlEndpoint() {
-       return context.getInitParameter("UserSparqlEndpoint");
+       return Endpoint.getEndpoint() + "/users/sparql";
     }
     
     public String userSparqlUpdateEndpoint() {
-       return context.getInitParameter("UserSparqlUpdateEndpoint");
+       return Endpoint.getEndpoint() + "/users/update";
     }
      
     @GET
@@ -92,10 +96,20 @@ public class User {
     @Produces("application/ld+json")
     public Response getUser(@ApiParam(value = "email") @QueryParam("email") String email) {
        
-        String queryString = LDHelper.prefix+"CONSTRUCT { ?id a foaf:Person ; foaf:fullName ?name . } WHERE { GRAPH <urn:csc:users> {  ?id a foaf:Person ; foaf:fullName ?name; foaf:mbox "+(email==null||email.equals("undefined")?"?email":"'"+email+"'")+" }}";
-
+        String queryString;
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+        
+        queryString = "CONSTRUCT { ?id a foaf:Person ; foaf:fullName ?name . } WHERE { GRAPH <urn:csc:users> { ?id a foaf:Person ; foaf:fullName ?name; foaf:mbox ?email }}"; 
+          
+        // If looking with certain email
+        if(email!=null && !email.equals("undefined")) {
+              pss.setCommandText(queryString);
+              pss.setIri("email", email);
+        } 
+        
         Client client = Client.create();
-
+         
         WebResource webResource = client.resource(userSparqlEndpoint())
                                   .queryParam("query", UriComponent.encode(queryString,UriComponent.Type.QUERY));
 
@@ -106,10 +120,10 @@ public class User {
         Object context = LDHelper.getUserContext();
         
             ResponseBuilder rb;   
-            Object data;
             
-                try {
-                    data = JsonUtils.fromInputStream(response.getEntityInputStream());
+             try {
+
+                 Object data = JsonUtils.fromInputStream(response.getEntityInputStream());
 
                     JsonLdOptions options = new JsonLdOptions();
                     
@@ -129,31 +143,10 @@ public class User {
 
             return rb.build();
         
-        
-        /*
-        String queryString = LDHelper.prefix+"SELECT ?id ?name WHERE { GRAPH <urn:csc:users> {  ?id a foaf:Person ; foaf:fullName ?name; foaf:mbox "+(email==null||email.equals("undefined")?"?email":"'"+email+"'")+" }}";
-        
-        Query query = QueryFactory.create(queryString);
-        QueryExecution qexec = QueryExecutionFactory.sparqlService(userSparqlEndpoint(), query);
-
-        try {
-            ResultSet results = qexec.execSelect();
-            ByteArrayOutputStream b = new ByteArrayOutputStream();
-            ResultSetFormatter.outputAsJSON(b, results);
-            return Response.status(200).entity(b.toString()).build();
-        } catch (QueryExceptionHTTP ex) {
-          Logger.getLogger(User.class.getName()).log(Level.WARNING, "Expect the unexpected!", ex);
-            return Response.status(400).build(); 
-        } finally {
-            qexec.close();
-        } 
-    
-        */
-        
     }
 
 
-    /* This should not be REST method */
+    /* This for testing only (SHOULD BE REMOVED) */
     @PUT
     @ApiOperation(value = "Add new user", notes = "PUT user to service")
       @ApiResponses(value = {

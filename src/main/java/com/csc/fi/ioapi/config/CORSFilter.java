@@ -22,11 +22,14 @@ public class CORSFilter implements ContainerResponseFilter {
     public ContainerResponse filter(ContainerRequest req, ContainerResponse resp) {
  
        resp.getHttpHeaders().add("Access-Control-Allow-Origin", "*");
+       resp.getHttpHeaders().add("Access-Control-Allow-Credentials","true");
        resp.getHttpHeaders().add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, HEAD");
        resp.getHttpHeaders().add("Access-Control-Request-Headers","origin, content-type, accept, authorization");
-       resp.getHttpHeaders().add("Access-Control-Allow-Credentials","true");
+       resp.getHttpHeaders().add("Access-Control-Allow-Headers","Content-Type, Accept, X-Requested-With");
        
        return resp;
+       
+        /* Another way to do it? */
         /*
         ResponseBuilder resp = Response.fromResponse(contResp.getResponse());
         resp.header("Access-Control-Allow-Origin", "*")
@@ -40,7 +43,8 @@ public class CORSFilter implements ContainerResponseFilter {
  
         contResp.setResponse(resp.build());
         return contResp;
- */
+        */
+       
           }
  
 }

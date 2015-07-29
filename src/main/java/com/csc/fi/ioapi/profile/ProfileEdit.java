@@ -5,6 +5,7 @@
  */
 package com.csc.fi.ioapi.profile;
 
+import com.csc.fi.ioapi.config.Endpoint;
 import com.csc.fi.ioapi.utils.ServiceDescriptionManager;
 import com.csc.fi.ioapi.genericapi.Data;
 import com.csc.fi.ioapi.model.*;
@@ -41,11 +42,11 @@ public class ProfileEdit {
     @Context ServletContext context;
         
     public String ProfileSparqlUpdateEndpoint() {
-       return context.getInitParameter("ProfileSparqlUpdateEndpoint");
+       return Endpoint.getEndpoint()+"/profile/update";
     }
     
     public String ProfileDataEndpoint() {
-       return context.getInitParameter("ProfileDataEndpoint");
+      return Endpoint.getEndpoint()+"/profile/data";
     }
         
     /**
