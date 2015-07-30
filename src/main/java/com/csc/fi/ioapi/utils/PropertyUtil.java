@@ -30,7 +30,7 @@ public class PropertyUtil
     try
     {
       PropertyUtil util = new PropertyUtil();
-      properties = util.getPropertiesFromClasspath(File.separator+"app.properties");
+      properties = util.getPropertiesFromClasspath("app.properties");
     }
     
     catch (FileNotFoundException e)
