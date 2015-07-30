@@ -9,6 +9,7 @@ package com.csc.fi.ioapi.utils;
  *
  * @author malonen
  */
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -29,7 +30,7 @@ public class PropertyUtil
     try
     {
       PropertyUtil util = new PropertyUtil();
-      properties = util.getPropertiesFromClasspath("/app.properties");
+      properties = util.getPropertiesFromClasspath(File.separator+"app.properties");
     }
     
     catch (FileNotFoundException e)
