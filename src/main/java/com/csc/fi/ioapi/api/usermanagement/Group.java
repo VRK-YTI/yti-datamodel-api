@@ -1,9 +1,7 @@
-package com.csc.fi.ioapi.usermanagement;
+package com.csc.fi.ioapi.api.usermanagement;
 
 import com.csc.fi.ioapi.config.Endpoint;
-import com.csc.fi.ioapi.genericapi.Data;
 import com.csc.fi.ioapi.utils.LDHelper;
-import com.csc.fi.ioapi.usermanagement.User;
 import com.github.jsonldjava.core.JsonLdError;
 import com.github.jsonldjava.core.JsonLdOptions;
 import com.github.jsonldjava.core.JsonLdProcessor;
@@ -198,7 +196,7 @@ public class Group {
             ClientResponse response = builder.get(ClientResponse.class);
 
             if (response.getStatus() != 200) {
-               Logger.getLogger(Data.class.getName()).log(Level.INFO, response.getStatus()+" from SERVICE "+service);
+               Logger.getLogger(Group.class.getName()).log(Level.INFO, response.getStatus()+" from SERVICE "+service);
                return Response.status(response.getStatus()).entity("{}").build();
             }
             
@@ -221,10 +219,10 @@ public class Group {
                     rb.entity(JsonUtils.toString(framed));
                     
                 } catch (JsonLdError ex) {
-                    Logger.getLogger(Data.class.getName()).log(Level.SEVERE, null, ex);
+                    Logger.getLogger(Group.class.getName()).log(Level.SEVERE, null, ex);
                      return Response.serverError().entity("{}").build();
                 } catch (IOException ex) {
-                    Logger.getLogger(Data.class.getName()).log(Level.SEVERE, null, ex);
+                    Logger.getLogger(Group.class.getName()).log(Level.SEVERE, null, ex);
                      return Response.serverError().entity("{}").build();
                 }
                 

@@ -1,4 +1,4 @@
-package com.csc.fi.ioapi.genericapi;
+package com.csc.fi.ioapi.api.genericapi;
 
 /*
  * To change this license header, choose License Headers in Project Properties.
@@ -10,6 +10,7 @@ package com.csc.fi.ioapi.genericapi;
  *
  * @author malonen
  */
+import com.csc.fi.ioapi.api.profile.ProfileData;
 import com.csc.fi.ioapi.utils.LDHelper;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
@@ -83,8 +84,6 @@ public class Data {
   }
 
   
-  
-  
   @GET
   @Produces("application/ld+json")
   @ApiOperation(value = "Get model from service", notes = "More notes about this method")
@@ -95,6 +94,7 @@ public class Data {
   })
   public Response json(@ApiParam(value = "Requested service", required=true) @QueryParam("service") String service, @ApiParam(value = "Requested resource", defaultValue="default") @QueryParam("graph") String graph) {      
       try {
+          
             Client client = Client.create();
 
             WebResource webResource = client.resource(service)
@@ -104,53 +104,17 @@ public class Data {
 
             ClientResponse response = builder.get(ClientResponse.class);
 
-
             if (response.getStatus() != 200) {
                Logger.getLogger(Data.class.getName()).log(Level.INFO, response.getStatus()+" from SERVICE "+service+" and GRAPH "+graph);
                return Response.status(response.getStatus()).entity("{}").build();
             }
             
             ResponseBuilder rb;
-
-            if(graph.equals("default")) {
-                
-                Object context = LDHelper.getDescriptionContext();        
-
-                // BUG FIX == https://issues.apache.org/jira/browse/JENA-794
-                /*  JsonObject json = JSON.parse(response.getEntityInputStream());
-                json.remove("@id");
-                System.out.println(json.toString());
-                */
-                
-                Object data;
-                try {
-                    data = JsonUtils.fromInputStream(response.getEntityInputStream());
-
-                    JsonLdOptions options = new JsonLdOptions();
-
-                    Object framed = JsonLdProcessor.frame(data, context, options);
-
-                    rb = Response.status(response.getStatus()); 
-
-                    rb.entity(JsonUtils.toString(framed));
-                    
-                } catch (JsonLdError ex) {
-                    Logger.getLogger(Data.class.getName()).log(Level.SEVERE, null, ex);
-                     return Response.serverError().entity("{}").build();
-                } catch (IOException ex) {
-                    Logger.getLogger(Data.class.getName()).log(Level.SEVERE, null, ex);
-                     return Response.serverError().entity("{}").build();
-                }
-                
-                
-            } else {
-                rb = Response.status(response.getStatus()); 
-                rb.entity(response.getEntityInputStream());
-            }
-           
+            rb = Response.status(response.getStatus()); 
+            rb.entity(response.getEntityInputStream());
+            
            return rb.build();
       
-           
       } catch(UniformInterfaceException | ClientHandlerException ex) {
           Logger.getLogger(Data.class.getName()).log(Level.WARNING, "Expect the unexpected!", ex);
           return Response.serverError().entity("{}").build();

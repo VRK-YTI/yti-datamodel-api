@@ -1,0 +1,58 @@
+{
+  "@context": {
+    "adms": "http://www.w3.org/ns/adms#",
+    "adms-stat": "http://purl.org/adms/status/",
+    "dcterms": "http://purl.org/dc/terms/",
+    "ent": "http://www.w3.org/ns/entailment/",
+    "prof": "http://www.w3.org/ns/owl-profile/",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "sd": "http://www.w3.org/ns/sparql-service-description#",
+    "usr": "http://urn.fi/urn:nbn:fi:csc-iow-default#",
+    "vann": "http://purl.org/vocab/vann/",
+    "void": "http://rdfs.org/ns/void#",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "@graph": [
+    {
+      "@id": "_:a",
+      "@type": "sd:Service",
+      "sd:availableGraphs": {
+         "@id": "_:d" 
+      },
+      "sd:defaultDataset": {
+        "@id": "_:b"
+      },
+      "sd:resultFormat": [
+        {
+          "@id": "http://www.w3.org/ns/formats/JSON-LD"
+        },
+        {
+          "@id": "http://www.w3.org/ns/formats/Turtle"
+        },
+        {
+          "@id": "http://www.w3.org/ns/formats/RDF_XML"
+        }
+      ],
+      "sd:supportedLanguage": {
+        "@id": "sd:SPARQL11Query"
+      }
+    },
+    {
+      "@id": "_:b",
+      "@type": "sd:Dataset",
+      "sd:defaultGraph": {
+        "@id": "_:c"
+      }
+    },
+    {
+      "@id": "_:c",
+      "@type": "sd:Graph",
+      "dcterms:title": "Service description"
+    },
+    {
+      "@id": "_:d",
+      "@type": "sd:GraphCollection"
+    }
+  ]
+}

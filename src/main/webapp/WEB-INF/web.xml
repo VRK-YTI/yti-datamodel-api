@@ -15,7 +15,11 @@
         </init-param>
         <init-param>
             <param-name>com.sun.jersey.config.property.packages</param-name>
-            <param-value>com.csc.fi.ioapi.usermanagement;com.csc.fi.ioapi.model;com.csc.fi.ioapi.profile;com.csc.fi.ioapi.genericapi;com.wordnik.swagger.jersey.listing</param-value>
+            <param-value>com.csc.fi.ioapi.api.usermanagement;
+                         com.csc.fi.ioapi.api.model;
+                         com.csc.fi.ioapi.api.profile;
+                         com.csc.fi.ioapi.api.genericapi;
+                         com.wordnik.swagger.jersey.listing</param-value>
         </init-param>
         <load-on-startup>1</load-on-startup>
     </servlet>

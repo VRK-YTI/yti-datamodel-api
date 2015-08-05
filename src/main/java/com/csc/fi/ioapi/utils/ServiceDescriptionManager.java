@@ -40,8 +40,8 @@ public class ServiceDescriptionManager {
                 " ?graph dcterms:modified ?timestamp "+
                 "} WHERE {"+
                 " ?service a sd:Service . "+
-                " ?service sd:defaultDataset ?dataset . "+
-                " ?dataset sd:namedGraph ?graph . "+
+                " ?service sd:graphCollection ?graphCollection . "+
+                " ?graphCollection sd:namedGraph ?graph . "+
                 " ?graph sd:name ?graphName . "+
                 " OPTIONAL {?graph dcterms:modified ?date . }"+
                 "}";
@@ -60,20 +60,23 @@ public class ServiceDescriptionManager {
     }
     
         public static void createGraphDescription(String service, String graph) {
-
+        
         String timestamp = fmt.format(new Date());
         
-         String query = "INSERT { ?dataset sd:namedGraph _:graph . "+
+         String query = "INSERT { ?graphCollection sd:namedGraph _:graph . "+
                 " _:graph a sd:NamedGraph . "+
                 " _:graph sd:name ?graphName . "+
                 " _:graph dcterms:created ?timestamp . "+
                 "} WHERE {"+
                 " ?service a sd:Service . "+
-                " ?service sd:defaultDataset ?dataset . "+
+                " ?service sd:availableGraphs ?graphCollection . "+
+                " ?graphCollection a sd:GraphCollection . "+
                 " FILTER NOT EXISTS { "+
-                " ?dataset sd:namedGraph ?graph . "+
+                " ?graphCollection sd:namedGraph ?graph . "+
                 " ?graph sd:name ?graphName . "+
                 "}}";
+        
+          System.out.println(query);
          
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
@@ -96,8 +99,8 @@ public class ServiceDescriptionManager {
                 " ?graph ?p ?o "+
                 "} WHERE {"+
                 " ?service a sd:Service . "+
-                " ?service sd:defaultDataset ?dataset . "+
-                " ?dataset sd:namedGraph ?graph . "+
+                " ?service sd:availableGraphs ?graphCollection . "+
+                " ?graphCollection sd:namedGraph ?graph . "+
                 " ?graph sd:name ?graphName . "+
                 " ?graph ?p ?o "+
                 "}";

@@ -3,10 +3,9 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.csc.fi.ioapi.usermanagement;
+package com.csc.fi.ioapi.api.usermanagement;
 
 import com.csc.fi.ioapi.config.Endpoint;
-import com.csc.fi.ioapi.genericapi.Data;
 import com.csc.fi.ioapi.utils.LDHelper;
 import com.github.jsonldjava.core.JsonLdError;
 import com.github.jsonldjava.core.JsonLdOptions;
@@ -134,10 +133,10 @@ public class User {
                     rb.entity(JsonUtils.toString(framed));
                     
                 } catch (JsonLdError ex) {
-                    Logger.getLogger(Data.class.getName()).log(Level.SEVERE, null, ex);
+                    Logger.getLogger(User.class.getName()).log(Level.SEVERE, null, ex);
                      return Response.serverError().entity("{}").build();
                 } catch (IOException ex) {
-                    Logger.getLogger(Data.class.getName()).log(Level.SEVERE, null, ex);
+                    Logger.getLogger(User.class.getName()).log(Level.SEVERE, null, ex);
                     return Response.serverError().entity("{}").build();
                 }
 

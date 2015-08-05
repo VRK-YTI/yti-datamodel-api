@@ -72,6 +72,11 @@ public class LDHelper {
         return name;
     }
     
+    
+      public static InputStream getDefaultGraphInputStream() {
+           return LDHelper.class.getClassLoader().getResourceAsStream("defaultGraph.json");
+    }
+    
     public static Object getUserContext() {
        try {
            //  return Thread.currentThread().getContextClassLoader().getResourceAsStream("userContext.json");
