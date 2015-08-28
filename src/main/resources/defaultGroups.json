@@ -1,0 +1,32 @@
+{
+  "@context": {
+    "member": {
+      "@id": "foaf:member",
+      "@type": "@id"
+    },
+    "label": "rdfs:label",
+    "dc": "http://purl.org/dc/elements/1.1/",
+    "adms": "http://www.w3.org/ns/adms#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "foaf": "http://xmlns.com/foaf/0.1/",
+    "sd": "http://www.w3.org/ns/sparql-service-description#",
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "owl": "http://www.w3.org/2002/07/owl#",
+    "void": "http://rdfs.org/ns/void#",
+    "vann": "http://purl.org/vocab/vann/",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "dcterms": "http://purl.org/dc/terms/"
+  },
+  "@graph": [
+    {
+      "@id": "urn:uuid:4925a5ee-3468-45c2-b31d-bc1cf644ef87",
+      "@type": "foaf:Group",
+      "label": "Opintohallinnon tietokomponentit"
+    },
+    {
+      "@id": "urn:uuid:7a389eed-9f66-4d3c-8c6f-199117562d70",
+      "@type": "foaf:Group",
+      "label": "Yhteiset tietokomponentit"
+    }
+  ]
+}

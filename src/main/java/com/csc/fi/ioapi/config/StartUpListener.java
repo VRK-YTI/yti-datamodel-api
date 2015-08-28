@@ -44,13 +44,46 @@ public class StartUpListener implements ServletContextListener {
                 else
                     Logger.getLogger(StartUpListener.class.getName()).log(Level.INFO,"Failed to create default graph!");
               }
+          
+            if(testDefaultGroups())
+                Logger.getLogger(StartUpListener.class.getName()).log(Level.INFO,"Default groups are initialized!");
+              else {
+                Logger.getLogger(StartUpListener.class.getName()).log(Level.WARNING,"Default groups are NOT initialized!");
+                createDefaultGroups();
+                if(testDefaultGroups())
+                    Logger.getLogger(StartUpListener.class.getName()).log(Level.INFO,"Created default groups!");
+                else
+                    Logger.getLogger(StartUpListener.class.getName()).log(Level.INFO,"Failed to create default groups!");
+              }
 
     }
     
     private boolean testDefaultGraph() {
-                 String queryString = " ASK { ?s a sd:Service ; sd:defaultDataset ?d . ?d sd:defaultGraph ?g . ?g dcterms:title ?title . }";
+        String queryString = " ASK { ?s a sd:Service ; sd:defaultDataset ?d . ?d sd:defaultGraph ?g . ?g dcterms:title ?title . }";
     
          String endpoint = Endpoint.getEndpoint()+"/core/sparql";
+        
+         Query query = QueryFactory.create(LDHelper.prefix+queryString);        
+         QueryExecution qexec = QueryExecutionFactory.sparqlService(endpoint, query);
+        
+         try
+          {
+              boolean b = qexec.execAsk();
+              
+              return b;
+              
+           } catch(Exception ex) {
+               Logger.getLogger(StartUpListener.class.getName()).log(Level.WARNING, "Failed in checking the endpoint status: "+endpoint);
+               return false; 
+           }
+    }
+    
+    
+        private boolean testDefaultGroups() {
+         
+          String queryString = "ASK { ?s a foaf:Group . }";
+    
+         String endpoint = Endpoint.getEndpoint()+"/users/sparql";
         
          Query query = QueryFactory.create(LDHelper.prefix+queryString);        
          QueryExecution qexec = QueryExecutionFactory.sparqlService(endpoint, query);
@@ -79,6 +112,20 @@ public class StartUpListener implements ServletContextListener {
         accessor.putModel(m);
         
     }
+    
+    private void createDefaultGroups() {
+        
+        String serviceURI = Endpoint.getEndpoint()+"/users/data";
+ 
+        DatasetAccessor accessor = DatasetAccessorFactory.createHTTP(serviceURI);
+        
+        Model m = ModelFactory.createDefaultModel();
+        RDFDataMgr.read(m, LDHelper.getDefaultGroupsInputStream(),RDFLanguages.JSONLD);
+      
+        accessor.putModel(m);
+        
+    }
+   
 
     @Override
     public void contextDestroyed(ServletContextEvent sce) {

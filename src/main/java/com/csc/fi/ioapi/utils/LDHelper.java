@@ -73,8 +73,12 @@ public class LDHelper {
     }
     
     
-      public static InputStream getDefaultGraphInputStream() {
+    public static InputStream getDefaultGraphInputStream() {
            return LDHelper.class.getClassLoader().getResourceAsStream("defaultGraph.json");
+    }
+      
+    public static InputStream getDefaultGroupsInputStream() {
+           return LDHelper.class.getClassLoader().getResourceAsStream("defaultGroups.json");
     }
     
     public static Object getUserContext() {
