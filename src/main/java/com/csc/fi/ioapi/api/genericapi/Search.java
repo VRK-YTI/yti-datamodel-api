@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.csc.fi.ioapi.api.model;
+package com.csc.fi.ioapi.api.genericapi;
 
 import com.csc.fi.ioapi.api.genericapi.*;
 import com.csc.fi.ioapi.config.Endpoint;
@@ -61,7 +61,7 @@ import javax.ws.rs.core.StreamingOutput;
  */
 @Path("search")
 @Api(value = "/search", description = "Search resources")
-public class SearchModels {
+public class Search {
 
     @Context ServletContext context;
 
@@ -97,7 +97,7 @@ public class SearchModels {
        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
        pss.setCommandText(queryString);
       
-       Logger.getLogger(SearchModels.class.getName()).log(Level.INFO, "Searching "+graph+" with query: "+queryString);
+       Logger.getLogger(Search.class.getName()).log(Level.INFO, "Searching "+graph+" with query: "+queryString);
       
         ResponseBuilder rb;
               Client client = Client.create();
