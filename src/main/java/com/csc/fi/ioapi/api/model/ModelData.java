@@ -74,6 +74,7 @@ import org.apache.jena.atlas.json.JsonValue;
 public class ModelData {
 
     @Context ServletContext context;
+    
         
     public String ModelDataEndpoint() {
        return Endpoint.getEndpoint()+"/core/data";
