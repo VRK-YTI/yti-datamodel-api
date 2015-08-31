@@ -78,20 +78,21 @@ public class Search {
       @ApiResponse(code = 500, message = "Query exception"),
       @ApiResponse(code = 200, message = "OK")
   })
-  public Response sparql(
+  public Response search(
           @ApiParam(value = "Search in graph", defaultValue="default") @QueryParam("graph") String graph,
           @ApiParam(value = "Searchstring", required = true) @QueryParam("search") String search,
           @ApiParam(value = "Language", required = true) @QueryParam("lang") String lang) {      
 
+      if(!search.endsWith("~")||!search.endsWith("*")) search = search+"*";
+      
       String queryString = "CONSTRUCT {"
               + "?resource rdf:type ?type ."
               + "?resource rdfs:label ?label ."
               + "} WHERE { "
-              + "?resource ?p ?o . "
+              + "?resource text:query '"+search+"' . "
               + "?resource rdf:type ?type ."
               + "?resource rdfs:label ?label . "
-              + "FILTER langMatches(lang(?label),'"+lang+"') "
-              + "FILTER CONTAINS(LCASE(?o),'"+search.toLowerCase()+"')}";   
+              + "FILTER langMatches(lang(?label),'"+lang+"')}"; 
       
        ParameterizedSparqlString pss = new ParameterizedSparqlString();
        pss.setNsPrefixes(LDHelper.PREFIX_MAP);

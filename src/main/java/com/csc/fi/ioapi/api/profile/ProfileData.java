@@ -72,13 +72,12 @@ public class ProfileData {
     @Context ServletContext context;
         
     public String ProfileDataEndpoint() {
-      return Endpoint.getEndpoint()+"/profile/data";
+      return Endpoint.getEndpoint()+"/core/data";
     }
     
     public String ProfileSparqlUpdateEndpoint() {
-       return Endpoint.getEndpoint()+"/profile/update";
+       return Endpoint.getEndpoint()+"/core/update";
     }
-    
     
   @GET
   @Produces("application/ld+json")

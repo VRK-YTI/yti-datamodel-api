@@ -43,6 +43,7 @@ public class LDHelper {
         put("vann","http://purl.org/vocab/vann/");
         put("void","http://rdfs.org/ns/void#");
         put("sd","http://www.w3.org/ns/sparql-service-description#");
+        put("text","http://jena.apache.org/text#");
     }});
     
     public final static String prefix =   "PREFIX owl: <http://www.w3.org/2002/07/owl#> "+
@@ -55,7 +56,8 @@ public class LDHelper {
                             "PREFIX dc: <http://purl.org/dc/elements/1.1/> "+
                             "PREFIX vann: <http://purl.org/vocab/vann/> "+
                             "PREFIX void: <http://rdfs.org/ns/void#> "+
-                            "PREFIX sd: <http://www.w3.org/ns/sparql-service-description#> ";
+                            "PREFIX sd: <http://www.w3.org/ns/sparql-service-description#> "+
+                            "PREFIX text: <http://jena.apache.org/text#> ";
     
     
     ParameterizedSparqlString pss = new ParameterizedSparqlString();
