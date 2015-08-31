@@ -88,9 +88,13 @@ public class Search {
       String queryString = "CONSTRUCT {"
               + "?resource rdf:type ?type ."
               + "?resource rdfs:label ?label ."
+              + "?resource rdfs:comment ?comment ."
+              + "?resource rdfs:isDefinedBy ?super ."
               + "} WHERE { "
               + "?resource text:query '"+search+"' . "
-              + "?resource rdf:type ?type ."
+              + "OPTIONAL{?resource rdf:type ?type .}"
+              + "OPTIONAL{?resource rdfs:comment ?comment .}"
+              + "OPTIONAL{?super sh:property ?resource .}"
               + "?resource rdfs:label ?label . "
               + "FILTER langMatches(lang(?label),'"+lang+"')}"; 
       
