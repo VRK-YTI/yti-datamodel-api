@@ -78,6 +78,10 @@ public class Group {
        return Endpoint.getEndpoint() + "/users/sparql";
     }
     
+    public String searchSparqlEndpoint() {
+       return Endpoint.getEndpoint() + "/search/sparql";
+    }
+    
     public String userSparqlUpdateEndpoint() {
        return Endpoint.getEndpoint() + "/users/update";
     }
@@ -186,10 +190,14 @@ public class Group {
     @Produces("application/ld+json")
     public Response getGroup() {
       
+    ResponseBuilder rb;
+        
+     
+ 
          Client client = Client.create();
          String service = userEndpoint();
          
-            WebResource webResource = client.resource(service).queryParam("graph", "urn:csc:groups");
+            WebResource webResource = client.resource(service); //.queryParam("graph", "urn:csc:groups");
 
             WebResource.Builder builder = webResource.accept("application/ld+json");
 
@@ -200,6 +208,11 @@ public class Group {
                return Response.status(response.getStatus()).entity("{}").build();
             }
             
+            rb = Response.status(response.getStatus()); 
+            rb.entity(response.getEntityInputStream());
+            
+        
+            /*
             ResponseBuilder rb;
 
                 Object context = LDHelper.getGroupContext();        
@@ -225,7 +238,9 @@ public class Group {
                     Logger.getLogger(Group.class.getName()).log(Level.SEVERE, null, ex);
                      return Response.serverError().entity("{}").build();
                 }
-                
+                */
+            
+            
            return rb.build();
 
     }

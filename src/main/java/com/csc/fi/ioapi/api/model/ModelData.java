@@ -30,10 +30,12 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.QueryParam;
 import com.hp.hpl.jena.query.DatasetAccessor ;
 import com.hp.hpl.jena.query.DatasetAccessorFactory ;
+import com.hp.hpl.jena.query.ParameterizedSparqlString;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.sun.jersey.api.client.ClientHandlerException;
 import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.api.client.WebResource.Builder;
+import com.sun.jersey.api.uri.UriComponent;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiParam;
@@ -77,6 +79,10 @@ public class ModelData {
        return Endpoint.getEndpoint()+"/core/data";
     }
     
+    public String ModelSparqlDataEndpoint() {
+       return Endpoint.getEndpoint()+"/core/sparql";
+    }
+    
     public String ModelSparqlUpdateEndpoint() {
        return Endpoint.getEndpoint()+"/core/update";
     }
@@ -89,34 +95,69 @@ public class ModelData {
       @ApiResponse(code = 404, message = "Service not found"),
       @ApiResponse(code = 500, message = "Internal server error")
   })
-  public Response json(@ApiParam(value = "Requested resource", defaultValue="default") @QueryParam("graph") String graph) {
+  public Response json(
+          @ApiParam(value = "Requested resource", defaultValue="default") 
+          @QueryParam("graph") String graph,
+          @ApiParam(value = "group")
+          @QueryParam("group") String group) {
  
-      
       String service = ModelDataEndpoint();
-      System.out.println(service);
+      ResponseBuilder rb;
       
       try {
+          
+          /* If Grouping is NOT wanted */
+          if(group==null || group.equals("undefined")) {
+        
             Client client = Client.create();
 
+            if(graph.equals("default")) graph = "urn:csc:iow:sd";
+            
             WebResource webResource = client.resource(service)
                                       .queryParam("graph", graph);
 
             Builder builder = webResource.accept("application/ld+json");
-
             ClientResponse response = builder.get(ClientResponse.class);
-
 
             if (response.getStatus() != 200) {
                Logger.getLogger(ModelData.class.getName()).log(Level.INFO, response.getStatus()+" from SERVICE "+service+" and GRAPH "+graph);
                return Response.status(response.getStatus()).entity("{}").build();
             }
             
-            ResponseBuilder rb;
             rb = Response.status(response.getStatus()); 
             rb.entity(response.getEntityInputStream());
        
            return rb.build();
-    
+            
+      } else {
+              
+              /* IF group parameter is available list of core vocabularies is created */
+              
+            String queryString;
+            ParameterizedSparqlString pss = new ParameterizedSparqlString();
+            pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+
+            queryString = "CONSTRUCT { ?graphName rdfs:label ?label . ?graphName dcterms:identifier ?graphName } WHERE { ?graph a sd:NamedGraph ; dcterms:isPartOf ?group . ?graph sd:name ?graphName . ?graphName rdfs:label ?label }"; 
+
+            pss.setIri("group", group);
+            pss.setCommandText(queryString);
+           
+            Client client = Client.create();
+
+            WebResource webResource = client.resource(ModelSparqlDataEndpoint())
+                                      .queryParam("query", UriComponent.encode(pss.toString(),UriComponent.Type.QUERY));
+
+            WebResource.Builder builder = webResource.accept("application/ld+json");
+
+            ClientResponse response = builder.get(ClientResponse.class);
+            rb = Response.status(response.getStatus()); 
+            rb.entity(response.getEntityInputStream());
+       
+           return rb.build();
+           
+          }
+           
+           
       } catch(UniformInterfaceException | ClientHandlerException ex) {
           Logger.getLogger(ModelData.class.getName()).log(Level.WARNING, "Expect the unexpected!", ex);
           return Response.serverError().entity("{}").build();
@@ -140,7 +181,7 @@ public class ModelData {
   public Response postJson(
           @ApiParam(value = "New graph in application/ld+json", required = true) 
                 String body, @ApiParam(value = "Graph to overwrite", required = true) 
-          @QueryParam("graph") 
+                @QueryParam("graph") 
                 String graph) {
       
        if(graph.equals("default") || graph.equals("undefined")) {
@@ -189,7 +230,10 @@ public class ModelData {
                 String body, 
           @ApiParam(value = "Graph to overwrite", required = true) 
           @QueryParam("graph") 
-                String graph) {
+                String graph,
+          @ApiParam(value = "Group", required = true) 
+          @QueryParam("group") 
+                String group) {
       
        if(graph.equals("default")) {
            return Response.status(403).build();
@@ -200,7 +244,7 @@ public class ModelData {
            String service = ModelDataEndpoint();
 
            if(!graph.equals("undefined")) {
-               ServiceDescriptionManager.createGraphDescription(ModelSparqlUpdateEndpoint(), graph);
+               ServiceDescriptionManager.createGraphDescription(ModelSparqlUpdateEndpoint(), graph, group);
            }
 
             Client client = Client.create();
@@ -224,7 +268,6 @@ public class ModelData {
         return Response.status(400).build();
       }
   }
-  
   
   @DELETE
   @ApiOperation(value = "Delete graph from service and service description", notes = "Delete graph")

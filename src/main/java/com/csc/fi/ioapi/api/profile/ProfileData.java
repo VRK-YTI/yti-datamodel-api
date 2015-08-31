@@ -218,7 +218,10 @@ public class ProfileData {
                 String body, 
           @ApiParam(value = "Graph to overwrite", required = true) 
           @QueryParam("graph") 
-                String graph) {
+                String graph,
+          @ApiParam(value = "Group", required = true) 
+          @QueryParam("group") 
+                String group) {
       
        if(graph.equals("default")) {
            return Response.status(403).build();
@@ -228,7 +231,7 @@ public class ProfileData {
             String service = ProfileDataEndpoint();
 
            if(!(graph.equals("undefined") || graph.equals("default"))) {
-               ServiceDescriptionManager.createGraphDescription(ProfileSparqlUpdateEndpoint(), graph);
+               ServiceDescriptionManager.createGraphDescription(ProfileSparqlUpdateEndpoint(), graph, group);
            }
 
             Client client = Client.create();

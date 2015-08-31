@@ -33,6 +33,7 @@ public class ServiceDescriptionManager {
         System.out.println(timestamp);
         
         String query =
+                "WITH <urn:csc:iow:sd>"+
                 "DELETE { "+
                 " ?graph dcterms:modified ?date . "+
                 "} "+
@@ -49,7 +50,7 @@ public class ServiceDescriptionManager {
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
 
-        pss.setLiteral("graphName", graph);
+        pss.setIri("graphName", graph);
         pss.setLiteral("timestamp", timestamp,XSDDatatype.XSDdateTime);
         pss.setCommandText(query);
 
@@ -59,14 +60,17 @@ public class ServiceDescriptionManager {
       
     }
     
-        public static void createGraphDescription(String service, String graph) {
+        public static void createGraphDescription(String service, String graph, String group) {
         
         String timestamp = fmt.format(new Date());
         
-         String query = "INSERT { ?graphCollection sd:namedGraph _:graph . "+
+         String query = 
+                "WITH <urn:csc:iow:sd>"+
+                "INSERT { ?graphCollection sd:namedGraph _:graph . "+
                 " _:graph a sd:NamedGraph . "+
                 " _:graph sd:name ?graphName . "+
                 " _:graph dcterms:created ?timestamp . "+
+                 " _:graph dcterms:isPartOf ?group . "+
                 "} WHERE {"+
                 " ?service a sd:Service . "+
                 " ?service sd:availableGraphs ?graphCollection . "+
@@ -81,7 +85,8 @@ public class ServiceDescriptionManager {
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
 
-        pss.setLiteral("graphName", graph);
+        pss.setIri("graphName", graph);
+        pss.setIri("group", group);
         pss.setLiteral("timestamp", timestamp,XSDDatatype.XSDdateTime);
         pss.setCommandText(query);
 
@@ -94,7 +99,8 @@ public class ServiceDescriptionManager {
         
     public static void deleteGraphDescription(String service, String graph) {
         
-        String query = 
+        String query =
+                "WITH <urn:csc:iow:sd>"+
                 "DELETE { "+
                 " ?graph ?p ?o "+
                 "} WHERE {"+

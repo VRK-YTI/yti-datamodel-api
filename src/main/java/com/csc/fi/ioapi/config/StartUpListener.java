@@ -56,6 +56,7 @@ public class StartUpListener implements ServletContextListener {
                     Logger.getLogger(StartUpListener.class.getName()).log(Level.INFO,"Failed to create default groups!");
               }
 
+            
     }
     
     private boolean testDefaultGraph() {
@@ -64,7 +65,7 @@ public class StartUpListener implements ServletContextListener {
          String endpoint = Endpoint.getEndpoint()+"/core/sparql";
         
          Query query = QueryFactory.create(LDHelper.prefix+queryString);        
-         QueryExecution qexec = QueryExecutionFactory.sparqlService(endpoint, query);
+         QueryExecution qexec = QueryExecutionFactory.sparqlService(endpoint, query,"urn:csc:iow:sd");
         
          try
           {
@@ -81,7 +82,7 @@ public class StartUpListener implements ServletContextListener {
     
         private boolean testDefaultGroups() {
          
-          String queryString = "ASK { ?s a foaf:Group . }";
+         String queryString = "ASK { ?s a foaf:Group . }";
     
          String endpoint = Endpoint.getEndpoint()+"/users/sparql";
         
@@ -109,7 +110,7 @@ public class StartUpListener implements ServletContextListener {
         Model m = ModelFactory.createDefaultModel();
         RDFDataMgr.read(m, LDHelper.getDefaultGraphInputStream(),RDFLanguages.JSONLD);
       
-        accessor.putModel(m);
+        accessor.putModel("urn:csc:iow:sd",m);
         
     }
     
