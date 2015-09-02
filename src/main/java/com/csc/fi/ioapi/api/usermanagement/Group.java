@@ -1,5 +1,6 @@
 package com.csc.fi.ioapi.api.usermanagement;
 
+import com.csc.fi.ioapi.api.model.ModelData;
 import com.csc.fi.ioapi.config.Endpoint;
 import com.csc.fi.ioapi.utils.LDHelper;
 import com.github.jsonldjava.core.JsonLdError;
@@ -23,7 +24,9 @@ import com.hp.hpl.jena.update.UpdateFactory;
 import com.hp.hpl.jena.update.UpdateProcessor;
 import com.hp.hpl.jena.update.UpdateRequest;
 import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientHandlerException;
 import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.uri.UriComponent;
 import com.wordnik.swagger.annotations.Api;
@@ -154,10 +157,35 @@ public class Group {
       @ApiResponse(code = 400, message = "Invalid graph supplied"),
       @ApiResponse(code = 404, message = "Service not found") 
   })
-    public Response addNewGroup(@ApiParam(value = "Name", required = true) @QueryParam("name") String name) {
+    public Response addNewGroups(
+            @ApiParam(value = "New groups in application/ld+json", required = true) String body) {
     
-        UUID groupID = UUID.randomUUID();
+          //  UUID groupID = UUID.randomUUID();
+     
+          try {
+ 
+            String service = userEndpoint();
+            Client client = Client.create();
+            WebResource webResource = client.resource(service)
+                                      .queryParam("graph", "urn:csc:groups");
 
+            WebResource.Builder builder = webResource.header("Content-type", "application/ld+json");
+            ClientResponse response = builder.put(ClientResponse.class,body);
+
+            if (response.getStatus() != 204) {
+               Logger.getLogger(Group.class.getName()).log(Level.WARNING, "Group was not updated! Status "+response.getStatus());
+               return Response.status(response.getStatus()).build();
+            }
+
+            Logger.getLogger(Group.class.getName()).log(Level.INFO, "Group added sucessfully!");
+            return Response.status(204).build();
+
+      } catch(UniformInterfaceException | ClientHandlerException ex) {
+        Logger.getLogger(Group.class.getName()).log(Level.WARNING, "Expect the unexpected!", ex);
+        return Response.status(400).build();
+      }
+
+        /*
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
         
@@ -176,7 +204,8 @@ public class Group {
         } catch(Exception ex) {
             return Response.status(400).build(); 
         }
- 
+ */
+        
     }
     
     
