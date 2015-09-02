@@ -221,12 +221,10 @@ public class Group {
       
     ResponseBuilder rb;
         
-     
- 
          Client client = Client.create();
          String service = userEndpoint();
          
-            WebResource webResource = client.resource(service); //.queryParam("graph", "urn:csc:groups");
+            WebResource webResource = client.resource(service).queryParam("graph", "urn:csc:groups");
 
             WebResource.Builder builder = webResource.accept("application/ld+json");
 
