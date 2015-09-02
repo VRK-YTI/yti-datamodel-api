@@ -1,6 +1,6 @@
 package com.csc.fi.ioapi.api.usermanagement;
 
-import com.csc.fi.ioapi.api.model.ModelData;
+import com.csc.fi.ioapi.api.model.Core;
 import com.csc.fi.ioapi.config.Endpoint;
 import com.csc.fi.ioapi.utils.LDHelper;
 import com.github.jsonldjava.core.JsonLdError;

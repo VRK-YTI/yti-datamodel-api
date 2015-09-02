@@ -65,9 +65,9 @@ import org.apache.jena.atlas.json.JsonValue;
 /**
  * Root resource (exposed at "myresource" path)
  */
-@Path("profile-data")
-@Api(value = "/profile-data", description = "Operations about data")
-public class ProfileData {
+@Path("profile")
+@Api(value = "/profile", description = "Operations about data")
+public class Profile {
 
     @Context ServletContext context;
         
@@ -103,7 +103,7 @@ public class ProfileData {
 
 
             if (response.getStatus() != 200) {
-               Logger.getLogger(ProfileData.class.getName()).log(Level.INFO, response.getStatus()+" from SERVICE "+service+" and GRAPH "+graph);
+               Logger.getLogger(Profile.class.getName()).log(Level.INFO, response.getStatus()+" from SERVICE "+service+" and GRAPH "+graph);
                return Response.status(response.getStatus()).entity("{}").build();
             }
             
@@ -123,15 +123,15 @@ public class ProfileData {
                     Object framed = JsonLdProcessor.frame(data, context, options);                   
                     rb.entity(JsonUtils.toString(framed));   
                 } catch (NullPointerException ex) {
-                    Logger.getLogger(ProfileData.class.getName()).log(Level.WARNING, null, "DEFAULT GRAPH IS NULL!");
+                    Logger.getLogger(Profile.class.getName()).log(Level.WARNING, null, "DEFAULT GRAPH IS NULL!");
                      return rb.entity(JsonUtils.toString(data)).build();
                 } catch (JsonLdError ex) {
-                    Logger.getLogger(ProfileData.class.getName()).log(Level.SEVERE, null, ex);
+                    Logger.getLogger(Profile.class.getName()).log(Level.SEVERE, null, ex);
                      return Response.serverError().entity("{}").build();
                 }
                   
                 } catch (IOException ex) {
-                    Logger.getLogger(ProfileData.class.getName()).log(Level.SEVERE, null, ex);
+                    Logger.getLogger(Profile.class.getName()).log(Level.SEVERE, null, ex);
                      return Response.serverError().entity("{}").build();
                 }
                 
@@ -145,7 +145,7 @@ public class ProfileData {
       
            
       } catch(UniformInterfaceException | ClientHandlerException ex) {
-          Logger.getLogger(ProfileData.class.getName()).log(Level.WARNING, "Expect the unexpected!", ex);
+          Logger.getLogger(Profile.class.getName()).log(Level.WARNING, "Expect the unexpected!", ex);
           return Response.serverError().entity("{}").build();
       } 
 
@@ -190,15 +190,15 @@ public class ProfileData {
             ClientResponse response = builder.put(ClientResponse.class,body);
 
             if (response.getStatus() != 204) {
-               Logger.getLogger(ProfileData.class.getName()).log(Level.WARNING, graph+" was not updated! Status "+response.getStatus());
+               Logger.getLogger(Profile.class.getName()).log(Level.WARNING, graph+" was not updated! Status "+response.getStatus());
                return Response.status(response.getStatus()).build();
             }
 
-            Logger.getLogger(ProfileData.class.getName()).log(Level.INFO, graph+" updated sucessfully!");
+            Logger.getLogger(Profile.class.getName()).log(Level.INFO, graph+" updated sucessfully!");
             return Response.status(204).build();
 
       } catch(UniformInterfaceException | ClientHandlerException ex) {
-        Logger.getLogger(ProfileData.class.getName()).log(Level.WARNING, "Expect the unexpected!", ex);
+        Logger.getLogger(Profile.class.getName()).log(Level.WARNING, "Expect the unexpected!", ex);
         return Response.status(400).build();
       }
   }
@@ -242,15 +242,15 @@ public class ProfileData {
             ClientResponse response = builder.put(ClientResponse.class,body);
 
             if (response.getStatus() != 204) {
-               Logger.getLogger(ProfileData.class.getName()).log(Level.WARNING, graph+" was not updated! Status "+response.getStatus());
+               Logger.getLogger(Profile.class.getName()).log(Level.WARNING, graph+" was not updated! Status "+response.getStatus());
                return Response.status(response.getStatus()).build();
             }
 
-            Logger.getLogger(ProfileData.class.getName()).log(Level.INFO, graph+" updated sucessfully!");
+            Logger.getLogger(Profile.class.getName()).log(Level.INFO, graph+" updated sucessfully!");
             return Response.status(204).build();
 
       } catch(UniformInterfaceException | ClientHandlerException ex) {
-        Logger.getLogger(ProfileData.class.getName()).log(Level.WARNING, "Expect the unexpected!", ex);
+        Logger.getLogger(Profile.class.getName()).log(Level.WARNING, "Expect the unexpected!", ex);
         return Response.status(400).build();
       }
   }
@@ -285,7 +285,7 @@ public class ProfileData {
             ClientResponse response = builder.delete(ClientResponse.class);
 
             if (response.getStatus() != 204) {
-               Logger.getLogger(ProfileData.class.getName()).log(Level.WARNING, graph+" was not deleted! Status "+response.getStatus());
+               Logger.getLogger(Profile.class.getName()).log(Level.WARNING, graph+" was not deleted! Status "+response.getStatus());
                return Response.status(response.getStatus()).build();
             }
 
@@ -293,11 +293,11 @@ public class ProfileData {
                ServiceDescriptionManager.deleteGraphDescription(ProfileSparqlUpdateEndpoint(), graph);
            }
 
-            Logger.getLogger(ProfileData.class.getName()).log(Level.INFO, graph+" deleted successfully!");
+            Logger.getLogger(Profile.class.getName()).log(Level.INFO, graph+" deleted successfully!");
             return Response.status(204).build();
 
       } catch(UniformInterfaceException | ClientHandlerException ex) {
-            Logger.getLogger(ProfileData.class.getName()).log(Level.WARNING, "Expect the unexpected!", ex);
+            Logger.getLogger(Profile.class.getName()).log(Level.WARNING, "Expect the unexpected!", ex);
             return Response.status(400).build();
       }
   }

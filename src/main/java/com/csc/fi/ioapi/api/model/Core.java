@@ -69,9 +69,9 @@ import org.apache.jena.atlas.json.JsonValue;
 /**
  * Root resource (exposed at "myresource" path)
  */
-@Path("model-data")
-@Api(value = "/model-data", description = "Operations about data")
-public class ModelData {
+@Path("core")
+@Api(value = "/core", description = "Operations about data")
+public class Core {
 
     @Context ServletContext context;
     
@@ -121,7 +121,7 @@ public class ModelData {
             ClientResponse response = builder.get(ClientResponse.class);
 
             if (response.getStatus() != 200) {
-               Logger.getLogger(ModelData.class.getName()).log(Level.INFO, response.getStatus()+" from SERVICE "+service+" and GRAPH "+graph);
+               Logger.getLogger(Core.class.getName()).log(Level.INFO, response.getStatus()+" from SERVICE "+service+" and GRAPH "+graph);
                return Response.status(response.getStatus()).entity("{}").build();
             }
             
@@ -160,7 +160,7 @@ public class ModelData {
            
            
       } catch(UniformInterfaceException | ClientHandlerException ex) {
-          Logger.getLogger(ModelData.class.getName()).log(Level.WARNING, "Expect the unexpected!", ex);
+          Logger.getLogger(Core.class.getName()).log(Level.WARNING, "Expect the unexpected!", ex);
           return Response.serverError().entity("{}").build();
       }
 
@@ -203,15 +203,15 @@ public class ModelData {
             ClientResponse response = builder.put(ClientResponse.class,body);
 
             if (response.getStatus() != 204 && response.getStatus() != 200) {
-               Logger.getLogger(ModelData.class.getName()).log(Level.WARNING, graph+" was not updated! Status "+response.getStatus());
+               Logger.getLogger(Core.class.getName()).log(Level.WARNING, graph+" was not updated! Status "+response.getStatus());
                return Response.status(response.getStatus()).build();
             }
 
-            Logger.getLogger(ModelData.class.getName()).log(Level.INFO, graph+" updated sucessfully!");
+            Logger.getLogger(Core.class.getName()).log(Level.INFO, graph+" updated sucessfully!");
             return Response.status(204).build();
 
       } catch(UniformInterfaceException | ClientHandlerException ex) {
-        Logger.getLogger(ModelData.class.getName()).log(Level.WARNING, "Expect the unexpected!", ex);
+        Logger.getLogger(Core.class.getName()).log(Level.WARNING, "Expect the unexpected!", ex);
         return Response.status(400).build();
       }
   }
@@ -257,15 +257,15 @@ public class ModelData {
             ClientResponse response = builder.put(ClientResponse.class,body);
 
             if (response.getStatus() != 204) {
-               Logger.getLogger(ModelData.class.getName()).log(Level.WARNING, graph+" was not updated! Status "+response.getStatus());
+               Logger.getLogger(Core.class.getName()).log(Level.WARNING, graph+" was not updated! Status "+response.getStatus());
                return Response.status(response.getStatus()).build();
             }
 
-            Logger.getLogger(ModelData.class.getName()).log(Level.INFO, graph+" updated sucessfully!");
+            Logger.getLogger(Core.class.getName()).log(Level.INFO, graph+" updated sucessfully!");
             return Response.status(204).build();
 
       } catch(UniformInterfaceException | ClientHandlerException ex) {
-        Logger.getLogger(ModelData.class.getName()).log(Level.WARNING, "Expect the unexpected!", ex);
+        Logger.getLogger(Core.class.getName()).log(Level.WARNING, "Expect the unexpected!", ex);
         return Response.status(400).build();
       }
   }
@@ -299,7 +299,7 @@ public class ModelData {
             ClientResponse response = builder.delete(ClientResponse.class);
 
             if (response.getStatus() != 204) {
-               Logger.getLogger(ModelData.class.getName()).log(Level.WARNING, graph+" was not deleted! Status "+response.getStatus());
+               Logger.getLogger(Core.class.getName()).log(Level.WARNING, graph+" was not deleted! Status "+response.getStatus());
                return Response.status(response.getStatus()).build();
             }
 
@@ -307,11 +307,11 @@ public class ModelData {
                ServiceDescriptionManager.deleteGraphDescription(ModelSparqlUpdateEndpoint(), graph);
            }
 
-            Logger.getLogger(ModelData.class.getName()).log(Level.INFO, graph+" deleted successfully!");
+            Logger.getLogger(Core.class.getName()).log(Level.INFO, graph+" deleted successfully!");
             return Response.status(204).build();
 
       } catch(UniformInterfaceException | ClientHandlerException ex) {
-            Logger.getLogger(ModelData.class.getName()).log(Level.WARNING, "Expect the unexpected!", ex);
+            Logger.getLogger(Core.class.getName()).log(Level.WARNING, "Expect the unexpected!", ex);
             return Response.status(400).build();
       }
   }

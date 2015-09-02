@@ -10,7 +10,7 @@ package com.csc.fi.ioapi.api.genericapi;
  *
  * @author malonen
  */
-import com.csc.fi.ioapi.api.profile.ProfileData;
+import com.csc.fi.ioapi.api.profile.Profile;
 import com.csc.fi.ioapi.utils.LDHelper;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
