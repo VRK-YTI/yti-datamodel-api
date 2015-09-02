@@ -55,6 +55,8 @@ import javax.ws.rs.DELETE;
 import static javax.ws.rs.HttpMethod.POST;
 import javax.ws.rs.POST;
 import javax.ws.rs.core.Response.ResponseBuilder;
+import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.core.Response.Status.Family;
 import org.apache.jena.atlas.json.JSON;
 import org.apache.jena.atlas.json.JsonObject;
 import org.apache.jena.atlas.json.JsonValue;
@@ -172,7 +174,7 @@ public class Group {
             WebResource.Builder builder = webResource.header("Content-type", "application/ld+json");
             ClientResponse response = builder.put(ClientResponse.class,body);
 
-            if (response.getStatus() != 204) {
+            if (response.getStatusInfo().getFamily()!=Family.SUCCESSFUL) {
                Logger.getLogger(Group.class.getName()).log(Level.WARNING, "Group was not updated! Status "+response.getStatus());
                return Response.status(response.getStatus()).build();
             }
@@ -230,7 +232,7 @@ public class Group {
 
             ClientResponse response = builder.get(ClientResponse.class);
 
-            if (response.getStatus() != 200) {
+            if (response.getStatusInfo().getFamily()!=Family.SUCCESSFUL) {
                Logger.getLogger(Group.class.getName()).log(Level.INFO, response.getStatus()+" from SERVICE "+service);
                return Response.status(response.getStatus()).entity("{}").build();
             }
