@@ -5,22 +5,19 @@
  */
 package com.csc.fi.ioapi.utils;
 
-import com.github.jsonldjava.utils.JsonUtils;
-import com.hp.hpl.jena.query.ParameterizedSparqlString;
-import com.sun.jersey.api.uri.UriComponent;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.StringEscapeUtils;
-import org.apache.jena.iri.IRIFactory;
+
+import com.github.jsonldjava.utils.JsonUtils;
+import com.hp.hpl.jena.query.ParameterizedSparqlString;
+import com.sun.jersey.api.uri.UriComponent;
 
 /**
  *

@@ -5,16 +5,10 @@
  */
 package com.csc.fi.ioapi.utils;
 
-/**
- *
- * @author malonen
- */
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
-import java.util.Set;
  
 public class PropertyUtil
 {

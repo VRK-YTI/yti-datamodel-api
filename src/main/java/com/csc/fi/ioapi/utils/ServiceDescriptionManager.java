@@ -5,18 +5,14 @@
  */
 package com.csc.fi.ioapi.utils;
 
-import com.hp.hpl.jena.datatypes.RDFDatatype;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 import com.hp.hpl.jena.datatypes.xsd.XSDDatatype;
 import com.hp.hpl.jena.query.ParameterizedSparqlString;
 import com.hp.hpl.jena.update.UpdateExecutionFactory;
-import com.hp.hpl.jena.update.UpdateFactory;
 import com.hp.hpl.jena.update.UpdateProcessor;
 import com.hp.hpl.jena.update.UpdateRequest;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import javax.ws.rs.core.Response;
-import org.joda.time.*;
-import org.joda.time.format.*;
 
 /**
  *
