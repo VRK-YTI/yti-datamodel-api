@@ -75,7 +75,6 @@ public class Core {
 
     @Context ServletContext context;
     
-        
     public String ModelDataEndpoint() {
        return Endpoint.getEndpoint()+"/core/data";
     }
@@ -138,11 +137,13 @@ public class Core {
             ParameterizedSparqlString pss = new ParameterizedSparqlString();
             pss.setNsPrefixes(LDHelper.PREFIX_MAP);
 
-            queryString = "CONSTRUCT { ?graphName rdfs:label ?label . ?graphName dcterms:identifier ?graphName } WHERE { ?graph a sd:NamedGraph ; dcterms:isPartOf ?group . ?graph sd:name ?graphName . ?graphName rdfs:label ?label }"; 
+            queryString = "CONSTRUCT { ?graphName rdfs:label ?label . ?graphName dcterms:identifier ?g . ?graphName dcterms:isPartOf ?group . ?anyGraph a sd:NamedGraph . } WHERE { ?graph sd:name ?graphName . ?graph a sd:NamedGraph ; dcterms:isPartOf ?group . GRAPH ?graphName {  ?g a owl:Ontology . ?g rdfs:label ?label }}"; 
 
             pss.setIri("group", group);
             pss.setCommandText(queryString);
            
+            Logger.getLogger(Core.class.getName()).log(Level.INFO, pss.toString());
+          
             Client client = Client.create();
 
             WebResource webResource = client.resource(ModelSparqlDataEndpoint())
@@ -157,7 +158,6 @@ public class Core {
            return rb.build();
            
           }
-           
            
       } catch(UniformInterfaceException | ClientHandlerException ex) {
           Logger.getLogger(Core.class.getName()).log(Level.WARNING, "Expect the unexpected!", ex);
