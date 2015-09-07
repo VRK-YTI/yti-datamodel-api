@@ -45,9 +45,9 @@ import com.wordnik.swagger.annotations.ApiResponses;
 /**
  * Root resource (exposed at "myresource" path)
  */
-@Path("core")
-@Api(value = "/core", description = "Operations about data")
-public class Core {
+@Path("model")
+@Api(value = "/model", description = "Operations about data")
+public class Model {
 
     @Context ServletContext context;
     
@@ -96,7 +96,7 @@ public class Core {
             ClientResponse response = builder.get(ClientResponse.class);
 
             if (response.getStatus() != 200) {
-               Logger.getLogger(Core.class.getName()).log(Level.INFO, response.getStatus()+" from SERVICE "+service+" and GRAPH "+graph);
+               Logger.getLogger(Model.class.getName()).log(Level.INFO, response.getStatus()+" from SERVICE "+service+" and GRAPH "+graph);
                return Response.status(response.getStatus()).entity("{}").build();
             }
             
@@ -113,12 +113,12 @@ public class Core {
             ParameterizedSparqlString pss = new ParameterizedSparqlString();
             pss.setNsPrefixes(LDHelper.PREFIX_MAP);
 
-            queryString = "CONSTRUCT { ?graphName rdfs:label ?label . ?graphName dcterms:identifier ?g . ?graphName dcterms:isPartOf ?group . ?anyGraph a sd:NamedGraph . } WHERE { ?graph sd:name ?graphName . ?graph a sd:NamedGraph ; dcterms:isPartOf ?group . GRAPH ?graphName {  ?g a owl:Ontology . ?g rdfs:label ?label }}"; 
+            queryString = "CONSTRUCT { ?graphName rdfs:label ?label . ?graphName dcterms:identifier ?g . ?graphName dcterms:isPartOf ?group . ?graphName a sd:NamedGraph . } WHERE { ?graph sd:name ?graphName . ?graph a sd:NamedGraph ; dcterms:isPartOf ?group . GRAPH ?graphName {  ?g a owl:Ontology . ?g rdfs:label ?label }}"; 
 
             pss.setIri("group", group);
             pss.setCommandText(queryString);
            
-            Logger.getLogger(Core.class.getName()).log(Level.INFO, pss.toString());
+            Logger.getLogger(Model.class.getName()).log(Level.INFO, pss.toString());
           
             Client client = Client.create();
 
@@ -136,7 +136,7 @@ public class Core {
           }
            
       } catch(UniformInterfaceException | ClientHandlerException ex) {
-          Logger.getLogger(Core.class.getName()).log(Level.WARNING, "Expect the unexpected!", ex);
+          Logger.getLogger(Model.class.getName()).log(Level.WARNING, "Expect the unexpected!", ex);
           return Response.serverError().entity("{}").build();
       }
 
@@ -179,15 +179,15 @@ public class Core {
             ClientResponse response = builder.put(ClientResponse.class,body);
 
             if (response.getStatus() != 204 && response.getStatus() != 200) {
-               Logger.getLogger(Core.class.getName()).log(Level.WARNING, graph+" was not updated! Status "+response.getStatus());
+               Logger.getLogger(Model.class.getName()).log(Level.WARNING, graph+" was not updated! Status "+response.getStatus());
                return Response.status(response.getStatus()).build();
             }
 
-            Logger.getLogger(Core.class.getName()).log(Level.INFO, graph+" updated sucessfully!");
+            Logger.getLogger(Model.class.getName()).log(Level.INFO, graph+" updated sucessfully!");
             return Response.status(204).build();
 
       } catch(UniformInterfaceException | ClientHandlerException ex) {
-        Logger.getLogger(Core.class.getName()).log(Level.WARNING, "Expect the unexpected!", ex);
+        Logger.getLogger(Model.class.getName()).log(Level.WARNING, "Expect the unexpected!", ex);
         return Response.status(400).build();
       }
   }
@@ -233,15 +233,15 @@ public class Core {
             ClientResponse response = builder.put(ClientResponse.class,body);
 
             if (response.getStatus() != 204) {
-               Logger.getLogger(Core.class.getName()).log(Level.WARNING, graph+" was not updated! Status "+response.getStatus());
+               Logger.getLogger(Model.class.getName()).log(Level.WARNING, graph+" was not updated! Status "+response.getStatus());
                return Response.status(response.getStatus()).build();
             }
 
-            Logger.getLogger(Core.class.getName()).log(Level.INFO, graph+" updated sucessfully!");
+            Logger.getLogger(Model.class.getName()).log(Level.INFO, graph+" updated sucessfully!");
             return Response.status(204).build();
 
       } catch(UniformInterfaceException | ClientHandlerException ex) {
-        Logger.getLogger(Core.class.getName()).log(Level.WARNING, "Expect the unexpected!", ex);
+        Logger.getLogger(Model.class.getName()).log(Level.WARNING, "Expect the unexpected!", ex);
         return Response.status(400).build();
       }
   }
@@ -275,7 +275,7 @@ public class Core {
             ClientResponse response = builder.delete(ClientResponse.class);
 
             if (response.getStatus() != 204) {
-               Logger.getLogger(Core.class.getName()).log(Level.WARNING, graph+" was not deleted! Status "+response.getStatus());
+               Logger.getLogger(Model.class.getName()).log(Level.WARNING, graph+" was not deleted! Status "+response.getStatus());
                return Response.status(response.getStatus()).build();
             }
 
@@ -283,11 +283,11 @@ public class Core {
                ServiceDescriptionManager.deleteGraphDescription(ModelSparqlUpdateEndpoint(), graph);
            }
 
-            Logger.getLogger(Core.class.getName()).log(Level.INFO, graph+" deleted successfully!");
+            Logger.getLogger(Model.class.getName()).log(Level.INFO, graph+" deleted successfully!");
             return Response.status(204).build();
 
       } catch(UniformInterfaceException | ClientHandlerException ex) {
-            Logger.getLogger(Core.class.getName()).log(Level.WARNING, "Expect the unexpected!", ex);
+            Logger.getLogger(Model.class.getName()).log(Level.WARNING, "Expect the unexpected!", ex);
             return Response.status(400).build();
       }
   }
