@@ -65,8 +65,8 @@ public class Property {
       @ApiResponse(code = 500, message = "Internal server error")
   })
   public Response json(
-          @ApiParam(value = "property")
-          @QueryParam("property") String property) {
+          @ApiParam(value = "Property id")
+          @QueryParam("id") String id) {
 
       ResponseBuilder rb;
       
@@ -77,7 +77,7 @@ public class Property {
 
             queryString = "CONSTRUCT { ?property ?p ?o . } WHERE { ?property ?p ?o . }"; 
 
-            pss.setIri("property", property);
+            pss.setIri("property", id);
             pss.setCommandText(queryString);
            
             Logger.getLogger(Property.class.getName()).log(Level.INFO, pss.toString());
