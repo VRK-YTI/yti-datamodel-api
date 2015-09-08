@@ -63,7 +63,7 @@ public class Model {
   })
   public Response json(
           @ApiParam(value = "Requested resource", defaultValue="default") 
-          @QueryParam("graph") String graph,
+          @QueryParam("id") String id,
           @ApiParam(value = "group")
           @QueryParam("group") String group) {
  
@@ -77,16 +77,16 @@ public class Model {
         
             Client client = Client.create();
 
-            if(graph.equals("default")) graph = "urn:csc:iow:sd";
+            if(id.equals("default")) id = "urn:csc:iow:sd";
             
             WebResource webResource = client.resource(service)
-                                      .queryParam("graph", graph);
+                                      .queryParam("graph", id);
 
             Builder builder = webResource.accept("application/ld+json");
             ClientResponse response = builder.get(ClientResponse.class);
 
             if (response.getStatus() != 200) {
-               Logger.getLogger(Model.class.getName()).log(Level.INFO, response.getStatus()+" from SERVICE "+service+" and GRAPH "+graph);
+               Logger.getLogger(Model.class.getName()).log(Level.INFO, response.getStatus()+" from SERVICE "+service+" and GRAPH "+id);
                return Response.status(response.getStatus()).entity("{}").build();
             }
             
