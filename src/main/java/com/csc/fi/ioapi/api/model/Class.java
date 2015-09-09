@@ -45,9 +45,9 @@ import com.wordnik.swagger.annotations.ApiResponses;
 /**
  * Root resource (exposed at "myresource" path)
  */
-@Path("property")
-@Api(value = "/property", description = "Operations about property")
-public class Property {
+@Path("class")
+@Api(value = "/class", description = "Operations about property")
+public class Class {
 
     @Context ServletContext context;
     
@@ -65,7 +65,7 @@ public class Property {
       @ApiResponse(code = 500, message = "Internal server error")
   })
   public Response json(
-          @ApiParam(value = "Property id")
+          @ApiParam(value = "Class id")
           @QueryParam("id") String id,
           @ApiParam(value = "Model id")
           @QueryParam("model") String model) {
@@ -77,17 +77,16 @@ public class Property {
             ParameterizedSparqlString pss = new ParameterizedSparqlString();
             pss.setNsPrefixes(LDHelper.PREFIX_MAP);
 
-            queryString = "CONSTRUCT { ?property rdfs:label ?label . ?property rdfs:comment ?comment . ?property a ?type . ?property rdfs:isDefinedBy ?library } WHERE { ?property rdfs:label ?label . OPTIONAL { ?property rdfs:comment ?comment . } ?property a ?type . {?library iow:associations ?property .} UNION {?library iow:attributes ?property .} }"; 
+            queryString = "CONSTRUCT { ?class rdfs:label ?label . ?class rdfs:comment ?comment . ?class rdfs:isDefinedBy ?library . } WHERE { ?class rdfs:label ?label . OPTIONAL { ?class rdfs:comment ?comment } . ?class a sh:ShapeClass . ?library iow:classes ?class . }"; 
 
             if(id!=null && !id.equals("undefined"))
-            pss.setIri("property", id);
-            
-            if(model!=null && !model.equals("undefined"))
-            pss.setIri("library", model);
-            
-            pss.setCommandText(queryString);
+                   pss.setIri("class", id);
            
-            Logger.getLogger(Property.class.getName()).log(Level.INFO, pss.toString());
+            if(model!=null && !model.equals("undefined"))
+                   pss.setIri("library", model);
+           
+            pss.setCommandText(queryString);
+            Logger.getLogger(Class.class.getName()).log(Level.INFO, pss.toString());
           
             Client client = Client.create();
 
@@ -104,7 +103,7 @@ public class Property {
            
                   
       } catch(UniformInterfaceException | ClientHandlerException ex) {
-          Logger.getLogger(Property.class.getName()).log(Level.WARNING, "Expect the unexpected!", ex);
+          Logger.getLogger(Class.class.getName()).log(Level.WARNING, "Expect the unexpected!", ex);
           return Response.serverError().entity("{}").build();
       }
 
