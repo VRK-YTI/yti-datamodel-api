@@ -10,12 +10,13 @@
 <html>
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-        <title>Login page</title>
+        <title>Login test page</title>
     </head>
     <body>
       <h1>HTTP Request Headers Received</h1>
       <table border="1" cellpadding="4" cellspacing="0">
       <%
+         
          Enumeration eNames = request.getHeaderNames();
          while (eNames.hasMoreElements()) {
             String name = (String) eNames.nextElement();
