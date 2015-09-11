@@ -3,6 +3,7 @@
     Created on : Sep 9, 2015, 3:18:47 PM
     Author     : malonen
 --%>
+<%@page import="java.util.Date"%>
 <%@page import="java.util.Enumeration"%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <!DOCTYPE html>
@@ -25,6 +26,24 @@
          }
       %>
       </table>
+      
+      <h1>Session variables</h1>
+      
+      <table border="1" cellpadding="4" cellspacing="0">
+      <% 
+         
+       if(session.getAttribute("creationTime")==null) {
+             session.setAttribute("creationTime", (new Date(session.getCreationTime())).toString());
+       }
+       
+         Enumeration sNames = session.getAttributeNames();
+         while(sNames.hasMoreElements()){
+            String name= (String) sNames.nextElement();
+            String value = (String) session.getAttribute(name);%>      
+      <tr><td><%= name %></td><td><%= value %></td></tr>
+      <% }%>
+      </table>
+      
 <%!
    private String normalize(String value)
    {
