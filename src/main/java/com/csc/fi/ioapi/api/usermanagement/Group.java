@@ -126,6 +126,9 @@ public class Group {
 		}
 	}
 
+        
+        /* TODO: For testin only should be removed */
+        
 	@PUT
 	@ApiOperation(value = "Add new group", notes = "PUT Body should be json-ld")
 	@ApiResponses(value = { @ApiResponse(code = 204, message = "New group is created"),

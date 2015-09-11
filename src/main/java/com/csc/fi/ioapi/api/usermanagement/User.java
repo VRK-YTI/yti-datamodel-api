@@ -33,7 +33,9 @@ import com.hp.hpl.jena.update.UpdateExecutionFactory;
 import com.hp.hpl.jena.update.UpdateProcessor;
 import com.hp.hpl.jena.update.UpdateRequest;
 import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientHandlerException;
 import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.uri.UriComponent;
 import com.wordnik.swagger.annotations.Api;
@@ -73,45 +75,57 @@ public class User {
       @ApiResponse(code = 404, message = "Service not found") 
   })
     @Produces("application/ld+json")
-    public Response getUser(@ApiParam(value = "email") @QueryParam("email") String email) {
+    public Response getUser(@ApiParam(value = "email") @QueryParam("email") String email, @ApiParam(value = "debug") @QueryParam("debug") String debug) {
        
         String queryString;
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
-        
-        queryString = "CONSTRUCT { ?id a foaf:Person ; foaf:fullName ?name . } WHERE { GRAPH <urn:csc:users> { ?id a foaf:Person ; foaf:fullName ?name; foaf:mbox ?email }}"; 
+            
+        ResponseBuilder rb;
+
+        queryString = "CONSTRUCT { ?id a foaf:Person ; foaf:fullName ?name . ?id iow:login ?login . } WHERE { GRAPH <urn:csc:users> { ?id a foaf:Person ; foaf:fullName ?name; foaf:mbox ?email }}"; 
+         
+        pss.setCommandText(queryString);
+        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
           
         // If looking with certain email
         if(email!=null && !email.equals("undefined")) {
-              pss.setCommandText(queryString);
-              pss.setIri("email", email);
+              pss.setLiteral("email", email);
+         
+            /* TODO: REMOVE - FOR TESTING ONLY */      
+            if(debug!=null && !debug.equals("undefined") && new Boolean(debug).equals(true)) {
+                pss.setLiteral("login", true);
+            } else {
+                pss.setLiteral("login", false);
+            }
+              
+              
         } 
+        
+
         
         Client client = Client.create();
          
         WebResource webResource = client.resource(userSparqlEndpoint())
-                                  .queryParam("query", UriComponent.encode(queryString,UriComponent.Type.QUERY));
+                                  .queryParam("query", UriComponent.encode(pss.toString(),UriComponent.Type.QUERY));
 
         WebResource.Builder builder = webResource.accept("application/ld+json");
 
         ClientResponse response = builder.get(ClientResponse.class);
 
-        Object context = LDHelper.getUserContext();
         
-            ResponseBuilder rb;   
-            
+        rb = Response.status(response.getStatus()); 
+        rb.entity(response.getEntityInputStream());
+       
+     
+            /*
              try {
-
-                 Object data = JsonUtils.fromInputStream(response.getEntityInputStream());
-
+                    Object context = LDHelper.getUserContext();
+                    Object data = JsonUtils.fromInputStream(response.getEntityInputStream());
                     JsonLdOptions options = new JsonLdOptions();
-                    
                     Object framed = JsonLdProcessor.frame(data, context, options);
-
                     rb = Response.status(response.getStatus()); 
-
                     rb.entity(JsonUtils.toString(framed));
-                    
                 } catch (JsonLdError ex) {
                     Logger.getLogger(User.class.getName()).log(Level.SEVERE, null, ex);
                      return Response.serverError().entity("{}").build();
@@ -119,13 +133,15 @@ public class User {
                     Logger.getLogger(User.class.getName()).log(Level.SEVERE, null, ex);
                     return Response.serverError().entity("{}").build();
                 }
-
+*/
+        
             return rb.build();
         
     }
 
 
-    /* This for testing only (SHOULD BE REMOVED) */
+    /* TODO: This for testing only (SHOULD BE REMOVED) */
+    
     @PUT
     @ApiOperation(value = "Add new user", notes = "PUT user to service")
       @ApiResponses(value = {
@@ -133,8 +149,34 @@ public class User {
       @ApiResponse(code = 400, message = "Invalid graph supplied"),
       @ApiResponse(code = 404, message = "Service not found") 
   })
-    public Response addNewUser(@Context HttpServletRequest req, @ApiParam(value = "Fullname", required = true) @QueryParam("fullName") String fullName, @ApiParam(value = "email", required = true) @QueryParam("email") String email) {
+    public Response addNewUser(@ApiParam(value = "New users in application/ld+json", required = true) String body) {
+  
+        	try {
+
+			String service = userEndpoint();
+			Client client = Client.create();
+			WebResource webResource = client.resource(service).queryParam("graph", "urn:csc:users");
+
+			WebResource.Builder builder = webResource.header("Content-type", "application/ld+json");
+			ClientResponse response = builder.put(ClientResponse.class, body);
+
+			if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
+				Logger.getLogger(Group.class.getName()).log(Level.WARNING,
+						"Group was not updated! Status " + response.getStatus());
+				return Response.status(response.getStatus()).build();
+			}
+
+			Logger.getLogger(Group.class.getName()).log(Level.INFO, "Group added sucessfully!");
+			return Response.status(204).build();
+
+		} catch (UniformInterfaceException | ClientHandlerException ex) {
+			Logger.getLogger(Group.class.getName()).log(Level.WARNING, "Expect the unexpected!", ex);
+			return Response.status(400).build();
+		}
+
         
+        
+        /*
         HttpSession session = req.getSession(true);
     	Object auth = session.getAttribute("auth");
         if(auth!=null) {
@@ -163,7 +205,7 @@ public class User {
         
         
         return Response.status(200).build(); 
-
+*/
     }
 
 }
