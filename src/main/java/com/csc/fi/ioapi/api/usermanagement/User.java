@@ -83,7 +83,7 @@ public class User {
             
         ResponseBuilder rb;
 
-        queryString = "CONSTRUCT { ?id a foaf:Person ; foaf:fullName ?name . ?id iow:login ?login . } WHERE { GRAPH <urn:csc:users> { ?id a foaf:Person ; foaf:fullName ?name; foaf:mbox ?email }}"; 
+        queryString = "CONSTRUCT { ?id a foaf:Person ; foaf:fullName ?name . ?id iow:login ?login . ?id dcterms:isPartOf ?group . } WHERE { GRAPH <urn:csc:users> { ?id a foaf:Person ; foaf:fullName ?name; foaf:mbox ?email ; dcterms:isPartOf ?group . }}"; 
          
         pss.setCommandText(queryString);
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
