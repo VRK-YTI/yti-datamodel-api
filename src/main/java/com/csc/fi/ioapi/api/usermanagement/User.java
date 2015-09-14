@@ -75,8 +75,12 @@ public class User {
       @ApiResponse(code = 404, message = "Service not found") 
   })
     @Produces("application/ld+json")
-    public Response getUser(@ApiParam(value = "email") @QueryParam("email") String email, @ApiParam(value = "debug") @QueryParam("debug") String debug) {
+    public Response getUser(@ApiParam(value = "email") @QueryParam("email") String email, @ApiParam(value = "debug") @QueryParam("debug") String debug, @Context HttpServletRequest request) {
        
+        HttpSession session = request.getSession();
+        
+        Logger.getLogger(User.class.getName()).log(Level.INFO, "Session created at "+(String)session.getAttribute("creationTime"));
+        
         String queryString;
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);

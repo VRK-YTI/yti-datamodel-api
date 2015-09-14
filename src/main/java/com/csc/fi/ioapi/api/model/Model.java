@@ -77,7 +77,7 @@ public class Model {
         
             Client client = Client.create();
 
-            if(id.equals("default")) id = "urn:csc:iow:sd";
+            if(id==null || id.equals("undefined") || id.equals("default")) id = "urn:csc:iow:sd";
             
             WebResource webResource = client.resource(service)
                                       .queryParam("graph", id);
