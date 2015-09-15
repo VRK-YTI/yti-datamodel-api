@@ -3,6 +3,8 @@
     Created on : Sep 9, 2015, 3:18:47 PM
     Author     : malonen
 --%>
+<%@page import="com.csc.fi.ioapi.config.LoginSession"%>
+<%@page import="com.csc.fi.ioapi.utils.UserManager"%>
 <%@page import="java.util.Arrays"%>
 <%@page import="java.util.Date"%>
 <%@page import="java.util.Enumeration"%>
@@ -24,14 +26,16 @@
       Object mail = request.getAttribute("mail");
       Object sn = request.getAttribute("sn"); 
       Object uid = request.getAttribute("uid"); 
-
-      
+ 
      if (prov!=null){
          
       session.setAttribute("displayName",displayName);
       session.setAttribute("group",group);
       session.setAttribute("mail",mail);
       session.setAttribute("uid",uid);
+      
+      LoginSession loginSession = new LoginSession(session);
+      UserManager.checkUser(loginSession);
       
       %>
       <h1>Hei <%=displayName.toString()%>!</h1>

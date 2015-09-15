@@ -222,7 +222,7 @@ public class Model {
             WebResource.Builder builder = webResource.header("Content-type", "application/ld+json");
             ClientResponse response = builder.put(ClientResponse.class,body);
 
-            if (response.getStatus() != 204) {
+            if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
                Logger.getLogger(Model.class.getName()).log(Level.WARNING, graph+" was not updated! Status "+response.getStatus());
                return Response.status(response.getStatus()).build();
             }

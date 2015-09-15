@@ -13,6 +13,8 @@ import com.hp.hpl.jena.query.ParameterizedSparqlString;
 import com.hp.hpl.jena.update.UpdateExecutionFactory;
 import com.hp.hpl.jena.update.UpdateProcessor;
 import com.hp.hpl.jena.update.UpdateRequest;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -76,7 +78,7 @@ public class ServiceDescriptionManager {
                 " ?graph sd:name ?graphName . "+
                 "}}";
         
-          System.out.println(query);
+          
          
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
@@ -86,6 +88,8 @@ public class ServiceDescriptionManager {
         pss.setLiteral("timestamp", timestamp,XSDDatatype.XSDdateTime);
         pss.setCommandText(query);
 
+        Logger.getLogger(ServiceDescriptionManager.class.getName()).log(Level.WARNING, pss.toString());
+        
         UpdateRequest queryObj = pss.asUpdate();
         UpdateProcessor qexec=UpdateExecutionFactory.createRemoteForm(queryObj,service);
         qexec.execute();

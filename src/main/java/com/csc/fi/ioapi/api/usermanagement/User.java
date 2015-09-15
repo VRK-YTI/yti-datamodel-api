@@ -90,7 +90,7 @@ public class User {
             
         ResponseBuilder rb;
 
-        queryString = "CONSTRUCT { ?id a foaf:Person ; foaf:fullName ?name . ?id iow:login ?login . ?id dcterms:isPartOf ?group . } WHERE { GRAPH <urn:csc:users> { ?id a foaf:Person ; foaf:fullName ?name; foaf:mbox ?email ; dcterms:isPartOf ?group .}}"; 
+        queryString = "CONSTRUCT { ?id a foaf:Person ; foaf:name ?name . ?id iow:login ?login . ?id dcterms:isPartOf ?group . } WHERE { GRAPH <urn:csc:users> { ?id a foaf:Person ; foaf:name ?name; foaf:mbox ?email . OPTIONAL { ?id dcterms:isPartOf ?group .}}}"; 
          
         pss.setCommandText(queryString);
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
@@ -144,7 +144,7 @@ public class User {
 
 
     /* TODO: This for testing only (SHOULD BE REMOVED) */
-    /*
+   
     @PUT
     @ApiOperation(value = "Add new user", notes = "PUT user to service")
       @ApiResponses(value = {
@@ -176,8 +176,7 @@ public class User {
 			Logger.getLogger(Group.class.getName()).log(Level.WARNING, "Expect the unexpected!", ex);
 			return Response.status(400).build();
 		}
-*/
-        
+    
         
         /*
         HttpSession session = req.getSession(true);
@@ -209,6 +208,5 @@ public class User {
         
         return Response.status(200).build(); 
 */
- //   }
-
+    }
 }

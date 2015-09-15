@@ -154,6 +154,7 @@ public class Group {
 			}
 
 			Logger.getLogger(Group.class.getName()).log(Level.INFO, "Group added sucessfully!");
+                        
 			return Response.status(204).build();
 
 		} catch (UniformInterfaceException | ClientHandlerException ex) {
