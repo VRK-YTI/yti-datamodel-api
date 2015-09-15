@@ -23,6 +23,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 
 import com.csc.fi.ioapi.config.Endpoint;
+import com.csc.fi.ioapi.config.LoginSession;
 import com.csc.fi.ioapi.utils.LDHelper;
 import com.github.jsonldjava.core.JsonLdError;
 import com.github.jsonldjava.core.JsonLdOptions;
@@ -75,11 +76,13 @@ public class User {
       @ApiResponse(code = 404, message = "Service not found") 
   })
     @Produces("application/ld+json")
-    public Response getUser(@ApiParam(value = "email") @QueryParam("email") String email, @ApiParam(value = "debug") @QueryParam("debug") String debug, @Context HttpServletRequest request) {
+    public Response getUser(@ApiParam(value = "email") @QueryParam("email") String email, @Context HttpServletRequest request) {
        
-        HttpSession session = request.getSession();
+       // HttpSession session = request.getSession();
         
-        Logger.getLogger(User.class.getName()).log(Level.INFO, "Session created at "+(String)session.getAttribute("creationTime"));
+        LoginSession login = new LoginSession(request.getSession());
+        
+       // Logger.getLogger(User.class.getName()).log(Level.INFO, "Session created at "+(String)session.getAttribute("creationTime"));
         
         String queryString;
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
@@ -87,7 +90,7 @@ public class User {
             
         ResponseBuilder rb;
 
-        queryString = "CONSTRUCT { ?id a foaf:Person ; foaf:fullName ?name . ?id iow:login ?login . ?id dcterms:isPartOf ?group . } WHERE { GRAPH <urn:csc:users> { ?id a foaf:Person ; foaf:fullName ?name; foaf:mbox ?email ; dcterms:isPartOf ?group . }}"; 
+        queryString = "CONSTRUCT { ?id a foaf:Person ; foaf:fullName ?name . ?id iow:login ?login . ?id dcterms:isPartOf ?group . } WHERE { GRAPH <urn:csc:users> { ?id a foaf:Person ; foaf:fullName ?name; foaf:mbox ?email ; dcterms:isPartOf ?group .}}"; 
          
         pss.setCommandText(queryString);
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
@@ -95,19 +98,15 @@ public class User {
         // If looking with certain email
         if(email!=null && !email.equals("undefined")) {
               pss.setLiteral("email", email);
-         
-            /* TODO: REMOVE - FOR TESTING ONLY */      
-            if(debug!=null && !debug.equals("undefined") && new Boolean(debug).equals(true)) {
-                pss.setLiteral("login", true);
-            } else {
-                pss.setLiteral("login", false);
-            }
               
+              if(email.equals("testi@example.org"))
+                    pss.setLiteral("login", true);
+                  else
+                    pss.setLiteral("login", login.isLoggedIn());
               
         } 
         
 
-        
         Client client = Client.create();
          
         WebResource webResource = client.resource(userSparqlEndpoint())
@@ -145,7 +144,7 @@ public class User {
 
 
     /* TODO: This for testing only (SHOULD BE REMOVED) */
-    
+    /*
     @PUT
     @ApiOperation(value = "Add new user", notes = "PUT user to service")
       @ApiResponses(value = {
@@ -177,7 +176,7 @@ public class User {
 			Logger.getLogger(Group.class.getName()).log(Level.WARNING, "Expect the unexpected!", ex);
 			return Response.status(400).build();
 		}
-
+*/
         
         
         /*
@@ -210,6 +209,6 @@ public class User {
         
         return Response.status(200).build(); 
 */
-    }
+ //   }
 
 }
