@@ -29,10 +29,10 @@
  
      if (prov!=null){
          
-      session.setAttribute("displayName",displayName);
-      session.setAttribute("group",group);
-      session.setAttribute("mail",mail);
-      session.setAttribute("uid",uid);
+      session.setAttribute("displayName",displayName.toString());
+      session.setAttribute("group",group.toString());
+      session.setAttribute("mail",mail.toString());
+      session.setAttribute("uid",uid.toString());
       
       LoginSession loginSession = new LoginSession(session);
       UserManager.checkUser(loginSession);

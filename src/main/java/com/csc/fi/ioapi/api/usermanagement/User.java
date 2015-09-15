@@ -82,9 +82,9 @@ public class User {
         
         LoginSession login = new LoginSession(session);
         
-      // Logger.getLogger(User.class.getName()).log(Level.INFO, "Session created at "+(String)session.getAttribute("creationTime"));
-      
-        Logger.getLogger(User.class.getName()).log(Level.INFO, "USER UID "+session.getAttribute("uid").toString());
+        if(session.getAttribute("uid")!=null){
+            Logger.getLogger(User.class.getName()).log(Level.INFO, "USER UID "+session.getAttribute("uid").toString());
+        }
         
         String queryString;
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
