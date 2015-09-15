@@ -21,7 +21,7 @@ public class LoginSession implements LoginInterface {
 
     @Override
     public boolean isLoggedIn() {
-        return session.getAttribute("uid")!=null;
+        return !(session.getAttribute("main")==null);
     }
 
     @Override

@@ -78,11 +78,13 @@ public class User {
     @Produces("application/ld+json")
     public Response getUser(@ApiParam(value = "email") @QueryParam("email") String email, @Context HttpServletRequest request) {
        
-       // HttpSession session = request.getSession();
+        HttpSession session = request.getSession();
         
-        LoginSession login = new LoginSession(request.getSession());
+        LoginSession login = new LoginSession(session);
         
-       // Logger.getLogger(User.class.getName()).log(Level.INFO, "Session created at "+(String)session.getAttribute("creationTime"));
+      // Logger.getLogger(User.class.getName()).log(Level.INFO, "Session created at "+(String)session.getAttribute("creationTime"));
+      
+        Logger.getLogger(User.class.getName()).log(Level.INFO, "USER UID "+session.getAttribute("uid").toString());
         
         String queryString;
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
