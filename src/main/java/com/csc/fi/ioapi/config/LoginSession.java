@@ -45,7 +45,7 @@ public class LoginSession implements LoginInterface {
         for (int i = 0; i<groups.length;i++){
             int spacePos = groups[i].indexOf(" ");
             if (spacePos > 0) {
-               groups[i] = groups[i].substring(0, spacePos - 1);
+               groups[i] = groups[i].substring(0, spacePos);
             }
         }
         return groups;
