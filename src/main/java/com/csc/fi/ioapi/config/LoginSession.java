@@ -42,10 +42,11 @@ public class LoginSession implements LoginInterface {
     @Override
     public String[] getGroupUris() {
         String[] groups = session.getAttribute("group").toString().split(";");
+        int index = 0;
         for (String g : groups){
             int spacePos = g.indexOf(" ");
             if (spacePos > 0) {
-                g = g.substring(0, spacePos - 1);
+                groups[index++] = g.substring(0, spacePos - 1);
             }
         }
         return groups;
