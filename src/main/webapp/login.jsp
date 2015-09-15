@@ -44,6 +44,14 @@
       %>
       </table>
       
+      <% Object prov = request.getAttribute("Shib-Identity-Provider"); 
+      
+      if(prov!=null) {%>
+      <h1>SHIB attrs</h1>
+       <table border="1" cellpadding="4" cellspacing="0">
+       <tr><td>Shib-Identity-Provider</td><td><%= prov.toString() %></td></tr>
+      <% }%>
+      </table>
       
       <h1>Session variables</h1>
       
