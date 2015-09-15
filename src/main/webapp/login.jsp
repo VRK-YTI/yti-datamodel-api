@@ -16,8 +16,6 @@
       <h1>HTTP Request Headers Received</h1>
       <table border="1" cellpadding="4" cellspacing="0">
       <%
-         
-          
          Enumeration eNames = request.getHeaderNames();
          while (eNames.hasMoreElements()) {
             String name = (String) eNames.nextElement();
@@ -36,10 +34,9 @@
       <h1>HTTP Request attributes</h1>
       <table border="1" cellpadding="4" cellspacing="0">
       <%
-         
          while (aNames.hasMoreElements()) {
             String name = (String) aNames.nextElement();
-            String value = (String) request.getAttribute(name);
+            String value = request.getAttribute(name).toString();
       %>
          <tr><td><%= name %></td><td><%= value %></td></tr>
       <%
