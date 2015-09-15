@@ -44,12 +44,25 @@
       %>
       </table>
       
-      <% Object prov = request.getAttribute("Shib-Identity-Provider"); 
+      <% 
+      
+      Object prov = request.getAttribute("Shib-Identity-Provider"); 
+      Object displayName = request.getAttribute("displayName"); 
+      Object group = request.getAttribute("group"); 
+      Object mail = request.getAttribute("mail");
+      Object sn = request.getAttribute("sn"); 
+      Object uid = request.getAttribute("uid"); 
+
       
       if(prov!=null) {%>
       <h1>SHIB attrs</h1>
        <table border="1" cellpadding="4" cellspacing="0">
        <tr><td>Shib-Identity-Provider</td><td><%= prov.toString() %></td></tr>
+       <%if(displayName!=null){%><tr><td>displayName</td><td><%= displayName.toString() %></td></tr><%}%>
+       <%if(group!=null){%><tr><td>group</td><td><%= group.toString() %></td></tr><%}%>
+       <%if(mail!=null){%><tr><td>mail</td><td><%= mail.toString() %></td></tr><%}%>
+       <%if(sn!=null){%><tr><td>sn</td><td><%= sn.toString() %></td></tr><%}%>
+       <%if(uid!=null){%><tr><td>uid</td><td><%= uid.toString() %></td></tr><%}%>
       <% }%>
       </table>
       
