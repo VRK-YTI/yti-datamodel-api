@@ -41,7 +41,7 @@ public class LoginSession implements LoginInterface {
 
     @Override
     public String[] getGroupUris() {
-        String[] groups = session.getAttribute("groups").toString().split(";");
+        String[] groups = session.getAttribute("group").toString().split(";");
         for (String g : groups){
             int spacePos = g.indexOf(" ");
             if (spacePos > 0) {
