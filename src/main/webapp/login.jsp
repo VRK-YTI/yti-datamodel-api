@@ -3,6 +3,7 @@
     Created on : Sep 9, 2015, 3:18:47 PM
     Author     : malonen
 --%>
+<%@page import="java.util.Arrays"%>
 <%@page import="com.csc.fi.ioapi.config.LoginSession"%>
 <%@page import="java.util.Date"%>
 <%@page import="java.util.Enumeration"%>
@@ -38,7 +39,7 @@
       
       %>
       <h1>Hei <%=displayName.toString()%>!</h1>
-      <div>groups: <%=loginSession.getGroupUris().toString()%></div>
+      <div>groups: <%=Arrays.toString(loginSession.getGroupUris())%></div>
       <%}%>
       
 </html>
