@@ -4,7 +4,6 @@
     Author     : malonen
 --%>
 <%@page import="java.util.Arrays"%>
-<%@page import="com.csc.fi.ioapi.config.LoginSession"%>
 <%@page import="java.util.Date"%>
 <%@page import="java.util.Enumeration"%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
@@ -14,11 +13,11 @@
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
         <title>Welcome</title>
     </head>
+    <body>
       <% 
           
-      //response.setHeader("Refresh", "2;url=/");
-      
-      
+      response.setHeader("Refresh", "2;url=/");
+    
       Object prov = request.getAttribute("Shib-Identity-Provider"); 
       Object displayName = request.getAttribute("displayName"); 
       Object group = request.getAttribute("group"); 
@@ -34,12 +33,10 @@
       session.setAttribute("mail",mail);
       session.setAttribute("uid",uid);
       
-      LoginSession loginSession = new LoginSession(session);
-      
-      
       %>
       <h1>Hei <%=displayName.toString()%>!</h1>
-      <div>groups: <%=Arrays.toString(loginSession.getGroupUris())%></div>
+      <%} else {%>
+      <h1>Kirjautuminen epäonnistui</h1>
       <%}%>
-      
+    </body>
 </html>
