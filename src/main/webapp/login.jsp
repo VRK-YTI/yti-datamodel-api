@@ -18,7 +18,7 @@
     <body>
       <% 
           
-      response.setHeader("Refresh", "2;url=/");
+      //response.setHeader("Refresh", "2;url=/");
     
       Object prov = request.getAttribute("Shib-Identity-Provider"); 
       Object displayName = request.getAttribute("displayName"); 
@@ -26,7 +26,7 @@
       Object mail = request.getAttribute("mail");
       Object sn = request.getAttribute("sn"); 
       Object uid = request.getAttribute("uid"); 
- 
+      
      if (prov!=null){
          
       session.setAttribute("displayName",displayName.toString());
@@ -36,6 +36,8 @@
       
       LoginSession loginSession = new LoginSession(session);
       UserManager.checkUser(loginSession);
+      
+      response.sendRedirect(response.encodeRedirectURL(request.getContextPath()+ "/"));
       
       %>
       <h1>Hei <%=displayName.toString()%>!</h1>
