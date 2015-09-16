@@ -37,10 +37,11 @@
       LoginSession loginSession = new LoginSession(session);
       UserManager.checkUser(loginSession);
       
+      /*
       if (request.isSecure()) { // it is HTTPS
             response.sendRedirect(response.encodeRedirectURL("http://"+request.getServerName()));
         }
-      
+      */
       
       %>
       <h1>Hei <%=displayName.toString()%>!</h1>
