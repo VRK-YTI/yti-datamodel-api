@@ -20,20 +20,8 @@
           
       //response.setHeader("Refresh", "2;url=/");
     
-      Object prov = request.getAttribute("Shib-Identity-Provider"); 
-      Object displayName = request.getAttribute("displayName"); 
-      Object group = request.getAttribute("group"); 
-      Object mail = request.getAttribute("mail");
-      Object sn = request.getAttribute("sn"); 
-      Object uid = request.getAttribute("uid"); 
-      
-     if (prov!=null){
+     if (session.getAttribute("displayName")!=null){
          
-      session.setAttribute("displayName",displayName.toString());
-      session.setAttribute("group",group.toString());
-      session.setAttribute("mail",mail.toString());
-      session.setAttribute("uid",uid.toString());
-      
       LoginSession loginSession = new LoginSession(session);
       UserManager.checkUser(loginSession);
       
@@ -44,7 +32,7 @@
       */
       
       %>
-      <h1>Hei <%=displayName.toString()%>!</h1>
+      <h1>Hei <%=session.getAttribute("displayName")%>!</h1>
       <%} else {%>
       <h1>Kirjautuminen epäonnistui</h1>
       <%}%>

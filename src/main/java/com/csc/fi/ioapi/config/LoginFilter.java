@@ -20,6 +20,7 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 /**
  *
@@ -104,12 +105,28 @@ public class LoginFilter implements Filter {
             throws IOException, ServletException {
         
         HttpServletRequest httpRequest = (HttpServletRequest) request;
+        HttpSession session = httpRequest.getSession(false);
         HttpServletResponse httpResponse = (HttpServletResponse) response;
         String requestURI = httpRequest.getRequestURL().toString();
         
+        Object prov = request.getAttribute("Shib-Identity-Provider"); 
+        Object displayName = request.getAttribute("displayName"); 
+        Object group = request.getAttribute("group"); 
+        Object mail = request.getAttribute("mail");
+        Object sn = request.getAttribute("sn"); 
+        Object uid = request.getAttribute("uid"); 
+        
+        if(prov!=null) {  
+            Logger.getLogger(LoginFilter.class.getName()).log(Level.INFO, displayName.toString()+ " from "+prov.toString());
+            session.setAttribute("displayName",displayName.toString());
+            session.setAttribute("group",group.toString());
+            session.setAttribute("mail",mail.toString());
+            session.setAttribute("uid",uid.toString());
+        }
+          
         requestURI = httpResponse.encodeRedirectURL(requestURI);
         requestURI = requestURI.replaceFirst("https", "http");
-        requestURI = requestURI.replaceFirst("/login", "/welcome;jsessionid="+httpRequest.getSession().getId());
+        requestURI = requestURI.replaceFirst("/login", "/welcome");
         
         Logger.getLogger(LoginFilter.class.getName()).log(Level.INFO, requestURI);
   
