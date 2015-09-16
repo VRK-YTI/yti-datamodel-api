@@ -24,14 +24,9 @@
   <script src='lib/swagger-oauth.js' type='text/javascript'></script>
   <script type="text/javascript">
     $(function () {
-      var url = window.location.search.match(/url=([^&]+)/);
-      if (url && url.length > 1) {
-        url = url[1];
-      } else {
-        url = window.location.href;
-        console.log(url);
-        url = url.replace("swagger-ui","rest/api-docs")
-      }
+      var url = window.location.href;
+      url = url.replace("swagger-ui","rest/api-docs")
+   
       window.swaggerUi = new SwaggerUi({
         url: url,
         dom_id: "swagger-ui-container",
