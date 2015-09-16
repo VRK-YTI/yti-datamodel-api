@@ -107,12 +107,13 @@ public class LoginFilter implements Filter {
         HttpServletResponse httpResponse = (HttpServletResponse) response;
         String requestURI = httpRequest.getRequestURL().toString();
         
+        requestURI = httpResponse.encodeRedirectURL(requestURI);
         requestURI = requestURI.replaceFirst("https", "http");
-        requestURI = requestURI.replaceFirst("/login", "/welcome");
+        requestURI = requestURI.replaceFirst("/login", "/welcome;jsessionid="+httpRequest.getSession().getId());
         
         Logger.getLogger(LoginFilter.class.getName()).log(Level.INFO, requestURI);
   
-        httpResponse.sendRedirect(httpResponse.encodeRedirectURL(requestURI));
+        httpResponse.sendRedirect(requestURI);
                 
     /*    
         
