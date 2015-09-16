@@ -20,7 +20,6 @@
           
      if (session.getAttribute("displayName")!=null){
       
-         
       response.setHeader("Refresh", "1;url=/?login=true&user="+session.getAttribute("mail"));
          
       LoginSession loginSession = new LoginSession(session);

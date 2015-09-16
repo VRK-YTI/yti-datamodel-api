@@ -82,8 +82,10 @@ public class User {
         
         LoginSession login = new LoginSession(session);
         
-        if(session.getAttribute("uid")!=null){
-            Logger.getLogger(User.class.getName()).log(Level.INFO, "USER UID "+session.getAttribute("uid").toString());
+        if(session.getAttribute("mail")!=null){
+            Logger.getLogger(User.class.getName()).log(Level.INFO, "USER mail: "+session.getAttribute("mail"));
+        } else {
+             Logger.getLogger(User.class.getName()).log(Level.INFO, "Not logged in?");
         }
         
         String queryString;
