@@ -18,22 +18,21 @@
     <body>
       <% 
           
-      //response.setHeader("Refresh", "2;url=/");
-    
      if (session.getAttribute("displayName")!=null){
+      
+         
+      response.setHeader("Refresh", "1;url=/?login=true&user="+session.getAttribute("mail"));
          
       LoginSession loginSession = new LoginSession(session);
       UserManager.checkUser(loginSession);
       
-      /*
-      if (request.isSecure()) { // it is HTTPS
-            response.sendRedirect(response.encodeRedirectURL("http://"+request.getServerName()));
-        }
-      */
-      
       %>
       <h1>Hei <%=session.getAttribute("displayName")%>!</h1>
-      <%} else {%>
+      <%} else {
+      
+      response.setHeader("Refresh", "1;url=/?login=false");
+      
+      %>
       <h1>Kirjautuminen epäonnistui</h1>
       <%}%>
     </body>
