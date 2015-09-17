@@ -43,7 +43,7 @@ public class Search {
     @Context ServletContext context;
 
     public String ModelSparqlDataEndpoint() {
-       return Endpoint.getEndpoint()+"/core/sparql";
+       return Endpoint.getEndpoint()+"/search/sparql";
     }
             
   @GET
