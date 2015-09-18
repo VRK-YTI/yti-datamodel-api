@@ -77,7 +77,7 @@ public class Class {
             ParameterizedSparqlString pss = new ParameterizedSparqlString();
             pss.setNsPrefixes(LDHelper.PREFIX_MAP);
 
-            queryString = "CONSTRUCT { ?class rdfs:label ?label . ?class rdfs:comment ?comment . ?class rdfs:isDefinedBy ?library . } WHERE { ?class rdfs:label ?label . OPTIONAL { ?class rdfs:comment ?comment } . ?class a sh:ShapeClass . ?library iow:classes ?class . }"; 
+            queryString = "CONSTRUCT { ?class a sh:ShapeClass . ?class ?p ?o . ?class sh:property ?prop . ?prop ?pp ?po . ?class rdfs:isDefinedBy ?library . } WHERE { ?class a sh:ShapeClass . ?class ?p ?o . ?class sh:property ?prop . ?prop ?pp ?po . ?library iow:classes ?class . }"; 
 
             if(id!=null && !id.equals("undefined"))
                    pss.setIri("class", id);
@@ -86,8 +86,8 @@ public class Class {
                    pss.setIri("library", model);
            
             pss.setCommandText(queryString);
-            Logger.getLogger(Class.class.getName()).log(Level.INFO, pss.toString());
-          
+            Logger.getLogger(Class.class.getName()).log(Level.INFO, pss.toString()); 
+         
             Client client = Client.create();
 
             WebResource webResource = client.resource(ModelSparqlDataEndpoint())

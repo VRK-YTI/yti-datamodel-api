@@ -5,6 +5,7 @@
  */
 package com.csc.fi.ioapi.utils;
 
+import com.csc.fi.ioapi.config.Endpoint;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -97,10 +98,10 @@ public class ServiceDescriptionManager {
  
     }
         
-    public static void deleteGraphDescription(String service, String graph) {
+    public static void deleteGraphDescription(String graph) {
         
         String query =
-                "WITH <urn:csc:iow:sd>"+
+                "WITH <urn:csc:iow:sd> "+
                 "DELETE { "+
                 " ?graph ?p ?o "+
                 "} WHERE {"+
@@ -114,11 +115,14 @@ public class ServiceDescriptionManager {
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
 
-        pss.setLiteral("graphName", graph);
+        pss.setIri("graphName", graph);
         pss.setCommandText(query);
 
+         Logger.getLogger(ServiceDescriptionManager.class.getName()).log(Level.WARNING,"Removing "+graph);
+        Logger.getLogger(ServiceDescriptionManager.class.getName()).log(Level.WARNING, pss.toString());
+        
         UpdateRequest queryObj = pss.asUpdate();
-        UpdateProcessor qexec=UpdateExecutionFactory.createRemoteForm(queryObj,service);
+        UpdateProcessor qexec=UpdateExecutionFactory.createRemoteForm(queryObj,Endpoint.getEndpoint()+"/core/update");
         qexec.execute();
         
       

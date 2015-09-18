@@ -104,7 +104,6 @@ public class Model {
             pss.setNsPrefixes(LDHelper.PREFIX_MAP);
 
             queryString = "CONSTRUCT { ?graphName rdfs:label ?label . ?graphName dcterms:identifier ?g . ?graphName dcterms:isPartOf ?group . ?graphName a sd:NamedGraph . } WHERE { ?graph sd:name ?graphName . ?graph a sd:NamedGraph ; dcterms:isPartOf ?group . GRAPH ?graphName {  ?g a owl:Ontology . ?g rdfs:label ?label }}"; 
-
             pss.setIri("group", group);
             pss.setCommandText(queryString);
            
@@ -264,14 +263,16 @@ public class Model {
             WebResource.Builder builder = webResource.header("Content-type", "application/ld+json");
             ClientResponse response = builder.delete(ClientResponse.class);
 
+           if(!(graph.equals("undefined") || graph.equals("default"))) {
+               ServiceDescriptionManager.deleteGraphDescription(graph);
+           }
+            
             if (response.getStatus() != 204) {
                Logger.getLogger(Model.class.getName()).log(Level.WARNING, graph+" was not deleted! Status "+response.getStatus());
                return Response.status(response.getStatus()).build();
             }
 
-            if(!(graph.equals("undefined") || graph.equals("default"))) {
-               ServiceDescriptionManager.deleteGraphDescription(ModelSparqlUpdateEndpoint(), graph);
-           }
+
 
             Logger.getLogger(Model.class.getName()).log(Level.INFO, graph+" deleted successfully!");
             return Response.status(204).build();

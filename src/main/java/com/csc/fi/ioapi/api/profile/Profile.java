@@ -273,7 +273,7 @@ public class Profile {
             }
 
             if(!(graph.equals("undefined") || graph.equals("default"))) {
-               ServiceDescriptionManager.deleteGraphDescription(ProfileSparqlUpdateEndpoint(), graph);
+               ServiceDescriptionManager.deleteGraphDescription(graph);
            }
 
             Logger.getLogger(Profile.class.getName()).log(Level.INFO, graph+" deleted successfully!");
