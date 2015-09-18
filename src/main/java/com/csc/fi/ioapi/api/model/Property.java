@@ -74,7 +74,7 @@ public class Property {
             ParameterizedSparqlString pss = new ParameterizedSparqlString();
             pss.setNsPrefixes(LDHelper.PREFIX_MAP);
 
-            queryString = "CONSTRUCT { ?property rdfs:label ?label . ?property rdfs:comment ?comment . ?property a ?type . ?property rdfs:isDefinedBy ?library } WHERE { ?property rdfs:label ?label . OPTIONAL { ?property rdfs:comment ?comment . } ?property a ?type . VALUES ?rel { iow:associations iow:attributes } ?library ?rel ?property }"; 
+            queryString = "CONSTRUCT { ?property ?p ?o . ?property rdfs:isDefinedBy ?library } WHERE { ?property ?p ?o . VALUES ?rel { iow:associations iow:attributes } ?library ?rel ?property }"; 
 
             if(id!=null && !id.equals("undefined"))
             pss.setIri("property", id);
