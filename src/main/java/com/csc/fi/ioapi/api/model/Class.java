@@ -77,13 +77,16 @@ public class Class {
             ParameterizedSparqlString pss = new ParameterizedSparqlString();
             pss.setNsPrefixes(LDHelper.PREFIX_MAP);
 
-            queryString = "CONSTRUCT { ?class a sh:ShapeClass . ?class ?p ?o . ?class sh:property ?prop . ?prop ?pp ?po . ?class rdfs:isDefinedBy ?library . } WHERE { ?class a sh:ShapeClass . ?class ?p ?o . ?class sh:property ?prop . ?prop ?pp ?po . ?library iow:classes ?class . }"; 
-
-            if(id!=null && !id.equals("undefined"))
+            if(model!=null && !model.equals("undefined")) {
+                queryString = "CONSTRUCT { ?class a sh:ShapeClass . ?class rdfs:label ?label . ?class rdfs:isDefinedBy ?library . } WHERE { ?class a sh:ShapeClass . ?class rdfs:label ?label . ?library iow:classes ?class . }"; 
+                pss.setIri("library", model);
+            } else {
+                /* Get all properties for the classes */
+                queryString = "CONSTRUCT { ?class a sh:ShapeClass . ?class ?p ?o . ?class sh:property ?prop . ?prop ?pp ?po . ?class rdfs:isDefinedBy ?library . } WHERE { ?class a sh:ShapeClass . ?class ?p ?o . ?class sh:property ?prop . ?prop ?pp ?po . ?library iow:classes ?class . }"; 
+            }
+            
+           if(id!=null && !id.equals("undefined"))
                    pss.setIri("class", id);
-           
-            if(model!=null && !model.equals("undefined"))
-                   pss.setIri("library", model);
            
             pss.setCommandText(queryString);
             Logger.getLogger(Class.class.getName()).log(Level.INFO, pss.toString()); 
