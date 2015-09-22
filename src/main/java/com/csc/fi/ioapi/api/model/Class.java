@@ -83,7 +83,7 @@ public class Class {
                 pss.setIri("class", id);
             }
             else {
-                queryString = "CONSTRUCT { ?class a sh:ShapeClass . ?class rdfs:label ?label . ?class rdfs:isDefinedBy ?library . } WHERE { GRAPH ?library {?class a sh:ShapeClass . ?class rdfs:label ?label . ?library iow:classes ?class . }}"; 
+                queryString = "CONSTRUCT { ?class a sh:ShapeClass . ?class rdfs:label ?label . ?class rdfs:isDefinedBy ?graph . } WHERE { ?library iow:classes ?class . GRAPH ?graph { ?class a sh:ShapeClass . ?class rdfs:label ?label . } }"; 
             } 
             
              if(model!=null && !model.equals("undefined")) {
