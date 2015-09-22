@@ -79,11 +79,11 @@ public class Class {
 
   
             if(id!=null && !id.equals("undefined")) {
-                queryString = "CONSTRUCT { ?class a sh:ShapeClass . ?class ?p ?o . ?class sh:property ?prop . ?prop ?pp ?po . ?class rdfs:isDefinedBy ?library . } WHERE { GRAPH ?library { ?class a sh:ShapeClass . ?class ?p ?o . ?class sh:property ?prop . ?prop ?pp ?po . ?library iow:classes ?class . }}"; 
+                queryString = "CONSTRUCT { ?class a sh:ShapeClass . ?class ?p ?o . ?class sh:property ?prop . ?prop ?pp ?po . ?class rdfs:isDefinedBy ?library . } WHERE { GRAPH ?library { ?library iow:classes ?class . ?class a sh:ShapeClass . ?class ?p ?o . ?class sh:property ?prop . ?prop ?pp ?po .  }}"; 
                 pss.setIri("class", id);
             }
             else {
-                queryString = "CONSTRUCT { ?class a sh:ShapeClass . ?class rdfs:label ?label . ?class rdfs:isDefinedBy ?graph . } WHERE { ?library iow:classes ?class . GRAPH ?graph { ?class a sh:ShapeClass . ?class rdfs:label ?label . } }"; 
+                queryString = "CONSTRUCT { ?class a sh:ShapeClass . ?class rdfs:label ?label . ?class rdfs:isDefinedBy ?graph. } WHERE { ?library iow:classes ?class . GRAPH ?graph { ?class a sh:ShapeClass . ?class rdfs:label ?label . } }"; 
             } 
             
              if(model!=null && !model.equals("undefined")) {

@@ -74,13 +74,16 @@ public class Property {
             ParameterizedSparqlString pss = new ParameterizedSparqlString();
             pss.setNsPrefixes(LDHelper.PREFIX_MAP);
 
-            queryString = "CONSTRUCT { ?property ?p ?o . ?property rdfs:isDefinedBy ?library } WHERE { ?property ?p ?o . VALUES ?rel { iow:associations iow:attributes } ?library ?rel ?property }"; 
-
-            if(id!=null && !id.equals("undefined"))
-            pss.setIri("property", id);
+            if(id!=null && !id.equals("undefined")) {
+                queryString = "CONSTRUCT { ?property ?p ?o . ?property rdfs:isDefinedBy ?library } WHERE { VALUES ?rel { iow:associations iow:attributes } ?library ?rel ?property . GRAPH ?library { ?property ?p ?o . }}"; 
+                pss.setIri("property", id);
+            } else {
+                queryString = "CONSTRUCT { ?property rdfs:label ?label . ?property rdfs:isDefinedBy ?graph . } WHERE { VALUES ?rel { iow:associations iow:attributes } ?library ?rel ?property . GRAPH ?graph { ?property rdfs:label ?label . } }"; 
+            }
             
-            if(model!=null && !model.equals("undefined"))
-            pss.setIri("library", model);
+            if(model!=null && !model.equals("undefined")) {
+                pss.setIri("library", model);
+            }
             
             pss.setCommandText(queryString);
            
