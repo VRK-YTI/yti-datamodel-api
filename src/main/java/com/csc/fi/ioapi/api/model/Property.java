@@ -78,7 +78,7 @@ public class Property {
                 queryString = "CONSTRUCT { ?property ?p ?o . ?property rdfs:isDefinedBy ?library } WHERE { VALUES ?rel { iow:associations iow:attributes } ?library ?rel ?property . GRAPH ?library { ?property ?p ?o . }}"; 
                 pss.setIri("property", id);
             } else {
-                queryString = "CONSTRUCT { ?property rdfs:label ?label . ?property rdfs:isDefinedBy ?graph . } WHERE { VALUES ?rel { iow:associations iow:attributes } ?library ?rel ?property . GRAPH ?graph { ?property rdfs:label ?label . } }"; 
+                queryString = "CONSTRUCT { ?property rdfs:label ?label . ?property a ?type . ?property rdfs:isDefinedBy ?graph . } WHERE { VALUES ?rel { iow:associations iow:attributes } ?library ?rel ?property . GRAPH ?graph { ?property rdfs:label ?label . ?property a ?type . } }"; 
             }
             
             if(model!=null && !model.equals("undefined")) {
