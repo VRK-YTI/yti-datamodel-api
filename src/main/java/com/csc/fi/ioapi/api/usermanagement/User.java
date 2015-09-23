@@ -106,7 +106,7 @@ public class User {
               if(email.equals("testi@example.org"))
                     pss.setLiteral("login", true);
                   else
-                    pss.setLiteral("login", login.isLoggedIn());
+                    pss.setLiteral("login", login.isLoggedIn(email));
               
         } 
         

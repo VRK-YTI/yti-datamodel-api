@@ -14,7 +14,7 @@ import javax.servlet.http.HttpSession;
  */
 public interface LoginInterface {
     
-    public boolean isLoggedIn();
+    public boolean isLoggedIn(String email);
     
     public boolean isInGroup(String group);
    
