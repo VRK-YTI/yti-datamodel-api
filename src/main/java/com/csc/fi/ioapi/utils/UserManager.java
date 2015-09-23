@@ -119,10 +119,12 @@ public class UserManager {
         }
         
          String query = 
-                "DELETE DATA { GRAPH <urn:csc:users> { ?id dcterms:modified ?oldTime . } "+
-                "INSERT DATA { GRAPH <urn:csc:users> { ?id a foaf:Person . "+
-                 "?id dcterms:modified ?timestamp . "+ groups +
-                "}}";
+                "WITH <urn:csc:users> "+
+                "DELETE { ?id dcterms:modified ?oldTime . } "+
+                "INSERT { ?id dcterms:modified ?timestamp . "+ groups +
+                "} WHERE {"+
+                "?id a foaf:Person }";
+                 
          
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
