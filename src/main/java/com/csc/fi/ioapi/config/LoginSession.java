@@ -5,6 +5,7 @@
  */
 package com.csc.fi.ioapi.config;
 
+import java.util.HashMap;
 import javax.servlet.http.HttpSession;
 
 /**
@@ -40,15 +41,25 @@ public class LoginSession implements LoginInterface {
     }
 
     @Override
-    public String[] getGroupUris() {
-        String[] groups = session.getAttribute("group").toString().split(";");
-        for (int i = 0; i<groups.length;i++){
-            int spacePos = groups[i].indexOf(" ");
-            if (spacePos > 0) {
-               groups[i] = groups[i].substring(0, spacePos);
+    public HashMap<String,Boolean> getGroups() {
+        HashMap groups = new HashMap();
+        
+        String[] groupString = session.getAttribute("group").toString().split(";");
+        
+        for (int i = 0; i<groupString.length;i++){
+            
+            String[] myGroup = groupString[i].split("_");
+            
+            if(myGroup[0].startsWith("https://tt.eduuni.fi/sites/csc-iow#")) {
+                if(myGroup[1].equals("_ADMINS")) {
+                    groups.put(myGroup[0], true); }
+                else {
+                    groups.put(myGroup[0], false); }
             }
         }
+        
         return groups;
+       
     }
     
 }

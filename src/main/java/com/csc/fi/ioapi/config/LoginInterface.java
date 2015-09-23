@@ -5,6 +5,7 @@
  */
 package com.csc.fi.ioapi.config;
 
+import java.util.HashMap;
 import javax.servlet.http.HttpSession;
 
 /**
@@ -21,6 +22,6 @@ public interface LoginInterface {
     
     public String getEmail();
     
-    public String[] getGroupUris();
+    public HashMap<String,Boolean> getGroups();
     
 }

@@ -20,6 +20,8 @@ import com.hp.hpl.jena.query.QueryExecutionFactory;
 import com.hp.hpl.jena.update.UpdateExecutionFactory;
 import com.hp.hpl.jena.update.UpdateProcessor;
 import com.hp.hpl.jena.update.UpdateRequest;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -78,10 +80,22 @@ public class UserManager {
         
         
         String groups = "";
-        for(String g : loginSession.getGroupUris()) {
+        
+        HashMap allGroups = loginSession.getGroups();
+        Iterator<String> groupIterator = allGroups.keySet().iterator();
+        
+        while(groupIterator.hasNext()) {
+            String group = groupIterator.next();
+            Node n = NodeFactory.createURI(group);
+            groups = groups+"?id dcterms:isPartOf <"+n.getURI()+"> . "+(allGroups.get(group).equals(true)?" ?id iow:isAdminOf <"+n.getURI()+"> . ":"");
+        }
+        
+        /*
+        for(String g : loginSession.getGroups()) {
             Node n = NodeFactory.createURI(g);
             groups = groups+"?id dcterms:isPartOf <"+n.getURI()+"> . ";
         }
+                */
         
          String query = 
                 "INSERT DATA { GRAPH <urn:csc:users> { ?id a foaf:Person . "+
@@ -113,17 +127,28 @@ public class UserManager {
         
         
         String groups = "";
+        
+        HashMap allGroups = loginSession.getGroups();
+        Iterator<String> groupIterator = allGroups.keySet().iterator();
+        
+        while(groupIterator.hasNext()) {
+            String group = groupIterator.next();
+            Node n = NodeFactory.createURI(group);
+            groups = groups+"?id dcterms:isPartOf <"+n.getURI()+"> . "+(allGroups.get(group).equals(true)?" ?id iow:isAdminOf <"+n.getURI()+"> . ":"");
+        }
+        
+        /*
         for(String g : loginSession.getGroupUris()) {
             Node n = NodeFactory.createURI(g);
             groups = groups+"?id dcterms:isPartOf <"+n.getURI()+"> . ";
-        }
+        }*/
         
          String query = 
                 "WITH <urn:csc:users> "+
-                "DELETE { ?id dcterms:modified ?oldTime . } "+
+                "DELETE { ?id dcterms:modified ?oldTime . ?id dcterms:isPartOf ?group . ?id iow:isAdminOf ?group . } "+
                 "INSERT { ?id dcterms:modified ?timestamp . "+ groups +
                 "} WHERE {"+
-                "?id a foaf:Person }";
+                "?id a foaf:Person . ?id dcterms:modified ?oldTime . OPTIONAL {?id dcterms:isPartOf ?group .} OPTIONAL {?id iow:isAdminOf ?group .}}";
                  
          
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
@@ -139,8 +164,8 @@ public class UserManager {
         UpdateRequest queryObj = pss.asUpdate();
         UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj,userEndpoint());
         qexec.execute();
-       
- 
+        
+
     }
 
 }
