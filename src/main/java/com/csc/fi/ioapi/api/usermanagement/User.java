@@ -94,7 +94,7 @@ public class User {
             
         ResponseBuilder rb;
 
-        queryString = "CONSTRUCT { ?id a foaf:Person ; foaf:name ?name . ?id iow:login ?login . ?id dcterms:created ?created . ?id dcterms:modified ?modified . ?id dcterms:isPartOf ?group . } WHERE { GRAPH <urn:csc:users> { ?id a foaf:Person ; foaf:name ?name; foaf:mbox ?email ; dcterms:created ?created . OPTIONAL { ?id dcterms:isPartOf ?group . } OPTIONAL { ?id dcterms:modified ?modified . }}}"; 
+        queryString = "CONSTRUCT { ?id a foaf:Person ; foaf:name ?name . ?id iow:login ?login . ?id dcterms:created ?created . ?id dcterms:modified ?modified . ?id dcterms:isPartOf ?group . ?id dcterms:isAdminOf ?group . } WHERE { GRAPH <urn:csc:users> { ?id a foaf:Person ; foaf:name ?name; foaf:mbox ?email ; dcterms:created ?created . OPTIONAL { ?id dcterms:isPartOf ?group . } OPTIONAL { ?id iow:isAdminOf ?group . } OPTIONAL { ?id dcterms:modified ?modified . }}}"; 
          
         pss.setCommandText(queryString);
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
