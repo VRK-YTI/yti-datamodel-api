@@ -51,10 +51,10 @@ public class LoginSession implements LoginInterface {
             String[] myGroup = groupString[i].split("_");
             
             if(myGroup[0].startsWith("https://tt.eduuni.fi/sites/csc-iow#")) {
-                if(myGroup[1].equals("_ADMINS")) {
-                    groups.put(myGroup[0], true); }
+                if(myGroup[1].equals("ADMINS")) {
+                    groups.put(myGroup[0], Boolean.TRUE); }
                 else {
-                    groups.put(myGroup[0], false); }
+                    groups.put(myGroup[0], Boolean.FALSE); }
             }
         }
         
