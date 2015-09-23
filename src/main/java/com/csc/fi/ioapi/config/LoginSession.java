@@ -22,7 +22,7 @@ public class LoginSession implements LoginInterface {
 
     @Override
     public boolean isLoggedIn(String email) {
-        return session.getAttribute("mail").equals(email);
+        return (session.getAttribute("mail")!=null && session.getAttribute("mail").equals(email));
     }
 
     @Override
