@@ -134,6 +134,7 @@ public class UserManager {
         while(groupIterator.hasNext()) {
             String group = groupIterator.next();
             Node n = NodeFactory.createURI(group);
+            Logger.getLogger(UserManager.class.getName()).log(Level.INFO, group+" is "+allGroups.get(group).booleanValue());
             groups = groups+"?id dcterms:isPartOf <"+n.getURI()+"> . "+(allGroups.get(group).booleanValue()==true?" ?id iow:isAdminOf <"+n.getURI()+"> . ":"");
         }
         
