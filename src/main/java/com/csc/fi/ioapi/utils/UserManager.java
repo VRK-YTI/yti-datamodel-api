@@ -65,9 +65,7 @@ public class UserManager {
     public static void checkUser(LoginSession loginSession) {
         
         if(isExistingUser(loginSession.getEmail())) {
-            
-            Logger.getLogger(UserManager.class.getName()).log(Level.INFO, loginSession.getDisplayName()+" is existing user!");
-            
+            updateUser(loginSession);
         } else {
             createUser(loginSession);
         }
@@ -121,7 +119,7 @@ public class UserManager {
         }
         
          String query = 
-                "DELETE DATA { GRAPH <urn:csc:users> { ?id dcterms:modified ?oldTime } "+
+                "DELETE DATA { GRAPH <urn:csc:users> { ?id dcterms:modified ?oldTime . } "+
                 "INSERT DATA { GRAPH <urn:csc:users> { ?id a foaf:Person . "+
                  "?id dcterms:modified ?timestamp . "+ groups +
                 "}}";
