@@ -81,13 +81,13 @@ public class UserManager {
         
         String groups = "";
         
-        HashMap allGroups = loginSession.getGroups();
+        HashMap<String,Boolean> allGroups = loginSession.getGroups();
         Iterator<String> groupIterator = allGroups.keySet().iterator();
         
         while(groupIterator.hasNext()) {
             String group = groupIterator.next();
             Node n = NodeFactory.createURI(group);
-            groups = groups+"?id dcterms:isPartOf <"+n.getURI()+"> . "+(allGroups.get(group).equals(true)?" ?id iow:isAdminOf <"+n.getURI()+"> . ":"");
+            groups = groups+"?id dcterms:isPartOf <"+n.getURI()+"> . "+(allGroups.get(group).booleanValue()?" ?id iow:isAdminOf <"+n.getURI()+"> . ":"");
         }
         
         /*
@@ -135,7 +135,7 @@ public class UserManager {
             String group = groupIterator.next();
             Node n = NodeFactory.createURI(group);
             Logger.getLogger(UserManager.class.getName()).log(Level.INFO, group+" is "+allGroups.get(group).booleanValue());
-            groups = groups+"?id dcterms:isPartOf <"+n.getURI()+"> . "+(allGroups.get(group).booleanValue()==true?" ?id iow:isAdminOf <"+n.getURI()+"> . ":"");
+            groups = groups+"?id dcterms:isPartOf <"+n.getURI()+"> . "+(allGroups.get(group).booleanValue()?" ?id iow:isAdminOf <"+n.getURI()+"> . ":"");
         }
         
         /*
