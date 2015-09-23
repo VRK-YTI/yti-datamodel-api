@@ -49,6 +49,7 @@ public class LoginServlet extends HttpServlet {
         
         if(prov!=null) {  
             Logger.getLogger(LoginServlet.class.getName()).log(Level.INFO, displayName.toString()+ " logged in from "+prov.toString());
+            Logger.getLogger(LoginServlet.class.getName()).log(Level.INFO, "Groups: "+group.toString());
             session.setAttribute("displayName",displayName.toString());
             session.setAttribute("group",group.toString());
             session.setAttribute("mail",mail.toString());
