@@ -52,7 +52,8 @@ public class LoginFilter implements Filter {
             FilterChain chain)
             throws IOException, ServletException {
         
-        Logger.getLogger(LoginFilter.class.getName()).log(Level.INFO, "FILTERING!");
+        /* TO BE REMOVED */
+      /*  Logger.getLogger(LoginFilter.class.getName()).log(Level.INFO, "FILTERING!");
         
         HttpServletRequest httpRequest = (HttpServletRequest) request;
         HttpSession session = httpRequest.getSession();
@@ -83,6 +84,7 @@ public class LoginFilter implements Filter {
         //request.getRequestDispatcher("/err").forward(httpRequest, httpResponse); 
                
         httpResponse.sendRedirect("/");
+        */
                 
     }
 

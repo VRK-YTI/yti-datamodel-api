@@ -108,5 +108,39 @@ public class UserManager {
        
  
     }
+    
+        public static void updateUser(LoginSession loginSession) {
+        
+        String timestamp = fmt.format(new Date());
+        
+        
+        String groups = "";
+        for(String g : loginSession.getGroupUris()) {
+            Node n = NodeFactory.createURI(g);
+            groups = groups+"?id dcterms:isPartOf <"+n.getURI()+"> . ";
+        }
+        
+         String query = 
+                "DELETE DATA { GRAPH <urn:csc:users> { ?id dcterms:modified ?oldTime } "+
+                "INSERT DATA { GRAPH <urn:csc:users> { ?id a foaf:Person . "+
+                 "?id dcterms:modified ?timestamp . "+ groups +
+                "}}";
+         
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+        pss.setIri("id","mailto:"+loginSession.getEmail());
+        pss.setLiteral("name", loginSession.getDisplayName());
+        pss.setLiteral("mail", loginSession.getEmail());
+        pss.setLiteral("timestamp", timestamp,XSDDatatype.XSDdateTime);
+        pss.setCommandText(query);
+        
+        Logger.getLogger(UserManager.class.getName()).log(Level.WARNING, pss.toString()+" "+userEndpoint());
+        
+        UpdateRequest queryObj = pss.asUpdate();
+        UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj,userEndpoint());
+        qexec.execute();
+       
+ 
+    }
 
 }

@@ -5,6 +5,7 @@
  */
 package com.csc.fi.ioapi.config;
 
+import com.csc.fi.ioapi.utils.UserManager;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.logging.Level;
@@ -47,12 +48,16 @@ public class LoginServlet extends HttpServlet {
         Object uid = request.getAttribute("uid"); 
         
         if(prov!=null) {  
-            Logger.getLogger(LoginServlet.class.getName()).log(Level.INFO, displayName.toString()+ " from "+prov.toString());
+            Logger.getLogger(LoginServlet.class.getName()).log(Level.INFO, displayName.toString()+ " logged in from "+prov.toString());
             session.setAttribute("displayName",displayName.toString());
             session.setAttribute("group",group.toString());
             session.setAttribute("mail",mail.toString());
             session.setAttribute("uid",uid.toString());
             httpResponse.sendRedirect("/?login=true&user="+mail.toString());
+            
+            LoginSession loginSession = new LoginSession(session);
+            UserManager.checkUser(loginSession);
+
         } else {
             Logger.getLogger(LoginServlet.class.getName()).log(Level.INFO, "NOT LOGGED IN");
             httpResponse.sendRedirect("/?login=false");
