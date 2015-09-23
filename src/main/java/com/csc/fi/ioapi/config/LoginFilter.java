@@ -52,6 +52,8 @@ public class LoginFilter implements Filter {
             FilterChain chain)
             throws IOException, ServletException {
         
+        Logger.getLogger(LoginFilter.class.getName()).log(Level.INFO, "FILTERING!");
+        
         HttpServletRequest httpRequest = (HttpServletRequest) request;
         HttpSession session = httpRequest.getSession();
         HttpServletResponse httpResponse = (HttpServletResponse) response;
@@ -72,13 +74,15 @@ public class LoginFilter implements Filter {
             session.setAttribute("uid",uid.toString());
         }
           
-        requestURI = httpResponse.encodeRedirectURL(requestURI);
-        requestURI = requestURI.replaceFirst("https", "http");
-        requestURI = requestURI.replaceFirst("/login", "/welcome");
+       //requestURI = httpResponse.encodeRedirectURL(requestURI);
+      //  requestURI = requestURI.replaceFirst("https", "http");
+       // requestURI = requestURI.replaceFirst("/login", "/welcome");
         
-        Logger.getLogger(LoginFilter.class.getName()).log(Level.INFO, requestURI);
+      //  Logger.getLogger(LoginFilter.class.getName()).log(Level.INFO, httpRequest.getRequestURI());
   
-        httpResponse.sendRedirect(requestURI);
+        //request.getRequestDispatcher("/err").forward(httpRequest, httpResponse); 
+               
+        httpResponse.sendRedirect("/");
                 
     }
 
