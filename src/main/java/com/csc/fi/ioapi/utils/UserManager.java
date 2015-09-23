@@ -149,7 +149,7 @@ public class UserManager {
                 "DELETE { ?id dcterms:modified ?oldTime . ?id dcterms:isPartOf ?group . ?id iow:isAdminOf ?group . } "+
                 "INSERT { ?id dcterms:modified ?timestamp . "+ groups +
                 "} WHERE {"+
-                "?id a foaf:Person . ?id dcterms:modified ?oldTime . OPTIONAL {?id dcterms:isPartOf ?group .} OPTIONAL {?id iow:isAdminOf ?group .}}";
+                "?id a foaf:Person . OPTIONAL {?id dcterms:modified ?oldTime .} OPTIONAL {?id dcterms:isPartOf ?group .} OPTIONAL {?id iow:isAdminOf ?group .}}";
                  
          
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
