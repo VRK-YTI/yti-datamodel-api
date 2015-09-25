@@ -104,7 +104,7 @@ public class StartUpListener implements ServletContextListener {
     
     private void createDefaultGraph() {
         
-        String serviceURI = Endpoint.getEndpoint()+"/core/data";
+        String serviceURI = Endpoint.getEndpoint()+"/search/data";
  
         DatasetAccessor accessor = DatasetAccessorFactory.createHTTP(serviceURI);
         
