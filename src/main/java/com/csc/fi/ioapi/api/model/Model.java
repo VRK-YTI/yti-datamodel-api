@@ -42,7 +42,11 @@ public class Model {
     @Context ServletContext context;
     
     public String ModelDataEndpoint() {
-       return Endpoint.getEndpoint()+"/core/data";
+       return Endpoint.getEndpoint()+"/core/get";
+    }
+    
+   public String ModelUpdateDataEndpoint() {
+       return Endpoint.getEndpoint()+"/search/data";
     }
     
     public String ModelSparqlDataEndpoint() {
@@ -50,7 +54,7 @@ public class Model {
     }
     
     public String ModelSparqlUpdateEndpoint() {
-       return Endpoint.getEndpoint()+"/core/update";
+       return Endpoint.getEndpoint()+"/search/update";
     }
     
   @GET
@@ -155,7 +159,7 @@ public class Model {
        } 
        try {
 
-           String service = ModelDataEndpoint();
+           String service = ModelUpdateDataEndpoint();
            
            ServiceDescriptionManager.updateGraphDescription(ModelSparqlUpdateEndpoint(), graph);
           
@@ -207,7 +211,7 @@ public class Model {
        
        try {
  
-           String service = ModelDataEndpoint();
+           String service = ModelUpdateDataEndpoint();
 
            if(!graph.equals("undefined")) {
                ServiceDescriptionManager.createGraphDescription(ModelSparqlUpdateEndpoint(), graph, group);
