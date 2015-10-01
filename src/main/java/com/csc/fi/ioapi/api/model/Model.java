@@ -16,6 +16,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 
 import com.csc.fi.ioapi.config.Endpoint;
+import com.csc.fi.ioapi.utils.GraphManager;
 import com.csc.fi.ioapi.utils.LDHelper;
 import com.csc.fi.ioapi.utils.ServiceDescriptionManager;
 import com.hp.hpl.jena.query.ParameterizedSparqlString;
@@ -50,7 +51,7 @@ public class Model {
     }
     
     public String ModelSparqlDataEndpoint() {
-       return Endpoint.getEndpoint()+"/core/sparql";
+       return Endpoint.getEndpoint()+"/search/sparql";
     }
     
     public String ModelSparqlUpdateEndpoint() {
@@ -76,7 +77,10 @@ public class Model {
       
       try {
           
-          /* If Grouping is NOT wanted */
+          /* FIXME: GRAPH PROTOCOL IS NOT WORKING AS EXPECTED FROM TEXTDATASET - BUG in FUSEKI 2.3.0 ? 
+             USING CONSTRUCT QUERY INSTEAD - MUCH SLOWER - MUST BE FIXED. */
+          
+          /*
           if(group==null || group.equals("undefined")) {
         
             Client client = Client.create();
@@ -98,17 +102,25 @@ public class Model {
             rb.entity(response.getEntityInputStream());
        
            return rb.build();
-            
-      } else {
-              
-              /* IF group parameter is available list of core vocabularies is created */
-              
+            */
+          
             String queryString;
             ParameterizedSparqlString pss = new ParameterizedSparqlString();
             pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+            
+     
+     if(group==null || group.equals("undefined")) { 
+         queryString = "CONSTRUCT { ?s ?p ?o } WHERE { GRAPH ?graph { ?s ?p ?o }}"; 
+         if(id==null || id.equals("undefined") || id.equals("default")) id = "urn:csc:iow:sd";
+         pss.setIri("graph", id);
+     }
+     else { 
+         queryString = "CONSTRUCT { ?graphName rdfs:label ?label . ?graphName dcterms:identifier ?g . ?graphName dcterms:isPartOf ?group . ?graphName a sd:NamedGraph . } WHERE { ?graph sd:name ?graphName . ?graph a sd:NamedGraph ; dcterms:isPartOf ?group . GRAPH ?graphName {  ?g a owl:Ontology . ?g rdfs:label ?label }}"; 
+         pss.setIri("group", group);    
+       }
+              /* IF group parameter is available list of core vocabularies is created */
+              
 
-            queryString = "CONSTRUCT { ?graphName rdfs:label ?label . ?graphName dcterms:identifier ?g . ?graphName dcterms:isPartOf ?group . ?graphName a sd:NamedGraph . } WHERE { ?graph sd:name ?graphName . ?graph a sd:NamedGraph ; dcterms:isPartOf ?group . GRAPH ?graphName {  ?g a owl:Ontology . ?g rdfs:label ?label }}"; 
-            pss.setIri("group", group);
             pss.setCommandText(queryString);
            
             Logger.getLogger(Model.class.getName()).log(Level.INFO, pss.toString());
@@ -125,8 +137,6 @@ public class Model {
             rb.entity(response.getEntityInputStream());
        
            return rb.build();
-           
-          }
            
       } catch(UniformInterfaceException | ClientHandlerException ex) {
           Logger.getLogger(Model.class.getName()).log(Level.WARNING, "Expect the unexpected!", ex);
@@ -171,12 +181,15 @@ public class Model {
             
             ClientResponse response = builder.put(ClientResponse.class,body);
 
-            if (response.getStatus() != 204 && response.getStatus() != 200) {
+            if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
                Logger.getLogger(Model.class.getName()).log(Level.WARNING, graph+" was not updated! Status "+response.getStatus());
                return Response.status(response.getStatus()).build();
             }
 
             Logger.getLogger(Model.class.getName()).log(Level.INFO, graph+" updated sucessfully!");
+            
+            GraphManager.createResourceGraphs(graph);
+
             return Response.status(204).build();
 
       } catch(UniformInterfaceException | ClientHandlerException ex) {
@@ -231,6 +244,9 @@ public class Model {
             }
 
             Logger.getLogger(Model.class.getName()).log(Level.INFO, graph+" updated sucessfully!");
+            
+            GraphManager.createResourceGraphs(graph);
+            
             return Response.status(204).build();
 
       } catch(UniformInterfaceException | ClientHandlerException ex) {
@@ -257,8 +273,11 @@ public class Model {
 
        try {
 
-            String service = ModelDataEndpoint();
+            String service = ModelUpdateDataEndpoint();
 
+            
+            GraphManager.deleteResourceGraphs(graph);
+            
             Client client = Client.create();
 
             WebResource webResource = client.resource(service)
@@ -271,7 +290,7 @@ public class Model {
                ServiceDescriptionManager.deleteGraphDescription(graph);
            }
             
-            if (response.getStatus() != 204) {
+            if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
                Logger.getLogger(Model.class.getName()).log(Level.WARNING, graph+" was not deleted! Status "+response.getStatus());
                return Response.status(response.getStatus()).build();
             }
@@ -279,6 +298,9 @@ public class Model {
 
 
             Logger.getLogger(Model.class.getName()).log(Level.INFO, graph+" deleted successfully!");
+            
+           
+            
             return Response.status(204).build();
 
       } catch(UniformInterfaceException | ClientHandlerException ex) {

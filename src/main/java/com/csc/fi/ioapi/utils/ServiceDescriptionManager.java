@@ -122,7 +122,7 @@ public class ServiceDescriptionManager {
         Logger.getLogger(ServiceDescriptionManager.class.getName()).log(Level.WARNING, pss.toString());
         
         UpdateRequest queryObj = pss.asUpdate();
-        UpdateProcessor qexec=UpdateExecutionFactory.createRemoteForm(queryObj,Endpoint.getEndpoint()+"/core/update");
+        UpdateProcessor qexec=UpdateExecutionFactory.createRemoteForm(queryObj,Endpoint.getEndpoint()+"/search/update");
         qexec.execute();
         
       

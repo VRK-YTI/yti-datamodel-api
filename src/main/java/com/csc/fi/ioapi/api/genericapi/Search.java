@@ -70,6 +70,7 @@ public class Search {
               + "} WHERE { "
               + "?resource text:query '"+search+"' . "
               + "OPTIONAL{?resource rdf:type ?type .}"
+              + "OPTIONAL{?resource sh:predicate ?type .}"
               + "OPTIONAL{?resource rdfs:comment ?comment .}"
               + "OPTIONAL{?super sh:property ?resource .}"
               + "?resource rdfs:label ?label . "
