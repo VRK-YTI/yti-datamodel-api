@@ -22,7 +22,7 @@ import javax.ws.rs.core.Response.ResponseBuilder;
  *
  * @author malonen
  */
-import com.csc.fi.ioapi.config.Endpoint;
+import com.csc.fi.ioapi.config.ApplicationProperties;
 import com.csc.fi.ioapi.utils.GraphManager;
 import com.csc.fi.ioapi.utils.LDHelper;
 import com.csc.fi.ioapi.utils.ServiceDescriptionManager;
@@ -55,15 +55,15 @@ public class Property {
     @Context ServletContext context;
     
     public String ModelSparqlDataEndpoint() {
-       return Endpoint.getEndpoint()+"/core/sparql";
+       return ApplicationProperties.getEndpoint()+"/core/sparql";
     }
     
     public String ModelSparqlUpdateEndpoint() {
-       return Endpoint.getEndpoint()+"/search/update";
+       return ApplicationProperties.getEndpoint()+"/search/update";
     }
     
     public String ModelUpdateDataEndpoint() {
-       return Endpoint.getEndpoint()+"/search/data";
+       return ApplicationProperties.getEndpoint()+"/search/data";
     }
     
     
@@ -93,7 +93,7 @@ public class Property {
                 //   queryString = "CONSTRUCT { ?property ?p ?o . ?property rdfs:isDefinedBy ?library } WHERE { VALUES ?rel { iow:associations iow:attributes } ?library ?rel ?property . GRAPH ?library { ?property ?p ?o . }}"; 
                 pss.setIri("property", id);
             } else {
-                queryString = "CONSTRUCT { ?property rdfs:label ?label . ?property a ?type . ?property rdfs:isDefinedBy ?source . } WHERE { VALUES ?rel {dcterms:hasPart iow:associations iow:attributes} ?library ?rel ?property . GRAPH ?graph { ?property rdfs:label ?label . ?property a ?type . ?property rdfs:isDefinedBy ?source . } }"; 
+                queryString = "CONSTRUCT { ?property rdfs:label ?label . ?property a ?type . ?property rdfs:isDefinedBy ?source . } WHERE { VALUES ?rel {dcterms:hasPart iow:associations iow:attributes} ?library ?rel ?property . GRAPH ?graph { ?property rdfs:label ?label . VALUES ?type { owl:ObjectProperty owl:DatatypeProperty } ?property a ?type . ?property rdfs:isDefinedBy ?source . } }"; 
             }
             
             if(model!=null && !model.equals("undefined")) {
