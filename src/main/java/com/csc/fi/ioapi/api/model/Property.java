@@ -23,6 +23,7 @@ import javax.ws.rs.core.Response.ResponseBuilder;
  * @author malonen
  */
 import com.csc.fi.ioapi.config.ApplicationProperties;
+import com.csc.fi.ioapi.config.LoginSession;
 import com.csc.fi.ioapi.utils.GraphManager;
 import com.csc.fi.ioapi.utils.LDHelper;
 import com.csc.fi.ioapi.utils.ServiceDescriptionManager;
@@ -39,6 +40,8 @@ import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiParam;
 import com.wordnik.swagger.annotations.ApiResponse;
 import com.wordnik.swagger.annotations.ApiResponses;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import org.apache.jena.iri.IRI;
@@ -131,6 +134,7 @@ public class Property {
   @ApiResponses(value = {
       @ApiResponse(code = 201, message = "Graph is created"),
       @ApiResponse(code = 204, message = "Graph is saved"),
+      @ApiResponse(code = 401, message = "Unauthorized"),
       @ApiResponse(code = 405, message = "Update not allowed"),
       @ApiResponse(code = 403, message = "Illegal graph parameter"),
       @ApiResponse(code = 400, message = "Invalid graph supplied"),
@@ -144,9 +148,19 @@ public class Property {
                 String id,
           @ApiParam(value = "Model ID", required = true) 
           @QueryParam("model") 
-                String model) {
+                String model,
+          @Context HttpServletRequest request) {
       
-       try {
+    try {
+               
+        HttpSession session = request.getSession();
+        
+        if(session==null) return Response.status(401).build();
+        
+        LoginSession login = new LoginSession(session);
+        
+        if(!login.isLoggedIn() || !login.hasRightToEdit(model))
+            return Response.status(401).build();
  
         IRIFactory iriFactory = IRIFactory.semanticWebImplementation();
         IRI modelIRI,idIRI;
@@ -166,7 +180,7 @@ public class Property {
                                       .queryParam("graph", id);
 
             WebResource.Builder builder = webResource.header("Content-type", "application/ld+json");
-            ClientResponse response = builder.post(ClientResponse.class,body);
+            ClientResponse response = builder.put(ClientResponse.class,body);
 
             if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
                Logger.getLogger(Property.class.getName()).log(Level.WARNING, id+" was not updated! Status "+response.getStatus());
@@ -200,6 +214,7 @@ public class Property {
   @ApiResponses(value = {
       @ApiResponse(code = 201, message = "Graph is created"),
       @ApiResponse(code = 204, message = "Graph is saved"),
+      @ApiResponse(code = 401, message = "Unauthorized"),
       @ApiResponse(code = 405, message = "Update not allowed"),
       @ApiResponse(code = 403, message = "Illegal graph parameter"),
       @ApiResponse(code = 400, message = "Invalid graph supplied"),
@@ -213,9 +228,19 @@ public class Property {
                 String id,
           @ApiParam(value = "Model ID", required = true) 
           @QueryParam("model") 
-                String model) {
+                String model,
+          @Context HttpServletRequest request) {
       
-       try {
+    try {
+               
+        HttpSession session = request.getSession();
+        
+        if(session==null) return Response.status(401).build();
+        
+        LoginSession login = new LoginSession(session);
+        
+        if(!login.isLoggedIn() || !login.hasRightToEdit(model))
+            return Response.status(401).build();
            
         if(!id.startsWith(model))
             return Response.status(403).build();

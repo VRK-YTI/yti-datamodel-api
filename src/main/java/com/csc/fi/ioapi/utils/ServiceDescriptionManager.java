@@ -5,15 +5,22 @@
  */
 package com.csc.fi.ioapi.utils;
 
-import com.csc.fi.ioapi.config.Endpoint;
+import com.csc.fi.ioapi.config.ApplicationProperties;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import com.hp.hpl.jena.datatypes.xsd.XSDDatatype;
+import com.hp.hpl.jena.graph.Node;
+import com.hp.hpl.jena.graph.NodeFactory;
 import com.hp.hpl.jena.query.ParameterizedSparqlString;
+import com.hp.hpl.jena.query.Query;
+import com.hp.hpl.jena.query.QueryExecution;
+import com.hp.hpl.jena.query.QueryExecutionFactory;
 import com.hp.hpl.jena.update.UpdateExecutionFactory;
 import com.hp.hpl.jena.update.UpdateProcessor;
 import com.hp.hpl.jena.update.UpdateRequest;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -58,6 +65,47 @@ public class ServiceDescriptionManager {
         qexec.execute();
       
     }
+    
+    
+    public static boolean isModelInGroup(String model, HashMap<String,Boolean> groupList) {
+        
+        Iterator<String> groupIterator = groupList.keySet().iterator();
+        
+        String groups = "VALUES ?groups { ";
+        
+        while(groupIterator.hasNext()) {
+            String group = groupIterator.next();
+            Node n = NodeFactory.createURI(group);
+            groups = groups+" <"+n.getURI()+"> ";
+        }
+        
+        groups+=" }";
+            
+         String queryString = " ASK { GRAPH <urn:csc:iow:sd> { "+groups+" ?graph sd:name ?graphName . ?graph dcterms:isPartOf ?groups . }";
+    
+         ParameterizedSparqlString pss = new ParameterizedSparqlString();
+         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+         pss.setIri("graphName", model);
+         pss.setCommandText(queryString);
+         
+         String endpoint = ApplicationProperties.getEndpoint()+"/users/sparql";
+        
+         Query query = pss.asQuery();
+         QueryExecution qexec = QueryExecutionFactory.sparqlService(endpoint, query);
+        
+         try
+          {
+              boolean b = qexec.execAsk();
+              
+              return b;
+              
+           } catch(Exception ex) {
+               Logger.getLogger(UserManager.class.getName()).log(Level.WARNING, "Failed in checking the endpoint status: "+endpoint);
+               return false; 
+           }
+        
+    }
+    
     
         public static void createGraphDescription(String service, String graph, String group) {
         
@@ -122,7 +170,7 @@ public class ServiceDescriptionManager {
         Logger.getLogger(ServiceDescriptionManager.class.getName()).log(Level.WARNING, pss.toString());
         
         UpdateRequest queryObj = pss.asUpdate();
-        UpdateProcessor qexec=UpdateExecutionFactory.createRemoteForm(queryObj,Endpoint.getEndpoint()+"/search/update");
+        UpdateProcessor qexec=UpdateExecutionFactory.createRemoteForm(queryObj,ApplicationProperties.getEndpoint()+"/search/update");
         qexec.execute();
         
       

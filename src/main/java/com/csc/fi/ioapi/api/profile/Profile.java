@@ -26,7 +26,7 @@ import javax.ws.rs.core.Response.ResponseBuilder;
  *
  * @author malonen
  */
-import com.csc.fi.ioapi.config.Endpoint;
+import com.csc.fi.ioapi.config.ApplicationProperties;
 import com.csc.fi.ioapi.utils.LDHelper;
 import com.csc.fi.ioapi.utils.ServiceDescriptionManager;
 import com.github.jsonldjava.core.JsonLdError;
@@ -55,11 +55,11 @@ public class Profile {
     @Context ServletContext context;
         
     public String ProfileDataEndpoint() {
-      return Endpoint.getEndpoint()+"/core/data";
+      return ApplicationProperties.getEndpoint()+"/core/data";
     }
     
     public String ProfileSparqlUpdateEndpoint() {
-       return Endpoint.getEndpoint()+"/core/update";
+       return ApplicationProperties.getEndpoint()+"/core/update";
     }
     
   @GET

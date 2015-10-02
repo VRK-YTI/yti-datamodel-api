@@ -5,7 +5,7 @@
  */
 package com.csc.fi.ioapi.utils;
 
-import com.csc.fi.ioapi.config.Endpoint;
+import com.csc.fi.ioapi.config.ApplicationProperties;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import com.csc.fi.ioapi.config.LoginSession;
@@ -34,8 +34,11 @@ public class UserManager {
     final static SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssX");
     
     public static String userEndpoint() {
-       return Endpoint.getEndpoint() + "/users/update";
+       return ApplicationProperties.getEndpoint() + "/users/update";
     }
+    
+    
+    
 
     private static boolean isExistingUser(String email) {
         
@@ -46,7 +49,7 @@ public class UserManager {
          pss.setLiteral("email", email);
          pss.setCommandText(queryString);
          
-         String endpoint = Endpoint.getEndpoint()+"/users/sparql";
+         String endpoint = ApplicationProperties.getEndpoint()+"/users/sparql";
         
          Query query = pss.asQuery();
          QueryExecution qexec = QueryExecutionFactory.sparqlService(endpoint, query,"urn:csc:users");
@@ -64,11 +67,14 @@ public class UserManager {
         
     }
     
+
+    
     public static void checkUser(LoginSession loginSession) {
         
         if(isExistingUser(loginSession.getEmail())) {
             updateUser(loginSession);
         } else {
+            Logger.getLogger(UserManager.class.getName()).log(Level.INFO, "Creating new user: "+loginSession.getEmail());
             createUser(loginSession);
         }
         
@@ -90,14 +96,7 @@ public class UserManager {
             groups = groups+"?id dcterms:isPartOf <"+n.getURI()+"> . "+(allGroups.get(group).booleanValue()?" ?id iow:isAdminOf <"+n.getURI()+"> . ":"");
         }
         
-        /*
-        for(String g : loginSession.getGroups()) {
-            Node n = NodeFactory.createURI(g);
-            groups = groups+"?id dcterms:isPartOf <"+n.getURI()+"> . ";
-        }
-                */
-        
-         String query = 
+        String query = 
                 "INSERT DATA { GRAPH <urn:csc:users> { ?id a foaf:Person . "+
                 " ?id foaf:name ?name . "+
                  "?id dcterms:created ?timestamp . "+

@@ -63,7 +63,7 @@ public class StartUpListener implements ServletContextListener {
     private boolean testDefaultGraph() {
         String queryString = " ASK { ?s a sd:Service ; sd:defaultDataset ?d . ?d sd:defaultGraph ?g . ?g dcterms:title ?title . }";
     
-         String endpoint = Endpoint.getEndpoint()+"/core/sparql";
+         String endpoint = ApplicationProperties.getEndpoint()+"/core/sparql";
         
          Query query = QueryFactory.create(LDHelper.prefix+queryString);        
          QueryExecution qexec = QueryExecutionFactory.sparqlService(endpoint, query,"urn:csc:iow:sd");
@@ -85,7 +85,7 @@ public class StartUpListener implements ServletContextListener {
          
          String queryString = "ASK { ?s a foaf:Group . }";
     
-         String endpoint = Endpoint.getEndpoint()+"/users/sparql";
+         String endpoint = ApplicationProperties.getEndpoint()+"/users/sparql";
         
          Query query = QueryFactory.create(LDHelper.prefix+queryString);        
          QueryExecution qexec = QueryExecutionFactory.sparqlService(endpoint, query);
@@ -104,7 +104,7 @@ public class StartUpListener implements ServletContextListener {
     
     private void createDefaultGraph() {
         
-        String serviceURI = Endpoint.getEndpoint()+"/search/data";
+        String serviceURI = ApplicationProperties.getEndpoint()+"/search/data";
  
         DatasetAccessor accessor = DatasetAccessorFactory.createHTTP(serviceURI);
         
@@ -117,7 +117,7 @@ public class StartUpListener implements ServletContextListener {
     
     private void createDefaultGroups() {
         
-        String serviceURI = Endpoint.getEndpoint()+"/users/data";
+        String serviceURI = ApplicationProperties.getEndpoint()+"/users/data";
  
         DatasetAccessor accessor = DatasetAccessorFactory.createHTTP(serviceURI);
         

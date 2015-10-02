@@ -14,9 +14,11 @@ import javax.servlet.http.HttpSession;
  */
 public interface LoginInterface {
     
-    public boolean isLoggedIn(String email);
+    public boolean isLoggedIn();
     
     public boolean isInGroup(String group);
+    
+    public boolean hasRightToEdit(String resource);
    
     public String getDisplayName();
     

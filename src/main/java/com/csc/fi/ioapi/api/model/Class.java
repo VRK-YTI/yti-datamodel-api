@@ -25,7 +25,8 @@ import javax.ws.rs.core.Response.ResponseBuilder;
  *
  * @author malonen
  */
-import com.csc.fi.ioapi.config.Endpoint;
+import com.csc.fi.ioapi.config.ApplicationProperties;
+import com.csc.fi.ioapi.config.LoginSession;
 import com.csc.fi.ioapi.utils.GraphManager;
 import com.csc.fi.ioapi.utils.LDHelper;
 import com.csc.fi.ioapi.utils.ServiceDescriptionManager;
@@ -42,6 +43,8 @@ import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiParam;
 import com.wordnik.swagger.annotations.ApiResponse;
 import com.wordnik.swagger.annotations.ApiResponses;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
 import org.apache.jena.iri.IRIFactory;
@@ -56,16 +59,16 @@ public class Class {
     @Context ServletContext context;
     
     public String ModelSparqlDataEndpoint() {
-       return Endpoint.getEndpoint()+"/core/sparql";
+       return ApplicationProperties.getEndpoint()+"/core/sparql";
     }
     
     public String ModelSparqlUpdateEndpoint() {
-       return Endpoint.getEndpoint()+"/search/update";
+       return ApplicationProperties.getEndpoint()+"/search/update";
     }
     
 
        public String ModelUpdateDataEndpoint() {
-       return Endpoint.getEndpoint()+"/search/data";
+       return ApplicationProperties.getEndpoint()+"/search/data";
     }
     
   @GET
@@ -133,6 +136,7 @@ public class Class {
   @ApiResponses(value = {
       @ApiResponse(code = 201, message = "Graph is created"),
       @ApiResponse(code = 204, message = "Graph is saved"),
+      @ApiResponse(code = 401, message = "Unauthorized"),
       @ApiResponse(code = 405, message = "Update not allowed"),
       @ApiResponse(code = 403, message = "Illegal graph parameter"),
       @ApiResponse(code = 400, message = "Invalid graph supplied"),
@@ -146,10 +150,20 @@ public class Class {
                 String id,
           @ApiParam(value = "Model ID", required = true) 
           @QueryParam("model") 
-                String model) {
+                String model,
+          @Context HttpServletRequest request) {
       
-       try {
- 
+    try {
+               
+        HttpSession session = request.getSession();
+        
+        if(session==null) return Response.status(401).build();
+        
+        LoginSession login = new LoginSession(session);
+        
+        if(!login.isLoggedIn() || !login.hasRightToEdit(model))
+            return Response.status(401).build();
+        
         IRIFactory iriFactory = IRIFactory.semanticWebImplementation();
         IRI modelIRI,idIRI;
         try {
@@ -168,7 +182,7 @@ public class Class {
                                       .queryParam("graph", id);
 
             WebResource.Builder builder = webResource.header("Content-type", "application/ld+json");
-            ClientResponse response = builder.post(ClientResponse.class,body);
+            ClientResponse response = builder.put(ClientResponse.class,body);
 
             if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
                Logger.getLogger(Class.class.getName()).log(Level.WARNING, id+" was not updated! Status "+response.getStatus());
@@ -202,6 +216,7 @@ public class Class {
   @ApiResponses(value = {
       @ApiResponse(code = 201, message = "Graph is created"),
       @ApiResponse(code = 204, message = "Graph is saved"),
+      @ApiResponse(code = 401, message = "Unauthorized"),
       @ApiResponse(code = 405, message = "Update not allowed"),
       @ApiResponse(code = 403, message = "Illegal graph parameter"),
       @ApiResponse(code = 400, message = "Invalid graph supplied"),
@@ -215,10 +230,20 @@ public class Class {
                 String id,
           @ApiParam(value = "Model ID", required = true) 
           @QueryParam("model") 
-                String model) {
+                String model,
+          @Context HttpServletRequest request) {
       
-       try {
-           
+    try {
+               
+        HttpSession session = request.getSession();
+        
+        if(session==null) return Response.status(401).build();
+        
+        LoginSession login = new LoginSession(session);
+        
+        if(!login.isLoggedIn() || !login.hasRightToEdit(model))
+            return Response.status(401).build();
+        
          if(!id.startsWith(model)) {
             Logger.getLogger(Class.class.getName()).log(Level.WARNING, id+" ID must start with "+model);
             return Response.status(403).build();

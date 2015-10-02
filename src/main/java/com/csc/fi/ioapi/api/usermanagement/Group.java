@@ -20,7 +20,7 @@ import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
 import org.apache.jena.iri.IRIFactory;
 
-import com.csc.fi.ioapi.config.Endpoint;
+import com.csc.fi.ioapi.config.ApplicationProperties;
 import com.csc.fi.ioapi.utils.LDHelper;
 import com.hp.hpl.jena.query.ParameterizedSparqlString;
 import com.hp.hpl.jena.sparql.engine.http.QueryExceptionHTTP;
@@ -51,19 +51,19 @@ public class Group {
 	ServletContext context;
 
 	public String userEndpoint() {
-		return Endpoint.getEndpoint() + "/users/data";
+		return ApplicationProperties.getEndpoint() + "/users/data";
 	}
 
 	public String userSparqlEndpoint() {
-		return Endpoint.getEndpoint() + "/users/sparql";
+		return ApplicationProperties.getEndpoint() + "/users/sparql";
 	}
 
 	public String searchSparqlEndpoint() {
-		return Endpoint.getEndpoint() + "/search/sparql";
+		return ApplicationProperties.getEndpoint() + "/search/sparql";
 	}
 
 	public String userSparqlUpdateEndpoint() {
-		return Endpoint.getEndpoint() + "/users/update";
+		return ApplicationProperties.getEndpoint() + "/users/update";
 	}
 
 	@POST
@@ -136,8 +136,6 @@ public class Group {
 			@ApiResponse(code = 404, message = "Service not found") })
 	public Response addNewGroups(@ApiParam(value = "New groups in application/ld+json", required = true) String body) {
 
-		// UUID groupID = UUID.randomUUID();
-
 		try {
 
 			String service = userEndpoint();
@@ -162,26 +160,6 @@ public class Group {
 			return Response.status(400).build();
 		}
 
-		/*
-		 * ParameterizedSparqlString pss = new ParameterizedSparqlString();
-		 * pss.setNsPrefixes(LDHelper.PREFIX_MAP);
-		 * 
-		 * String query = "INSERT { GRAPH <urn:csc:groups> { <urn:uuid:"
-		 * +groupID+
-		 * "> a foaf:Group ; rdfs:label ?name . } } WHERE { GRAPH <urn:csc:groups> { FILTER NOT EXISTS { ?any a foaf:Group ; rdfs:label ?name } } }"
-		 * ;
-		 * 
-		 * pss.setLiteral("name", name); pss.setCommandText(query);
-		 * 
-		 * UpdateRequest queryObj = pss.asUpdate();
-		 * 
-		 * UpdateProcessor
-		 * qexec=UpdateExecutionFactory.createRemoteForm(queryObj,
-		 * userSparqlUpdateEndpoint());
-		 * 
-		 * try { qexec.execute(); return Response.status(200).build(); }
-		 * catch(Exception ex) { return Response.status(400).build(); }
-		 */
 
 	}
 
@@ -211,32 +189,6 @@ public class Group {
 
 		rb = Response.status(response.getStatus());
 		rb.entity(response.getEntityInputStream());
-
-		/*
-		 * ResponseBuilder rb;
-		 * 
-		 * Object context = LDHelper.getGroupContext();
-		 * 
-		 * Object data; try { data =
-		 * JsonUtils.fromInputStream(response.getEntityInputStream());
-		 * 
-		 * JsonLdOptions options = new JsonLdOptions();
-		 * 
-		 * 
-		 * System.out.println(data); Object framed = JsonLdProcessor.frame(data,
-		 * context, options);
-		 * 
-		 * rb = Response.status(response.getStatus());
-		 * 
-		 * rb.entity(JsonUtils.toString(framed));
-		 * 
-		 * } catch (JsonLdError ex) {
-		 * Logger.getLogger(Group.class.getName()).log(Level.SEVERE, null, ex);
-		 * return Response.serverError().entity("{}").build(); } catch
-		 * (IOException ex) {
-		 * Logger.getLogger(Group.class.getName()).log(Level.SEVERE, null, ex);
-		 * return Response.serverError().entity("{}").build(); }
-		 */
 
 		return rb.build();
 

@@ -5,6 +5,7 @@
  */
 package com.csc.fi.ioapi.config;
 
+import com.csc.fi.ioapi.utils.ServiceDescriptionManager;
 import java.util.HashMap;
 import javax.servlet.http.HttpSession;
 
@@ -21,10 +22,13 @@ public class LoginSession implements LoginInterface {
     }
 
     @Override
-    public boolean isLoggedIn(String email) {
-        return (session.getAttribute("mail")!=null && session.getAttribute("mail").equals(email));
+    public boolean isLoggedIn() {
+        //  && session.getAttribute("mail").equals(email)
+        return (session.getAttribute("mail")!=null);
     }
 
+
+    
     @Override
     public boolean isInGroup(String group) {
         return session.getAttribute("group").toString().contains(group);
@@ -50,7 +54,7 @@ public class LoginSession implements LoginInterface {
             
             String[] myGroup = groupString[i].split("_");
             
-            if(myGroup[0].startsWith("https://tt.eduuni.fi/sites/csc-iow#")) {
+            if(myGroup[0].startsWith(ApplicationProperties.getGroupDomain())) {
                 if(myGroup[1].equals("ADMINS")) {
                     groups.put(myGroup[0], Boolean.TRUE); }
                 else {
@@ -60,6 +64,14 @@ public class LoginSession implements LoginInterface {
         
         return groups;
        
+    }
+
+    @Override
+    public boolean hasRightToEdit(String model) {
+        
+        if(this.isInGroup("SUPER")) return true;
+       
+        return ServiceDescriptionManager.isModelInGroup(model,this.getGroups());
     }
     
 }

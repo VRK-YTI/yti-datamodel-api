@@ -22,7 +22,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 
-import com.csc.fi.ioapi.config.Endpoint;
+import com.csc.fi.ioapi.config.ApplicationProperties;
 import com.csc.fi.ioapi.config.LoginSession;
 import com.csc.fi.ioapi.utils.LDHelper;
 import com.github.jsonldjava.core.JsonLdError;
@@ -50,22 +50,22 @@ import com.wordnik.swagger.annotations.ApiResponses;
  *
  * @author malonen
  */
-@Path("users")
-@Api(value = "/users", description = "Edit users")
+@Path("user")
+@Api(value = "/user", description = "Get user")
 public class User {
 
     @Context ServletContext context;
 
     public String userEndpoint() {
-       return Endpoint.getEndpoint() + "/users/data";
+       return ApplicationProperties.getEndpoint() + "/users/data";
     }
     
     public String userSparqlEndpoint() {
-       return Endpoint.getEndpoint() + "/users/sparql";
+       return ApplicationProperties.getEndpoint() + "/users/sparql";
     }
     
     public String userSparqlUpdateEndpoint() {
-       return Endpoint.getEndpoint() + "/users/update";
+       return ApplicationProperties.getEndpoint() + "/users/update";
     }
      
     @GET
@@ -73,20 +73,24 @@ public class User {
       @ApiResponses(value = {
       @ApiResponse(code = 204, message = "Graph is saved"),
       @ApiResponse(code = 400, message = "Invalid graph supplied"),
+      @ApiResponse(code = 401, message = "Not logged in"),
       @ApiResponse(code = 404, message = "Service not found") 
   })
     @Produces("application/ld+json")
-    public Response getUser(@ApiParam(value = "email") @QueryParam("email") String email, @Context HttpServletRequest request) {
-       
-        HttpSession session = request.getSession();
+    public Response getUser(@Context HttpServletRequest request) {
+       // @ApiParam(value = "email") @QueryParam("email") String email, 
         
+        HttpSession session = request.getSession(); 
         LoginSession login = new LoginSession(session);
-        
-        if(session.getAttribute("mail")!=null){
-            Logger.getLogger(User.class.getName()).log(Level.INFO, "USER mail: "+session.getAttribute("mail"));
+ 
+        if(login.isLoggedIn()){
+            Logger.getLogger(User.class.getName()).log(Level.INFO, "User is logged in with: "+login.getEmail());
         } else {
-             Logger.getLogger(User.class.getName()).log(Level.INFO, "Not logged in?");
+             return Response.status(401).build();
         }
+        
+        String email = login.getEmail();
+        
         
         String queryString;
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
@@ -98,8 +102,13 @@ public class User {
          
         pss.setCommandText(queryString);
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
-          
-        // If looking with certain email
+        pss.setLiteral("email", email);
+        pss.setLiteral("login", login.isLoggedIn());
+        
+        
+        Logger.getLogger(User.class.getName()).log(Level.INFO, "User query: "+pss.toString());
+     
+        /*
         if(email!=null && !email.equals("undefined")) {
               pss.setLiteral("email", email);
               
@@ -107,8 +116,8 @@ public class User {
                     pss.setLiteral("login", true);
                   else
                     pss.setLiteral("login", login.isLoggedIn(email));
-              
-        } 
+          
+        } */
         
 
         Client client = Client.create();
@@ -124,31 +133,13 @@ public class User {
         rb = Response.status(response.getStatus()); 
         rb.entity(response.getEntityInputStream());
        
-     
-            /*
-             try {
-                    Object context = LDHelper.getUserContext();
-                    Object data = JsonUtils.fromInputStream(response.getEntityInputStream());
-                    JsonLdOptions options = new JsonLdOptions();
-                    Object framed = JsonLdProcessor.frame(data, context, options);
-                    rb = Response.status(response.getStatus()); 
-                    rb.entity(JsonUtils.toString(framed));
-                } catch (JsonLdError ex) {
-                    Logger.getLogger(User.class.getName()).log(Level.SEVERE, null, ex);
-                     return Response.serverError().entity("{}").build();
-                } catch (IOException ex) {
-                    Logger.getLogger(User.class.getName()).log(Level.SEVERE, null, ex);
-                    return Response.serverError().entity("{}").build();
-                }
-*/
-        
             return rb.build();
         
     }
 
 
     /* TODO: This for testing only (SHOULD BE REMOVED) */
-   
+   /*
     @PUT
     @ApiOperation(value = "Add new user", notes = "PUT user to service")
       @ApiResponses(value = {
@@ -212,5 +203,5 @@ public class User {
         
         return Response.status(200).build(); 
 */
-    }
+  //  }
 }

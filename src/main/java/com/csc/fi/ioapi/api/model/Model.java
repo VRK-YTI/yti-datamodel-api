@@ -15,7 +15,8 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 
-import com.csc.fi.ioapi.config.Endpoint;
+import com.csc.fi.ioapi.config.ApplicationProperties;
+import com.csc.fi.ioapi.config.LoginSession;
 import com.csc.fi.ioapi.utils.GraphManager;
 import com.csc.fi.ioapi.utils.LDHelper;
 import com.csc.fi.ioapi.utils.ServiceDescriptionManager;
@@ -32,6 +33,8 @@ import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiParam;
 import com.wordnik.swagger.annotations.ApiResponse;
 import com.wordnik.swagger.annotations.ApiResponses;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
  
 /**
  * Root resource (exposed at "myresource" path)
@@ -43,19 +46,19 @@ public class Model {
     @Context ServletContext context;
     
     public String ModelDataEndpoint() {
-       return Endpoint.getEndpoint()+"/core/get";
+       return ApplicationProperties.getEndpoint()+"/core/get";
     }
     
    public String ModelUpdateDataEndpoint() {
-       return Endpoint.getEndpoint()+"/search/data";
+       return ApplicationProperties.getEndpoint()+"/search/data";
     }
     
     public String ModelSparqlDataEndpoint() {
-       return Endpoint.getEndpoint()+"/search/sparql";
+       return ApplicationProperties.getEndpoint()+"/search/sparql";
     }
     
     public String ModelSparqlUpdateEndpoint() {
-       return Endpoint.getEndpoint()+"/search/update";
+       return ApplicationProperties.getEndpoint()+"/search/update";
     }
     
   @GET
@@ -115,10 +118,11 @@ public class Model {
          pss.setIri("graph", id);
      }
      else { 
+          /* IF group parameter is available list of core vocabularies is created */
          queryString = "CONSTRUCT { ?graphName rdfs:label ?label . ?graphName dcterms:identifier ?g . ?graphName dcterms:isPartOf ?group . ?graphName a sd:NamedGraph . } WHERE { ?graph sd:name ?graphName . ?graph a sd:NamedGraph ; dcterms:isPartOf ?group . GRAPH ?graphName {  ?g a owl:Ontology . ?g rdfs:label ?label }}"; 
          pss.setIri("group", group);    
        }
-              /* IF group parameter is available list of core vocabularies is created */
+             
               
 
             pss.setCommandText(queryString);
@@ -154,19 +158,34 @@ public class Model {
   @ApiResponses(value = {
       @ApiResponse(code = 204, message = "Graph is saved"),
       @ApiResponse(code = 400, message = "Invalid graph supplied"),
+      @ApiResponse(code = 401, message = "Unauthorized"),
+      @ApiResponse(code = 405, message = "Update not allowed"),
       @ApiResponse(code = 403, message = "Illegal graph parameter"),
       @ApiResponse(code = 404, message = "Service not found"),
       @ApiResponse(code = 500, message = "Bad data?") 
   })
   public Response postJson(
-          @ApiParam(value = "New graph in application/ld+json", required = true) 
-                String body, @ApiParam(value = "Graph to overwrite", required = true) 
-                @QueryParam("graph") 
-                String graph) {
+          @ApiParam(value = "Updated model in application/ld+json", required = true) 
+                String body, 
+          @ApiParam(value = "Model ID", required = true) 
+                @QueryParam("id") 
+                String graph,
+          @Context HttpServletRequest request) {
       
        if(graph.equals("default") || graph.equals("undefined")) {
             return Response.status(403).build();
        } 
+ 
+        HttpSession session = request.getSession();
+        
+        if(session==null) return Response.status(401).build();
+        
+        LoginSession login = new LoginSession(session);
+        
+        if(!login.isLoggedIn() || !login.hasRightToEdit(graph))
+            return Response.status(401).build();
+        
+
        try {
 
            String service = ModelUpdateDataEndpoint();
@@ -188,8 +207,6 @@ public class Model {
 
             Logger.getLogger(Model.class.getName()).log(Level.INFO, graph+" updated sucessfully!");
             
-            GraphManager.createResourceGraphs(graph);
-
             return Response.status(204).build();
 
       } catch(UniformInterfaceException | ClientHandlerException ex) {
@@ -203,6 +220,7 @@ public class Model {
   @ApiResponses(value = {
       @ApiResponse(code = 201, message = "Graph is created"),
       @ApiResponse(code = 204, message = "Graph is saved"),
+      @ApiResponse(code = 401, message = "Unauthorized"),
       @ApiResponse(code = 405, message = "Update not allowed"),
       @ApiResponse(code = 403, message = "Illegal graph parameter"),
       @ApiResponse(code = 400, message = "Invalid graph supplied"),
@@ -211,17 +229,27 @@ public class Model {
   public Response putJson(
           @ApiParam(value = "New graph in application/ld+json", required = true) 
                 String body, 
-          @ApiParam(value = "Graph to overwrite", required = true) 
-          @QueryParam("graph") 
+          @ApiParam(value = "Model ID", required = true) 
+          @QueryParam("id") 
                 String graph,
           @ApiParam(value = "Group", required = true) 
           @QueryParam("group") 
-                String group) {
+                String group,
+          @Context HttpServletRequest request) {
       
        if(graph.equals("default")) {
            return Response.status(403).build();
        }
-       
+             
+        HttpSession session = request.getSession();
+        
+        if(session==null) return Response.status(401).build();
+        
+        LoginSession login = new LoginSession(session);
+        
+        if(!login.isLoggedIn() || !login.hasRightToEdit(graph))
+            return Response.status(401).build();
+        
        try {
  
            String service = ModelUpdateDataEndpoint();
@@ -244,9 +272,7 @@ public class Model {
             }
 
             Logger.getLogger(Model.class.getName()).log(Level.INFO, graph+" updated sucessfully!");
-            
-            GraphManager.createResourceGraphs(graph);
-            
+           
             return Response.status(204).build();
 
       } catch(UniformInterfaceException | ClientHandlerException ex) {
@@ -254,62 +280,5 @@ public class Model {
         return Response.status(400).build();
       }
   }
-  
-  @DELETE
-  @ApiOperation(value = "Delete graph from service and service description", notes = "Delete graph")
-  @ApiResponses(value = {
-      @ApiResponse(code = 204, message = "Graph is deleted"),
-      @ApiResponse(code = 403, message = "Illegal graph parameter"),
-      @ApiResponse(code = 404, message = "No such graph")
-  })
-  public Response deleteJson(
-          @ApiParam(value = "Graph to be deleted", required = true) 
-          @QueryParam("graph") 
-                String graph) {
-      
-    /*if(graph.equals("default")) {
-           return Response.status(403).build();
-     }*/
-
-       try {
-
-            String service = ModelUpdateDataEndpoint();
-
-            
-            GraphManager.deleteResourceGraphs(graph);
-            
-            Client client = Client.create();
-
-            WebResource webResource = client.resource(service)
-                                      .queryParam("graph", graph);
-
-            WebResource.Builder builder = webResource.header("Content-type", "application/ld+json");
-            ClientResponse response = builder.delete(ClientResponse.class);
-
-           if(!(graph.equals("undefined") || graph.equals("default"))) {
-               ServiceDescriptionManager.deleteGraphDescription(graph);
-           }
-            
-            if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-               Logger.getLogger(Model.class.getName()).log(Level.WARNING, graph+" was not deleted! Status "+response.getStatus());
-               return Response.status(response.getStatus()).build();
-            }
-
-
-
-            Logger.getLogger(Model.class.getName()).log(Level.INFO, graph+" deleted successfully!");
-            
-           
-            
-            return Response.status(204).build();
-
-      } catch(UniformInterfaceException | ClientHandlerException ex) {
-            Logger.getLogger(Model.class.getName()).log(Level.WARNING, "Expect the unexpected!", ex);
-            return Response.status(400).build();
-      }
-  }
-  
-  
-  
   
 }

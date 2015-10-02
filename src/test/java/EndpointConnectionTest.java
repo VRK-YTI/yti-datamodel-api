@@ -5,7 +5,7 @@
  */
 
 
-import com.csc.fi.ioapi.config.Endpoint;
+import com.csc.fi.ioapi.config.ApplicationProperties;
 import com.hp.hpl.jena.query.Query;
 import com.hp.hpl.jena.query.QueryExecution;
 import com.hp.hpl.jena.query.QueryExecutionFactory;
@@ -51,7 +51,7 @@ public class EndpointConnectionTest {
     public void testEndpoint() {
         String queryString = "SELECT ?s ?p ?o WHERE { ?s ?p ?o } LIMIT 1";
     
-         String endpoint = Endpoint.getEndpoint()+"/core/sparql";
+         String endpoint = ApplicationProperties.getEndpoint()+"/core/sparql";
          System.out.println();
         
          Query query = QueryFactory.create(queryString);        

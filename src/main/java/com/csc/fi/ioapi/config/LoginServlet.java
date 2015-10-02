@@ -45,17 +45,26 @@ public class LoginServlet extends HttpServlet {
         Object group = request.getAttribute("group"); 
         Object mail = request.getAttribute("mail");
         Object sn = request.getAttribute("sn"); 
-        Object uid = request.getAttribute("uid"); 
+        Object uid = request.getAttribute("uid");
         
-        if(prov!=null) {  
-            Logger.getLogger(LoginServlet.class.getName()).log(Level.INFO, displayName.toString()+ " logged in from "+prov.toString());
-            Logger.getLogger(LoginServlet.class.getName()).log(Level.INFO, "Groups: "+group.toString());
-            session.setAttribute("displayName",displayName.toString());
-            session.setAttribute("group",group.toString());
-            session.setAttribute("mail",mail.toString());
-            session.setAttribute("uid",uid.toString());
-            httpResponse.sendRedirect("/?login=true&user="+mail.toString());
+        boolean debug = ApplicationProperties.getDebugMode();
+          
+        if(prov!=null || debug) {
+            if(debug) {
+                Logger.getLogger(LoginServlet.class.getName()).log(Level.INFO, "Logged in DEBUG MODE: "+debug);
+                session.setAttribute("displayName","Testi Testaaja");
+                session.setAttribute("group",ApplicationProperties.getGroupDomain()+"SUPER_ADMINS");
+                session.setAttribute("mail","testi@example.org");
+            } else { 
+                Logger.getLogger(LoginServlet.class.getName()).log(Level.INFO, displayName.toString()+ " logged in from "+prov.toString());
+                Logger.getLogger(LoginServlet.class.getName()).log(Level.INFO, "Groups: "+group.toString());
+                session.setAttribute("displayName",displayName.toString());
+                session.setAttribute("group",group.toString());
+                session.setAttribute("mail",mail.toString());
+            }
             
+            // &user="+session.getAttribute("mail")
+            httpResponse.sendRedirect("/?login=true");
             LoginSession loginSession = new LoginSession(session);
             UserManager.checkUser(loginSession);
 

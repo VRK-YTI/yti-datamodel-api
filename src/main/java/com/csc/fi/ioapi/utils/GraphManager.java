@@ -5,7 +5,7 @@
  */
 package com.csc.fi.ioapi.utils;
 
-import com.csc.fi.ioapi.config.Endpoint;
+import com.csc.fi.ioapi.config.ApplicationProperties;
 import com.hp.hpl.jena.query.ParameterizedSparqlString;
 import com.hp.hpl.jena.update.UpdateExecutionFactory;
 import com.hp.hpl.jena.update.UpdateProcessor;
@@ -28,7 +28,7 @@ public class GraphManager {
     final static SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssX");
     
     public static String ModelSparqlUpdateEndpoint() {
-       return Endpoint.getEndpoint()+"/search/update";
+       return ApplicationProperties.getEndpoint()+"/search/update";
     }
     
     public static void createResourceGraphs(String graph) {

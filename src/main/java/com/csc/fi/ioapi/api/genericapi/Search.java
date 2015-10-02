@@ -18,7 +18,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 
-import com.csc.fi.ioapi.config.Endpoint;
+import com.csc.fi.ioapi.config.ApplicationProperties;
 import com.csc.fi.ioapi.utils.LDHelper;
 import com.hp.hpl.jena.query.ParameterizedSparqlString;
 import com.sun.jersey.api.client.Client;
@@ -43,7 +43,7 @@ public class Search {
     @Context ServletContext context;
 
     public String ModelSparqlDataEndpoint() {
-       return Endpoint.getEndpoint()+"/search/sparql";
+       return ApplicationProperties.getEndpoint()+"/search/sparql";
     }
             
   @GET
