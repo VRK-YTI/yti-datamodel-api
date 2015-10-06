@@ -21,6 +21,7 @@ import org.apache.jena.iri.IRIException;
 import org.apache.jena.iri.IRIFactory;
 
 import com.csc.fi.ioapi.config.ApplicationProperties;
+import com.csc.fi.ioapi.config.EndpointServices;
 import com.csc.fi.ioapi.utils.LDHelper;
 import com.hp.hpl.jena.query.ParameterizedSparqlString;
 import com.hp.hpl.jena.sparql.engine.http.QueryExceptionHTTP;
@@ -47,24 +48,9 @@ import com.wordnik.swagger.annotations.ApiResponses;
 @Api(value = "/groups", description = "Edit groups")
 public class Group {
 
-	@Context
-	ServletContext context;
+	@Context ServletContext context;
+        EndpointServices services = new EndpointServices();
 
-	public String userEndpoint() {
-		return ApplicationProperties.getEndpoint() + "/users/data";
-	}
-
-	public String userSparqlEndpoint() {
-		return ApplicationProperties.getEndpoint() + "/users/sparql";
-	}
-
-	public String searchSparqlEndpoint() {
-		return ApplicationProperties.getEndpoint() + "/search/sparql";
-	}
-
-	public String userSparqlUpdateEndpoint() {
-		return ApplicationProperties.getEndpoint() + "/users/update";
-	}
 
 	@POST
 	@ApiOperation(value = "Update group", notes = "Add users or change name")
@@ -115,7 +101,7 @@ public class Group {
 		pss.setIri("group", groupID);
 
 		UpdateRequest query = pss.asUpdate();
-		UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(query, userSparqlUpdateEndpoint());
+		UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(query, services.getUsersSparqlUpdateAddress() );
 
 		try {
 			qexec.execute();
@@ -138,9 +124,8 @@ public class Group {
 
 		try {
 
-			String service = userEndpoint();
 			Client client = Client.create();
-			WebResource webResource = client.resource(service).queryParam("graph", "urn:csc:groups");
+			WebResource webResource = client.resource(services.getUsersReadWriteAddress()).queryParam("graph", "urn:csc:groups");
 
 			WebResource.Builder builder = webResource.header("Content-type", "application/ld+json");
 			ClientResponse response = builder.put(ClientResponse.class, body);
@@ -174,16 +159,15 @@ public class Group {
 		ResponseBuilder rb;
 
 		Client client = Client.create();
-		String service = userEndpoint();
 
-		WebResource webResource = client.resource(service).queryParam("graph", "urn:csc:groups");
+		WebResource webResource = client.resource(services.getUsersReadWriteAddress()).queryParam("graph", "urn:csc:groups");
 
 		WebResource.Builder builder = webResource.accept("application/ld+json");
 
 		ClientResponse response = builder.get(ClientResponse.class);
 
 		if (response.getStatusInfo().getFamily() != Family.SUCCESSFUL) {
-			Logger.getLogger(Group.class.getName()).log(Level.INFO, response.getStatus() + " from SERVICE " + service);
+			Logger.getLogger(Group.class.getName()).log(Level.INFO, response.getStatus() + " from SERVICE " + services.getUsersReadWriteAddress());
 			return Response.status(response.getStatus()).entity("{}").build();
 		}
 
@@ -216,7 +200,7 @@ public class Group {
 		pss.setIri("group", groupID);
 
 		UpdateRequest queryObj = pss.asUpdate(); // UpdateFactory.create(parameterizedSparqlString.as);
-		UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, userSparqlUpdateEndpoint());
+		UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, services.getUsersSparqlUpdateAddress());
 
 		try {
 			qexec.execute();

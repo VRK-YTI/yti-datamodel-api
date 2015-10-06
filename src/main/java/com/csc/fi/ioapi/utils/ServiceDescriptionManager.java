@@ -6,6 +6,7 @@
 package com.csc.fi.ioapi.utils;
 
 import com.csc.fi.ioapi.config.ApplicationProperties;
+import com.csc.fi.ioapi.config.EndpointServices;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -32,7 +33,9 @@ public class ServiceDescriptionManager {
     
     final static SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssX");
     
-    public static void updateGraphDescription(String service, String graph) {
+    static EndpointServices services = new EndpointServices();
+    
+    public static void updateGraphDescription(String graph) {
         
         String timestamp = fmt.format(new Date());
         
@@ -61,7 +64,7 @@ public class ServiceDescriptionManager {
         pss.setCommandText(query);
 
         UpdateRequest queryObj = pss.asUpdate();
-        UpdateProcessor qexec=UpdateExecutionFactory.createRemoteForm(queryObj,service);
+        UpdateProcessor qexec=UpdateExecutionFactory.createRemoteForm(queryObj,services.getCoreSparqlUpdateAddress());
         qexec.execute();
       
     }
@@ -88,7 +91,7 @@ public class ServiceDescriptionManager {
          pss.setIri("graphName", model);
          pss.setCommandText(queryString);
          
-         String endpoint = ApplicationProperties.getEndpoint()+"/users/sparql";
+         String endpoint = services.getCoreSparqlAddress(); //ApplicationProperties.getEndpoint()+"/users/sparql";
         
          Query query = pss.asQuery();
          QueryExecution qexec = QueryExecutionFactory.sparqlService(endpoint, query);
@@ -107,7 +110,7 @@ public class ServiceDescriptionManager {
     }
     
     
-        public static void createGraphDescription(String service, String graph, String group) {
+        public static void createGraphDescription(String graph, String group) {
         
         String timestamp = fmt.format(new Date());
         
@@ -140,7 +143,7 @@ public class ServiceDescriptionManager {
         Logger.getLogger(ServiceDescriptionManager.class.getName()).log(Level.WARNING, pss.toString());
         
         UpdateRequest queryObj = pss.asUpdate();
-        UpdateProcessor qexec=UpdateExecutionFactory.createRemoteForm(queryObj,service);
+        UpdateProcessor qexec=UpdateExecutionFactory.createRemoteForm(queryObj,services.getCoreSparqlUpdateAddress());
         qexec.execute();
         
  
@@ -170,7 +173,7 @@ public class ServiceDescriptionManager {
         Logger.getLogger(ServiceDescriptionManager.class.getName()).log(Level.WARNING, pss.toString());
         
         UpdateRequest queryObj = pss.asUpdate();
-        UpdateProcessor qexec=UpdateExecutionFactory.createRemoteForm(queryObj,ApplicationProperties.getEndpoint()+"/search/update");
+        UpdateProcessor qexec=UpdateExecutionFactory.createRemoteForm(queryObj,services.getCoreSparqlUpdateAddress());
         qexec.execute();
         
       

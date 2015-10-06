@@ -26,6 +26,7 @@ import javax.ws.rs.core.Response.ResponseBuilder;
  * @author malonen
  */
 import com.csc.fi.ioapi.config.ApplicationProperties;
+import com.csc.fi.ioapi.config.EndpointServices;
 import com.csc.fi.ioapi.config.LoginSession;
 import com.csc.fi.ioapi.utils.GraphManager;
 import com.csc.fi.ioapi.utils.LDHelper;
@@ -57,19 +58,7 @@ import org.apache.jena.iri.IRIFactory;
 public class Class {
 
     @Context ServletContext context;
-    
-    public String ModelSparqlDataEndpoint() {
-       return ApplicationProperties.getEndpoint()+"/core/sparql";
-    }
-    
-    public String ModelSparqlUpdateEndpoint() {
-       return ApplicationProperties.getEndpoint()+"/search/update";
-    }
-    
-
-       public String ModelUpdateDataEndpoint() {
-       return ApplicationProperties.getEndpoint()+"/search/data";
-    }
+    EndpointServices services = new EndpointServices();
     
   @GET
   @Produces("application/ld+json")
@@ -111,7 +100,7 @@ public class Class {
          
             Client client = Client.create();
 
-            WebResource webResource = client.resource(ModelSparqlDataEndpoint())
+            WebResource webResource = client.resource(services.getCoreSparqlAddress())
                                       .queryParam("query", UriComponent.encode(pss.toString(),UriComponent.Type.QUERY));
 
             WebResource.Builder builder = webResource.accept("application/ld+json");
@@ -175,10 +164,9 @@ public class Class {
         }
         
         if(body!=null) {
-           String service = ModelUpdateDataEndpoint();
            Client client = Client.create();
            
-           WebResource webResource = client.resource(service)
+           WebResource webResource = client.resource(services.getCoreReadWriteAddress())
                                       .queryParam("graph", id);
 
             WebResource.Builder builder = webResource.header("Content-type", "application/ld+json");
@@ -259,10 +247,9 @@ public class Class {
             return Response.status(403).build();
         }
           
-           String service = ModelUpdateDataEndpoint();
            Client client = Client.create();
            
-           WebResource webResource = client.resource(service)
+           WebResource webResource = client.resource(services.getCoreReadWriteAddress())
                                       .queryParam("graph", id);
 
             WebResource.Builder builder = webResource.header("Content-type", "application/ld+json");

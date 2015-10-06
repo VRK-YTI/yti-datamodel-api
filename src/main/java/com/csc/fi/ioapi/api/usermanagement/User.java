@@ -23,6 +23,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 
 import com.csc.fi.ioapi.config.ApplicationProperties;
+import com.csc.fi.ioapi.config.EndpointServices;
 import com.csc.fi.ioapi.config.LoginSession;
 import com.csc.fi.ioapi.utils.LDHelper;
 import com.github.jsonldjava.core.JsonLdError;
@@ -55,19 +56,8 @@ import com.wordnik.swagger.annotations.ApiResponses;
 public class User {
 
     @Context ServletContext context;
+    EndpointServices services = new EndpointServices();
 
-    public String userEndpoint() {
-       return ApplicationProperties.getEndpoint() + "/users/data";
-    }
-    
-    public String userSparqlEndpoint() {
-       return ApplicationProperties.getEndpoint() + "/users/sparql";
-    }
-    
-    public String userSparqlUpdateEndpoint() {
-       return ApplicationProperties.getEndpoint() + "/users/update";
-    }
-     
     @GET
     @ApiOperation(value = "Get user id", notes = "Get user from service")
       @ApiResponses(value = {
@@ -78,7 +68,6 @@ public class User {
   })
     @Produces("application/ld+json")
     public Response getUser(@Context HttpServletRequest request) {
-       // @ApiParam(value = "email") @QueryParam("email") String email, 
         
         HttpSession session = request.getSession(); 
         LoginSession login = new LoginSession(session);
@@ -107,22 +96,10 @@ public class User {
         
         
         Logger.getLogger(User.class.getName()).log(Level.INFO, "User query: "+pss.toString());
-     
-        /*
-        if(email!=null && !email.equals("undefined")) {
-              pss.setLiteral("email", email);
-              
-              if(email.equals("testi@example.org"))
-                    pss.setLiteral("login", true);
-                  else
-                    pss.setLiteral("login", login.isLoggedIn(email));
-          
-        } */
-        
-
+    
         Client client = Client.create();
          
-        WebResource webResource = client.resource(userSparqlEndpoint())
+        WebResource webResource = client.resource(services.getUsersSparqlAddress())
                                   .queryParam("query", UriComponent.encode(pss.toString(),UriComponent.Type.QUERY));
 
         WebResource.Builder builder = webResource.accept("application/ld+json");
@@ -133,7 +110,7 @@ public class User {
         rb = Response.status(response.getStatus()); 
         rb.entity(response.getEntityInputStream());
        
-            return rb.build();
+        return rb.build();
         
     }
 

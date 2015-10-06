@@ -5,6 +5,7 @@
  */
 package com.csc.fi.ioapi.config;
 
+import com.csc.fi.ioapi.utils.GraphManager;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -39,7 +40,7 @@ public class StartUpListener implements ServletContextListener {
                 Logger.getLogger(StartUpListener.class.getName()).log(Level.INFO,"Default graph is initialized!");
               else {
                 Logger.getLogger(StartUpListener.class.getName()).log(Level.WARNING,"Default graph is NOT initialized!");
-                createDefaultGraph();
+                GraphManager.createDefaultGraph();
                 if(testDefaultGraph())
                     Logger.getLogger(StartUpListener.class.getName()).log(Level.INFO,"Created NEW DEFAULT graph!");
                 else
@@ -102,19 +103,7 @@ public class StartUpListener implements ServletContextListener {
            }
     }
     
-    private void createDefaultGraph() {
-        
-        String serviceURI = ApplicationProperties.getEndpoint()+"/search/data";
  
-        DatasetAccessor accessor = DatasetAccessorFactory.createHTTP(serviceURI);
-        
-        Model m = ModelFactory.createDefaultModel();
-        RDFDataMgr.read(m, LDHelper.getDefaultGraphInputStream(),RDFLanguages.JSONLD);
-      
-        accessor.putModel("urn:csc:iow:sd",m);
-        
-    }
-    
     private void createDefaultGroups() {
         
         String serviceURI = ApplicationProperties.getEndpoint()+"/users/data";

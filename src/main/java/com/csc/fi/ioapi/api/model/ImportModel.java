@@ -13,6 +13,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 
 import com.csc.fi.ioapi.config.ApplicationProperties;
+import com.csc.fi.ioapi.config.EndpointServices;
 import com.csc.fi.ioapi.utils.GraphManager;
 import com.csc.fi.ioapi.utils.ServiceDescriptionManager;
 import com.sun.jersey.api.client.Client;
@@ -34,24 +35,8 @@ import com.wordnik.swagger.annotations.ApiResponses;
 public class ImportModel {
 
     @Context ServletContext context;
-    
-    public String ModelDataEndpoint() {
-       return ApplicationProperties.getEndpoint()+"/core/get";
-    }
-    
-   public String ModelUpdateDataEndpoint() {
-       return ApplicationProperties.getEndpoint()+"/search/data";
-    }
-    
-    public String ModelSparqlDataEndpoint() {
-       return ApplicationProperties.getEndpoint()+"/search/sparql";
-    }
-    
-    public String ModelSparqlUpdateEndpoint() {
-       return ApplicationProperties.getEndpoint()+"/search/update";
-    }
-
-
+     EndpointServices services = new EndpointServices();
+  
   @POST
   @ApiOperation(value = "Updates graph in service and writes service description to default", notes = "PUT Body should be json-ld")
   @ApiResponses(value = {
@@ -72,13 +57,11 @@ public class ImportModel {
        } 
        try {
 
-           String service = ModelUpdateDataEndpoint();
-           
-           ServiceDescriptionManager.updateGraphDescription(ModelSparqlUpdateEndpoint(), graph);
+           ServiceDescriptionManager.updateGraphDescription(graph);
           
             Client client = Client.create();
 
-            WebResource webResource = client.resource(service).queryParam("graph", graph);
+            WebResource webResource = client.resource(services.getCoreReadWriteAddress()).queryParam("graph", graph);
 
             WebResource.Builder builder = webResource.header("Content-type", "application/ld+json");
             
@@ -127,15 +110,13 @@ public class ImportModel {
        
        try {
  
-           String service = ModelUpdateDataEndpoint();
-
            if(!graph.equals("undefined")) {
-               ServiceDescriptionManager.createGraphDescription(ModelSparqlUpdateEndpoint(), graph, group);
+               ServiceDescriptionManager.createGraphDescription(graph, group);
            }
 
             Client client = Client.create();
 
-            WebResource webResource = client.resource(service)
+            WebResource webResource = client.resource(services.getCoreReadWriteAddress())
                                       .queryParam("graph", graph);
 
             WebResource.Builder builder = webResource.header("Content-type", "application/ld+json");
@@ -176,14 +157,11 @@ public class ImportModel {
 
        try {
 
-            String service = ModelUpdateDataEndpoint();
-
-            
             GraphManager.deleteResourceGraphs(graph);
             
             Client client = Client.create();
 
-            WebResource webResource = client.resource(service)
+            WebResource webResource = client.resource(services.getCoreReadWriteAddress())
                                       .queryParam("graph", graph);
 
             WebResource.Builder builder = webResource.header("Content-type", "application/ld+json");
@@ -201,9 +179,7 @@ public class ImportModel {
 
 
             Logger.getLogger(ImportModel.class.getName()).log(Level.INFO, graph+" deleted successfully!");
-            
-           
-            
+
             return Response.status(204).build();
 
       } catch(UniformInterfaceException | ClientHandlerException ex) {

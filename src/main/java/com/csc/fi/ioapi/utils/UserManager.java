@@ -6,6 +6,7 @@
 package com.csc.fi.ioapi.utils;
 
 import com.csc.fi.ioapi.config.ApplicationProperties;
+import com.csc.fi.ioapi.config.EndpointServices;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import com.csc.fi.ioapi.config.LoginSession;
@@ -32,11 +33,8 @@ import java.util.logging.Logger;
 public class UserManager {
     
     final static SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssX");
-    
-    public static String userEndpoint() {
-       return ApplicationProperties.getEndpoint() + "/users/update";
-    }
-    
+    static EndpointServices services = new EndpointServices();
+
     
     
 
@@ -49,10 +47,9 @@ public class UserManager {
          pss.setLiteral("email", email);
          pss.setCommandText(queryString);
          
-         String endpoint = ApplicationProperties.getEndpoint()+"/users/sparql";
         
          Query query = pss.asQuery();
-         QueryExecution qexec = QueryExecutionFactory.sparqlService(endpoint, query,"urn:csc:users");
+         QueryExecution qexec = QueryExecutionFactory.sparqlService(services.getUsersSparqlAddress(), query,"urn:csc:users");
         
          try
           {
@@ -61,7 +58,7 @@ public class UserManager {
               return b;
               
            } catch(Exception ex) {
-               Logger.getLogger(UserManager.class.getName()).log(Level.WARNING, "Failed in checking the endpoint status: "+endpoint);
+               Logger.getLogger(UserManager.class.getName()).log(Level.WARNING, "Failed in checking the endpoint status: "+services.getUsersSparqlAddress());
                return false; 
            }
         
@@ -111,14 +108,32 @@ public class UserManager {
         pss.setLiteral("timestamp", timestamp,XSDDatatype.XSDdateTime);
         pss.setCommandText(query);
         
-        Logger.getLogger(UserManager.class.getName()).log(Level.WARNING, pss.toString()+" "+userEndpoint());
+        Logger.getLogger(UserManager.class.getName()).log(Level.WARNING, pss.toString()+" "+services.getUsersSparqlUpdateAddress());
         
         UpdateRequest queryObj = pss.asUpdate();
-        UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj,userEndpoint());
+        UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj,services.getUsersSparqlUpdateAddress());
         qexec.execute();
        
  
     }
+    
+    public static void deleteUsersAndGroups() {
+       
+        String query = 
+                "DROP ALL";
+         
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
+       // pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+        pss.setCommandText(query);
+        
+        Logger.getLogger(UserManager.class.getName()).log(Level.WARNING, pss.toString()+" from "+services.getUsersSparqlUpdateAddress());
+        
+        UpdateRequest queryObj = pss.asUpdate();
+        UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj,services.getUsersSparqlUpdateAddress());
+        qexec.execute();
+       
+    }
+    
     
         public static void updateUser(LoginSession loginSession) {
         
@@ -159,10 +174,10 @@ public class UserManager {
         pss.setLiteral("timestamp", timestamp,XSDDatatype.XSDdateTime);
         pss.setCommandText(query);
         
-        Logger.getLogger(UserManager.class.getName()).log(Level.WARNING, pss.toString()+" "+userEndpoint());
+        Logger.getLogger(UserManager.class.getName()).log(Level.WARNING, pss.toString()+" "+services.getUsersSparqlUpdateAddress());
         
         UpdateRequest queryObj = pss.asUpdate();
-        UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj,userEndpoint());
+        UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj,services.getUsersSparqlUpdateAddress());
         qexec.execute();
         
 

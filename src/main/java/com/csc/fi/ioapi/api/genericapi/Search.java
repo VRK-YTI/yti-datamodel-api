@@ -19,6 +19,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 
 import com.csc.fi.ioapi.config.ApplicationProperties;
+import com.csc.fi.ioapi.config.EndpointServices;
 import com.csc.fi.ioapi.utils.LDHelper;
 import com.hp.hpl.jena.query.ParameterizedSparqlString;
 import com.sun.jersey.api.client.Client;
@@ -41,10 +42,7 @@ import com.wordnik.swagger.annotations.ApiResponses;
 public class Search {
 
     @Context ServletContext context;
-
-    public String ModelSparqlDataEndpoint() {
-       return ApplicationProperties.getEndpoint()+"/search/sparql";
-    }
+    EndpointServices services = new EndpointServices();
             
   @GET
   @Consumes("application/sparql-query")
@@ -62,30 +60,30 @@ public class Search {
 
       if(!search.endsWith("~")||!search.endsWith("*")) search = search+"*";
       
-      String queryString = "CONSTRUCT {"
-              + "?resource rdf:type ?type ."
-              + "?resource rdfs:label ?label ."
-              + "?resource rdfs:comment ?comment ."
-              + "?resource rdfs:isDefinedBy ?super ."
-              + "} WHERE { "
-              + "?resource text:query '"+search+"' . "
-              + "OPTIONAL{?resource rdf:type ?type .}"
-              + "OPTIONAL{?resource sh:predicate ?type .}"
-              + "OPTIONAL{?resource rdfs:comment ?comment .}"
-              + "OPTIONAL{?super sh:property ?resource .}"
-              + "?resource rdfs:label ?label . "
-              + "FILTER langMatches(lang(?label),'"+lang+"')}"; 
-      
-       ParameterizedSparqlString pss = new ParameterizedSparqlString();
-       pss.setNsPrefixes(LDHelper.PREFIX_MAP);
-       pss.setCommandText(queryString);
-      
-       Logger.getLogger(Search.class.getName()).log(Level.INFO, "Searching "+graph+" with query: "+queryString);
-      
-        ResponseBuilder rb;
-              Client client = Client.create();
+            String queryString = "CONSTRUCT {"
+                  + "?resource rdf:type ?type ."
+                  + "?resource rdfs:label ?label ."
+                  + "?resource rdfs:comment ?comment ."
+                  + "?resource rdfs:isDefinedBy ?super ."
+                  + "} WHERE { "
+                  + "?resource text:query '"+search+"' . "
+                  + "OPTIONAL{?resource rdf:type ?type .}"
+                  + "OPTIONAL{?resource sh:predicate ?type .}"
+                  + "OPTIONAL{?resource rdfs:comment ?comment .}"
+                  + "OPTIONAL{?super sh:property ?resource .}"
+                  + "?resource rdfs:label ?label . "
+                  + "FILTER langMatches(lang(?label),'"+lang+"')}"; 
 
-            WebResource webResource = client.resource(ModelSparqlDataEndpoint())
+            ParameterizedSparqlString pss = new ParameterizedSparqlString();
+            pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+            pss.setCommandText(queryString);
+
+            Logger.getLogger(Search.class.getName()).log(Level.INFO, "Searching "+graph+" with query: "+queryString);
+
+            ResponseBuilder rb;
+            Client client = Client.create();
+
+            WebResource webResource = client.resource(services.getCoreSparqlAddress())
                                       .queryParam("query", UriComponent.encode(pss.toString(),UriComponent.Type.QUERY));
 
             WebResource.Builder builder = webResource.accept("application/ld+json");
@@ -93,7 +91,7 @@ public class Search {
             ClientResponse response = builder.get(ClientResponse.class);
             rb = Response.status(response.getStatus()); 
             rb.entity(response.getEntityInputStream());
-       
+
            return rb.build();    
 
   }

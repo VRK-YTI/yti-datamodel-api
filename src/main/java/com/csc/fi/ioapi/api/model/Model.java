@@ -16,6 +16,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 
 import com.csc.fi.ioapi.config.ApplicationProperties;
+import com.csc.fi.ioapi.config.EndpointServices;
 import com.csc.fi.ioapi.config.LoginSession;
 import com.csc.fi.ioapi.utils.GraphManager;
 import com.csc.fi.ioapi.utils.LDHelper;
@@ -44,22 +45,7 @@ import javax.servlet.http.HttpSession;
 public class Model {
 
     @Context ServletContext context;
-    
-    public String ModelDataEndpoint() {
-       return ApplicationProperties.getEndpoint()+"/core/get";
-    }
-    
-   public String ModelUpdateDataEndpoint() {
-       return ApplicationProperties.getEndpoint()+"/search/data";
-    }
-    
-    public String ModelSparqlDataEndpoint() {
-       return ApplicationProperties.getEndpoint()+"/search/sparql";
-    }
-    
-    public String ModelSparqlUpdateEndpoint() {
-       return ApplicationProperties.getEndpoint()+"/search/update";
-    }
+    EndpointServices services = new EndpointServices();
     
   @GET
   @Produces("application/ld+json")
@@ -75,7 +61,8 @@ public class Model {
           @ApiParam(value = "group")
           @QueryParam("group") String group) {
  
-      String service = ModelDataEndpoint();
+      String service = services.getCoreReadAddress();
+      
       ResponseBuilder rb;
       
       try {
@@ -131,7 +118,7 @@ public class Model {
           
             Client client = Client.create();
 
-            WebResource webResource = client.resource(ModelSparqlDataEndpoint())
+            WebResource webResource = client.resource(services.getCoreSparqlAddress())
                                       .queryParam("query", UriComponent.encode(pss.toString(),UriComponent.Type.QUERY));
 
             WebResource.Builder builder = webResource.accept("application/ld+json");
@@ -188,9 +175,9 @@ public class Model {
 
        try {
 
-           String service = ModelUpdateDataEndpoint();
+           String service = services.getCoreReadWriteAddress();
            
-           ServiceDescriptionManager.updateGraphDescription(ModelSparqlUpdateEndpoint(), graph);
+           ServiceDescriptionManager.updateGraphDescription(graph);
           
             Client client = Client.create();
 
@@ -252,15 +239,13 @@ public class Model {
         
        try {
  
-           String service = ModelUpdateDataEndpoint();
-
            if(!graph.equals("undefined")) {
-               ServiceDescriptionManager.createGraphDescription(ModelSparqlUpdateEndpoint(), graph, group);
+               ServiceDescriptionManager.createGraphDescription(graph, group);
            }
 
             Client client = Client.create();
 
-            WebResource webResource = client.resource(service)
+            WebResource webResource = client.resource(services.getCoreReadWriteAddress())
                                       .queryParam("graph", graph);
 
             WebResource.Builder builder = webResource.header("Content-type", "application/ld+json");

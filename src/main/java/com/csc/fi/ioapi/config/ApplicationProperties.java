@@ -11,7 +11,7 @@ import com.csc.fi.ioapi.utils.PropertyUtil;
  *
  * @author malonen
  */
-public class ApplicationProperties {
+public class ApplicationProperties {    
     
 public static String getEndpoint() {
     return PropertyUtil.getProperty("application.endpoint");
