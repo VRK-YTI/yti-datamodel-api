@@ -16,6 +16,9 @@ import com.csc.fi.ioapi.config.ApplicationProperties;
 import com.csc.fi.ioapi.config.EndpointServices;
 import com.csc.fi.ioapi.utils.GraphManager;
 import com.csc.fi.ioapi.utils.ServiceDescriptionManager;
+import com.hp.hpl.jena.rdf.model.Model;
+import com.hp.hpl.jena.rdf.model.ModelFactory;
+import com.hp.hpl.jena.rdf.model.ModelMaker;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientHandlerException;
 import com.sun.jersey.api.client.ClientResponse;
@@ -26,6 +29,11 @@ import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiParam;
 import com.wordnik.swagger.annotations.ApiResponse;
 import com.wordnik.swagger.annotations.ApiResponses;
+import java.io.ByteArrayInputStream;
+import org.apache.jena.atlas.json.JSON;
+import org.apache.jena.atlas.json.JsonObject;
+import org.apache.jena.riot.RDFDataMgr;
+import org.apache.jena.riot.RDFLanguages;
  
 /**
  * Root resource (exposed at "myresource" path)
@@ -72,9 +80,15 @@ public class ImportModel {
                return Response.status(response.getStatus()).build();
             }
 
-            Logger.getLogger(ImportModel.class.getName()).log(Level.INFO, graph+" updated sucessfully!");
+            Logger.getLogger(ImportModel.class.getName()).log(Level.FINE, graph+" updated sucessfully!");
             
-            GraphManager.createResourceGraphs(graph);
+            Model model = ModelFactory.createDefaultModel();
+            
+            RDFDataMgr.read(model, response.getEntityInputStream(),RDFLanguages.JSONLD);
+            
+            Logger.getLogger(ImportModel.class.getName()).log(Level.FINE,"Reading model "+model.isEmpty());
+            
+            GraphManager.createResourceGraphs(graph,model.getNsPrefixMap());
 
             return Response.status(204).build();
 
@@ -129,7 +143,14 @@ public class ImportModel {
 
             Logger.getLogger(ImportModel.class.getName()).log(Level.INFO, graph+" updated sucessfully!");
             
-            GraphManager.createResourceGraphs(graph);
+            //JsonObject json = JSON.parse(response.getEntityInputStream());
+            
+            //ModelMaker modelMaker = ModelFactory.createMemModelMaker();
+            Model model = ModelFactory.createDefaultModel(); //modelMaker.createModel(body);
+            
+            RDFDataMgr.read(model, new ByteArrayInputStream(body.getBytes()), RDFLanguages.JSONLD);
+
+            GraphManager.createResourceGraphs(graph,model.getNsPrefixMap());
             
             return Response.status(204).build();
 

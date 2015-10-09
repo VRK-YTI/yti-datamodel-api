@@ -5,7 +5,6 @@
  */
 package com.csc.fi.ioapi.utils;
 
-import com.csc.fi.ioapi.config.ApplicationProperties;
 import com.csc.fi.ioapi.config.EndpointServices;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -140,7 +139,7 @@ public class ServiceDescriptionManager {
         pss.setLiteral("timestamp", timestamp,XSDDatatype.XSDdateTime);
         pss.setCommandText(query);
 
-        Logger.getLogger(ServiceDescriptionManager.class.getName()).log(Level.WARNING, pss.toString());
+        Logger.getLogger(ServiceDescriptionManager.class.getName()).log(Level.FINE, pss.toString());
         
         UpdateRequest queryObj = pss.asUpdate();
         UpdateProcessor qexec=UpdateExecutionFactory.createRemoteForm(queryObj,services.getCoreSparqlUpdateAddress());
@@ -169,8 +168,7 @@ public class ServiceDescriptionManager {
         pss.setIri("graphName", graph);
         pss.setCommandText(query);
 
-         Logger.getLogger(ServiceDescriptionManager.class.getName()).log(Level.WARNING,"Removing "+graph);
-        Logger.getLogger(ServiceDescriptionManager.class.getName()).log(Level.WARNING, pss.toString());
+         Logger.getLogger(ServiceDescriptionManager.class.getName()).log(Level.FINE,"Removing "+graph);
         
         UpdateRequest queryObj = pss.asUpdate();
         UpdateProcessor qexec=UpdateExecutionFactory.createRemoteForm(queryObj,services.getCoreSparqlUpdateAddress());

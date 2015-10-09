@@ -75,30 +75,26 @@ public class Property {
           @QueryParam("model") String model) {
 
       ResponseBuilder rb;
-      
-      try {                   
+          
+       try {
+            
+          Client client = Client.create();
+          
+          if(id==null || id.equals("undefined") || id.equals("default")) {
+          
             String queryString;
             ParameterizedSparqlString pss = new ParameterizedSparqlString();
             pss.setNsPrefixes(LDHelper.PREFIX_MAP);
-
-            if(id!=null && !id.equals("undefined")) {
-                queryString = "CONSTRUCT { ?s ?p ?o . } WHERE { GRAPH ?property { ?s ?p ?o . } }";             
-                //   queryString = "CONSTRUCT { ?property ?p ?o . ?property rdfs:isDefinedBy ?library } WHERE { VALUES ?rel { iow:associations iow:attributes } ?library ?rel ?property . GRAPH ?library { ?property ?p ?o . }}"; 
-                pss.setIri("property", id);
-            } else {
-                queryString = "CONSTRUCT { ?property rdfs:label ?label . ?property a ?type . ?property rdfs:isDefinedBy ?source . } WHERE { VALUES ?rel {dcterms:hasPart iow:associations iow:attributes} ?library ?rel ?property . GRAPH ?graph { ?property rdfs:label ?label . VALUES ?type { owl:ObjectProperty owl:DatatypeProperty } ?property a ?type . ?property rdfs:isDefinedBy ?source . } }"; 
-            }
             
-            if(model!=null && !model.equals("undefined")) {
-                pss.setIri("library", model);
-            }
+            queryString = "CONSTRUCT { ?property rdfs:label ?label . ?property a ?type . ?property rdfs:isDefinedBy ?source . } WHERE { VALUES ?rel {dcterms:hasPart iow:associations iow:attributes} ?library ?rel ?property . GRAPH ?graph { ?property rdfs:label ?label . VALUES ?type { owl:ObjectProperty owl:DatatypeProperty } ?property a ?type . ?property rdfs:isDefinedBy ?source . } }"; 
+       
+            
+             if(model!=null && !model.equals("undefined")) {
+                  pss.setIri("library", model);
+             }
             
             pss.setCommandText(queryString);
-           
-            Logger.getLogger(Property.class.getName()).log(Level.INFO, pss.toString());
-          
-            Client client = Client.create();
-
+         
             WebResource webResource = client.resource(services.getCoreSparqlAddress())
                                       .queryParam("query", UriComponent.encode(pss.toString(),UriComponent.Type.QUERY));
 
@@ -107,10 +103,27 @@ public class Property {
             ClientResponse response = builder.get(ClientResponse.class);
             rb = Response.status(response.getStatus()); 
             rb.entity(response.getEntityInputStream());
-       
-           return rb.build();
+            
+          } else {
+              
            
-                  
+            WebResource webResource = client.resource(services.getCoreReadAddress())
+                                      .queryParam("graph", id);
+
+            Builder builder = webResource.accept("application/ld+json");
+            ClientResponse response = builder.get(ClientResponse.class);
+
+            if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
+                return Response.status(response.getStatus()).entity("{}").build();
+            }
+            
+            rb = Response.status(response.getStatus()); 
+            rb.entity(response.getEntityInputStream());
+       
+          }
+         
+        return rb.build();
+           
       } catch(UniformInterfaceException | ClientHandlerException ex) {
           Logger.getLogger(Property.class.getName()).log(Level.WARNING, "Expect the unexpected!", ex);
           return Response.serverError().entity("{}").build();

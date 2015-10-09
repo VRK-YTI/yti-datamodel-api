@@ -5,11 +5,16 @@
  */
 package com.csc.fi.ioapi.utils;
 
-import com.csc.fi.ioapi.config.ApplicationProperties;
 import com.csc.fi.ioapi.config.EndpointServices;
 import com.hp.hpl.jena.query.DatasetAccessor;
 import com.hp.hpl.jena.query.DatasetAccessorFactory;
 import com.hp.hpl.jena.query.ParameterizedSparqlString;
+import com.hp.hpl.jena.query.Query;
+import com.hp.hpl.jena.query.QueryExecution;
+import com.hp.hpl.jena.query.QueryExecutionFactory;
+import com.hp.hpl.jena.query.QueryFactory;
+import com.hp.hpl.jena.query.QuerySolution;
+import com.hp.hpl.jena.query.ResultSet;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.update.UpdateExecutionFactory;
@@ -17,6 +22,7 @@ import com.hp.hpl.jena.update.UpdateProcessor;
 import com.hp.hpl.jena.update.UpdateRequest;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.jena.iri.IRI;
@@ -40,26 +46,131 @@ public class GraphManager {
         
     }
     
-    public static void createResourceGraphs(String graph) {
+    public static void createResourceGraphs(String graph, Map<String,String> map) {
         
         String timestamp = fmt.format(new Date());
         
+        deleteResourceGraphs(graph);
+        
+        // GRAPH ?resource { ?resource ?p ?o .  ?resource sh:property ?node . ?node ?pp ?oo .  ?resource a ?type . ?resource dcterms:modified ?date . ?resource rdfs:isDefinedBy ?graph . } 
          String query = 
-                " INSERT { GRAPH ?graph { ?graph dcterms:hasPart ?resource } GRAPH ?resource { ?resource ?p ?o . ?resource sh:property ?props . ?props ?pp ?po .  ?resource a ?type . ?resource dcterms:modified ?date . ?resource rdfs:isDefinedBy ?graph . } } "+
-                " WHERE { GRAPH ?graph { VALUES ?type { sh:ShapeClass owl:DatatypeProperty owl:ObjectProperty } . ?resource a ?type . ?resource ?p ?o . OPTIONAL { ?resource sh:property ?props . ?props ?pp ?po . } }}";
-                    
+                " INSERT { GRAPH ?graph { ?graph dcterms:hasPart ?resource } GRAPH ?resource { ?resource dcterms:modified ?date . ?resource rdfs:isDefinedBy ?graph }}"+
+                " WHERE { GRAPH ?graph { VALUES ?type { sh:ShapeClass owl:DatatypeProperty owl:ObjectProperty } ?resource a ?type . }}";
+        // . ?resource a ?type . ?resource ?p ?o . OPTIONAL { ?resource sh:property ?node . ?node ?pp ?oo . } }            
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
-        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+        
+        /* ADD prefix&namespaces from the model*/
+        pss.setNsPrefixes(map);
+        
+        /* ADD all used in the query to be sure */ 
+        pss.setNsPrefix("dcterms", "http://purl.org/dc/terms/");
+        pss.setNsPrefix("sh", "http://www.w3.org/ns/shacl#");
+        pss.setNsPrefix("owl", "http://www.w3.org/2002/07/owl#");
+        pss.setNsPrefix("rdfs", "http://www.w3.org/2000/01/rdf-schema#");
+        
         pss.setIri("graph",graph);
         pss.setLiteral("date", timestamp);
-        pss.setCommandText(query);
-        
-        Logger.getLogger(GraphManager.class.getName()).log(Level.INFO, pss.toString()+" "+services.getCoreSparqlUpdateAddress());
+        pss.setCommandText(query);        
         
         UpdateRequest queryObj = pss.asUpdate();
         UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj,services.getCoreSparqlUpdateAddress());
         qexec.execute();
         
+        
+       updateResourceGraphs(graph, map);
+        
+    }
+    
+    public static void updateResourceGraphs(String model, Map<String,String> map) {
+        
+    ParameterizedSparqlString pss = new ParameterizedSparqlString();
+    String selectResources = "SELECT ?resource WHERE { GRAPH ?resource { ?resource rdfs:isDefinedBy ?model . }}";    
+    
+    pss.setIri("model", model);
+    pss.setNsPrefix("rdfs", "http://www.w3.org/2000/01/rdf-schema#");
+    pss.setCommandText(selectResources);
+    
+    QueryExecution qexec = QueryExecutionFactory.sparqlService(services.getCoreSparqlAddress(), pss.asQuery());
+    
+    ResultSet results = qexec.execSelect() ;
+    
+    while (results.hasNext())
+    {
+      QuerySolution soln = results.nextSolution() ;
+      constructGraphs(model,soln.getResource("resource").toString(),map);
+    }
+
+    }
+    
+    
+    public static void constructGraphs(String graph, String resource, Map<String,String> map) {
+        
+    ParameterizedSparqlString pss = new ParameterizedSparqlString(); 
+    
+    String query = 
+                " CONSTRUCT { ?resource ?p ?o .  ?resource sh:property ?node . ?node ?pp ?oo .  ?resource a ?type . ?resource dcterms:modified ?date . ?resource rdfs:isDefinedBy ?graph .} "+
+                " WHERE { GRAPH ?graph { VALUES ?type { sh:ShapeClass owl:DatatypeProperty owl:ObjectProperty } . ?resource a ?type . ?resource ?p ?o . OPTIONAL { ?resource sh:property ?node . ?node ?pp ?oo . } }}";
+    pss.setIri("graph", graph);
+    pss.setIri("resource", resource);
+    pss.setNsPrefixes(map);
+    pss.setNsPrefix("dcterms", "http://purl.org/dc/terms/");
+    pss.setNsPrefix("sh", "http://www.w3.org/ns/shacl#");
+    pss.setNsPrefix("owl", "http://www.w3.org/2002/07/owl#");
+    pss.setNsPrefix("rdfs", "http://www.w3.org/2000/01/rdf-schema#");
+        
+    pss.setCommandText(query);
+    
+    QueryExecution qexec = QueryExecutionFactory.sparqlService(services.getCoreSparqlAddress(), pss.asQuery());
+    
+    Model results = qexec.execConstruct();
+    results.write(System.out, "TURTLE");
+    
+    DatasetAccessor accessor = DatasetAccessorFactory.createHTTP(services.getCoreReadWriteAddress());
+    accessor.add(resource, results);
+  
+    }
+    
+    
+    
+    public static void deleteResourceGraphs(String model) {
+        
+         String query = "DELETE WHERE { GRAPH ?graph { ?s ?p ?o . ?graph rdfs:isDefinedBy ?model . } }";
+                    
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        pss.setNsPrefix("rdfs", "http://www.w3.org/2000/01/rdf-schema#");
+        pss.setIri("model", model);
+        
+        pss.setCommandText(query);
+        
+        UpdateRequest queryObj = pss.asUpdate();
+        UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj,services.getCoreSparqlUpdateAddress());
+        qexec.execute();
+        
+        /* OPTIONALLY
+        
+       UpdateRequest request = UpdateFactory.create() ;
+        request.add("DROP ALL")
+        UpdateAction.execute(request, graphStore) ;
+        
+        */
+    }
+    
+    
+    public static boolean testDefaultGraph() {
+        String queryString = " ASK { ?s a sd:Service ; sd:defaultDataset ?d . ?d sd:defaultGraph ?g . ?g dcterms:title ?title . }";
+    
+         Query query = QueryFactory.create(LDHelper.prefix+queryString);        
+         QueryExecution qexec = QueryExecutionFactory.sparqlService(services.getCoreSparqlAddress(), query,"urn:csc:iow:sd");
+        
+         try
+          {
+              boolean b = qexec.execAsk();
+              
+              return b;
+              
+           } catch(Exception ex) {
+               return false; 
+           }
     }
     
       public static void createDefaultGraph() {
@@ -77,14 +188,12 @@ public class GraphManager {
     
     public static void deleteGraphs() {
        
-        String query = 
-                "DROP ALL";
+        String query = "DROP ALL";
          
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
-       // pss.setNsPrefixes(LDHelper.PREFIX_MAP);
         pss.setCommandText(query);
         
-        Logger.getLogger(UserManager.class.getName()).log(Level.WARNING, pss.toString()+" from "+services.getCoreSparqlUpdateAddress());
+        Logger.getLogger(GraphManager.class.getName()).log(Level.WARNING, pss.toString()+" from "+services.getCoreSparqlUpdateAddress());
         
         UpdateRequest queryObj = pss.asUpdate();
         UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj,services.getCoreSparqlUpdateAddress());
@@ -92,28 +201,6 @@ public class GraphManager {
        
     }
     
-    
-    
-        public static void deleteResourceGraphs(String graph) {
-        
-         String query = 
-                " DELETE { GRAPH ?resource { ?s ?p ?o } } "+
-                " WHERE { GRAPH ?graph {?resource a ?type . } GRAPH ?resource {?s ?p ?o . } }";
-                    
-        ParameterizedSparqlString pss = new ParameterizedSparqlString();
-        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
-        pss.setIri("graph",graph);
-        pss.setCommandText(query);
-        
-        Logger.getLogger(GraphManager.class.getName()).log(Level.WARNING, pss.toString()+" "+services.getCoreSparqlUpdateAddress());
-        
-        UpdateRequest queryObj = pss.asUpdate();
-        UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj,services.getCoreSparqlUpdateAddress());
-        qexec.execute();
-        
-    }
-        
-        
     public static void insertNewGraphReferenceToModel(IRI graph, IRI model) {
      
        String timestamp = fmt.format(new Date());

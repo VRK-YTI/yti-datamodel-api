@@ -58,7 +58,8 @@ public class Search {
           @ApiParam(value = "Searchstring", required = true) @QueryParam("search") String search,
           @ApiParam(value = "Language", required = true) @QueryParam("lang") String lang) {      
 
-      if(!search.endsWith("~")||!search.endsWith("*")) search = search+"*";
+      /* TODO: ADD TEXTDATASET ONCE NAMESPACE BUG IS RESOLVED */
+      // if(!search.endsWith("~")||!search.endsWith("*")) search = search+"*";
       
             String queryString = "CONSTRUCT {"
                   + "?resource rdf:type ?type ."
@@ -66,8 +67,10 @@ public class Search {
                   + "?resource rdfs:comment ?comment ."
                   + "?resource rdfs:isDefinedBy ?super ."
                   + "} WHERE { "
-                  + "?resource text:query '"+search+"' . "
-                  + "OPTIONAL{?resource rdf:type ?type .}"
+                  + "?resource ?p ?literal ."
+                  + "?resource rdf:type ?type ."
+                  + "FILTER contains(lcase(?literal),lcase(?search)) "  
+                  //+ "?resource text:query '"+search+"' . "
                   + "OPTIONAL{?resource sh:predicate ?type .}"
                   + "OPTIONAL{?resource rdfs:comment ?comment .}"
                   + "OPTIONAL{?super sh:property ?resource .}"
@@ -76,7 +79,9 @@ public class Search {
 
             ParameterizedSparqlString pss = new ParameterizedSparqlString();
             pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+            pss.setLiteral("search", search);
             pss.setCommandText(queryString);
+            
 
             Logger.getLogger(Search.class.getName()).log(Level.INFO, "Searching "+graph+" with query: "+queryString);
 

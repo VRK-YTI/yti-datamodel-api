@@ -22,15 +22,15 @@ public String getCoreReadAddress() {
 }
 
 public String getCoreReadWriteAddress() {
-    return endpoint+"/search/data";
+    return endpoint+"/core/data";
 }
 
 public String getCoreSparqlAddress() {
-    return endpoint+"/search/sparql";
+    return endpoint+"/core/sparql";
 }
 
 public String getCoreSparqlUpdateAddress() {
-    return endpoint+"/search/update";
+    return endpoint+"/core/update";
 }
 
 public String getUsersReadAddress() {

@@ -42,7 +42,7 @@ import javax.servlet.http.HttpSession;
  */
 @Path("model")
 @Api(value = "/model", description = "Operations about data")
-public class Model {
+public class Models {
 
     @Context ServletContext context;
     EndpointServices services = new EndpointServices();
@@ -60,31 +60,25 @@ public class Model {
           @QueryParam("id") String id,
           @ApiParam(value = "group")
           @QueryParam("group") String group) {
- 
-      String service = services.getCoreReadAddress();
-      
+
       ResponseBuilder rb;
       
       try {
           
-          /* FIXME: GRAPH PROTOCOL IS NOT WORKING AS EXPECTED FROM TEXTDATASET - BUG in FUSEKI 2.3.0 ? 
-             USING CONSTRUCT QUERY INSTEAD - MUCH SLOWER - MUST BE FIXED. */
-          
-          /*
           if(group==null || group.equals("undefined")) {
         
             Client client = Client.create();
 
             if(id==null || id.equals("undefined") || id.equals("default")) id = "urn:csc:iow:sd";
             
-            WebResource webResource = client.resource(service)
+            WebResource webResource = client.resource(services.getCoreReadAddress())
                                       .queryParam("graph", id);
 
             Builder builder = webResource.accept("application/ld+json");
             ClientResponse response = builder.get(ClientResponse.class);
 
-            if (response.getStatus() != 200) {
-               Logger.getLogger(Model.class.getName()).log(Level.INFO, response.getStatus()+" from SERVICE "+service+" and GRAPH "+id);
+            if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
+               Logger.getLogger(Models.class.getName()).log(Level.INFO, response.getStatus()+" from SERVICE "+services.getCoreReadAddress()+" and GRAPH "+id);
                return Response.status(response.getStatus()).entity("{}").build();
             }
             
@@ -92,29 +86,21 @@ public class Model {
             rb.entity(response.getEntityInputStream());
        
            return rb.build();
-            */
-          
+       
+     }
+     else { 
+              
             String queryString;
             ParameterizedSparqlString pss = new ParameterizedSparqlString();
             pss.setNsPrefixes(LDHelper.PREFIX_MAP);
-            
-     
-     if(group==null || group.equals("undefined")) { 
-         queryString = "CONSTRUCT { ?s ?p ?o } WHERE { GRAPH ?graph { ?s ?p ?o }}"; 
-         if(id==null || id.equals("undefined") || id.equals("default")) id = "urn:csc:iow:sd";
-         pss.setIri("graph", id);
-     }
-     else { 
-          /* IF group parameter is available list of core vocabularies is created */
-         queryString = "CONSTRUCT { ?graphName rdfs:label ?label . ?graphName dcterms:identifier ?g . ?graphName dcterms:isPartOf ?group . ?graphName a sd:NamedGraph . } WHERE { ?graph sd:name ?graphName . ?graph a sd:NamedGraph ; dcterms:isPartOf ?group . GRAPH ?graphName {  ?g a owl:Ontology . ?g rdfs:label ?label }}"; 
-         pss.setIri("group", group);    
-       }
-             
-              
+            /* IF group parameter is available list of core vocabularies is created */
+           queryString = "CONSTRUCT { ?graphName rdfs:label ?label . ?graphName dcterms:identifier ?g . ?graphName dcterms:isPartOf ?group . ?graphName a sd:NamedGraph . } WHERE { ?graph sd:name ?graphName . ?graph a sd:NamedGraph ; dcterms:isPartOf ?group . GRAPH ?graphName {  ?g a owl:Ontology . ?g rdfs:label ?label }}"; 
+           pss.setIri("group", group);    
+
 
             pss.setCommandText(queryString);
            
-            Logger.getLogger(Model.class.getName()).log(Level.INFO, pss.toString());
+            Logger.getLogger(Models.class.getName()).log(Level.INFO, pss.toString());
           
             Client client = Client.create();
 
@@ -126,11 +112,13 @@ public class Model {
             ClientResponse response = builder.get(ClientResponse.class);
             rb = Response.status(response.getStatus()); 
             rb.entity(response.getEntityInputStream());
+            
+     }
        
            return rb.build();
            
       } catch(UniformInterfaceException | ClientHandlerException ex) {
-          Logger.getLogger(Model.class.getName()).log(Level.WARNING, "Expect the unexpected!", ex);
+          Logger.getLogger(Models.class.getName()).log(Level.WARNING, "Expect the unexpected!", ex);
           return Response.serverError().entity("{}").build();
       }
 
@@ -188,16 +176,16 @@ public class Model {
             ClientResponse response = builder.put(ClientResponse.class,body);
 
             if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-               Logger.getLogger(Model.class.getName()).log(Level.WARNING, graph+" was not updated! Status "+response.getStatus());
+               Logger.getLogger(Models.class.getName()).log(Level.WARNING, graph+" was not updated! Status "+response.getStatus());
                return Response.status(response.getStatus()).build();
             }
 
-            Logger.getLogger(Model.class.getName()).log(Level.INFO, graph+" updated sucessfully!");
+            Logger.getLogger(Models.class.getName()).log(Level.INFO, graph+" updated sucessfully!");
             
             return Response.status(204).build();
 
       } catch(UniformInterfaceException | ClientHandlerException ex) {
-        Logger.getLogger(Model.class.getName()).log(Level.WARNING, "Expect the unexpected!", ex);
+        Logger.getLogger(Models.class.getName()).log(Level.WARNING, "Expect the unexpected!", ex);
         return Response.status(400).build();
       }
   }
@@ -252,16 +240,16 @@ public class Model {
             ClientResponse response = builder.put(ClientResponse.class,body);
 
             if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-               Logger.getLogger(Model.class.getName()).log(Level.WARNING, graph+" was not updated! Status "+response.getStatus());
+               Logger.getLogger(Models.class.getName()).log(Level.WARNING, graph+" was not updated! Status "+response.getStatus());
                return Response.status(response.getStatus()).build();
             }
 
-            Logger.getLogger(Model.class.getName()).log(Level.INFO, graph+" updated sucessfully!");
+            Logger.getLogger(Models.class.getName()).log(Level.INFO, graph+" updated sucessfully!");
            
             return Response.status(204).build();
 
       } catch(UniformInterfaceException | ClientHandlerException ex) {
-        Logger.getLogger(Model.class.getName()).log(Level.WARNING, "Expect the unexpected!", ex);
+        Logger.getLogger(Models.class.getName()).log(Level.WARNING, "Expect the unexpected!", ex);
         return Response.status(400).build();
       }
   }

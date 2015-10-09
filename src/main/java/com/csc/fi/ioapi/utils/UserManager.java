@@ -14,10 +14,15 @@ import com.csc.fi.ioapi.config.LoginSession;
 import com.hp.hpl.jena.datatypes.xsd.XSDDatatype;
 import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.graph.NodeFactory;
+import com.hp.hpl.jena.query.DatasetAccessor;
+import com.hp.hpl.jena.query.DatasetAccessorFactory;
 import com.hp.hpl.jena.query.ParameterizedSparqlString;
 import com.hp.hpl.jena.query.Query;
 import com.hp.hpl.jena.query.QueryExecution;
 import com.hp.hpl.jena.query.QueryExecutionFactory;
+import com.hp.hpl.jena.query.QueryFactory;
+import com.hp.hpl.jena.rdf.model.Model;
+import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.update.UpdateExecutionFactory;
 import com.hp.hpl.jena.update.UpdateProcessor;
 import com.hp.hpl.jena.update.UpdateRequest;
@@ -25,6 +30,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.apache.jena.riot.RDFDataMgr;
+import org.apache.jena.riot.RDFLanguages;
 
 /**
  *
@@ -182,5 +189,36 @@ public class UserManager {
         
 
     }
+        
+        public static boolean testDefaultGroups() {
+         
+         String queryString = "ASK { ?s a foaf:Group . }";
+    
+         Query query = QueryFactory.create(LDHelper.prefix+queryString);        
+         QueryExecution qexec = QueryExecutionFactory.sparqlService(services.getUsersSparqlAddress(), query);
+        
+         try
+          {
+              boolean b = qexec.execAsk();
+              
+              return b;
+              
+           } catch(Exception ex) {
+              return false; 
+           }
+    }
+    
+ 
+    public static void createDefaultGroups() {
+       
+        DatasetAccessor accessor = DatasetAccessorFactory.createHTTP(services.getUsersReadWriteAddress());
+        
+        Model m = ModelFactory.createDefaultModel();
+        RDFDataMgr.read(m, LDHelper.getDefaultGroupsInputStream(),RDFLanguages.JSONLD);
+      
+        accessor.putModel(m);
+        
+    }
+        
 
 }
