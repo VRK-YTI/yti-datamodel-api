@@ -46,7 +46,7 @@ public class Models {
 
     @Context ServletContext context;
     EndpointServices services = new EndpointServices();
-    
+   
   @GET
   @Produces("application/ld+json")
   @ApiOperation(value = "Get model from service", notes = "More notes about this method")

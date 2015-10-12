@@ -27,7 +27,6 @@ public class LoginSession implements LoginInterface {
     }
 
 
-    
     @Override
     public boolean isInGroup(String group) {
         return session.getAttribute("group").toString().contains(group);

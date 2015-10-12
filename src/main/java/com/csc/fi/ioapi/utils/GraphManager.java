@@ -134,7 +134,7 @@ public class GraphManager {
     
     public static void deleteResourceGraphs(String model) {
         
-         String query = "DELETE WHERE { GRAPH ?graph { ?s ?p ?o . ?graph rdfs:isDefinedBy ?model . } }";
+        String query = "DELETE WHERE { GRAPH ?graph { ?s ?p ?o . ?graph rdfs:isDefinedBy ?model . } }";
                     
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         pss.setNsPrefix("rdfs", "http://www.w3.org/2000/01/rdf-schema#");

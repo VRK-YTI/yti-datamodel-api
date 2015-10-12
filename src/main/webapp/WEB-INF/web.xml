@@ -19,6 +19,7 @@
                          com.csc.fi.ioapi.api.model;
                          com.csc.fi.ioapi.api.profile;
                          com.csc.fi.ioapi.api.genericapi;
+                         com.csc.fi.ioapi.api.concepts;
                          com.wordnik.swagger.jersey.listing</param-value>
         </init-param>
         <load-on-startup>1</load-on-startup>

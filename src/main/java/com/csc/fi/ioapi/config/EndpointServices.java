@@ -49,4 +49,20 @@ public String getUsersSparqlUpdateAddress() {
     return endpoint+"/users/update";
 }
 
+public String getConceptAPI() {
+     return "http://api.finto.fi/rest/v1/data";
+}
+
+public String getConceptSearchAPI() {
+     return "http://api.finto.fi/rest/v1/search";
+}
+
+public String getConceptSearchAPI(String id) {
+     return "http://api.finto.fi/rest/v1/"+id+"/search";
+}
+
+public String getSchemeSearchAPI() {
+     return "http://api.finto.fi/rest/v1/vocabularies";
+}
+
 }
