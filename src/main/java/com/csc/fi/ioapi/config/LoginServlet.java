@@ -5,17 +5,19 @@
  */
 package com.csc.fi.ioapi.config;
 
-import com.csc.fi.ioapi.utils.UserManager;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+
+import com.csc.fi.ioapi.api.usermanagement.UserDefinition;
+import com.csc.fi.ioapi.utils.UserManager;
 
 /**
  *
@@ -24,6 +26,8 @@ import javax.servlet.http.HttpSession;
 @WebServlet(name = "LoginServlet", urlPatterns = {"/LoginServlet"})
 public class LoginServlet extends HttpServlet {
 
+    private static String SHIBBOLETH_PROVIDER_ATTRIBUTE = "Shib-Identity-Provider";
+    
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
      * methods.
@@ -35,50 +39,58 @@ public class LoginServlet extends HttpServlet {
      */
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        
-        HttpServletRequest httpRequest = (HttpServletRequest) request;
-        HttpSession session = httpRequest.getSession();
-        HttpServletResponse httpResponse = (HttpServletResponse) response;
-          
-        Object prov = request.getAttribute("Shib-Identity-Provider"); 
-        Object displayName = request.getAttribute("displayName"); 
-        Object group = request.getAttribute("group"); 
-        Object mail = request.getAttribute("mail");
-        Object sn = request.getAttribute("sn"); 
-        Object uid = request.getAttribute("uid");
-        
-        boolean debug = ApplicationProperties.getDebugMode();
-          
-        if(prov!=null || debug) {
-            if(debug) {
-                Logger.getLogger(LoginServlet.class.getName()).log(Level.INFO, "Logged in DEBUG MODE: "+debug);
-                session.setAttribute("displayName","Testi Testaaja");
-                session.setAttribute("group",ApplicationProperties.getGroupDomain()+"SUPER_ADMINS");
-                session.setAttribute("mail","testi@example.org");
-            } else { 
-                Logger.getLogger(LoginServlet.class.getName()).log(Level.INFO, displayName.toString()+ " logged in from "+prov.toString());
-                Logger.getLogger(LoginServlet.class.getName()).log(Level.INFO, "Groups: "+group.toString());
-                session.setAttribute("displayName",displayName.toString());
-                session.setAttribute("group",group.toString());
-                session.setAttribute("mail",mail.toString());
-            }
-            
-            LoginSession loginSession = new LoginSession(session);
-            UserManager.checkUser(loginSession);
-            
-            if(debug) {
-               httpResponse.sendRedirect(ApplicationProperties.getDebugAdress());
-            }
-            else {
-               httpResponse.sendRedirect("/");
-            }
-            
 
+        HttpSession session = request.getSession();
+        boolean debug = ApplicationProperties.getDebugMode();
+
+        if (debug) {
+            initializeUser(session, createDebugUser());
         } else {
-            Logger.getLogger(LoginServlet.class.getName()).log(Level.INFO, "NOT LOGGED IN");
-            httpResponse.sendRedirect("/");
+            if (isLoggedIn(request)) {
+                initializeUser(session, createUser(request));
+            } else {
+                Logger.getLogger(LoginServlet.class.getName()).log(Level.INFO, "NOT LOGGED IN");   
+            }
         }
         
+        response.sendRedirect(resolveFrontendAddress(debug));
+    }
+
+    private static String resolveFrontendAddress(boolean debug) {
+        return debug ? ApplicationProperties.getDebugAdress() : "/";
+    }
+    
+    private static void initializeUser(HttpSession session, UserDefinition userDefinition) {
+        session.setAttribute("displayName", userDefinition.getDisplayName());
+        session.setAttribute("group", userDefinition.getGroup());
+        session.setAttribute("mail", userDefinition.getMail());
+        UserManager.checkUser(new LoginSession(session));
+    }
+
+    private static UserDefinition createUser(HttpServletRequest request) {
+        String prov = getAttributeAsString(request, SHIBBOLETH_PROVIDER_ATTRIBUTE);
+        String displayName = getAttributeAsString(request, "displayName");
+        String group = getAttributeAsString(request, "group");
+        String mail = getAttributeAsString(request, "mail");
+        String sn = getAttributeAsString(request, "sn");
+        String uid = getAttributeAsString(request, "uid");
+
+        Logger.getLogger(LoginServlet.class.getName()).log(Level.INFO, displayName + " logged in from " + prov);
+        
+        return new UserDefinition(displayName, group, mail);
+    }
+
+    private static UserDefinition createDebugUser() {
+        return new UserDefinition("Testi Testaaja", ApplicationProperties.getGroupDomain() + "SUPER_ADMINS", "testi@example.org");
+    }
+
+    private static boolean isLoggedIn(HttpServletRequest request) {
+        return request.getAttribute(SHIBBOLETH_PROVIDER_ATTRIBUTE) != null;
+    }
+    
+    private static String getAttributeAsString(HttpServletRequest request, String attributeName) {
+        Object attribute = request.getAttribute(attributeName);
+        return attribute != null ? attribute.toString() : null;
     }
 
     // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
