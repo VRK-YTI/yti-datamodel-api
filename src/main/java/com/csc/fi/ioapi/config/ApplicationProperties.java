@@ -24,5 +24,9 @@ public static boolean getDebugMode() {
 public static String getGroupDomain() {
     return PropertyUtil.getProperty("application.groupdomain");
 } 
+
+public static String getDebugAdress() {
+    return PropertyUtil.getProperty("application.debugAdress");  
+}
     
 }

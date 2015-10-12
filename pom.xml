@@ -12,6 +12,7 @@
     <properties>
         <project.endpoint>http://localhost:3030</project.endpoint>
         <project.debug>true</project.debug>
+        <project.debugAdress>http://localhost:9001</project.debugAdress>
         <project.groupdomain>https://tt.eduuni.fi/sites/csc-iow#</project.groupdomain>
         <endorsed.dir>${project.build.directory}/endorsed</endorsed.dir>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
