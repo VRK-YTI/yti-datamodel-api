@@ -61,7 +61,7 @@ public class User {
     @GET
     @ApiOperation(value = "Get user id", notes = "Get user from service")
       @ApiResponses(value = {
-      @ApiResponse(code = 204, message = "Graph is saved"),
+      @ApiResponse(code = 200, message = "Logged in"),
       @ApiResponse(code = 400, message = "Invalid graph supplied"),
       @ApiResponse(code = 401, message = "Not logged in"),
       @ApiResponse(code = 404, message = "Service not found") 

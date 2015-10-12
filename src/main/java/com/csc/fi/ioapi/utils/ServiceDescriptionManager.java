@@ -90,7 +90,7 @@ public class ServiceDescriptionManager {
          pss.setIri("graphName", model);
          pss.setCommandText(queryString);
          
-         String endpoint = services.getCoreSparqlAddress(); //ApplicationProperties.getEndpoint()+"/users/sparql";
+         String endpoint = services.getCoreSparqlAddress();
         
          Query query = pss.asQuery();
          QueryExecution qexec = QueryExecutionFactory.sparqlService(endpoint, query);

@@ -64,13 +64,13 @@ public class LoginServlet extends HttpServlet {
             }
             
             // &user="+session.getAttribute("mail")
-            httpResponse.sendRedirect("/?login=true");
+            httpResponse.sendRedirect("/");
             LoginSession loginSession = new LoginSession(session);
             UserManager.checkUser(loginSession);
 
         } else {
             Logger.getLogger(LoginServlet.class.getName()).log(Level.INFO, "NOT LOGGED IN");
-            httpResponse.sendRedirect("/?login=false");
+            httpResponse.sendRedirect("/");
         }
         
     }

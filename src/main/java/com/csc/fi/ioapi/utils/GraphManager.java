@@ -157,17 +157,19 @@ public class GraphManager {
     
     
     public static boolean testDefaultGraph() {
+        
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
         String queryString = " ASK { ?s a sd:Service ; sd:defaultDataset ?d . ?d sd:defaultGraph ?g . ?g dcterms:title ?title . }";
-    
-         Query query = QueryFactory.create(LDHelper.prefix+queryString);        
-         QueryExecution qexec = QueryExecutionFactory.sparqlService(services.getCoreSparqlAddress(), query,"urn:csc:iow:sd");
+        pss.setCommandText(queryString);
+        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+        
+        Query query = pss.asQuery();
+        QueryExecution qexec = QueryExecutionFactory.sparqlService(services.getCoreSparqlAddress(), query,"urn:csc:iow:sd");
         
          try
           {
               boolean b = qexec.execAsk();
-              
               return b;
-              
            } catch(Exception ex) {
                return false; 
            }
