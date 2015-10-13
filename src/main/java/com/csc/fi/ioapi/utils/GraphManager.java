@@ -20,7 +20,6 @@ import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.update.UpdateExecutionFactory;
 import com.hp.hpl.jena.update.UpdateProcessor;
 import com.hp.hpl.jena.update.UpdateRequest;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Map;
 import java.util.logging.Level;
@@ -38,7 +37,7 @@ import org.apache.jena.riot.RDFLanguages;
 
 public class GraphManager {
     
-    final static SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssX");
+    
     
     static EndpointServices services = new EndpointServices();
     
@@ -48,7 +47,7 @@ public class GraphManager {
     
     public static void createResourceGraphs(String graph, Map<String,String> map) {
         
-        String timestamp = fmt.format(new Date());
+        String timestamp = SafeDateFormat.fmt().format(new Date());
         
         deleteResourceGraphs(graph);
         
@@ -205,7 +204,7 @@ public class GraphManager {
     
     public static void insertNewGraphReferenceToModel(IRI graph, IRI model) {
      
-       String timestamp = fmt.format(new Date());
+       String timestamp = SafeDateFormat.fmt().format(new Date());
         
        String query = 
                 " INSERT { GRAPH ?model { ?model dcterms:hasPart ?graph } GRAPH ?graph { ?graph rdfs:isDefinedBy ?graph . ?graph dcterms:created ?timestamp . }} "+

@@ -6,7 +6,6 @@
 package com.csc.fi.ioapi.utils;
 
 import com.csc.fi.ioapi.config.EndpointServices;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import com.hp.hpl.jena.datatypes.xsd.XSDDatatype;
@@ -30,13 +29,12 @@ import java.util.logging.Logger;
  */
 public class ServiceDescriptionManager {
     
-    final static SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssX");
     
     static EndpointServices services = new EndpointServices();
     
     public static void updateGraphDescription(String graph) {
         
-        String timestamp = fmt.format(new Date());
+        String timestamp = SafeDateFormat.fmt().format(new Date());
         
         System.out.println(timestamp);
         
@@ -111,7 +109,7 @@ public class ServiceDescriptionManager {
     
         public static void createGraphDescription(String graph, String group) {
         
-        String timestamp = fmt.format(new Date());
+        String timestamp = SafeDateFormat.fmt().format(new Date());
         
          String query = 
                 "WITH <urn:csc:iow:sd>"+

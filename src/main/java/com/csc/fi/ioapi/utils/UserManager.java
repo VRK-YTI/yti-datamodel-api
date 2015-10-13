@@ -7,7 +7,6 @@ package com.csc.fi.ioapi.utils;
 
 import com.csc.fi.ioapi.config.ApplicationProperties;
 import com.csc.fi.ioapi.config.EndpointServices;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import com.csc.fi.ioapi.config.LoginSession;
 
@@ -39,7 +38,6 @@ import org.apache.jena.riot.RDFLanguages;
  */
 public class UserManager {
     
-    final static SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssX");
     static EndpointServices services = new EndpointServices();
 
     
@@ -86,7 +84,7 @@ public class UserManager {
     
     public static void createUser(LoginSession loginSession) {
         
-        String timestamp = fmt.format(new Date());
+        String timestamp = SafeDateFormat.fmt().format(new Date());
         
         
         String groups = "";
@@ -144,7 +142,7 @@ public class UserManager {
     
         public static void updateUser(LoginSession loginSession) {
         
-        String timestamp = fmt.format(new Date());
+        String timestamp = SafeDateFormat.fmt().format(new Date());
         
         
         String groups = "";
