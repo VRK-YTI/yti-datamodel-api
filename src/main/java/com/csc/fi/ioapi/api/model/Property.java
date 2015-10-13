@@ -59,7 +59,6 @@ public class Property {
     @Context ServletContext context;
     EndpointServices services = new EndpointServices();
  
-    
   @GET
   @Produces("application/ld+json")
   @ApiOperation(value = "Get property from model", notes = "More notes about this method")
@@ -146,9 +145,12 @@ public class Property {
   public Response postJson(
           @ApiParam(value = "New graph in application/ld+json", required = false) 
                 String body, 
-          @ApiParam(value = "Class ID", required = true) 
+          @ApiParam(value = "Property ID", required = true) 
           @QueryParam("id") 
                 String id,
+          @ApiParam(value = "NEW Property ID") 
+          @QueryParam("newid") 
+                String newid,
           @ApiParam(value = "Model ID", required = true) 
           @QueryParam("model") 
                 String model,
@@ -165,11 +167,24 @@ public class Property {
         if(!login.isLoggedIn() || !login.hasRightToEdit(model))
             return Response.status(401).build();
  
+         String graphID = id;
+                
         IRIFactory iriFactory = IRIFactory.semanticWebImplementation();
-        IRI modelIRI,idIRI;
+        IRI modelIRI,idIRI,newIdIRI = null; 
+        
+       /* Check that URIs are valid */
         try {
             modelIRI = iriFactory.construct(model);
             idIRI = iriFactory.construct(id);
+            /* If newid exists */
+            if(newid!=null && !newid.equals("undefined")) {
+                if(newid.equals(id)) {
+                  /* id and newid cant be the same */
+                  return Response.status(403).build();
+                }
+                graphID = newid;
+                newIdIRI = iriFactory.construct(newid);
+            }
         }
         catch (IRIException e) {
             return Response.status(403).build();
@@ -179,7 +194,7 @@ public class Property {
            Client client = Client.create();
            
            WebResource webResource = client.resource(services.getCoreReadWriteAddress())
-                                      .queryParam("graph", id);
+                                      .queryParam("graph", graphID);
 
             WebResource.Builder builder = webResource.header("Content-type", "application/ld+json");
             ClientResponse response = builder.put(ClientResponse.class,body);
@@ -189,7 +204,12 @@ public class Property {
                return Response.status(response.getStatus()).build();
             }
             
-            GraphManager.insertNewGraphReferenceToModel(idIRI, modelIRI);
+            if(newIdIRI!=null) {
+                GraphManager.removeGraph(idIRI);
+                GraphManager.renameID(idIRI,newIdIRI);
+            } else {
+                GraphManager.insertNewGraphReferenceToModel(idIRI, modelIRI);
+            }
             
         } else {
              /* IF NO JSON-LD POSTED TRY TO CREATE REFERENCE FROM MODEL TO CLASS ID */
@@ -200,9 +220,9 @@ public class Property {
                 GraphManager.insertExistingGraphReferenceToModel(idIRI, modelIRI);
             }
         }
-            Logger.getLogger(Property.class.getName()).log(Level.INFO, id+" updated sucessfully!");
-            
-            return Response.status(204).build();
+        
+        Logger.getLogger(Property.class.getName()).log(Level.INFO, id+" updated sucessfully!");        
+        return Response.status(204).build();
 
       } catch(UniformInterfaceException | ClientHandlerException ex) {
         Logger.getLogger(Property.class.getName()).log(Level.WARNING, "Expect the unexpected!", ex);
@@ -225,7 +245,7 @@ public class Property {
   public Response putJson(
           @ApiParam(value = "New graph in application/ld+json", required = true) 
                 String body, 
-          @ApiParam(value = "Class ID", required = true) 
+          @ApiParam(value = "Property ID", required = true) 
           @QueryParam("id") 
                 String id,
           @ApiParam(value = "Model ID", required = true) 

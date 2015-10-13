@@ -17,6 +17,7 @@ import com.hp.hpl.jena.query.QuerySolution;
 import com.hp.hpl.jena.query.ResultSet;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
+import com.hp.hpl.jena.update.UpdateException;
 import com.hp.hpl.jena.update.UpdateExecutionFactory;
 import com.hp.hpl.jena.update.UpdateProcessor;
 import com.hp.hpl.jena.update.UpdateRequest;
@@ -187,6 +188,27 @@ public class GraphManager {
     }
     
     
+       public static void removeGraph(IRI id) {
+       
+        String query = "DROP GRAPH ?graph ;";
+         
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        pss.setCommandText(query);
+        pss.setIri("graph", id);
+
+        Logger.getLogger(GraphManager.class.getName()).log(Level.WARNING, "Removing graph "+id);
+        
+           
+        UpdateRequest queryObj = pss.asUpdate();
+        UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj,services.getCoreSparqlUpdateAddress());
+     
+        try {
+           qexec.execute();
+        } catch(UpdateException ex) {
+           Logger.getLogger(GraphManager.class.getName()).log(Level.WARNING, ex.toString());
+        }
+    }   
+      
     public static void deleteGraphs() {
        
         String query = "DROP ALL";
@@ -200,6 +222,28 @@ public class GraphManager {
         UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj,services.getCoreSparqlUpdateAddress());
         qexec.execute();
        
+    }
+    
+    
+        public static void renameID(IRI oldID, IRI newID) {
+     
+       String query =
+                " DELETE { GRAPH ?graph { ?graph dcterms:hasPart ?oldID }}"+
+                " INSERT { GRAPH ?graph { ?graph dcterms:hasPart ?newID }}"+
+                " WHERE { GRAPH ?graph { ?graph dcterms:hasPart ?oldID }}";
+                    
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+        pss.setIri("oldID",oldID);
+        pss.setIri("newID",newID);
+        pss.setCommandText(query);
+        
+        Logger.getLogger(GraphManager.class.getName()).log(Level.WARNING, "Renaming "+oldID+" to "+newID);
+        
+        UpdateRequest queryObj = pss.asUpdate();
+        UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj,services.getCoreSparqlUpdateAddress());
+        qexec.execute();
+        
     }
     
     public static void insertNewGraphReferenceToModel(IRI graph, IRI model) {

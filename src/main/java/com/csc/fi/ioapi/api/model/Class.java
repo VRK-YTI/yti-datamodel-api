@@ -134,7 +134,7 @@ public class Class {
  
   
   @POST
-  @ApiOperation(value = "Create new class to certain model OR add reference from existing class to another model", notes = "PUT Body should be json-ld")
+  @ApiOperation(value = "Update class in certain model OR add reference from existing class to another model AND/OR change Class ID", notes = "PUT Body should be json-ld")
   @ApiResponses(value = {
       @ApiResponse(code = 201, message = "Graph is created"),
       @ApiResponse(code = 204, message = "Graph is saved"),
@@ -150,6 +150,9 @@ public class Class {
           @ApiParam(value = "Class ID", required = true) 
           @QueryParam("id") 
                 String id,
+          @ApiParam(value = "NEW Class ID") 
+          @QueryParam("newid") 
+                String newid,
           @ApiParam(value = "Model ID", required = true) 
           @QueryParam("model") 
                 String model,
@@ -166,31 +169,51 @@ public class Class {
         if(!login.isLoggedIn() || !login.hasRightToEdit(model))
             return Response.status(401).build();
         
+        
+        String graphID = id;
+                
         IRIFactory iriFactory = IRIFactory.semanticWebImplementation();
-        IRI modelIRI,idIRI;
+        IRI modelIRI,idIRI,newIdIRI = null;        
+        
+        /* Check that URIs are valid */
         try {
             modelIRI = iriFactory.construct(model);
             idIRI = iriFactory.construct(id);
+            /* If newid exists */
+            if(newid!=null && !newid.equals("undefined")) {
+                if(newid.equals(id)) {
+                  /* id and newid cant be the same */
+                  return Response.status(403).build();
+                }
+                graphID = newid;
+                newIdIRI = iriFactory.construct(newid);
+            }
         }
         catch (IRIException e) {
             return Response.status(403).build();
         }
         
+
         if(body!=null) {
            Client client = Client.create();
            
            WebResource webResource = client.resource(services.getCoreReadWriteAddress())
-                                      .queryParam("graph", id);
+                                      .queryParam("graph", graphID);
 
             WebResource.Builder builder = webResource.header("Content-type", "application/ld+json");
             ClientResponse response = builder.put(ClientResponse.class,body);
 
             if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-               Logger.getLogger(Class.class.getName()).log(Level.WARNING, id+" was not updated! Status "+response.getStatus());
+               Logger.getLogger(Class.class.getName()).log(Level.WARNING, graphID+" was not updated! Status "+response.getStatus());
                return Response.status(response.getStatus()).build();
             }
             
-            GraphManager.insertNewGraphReferenceToModel(idIRI, modelIRI);
+            if(newIdIRI!=null) {
+                GraphManager.removeGraph(idIRI);
+                GraphManager.renameID(idIRI,newIdIRI);
+            } else {
+                GraphManager.insertNewGraphReferenceToModel(idIRI, modelIRI);
+            }
             
         } else {
              /* IF NO JSON-LD POSTED TRY TO CREATE REFERENCE FROM MODEL TO CLASS ID */
@@ -201,9 +224,9 @@ public class Class {
                 GraphManager.insertExistingGraphReferenceToModel(idIRI, modelIRI);
             }
         }
-            Logger.getLogger(Class.class.getName()).log(Level.INFO, id+" updated sucessfully!");
-            
-            return Response.status(204).build();
+        
+        Logger.getLogger(Class.class.getName()).log(Level.INFO, id+" updated sucessfully!");
+        return Response.status(204).build();
 
       } catch(UniformInterfaceException | ClientHandlerException ex) {
         Logger.getLogger(Class.class.getName()).log(Level.WARNING, "Expect the unexpected!", ex);

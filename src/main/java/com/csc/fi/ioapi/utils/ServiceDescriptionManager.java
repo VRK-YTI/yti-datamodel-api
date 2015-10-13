@@ -36,8 +36,6 @@ public class ServiceDescriptionManager {
         
         String timestamp = SafeDateFormat.fmt().format(new Date());
         
-        System.out.println(timestamp);
-        
         String query =
                 "WITH <urn:csc:iow:sd>"+
                 "DELETE { "+
