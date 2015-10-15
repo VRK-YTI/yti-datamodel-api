@@ -251,7 +251,7 @@ public class GraphManager {
        String timestamp = SafeDateFormat.fmt().format(new Date());
         
        String query = 
-                " INSERT { GRAPH ?model { ?model dcterms:hasPart ?graph } GRAPH ?graph { ?graph rdfs:isDefinedBy ?graph . ?graph dcterms:created ?timestamp . }} "+
+                " INSERT { GRAPH ?model { ?model dcterms:hasPart ?graph } GRAPH ?graph { ?graph rdfs:isDefinedBy ?model . ?graph dcterms:created ?timestamp . }} "+
                 " WHERE { GRAPH ?graph {}}";
                     
         ParameterizedSparqlString pss = new ParameterizedSparqlString();

@@ -211,9 +211,10 @@ public class Class {
             if(newIdIRI!=null) {
                 GraphManager.removeGraph(idIRI);
                 GraphManager.renameID(idIRI,newIdIRI);
-            } else {
-                GraphManager.insertNewGraphReferenceToModel(idIRI, modelIRI);
-            }
+            } 
+            
+            // GraphManager.insertNewGraphReferenceToModel(idIRI, modelIRI);
+            
             
         } else {
              /* IF NO JSON-LD POSTED TRY TO CREATE REFERENCE FROM MODEL TO CLASS ID */
