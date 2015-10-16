@@ -56,6 +56,8 @@ import org.apache.jena.iri.IRIFactory;
 @Api(value = "/property", description = "Operations about property")
 public class Property {
 
+    public static final Logger logger = Logger.getLogger(Property.class.getName());
+    
     @Context ServletContext context;
     EndpointServices services = new EndpointServices();
  
@@ -124,7 +126,7 @@ public class Property {
         return rb.build();
            
       } catch(UniformInterfaceException | ClientHandlerException ex) {
-          Logger.getLogger(Property.class.getName()).log(Level.WARNING, "Expect the unexpected!", ex);
+          logger.log(Level.WARNING, "Expect the unexpected!", ex);
           return Response.serverError().entity("{}").build();
       }
 
@@ -200,7 +202,7 @@ public class Property {
             ClientResponse response = builder.put(ClientResponse.class,body);
 
             if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-               Logger.getLogger(Property.class.getName()).log(Level.WARNING, id+" was not updated! Status "+response.getStatus());
+               logger.log(Level.WARNING, id + " was not updated! Status " + response.getStatus());
                return Response.status(response.getStatus()).build();
             }
             
@@ -222,11 +224,11 @@ public class Property {
             }
         }
         
-        Logger.getLogger(Property.class.getName()).log(Level.INFO, id+" updated sucessfully!");        
+        logger.log(Level.INFO, id + " updated sucessfully!");
         return Response.status(204).build();
 
       } catch(UniformInterfaceException | ClientHandlerException ex) {
-        Logger.getLogger(Property.class.getName()).log(Level.WARNING, "Expect the unexpected!", ex);
+        logger.log(Level.WARNING, "Expect the unexpected!", ex);
         return Response.status(400).build();
       }
   }
@@ -287,18 +289,18 @@ public class Property {
             ClientResponse response = builder.put(ClientResponse.class,body);
 
             if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-               Logger.getLogger(Property.class.getName()).log(Level.WARNING, id+" was not updated! Status "+response.getStatus());
+               logger.log(Level.WARNING, id + " was not updated! Status " + response.getStatus());
                return Response.status(response.getStatus()).build();
             }
             
             GraphManager.insertNewGraphReferenceToModel(idIRI, modelIRI);
             
-            Logger.getLogger(Property.class.getName()).log(Level.INFO, id+" updated sucessfully!");
+            logger.log(Level.INFO, id + " updated sucessfully!");
             
             return Response.status(204).build();
 
       } catch(UniformInterfaceException | ClientHandlerException ex) {
-        Logger.getLogger(Property.class.getName()).log(Level.WARNING, "Expect the unexpected!", ex);
+        logger.log(Level.WARNING, "Expect the unexpected!", ex);
         return Response.status(400).build();
       }
   }
