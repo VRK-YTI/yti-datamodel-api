@@ -57,7 +57,7 @@ import org.apache.jena.iri.IRIFactory;
 public class Property {
 
     public static final Logger logger = Logger.getLogger(Property.class.getName());
-    
+
     @Context ServletContext context;
     EndpointServices services = new EndpointServices();
  
@@ -189,6 +189,7 @@ public class Property {
             }
         }
         catch (IRIException e) {
+            logger.log(Level.SEVERE, e.toString());
             return Response.status(403).build();
         }
         
