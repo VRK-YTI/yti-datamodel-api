@@ -150,9 +150,9 @@ public class Class {
           @ApiParam(value = "Class ID", required = true) 
           @QueryParam("id") 
                 String id,
-          @ApiParam(value = "NEW Class ID") 
-          @QueryParam("newid") 
-                String newid,
+          @ApiParam(value = "OLD Class ID") 
+          @QueryParam("oldid") 
+                String oldid,
           @ApiParam(value = "Model ID", required = true) 
           @QueryParam("model") 
                 String model,
@@ -173,27 +173,25 @@ public class Class {
         String graphID = id;
                 
         IRIFactory iriFactory = IRIFactory.semanticWebImplementation();
-        IRI modelIRI,idIRI,newIdIRI = null;        
+        IRI modelIRI,idIRI,oldIdIRI = null;        
         
         /* Check that URIs are valid */
         try {
             modelIRI = iriFactory.construct(model);
             idIRI = iriFactory.construct(id);
             /* If newid exists */
-            if(newid!=null && !newid.equals("undefined")) {
-                if(newid.equals(id)) {
+            if(oldid!=null && !oldid.equals("undefined")) {
+                if(oldid.equals(id)) {
                   /* id and newid cant be the same */
                   return Response.status(403).build();
                 }
-                graphID = newid;
-                newIdIRI = iriFactory.construct(newid);
+                oldIdIRI = iriFactory.construct(oldid);
             }
         }
         catch (IRIException e) {
             return Response.status(403).build();
         }
         
-
         if(body!=null) {
            Client client = Client.create();
            
@@ -208,9 +206,9 @@ public class Class {
                return Response.status(response.getStatus()).build();
             }
             
-            if(newIdIRI!=null) {
-                GraphManager.removeGraph(idIRI);
-                GraphManager.renameID(idIRI,newIdIRI);
+            if(oldIdIRI!=null) {
+                GraphManager.removeGraph(oldIdIRI);
+                GraphManager.renameID(oldIdIRI,idIRI);
             } 
             
             // GraphManager.insertNewGraphReferenceToModel(idIRI, modelIRI);

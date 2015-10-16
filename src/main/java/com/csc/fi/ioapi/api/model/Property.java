@@ -150,9 +150,9 @@ public class Property {
           @ApiParam(value = "Property ID", required = true) 
           @QueryParam("id") 
                 String id,
-          @ApiParam(value = "NEW Property ID") 
-          @QueryParam("newid") 
-                String newid,
+          @ApiParam(value = "OLD Property ID") 
+          @QueryParam("oldid") 
+                String oldid,
           @ApiParam(value = "Model ID", required = true) 
           @QueryParam("model") 
                 String model,
@@ -172,20 +172,19 @@ public class Property {
          String graphID = id;
                 
         IRIFactory iriFactory = IRIFactory.semanticWebImplementation();
-        IRI modelIRI,idIRI,newIdIRI = null; 
+        IRI modelIRI,idIRI,oldIdIRI = null; 
         
        /* Check that URIs are valid */
         try {
             modelIRI = iriFactory.construct(model);
             idIRI = iriFactory.construct(id);
             /* If newid exists */
-            if(newid!=null && !newid.equals("undefined")) {
-                if(newid.equals(id)) {
+            if(oldid!=null && !oldid.equals("undefined")) {
+                if(oldid.equals(id)) {
                   /* id and newid cant be the same */
                   return Response.status(403).build();
                 }
-                graphID = newid;
-                newIdIRI = iriFactory.construct(newid);
+                oldIdIRI = iriFactory.construct(oldid);
             }
         }
         catch (IRIException e) {
@@ -207,14 +206,13 @@ public class Property {
                return Response.status(response.getStatus()).build();
             }
             
-            if(newIdIRI!=null) {
-                GraphManager.removeGraph(idIRI);
-                GraphManager.renameID(idIRI,newIdIRI);
+            if(oldIdIRI!=null) {
+                GraphManager.removeGraph(oldIdIRI);
+                GraphManager.renameID(oldIdIRI,idIRI);
             }
              
             // GraphManager.insertNewGraphReferenceToModel(idIRI, modelIRI);
-           
-            
+   
         } else {
              /* IF NO JSON-LD POSTED TRY TO CREATE REFERENCE FROM MODEL TO CLASS ID */
             if(id.startsWith(model)) {
