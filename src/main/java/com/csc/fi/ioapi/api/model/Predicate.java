@@ -52,11 +52,11 @@ import org.apache.jena.iri.IRIFactory;
 /**
  * Root resource (exposed at "myresource" path)
  */
-@Path("property")
-@Api(value = "/property", description = "Operations about property")
-public class Property {
+@Path("predicate")
+@Api(value = "/predicate", description = "Operations about property")
+public class Predicate {
 
-    public static final Logger logger = Logger.getLogger(Property.class.getName());
+    public static final Logger logger = Logger.getLogger(Predicate.class.getName());
 
     @Context ServletContext context;
     EndpointServices services = new EndpointServices();
@@ -178,10 +178,10 @@ public class Property {
         try {
             modelIRI = iriFactory.construct(model);
             idIRI = iriFactory.construct(id);
-            /* If newid exists */
+            /* If oldid exists */
             if(oldid!=null && !oldid.equals("undefined")) {
                 if(oldid.equals(id)) {
-                  /* id and newid cant be the same */
+                  /* id and oldid cant be the same */
                   return Response.status(403).build();
                 }
                 oldIdIRI = iriFactory.construct(oldid);

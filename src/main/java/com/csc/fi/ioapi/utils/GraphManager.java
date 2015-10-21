@@ -53,10 +53,13 @@ public class GraphManager {
         deleteResourceGraphs(graph);
         
         // GRAPH ?resource { ?resource ?p ?o .  ?resource sh:property ?node . ?node ?pp ?oo .  ?resource a ?type . ?resource dcterms:modified ?date . ?resource rdfs:isDefinedBy ?graph . } 
-         String query = 
-                " INSERT { GRAPH ?graph { ?graph dcterms:hasPart ?resource } GRAPH ?resource { ?resource dcterms:modified ?date . ?resource rdfs:isDefinedBy ?graph }}"+
-                " WHERE { GRAPH ?graph { VALUES ?type { sh:ShapeClass owl:DatatypeProperty owl:ObjectProperty } ?resource a ?type . }}";
-        // . ?resource a ?type . ?resource ?p ?o . OPTIONAL { ?resource sh:property ?node . ?node ?pp ?oo . } }            
+        // . ?resource a ?type . ?resource ?p ?o . OPTIONAL { ?resource sh:property ?node . ?node ?pp ?oo . } }    
+        
+        /* Creates resource graphs from model and adds UUIDS for class propeties */
+        String query = 
+                " INSERT { GRAPH ?graph { ?graph dcterms:hasPart ?resource } GRAPH ?resource { ?resource dcterms:modified ?date . ?resource rdfs:isDefinedBy ?graph . ?resource sh:property ?propertyID . ?propertyID sh:predicate ?predicate . }}"+
+                " WHERE { GRAPH ?graph { VALUES ?type { sh:ShapeClass owl:DatatypeProperty owl:ObjectProperty } ?resource a ?type . OPTIONAL { ?resource sh:property ?property . ?property sh:predicate ?predicate . BIND(UUID() AS ?propertyID) } }}";
+                 
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         
         /* ADD prefix&namespaces from the model*/
@@ -108,8 +111,9 @@ public class GraphManager {
     ParameterizedSparqlString pss = new ParameterizedSparqlString(); 
     
     String query = 
-                " CONSTRUCT { ?resource ?p ?o .  ?resource sh:property ?node . ?node ?pp ?oo .  ?resource a ?type . ?resource dcterms:modified ?date . ?resource rdfs:isDefinedBy ?graph .} "+
-                " WHERE { GRAPH ?graph { VALUES ?type { sh:ShapeClass owl:DatatypeProperty owl:ObjectProperty } . ?resource a ?type . ?resource ?p ?o . OPTIONAL { ?resource sh:property ?node . ?node ?pp ?oo . } }}";
+                " CONSTRUCT { ?resource a ?type . ?resource ?p ?o .  ?resource sh:property ?uuid . ?uuid ?pp ?oo .  ?resource dcterms:modified ?date . ?resource rdfs:isDefinedBy ?graph . } "+
+                " WHERE { GRAPH ?graph { VALUES ?type { sh:ShapeClass owl:DatatypeProperty owl:ObjectProperty } . ?resource a ?type . ?resource ?p ?o . FILTER(!isBlank(?o)) OPTIONAL { ?resource sh:property ?property . ?property sh:predicate ?predicate . ?property ?pp ?oo . } }  GRAPH ?resource { OPTIONAL {?resource sh:property ?uuid . ?uuid sh:predicate ?predicate .}} }";
+    
     pss.setIri("graph", graph);
     pss.setIri("resource", resource);
     pss.setNsPrefixes(map);
@@ -130,8 +134,7 @@ public class GraphManager {
   
     }
     
-    
-    
+
     public static void deleteResourceGraphs(String model) {
         
         String query = "DELETE WHERE { GRAPH ?graph { ?s ?p ?o . ?graph rdfs:isDefinedBy ?model . } }";
