@@ -110,18 +110,17 @@ public class GraphManager {
     ParameterizedSparqlString pss = new ParameterizedSparqlString(); 
     
     String query = 
-                " CONSTRUCT { ?resource a ?type . ?resource adms:status state:UnderDevelopment . ?resource ?p ?o .  ?resource sh:property ?uuid . ?uuid adms:status state:UnderDevelopment . ?uuid ?pp ?oo .  ?resource dcterms:modified ?date . ?resource rdfs:isDefinedBy ?graph . } "+
+                " CONSTRUCT { ?resource a ?type . ?resource owl:versionInfo ?draft . ?resource ?p ?o .  ?resource sh:property ?uuid . ?uuid owl:versionInfo ?draft . ?uuid ?pp ?oo .  ?resource dcterms:modified ?date . ?resource rdfs:isDefinedBy ?graph . } "+
                 " WHERE { GRAPH ?graph { VALUES ?type { sh:ShapeClass owl:DatatypeProperty owl:ObjectProperty } . ?resource a ?type . ?resource ?p ?o . FILTER(!isBlank(?o)) OPTIONAL { ?resource sh:property ?property . ?property sh:predicate ?predicate . ?property ?pp ?oo . } }  GRAPH ?resource { OPTIONAL {?resource sh:property ?uuid . ?uuid sh:predicate ?predicate .}} }";
     
     pss.setIri("graph", graph);
     pss.setIri("resource", resource);
+    pss.setLiteral("draft","Unstable");
     pss.setNsPrefixes(map);
     pss.setNsPrefix("dcterms", "http://purl.org/dc/terms/");
     pss.setNsPrefix("sh", "http://www.w3.org/ns/shacl#");
     pss.setNsPrefix("owl", "http://www.w3.org/2002/07/owl#");
     pss.setNsPrefix("rdfs", "http://www.w3.org/2000/01/rdf-schema#");
-    pss.setNsPrefix("adms", "http://www.w3.org/ns/adms#");
-    pss.setNsPrefix("state", "http://purl.org/adms/status/");
         
     pss.setCommandText(query);
     
