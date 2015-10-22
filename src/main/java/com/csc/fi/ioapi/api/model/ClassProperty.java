@@ -33,6 +33,10 @@ import com.hp.hpl.jena.sparql.engine.http.QueryExceptionHTTP;
 import com.hp.hpl.jena.update.UpdateExecutionFactory;
 import com.hp.hpl.jena.update.UpdateProcessor;
 import com.hp.hpl.jena.update.UpdateRequest;
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.WebResource;
+import com.sun.jersey.api.uri.UriComponent;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiParam;
@@ -53,6 +57,53 @@ public class ClassProperty {
     private EndpointServices services = new EndpointServices();
     private static final Logger logger = Logger.getLogger(ClassProperty.class.getName());
     
+    
+  @GET
+  @Produces("application/ld+json")
+  @ApiOperation(value = "Get property from model", notes = "More notes about this method")
+  @ApiResponses(value = {
+      @ApiResponse(code = 400, message = "Invalid model supplied"),
+      @ApiResponse(code = 404, message = "Service not found"),
+      @ApiResponse(code = 500, message = "Internal server error")
+  })
+  public Response json(
+	@ApiParam(value = "Predicate ID", required = true) @QueryParam("predicateID") String predicateID) {
+
+      
+        IRI predicateIRI;
+		try {
+                    IRIFactory iri = IRIFactory.semanticWebImplementation();
+                    predicateIRI = iri.construct(predicateID);
+		} catch (IRIException e) {
+			logger.log(Level.WARNING, "CLASS OR PROPERTY ID is invalid IRI!");
+			return Response.status(403).build();
+		}
+                
+          ResponseBuilder rb;
+          
+          Client client = Client.create();
+          String queryString;
+          ParameterizedSparqlString pss = new ParameterizedSparqlString();
+          pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+            
+          queryString = "CONSTRUCT { ?uuid sh:predicate ?predicate . ?uuid rdfs:label ?label . ?uuid rdfs:comment ?comment . ?uuid sh:valueClass ?valueClass . ?uuid sh:datatype ?datatype . } WHERE { BIND(UUID() as ?uuid) OPTIONAL { GRAPH ?predicate { ?predicate rdfs:label ?label .  OPTIONAL{ ?predicate rdfs:comment ?comment . } OPTIONAL{ ?predicate a owl:DatatypeProperty . ?predicate rdfs:range ?datatype . } OPTIONAL { ?predicate a owl:ObjectProperty . ?predicate rdfs:range ?valueClass . }}} }";
+  	  
+          pss.setCommandText(queryString);
+          pss.setIri("predicate", predicateIRI);
+
+         
+          WebResource webResource = client.resource(services.getCoreSparqlAddress())
+                                      .queryParam("query", UriComponent.encode(pss.toString(),UriComponent.Type.QUERY));
+
+          WebResource.Builder builder = webResource.accept("application/ld+json");
+
+          ClientResponse response = builder.get(ClientResponse.class);
+          rb = Response.status(response.getStatus()); 
+          rb.entity(response.getEntityInputStream());
+            
+          return rb.build();
+           
+  }
  
   	@PUT
 	@ApiOperation(value = "Create new class property", notes = "Create new class property")
