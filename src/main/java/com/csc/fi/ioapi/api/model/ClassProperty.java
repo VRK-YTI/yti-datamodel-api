@@ -63,11 +63,12 @@ public class ClassProperty {
 	public Response newClassProperty(
                 @ApiParam(value = "Model ID", required = true) @QueryParam("modelID") String modelID,
                 @ApiParam(value = "Class ID", required = true) @QueryParam("classID") String classID,
-		@ApiParam(value = "Predicate ID", required = true) @QueryParam("predicateId") String predicateID) {
+		@ApiParam(value = "Predicate ID", required = true) @QueryParam("predicateID") String predicateID) {
 
 		IRI classIRI,predicateIRI,modelIRI;
 		try {
 			IRIFactory iri = IRIFactory.semanticWebImplementation();
+
 			classIRI = iri.construct(classID);
                         predicateIRI = iri.construct(predicateID);
                         modelIRI = iri.construct(modelID);

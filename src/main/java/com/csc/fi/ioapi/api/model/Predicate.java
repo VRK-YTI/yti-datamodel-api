@@ -56,7 +56,7 @@ import org.apache.jena.iri.IRIFactory;
 @Api(value = "/predicate", description = "Operations about property")
 public class Predicate {
 
-    public static final Logger logger = Logger.getLogger(Predicate.class.getName());
+    private static final Logger logger = Logger.getLogger(Predicate.class.getName());
 
     @Context ServletContext context;
     EndpointServices services = new EndpointServices();
