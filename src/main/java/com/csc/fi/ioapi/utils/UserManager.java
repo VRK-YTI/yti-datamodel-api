@@ -90,12 +90,17 @@ public class UserManager {
         String groups = "";
         
         HashMap<String,Boolean> allGroups = loginSession.getGroups();
-        Iterator<String> groupIterator = allGroups.keySet().iterator();
         
-        while(groupIterator.hasNext()) {
-            String group = groupIterator.next();
-            Node n = NodeFactory.createURI(group);
-            groups = groups+"?id dcterms:isPartOf <"+n.getURI()+"> . "+(allGroups.get(group).booleanValue()?" ?id iow:isAdminOf <"+n.getURI()+"> . ":"");
+        if(allGroups!=null) {
+            
+            Iterator<String> groupIterator = allGroups.keySet().iterator();
+
+            while(groupIterator.hasNext()) {
+                String group = groupIterator.next();
+                Node n = NodeFactory.createURI(group);
+                groups = groups+"?id dcterms:isPartOf <"+n.getURI()+"> . "+(allGroups.get(group).booleanValue()?" ?id iow:isAdminOf <"+n.getURI()+"> . ":"");
+            }
+        
         }
         
         String query = 
@@ -147,16 +152,19 @@ public class UserManager {
         
         String groups = "";
         
+        
         HashMap<String,Boolean> allGroups = loginSession.getGroups();
-        Iterator<String> groupIterator = allGroups.keySet().iterator();
         
-        while(groupIterator.hasNext()) {
-            String group = groupIterator.next();
-            Node n = NodeFactory.createURI(group);
-            Logger.getLogger(UserManager.class.getName()).log(Level.INFO, group+" is "+allGroups.get(group).booleanValue());
-            groups = groups+"?id dcterms:isPartOf <"+n.getURI()+"> . "+(allGroups.get(group).booleanValue()?" ?id iow:isAdminOf <"+n.getURI()+"> . ":"");
+        if(allGroups!=null) {
+            Iterator<String> groupIterator = allGroups.keySet().iterator();
+
+            while(groupIterator.hasNext()) {
+                String group = groupIterator.next();
+                Node n = NodeFactory.createURI(group);
+                Logger.getLogger(UserManager.class.getName()).log(Level.INFO, group+" is "+allGroups.get(group).booleanValue());
+                groups = groups+"?id dcterms:isPartOf <"+n.getURI()+"> . "+(allGroups.get(group).booleanValue()?" ?id iow:isAdminOf <"+n.getURI()+"> . ":"");
+            }
         }
-        
         /*
         for(String g : loginSession.getGroupUris()) {
             Node n = NodeFactory.createURI(g);

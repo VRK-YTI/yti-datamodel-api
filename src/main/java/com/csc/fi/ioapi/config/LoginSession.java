@@ -44,6 +44,9 @@ public class LoginSession implements LoginInterface {
 
     @Override
     public HashMap<String,Boolean> getGroups() {
+        
+        if(session.getAttribute("group")==null) return null;
+                
         HashMap groups = new HashMap();
         
         String[] groupString = session.getAttribute("group").toString().split(";");
@@ -66,6 +69,8 @@ public class LoginSession implements LoginInterface {
 
     @Override
     public boolean hasRightToEdit(String model) {
+        
+        if(this.getGroups()==null) return false;
         
         if(this.isInGroup("SUPER")) return true;
        
