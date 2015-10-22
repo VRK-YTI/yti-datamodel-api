@@ -110,7 +110,7 @@ public class GraphManager {
     ParameterizedSparqlString pss = new ParameterizedSparqlString(); 
     
     String query = 
-                " CONSTRUCT { ?resource a ?type . ?resource adms:status status:UnderDevelopment . ?resource ?p ?o .  ?resource sh:property ?uuid . ?uuid adms:status status:UnderDevelopment . ?uuid ?pp ?oo .  ?resource dcterms:modified ?date . ?resource rdfs:isDefinedBy ?graph . } "+
+                " CONSTRUCT { ?resource a ?type . ?resource adms:status state:UnderDevelopment . ?resource ?p ?o .  ?resource sh:property ?uuid . ?uuid adms:status state:UnderDevelopment . ?uuid ?pp ?oo .  ?resource dcterms:modified ?date . ?resource rdfs:isDefinedBy ?graph . } "+
                 " WHERE { GRAPH ?graph { VALUES ?type { sh:ShapeClass owl:DatatypeProperty owl:ObjectProperty } . ?resource a ?type . ?resource ?p ?o . FILTER(!isBlank(?o)) OPTIONAL { ?resource sh:property ?property . ?property sh:predicate ?predicate . ?property ?pp ?oo . } }  GRAPH ?resource { OPTIONAL {?resource sh:property ?uuid . ?uuid sh:predicate ?predicate .}} }";
     
     pss.setIri("graph", graph);
@@ -121,7 +121,7 @@ public class GraphManager {
     pss.setNsPrefix("owl", "http://www.w3.org/2002/07/owl#");
     pss.setNsPrefix("rdfs", "http://www.w3.org/2000/01/rdf-schema#");
     pss.setNsPrefix("adms", "http://www.w3.org/ns/adms#");
-    pss.setNsPrefix("status", "http://purl.org/adms/status/");
+    pss.setNsPrefix("state", "http://purl.org/adms/status/");
         
     pss.setCommandText(query);
     
