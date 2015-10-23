@@ -31,7 +31,18 @@ import com.csc.fi.ioapi.config.LoginSession;
 import com.csc.fi.ioapi.utils.GraphManager;
 import com.csc.fi.ioapi.utils.LDHelper;
 import com.csc.fi.ioapi.utils.ServiceDescriptionManager;
+import com.hp.hpl.jena.query.DatasetAccessor;
+import com.hp.hpl.jena.query.DatasetAccessorFactory;
 import com.hp.hpl.jena.query.ParameterizedSparqlString;
+import com.hp.hpl.jena.query.QueryExecution;
+import com.hp.hpl.jena.query.QueryExecutionFactory;
+import com.hp.hpl.jena.query.ResultSet;
+import com.hp.hpl.jena.rdf.model.Model;
+import com.hp.hpl.jena.rdf.model.ModelFactory;
+import com.hp.hpl.jena.sparql.engine.http.QueryExceptionHTTP;
+import com.hp.hpl.jena.update.UpdateExecutionFactory;
+import com.hp.hpl.jena.update.UpdateProcessor;
+import com.hp.hpl.jena.update.UpdateRequest;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientHandlerException;
 import com.sun.jersey.api.client.ClientResponse;
@@ -44,11 +55,14 @@ import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiParam;
 import com.wordnik.swagger.annotations.ApiResponse;
 import com.wordnik.swagger.annotations.ApiResponses;
+import java.io.ByteArrayInputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
 import org.apache.jena.iri.IRIFactory;
+import org.apache.jena.riot.RDFDataMgr;
+import org.apache.jena.riot.RDFLanguages;
  
 /**
  * Root resource (exposed at "myresource" path)
@@ -59,6 +73,7 @@ public class Class {
 
     @Context ServletContext context;
     EndpointServices services = new EndpointServices();
+     private static final Logger logger = Logger.getLogger(Class.class.getName());
     
   @GET
   @Produces("application/ld+json")
@@ -233,7 +248,7 @@ public class Class {
       }
   }
   
-  
+ 
   @PUT
   @ApiOperation(value = "Create new class to certain model", notes = "PUT Body should be json-ld")
   @ApiResponses(value = {
@@ -306,11 +321,7 @@ public class Class {
         return Response.status(400).build();
       }
   }
-  
-  
-  
-  
-  
-  
-  
+ 
+
+
 }

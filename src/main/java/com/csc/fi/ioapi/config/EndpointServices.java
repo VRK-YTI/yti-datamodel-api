@@ -53,6 +53,14 @@ public String getConceptAPI() {
      return "http://api.finto.fi/rest/v1/data";
 }
 
+public String getTempConceptReadWriteAddress() {
+    return endpoint+"/concept/data";
+}
+
+public String getTempConceptReadSparqlAddress() {
+    return endpoint+"/concept/sparql";
+}
+
 public String getConceptSearchAPI() {
      return "http://api.finto.fi/rest/v1/search";
 }
