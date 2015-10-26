@@ -1,0 +1,182 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package com.csc.fi.ioapi.api.concepts;
+
+import com.csc.fi.ioapi.config.EndpointServices;
+import com.csc.fi.ioapi.config.LoginSession;
+import com.csc.fi.ioapi.utils.LDHelper;
+import com.hp.hpl.jena.query.ParameterizedSparqlString;
+import java.io.ByteArrayOutputStream;
+import java.io.OutputStream;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import javax.servlet.ServletContext;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.Response;
+
+import com.hp.hpl.jena.query.Query;
+import com.hp.hpl.jena.query.QueryException;
+import com.hp.hpl.jena.query.QueryExecution;
+import com.hp.hpl.jena.query.QueryExecutionFactory;
+import com.hp.hpl.jena.query.QueryFactory;
+import com.hp.hpl.jena.query.QueryParseException;
+import com.hp.hpl.jena.query.ResultSet;
+import com.hp.hpl.jena.query.ResultSetFormatter;
+import com.hp.hpl.jena.sparql.engine.http.QueryExceptionHTTP;
+import com.hp.hpl.jena.update.UpdateExecutionFactory;
+import com.hp.hpl.jena.update.UpdateProcessor;
+import com.hp.hpl.jena.update.UpdateRequest;
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.WebResource;
+import com.sun.jersey.api.uri.UriComponent;
+import com.wordnik.swagger.annotations.Api;
+import com.wordnik.swagger.annotations.ApiOperation;
+import com.wordnik.swagger.annotations.ApiParam;
+import com.wordnik.swagger.annotations.ApiResponse;
+import com.wordnik.swagger.annotations.ApiResponses;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+import javax.ws.rs.PUT;
+import org.apache.jena.iri.IRI;
+import org.apache.jena.iri.IRIException;
+import org.apache.jena.iri.IRIFactory;
+
+/**
+ * REST Web Service
+ *
+ * @author malonen
+ */
+@Path("conceptSuggestion")
+@Api(value = "/conceptSuggestion", description = "Edit resources")
+public class ConceptSuggestion {
+
+  @Context ServletContext context;
+  private EndpointServices services = new EndpointServices();
+  private static final Logger logger = Logger.getLogger(ConceptSuggestion.class.getName());
+    
+  
+  
+  @GET
+  @Produces("application/ld+json")
+  @ApiOperation(value = "Get property from model", notes = "Get concept suggestions with concept ID, scheme ID or user ID. Concept suggestions with Scheme ID should be most useful. ")
+  @ApiResponses(value = {
+      @ApiResponse(code = 400, message = "Invalid model supplied"),
+      @ApiResponse(code = 404, message = "Service not found"),
+      @ApiResponse(code = 500, message = "Internal server error")
+  })
+  public Response json(
+	@ApiParam(value = "Concept ID") @QueryParam("conceptID") String conceptID,
+        @ApiParam(value = "User ID") @QueryParam("userID") String userID,
+        @ApiParam(value = "Scheme ID") @QueryParam("schemeID") String schemeID) {
+
+        IRI conceptIRI = null;
+        IRI userIRI = null;
+        IRI schemeIRI = null;
+        logger.info(userID +" "+schemeID+" "+conceptID);
+		try {
+                    IRIFactory iri = IRIFactory.semanticWebImplementation();
+                    
+                    if(conceptID!=null && !conceptID.equals("undefined")) conceptIRI = iri.construct(conceptID);
+                    if(userID!=null && !userID.equals("undefined")) userIRI = iri.construct(userID);
+                    if(schemeID!=null && !schemeID.equals("undefined")) schemeIRI = iri.construct(schemeID);
+                    
+		} catch (IRIException e) {
+                    
+			logger.log(Level.WARNING, "ID is invalid IRI!");
+			return Response.status(403).build();
+		}
+                
+          Response.ResponseBuilder rb;
+          
+          Client client = Client.create();
+          String queryString;
+          ParameterizedSparqlString pss = new ParameterizedSparqlString();
+          pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+            
+          queryString = "CONSTRUCT { ?concept skos:inScheme ?scheme . ?concept prov:atTime ?time . ?concept skos:prefLabel ?label . ?concept rdfs:comment ?comment . } WHERE { ?concept skos:inScheme ?scheme . ?concept skos:prefLabel ?label . ?concept prov:atTime ?time . ?concept rdfs:comment ?comment . ?concept prov:wasAssociatedWith ?user . }";
+  	  
+          pss.setCommandText(queryString);
+          
+          if(conceptIRI!=null) pss.setIri("concept", conceptIRI);
+          if(userIRI!=null) pss.setIri("user", userIRI);
+          if(schemeIRI!=null) pss.setIri("scheme", schemeIRI);
+         
+          WebResource webResource = client.resource(services.getTempConceptReadSparqlAddress())
+                                      .queryParam("query", UriComponent.encode(pss.toString(),UriComponent.Type.QUERY));
+
+          WebResource.Builder builder = webResource.accept("application/ld+json");
+
+          ClientResponse response = builder.get(ClientResponse.class);
+          rb = Response.status(response.getStatus()); 
+          rb.entity(response.getEntityInputStream());
+            
+          return rb.build();
+           
+  }
+ 
+
+    	@PUT
+	@ApiOperation(value = "Create new class property", notes = "Create new class property")
+	@ApiResponses(value = { @ApiResponse(code = 200, message = "New property is created"),
+			@ApiResponse(code = 400, message = "Invalid ID supplied"),
+			@ApiResponse(code = 403, message = "Invalid IRI in parameter"),
+                        @ApiResponse(code = 401, message = "User is not logged in"),
+			@ApiResponse(code = 404, message = "Service not found") })
+	public Response newClassProperty(
+                @ApiParam(value = "Scheme ID", required = true) @QueryParam("schemeID") String scheme,
+                @ApiParam(value = "Label", required = true) @QueryParam("label") String label,
+		@ApiParam(value = "Comment", required = true) @QueryParam("comment") String comment,
+                @Context HttpServletRequest request) {
+
+                HttpSession session = request.getSession();
+
+                if(session==null) return Response.status(401).build();
+
+                LoginSession login = new LoginSession(session);
+
+                if(!login.isLoggedIn()) return Response.status(401).build();
+            
+		IRI schemeIRI;
+		try {
+			IRIFactory iri = IRIFactory.semanticWebImplementation();
+			schemeIRI = iri.construct(scheme);
+		} catch (IRIException e) {
+			logger.log(Level.WARNING, "CLASS OR PROPERTY ID is invalid IRI!");
+			return Response.status(403).build();
+		}
+
+		String queryString;
+		ParameterizedSparqlString pss = new ParameterizedSparqlString();
+		pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+		queryString = "INSERT { GRAPH ?concept { ?concept skos:inScheme ?scheme . ?concept owl:versionInfo 'Unstable' . ?concept a skos:Concept . ?concept skos:prefLabel ?label . ?concept rdfs:comment ?comment . ?concept prov:atTime ?time . ?concept prov:wasAssociatedWith ?user . } } WHERE { BIND(NOW() as ?time) BIND(UUID() as ?concept)}";
+		pss.setCommandText(queryString);
+		pss.setIri("scheme", schemeIRI);
+                pss.setLiteral("label", label);
+                pss.setLiteral("comment", comment);
+                pss.setIri("user", "mailto:"+login.getEmail());
+
+                logger.log(Level.INFO,pss.toString());
+                
+		UpdateRequest query = pss.asUpdate();
+		UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(query, services.getTempConceptSparqlUpdateAddress());
+
+		try {
+			qexec.execute();
+			return Response.status(200).build();
+		} catch (QueryExceptionHTTP ex) {
+			logger.log(Level.WARNING, "Expect the unexpected!", ex);
+			return Response.status(400).build();
+		}
+	}
+  
+}
