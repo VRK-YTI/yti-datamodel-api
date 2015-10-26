@@ -61,6 +61,11 @@ public String getTempConceptReadSparqlAddress() {
     return endpoint+"/concept/sparql";
 }
 
+
+public String getTempConceptSparqlUpdateAddress() {
+    return endpoint+"/concept/update";
+}
+
 public String getConceptSearchAPI() {
      return "http://api.finto.fi/rest/v1/search";
 }

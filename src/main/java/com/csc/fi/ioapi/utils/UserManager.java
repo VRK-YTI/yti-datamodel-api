@@ -40,9 +40,6 @@ public class UserManager {
     
     static EndpointServices services = new EndpointServices();
 
-    
-    
-
     private static boolean isExistingUser(String email) {
         
          String queryString = " ASK {?id a foaf:Person . ?id foaf:mbox ?email . }";

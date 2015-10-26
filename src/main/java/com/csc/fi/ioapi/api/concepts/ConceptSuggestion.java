@@ -44,6 +44,7 @@ import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiParam;
 import com.wordnik.swagger.annotations.ApiResponse;
 import com.wordnik.swagger.annotations.ApiResponses;
+import java.util.UUID;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import javax.ws.rs.PUT;
@@ -133,7 +134,7 @@ public class ConceptSuggestion {
                         @ApiResponse(code = 401, message = "User is not logged in"),
 			@ApiResponse(code = 404, message = "Service not found") })
 	public Response newClassProperty(
-                @ApiParam(value = "Scheme ID", required = true) @QueryParam("schemeID") String scheme,
+                @ApiParam(value = "Scheme ID", required = true) @QueryParam("schemeID") String schemeID,
                 @ApiParam(value = "Label", required = true) @QueryParam("label") String label,
 		@ApiParam(value = "Comment", required = true) @QueryParam("comment") String comment,
                 @Context HttpServletRequest request) {
@@ -149,20 +150,23 @@ public class ConceptSuggestion {
 		IRI schemeIRI;
 		try {
 			IRIFactory iri = IRIFactory.semanticWebImplementation();
-			schemeIRI = iri.construct(scheme);
+			schemeIRI = iri.construct(schemeID);
 		} catch (IRIException e) {
 			logger.log(Level.WARNING, "CLASS OR PROPERTY ID is invalid IRI!");
 			return Response.status(403).build();
 		}
-
+                
+                UUID conceptUUID = UUID.randomUUID();
+                
 		String queryString;
 		ParameterizedSparqlString pss = new ParameterizedSparqlString();
 		pss.setNsPrefixes(LDHelper.PREFIX_MAP);
-		queryString = "INSERT { GRAPH ?concept { ?concept skos:inScheme ?scheme . ?concept owl:versionInfo 'Unstable' . ?concept a skos:Concept . ?concept skos:prefLabel ?label . ?concept rdfs:comment ?comment . ?concept prov:atTime ?time . ?concept prov:wasAssociatedWith ?user . } } WHERE { BIND(NOW() as ?time) BIND(UUID() as ?concept)}";
+		queryString = "INSERT { GRAPH ?concept { ?concept skos:inScheme ?scheme . ?concept owl:versionInfo 'Unstable' . ?concept a skos:Concept . ?concept skos:prefLabel ?label . ?concept rdfs:comment ?comment . ?concept prov:atTime ?time . ?concept prov:wasAssociatedWith ?user . } } WHERE { BIND(NOW() as ?time)}";
 		pss.setCommandText(queryString);
 		pss.setIri("scheme", schemeIRI);
                 pss.setLiteral("label", label);
                 pss.setLiteral("comment", comment);
+                pss.setIri("concept", "urn:uuid:"+conceptUUID);
                 pss.setIri("user", "mailto:"+login.getEmail());
 
                 logger.log(Level.INFO,pss.toString());
@@ -172,7 +176,8 @@ public class ConceptSuggestion {
 
 		try {
 			qexec.execute();
-			return Response.status(200).build();
+                        // TODO: Create JSON-LD?
+			return Response.status(200).entity("{\"@id\":\"urn:uuid:"+conceptUUID+"\"}").build();
 		} catch (QueryExceptionHTTP ex) {
 			logger.log(Level.WARNING, "Expect the unexpected!", ex);
 			return Response.status(400).build();

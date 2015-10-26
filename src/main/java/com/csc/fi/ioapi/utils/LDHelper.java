@@ -45,6 +45,7 @@ public class LDHelper {
         put("sh","http://www.w3.org/ns/shacl#");
         put("iow","http://urn.fi/urn:nbn:fi:csc-iow-meta#");
         put("skos","http://www.w3.org/2004/02/skos/core#");
+        put("prov","http://www.w3.org/ns/prov#");
     }});
     
     public final static String prefix =   "PREFIX owl: <http://www.w3.org/2002/07/owl#> "+
@@ -61,6 +62,7 @@ public class LDHelper {
                             "PREFIX text: <http://jena.apache.org/text#> "+
                             "PREFIX sh: <http://www.w3.org/ns/shacl#> "+
                             "PREFIX skos: <http://www.w3.org/2004/02/skos/core#> "+
+                            "PREFIX prov: <http://www.w3.org/ns/prov#> " +
                             "PREFIX iow: <http://urn.fi/urn:nbn:fi:csc-iow-meta#>";
     
     
