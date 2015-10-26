@@ -85,6 +85,7 @@ public class ClassCreator {
                     @ApiResponse(code = 404, message = "Service not found") })
     public Response newClass(
             @ApiParam(value = "Model ID", required = true) @QueryParam("modelID") String modelID,
+            @ApiParam(value = "Class label", required = true) @QueryParam("classLabel") String classLabel,
             @ApiParam(value = "Concept ID", required = true) @QueryParam("conceptID") String conceptID,
             @Context HttpServletRequest request) {
 
@@ -118,11 +119,15 @@ public class ClassCreator {
                 String queryString;
                 ParameterizedSparqlString pss = new ParameterizedSparqlString();
                 pss.setNsPrefixes(LDHelper.PREFIX_MAP);
-                queryString = "CONSTRUCT  { ?classIRI a sh:ShapeClass . ?classIRI rdfs:isDefinedBy ?model . ?classIRI rdfs:label ?label . ?classIRI rdfs:comment ?comment . ?classIRI dcterms:subject ?concept . ?concept skos:prefLabel ?label . ?concept rdfs:comment ?comment . } WHERE {{ ?concept a skos:Concept . ?concept skos:prefLabel ?label . OPTIONAL {?concept rdfs:comment ?comment . }} UNION { ?concept skos:prefLabel ?label . FILTER(lang(?label)='fi') BIND(IRI(CONCAT(?namespace,ENCODE_FOR_URI(REPLACE(UCASE(STR(?label)),' ','')))) as ?classIRI) } }";
+                // BIND(IRI(CONCAT(?namespace,ENCODE_FOR_URI(REPLACE(UCASE(STR(?label)),' ','')))) as ?classIRI)
+                queryString = "CONSTRUCT  { ?classIRI a sh:ShapeClass . ?classIRI rdfs:isDefinedBy ?model . ?classIRI rdfs:label ?label . ?classIRI rdfs:comment ?comment . ?classIRI dcterms:subject ?concept . ?concept skos:prefLabel ?label . ?concept rdfs:comment ?comment . } WHERE { ?concept a skos:Concept . ?concept skos:prefLabel ?label . OPTIONAL {?concept rdfs:comment ?comment . } }";
+               
                 pss.setCommandText(queryString);
                 pss.setIri("concept", conceptIRI);
                 pss.setIri("model", modelIRI);
-                pss.setLiteral("namespace",modelID+"#");
+                pss.setLiteral("classLabel", classLabel);
+                pss.setIri("classIRI",modelID+"#"+LDHelper.resourceName(classLabel));
+               
 
                 logger.info(pss.toString());
                 WebResource webResource = client.resource(services.getTempConceptReadSparqlAddress())
@@ -148,8 +153,7 @@ public class ClassCreator {
     }
         
      private void updateConceptstoCoreService(String uri) {
-            
-         
+               
          // TODO: ADD TEST FOR SUGGESTIONS AND TEMP CONCEPTS 
          
             Client client = Client.create();

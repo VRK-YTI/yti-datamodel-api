@@ -18,6 +18,7 @@ import org.apache.commons.lang3.StringUtils;
 import com.github.jsonldjava.utils.JsonUtils;
 import com.hp.hpl.jena.query.ParameterizedSparqlString;
 import com.sun.jersey.api.uri.UriComponent;
+import org.apache.commons.lang3.text.WordUtils;
 
 /**
  *
@@ -71,8 +72,8 @@ public class LDHelper {
         return  UriComponent.encode(queryString,UriComponent.Type.QUERY_PARAM); // URLEncoder.encode(queryString, "UTF-8");
     }
     
-    static String resourceName(String name) {
-        name = StringUtils.capitalize(name);
+    public static String resourceName(String name) {
+        name = WordUtils.capitalize(name);
         name = name.replaceAll("[^a-zA-Z0-9_-]", "");
         return name;
     }
