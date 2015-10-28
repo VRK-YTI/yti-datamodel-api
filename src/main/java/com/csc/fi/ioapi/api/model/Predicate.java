@@ -87,7 +87,7 @@ public class Predicate {
             ParameterizedSparqlString pss = new ParameterizedSparqlString();
             pss.setNsPrefixes(LDHelper.PREFIX_MAP);
             
-            queryString = "CONSTRUCT { ?property rdfs:label ?label . ?property a ?type . ?property rdfs:isDefinedBy ?source . ?source rdfs:label ?sourceLabel . } WHERE { VALUES ?rel {dcterms:hasPart iow:associations iow:attributes} ?library ?rel ?property . GRAPH ?graph { ?property rdfs:label ?label . VALUES ?type { owl:ObjectProperty owl:DatatypeProperty } ?property a ?type . ?property rdfs:isDefinedBy ?source . } ?source rdfs:label ?sourceLabel .  }"; 
+            queryString = "CONSTRUCT { ?property rdfs:label ?label . ?property a ?type . ?property rdfs:isDefinedBy ?source . ?source rdfs:label ?sourceLabel . ?property dcterms:modified ?date . } WHERE { ?library dcterms:hasPart ?property . GRAPH ?graph { ?property rdfs:label ?label . VALUES ?type { owl:ObjectProperty owl:DatatypeProperty } ?property a ?type . ?property rdfs:isDefinedBy ?source . ?property dcterms:modified ?date .  } ?source rdfs:label ?sourceLabel .  }"; 
        
              if(model!=null && !model.equals("undefined")) {
                   pss.setIri("library", model);

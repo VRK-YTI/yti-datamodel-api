@@ -18,6 +18,8 @@ import org.apache.commons.lang3.StringUtils;
 import com.github.jsonldjava.utils.JsonUtils;
 import com.hp.hpl.jena.query.ParameterizedSparqlString;
 import com.sun.jersey.api.uri.UriComponent;
+import java.text.Normalizer;
+import java.text.Normalizer.Form;
 import org.apache.commons.lang3.text.WordUtils;
 
 /**
@@ -76,10 +78,16 @@ public class LDHelper {
     
     public static String resourceName(String name) {
         name = WordUtils.capitalize(name);
+        name = removeAccents(name);
         name = name.replaceAll("[^a-zA-Z0-9_-]", "");
         return name;
     }
     
+    public static String removeAccents(String text) {
+    return text == null ? null :
+        Normalizer.normalize(text, Form.NFD)
+            .replaceAll("\\p{InCombiningDiacriticalMarks}+", "");
+    }
     
     public static InputStream getDefaultGraphInputStream() {
            return LDHelper.class.getClassLoader().getResourceAsStream("defaultGraph.json");

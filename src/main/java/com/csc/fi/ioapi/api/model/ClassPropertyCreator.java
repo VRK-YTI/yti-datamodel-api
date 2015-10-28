@@ -51,11 +51,11 @@ import org.apache.jena.iri.IRIFactory;
  */
 @Path("classProperty")
 @Api(value = "/classProperty", description = "Operations about property")
-public class ClassProperty {
+public class ClassPropertyCreator {
 
     @Context ServletContext context;
     private EndpointServices services = new EndpointServices();
-    private static final Logger logger = Logger.getLogger(ClassProperty.class.getName());
+    private static final Logger logger = Logger.getLogger(ClassPropertyCreator.class.getName());
     
     
   @GET
@@ -104,7 +104,7 @@ public class ClassProperty {
           return rb.build();
            
   }
- 
+ /*
   	@PUT
 	@ApiOperation(value = "Create new class property", notes = "Create new class property")
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "New property is created"),
@@ -194,5 +194,5 @@ public class ClassProperty {
 			return Response.status(400).build();
 		}
 	}
-  
+  */
 }

@@ -69,34 +69,37 @@ import org.apache.jena.riot.RDFLanguages;
 /**
  * Root resource (exposed at "myresource" path)
  */
-@Path("classCreator")
-@Api(value = "/classCreator", description = "Operations about property")
-public class ClassCreator {
+@Path("predicateCreator")
+@Api(value = "/predicateCreator", description = "Creates new RDF properties based on SKOS concepts")
+public class PredicateCreator {
 
     @Context ServletContext context;
     EndpointServices services = new EndpointServices();
-     private static final Logger logger = Logger.getLogger(ClassCreator.class.getName());
+     private static final Logger logger = Logger.getLogger(PredicateCreator.class.getName());
     
     @GET
     @Produces("application/ld+json")
-    @ApiOperation(value = "Create new class", notes = "Create new")
-    @ApiResponses(value = { @ApiResponse(code = 200, message = "New class is created"),
+    @ApiOperation(value = "Create new predicate", notes = "Create new predicate")
+    @ApiResponses(value = { @ApiResponse(code = 200, message = "New predicate is created"),
                     @ApiResponse(code = 400, message = "Invalid ID supplied"),
                     @ApiResponse(code = 403, message = "Invalid IRI in parameter"),
                     @ApiResponse(code = 404, message = "Service not found") })
-    public Response newClass(
+    public Response newPredicate(
             @ApiParam(value = "Model ID", required = true) @QueryParam("modelID") String modelID,
-            @ApiParam(value = "Class label", required = true) @QueryParam("classLabel") String classLabel,
+            @ApiParam(value = "Predicate label", required = true) @QueryParam("predicateLabel") String predicateLabel,
             @ApiParam(value = "Concept ID", required = true) @QueryParam("conceptID") String conceptID,
+            @ApiParam(value = "Predicate type", required = true, allowableValues="owl:DatatypeProperty,owl:ObjectProperty") @QueryParam("type") String type,
             @Context HttpServletRequest request) {
 
           ResponseBuilder rb;
 
-            IRI conceptIRI,modelIRI;
+            IRI conceptIRI,modelIRI,typeIRI;
             try {
+                    String typeURI = type.replace("owl:", "http://www.w3.org/2002/07/owl#");
                     IRIFactory iri = IRIFactory.semanticWebImplementation();
                     conceptIRI = iri.construct(conceptID);
                     modelIRI = iri.construct(modelID);
+                    typeIRI = iri.construct(typeURI);
             } catch (IRIException e) {
                     logger.log(Level.WARNING, "ID is invalid IRI!");
                     return Response.status(403).build();
@@ -120,14 +123,14 @@ public class ClassCreator {
                 String queryString;
                 ParameterizedSparqlString pss = new ParameterizedSparqlString();
                 pss.setNsPrefixes(LDHelper.PREFIX_MAP);
-                // BIND(IRI(CONCAT(?namespace,ENCODE_FOR_URI(REPLACE(UCASE(STR(?label)),' ','')))) as ?classIRI)
-                queryString = "CONSTRUCT  { ?classIRI a sh:ShapeClass . ?classIRI rdfs:isDefinedBy ?model . ?classIRI rdfs:label ?classLabel . ?classIRI rdfs:comment ?comment . ?classIRI dcterms:subject ?concept . ?concept skos:prefLabel ?label . ?concept rdfs:comment ?comment . } WHERE { ?concept a skos:Concept . ?concept skos:prefLabel ?label . OPTIONAL {?concept rdfs:comment ?comment . } }";
+                queryString = "CONSTRUCT  { ?predicateIRI a ?type .  ?predicateIRI rdfs:isDefinedBy ?model . ?predicateIRI rdfs:label ?label . ?predicateIRI rdfs:comment ?comment . ?predicateIRI dcterms:subject ?concept . ?concept skos:prefLabel ?label . ?concept rdfs:comment ?comment . } WHERE { ?concept a skos:Concept . ?concept skos:prefLabel ?label . OPTIONAL {?concept rdfs:comment ?comment . } }";
                
                 pss.setCommandText(queryString);
                 pss.setIri("concept", conceptIRI);
                 pss.setIri("model", modelIRI);
-                pss.setLiteral("classLabel", classLabel);
-                pss.setIri("classIRI",modelID+"#"+LDHelper.resourceName(classLabel));
+                pss.setIri("type", typeIRI);
+                pss.setLiteral("predicateLabel", predicateLabel);
+                pss.setIri("predicateIRI",modelID+"#"+LDHelper.resourceName(predicateLabel));
                
 
                 logger.info(pss.toString());
