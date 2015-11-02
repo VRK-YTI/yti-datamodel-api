@@ -41,6 +41,7 @@ import com.hp.hpl.jena.query.QueryExecutionFactory;
 import com.hp.hpl.jena.query.ResultSet;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
+import com.hp.hpl.jena.rdf.model.ResourceFactory;
 import com.hp.hpl.jena.sparql.engine.http.QueryExceptionHTTP;
 import com.hp.hpl.jena.update.UpdateExecutionFactory;
 import com.hp.hpl.jena.update.UpdateProcessor;
@@ -89,6 +90,7 @@ public class PredicateCreator {
             @ApiParam(value = "Predicate label", required = true) @QueryParam("predicateLabel") String predicateLabel,
             @ApiParam(value = "Concept ID", required = true) @QueryParam("conceptID") String conceptID,
             @ApiParam(value = "Predicate type", required = true, allowableValues="owl:DatatypeProperty,owl:ObjectProperty") @QueryParam("type") String type,
+            @ApiParam(value = "Language", required = true, allowableValues="fi,en") @QueryParam("lang") String lang,
             @Context HttpServletRequest request) {
 
           ResponseBuilder rb;
@@ -123,13 +125,14 @@ public class PredicateCreator {
                 String queryString;
                 ParameterizedSparqlString pss = new ParameterizedSparqlString();
                 pss.setNsPrefixes(LDHelper.PREFIX_MAP);
-                queryString = "CONSTRUCT  { ?predicateIRI a ?type .  ?predicateIRI rdfs:isDefinedBy ?model . ?predicateIRI rdfs:label ?label . ?predicateIRI rdfs:comment ?comment . ?predicateIRI dcterms:subject ?concept . ?concept skos:prefLabel ?label . ?concept rdfs:comment ?comment . } WHERE { ?concept a skos:Concept . ?concept skos:prefLabel ?label . OPTIONAL {?concept rdfs:comment ?comment . } }";
+                queryString = "CONSTRUCT  { ?predicateIRI owl:versionInfo ?draft . ?predicateIRI a ?type .  ?predicateIRI rdfs:isDefinedBy ?model . ?predicateIRI rdfs:label ?label . ?predicateIRI rdfs:comment ?comment . ?predicateIRI dcterms:subject ?concept . ?concept skos:prefLabel ?label . ?concept rdfs:comment ?comment . } WHERE { ?concept a skos:Concept . ?concept skos:prefLabel ?label . OPTIONAL {?concept rdfs:comment ?comment . } }";
                
                 pss.setCommandText(queryString);
                 pss.setIri("concept", conceptIRI);
                 pss.setIri("model", modelIRI);
                 pss.setIri("type", typeIRI);
-                pss.setLiteral("predicateLabel", predicateLabel);
+                pss.setLiteral("draft", "Unstable");
+                pss.setLiteral("predicateLabel", ResourceFactory.createLangLiteral(predicateLabel, lang));
                 pss.setIri("predicateIRI",modelID+"#"+LDHelper.resourceName(predicateLabel));
                
 

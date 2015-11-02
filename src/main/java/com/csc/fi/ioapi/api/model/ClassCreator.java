@@ -41,6 +41,8 @@ import com.hp.hpl.jena.query.QueryExecutionFactory;
 import com.hp.hpl.jena.query.ResultSet;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
+import com.hp.hpl.jena.rdf.model.ResourceFactory;
+import com.hp.hpl.jena.rdf.model.impl.LiteralImpl;
 import com.hp.hpl.jena.sparql.engine.http.QueryExceptionHTTP;
 import com.hp.hpl.jena.update.UpdateExecutionFactory;
 import com.hp.hpl.jena.update.UpdateProcessor;
@@ -88,6 +90,7 @@ public class ClassCreator {
             @ApiParam(value = "Model ID", required = true) @QueryParam("modelID") String modelID,
             @ApiParam(value = "Class label", required = true) @QueryParam("classLabel") String classLabel,
             @ApiParam(value = "Concept ID", required = true) @QueryParam("conceptID") String conceptID,
+            @ApiParam(value = "Language", required = true, allowableValues="fi,en") @QueryParam("lang") String lang,
             @Context HttpServletRequest request) {
 
           ResponseBuilder rb;
@@ -121,15 +124,15 @@ public class ClassCreator {
                 ParameterizedSparqlString pss = new ParameterizedSparqlString();
                 pss.setNsPrefixes(LDHelper.PREFIX_MAP);
                 // BIND(IRI(CONCAT(?namespace,ENCODE_FOR_URI(REPLACE(UCASE(STR(?label)),' ','')))) as ?classIRI)
-                queryString = "CONSTRUCT  { ?classIRI a sh:ShapeClass . ?classIRI rdfs:isDefinedBy ?model . ?classIRI rdfs:label ?classLabel . ?classIRI rdfs:comment ?comment . ?classIRI dcterms:subject ?concept . ?concept skos:prefLabel ?label . ?concept rdfs:comment ?comment . } WHERE { ?concept a skos:Concept . ?concept skos:prefLabel ?label . OPTIONAL {?concept rdfs:comment ?comment . } }";
+                queryString = "CONSTRUCT  { ?classIRI owl:versionInfo ?draft . ?classIRI a sh:ShapeClass . ?classIRI rdfs:isDefinedBy ?model . ?classIRI rdfs:label ?classLabel . ?classIRI rdfs:comment ?comment . ?classIRI dcterms:subject ?concept . ?concept skos:prefLabel ?label . ?concept rdfs:comment ?comment . } WHERE {?concept a skos:Concept . ?concept skos:prefLabel ?label . OPTIONAL {?concept rdfs:comment ?comment . } }";
                
                 pss.setCommandText(queryString);
                 pss.setIri("concept", conceptIRI);
                 pss.setIri("model", modelIRI);
-                pss.setLiteral("classLabel", classLabel);
+                pss.setLiteral("draft", "Unstable");
+                pss.setLiteral("classLabel", ResourceFactory.createLangLiteral(classLabel, lang));
                 pss.setIri("classIRI",modelID+"#"+LDHelper.resourceName(classLabel));
                
-
                 logger.info(pss.toString());
                 WebResource webResource = client.resource(services.getTempConceptReadSparqlAddress())
                          .queryParam("query", UriComponent.encode(pss.toString(),UriComponent.Type.QUERY));
