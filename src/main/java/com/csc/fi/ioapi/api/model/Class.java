@@ -86,9 +86,8 @@ public class Class {
             ParameterizedSparqlString pss = new ParameterizedSparqlString();
             pss.setNsPrefixes(LDHelper.PREFIX_MAP);
             
-            queryString = "CONSTRUCT { ?class a sh:ShapeClass . ?class rdfs:label ?label . ?class a ?type . ?class dcterms:modified ?date . ?class rdfs:isDefinedBy ?source . ?source rdfs:label ?sourceLabel . } WHERE { VALUES ?rel {dcterms:hasPart iow:classes} ?library ?rel ?class . GRAPH ?graph { ?class a sh:ShapeClass . ?class rdfs:label ?label . ?class a ?type . ?class rdfs:isDefinedBy ?source . } ?source rdfs:label ?sourceLabel . }"; 
+            queryString = "CONSTRUCT { ?class a sh:ShapeClass . ?class rdfs:label ?label . ?class a ?type . ?class dcterms:modified ?date . ?class dcterms:modified ?modified . ?class rdfs:isDefinedBy ?source . ?source rdfs:label ?sourceLabel . } WHERE { VALUES ?rel {dcterms:hasPart iow:classes} ?library ?rel ?class . GRAPH ?graph { ?class dcterms:modified ?modified . ?class a sh:ShapeClass . ?class rdfs:label ?label . ?class a ?type . ?class rdfs:isDefinedBy ?source . } ?source rdfs:label ?sourceLabel . }"; 
           
-            
              if(model!=null && !model.equals("undefined")) {
                   pss.setIri("library", model);
              }
