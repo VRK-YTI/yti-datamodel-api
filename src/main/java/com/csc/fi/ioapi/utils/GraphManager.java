@@ -179,7 +179,7 @@ public class GraphManager {
     }
     
     
-    public static boolean isExistingGraph(String graphIRI) {
+    public static boolean isExistingGraph(IRI graphIRI) {
         
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         String queryString = " ASK { GRAPH ?graph { ?s ?p ?o }}";

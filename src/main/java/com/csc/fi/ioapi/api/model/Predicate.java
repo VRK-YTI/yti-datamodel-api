@@ -192,26 +192,35 @@ public class Predicate {
         }
         
         if(isNotEmpty(body)) {
-           Client client = Client.create();
-           
-           WebResource webResource = client.resource(services.getCoreReadWriteAddress())
-                                      .queryParam("graph", graphID);
-
-            WebResource.Builder builder = webResource.header("Content-type", "application/ld+json");
-            ClientResponse response = builder.put(ClientResponse.class,body);
-
-            if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-               logger.log(Level.WARNING, id + " was not updated! Status " + response.getStatus());
-               return Response.status(response.getStatus()).build();
+            
+            /* Rename ID */
+            if(oldIdIRI!=null) {
+                /* Prevent overwriting existing resources */
+                if(GraphManager.isExistingGraph(idIRI)) {
+                    logger.log(Level.WARNING, idIRI+" is existing graph!");
+                    return Response.status(403).build();
+                }
+                else {
+                    /* Remove old graph and add update references */
+                    GraphManager.removeGraph(oldIdIRI);
+                    GraphManager.renameID(oldIdIRI,idIRI);
+                }
             }
             
-            if(oldIdIRI!=null) {
-                GraphManager.removeGraph(oldIdIRI);
-                GraphManager.renameID(oldIdIRI,idIRI);
-            }
-             
-            // GraphManager.insertNewGraphReferenceToModel(idIRI, modelIRI);
-   
+        /* Create new graph with new id */ 
+        Client client = Client.create();
+
+        WebResource webResource = client.resource(services.getCoreReadWriteAddress())
+                                  .queryParam("graph", graphID);
+
+        WebResource.Builder builder = webResource.header("Content-type", "application/ld+json");
+        ClientResponse response = builder.put(ClientResponse.class,body);
+
+        if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
+           logger.log(Level.WARNING, id + " was not updated! Status " + response.getStatus());
+           return Response.status(response.getStatus()).build();
+        }
+            
         } else {
              /* IF NO JSON-LD POSTED TRY TO CREATE REFERENCE FROM MODEL TO CLASS ID */
             if(id.startsWith(model)) {
@@ -256,46 +265,52 @@ public class Predicate {
       
     try {
                
-        HttpSession session = request.getSession();
+            HttpSession session = request.getSession();
+
+            if(session==null) return Response.status(401).build();
+
+            LoginSession login = new LoginSession(session);
+
+            if(!login.isLoggedIn() || !login.hasRightToEdit(model))
+                return Response.status(401).build();
+
+            if(!id.startsWith(model))
+                return Response.status(403).build();
+
+            IRIFactory iriFactory = IRIFactory.semanticWebImplementation();
+            IRI modelIRI,idIRI;
+            try {
+                modelIRI = iriFactory.construct(model);
+                idIRI = iriFactory.construct(id);
+            }
+            catch (IRIException e) {
+                return Response.status(403).build();
+            }
+
+            /* Prevent overwriting existing predicate */ 
+            if(GraphManager.isExistingGraph(idIRI)) {
+               logger.log(Level.WARNING, idIRI+" is existing predicate!");
+               return Response.status(403).build();
+            }
         
-        if(session==null) return Response.status(401).build();
-        
-        LoginSession login = new LoginSession(session);
-        
-        if(!login.isLoggedIn() || !login.hasRightToEdit(model))
-            return Response.status(401).build();
-           
-        if(!id.startsWith(model))
-            return Response.status(403).build();
-        
-        IRIFactory iriFactory = IRIFactory.semanticWebImplementation();
-        IRI modelIRI,idIRI;
-        try {
-            modelIRI = iriFactory.construct(model);
-            idIRI = iriFactory.construct(id);
-        }
-        catch (IRIException e) {
-            return Response.status(403).build();
-        }
-          
            Client client = Client.create();
            
            WebResource webResource = client.resource(services.getCoreReadWriteAddress())
                                       .queryParam("graph", id);
 
-            WebResource.Builder builder = webResource.header("Content-type", "application/ld+json");
-            ClientResponse response = builder.put(ClientResponse.class,body);
+           WebResource.Builder builder = webResource.header("Content-type", "application/ld+json");
+           ClientResponse response = builder.put(ClientResponse.class,body);
 
-            if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
+           if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
                logger.log(Level.WARNING, id + " was not updated! Status " + response.getStatus());
                return Response.status(response.getStatus()).build();
-            }
+           }
             
-            GraphManager.insertNewGraphReferenceToModel(idIRI, modelIRI);
+           GraphManager.insertNewGraphReferenceToModel(idIRI, modelIRI);
             
-            logger.log(Level.INFO, id + " updated sucessfully!");
+           logger.log(Level.INFO, id + " updated sucessfully!");
             
-            return Response.status(204).build();
+           return Response.status(204).build();
 
       } catch(UniformInterfaceException | ClientHandlerException ex) {
         logger.log(Level.WARNING, "Expect the unexpected!", ex);

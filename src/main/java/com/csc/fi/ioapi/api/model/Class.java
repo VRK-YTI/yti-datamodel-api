@@ -192,27 +192,35 @@ public class Class {
         }
         
         if(isNotEmpty(body)) {
+            
+            /* Rename ID if oldIdIRI exists */
+            if(oldIdIRI!=null) {
+                /* Prevent overwriting existing resources */
+                if(GraphManager.isExistingGraph(idIRI)) {
+                    logger.log(Level.WARNING, idIRI+" is existing graph!");
+                    return Response.status(403).build();
+                }
+                else {
+                    /* Remove old graph and add update references */
+                    GraphManager.removeGraph(oldIdIRI);
+                    GraphManager.renameID(oldIdIRI,idIRI);
+                }
+            }
+            
+           /* Create new graph with new id */ 
            Client client = Client.create();
            
            WebResource webResource = client.resource(services.getCoreReadWriteAddress())
                                       .queryParam("graph", graphID);
 
-            WebResource.Builder builder = webResource.header("Content-type", "application/ld+json");
-            ClientResponse response = builder.put(ClientResponse.class,body);
+           WebResource.Builder builder = webResource.header("Content-type", "application/ld+json");
+           ClientResponse response = builder.put(ClientResponse.class,body);
 
-            if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
+           if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
                Logger.getLogger(Class.class.getName()).log(Level.WARNING, graphID+" was not updated! Status "+response.getStatus());
                return Response.status(response.getStatus()).build();
-            }
-            
-            if(oldIdIRI!=null) {
-                GraphManager.removeGraph(oldIdIRI);
-                GraphManager.renameID(oldIdIRI,idIRI);
-            } 
-            
-            // GraphManager.insertNewGraphReferenceToModel(idIRI, modelIRI);
-            
-            
+           }
+             
         } else {
              /* IF NO JSON-LD POSTED TRY TO CREATE REFERENCE FROM MODEL TO CLASS ID */
             if(id.startsWith(model)) {
@@ -257,29 +265,35 @@ public class Class {
       
     try {
                
-        HttpSession session = request.getSession();
-        
-        if(session==null) return Response.status(401).build();
-        
-        LoginSession login = new LoginSession(session);
-        
-        if(!login.isLoggedIn() || !login.hasRightToEdit(model))
-            return Response.status(401).build();
-        
-         if(!id.startsWith(model)) {
-            Logger.getLogger(Class.class.getName()).log(Level.WARNING, id+" ID must start with "+model);
-            return Response.status(403).build();
-         }
- 
-        IRIFactory iriFactory = IRIFactory.semanticWebImplementation();
-        IRI modelIRI,idIRI;
-        try {
-            modelIRI = iriFactory.construct(model);
-            idIRI = iriFactory.construct(id);
-        }
-        catch (IRIException e) {
-            return Response.status(403).build();
-        }
+            HttpSession session = request.getSession();
+
+            if(session==null) return Response.status(401).build();
+
+            LoginSession login = new LoginSession(session);
+
+            if(!login.isLoggedIn() || !login.hasRightToEdit(model))
+                return Response.status(401).build();
+
+             if(!id.startsWith(model)) {
+                Logger.getLogger(Class.class.getName()).log(Level.WARNING, id+" ID must start with "+model);
+                return Response.status(403).build();
+             }
+
+            IRIFactory iriFactory = IRIFactory.semanticWebImplementation();
+            IRI modelIRI,idIRI;
+            try {
+                modelIRI = iriFactory.construct(model);
+                idIRI = iriFactory.construct(id);
+            }
+            catch (IRIException e) {
+                return Response.status(403).build();
+            }
+
+            /* Prevent overwriting existing classes */ 
+            if(GraphManager.isExistingGraph(idIRI)) {
+               logger.log(Level.WARNING, idIRI+" is existing class!");
+               return Response.status(403).build();
+            }
           
            Client client = Client.create();
            

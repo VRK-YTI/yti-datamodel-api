@@ -160,7 +160,6 @@ public class Models {
         if(!login.isLoggedIn() || !login.hasRightToEdit(graph))
             return Response.status(401).build();
         
-
        try {
 
            String service = services.getCoreReadWriteAddress();
