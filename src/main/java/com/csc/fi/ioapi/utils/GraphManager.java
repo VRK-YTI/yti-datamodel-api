@@ -178,6 +178,26 @@ public class GraphManager {
            }
     }
     
+    
+    public static boolean isExistingGraph(String graphIRI) {
+        
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        String queryString = " ASK { GRAPH ?graph { ?s ?p ?o }}";
+        pss.setCommandText(queryString);
+        pss.setIri("graph", graphIRI);
+        
+        Query query = pss.asQuery();
+        QueryExecution qexec = QueryExecutionFactory.sparqlService(services.getCoreSparqlAddress(), query);
+        
+         try
+          {
+              boolean b = qexec.execAsk();
+              return b;
+           } catch(Exception ex) {
+               return false; 
+           }
+    }
+    
       public static void createDefaultGraph() {
         
  
