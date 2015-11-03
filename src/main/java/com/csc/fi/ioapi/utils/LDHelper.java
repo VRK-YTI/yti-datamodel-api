@@ -76,8 +76,17 @@ public class LDHelper {
         return  UriComponent.encode(queryString,UriComponent.Type.QUERY_PARAM); // URLEncoder.encode(queryString, "UTF-8");
     }
     
+    public static String propertyName(String name) {
+        name = StringUtils.uncapitalize(name);
+        return camelCase(name);
+    }
+    
     public static String resourceName(String name) {
-        name = WordUtils.capitalize(name);
+         name = WordUtils.capitalize(name);
+         return camelCase(name);
+    }
+    
+    public static String camelCase(String name) {
         name = removeAccents(name);
         name = name.replaceAll("[^a-zA-Z0-9_-]", "");
         return name;

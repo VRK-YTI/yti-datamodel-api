@@ -133,7 +133,7 @@ public class PredicateCreator {
                 pss.setIri("type", typeIRI);
                 pss.setLiteral("draft", "Unstable");
                 pss.setLiteral("predicateLabel", ResourceFactory.createLangLiteral(predicateLabel, lang));
-                pss.setIri("predicateIRI",modelID+"#"+LDHelper.resourceName(predicateLabel));
+                pss.setIri("predicateIRI",modelID+"#"+LDHelper.propertyName(predicateLabel));
                
 
                 logger.info(pss.toString());
