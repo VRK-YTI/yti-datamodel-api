@@ -26,6 +26,7 @@ import com.csc.fi.ioapi.config.EndpointServices;
 import com.csc.fi.ioapi.config.LoginSession;
 import com.csc.fi.ioapi.utils.GraphManager;
 import com.csc.fi.ioapi.utils.LDHelper;
+import com.csc.fi.ioapi.utils.ServiceDescriptionManager;
 import com.hp.hpl.jena.query.ParameterizedSparqlString;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientHandlerException;
@@ -39,6 +40,7 @@ import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiParam;
 import com.wordnik.swagger.annotations.ApiResponse;
 import com.wordnik.swagger.annotations.ApiResponses;
+import javax.ws.rs.DELETE;
 
 /*
  * To change this license header, choose License Headers in Project Properties.
@@ -304,13 +306,13 @@ public class Class {
             ClientResponse response = builder.put(ClientResponse.class,body);
 
             if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-               Logger.getLogger(Class.class.getName()).log(Level.WARNING, id+" was not updated! Status "+response.getStatus());
+               logger.log(Level.WARNING, id+" was not updated! Status "+response.getStatus());
                return Response.status(response.getStatus()).build();
             }
             
             GraphManager.insertNewGraphReferenceToModel(idIRI, modelIRI);
             
-            Logger.getLogger(Class.class.getName()).log(Level.INFO, id+" updated sucessfully!");
+            logger.log(Level.INFO, id+" updated sucessfully!");
             
             return Response.status(204).build();
 
@@ -320,6 +322,75 @@ public class Class {
       }
   }
  
+@DELETE
+  @ApiOperation(value = "Delete graph from service and service description", notes = "Delete graph")
+  @ApiResponses(value = {
+      @ApiResponse(code = 204, message = "Graph is deleted"),
+      @ApiResponse(code = 403, message = "Illegal graph parameter"),
+      @ApiResponse(code = 404, message = "No such graph"),
+      @ApiResponse(code = 401, message = "Unauthorized")
+  })
+  public Response deleteClass(
+          @ApiParam(value = "Model ID", required = true) 
+          @QueryParam("model") String model,
+          @ApiParam(value = "Class ID", required = true) 
+          @QueryParam("id") String id,
+          @Context HttpServletRequest request) {
+      
+      IRIFactory iriFactory = IRIFactory.semanticWebImplementation();
+       /* Check that URIs are valid */
+      IRI modelIRI,idIRI;
+        try {
+            modelIRI = iriFactory.construct(model);
+            idIRI = iriFactory.construct(id);
+        }
+        catch (IRIException e) {
+            return Response.status(403).build();
+        }
+      
+       if(id.equals("default")) {
+               return Response.status(403).build();
+       }
+       
+       HttpSession session = request.getSession();
 
+       if(session==null) return Response.status(401).build();
+
+       LoginSession login = new LoginSession(session);
+
+       if(!login.isLoggedIn() || !login.hasRightToEdit(model))
+          return Response.status(401).build();
+       
+       /* If Class is defined in the model */
+       if(id.startsWith(model)) {
+
+        try {
+
+             Client client = Client.create();
+             WebResource webResource = client.resource(services.getCoreReadWriteAddress())
+                                       .queryParam("graph", id);
+
+             WebResource.Builder builder = webResource.header("Content-type", "application/ld+json");
+             ClientResponse response = builder.delete(ClientResponse.class);
+
+             if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
+                logger.log(Level.WARNING, id+" was not deleted! Status "+response.getStatus());
+                return Response.status(response.getStatus()).build();
+             }
+             
+             logger.log(Level.INFO, id+" deleted successfully!");
+             return Response.status(204).build();
+
+       } catch(UniformInterfaceException | ClientHandlerException ex) {
+             logger.log(Level.WARNING, "Expect the unexpected!", ex);
+             return Response.status(400).build();
+       }
+        
+    } else {
+        /* If removing referenced class */   
+         GraphManager.deleteGraphReferenceFromModel(idIRI,modelIRI);  
+         return Response.status(204).build();   
+       }
+  }
 
 }

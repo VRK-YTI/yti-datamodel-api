@@ -292,7 +292,6 @@ public class GraphManager {
         
     }
     
-    
     public static void insertExistingGraphReferenceToModel(IRI graph, IRI model) {
      
       // TODO: ADD MODIFIED DATE TO MODEL
@@ -310,6 +309,25 @@ public class GraphManager {
         pss.setCommandText(query);
         
         Logger.getLogger(GraphManager.class.getName()).log(Level.WARNING, pss.toString()+" "+services.getCoreSparqlUpdateAddress());
+        
+        UpdateRequest queryObj = pss.asUpdate();
+        UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj,services.getCoreSparqlUpdateAddress());
+        qexec.execute();
+        
+    }
+    
+    
+    public static void deleteGraphReferenceFromModel(IRI graph, IRI model) {
+
+         String query = 
+                " DELETE { GRAPH ?model { ?model dcterms:hasPart ?graph }} "+
+                " WHERE { GRAPH ?graph { ?graph a ?type . }}";
+                    
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+        pss.setIri("graph",graph);
+        pss.setIri("model",model);
+        pss.setCommandText(query);
         
         UpdateRequest queryObj = pss.asUpdate();
         UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj,services.getCoreSparqlUpdateAddress());
