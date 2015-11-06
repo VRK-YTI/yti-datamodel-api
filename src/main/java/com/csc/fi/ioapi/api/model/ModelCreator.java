@@ -4,53 +4,21 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.servlet.ServletContext;
-import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
-
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
-/**
- *
- * @author malonen
- */
 import com.csc.fi.ioapi.config.ApplicationProperties;
 import com.csc.fi.ioapi.config.EndpointServices;
-import com.csc.fi.ioapi.config.LoginSession;
-import com.csc.fi.ioapi.utils.ConceptMapper;
-import com.csc.fi.ioapi.utils.GraphManager;
 import com.csc.fi.ioapi.utils.LDHelper;
-import com.csc.fi.ioapi.utils.ServiceDescriptionManager;
-import com.hp.hpl.jena.query.DatasetAccessor;
-import com.hp.hpl.jena.query.DatasetAccessorFactory;
 import com.hp.hpl.jena.query.ParameterizedSparqlString;
-import com.hp.hpl.jena.query.Query;
-import com.hp.hpl.jena.query.QueryExecution;
-import com.hp.hpl.jena.query.QueryExecutionFactory;
-import com.hp.hpl.jena.query.ResultSet;
-import com.hp.hpl.jena.rdf.model.Model;
-import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.rdf.model.ResourceFactory;
-import com.hp.hpl.jena.rdf.model.impl.LiteralImpl;
 import com.hp.hpl.jena.sparql.engine.http.QueryExceptionHTTP;
-import com.hp.hpl.jena.update.UpdateExecutionFactory;
-import com.hp.hpl.jena.update.UpdateProcessor;
-import com.hp.hpl.jena.update.UpdateRequest;
 import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientHandlerException;
 import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.WebResource.Builder;
 import com.sun.jersey.api.uri.UriComponent;
@@ -59,14 +27,9 @@ import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiParam;
 import com.wordnik.swagger.annotations.ApiResponse;
 import com.wordnik.swagger.annotations.ApiResponses;
-import java.io.ByteArrayInputStream;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
 import org.apache.jena.iri.IRIFactory;
-import org.apache.jena.riot.RDFDataMgr;
-import org.apache.jena.riot.RDFLanguages;
  
 /**
  * Root resource (exposed at "modelCreator" path)
@@ -88,7 +51,6 @@ public class ModelCreator {
                     @ApiResponse(code = 404, message = "Service not found"),
                     @ApiResponse(code = 401, message = "No right to create new")})
     public Response newModel(
-            @ApiParam(value = "Group ID", required = true) @QueryParam("groupID") String groupID,
             @ApiParam(value = "Model prefix", required = true) @QueryParam("prefix") String prefix,
             @ApiParam(value = "Model label", required = true) @QueryParam("label") String label,
             @ApiParam(value = "Initial language", required = true, allowableValues="fi,en") @QueryParam("lang") String lang) {
@@ -98,11 +60,10 @@ public class ModelCreator {
             prefix = LDHelper.modelName(prefix);
             String namespace = ApplicationProperties.getDefaultNamespace()+prefix+"#";
             
-            IRI groupIRI, namespaceIRI;
+            IRI namespaceIRI;
             
             try {
                     IRIFactory iri = IRIFactory.semanticWebImplementation();
-                    groupIRI = iri.construct(groupID);
                     namespaceIRI = iri.construct(namespace);
             } catch (IRIException e) {
                     logger.log(Level.WARNING, "ID is invalid IRI!");
@@ -118,7 +79,6 @@ public class ModelCreator {
             queryString = "CONSTRUCT  { ?modelIRI a owl:Ontology . ?modelIRI rdfs:label ?modelLabel . ?modelIRI owl:versionInfo ?draft . ?modelIRI dcterms:created ?creation . ?modelIRI dcterms:modified ?creation . } WHERE { BIND(now() as ?creation) }";
 
             pss.setCommandText(queryString);
-            pss.setIri("groupIRI", groupIRI);
             pss.setIri("modelIRI", namespaceIRI);
             pss.setLiteral("draft", "Unstable");
             pss.setLiteral("modelLabel", ResourceFactory.createLangLiteral(label, lang));
