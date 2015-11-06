@@ -157,7 +157,7 @@ public class Models {
         
         LoginSession login = new LoginSession(session);
         
-        if(!login.isLoggedIn() || !login.hasRightToEdit(graph))
+        if(!login.isLoggedIn() || !login.hasRightToEditModel(graph))
             return Response.status(401).build();
         
        try {
@@ -221,13 +221,15 @@ public class Models {
         
         LoginSession login = new LoginSession(session);
         
-        if(!login.isLoggedIn() || !login.hasRightToEdit(graph))
+        if(!login.isLoggedIn() || !login.hasRightToEditGroup(group))
             return Response.status(401).build();
+        
+        /* TODO: CHECK IF GRAPH ALREADY EXISTS */ 
         
        try {
  
            if(!graph.equals("undefined")) {
-               ServiceDescriptionManager.createGraphDescription(graph, group);
+               ServiceDescriptionManager.createGraphDescription(graph, group, login.getEmail());
            }
 
             Client client = Client.create();

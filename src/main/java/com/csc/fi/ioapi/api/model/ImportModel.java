@@ -125,7 +125,7 @@ public class ImportModel {
        try {
  
            if(!graph.equals("undefined")) {
-               ServiceDescriptionManager.createGraphDescription(graph, group);
+               ServiceDescriptionManager.createGraphDescription(graph, group, null);
            }
 
             Client client = Client.create();

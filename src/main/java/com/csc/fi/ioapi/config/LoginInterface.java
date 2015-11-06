@@ -18,8 +18,10 @@ public interface LoginInterface {
     
     public boolean isInGroup(String group);
     
-    public boolean hasRightToEdit(String resource);
+    public boolean hasRightToEditModel(String resource);
    
+    public boolean hasRightToEditGroup(String resource);
+    
     public String getDisplayName();
     
     public String getEmail();

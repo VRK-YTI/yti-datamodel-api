@@ -68,13 +68,23 @@ public class LoginSession implements LoginInterface {
     }
 
     @Override
-    public boolean hasRightToEdit(String model) {
+    public boolean hasRightToEditModel(String model) {
         
         if(this.getGroups()==null) return false;
         
         if(this.isInGroup("SUPER")) return true;
        
         return ServiceDescriptionManager.isModelInGroup(model,this.getGroups());
+    }
+    
+    @Override
+    public boolean hasRightToEditGroup(String group) {
+        
+        if(this.getGroups()==null) return false;
+        
+        if(this.isInGroup("SUPER")) return true;
+       
+        return isInGroup(group);
     }
     
 }

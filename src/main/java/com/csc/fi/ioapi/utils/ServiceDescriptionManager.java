@@ -105,7 +105,7 @@ public class ServiceDescriptionManager {
     }
     
     
-        public static void createGraphDescription(String graph, String group) {
+        public static void createGraphDescription(String graph, String group, String userMail) {
         
         String timestamp = SafeDateFormat.fmt().format(new Date());
         
@@ -116,6 +116,7 @@ public class ServiceDescriptionManager {
                 " _:graph sd:name ?graphName . "+
                 " _:graph dcterms:created ?timestamp . "+
                  " _:graph dcterms:isPartOf ?group . "+
+                 " _:graph dcterms:creator ?creator . "+
                 "} WHERE {"+
                 " ?service a sd:Service . "+
                 " ?service sd:availableGraphs ?graphCollection . "+
@@ -132,6 +133,7 @@ public class ServiceDescriptionManager {
 
         pss.setIri("graphName", graph);
         pss.setIri("group", group);
+        if(userMail!=null) pss.setIri("creator", "mailto:"+userMail);
         pss.setLiteral("timestamp", timestamp,XSDDatatype.XSDdateTime);
         pss.setCommandText(query);
 

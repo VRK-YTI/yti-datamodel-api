@@ -50,7 +50,6 @@
     },
     "dc": "http://purl.org/dc/elements/1.1/",
     "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
-    "doo": "http://urn.fi/urn:nbn:fi:csc-iow-doo#",
     "xsd": "http://www.w3.org/2001/XMLSchema#",
     "owl": "http://www.w3.org/2002/07/owl#",
     "iow": "http://urn.fi/urn:nbn:fi:csc-iow-meta#",

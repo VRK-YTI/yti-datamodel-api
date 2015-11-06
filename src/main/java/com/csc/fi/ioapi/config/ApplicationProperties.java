@@ -28,5 +28,9 @@ public static String getGroupDomain() {
 public static String getDebugAdress() {
     return PropertyUtil.getProperty("application.debugAdress");  
 }
+
+public static String getDefaultNamespace() {
+    return PropertyUtil.getProperty("application.defaultNamespace");  
+}
     
 }

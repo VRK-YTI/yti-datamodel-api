@@ -167,7 +167,7 @@ public class Class {
         
         LoginSession login = new LoginSession(session);
         
-        if(!login.isLoggedIn() || !login.hasRightToEdit(model))
+        if(!login.isLoggedIn() || !login.hasRightToEditModel(model))
             return Response.status(401).build();
         
         
@@ -273,7 +273,7 @@ public class Class {
 
             LoginSession login = new LoginSession(session);
 
-            if(!login.isLoggedIn() || !login.hasRightToEdit(model))
+            if(!login.isLoggedIn() || !login.hasRightToEditModel(model))
                 return Response.status(401).build();
 
              if(!id.startsWith(model)) {
@@ -358,7 +358,7 @@ public class Class {
 
        LoginSession login = new LoginSession(session);
 
-       if(!login.isLoggedIn() || !login.hasRightToEdit(model))
+       if(!login.isLoggedIn() || !login.hasRightToEditModel(model))
           return Response.status(401).build();
        
        /* If Class is defined in the model */

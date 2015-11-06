@@ -69,10 +69,10 @@ import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.riot.RDFLanguages;
  
 /**
- * Root resource (exposed at "myresource" path)
+ * Root resource (exposed at "classCreator" path)
  */
 @Path("classCreator")
-@Api(value = "/classCreator", description = "Operations about property")
+@Api(value = "/classCreator", description = "Construct new Class template")
 public class ClassCreator {
 
     @Context ServletContext context;
