@@ -91,8 +91,7 @@ public class ModelCreator {
             @ApiParam(value = "Group ID", required = true) @QueryParam("groupID") String groupID,
             @ApiParam(value = "Model prefix", required = true) @QueryParam("prefix") String prefix,
             @ApiParam(value = "Model label", required = true) @QueryParam("label") String label,
-            @ApiParam(value = "Initial language", required = true, allowableValues="fi,en") @QueryParam("lang") String lang,
-            @Context HttpServletRequest request) {
+            @ApiParam(value = "Initial language", required = true, allowableValues="fi,en") @QueryParam("lang") String lang) {
 
             ResponseBuilder rb;
             
@@ -110,23 +109,12 @@ public class ModelCreator {
                     return Response.status(403).build();
             }
 
-        
-            HttpSession session = request.getSession();
-
-            if(session==null) return Response.status(401).build();
-
-            LoginSession login = new LoginSession(session);
-
-            if(!login.isLoggedIn() || !login.hasRightToEditGroup(groupID))
-                return Response.status(401).build();
-        
             Client client = Client.create();
              
             String queryString;
             ParameterizedSparqlString pss = new ParameterizedSparqlString();
             pss.setNsPrefixes(LDHelper.PREFIX_MAP);
             pss.setNsPrefix(prefix, namespace);
-            // BIND(IRI(CONCAT(?namespace,ENCODE_FOR_URI(REPLACE(UCASE(STR(?label)),' ','')))) as ?classIRI)
             queryString = "CONSTRUCT  { ?modelIRI a owl:Ontology . ?modelIRI rdfs:label ?modelLabel . ?modelIRI owl:versionInfo ?draft . ?modelIRI dcterms:created ?creation . ?modelIRI dcterms:modified ?creation . } WHERE { BIND(now() as ?creation) }";
 
             pss.setCommandText(queryString);
