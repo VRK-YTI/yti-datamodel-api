@@ -58,7 +58,7 @@ public class ModelCreator {
             ResponseBuilder rb;
             
             prefix = LDHelper.modelName(prefix);
-            String namespace = ApplicationProperties.getDefaultNamespace()+prefix+"#";
+            String namespace = ApplicationProperties.getDefaultNamespace()+prefix;
             
             IRI namespaceIRI;
             
@@ -75,7 +75,7 @@ public class ModelCreator {
             String queryString;
             ParameterizedSparqlString pss = new ParameterizedSparqlString();
             pss.setNsPrefixes(LDHelper.PREFIX_MAP);
-            pss.setNsPrefix(prefix, namespace);
+            pss.setNsPrefix(prefix, namespace+"#");
             queryString = "CONSTRUCT  { ?modelIRI a owl:Ontology . ?modelIRI rdfs:label ?modelLabel . ?modelIRI owl:versionInfo ?draft . ?modelIRI dcterms:created ?creation . ?modelIRI dcterms:modified ?creation . } WHERE { BIND(now() as ?creation) }";
 
             pss.setCommandText(queryString);
