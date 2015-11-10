@@ -31,6 +31,7 @@ public class ServiceDescriptionManager {
     
     
     static EndpointServices services = new EndpointServices();
+    static final private Logger logger = Logger.getLogger(ServiceDescriptionManager.class.getName());
     
     public static void updateGraphDescription(String graph) {
         
@@ -92,6 +93,8 @@ public class ServiceDescriptionManager {
          
          String endpoint = services.getCoreSparqlAddress();
         
+         logger.info(pss.toString());
+         
          Query query = pss.asQuery();
          QueryExecution qexec = QueryExecutionFactory.sparqlService(endpoint, query);
         
@@ -102,7 +105,7 @@ public class ServiceDescriptionManager {
               return b;
               
            } catch(Exception ex) {
-               Logger.getLogger(UserManager.class.getName()).log(Level.WARNING, "Failed in checking the endpoint status: "+endpoint);
+               logger.log(Level.WARNING, "Failed in checking the endpoint status: "+endpoint);
                return false; 
            }
         
@@ -141,7 +144,7 @@ public class ServiceDescriptionManager {
         pss.setLiteral("timestamp", timestamp,XSDDatatype.XSDdateTime);
         pss.setCommandText(query);
 
-        Logger.getLogger(ServiceDescriptionManager.class.getName()).log(Level.FINE, pss.toString());
+        logger.log(Level.FINE, pss.toString());
         
         UpdateRequest queryObj = pss.asUpdate();
         UpdateProcessor qexec=UpdateExecutionFactory.createRemoteForm(queryObj,services.getCoreSparqlUpdateAddress());
