@@ -105,7 +105,7 @@ public class ConceptSuggestion {
           ParameterizedSparqlString pss = new ParameterizedSparqlString();
           pss.setNsPrefixes(LDHelper.PREFIX_MAP);
             
-          queryString = "CONSTRUCT { ?concept skos:inScheme ?scheme . ?concept prov:atTime ?time . ?concept skos:prefLabel ?label . ?concept rdfs:comment ?comment . ?concept prov:wasAssociatedWith ?user . } WHERE { ?concept skos:inScheme ?scheme . ?concept skos:prefLabel ?label . ?concept prov:atTime ?time . ?concept rdfs:comment ?comment . ?concept prov:wasAssociatedWith ?user . }";
+          queryString = "CONSTRUCT { ?concept skos:inScheme ?scheme . ?concept prov:atTime ?time . ?concept rdfs:label ?label . ?concept rdfs:comment ?comment . ?concept prov:wasAssociatedWith ?user . } WHERE { ?concept skos:inScheme ?scheme . ?concept rdfs:label ?label . ?concept prov:atTime ?time . ?concept rdfs:comment ?comment . ?concept prov:wasAssociatedWith ?user . }";
   	  
           pss.setCommandText(queryString);
           
@@ -163,7 +163,7 @@ public class ConceptSuggestion {
 		String queryString;
 		ParameterizedSparqlString pss = new ParameterizedSparqlString();
 		pss.setNsPrefixes(LDHelper.PREFIX_MAP);
-		queryString = "INSERT { GRAPH ?concept { ?concept skos:inScheme ?scheme . ?concept owl:versionInfo 'Unstable' . ?concept a skos:Concept . ?concept skos:prefLabel ?label . ?concept rdfs:comment ?comment . ?concept prov:atTime ?time . ?concept prov:wasAssociatedWith ?user . } } WHERE { BIND(NOW() as ?time)}";
+		queryString = "INSERT { GRAPH ?concept { ?concept skos:inScheme ?scheme . ?concept owl:versionInfo 'Unstable' . ?concept a skos:Concept . ?concept rdfs:label ?label . ?concept rdfs:comment ?comment . ?concept prov:atTime ?time . ?concept prov:wasAssociatedWith ?user . } } WHERE { BIND(NOW() as ?time)}";
 		pss.setCommandText(queryString);
 		pss.setIri("scheme", schemeIRI);
                 pss.setLiteral("label", ResourceFactory.createLangLiteral(label,lang));
