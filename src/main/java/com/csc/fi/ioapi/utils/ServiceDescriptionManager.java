@@ -69,15 +69,19 @@ public class ServiceDescriptionManager {
         
         Iterator<String> groupIterator = groupList.keySet().iterator();
         
-        String groups = "VALUES ?groups { ";
+        String groups = "";
         
-        while(groupIterator.hasNext()) {
-            String group = groupIterator.next();
-            Node n = NodeFactory.createURI(group);
-            groups = groups+" <"+n.getURI()+"> ";
+        if(groupList!=null && !groupList.isEmpty()) {
+            groups = "VALUES ?groups { ";
+
+            while(groupIterator.hasNext()) {
+                String group = groupIterator.next();
+                Node n = NodeFactory.createURI(group);
+                groups = groups+" <"+n.getURI()+"> ";
+            }
+
+            groups+=" }";
         }
-        
-        groups+=" }";
             
          String queryString = " ASK { GRAPH <urn:csc:iow:sd> { "+groups+" ?graph sd:name ?graphName . ?graph dcterms:isPartOf ?groups . }";
     
