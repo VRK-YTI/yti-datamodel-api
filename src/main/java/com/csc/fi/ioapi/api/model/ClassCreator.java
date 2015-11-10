@@ -124,7 +124,7 @@ public class ClassCreator {
                 ParameterizedSparqlString pss = new ParameterizedSparqlString();
                 pss.setNsPrefixes(LDHelper.PREFIX_MAP);
                 // BIND(IRI(CONCAT(?namespace,ENCODE_FOR_URI(REPLACE(UCASE(STR(?label)),' ','')))) as ?classIRI)
-                queryString = "CONSTRUCT  { ?classIRI owl:versionInfo ?draft . ?classIRI dcterms:modified ?modified . ?classIRI dcterms:created ?creation . ?classIRI a sh:ShapeClass . ?classIRI rdfs:isDefinedBy ?model . ?classIRI rdfs:label ?classLabel . ?classIRI rdfs:comment ?comment . ?classIRI dcterms:subject ?concept . ?concept skos:prefLabel ?label . ?concept rdfs:comment ?comment . } WHERE { BIND(now() as ?creation) BIND(now() as ?modified) ?concept a skos:Concept . VALUES ?someLabel {rdfs:label skos:prefLabel} ?concept ?someLabel skos:prefLabel ?label . OPTIONAL {?concept rdfs:comment ?comment . } }";
+                queryString = "CONSTRUCT  { ?classIRI owl:versionInfo ?draft . ?classIRI dcterms:modified ?modified . ?classIRI dcterms:created ?creation . ?classIRI a sh:ShapeClass . ?classIRI rdfs:isDefinedBy ?model . ?classIRI rdfs:label ?classLabel . ?classIRI rdfs:comment ?comment . ?classIRI dcterms:subject ?concept . ?concept skos:prefLabel ?label . ?concept rdfs:comment ?comment . } WHERE { BIND(now() as ?creation) BIND(now() as ?modified) ?concept a skos:Concept . VALUES ?someLabel {rdfs:label skos:prefLabel} ?concept ?someLabel ?label . OPTIONAL {?concept rdfs:comment ?comment . } }";
                
                 pss.setCommandText(queryString);
                 pss.setIri("concept", conceptIRI);
