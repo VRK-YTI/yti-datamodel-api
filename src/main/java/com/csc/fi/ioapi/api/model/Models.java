@@ -41,7 +41,7 @@ import javax.servlet.http.HttpSession;
  * Root resource (exposed at "myresource" path)
  */
 @Path("model")
-@Api(value = "/model", description = "Operations about data")
+@Api(value = "/model", description = "Operations about models")
 public class Models {
 
     @Context ServletContext context;
@@ -94,9 +94,8 @@ public class Models {
             ParameterizedSparqlString pss = new ParameterizedSparqlString();
             pss.setNsPrefixes(LDHelper.PREFIX_MAP);
             /* IF group parameter is available list of core vocabularies is created */
-           queryString = "CONSTRUCT { ?graphName rdfs:label ?label . ?graphName dcterms:identifier ?g . ?graphName dcterms:isPartOf ?group . ?graphName a sd:NamedGraph . } WHERE { ?graph sd:name ?graphName . ?graph a sd:NamedGraph ; dcterms:isPartOf ?group . GRAPH ?graphName {  ?g a owl:Ontology . ?g rdfs:label ?label }}"; 
+           queryString = "CONSTRUCT { ?graphName rdfs:label ?label . ?graphName ?p ?o . ?graphName dcterms:identifier ?g . ?graphName dcterms:isPartOf ?group . ?graphName a sd:NamedGraph . } WHERE { ?graph sd:name ?graphName . ?graph a sd:NamedGraph ; dcterms:isPartOf ?group . GRAPH ?graphName { ?g a owl:Ontology . ?g rdfs:label ?label . }}"; 
            pss.setIri("group", group);    
-
 
             pss.setCommandText(queryString);
            

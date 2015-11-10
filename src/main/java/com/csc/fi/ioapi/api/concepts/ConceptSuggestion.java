@@ -31,6 +31,7 @@ import com.hp.hpl.jena.query.QueryFactory;
 import com.hp.hpl.jena.query.QueryParseException;
 import com.hp.hpl.jena.query.ResultSet;
 import com.hp.hpl.jena.query.ResultSetFormatter;
+import com.hp.hpl.jena.rdf.model.ResourceFactory;
 import com.hp.hpl.jena.sparql.engine.http.QueryExceptionHTTP;
 import com.hp.hpl.jena.update.UpdateExecutionFactory;
 import com.hp.hpl.jena.update.UpdateProcessor;
@@ -104,7 +105,7 @@ public class ConceptSuggestion {
           ParameterizedSparqlString pss = new ParameterizedSparqlString();
           pss.setNsPrefixes(LDHelper.PREFIX_MAP);
             
-          queryString = "CONSTRUCT { ?concept skos:inScheme ?scheme . ?concept prov:atTime ?time . ?concept skos:prefLabel ?label . ?concept rdfs:comment ?comment . } WHERE { ?concept skos:inScheme ?scheme . ?concept skos:prefLabel ?label . ?concept prov:atTime ?time . ?concept rdfs:comment ?comment . ?concept prov:wasAssociatedWith ?user . }";
+          queryString = "CONSTRUCT { ?concept skos:inScheme ?scheme . ?concept prov:atTime ?time . ?concept skos:prefLabel ?label . ?concept rdfs:comment ?comment . ?concept prov:wasAssociatedWith ?user . } WHERE { ?concept skos:inScheme ?scheme . ?concept skos:prefLabel ?label . ?concept prov:atTime ?time . ?concept rdfs:comment ?comment . ?concept prov:wasAssociatedWith ?user . }";
   	  
           pss.setCommandText(queryString);
           
@@ -137,6 +138,7 @@ public class ConceptSuggestion {
                 @ApiParam(value = "Scheme ID", required = true) @QueryParam("schemeID") String schemeID,
                 @ApiParam(value = "Label", required = true) @QueryParam("label") String label,
 		@ApiParam(value = "Comment", required = true) @QueryParam("comment") String comment,
+                @ApiParam(value = "Initial language", required = true, allowableValues="fi,en") @QueryParam("lang") String lang,
                 @Context HttpServletRequest request) {
 
                 HttpSession session = request.getSession();
@@ -164,8 +166,8 @@ public class ConceptSuggestion {
 		queryString = "INSERT { GRAPH ?concept { ?concept skos:inScheme ?scheme . ?concept owl:versionInfo 'Unstable' . ?concept a skos:Concept . ?concept skos:prefLabel ?label . ?concept rdfs:comment ?comment . ?concept prov:atTime ?time . ?concept prov:wasAssociatedWith ?user . } } WHERE { BIND(NOW() as ?time)}";
 		pss.setCommandText(queryString);
 		pss.setIri("scheme", schemeIRI);
-                pss.setLiteral("label", label);
-                pss.setLiteral("comment", comment);
+                pss.setLiteral("label", ResourceFactory.createLangLiteral(label,lang));
+                pss.setLiteral("comment", ResourceFactory.createLangLiteral(comment,lang));
                 pss.setIri("concept", "urn:uuid:"+conceptUUID);
                 pss.setIri("user", "mailto:"+login.getEmail());
 
