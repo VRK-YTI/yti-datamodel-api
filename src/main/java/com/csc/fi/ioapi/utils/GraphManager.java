@@ -41,6 +41,7 @@ public class GraphManager {
     
     
     static EndpointServices services = new EndpointServices();
+    private static final Logger logger = Logger.getLogger(GraphManager.class.getName());
     
     public static void dropAll() {
         
@@ -127,7 +128,7 @@ public class GraphManager {
     QueryExecution qexec = QueryExecutionFactory.sparqlService(services.getCoreSparqlAddress(), pss.asQuery());
     
     Model results = qexec.execConstruct();
-    results.write(System.out, "TURTLE");
+   // results.write(System.out, "TURTLE");
     
     DatasetAccessor accessor = DatasetAccessorFactory.createHTTP(services.getCoreReadWriteAddress());
     accessor.add(resource, results);
@@ -219,7 +220,7 @@ public class GraphManager {
         pss.setCommandText(query);
         pss.setIri("graph", id);
 
-        Logger.getLogger(GraphManager.class.getName()).log(Level.WARNING, "Removing graph "+id);
+        logger.log(Level.WARNING, "Removing graph "+id);
         
            
         UpdateRequest queryObj = pss.asUpdate();
@@ -228,7 +229,7 @@ public class GraphManager {
         try {
            qexec.execute();
         } catch(UpdateException ex) {
-           Logger.getLogger(GraphManager.class.getName()).log(Level.WARNING, ex.toString());
+           logger.log(Level.WARNING, ex.toString());
         }
     }   
       
@@ -239,7 +240,7 @@ public class GraphManager {
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         pss.setCommandText(query);
         
-        Logger.getLogger(GraphManager.class.getName()).log(Level.WARNING, pss.toString()+" from "+services.getCoreSparqlUpdateAddress());
+        logger.log(Level.WARNING, pss.toString()+" from "+services.getCoreSparqlUpdateAddress());
         
         UpdateRequest queryObj = pss.asUpdate();
         UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj,services.getCoreSparqlUpdateAddress());
@@ -261,7 +262,7 @@ public class GraphManager {
         pss.setIri("newID",newID);
         pss.setCommandText(query);
         
-        Logger.getLogger(GraphManager.class.getName()).log(Level.WARNING, "Renaming "+oldID+" to "+newID);
+        logger.log(Level.WARNING, "Renaming "+oldID+" to "+newID);
         
         UpdateRequest queryObj = pss.asUpdate();
         UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj,services.getCoreSparqlUpdateAddress());
@@ -284,7 +285,7 @@ public class GraphManager {
         pss.setLiteral("date", timestamp);
         pss.setCommandText(query);
         
-        Logger.getLogger(GraphManager.class.getName()).log(Level.WARNING, pss.toString()+" "+services.getCoreSparqlUpdateAddress());
+        logger.log(Level.WARNING, pss.toString()+" "+services.getCoreSparqlUpdateAddress());
         
         UpdateRequest queryObj = pss.asUpdate();
         UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj,services.getCoreSparqlUpdateAddress());
@@ -308,7 +309,7 @@ public class GraphManager {
        // pss.setLiteral("date", timestamp);
         pss.setCommandText(query);
         
-        Logger.getLogger(GraphManager.class.getName()).log(Level.WARNING, pss.toString()+" "+services.getCoreSparqlUpdateAddress());
+        logger.log(Level.WARNING, pss.toString()+" "+services.getCoreSparqlUpdateAddress());
         
         UpdateRequest queryObj = pss.asUpdate();
         UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj,services.getCoreSparqlUpdateAddress());
@@ -329,6 +330,28 @@ public class GraphManager {
         pss.setIri("model",model);
         pss.setCommandText(query);
         
+        UpdateRequest queryObj = pss.asUpdate();
+        UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj,services.getCoreSparqlUpdateAddress());
+        qexec.execute();
+        
+    }
+    
+    
+    public static void updateModelNamespaceInfo(String model, String namespace, String prefix) {
+        
+       String query = 
+                " INSERT { GRAPH ?model { ?model dcap:preferredXMLNamespaceName ?namespace . ?model dcap:preferredXMLNamespacePrefix ?prefix . }} "+
+                " WHERE { GRAPH ?model { ?model ?p ?o . }}";
+                    
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+        pss.setIri("model",model);
+        pss.setLiteral("namespace",namespace);
+        pss.setLiteral("prefix", prefix);
+        pss.setCommandText(query);
+        
+        logger.info(pss.toString());
+  
         UpdateRequest queryObj = pss.asUpdate();
         UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj,services.getCoreSparqlUpdateAddress());
         qexec.execute();

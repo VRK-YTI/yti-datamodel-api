@@ -77,7 +77,7 @@ public class ClassCreator {
 
     @Context ServletContext context;
     EndpointServices services = new EndpointServices();
-     private static final Logger logger = Logger.getLogger(ClassCreator.class.getName());
+    private static final Logger logger = Logger.getLogger(ClassCreator.class.getName());
     
     @GET
     @Produces("application/ld+json")

@@ -65,12 +65,10 @@ public class Models {
       
       try {
           
-          if(group==null || group.equals("undefined")) {
+          if( (group==null || group.equals("undefined")) && (id!=null && !id.equals("undefined") && !id.equals("default"))) {
         
             Client client = Client.create();
 
-            if(id==null || id.equals("undefined") || id.equals("default")) id = "urn:csc:iow:sd";
-            
             WebResource webResource = client.resource(services.getCoreReadAddress())
                                       .queryParam("graph", id);
 
@@ -91,12 +89,19 @@ public class Models {
      else { 
               
             String queryString;
+            String graphId = "default";
             ParameterizedSparqlString pss = new ParameterizedSparqlString();
             pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+            
+           if(group!=null && !group.equals("undefined")) {
             /* IF group parameter is available list of core vocabularies is created */
-           queryString = "CONSTRUCT { ?graphName rdfs:label ?label . ?graphName ?p ?o . ?graphName dcterms:identifier ?g . ?graphName dcterms:isPartOf ?group . ?graphName a sd:NamedGraph . } WHERE { ?graph sd:name ?graphName . ?graph a sd:NamedGraph ; dcterms:isPartOf ?group . GRAPH ?graphName { ?g a owl:Ontology . ?g rdfs:label ?label . }}"; 
-           pss.setIri("group", group);    
-
+             queryString = "CONSTRUCT { ?graphName rdfs:label ?label . ?graphName ?p ?o . ?graphName dcterms:identifier ?g . ?graphName dcterms:isPartOf ?group . ?graphName a sd:NamedGraph . } WHERE { ?graph sd:name ?graphName . ?graph a sd:NamedGraph ; dcterms:isPartOf ?group . GRAPH ?graphName { ?g a owl:Ontology . ?g rdfs:label ?label . }}";   
+           } else {
+             /* IF ID is null or default and no group available */
+             queryString = "CONSTRUCT { ?g a owl:Ontology . ?g rdfs:label ?label . ?g dcap:preferredXMLNamespaceName ?namespace . ?g dcap:preferredXMLNamespacePrefix ?prefix . } "+
+                           "WHERE { GRAPH ?g { ?g a owl:Ontology . ?g rdfs:label ?label . ?g dcap:preferredXMLNamespaceName ?namespace . ?g dcap:preferredXMLNamespacePrefix ?prefix . }}"; 
+           }
+           
             pss.setCommandText(queryString);
            
             Logger.getLogger(Models.class.getName()).log(Level.INFO, pss.toString());

@@ -29,7 +29,6 @@ import org.apache.commons.lang3.text.WordUtils;
 public class LDHelper {
    
   
-   
    public static final Map<String, String> PREFIX_MAP = 
     Collections.unmodifiableMap(new HashMap<String, String>() {{ 
         put("owl", "http://www.w3.org/2002/07/owl#");
@@ -48,6 +47,7 @@ public class LDHelper {
         put("iow","http://urn.fi/urn:nbn:fi:csc-iow-meta#");
         put("skos","http://www.w3.org/2004/02/skos/core#");
         put("prov","http://www.w3.org/ns/prov#");
+        put("dcap","http://purl.org/ws-mmi-dc/terms/");
     }});
     
     public final static String prefix =   "PREFIX owl: <http://www.w3.org/2002/07/owl#> "+
@@ -65,7 +65,8 @@ public class LDHelper {
                             "PREFIX sh: <http://www.w3.org/ns/shacl#> "+
                             "PREFIX skos: <http://www.w3.org/2004/02/skos/core#> "+
                             "PREFIX prov: <http://www.w3.org/ns/prov#> " +
-                            "PREFIX iow: <http://urn.fi/urn:nbn:fi:csc-iow-meta#>";
+                            "PREFIX iow: <http://urn.fi/urn:nbn:fi:csc-iow-meta#>" +
+                            "PREFIX dcap: <http://purl.org/ws-mmi-dc/terms/> ";
     
     
     ParameterizedSparqlString pss = new ParameterizedSparqlString();
