@@ -95,7 +95,8 @@ public class Models {
             
            if(group!=null && !group.equals("undefined")) {
             /* IF group parameter is available list of core vocabularies is created */
-             queryString = "CONSTRUCT { ?graphName rdfs:label ?label . ?graphName ?p ?o . ?graphName dcterms:identifier ?g . ?graphName dcterms:isPartOf ?group . ?graphName a sd:NamedGraph . } WHERE { ?graph sd:name ?graphName . ?graph a sd:NamedGraph ; dcterms:isPartOf ?group . GRAPH ?graphName { ?g a owl:Ontology . ?g rdfs:label ?label . }}";   
+             queryString = "CONSTRUCT { ?graphName rdfs:label ?label . ?graphName ?p ?o . ?graphName dcterms:identifier ?g . ?graphName dcterms:isPartOf ?group . ?graphName a sd:NamedGraph . } WHERE { ?graph sd:name ?graphName . ?graph a sd:NamedGraph ; dcterms:isPartOf ?group . GRAPH ?graphName { ?g a owl:Ontology . ?g rdfs:label ?label . }}"; 
+             pss.setIri("group", group);
            } else {
              /* IF ID is null or default and no group available */
              queryString = "CONSTRUCT { ?g a owl:Ontology . ?g rdfs:label ?label . ?g dcap:preferredXMLNamespaceName ?namespace . ?g dcap:preferredXMLNamespacePrefix ?prefix . } "+
