@@ -47,6 +47,30 @@ public class GraphManager {
         
     }
     
+    
+    
+        public static void removeDuplicatesFromModel(String graph) {
+        
+        String query = 
+                " DELETE { GRAPH ?graph { ?graph owl:imports ?import . ?resource ?p ?o . ?resource sh:property ?propertyID . ?propertyID ?pp ?oo . }}"+
+                " WHERE { GRAPH ?graph { ?graph owl:imports ?import .  OPTIONAL { VALUES ?type { sh:ShapeClass owl:DatatypeProperty owl:ObjectProperty } ?resource a ?type . ?resource ?p ?o . ?resource sh:property ?property . ?property ?pp ?oo . } }}";
+                 
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
+     
+        /* ADD all used in the query to be sure */ 
+        pss.setNsPrefix("dcterms", "http://purl.org/dc/terms/");
+        pss.setNsPrefix("sh", "http://www.w3.org/ns/shacl#");
+        pss.setNsPrefix("owl", "http://www.w3.org/2002/07/owl#");
+        pss.setNsPrefix("rdfs", "http://www.w3.org/2000/01/rdf-schema#");
+        
+        pss.setIri("graph",graph);
+        pss.setCommandText(query);        
+        
+        UpdateRequest queryObj = pss.asUpdate();
+        UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj,services.getCoreSparqlUpdateAddress());
+        qexec.execute();
+    }
+    
     public static void createResourceGraphs(String graph, Map<String,String> map) {
         
         String timestamp = SafeDateFormat.fmt().format(new Date());
@@ -103,6 +127,8 @@ public class GraphManager {
       QuerySolution soln = results.nextSolution() ;
       constructGraphs(model,soln.getResource("resource").toString(),map);
     }
+    
+    removeDuplicatesFromModel(model);
 
     }
     
