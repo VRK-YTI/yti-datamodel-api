@@ -53,7 +53,7 @@ public class GraphManager {
         
         String query = 
                 " DELETE { GRAPH ?graph { ?graph owl:imports ?import . ?resource ?p ?o . ?resource sh:property ?propertyID . ?propertyID ?pp ?oo . }}"+
-                " WHERE { GRAPH ?graph { ?graph owl:imports ?import .  OPTIONAL { VALUES ?type { sh:ShapeClass owl:DatatypeProperty owl:ObjectProperty } ?resource a ?type . ?resource ?p ?o . ?resource sh:property ?property . ?property ?pp ?oo . } }}";
+                " WHERE { GRAPH ?graph { ?graph owl:imports ?import .  OPTIONAL { VALUES ?type { sh:ShapeClass owl:DatatypeProperty owl:ObjectProperty } ?resource a ?type . ?resource ?p ?o . OPTIONAL { ?resource sh:property ?property . ?property ?pp ?oo . } } }}";
                  
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
      
@@ -82,8 +82,8 @@ public class GraphManager {
         
         /* Creates resource graphs from model and adds UUIDS for class propeties */
         String query = 
-                " INSERT { GRAPH ?graph { ?graph dcterms:hasPart ?resource } GRAPH ?resource { ?resource dcterms:modified ?date . ?resource rdfs:isDefinedBy ?graph . ?resource sh:property ?propertyID . ?propertyID sh:predicate ?predicate . }}"+
-                " WHERE { GRAPH ?graph { VALUES ?type { sh:ShapeClass owl:DatatypeProperty owl:ObjectProperty } ?resource a ?type . OPTIONAL { ?resource sh:property ?property . ?property sh:predicate ?predicate . BIND(UUID() AS ?propertyID) } }}";
+                " INSERT { GRAPH ?graph { ?graph dcterms:hasPart ?resource . ?graph owl:versionInfo ?draft . } GRAPH ?resource { ?resource dcterms:modified ?date . ?resource rdfs:isDefinedBy ?graph . ?resource dcterms:subject ?subject . ?subject ?sp ?so . ?resource sh:property ?propertyID . ?propertyID sh:predicate ?predicate . }}"+
+                " WHERE { GRAPH ?graph { VALUES ?type { sh:ShapeClass owl:DatatypeProperty owl:ObjectProperty } ?resource a ?type . OPTIONAL { ?resource dcterms:subject ?subject . ?subject ?sp ?so . } OPTIONAL { ?resource sh:property ?property . ?property sh:predicate ?predicate . BIND(UUID() AS ?propertyID) } }}";
                  
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         
@@ -98,6 +98,7 @@ public class GraphManager {
         
         pss.setIri("graph",graph);
         pss.setLiteral("date", timestamp);
+        pss.setLiteral("draft", "Unstable");
         pss.setCommandText(query);        
         
         UpdateRequest queryObj = pss.asUpdate();
