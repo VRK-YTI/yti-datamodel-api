@@ -44,7 +44,7 @@ public class ModeRequirementlCreator {
     
     @GET
     @Produces("application/ld+json")
-    @ApiOperation(value = "Create new model", notes = "Create new model")
+    @ApiOperation(value = "Create new model", notes = "Create namespace object. Namespace must be valid URI and end with # or /.")
     @ApiResponses(value = { @ApiResponse(code = 200, message = "New class is created"),
                     @ApiResponse(code = 400, message = "Invalid ID supplied"),
                     @ApiResponse(code = 403, message = "Invalid IRI in parameter"),
@@ -75,7 +75,7 @@ public class ModeRequirementlCreator {
             String queryString;
             ParameterizedSparqlString pss = new ParameterizedSparqlString();
             pss.setNsPrefixes(LDHelper.PREFIX_MAP);
-            queryString = "CONSTRUCT  { ?g rdfs:label ?label . ?g dcap:preferredXMLNamespaceName ?namespace . ?g dcap:preferredXMLNamespacePrefix ?prefix . } WHERE { }";
+            queryString = "CONSTRUCT  { ?g dcterms:title ?label . ?g dcap:preferredXMLNamespaceName ?namespace . ?g dcap:preferredXMLNamespacePrefix ?prefix . } WHERE { }";
 
             pss.setCommandText(queryString);
             pss.setIri("g", namespaceIRI);
