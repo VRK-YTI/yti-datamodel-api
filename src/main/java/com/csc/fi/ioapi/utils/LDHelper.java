@@ -20,6 +20,8 @@ import com.hp.hpl.jena.query.ParameterizedSparqlString;
 import com.sun.jersey.api.uri.UriComponent;
 import java.text.Normalizer;
 import java.text.Normalizer.Form;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.apache.commons.lang3.text.WordUtils;
 
 /**
@@ -28,7 +30,7 @@ import org.apache.commons.lang3.text.WordUtils;
  */
 public class LDHelper {
    
-  
+
    public static final Map<String, String> PREFIX_MAP = 
     Collections.unmodifiableMap(new HashMap<String, String>() {{ 
         put("owl", "http://www.w3.org/2002/07/owl#");
@@ -142,5 +144,30 @@ public class LDHelper {
        }
     }
     
+        
+   public static String expandSparqlQuery(String query, Map<String, String> prefix_map) {
+  
+    for(Map.Entry<String, String> namespaces : prefix_map.entrySet()) {
+        StringBuffer sb = new StringBuffer();
+        /* Find curies starting with whitespace */
+        String prefiz = " "+namespaces.getKey().concat(":");
+        String REGEX = prefiz+"\\w*\\b";
+        Pattern p = Pattern.compile(REGEX);
+        Matcher m = p.matcher(query); 
+
+        while(m.find()){
+            StringBuffer replacement = new StringBuffer();
+            replacement.append(" <").append(m.group().replace(prefiz, namespaces.getValue())).append(">");
+            m.appendReplacement(sb, replacement.toString());
+        }
+            
+       m.appendTail(sb);
+       query = sb.toString();
+  
+     }
+    
+     return query;
+ }    
+        
     
 }

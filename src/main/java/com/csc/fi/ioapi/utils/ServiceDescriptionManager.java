@@ -29,7 +29,6 @@ import java.util.logging.Logger;
  */
 public class ServiceDescriptionManager {
     
-    
     static EndpointServices services = new EndpointServices();
     static final private Logger logger = Logger.getLogger(ServiceDescriptionManager.class.getName());
     

@@ -16,25 +16,18 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.ResponseBuilder;
-
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
 import org.apache.jena.iri.IRIFactory;
-
 import com.csc.fi.ioapi.config.EndpointServices;
 import com.csc.fi.ioapi.config.LoginSession;
 import com.csc.fi.ioapi.utils.GraphManager;
+import com.csc.fi.ioapi.utils.JerseyFusekiClient;
 import com.csc.fi.ioapi.utils.LDHelper;
-import com.csc.fi.ioapi.utils.ServiceDescriptionManager;
 import com.hp.hpl.jena.query.ParameterizedSparqlString;
-import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientHandlerException;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.UniformInterfaceException;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.WebResource.Builder;
-import com.sun.jersey.api.uri.UriComponent;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiParam;
@@ -71,66 +64,33 @@ public class Class {
       @ApiResponse(code = 500, message = "Internal server error")
   })
   public Response json(
-          @ApiParam(value = "Class id")
-          @QueryParam("id") String id,
-          @ApiParam(value = "Model id")
-          @QueryParam("model") String model) {
+      @ApiParam(value = "Class id")
+      @QueryParam("id") String id,
+      @ApiParam(value = "Model id")
+      @QueryParam("model") String model) {
 
-        ResponseBuilder rb;
-        
-        try {
-            
-          Client client = Client.create();
+      if(id==null || id.equals("undefined") || id.equals("default")) {
           
-          if(id==null || id.equals("undefined") || id.equals("default")) {
-          
-            String queryString;
-            ParameterizedSparqlString pss = new ParameterizedSparqlString();
-            pss.setNsPrefixes(LDHelper.PREFIX_MAP);
-            
-            queryString = "CONSTRUCT { ?class a sh:ShapeClass . ?class rdfs:label ?label . ?class a ?type . ?class dcterms:modified ?date . ?class dcterms:modified ?modified . ?class rdfs:isDefinedBy ?source . ?source rdfs:label ?sourceLabel . } WHERE { VALUES ?rel {dcterms:hasPart iow:classes} ?library ?rel ?class . GRAPH ?graph { ?class dcterms:modified ?modified . ?class a sh:ShapeClass . ?class rdfs:label ?label . ?class a ?type . ?class rdfs:isDefinedBy ?source .  } GRAPH ?source { ?source rdfs:label ?sourceLabel . } }"; 
-          
-             if(model!=null && !model.equals("undefined")) {
-                  pss.setIri("library", model);
-             }
-            
-            pss.setCommandText(queryString);
-            Logger.getLogger(Class.class.getName()).log(Level.INFO, pss.toString()); 
-         
-            WebResource webResource = client.resource(services.getCoreSparqlAddress())
-                                      .queryParam("query", UriComponent.encode(pss.toString(),UriComponent.Type.QUERY));
+        /* If no id is provided create a list of classes */
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+        String queryString = "CONSTRUCT { ?class a sh:ShapeClass . ?class rdfs:label ?label . ?class a ?type . ?class dcterms:modified ?date . ?class dcterms:modified ?modified . ?class rdfs:isDefinedBy ?source . ?source rdfs:label ?sourceLabel . } WHERE { VALUES ?rel {dcterms:hasPart iow:classes} ?library ?rel ?class . GRAPH ?graph { ?class dcterms:modified ?modified . ?class a sh:ShapeClass . ?class rdfs:label ?label . ?class a ?type . ?class rdfs:isDefinedBy ?source .  } GRAPH ?source { ?source rdfs:label ?sourceLabel . } }"; 
 
-            WebResource.Builder builder = webResource.accept("application/ld+json");
+         if(model!=null && !model.equals("undefined")) {
+              pss.setIri("library", model);
+         }
 
-            ClientResponse response = builder.get(ClientResponse.class);
-            rb = Response.status(response.getStatus()); 
-            rb.entity(response.getEntityInputStream());
-            
-          } else {
-              
-           
-            WebResource webResource = client.resource(services.getCoreReadAddress())
-                                      .queryParam("graph", id);
+        pss.setCommandText(queryString);
 
-            Builder builder = webResource.accept("application/ld+json");
-            ClientResponse response = builder.get(ClientResponse.class);
+        return JerseyFusekiClient.constructGraphFromService(pss.toString(), services.getCoreSparqlAddress());
 
-            if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-                return Response.status(response.getStatus()).entity("{}").build();
-            }
-            
-            rb = Response.status(response.getStatus()); 
-            rb.entity(response.getEntityInputStream());
-       
-          }
-         
-           return rb.build();
-           
-      } catch(UniformInterfaceException | ClientHandlerException ex) {
-          Logger.getLogger(Class.class.getName()).log(Level.WARNING, "Expect the unexpected!", ex);
-          return Response.serverError().entity("{}").build();
+      } else {
+
+        /* else return graph with given id */
+        return JerseyFusekiClient.getGraphResponseFromService(id, services.getCoreReadAddress());
+
       }
-
+         
   }
  
   
@@ -158,20 +118,15 @@ public class Class {
           @QueryParam("model") 
                 String model,
           @Context HttpServletRequest request) {
-      
-    try {
-               
+              
         HttpSession session = request.getSession();
         
-        if(session==null) return Response.status(401).build();
+        if(session==null) return Response.status(401).entity("{\"errorMessage\":\"Unauthorized\"}").build();
         
         LoginSession login = new LoginSession(session);
         
         if(!login.isLoggedIn() || !login.hasRightToEditModel(model))
-            return Response.status(401).build();
-        
-        
-        String graphID = id;
+            return Response.status(401).entity("{\"errorMessage\":\"Unauthorized\"}").build();
                 
         IRIFactory iriFactory = IRIFactory.semanticWebImplementation();
         IRI modelIRI,idIRI,oldIdIRI = null;        
@@ -210,36 +165,25 @@ public class Class {
             }
             
            /* Create new graph with new id */ 
-           Client client = Client.create();
+           ClientResponse response = JerseyFusekiClient.putGraphToTheService(id, body, services.getCoreReadWriteAddress());
            
-           WebResource webResource = client.resource(services.getCoreReadWriteAddress())
-                                      .queryParam("graph", graphID);
-
-           WebResource.Builder builder = webResource.header("Content-type", "application/ld+json");
-           ClientResponse response = builder.put(ClientResponse.class,body);
-
            if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-               Logger.getLogger(Class.class.getName()).log(Level.WARNING, graphID+" was not updated! Status "+response.getStatus());
-               return Response.status(response.getStatus()).build();
+               return Response.status(response.getStatus()).entity("{\"errorMessage\":\"Resource was not updated\"}").build();
            }
-             
+
         } else {
              /* IF NO JSON-LD POSTED TRY TO CREATE REFERENCE FROM MODEL TO CLASS ID */
             if(id.startsWith(model)) {
                 // Selfreferences not allowed
-                Response.status(403).build();
+                Response.status(403).entity("{\"errorMessage\":\"Resource is already defined in the model\"}").build();
             } else {
                 GraphManager.insertExistingGraphReferenceToModel(idIRI, modelIRI);
             }
         }
         
-        Logger.getLogger(Class.class.getName()).log(Level.INFO, id+" updated sucessfully!");
+        Logger.getLogger(Class.class.getName()).log(Level.INFO, id+" updated sucessfully");
         return Response.status(204).build();
-
-      } catch(UniformInterfaceException | ClientHandlerException ex) {
-        Logger.getLogger(Class.class.getName()).log(Level.WARNING, "Expect the unexpected!", ex);
-        return Response.status(400).build();
-      }
+        
   }
   
  
@@ -269,12 +213,12 @@ public class Class {
                
             HttpSession session = request.getSession();
 
-            if(session==null) return Response.status(401).build();
+            if(session==null) return Response.status(401).entity("{\"errorMessage\":\"Unauthorized\"}").build();
 
             LoginSession login = new LoginSession(session);
 
             if(!login.isLoggedIn() || !login.hasRightToEditModel(model))
-                return Response.status(401).build();
+                return Response.status(401).entity("{\"errorMessage\":\"Unauthorized\"}").build();
 
              if(!id.startsWith(model)) {
                 Logger.getLogger(Class.class.getName()).log(Level.WARNING, id+" ID must start with "+model);
@@ -294,26 +238,19 @@ public class Class {
             /* Prevent overwriting existing classes */ 
             if(GraphManager.isExistingGraph(idIRI)) {
                logger.log(Level.WARNING, idIRI+" is existing class!");
-               return Response.status(403).build();
+               return Response.status(403).entity("{\"errorMessage\":\"Resource already exists\"}").build();
             }
           
-           Client client = Client.create();
+           /* Create new graph with new id */ 
+           ClientResponse response = JerseyFusekiClient.putGraphToTheService(id, body, services.getCoreReadWriteAddress());
            
-           WebResource webResource = client.resource(services.getCoreReadWriteAddress())
-                                      .queryParam("graph", id);
-
-            WebResource.Builder builder = webResource.header("Content-type", "application/ld+json");
-            ClientResponse response = builder.put(ClientResponse.class,body);
-
-            if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-               logger.log(Level.WARNING, id+" was not updated! Status "+response.getStatus());
-               return Response.status(response.getStatus()).build();
-            }
+           if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
+               return Response.status(response.getStatus()).entity("{\"errorMessage\":\"Resource was not created\"}").build();
+           }
             
             GraphManager.insertNewGraphReferenceToModel(idIRI, modelIRI);
             
             logger.log(Level.INFO, id+" updated sucessfully!");
-            
             return Response.status(204).build();
 
       } catch(UniformInterfaceException | ClientHandlerException ex) {
@@ -363,33 +300,13 @@ public class Class {
        
        /* If Class is defined in the model */
        if(id.startsWith(model)) {
-
-        try {
-
-             Client client = Client.create();
-             WebResource webResource = client.resource(services.getCoreReadWriteAddress())
-                                       .queryParam("graph", id);
-
-             WebResource.Builder builder = webResource.header("Content-type", "application/ld+json");
-             ClientResponse response = builder.delete(ClientResponse.class);
-
-             if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-                logger.log(Level.WARNING, id+" was not deleted! Status "+response.getStatus());
-                return Response.status(response.getStatus()).build();
-             }
-             
-             logger.log(Level.INFO, id+" deleted successfully!");
-             return Response.status(204).build();
-
-       } catch(UniformInterfaceException | ClientHandlerException ex) {
-             logger.log(Level.WARNING, "Expect the unexpected!", ex);
-             return Response.status(400).build();
-       }
-        
-    } else {
+           /* Remove graph */
+            return JerseyFusekiClient.deleteGraphFromService(id, services.getCoreReadWriteAddress());   
+        } else {
         /* If removing referenced class */   
-         GraphManager.deleteGraphReferenceFromModel(idIRI,modelIRI);  
-         return Response.status(204).build();   
+        /* TODO: Add response to GraphManager? */   
+             GraphManager.deleteGraphReferenceFromModel(idIRI,modelIRI);  
+             return Response.status(204).build();   
        }
   }
 

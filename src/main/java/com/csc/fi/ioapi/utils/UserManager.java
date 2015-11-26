@@ -39,6 +39,7 @@ import org.apache.jena.riot.RDFLanguages;
 public class UserManager {
     
     static EndpointServices services = new EndpointServices();
+    static final private Logger logger = Logger.getLogger(UserManager.class.getName());
 
     private static boolean isExistingUser(String email) {
         
@@ -60,7 +61,7 @@ public class UserManager {
               return b;
               
            } catch(Exception ex) {
-               Logger.getLogger(UserManager.class.getName()).log(Level.WARNING, "Failed in checking the endpoint status: "+services.getUsersSparqlAddress());
+               logger.log(Level.WARNING, "Failed in checking the endpoint status: "+services.getUsersSparqlAddress());
                return false; 
            }
         
@@ -73,7 +74,7 @@ public class UserManager {
         if(isExistingUser(loginSession.getEmail())) {
             updateUser(loginSession);
         } else {
-            Logger.getLogger(UserManager.class.getName()).log(Level.INFO, "Creating new user: "+loginSession.getEmail());
+            logger.log(Level.INFO, "Creating new user: "+loginSession.getEmail());
             createUser(loginSession);
         }
         
@@ -115,7 +116,7 @@ public class UserManager {
         pss.setLiteral("timestamp", timestamp,XSDDatatype.XSDdateTime);
         pss.setCommandText(query);
         
-        Logger.getLogger(UserManager.class.getName()).log(Level.WARNING, pss.toString()+" "+services.getUsersSparqlUpdateAddress());
+        logger.log(Level.WARNING, pss.toString()+" "+services.getUsersSparqlUpdateAddress());
         
         UpdateRequest queryObj = pss.asUpdate();
         UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj,services.getUsersSparqlUpdateAddress());
@@ -124,7 +125,7 @@ public class UserManager {
  
     }
     
-    public static void deleteUsersAndGroups() {
+    public static void deleteUsers() {
        
         String query = 
                 "DROP ALL";
@@ -133,7 +134,7 @@ public class UserManager {
        // pss.setNsPrefixes(LDHelper.PREFIX_MAP);
         pss.setCommandText(query);
         
-        Logger.getLogger(UserManager.class.getName()).log(Level.WARNING, pss.toString()+" from "+services.getUsersSparqlUpdateAddress());
+        logger.log(Level.WARNING, pss.toString()+" from "+services.getUsersSparqlUpdateAddress());
         
         UpdateRequest queryObj = pss.asUpdate();
         UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj,services.getUsersSparqlUpdateAddress());
@@ -158,7 +159,7 @@ public class UserManager {
             while(groupIterator.hasNext()) {
                 String group = groupIterator.next();
                 Node n = NodeFactory.createURI(group);
-                Logger.getLogger(UserManager.class.getName()).log(Level.INFO, group+" is "+allGroups.get(group).booleanValue());
+                logger.log(Level.INFO, group+" is "+allGroups.get(group).booleanValue());
                 groups = groups+"?id dcterms:isPartOf <"+n.getURI()+"> . "+(allGroups.get(group).booleanValue()?" ?id iow:isAdminOf <"+n.getURI()+"> . ":"");
             }
         }
@@ -184,7 +185,7 @@ public class UserManager {
         pss.setLiteral("timestamp", timestamp,XSDDatatype.XSDdateTime);
         pss.setCommandText(query);
         
-        Logger.getLogger(UserManager.class.getName()).log(Level.WARNING, pss.toString()+" "+services.getUsersSparqlUpdateAddress());
+        logger.log(Level.WARNING, pss.toString()+" "+services.getUsersSparqlUpdateAddress());
         
         UpdateRequest queryObj = pss.asUpdate();
         UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj,services.getUsersSparqlUpdateAddress());
@@ -193,35 +194,6 @@ public class UserManager {
 
     }
         
-        public static boolean testDefaultGroups() {
-         
-         String queryString = "ASK { ?s a foaf:Group . }";
-    
-         Query query = QueryFactory.create(LDHelper.prefix+queryString);        
-         QueryExecution qexec = QueryExecutionFactory.sparqlService(services.getUsersSparqlAddress(), query);
-        
-         try
-          {
-              boolean b = qexec.execAsk();
-              
-              return b;
-              
-           } catch(Exception ex) {
-              return false; 
-           }
-    }
-    
- 
-    public static void createDefaultGroups() {
-       
-        DatasetAccessor accessor = DatasetAccessorFactory.createHTTP(services.getUsersReadWriteAddress());
-        
-        Model m = ModelFactory.createDefaultModel();
-        RDFDataMgr.read(m, LDHelper.getDefaultGroupsInputStream(),RDFLanguages.JSONLD);
-      
-        accessor.putModel(m);
-        
-    }
-        
+
 
 }

@@ -10,18 +10,12 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.ResponseBuilder;
 import com.csc.fi.ioapi.config.ApplicationProperties;
 import com.csc.fi.ioapi.config.EndpointServices;
+import com.csc.fi.ioapi.utils.JerseyFusekiClient;
 import com.csc.fi.ioapi.utils.LDHelper;
 import com.hp.hpl.jena.query.ParameterizedSparqlString;
 import com.hp.hpl.jena.rdf.model.ResourceFactory;
-import com.hp.hpl.jena.sparql.engine.http.QueryExceptionHTTP;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.WebResource.Builder;
-import com.sun.jersey.api.uri.UriComponent;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiParam;
@@ -55,8 +49,6 @@ public class ModelCreator {
             @ApiParam(value = "Model label", required = true) @QueryParam("label") String label,
             @ApiParam(value = "Initial language", required = true, allowableValues="fi,en") @QueryParam("lang") String lang) {
 
-            ResponseBuilder rb;
-            
             prefix = LDHelper.modelName(prefix);
             String namespace = ApplicationProperties.getDefaultNamespace()+prefix;
             
@@ -67,44 +59,36 @@ public class ModelCreator {
                     namespaceIRI = iri.construct(namespace);
             } catch (IRIException e) {
                     logger.log(Level.WARNING, "ID is invalid IRI!");
-                    return Response.status(403).build();
+                    return Response.status(403).entity("{\"errorMessage\":\"Invalid id\"}").build();
             }
 
-            Client client = Client.create();
-             
-            String queryString;
             ParameterizedSparqlString pss = new ParameterizedSparqlString();
             pss.setNsPrefixes(LDHelper.PREFIX_MAP);
             pss.setNsPrefix(prefix, namespace+"#");
-            queryString = "CONSTRUCT  { ?modelIRI a owl:Ontology . ?modelIRI rdfs:label ?modelLabel . ?modelIRI owl:versionInfo ?draft . ?modelIRI dcterms:created ?creation . ?modelIRI dcterms:modified ?creation . } WHERE { BIND(now() as ?creation) }";
+            
+            String queryString = "CONSTRUCT  { "
+                    + "?modelIRI a owl:Ontology . "
+                    + "?modelIRI rdfs:label ?modelLabel . "
+                    + "?modelIRI owl:versionInfo ?draft . "
+                    + "?modelIRI dcterms:created ?creation . "
+                    + "?modelIRI dcterms:modified ?creation . "
+                    + "?modelIRI dcap:preferredXMLNamespaceName ?namespace . "
+                    + "?modelIRI dcap:preferredXMLNamespacePrefix ?prefix . "
+                    + "} WHERE { "
+                    + "BIND(now() as ?creation) "
+                    + "}";
 
             pss.setCommandText(queryString);
+            pss.setLiteral("namespace", namespace+"#");
+            pss.setLiteral("prefix", prefix);
             pss.setIri("modelIRI", namespaceIRI);
             pss.setLiteral("draft", "Unstable");
             pss.setLiteral("modelLabel", ResourceFactory.createLangLiteral(label, lang));
 
             logger.info(pss.toString());
             
-            WebResource webResource = client.resource(services.getTempConceptReadSparqlAddress())
-                     .queryParam("query", UriComponent.encode(pss.toString(),UriComponent.Type.QUERY));
-
-            Builder builder = webResource.accept("application/ld+json");
-            ClientResponse response = builder.get(ClientResponse.class);
-
-           if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-                logger.log(Level.WARNING, response.toString());
-                return Response.status(response.getStatus()).entity("{}").build();
-            } 
+            return JerseyFusekiClient.constructGraphFromService(pss.toString(), services.getTempConceptReadSparqlAddress());
             
-            rb = Response.status(response.getStatus()); 
-            rb.entity(response.getEntityInputStream());
-            
-            try {
-                    return rb.build();
-            } catch (QueryExceptionHTTP ex) {
-                    logger.log(Level.WARNING, "Expect the unexpected!", ex);
-                    return Response.status(400).build();
-            }
     }   
  
 }

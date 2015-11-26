@@ -1,38 +1,20 @@
 package com.csc.fi.ioapi.api.usermanagement;
 
+import com.csc.fi.ioapi.config.EndpointServices;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
 import javax.servlet.ServletContext;
-import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
-import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status.Family;
-
-import org.apache.jena.iri.IRI;
-import org.apache.jena.iri.IRIException;
-import org.apache.jena.iri.IRIFactory;
-
-import com.csc.fi.ioapi.config.ApplicationProperties;
-import com.csc.fi.ioapi.config.EndpointServices;
-import com.csc.fi.ioapi.utils.LDHelper;
-import com.hp.hpl.jena.query.ParameterizedSparqlString;
-import com.hp.hpl.jena.sparql.engine.http.QueryExceptionHTTP;
-import com.hp.hpl.jena.update.UpdateExecutionFactory;
-import com.hp.hpl.jena.update.UpdateProcessor;
-import com.hp.hpl.jena.update.UpdateRequest;
-import com.sun.jersey.api.client.Client;
+import com.csc.fi.ioapi.utils.JerseyFusekiClient;
 import com.sun.jersey.api.client.ClientHandlerException;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.UniformInterfaceException;
-import com.sun.jersey.api.client.WebResource;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiParam;
@@ -50,8 +32,54 @@ public class Group {
 
 	@Context ServletContext context;
         EndpointServices services = new EndpointServices();
+        private static final Logger logger = Logger.getLogger(Group.class.getName());
+
+       
+
+	@GET
+	@ApiOperation(value = "Get groups", notes = "")
+	@ApiResponses(value = { @ApiResponse(code = 204, message = "Graph is saved"),
+			@ApiResponse(code = 400, message = "Invalid graph supplied"),
+			@ApiResponse(code = 404, message = "Service not found") })
+	@Produces("application/ld+json")
+	public Response getGroup() {
+		return JerseyFusekiClient.getGraphResponseFromService("urn:csc:groups",services.getCoreReadAddress());
+	}
+
+        
+        
+        /* TODO: Remove or add API key */
+	@PUT
+	@ApiOperation(value = "Add new group", notes = "PUT Body should be json-ld")
+	@ApiResponses(value = { @ApiResponse(code = 204, message = "New group is created"),
+			@ApiResponse(code = 400, message = "Invalid graph supplied"),
+			@ApiResponse(code = 404, message = "Service not found") })
+	public Response addNewGroups(@ApiParam(value = "New groups in application/ld+json", required = true) String body) {
+
+		try {
+
+                    ClientResponse response = JerseyFusekiClient.putGraphToTheService("urn:csc:groups", body, services.getCoreReadWriteAddress());
+
+                    if (response.getStatusInfo().getFamily() != Family.SUCCESSFUL) {
+                        Logger.getLogger(Group.class.getName()).log(Level.WARNING,
+                                        "Group was not updated! Status " + response.getStatus());
+                        return Response.status(response.getStatus()).build();
+                    }
+
+                    logger.log(Level.INFO, "Group added sucessfully!");
+
+                    return Response.status(204).build();
+
+		} catch (UniformInterfaceException | ClientHandlerException ex) {
+			Logger.getLogger(Group.class.getName()).log(Level.WARNING, "Expect the unexpected!", ex);
+			return Response.status(400).build();
+		}
 
 
+	}
+        
+        
+        /*
 	@POST
 	@ApiOperation(value = "Update group", notes = "Add users or change name")
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "Group is updated"),
@@ -101,7 +129,7 @@ public class Group {
 		pss.setIri("group", groupID);
 
 		UpdateRequest query = pss.asUpdate();
-		UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(query, services.getUsersSparqlUpdateAddress() );
+		UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(query, services.getCoreReadWriteAddress());
 
 		try {
 			qexec.execute();
@@ -111,73 +139,10 @@ public class Group {
 			return Response.status(400).build();
 		}
 	}
+*/
 
         
-        /* TODO: For testin only should be removed */
-        
-	@PUT
-	@ApiOperation(value = "Add new group", notes = "PUT Body should be json-ld")
-	@ApiResponses(value = { @ApiResponse(code = 204, message = "New group is created"),
-			@ApiResponse(code = 400, message = "Invalid graph supplied"),
-			@ApiResponse(code = 404, message = "Service not found") })
-	public Response addNewGroups(@ApiParam(value = "New groups in application/ld+json", required = true) String body) {
-
-		try {
-
-			Client client = Client.create();
-			WebResource webResource = client.resource(services.getUsersReadWriteAddress()).queryParam("graph", "urn:csc:groups");
-
-			WebResource.Builder builder = webResource.header("Content-type", "application/ld+json");
-			ClientResponse response = builder.put(ClientResponse.class, body);
-
-			if (response.getStatusInfo().getFamily() != Family.SUCCESSFUL) {
-				Logger.getLogger(Group.class.getName()).log(Level.WARNING,
-						"Group was not updated! Status " + response.getStatus());
-				return Response.status(response.getStatus()).build();
-			}
-
-			Logger.getLogger(Group.class.getName()).log(Level.INFO, "Group added sucessfully!");
-                        
-			return Response.status(204).build();
-
-		} catch (UniformInterfaceException | ClientHandlerException ex) {
-			Logger.getLogger(Group.class.getName()).log(Level.WARNING, "Expect the unexpected!", ex);
-			return Response.status(400).build();
-		}
-
-
-	}
-
-	@GET
-	@ApiOperation(value = "Get groups", notes = "")
-	@ApiResponses(value = { @ApiResponse(code = 204, message = "Graph is saved"),
-			@ApiResponse(code = 400, message = "Invalid graph supplied"),
-			@ApiResponse(code = 404, message = "Service not found") })
-	@Produces("application/ld+json")
-	public Response getGroup() {
-
-		ResponseBuilder rb;
-
-		Client client = Client.create();
-
-		WebResource webResource = client.resource(services.getUsersReadWriteAddress()).queryParam("graph", "urn:csc:groups");
-
-		WebResource.Builder builder = webResource.accept("application/ld+json");
-
-		ClientResponse response = builder.get(ClientResponse.class);
-
-		if (response.getStatusInfo().getFamily() != Family.SUCCESSFUL) {
-			Logger.getLogger(Group.class.getName()).log(Level.INFO, response.getStatus() + " from SERVICE " + services.getUsersReadWriteAddress());
-			return Response.status(response.getStatus()).entity("{}").build();
-		}
-
-		rb = Response.status(response.getStatus());
-		rb.entity(response.getEntityInputStream());
-
-		return rb.build();
-
-	}
-
+        /*
 	@DELETE
 	@ApiOperation(value = "Delete group", notes = "PUT Body should be json-ld")
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "Group is removed"),
@@ -210,5 +175,6 @@ public class Group {
 		}
 
 	}
-
+*/
+        
 }

@@ -25,6 +25,7 @@ import org.apache.jena.iri.IRIFactory;
 import com.csc.fi.ioapi.config.EndpointServices;
 import com.csc.fi.ioapi.config.LoginSession;
 import com.csc.fi.ioapi.utils.GraphManager;
+import com.csc.fi.ioapi.utils.JerseyFusekiClient;
 import com.csc.fi.ioapi.utils.LDHelper;
 import com.hp.hpl.jena.query.ParameterizedSparqlString;
 import com.sun.jersey.api.client.Client;
@@ -72,62 +73,30 @@ public class Predicate {
       @ApiResponse(code = 500, message = "Internal server error")
   })
   public Response json(
-          @ApiParam(value = "Property id")
-          @QueryParam("id") String id,
-          @ApiParam(value = "Model id")
-          @QueryParam("model") String model) {
+      @ApiParam(value = "Property id")
+      @QueryParam("id") String id,
+      @ApiParam(value = "Model id")
+      @QueryParam("model") String model) {
 
-      ResponseBuilder rb;
-          
-       try {
-            
-          Client client = Client.create();
-          
-          if(id==null || id.equals("undefined") || id.equals("default")) {
-          
-            String queryString;
-            ParameterizedSparqlString pss = new ParameterizedSparqlString();
-            pss.setNsPrefixes(LDHelper.PREFIX_MAP);
-            
-            queryString = "CONSTRUCT { ?property rdfs:label ?label . ?property a ?type . ?property rdfs:isDefinedBy ?source . ?source rdfs:label ?sourceLabel . ?property dcterms:modified ?date . } WHERE { ?library dcterms:hasPart ?property . GRAPH ?graph { ?property rdfs:label ?label . VALUES ?type { owl:ObjectProperty owl:DatatypeProperty } ?property a ?type . ?property rdfs:isDefinedBy ?source . ?property dcterms:modified ?date .  } GRAPH ?source { ?source rdfs:label ?sourceLabel . }}"; 
-       
-             if(model!=null && !model.equals("undefined")) {
-                  pss.setIri("library", model);
-             }
-            
-            pss.setCommandText(queryString);
-         
-            WebResource webResource = client.resource(services.getCoreSparqlAddress())
-                                      .queryParam("query", UriComponent.encode(pss.toString(),UriComponent.Type.QUERY));
+      if(id==null || id.equals("undefined") || id.equals("default")) {
 
-            WebResource.Builder builder = webResource.accept("application/ld+json");
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
 
-            ClientResponse response = builder.get(ClientResponse.class);
-            rb = Response.status(response.getStatus()); 
-            rb.entity(response.getEntityInputStream());
-            
-          } else {
-              
-            WebResource webResource = client.resource(services.getCoreReadAddress())
-                                      .queryParam("graph", id);
+        String queryString = "CONSTRUCT { ?property rdfs:label ?label . ?property a ?type . ?property rdfs:isDefinedBy ?source . ?source rdfs:label ?sourceLabel . ?property dcterms:modified ?date . } WHERE { ?library dcterms:hasPart ?property . GRAPH ?graph { ?property rdfs:label ?label . VALUES ?type { owl:ObjectProperty owl:DatatypeProperty } ?property a ?type . ?property rdfs:isDefinedBy ?source . ?property dcterms:modified ?date .  } GRAPH ?source { ?source rdfs:label ?sourceLabel . }}"; 
 
-            Builder builder = webResource.accept("application/ld+json");
-            ClientResponse response = builder.get(ClientResponse.class);
+         if(model!=null && !model.equals("undefined")) {
+              pss.setIri("library", model);
+         }
 
-            if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-                return Response.status(response.getStatus()).entity("{}").build();
-            }
-            
-            rb = Response.status(response.getStatus()); 
-            rb.entity(response.getEntityInputStream());
-       
-          }
-         
-        return rb.build();
-           
-      } catch(UniformInterfaceException | ClientHandlerException ex) {
-          logger.log(Level.WARNING, "Expect the unexpected!", ex);
-          return Response.serverError().entity("{}").build();
+        pss.setCommandText(queryString);
+
+        return JerseyFusekiClient.constructGraphFromService(pss.toString(), services.getCoreSparqlAddress());
+
+      } else {
+
+        return JerseyFusekiClient.getGraphResponseFromService(id, services.getCoreReadAddress());
+
       }
 
   }
@@ -158,8 +127,7 @@ public class Predicate {
                 String model,
           @Context HttpServletRequest request) {
       
-    try {
-               
+ 
         HttpSession session = request.getSession();
         
         if(session==null) return Response.status(401).build();
@@ -168,8 +136,6 @@ public class Predicate {
         
         if(!login.isLoggedIn() || !login.hasRightToEditModel(model))
             return Response.status(401).build();
- 
-         String graphID = id;
                 
         IRIFactory iriFactory = IRIFactory.semanticWebImplementation();
         IRI modelIRI,idIRI,oldIdIRI = null; 
@@ -209,24 +175,17 @@ public class Predicate {
             }
             
         /* Create new graph with new id */ 
-        Client client = Client.create();
-
-        WebResource webResource = client.resource(services.getCoreReadWriteAddress())
-                                  .queryParam("graph", graphID);
-
-        WebResource.Builder builder = webResource.header("Content-type", "application/ld+json");
-        ClientResponse response = builder.put(ClientResponse.class,body);
-
+        ClientResponse response = JerseyFusekiClient.putGraphToTheService(id, body, services.getCoreReadWriteAddress());
+           
         if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-           logger.log(Level.WARNING, id + " was not updated! Status " + response.getStatus());
-           return Response.status(response.getStatus()).build();
+            return Response.status(response.getStatus()).entity("{\"errorMessage\":\"Resource was not updated\"}").build();
         }
             
         } else {
              /* IF NO JSON-LD POSTED TRY TO CREATE REFERENCE FROM MODEL TO CLASS ID */
             if(id.startsWith(model)) {
                 // Selfreferences not allowed
-                Response.status(403).build();
+                Response.status(403).entity("{\"errorMessage\":\"Resource is already defined in the model\"}").build();
             } else {
                 GraphManager.insertExistingGraphReferenceToModel(idIRI, modelIRI);
             }
@@ -235,10 +194,6 @@ public class Predicate {
         logger.log(Level.INFO, id + " updated sucessfully!");
         return Response.status(204).build();
 
-      } catch(UniformInterfaceException | ClientHandlerException ex) {
-        logger.log(Level.WARNING, "Expect the unexpected!", ex);
-        return Response.status(400).build();
-      }
   }
   
   
@@ -263,17 +218,15 @@ public class Predicate {
           @QueryParam("model") 
                 String model,
           @Context HttpServletRequest request) {
-      
-    try {
-               
+        
             HttpSession session = request.getSession();
 
-            if(session==null) return Response.status(401).build();
+            if(session==null) return Response.status(401).entity("{\"errorMessage\":\"Unauthorized\"}").build();
 
             LoginSession login = new LoginSession(session);
 
             if(!login.isLoggedIn() || !login.hasRightToEditModel(model))
-                return Response.status(401).build();
+                return Response.status(401).entity("{\"errorMessage\":\"Unauthorized\"}").build();
 
             if(!id.startsWith(model))
                 return Response.status(403).build();
@@ -285,26 +238,19 @@ public class Predicate {
                 idIRI = iriFactory.construct(id);
             }
             catch (IRIException e) {
-                return Response.status(403).build();
+                return Response.status(403).entity("{\"errorMessage\":\"Invalid id\"}").build();
             }
 
             /* Prevent overwriting existing predicate */ 
             if(GraphManager.isExistingGraph(idIRI)) {
                logger.log(Level.WARNING, idIRI+" is existing predicate!");
-               return Response.status(403).build();
+               return Response.status(403).entity("{\"errorMessage\":\"Resource already exists\"}").build();
             }
         
-           Client client = Client.create();
+           ClientResponse response = JerseyFusekiClient.putGraphToTheService(id, body, services.getCoreReadWriteAddress());
            
-           WebResource webResource = client.resource(services.getCoreReadWriteAddress())
-                                      .queryParam("graph", id);
-
-           WebResource.Builder builder = webResource.header("Content-type", "application/ld+json");
-           ClientResponse response = builder.put(ClientResponse.class,body);
-
            if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-               logger.log(Level.WARNING, id + " was not updated! Status " + response.getStatus());
-               return Response.status(response.getStatus()).build();
+               return Response.status(response.getStatus()).entity("{\"errorMessage\":\"Resource was not created\"}").build();
            }
             
            GraphManager.insertNewGraphReferenceToModel(idIRI, modelIRI);
@@ -312,11 +258,7 @@ public class Predicate {
            logger.log(Level.INFO, id + " updated sucessfully!");
             
            return Response.status(204).build();
-
-      } catch(UniformInterfaceException | ClientHandlerException ex) {
-        logger.log(Level.WARNING, "Expect the unexpected!", ex);
-        return Response.status(400).build();
-      }
+           
   }
   
   
@@ -359,31 +301,10 @@ public class Predicate {
        if(!login.isLoggedIn() || !login.hasRightToEditModel(model))
           return Response.status(401).build();
        
-       /* If Class is defined in the model */
-       if(id.startsWith(model)) {
-
-        try {
-
-             Client client = Client.create();
-             WebResource webResource = client.resource(services.getCoreReadWriteAddress())
-                                       .queryParam("graph", id);
-
-             WebResource.Builder builder = webResource.header("Content-type", "application/ld+json");
-             ClientResponse response = builder.delete(ClientResponse.class);
-
-             if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-                logger.log(Level.WARNING, id+" was not deleted! Status "+response.getStatus());
-                return Response.status(response.getStatus()).build();
-             }
-             
-             logger.log(Level.INFO, id+" deleted successfully!");
-             return Response.status(204).build();
-
-       } catch(UniformInterfaceException | ClientHandlerException ex) {
-             logger.log(Level.WARNING, "Expect the unexpected!", ex);
-             return Response.status(400).build();
-       }
-        
+    /* If Class is defined in the model */
+    if(id.startsWith(model)) {
+        /* Remove graph */
+        return JerseyFusekiClient.deleteGraphFromService(id, services.getCoreReadWriteAddress());  
     } else {
         /* If removing referenced predicate */   
          GraphManager.deleteGraphReferenceFromModel(idIRI,modelIRI);  
