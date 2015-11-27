@@ -45,10 +45,15 @@ public class LoginSession implements LoginInterface {
     @Override
     public HashMap<String,Boolean> getGroups() {
         
-        if(session.getAttribute("group")==null) return null;
-                
         HashMap groups = new HashMap();
         
+        if(ApplicationProperties.getDebugMode()) {
+           groups.put(ApplicationProperties.getDebugGroup(), Boolean.TRUE);
+           return groups;
+        }
+            
+        if(session.getAttribute("group")==null) return null;
+                
         String[] groupString = session.getAttribute("group").toString().split(";");
         
         for (int i = 0; i<groupString.length;i++){

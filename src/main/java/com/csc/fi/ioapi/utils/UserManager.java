@@ -71,13 +71,13 @@ public class UserManager {
     
     public static void checkUser(LoginSession loginSession) {
         
-        if(isExistingUser(loginSession.getEmail())) {
-            updateUser(loginSession);
-        } else {
-            logger.log(Level.INFO, "Creating new user: "+loginSession.getEmail());
-            createUser(loginSession);
-        }
-        
+            if(isExistingUser(loginSession.getEmail())) {
+                updateUser(loginSession);
+            } else {
+                logger.log(Level.INFO, "Creating new user: "+loginSession.getEmail());
+                createUser(loginSession);
+            }
+     
     }
     
     public static void createUser(LoginSession loginSession) {
