@@ -1,8 +1,7 @@
-package com.csc.fi.ioapi.api.model;
+package com.csc.fi.ioapi.api.profile;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
 import javax.servlet.ServletContext;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -28,37 +27,35 @@ import org.apache.jena.iri.IRIFactory;
 /**
  * Root resource (exposed at "modelCreator" path)
  */
-@Path("modelCreator")
-@Api(value = "/modelCreator", description = "Construct new model template")
-public class ModelCreator {
+@Path("profileCreator")
+@Api(value = "/profileCreator", description = "Construct new profile template")
+public class ProfileCreator {
 
     @Context ServletContext context;
     EndpointServices services = new EndpointServices();
-     private static final Logger logger = Logger.getLogger(ModelCreator.class.getName());
+     private static final Logger logger = Logger.getLogger(ProfileCreator.class.getName());
     
     @GET
     @Produces("application/ld+json")
-    @ApiOperation(value = "Create new model", notes = "Create new model")
-    @ApiResponses(value = { @ApiResponse(code = 200, message = "New class is created"),
+    @ApiOperation(value = "Create new profile", notes = "Create new profile")
+    @ApiResponses(value = { @ApiResponse(code = 200, message = "New profile is created"),
                     @ApiResponse(code = 400, message = "Invalid ID supplied"),
                     @ApiResponse(code = 403, message = "Invalid IRI in parameter"),
                     @ApiResponse(code = 404, message = "Service not found"),
                     @ApiResponse(code = 401, message = "No right to create new")})
-    public Response newModel(
-            @ApiParam(value = "Model prefix", required = true) @QueryParam("prefix") String prefix,
-            @ApiParam(value = "Model label", required = true) @QueryParam("label") String label,
-            @ApiParam(value = "Group ID", required = true) @QueryParam("group") String group,
+    public Response newPfofile(
+            @ApiParam(value = "Profile prefix", required = true) @QueryParam("prefix") String prefix,
+            @ApiParam(value = "Profile label", required = true) @QueryParam("label") String label,
             @ApiParam(value = "Initial language", required = true, allowableValues="fi,en") @QueryParam("lang") String lang) {
 
             prefix = LDHelper.modelName(prefix);
-            String namespace = ApplicationProperties.getDefaultNamespace()+prefix;
+            String namespace = ApplicationProperties.getProfileNamespace()+prefix;
             
-            IRI groupIRI, namespaceIRI;
+            IRI namespaceIRI;
             
             try {
                     IRIFactory iri = IRIFactory.semanticWebImplementation();
                     namespaceIRI = iri.construct(namespace);
-                    groupIRI = iri.construct(group);
             } catch (IRIException e) {
                     logger.log(Level.WARNING, "ID is invalid IRI!");
                     return Response.status(403).entity("{\"errorMessage\":\"Invalid id\"}").build();
@@ -69,34 +66,25 @@ public class ModelCreator {
             pss.setNsPrefix(prefix, namespace+"#");
             
             String queryString = "CONSTRUCT  { "
-                    + "?modelIRI a owl:Ontology . "
-                    + "?modelIRI rdfs:label ?mlabel . "
+                    + "?modelIRI a dcap:DCAP . "
+                    + "?modelIRI rdfs:label ?profileLabel . "
                     + "?modelIRI owl:versionInfo ?draft . "
                     + "?modelIRI dcterms:created ?creation . "
                     + "?modelIRI dcterms:modified ?creation . "
                     + "?modelIRI dcap:preferredXMLNamespaceName ?namespace . "
                     + "?modelIRI dcap:preferredXMLNamespacePrefix ?prefix . "
-                    + "?modelIRI dcterms:isPartOf ?group . "
-                    + "?group rdfs:label ?groupLabel . "
                     + "} WHERE { "
                     + "BIND(now() as ?creation) "
-                    + "GRAPH <urn:csc:groups> { "
-                    + "?group a foaf:Group . "
-                    + "?group rdfs:label ?groupLabel . "
-                    + "}"
                     + "}";
 
             pss.setCommandText(queryString);
             pss.setLiteral("namespace", namespace+"#");
             pss.setLiteral("prefix", prefix);
             pss.setIri("modelIRI", namespaceIRI);
-            pss.setIri("group", groupIRI);
             pss.setLiteral("draft", "Unstable");
-            pss.setLiteral("mlabel", ResourceFactory.createLangLiteral(label, lang));
+            pss.setLiteral("profileLabel", ResourceFactory.createLangLiteral(label, lang));
 
-            logger.info(pss.toString());
-            
-            return JerseyFusekiClient.constructGraphFromService(pss.toString(), services.getCoreSparqlAddress());
+            return JerseyFusekiClient.constructGraphFromService(pss.toString(), services.getTempConceptReadSparqlAddress());
             
     }   
  

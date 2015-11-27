@@ -32,5 +32,9 @@ public static String getDebugAdress() {
 public static String getDefaultNamespace() {
     return PropertyUtil.getProperty("application.defaultNamespace");  
 }
+
+public static String getProfileNamespace() {
+    return PropertyUtil.getProperty("application.defaultProfileNamespace");  
+}
     
 }

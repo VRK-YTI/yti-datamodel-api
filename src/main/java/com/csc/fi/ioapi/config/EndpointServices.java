@@ -78,4 +78,16 @@ public String getSchemeSearchAPI() {
      return "http://api.finto.fi/rest/v1/vocabularies";
 }
 
+public String getImportsReadWriteAddress() {
+      return endpoint+"/imports/data";
+}
+
+public String getImportsReadAddress() {
+      return endpoint+"/imports/get";
+}
+
+public String getImportsSparqlAddress() {
+      return endpoint+"/imports/sparql";
+}
+
 }
