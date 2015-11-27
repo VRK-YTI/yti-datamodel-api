@@ -46,16 +46,18 @@ public class ProfileCreator {
     public Response newPfofile(
             @ApiParam(value = "Profile prefix", required = true) @QueryParam("prefix") String prefix,
             @ApiParam(value = "Profile label", required = true) @QueryParam("label") String label,
+            @ApiParam(value = "Group ID", required = true) @QueryParam("group") String group,
             @ApiParam(value = "Initial language", required = true, allowableValues="fi,en") @QueryParam("lang") String lang) {
 
             prefix = LDHelper.modelName(prefix);
             String namespace = ApplicationProperties.getProfileNamespace()+prefix;
             
-            IRI namespaceIRI;
+            IRI groupIRI,namespaceIRI;
             
             try {
                     IRIFactory iri = IRIFactory.semanticWebImplementation();
                     namespaceIRI = iri.construct(namespace);
+                    groupIRI = iri.construct(group);
             } catch (IRIException e) {
                     logger.log(Level.WARNING, "ID is invalid IRI!");
                     return Response.status(403).entity("{\"errorMessage\":\"Invalid id\"}").build();
@@ -73,14 +75,21 @@ public class ProfileCreator {
                     + "?modelIRI dcterms:modified ?creation . "
                     + "?modelIRI dcap:preferredXMLNamespaceName ?namespace . "
                     + "?modelIRI dcap:preferredXMLNamespacePrefix ?prefix . "
+                    + "?modelIRI dcterms:isPartOf ?group . "
+                    + "?group rdfs:label ?groupLabel . "
                     + "} WHERE { "
                     + "BIND(now() as ?creation) "
+                    + "GRAPH <urn:csc:groups> { "
+                    + "?group a foaf:Group . "
+                    + "?group rdfs:label ?groupLabel . "
+                    + "}"
                     + "}";
 
             pss.setCommandText(queryString);
             pss.setLiteral("namespace", namespace+"#");
             pss.setLiteral("prefix", prefix);
             pss.setIri("modelIRI", namespaceIRI);
+            pss.setIri("group", groupIRI);
             pss.setLiteral("draft", "Unstable");
             pss.setLiteral("profileLabel", ResourceFactory.createLangLiteral(label, lang));
 

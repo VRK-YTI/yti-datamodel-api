@@ -15,9 +15,15 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.SocketTimeoutException;
 import java.net.URL;
+import java.net.UnknownHostException;
+import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.ws.rs.core.Response;
 import org.apache.jena.atlas.web.ContentType;
 import org.apache.jena.atlas.web.HttpException;
+import org.apache.jena.iri.IRI;
+import org.apache.jena.iri.IRIException;
+import org.apache.jena.iri.IRIFactory;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFLanguages;
 
@@ -31,8 +37,19 @@ public class NamespaceResolver {
     	
 	public static Boolean resolveNamespace(String namespace) {
 		
+ 
             try { // Unexpected exception
-                    
+                
+                IRI namespaceIRI;
+
+                try {
+                        IRIFactory iri = IRIFactory.semanticWebImplementation();
+                        namespaceIRI = iri.construct(namespace);
+                } catch (IRIException e) {
+                        logger.warning("Namespace is invalid IRI!");
+                        return false;
+                }
+
 		if (NamespaceManager.isSchemaInStore(namespace)) {
 			logger.info("Schema found in store: "+namespace);
 			return true;
@@ -46,7 +63,6 @@ public class NamespaceResolver {
                             url = new URL(namespace);
                         } catch (MalformedURLException e) {
                             logger.warning("Malformed URL: "+namespace);
-                            e.printStackTrace();
                             return false;
                         }
                         
@@ -77,9 +93,8 @@ public class NamespaceResolver {
 
                                     try {
                                         stream = connection.getInputStream();
-                                    } catch (FileNotFoundException e) {
-                                            logger.warning("Couldnt open stream from "+namespace);
-                                            e.printStackTrace();
+                                    }  catch (IOException e) {
+                                            logger.warning("Couldnt read from "+namespace);
                                             return false;
                                     } 
 
@@ -124,6 +139,9 @@ public class NamespaceResolver {
                                     }
 					
 					
+                            } catch (UnknownHostException e) {
+                                logger.warning("Invalid hostname "+namespace);
+                                return false;
                             } catch (SocketTimeoutException e) {
                                 logger.info("Timeout from "+namespace);
                                 e.printStackTrace();
@@ -132,7 +150,6 @@ public class NamespaceResolver {
 				
 			} catch (IOException e) {
                             logger.info("Could not read file from "+namespace);
-                            e.printStackTrace();
                             return false;
 			}  
 				
@@ -150,7 +167,6 @@ public class NamespaceResolver {
                                 
                         } catch(HttpException ex) {
                                 logger.warning("Error in saving the model loaded from "+namespace);
-                                ex.printStackTrace();
                                 return false;
                         }
 
