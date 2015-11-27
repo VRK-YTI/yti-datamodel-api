@@ -81,7 +81,7 @@ public class LoginServlet extends HttpServlet {
     }
 
     private static UserDefinition createDebugUser() {
-        return new UserDefinition("Testi Testaaja", ApplicationProperties.getGroupDomain() + "SUPER_ADMINS", "testi@example.org");
+        return new UserDefinition("Testi Testaaja", ApplicationProperties.getDebugGroup(), "testi@example.org");
     }
 
     private static boolean isLoggedIn(HttpServletRequest request) {

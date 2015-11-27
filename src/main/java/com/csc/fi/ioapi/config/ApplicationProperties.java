@@ -23,7 +23,11 @@ public static boolean getDebugMode() {
 
 public static String getGroupDomain() {
     return PropertyUtil.getProperty("application.groupdomain");
-} 
+}
+
+public static String getDebugGroup() {
+    return PropertyUtil.getProperty("application.testgroup");  
+}
 
 public static String getDebugAdress() {
     return PropertyUtil.getProperty("application.debugAdress");  

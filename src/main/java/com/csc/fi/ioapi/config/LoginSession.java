@@ -71,9 +71,7 @@ public class LoginSession implements LoginInterface {
     public boolean hasRightToEditModel(String model) {
         
         if(this.getGroups()==null) return false;
-        
-        if(this.isInGroup("SUPER")) return true;
-       
+
         return ServiceDescriptionManager.isModelInGroup(model,this.getGroups());
     }
     
@@ -82,7 +80,7 @@ public class LoginSession implements LoginInterface {
         
         if(this.getGroups()==null) return false;
         
-        if(this.isInGroup("SUPER")) return true;
+        if(ApplicationProperties.getDebugMode()) return true;
        
         return isInGroup(group);
     }
