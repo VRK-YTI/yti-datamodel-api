@@ -92,6 +92,7 @@ public class Models {
                      + "?req dcap:preferredXMLNamespacePrefix ?prefixes . "
                      + "?graph dcterms:isPartOf ?group . "
                      + "?group rdfs:label ?groupLabel . "
+                     + "?group foaf:homepage ?homepage . "
                      + "} WHERE { "
                      + "GRAPH ?graph { "
                      + "?graph a owl:Ontology . "
@@ -113,6 +114,7 @@ public class Models {
                      + "?metaGraph dcterms:isPartOf ?group . "
                      + "} GRAPH <urn:csc:groups> { "
                      + "?group a foaf:Group . "
+                     + "?group foaf:homepage ?homepage . "
                      + "?group rdfs:label ?groupLabel . "
                      + "}}";
              
@@ -124,7 +126,6 @@ public class Models {
              pss.setIri("graph", modelIRI);
              
      } else if(group!=null && !group.equals("undefined")) {
-         
          
            IRI groupIRI;
             try {
