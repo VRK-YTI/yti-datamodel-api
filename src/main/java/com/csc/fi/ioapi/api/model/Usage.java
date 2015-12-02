@@ -74,7 +74,7 @@ public class Usage {
                     + "?resource rdfs:label ?label . "
                     + "?resource rdfs:isDefinedBy ?resourceModel . "
                     + "?resource dcterms:isReferencedBy ?usage . "
-                    + "?usage a ?type . "
+                    + "?usage a ?usageType . "
                     + "?usage rdfs:label ?usageLabel . "
                     + "?usage rdfs:isDefinedBy ?usageModel . "
                     + "} WHERE { "
@@ -84,9 +84,10 @@ public class Usage {
                     + "?resource rdfs:isDefinedBy ?resourceModel . }"
                     + "GRAPH ?usage { "
                     + "?subject ?property ?resource . "
-                    + "?usage a ?type . "
+                    + "?usage a ?usageType . "
                     + "?usage rdfs:label ?usageLabel . "
-                    + "?usage rdfs:isDefinedBy ?usageModel . }"
+                    + "OPTIONAL {?usage rdfs:isDefinedBy ?usageModel . }}"
+                    + "FILTER(?usage!=?resourceModel)"
                     + "}";
 
             pss.setCommandText(queryString);
