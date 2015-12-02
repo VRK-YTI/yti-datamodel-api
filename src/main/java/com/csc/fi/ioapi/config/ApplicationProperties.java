@@ -25,7 +25,7 @@ public static String getGroupDomain() {
     return PropertyUtil.getProperty("application.groupdomain");
 }
 
-public static String getDebugGroup() {
+public static String getDebugGroups() {
     return PropertyUtil.getProperty("application.debugGroup");  
 }
 

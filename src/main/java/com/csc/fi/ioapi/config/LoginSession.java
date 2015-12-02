@@ -45,17 +45,20 @@ public class LoginSession implements LoginInterface {
     @Override
     public HashMap<String,Boolean> getGroups() {
         
-        HashMap groups = new HashMap();
+        /* Group string format: https://example.org#GROUOP_ADMINS;https://example.org#GROUP_MEMBERS;...;*/
+        
+        String[] groupString;
         
         if(ApplicationProperties.getDebugMode()) {
-           groups.put(ApplicationProperties.getDebugGroup(), Boolean.TRUE);
-           return groups;
+            groupString = ApplicationProperties.getDebugGroups().split(";");
+        } else if(session.getAttribute("group")==null) {
+            return null;
+        } else {
+            groupString = session.getAttribute("group").toString().split(";");
         }
-            
-        if(session.getAttribute("group")==null) return null;
-                
-        String[] groupString = session.getAttribute("group").toString().split(";");
         
+        HashMap groups = new HashMap();
+
         for (int i = 0; i<groupString.length;i++){
             
             String[] myGroup = groupString[i].split("_");
