@@ -77,6 +77,12 @@ public class Models {
             /* TODO: Create Namespace service? */
             DatasetAccessor accessor = DatasetAccessorFactory.createHTTP(services.getCoreReadAddress());
             Model model = accessor.getModel(id);
+            
+            if(model==null) {
+                /* TODO: Add error message */
+                return Response.status(403).build();
+            }
+            
             pss.setNsPrefixes(model.getNsPrefixMap());
             
              queryString = "CONSTRUCT { "
