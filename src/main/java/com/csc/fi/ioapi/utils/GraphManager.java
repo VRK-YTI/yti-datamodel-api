@@ -237,8 +237,53 @@ public class GraphManager {
         accessor.putModel("urn:csc:iow:sd",m);
         
     }
+
+    public static String buildRemoveModelQuery(String model) {
+        
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        String selectResources = "SELECT ?graph WHERE { GRAPH ?model { ?model dcterms:hasPart ?graph . } GRAPH ?graph { ?graph rdfs:isDefinedBy ?model . }}";    
+
+        pss.setIri("model", model);
+        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+        pss.setCommandText(selectResources);
+
+        QueryExecution qexec = QueryExecutionFactory.sparqlService(services.getCoreSparqlAddress(), pss.asQuery());
+
+        ResultSet results = qexec.execSelect() ;
+        String newQuery = "DROP SILENT GRAPH <"+model+">; ";
+
+        while (results.hasNext())
+        {
+          QuerySolution soln = results.nextSolution() ;
+          newQuery += "DROP SILENT GRAPH <"+soln.getResource("graph").toString()+">; ";
+        }
+     
+        return newQuery;
+     
+    }
     
-    
+
+    public static void removeModel(IRI id) {
+       
+        String query = buildRemoveModelQuery(id.toString());
+         
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        pss.setCommandText(query);
+        pss.setIri("graph", id);
+
+        logger.info("Removing model from "+id);
+        logger.info(query);
+        
+        UpdateRequest queryObj = pss.asUpdate();
+        UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj,services.getCoreSparqlUpdateAddress());
+     
+        try {
+           qexec.execute();
+        } catch(UpdateException ex) {
+           logger.log(Level.WARNING, ex.toString());
+        }
+    }   
+      
        public static void removeGraph(IRI id) {
        
         String query = "DROP GRAPH ?graph ;";
@@ -248,8 +293,7 @@ public class GraphManager {
         pss.setIri("graph", id);
 
         logger.log(Level.WARNING, "Removing graph "+id);
-        
-           
+            
         UpdateRequest queryObj = pss.asUpdate();
         UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj,services.getCoreSparqlUpdateAddress());
      

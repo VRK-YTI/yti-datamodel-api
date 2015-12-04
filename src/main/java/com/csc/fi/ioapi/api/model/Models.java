@@ -14,6 +14,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import com.csc.fi.ioapi.config.EndpointServices;
 import com.csc.fi.ioapi.config.LoginSession;
+import com.csc.fi.ioapi.utils.GraphManager;
 import com.csc.fi.ioapi.utils.JerseyFusekiClient;
 import com.csc.fi.ioapi.utils.LDHelper;
 import com.csc.fi.ioapi.utils.ServiceDescriptionManager;
@@ -29,6 +30,7 @@ import com.wordnik.swagger.annotations.ApiResponse;
 import com.wordnik.swagger.annotations.ApiResponses;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
+import javax.ws.rs.DELETE;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
 import org.apache.jena.iri.IRIFactory;
@@ -263,5 +265,49 @@ public class Models {
             return Response.status(204).build();
 
   }
+  
+  @DELETE
+  @ApiOperation(value = "Delete graph from service and service description", notes = "Delete graph")
+  @ApiResponses(value = {
+      @ApiResponse(code = 204, message = "Graph is deleted"),
+      @ApiResponse(code = 403, message = "Illegal graph parameter"),
+      @ApiResponse(code = 404, message = "No such graph"),
+      @ApiResponse(code = 401, message = "Unauthorized")
+  })
+  public Response deleteClass(
+          @ApiParam(value = "Model ID", required = true) 
+          @QueryParam("id") String id,
+          @Context HttpServletRequest request) {
+     
+      /* TODO: Check model status ... prevent removing if Draft resources? */
+      
+      IRIFactory iriFactory = IRIFactory.semanticWebImplementation();
+       /* Check that URIs are valid */
+      IRI modelIRI;
+        try {
+            modelIRI = iriFactory.construct(id);
+        }
+        catch (IRIException e) {
+            return Response.status(403).build();
+        }
+      
+       if(id.equals("default")) {
+               return Response.status(403).build();
+       }
+       
+       HttpSession session = request.getSession();
+
+       if(session==null) return Response.status(401).build();
+
+       LoginSession login = new LoginSession(session);
+
+       if(!login.isLoggedIn() || !login.hasRightToEditModel(id))
+          return Response.status(401).build();
+        
+       ServiceDescriptionManager.deleteGraphDescription(id);
+       GraphManager.removeModel(modelIRI);
+       
+       return Response.status(200).build();
+    }
   
 }

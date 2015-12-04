@@ -14,6 +14,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
+import org.apache.jena.atlas.json.JSON;
+import org.apache.jena.atlas.json.JsonObject;
+import org.apache.jena.atlas.json.JsonValue;
 /**
  *
  * @author malonen
@@ -21,6 +24,25 @@ import javax.ws.rs.core.Response.ResponseBuilder;
 public class JerseyFusekiClient {
     
     static final private Logger logger = Logger.getLogger(JerseyFusekiClient.class.getName());
+    
+    
+    public static JsonValue getGraphContextFromService(String id, String service) {
+         
+        Client client = Client.create();
+
+        WebResource webResource = client.resource(service)
+                                  .queryParam("graph", id);
+
+        Builder builder = webResource.accept("application/ld+json");
+        ClientResponse response = builder.get(ClientResponse.class);
+
+        JsonObject json = JSON.parse(response.getEntityInputStream());
+        JsonValue jsonContext = json.get("@context");
+        
+        return jsonContext;
+        
+       
+    }
     
     public static Response getGraphResponseFromService(String id, String service) {
         try {
@@ -52,6 +74,16 @@ public class JerseyFusekiClient {
         WebResource webResource = client.resource(service).queryParam("graph", graph);
         WebResource.Builder builder = webResource.header("Content-type", "application/ld+json");
         return builder.put(ClientResponse.class, body);
+    }
+    
+    public static ClientResponse clientResponseFromConstruct(String query, String service) {
+                   
+            Client client = Client.create();
+            WebResource webResource = client.resource(service)
+                                      .queryParam("query", UriComponent.encode(query,UriComponent.Type.QUERY));
+            WebResource.Builder builder = webResource.accept("application/ld+json");
+            return builder.get(ClientResponse.class);
+
     }
     
     public static Response constructGraphFromService(String query, String service) {

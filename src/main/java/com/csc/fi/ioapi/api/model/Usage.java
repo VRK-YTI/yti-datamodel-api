@@ -37,10 +37,10 @@ import org.apache.jena.iri.IRIFactory;
  */
 
 /**
- * Root resource (exposed at "classCreator" path)
+ * Root resource (exposed at "usage" path)
  */
 @Path("usage")
-@Api(value = "/usage", description = "Construct new Class template")
+@Api(value = "/usage", description = "Returns all known references to the given resource")
 public class Usage {
 
     @Context ServletContext context;

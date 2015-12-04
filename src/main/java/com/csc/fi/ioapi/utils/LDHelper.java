@@ -5,6 +5,9 @@
  */
 package com.csc.fi.ioapi.utils;
 
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collections;
@@ -51,6 +54,24 @@ public class LDHelper {
         put("prov","http://www.w3.org/ns/prov#");
         put("dcap","http://purl.org/ws-mmi-dc/terms/");
     }});
+
+    public static final Map<String, Object> CONTEXT_MAP = 
+    Collections.unmodifiableMap(new HashMap<String, Object>() {{
+        put("subClassOf", jsonObject("{ '@id': 'http://www.w3.org/2000/01/rdf-schema#subClassOf', '@type': '@id' }"));
+        put("property", jsonObject("{ '@id': 'http://www.w3.org/ns/shacl#property', '@type': '@id' }"));
+        put("predicate", jsonObject("{ '@id': 'http://www.w3.org/ns/shacl#predicate', '@type': '@id' }"));
+    }});
+
+    private static Map<String,Object> jsonObject(String json) {
+       try {
+           ObjectMapper mapper = new ObjectMapper();
+           mapper.configure(JsonParser.Feature.ALLOW_SINGLE_QUOTES, true);
+           return mapper.readValue(json, new TypeReference<HashMap<String,Object>>() {});
+       } catch (IOException ex) {
+           System.out.println(ex.toString());
+           return null;
+       }
+    }
     
     public final static String prefix =   "PREFIX owl: <http://www.w3.org/2002/07/owl#> "+
                             "PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> "+
@@ -73,6 +94,9 @@ public class LDHelper {
     
     ParameterizedSparqlString pss = new ParameterizedSparqlString();
    
+    
+
+    
     
     static String query(String queryString) {
         queryString = prefix+queryString;
@@ -124,7 +148,7 @@ public class LDHelper {
        }
     }
     
-        public static Object getDescriptionContext() {
+    public static Object getDescriptionContext() {
        try {
            //  return Thread.currentThread().getContextClassLoader().getResourceAsStream("userContext.json");
            return JsonUtils.fromInputStream(LDHelper.class.getClassLoader().getResourceAsStream("descriptionContext.json"));
@@ -144,6 +168,15 @@ public class LDHelper {
        }
     }
     
+    public static Object getExportContext() {
+       try {
+           //  return Thread.currentThread().getContextClassLoader().getResourceAsStream("userContext.json");
+           return JsonUtils.fromInputStream(LDHelper.class.getClassLoader().getResourceAsStream("export.json"));
+       } catch (IOException ex) {
+           Logger.getLogger(LDHelper.class.getName()).log(Level.SEVERE, null, ex);
+           return null;
+       }
+    }
         
    public static String expandSparqlQuery(String query, Map<String, String> prefix_map) {
   

@@ -133,6 +133,7 @@ public class Data {
             JsonObject json = JSON.parse(response.getEntityInputStream());
             JsonValue jsonGraph = json.get("@graph");
             JsonValue jsonContext = json.get("@context");
+            
             json.remove("@id");
 
             Object data = JsonUtils.fromString(json.toString());
