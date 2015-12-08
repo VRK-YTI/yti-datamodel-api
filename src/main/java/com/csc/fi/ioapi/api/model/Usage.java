@@ -11,6 +11,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import com.csc.fi.ioapi.config.EndpointServices;
 import com.csc.fi.ioapi.utils.ConceptMapper;
+import com.csc.fi.ioapi.utils.GraphManager;
 import com.csc.fi.ioapi.utils.JerseyFusekiClient;
 import com.csc.fi.ioapi.utils.LDHelper;
 import com.hp.hpl.jena.query.ParameterizedSparqlString;
@@ -20,6 +21,7 @@ import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiParam;
 import com.wordnik.swagger.annotations.ApiResponse;
 import com.wordnik.swagger.annotations.ApiResponses;
+import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
@@ -67,7 +69,9 @@ public class Usage {
             }
 
             ParameterizedSparqlString pss = new ParameterizedSparqlString();
-            pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+            Map<String,String> namespaces = GraphManager.getNamespaceMap();
+            namespaces.putAll(LDHelper.PREFIX_MAP);
+            pss.setNsPrefixes(namespaces);
             
             String queryString = "CONSTRUCT  { "
                     + "?resource a ?type . "

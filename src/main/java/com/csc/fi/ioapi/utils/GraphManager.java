@@ -22,6 +22,7 @@ import com.hp.hpl.jena.update.UpdateExecutionFactory;
 import com.hp.hpl.jena.update.UpdateProcessor;
 import com.hp.hpl.jena.update.UpdateRequest;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -356,6 +357,35 @@ public class GraphManager {
      
         return newQuery;
      
+    }
+    
+    public static Map<String,String> getNamespaceMap() {
+        
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        String selectResources = 
+                "SELECT ?namespace ?prefix WHERE { "
+                + "GRAPH ?graph { "
+                + " ?graph a owl:Ontology .  "
+                + " ?graph dcap:preferredXMLNamespaceName ?namespace . "
+                + " ?graph dcap:preferredXMLNamespacePrefix ?prefix . "
+                + "}}";    
+
+        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+        pss.setCommandText(selectResources);
+
+        QueryExecution qexec = QueryExecutionFactory.sparqlService(services.getCoreSparqlAddress(), pss.asQuery());
+
+        ResultSet results = qexec.execSelect() ;
+        Map namespaceMap = new HashMap<String,String>();
+        
+        while (results.hasNext())
+        {
+          QuerySolution soln = results.nextSolution() ;
+          namespaceMap.put(soln.getLiteral("prefix").toString(), soln.getLiteral("namespace").toString());
+        }
+     
+      return namespaceMap;
+        
     }
     
 
