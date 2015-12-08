@@ -61,7 +61,7 @@ public class ModeRequirementlCreator {
             String queryString;
             ParameterizedSparqlString pss = new ParameterizedSparqlString();
             pss.setNsPrefixes(LDHelper.PREFIX_MAP);
-            queryString = "CONSTRUCT  { ?g rdfs:label ?label . ?g dcap:preferredXMLNamespaceName ?namespace . ?g dcap:preferredXMLNamespacePrefix ?prefix . } WHERE { }";
+            queryString = "CONSTRUCT  { ?g a dcap:MetadataVocabulary . ?g rdfs:label ?label . ?g dcap:preferredXMLNamespaceName ?namespace . ?g dcap:preferredXMLNamespacePrefix ?prefix . } WHERE { }";
 
             pss.setCommandText(queryString);
             pss.setIri("g", namespaceIRI);
