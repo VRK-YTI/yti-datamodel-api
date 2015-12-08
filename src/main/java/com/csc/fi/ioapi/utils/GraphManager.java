@@ -159,7 +159,7 @@ public class GraphManager {
     public static void addIndexNumberToProperties(String resource) {
         
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
-        String selectResources = "SELECT ?property WHERE { GRAPH ?resource { ?resource rdfs:isDefinedBy ?model . ?resource sh:property ?property . ?property rdfs:label ?label . }} ORDER BY ?label ";    
+        String selectResources = "SELECT ?property WHERE { GRAPH ?resource { ?resource rdfs:isDefinedBy ?model . ?resource sh:property ?property . ?property sh:predicate ?predicate . }} ORDER BY ?predicate ";    
 
         pss.setNsPrefix("sh", "http://www.w3.org/ns/shacl#");
         pss.setNsPrefix("rdfs", "http://www.w3.org/2000/01/rdf-schema#");
