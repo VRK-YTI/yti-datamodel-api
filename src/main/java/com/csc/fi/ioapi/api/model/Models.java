@@ -107,15 +107,14 @@ public class Models {
                      + " }"
                      + " OPTIONAL { "
                      + "  ?graph dcterms:requires ?req . "
-                     + " }"
-                     + " OPTIONAL { "
-                     + "  ?req rdfs:label ?reqLabel . "
                      + "  ?req a dcap:MetadataVocabulary . "
+                     + "  ?req rdfs:label ?reqLabel . "
                      + "  ?req dcap:preferredXMLNamespaceName ?namespaces . "
                      + "  ?req dcap:preferredXMLNamespacePrefix ?prefixes . "
                      + " }"
                      + "} "
                      + "OPTIONAL { "
+                     + " ?graph dcterms:requires ?req . "
                      + " GRAPH ?req { "
                      + "  ?req rdfs:label ?reqLabel . "
                      + "  ?req dcap:preferredXMLNamespaceName ?namespaces . "
@@ -134,7 +133,7 @@ public class Models {
                      + "}"
                      + "}";
              
-             /* TODO: Do fixed query? Query is expanded to avoid namespace collisions */
+             /* TODO: Do fixed query? Final string? Query is expanded to avoid namespace collisions */
              queryString = LDHelper.expandSparqlQuery(queryString, LDHelper.PREFIX_MAP);
              
              logger.info(queryString);

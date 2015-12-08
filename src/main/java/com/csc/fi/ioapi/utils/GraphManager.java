@@ -82,8 +82,29 @@ public class GraphManager {
         
         /* Creates resource graphs from model and adds UUIDS for class propeties */
         String query = 
-                " INSERT { GRAPH ?graph { ?graph dcterms:hasPart ?resource . ?graph owl:versionInfo ?draft . } GRAPH ?resource { ?resource dcterms:modified ?date . ?resource rdfs:isDefinedBy ?graph . ?resource dcterms:subject ?subject . ?subject ?sp ?so . ?resource sh:property ?propertyID . ?propertyID sh:predicate ?predicate . }}"+
-                " WHERE { GRAPH ?graph { VALUES ?type { sh:ShapeClass owl:DatatypeProperty owl:ObjectProperty } ?resource a ?type . OPTIONAL { ?resource dcterms:subject ?subject . ?subject ?sp ?so . } OPTIONAL { ?resource sh:property ?property . ?property sh:predicate ?predicate . BIND(UUID() AS ?propertyID) } }}";
+                " INSERT { "
+                + "GRAPH ?graph { "
+                + " ?graph dcterms:hasPart ?resource . "
+                + " ?graph owl:versionInfo ?draft . } "
+                + "GRAPH ?resource { "
+                + " ?resource dcterms:modified ?date . "
+                + " ?resource rdfs:isDefinedBy ?graph . "
+                + " ?resource dcterms:subject ?subject . "
+                + " ?subject ?sp ?so . "
+                + " ?resource sh:property ?propertyID . "
+                + " ?propertyID sh:predicate ?predicate . }}"
+                + "WHERE { "
+                + " GRAPH ?graph { "
+                + " VALUES ?type { sh:ShapeClass owl:DatatypeProperty owl:ObjectProperty } "
+                + " ?resource a ?type . "
+                + " OPTIONAL { "
+                + "  ?resource dcterms:subject ?subject . "
+                + "  ?subject ?sp ?so . "
+                + " } OPTIONAL { "
+                + "  ?resource sh:property ?property . "
+                + "  ?property sh:predicate ?predicate . "
+                + "  BIND(UUID() AS ?propertyID) } "
+                + "}}";
                  
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         
@@ -112,34 +133,109 @@ public class GraphManager {
     
     public static void updateResourceGraphs(String model, Map<String,String> map) {
         
-    ParameterizedSparqlString pss = new ParameterizedSparqlString();
-    String selectResources = "SELECT ?resource WHERE { GRAPH ?resource { ?resource rdfs:isDefinedBy ?model . }}";    
-    
-    pss.setIri("model", model);
-    pss.setNsPrefix("rdfs", "http://www.w3.org/2000/01/rdf-schema#");
-    pss.setCommandText(selectResources);
-    
-    QueryExecution qexec = QueryExecutionFactory.sparqlService(services.getCoreSparqlAddress(), pss.asQuery());
-    
-    ResultSet results = qexec.execSelect() ;
-    
-    while (results.hasNext())
-    {
-      QuerySolution soln = results.nextSolution() ;
-      constructGraphs(model,soln.getResource("resource").toString(),map);
-    }
-    
-    removeDuplicatesFromModel(model);
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        String selectResources = "SELECT ?resource WHERE { GRAPH ?resource { ?resource rdfs:isDefinedBy ?model . }}";    
+
+        pss.setIri("model", model);
+        pss.setNsPrefix("rdfs", "http://www.w3.org/2000/01/rdf-schema#");
+        pss.setCommandText(selectResources);
+
+        QueryExecution qexec = QueryExecutionFactory.sparqlService(services.getCoreSparqlAddress(), pss.asQuery());
+
+        ResultSet results = qexec.execSelect() ;
+
+        while (results.hasNext())
+        {
+          QuerySolution soln = results.nextSolution() ;
+          constructGraphs(model,soln.getResource("resource").toString(),map);
+          addIndexNumberToProperties(soln.getResource("resource").toString());
+        }
+
+        removeDuplicatesFromModel(model);
 
     }
+    
+    
+    public static void addIndexNumberToProperties(String resource) {
+        
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        String selectResources = "SELECT ?property WHERE { GRAPH ?resource { ?resource rdfs:isDefinedBy ?model . ?resource sh:property ?property . ?property rdfs:label ?label . }} ORDER BY ?label ";    
+
+        pss.setNsPrefix("sh", "http://www.w3.org/ns/shacl#");
+        pss.setNsPrefix("rdfs", "http://www.w3.org/2000/01/rdf-schema#");
+        pss.setIri("resource", resource);
+        pss.setCommandText(selectResources);
+
+        QueryExecution qexec = QueryExecutionFactory.sparqlService(services.getCoreSparqlAddress(), pss.asQuery());
+
+        ResultSet results = qexec.execSelect() ;
+        int id = 1;
+        while (results.hasNext())
+        {
+          QuerySolution soln = results.nextSolution() ;
+          addIndexToProperty(resource,soln.getResource("property").toString(),id++);
+        }
+
+    }
+
+    public static void addIndexToProperty(String resource, String property, int index) {
+            
+        String query = 
+                " INSERT { "
+                + "GRAPH ?resource { "
+                + "?resource sh:property ?property . "
+                + "?property sh:index ?index . }}"
+                + "WHERE { "
+                + " GRAPH ?resource { "
+                + "?resource sh:property ?property . "
+                + "}}";
+                 
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        pss.setNsPrefix("sh", "http://www.w3.org/ns/shacl#");
+
+        pss.setIri("resource",resource);
+        pss.setIri("property",property);
+        pss.setLiteral("index", index);
+        pss.setCommandText(query);        
+        
+        UpdateRequest queryObj = pss.asUpdate();
+        UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj,services.getCoreSparqlUpdateAddress());
+        qexec.execute();
+        
+    }
+    
+    
     
     public static void constructGraphs(String graph, String resource, Map<String,String> map) {
         
     ParameterizedSparqlString pss = new ParameterizedSparqlString(); 
     
     String query = 
-                " CONSTRUCT { ?resource a ?type . ?resource owl:versionInfo ?draft . ?resource ?p ?o .  ?resource sh:property ?uuid . ?uuid owl:versionInfo ?draft . ?uuid ?pp ?oo .  ?resource dcterms:modified ?date . ?resource rdfs:isDefinedBy ?graph . } "+
-                " WHERE { GRAPH ?graph { VALUES ?type { sh:ShapeClass owl:DatatypeProperty owl:ObjectProperty } . ?resource a ?type . ?resource ?p ?o . FILTER(!isBlank(?o)) OPTIONAL { ?resource sh:property ?property . ?property sh:predicate ?predicate . ?property ?pp ?oo . } }  GRAPH ?resource { OPTIONAL {?resource sh:property ?uuid . ?uuid sh:predicate ?predicate .}} }";
+              "CONSTRUCT { "
+            + "?resource a ?type . "
+            + "?resource owl:versionInfo ?draft . "
+            + "?resource ?p ?o .  "
+            + "?resource sh:property ?uuid . "
+            + "?uuid owl:versionInfo ?draft . "
+            + "?uuid ?pp ?oo .  "
+            + "?resource dcterms:modified ?date . "
+            + "?resource rdfs:isDefinedBy ?graph . } "
+            + " WHERE { "
+            + "GRAPH ?graph { "
+            + "VALUES ?type { sh:ShapeClass owl:DatatypeProperty owl:ObjectProperty } . "
+            + "?resource a ?type . "
+            + "?resource ?p ?o . "
+            + "FILTER(!isBlank(?o)) "
+            + "OPTIONAL { "
+            + " ?resource sh:property ?property . "
+            + " ?property sh:predicate ?predicate . "
+            + " ?property ?pp ?oo . } }  "
+            + "GRAPH ?resource { "
+            + " OPTIONAL { "
+            + "  ?resource sh:property ?uuid . "
+            + "  ?uuid sh:predicate ?predicate ."
+            + "}} "
+            + "}";
     
     pss.setIri("graph", graph);
     pss.setIri("resource", resource);
