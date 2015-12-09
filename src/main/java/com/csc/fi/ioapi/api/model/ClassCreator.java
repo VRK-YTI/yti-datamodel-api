@@ -1,3 +1,6 @@
+/*
+ * Licensed under the European Union Public Licence (EUPL) V.1.1 
+ */
 package com.csc.fi.ioapi.api.model;
 
 import java.util.logging.Level;
@@ -11,6 +14,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import com.csc.fi.ioapi.config.EndpointServices;
 import com.csc.fi.ioapi.utils.ConceptMapper;
+import com.csc.fi.ioapi.utils.ErrorMessage;
 import com.csc.fi.ioapi.utils.JerseyFusekiClient;
 import com.csc.fi.ioapi.utils.LDHelper;
 import com.hp.hpl.jena.query.ParameterizedSparqlString;
@@ -24,17 +28,6 @@ import javax.servlet.http.HttpServletRequest;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
 import org.apache.jena.iri.IRIFactory;
- 
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
-/**
- *
- * @author malonen
- */
 
 /**
  * Root resource (exposed at "classCreator" path)
@@ -67,8 +60,7 @@ public class ClassCreator {
                     conceptIRI = iri.construct(conceptID);
                     modelIRI = iri.construct(modelID);
             } catch (IRIException e) {
-                    logger.log(Level.WARNING, "ID is invalid IRI!");
-                    return Response.status(403).entity("{\"errorMessage\":\"Invalid id\"}").build();
+                    return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
             }
 
             ConceptMapper.updateConceptFromConceptService(conceptID);

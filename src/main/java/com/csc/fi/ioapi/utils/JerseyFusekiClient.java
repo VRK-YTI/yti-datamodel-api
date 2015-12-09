@@ -56,7 +56,7 @@ public class JerseyFusekiClient {
 
         if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
            logger.log(Level.INFO, response.getStatus()+" from SERVICE "+service+" and GRAPH "+id);
-           return Response.status(response.getStatus()).entity("{\"errorMessage\":\"Resource not found\"}").build();
+           return Response.status(response.getStatus()).entity(ErrorMessage.NOTFOUND).build();
         }
 
         ResponseBuilder rb = Response.status(response.getStatus()); 
@@ -65,7 +65,7 @@ public class JerseyFusekiClient {
        return rb.build();
         } catch(ClientHandlerException ex) {
           logger.log(Level.WARNING, "Expect the unexpected!", ex);
-          return Response.serverError().entity("{\"errorMessage\":\"Internal error\"}").build();
+          return Response.serverError().entity(ErrorMessage.UNEXPECTED).build();
         }
     }
     
@@ -102,14 +102,14 @@ public class JerseyFusekiClient {
             rb.entity(response.getEntityInputStream());
             
             if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-               return Response.status(response.getStatus()).entity("{\"errorMessage\":\"Internal error\"}").build();
+               return Response.status(response.getStatus()).entity(ErrorMessage.UNEXPECTED).build();
             }
             
             return rb.build();
 
       } catch(Exception ex) {
           logger.log(Level.WARNING, "Expect the unexpected!", ex);
-          return Response.serverError().entity("{\"errorMessage\":\"Internal error\"}").build();
+          return Response.serverError().entity(ErrorMessage.UNEXPECTED).build();
       }
 
     }
@@ -127,14 +127,14 @@ public class JerseyFusekiClient {
 
              if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
                 logger.log(Level.WARNING, "Database connection error: "+graph+" was not deleted from "+service+"! Status "+response.getStatus());
-                return Response.serverError().entity("{\"errorMessage\":\"Database connection error\"}").build();
+                return Response.serverError().entity(ErrorMessage.NOTREMOVED).build();
              }
              
              return Response.status(204).build();
 
        } catch(Exception ex) {
             logger.log(Level.WARNING, "Expect the unexpected!", ex);
-            return Response.serverError().entity("{\"errorMessage\":\"Internal error\"}").build();
+            return Response.serverError().entity(ErrorMessage.UNEXPECTED).build();
        }
         
         

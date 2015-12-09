@@ -1,3 +1,6 @@
+/*
+ * Licensed under the European Union Public Licence (EUPL) V.1.1 
+ */
 package com.csc.fi.ioapi.api.model;
 
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
@@ -21,6 +24,7 @@ import org.apache.jena.iri.IRIException;
 import org.apache.jena.iri.IRIFactory;
 import com.csc.fi.ioapi.config.EndpointServices;
 import com.csc.fi.ioapi.config.LoginSession;
+import com.csc.fi.ioapi.utils.ErrorMessage;
 import com.csc.fi.ioapi.utils.GraphManager;
 import com.csc.fi.ioapi.utils.JerseyFusekiClient;
 import com.csc.fi.ioapi.utils.LDHelper;
@@ -34,21 +38,12 @@ import com.wordnik.swagger.annotations.ApiParam;
 import com.wordnik.swagger.annotations.ApiResponse;
 import com.wordnik.swagger.annotations.ApiResponses;
 import javax.ws.rs.DELETE;
-
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-/**
- * @author malonen
- */
  
 /**
- * Root resource (exposed at "myresource" path)
+ * Root resource (exposed at "class" path)
  */
 @Path("class")
-@Api(value = "/class", description = "Operations about property")
+@Api(value = "/class", description = "Class operations")
 public class Class {
 
     @Context ServletContext context;
@@ -57,7 +52,7 @@ public class Class {
     
   @GET
   @Produces("application/ld+json")
-  @ApiOperation(value = "Get property from model", notes = "More notes about this method")
+  @ApiOperation(value = "Get class from model", notes = "Get class in JSON-LD")
   @ApiResponses(value = {
       @ApiResponse(code = 400, message = "Invalid model supplied"),
       @ApiResponse(code = 404, message = "Service not found"),
@@ -121,12 +116,12 @@ public class Class {
               
         HttpSession session = request.getSession();
         
-        if(session==null) return Response.status(401).entity("{\"errorMessage\":\"Unauthorized\"}").build();
+        if(session==null) return Response.status(401).entity(ErrorMessage.UNAUTHORIZED).build();
         
         LoginSession login = new LoginSession(session);
         
         if(!login.isLoggedIn() || !login.hasRightToEditModel(model))
-            return Response.status(401).entity("{\"errorMessage\":\"Unauthorized\"}").build();
+            return Response.status(401).entity(ErrorMessage.UNAUTHORIZED).build();
                 
         IRIFactory iriFactory = IRIFactory.semanticWebImplementation();
         IRI modelIRI,idIRI,oldIdIRI = null;        
@@ -139,13 +134,13 @@ public class Class {
             if(oldid!=null && !oldid.equals("undefined")) {
                 if(oldid.equals(id)) {
                   /* id and newid cant be the same */
-                  return Response.status(403).build();
+                  return Response.status(403).entity(ErrorMessage.USEDIRI).build();
                 }
                 oldIdIRI = iriFactory.construct(oldid);
             }
         }
         catch (IRIException e) {
-            return Response.status(403).build();
+            return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
         }
         
         if(isNotEmpty(body)) {
@@ -155,7 +150,7 @@ public class Class {
                 /* Prevent overwriting existing resources */
                 if(GraphManager.isExistingGraph(idIRI)) {
                     logger.log(Level.WARNING, idIRI+" is existing graph!");
-                    return Response.status(403).build();
+                    return Response.status(403).entity(ErrorMessage.USEDIRI).build();
                 }
                 else {
                     /* Remove old graph and add update references */
@@ -168,14 +163,15 @@ public class Class {
            ClientResponse response = JerseyFusekiClient.putGraphToTheService(id, body, services.getCoreReadWriteAddress());
            
            if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-               return Response.status(response.getStatus()).entity("{\"errorMessage\":\"Resource was not updated\"}").build();
+               logger.log(Level.WARNING, "Unexpected: Not updated: "+id);
+               return Response.status(response.getStatus()).entity(ErrorMessage.UNEXPECTED).build();
            }
 
         } else {
              /* IF NO JSON-LD POSTED TRY TO CREATE REFERENCE FROM MODEL TO CLASS ID */
             if(id.startsWith(model)) {
                 // Selfreferences not allowed
-                Response.status(403).entity("{\"errorMessage\":\"Resource is already defined in the model\"}").build();
+                Response.status(403).entity(ErrorMessage.USEDIRI).build();
             } else {
                 GraphManager.insertExistingGraphReferenceToModel(idIRI, modelIRI);
             }
@@ -213,16 +209,16 @@ public class Class {
                
             HttpSession session = request.getSession();
 
-            if(session==null) return Response.status(401).entity("{\"errorMessage\":\"Unauthorized\"}").build();
+            if(session==null) return Response.status(401).entity(ErrorMessage.UNAUTHORIZED).build();
 
             LoginSession login = new LoginSession(session);
 
             if(!login.isLoggedIn() || !login.hasRightToEditModel(model))
-                return Response.status(401).entity("{\"errorMessage\":\"Unauthorized\"}").build();
+                return Response.status(401).entity(ErrorMessage.UNAUTHORIZED).build();
 
              if(!id.startsWith(model)) {
                 Logger.getLogger(Class.class.getName()).log(Level.WARNING, id+" ID must start with "+model);
-                return Response.status(403).build();
+                return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
              }
 
             IRIFactory iriFactory = IRIFactory.semanticWebImplementation();
@@ -232,20 +228,21 @@ public class Class {
                 idIRI = iriFactory.construct(id);
             }
             catch (IRIException e) {
-                return Response.status(403).build();
+                return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
             }
 
             /* Prevent overwriting existing classes */ 
             if(GraphManager.isExistingGraph(idIRI)) {
                logger.log(Level.WARNING, idIRI+" is existing class!");
-               return Response.status(403).entity("{\"errorMessage\":\"Resource already exists\"}").build();
+               return Response.status(403).entity(ErrorMessage.USEDIRI).build();
             }
           
            /* Create new graph with new id */ 
            ClientResponse response = JerseyFusekiClient.putGraphToTheService(id, body, services.getCoreReadWriteAddress());
            
            if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-               return Response.status(response.getStatus()).entity("{\"errorMessage\":\"Resource was not created\"}").build();
+               logger.log(Level.WARNING, "Unexpected: Not created: "+id);
+               return Response.status(response.getStatus()).entity(ErrorMessage.UNEXPECTED).build();
            }
             
             GraphManager.insertNewGraphReferenceToModel(idIRI, modelIRI);
@@ -255,7 +252,7 @@ public class Class {
 
       } catch(UniformInterfaceException | ClientHandlerException ex) {
         Logger.getLogger(Class.class.getName()).log(Level.WARNING, "Expect the unexpected!", ex);
-        return Response.status(400).build();
+        return Response.status(400).entity(ErrorMessage.UNEXPECTED).build();
       }
   }
  
@@ -282,21 +279,17 @@ public class Class {
             idIRI = iriFactory.construct(id);
         }
         catch (IRIException e) {
-            return Response.status(403).build();
+            return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
         }
       
-       if(id.equals("default")) {
-               return Response.status(403).build();
-       }
-       
        HttpSession session = request.getSession();
 
-       if(session==null) return Response.status(401).build();
+       if(session==null) return Response.status(401).entity(ErrorMessage.UNAUTHORIZED).build();
 
        LoginSession login = new LoginSession(session);
 
        if(!login.isLoggedIn() || !login.hasRightToEditModel(model))
-          return Response.status(401).build();
+          return Response.status(401).entity(ErrorMessage.UNAUTHORIZED).build();
        
        /* If Class is defined in the model */
        if(id.startsWith(model)) {

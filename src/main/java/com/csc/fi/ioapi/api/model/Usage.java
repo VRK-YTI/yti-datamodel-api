@@ -1,6 +1,8 @@
+/*
+ * Licensed under the European Union Public Licence (EUPL) V.1.1 
+ */
 package com.csc.fi.ioapi.api.model;
 
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.servlet.ServletContext;
 import javax.ws.rs.GET;
@@ -10,33 +12,20 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import com.csc.fi.ioapi.config.EndpointServices;
-import com.csc.fi.ioapi.utils.ConceptMapper;
+import com.csc.fi.ioapi.utils.ErrorMessage;
 import com.csc.fi.ioapi.utils.GraphManager;
 import com.csc.fi.ioapi.utils.JerseyFusekiClient;
 import com.csc.fi.ioapi.utils.LDHelper;
 import com.hp.hpl.jena.query.ParameterizedSparqlString;
-import com.hp.hpl.jena.rdf.model.ResourceFactory;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiParam;
 import com.wordnik.swagger.annotations.ApiResponse;
 import com.wordnik.swagger.annotations.ApiResponses;
 import java.util.Map;
-import javax.servlet.http.HttpServletRequest;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
 import org.apache.jena.iri.IRIFactory;
- 
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
-/**
- *
- * @author malonen
- */
 
 /**
  * Root resource (exposed at "usage" path)
@@ -64,8 +53,7 @@ public class Usage {
                     IRIFactory iri = IRIFactory.semanticWebImplementation();
                     resourceIRI = iri.construct(id);
             } catch (IRIException e) {
-                    logger.log(Level.WARNING, "ID is invalid IRI!");
-                    return Response.status(403).entity("{\"errorMessage\":\"Invalid id\"}").build();
+                    return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
             }
 
             ParameterizedSparqlString pss = new ParameterizedSparqlString();

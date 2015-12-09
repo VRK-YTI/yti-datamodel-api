@@ -1,3 +1,6 @@
+/*
+ * Licensed under the European Union Public Licence (EUPL) V.1.1 
+ */
 package com.csc.fi.ioapi.api.model;
 
 import java.util.logging.Level;
@@ -9,6 +12,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import com.csc.fi.ioapi.config.EndpointServices;
+import com.csc.fi.ioapi.utils.ErrorMessage;
 import com.csc.fi.ioapi.utils.GraphManager;
 import com.csc.fi.ioapi.utils.JerseyFusekiClient;
 import com.csc.fi.ioapi.utils.ServiceDescriptionManager;
@@ -60,7 +64,7 @@ public class ImportModel {
       /* TODO: Add API key? */
       
        if(graph.equals("default")) {
-           return Response.status(403).build();
+           return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
        }
        
        IRI graphIRI, namespaceIRI;
@@ -70,8 +74,7 @@ public class ImportModel {
             graphIRI = iri.construct(graph);
             namespaceIRI = iri.construct(graph+"#");
         } catch (IRIException e) {
-            logger.log(Level.WARNING, "Graph is invalid IRI!");
-            return Response.status(403).build();
+            return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
         }
        
        ServiceDescriptionManager.createGraphDescription(graph, group, null);
@@ -80,7 +83,8 @@ public class ImportModel {
        ClientResponse response = JerseyFusekiClient.putGraphToTheService(graph, body, services.getCoreReadWriteAddress());
 
        if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-           return Response.status(response.getStatus()).entity("{\"errorMessage\":\"Resource was not created\"}").build();
+               logger.log(Level.WARNING, "Unexpected: import failed: "+graph);
+               return Response.status(response.getStatus()).entity(ErrorMessage.UNEXPECTED).build();
        }
 
         logger.log(Level.INFO, graph+" updated sucessfully!");

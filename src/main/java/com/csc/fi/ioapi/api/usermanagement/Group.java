@@ -1,3 +1,6 @@
+/*
+ * Licensed under the European Union Public Licence (EUPL) V.1.1 
+ */
 package com.csc.fi.ioapi.api.usermanagement;
 
 import com.csc.fi.ioapi.config.EndpointServices;

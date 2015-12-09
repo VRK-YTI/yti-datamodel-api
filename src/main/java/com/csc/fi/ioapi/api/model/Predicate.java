@@ -1,3 +1,6 @@
+/*
+ * Licensed under the European Union Public Licence (EUPL) V.1.1 
+ */
 package com.csc.fi.ioapi.api.model;
 
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
@@ -24,6 +27,7 @@ import org.apache.jena.iri.IRIFactory;
 
 import com.csc.fi.ioapi.config.EndpointServices;
 import com.csc.fi.ioapi.config.LoginSession;
+import com.csc.fi.ioapi.utils.ErrorMessage;
 import com.csc.fi.ioapi.utils.GraphManager;
 import com.csc.fi.ioapi.utils.JerseyFusekiClient;
 import com.csc.fi.ioapi.utils.LDHelper;
@@ -42,15 +46,6 @@ import com.wordnik.swagger.annotations.ApiResponse;
 import com.wordnik.swagger.annotations.ApiResponses;
 import javax.ws.rs.DELETE;
 
-
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-/**
- * @author malonen
- */
  
 /**
  * Root resource (exposed at "myresource" path)
@@ -130,12 +125,12 @@ public class Predicate {
  
         HttpSession session = request.getSession();
         
-        if(session==null) return Response.status(401).build();
+        if(session==null) return Response.status(403).entity(ErrorMessage.UNAUTHORIZED).build();
         
         LoginSession login = new LoginSession(session);
         
         if(!login.isLoggedIn() || !login.hasRightToEditModel(model))
-            return Response.status(401).build();
+            return Response.status(403).entity(ErrorMessage.UNAUTHORIZED).build();
                 
         IRIFactory iriFactory = IRIFactory.semanticWebImplementation();
         IRI modelIRI,idIRI,oldIdIRI = null; 
@@ -148,14 +143,13 @@ public class Predicate {
             if(oldid!=null && !oldid.equals("undefined")) {
                 if(oldid.equals(id)) {
                   /* id and oldid cant be the same */
-                  return Response.status(403).build();
+                  return Response.status(403).entity(ErrorMessage.USEDIRI).build();
                 }
                 oldIdIRI = iriFactory.construct(oldid);
             }
         }
         catch (IRIException e) {
-            logger.log(Level.SEVERE, e.toString());
-            return Response.status(403).build();
+            return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
         }
         
         if(isNotEmpty(body)) {
@@ -165,7 +159,7 @@ public class Predicate {
                 /* Prevent overwriting existing resources */
                 if(GraphManager.isExistingGraph(idIRI)) {
                     logger.log(Level.WARNING, idIRI+" is existing graph!");
-                    return Response.status(403).build();
+                    return Response.status(403).entity(ErrorMessage.USEDIRI).build();
                 }
                 else {
                     /* Remove old graph and add update references */
@@ -178,14 +172,15 @@ public class Predicate {
         ClientResponse response = JerseyFusekiClient.putGraphToTheService(id, body, services.getCoreReadWriteAddress());
            
         if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-            return Response.status(response.getStatus()).entity("{\"errorMessage\":\"Resource was not updated\"}").build();
+               logger.log(Level.WARNING, "Unexpected: Predicate update failed: "+id);
+               return Response.status(response.getStatus()).entity(ErrorMessage.UNEXPECTED).build();
         }
             
         } else {
              /* IF NO JSON-LD POSTED TRY TO CREATE REFERENCE FROM MODEL TO CLASS ID */
             if(id.startsWith(model)) {
                 // Selfreferences not allowed
-                Response.status(403).entity("{\"errorMessage\":\"Resource is already defined in the model\"}").build();
+                 return Response.status(403).entity(ErrorMessage.USEDIRI).build();
             } else {
                 GraphManager.insertExistingGraphReferenceToModel(idIRI, modelIRI);
             }
@@ -221,12 +216,12 @@ public class Predicate {
         
             HttpSession session = request.getSession();
 
-            if(session==null) return Response.status(401).entity("{\"errorMessage\":\"Unauthorized\"}").build();
+            if(session==null) return Response.status(403).entity(ErrorMessage.UNAUTHORIZED).build();
 
             LoginSession login = new LoginSession(session);
 
             if(!login.isLoggedIn() || !login.hasRightToEditModel(model))
-                return Response.status(401).entity("{\"errorMessage\":\"Unauthorized\"}").build();
+                return Response.status(403).entity(ErrorMessage.UNAUTHORIZED).build();
 
             if(!id.startsWith(model))
                 return Response.status(403).build();
@@ -238,19 +233,20 @@ public class Predicate {
                 idIRI = iriFactory.construct(id);
             }
             catch (IRIException e) {
-                return Response.status(403).entity("{\"errorMessage\":\"Invalid id\"}").build();
+                return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
             }
 
             /* Prevent overwriting existing predicate */ 
             if(GraphManager.isExistingGraph(idIRI)) {
                logger.log(Level.WARNING, idIRI+" is existing predicate!");
-               return Response.status(403).entity("{\"errorMessage\":\"Resource already exists\"}").build();
+               return Response.status(403).entity(ErrorMessage.USEDIRI).build();
             }
         
            ClientResponse response = JerseyFusekiClient.putGraphToTheService(id, body, services.getCoreReadWriteAddress());
            
            if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-               return Response.status(response.getStatus()).entity("{\"errorMessage\":\"Resource was not created\"}").build();
+               logger.log(Level.WARNING, "Unexpected: Predicate creation failed: "+id);
+               return Response.status(response.getStatus()).entity(ErrorMessage.UNEXPECTED).build();
            }
             
            GraphManager.insertNewGraphReferenceToModel(idIRI, modelIRI);
@@ -285,21 +281,18 @@ public class Predicate {
             idIRI = iriFactory.construct(id);
         }
         catch (IRIException e) {
-            return Response.status(403).build();
+            return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
         }
       
-       if(id.equals("default")) {
-               return Response.status(403).build();
-       }
        
        HttpSession session = request.getSession();
 
-       if(session==null) return Response.status(401).build();
+       if(session==null) return Response.status(401).entity(ErrorMessage.UNAUTHORIZED).build();
 
        LoginSession login = new LoginSession(session);
 
        if(!login.isLoggedIn() || !login.hasRightToEditModel(model))
-          return Response.status(401).build();
+          return Response.status(401).entity(ErrorMessage.UNAUTHORIZED).build();
        
     /* If Class is defined in the model */
     if(id.startsWith(model)) {

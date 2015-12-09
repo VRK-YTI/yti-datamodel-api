@@ -17,6 +17,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import com.csc.fi.ioapi.config.EndpointServices;
 import com.csc.fi.ioapi.config.LoginSession;
+import com.csc.fi.ioapi.utils.ErrorMessage;
 import com.csc.fi.ioapi.utils.JerseyFusekiClient;
 import com.csc.fi.ioapi.utils.LDHelper;
 import com.hp.hpl.jena.query.ParameterizedSparqlString;
@@ -54,7 +55,7 @@ public class User {
         if(login.isLoggedIn()){
             Logger.getLogger(User.class.getName()).log(Level.INFO, "User is logged in with: "+login.getEmail());
         } else {
-             return Response.status(401).entity("{\"errorMessage\":\"Unauthorized\"}").build();
+             return Response.status(401).entity(ErrorMessage.UNAUTHORIZED).build();
         }
         
         String email = login.getEmail();

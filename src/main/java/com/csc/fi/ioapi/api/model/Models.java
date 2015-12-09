@@ -1,3 +1,6 @@
+/*
+ * Licensed under the European Union Public Licence (EUPL) V.1.1 
+ */
 package com.csc.fi.ioapi.api.model;
 
 import java.util.logging.Level;
@@ -14,6 +17,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import com.csc.fi.ioapi.config.EndpointServices;
 import com.csc.fi.ioapi.config.LoginSession;
+import com.csc.fi.ioapi.utils.ErrorMessage;
 import com.csc.fi.ioapi.utils.GraphManager;
 import com.csc.fi.ioapi.utils.JerseyFusekiClient;
 import com.csc.fi.ioapi.utils.LDHelper;
@@ -194,17 +198,17 @@ public class Models {
           @Context HttpServletRequest request) {
       
        if(graph.equals("default") || graph.equals("undefined")) {
-            return Response.status(403).build();
+            return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
        } 
  
         HttpSession session = request.getSession();
         
-        if(session==null) return Response.status(401).entity("{\"errorMessage\":\"Unauthorized\"}").build();
+        if(session==null) return Response.status(403).entity(ErrorMessage.UNAUTHORIZED).build();
         
         LoginSession login = new LoginSession(session);
         
         if(!login.isLoggedIn() || !login.hasRightToEditModel(graph))
-            return Response.status(401).entity("{\"errorMessage\":\"Unauthorized\"}").build();
+            return Response.status(403).entity(ErrorMessage.UNAUTHORIZED).build();
         
         String service = services.getCoreReadWriteAddress();
         ServiceDescriptionManager.updateGraphDescription(graph);
@@ -212,8 +216,8 @@ public class Models {
         ClientResponse response = JerseyFusekiClient.putGraphToTheService(graph, body, service);
 
         if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-           Logger.getLogger(Models.class.getName()).log(Level.WARNING, graph+" was not updated! Status "+response.getStatus());
-           return Response.status(response.getStatus()).entity("{\"errorMessage\":\"Resource was not updated\"}").build();
+               logger.log(Level.WARNING, "Unexpected: Model update failed: "+graph);
+               return Response.status(response.getStatus()).entity(ErrorMessage.UNEXPECTED).build();
         }
 
         Logger.getLogger(Models.class.getName()).log(Level.INFO, graph+" updated sucessfully!");
@@ -250,12 +254,12 @@ public class Models {
              
         HttpSession session = request.getSession();
         
-        if(session==null) return Response.status(401).entity("{\"errorMessage\":\"Unauthorized\"}").build();
+        if(session==null) return Response.status(403).entity(ErrorMessage.UNAUTHORIZED).build();
         
         LoginSession login = new LoginSession(session);
         
         if(!login.isLoggedIn() || !login.hasRightToEditGroup(group))
-            return Response.status(401).entity("{\"errorMessage\":\"Unauthorized\"}").build();
+            return Response.status(403).entity(ErrorMessage.UNAUTHORIZED).build();
         
         /* TODO: CHECK IF GRAPH ALREADY EXISTS */ 
         
@@ -299,7 +303,7 @@ public class Models {
             modelIRI = iriFactory.construct(id);
         }
         catch (IRIException e) {
-            return Response.status(403).build();
+            return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
         }
       
        if(id.equals("default")) {
@@ -308,12 +312,12 @@ public class Models {
        
        HttpSession session = request.getSession();
 
-       if(session==null) return Response.status(401).build();
+       if(session==null) return Response.status(403).entity(ErrorMessage.UNAUTHORIZED).build();
 
        LoginSession login = new LoginSession(session);
 
        if(!login.isLoggedIn() || !login.hasRightToEditModel(id))
-          return Response.status(401).build();
+          return Response.status(403).entity(ErrorMessage.UNAUTHORIZED).build();
         
        ServiceDescriptionManager.deleteGraphDescription(id);
        GraphManager.removeModel(modelIRI);

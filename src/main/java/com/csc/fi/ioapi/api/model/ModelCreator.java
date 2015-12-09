@@ -1,3 +1,6 @@
+/*
+ * Licensed under the European Union Public Licence (EUPL) V.1.1 
+ */
 package com.csc.fi.ioapi.api.model;
 
 import java.util.logging.Level;
@@ -12,6 +15,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import com.csc.fi.ioapi.config.ApplicationProperties;
 import com.csc.fi.ioapi.config.EndpointServices;
+import com.csc.fi.ioapi.utils.ErrorMessage;
 import com.csc.fi.ioapi.utils.JerseyFusekiClient;
 import com.csc.fi.ioapi.utils.LDHelper;
 import com.hp.hpl.jena.query.ParameterizedSparqlString;
@@ -60,8 +64,7 @@ public class ModelCreator {
                     namespaceIRI = iri.construct(namespace);
                     groupIRI = iri.construct(group);
             } catch (IRIException e) {
-                    logger.log(Level.WARNING, "ID is invalid IRI!");
-                    return Response.status(403).entity("{\"errorMessage\":\"Invalid id\"}").build();
+                    return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
             }
 
             ParameterizedSparqlString pss = new ParameterizedSparqlString();

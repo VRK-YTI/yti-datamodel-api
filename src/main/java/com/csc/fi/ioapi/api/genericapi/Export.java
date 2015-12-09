@@ -28,6 +28,7 @@ import javax.ws.rs.core.Response.ResponseBuilder;
  */
 import com.csc.fi.ioapi.config.ApplicationProperties;
 import com.csc.fi.ioapi.config.EndpointServices;
+import com.csc.fi.ioapi.utils.ErrorMessage;
 import com.csc.fi.ioapi.utils.JerseyFusekiClient;
 import com.csc.fi.ioapi.utils.LDHelper;
 import com.csc.fi.ioapi.utils.ServiceDescriptionManager;
@@ -111,7 +112,7 @@ public class Export {
         ClientResponse response = JerseyFusekiClient.clientResponseFromConstruct(pss.toString(), services.getCoreSparqlAddress());
 
             if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-                return Response.status(401).entity("{\"errorMessage\":\"Export Failed\"}").build();
+                return Response.status(401).entity(ErrorMessage.UNEXPECTED).build();
             }
             
         ResponseBuilder rb;
@@ -125,6 +126,7 @@ public class Export {
               jsonModel = (Map<String,Object>)JsonUtils.fromString(out.toString());
           } catch (IOException ex) {
               Logger.getLogger(Export.class.getName()).log(Level.SEVERE, null, ex);
+              return Response.status(401).entity(ErrorMessage.UNEXPECTED).build();
           }
         
       Map<String,Object> frame = new HashMap<String,Object>(); 

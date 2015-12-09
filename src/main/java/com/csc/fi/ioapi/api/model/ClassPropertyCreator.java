@@ -1,3 +1,6 @@
+/*
+ * Licensed under the European Union Public Licence (EUPL) V.1.1 
+ */
 package com.csc.fi.ioapi.api.model;
 
 import java.util.logging.Level;
@@ -10,6 +13,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import com.csc.fi.ioapi.config.EndpointServices;
+import com.csc.fi.ioapi.utils.ErrorMessage;
 import com.csc.fi.ioapi.utils.JerseyFusekiClient;
 import com.csc.fi.ioapi.utils.LDHelper;
 import com.hp.hpl.jena.query.ParameterizedSparqlString;
@@ -21,17 +25,6 @@ import com.wordnik.swagger.annotations.ApiResponses;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
 import org.apache.jena.iri.IRIFactory;
- 
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
-/**
- *
- * @author malonen
- */
 
 /**
  * Root resource (exposed at "myresource" path)
@@ -62,8 +55,7 @@ public class ClassPropertyCreator {
             IRIFactory iri = IRIFactory.semanticWebImplementation();
             predicateIRI = iri.construct(predicateID);
         } catch (IRIException e) {
-                logger.log(Level.WARNING, "CLASS OR PROPERTY ID is invalid IRI!");
-                return Response.status(403).entity("{\"errorMessage\":\"Invalid id\"}").build();
+                return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
       }
         
       String queryString;

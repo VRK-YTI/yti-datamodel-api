@@ -1,6 +1,8 @@
+/*
+ * Licensed under the European Union Public Licence (EUPL) V.1.1 
+ */
 package com.csc.fi.ioapi.api.model;
 
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.servlet.ServletContext;
 import javax.ws.rs.GET;
@@ -9,6 +11,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import com.csc.fi.ioapi.config.EndpointServices;
+import com.csc.fi.ioapi.utils.ErrorMessage;
 import com.csc.fi.ioapi.utils.JerseyFusekiClient;
 import com.hp.hpl.jena.query.DatasetAccessor;
 import com.hp.hpl.jena.query.DatasetAccessorFactory;
@@ -23,19 +26,6 @@ import javax.ws.rs.core.Response;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
 import org.apache.jena.iri.IRIFactory;
-
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
-/**
- *
- * @author malonen
- */
-
- 
 /**
  * Root resource (exposed at "classCreator" path)
  */
@@ -67,8 +57,7 @@ public class ClassVisualizer {
                 classIRI = iri.construct(classID);
                 modelIRI = iri.construct(modelID);
           } catch (IRIException e) {
-                logger.log(Level.WARNING, "ID is invalid IRI!");
-                return Response.status(403).build();
+                return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
         }
 
         /*  TODO: Namespace serice!? */
@@ -98,22 +87,23 @@ public class ClassVisualizer {
                 + "GRAPH ?classIRI { "
                 + "?classIRI a sh:ShapeClass . "
                 + "?classIRI rdfs:label ?classLabel . "
-                + "?classIRI sh:property ?property . "
-                + "?property sh:index ?index . "
-                + "?property rdfs:label ?propertyLabel . "
-                + "?property sh:predicate ?predicate . "
-                + "VALUES ?range { sh:valueClass sh:datatype } "
-                + "?property ?range ?classRef . "
-                + "}"
-                + "OPTIONAL { "
-                + "GRAPH ?classRef { ?classRef a ?type . "
-                + "?classRef rdfs:label ?classRefLabel . "
-                + "?classRef sh:property ?propertyRef . "
-                + "?propertyRef sh:index ?refIndex . "
-                + "?propertyRef sh:predicate ?predicateRef . "
-                + "?propertyRef rdfs:label ?propertyRefLabel . "
-                + "VALUES ?refRange { sh:valueClass sh:datatype } "
-                + "?propertyRef ?refRange ?propertyRefRange . "
+                + "OPTIONAL {"
+                +  "?classIRI sh:property ?property . "
+                +  "?property sh:index ?index . "
+                +  "?property rdfs:label ?propertyLabel . "
+                +  "?property sh:predicate ?predicate . "
+                +  "VALUES ?range { sh:valueClass sh:datatype } "
+                +  "?property ?range ?classRef .  "
+                +  "OPTIONAL { "
+                +  "GRAPH ?classRef { ?classRef a ?type . "
+                +  "?classRef rdfs:label ?classRefLabel . "
+                +  "?classRef sh:property ?propertyRef . "
+                +  "?propertyRef sh:index ?refIndex . "
+                +  "?propertyRef sh:predicate ?predicateRef . "
+                +  "?propertyRef rdfs:label ?propertyRefLabel . "
+                +  "VALUES ?refRange { sh:valueClass sh:datatype } "
+                +  "?propertyRef ?refRange ?propertyRefRange . "
+                +  "}}"
                 + "}}"
                 + "}";
 
