@@ -303,6 +303,40 @@ public class GraphManager {
            }
     }
     
+    public static boolean modelStatusRestrictsRemoving(IRI graphIRI) {
+        
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        String queryString = " ASK { {"
+                + "GRAPH ?graph { "
+                + "VALUES ?status { \"Draft\" \"Recommendation\" } "
+                + "?graph owl:versionInfo ?status . }"
+                + "} UNION { "
+                + "GRAPH ?graph { "
+                + "?graph dcterms:hasPart ?resource . }"
+                + "GRAPH ?resource { "
+                + "?resource rdfs:isDefinedBy ?graph . "
+                + "VALUES ?status { \"Draft\" \"Recommendation\" } "
+                + "?resource owl:versionInfo ?status  . "
+                + "}"
+                + "}}";
+        
+        
+        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+        pss.setCommandText(queryString);
+        pss.setIri("graph", graphIRI);
+        
+        Query query = pss.asQuery();
+        QueryExecution qexec = QueryExecutionFactory.sparqlService(services.getCoreSparqlAddress(), query);
+        
+         try
+          {
+              boolean b = qexec.execAsk();
+              return b;
+           } catch(Exception ex) {
+               return false; 
+           }
+    }
+        
     
     public static boolean isExistingGraph(IRI graphIRI) {
         

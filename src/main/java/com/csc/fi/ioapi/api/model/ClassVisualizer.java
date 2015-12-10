@@ -97,13 +97,13 @@ public class ClassVisualizer {
                 +  "OPTIONAL { "
                 +  "GRAPH ?classRef { ?classRef a ?type . "
                 +  "?classRef rdfs:label ?classRefLabel . "
-                +  "?classRef sh:property ?propertyRef . "
+                +  "OPTIONAL {?classRef sh:property ?propertyRef . "
                 +  "?propertyRef sh:index ?refIndex . "
                 +  "?propertyRef sh:predicate ?predicateRef . "
                 +  "?propertyRef rdfs:label ?propertyRefLabel . "
                 +  "VALUES ?refRange { sh:valueClass sh:datatype } "
                 +  "?propertyRef ?refRange ?propertyRefRange . "
-                +  "}}"
+                +  "}}}"
                 + "}}"
                 + "}";
 

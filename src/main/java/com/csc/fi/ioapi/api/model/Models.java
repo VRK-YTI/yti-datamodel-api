@@ -287,7 +287,8 @@ public class Models {
       @ApiResponse(code = 204, message = "Graph is deleted"),
       @ApiResponse(code = 403, message = "Illegal graph parameter"),
       @ApiResponse(code = 404, message = "No such graph"),
-      @ApiResponse(code = 401, message = "Unauthorized")
+      @ApiResponse(code = 401, message = "Unauthorized"),
+      @ApiResponse(code = 406, message = "Not acceptable")
   })
   public Response deleteClass(
           @ApiParam(value = "Model ID", required = true) 
@@ -305,10 +306,6 @@ public class Models {
         catch (IRIException e) {
             return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
         }
-      
-       if(id.equals("default")) {
-               return Response.status(403).build();
-       }
        
        HttpSession session = request.getSession();
 
@@ -318,7 +315,11 @@ public class Models {
 
        if(!login.isLoggedIn() || !login.hasRightToEditModel(id))
           return Response.status(403).entity(ErrorMessage.UNAUTHORIZED).build();
-        
+       
+       if(GraphManager.modelStatusRestrictsRemoving(modelIRI)) {
+          return Response.status(406).entity(ErrorMessage.STATUS).build();
+       }
+       
        ServiceDescriptionManager.deleteGraphDescription(id);
        GraphManager.removeModel(modelIRI);
        
