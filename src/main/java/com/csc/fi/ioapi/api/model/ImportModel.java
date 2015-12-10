@@ -14,6 +14,7 @@ import javax.ws.rs.core.Context;
 import com.csc.fi.ioapi.config.EndpointServices;
 import com.csc.fi.ioapi.utils.ErrorMessage;
 import com.csc.fi.ioapi.utils.GraphManager;
+import com.csc.fi.ioapi.utils.ImportManager;
 import com.csc.fi.ioapi.utils.JerseyFusekiClient;
 import com.csc.fi.ioapi.utils.ServiceDescriptionManager;
 import com.hp.hpl.jena.rdf.model.Model;
@@ -96,8 +97,8 @@ public class ImportModel {
         RDFDataMgr.read(model, new ByteArrayInputStream(body.getBytes()), RDFLanguages.JSONLD);
         Map<String,String> prefixMap = model.getNsPrefixMap();
 
-        GraphManager.updateModelNamespaceInfo(graph, namespaceIRI.toString(), model.getNsURIPrefix(namespaceIRI.toString()));
-        GraphManager.createResourceGraphs(graph, prefixMap);
+        ImportManager.updateModelNamespaceInfo(graph, namespaceIRI.toString(), model.getNsURIPrefix(namespaceIRI.toString()));
+        ImportManager.createResourceGraphs(graph, prefixMap);
 
         return Response.status(204).build();
 
