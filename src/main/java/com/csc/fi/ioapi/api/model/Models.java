@@ -75,9 +75,10 @@ public class Models {
                     modelIRI = iri.construct(id);
             } catch (IRIException e) {
                     logger.log(Level.WARNING, "ID is invalid IRI!");
-                    return Response.status(403).build();
+                   return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
+       
             }
-            
+        
             /* TODO: Create Namespace service? */
             DatasetAccessor accessor = DatasetAccessorFactory.createHTTP(services.getCoreReadAddress());
             Model model = accessor.getModel(id);
@@ -153,7 +154,7 @@ public class Models {
                     groupIRI = iri.construct(group);
             } catch (IRIException e) {
                     logger.log(Level.WARNING, "ID is invalid IRI!");
-                    return Response.status(403).build();
+                    return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
             }
              pss.setNsPrefixes(LDHelper.PREFIX_MAP);
             /* IF group parameter is available list of core vocabularies is created */
@@ -200,6 +201,16 @@ public class Models {
        if(graph.equals("default") || graph.equals("undefined")) {
             return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
        } 
+       
+       IRI graphIRI;
+       
+            try {
+                    IRIFactory iri = IRIFactory.semanticWebImplementation();
+                    graphIRI = iri.construct(graph);
+            } catch (IRIException e) {
+                    logger.log(Level.WARNING, "GRAPH ID is invalid IRI!");
+                   return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
+            }
  
         HttpSession session = request.getSession();
         
@@ -251,7 +262,17 @@ public class Models {
         if(graph.equals("default")) {
             return Response.status(403).entity("{\"errorMessage\":\"Invalid id\"}").build();
         }
-             
+        
+       IRI graphIRI;
+       
+            try {
+                    IRIFactory iri = IRIFactory.semanticWebImplementation();
+                    graphIRI = iri.construct(graph);
+            } catch (IRIException e) {
+                    logger.log(Level.WARNING, "GRAPH ID is invalid IRI!");
+                   return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
+            } 
+            
         HttpSession session = request.getSession();
         
         if(session==null) return Response.status(403).entity(ErrorMessage.UNAUTHORIZED).build();
@@ -261,7 +282,9 @@ public class Models {
         if(!login.isLoggedIn() || !login.hasRightToEditGroup(group))
             return Response.status(403).entity(ErrorMessage.UNAUTHORIZED).build();
         
-        /* TODO: CHECK IF GRAPH ALREADY EXISTS */ 
+        if(GraphManager.isExistingGraph(graphIRI)) {
+            return Response.status(405).entity(ErrorMessage.USEDIRI).build();
+        }
         
         if(!graph.equals("undefined")) {
             ServiceDescriptionManager.createGraphDescription(graph, group, login.getEmail());
