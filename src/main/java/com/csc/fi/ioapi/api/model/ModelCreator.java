@@ -16,6 +16,7 @@ import javax.ws.rs.core.Response;
 import com.csc.fi.ioapi.config.ApplicationProperties;
 import com.csc.fi.ioapi.config.EndpointServices;
 import com.csc.fi.ioapi.utils.ErrorMessage;
+import com.csc.fi.ioapi.utils.GraphManager;
 import com.csc.fi.ioapi.utils.JerseyFusekiClient;
 import com.csc.fi.ioapi.utils.LDHelper;
 import com.hp.hpl.jena.query.ParameterizedSparqlString;
@@ -66,6 +67,10 @@ public class ModelCreator {
             } catch (IRIException e) {
                     return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
             }
+            
+        if(GraphManager.isExistingGraph(namespaceIRI)) {
+            return Response.status(405).entity(ErrorMessage.USEDIRI).build();
+        }
 
             ParameterizedSparqlString pss = new ParameterizedSparqlString();
             pss.setNsPrefixes(LDHelper.PREFIX_MAP);
