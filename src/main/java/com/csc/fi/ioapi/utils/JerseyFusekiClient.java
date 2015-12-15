@@ -88,8 +88,6 @@ public class JerseyFusekiClient {
     
     public static Response constructGraphFromService(String query, String service) {
         
-        try {
-            
             Client client = Client.create();
 
             WebResource webResource = client.resource(service)
@@ -106,12 +104,7 @@ public class JerseyFusekiClient {
             }
             
             return rb.build();
-
-      } catch(Exception ex) {
-          logger.log(Level.WARNING, "Expect the unexpected!", ex);
-          return Response.serverError().entity(ErrorMessage.UNEXPECTED).build();
-      }
-
+            
     }
     
     public static Response deleteGraphFromService(String graph, String service) {
