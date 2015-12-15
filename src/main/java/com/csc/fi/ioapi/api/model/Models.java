@@ -121,6 +121,7 @@ public class Models {
                      + " }"
                      + "} "
                      + "OPTIONAL { "
+                     + " ?graph dcterms:requires ?req . "
                      + " GRAPH ?req { "
                      + "  ?req rdfs:label ?reqLabel . "
                      + "  ?req dcap:preferredXMLNamespaceName ?namespaces . "
