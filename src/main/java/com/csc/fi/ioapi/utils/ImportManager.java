@@ -86,8 +86,21 @@ public class ImportManager {
     public static void removeDuplicatesFromModel(String graph) {
 
         String query
-                = " DELETE { GRAPH ?graph { ?graph owl:imports ?import . ?resource ?p ?o . ?resource sh:property ?propertyID . ?propertyID ?pp ?oo . }}"
-                + " WHERE { GRAPH ?graph { ?graph owl:imports ?import .  OPTIONAL { VALUES ?type { sh:ShapeClass owl:DatatypeProperty owl:ObjectProperty } ?resource a ?type . ?resource ?p ?o . OPTIONAL { ?resource sh:property ?property . ?property ?pp ?oo . } } }}";
+                = "DELETE { "
+                + " GRAPH ?graph { "
+                + "?graph owl:imports ?import . "
+                + "?resource ?p ?o . "
+                + "?resource sh:property ?property . "
+                + "?property ?pp ?oo . }}"
+                + " WHERE { "
+                + "GRAPH ?graph { "
+                + "?graph owl:imports ?import .  "
+                + "OPTIONAL { VALUES ?type { sh:ShapeClass owl:DatatypeProperty owl:ObjectProperty } "
+                + "?resource a ?type . "
+                + "?resource ?p ?o . "
+                + "OPTIONAL { ?resource sh:property ?property . ?property ?pp ?oo . } } "
+                + "}"
+                + "}";
 
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
 

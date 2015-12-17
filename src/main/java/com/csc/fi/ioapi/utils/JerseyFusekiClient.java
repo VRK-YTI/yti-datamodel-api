@@ -17,6 +17,8 @@ import javax.ws.rs.core.Response.ResponseBuilder;
 import org.apache.jena.atlas.json.JSON;
 import org.apache.jena.atlas.json.JsonObject;
 import org.apache.jena.atlas.json.JsonValue;
+import org.apache.jena.atlas.web.ContentType;
+import org.apache.jena.riot.Lang;
 /**
  *
  * @author malonen
@@ -82,6 +84,16 @@ public class JerseyFusekiClient {
             WebResource webResource = client.resource(service)
                                       .queryParam("query", UriComponent.encode(query,UriComponent.Type.QUERY));
             WebResource.Builder builder = webResource.accept("application/ld+json");
+            return builder.get(ClientResponse.class);
+
+    }
+    
+        public static ClientResponse clientResponseFromConstruct(String query, String service, ContentType contentType) {
+                   
+            Client client = Client.create();
+            WebResource webResource = client.resource(service)
+                                      .queryParam("query", UriComponent.encode(query,UriComponent.Type.QUERY));
+            WebResource.Builder builder = webResource.accept(contentType.getContentType());
             return builder.get(ClientResponse.class);
 
     }

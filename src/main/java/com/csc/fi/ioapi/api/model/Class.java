@@ -294,6 +294,7 @@ public class Class {
        /* If Class is defined in the model */
        if(id.startsWith(model)) {
            /* Remove graph */
+           /* TODO: Remove references ? */ 
             return JerseyFusekiClient.deleteGraphFromService(id, services.getCoreReadWriteAddress());   
         } else {
         /* If removing referenced class */   

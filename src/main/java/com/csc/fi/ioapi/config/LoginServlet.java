@@ -76,6 +76,7 @@ public class LoginServlet extends HttpServlet {
         String uid = getAttributeAsString(request, "uid");
 
         Logger.getLogger(LoginServlet.class.getName()).log(Level.INFO, displayName + " logged in from " + prov);
+        Logger.getLogger(LoginServlet.class.getName()).log(Level.INFO, mail+" groups: "+group);
         
         return new UserDefinition(displayName, group, mail);
     }
