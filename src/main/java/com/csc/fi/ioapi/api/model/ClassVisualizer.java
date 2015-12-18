@@ -12,6 +12,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import com.csc.fi.ioapi.config.EndpointServices;
 import com.csc.fi.ioapi.utils.ErrorMessage;
+import com.csc.fi.ioapi.utils.GraphManager;
 import com.csc.fi.ioapi.utils.JerseyFusekiClient;
 import com.hp.hpl.jena.query.DatasetAccessor;
 import com.hp.hpl.jena.query.DatasetAccessorFactory;
@@ -22,6 +23,7 @@ import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiParam;
 import com.wordnik.swagger.annotations.ApiResponse;
 import com.wordnik.swagger.annotations.ApiResponses;
+import java.util.Map;
 import javax.ws.rs.core.Response;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
@@ -60,13 +62,18 @@ public class ClassVisualizer {
                 return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
         }
 
-        /*  TODO: Namespace serice!? */
+        /* Get all used Core Vocabulary namespaces */
+        Map<String,String> coreNamespaces = GraphManager.getNamespaceMap();
+                
         DatasetAccessor accessor = DatasetAccessorFactory.createHTTP(services.getCoreReadAddress());
         Model model = accessor.getModel(modelID);
 
         String queryString;
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
-        pss.setNsPrefixes(model.getNsPrefixMap());
+        
+        /* Include all models namespaces */
+        coreNamespaces.putAll(model.getNsPrefixMap());
+        pss.setNsPrefixes(coreNamespaces);
         
         queryString = "CONSTRUCT  { "
                 + "?classIRI a sh:ShapeClass . "
