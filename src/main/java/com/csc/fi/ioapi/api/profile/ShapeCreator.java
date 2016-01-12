@@ -97,7 +97,6 @@ public class ShapeCreator {
                     + "?classIRI rdfs:label ?label . "
                     + "OPTIONAL { ?classIRI rdfs:comment ?comment . } "
                     + "OPTIONAL { "
-                    
                     + "?classIRI sh:property ?property . "
                     + "?property ?p ?o . } "
                     + "}}";
