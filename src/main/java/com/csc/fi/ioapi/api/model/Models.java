@@ -64,7 +64,9 @@ public class Models {
           @ApiParam(value = "group")
           @QueryParam("group") String group) {
 
+          // TODO: Create final string - QueryLibrary class
           String queryString;
+          
           ParameterizedSparqlString pss = new ParameterizedSparqlString();
           
           if((group==null || group.equals("undefined")) && (id!=null && !id.equals("undefined") && !id.equals("default"))) {

@@ -84,6 +84,7 @@ public class ConceptSuggestion {
         IRI conceptIRI = null;
         IRI userIRI = null;
         IRI schemeIRI = null;
+       
         logger.info(userID +" "+schemeID+" "+conceptID);
 		try {
                     IRIFactory iri = IRIFactory.semanticWebImplementation();
@@ -91,9 +92,7 @@ public class ConceptSuggestion {
                     if(conceptID!=null && !conceptID.equals("undefined")) conceptIRI = iri.construct(conceptID);
                     if(userID!=null && !userID.equals("undefined")) userIRI = iri.construct(userID);
                     if(schemeID!=null && !schemeID.equals("undefined")) schemeIRI = iri.construct(schemeID);
-                    
 		} catch (IRIException e) {
-                    
 			logger.log(Level.WARNING, "ID is invalid IRI!");
 			return Response.status(403).build();
 		}
@@ -105,14 +104,14 @@ public class ConceptSuggestion {
           ParameterizedSparqlString pss = new ParameterizedSparqlString();
           pss.setNsPrefixes(LDHelper.PREFIX_MAP);
             
-          queryString = "CONSTRUCT { ?concept skos:inScheme ?scheme . ?concept prov:atTime ?time . ?concept rdfs:label ?label . ?concept rdfs:comment ?comment . ?concept prov:wasAssociatedWith ?user . } WHERE { ?concept skos:inScheme ?scheme . ?concept rdfs:label ?label . ?concept prov:atTime ?time . ?concept rdfs:comment ?comment . ?concept prov:wasAssociatedWith ?user . }";
+          queryString = "CONSTRUCT { ?concept skos:inScheme ?scheme . ?concept skos:broader ?top . ?concept prov:atTime ?time . ?concept rdfs:label ?label . ?concept rdfs:comment ?comment . ?concept prov:wasAssociatedWith ?user . } WHERE { ?concept skos:inScheme ?scheme . ?concept rdfs:label ?label . ?concept prov:atTime ?time . OPTIONAL { ?concept skos:broader ?top . } ?concept rdfs:comment ?comment . ?concept prov:wasAssociatedWith ?user . }";
   	  
           pss.setCommandText(queryString);
           
           if(conceptIRI!=null) pss.setIri("concept", conceptIRI);
           if(userIRI!=null) pss.setIri("user", userIRI);
           if(schemeIRI!=null) pss.setIri("scheme", schemeIRI);
-         
+          
           WebResource webResource = client.resource(services.getTempConceptReadSparqlAddress())
                                       .queryParam("query", UriComponent.encode(pss.toString(),UriComponent.Type.QUERY));
 
@@ -139,6 +138,7 @@ public class ConceptSuggestion {
                 @ApiParam(value = "Label", required = true) @QueryParam("label") String label,
 		@ApiParam(value = "Comment", required = true) @QueryParam("comment") String comment,
                 @ApiParam(value = "Initial language", required = true, allowableValues="fi,en") @QueryParam("lang") String lang,
+                @ApiParam(value = "Broader concept ID") @QueryParam("topConceptID") String topConceptID,
                 @Context HttpServletRequest request) {
 
                 HttpSession session = request.getSession();
@@ -150,9 +150,12 @@ public class ConceptSuggestion {
                 if(!login.isLoggedIn()) return Response.status(401).build();
             
 		IRI schemeIRI;
+                IRI topIRI = null;
+                
 		try {
 			IRIFactory iri = IRIFactory.semanticWebImplementation();
 			schemeIRI = iri.construct(schemeID);
+                        if(topConceptID!=null && !topConceptID.equals("undefined")) topIRI = iri.construct(topConceptID);
 		} catch (IRIException e) {
 			logger.log(Level.WARNING, "CLASS OR PROPERTY ID is invalid IRI!");
 			return Response.status(403).build();
@@ -163,13 +166,15 @@ public class ConceptSuggestion {
 		String queryString;
 		ParameterizedSparqlString pss = new ParameterizedSparqlString();
 		pss.setNsPrefixes(LDHelper.PREFIX_MAP);
-		queryString = "INSERT { GRAPH ?concept { ?concept skos:inScheme ?scheme . ?concept owl:versionInfo 'Unstable' . ?concept a skos:Concept . ?concept rdfs:label ?label . ?concept rdfs:comment ?comment . ?concept prov:atTime ?time . ?concept prov:wasAssociatedWith ?user . } } WHERE { BIND(NOW() as ?time)}";
+		queryString = "INSERT { GRAPH ?concept { ?concept skos:inScheme ?scheme . ?concept skos:broader ?top . ?concept owl:versionInfo 'Unstable' . ?concept a skos:Concept . ?concept rdfs:label ?label . ?concept rdfs:comment ?comment . ?concept prov:atTime ?time . ?concept prov:wasAssociatedWith ?user . } } WHERE { BIND(NOW() as ?time)}";
 		pss.setCommandText(queryString);
 		pss.setIri("scheme", schemeIRI);
                 pss.setLiteral("label", ResourceFactory.createLangLiteral(label,lang));
                 pss.setLiteral("comment", ResourceFactory.createLangLiteral(comment,lang));
                 pss.setIri("concept", "urn:uuid:"+conceptUUID);
-                pss.setIri("user", "mailto:"+login.getEmail());
+                pss.setIri("user", "mailto:"+login.getEmail());      
+                if(topIRI!=null) pss.setIri("top", topIRI);
+         
 
                 logger.log(Level.INFO,pss.toString());
                 
