@@ -71,9 +71,12 @@ public class ShapeCreator {
             
             String queryString;
             String service;
-                    
+                
             /* Create Shape from ShapeClass*/
             if(classID.startsWith(ApplicationProperties.getDefaultNamespace())) {
+                
+
+                
                 service = services.getCoreSparqlAddress();
                 queryString = "CONSTRUCT  { "
                     + "?shapeIRI owl:versionInfo ?draft . "
@@ -89,12 +92,15 @@ public class ShapeCreator {
                     + "} WHERE { "
                     + "BIND(now() as ?creation) "
                     + "BIND(now() as ?modified) "
+                    + "GRAPH ?classIRI { "
                     + "?classIRI a sh:ShapeClass . "
                     + "?classIRI rdfs:label ?label . "
-                    + "?classIRI rdfs:comment ?comment . "
+                    + "OPTIONAL { ?classIRI rdfs:comment ?comment . } "
+                    + "OPTIONAL { "
+                    
                     + "?classIRI sh:property ?property . "
-                    + "?property ?p ?o . "
-                    + "}";
+                    + "?property ?p ?o . } "
+                    + "}}";
 
             } else {
             /* Create Shape from external IMPORT */   
@@ -140,6 +146,8 @@ public class ShapeCreator {
             pss.setLiteral("draft", "Unstable");
             pss.setIri("shapeIRI", "urn:uuid:"+shapeUUID);
 
+            System.out.println(pss.toString());
+            
             return JerseyFusekiClient.constructGraphFromService(pss.toString(), service);
     }   
  

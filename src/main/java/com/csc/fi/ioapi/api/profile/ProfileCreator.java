@@ -97,7 +97,8 @@ public class ProfileCreator {
             pss.setLiteral("draft", "Unstable");
             pss.setLiteral("profileLabel", ResourceFactory.createLangLiteral(label, lang));
 
-            return JerseyFusekiClient.constructGraphFromService(pss.toString(), services.getTempConceptReadSparqlAddress());
+            
+            return JerseyFusekiClient.constructGraphFromService(pss.toString(), services.getCoreSparqlAddress());
             
     }   
  
