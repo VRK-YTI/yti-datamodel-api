@@ -74,9 +74,7 @@ public class ShapeCreator {
                 
             /* Create Shape from ShapeClass*/
             if(classID.startsWith(ApplicationProperties.getDefaultNamespace())) {
-                
 
-                
                 service = services.getCoreSparqlAddress();
                 queryString = "CONSTRUCT  { "
                     + "?shapeIRI owl:versionInfo ?draft . "

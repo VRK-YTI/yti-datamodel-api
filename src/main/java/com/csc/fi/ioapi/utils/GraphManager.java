@@ -144,7 +144,7 @@ public class GraphManager {
         String selectResources
                 = "SELECT ?namespace ?prefix WHERE { "
                 + "GRAPH ?graph { "
-                + " ?graph a owl:Ontology .  "
+               // + " ?graph a owl:Ontology .  "
                 + " ?graph dcap:preferredXMLNamespaceName ?namespace . "
                 + " ?graph dcap:preferredXMLNamespacePrefix ?prefix . "
                 + "}}";

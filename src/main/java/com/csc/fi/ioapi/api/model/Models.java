@@ -172,7 +172,7 @@ public class Models {
                      + "?graph a sd:NamedGraph . "
                      + "?graph dcterms:isPartOf ?group . "
                      + "GRAPH ?graphName { "
-                     + "?graphName a owl:Ontology . "
+                    // + "?graphName a owl:Ontology . "
                      + "?graphName rdfs:label ?label . }}";
              
              pss.setIri("group", groupIRI);
@@ -180,8 +180,8 @@ public class Models {
            } else {
              pss.setNsPrefixes(LDHelper.PREFIX_MAP);
              /* IF ID is null or default and no group available */
-             queryString = "CONSTRUCT { ?g a owl:Ontology . ?g rdfs:label ?label . ?g dcap:preferredXMLNamespaceName ?namespace . ?g dcap:preferredXMLNamespacePrefix ?prefix . } "+
-                           "WHERE { GRAPH ?g { ?g a owl:Ontology . ?g rdfs:label ?label . ?g dcap:preferredXMLNamespaceName ?namespace . ?g dcap:preferredXMLNamespacePrefix ?prefix . }}"; 
+             queryString = "CONSTRUCT { ?g a ?type . ?g rdfs:label ?label . ?g dcap:preferredXMLNamespaceName ?namespace . ?g dcap:preferredXMLNamespacePrefix ?prefix . } "+
+                           "WHERE { GRAPH ?g { ?g a ?type . ?g rdfs:label ?label . ?g dcap:preferredXMLNamespaceName ?namespace . ?g dcap:preferredXMLNamespacePrefix ?prefix . }}"; 
            }
            
             
