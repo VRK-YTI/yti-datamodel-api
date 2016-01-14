@@ -76,7 +76,7 @@ public class ClassVisualizer {
         pss.setNsPrefixes(coreNamespaces);
         
         queryString = "CONSTRUCT  { "
-                + "?classIRI a sh:ShapeClass . "
+                + "?classIRI a ?classType . "
                 + "?classIRI rdfs:label ?classLabel . "
                 + "?classIRI sh:property ?property . "
                 + "?property sh:predicate ?predicate . "
@@ -92,7 +92,8 @@ public class ClassVisualizer {
                 + "?propertyRef ?refRange ?propertyRefRange . "
                 + "} WHERE { "
                 + "GRAPH ?classIRI { "
-                + "?classIRI a sh:ShapeClass . "
+                + "?classIRI a ?classType . "
+                + "VALUES ?classType { sh:ShapeClass sh:Shape } "
                 + "?classIRI rdfs:label ?classLabel . "
                 + "OPTIONAL {"
                 +  "?classIRI sh:property ?property . "
