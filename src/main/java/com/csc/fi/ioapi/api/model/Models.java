@@ -21,6 +21,7 @@ import com.csc.fi.ioapi.utils.ErrorMessage;
 import com.csc.fi.ioapi.utils.GraphManager;
 import com.csc.fi.ioapi.utils.JerseyFusekiClient;
 import com.csc.fi.ioapi.utils.LDHelper;
+import com.csc.fi.ioapi.utils.QueryLibrary;
 import com.csc.fi.ioapi.utils.ServiceDescriptionManager;
 import com.hp.hpl.jena.query.DatasetAccessor;
 import com.hp.hpl.jena.query.DatasetAccessorFactory;
@@ -92,62 +93,9 @@ public class Models {
             
             pss.setNsPrefixes(model.getNsPrefixMap());
             
-             queryString = "CONSTRUCT { "
-                     + "?graph ?p ?o . "
-                     + "?graph dcterms:references ?ref . "
-                     + "?ref dcterms:title ?title . "
-                     + "?ref dcterms:identifier ?refID . "
-                     + "?graph dcterms:requires ?req . "
-                     + "?req rdfs:label ?reqLabel . "
-                     + "?req a ?type . "
-                     + "?req dcap:preferredXMLNamespaceName ?namespaces . "
-                     + "?req dcap:preferredXMLNamespacePrefix ?prefixes . "
-                     + "?graph dcterms:isPartOf ?group . "
-                     + "?group rdfs:label ?groupLabel . "
-                     + "?group foaf:homepage ?homepage . "
-                     + "} WHERE { "
-                     + "GRAPH ?graph { "
-                     + " ?graph ?p ?o . "
-                     + " OPTIONAL { "
-                     + "  ?graph dcterms:references ?ref . "
-                     + "  ?ref dcterms:title ?title . "
-                     + "  ?ref dcterms:identifier ?refID . "
-                     + " }"
-                     + " OPTIONAL { ?graph dcterms:requires ?req . }"
-                     + " OPTIONAL { "
-                     + "  ?req a dcap:MetadataVocabulary . "
-                     + "  ?req a ?type .  "
-                     + "  ?req rdfs:label ?reqLabel . "
-                     + "  ?req dcap:preferredXMLNamespaceName ?namespaces . "
-                     + "  ?req dcap:preferredXMLNamespacePrefix ?prefixes . "
-                     + " }"
-                     + "} "
-                     + "OPTIONAL { "
-                     + " ?graph dcterms:requires ?req . "
-                     + " GRAPH ?req { "
-                     + "  ?req rdfs:label ?reqLabel . "
-                     + "  ?req dcap:preferredXMLNamespaceName ?namespaces . "
-                     + "  ?req dcap:preferredXMLNamespacePrefix ?prefixes . "
-                     + " }"
-                     + "}"
-                     + "GRAPH <urn:csc:iow:sd> { "
-                     + " ?metaGraph a sd:NamedGraph . "
-                     + " ?metaGraph sd:name ?graph . "
-                     + " ?metaGraph dcterms:isPartOf ?group . "
-                     + "} "
-                     + "GRAPH <urn:csc:groups> { "
-                     + " ?group a foaf:Group . "
-                     + " ?group foaf:homepage ?homepage . "
-                     + " ?group rdfs:label ?groupLabel . "
-                     + "}"
-                     + "}";
+            queryString = QueryLibrary.modelQuery;
              
-             /* TODO: Do fixed query? Final string? Query is expanded to avoid namespace collisions */
-             queryString = LDHelper.expandSparqlQuery(queryString, LDHelper.PREFIX_MAP);
-             
-             logger.info(queryString);
-             
-             pss.setIri("graph", modelIRI);
+            pss.setIri("graph", modelIRI);
              
      } else if(group!=null && !group.equals("undefined")) {
          

@@ -115,7 +115,7 @@ public class ShapeCreator {
                     + "?property sh:predicate ?predicate . "
                     + "?property rdfs:comment ?propertyComment .  "
                     + "?property rdfs:label ?propertyLabel .  "
-                    + "?property sh:valueClass ?valueClass . "
+                    + "?property sh:valueShape ?valueClass . "
                     + "?property sh:datatype ?datatype . "
                     + "} WHERE { "
                     + "BIND(now() as ?creation) "

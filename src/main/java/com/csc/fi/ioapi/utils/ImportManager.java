@@ -241,8 +241,7 @@ public class ImportManager {
 
     public static void updateModelNamespaceInfo(String model, String namespace, String prefix) {
 
-        String query
-                = " INSERT { "
+        String query = "INSERT { "
                 + "GRAPH ?model { "
                 + "?model dcap:preferredXMLNamespaceName ?namespace . "
                 + "?model dcap:preferredXMLNamespacePrefix ?prefix . }} "

@@ -36,8 +36,8 @@
       "@id": "http://www.w3.org/ns/shacl#predicate",
       "@type": "@id"
     },
-    "valueClass": {
-      "@id": "http://www.w3.org/ns/shacl#valueClass",
+    "valueShape": {
+      "@id": "http://www.w3.org/ns/shacl#valueShape",
       "@type": "@id"
     },
     "datatype": {
@@ -64,7 +64,7 @@
         "predicate":{
           "@embed":false
             },
-      "valueClass":{
+      "valueShape":{
         "@omitDefault":true,
         "@default":[],
         "@embed":false

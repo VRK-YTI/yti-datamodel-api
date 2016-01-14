@@ -28,7 +28,11 @@ import com.csc.fi.ioapi.utils.ErrorMessage;
 import com.csc.fi.ioapi.utils.GraphManager;
 import com.csc.fi.ioapi.utils.JerseyFusekiClient;
 import com.csc.fi.ioapi.utils.LDHelper;
+import com.csc.fi.ioapi.utils.QueryLibrary;
+import com.hp.hpl.jena.query.DatasetAccessor;
+import com.hp.hpl.jena.query.DatasetAccessorFactory;
 import com.hp.hpl.jena.query.ParameterizedSparqlString;
+import com.hp.hpl.jena.rdf.model.Model;
 import com.sun.jersey.api.client.ClientHandlerException;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.UniformInterfaceException;
@@ -95,9 +99,33 @@ public class Class {
         return JerseyFusekiClient.constructGraphFromService(pss.toString(), services.getCoreSparqlAddress());
 
       } else {
-
+        
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        
+        /* TODO: Create Namespace service? */
+        DatasetAccessor accessor = DatasetAccessorFactory.createHTTP(services.getCoreReadAddress());
+        Model classModel = accessor.getModel(id);
+            
+            if(classModel==null) {
+                /* TODO: Add error message */
+                return Response.status(403).build();
+            }
+            
+        pss.setNsPrefixes(classModel.getNsPrefixMap());
+        
+        String queryString = QueryLibrary.classQuery;
+        pss.setCommandText(queryString);
+        
+        pss.setIri("graph", id);
+        
+        if(model!=null && !model.equals("undefined")) {
+              pss.setIri("library", model);
+        }
+        
+        return JerseyFusekiClient.constructGraphFromService(pss.toString(), services.getCoreSparqlAddress());
+          
         /* else return graph with given id */
-        return JerseyFusekiClient.getGraphResponseFromService(id, services.getCoreReadAddress());
+     //   return JerseyFusekiClient.getGraphResponseFromService(id, services.getCoreReadAddress());
 
       }
          

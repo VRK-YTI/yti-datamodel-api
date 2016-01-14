@@ -96,7 +96,7 @@ public class ImportModel {
         Model model = ModelFactory.createDefaultModel(); //modelMaker.createModel(body);            
         RDFDataMgr.read(model, new ByteArrayInputStream(body.getBytes()), RDFLanguages.JSONLD);
         Map<String,String> prefixMap = model.getNsPrefixMap();
-
+        
         ImportManager.updateModelNamespaceInfo(graph, namespaceIRI.toString(), model.getNsURIPrefix(namespaceIRI.toString()));
         ImportManager.createResourceGraphs(graph, prefixMap);
 

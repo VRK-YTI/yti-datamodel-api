@@ -62,7 +62,7 @@ public class ClassPropertyCreator {
       ParameterizedSparqlString pss = new ParameterizedSparqlString();
       pss.setNsPrefixes(LDHelper.PREFIX_MAP);
 
-      queryString = "CONSTRUCT { ?uuid sh:predicate ?predicate . ?uuid dcterms:created ?creation . ?uuid rdfs:label ?label . ?uuid rdfs:comment ?comment . ?uuid sh:valueClass ?valueClass . ?uuid sh:datatype ?datatype . } WHERE { BIND(now() as ?creation) BIND(UUID() as ?uuid) OPTIONAL { GRAPH ?predicate { ?predicate rdfs:label ?label .  OPTIONAL{ ?predicate rdfs:comment ?comment . } OPTIONAL{ ?predicate a owl:DatatypeProperty . ?predicate rdfs:range ?datatype . } OPTIONAL { ?predicate a owl:ObjectProperty . ?predicate rdfs:range ?valueClass . }}} }";
+      queryString = "CONSTRUCT { ?uuid sh:predicate ?predicate . ?uuid dcterms:created ?creation . ?uuid rdfs:label ?label . ?uuid rdfs:comment ?comment . ?uuid sh:valueShape ?valueClass . ?uuid sh:datatype ?datatype . } WHERE { BIND(now() as ?creation) BIND(UUID() as ?uuid) OPTIONAL { GRAPH ?predicate { ?predicate rdfs:label ?label .  OPTIONAL{ ?predicate rdfs:comment ?comment . } OPTIONAL{ ?predicate a owl:DatatypeProperty . ?predicate rdfs:range ?datatype . } OPTIONAL { ?predicate a owl:ObjectProperty . ?predicate rdfs:range ?valueClass . }}} }";
 
       pss.setCommandText(queryString);
       pss.setIri("predicate", predicateIRI);
