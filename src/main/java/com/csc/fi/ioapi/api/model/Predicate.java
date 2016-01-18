@@ -31,6 +31,8 @@ import com.csc.fi.ioapi.utils.ErrorMessage;
 import com.csc.fi.ioapi.utils.GraphManager;
 import com.csc.fi.ioapi.utils.JerseyFusekiClient;
 import com.csc.fi.ioapi.utils.LDHelper;
+import com.csc.fi.ioapi.utils.NamespaceManager;
+import com.csc.fi.ioapi.utils.QueryLibrary;
 import com.hp.hpl.jena.query.ParameterizedSparqlString;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientHandlerException;
@@ -44,6 +46,7 @@ import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiParam;
 import com.wordnik.swagger.annotations.ApiResponse;
 import com.wordnik.swagger.annotations.ApiResponses;
+import java.util.Map;
 import javax.ws.rs.DELETE;
 
  
@@ -90,7 +93,23 @@ public class Predicate {
 
       } else {
 
-        return JerseyFusekiClient.getGraphResponseFromService(id, services.getCoreReadAddress());
+            ParameterizedSparqlString pss = new ParameterizedSparqlString();
+
+            /* Get Map of namespaces from id-graph */
+            Map<String, String> namespaceMap = NamespaceManager.getNamespaceMap(id);
+
+            pss.setNsPrefixes(namespaceMap);
+
+            String queryString = QueryLibrary.predicateQuery;
+            pss.setCommandText(queryString);
+
+            pss.setIri("graph", id);
+
+            if(model!=null && !model.equals("undefined")) {
+                  pss.setIri("library", model);
+            }
+
+            return JerseyFusekiClient.constructGraphFromService(pss.toString(), services.getCoreSparqlAddress());         
 
       }
 

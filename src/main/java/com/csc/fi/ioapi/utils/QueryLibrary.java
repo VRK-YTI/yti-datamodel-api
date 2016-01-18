@@ -78,6 +78,25 @@ public class QueryLibrary {
                      + " ?library rdfs:label ?label . "
                      + "}"
                      + "}", LDHelper.PREFIX_MAP);
+     
+     
+      final public static String predicateQuery = LDHelper.expandSparqlQuery(
+                 "CONSTRUCT { "
+                 + "?s ?p ?o . "
+                 + "?graph ?pp ?oo . "
+                 + "?graph rdfs:isDefinedBy ?library . "
+                 + "?library a ?type . "
+                 + "?library rdfs:label ?label . "
+                 + "} WHERE { "
+                 + "GRAPH ?graph { "
+                 + "?s ?p ?o . "
+                 + "?graph ?pp ?oo . "
+                 + "?graph rdfs:isDefinedBy ?library . }"
+                 + "GRAPH ?library { "
+                 + " ?library a ?type . "
+                 + " ?library rdfs:label ?label . "
+                 + "}"
+                 + "}", LDHelper.PREFIX_MAP);
     
-    
+     
 }

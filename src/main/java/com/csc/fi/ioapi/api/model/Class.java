@@ -28,6 +28,7 @@ import com.csc.fi.ioapi.utils.ErrorMessage;
 import com.csc.fi.ioapi.utils.GraphManager;
 import com.csc.fi.ioapi.utils.JerseyFusekiClient;
 import com.csc.fi.ioapi.utils.LDHelper;
+import com.csc.fi.ioapi.utils.NamespaceManager;
 import com.csc.fi.ioapi.utils.QueryLibrary;
 import com.hp.hpl.jena.query.DatasetAccessor;
 import com.hp.hpl.jena.query.DatasetAccessorFactory;
@@ -41,6 +42,7 @@ import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiParam;
 import com.wordnik.swagger.annotations.ApiResponse;
 import com.wordnik.swagger.annotations.ApiResponses;
+import java.util.Map;
 import javax.ws.rs.DELETE;
  
 /**
@@ -106,16 +108,10 @@ public class Class {
         
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         
-        /* TODO: Create Namespace service? */
-        DatasetAccessor accessor = DatasetAccessorFactory.createHTTP(services.getCoreReadAddress());
-        Model classModel = accessor.getModel(id);
+        /* Get Map of namespaces from id-graph */
+        Map<String, String> namespaceMap = NamespaceManager.getNamespaceMap(id);
             
-            if(classModel==null) {
-                /* TODO: Add error message */
-                return Response.status(403).build();
-            }
-            
-        pss.setNsPrefixes(classModel.getNsPrefixMap());
+        pss.setNsPrefixes(namespaceMap);
         
         String queryString = QueryLibrary.classQuery;
         pss.setCommandText(queryString);
@@ -126,10 +122,7 @@ public class Class {
               pss.setIri("library", model);
         }
         
-        return JerseyFusekiClient.constructGraphFromService(pss.toString(), services.getCoreSparqlAddress());
-          
-        /* else return graph with given id */
-     //   return JerseyFusekiClient.getGraphResponseFromService(id, services.getCoreReadAddress());
+        return JerseyFusekiClient.constructGraphFromService(pss.toString(), services.getCoreSparqlAddress());         
 
       }
          
