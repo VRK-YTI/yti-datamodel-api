@@ -50,7 +50,7 @@ public String getUsersSparqlUpdateAddress() {
 }
 
 public String getConceptAPI() {
-     return "http://api.finto.fi/rest/v1/data";
+     return "http://dev.finto.fi/rest/v1/data";
 }
 
 public String getTempConceptReadWriteAddress() {
@@ -67,15 +67,15 @@ public String getTempConceptSparqlUpdateAddress() {
 }
 
 public String getConceptSearchAPI() {
-     return "http://api.finto.fi/rest/v1/search";
+     return "http://dev.finto.fi/rest/v1/search";
 }
 
 public String getConceptSearchAPI(String id) {
-     return "http://api.finto.fi/rest/v1/"+id+"/search";
+     return "http://dev.finto.fi/rest/v1/"+id+"/search";
 }
 
 public String getSchemeSearchAPI() {
-     return "http://api.finto.fi/rest/v1/vocabularies";
+     return "http://dev.finto.fi/rest/v1/vocabularies";
 }
 
 public String getImportsReadWriteAddress() {

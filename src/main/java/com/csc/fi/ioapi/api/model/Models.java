@@ -36,6 +36,8 @@ import com.wordnik.swagger.annotations.ApiResponses;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import javax.ws.rs.DELETE;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
 import org.apache.jena.iri.IRIFactory;
@@ -46,7 +48,7 @@ import org.apache.jena.iri.IRIFactory;
 @Path("model")
 @Api(value = "/model", description = "Operations about models")
 public class Models {
-
+  
     @Context ServletContext context;
     EndpointServices services = new EndpointServices();
     private static final Logger logger = Logger.getLogger(Models.class.getName());
