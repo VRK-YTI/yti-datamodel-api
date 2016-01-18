@@ -79,7 +79,8 @@ public class Class {
                 + "?class dcterms:modified ?date . "
                 + "?class dcterms:modified ?modified . "
                 + "?class rdfs:isDefinedBy ?source . "
-                + "?source rdfs:label ?sourceLabel . } WHERE { "
+                + "?source rdfs:label ?sourceLabel . "
+                + "?source a ?sourceType . } WHERE { "
                 + "VALUES ?rel {dcterms:hasPart iow:classes} "
                 + "?library ?rel ?class . "
                 + "GRAPH ?graph { "
@@ -88,7 +89,10 @@ public class Class {
                 + "?class a ?type . "
                 + "VALUES ?type { sh:ShapeClass sh:Shape } "
                 + "?class rdfs:isDefinedBy ?source .  } "
-                + "GRAPH ?source { ?source rdfs:label ?sourceLabel . } }"; 
+                + "GRAPH ?source { "
+                + "?source a ?sourceType . "
+                + "?source rdfs:label ?sourceLabel . "
+                + "} }"; 
 
          if(model!=null && !model.equals("undefined")) {
               pss.setIri("library", model);

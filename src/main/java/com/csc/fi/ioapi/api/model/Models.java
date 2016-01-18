@@ -134,7 +134,7 @@ public class Models {
            
             
             pss.setCommandText(queryString);
-           
+            
             return JerseyFusekiClient.constructGraphFromService(pss.toString(), services.getCoreSparqlAddress());
 
   }
