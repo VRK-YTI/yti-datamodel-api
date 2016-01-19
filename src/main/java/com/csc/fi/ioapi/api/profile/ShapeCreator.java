@@ -90,6 +90,7 @@ public class ShapeCreator {
                     + "} WHERE { "
                     + "BIND(now() as ?creation) "
                     + "BIND(now() as ?modified) "
+                    + "BIND(iri(concat(?profileNamespace,afn:localname(?classIRI))) as ?shapeIRI)"    
                     + "GRAPH ?classIRI { "
                     + "?classIRI a sh:ShapeClass . "
                     + "?classIRI rdfs:label ?label . "
@@ -140,8 +141,9 @@ public class ShapeCreator {
             pss.setCommandText(queryString);
             pss.setIri("classIRI", classIRI);
             pss.setIri("model", profileIRI);
+            pss.setLiteral("profileNamespace", profileID+"#");
             pss.setLiteral("draft", "Unstable");
-            pss.setIri("shapeIRI", "urn:uuid:"+shapeUUID);
+          //  pss.setIri("shapeIRI", "urn:uuid:"+shapeUUID);
 
             System.out.println(pss.toString());
             

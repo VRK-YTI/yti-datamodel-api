@@ -52,6 +52,7 @@ public class LDHelper {
         put("skos","http://www.w3.org/2004/02/skos/core#");
         put("prov","http://www.w3.org/ns/prov#");
         put("dcap","http://purl.org/ws-mmi-dc/terms/");
+        put("afn","http://jena.hpl.hp.com/ARQ/function#");
     }});
 
     public static final Map<String, Object> CONTEXT_MAP = 
@@ -88,7 +89,8 @@ public class LDHelper {
                             "PREFIX skos: <http://www.w3.org/2004/02/skos/core#> "+
                             "PREFIX prov: <http://www.w3.org/ns/prov#> " +
                             "PREFIX iow: <http://urn.fi/urn:nbn:fi:csc-iow-meta#>" +
-                            "PREFIX dcap: <http://purl.org/ws-mmi-dc/terms/> ";
+                            "PREFIX dcap: <http://purl.org/ws-mmi-dc/terms/> " +
+                            "PREFIX afn: <http://jena.hpl.hp.com/ARQ/function#>";
     
     
     ParameterizedSparqlString pss = new ParameterizedSparqlString();
