@@ -73,7 +73,7 @@ public class ShapeCreator {
             String service;
                 
             /* Create Shape from ShapeClass*/
-            if(classID.startsWith(ApplicationProperties.getDefaultNamespace())) {
+            if(classID.startsWith(ApplicationProperties.getDefaultNamespace()) || classID.startsWith(ApplicationProperties.getProfileNamespace())) {
 
                 service = services.getCoreSparqlAddress();
                 queryString = "CONSTRUCT  { "
@@ -90,7 +90,9 @@ public class ShapeCreator {
                     + "} WHERE { "
                     + "BIND(now() as ?creation) "
                     + "BIND(now() as ?modified) "
-                    + "BIND(iri(concat(?profileNamespace,afn:localname(?classIRI))) as ?shapeIRI)"    
+                    + (classID.startsWith(ApplicationProperties.getProfileNamespace()) ?
+                        "BIND(iri(concat(concat(?profileNamespace,afn:localname(?classIRI)),substr(str(rand()), 3, 7))) as ?shapeIRI)":
+                        "BIND(iri(concat(?profileNamespace,afn:localname(?classIRI))) as ?shapeIRI)")   
                     + "GRAPH ?classIRI { "
                     + "?classIRI a sh:ShapeClass . "
                     + "?classIRI rdfs:label ?label . "
@@ -135,15 +137,12 @@ public class ShapeCreator {
                     + "}";
                 
             }
-
-            UUID shapeUUID = UUID.randomUUID();
-                
+   
             pss.setCommandText(queryString);
             pss.setIri("classIRI", classIRI);
             pss.setIri("model", profileIRI);
             pss.setLiteral("profileNamespace", profileID+"#");
             pss.setLiteral("draft", "Unstable");
-          //  pss.setIri("shapeIRI", "urn:uuid:"+shapeUUID);
 
             System.out.println(pss.toString());
             
