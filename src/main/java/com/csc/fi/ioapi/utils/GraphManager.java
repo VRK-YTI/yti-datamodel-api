@@ -138,34 +138,6 @@ public class GraphManager {
 
     }
 
-    public static Map<String, String> getNamespaceMap() {
-
-        ParameterizedSparqlString pss = new ParameterizedSparqlString();
-        String selectResources
-                = "SELECT ?namespace ?prefix WHERE { "
-                + "GRAPH ?graph { "
-               // + " ?graph a owl:Ontology .  "
-                + " ?graph dcap:preferredXMLNamespaceName ?namespace . "
-                + " ?graph dcap:preferredXMLNamespacePrefix ?prefix . "
-                + "}}";
-
-        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
-        pss.setCommandText(selectResources);
-
-        QueryExecution qexec = QueryExecutionFactory.sparqlService(services.getCoreSparqlAddress(), pss.asQuery());
-
-        ResultSet results = qexec.execSelect();
-        Map namespaceMap = new HashMap<String, String>();
-
-        while (results.hasNext()) {
-            QuerySolution soln = results.nextSolution();
-            namespaceMap.put(soln.getLiteral("prefix").toString(), soln.getLiteral("namespace").toString());
-        }
-
-        return namespaceMap;
-
-    }
-
     public static void removeModel(IRI id) {
 
         String query = buildRemoveModelQuery(id.toString());

@@ -14,6 +14,7 @@ import com.csc.fi.ioapi.config.EndpointServices;
 import com.csc.fi.ioapi.utils.ErrorMessage;
 import com.csc.fi.ioapi.utils.GraphManager;
 import com.csc.fi.ioapi.utils.JerseyFusekiClient;
+import com.csc.fi.ioapi.utils.NamespaceManager;
 import com.hp.hpl.jena.query.DatasetAccessor;
 import com.hp.hpl.jena.query.DatasetAccessorFactory;
 import com.hp.hpl.jena.query.ParameterizedSparqlString;
@@ -63,7 +64,7 @@ public class ClassVisualizer {
         }
 
         /* Get all used Core Vocabulary namespaces */
-        Map<String,String> coreNamespaces = GraphManager.getNamespaceMap();
+        Map<String,String> coreNamespaces = NamespaceManager.getCoreNamespaceMap();
                 
         DatasetAccessor accessor = DatasetAccessorFactory.createHTTP(services.getCoreReadAddress());
         Model model = accessor.getModel(modelID);

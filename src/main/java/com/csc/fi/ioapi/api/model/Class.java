@@ -109,7 +109,7 @@ public class Class {
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         
         /* Get Map of namespaces from id-graph */
-        Map<String, String> namespaceMap = NamespaceManager.getNamespaceMap(id);
+        Map<String, String> namespaceMap = NamespaceManager.getCoreNamespaceMap(id);
             
         pss.setNsPrefixes(namespaceMap);
         

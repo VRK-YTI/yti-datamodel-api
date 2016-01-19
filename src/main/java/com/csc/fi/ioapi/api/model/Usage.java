@@ -16,6 +16,7 @@ import com.csc.fi.ioapi.utils.ErrorMessage;
 import com.csc.fi.ioapi.utils.GraphManager;
 import com.csc.fi.ioapi.utils.JerseyFusekiClient;
 import com.csc.fi.ioapi.utils.LDHelper;
+import com.csc.fi.ioapi.utils.NamespaceManager;
 import com.hp.hpl.jena.query.ParameterizedSparqlString;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
@@ -57,7 +58,7 @@ public class Usage {
             }
 
             ParameterizedSparqlString pss = new ParameterizedSparqlString();
-            Map<String,String> namespaces = GraphManager.getNamespaceMap();
+            Map<String,String> namespaces = NamespaceManager.getCoreNamespaceMap();
             namespaces.putAll(LDHelper.PREFIX_MAP);
             pss.setNsPrefixes(namespaces);
             
@@ -65,6 +66,8 @@ public class Usage {
                     + "?resource a ?type . "
                     + "?resource rdfs:label ?label . "
                     + "?resource rdfs:isDefinedBy ?resourceModel . "
+                    + "?resourceModel a ?modelType . "
+                    + "?resourceModel rdfs:label ?modelLabel . "
                     + "?resource dcterms:isReferencedBy ?usage . "
                     + "?usage a ?usageType . "
                     + "?usage rdfs:label ?usageLabel . "
@@ -74,6 +77,9 @@ public class Usage {
                     + "?resource a ?type . "
                     + "?resource rdfs:label ?label . "
                     + "?resource rdfs:isDefinedBy ?resourceModel . }"
+                    + "GRAPH ?resourceModel {"
+                    + "?resourceModel a ?modelType . "
+                    + "?resourceModel rdfs:label ?modelLabel . }"
                     + "GRAPH ?usage { "
                     + "?subject ?property ?resource . "
                     + "?usage a ?usageType . "

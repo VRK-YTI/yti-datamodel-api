@@ -81,7 +81,20 @@ public class Predicate {
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
 
-        String queryString = "CONSTRUCT { ?property rdfs:label ?label . ?property a ?type . ?property rdfs:isDefinedBy ?source . ?source rdfs:label ?sourceLabel . ?property dcterms:modified ?date . } WHERE { ?library dcterms:hasPart ?property . GRAPH ?graph { ?property rdfs:label ?label . VALUES ?type { owl:ObjectProperty owl:DatatypeProperty } ?property a ?type . ?property rdfs:isDefinedBy ?source . ?property dcterms:modified ?date .  } GRAPH ?source { ?source rdfs:label ?sourceLabel . }}"; 
+        String queryString = "CONSTRUCT { "
+                + "?property rdfs:label ?label . "
+                + "?property a ?type . "
+                + "?property rdfs:isDefinedBy ?source . "
+                + "?source rdfs:label ?sourceLabel . "
+                + "?source a ?sourceType . "
+                + "?property dcterms:modified ?date . } "
+                + "WHERE { ?library dcterms:hasPart ?property . "
+                + "GRAPH ?graph { ?property rdfs:label ?label . "
+                + "VALUES ?type { owl:ObjectProperty owl:DatatypeProperty } "
+                + "?property a ?type . "
+                + "?property rdfs:isDefinedBy ?source . "
+                + "?property dcterms:modified ?date .  } "
+                + "GRAPH ?source { ?source a ?sourceType . ?source rdfs:label ?sourceLabel . }}"; 
 
          if(model!=null && !model.equals("undefined")) {
               pss.setIri("library", model);
@@ -96,7 +109,7 @@ public class Predicate {
             ParameterizedSparqlString pss = new ParameterizedSparqlString();
 
             /* Get Map of namespaces from id-graph */
-            Map<String, String> namespaceMap = NamespaceManager.getNamespaceMap(id);
+            Map<String, String> namespaceMap = NamespaceManager.getCoreNamespaceMap(id);
 
             pss.setNsPrefixes(namespaceMap);
 

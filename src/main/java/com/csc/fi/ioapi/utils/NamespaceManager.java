@@ -4,9 +4,16 @@
 package com.csc.fi.ioapi.utils;
 
 import com.csc.fi.ioapi.config.EndpointServices;
+import static com.csc.fi.ioapi.utils.GraphManager.services;
 import com.hp.hpl.jena.query.DatasetAccessor;
 import com.hp.hpl.jena.query.DatasetAccessorFactory;
+import com.hp.hpl.jena.query.ParameterizedSparqlString;
+import com.hp.hpl.jena.query.QueryExecution;
+import com.hp.hpl.jena.query.QueryExecutionFactory;
+import com.hp.hpl.jena.query.QuerySolution;
+import com.hp.hpl.jena.query.ResultSet;
 import com.hp.hpl.jena.rdf.model.Model;
+import java.util.HashMap;
 import java.util.Map;
 import javax.ws.rs.core.Response;
 import org.apache.jena.web.DatasetAdapter;
@@ -36,7 +43,8 @@ public class NamespaceManager {
     
     }
     
-    public static Map<String, String> getNamespaceMap(String graph) {
+    /* Get exact namespaces from graph */
+    public static Map<String, String> getCoreNamespaceMap(String graph) {
         
         DatasetAccessor accessor = DatasetAccessorFactory.createHTTP(services.getCoreReadAddress());
         Model classModel = accessor.getModel(graph);
@@ -47,6 +55,36 @@ public class NamespaceManager {
             
             return classModel.getNsPrefixMap();
        
+    }
+    
+    /* Get namespaces from all graphs */
+    public static Map<String, String> getCoreNamespaceMap() {
+
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        String selectResources
+                = "SELECT ?namespace ?prefix WHERE { "
+                + "GRAPH ?graph { "
+                + " ?graph a ?type  "
+                + " VALUES ?type { owl:Ontology dcap:DCAP }"
+                + " ?graph dcap:preferredXMLNamespaceName ?namespace . "
+                + " ?graph dcap:preferredXMLNamespacePrefix ?prefix . "
+                + "}}";
+
+        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+        pss.setCommandText(selectResources);
+
+        QueryExecution qexec = QueryExecutionFactory.sparqlService(services.getCoreSparqlAddress(), pss.asQuery());
+
+        ResultSet results = qexec.execSelect();
+        Map namespaceMap = new HashMap<String, String>();
+
+        while (results.hasNext()) {
+            QuerySolution soln = results.nextSolution();
+            namespaceMap.put(soln.getLiteral("prefix").toString(), soln.getLiteral("namespace").toString());
+        }
+
+        return namespaceMap;
+
     }
 
 
