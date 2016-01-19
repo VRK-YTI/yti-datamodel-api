@@ -82,7 +82,7 @@ public class ShapeCreator {
                     + "?shapeIRI dcterms:created ?creation . "
                     + "?shapeIRI sh:scopeClass ?classIRI . "
                     + "?shapeIRI a sh:Shape . "
-                    + "?shapeIRI rdfs:isDefinedBy ?profile . "
+                    + "?shapeIRI rdfs:isDefinedBy ?model . "
                     + "?shapeIRI rdfs:label ?label . "
                     + "?shapeIRI rdfs:comment ?comment . "
                     + "?shapeIRI sh:property ?property . "

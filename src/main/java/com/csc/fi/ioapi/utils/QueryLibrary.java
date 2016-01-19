@@ -9,7 +9,6 @@ package com.csc.fi.ioapi.utils;
  */
 public class QueryLibrary {
     
-    
     final public static String modelQuery = LDHelper.expandSparqlQuery(
                      "CONSTRUCT { "
                      + "?graph ?p ?o . "
@@ -59,7 +58,7 @@ public class QueryLibrary {
                      + " ?group foaf:homepage ?homepage . "
                      + " ?group rdfs:label ?groupLabel . "
                      + "}"
-                     + "}", LDHelper.PREFIX_MAP);
+                     + "}");
     
      final public static String classQuery = LDHelper.expandSparqlQuery(
                      "CONSTRUCT { "
@@ -77,7 +76,7 @@ public class QueryLibrary {
                      + " ?library a ?type . "
                      + " ?library rdfs:label ?label . "
                      + "}"
-                     + "}", LDHelper.PREFIX_MAP);
+                     + "}");
      
      
       final public static String predicateQuery = LDHelper.expandSparqlQuery(
@@ -96,7 +95,7 @@ public class QueryLibrary {
                  + " ?library a ?type . "
                  + " ?library rdfs:label ?label . "
                  + "}"
-                 + "}", LDHelper.PREFIX_MAP);
+                 + "}");
     
      
 }

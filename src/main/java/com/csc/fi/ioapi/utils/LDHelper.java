@@ -33,7 +33,6 @@ import org.apache.commons.lang3.text.WordUtils;
  */
 public class LDHelper {
    
-
    public static final Map<String, String> PREFIX_MAP = 
     Collections.unmodifiableMap(new HashMap<String, String>() {{ 
         put("owl", "http://www.w3.org/2002/07/owl#");
@@ -93,11 +92,7 @@ public class LDHelper {
     
     
     ParameterizedSparqlString pss = new ParameterizedSparqlString();
-   
-    
 
-    
-    
     static String query(String queryString) {
         queryString = prefix+queryString;
         return  UriComponent.encode(queryString,UriComponent.Type.QUERY_PARAM); // URLEncoder.encode(queryString, "UTF-8");
@@ -177,7 +172,11 @@ public class LDHelper {
            return null;
        }
     }
-        
+   
+   public static String expandSparqlQuery(String query) {
+       return expandSparqlQuery(query,LDHelper.PREFIX_MAP);
+   }
+    
    public static String expandSparqlQuery(String query, Map<String, String> prefix_map) {
   
     for(Map.Entry<String, String> namespaces : prefix_map.entrySet()) {
