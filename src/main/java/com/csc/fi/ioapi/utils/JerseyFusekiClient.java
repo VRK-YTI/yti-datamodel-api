@@ -71,6 +71,31 @@ public class JerseyFusekiClient {
         }
     }
     
+        public static Response getGraphResponseFromService(String id, String service, ContentType contentType) {
+        try {
+        Client client = Client.create();
+
+        WebResource webResource = client.resource(service)
+                                  .queryParam("graph", id);
+
+        Builder builder = webResource.accept(contentType.getContentType());
+        ClientResponse response = builder.get(ClientResponse.class);
+
+        if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
+           logger.log(Level.INFO, response.getStatus()+" from SERVICE "+service+" and GRAPH "+id);
+           return Response.status(response.getStatus()).entity(ErrorMessage.NOTFOUND).build();
+        }
+
+        ResponseBuilder rb = Response.status(response.getStatus()); 
+        rb.entity(response.getEntityInputStream());
+
+       return rb.build();
+        } catch(ClientHandlerException ex) {
+          logger.log(Level.WARNING, "Expect the unexpected!", ex);
+          return Response.serverError().entity(ErrorMessage.UNEXPECTED).build();
+        }
+    }
+    
     public static ClientResponse putGraphToTheService(String graph, String body, String service) {
         Client client = Client.create();
         WebResource webResource = client.resource(service).queryParam("graph", graph);
@@ -89,7 +114,7 @@ public class JerseyFusekiClient {
     }
     
         public static ClientResponse clientResponseFromConstruct(String query, String service, ContentType contentType) {
-                   
+                     
             Client client = Client.create();
             WebResource webResource = client.resource(service)
                                       .queryParam("query", UriComponent.encode(query,UriComponent.Type.QUERY));

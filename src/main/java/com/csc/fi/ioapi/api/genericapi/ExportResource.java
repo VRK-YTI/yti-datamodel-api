@@ -93,101 +93,19 @@ public class ExportResource {
             @ApiParam(value = "Content-type", required = true, allowableValues = "application/ld+json,text/turtle,application/rdf+xml") @QueryParam("content-type") String ctype) {
 
         
-         IRI modelIRI;
+         IRI resourceIRI;
             try {
                     IRIFactory iri = IRIFactory.semanticWebImplementation();
-                    modelIRI = iri.construct(graph);
+                    resourceIRI = iri.construct(graph);
             } catch (IRIException e) {
                     return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
             }
             
         try {
 
-            DatasetAccessor accessor = DatasetAccessorFactory.createHTTP(services.getCoreReadAddress());
-            Model model = accessor.getModel(graph);
-
-            /* If no id is provided create a list of classes */
-            ParameterizedSparqlString pss = new ParameterizedSparqlString();
-
-            pss.setNsPrefixes(model.getNsPrefixMap());
-
-            String queryString = "CONSTRUCT { "
-                + "?rs ?rp ?ro . "
-                + " } WHERE { "
-                + "GRAPH ?resource { "
-                + "?rs ?rp ?ro . "
-                + "}}"; 
-
-            pss.setCommandText(queryString);
-            pss.setIri("resource", graph);
-
-            OutputStream out = new ByteArrayOutputStream();
-
             ContentType contentType = ContentType.create(ctype);
-            Lang rdfLang = RDFLanguages.contentTypeToLang(contentType);
 
-            ClientResponse response = JerseyFusekiClient.clientResponseFromConstruct(pss.toString(), services.getCoreSparqlAddress(), contentType);
-
-            if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-                return Response.status(401).entity(ErrorMessage.UNEXPECTED).build();
-            }
-
-            ResponseBuilder rb;
-            RDFDataMgr.write(out, model, rdfLang);
-
-            if (rdfLang.equals(Lang.JSONLD)) {
-
-                Map<String, Object> jsonModel = null;
-                try {
-                    jsonModel = (Map<String, Object>) JsonUtils.fromString(out.toString());
-                } catch (IOException ex) {
-                    Logger.getLogger(ExportResource.class.getName()).log(Level.SEVERE, null, ex);
-                    return Response.status(401).entity(ErrorMessage.UNEXPECTED).build();
-                }
-
-                Map<String, Object> frame = new HashMap<String, Object>();
-                //Map<String,Object> frame = (HashMap<String,Object>) LDHelper.getExportContext();
-
-                Map<String, Object> context = (Map<String, Object>) jsonModel.get("@context");
-
-                context.putAll(LDHelper.CONTEXT_MAP);
-
-                logger.info(context.toString());
-
-                frame.put("@context", context);
-                frame.put("isDefinedBy", "{}");
-
-                logger.info(frame.toString());
-
-                Object data;
-
-                try {
-                    data = JsonUtils.fromInputStream(response.getEntityInputStream());
-                    rb = Response.status(response.getStatus());
-
-                    try {
-                        JsonLdOptions options = new JsonLdOptions();
-                        Object framed = JsonLdProcessor.frame(data, frame, options);
-                        rb.entity(JsonUtils.toString(framed));
-                    } catch (NullPointerException ex) {
-                        logger.log(Level.WARNING, null, "DEFAULT GRAPH IS NULL!");
-                        return rb.entity(JsonUtils.toString(data)).build();
-                    } catch (JsonLdError ex) {
-                        logger.log(Level.SEVERE, null, ex);
-                        return Response.serverError().entity("{}").build();
-                    }
-
-                } catch (IOException ex) {
-                    logger.log(Level.SEVERE, null, ex);
-                    return Response.serverError().entity("{}").build();
-                }
-
-            } else {
-                 rb = Response.status(response.getStatus());
-                 rb.entity(response.getEntityInputStream());
-            }
-
-            return rb.build();
+            return JerseyFusekiClient.getGraphResponseFromService(graph, services.getCoreReadAddress(), contentType);
 
         } catch (UniformInterfaceException | ClientHandlerException ex) {
             logger.log(Level.WARNING, "Expect the unexpected!", ex);
