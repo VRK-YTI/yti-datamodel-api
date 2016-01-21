@@ -60,6 +60,7 @@ public class Class {
   @Produces("application/ld+json")
   @ApiOperation(value = "Get class from model", notes = "Get class in JSON-LD")
   @ApiResponses(value = {
+      @ApiResponse(code = 404, message = "No such resource"),
       @ApiResponse(code = 400, message = "Invalid model supplied"),
       @ApiResponse(code = 404, message = "Service not found"),
       @ApiResponse(code = 500, message = "Internal server error")
@@ -110,7 +111,11 @@ public class Class {
         
         /* Get Map of namespaces from id-graph */
         Map<String, String> namespaceMap = NamespaceManager.getCoreNamespaceMap(id);
-            
+        
+        if(namespaceMap==null) {
+            return Response.status(404).entity(ErrorMessage.NOTFOUND).build();
+        }
+        
         pss.setNsPrefixes(namespaceMap);
         
         String queryString = QueryLibrary.classQuery;
