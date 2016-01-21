@@ -87,7 +87,7 @@ public class JerseyFusekiClient {
         }
 
         ResponseBuilder rb = Response.status(response.getStatus()); 
-        rb.entity(response.getEntityInputStream());
+        rb.type(contentType.getContentType()).entity(response.getEntityInputStream());
 
        return rb.build();
         } catch(ClientHandlerException ex) {
