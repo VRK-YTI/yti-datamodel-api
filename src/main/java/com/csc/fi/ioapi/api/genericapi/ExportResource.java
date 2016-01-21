@@ -114,7 +114,7 @@ public class ExportResource {
             String queryString = "CONSTRUCT { "
                 + "?rs ?rp ?ro . "
                 + " } WHERE { "
-                + "} GRAPH ?resource { "
+                + "GRAPH ?resource { "
                 + "?rs ?rp ?ro . "
                 + "}}"; 
 
