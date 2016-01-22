@@ -48,6 +48,7 @@ public class ExportResource {
     })
     public Response json(
             @ApiParam(value = "Requested resource", defaultValue = "default") @QueryParam("graph") String graph,
+            @ApiParam(value = "Raw / PlainText boolean", defaultValue = "false") @QueryParam("raw") boolean raw,
             @ApiParam(value = "Content-type", required = true, allowableValues = "application/ld+json,text/turtle,application/rdf+xml") @QueryParam("content-type") String ctype) {
 
         
@@ -62,8 +63,8 @@ public class ExportResource {
         try {
 
             ContentType contentType = ContentType.create(ctype);
-
-            return JerseyFusekiClient.getGraphResponseFromService(graph, services.getCoreReadAddress(), contentType);
+            
+            return  JerseyFusekiClient.getGraphResponseFromService(graph, services.getCoreReadAddress(), contentType, true);
 
         } catch (UniformInterfaceException | ClientHandlerException ex) {
             logger.log(Level.WARNING, "Expect the unexpected!", ex);

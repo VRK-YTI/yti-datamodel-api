@@ -16,6 +16,7 @@ import com.csc.fi.ioapi.config.EndpointServices;
 import com.csc.fi.ioapi.utils.ErrorMessage;
 import com.csc.fi.ioapi.utils.JerseyFusekiClient;
 import com.csc.fi.ioapi.utils.LDHelper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.jsonldjava.core.JsonLdError;
 import com.github.jsonldjava.core.JsonLdOptions;
 import com.github.jsonldjava.core.JsonLdProcessor;
@@ -36,6 +37,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
+import org.apache.jena.atlas.json.JSON;
 import org.apache.jena.atlas.web.ContentType;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
@@ -43,6 +45,7 @@ import org.apache.jena.iri.IRIFactory;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.riot.RDFLanguages;
+import scala.util.parsing.json.JSONObject;
 
 /**
  * Root resource (exposed at "myresource" path)
@@ -67,9 +70,9 @@ public class ExportModel {
     })
     public Response json(
             @ApiParam(value = "Requested resource", defaultValue = "default") @QueryParam("graph") String graph,
+            @ApiParam(value = "Raw / PlainText boolean", defaultValue = "false") @QueryParam("raw") boolean raw,
             @ApiParam(value = "Content-type", required = true, allowableValues = "application/ld+json,text/turtle,application/rdf+xml") @QueryParam("content-type") String ctype) {
 
-        
          IRI modelIRI;
             try {
                     IRIFactory iri = IRIFactory.semanticWebImplementation();
@@ -146,12 +149,17 @@ public class ExportModel {
 
                 try {                 
                     data = JsonUtils.fromInputStream(response.getEntityInputStream());
+                    
                     rb = Response.status(response.getStatus());
 
                     try {
                         JsonLdOptions options = new JsonLdOptions();
                         Object framed = JsonLdProcessor.frame(data, frame, options);
-                        rb.entity(JsonUtils.toString(framed));
+                        
+                        ObjectMapper mapper = new ObjectMapper();
+ 
+                        rb.entity(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(framed));
+                        
                     } catch (NullPointerException ex) {
                         logger.log(Level.WARNING, null, "DEFAULT GRAPH IS NULL!");
                         return rb.entity(JsonUtils.toString(data)).build();
@@ -170,7 +178,13 @@ public class ExportModel {
                  rb.entity(response.getEntityInputStream());
             }
 
-            return rb.type(contentType.getContentType()).build();
+            if(!raw) {
+                rb.type(contentType.getContentType());
+            } else {
+                rb.type("text/plain");
+            }
+            
+            return rb.build();
 
         } catch (UniformInterfaceException | ClientHandlerException ex) {
             logger.log(Level.WARNING, "Expect the unexpected!", ex);

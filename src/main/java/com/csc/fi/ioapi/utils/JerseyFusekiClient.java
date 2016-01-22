@@ -71,7 +71,7 @@ public class JerseyFusekiClient {
         }
     }
     
-        public static Response getGraphResponseFromService(String id, String service, ContentType contentType) {
+        public static Response getGraphResponseFromService(String id, String service, ContentType contentType, boolean raw) {
         try {
         Client client = Client.create();
 
@@ -87,7 +87,13 @@ public class JerseyFusekiClient {
         }
 
         ResponseBuilder rb = Response.status(response.getStatus()); 
-        rb.type(contentType.getContentType()).entity(response.getEntityInputStream());
+        rb.entity(response.getEntityInputStream());
+        
+        if(!raw) {
+           rb.type(contentType.getContentType());
+        } else {
+            rb.type("text/plain");
+        }
 
        return rb.build();
         } catch(ClientHandlerException ex) {
