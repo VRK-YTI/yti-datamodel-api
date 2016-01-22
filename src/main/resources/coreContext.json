@@ -58,7 +58,7 @@
     "skos": "http://www.w3.org/2004/02/skos/core#",
     "dcterms": "http://purl.org/dc/terms/"
   },
-"@type":"sh:ShapeClass",
+"@type":"rdfs:Class",
  "label":{"@container": "@language"},
     "property":{
         "predicate":{

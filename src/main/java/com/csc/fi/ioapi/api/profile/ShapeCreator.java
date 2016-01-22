@@ -72,7 +72,7 @@ public class ShapeCreator {
             String queryString;
             String service;
                 
-            /* Create Shape from ShapeClass*/
+            /* Create Shape from Class */
             if(classID.startsWith(ApplicationProperties.getDefaultNamespace()) || classID.startsWith(ApplicationProperties.getProfileNamespace())) {
 
                 service = services.getCoreSparqlAddress();
@@ -94,7 +94,7 @@ public class ShapeCreator {
                 //        "BIND(iri(concat(concat(?profileNamespace,afn:localname(?classIRI)),substr(str(rand()), 3, 7))) as ?shapeIRI)":
                     + "BIND(iri(concat(?profileNamespace,concat('s',afn:localname(?classIRI)))) as ?shapeIRI)"   
                     + "GRAPH ?classIRI { "
-                    + "?classIRI a sh:ShapeClass . "
+                    + "?classIRI a rdfs:Class . "
                     + "?classIRI rdfs:label ?label . "
                     + "OPTIONAL { ?classIRI rdfs:comment ?comment . } "
                     + "OPTIONAL { "

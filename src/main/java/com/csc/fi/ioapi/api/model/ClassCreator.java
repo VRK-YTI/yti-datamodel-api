@@ -72,7 +72,7 @@ public class ClassCreator {
                     + "?classIRI owl:versionInfo ?draft . "
                     + "?classIRI dcterms:modified ?modified . "
                     + "?classIRI dcterms:created ?creation . "
-                    + "?classIRI a sh:ShapeClass . "
+                    + "?classIRI a rdfs:Class . "
                     + "?classIRI rdfs:isDefinedBy ?model . "
                     + "?classIRI rdfs:label ?classLabel . "
                     + "?classIRI rdfs:comment ?comment . "

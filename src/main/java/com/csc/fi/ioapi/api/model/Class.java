@@ -90,7 +90,7 @@ public class Class {
                 + "?class dcterms:modified ?modified . "
                 + "?class rdfs:label ?label . "
                 + "?class a ?type . "
-                + "VALUES ?type { sh:ShapeClass sh:Shape } "
+                + "VALUES ?type { rdfs:Class sh:Shape } "
                 + "?class rdfs:isDefinedBy ?source .  } "
                 + "GRAPH ?source { "
                 + "?source a ?sourceType . "

@@ -94,7 +94,7 @@ public class ClassVisualizer {
                 + "} WHERE { "
                 + "GRAPH ?classIRI { "
                 + "?classIRI a ?classType . "
-                + "VALUES ?classType { sh:ShapeClass sh:Shape } "
+                + "VALUES ?classType { rdfs:Class sh:Shape } "
                 + "?classIRI rdfs:label ?classLabel . "
                 + "OPTIONAL {"
                 +  "?classIRI sh:property ?property . "

@@ -111,6 +111,10 @@ public class Predicate {
             /* Get Map of namespaces from id-graph */
             Map<String, String> namespaceMap = NamespaceManager.getCoreNamespaceMap(id);
 
+            if(namespaceMap==null) {
+                return Response.status(404).entity(ErrorMessage.NOTFOUND).build();
+            }
+
             pss.setNsPrefixes(namespaceMap);
 
             String queryString = QueryLibrary.predicateQuery;
