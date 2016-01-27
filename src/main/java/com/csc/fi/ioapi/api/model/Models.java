@@ -116,10 +116,12 @@ public class Models {
                      + "?graphName a ?type . "
                      + "?graphName dcterms:isPartOf ?group . "
                      + "?group a foaf:Group . "
+                     + "?group rdfs:label ?groupLabel . "
                      + "} WHERE { "
                      + "?graph sd:name ?graphName . "
                      + "?graph a sd:NamedGraph . "
                      + "?graph dcterms:isPartOf ?group . "
+                     + "?group rdfs:label ?groupLabel . "
                      + "GRAPH ?graphName { "
                      + "?graphName a ?type . "
                      + "?graphName rdfs:label ?label . }}";

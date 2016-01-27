@@ -21,6 +21,7 @@ public class QueryLibrary {
                      + "?req dcap:preferredXMLNamespaceName ?namespaces . "
                      + "?req dcap:preferredXMLNamespacePrefix ?prefixes . "
                      + "?graph dcterms:isPartOf ?group . "
+                     + "?group a foaf:Group . "
                      + "?group rdfs:label ?groupLabel . "
                      + "?group foaf:homepage ?homepage . "
                      + "} WHERE { "
