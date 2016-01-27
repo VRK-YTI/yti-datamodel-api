@@ -115,6 +115,7 @@ public class Models {
                      + "?graphName rdfs:label ?label . "
                      + "?graphName a ?type . "
                      + "?graphName dcterms:isPartOf ?group . "
+                     + "?group a foaf:Group . "
                      + "} WHERE { "
                      + "?graph sd:name ?graphName . "
                      + "?graph a sd:NamedGraph . "

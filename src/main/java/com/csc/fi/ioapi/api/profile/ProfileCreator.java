@@ -72,6 +72,7 @@ public class ProfileCreator {
             pss.setNsPrefix(prefix, namespace+"#");
             
             String queryString = "CONSTRUCT  { "
+                    + "?modelIRI a owl:Ontology . "
                     + "?modelIRI a dcap:DCAP . "
                     + "?modelIRI rdfs:label ?profileLabel . "
                     + "?modelIRI owl:versionInfo ?draft . "

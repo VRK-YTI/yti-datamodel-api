@@ -78,6 +78,7 @@ public class ModelCreator {
             
             String queryString = "CONSTRUCT  { "
                     + "?modelIRI a owl:Ontology . "
+                    + "?modelIRI a dcap:MetadataVocabulary . "
                     + "?modelIRI rdfs:label ?mlabel . "
                     + "?modelIRI owl:versionInfo ?draft . "
                     + "?modelIRI dcterms:created ?creation . "
