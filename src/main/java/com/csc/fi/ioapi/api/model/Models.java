@@ -21,6 +21,7 @@ import com.csc.fi.ioapi.utils.ErrorMessage;
 import com.csc.fi.ioapi.utils.GraphManager;
 import com.csc.fi.ioapi.utils.JerseyFusekiClient;
 import com.csc.fi.ioapi.utils.LDHelper;
+import com.csc.fi.ioapi.utils.ProvenanceManager;
 import com.csc.fi.ioapi.utils.QueryLibrary;
 import com.csc.fi.ioapi.utils.ServiceDescriptionManager;
 import com.hp.hpl.jena.query.DatasetAccessor;
@@ -33,6 +34,7 @@ import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiParam;
 import com.wordnik.swagger.annotations.ApiResponse;
 import com.wordnik.swagger.annotations.ApiResponses;
+import java.util.UUID;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import javax.ws.rs.DELETE;
@@ -83,9 +85,21 @@ public class Models {
                    return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
        
             }
+            
+            String sparqlService, graphService;
         
+            if(id.startsWith("urn:")) {
+               sparqlService = services.getProvReadSparqlAddress();
+               graphService = services.getProvReadWriteAddress();
+               queryString = QueryLibrary.provModelQuery;
+           } else { 
+                sparqlService = services.getCoreSparqlAddress();
+                graphService = services.getCoreReadWriteAddress();
+                queryString = QueryLibrary.modelQuery;
+            }
+
             /* TODO: Create Namespace service? */
-            DatasetAccessor accessor = DatasetAccessorFactory.createHTTP(services.getCoreReadAddress());
+            DatasetAccessor accessor = DatasetAccessorFactory.createHTTP(graphService);
             Model model = accessor.getModel(id);
             
             if(model==null) {
@@ -95,9 +109,14 @@ public class Models {
             
             pss.setNsPrefixes(model.getNsPrefixMap());
             
-            queryString = QueryLibrary.modelQuery;
              
             pss.setIri("graph", modelIRI);
+            
+            pss.setCommandText(queryString);
+            
+            logger.info(pss.toString());
+            
+            return JerseyFusekiClient.constructGraphFromService(pss.toString(), sparqlService);
              
      } else if(group!=null && !group.equals("undefined")) {
          
@@ -171,6 +190,9 @@ public class Models {
           @ApiParam(value = "Model ID", required = true) 
                 @QueryParam("id") 
                 String graph,
+                @ApiParam(value = "version flag", defaultValue="false") 
+                @QueryParam("version") 
+                boolean version,
           @Context HttpServletRequest request) {
       
        if(graph.equals("default") || graph.equals("undefined")) {
@@ -204,6 +226,16 @@ public class Models {
         if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
                logger.log(Level.WARNING, "Unexpected: Model update failed: "+graph);
                return Response.status(response.getStatus()).entity(ErrorMessage.UNEXPECTED).build();
+        }
+        
+        /* If update is successfull create new prov entity */ 
+           if(ProvenanceManager.getProvMode()) {
+           
+               ProvenanceManager.createProvenanceGraph(graph, graph, body, login.getEmail()); 
+           
+                if(version) {
+                  UUID provModelUUID = ProvenanceManager.createNewVersionModel(graph, login.getEmail());  
+                }
         }
 
         Logger.getLogger(Models.class.getName()).log(Level.INFO, graph+" updated sucessfully!");
@@ -272,6 +304,11 @@ public class Models {
                Logger.getLogger(Models.class.getName()).log(Level.WARNING, graph+" was not created! Status "+response.getStatus());
                return Response.status(response.getStatus()).entity("{\"errorMessage\":\"Resource was not created\"}").build();
             }
+            
+           /* If new model was created succesfully create prov activity */
+           if(ProvenanceManager.getProvMode()) {
+                ProvenanceManager.createProvenanceActivity(graph, login.getEmail(), body);
+           }
 
             Logger.getLogger(Models.class.getName()).log(Level.INFO, graph+" updated sucessfully!");
            

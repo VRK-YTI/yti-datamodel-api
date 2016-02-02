@@ -46,6 +46,16 @@ public class JerseyFusekiClient {
        
     }
     
+    public static ClientResponse getGraphClientResponseFromService(String id, String service) {
+                   
+            Client client = Client.create();
+            WebResource webResource = client.resource(service)
+                                  .queryParam("graph", id);
+           
+            WebResource.Builder builder = webResource.accept("application/ld+json");
+            return builder.get(ClientResponse.class);
+    }
+    
     public static Response getGraphResponseFromService(String id, String service) {
         try {
         Client client = Client.create();

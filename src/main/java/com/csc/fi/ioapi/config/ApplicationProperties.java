@@ -41,4 +41,8 @@ public static String getProfileNamespace() {
     return PropertyUtil.getProperty("application.defaultProfileNamespace");  
 }
     
+public static boolean getProvenanceMode() {
+    return Boolean.parseBoolean(PropertyUtil.getProperty("application.provenance"));  
+}
+
 }

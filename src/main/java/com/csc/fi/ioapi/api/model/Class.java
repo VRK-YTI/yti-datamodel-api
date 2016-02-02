@@ -29,6 +29,7 @@ import com.csc.fi.ioapi.utils.GraphManager;
 import com.csc.fi.ioapi.utils.JerseyFusekiClient;
 import com.csc.fi.ioapi.utils.LDHelper;
 import com.csc.fi.ioapi.utils.NamespaceManager;
+import com.csc.fi.ioapi.utils.ProvenanceManager;
 import com.csc.fi.ioapi.utils.QueryLibrary;
 import com.hp.hpl.jena.query.DatasetAccessor;
 import com.hp.hpl.jena.query.DatasetAccessorFactory;
@@ -43,6 +44,7 @@ import com.wordnik.swagger.annotations.ApiParam;
 import com.wordnik.swagger.annotations.ApiResponse;
 import com.wordnik.swagger.annotations.ApiResponses;
 import java.util.Map;
+import java.util.UUID;
 import javax.ws.rs.DELETE;
  
 /**
@@ -106,11 +108,31 @@ public class Class {
         return JerseyFusekiClient.constructGraphFromService(pss.toString(), services.getCoreSparqlAddress());
 
       } else {
+          
+            IRIFactory iriFactory = IRIFactory.semanticWebImplementation();
+            IRI idIRI;
+            try {
+                idIRI = iriFactory.construct(id);
+            }
+            catch (IRIException e) {
+                return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
+            }  
+            
+            String sparqlService, graphService;
+        
+            if(id.startsWith("urn:")) {
+               sparqlService = services.getProvReadSparqlAddress();
+               graphService = services.getProvReadWriteAddress();
+           } else { 
+                sparqlService = services.getCoreSparqlAddress();
+                graphService = services.getCoreReadWriteAddress();
+            }
+          
         
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         
         /* Get Map of namespaces from id-graph */
-        Map<String, String> namespaceMap = NamespaceManager.getCoreNamespaceMap(id);
+        Map<String, String> namespaceMap = NamespaceManager.getCoreNamespaceMap(id, graphService);
         
         if(namespaceMap==null) {
             return Response.status(404).entity(ErrorMessage.NOTFOUND).build();
@@ -127,7 +149,7 @@ public class Class {
               pss.setIri("library", model);
         }
         
-        return JerseyFusekiClient.constructGraphFromService(pss.toString(), services.getCoreSparqlAddress());         
+        return JerseyFusekiClient.constructGraphFromService(pss.toString(), sparqlService);         
 
       }
          
@@ -203,13 +225,19 @@ public class Class {
                     GraphManager.renameID(oldIdIRI,idIRI);
                 }
             }
-            
+           
            /* Create new graph with new id */ 
            ClientResponse response = JerseyFusekiClient.putGraphToTheService(id, body, services.getCoreReadWriteAddress());
            
            if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
+               /* TODO: Create prov events from failed updates? */
                logger.log(Level.WARNING, "Unexpected: Not updated: "+id);
                return Response.status(response.getStatus()).entity(ErrorMessage.UNEXPECTED).build();
+           } 
+           
+           /* If update is successfull create new prov entity */ 
+           if(ProvenanceManager.getProvMode()) {
+                ProvenanceManager.createProvenanceGraph(id, model, body, login.getEmail()); 
            }
 
         } else {
@@ -284,10 +312,17 @@ public class Class {
           
            /* Create new graph with new id */ 
            ClientResponse response = JerseyFusekiClient.putGraphToTheService(id, body, services.getCoreReadWriteAddress());
-           
+          
            if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
                logger.log(Level.WARNING, "Unexpected: Not created: "+id);
                return Response.status(response.getStatus()).entity(ErrorMessage.UNEXPECTED).build();
+           }
+           
+           /* If new class was created succesfully create prov activity */
+           if(ProvenanceManager.getProvMode()) {
+              
+                ProvenanceManager.createProvenanceActivity(id, login.getEmail(), body);
+         
            }
             
             GraphManager.insertNewGraphReferenceToModel(idIRI, modelIRI);

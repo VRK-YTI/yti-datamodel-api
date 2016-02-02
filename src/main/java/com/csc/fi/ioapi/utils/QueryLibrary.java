@@ -9,6 +9,58 @@ package com.csc.fi.ioapi.utils;
  */
 public class QueryLibrary {
     
+        final public static String provModelQuery = LDHelper.expandSparqlQuery(
+                "CONSTRUCT {"
+                + "?every ?darn ?thing . }"
+                + "WHERE {"
+                + "GRAPH ?graph {"
+                + " ?every ?darn ?thing . }"
+                + "}");
+                
+                /* THIS WAS GETTING TOO COMPLEX ...
+        
+                     "CONSTRUCT { "
+                     + "?provGraph ?p ?o . "
+                     + "?every ?darn ?thing . "
+                     + "?provGraph dcterms:references ?ref . "
+                     + "?ref dcterms:title ?title . "
+                     + "?ref dcterms:identifier ?refID . "
+                     + "?provGraph dcterms:requires ?req . "
+                     + "?req rdfs:label ?reqLabel . "
+                     + "?req a ?type . "
+                     + "?req dcap:preferredXMLNamespaceName ?namespaces . "
+                     + "?req dcap:preferredXMLNamespacePrefix ?prefixes . "
+                     + "?provGraph dcterms:isPartOf ?group . "
+                     + "?group a foaf:Group . "
+                     + "?group rdfs:label ?groupLabel . "
+                     + "?group foaf:homepage ?homepage . " 
+                     + "} WHERE {"
+                     + "GRAPH ?provGraph {"
+                     + "?provGraph a prov:Activity . "
+                     + "?provGraph prov:used ?entity . "
+                     + "?entity prov:value ?graph . "
+                     + "} "
+                     + "GRAPH ?graph { "
+                     + "?provGraph ?p ?o . "
+                     + "?every ?darn ?thing . "
+                     + "OPTIONAL { "
+                     + "?provGraph dcterms:references ?ref . "
+                     + "?ref dcterms:title ?title . "
+                     + "?ref dcterms:identifier ?refID . "
+                     + " }"
+                     + "OPTIONAL {"
+                     + "?provGraph dcterms:requires ?req . "
+                     + "?req rdfs:label ?reqLabel . "
+                     + "?req a ?type . "
+                     + "?req dcap:preferredXMLNamespaceName ?namespaces . "
+                     + "?req dcap:preferredXMLNamespacePrefix ?prefixes .  }"
+                     + "?provGraph dcterms:isPartOf ?group . "
+                     + "OPTIONAL { "
+                     + "?group rdfs:label ?groupLabel . "
+                     + "?group foaf:homepage ?homepage . }"        
+                     + "} "
+                     + "}"); */
+    
     final public static String modelQuery = LDHelper.expandSparqlQuery(
                      "CONSTRUCT { "
                      + "?graph ?p ?o . "
@@ -32,8 +84,8 @@ public class QueryLibrary {
                      + "  ?ref dcterms:title ?title . "
                      + "  ?ref dcterms:identifier ?refID . "
                      + " }"
-                     + " OPTIONAL { ?graph dcterms:requires ?req . }"
                      + " OPTIONAL { "
+                     + "  ?graph dcterms:requires ?req . "
                      + "  ?req a dcap:MetadataVocabulary . "
                      + "  ?req a ?type .  "
                      + "  ?req rdfs:label ?reqLabel . "

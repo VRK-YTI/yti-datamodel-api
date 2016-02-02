@@ -214,7 +214,10 @@ public class GraphManager {
         UpdateRequest queryObj = pss.asUpdate();
         UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, services.getCoreSparqlUpdateAddress());
         qexec.execute();
+        
+        qexec = UpdateExecutionFactory.createRemoteForm(queryObj, services.getProvSparqlUpdateAddress());
 
+        qexec.execute();
     }
 
     public static void renameID(IRI oldID, IRI newID) {
@@ -243,7 +246,13 @@ public class GraphManager {
         String timestamp = SafeDateFormat.fmt().format(new Date());
 
         String query
-                = " INSERT { GRAPH ?model { ?model dcterms:hasPart ?graph } GRAPH ?graph { ?graph rdfs:isDefinedBy ?model . ?graph dcterms:created ?timestamp . }} "
+                = " INSERT { "
+                + "GRAPH ?model { "
+                + "?model dcterms:hasPart ?graph "
+                + "} "
+                + "GRAPH ?graph { "
+                + "?graph rdfs:isDefinedBy ?model . "
+                + "?graph dcterms:created ?timestamp . }} "
                 + " WHERE { GRAPH ?graph {}}";
 
         ParameterizedSparqlString pss = new ParameterizedSparqlString();

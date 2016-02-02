@@ -90,8 +90,6 @@ public class ShapeCreator {
                     + "} WHERE { "
                     + "BIND(now() as ?creation) "
                     + "BIND(now() as ?modified) "
-                //    + (classID.startsWith(ApplicationProperties.getProfileNamespace()) ?
-                //        "BIND(iri(concat(concat(?profileNamespace,afn:localname(?classIRI)),substr(str(rand()), 3, 7))) as ?shapeIRI)":
                     + "BIND(iri(concat(?profileNamespace,concat('s',afn:localname(?classIRI)))) as ?shapeIRI)"   
                     + "GRAPH ?classIRI { "
                     + "?classIRI a rdfs:Class . "
