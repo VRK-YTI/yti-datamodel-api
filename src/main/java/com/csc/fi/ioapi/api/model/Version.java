@@ -69,6 +69,7 @@ public class Version {
     @Context ServletContext context;
     EndpointServices services = new EndpointServices();
  
+    
   @GET
   @Produces("application/ld+json")
   @ApiOperation(value = "Get activity history for the resource", notes = "More notes about this method")
@@ -120,7 +121,7 @@ public class Version {
       
     }
   
-
+/* TODO: Should be removed and used from model api? */
     @PUT
     @ApiOperation(value = "Create new model version", notes = "Create new model version")
     @ApiResponses(value = { @ApiResponse(code = 200, message = "New property is created"),
