@@ -6,7 +6,10 @@
 package com.csc.fi.ioapi.config;
 
 import com.csc.fi.ioapi.utils.ServiceDescriptionManager;
+import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.servlet.http.HttpSession;
 
 /**
@@ -16,6 +19,7 @@ import javax.servlet.http.HttpSession;
 public class LoginSession implements LoginInterface {
 
     private HttpSession session;
+    private static final Logger logger = Logger.getLogger(LoginSession.class.getName());
     
     public LoginSession(HttpSession httpSession) {
         this.session = httpSession;
@@ -34,7 +38,12 @@ public class LoginSession implements LoginInterface {
 
     @Override
     public String getDisplayName() {
-        return session.getAttribute("displayName").toString();
+        try {
+            return new String(session.getAttribute("displayName").toString().getBytes("ISO-8859-1"),"UTF-8");
+        } catch (UnsupportedEncodingException ex) {
+           logger.warning("Unable to convert ISO-8859-1 to UTF-8");
+           return session.getAttribute("displayName").toString();
+        }
     }
 
     @Override
