@@ -32,7 +32,7 @@ import org.apache.jena.iri.IRIFactory;
  * Root resource (exposed at "usage" path)
  */
 @Path("usage")
-@Api(value = "/usage", description = "Returns all known references to the given resource")
+@Api(value = "/usage", description = "Returns all known references to the given resource. Resource ID and Model ID are alternative parameters")
 public class Usage {
 
     @Context ServletContext context;
@@ -47,15 +47,23 @@ public class Usage {
                     @ApiResponse(code = 403, message = "Invalid IRI in parameter"),
                     @ApiResponse(code = 404, message = "Service not found") })
     public Response newClass(
-            @ApiParam(value = "Resource ID", required = true) @QueryParam("id") String id) {
+            @ApiParam(value = "Resource ID") @QueryParam("id") String id,
+            @ApiParam(value = "Model ID") @QueryParam("model") String model) {
 
-            IRI resourceIRI;
+            IRI resourceIRI = null;
+            IRI modelIRI = null;
+            
             try {
                     IRIFactory iri = IRIFactory.semanticWebImplementation();
-                    resourceIRI = iri.construct(id);
+                    if(id!=null && !id.equals("undefined")) resourceIRI = iri.construct(id);
+                    if(model!=null && !model.equals("undefined")) modelIRI = iri.construct(model);
             } catch (IRIException e) {
                     return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
             }
+            
+            if(resourceIRI==null && modelIRI==null || resourceIRI!=null && modelIRI!=null) {
+                 return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
+            } 
 
             ParameterizedSparqlString pss = new ParameterizedSparqlString();
             Map<String,String> namespaces = NamespaceManager.getCoreNamespaceMap();
@@ -87,10 +95,38 @@ public class Usage {
                     + "OPTIONAL {?usage rdfs:isDefinedBy ?usageModel . }}"
                     + "FILTER(?usage!=?resourceModel)"
                     + "}";
+            
+                String modelQueryString = "CONSTRUCT  { "
+                    + "?resourceModel a ?modelType . "
+                    + "?resourceModel rdfs:label ?modelLabel . "
+                    + "?resourceModel dcterms:isReferencedBy ?usage . "
+                    + "?usage a ?usageType . "
+                    + "?usage rdfs:label ?usageLabel . "
+                    + "?usage rdfs:isDefinedBy ?usageModel . "
+                    + "} WHERE { "
+                    + "GRAPH ?resource { "
+                    + "?resource a ?type . "
+                    + "?resource rdfs:label ?label . "
+                    + "?resource rdfs:isDefinedBy ?resourceModel . }"
+                    + "GRAPH ?resourceModel {"
+                    + "?resourceModel a ?modelType . "
+                    + "?resourceModel rdfs:label ?modelLabel . }"
+                    + "GRAPH ?usage { "
+                    + "?subject ?property ?resource . "
+                    + "?usage a ?usageType . "
+                    + "?usage rdfs:label ?usageLabel . "
+                    + "?usage rdfs:isDefinedBy ?usageModel . }"
+                    + "FILTER(?usageModel!=?resourceModel)"
+                    + "}";
 
-            pss.setCommandText(queryString);
-            pss.setIri("resource", resourceIRI);
-
+            if(modelIRI==null) {
+                pss.setCommandText(queryString);
+                pss.setIri("resource", resourceIRI);
+            } else {
+                pss.setCommandText(modelQueryString);
+                pss.setIri("resourceModel", modelIRI);
+            }
+           
             return JerseyFusekiClient.constructGraphFromService(pss.toString(), services.getCoreSparqlAddress());
     }   
  
