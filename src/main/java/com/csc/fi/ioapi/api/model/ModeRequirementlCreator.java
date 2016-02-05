@@ -63,7 +63,7 @@ public class ModeRequirementlCreator {
                     return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
             }
             
-            boolean isResolvedNamespace = false;
+            boolean isResolvedNamespace = true;
             
             if(!namespace.startsWith(ApplicationProperties.getDefaultDomain())) {
                isResolvedNamespace = NamespaceResolver.resolveNamespace(namespace);
