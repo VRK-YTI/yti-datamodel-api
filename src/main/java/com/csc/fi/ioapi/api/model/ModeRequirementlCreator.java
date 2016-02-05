@@ -3,6 +3,7 @@
  */
 package com.csc.fi.ioapi.api.model;
 
+import com.csc.fi.ioapi.config.ApplicationProperties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -15,6 +16,7 @@ import com.csc.fi.ioapi.config.EndpointServices;
 import com.csc.fi.ioapi.utils.ErrorMessage;
 import com.csc.fi.ioapi.utils.JerseyFusekiClient;
 import com.csc.fi.ioapi.utils.LDHelper;
+import com.csc.fi.ioapi.utils.NamespaceResolver;
 import com.hp.hpl.jena.query.ParameterizedSparqlString;
 import com.hp.hpl.jena.rdf.model.ResourceFactory;
 import com.wordnik.swagger.annotations.Api;
@@ -60,17 +62,24 @@ public class ModeRequirementlCreator {
             } catch (IRIException e) {
                     return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
             }
+            
+            boolean isResolvedNamespace = false;
+            
+            if(!namespace.startsWith(ApplicationProperties.getDefaultDomain())) {
+               isResolvedNamespace = NamespaceResolver.resolveNamespace(namespace);
+            }
 
             String queryString;
             ParameterizedSparqlString pss = new ParameterizedSparqlString();
             pss.setNsPrefixes(LDHelper.PREFIX_MAP);
-            queryString = "CONSTRUCT  { ?g a dcap:MetadataVocabulary . ?g rdfs:label ?label . ?g dcap:preferredXMLNamespaceName ?namespace . ?g dcap:preferredXMLNamespacePrefix ?prefix . } WHERE { }";
+            queryString = "CONSTRUCT  { ?g a dcap:MetadataVocabulary . ?g rdfs:label ?label . ?g dcap:preferredXMLNamespaceName ?namespace . ?g dcap:preferredXMLNamespacePrefix ?prefix . ?g iow:isResolved ?resolved } WHERE { }";
 
             pss.setCommandText(queryString);
             pss.setIri("g", namespaceIRI);
             pss.setLiteral("label", ResourceFactory.createLangLiteral(label, lang));
             pss.setLiteral("namespace",namespace);
             pss.setLiteral("prefix", prefix);
+            pss.setLiteral("resolved", isResolvedNamespace);
 
             return JerseyFusekiClient.constructGraphFromService(pss.toString(), services.getTempConceptReadSparqlAddress());
 

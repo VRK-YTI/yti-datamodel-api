@@ -11,37 +11,41 @@ import com.csc.fi.ioapi.utils.PropertyUtil;
  *
  * @author malonen
  */
-public class ApplicationProperties {    
+public final class ApplicationProperties {    
     
-public static String getEndpoint() {
+public final static String getEndpoint() {
     return PropertyUtil.getProperty("application.endpoint");
 }
 
-public static boolean getDebugMode() {
+public final static boolean getDebugMode() {
     return Boolean.parseBoolean(PropertyUtil.getProperty("application.debug"));
 } 
 
-public static String getGroupDomain() {
+public final static String getGroupDomain() {
     return PropertyUtil.getProperty("application.groupdomain");
 }
 
-public static String getDebugGroups() {
+public final static String getDebugGroups() {
     return PropertyUtil.getProperty("application.debugGroup");  
 }
 
-public static String getDebugAdress() {
+public final static String getDebugAdress() {
     return PropertyUtil.getProperty("application.debugAdress");  
 }
 
-public static String getDefaultNamespace() {
+public final static String getDefaultNamespace() {
     return PropertyUtil.getProperty("application.defaultNamespace");  
 }
 
-public static String getProfileNamespace() {
+public final static String getDefaultDomain() {
+    return PropertyUtil.getProperty("application.defaultDomain");  
+}
+
+public final static String getProfileNamespace() {
     return PropertyUtil.getProperty("application.defaultProfileNamespace");  
 }
     
-public static boolean getProvenanceMode() {
+public final static boolean getProvenanceMode() {
     return Boolean.parseBoolean(PropertyUtil.getProperty("application.provenance"));  
 }
 
