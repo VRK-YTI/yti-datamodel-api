@@ -157,10 +157,13 @@ public class Version {
           
         UUID versionUUID = UUID.randomUUID();
         
-        
+        try {
         GraphManager.addGraphFromServiceToService(modelID, "urn:uuid:"+versionUUID, services.getCoreReadAddress(), services.getProvReadWriteAddress());  
         GraphManager.addGraphFromServiceToService(modelID+"#HasPartGraph", modelID+"#HasPartGraph", services.getCoreReadAddress(), services.getProvReadWriteAddress());  
-  
+        } catch(NullPointerException ex) {
+            logger.warning("Could not create PROV graphs!");
+        }
+        
         ProvenanceManager.createNewVersionModel(modelID, login.getEmail(), versionUUID);
         
         return Response.status(200).entity("{\"@id\":\"urn:uuid:"+versionUUID+"\"}").build();
