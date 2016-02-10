@@ -95,22 +95,16 @@ public class Version {
         
         String queryString = "CONSTRUCT { "
                 + "?activity a prov:Activity . "
-                + "?activity rdfs:label ?label . "
                 + "?activity prov:wasAttributedTo ?user . "
                 + "?activity dcterms:modified ?modified . "
-                + "?activity rdfs:isDefinedBy ?model . " 
+                + "?activity dcterms:identifier ?entity . " 
                 + " } "
                 + "WHERE {"
                 + "?activity a prov:Activity . "
                 + "?activity prov:used ?entity . "
                 + "?entity a prov:Entity . "
                 + "?entity prov:wasAttributedTo ?user . "
-                + "?entity prov:value ?provGraph . "
                 + "?entity prov:generatedAtTime ?modified . "
-                + "GRAPH ?provGraph {"
-                + "?resource rdfs:isDefinedBy ?model . "
-                + "?resource rdfs:label ?label . "
-                + "}"
                 + "} ORDER BY DESC(?modified)"; 
 
         pss.setCommandText(queryString);
