@@ -80,10 +80,12 @@ public class Version {
   })
   public Response json(
       @ApiParam(value = "resource id")
-      @QueryParam("id") String id) {
+      @QueryParam("id") String id,
+      @ApiParam(value = "Peek", defaultValue="false")
+      @QueryParam("peek") boolean peek) {
       
-      if(id==null || id.equals("undefined") || id.equals("default")) {
-
+      if(id==null || id.equals("undefined") || id.equals("default") || (peek && id!=null) ) {
+ 
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         
         Map<String, String> namespacemap = NamespaceManager.getCoreNamespaceMap();
@@ -95,23 +97,27 @@ public class Version {
                 + "?activity a prov:Activity . "
                 + "?activity rdfs:label ?label . "
                 + "?activity prov:wasAttributedTo ?user . "
-                + "?activity prov:atTime ?created . "
-                + "?activity rdfs:isDefinedBy ?model . "
+                + "?activity dcterms:modified ?modified . "
+                + "?activity rdfs:isDefinedBy ?model . " 
                 + " } "
                 + "WHERE {"
                 + "?activity a prov:Activity . "
                 + "?activity prov:used ?entity . "
                 + "?entity a prov:Entity . "
                 + "?entity prov:wasAttributedTo ?user . "
-                + "?entity prov:generatedAtTime ?created . "
                 + "?entity prov:value ?provGraph . "
+                + "?entity prov:generatedAtTime ?modified . "
                 + "GRAPH ?provGraph {"
                 + "?resource rdfs:isDefinedBy ?model . "
                 + "?resource rdfs:label ?label . "
                 + "}"
-                + "} ORDER BY DESC(?created)"; 
+                + "} ORDER BY DESC(?modified)"; 
 
         pss.setCommandText(queryString);
+        
+        if(peek) {
+            pss.setIri("activity", id);
+        }
 
         return JerseyFusekiClient.constructGraphFromService(pss.toString(), services.getProvReadSparqlAddress());
       
@@ -155,11 +161,15 @@ public class Version {
                     return Response.status(403).build();
             }
           
-            /* TODO: Check that model is dcap:MetadataVocabulary or dcap:DCAP */
-            
-        UUID provModelUUID = ProvenanceManager.createNewVersionModel(modelID, login.getEmail());
-           
-        return Response.status(200).entity("{\"@id\":\"urn:uuid:"+provModelUUID+"\"}").build();
+        UUID versionUUID = UUID.randomUUID();
+        
+        
+        GraphManager.addGraphFromServiceToService(modelID, "urn:uuid:"+versionUUID, services.getCoreReadAddress(), services.getProvReadWriteAddress());  
+        GraphManager.addGraphFromServiceToService(modelID+"#HasPartGraph", modelID+"#HasPartGraph", services.getCoreReadAddress(), services.getProvReadWriteAddress());  
+  
+        ProvenanceManager.createNewVersionModel(modelID, login.getEmail(), versionUUID);
+        
+        return Response.status(200).entity("{\"@id\":\"urn:uuid:"+versionUUID+"\"}").build();
          
     }
 

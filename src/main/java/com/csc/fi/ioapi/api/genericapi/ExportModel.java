@@ -95,9 +95,9 @@ public class ExportModel {
                 + "?ms ?p ?o . "
                 + "?rs ?rp ?ro . "
                 + " } WHERE { "
+                + "?model <http://purl.org/dc/terms/hasPart> ?resource . "
                 + "GRAPH ?model {"
                 + "?ms ?p ?o . "
-                + "?model <http://purl.org/dc/terms/hasPart> ?resource . "
                 + "} GRAPH ?resource { "
                 + "?rs ?rp ?ro . "
                 + "}}"; 

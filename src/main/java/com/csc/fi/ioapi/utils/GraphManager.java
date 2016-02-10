@@ -62,7 +62,7 @@ public class GraphManager {
                 + "VALUES ?status { \"Draft\" \"Recommendation\" } "
                 + "?graph owl:versionInfo ?status . }"
                 + "} UNION { "
-                + "GRAPH ?graph { "
+                + "GRAPH ?hasPartGraph { "
                 + "?graph dcterms:hasPart ?resource . }"
                 + "GRAPH ?resource { "
                 + "?resource rdfs:isDefinedBy ?graph . "
@@ -118,7 +118,7 @@ public class GraphManager {
     public static String buildRemoveModelQuery(String model) {
 
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
-        String selectResources = "SELECT ?graph WHERE { GRAPH ?model { ?model dcterms:hasPart ?graph . } GRAPH ?graph { ?graph rdfs:isDefinedBy ?model . }}";
+        String selectResources = "SELECT ?graph WHERE { GRAPH ?hasPartGraph { ?model dcterms:hasPart ?graph . } GRAPH ?graph { ?graph rdfs:isDefinedBy ?model . }}";
 
         pss.setIri("model", model);
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
@@ -223,9 +223,9 @@ public class GraphManager {
     public static void renameID(IRI oldID, IRI newID) {
 
         String query
-                = " DELETE { GRAPH ?graph { ?graph dcterms:hasPart ?oldID }}"
-                + " INSERT { GRAPH ?graph { ?graph dcterms:hasPart ?newID }}"
-                + " WHERE { GRAPH ?graph { ?graph dcterms:hasPart ?oldID }}";
+                = " DELETE { GRAPH ?hasPartGraph { ?graph dcterms:hasPart ?oldID }}"
+                + " INSERT { GRAPH ?hasPartGraph { ?graph dcterms:hasPart ?newID }}"
+                + " WHERE { GRAPH ?hasPartGraph { ?graph dcterms:hasPart ?oldID }}";
 
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
@@ -241,24 +241,25 @@ public class GraphManager {
 
     }
 
-    public static void insertNewGraphReferenceToModel(IRI graph, IRI model) {
+    public static void insertNewGraphReferenceToModel(String graph, String model) {
 
         String timestamp = SafeDateFormat.fmt().format(new Date());
 
         String query
                 = " INSERT { "
-                + "GRAPH ?model { "
+                + "GRAPH ?hasPartGraph { "
                 + "?model dcterms:hasPart ?graph "
                 + "} "
                 + "GRAPH ?graph { "
                 + "?graph rdfs:isDefinedBy ?model . "
                 + "?graph dcterms:created ?timestamp . }} "
-                + " WHERE { GRAPH ?graph {}}";
+                + " WHERE { GRAPH ?graph { ?graph a ?type . }}";
 
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
         pss.setIri("graph", graph);
         pss.setIri("model", model);
+        pss.setIri("hasPartGraph", model+"#HasPartGraph");
         pss.setLiteral("date", timestamp);
         pss.setCommandText(query);
 
@@ -270,19 +271,17 @@ public class GraphManager {
 
     }
 
-    public static void insertExistingGraphReferenceToModel(IRI graph, IRI model) {
+    public static void insertExistingGraphReferenceToModel(String graph, String model) {
 
-      // TODO: ADD MODIFIED DATE TO MODEL
-        //   String timestamp = fmt.format(new Date());
         String query
-                = " INSERT { GRAPH ?model { ?model dcterms:hasPart ?graph }} "
+                = " INSERT { GRAPH ?hasPartGraph { ?model dcterms:hasPart ?graph }} "
                 + " WHERE { GRAPH ?graph { ?graph a ?type . }}";
 
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
         pss.setIri("graph", graph);
         pss.setIri("model", model);
-        // pss.setLiteral("date", timestamp);
+        pss.setIri("hasPartGraph", model+"#HasPartGraph");
         pss.setCommandText(query);
 
         logger.log(Level.WARNING, pss.toString() + " " + services.getCoreSparqlUpdateAddress());
@@ -296,7 +295,7 @@ public class GraphManager {
     public static void deleteGraphReferenceFromModel(IRI graph, IRI model) {
 
         String query
-                = " DELETE { GRAPH ?model { ?model dcterms:hasPart ?graph }} "
+                = " DELETE { GRAPH ?hasPartGraph { ?model dcterms:hasPart ?graph }} "
                 + " WHERE { GRAPH ?graph { ?graph a ?type . }}";
 
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
@@ -311,4 +310,19 @@ public class GraphManager {
 
     }
 
+        public static void addGraphFromServiceToService(String fromGraph, String toGraph, String fromService, String toService) throws NullPointerException {
+        
+        DatasetAccessor fromAccessor = DatasetAccessorFactory.createHTTP(fromService);
+        Model graphModel = fromAccessor.getModel(fromGraph);
+        
+        if(graphModel==null) {
+            throw new NullPointerException();
+        }
+        
+        DatasetAccessor toAccessor = DatasetAccessorFactory.createHTTP(toService);
+        toAccessor.add(toGraph, graphModel);
+        
+    }
+    
+    
 }

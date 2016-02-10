@@ -36,8 +36,10 @@ public class ImportManager {
 
         String query
                 = " INSERT { "
-                + "GRAPH ?graph { "
+                + "GRAPH ?hasPartGraph { "
                 + " ?graph dcterms:hasPart ?resource . "
+                + "}"
+                + "GRAPH ?graph { "
                 + " ?graph owl:versionInfo ?draft . } "
                 + "GRAPH ?resource { "
                 + " ?resource dcterms:modified ?date . "
@@ -71,6 +73,7 @@ public class ImportManager {
         pss.setNsPrefix("rdfs", "http://www.w3.org/2000/01/rdf-schema#");
 
         pss.setIri("graph", graph);
+        pss.setIri("hasPartGraph", graph+"#HasPartGraph");
         pss.setLiteral("date", timestamp);
         pss.setLiteral("draft", "Unstable");
         pss.setCommandText(query);

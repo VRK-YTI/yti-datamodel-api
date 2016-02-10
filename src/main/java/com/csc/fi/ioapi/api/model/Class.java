@@ -86,8 +86,7 @@ public class Class {
                 + "?class rdfs:isDefinedBy ?source . "
                 + "?source rdfs:label ?sourceLabel . "
                 + "?source a ?sourceType . } WHERE { "
-                + "VALUES ?rel {dcterms:hasPart iow:classes} "
-                + "?library ?rel ?class . "
+                + "?library dcterms:hasPart ?class . "
                 + "GRAPH ?graph { "
                 + "?class dcterms:modified ?modified . "
                 + "?class rdfs:label ?label . "
@@ -210,6 +209,8 @@ public class Class {
             return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
         }
         
+        UUID provUUID = UUID.randomUUID();
+        
         if(isNotEmpty(body)) {
             
             /* Rename ID if oldIdIRI exists */
@@ -234,10 +235,10 @@ public class Class {
                logger.log(Level.WARNING, "Unexpected: Not updated: "+id);
                return Response.status(response.getStatus()).entity(ErrorMessage.UNEXPECTED).build();
            } 
-           
+            
            /* If update is successfull create new prov entity */ 
            if(ProvenanceManager.getProvMode()) {
-                ProvenanceManager.createProvenanceGraph(id, model, body, login.getEmail()); 
+                ProvenanceManager.createProvenanceGraph(id, body, login.getEmail(), provUUID); 
            }
 
         } else {
@@ -246,12 +247,13 @@ public class Class {
                 // Selfreferences not allowed
                 Response.status(403).entity(ErrorMessage.USEDIRI).build();
             } else {
-                GraphManager.insertExistingGraphReferenceToModel(idIRI, modelIRI);
+                GraphManager.insertExistingGraphReferenceToModel(id, model);
+                return Response.status(204).build();
             }
         }
         
         Logger.getLogger(Class.class.getName()).log(Level.INFO, id+" updated sucessfully");
-        return Response.status(204).build();
+        return Response.status(204).entity("{\"identifier\":\"urn:uuid:"+provUUID+"\"}").build();
         
   }
   
@@ -318,17 +320,18 @@ public class Class {
                return Response.status(response.getStatus()).entity(ErrorMessage.UNEXPECTED).build();
            }
            
+            UUID provUUID = UUID.randomUUID();
+            
            /* If new class was created succesfully create prov activity */
            if(ProvenanceManager.getProvMode()) {
-              
-                ProvenanceManager.createProvenanceActivity(id, login.getEmail(), body);
-         
+               ProvenanceManager.createProvenanceActivity(id, login.getEmail(), body, provUUID);
            }
             
-            GraphManager.insertNewGraphReferenceToModel(idIRI, modelIRI);
+            GraphManager.insertNewGraphReferenceToModel(id, model);
             
             logger.log(Level.INFO, id+" updated sucessfully!");
-            return Response.status(204).build();
+            
+          return Response.status(204).entity("{\"identifier\":\"urn:uuid:"+provUUID+"\"}").build();
 
       } catch(UniformInterfaceException | ClientHandlerException ex) {
         Logger.getLogger(Class.class.getName()).log(Level.WARNING, "Expect the unexpected!", ex);

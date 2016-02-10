@@ -16,6 +16,7 @@ import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Logger;
 import javax.ws.rs.core.Response;
 import org.apache.jena.web.DatasetAdapter;
 import org.apache.jena.web.DatasetGraphAccessorHTTP;
@@ -27,7 +28,8 @@ import org.apache.jena.web.DatasetGraphAccessorHTTP;
 public class NamespaceManager {
 
     static EndpointServices services = new EndpointServices();
-     
+    private static final Logger logger = Logger.getLogger(NamespaceManager.class.getName());
+      
     public static boolean isSchemaInStore(String namespace) {
         
         DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(services.getImportsReadAddress());
@@ -60,6 +62,8 @@ public class NamespaceManager {
     
     public static void copyNamespacesFromGraphToGraph(String fromGraph, String toGraph, String fromService, String toService) throws NullPointerException {
         
+        /* TODO: j.0 namespace ISSUE!? */ 
+        
         DatasetAccessor fromAccessor = DatasetAccessorFactory.createHTTP(fromService);
         Model classModel = fromAccessor.getModel(fromGraph);
             
@@ -71,6 +75,7 @@ public class NamespaceManager {
         
         Model copyNamespaces = ModelFactory.createDefaultModel();
         copyNamespaces.setNsPrefixes(namespaces);
+        copyNamespaces.removeNsPrefix("j.0");
         
         DatasetAccessor toAccessor = DatasetAccessorFactory.createHTTP(toService);
         toAccessor.add(toGraph, copyNamespaces);

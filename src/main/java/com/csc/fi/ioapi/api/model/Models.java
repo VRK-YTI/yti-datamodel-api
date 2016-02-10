@@ -228,19 +228,31 @@ public class Models {
                return Response.status(response.getStatus()).entity(ErrorMessage.UNEXPECTED).build();
         }
         
+        UUID provUUID = UUID.randomUUID();
+                
         /* If update is successfull create new prov entity */ 
            if(ProvenanceManager.getProvMode()) {
            
-               ProvenanceManager.createProvenanceGraph(graph, graph, body, login.getEmail()); 
+               ProvenanceManager.createProvenanceGraph(graph, body, login.getEmail(), provUUID); 
            
                 if(version) {
-                  UUID provModelUUID = ProvenanceManager.createNewVersionModel(graph, login.getEmail());  
+                  
+                  UUID versionUUID = UUID.randomUUID();
+                  
+                  /* Create version model from current model */
+                  GraphManager.addGraphFromServiceToService(graph, "urn:uuid:"+versionUUID, services.getCoreReadAddress(), services.getProvReadWriteAddress());  
+                  /* Add hasPartList to model graph */  
+                  GraphManager.addGraphFromServiceToService(graph+"#HasPartGraph", graph+"#HasPartGraph", services.getCoreReadAddress(), services.getProvReadWriteAddress());  
+  
+                  ProvenanceManager.createNewVersionModel(graph, login.getEmail(), versionUUID);
+                  
+                  return Response.status(204).entity("{\"identifier\":\"urn:uuid:"+versionUUID+"\"}").build();
                 }
         }
 
         Logger.getLogger(Models.class.getName()).log(Level.INFO, graph+" updated sucessfully!");
 
-        return Response.status(204).build();
+        return Response.status(204).entity("{\"identifier\":\"urn:uuid:"+provUUID+"\"}").build();
 
   }
   
@@ -304,15 +316,17 @@ public class Models {
                Logger.getLogger(Models.class.getName()).log(Level.WARNING, graph+" was not created! Status "+response.getStatus());
                return Response.status(response.getStatus()).entity("{\"errorMessage\":\"Resource was not created\"}").build();
             }
-            
+           
+           UUID provUUID = UUID.randomUUID();
+                    
            /* If new model was created succesfully create prov activity */
            if(ProvenanceManager.getProvMode()) {
-                ProvenanceManager.createProvenanceActivity(graph, login.getEmail(), body);
+                ProvenanceManager.createProvenanceActivity(graph, login.getEmail(), body, provUUID);
            }
 
             Logger.getLogger(Models.class.getName()).log(Level.INFO, graph+" updated sucessfully!");
            
-            return Response.status(204).build();
+            return Response.status(204).entity("{\"identifier\":\"urn:uuid:"+provUUID+"\"}").build();
 
   }
   

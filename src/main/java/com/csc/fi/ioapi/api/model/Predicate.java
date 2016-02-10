@@ -48,6 +48,7 @@ import com.wordnik.swagger.annotations.ApiParam;
 import com.wordnik.swagger.annotations.ApiResponse;
 import com.wordnik.swagger.annotations.ApiResponses;
 import java.util.Map;
+import java.util.UUID;
 import javax.ws.rs.DELETE;
 
  
@@ -89,7 +90,8 @@ public class Predicate {
                 + "?source rdfs:label ?sourceLabel . "
                 + "?source a ?sourceType . "
                 + "?property dcterms:modified ?date . } "
-                + "WHERE { ?library dcterms:hasPart ?property . "
+                + "WHERE { "
+                + "?library dcterms:hasPart ?property . "
                 + "GRAPH ?graph { ?property rdfs:label ?label . "
                 + "VALUES ?type { owl:ObjectProperty owl:DatatypeProperty } "
                 + "?property a ?type . "
@@ -208,6 +210,8 @@ public class Predicate {
             return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
         }
         
+        UUID provUUID = UUID.randomUUID();
+        
         if(isNotEmpty(body)) {
             
             /* Rename ID */
@@ -235,7 +239,7 @@ public class Predicate {
         
         /* If update is successfull create new prov entity */ 
         if(ProvenanceManager.getProvMode()) {
-           ProvenanceManager.createProvenanceGraph(id, model, body, login.getEmail()); 
+           ProvenanceManager.createProvenanceGraph(id, body, login.getEmail(), provUUID); 
         }
             
         } else {
@@ -244,13 +248,15 @@ public class Predicate {
                 // Selfreferences not allowed
                  return Response.status(403).entity(ErrorMessage.USEDIRI).build();
             } else {
-                GraphManager.insertExistingGraphReferenceToModel(idIRI, modelIRI);
+                GraphManager.insertExistingGraphReferenceToModel(id, model);
+                return Response.status(204).build();
             }
         }
         
         logger.log(Level.INFO, id + " updated sucessfully!");
-        return Response.status(204).build();
 
+        return Response.status(204).entity("{\"identifier\":\"urn:uuid:"+provUUID+"\"}").build();
+        
   }
   
   
@@ -311,16 +317,18 @@ public class Predicate {
                return Response.status(response.getStatus()).entity(ErrorMessage.UNEXPECTED).build();
            }
            
+            UUID provUUID = UUID.randomUUID();
+            
            /* If predicate is created succesfully create prov activity */
            if(ProvenanceManager.getProvMode()) {
-                ProvenanceManager.createProvenanceActivity(id, login.getEmail(), body);
+                ProvenanceManager.createProvenanceActivity(id, login.getEmail(), body, provUUID);
            }
             
-           GraphManager.insertNewGraphReferenceToModel(idIRI, modelIRI);
+           GraphManager.insertNewGraphReferenceToModel(id, model);
             
            logger.log(Level.INFO, id + " updated sucessfully!");
             
-           return Response.status(204).build();
+           return Response.status(204).entity("{\"identifier\":\"urn:uuid:"+provUUID+"\"}").build();
            
   }
   

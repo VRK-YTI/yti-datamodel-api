@@ -160,6 +160,33 @@ public class JerseyFusekiClient {
             
     }
     
+        public static ClientResponse constructGraphFromServiceToService(String query, String fromService, String toService, String toGraph) {
+        
+            
+            /* TODO: TEST! Not yet in use. */
+            
+            Client client = Client.create();
+
+            WebResource webResource = client.resource(fromService)
+                                      .queryParam("query", UriComponent.encode(query,UriComponent.Type.QUERY));
+
+            WebResource.Builder builder = webResource.accept("application/ld+json");
+
+            ClientResponse response = builder.get(ClientResponse.class);
+            ResponseBuilder rb = Response.status(response.getStatus()); 
+            rb.entity(response.getEntityInputStream());
+            
+            if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
+              return builder.get(ClientResponse.class);
+            }
+            
+            logger.info(rb.toString());
+            
+            return putGraphToTheService(toGraph, rb.toString(), toService);
+            
+    }
+    
+    
     public static Response deleteGraphFromService(String graph, String service) {
         
         try {

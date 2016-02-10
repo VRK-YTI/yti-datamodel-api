@@ -15,9 +15,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
 import org.apache.commons.lang3.StringUtils;
-
 import com.github.jsonldjava.utils.JsonUtils;
 import com.hp.hpl.jena.query.ParameterizedSparqlString;
 import com.sun.jersey.api.uri.UriComponent;
@@ -53,6 +51,7 @@ public class LDHelper {
         put("prov","http://www.w3.org/ns/prov#");
         put("dcap","http://purl.org/ws-mmi-dc/terms/");
         put("afn","http://jena.hpl.hp.com/ARQ/function#");
+        put("schema","http://schema.org/");
     }});
 
     public static final Map<String, Object> CONTEXT_MAP = 
@@ -90,9 +89,10 @@ public class LDHelper {
                             "PREFIX prov: <http://www.w3.org/ns/prov#> " +
                             "PREFIX iow: <http://urn.fi/urn:nbn:fi:csc-iow-meta#>" +
                             "PREFIX dcap: <http://purl.org/ws-mmi-dc/terms/> " +
-                            "PREFIX afn: <http://jena.hpl.hp.com/ARQ/function#>";
+                            "PREFIX afn: <http://jena.hpl.hp.com/ARQ/function#>"+
+                            "PREFIX schema: <http://schema.org/>";
     
-    
+   
     ParameterizedSparqlString pss = new ParameterizedSparqlString();
 
     static String query(String queryString) {
