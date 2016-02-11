@@ -69,8 +69,7 @@ public class Models {
           @ApiParam(value = "group")
           @QueryParam("group") String group) {
 
-          // TODO: Create final string - QueryLibrary class
-          String queryString;
+          String queryString = QueryLibrary.modelQuery;
           
           ParameterizedSparqlString pss = new ParameterizedSparqlString();
           
@@ -86,17 +85,16 @@ public class Models {
        
             }
             
-            String sparqlService, graphService;
-        
+
             if(id.startsWith("urn:")) {
-               sparqlService = services.getProvReadSparqlAddress();
-               graphService = services.getProvReadWriteAddress();
-               queryString = QueryLibrary.provModelQuery;
-           } else { 
-                sparqlService = services.getCoreSparqlAddress();
-                graphService = services.getCoreReadWriteAddress();
-                queryString = QueryLibrary.modelQuery;
-            }
+               return JerseyFusekiClient.getGraphResponseFromService(id, services.getProvReadWriteAddress());
+            }   
+           
+
+            String sparqlService = services.getCoreSparqlAddress();
+            String graphService = services.getCoreReadWriteAddress();
+            
+         
 
             /* TODO: Create Namespace service? */
             DatasetAccessor accessor = DatasetAccessorFactory.createHTTP(graphService);
