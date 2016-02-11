@@ -5,13 +5,11 @@ package com.csc.fi.ioapi.utils;
 
 import com.csc.fi.ioapi.config.ApplicationProperties;
 import com.csc.fi.ioapi.config.EndpointServices;
-import static com.csc.fi.ioapi.utils.ImportManager.services;
 import com.hp.hpl.jena.query.ParameterizedSparqlString;
 import com.hp.hpl.jena.update.UpdateExecutionFactory;
 import com.hp.hpl.jena.update.UpdateProcessor;
 import com.hp.hpl.jena.update.UpdateRequest;
 import com.sun.jersey.api.client.ClientResponse;
-import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Logger;
 import javax.ws.rs.core.Response;
@@ -203,7 +201,7 @@ public class ProvenanceManager {
 
         public static void createNewVersionModel(String model, String user, UUID provModelUUID) {
         
-
+            
             String query
                 = "INSERT {"
                 + "GRAPH ?provModelUUID { "

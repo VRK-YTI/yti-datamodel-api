@@ -31,10 +31,7 @@ import com.csc.fi.ioapi.utils.LDHelper;
 import com.csc.fi.ioapi.utils.NamespaceManager;
 import com.csc.fi.ioapi.utils.ProvenanceManager;
 import com.csc.fi.ioapi.utils.QueryLibrary;
-import com.hp.hpl.jena.query.DatasetAccessor;
-import com.hp.hpl.jena.query.DatasetAccessorFactory;
 import com.hp.hpl.jena.query.ParameterizedSparqlString;
-import com.hp.hpl.jena.rdf.model.Model;
 import com.sun.jersey.api.client.ClientHandlerException;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.UniformInterfaceException;
@@ -117,38 +114,36 @@ public class Class {
                 return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
             }  
             
-            String sparqlService, graphService;
-        
+            
             if(id.startsWith("urn:")) {
-               sparqlService = services.getProvReadSparqlAddress();
-               graphService = services.getProvReadWriteAddress();
-           } else { 
-                sparqlService = services.getCoreSparqlAddress();
-                graphService = services.getCoreReadWriteAddress();
+               return JerseyFusekiClient.getGraphResponseFromService(id, services.getProvReadWriteAddress());
+            }   
+           
+            String sparqlService = services.getCoreSparqlAddress();
+            String graphService = services.getCoreReadWriteAddress();
+           
+        
+            ParameterizedSparqlString pss = new ParameterizedSparqlString();
+
+            /* Get Map of namespaces from id-graph */
+            Map<String, String> namespaceMap = NamespaceManager.getCoreNamespaceMap(id, graphService);
+
+            if(namespaceMap==null) {
+                return Response.status(404).entity(ErrorMessage.NOTFOUND).build();
             }
-          
-        
-        ParameterizedSparqlString pss = new ParameterizedSparqlString();
-        
-        /* Get Map of namespaces from id-graph */
-        Map<String, String> namespaceMap = NamespaceManager.getCoreNamespaceMap(id, graphService);
-        
-        if(namespaceMap==null) {
-            return Response.status(404).entity(ErrorMessage.NOTFOUND).build();
-        }
-        
-        pss.setNsPrefixes(namespaceMap);
-        
-        String queryString = QueryLibrary.classQuery;
-        pss.setCommandText(queryString);
-        
-        pss.setIri("graph", id);
-        
-        if(model!=null && !model.equals("undefined")) {
-              pss.setIri("library", model);
-        }
-        
-        return JerseyFusekiClient.constructGraphFromService(pss.toString(), sparqlService);         
+
+            pss.setNsPrefixes(namespaceMap);
+
+            String queryString = QueryLibrary.classQuery;
+            pss.setCommandText(queryString);
+
+            pss.setIri("graph", id);
+
+            if(model!=null && !model.equals("undefined")) {
+                  pss.setIri("library", model);
+            }
+
+            return JerseyFusekiClient.constructGraphFromService(pss.toString(), sparqlService);         
 
       }
          

@@ -19,7 +19,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.ResponseBuilder;
 
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
@@ -35,13 +34,7 @@ import com.csc.fi.ioapi.utils.NamespaceManager;
 import com.csc.fi.ioapi.utils.ProvenanceManager;
 import com.csc.fi.ioapi.utils.QueryLibrary;
 import com.hp.hpl.jena.query.ParameterizedSparqlString;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientHandlerException;
 import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.UniformInterfaceException;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.WebResource.Builder;
-import com.sun.jersey.api.uri.UriComponent;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiParam;
@@ -118,15 +111,12 @@ public class Predicate {
                 return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
             }  
             
-            String sparqlService, graphService;
-        
             if(id.startsWith("urn:")) {
-               sparqlService = services.getProvReadSparqlAddress();
-               graphService = services.getProvReadWriteAddress();
-           } else { 
-                sparqlService = services.getCoreSparqlAddress();
-                graphService = services.getCoreReadWriteAddress();
-            }         
+               return JerseyFusekiClient.getGraphResponseFromService(id, services.getProvReadWriteAddress());
+            }   
+           
+            String sparqlService = services.getCoreSparqlAddress();
+            String graphService = services.getCoreReadWriteAddress();       
 
             ParameterizedSparqlString pss = new ParameterizedSparqlString();
 

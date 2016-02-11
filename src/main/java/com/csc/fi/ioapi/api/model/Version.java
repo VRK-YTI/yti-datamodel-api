@@ -3,8 +3,6 @@
  */
 package com.csc.fi.ioapi.api.model;
 
-import static org.apache.commons.lang3.StringUtils.isNotEmpty;
-
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -12,14 +10,12 @@ import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import javax.ws.rs.GET;
-import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.ResponseBuilder;
 
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
@@ -33,20 +29,7 @@ import com.csc.fi.ioapi.utils.JerseyFusekiClient;
 import com.csc.fi.ioapi.utils.LDHelper;
 import com.csc.fi.ioapi.utils.NamespaceManager;
 import com.csc.fi.ioapi.utils.ProvenanceManager;
-import com.csc.fi.ioapi.utils.QueryLibrary;
 import com.hp.hpl.jena.query.ParameterizedSparqlString;
-import com.hp.hpl.jena.rdf.model.ResourceFactory;
-import com.hp.hpl.jena.sparql.engine.http.QueryExceptionHTTP;
-import com.hp.hpl.jena.update.UpdateExecutionFactory;
-import com.hp.hpl.jena.update.UpdateProcessor;
-import com.hp.hpl.jena.update.UpdateRequest;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientHandlerException;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.UniformInterfaceException;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.WebResource.Builder;
-import com.sun.jersey.api.uri.UriComponent;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiParam;
@@ -54,14 +37,12 @@ import com.wordnik.swagger.annotations.ApiResponse;
 import com.wordnik.swagger.annotations.ApiResponses;
 import java.util.Map;
 import java.util.UUID;
-import javax.ws.rs.DELETE;
-
  
 /**
  * Root resource (exposed at "myresource" path)
  */
 @Path("version")
-@Api(value = "/version", description = "Operations about version history")
+@Api(value = "/version", description = "Get list of model versions from version history")
 public class Version {
 
     private static final Logger logger = Logger.getLogger(Version.class.getName());
