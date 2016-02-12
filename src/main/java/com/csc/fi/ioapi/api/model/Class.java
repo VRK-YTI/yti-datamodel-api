@@ -82,7 +82,8 @@ public class Class {
                 + "?class dcterms:modified ?modified . "
                 + "?class rdfs:isDefinedBy ?source . "
                 + "?source rdfs:label ?sourceLabel . "
-                + "?source a ?sourceType . } WHERE { "
+                + "?source a ?sourceType . "
+                + "} WHERE { "
                 + "?library dcterms:hasPart ?class . "
                 + "GRAPH ?graph { "
                 + "?class dcterms:modified ?modified . "
@@ -121,8 +122,7 @@ public class Class {
            
             String sparqlService = services.getCoreSparqlAddress();
             String graphService = services.getCoreReadWriteAddress();
-           
-        
+
             ParameterizedSparqlString pss = new ParameterizedSparqlString();
 
             /* Get Map of namespaces from id-graph */

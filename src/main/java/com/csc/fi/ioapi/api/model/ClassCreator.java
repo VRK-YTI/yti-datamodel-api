@@ -78,14 +78,16 @@ public class ClassCreator {
                     + "?classIRI rdfs:comment ?comment . "
                     + "?classIRI dcterms:subject ?concept . "
                     + "?concept skos:prefLabel ?label . "
-                    + "?concept rdfs:comment ?comment . "
+                    + "?concept skos:definition ?comment . "
                     + "} WHERE { "
                     + "BIND(now() as ?creation) "
                     + "BIND(now() as ?modified) "
                     + "?concept a skos:Concept . "
                     + "VALUES ?someLabel { rdfs:label skos:prefLabel} "
                     + "?concept ?someLabel ?label . "
-                    + "OPTIONAL {?concept rdfs:comment ?comment . } "
+                    + "OPTIONAL {"
+                    + "VALUES ?someDefinition { rdfs:comment skos:definition } "
+                    + "?concept ?someDefinition ?comment . } "
                     + "}";
 
             pss.setCommandText(queryString);
