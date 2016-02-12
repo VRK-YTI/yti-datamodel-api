@@ -276,12 +276,27 @@ public class Class {
           @Context HttpServletRequest request) {
       
     try {
+        
+        IRIFactory iriFactory = IRIFactory.semanticWebImplementation();
+        IRI modelIRI,idIRI;   
+        
+        /* Check that URIs are valid */
+        try {
+            modelIRI = iriFactory.construct(model);
+            idIRI = iriFactory.construct(id);
+        }
+        catch(NullPointerException e) {
+            return Response.status(403).entity(ErrorMessage.UNEXPECTED).build();
+        }
+        catch (IRIException e) {
+            return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
+        }
                
-            HttpSession session = request.getSession();
+        HttpSession session = request.getSession();
 
-            if(session==null) return Response.status(401).entity(ErrorMessage.UNAUTHORIZED).build();
+        if(session==null) return Response.status(401).entity(ErrorMessage.UNAUTHORIZED).build();
 
-            LoginSession login = new LoginSession(session);
+        LoginSession login = new LoginSession(session);
 
             if(!login.isLoggedIn() || !login.hasRightToEditModel(model))
                 return Response.status(401).entity(ErrorMessage.UNAUTHORIZED).build();
@@ -290,16 +305,6 @@ public class Class {
                 Logger.getLogger(Class.class.getName()).log(Level.WARNING, id+" ID must start with "+model);
                 return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
              }
-
-            IRIFactory iriFactory = IRIFactory.semanticWebImplementation();
-            IRI modelIRI,idIRI;
-            try {
-                modelIRI = iriFactory.construct(model);
-                idIRI = iriFactory.construct(id);
-            }
-            catch (IRIException e) {
-                return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
-            }
 
             /* Prevent overwriting existing classes */ 
             if(GraphManager.isExistingGraph(idIRI)) {
