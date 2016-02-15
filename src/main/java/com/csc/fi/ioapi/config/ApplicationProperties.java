@@ -34,7 +34,7 @@ public final static String getDebugAdress() {
 }
 
 public final static String getDefaultNamespace() {
-    return PropertyUtil.getProperty("application.defaultNamespace");  
+     return getDefaultDomain()+"ns/";
 }
 
 public final static String getDefaultDomain() {
@@ -42,7 +42,7 @@ public final static String getDefaultDomain() {
 }
 
 public final static String getProfileNamespace() {
-    return PropertyUtil.getProperty("application.defaultProfileNamespace");  
+    return getDefaultDomain()+"ap/";
 }
     
 public final static boolean getProvenanceMode() {
