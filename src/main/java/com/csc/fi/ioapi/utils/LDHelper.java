@@ -19,8 +19,6 @@ import org.apache.commons.lang3.StringUtils;
 import com.github.jsonldjava.utils.JsonUtils;
 import com.hp.hpl.jena.query.ParameterizedSparqlString;
 import com.sun.jersey.api.uri.UriComponent;
-//import java.text.Normalizer;
-//import java.text.Normalizer.Form;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.apache.commons.lang3.text.WordUtils;
@@ -123,8 +121,38 @@ public class LDHelper {
         return name;
     }
     
+    private static final String tab00c0 = 
+    "AAAAAAACEEEEIIII" +
+    "DNOOOOO\u00d7\u00d8UUUUYI\u00df" +
+    "aaaaaaaceeeeiiii" +
+    "\u00f0nooooo\u00f7\u00f8uuuuy\u00fey" +
+    "AaAaAaCcCcCcCcDd" +
+    "DdEeEeEeEeEeGgGg" +
+    "GgGgHhHhIiIiIiIi" +
+    "IiJjJjKkkLlLlLlL" +
+    "lLlNnNnNnnNnOoOo" +
+    "OoOoRrRrRrSsSsSs" +
+    "SsTtTtTtUuUuUuUu" +
+    "UuUuWwYyYZzZzZzF";
+
+    /* From http://stackoverflow.com/a/10831704/4054733 */
+    public static String removeDiacritic(String source) {
+        char[] vysl = new char[source.length()];
+        char one;
+        for (int i = 0; i < source.length(); i++) {
+            one = source.charAt(i);
+            if (one >= '\u00c0' && one <= '\u017f') {
+                one = tab00c0.charAt((int) one - '\u00c0');
+            }
+            vysl[i] = one;
+        }
+        return new String(vysl);
+    }
+    
+    /* TODO: FIX dependency java.lang.NoClassDefFoundError: Could not initialize class sun.text.normalizer.NormalizerImpl
+       and use Normalizer instead? */
     public static String removeAccents(String text) {
-        return text == null ? null : StringUtils.stripAccents(text);
+        return text == null ? null : removeDiacritic(text);
     }
     
     public static final InputStream getDefaultGraphInputStream() {
