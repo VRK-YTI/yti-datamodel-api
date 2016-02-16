@@ -65,6 +65,7 @@ public class ModelCreator {
                     namespaceIRI = iri.construct(namespace);
                     groupIRI = iri.construct(group);
             } catch (IRIException e) {
+                    logger.warning("INVALID: "+namespace);
                     return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
             }
             
