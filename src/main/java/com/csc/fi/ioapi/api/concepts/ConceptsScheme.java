@@ -4,6 +4,7 @@
 package com.csc.fi.ioapi.api.concepts;
 
 import com.csc.fi.ioapi.config.EndpointServices;
+import com.csc.fi.ioapi.utils.LDHelper;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
@@ -23,6 +24,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
+import javax.ws.rs.core.Response.Status;
 
 /**
  * REST Web Service
@@ -50,14 +52,17 @@ public class ConceptsScheme {
           @QueryParam("lang") String lang) {
    
             ResponseBuilder rb;
-            Client client = Client.create();
+          
 
             if((lang==null || lang.equals("undefined")) ) return Response.status(Response.Status.NOT_ACCEPTABLE).entity("{}").build();
             
+            /* Schemes query commented out for now - waiting for finto vocabulary type support */
             
+            /*
+            Client client = Client.create();
             WebResource webResource = client.resource(services.getSchemeSearchAPI())
                                       .queryParam("lang",lang);
-
+           
             Builder builder = webResource.accept("application/ld+json");
             ClientResponse response = builder.get(ClientResponse.class);
 
@@ -65,9 +70,11 @@ public class ConceptsScheme {
                Logger.getLogger(ConceptsScheme.class.getName()).log(Level.INFO, response.getStatus()+" from CONCEPT SERVICE");
                return Response.status(response.getStatus()).entity("{}").build();
             }
+            */        
             
-            rb = Response.status(response.getStatus()); 
-            rb.entity(response.getEntityInputStream());
+            rb = Response.status(Status.OK);
+            rb.type("application/ld+json");
+            rb.entity(LDHelper.getDefaultSchemes());
        
            return rb.build();
     

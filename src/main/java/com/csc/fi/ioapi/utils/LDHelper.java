@@ -129,11 +129,15 @@ public class LDHelper {
             .replaceAll("\\p{InCombiningDiacriticalMarks}+", "");
     }
     
-    public static InputStream getDefaultGraphInputStream() {
+    public static final InputStream getDefaultGraphInputStream() {
            return LDHelper.class.getClassLoader().getResourceAsStream("defaultGraph.json");
     }
+    
+    public static final InputStream getDefaultSchemes() {
+           return LDHelper.class.getClassLoader().getResourceAsStream("defaultSchemes.json");
+    }
       
-    public static InputStream getDefaultGroupsInputStream() {
+    public static final InputStream getDefaultGroupsInputStream() {
            return LDHelper.class.getClassLoader().getResourceAsStream("defaultGroups.json");
     }
     

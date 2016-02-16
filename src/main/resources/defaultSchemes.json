@@ -1,0 +1,26 @@
+{
+  "@context": {
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "onki": "http://schema.onki.fi/onki#",
+    "title": {
+      "@id": "rdfs:label",
+      "@language": "fi"
+    },
+    "vocabularies": "onki:hasVocabulary",
+    "id": "onki:vocabularyIdentifier",
+    "uri": "@id"
+  },
+  "uri": "",
+  "vocabularies": [
+    {
+      "uri": "eos",
+      "id": "eos",
+      "title": "Elinikäisen oppimisen sanasto"
+    },
+    {
+      "uri": "jhsmeta",
+      "id": "jhsmeta",
+      "title": "JHSmeta"
+    }
+  ]
+}
