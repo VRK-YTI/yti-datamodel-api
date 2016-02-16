@@ -19,8 +19,8 @@ import org.apache.commons.lang3.StringUtils;
 import com.github.jsonldjava.utils.JsonUtils;
 import com.hp.hpl.jena.query.ParameterizedSparqlString;
 import com.sun.jersey.api.uri.UriComponent;
-import java.text.Normalizer;
-import java.text.Normalizer.Form;
+//import java.text.Normalizer;
+//import java.text.Normalizer.Form;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.apache.commons.lang3.text.WordUtils;
@@ -124,9 +124,7 @@ public class LDHelper {
     }
     
     public static String removeAccents(String text) {
-    return text == null ? null :
-        Normalizer.normalize(text, Form.NFD)
-            .replaceAll("\\p{InCombiningDiacriticalMarks}+", "");
+        return text == null ? null : StringUtils.stripAccents(text);
     }
     
     public static final InputStream getDefaultGraphInputStream() {
