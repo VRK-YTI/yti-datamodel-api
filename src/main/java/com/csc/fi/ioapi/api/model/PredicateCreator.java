@@ -71,7 +71,27 @@ public class PredicateCreator {
         String queryString;
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
-        queryString = "CONSTRUCT  { ?predicateIRI owl:versionInfo ?draft . ?predicateIRI dcterms:created ?creation . ?predicateIRI dcterms:modified ?modified . ?predicateIRI a ?type .  ?predicateIRI rdfs:isDefinedBy ?model . ?predicateIRI rdfs:label ?predicateLabel . ?predicateIRI rdfs:comment ?comment . ?predicateIRI dcterms:subject ?concept . ?concept skos:prefLabel ?label . ?concept rdfs:comment ?comment . } WHERE { BIND(now() as ?creation) BIND(now() as ?modified) ?concept a skos:Concept . VALUES ?someLabel {rdfs:label skos:prefLabel} ?concept ?someLabel ?label . OPTIONAL {?concept rdfs:comment ?comment . } }";
+        queryString = "CONSTRUCT  { "
+                + "?predicateIRI owl:versionInfo ?draft . "
+                + "?predicateIRI dcterms:created ?creation . "
+                + "?predicateIRI dcterms:modified ?modified . "
+                + "?predicateIRI a ?type .  "
+                + "?predicateIRI rdfs:isDefinedBy ?model . "
+                + "?predicateIRI rdfs:label ?predicateLabel . "
+                + "?predicateIRI rdfs:comment ?comment . "
+                + "?predicateIRI dcterms:subject ?concept . "
+                + "?concept skos:prefLabel ?label . "
+                + "?concept rdfs:comment ?comment . } "
+                + "WHERE { "
+                + "BIND(now() as ?creation) "
+                + "BIND(now() as ?modified) "
+                + "?concept a skos:Concept . "
+                + "VALUES ?someLabel { rdfs:label skos:prefLabel} "
+                + "?concept ?someLabel ?label . "
+                + "OPTIONAL {"
+                + "VALUES ?someDefinition { rdfs:comment skos:definition } "
+                + "?concept ?someDefinition ?comment . } "
+                + "}";
 
         pss.setCommandText(queryString);
         pss.setIri("concept", conceptIRI);
