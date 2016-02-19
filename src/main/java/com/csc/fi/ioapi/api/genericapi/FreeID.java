@@ -8,16 +8,12 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import com.csc.fi.ioapi.config.EndpointServices;
-import com.csc.fi.ioapi.utils.ErrorMessage;
 import com.csc.fi.ioapi.utils.GraphManager;
-import com.csc.fi.ioapi.utils.JerseyFusekiClient;
-import com.sun.jersey.api.client.ClientResponse;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiParam;
 import com.wordnik.swagger.annotations.ApiResponse;
 import com.wordnik.swagger.annotations.ApiResponses;
-import java.util.logging.Level;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response.Status;
 import org.apache.jena.iri.IRI;
@@ -34,7 +30,7 @@ public class FreeID {
   
   @GET
   @Produces("application/json")
-  @ApiOperation(value = "Get service description", notes = "More notes about this method")
+  @ApiOperation(value = "Returns true if ID is valid and not in use", notes = "ID must be valid IRI")
   @ApiResponses(value = {
       @ApiResponse(code = 200, message = "False or True response")
   })
@@ -45,10 +41,7 @@ public class FreeID {
             try {
                 IRIFactory iri = IRIFactory.semanticWebImplementation();
                 idIRI = iri.construct(id);
-            } catch(NullPointerException e) {
-                return Response.status(Status.OK).entity(false).build();
-            } 
-            catch (IRIException e) {
+            } catch(NullPointerException | IRIException e) {
                 return Response.status(Status.OK).entity(false).build();
             }
             
