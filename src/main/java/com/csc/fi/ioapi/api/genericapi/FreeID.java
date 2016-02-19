@@ -24,11 +24,8 @@ import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
 import org.apache.jena.iri.IRIFactory;
  
-/**
- * Root resource (exposed at "myresource" path)
- */
 @Path("freeID")
-@Api(value = "/testID", description = "Test if ID is valid and not in use")
+@Api(value = "/freeID", description = "Test if ID is valid and not in use")
 public class FreeID {
 
   @Context ServletContext context;
