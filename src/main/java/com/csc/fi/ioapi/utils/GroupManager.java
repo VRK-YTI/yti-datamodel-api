@@ -27,7 +27,7 @@ public class GroupManager {
          String queryString = "ASK { ?s a foaf:Group . }";
     
          Query query = QueryFactory.create(LDHelper.prefix+queryString);        
-         QueryExecution qexec = QueryExecutionFactory.sparqlService(services.getUsersSparqlAddress(), query);
+         QueryExecution qexec = QueryExecutionFactory.sparqlService(services.getCoreSparqlAddress(), query);
         
          try
           {
@@ -40,15 +40,15 @@ public class GroupManager {
            }
     }
     
- 
-    public static void createDefaultGroups() {
+  
+   public static void createDefaultGroups() {
        
-        DatasetAccessor accessor = DatasetAccessorFactory.createHTTP(services.getUsersReadWriteAddress());
+        DatasetAccessor accessor = DatasetAccessorFactory.createHTTP(services.getCoreReadWriteAddress());
         
         Model m = ModelFactory.createDefaultModel();
-        RDFDataMgr.read(m, LDHelper.getDefaultGroupsInputStream(),RDFLanguages.JSONLD);
+        RDFDataMgr.read(m, LDHelper.getDefaultGroupsInputStream(), RDFLanguages.JSONLD);
       
-        accessor.putModel(m);
+        accessor.putModel("urn:csc:groups", m);
         
     }
     

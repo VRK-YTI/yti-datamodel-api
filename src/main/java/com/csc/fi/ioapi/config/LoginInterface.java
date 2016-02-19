@@ -18,6 +18,8 @@ public interface LoginInterface {
     
     public boolean isInGroup(String group);
     
+    public boolean isAdminOfGroup(String group);
+    
     public boolean hasRightToEditModel(String resource);
    
     public boolean hasRightToEditGroup(String resource);

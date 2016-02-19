@@ -5,7 +5,9 @@
  */
 package com.csc.fi.ioapi.api.genericapi;
 
+import com.csc.fi.ioapi.config.ApplicationProperties;
 import com.csc.fi.ioapi.utils.GraphManager;
+import com.csc.fi.ioapi.utils.GroupManager;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiResponse;
@@ -28,9 +30,9 @@ import javax.ws.rs.core.Response;
  *
  * @author malonen
  */
-@Path("drop")
-@Api(value = "/drop", description = "DROP ALL")
-public class Drop {
+@Path("reset")
+@Api(value = "/reset", description = "DROP ALL and Recover")
+public class Reset {
 
     @Context ServletContext context;
 
@@ -42,11 +44,12 @@ public class Drop {
   })
     public Response drop(@Context HttpServletRequest request) {
         Response.ResponseBuilder rb;
-        
-        HttpSession session = request.getSession(false);
-     
-        GraphManager.deleteGraphs();
-        GraphManager.createDefaultGraph();
+              
+        if(ApplicationProperties.getDebugMode()) {
+            GraphManager.deleteGraphs();
+            GraphManager.createDefaultGraph();
+            GroupManager.createDefaultGroups();
+        }
         
         rb = Response.status(Response.Status.OK);
      

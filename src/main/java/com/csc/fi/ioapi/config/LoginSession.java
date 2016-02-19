@@ -8,7 +8,6 @@ package com.csc.fi.ioapi.config;
 import com.csc.fi.ioapi.utils.ServiceDescriptionManager;
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.servlet.http.HttpSession;
 
@@ -100,6 +99,15 @@ public class LoginSession implements LoginInterface {
         if(ApplicationProperties.getDebugMode()) return true;
        
         return isInGroup(group);
+    }
+
+    @Override
+    public boolean isAdminOfGroup(String group) {
+      
+        if(this.getGroups()==null) return false;
+        
+        return session.getAttribute("group").toString().contains(group.concat("_ADMINS"));
+        
     }
     
 }

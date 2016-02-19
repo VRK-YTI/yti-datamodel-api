@@ -283,11 +283,11 @@ public class Models {
        IRI graphIRI;
        
             try {
-                    IRIFactory iri = IRIFactory.semanticWebImplementation();
-                    graphIRI = iri.construct(graph);
+                IRIFactory iri = IRIFactory.semanticWebImplementation();
+                graphIRI = iri.construct(graph);
             } catch (IRIException e) {
-                    logger.log(Level.WARNING, "GRAPH ID is invalid IRI!");
-                   return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
+                logger.log(Level.WARNING, "GRAPH ID is invalid IRI!");
+                return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
             } 
             
         HttpSession session = request.getSession();

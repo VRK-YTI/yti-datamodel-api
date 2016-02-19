@@ -6,24 +6,12 @@
 package com.csc.fi.ioapi.config;
 
 import com.csc.fi.ioapi.utils.GraphManager;
+import com.csc.fi.ioapi.utils.GroupManager;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
-
-import org.apache.jena.riot.RDFDataMgr;
-import org.apache.jena.riot.RDFLanguages;
-
-import com.csc.fi.ioapi.utils.LDHelper;
-import com.hp.hpl.jena.query.DatasetAccessor;
-import com.hp.hpl.jena.query.DatasetAccessorFactory;
-import com.hp.hpl.jena.query.Query;
-import com.hp.hpl.jena.query.QueryExecution;
-import com.hp.hpl.jena.query.QueryExecutionFactory;
-import com.hp.hpl.jena.query.QueryFactory;
-import com.hp.hpl.jena.rdf.model.Model;
-import com.hp.hpl.jena.rdf.model.ModelFactory;
 
 /**
  *
@@ -31,27 +19,52 @@ import com.hp.hpl.jena.rdf.model.ModelFactory;
  */
 public class StartUpListener implements ServletContextListener {
 
+    private static final Logger logger = Logger.getLogger(StartUpListener.class.getName());
+            
     @Override
     public void contextInitialized(ServletContextEvent sce) {
-        System.out.println("System is starting ...");
-        Logger.getLogger(StartUpListener.class.getName()).log(Level.INFO, "System is starting ...");
         
-          if(GraphManager.testDefaultGraph())
-                Logger.getLogger(StartUpListener.class.getName()).log(Level.INFO,"Default graph is initialized!");
-              else {
-                Logger.getLogger(StartUpListener.class.getName()).log(Level.WARNING,"Default graph is NOT initialized!");
-                GraphManager.createDefaultGraph();
-                if(GraphManager.testDefaultGraph())
-                    Logger.getLogger(StartUpListener.class.getName()).log(Level.INFO,"Created NEW DEFAULT graph!");
-                else
-                    Logger.getLogger(StartUpListener.class.getName()).log(Level.INFO,"Failed to create default graph!");
-              }
+        System.out.println("System is starting ...");
+        logger.log(Level.INFO, "System is starting ...");
+        
+        initDefaultGraph();
+        initDefaultGroups();
+        
     }
     
     @Override
     public void contextDestroyed(ServletContextEvent sce) {
        System.out.println("System is closing ...");
-       Logger.getLogger(StartUpListener.class.getName()).log(Level.INFO, "System is closing ...");
+       logger.log(Level.INFO, "System is closing ...");
+    }
+    
+    private static void initDefaultGraph() {
+         if(GraphManager.testDefaultGraph()) {
+                logger.log(Level.INFO,"Default graph is initialized!");
+         }
+         else {
+                logger.log(Level.WARNING,"Default graph is NOT initialized!");
+                GraphManager.createDefaultGraph();
+                if(GraphManager.testDefaultGraph())
+                    logger.log(Level.INFO,"Created NEW DEFAULT graph!");
+                else
+                    logger.log(Level.WARNING,"Failed to create default graph!");
+              }
+    }
+    private static void initDefaultGroups() {
+         if(GroupManager.testDefaultGroups()) {
+                logger.log(Level.INFO,"Default groups are initialized!");
+         }
+         else {
+                logger.log(Level.WARNING,"Default groups are NOT initialized!");
+                
+                GroupManager.createDefaultGroups();
+                
+                if(GroupManager.testDefaultGroups())
+                    logger.log(Level.INFO,"Created default groups!");
+                else
+                    logger.log(Level.WARNING,"Failed to create default groups!");
+              }
     }
     
 }

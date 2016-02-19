@@ -209,15 +209,19 @@ public class GraphManager {
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         pss.setCommandText(query);
 
-        logger.log(Level.WARNING, pss.toString() + " from " + services.getCoreSparqlUpdateAddress());
+        logger.log(Level.WARNING, pss.toString() + " DROPPING ALL FROM CORE/PROV/SKOS SERVICES");
 
         UpdateRequest queryObj = pss.asUpdate();
+        
         UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, services.getCoreSparqlUpdateAddress());
         qexec.execute();
         
         qexec = UpdateExecutionFactory.createRemoteForm(queryObj, services.getProvSparqlUpdateAddress());
-
         qexec.execute();
+        
+        qexec = UpdateExecutionFactory.createRemoteForm(queryObj, services.getTempConceptSparqlUpdateAddress());
+        qexec.execute();
+            
     }
 
     public static void renameID(IRI oldID, IRI newID) {
