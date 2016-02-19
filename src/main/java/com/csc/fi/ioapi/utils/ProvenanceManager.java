@@ -205,6 +205,7 @@ public class ProvenanceManager {
             String query
                 = "INSERT {"
                 + "GRAPH ?provModelUUID { "
+                + "?model a prov:Entity . " 
                 + "?model dcterms:hasPart ?provResourceUUID . "
                 + "?model schema:version ?versionNumber . "
                 + "}"
