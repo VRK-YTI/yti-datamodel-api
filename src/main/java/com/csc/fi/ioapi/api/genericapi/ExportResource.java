@@ -10,8 +10,10 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import com.csc.fi.ioapi.config.EndpointServices;
+import com.csc.fi.ioapi.utils.ContextWriter;
 import com.csc.fi.ioapi.utils.ErrorMessage;
 import com.csc.fi.ioapi.utils.JerseyFusekiClient;
+import com.csc.fi.ioapi.utils.JsonSchemaWriter;
 import com.sun.jersey.api.client.ClientHandlerException;
 import com.sun.jersey.api.client.UniformInterfaceException;
 import com.wordnik.swagger.annotations.Api;
@@ -49,10 +51,11 @@ public class ExportResource {
     public Response json(
             @ApiParam(value = "Requested resource", defaultValue = "default") @QueryParam("graph") String graph,
             @ApiParam(value = "Raw / PlainText boolean", defaultValue = "false") @QueryParam("raw") boolean raw,
-            @ApiParam(value = "Content-type", required = true, allowableValues = "application/ld+json,text/turtle,application/rdf+xml") @QueryParam("content-type") String ctype) {
+            @ApiParam(value = "Content-type", required = true, allowableValues = "application/ld+json,text/turtle,application/rdf+xml,application/ld+json+context,application/schema+json") @QueryParam("content-type") String ctype) {
 
         
          IRI resourceIRI;
+         
             try {
                     IRIFactory iri = IRIFactory.semanticWebImplementation();
                     resourceIRI = iri.construct(graph);
@@ -60,12 +63,25 @@ public class ExportResource {
                     return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
             }
             
-        try {
-
-            ContentType contentType = ContentType.create(ctype);
+            if(ctype.equals("application/ld+json+context")) {
+                String context = ContextWriter.newClassContext(graph);
+                if(context!=null) {
+                    return Response.ok().entity(context).build();
+                } else {
+                    return Response.status(403).entity(ErrorMessage.NOTFOUND).build();
+                }
+            } else if(ctype.equals("application/schema+json")) {
+                String schema = JsonSchemaWriter.newClassSchema(graph);
+                if(schema!=null) {
+                    return Response.ok().entity(schema).build();
+                } else {
+                    return Response.status(403).entity(ErrorMessage.NOTFOUND).build();
+                }
+            }
             
+        try {
+            ContentType contentType = ContentType.create(ctype);
             return  JerseyFusekiClient.getGraphResponseFromService(graph, services.getCoreReadAddress(), contentType, true);
-
         } catch (UniformInterfaceException | ClientHandlerException ex) {
             logger.log(Level.WARNING, "Expect the unexpected!", ex);
             return Response.serverError().entity("{}").build();

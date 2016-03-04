@@ -134,8 +134,6 @@ public class Data {
             JsonValue jsonGraph = json.get("@graph");
             JsonValue jsonContext = json.get("@context");
             
-            json.remove("@id");
-
             Object data = JsonUtils.fromString(json.toString());
 
             JsonLdOptions options = new JsonLdOptions();

@@ -13,8 +13,10 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import com.csc.fi.ioapi.config.EndpointServices;
+import com.csc.fi.ioapi.utils.ContextWriter;
 import com.csc.fi.ioapi.utils.ErrorMessage;
 import com.csc.fi.ioapi.utils.JerseyFusekiClient;
+import com.csc.fi.ioapi.utils.JsonSchemaWriter;
 import com.csc.fi.ioapi.utils.LDHelper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.jsonldjava.core.JsonLdError;
@@ -71,7 +73,7 @@ public class ExportModel {
     public Response json(
             @ApiParam(value = "Requested resource", defaultValue = "default") @QueryParam("graph") String graph,
             @ApiParam(value = "Raw / PlainText boolean", defaultValue = "false") @QueryParam("raw") boolean raw,
-            @ApiParam(value = "Content-type", required = true, allowableValues = "application/ld+json,text/turtle,application/rdf+xml") @QueryParam("content-type") String ctype) {
+            @ApiParam(value = "Content-type", required = true, allowableValues = "application/ld+json,text/turtle,application/rdf+xml,text/ld+json+context,application/schema+json") @QueryParam("content-type") String ctype) {
 
          IRI modelIRI;
             try {
@@ -79,6 +81,22 @@ public class ExportModel {
                     modelIRI = iri.construct(graph);
             } catch (IRIException e) {
                     return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
+            }
+            
+            if(ctype.equals("text/ld+json+context")) {
+                String context = ContextWriter.newModelContext(graph);
+                if(context!=null) {
+                    return Response.ok().entity(context).build();
+                } else {
+                    return Response.status(403).entity(ErrorMessage.NOTFOUND).build();
+                }
+            } else if(ctype.equals("application/schema+json")) {
+                String schema = JsonSchemaWriter.newModelSchema(graph);
+                if(schema!=null) {
+                    return Response.ok().entity(schema).build();
+                } else {
+                    return Response.status(403).entity(ErrorMessage.NOTFOUND).build();
+                }
             }
             
         try {
