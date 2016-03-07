@@ -73,7 +73,7 @@ public class ExportModel {
     public Response json(
             @ApiParam(value = "Requested resource", defaultValue = "default") @QueryParam("graph") String graph,
             @ApiParam(value = "Raw / PlainText boolean", defaultValue = "false") @QueryParam("raw") boolean raw,
-            @ApiParam(value = "Content-type", required = true, allowableValues = "application/ld+json,text/turtle,application/rdf+xml,text/ld+json+context,application/schema+json") @QueryParam("content-type") String ctype) {
+            @ApiParam(value = "Content-type", required = true, allowableValues = "application/ld+json,text/turtle,application/rdf+xml,application/ld+json+context,application/schema+json") @QueryParam("content-type") String ctype) {
 
          IRI modelIRI;
             try {
@@ -83,7 +83,7 @@ public class ExportModel {
                     return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
             }
             
-            if(ctype.equals("text/ld+json+context")) {
+            if(ctype.equals("application/ld+json+context")) {
                 String context = ContextWriter.newModelContext(graph);
                 if(context!=null) {
                     return Response.ok().entity(context).build();
