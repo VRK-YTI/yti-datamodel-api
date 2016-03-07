@@ -101,6 +101,10 @@ public class ExportModel {
             
         try {
 
+            
+            ContentType contentType = ContentType.create(ctype);
+            Lang rdfLang = RDFLanguages.contentTypeToLang(contentType);
+            
             DatasetAccessor accessor = DatasetAccessorFactory.createHTTP(services.getCoreReadAddress());
             Model model = accessor.getModel(graph);
 
@@ -120,14 +124,29 @@ public class ExportModel {
                 + "?rs ?rp ?ro . "
                 + "}}"; 
 
+            if (rdfLang.equals(Lang.JSONLD)) {
+                
+                /* ADD hasPart list to JSON-LD Response */
+                
+                queryString = "CONSTRUCT { "
+                + "?model <http://purl.org/dc/terms/hasPart> ?resource . "    
+                + "?ms ?p ?o . "
+                + "?rs ?rp ?ro . "
+                + " } WHERE { "
+                + "?model <http://purl.org/dc/terms/hasPart> ?resource . "
+                + "GRAPH ?model {"
+                + "?ms ?p ?o . "
+                + "} GRAPH ?resource { "
+                + "?rs ?rp ?ro . "
+                + "}}"; 
+
+            } 
+            
             pss.setCommandText(queryString);
             pss.setIri("model", graph);
 
             OutputStream out = new ByteArrayOutputStream();
 
-            ContentType contentType = ContentType.create(ctype);
-            Lang rdfLang = RDFLanguages.contentTypeToLang(contentType);
-            
             logger.info(contentType.getContentType());
             
             ClientResponse response = JerseyFusekiClient.clientResponseFromConstruct(pss.toString(), services.getCoreSparqlAddress(), contentType);
