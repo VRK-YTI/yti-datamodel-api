@@ -25,6 +25,8 @@ import org.apache.jena.atlas.web.ContentType;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
 import org.apache.jena.iri.IRIFactory;
+import org.apache.jena.riot.Lang;
+import org.apache.jena.riot.RDFLanguages;
 
 /**
  * Root resource (exposed at "myresource" path)
@@ -81,6 +83,10 @@ public class ExportResource {
             
         try {
             ContentType contentType = ContentType.create(ctype);
+            Lang rdfLang = RDFLanguages.contentTypeToLang(contentType);
+            
+            if(rdfLang==null) return Response.status(403).entity(ErrorMessage.NOTFOUND).build();
+                        
             return  JerseyFusekiClient.getGraphResponseFromService(graph, services.getCoreReadAddress(), contentType, true);
         } catch (UniformInterfaceException | ClientHandlerException ex) {
             logger.log(Level.WARNING, "Expect the unexpected!", ex);
