@@ -100,10 +100,12 @@ public class ExportModel {
             }
             
         try {
-
             
             ContentType contentType = ContentType.create(ctype);
             Lang rdfLang = RDFLanguages.contentTypeToLang(contentType);
+            
+            if(rdfLang==null) return Response.status(403).entity(ErrorMessage.NOTFOUND).build();
+
             
             DatasetAccessor accessor = DatasetAccessorFactory.createHTTP(services.getCoreReadAddress());
             Model model = accessor.getModel(graph);
