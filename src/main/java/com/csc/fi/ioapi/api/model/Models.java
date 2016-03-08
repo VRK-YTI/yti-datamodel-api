@@ -85,16 +85,12 @@ public class Models {
        
             }
             
-
             if(id.startsWith("urn:")) {
                return JerseyFusekiClient.getGraphResponseFromService(id, services.getProvReadWriteAddress());
             }   
            
-
             String sparqlService = services.getCoreSparqlAddress();
             String graphService = services.getCoreReadWriteAddress();
-            
-         
 
             /* TODO: Create Namespace service? */
             DatasetAccessor accessor = DatasetAccessorFactory.createHTTP(graphService);
@@ -107,7 +103,6 @@ public class Models {
             
             pss.setNsPrefixes(model.getNsPrefixMap());
             
-             
             pss.setIri("graph", modelIRI);
             
             pss.setCommandText(queryString);
