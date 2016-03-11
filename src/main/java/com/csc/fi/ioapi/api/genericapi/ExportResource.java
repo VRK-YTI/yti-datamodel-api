@@ -68,14 +68,14 @@ public class ExportResource {
             if(ctype.equals("application/ld+json+context")) {
                 String context = ContextWriter.newClassContext(graph);
                 if(context!=null) {
-                    return Response.ok().entity(context).build();
+                    return Response.ok().entity(context).type(raw?"text/plain;charset=utf-8":"application/json").build();
                 } else {
                     return Response.status(403).entity(ErrorMessage.NOTFOUND).build();
                 }
             } else if(ctype.equals("application/schema+json")) {
                 String schema = JsonSchemaWriter.newClassSchema(graph);
                 if(schema!=null) {
-                    return Response.ok().entity(schema).build();
+                    return Response.ok().entity(schema).type(raw?"text/plain;charset=utf-8":"application/schema+json").build();
                 } else {
                     return Response.status(403).entity(ErrorMessage.NOTFOUND).build();
                 }
