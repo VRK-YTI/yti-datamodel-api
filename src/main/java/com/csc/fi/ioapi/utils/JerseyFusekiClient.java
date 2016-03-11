@@ -102,7 +102,7 @@ public class JerseyFusekiClient {
         if(!raw) {
            rb.type(contentType.getContentType());
         } else {
-            rb.type("text/plain");
+            rb.type("text/plain;charset=utf-8");
         }
 
        return rb.build();
