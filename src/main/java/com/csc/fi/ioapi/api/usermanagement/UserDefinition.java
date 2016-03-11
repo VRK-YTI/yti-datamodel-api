@@ -1,5 +1,8 @@
 package com.csc.fi.ioapi.api.usermanagement;
 
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
+
 public class UserDefinition {
 
     private final String displayName;
@@ -7,7 +10,13 @@ public class UserDefinition {
     private final String mail;
 
     public UserDefinition(String displayName, String group, String mail) {
-        this.displayName = displayName;
+ 
+        /* FIXME: This should be done elsewhere ... filter of httpd config? */
+        Charset iso88591charset = Charset.forName("ISO-8859-1");
+        Charset utf8charset = Charset.forName("UTF-8");
+        byte[] iso88591String = displayName.getBytes(iso88591charset);
+        this.displayName = new String (iso88591String, utf8charset );
+   
         this.group = group;
         this.mail = mail;
     }
