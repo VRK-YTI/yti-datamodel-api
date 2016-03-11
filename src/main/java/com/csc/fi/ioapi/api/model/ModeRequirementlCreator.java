@@ -75,11 +75,11 @@ public class ModeRequirementlCreator {
             ParameterizedSparqlString pss = new ParameterizedSparqlString();
             pss.setNsPrefixes(LDHelper.PREFIX_MAP);
             queryString = "CONSTRUCT  { "
-                    + "?g a owl:Ontology . "
+                    + "?g a rdfs:Resource . "
                     + "?g rdfs:label ?label . "
                     + "?g dcap:preferredXMLNamespaceName ?namespace . "
                     + "?g dcap:preferredXMLNamespacePrefix ?prefix . "
-                    + (isLocalNamespace?"?g iow:isResolved ?resolved . ":"")
+                    + (isLocalNamespace?"":"?g iow:isResolved ?resolved . ")
                     + "} WHERE { }";
 
             pss.setCommandText(queryString);
