@@ -39,6 +39,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
+import javax.ws.rs.core.MediaType;
 import org.apache.jena.atlas.json.JSON;
 import org.apache.jena.atlas.web.ContentType;
 import org.apache.jena.iri.IRI;
@@ -86,14 +87,14 @@ public class ExportModel {
             if(ctype.equals("application/ld+json+context")) {
                 String context = ContextWriter.newModelContext(graph);
                 if(context!=null) {
-                    return Response.ok().entity(context).build();
+                    return Response.ok().entity(context).type(raw?"text/plain;charset=utf-8":"application/json").build();
                 } else {
                     return Response.status(403).entity(ErrorMessage.NOTFOUND).build();
                 }
             } else if(ctype.equals("application/schema+json")) {
                 String schema = JsonSchemaWriter.newModelSchema(graph);
                 if(schema!=null) {
-                    return Response.ok().entity(schema).build();
+                    return Response.ok().entity(schema).type(raw?"text/plain;charset=utf-8":"application/schema+json").build();
                 } else {
                     return Response.status(403).entity(ErrorMessage.NOTFOUND).build();
                 }
