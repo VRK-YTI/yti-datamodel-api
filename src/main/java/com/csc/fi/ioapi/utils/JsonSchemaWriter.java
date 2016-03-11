@@ -12,7 +12,6 @@ import com.hp.hpl.jena.query.ResultSet;
 import com.hp.hpl.jena.query.ResultSetFactory;
 import com.hp.hpl.jena.sparql.resultset.ResultSetPeekable;
 import java.io.StringWriter;
-import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -52,6 +51,7 @@ public class JsonSchemaWriter {
         put("http://www.w3.org/2001/XMLSchema#string", "string");
         put("http://www.w3.org/2001/XMLSchema#anyUri", "string");
         put("http://www.w3.org/2001/XMLSchema#langString", "string");
+        put("http://www.w3.org/2001/XMLSchema#anyUri", "string");
     }});
     
     public static final Map<String, String> FORMAT_MAP = 
@@ -267,14 +267,6 @@ public class JsonSchemaWriter {
             
         }
         
-        /*JsonObjectBuilder contextDef = Json.createObjectBuilder();
-        
-        contextDef.add("type", "string");
-        contextDef.add("format","uri");
-        contextDef.add("default",modelID+".context");
-        properties.add("@context", contextDef.build());
-        */
-        
         String selectResources = 
                 "SELECT ?resource ?className (group_concat(concat(?classLabel,'@',lang(?classLabel)); separator=\", \" ) as ?classTitle) (group_concat(concat(?classComment,'@',lang(?classComment)); separator=\", \" ) as ?classDescription) ?predicate ?predicateName ?datatype ?shapeRef ?shapeRefName ?min ?max (group_concat(concat(?label,'@',lang(?label)); separator=\", \" ) as ?title) (group_concat(concat(?comment,'@',lang(?comment)); separator=\", \" ) as ?description)"
                 + "WHERE { "
@@ -295,7 +287,8 @@ public class JsonSchemaWriter {
                 + "OPTIONAL { ?property sh:maxCount ?max . }"
                 + "BIND(afn:localname(?predicate) as ?predicateName)"
                 + "}"
-                + "} GROUP BY ?resource ?className ?classLabel ?classComment ?predicate ?predicateName ?datatype ?shapeRef ?shapeRefName ?min ?max";
+                + "} GROUP BY ?resource ?className ?classLabel ?classComment ?predicate ?predicateName ?datatype ?shapeRef ?shapeRefName ?min ?max "
+                + "ORDER BY ?resource";
         
         
         pss.setIri("modelPartGraph", modelID+"#HasPartGraph");
@@ -314,17 +307,13 @@ public class JsonSchemaWriter {
         
         while (pResults.hasNext()) {
             QuerySolution soln = pResults.nextSolution();
-            //String predicateID = soln.getResource("predicate").toString();
             
             if(!soln.contains("className")) return null;
             
             String className = soln.getLiteral("className").toString();
             String predicateName = soln.getLiteral("predicateName").toString();
             String title = soln.getLiteral("title").toString();
-            
-            logger.info(className);
-            
-            
+
             JsonObjectBuilder predicate = Json.createObjectBuilder();
             
             predicate.add("title", title);
@@ -343,34 +332,40 @@ public class JsonSchemaWriter {
             
             if(soln.contains("datatype")) {
                 String datatype = soln.getResource("datatype").toString();
+                logger.info(datatype);
                 String jsonDatatype = DATATYPE_MAP.get(datatype);
-
+                
+                
                 if(!soln.contains("max") || soln.getLiteral("max").getInt()>1) {
                         if(soln.contains("min")) predicate.add("minItems",soln.getLiteral("min").getInt());
                         if(soln.contains("max")) predicate.add("maxItems",soln.getLiteral("max").getInt());
                         predicate.add("type", "array");
-                        predicate.add("items", Json.createObjectBuilder().add("type", jsonDatatype).build());                    
+                        if(jsonDatatype!=null) {
+                            predicate.add("items", Json.createObjectBuilder().add("type", jsonDatatype).build());
+                        }                    
                 } else {
-                    predicate.add("type", jsonDatatype);
+                    if(jsonDatatype!=null) {
+                        predicate.add("type", jsonDatatype);
+                    }
                 }
                 
                 if(FORMAT_MAP.containsKey(datatype)) {
                     predicate.add("format",FORMAT_MAP.get(datatype));
                 }
             } else {
-               String shapeRefName = soln.getLiteral("shapeRefName").toString();
-               
-                if(!soln.contains("max") || soln.getLiteral("max").getInt()>1) {
-                        if(soln.contains("min")) predicate.add("minItems",soln.getLiteral("min").getInt());
-                        if(soln.contains("max")) predicate.add("maxItems",soln.getLiteral("max").getInt());
-                        predicate.add("type", "array");
-                        predicate.add("items", Json.createObjectBuilder().add("type","object").add("$ref","#/definitions/"+shapeRefName).build());                    
-                } else {
-                    predicate.add("type","object");
-                    predicate.add("$ref","#/definitions/"+shapeRefName);
-                }
-               
+                if(soln.contains("shapeRefName")) {
+                    String shapeRefName = soln.getLiteral("shapeRefName").toString();
 
+                     if(!soln.contains("max") || soln.getLiteral("max").getInt()>1) {
+                             if(soln.contains("min")) predicate.add("minItems",soln.getLiteral("min").getInt());
+                             if(soln.contains("max")) predicate.add("maxItems",soln.getLiteral("max").getInt());
+                             predicate.add("type", "array");
+                             predicate.add("items", Json.createObjectBuilder().add("type","object").add("$ref","#/definitions/"+shapeRefName).build());                    
+                     } else {
+                         predicate.add("type","object");
+                         predicate.add("$ref","#/definitions/"+shapeRefName);
+                     }
+                }
             }
             
             properties.add(predicateName,predicate.build());
