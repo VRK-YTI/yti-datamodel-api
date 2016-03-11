@@ -5,7 +5,6 @@
  */
 package com.csc.fi.ioapi.utils;
 
-import com.csc.fi.ioapi.config.ApplicationProperties;
 import com.csc.fi.ioapi.config.EndpointServices;
 import java.util.Date;
 import com.csc.fi.ioapi.config.LoginSession;
@@ -13,15 +12,10 @@ import com.csc.fi.ioapi.config.LoginSession;
 import com.hp.hpl.jena.datatypes.xsd.XSDDatatype;
 import com.hp.hpl.jena.graph.Node;
 import com.hp.hpl.jena.graph.NodeFactory;
-import com.hp.hpl.jena.query.DatasetAccessor;
-import com.hp.hpl.jena.query.DatasetAccessorFactory;
 import com.hp.hpl.jena.query.ParameterizedSparqlString;
 import com.hp.hpl.jena.query.Query;
 import com.hp.hpl.jena.query.QueryExecution;
 import com.hp.hpl.jena.query.QueryExecutionFactory;
-import com.hp.hpl.jena.query.QueryFactory;
-import com.hp.hpl.jena.rdf.model.Model;
-import com.hp.hpl.jena.rdf.model.ModelFactory;
 import com.hp.hpl.jena.update.UpdateExecutionFactory;
 import com.hp.hpl.jena.update.UpdateProcessor;
 import com.hp.hpl.jena.update.UpdateRequest;
@@ -29,8 +23,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.apache.jena.riot.RDFDataMgr;
-import org.apache.jena.riot.RDFLanguages;
 
 /**
  *
@@ -149,7 +141,6 @@ public class UserManager {
         
         String groups = "";
         
-        
         HashMap<String,Boolean> allGroups = loginSession.getGroups();
         
         if(allGroups!=null) {
@@ -162,13 +153,7 @@ public class UserManager {
                 groups = groups+"?id dcterms:isPartOf <"+n.getURI()+"> . "+(allGroups.get(group).booleanValue()?" ?id iow:isAdminOf <"+n.getURI()+"> . ":"");
             }
         }
-        
-        /*
-        for(String g : loginSession.getGroupUris()) {
-            Node n = NodeFactory.createURI(g);
-            groups = groups+"?id dcterms:isPartOf <"+n.getURI()+"> . ";
-        }*/
-        
+         
          String query = 
                 "WITH <urn:csc:users> "+
                 "DELETE { ?id dcterms:modified ?oldTime . ?id dcterms:isPartOf ?partOfgroup . ?id iow:isAdminOf ?adminOfgroup . ?id foaf:name ?name . } "+
@@ -187,9 +172,7 @@ public class UserManager {
         pss.setLiteral("mail", loginSession.getEmail());
         pss.setLiteral("timestamp", timestamp,XSDDatatype.XSDdateTime);
         pss.setCommandText(query);
-        
-        logger.log(Level.WARNING, pss.toString()+" "+services.getUsersSparqlUpdateAddress());
-        
+
         UpdateRequest queryObj = pss.asUpdate();
         UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj,services.getUsersSparqlUpdateAddress());
         qexec.execute();
