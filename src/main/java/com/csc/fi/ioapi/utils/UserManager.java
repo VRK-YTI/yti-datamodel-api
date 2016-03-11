@@ -115,6 +115,8 @@ public class UserManager {
         pss.setLiteral("timestamp", timestamp,XSDDatatype.XSDdateTime);
         pss.setCommandText(query);
         
+        logger.info(pss.toString());
+        
         UpdateRequest queryObj = pss.asUpdate();
         UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj,services.getUsersSparqlUpdateAddress());
         qexec.execute();
@@ -169,19 +171,19 @@ public class UserManager {
         
          String query = 
                 "WITH <urn:csc:users> "+
-                "DELETE { ?id dcterms:modified ?oldTime . ?id dcterms:isPartOf ?partOfgroup . ?id iow:isAdminOf ?adminOfgroup . } "+
-                "INSERT { ?id dcterms:modified ?timestamp . "+ groups +
+                "DELETE { ?id dcterms:modified ?oldTime . ?id dcterms:isPartOf ?partOfgroup . ?id iow:isAdminOf ?adminOfgroup . ?id foaf:name ?name . } "+
+                "INSERT { ?id foaf:name ?newName . ?id dcterms:modified ?timestamp . "+ groups +
                 "} WHERE {"+
                 "?id a foaf:Person . "
+               + "OPTIONAL { ?id foaf:name ?name . }"
                + "OPTIONAL {?id dcterms:modified ?oldTime . } "
                + "OPTIONAL {?id dcterms:isPartOf ?partOfgroup .} "
                + "OPTIONAL {?id iow:isAdminOf ?adminOfgroup .}}";
                  
-         
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
         pss.setIri("id","mailto:"+loginSession.getEmail());
-        pss.setLiteral("name", loginSession.getDisplayName());
+        pss.setLiteral("newName", loginSession.getDisplayName());
         pss.setLiteral("mail", loginSession.getEmail());
         pss.setLiteral("timestamp", timestamp,XSDDatatype.XSDdateTime);
         pss.setCommandText(query);
