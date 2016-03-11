@@ -2,11 +2,9 @@
  * Licensed under the European Union Public Licence (EUPL) V.1.1 
  */
 package com.csc.fi.ioapi.utils;
-import com.hp.hpl.jena.query.QueryParseException;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientHandlerException;
 import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.WebResource.Builder;
 import com.sun.jersey.api.uri.UriComponent;
@@ -18,7 +16,6 @@ import org.apache.jena.atlas.json.JSON;
 import org.apache.jena.atlas.json.JsonObject;
 import org.apache.jena.atlas.json.JsonValue;
 import org.apache.jena.atlas.web.ContentType;
-import org.apache.jena.riot.Lang;
 /**
  *
  * @author malonen

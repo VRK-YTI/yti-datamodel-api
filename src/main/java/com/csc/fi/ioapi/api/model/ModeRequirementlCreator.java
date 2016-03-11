@@ -64,22 +64,30 @@ public class ModeRequirementlCreator {
             }
             
             boolean isResolvedNamespace = true;
+            boolean isLocalNamespace = true;
             
             if(!namespace.startsWith(ApplicationProperties.getDefaultDomain())) {
                isResolvedNamespace = NamespaceResolver.resolveNamespace(namespace);
+               isLocalNamespace = false;
             }
 
             String queryString;
             ParameterizedSparqlString pss = new ParameterizedSparqlString();
             pss.setNsPrefixes(LDHelper.PREFIX_MAP);
-            queryString = "CONSTRUCT  { ?g a dcap:MetadataVocabulary . ?g rdfs:label ?label . ?g dcap:preferredXMLNamespaceName ?namespace . ?g dcap:preferredXMLNamespacePrefix ?prefix . ?g iow:isResolved ?resolved } WHERE { }";
+            queryString = "CONSTRUCT  { "
+                    + "?g a owl:Ontology . "
+                    + "?g rdfs:label ?label . "
+                    + "?g dcap:preferredXMLNamespaceName ?namespace . "
+                    + "?g dcap:preferredXMLNamespacePrefix ?prefix . "
+                    + (isLocalNamespace?"?g iow:isResolved ?resolved . ":"")
+                    + "} WHERE { }";
 
             pss.setCommandText(queryString);
             pss.setIri("g", namespaceIRI);
             pss.setLiteral("label", ResourceFactory.createLangLiteral(label, lang));
             pss.setLiteral("namespace",namespace);
             pss.setLiteral("prefix", prefix);
-            pss.setLiteral("resolved", isResolvedNamespace);
+            if(!isLocalNamespace) pss.setLiteral("resolved", isResolvedNamespace);
 
             return JerseyFusekiClient.constructGraphFromService(pss.toString(), services.getTempConceptReadSparqlAddress());
 
