@@ -13,6 +13,8 @@ final public class ErrorMessage {
     final public static String NOTREMOVED = toJs("{'errorMessage':'Not removed'}");
     final public static String STATUS = toJs("{'errorMessage':'Resource status restricts removing'}");
     final public static String DEPEDENCIES = toJs("{'errorMessage':'Resource depedencies restricts removing'}");
+    final public static String INVALIDVOCABULARY = toJs("{'errorMessage':'Invalid SKOSMOS ID'}");
+    final public static String INVALIDPARAMETER = toJs("{'errorMessage':'Invalid API parameters'}");
  
     private static String toJs(String jsonString) {
         return jsonString.replaceAll("'", "\"");

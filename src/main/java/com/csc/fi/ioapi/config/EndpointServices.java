@@ -49,6 +49,10 @@ public String getUsersSparqlUpdateAddress() {
     return endpoint+"/users/update";
 }
 
+public String getConceptServiceUri() {
+     return "http://dev.finto.fi";
+}
+
 public String getConceptAPI() {
      return "http://dev.finto.fi/rest/v1/data";
 }
