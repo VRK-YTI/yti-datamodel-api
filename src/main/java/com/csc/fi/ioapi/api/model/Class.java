@@ -3,6 +3,7 @@
  */
 package com.csc.fi.ioapi.api.model;
 
+import com.csc.fi.ioapi.config.ApplicationProperties;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
 import java.util.logging.Level;
@@ -75,10 +76,11 @@ public class Class {
         /* If no id is provided create a list of classes */
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+        
         String queryString = "CONSTRUCT { "
                 + "?class rdfs:label ?label . "
                 + "?class a ?type . "
-                + "?class dcterms:modified ?date . "
+               // + "?class dcterms:modified ?date . "
                 + "?class dcterms:modified ?modified . "
                 + "?class rdfs:isDefinedBy ?source . "
                 + "?source rdfs:label ?sourceLabel . "
@@ -95,6 +97,7 @@ public class Class {
                 + "?source a ?sourceType . "
                 + "?source rdfs:label ?sourceLabel . "
                 + "} }"; 
+        
 
          if(model!=null && !model.equals("undefined")) {
               pss.setIri("library", model);
