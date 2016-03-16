@@ -48,7 +48,7 @@ public class LocalConcepts {
   public Response json(
       @ApiParam(value = "Concept id")
       @QueryParam("id") String id,
-      @ApiParam(value = "Model id")
+      @ApiParam(value = "Model id", required = true)
       @QueryParam("model") String model) {
 
         IRIFactory iriFactory = IRIFactory.semanticWebImplementation();
