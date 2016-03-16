@@ -331,6 +331,7 @@ public class Class {
             
             logger.log(Level.INFO, id+" updated sucessfully!");
             
+            
           return Response.status(204).entity("{\"identifier\":\"urn:uuid:"+provUUID+"\"}").build();
 
       } catch(UniformInterfaceException | ClientHandlerException ex) {

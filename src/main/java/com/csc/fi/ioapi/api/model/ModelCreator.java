@@ -58,11 +58,12 @@ public class ModelCreator {
             prefix = LDHelper.modelName(prefix);
             String namespace = ApplicationProperties.getDefaultNamespace()+prefix;
             
-            IRI groupIRI, namespaceIRI;
+            IRI groupIRI, namespaceIRI, namespaceSKOSIRI;
             
             try {
                     IRIFactory iri = IRIFactory.semanticWebImplementation();
                     namespaceIRI = iri.construct(namespace);
+                    namespaceSKOSIRI = iri.construct(namespace+"/skos#");
                     groupIRI = iri.construct(group);
             } catch (IRIException e) {
                     logger.warning("INVALID: "+namespace);
@@ -88,6 +89,10 @@ public class ModelCreator {
                     + "?modelIRI dcap:preferredXMLNamespacePrefix ?prefix . "
                     + "?modelIRI dcterms:isPartOf ?group . "
                     + "?group rdfs:label ?groupLabel . "
+                    + "?modelIRI dcterms:references ?localSKOSNamespace . "
+                    + "?localSKOSNamespace a skos:Collection ; "
+                    + " dcterms:identifier ?prefix ; "
+                    + " dcterms:title ?profileLabelSKOS . "
                     + "?modelIRI dcterms:references <http://jhsmeta.fi/skos/> . "
                     + "<http://jhsmeta.fi/skos/> a skos:ConceptScheme ; "
                     + " dcterms:identifier 'jhsmeta' ; "
@@ -101,6 +106,8 @@ public class ModelCreator {
                     + "}";
 
             pss.setCommandText(queryString);
+            pss.setIri("localSKOSNamespace", namespaceSKOSIRI);
+            pss.setLiteral("profileLabelSKOS", ResourceFactory.createLangLiteral(label+" - Käsitteistö", lang));
             pss.setLiteral("namespace", namespace+"#");
             pss.setLiteral("prefix", prefix);
             pss.setIri("modelIRI", namespaceIRI);

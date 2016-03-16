@@ -64,6 +64,7 @@ public class ClassCreator {
             }
 
             ConceptMapper.updateConceptFromConceptService(conceptID);
+            ConceptMapper.addConceptToLocalSKOSCollection(modelID,conceptID);
 
             ParameterizedSparqlString pss = new ParameterizedSparqlString();
             pss.setNsPrefixes(LDHelper.PREFIX_MAP);
@@ -97,6 +98,8 @@ public class ClassCreator {
             pss.setLiteral("classLabel", ResourceFactory.createLangLiteral(classLabel, lang));
             pss.setIri("classIRI",modelID+"#"+LDHelper.resourceName(classLabel));
 
+            logger.info("New classCreator template from "+conceptID);
+            
             return JerseyFusekiClient.constructGraphFromService(pss.toString(), services.getTempConceptReadSparqlAddress());
     }   
  

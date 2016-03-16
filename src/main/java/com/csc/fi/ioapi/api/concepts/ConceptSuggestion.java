@@ -9,13 +9,10 @@ import com.csc.fi.ioapi.config.EndpointServices;
 import com.csc.fi.ioapi.config.LoginSession;
 import com.csc.fi.ioapi.utils.LDHelper;
 import com.hp.hpl.jena.query.ParameterizedSparqlString;
-import java.io.ByteArrayOutputStream;
-import java.io.OutputStream;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.servlet.ServletContext;
-import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -23,14 +20,6 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 
-import com.hp.hpl.jena.query.Query;
-import com.hp.hpl.jena.query.QueryException;
-import com.hp.hpl.jena.query.QueryExecution;
-import com.hp.hpl.jena.query.QueryExecutionFactory;
-import com.hp.hpl.jena.query.QueryFactory;
-import com.hp.hpl.jena.query.QueryParseException;
-import com.hp.hpl.jena.query.ResultSet;
-import com.hp.hpl.jena.query.ResultSetFormatter;
 import com.hp.hpl.jena.rdf.model.ResourceFactory;
 import com.hp.hpl.jena.sparql.engine.http.QueryExceptionHTTP;
 import com.hp.hpl.jena.update.UpdateExecutionFactory;
@@ -85,8 +74,7 @@ public class ConceptSuggestion {
         IRI userIRI = null;
         IRI schemeIRI = null;
        
-        logger.info(userID +" "+schemeID+" "+conceptID);
-		try {
+	try {
                     IRIFactory iri = IRIFactory.semanticWebImplementation();
                     
                     if(conceptID!=null && !conceptID.equals("undefined")) conceptIRI = iri.construct(conceptID);
@@ -205,9 +193,6 @@ public class ConceptSuggestion {
                 pss.setIri("user", "mailto:"+login.getEmail());      
                 if(topIRI!=null) pss.setIri("top", topIRI);
          
-
-                logger.log(Level.INFO,pss.toString());
-                
 		UpdateRequest query = pss.asUpdate();
 		UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(query, services.getTempConceptSparqlUpdateAddress());
 

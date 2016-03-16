@@ -59,9 +59,6 @@ public class ConceptSearch {
             ResponseBuilder rb;
             Client client = Client.create();
             
-            if(!vocid.startsWith(services.getConceptServiceUri()))
-                return Response.status(Response.Status.NOT_ACCEPTABLE).entity(ErrorMessage.INVALIDVOCABULARY).build();
-
             if((term==null || term.equals("undefined")) || (lang==null || lang.equals("undefined")) ) return Response.status(Response.Status.NOT_ACCEPTABLE).entity(ErrorMessage.INVALIDPARAMETER).build();
             
             if(!term.contains("*")) term+="*";

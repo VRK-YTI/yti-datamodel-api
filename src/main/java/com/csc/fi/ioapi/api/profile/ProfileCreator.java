@@ -107,7 +107,7 @@ public class ProfileCreator {
 
             pss.setCommandText(queryString);
             pss.setIri("localSKOSNamespace", namespaceSKOSIRI);
-            pss.setLiteral("profileLabelSKOS", ResourceFactory.createLangLiteral(label+" - Sanasto", lang));
+            pss.setLiteral("profileLabelSKOS", ResourceFactory.createLangLiteral(label+" - Käsitteistö", lang));
             pss.setLiteral("namespace", namespace+"#");
             pss.setLiteral("prefix", prefix);
             pss.setIri("modelIRI", namespaceIRI);

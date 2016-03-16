@@ -4,16 +4,23 @@
 package com.csc.fi.ioapi.utils;
 
 import com.csc.fi.ioapi.config.EndpointServices;
+import static com.csc.fi.ioapi.utils.GraphManager.services;
 import com.hp.hpl.jena.query.DatasetAccessor;
 import com.hp.hpl.jena.query.DatasetAccessorFactory;
+import com.hp.hpl.jena.query.ParameterizedSparqlString;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.ModelFactory;
+import com.hp.hpl.jena.update.UpdateExecutionFactory;
+import com.hp.hpl.jena.update.UpdateProcessor;
+import com.hp.hpl.jena.update.UpdateRequest;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.uri.UriComponent;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ws.rs.core.Response;
+import org.apache.jena.iri.IRI;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.riot.RDFLanguages;
 
@@ -27,8 +34,9 @@ public class ConceptMapper {
      private static final Logger logger = Logger.getLogger(ConceptMapper.class.getName());
     
      public static void updateConceptFromConceptService(String uri) {
-               
-         // TODO: ADD TEST FOR SUGGESTIONS AND TEMP CONCEPTS 
+        
+        /* Only if concept IDs are not local UUIDs */ 
+        if(!uri.startsWith("urn:uuid:")) {                
          
             Client client = Client.create();
             
@@ -49,7 +57,33 @@ public class ConceptMapper {
             
             DatasetAccessor accessor = DatasetAccessorFactory.createHTTP(services.getTempConceptReadWriteAddress());
             accessor.add(uri, model);
+            
+            logger.info("Updated "+uri+" from "+services.getConceptAPI());
+            
+        } 
+
   
     }    
+
+    public static void addConceptToLocalSKOSCollection(String model, String concept) {
+        
+        String query
+                = " INSERT { GRAPH ?skosCollection { ?skosCollection skos:member ?concept . }}"
+                + " WHERE { GRAPH ?concept { ?s ?p ?o . } }";
+
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+        pss.setIri("skosCollection", model+"/skos#");
+        pss.setIri("concept", concept);
+        pss.setCommandText(query);
+        
+        logger.info(pss.toString());
+
+        UpdateRequest queryObj = pss.asUpdate();
+        UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, services.getTempConceptSparqlUpdateAddress());
+        qexec.execute();
+
+    }
+
     
 }
