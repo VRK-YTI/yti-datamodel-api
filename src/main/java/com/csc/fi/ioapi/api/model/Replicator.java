@@ -8,7 +8,6 @@ import java.util.logging.Logger;
 
 import javax.servlet.ServletContext;
 import javax.ws.rs.GET;
-import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -38,11 +37,8 @@ import com.wordnik.swagger.annotations.ApiParam;
 import com.wordnik.swagger.annotations.ApiResponse;
 import com.wordnik.swagger.annotations.ApiResponses;
 import java.io.DataInputStream;
-import java.util.concurrent.ExecutorService;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
-import javax.ws.rs.container.AsyncResponse;
-import javax.ws.rs.container.Suspended;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
 import org.apache.jena.iri.IRIFactory;
@@ -67,7 +63,6 @@ public class Replicator {
       /* Add proper logic */  
       return true;
     }
-    private ExecutorService executorService = java.util.concurrent.Executors.newCachedThreadPool();
    
     /**
      * Replaces Graph in given service
@@ -84,43 +79,35 @@ public class Replicator {
       @ApiResponse(code = 404, message = "Service not found"),
       @ApiResponse(code = 500, message = "Bad data?") 
   })
-  public void postJson(
-          @Suspended
-    final AsyncResponse asyncResponse, @ApiParam(value = "Service ID", required = true)
-                                       @QueryParam(value = "service")
-    final String service, @ApiParam(value = "Model ID")
-                          @QueryParam(value = "model")
-    final String model, @ApiParam(value = "Group ID")
-                        @QueryParam(value = "group")
-    final String group, @Context
-    final HttpServletRequest request) {
+  public Response postJson(
+          @ApiParam(value = "Service ID", required = true) 
+                @QueryParam("service") 
+                String service,
+                @ApiParam(value = "Model ID") 
+                @QueryParam("model") 
+                String model,
+                @ApiParam(value = "Group ID") 
+                @QueryParam("group") 
+                String group,
+                @Context HttpServletRequest request) {
       
-
-       executorService.submit(new Runnable() {
-            public void run() {
-                asyncResponse.resume(doPostJson(service, model, group, request));
-            }
-        });
-       
-
-  }
-
-    private Response doPostJson(@ApiParam(value = "Service ID", required = true) 
-    @QueryParam("service")
-            String service, @ApiParam(value = "Model ID") 
-            @QueryParam("model")
-                    String model, @ApiParam(value = "Group ID") 
-                    @QueryParam("group")
-                            String group, @Context HttpServletRequest request) {
-        if(service==null || service.equals("undefined")) {
+      
+       if(service==null || service.equals("undefined")) {
             return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
-        }HttpSession session = request.getSession();
+       } 
+       
+        HttpSession session = request.getSession();
+        
         if(session==null) return Response.status(403).entity(ErrorMessage.UNAUTHORIZED).build();
+        
         LoginSession login = new LoginSession(session);
+        
         if(!(login.isLoggedIn() && login.isSuperAdmin())) {
             return Response.status(403).entity(ErrorMessage.UNAUTHORIZED).build();
         }
+        
         Boolean replicate;
+        
         try {
             
             String replicateURI = service+"replicate";
@@ -133,7 +120,7 @@ public class Replicator {
             if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
                 logger.info(service);
                 logger.info(""+response.getStatus());
-                return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
+                  return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
             }
 
             DataInputStream dis = new DataInputStream(response.getEntityInputStream());
@@ -142,77 +129,82 @@ public class Replicator {
         } catch(Exception ex) {
             return Response.status(403).entity(ErrorMessage.NOTFOUND).build();
         }
+        
         if(replicate!=null && replicate.booleanValue()) {
             logger.info("Replicating data from "+replicate);
         }
+        
         IRI modelIRI = null, groupIRI = null;
+       
         try {
-            IRIFactory iri = IRIFactory.iriImplementation();
-            if(model!=null && !model.equals("undefined")) modelIRI = iri.construct(model);
-            if(group!=null && !group.equals("undefined")) groupIRI = iri.construct(group);
+                IRIFactory iri = IRIFactory.iriImplementation();
+                if(model!=null && !model.equals("undefined")) modelIRI = iri.construct(model);
+                if(group!=null && !group.equals("undefined")) groupIRI = iri.construct(group);
         } catch (IRIException e) {
-            logger.log(Level.WARNING, "Parameter is invalid IRI!");
-            return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
+                logger.log(Level.WARNING, "Parameter is invalid IRI!");
+               return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
         }
-        String SD = "http://www.w3.org/ns/sparql-service-description#";
-        if(modelIRI==null && groupIRI==null) {
-            
-            Model modelList = JerseyFusekiClient.getResourceAsJenaModel(service+"serviceDescription");
-            ResIterator iter = modelList.listResourcesWithProperty(RDF.type, ResourceFactory.createResource(SD+"NamedGraph"));
-            
-            DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(services.getCoreReadWriteAddress());
-            DatasetAdapter adapter = new DatasetAdapter(accessor);
-            
-            while (iter.hasNext()) {
+        
+       String SD = "http://www.w3.org/ns/sparql-service-description#";
+         
+       if(modelIRI==null && groupIRI==null) {
+           
+           Model modelList = JerseyFusekiClient.getResourceAsJenaModel(service+"serviceDescription");
+           ResIterator iter = modelList.listResourcesWithProperty(RDF.type, ResourceFactory.createResource(SD+"NamedGraph"));
+           
+           DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(services.getCoreReadWriteAddress());
+           DatasetAdapter adapter = new DatasetAdapter(accessor);
+           
+           while (iter.hasNext()) {
                 Resource res = iter.nextResource();
                 Resource modelURI = res.getPropertyResourceValue(ResourceFactory.createProperty(SD, "name"));
                 
                 if(GraphManager.isExistingGraph(modelURI.toString())) {
                     logger.info("Exists! Skipping "+modelURI.toString());
                 } else {
+                
+                 logger.info("---------------------------------------------------------");    
+                 
+                 logger.info(modelURI.toString());
+                 
+                Resource modelGROUP = res.getPropertyResourceValue(DCTerms.isPartOf);
+                
+                logger.info(modelGROUP.toString());
+                
+                ServiceDescriptionManager.createGraphDescription(modelURI.toString(), modelGROUP.toString(), null);
+                
+                Model exportedModel = JerseyFusekiClient.getResourceAsJenaModel(service+"exportResource?graph="+modelURI.toString());
+                adapter.add(modelURI.toString(), exportedModel);
+                
+                String uri = service+"exportResource?graph="+UriComponent.encode(modelURI.toString()+"#HasPartGraph",UriComponent.Type.QUERY_PARAM);
+     
+                Model hasPartModel = JerseyFusekiClient.getResourceAsJenaModel(uri);
+                adapter.add(modelURI.toString()+"#HasPartGraph", hasPartModel);
+                
+                NodeIterator nodIter = hasPartModel.listObjectsOfProperty(DCTerms.hasPart);
+                while(nodIter.hasNext()) {
+                    Resource part = nodIter.nextNode().asResource();
                     
-                    logger.info("---------------------------------------------------------");
-                    
-                    logger.info(modelURI.toString());
-                    
-                    Resource modelGROUP = res.getPropertyResourceValue(DCTerms.isPartOf);
-                    
-                    logger.info(modelGROUP.toString());
-                    
-                    ServiceDescriptionManager.createGraphDescription(modelURI.toString(), modelGROUP.toString(), null);
-                    
-                    Model exportedModel = JerseyFusekiClient.getResourceAsJenaModel(service+"exportResource?graph="+modelURI.toString());
-                    adapter.add(modelURI.toString(), exportedModel);
-                    
-                    String uri = service+"exportResource?graph="+UriComponent.encode(modelURI.toString()+"#HasPartGraph",UriComponent.Type.QUERY_PARAM);
-                    
-                    Model hasPartModel = JerseyFusekiClient.getResourceAsJenaModel(uri);
-                    adapter.add(modelURI.toString()+"#HasPartGraph", hasPartModel);
-                    
-                    NodeIterator nodIter = hasPartModel.listObjectsOfProperty(DCTerms.hasPart);
-                    while(nodIter.hasNext()) {
-                        Resource part = nodIter.nextNode().asResource();
-                        
-                        String resourceURI = service+"exportResource?graph="+UriComponent.encode(part.toString(),UriComponent.Type.QUERY_PARAM);
-                        Model resourceModel = JerseyFusekiClient.getResourceAsJenaModel(resourceURI);
-                        
-                        logger.info(part.toString());
-                        adapter.add(part.toString(), resourceModel);
-                        
-                    }
+                    String resourceURI = service+"exportResource?graph="+UriComponent.encode(part.toString(),UriComponent.Type.QUERY_PARAM);
+                    Model resourceModel = JerseyFusekiClient.getResourceAsJenaModel(resourceURI);
+
+                    logger.info(part.toString());
+                    adapter.add(part.toString(), resourceModel);
                     
                 }
                 
-            }
-            
-         logger.info("---------------------------------------------------------");
-        }
-        
-        logger.info("Returning 200 !?!?");
+           }
+           
+       } 
+           
+       logger.info("---------------------------------------------------------");
+       }
        
-         return Response.status(200).entity("{}").build();
-         
-    }
+
+       logger.info("Returning 200 !?!?");
+       return Response.status(200).entity("{}").build();
+
+  }
   
 
   
