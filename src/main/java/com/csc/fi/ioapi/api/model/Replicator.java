@@ -164,7 +164,13 @@ public class Replicator {
                     logger.info("Exists! Skipping "+modelURI.toString());
                 } else {
                 
+                 logger.info("---------------------------------------------------------");    
+                 
+                 logger.info(modelURI.toString());
+                 
                 Resource modelGROUP = res.getPropertyResourceValue(DCTerms.isPartOf);
+                
+                logger.info(modelGROUP.toString());
                 
                 ServiceDescriptionManager.createGraphDescription(modelURI.toString(), modelGROUP.toString(), null);
                 
@@ -183,13 +189,17 @@ public class Replicator {
                     String resourceURI = service+"exportResource?graph="+UriComponent.encode(part.toString(),UriComponent.Type.QUERY_PARAM);
                     Model resourceModel = JerseyFusekiClient.getResourceAsJenaModel(resourceURI);
 
+                    logger.info(part.toString());
                     adapter.add(part.toString(), resourceModel);
                     
                 }
                 
            }
            
-       } }
+       } 
+       
+       logger.info("---------------------------------------------------------");
+       }
        
         return Response.status(200).entity("{}").build();
 
