@@ -2,6 +2,9 @@
  * Licensed under the European Union Public Licence (EUPL) V.1.1 
  */
 package com.csc.fi.ioapi.utils;
+import com.hp.hpl.jena.rdf.model.Model;
+import com.hp.hpl.jena.rdf.model.ModelFactory;
+import com.hp.hpl.jena.rdf.model.RDFReader;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientHandlerException;
 import com.sun.jersey.api.client.ClientResponse;
@@ -16,6 +19,8 @@ import org.apache.jena.atlas.json.JSON;
 import org.apache.jena.atlas.json.JsonObject;
 import org.apache.jena.atlas.json.JsonValue;
 import org.apache.jena.atlas.web.ContentType;
+import org.apache.jena.riot.Lang;
+import org.apache.jena.riot.RiotException;
 /**
  *
  * @author malonen
@@ -24,6 +29,26 @@ public class JerseyFusekiClient {
     
     static final private Logger logger = Logger.getLogger(JerseyFusekiClient.class.getName());
     
+    public static Model getResourceAsJenaModel(String resourceURI) {
+        
+     
+        Client client = Client.create();
+        WebResource webResource = client.resource(resourceURI);
+        Builder builder = webResource.accept("text/turtle");
+        ClientResponse response = builder.get(ClientResponse.class);
+        
+         Model model = ModelFactory.createDefaultModel();
+         
+         try {
+         RDFReader reader = model.getReader(Lang.TURTLE.getName());
+         reader.read(model, response.getEntityInputStream(), resourceURI);
+         } catch(RiotException ex) {
+             return model;
+         }
+         
+         return model;
+        
+    }
     
     public static JsonValue getGraphContextFromService(String id, String service) {
          
@@ -97,7 +122,11 @@ public class JerseyFusekiClient {
         rb.entity(response.getEntityInputStream());
         
         if(!raw) {
-           rb.type(contentType.getContentType());
+            try {
+                rb.type(contentType.getContentType());
+            } catch(IllegalArgumentException ex) {
+                 rb.type("text/plain;charset=utf-8");
+            }
         } else {
             rb.type("text/plain;charset=utf-8");
         }

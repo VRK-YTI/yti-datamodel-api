@@ -116,6 +116,21 @@ public class QueryLibrary {
                  + " ?library rdfs:label ?label . "
                  + "}"
                  + "}");
-    
+      
+      
+        final public static String hasPartListQuery = LDHelper.expandSparqlQuery(
+                 "CONSTRUCT { "
+                 + "?model a ?type . "
+                 + "?model dcterms:isPartOf ?group . "
+                 + "?model dcterms:hasPart ?resource . "
+                 + "} WHERE { "
+                 + "GRAPH ?hasPartGraph { "
+                 + "?model dcterms:hasPart ?resource . "
+                 + "}"
+                 + "GRAPH ?model { "
+                 + "?model dcterms:isPartOf ?group . "
+                 + "?model a ?type . "
+                 + "}"
+                 + "}");  
      
 }

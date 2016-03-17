@@ -13,7 +13,7 @@
         <project.provenance>true</project.provenance>
         <project.endpoint>http://localhost:3030</project.endpoint>
         <project.debug>true</project.debug>
-        <project.debugGroup>https://tt.eduuni.fi/sites/csc-iow#JHS_ADMINS;https://tt.eduuni.fi/sites/csc-iow#KTK_ADMINS</project.debugGroup>
+        <project.debugGroup>https://tt.eduuni.fi/sites/csc-iow#IOW_ADMINS;https://tt.eduuni.fi/sites/csc-iow#JHS_ADMINS;https://tt.eduuni.fi/sites/csc-iow#KTK_ADMINS</project.debugGroup>
         <project.debugAdress>http://localhost:9001</project.debugAdress>
         <project.defaultNamespace>http://iow.csc.fi/id/ns/</project.defaultNamespace>
         <project.defaultDomain>http://iow.csc.fi/</project.defaultDomain>

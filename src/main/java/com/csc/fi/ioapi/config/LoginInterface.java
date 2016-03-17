@@ -16,6 +16,8 @@ public interface LoginInterface {
     
     public boolean isLoggedIn();
     
+    public boolean isSuperAdmin();
+    
     public boolean isInGroup(String group);
     
     public boolean isAdminOfGroup(String group);

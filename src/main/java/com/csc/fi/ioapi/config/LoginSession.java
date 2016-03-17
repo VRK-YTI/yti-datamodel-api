@@ -39,6 +39,10 @@ public class LoginSession implements LoginInterface {
     public String getDisplayName() {
         return session.getAttribute("displayName").toString();
     }
+    
+    public boolean isSuperAdmin() {
+        return session.getAttribute("group").toString().contains("https://tt.eduuni.fi/sites/csc-iow#IOW_ADMINS");
+    }
 
     @Override
     public String getEmail() {

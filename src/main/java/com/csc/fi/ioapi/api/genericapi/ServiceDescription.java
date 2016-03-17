@@ -9,10 +9,13 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import com.csc.fi.ioapi.config.EndpointServices;
 import com.csc.fi.ioapi.utils.JerseyFusekiClient;
+import javax.ws.rs.core.HttpHeaders;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiResponse;
 import com.wordnik.swagger.annotations.ApiResponses;
+import javax.ws.rs.HeaderParam;
+import org.apache.jena.atlas.web.ContentType;
  
 /**
  * Root resource (exposed at "myresource" path)
@@ -26,17 +29,15 @@ public class ServiceDescription {
     private static final Logger logger = Logger.getLogger(ServiceDescription.class.getName());
   
   @GET
-  @Produces("application/ld+json")
+  //@Produces("application/ld+json")
   @ApiOperation(value = "Get service description", notes = "More notes about this method")
   @ApiResponses(value = {
       @ApiResponse(code = 400, message = "Invalid model supplied"),
       @ApiResponse(code = 404, message = "Service description not found"),
       @ApiResponse(code = 500, message = "Internal server error")
   })
-  public Response json() {
-
-    return JerseyFusekiClient.getGraphResponseFromService("urn:csc:iow:sd",services.getCoreReadAddress());
-
+  public Response json(@HeaderParam("Accept") String accept) {
+    return JerseyFusekiClient.getGraphResponseFromService("urn:csc:iow:sd",services.getCoreReadAddress(), ContentType.create(accept), false);
 }
   
 }
