@@ -3,7 +3,6 @@
  */
 package com.csc.fi.ioapi.api.model;
 
-import com.csc.fi.ioapi.config.ApplicationProperties;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
 import java.util.logging.Level;
@@ -32,7 +31,7 @@ import com.csc.fi.ioapi.utils.LDHelper;
 import com.csc.fi.ioapi.utils.NamespaceManager;
 import com.csc.fi.ioapi.utils.ProvenanceManager;
 import com.csc.fi.ioapi.utils.QueryLibrary;
-import com.hp.hpl.jena.query.ParameterizedSparqlString;
+import org.apache.jena.query.ParameterizedSparqlString;
 import com.sun.jersey.api.client.ClientHandlerException;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.UniformInterfaceException;

@@ -3,7 +3,6 @@
  */
 package com.csc.fi.ioapi.api.model;
 
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.servlet.ServletContext;
 import javax.ws.rs.GET;
@@ -17,8 +16,8 @@ import com.csc.fi.ioapi.utils.ConceptMapper;
 import com.csc.fi.ioapi.utils.ErrorMessage;
 import com.csc.fi.ioapi.utils.JerseyFusekiClient;
 import com.csc.fi.ioapi.utils.LDHelper;
-import com.hp.hpl.jena.query.ParameterizedSparqlString;
-import com.hp.hpl.jena.rdf.model.ResourceFactory;
+import org.apache.jena.query.ParameterizedSparqlString;
+import org.apache.jena.rdf.model.ResourceFactory;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiParam;

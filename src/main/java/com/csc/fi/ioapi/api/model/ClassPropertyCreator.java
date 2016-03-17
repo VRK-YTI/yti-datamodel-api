@@ -16,7 +16,7 @@ import com.csc.fi.ioapi.config.EndpointServices;
 import com.csc.fi.ioapi.utils.ErrorMessage;
 import com.csc.fi.ioapi.utils.JerseyFusekiClient;
 import com.csc.fi.ioapi.utils.LDHelper;
-import com.hp.hpl.jena.query.ParameterizedSparqlString;
+import org.apache.jena.query.ParameterizedSparqlString;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiParam;
@@ -25,6 +25,7 @@ import com.wordnik.swagger.annotations.ApiResponses;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
 import org.apache.jena.iri.IRIFactory;
+import org.apache.jena.util.SplitIRI;
 
 /**
  * Root resource (exposed at "myresource" path)
@@ -57,15 +58,36 @@ public class ClassPropertyCreator {
         } catch (IRIException e) {
                 return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
       }
-        
+       
+      logger.info(""+SplitIRI.localname(predicateID));
+      
       String queryString;
       ParameterizedSparqlString pss = new ParameterizedSparqlString();
       pss.setNsPrefixes(LDHelper.PREFIX_MAP);
 
-      queryString = "CONSTRUCT { ?uuid sh:predicate ?predicate . ?uuid dcterms:created ?creation . ?uuid rdfs:label ?label . ?uuid rdfs:comment ?comment . ?uuid sh:valueShape ?valueClass . ?uuid sh:datatype ?datatype . } WHERE { BIND(now() as ?creation) BIND(UUID() as ?uuid) OPTIONAL { GRAPH ?predicate { ?predicate rdfs:label ?label .  OPTIONAL{ ?predicate rdfs:comment ?comment . } OPTIONAL{ ?predicate a owl:DatatypeProperty . ?predicate rdfs:range ?datatype . } OPTIONAL { ?predicate a owl:ObjectProperty . ?predicate rdfs:range ?valueClass . }}} }";
+      queryString = "CONSTRUCT { "
+              + "?uuid sh:predicate ?predicate . "
+              + "?uuid dcterms:created ?creation . "
+              + "?uuid dcterms:identifier ?localIdentifier . "
+              + "?uuid rdfs:label ?label . "
+              + "?uuid rdfs:comment ?comment . "
+              + "?uuid sh:valueShape ?valueClass . "
+              + "?uuid sh:datatype ?datatype . } "
+              + "WHERE { "
+              + "BIND(now() as ?creation) "
+              + "BIND(UUID() as ?uuid) "
+              + "OPTIONAL { "
+              + "GRAPH ?predicate { "
+              + "?predicate rdfs:label ?label .  "
+              + "OPTIONAL{ ?predicate rdfs:comment ?comment . } "
+              + "OPTIONAL{ ?predicate a owl:DatatypeProperty . "
+              + "?predicate rdfs:range ?datatype . } "
+              + "OPTIONAL { ?predicate a owl:ObjectProperty . "
+              + "?predicate rdfs:range ?valueClass . }}}}";
 
       pss.setCommandText(queryString);
       pss.setIri("predicate", predicateIRI);
+      pss.setLiteral("localIdentifier", SplitIRI.localname(predicateID));
 
       return JerseyFusekiClient.constructGraphFromService(pss.toString(), services.getCoreSparqlAddress());
 

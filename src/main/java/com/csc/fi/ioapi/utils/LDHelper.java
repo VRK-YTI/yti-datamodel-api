@@ -8,6 +8,7 @@ package com.csc.fi.ioapi.utils;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.jsonldjava.utils.JsonUtils;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collections;
@@ -16,9 +17,10 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.commons.lang3.StringUtils;
-import com.github.jsonldjava.utils.JsonUtils;
-import com.hp.hpl.jena.query.ParameterizedSparqlString;
+import org.apache.jena.query.ParameterizedSparqlString;
 import com.sun.jersey.api.uri.UriComponent;
+import java.text.Normalizer;
+import java.text.Normalizer.Form;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.apache.commons.lang3.text.WordUtils;
@@ -151,9 +153,16 @@ public class LDHelper {
     
     /* TODO: FIX dependency java.lang.NoClassDefFoundError: Could not initialize class sun.text.normalizer.NormalizerImpl
        and use Normalizer instead? */
-    public static String removeAccents(String text) {
+   /* public static String removeAccents(String text) {
         return text == null ? null : removeDiacritic(text);
+    }*/
+    
+   public static String removeAccents(String text) {
+    return text == null ? null :
+        Normalizer.normalize(text, Form.NFD)
+            .replaceAll("\\p{InCombiningDiacriticalMarks}+", "");
     }
+    
     
     public static final InputStream getDefaultGraphInputStream() {
            return LDHelper.class.getClassLoader().getResourceAsStream("defaultGraph.json");
