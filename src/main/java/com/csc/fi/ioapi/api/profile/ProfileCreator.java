@@ -70,7 +70,7 @@ public class ProfileCreator {
             }
 
             
-            if(GraphManager.isExistingGraph(namespaceIRI)) {
+            if(GraphManager.isExistingPrefix(prefix)) {
                 return Response.status(405).entity(ErrorMessage.USEDIRI).build();
             }
             
@@ -107,7 +107,7 @@ public class ProfileCreator {
 
             pss.setCommandText(queryString);
             pss.setIri("localSKOSNamespace", namespaceSKOSIRI);
-            pss.setLiteral("profileLabelSKOS", ResourceFactory.createLangLiteral(label+" - Käsitteistö", lang));
+            pss.setLiteral("profileLabelSKOS", ResourceFactory.createLangLiteral("Sisäinen käsitteistö", lang));
             pss.setLiteral("namespace", namespace+"#");
             pss.setLiteral("prefix", prefix);
             pss.setIri("modelIRI", namespaceIRI);

@@ -85,7 +85,26 @@ public class GraphManager {
             return false;
         }
     }
+    
+    public static boolean isExistingPrefix(String prefix) {
 
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        String queryString = " ASK { GRAPH ?graph { ?s dcap:preferredXMLNamespacePrefix ?prefix . }}";
+        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+        pss.setCommandText(queryString);
+        pss.setLiteral("prefix",prefix);
+
+        Query query = pss.asQuery();
+        QueryExecution qexec = QueryExecutionFactory.sparqlService(services.getCoreSparqlAddress(), query);
+
+        try {
+            boolean b = qexec.execAsk();
+            return b;
+        } catch (Exception ex) {
+            return false;
+        }
+    }
+    
     public static boolean isExistingGraph(IRI graphIRI) {
 
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
@@ -98,6 +117,7 @@ public class GraphManager {
 
         try {
             boolean b = qexec.execAsk();
+            logger.info(""+b);
             return b;
         } catch (Exception ex) {
             return false;
