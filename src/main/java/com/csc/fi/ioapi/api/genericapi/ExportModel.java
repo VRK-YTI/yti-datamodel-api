@@ -131,9 +131,10 @@ public class ExportModel {
                 + "?model <http://purl.org/dc/terms/hasPart> ?resource . "    
                 + "?ms ?p ?o . "
                 + "?rs ?rp ?ro . "
-                + " } WHERE { "
+                + " } WHERE {"
+                + "GRAPH ?modelHasPartGraph { "
                 + "?model <http://purl.org/dc/terms/hasPart> ?resource . "
-                + "GRAPH ?model {"
+                + "{ GRAPH ?model {"
                 + "?ms ?p ?o . "
                 + "} GRAPH ?resource { "
                 + "?rs ?rp ?ro . "
@@ -143,6 +144,7 @@ public class ExportModel {
             
             pss.setCommandText(queryString);
             pss.setIri("model", graph);
+            pss.setIri("modelHasPartGraph", graph+"#HasPartGraph");
 
             OutputStream out = new ByteArrayOutputStream();
 
