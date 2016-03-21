@@ -134,7 +134,7 @@ public class ExportModel {
                 + " } WHERE {"
                 + "GRAPH ?modelHasPartGraph { "
                 + "?model <http://purl.org/dc/terms/hasPart> ?resource . "
-                + "{ GRAPH ?model {"
+                + " } GRAPH ?model {"
                 + "?ms ?p ?o . "
                 + "} GRAPH ?resource { "
                 + "?rs ?rp ?ro . "
