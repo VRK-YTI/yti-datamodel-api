@@ -74,12 +74,12 @@ public class ExternalClass {
         
         String queryString = "CONSTRUCT { "
                 + "?class rdfs:label ?label . "
-                + "?class a ?type . "
+                + "?class a rdfs:Class . "
                 + "?class dcterms:modified ?modified . "
                 + "?class rdfs:isDefinedBy ?source . "
                 + "?source rdfs:label ?sourceLabel . "
                 + "} WHERE { "
-                 + "SERVICE ?modelService {"
+                 + "SERVICE ?modelService { "
                  + "GRAPH ?library { "
                  + "?library dcterms:requires ?externalModel . "
                  + "}}"
@@ -115,7 +115,7 @@ public class ExternalClass {
             pss.setNsPrefixes(LDHelper.PREFIX_MAP);
 
             String queryString = "CONSTRUCT { "
-                    + "?classIRI a ?type . "
+                    + "?classIRI a rdfs:Class . "
                     + "?classIRI rdfs:label ?label . "
                     + "?classIRI rdfs:comment ?comment . "
                     + "?classIRI sh:property ?property . "
