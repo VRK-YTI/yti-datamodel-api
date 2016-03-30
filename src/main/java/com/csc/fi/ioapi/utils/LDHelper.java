@@ -54,7 +54,7 @@ public class LDHelper {
         put("schema","http://schema.org/");
         put("ts","http://www.w3.org/2003/06/sw-vocab-status/ns#");
     }});
-
+   
     public static final Map<String, Object> CONTEXT_MAP = 
     Collections.unmodifiableMap(new HashMap<String, Object>() {{
         put("subClassOf", jsonObject("{ '@id': 'http://www.w3.org/2000/01/rdf-schema#subClassOf', '@type': '@id' }"));

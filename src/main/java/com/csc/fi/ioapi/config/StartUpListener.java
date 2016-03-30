@@ -7,6 +7,7 @@ package com.csc.fi.ioapi.config;
 
 import com.csc.fi.ioapi.utils.GraphManager;
 import com.csc.fi.ioapi.utils.GroupManager;
+import com.csc.fi.ioapi.utils.NamespaceManager;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -29,6 +30,7 @@ public class StartUpListener implements ServletContextListener {
         
         initDefaultGraph();
         initDefaultGroups();
+        initDefaultNamespaces();
         
     }
     
@@ -65,6 +67,12 @@ public class StartUpListener implements ServletContextListener {
                 else
                     logger.log(Level.WARNING,"Failed to create default groups!");
               }
+    }
+    
+    private static void initDefaultNamespaces() {
+        
+        NamespaceManager.addDefaultNamespacesToCore();
+        
     }
     
 }
