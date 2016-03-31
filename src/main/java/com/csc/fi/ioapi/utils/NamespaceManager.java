@@ -21,8 +21,10 @@ import java.util.Map;
 import java.util.logging.Logger;
 import javax.ws.rs.core.Response;
 import org.apache.jena.rdf.model.Property;
+import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.ResourceFactory;
+import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
 import org.apache.jena.web.DatasetAdapter;
 import org.apache.jena.web.DatasetGraphAccessorHTTP;
@@ -42,6 +44,7 @@ public class NamespaceManager {
        
        Property preferredXMLNamespaceName = ResourceFactory.createProperty("http://purl.org/ws-mmi-dc/terms/preferredXMLNamespaceName");
        Property preferredXMLNamespacePrefix = ResourceFactory.createProperty("http://purl.org/ws-mmi-dc/terms/preferredXMLNamespacePrefix");
+       RDFNode nsTypeStandard = ResourceFactory.createResource("http://purl.org/dc/terms/Standard");
        
        Iterator i = LDHelper.PREFIX_MAP.entrySet().iterator();
        
@@ -58,7 +61,8 @@ public class NamespaceManager {
            Resource nsResource = nsModel.createResource(namespace);
            nsModel.addLiteral(nsResource, preferredXMLNamespaceName, nsModel.createLiteral(namespace));
            nsModel.addLiteral(nsResource, preferredXMLNamespacePrefix, nsModel.createLiteral(prefix));
-           nsModel.addLiteral(nsResource, RDFS.label, nsModel.createLiteral(prefix, "en"));          
+           nsModel.addLiteral(nsResource, RDFS.label, nsModel.createLiteral(prefix, "en"));
+           nsModel.add(nsResource, RDF.type, nsTypeStandard);
        }
        
        return nsModel;
@@ -79,6 +83,7 @@ public class NamespaceManager {
        
        Property preferredXMLNamespaceName = ResourceFactory.createProperty("http://purl.org/ws-mmi-dc/terms/preferredXMLNamespaceName");
        Property preferredXMLNamespacePrefix = ResourceFactory.createProperty("http://purl.org/ws-mmi-dc/terms/preferredXMLNamespacePrefix");
+       RDFNode nsTypeStandard = ResourceFactory.createResource("http://purl.org/dc/terms/Standard");
        
        Iterator i = LDHelper.PREFIX_MAP.entrySet().iterator();
        
@@ -91,7 +96,7 @@ public class NamespaceManager {
            nsModel.addLiteral(nsResource, preferredXMLNamespaceName, nsModel.createLiteral(namespace));
            nsModel.addLiteral(nsResource, preferredXMLNamespacePrefix, nsModel.createLiteral(prefix));
            nsModel.addLiteral(nsResource, RDFS.label, nsModel.createLiteral(prefix, "en"));
-          
+           nsModel.add(nsResource, RDF.type, nsTypeStandard);
        }
        
        return nsModel;

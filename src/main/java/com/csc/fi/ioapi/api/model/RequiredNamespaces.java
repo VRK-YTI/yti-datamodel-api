@@ -52,21 +52,19 @@ public class RequiredNamespaces {
                      + "?g rdfs:label ?label . "
                      + "?g dcap:preferredXMLNamespaceName ?namespace . "
                      + "?g dcap:preferredXMLNamespacePrefix ?prefix . "
-                     + "?defNS rdfs:label ?nsLabel . "
-                     + "?defNS dcap:preferredXMLNamespaceName ?nsNamespace . "
-                     + "?defNS dcap:preferredXMLNamespacePrefix ?nsPrefix . "
                      + "} "
-                     + "WHERE { "
+                     + "WHERE { {"
                      + "GRAPH ?g { "
                      + "?g a ?type . "
                      + "?g rdfs:label ?label . "
                      + "?g dcap:preferredXMLNamespaceName ?namespace . "
-                     + "?g dcap:preferredXMLNamespacePrefix ?prefix . }"
+                     + "?g dcap:preferredXMLNamespacePrefix ?prefix . } } UNION {"
                      + "GRAPH <urn:csc:iow:namespaces> {"
-                     + "?defNS rdfs:label ?nsLabel . "
-                     + "?defNS dcap:preferredXMLNamespaceName ?nsNamespace . "
-                     + "?defNS dcap:preferredXMLNamespacePrefix ?nsPrefix . }"
-                     + "}"; 
+                     + "?g a ?type . "
+                     + "?g rdfs:label ?label . "
+                     + "?g dcap:preferredXMLNamespaceName ?namespace . "
+                     + "?g dcap:preferredXMLNamespacePrefix ?prefix . }"
+                     + "}}"; 
            
             pss.setCommandText(queryString);
             

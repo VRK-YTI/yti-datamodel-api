@@ -49,7 +49,7 @@ public class QueryLibrary {
                      + " }"
                      + " OPTIONAL { "
                      + "  ?graph dcterms:requires ?extReq . "
-                     + "  OPTIONAL { ?extReq a ?type . } "
+                     + "  ?extReq a ?type . "
                      + "  ?extReq rdfs:label ?extReqLabel . "
                      + "  ?extReq dcap:preferredXMLNamespaceName ?extNamespaces . "
                      + "  ?extReq dcap:preferredXMLNamespacePrefix ?extPrefixes . "
