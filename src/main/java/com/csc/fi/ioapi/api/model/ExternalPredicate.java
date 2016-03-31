@@ -28,17 +28,17 @@ import com.wordnik.swagger.annotations.ApiResponses;
 /**
  * Root resource (exposed at "class" path)
  */
-@Path("externalClass")
-@Api(value = "/externalClass", description = "External class operations")
-public class ExternalClass {
+@Path("externalPredicate")
+@Api(value = "/externalPredicate", description = "External predicate operations")
+public class ExternalPredicate {
 
     @Context ServletContext context;
     EndpointServices services = new EndpointServices();
-    private static final Logger logger = Logger.getLogger(ExternalClass.class.getName());
+    private static final Logger logger = Logger.getLogger(ExternalPredicate.class.getName());
     
   @GET
   @Produces("application/ld+json")
-  @ApiOperation(value = "Get external class from requires", notes = "Get class in JSON-LD")
+  @ApiOperation(value = "Get external predicate from required model", notes = "Get predicate in JSON-LD")
   @ApiResponses(value = {
       @ApiResponse(code = 404, message = "No such resource"),
       @ApiResponse(code = 400, message = "Invalid model supplied"),
@@ -46,7 +46,7 @@ public class ExternalClass {
       @ApiResponse(code = 500, message = "Internal server error")
   })
   public Response json(
-      @ApiParam(value = "Class id")
+      @ApiParam(value = "Predicate id")
       @QueryParam("id") String id,
       @ApiParam(value = "Model id")
       @QueryParam("model") String model) {
@@ -73,10 +73,10 @@ public class ExternalClass {
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
         
         String queryString = "CONSTRUCT { "
-                + "?class rdfs:label ?label . "
-                + "?class a rdfs:Class . "
-                + "?class dcterms:modified ?modified . "
-                + "?class rdfs:isDefinedBy ?source . "
+                + "?predicate rdfs:label ?label . "
+                + "?predicate a ?type . "
+                + "?predicate dcterms:modified ?modified . "
+                + "?predicate rdfs:isDefinedBy ?source . "
                 + "?source rdfs:label ?sourceLabel . "
                 + "} WHERE { "
                  + "SERVICE ?modelService { "
@@ -84,14 +84,15 @@ public class ExternalClass {
                  + "?library dcterms:requires ?externalModel . "
                  + "}}"
                  + "GRAPH ?externalModel { "
-                 + "?class a ?type . "
-                 + "VALUES ?type { rdfs:Class owl:Class sh:Shape } "
-                 + "?class rdfs:label ?labelStr . BIND(STRLANG(?labelStr,'en') as ?label) "
-                 + "OPTIONAL { ?class rdfs:isDefinedBy ?source . ?source rdfs:label ?sourceLabelStr .  BIND(STRLANG(?sourceLabelStr,'en') as ?sourceLabel)} "
+                 + "?predicate a ?type . "
+                 + "VALUES ?type { owl:DatatypeProperty owl:ObjectProperty } "
+                 + "?predicate rdfs:label ?labelStr . BIND(STRLANG(?labelStr,'en') as ?label) "
+                 + "OPTIONAL { ?predicate rdfs:isDefinedBy ?source . "
+                + "?source rdfs:label ?sourceLabelStr .  "
+                + "BIND(STRLANG(?sourceLabelStr,'en') as ?sourceLabel)} "
                  + "} "
                  + "}";
         
-
         pss.setIri("library", model);
         pss.setIri("modelService",services.getCoreSparqlAddress());
          
@@ -113,39 +114,42 @@ public class ExternalClass {
             ParameterizedSparqlString pss = new ParameterizedSparqlString();
 
             pss.setNsPrefixes(LDHelper.PREFIX_MAP);
-
-            String queryString = "CONSTRUCT { "
-                    + "?classIRI a rdfs:Class . "
-                    + "?classIRI rdfs:label ?label . "
-                    + "?classIRI rdfs:comment ?comment . "
-                    + "?classIRI sh:property ?property . "
-                    + "?property sh:datatype ?datatype . "
-                    + "?property sh:valueClass ?valueClass . "
-                    + "?property sh:predicate ?predicate . "
-                    + "?property rdfs:label ?propertyLabel . "
-                    + "?property rdfs:comment ?propertyComment . "
-                     + "} WHERE { "
-                    + "?classIRI a ?type . "
-                    + "OPTIONAL { ?classIRI rdfs:label ?labelStr . BIND(STRLANG(?labelStr,'en') as ?label) }"
-                    + "OPTIONAL { ?classIRI ?commentPred ?commentStr . "
-                    + "VALUES ?commentPred { rdfs:comment skos:definition dcterms:description dc:description }"
-                    + "BIND(STRLANG(?commentStr,'en') as ?comment) "
-                    + "}"
-                    + "OPTIONAL { "
-                    + "?predicate rdfs:domain ?classIRI .  "
-                    + "BIND(UUID() AS ?property)"    
-                    + "OPTIONAL { ?predicate a owl:DatatypeProperty . ?predicate rdfs:range ?datatype . } "
-                    + "OPTIONAL { ?predicate a owl:ObjectProperty . ?predicate rdfs:range ?valueClass . } "
-                    + "OPTIONAL { ?predicate rdfs:label ?propertyLabelStr . BIND(STRLANG(?propertyLabelStr,'en') as ?propertyLabel) }"
-                    + "OPTIONAL { ?predicate ?commentPred ?commentStr . "
-                    + "VALUES ?commentPred { rdfs:comment skos:definition dcterms:description dc:description }"
-                    + "BIND(STRLANG(?commentStr,'en') as ?propertyComment) "
-                    + "}"
-                    + "} }";
-            
+     
+           String queryString = "CONSTRUCT { "
+                + "?predicate rdfs:label ?label . "
+                   + "?predicate rdfs:label ?comment . "
+                + "?predicate a ?type . "
+                + "?predicate dcterms:modified ?modified . "
+                + "?predicate rdfs:range ?range . "
+                + "?predicate rdfs:domain ?domain . "
+                + "?predicate rdfs:isDefinedBy ?source . "
+                + "?source rdfs:label ?sourceLabel . "
+                + "} WHERE { "
+                 + "SERVICE ?modelService { "
+                 + "GRAPH ?library { "
+                 + "?library dcterms:requires ?externalModel . "
+                 + "}}"
+                 + "GRAPH ?externalModel { "
+                 + "?predicate a ?type . "
+                 + "VALUES ?type { owl:DatatypeProperty owl:ObjectProperty rdf:Property } "
+                 + "OPTIONAL { ?predicate rdfs:range ?range . }"
+                 + "OPTIONAL { ?predicate rdfs:domain ?domain . }"
+                 + "?predicate rdfs:label ?labelStr . BIND(STRLANG(?labelStr,'en') as ?label) "
+                 + "OPTIONAL { ?predicate ?commentPred ?commentStr . "
+                 + "VALUES ?commentPred { rdfs:comment skos:definition dcterms:description dc:description }"
+                 + "BIND(STRLANG(?commentStr,'en') as ?comment) "
+                 + "}"
+                 + "OPTIONAL { ?predicate rdfs:isDefinedBy ?source . "
+                + "?source rdfs:label ?sourceLabelStr .  "
+                + "BIND(STRLANG(?sourceLabelStr,'en') as ?sourceLabel)} "
+                 + "} "
+                 + "}";
+        
             pss.setCommandText(queryString);
 
-            pss.setIri("classIRI", idIRI);
+            pss.setIri("predicate", idIRI);   
+            pss.setIri("modelService",services.getCoreSparqlAddress());
+         
 
             if(model!=null && !model.equals("undefined")) {
                   pss.setIri("library", model);
