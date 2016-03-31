@@ -57,7 +57,7 @@ public class NamespaceResolver {
                         try {
                             url = new URL(namespace);
                         } catch (MalformedURLException e) {
-                            logger.warning("Malformed URL: "+namespace);
+                            logger.warning("Malformed Namespace URL: "+namespace);
                             return false;
                         }
                         

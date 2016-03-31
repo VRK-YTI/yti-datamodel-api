@@ -9,13 +9,13 @@ package com.csc.fi.ioapi.utils;
  */
 public class QueryLibrary {
     
-        final public static String provModelQuery = LDHelper.expandSparqlQuery(
+        final public static String provModelQuery = 
                 "CONSTRUCT {"
                 + "?every ?darn ?thing . }"
                 + "WHERE {"
                 + "GRAPH ?graph {"
                 + " ?every ?darn ?thing . }"
-                + "}");
+                + "}";
     
     final public static String modelQuery = LDHelper.expandSparqlQuery(
                      "CONSTRUCT { "

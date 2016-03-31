@@ -21,6 +21,7 @@ import org.apache.jena.query.ParameterizedSparqlString;
 import com.sun.jersey.api.uri.UriComponent;
 import java.text.Normalizer;
 import java.text.Normalizer.Form;
+import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.apache.commons.lang3.text.WordUtils;
@@ -30,6 +31,12 @@ import org.apache.commons.lang3.text.WordUtils;
  * @author malonen
  */
 public class LDHelper {
+    
+   public static final String[] UNRESOLVABLE = {"xsd","iow","text","sh","afn","schema","dcap"};
+   
+   public static boolean isPrefixResolvable(String item) {
+      return !Arrays.stream(UNRESOLVABLE).anyMatch(item::equals);
+   }
    
    public static final Map<String, String> PREFIX_MAP = 
     Collections.unmodifiableMap(new HashMap<String, String>() {{ 
@@ -41,7 +48,6 @@ public class LDHelper {
         put("dcterms","http://purl.org/dc/terms/");
         put("adms","http://www.w3.org/ns/adms#");
         put("dc","http://purl.org/dc/elements/1.1/");
-        put("vann","http://purl.org/vocab/vann/");
         put("void","http://rdfs.org/ns/void#");
         put("sd","http://www.w3.org/ns/sparql-service-description#");
         put("text","http://jena.apache.org/text#");
@@ -81,7 +87,6 @@ public class LDHelper {
                             "PREFIX dcterms: <http://purl.org/dc/terms/> "+
                             "PREFIX adms: <http://www.w3.org/ns/adms#> "+
                             "PREFIX dc: <http://purl.org/dc/elements/1.1/> "+
-                            "PREFIX vann: <http://purl.org/vocab/vann/> "+
                             "PREFIX void: <http://rdfs.org/ns/void#> "+
                             "PREFIX sd: <http://www.w3.org/ns/sparql-service-description#> "+
                             "PREFIX text: <http://jena.apache.org/text#> "+
@@ -144,7 +149,6 @@ public class LDHelper {
     
     public static Object getUserContext() {
        try {
-           //  return Thread.currentThread().getContextClassLoader().getResourceAsStream("userContext.json");
            return JsonUtils.fromInputStream(LDHelper.class.getClassLoader().getResourceAsStream("userContext.json"));
        } catch (IOException ex) {
            Logger.getLogger(LDHelper.class.getName()).log(Level.SEVERE, null, ex);
@@ -154,7 +158,6 @@ public class LDHelper {
     
     public static Object getDescriptionContext() {
        try {
-           //  return Thread.currentThread().getContextClassLoader().getResourceAsStream("userContext.json");
            return JsonUtils.fromInputStream(LDHelper.class.getClassLoader().getResourceAsStream("descriptionContext.json"));
        } catch (IOException ex) {
            Logger.getLogger(LDHelper.class.getName()).log(Level.SEVERE, null, ex);
@@ -162,9 +165,8 @@ public class LDHelper {
        }
     }
     
-        public static Object getGroupContext() {
+    public static Object getGroupContext() {
        try {
-           //  return Thread.currentThread().getContextClassLoader().getResourceAsStream("userContext.json");
            return JsonUtils.fromInputStream(LDHelper.class.getClassLoader().getResourceAsStream("groupContext.json"));
        } catch (IOException ex) {
            Logger.getLogger(LDHelper.class.getName()).log(Level.SEVERE, null, ex);
@@ -174,7 +176,6 @@ public class LDHelper {
     
     public static Object getExportContext() {
        try {
-           //  return Thread.currentThread().getContextClassLoader().getResourceAsStream("userContext.json");
            return JsonUtils.fromInputStream(LDHelper.class.getClassLoader().getResourceAsStream("export.json"));
        } catch (IOException ex) {
            Logger.getLogger(LDHelper.class.getName()).log(Level.SEVERE, null, ex);

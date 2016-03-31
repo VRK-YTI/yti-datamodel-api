@@ -50,14 +50,15 @@ public class NamespaceManager {
            String prefix = ns.getKey().toString();
            String namespace = ns.getValue().toString();
           
-           // TODO: Check & optimize resolving
-           NamespaceResolver.resolveNamespace(namespace);
+           if(LDHelper.isPrefixResolvable(prefix)) {
+            // TODO: Check & optimize resolving
+            NamespaceResolver.resolveNamespace(namespace);
+           } 
            
            Resource nsResource = nsModel.createResource(namespace);
            nsModel.addLiteral(nsResource, preferredXMLNamespaceName, nsModel.createLiteral(namespace));
            nsModel.addLiteral(nsResource, preferredXMLNamespacePrefix, nsModel.createLiteral(prefix));
-           nsModel.addLiteral(nsResource, RDFS.label, nsModel.createLiteral(prefix, "en"));
-          
+           nsModel.addLiteral(nsResource, RDFS.label, nsModel.createLiteral(prefix, "en"));          
        }
        
        return nsModel;
