@@ -27,6 +27,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
 import org.apache.jena.iri.IRIFactory;
+import org.apache.jena.util.SplitIRI;
 
 /**
  * Root resource (exposed at "classCreator" path)
@@ -52,11 +53,12 @@ public class ShapeCreator {
             @ApiParam(value = "Language", required = true, allowableValues="fi,en") @QueryParam("lang") String lang,
             @Context HttpServletRequest request) {
 
-            IRI classIRI,profileIRI;
+            IRI classIRI,profileIRI,shapeIRI;
             try {
                     IRIFactory iri = IRIFactory.semanticWebImplementation();
                     classIRI = iri.construct(classID);
                     profileIRI = iri.construct(profileID);
+                    shapeIRI = iri.construct(profileIRI+"#s"+SplitIRI.localname(classID));
             } catch (IRIException e) {
                     logger.log(Level.WARNING, "ID is invalid IRI!");
                     return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
@@ -87,7 +89,7 @@ public class ShapeCreator {
                     + "} WHERE { "
                     + "BIND(now() as ?creation) "
                     + "BIND(now() as ?modified) "
-                    + "BIND(iri(concat(?profileNamespace,concat('s',afn:localname(?classIRI)))) as ?shapeIRI)"   
+                   // + "BIND(iri(concat(?profileNamespace,concat('s',afn:localname(?classIRI)))) as ?shapeIRI)"   
                     + "GRAPH ?classIRI { "
                     + "?classIRI a rdfs:Class . "
                     + "?classIRI rdfs:label ?label . "
@@ -118,9 +120,9 @@ public class ShapeCreator {
                     + "} WHERE { "
                     + "BIND(now() as ?creation) "
                     + "BIND(now() as ?modified) "
-                    + "?classIRI a ?type . "
-                    + "VALUES ?type { owl:Class rdfs:Class } "
-                    + "BIND(iri(concat(?profileNamespace,concat('s',afn:localname(?classIRI)))) as ?shapeIRI)"   
+                    + "OPTIONAL { ?classIRI a ?type . "
+                    + "VALUES ?type { owl:Class rdfs:Class }}"
+                    //+ "BIND(iri(concat(?profileNamespace,concat('s',afn:localname(?classIRI)))) as ?shapeIRI)"   
                     + "OPTIONAL { ?classIRI rdfs:label ?labelStr . "
                     + "BIND(STRLANG(?labelStr,'en') as ?label) "
                     + "}"
@@ -141,6 +143,7 @@ public class ShapeCreator {
                     + "}"    
                     + "}";
                 
+                
             }
    
             pss.setCommandText(queryString);
@@ -148,7 +151,8 @@ public class ShapeCreator {
             pss.setIri("model", profileIRI);
             pss.setLiteral("profileNamespace", profileID+"#");
             pss.setLiteral("draft", "Unstable");
-
+            pss.setIri("shapeIRI",shapeIRI);
+                
             System.out.println(pss.toString());
             
             return JerseyFusekiClient.constructGraphFromService(pss.toString(), service);
