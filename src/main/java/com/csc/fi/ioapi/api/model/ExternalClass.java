@@ -131,15 +131,16 @@ public class ExternalClass {
                     + "VALUES ?commentPred { rdfs:comment skos:definition dcterms:description dc:description }"
                     + "BIND(STRLANG(?commentStr,'en') as ?comment) "
                     + "}"
+                    + "OPTIONAL { ?classIRI rdfs:comment ?commentStr . BIND(STRLANG(?commentStr,'en') as ?comment)}"
                     + "OPTIONAL { "
                     + "?predicate rdfs:domain ?classIRI .  "
                     + "BIND(UUID() AS ?property)"    
                     + "OPTIONAL { ?predicate a owl:DatatypeProperty . ?predicate rdfs:range ?datatype . } "
                     + "OPTIONAL { ?predicate a owl:ObjectProperty . ?predicate rdfs:range ?valueClass . } "
                     + "OPTIONAL { ?predicate rdfs:label ?propertyLabelStr . BIND(STRLANG(?propertyLabelStr,'en') as ?propertyLabel) }"
-                    + "OPTIONAL { ?predicate ?commentPred ?commentStr . "
+                    + "OPTIONAL { ?predicate ?commentPred ?propertyCommentStr . "
                     + "VALUES ?commentPred { rdfs:comment skos:definition dcterms:description dc:description }"
-                    + "BIND(STRLANG(?commentStr,'en') as ?propertyComment) "
+                    + "BIND(STRLANG(?propertyCommentStr,'en') as ?propertyComment) "
                     + "}"
                     + "} }";
             
