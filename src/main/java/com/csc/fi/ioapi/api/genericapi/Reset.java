@@ -8,6 +8,7 @@ package com.csc.fi.ioapi.api.genericapi;
 import com.csc.fi.ioapi.config.ApplicationProperties;
 import com.csc.fi.ioapi.utils.GraphManager;
 import com.csc.fi.ioapi.utils.GroupManager;
+import com.csc.fi.ioapi.utils.NamespaceManager;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiResponse;
@@ -49,6 +50,7 @@ public class Reset {
             GraphManager.deleteGraphs();
             GraphManager.createDefaultGraph();
             GroupManager.createDefaultGroups();
+            NamespaceManager.addDefaultNamespacesToCore();
         }
         
         rb = Response.status(Response.Status.OK);

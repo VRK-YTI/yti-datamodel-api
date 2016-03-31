@@ -71,7 +71,7 @@ public class StartUpListener implements ServletContextListener {
     
     private static void initDefaultNamespaces() {
         
-        NamespaceManager.addDefaultNamespacesToCore();
+        NamespaceManager.resolveDefaultNamespaceToTheCore();
         
     }
     

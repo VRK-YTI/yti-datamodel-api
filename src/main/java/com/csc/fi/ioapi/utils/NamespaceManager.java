@@ -36,7 +36,7 @@ public class NamespaceManager {
     static EndpointServices services = new EndpointServices();
     private static final Logger logger = Logger.getLogger(NamespaceManager.class.getName());
       
-    public static final Model getDefaultNamespaceModel() {
+    public static final Model getDefaultNamespaceModelAndResolve() {
        
        Model nsModel = ModelFactory.createDefaultModel();
        
@@ -53,6 +53,39 @@ public class NamespaceManager {
            // TODO: Check & optimize resolving
            NamespaceResolver.resolveNamespace(namespace);
            
+           Resource nsResource = nsModel.createResource(namespace);
+           nsModel.addLiteral(nsResource, preferredXMLNamespaceName, nsModel.createLiteral(namespace));
+           nsModel.addLiteral(nsResource, preferredXMLNamespacePrefix, nsModel.createLiteral(prefix));
+           nsModel.addLiteral(nsResource, RDFS.label, nsModel.createLiteral(prefix, "en"));
+          
+       }
+       
+       return nsModel;
+       
+   }
+    
+    public static void resolveDefaultNamespaceToTheCore() {
+        
+        DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(services.getCoreReadWriteAddress());
+	DatasetAdapter adapter = new DatasetAdapter(accessor);
+	adapter.add("urn:csc:iow:namespaces", getDefaultNamespaceModelAndResolve());
+        
+    }
+    
+    public static final Model getDefaultNamespaceModel() {
+       
+       Model nsModel = ModelFactory.createDefaultModel();
+       
+       Property preferredXMLNamespaceName = ResourceFactory.createProperty("http://purl.org/ws-mmi-dc/terms/preferredXMLNamespaceName");
+       Property preferredXMLNamespacePrefix = ResourceFactory.createProperty("http://purl.org/ws-mmi-dc/terms/preferredXMLNamespacePrefix");
+       
+       Iterator i = LDHelper.PREFIX_MAP.entrySet().iterator();
+       
+       while(i.hasNext()) {
+           Map.Entry ns = (Map.Entry) i.next();
+           String prefix = ns.getKey().toString();
+           String namespace = ns.getValue().toString();
+          
            Resource nsResource = nsModel.createResource(namespace);
            nsModel.addLiteral(nsResource, preferredXMLNamespaceName, nsModel.createLiteral(namespace));
            nsModel.addLiteral(nsResource, preferredXMLNamespacePrefix, nsModel.createLiteral(prefix));
