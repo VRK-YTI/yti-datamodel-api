@@ -115,6 +115,8 @@ public class ExternalClass {
             pss.setNsPrefixes(LDHelper.PREFIX_MAP);
 
             String queryString = "CONSTRUCT { "
+                    + "?externalModel rdfs:label ?externalModelLabel . "
+                    + "?classIRI rdfs:isDefinedBy ?externalModel . "
                     + "?classIRI a rdfs:Class . "
                     + "?classIRI rdfs:label ?label . "
                     + "?classIRI rdfs:comment ?comment . "
@@ -125,6 +127,12 @@ public class ExternalClass {
                     + "?property rdfs:label ?propertyLabel . "
                     + "?property rdfs:comment ?propertyComment . "
                      + "} WHERE { "
+                     + "SERVICE ?modelService { "
+                     + "GRAPH ?library { "
+                     + "?library dcterms:requires ?externalModel . "
+                    + "?externalModel rdfs:label ?externalModelLabel . "
+                     + "}}"
+                    + "GRAPH ?externalModel {"
                     + "?classIRI a ?type . "
                     + "OPTIONAL { ?classIRI rdfs:label ?labelStr . BIND(STRLANG(?labelStr,'en') as ?label) }"
                     + "OPTIONAL { ?classIRI ?commentPred ?commentStr . "
@@ -141,9 +149,11 @@ public class ExternalClass {
                     + "OPTIONAL { ?predicate ?commentPred ?propertyCommentStr . "
                     + "VALUES ?commentPred { rdfs:comment skos:definition dcterms:description dc:description }"
                     + "BIND(STRLANG(?propertyCommentStr,'en') as ?propertyComment) "
-                    + "}"
+                    + "} }"
                     + "} }";
             
+            pss.setIri("library", model);
+            pss.setIri("modelService",services.getCoreSparqlAddress());
             pss.setCommandText(queryString);
 
             pss.setIri("classIRI", idIRI);
