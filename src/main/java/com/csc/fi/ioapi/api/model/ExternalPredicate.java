@@ -73,6 +73,8 @@ public class ExternalPredicate {
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
         
         String queryString = "CONSTRUCT { "
+                + "?externalModel rdfs:label ?externalModelLabel . "
+                + "?predicate rdfs:isDefinedBy ?externalModel . "
                 + "?predicate rdfs:label ?label . "
                 + "?predicate a ?type . "
                 + "?predicate dcterms:modified ?modified . "
@@ -80,16 +82,17 @@ public class ExternalPredicate {
                 + "?source rdfs:label ?sourceLabel . "
                 + "} WHERE { "
                  + "SERVICE ?modelService { "
-                 + "GRAPH ?library { "
-                 + "?library dcterms:requires ?externalModel . "
-                 + "}}"
+                     + "GRAPH ?library { "
+                     + "?library dcterms:requires ?externalModel . "
+                    + "?externalModel rdfs:label ?externalModelLabel . "
+                     + "}}"
                  + "GRAPH ?externalModel { "
                  + "?predicate a ?type . "
                  + "VALUES ?type { owl:DatatypeProperty owl:ObjectProperty } "
                  + "?predicate rdfs:label ?labelStr . BIND(STRLANG(?labelStr,'en') as ?label) "
-                 + "OPTIONAL { ?predicate rdfs:isDefinedBy ?source . "
+              /*   + "OPTIONAL { ?predicate rdfs:isDefinedBy ?source . "
                 + "?source rdfs:label ?sourceLabelStr .  "
-                + "BIND(STRLANG(?sourceLabelStr,'en') as ?sourceLabel)} "
+                + "BIND(STRLANG(?sourceLabelStr,'en') as ?sourceLabel)} " */
                  + "} "
                  + "}";
         
@@ -116,6 +119,8 @@ public class ExternalPredicate {
             pss.setNsPrefixes(LDHelper.PREFIX_MAP);
      
            String queryString = "CONSTRUCT { "
+                      + "?externalModel rdfs:label ?externalModelLabel . "
+                   + "?predicate rdfs:isDefinedBy ?externalModel . "
                 + "?predicate rdfs:label ?label . "
                    + "?predicate rdfs:label ?comment . "
                 + "?predicate a ?type . "
@@ -126,9 +131,10 @@ public class ExternalPredicate {
                 + "?source rdfs:label ?sourceLabel . "
                 + "} WHERE { "
                  + "SERVICE ?modelService { "
-                 + "GRAPH ?library { "
-                 + "?library dcterms:requires ?externalModel . "
-                 + "}}"
+                     + "GRAPH ?library { "
+                     + "?library dcterms:requires ?externalModel . "
+                    + "?externalModel rdfs:label ?externalModelLabel . "
+                     + "}}"
                  + "GRAPH ?externalModel { "
                  + "?predicate a ?type . "
                  + "VALUES ?type { owl:DatatypeProperty owl:ObjectProperty rdf:Property } "

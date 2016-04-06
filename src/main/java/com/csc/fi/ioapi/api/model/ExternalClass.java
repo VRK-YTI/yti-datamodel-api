@@ -90,7 +90,7 @@ public class ExternalClass {
                  + "?class a ?type . "
                  + "VALUES ?type { rdfs:Class owl:Class sh:Shape } "
                  + "?class rdfs:label ?labelStr . BIND(STRLANG(?labelStr,'en') as ?label) "
-                 + "OPTIONAL { ?class rdfs:isDefinedBy ?source . ?source rdfs:label ?sourceLabelStr .  BIND(STRLANG(?sourceLabelStr,'en') as ?sourceLabel)} "
+              //   + "OPTIONAL { ?class rdfs:isDefinedBy ?source . ?source rdfs:label ?sourceLabelStr .  BIND(STRLANG(?sourceLabelStr,'en') as ?sourceLabel)} "
                  + "} "
                  + "}";
         
@@ -144,7 +144,8 @@ public class ExternalClass {
                     + "}"
                     + "OPTIONAL { ?classIRI rdfs:comment ?commentStr . BIND(STRLANG(?commentStr,'en') as ?comment)}"
                     + "OPTIONAL { "
-                    + "?predicate rdfs:domain ?classIRI .  "
+                    + "?classIRI rdfs:subClassOf* ?superclass . "
+                    + "?predicate rdfs:domain ?superclass . "
                     + "BIND(UUID() AS ?property)"    
                     + "OPTIONAL { ?predicate a owl:DatatypeProperty . ?predicate rdfs:range ?datatype . } "
                     + "OPTIONAL { ?predicate a owl:ObjectProperty . ?predicate rdfs:range ?valueClass . } "
