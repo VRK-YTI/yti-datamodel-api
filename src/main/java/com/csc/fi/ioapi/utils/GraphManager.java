@@ -339,7 +339,9 @@ public class GraphManager {
 
         String query
                 = " DELETE { GRAPH ?hasPartGraph { ?model dcterms:hasPart ?graph }} "
-                + " WHERE { GRAPH ?graph { ?graph a ?type . }}";
+                + " WHERE { "
+                + "GRAPH ?model { ?model a ?type . }"
+                + "GRAPH ?hasPartGraph { ?model dcterms:hasPart ?graph }}";
 
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
