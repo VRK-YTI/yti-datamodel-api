@@ -68,6 +68,16 @@ public class JsonSchemaWriter {
         factory = Json.createWriterFactory(config);
     }
     
+    
+    private static String createDummySchema(JsonObjectBuilder schema, JsonObjectBuilder properties, JsonArrayBuilder required) {
+        
+        schema.add("$schema", "http://json-schema.org/draft-04/schema#");
+        schema.add("properties", properties.build());
+        
+        return jsonObjectToPrettyString(schema.build());
+  }
+    
+    
     private static String createDefaultSchema(JsonObjectBuilder schema, JsonObjectBuilder properties, JsonArrayBuilder required) {
         
         schema.add("$schema", "http://json-schema.org/draft-04/schema#");
@@ -86,13 +96,14 @@ public class JsonSchemaWriter {
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         
         String selectClass = 
-                "SELECT (group_concat(concat(?label,'@',lang(?label)); separator=\", \" ) as ?title) (group_concat(concat(?comment,'@',lang(?comment)); separator=\", \" ) as ?description) "
+                "SELECT ?type (group_concat(concat(?label,'@',lang(?label)); separator=\", \" ) as ?title) (group_concat(concat(?comment,'@',lang(?comment)); separator=\", \" ) as ?description) "
                 + "WHERE { "
                 + "GRAPH ?resourceID { "
+                + "?resourceID a ?type . "
                 + "?resourceID rdfs:label ?label . "
                 + "OPTIONAL { ?resourceID rdfs:comment ?comment . }"
                 + "} "
-                + "} ";
+                + "} GROUP BY ?type ";
         
         pss.setIri("resourceID", classID);
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
@@ -105,6 +116,7 @@ public class JsonSchemaWriter {
 
         if(!results.hasNext()) return null;
         
+        boolean classMetadata = false;
         
         while (results.hasNext()) {
             
@@ -114,12 +126,18 @@ public class JsonSchemaWriter {
                 String description = soln.getLiteral("description").getString();
                 schema.add("description", description);
             }
+            
             schema.add("id",classID+".jschema");
             schema.add("title", title);
             
+            logger.info(soln.getResource("type").getLocalName());
+            if(soln.getResource("type").getLocalName().equals("Class")) {
+                classMetadata = true;
+            }
+            
             
         }
-        
+
         JsonObjectBuilder properties = Json.createObjectBuilder();
         JsonObjectBuilder contextDef = Json.createObjectBuilder();
         
@@ -128,6 +146,7 @@ public class JsonSchemaWriter {
         contextDef.add("default",classID+".context");
         properties.add("@context", contextDef.build());
         
+         if(classMetadata) {
         
         String selectResources = 
                 "SELECT ?predicate ?predicateName ?datatype ?shapeRef ?min ?max (group_concat(concat(?label,'@',lang(?label)); separator=\", \" ) as ?title) (group_concat(concat(?comment,'@',lang(?comment)); separator=\", \" ) as ?description)"
@@ -151,11 +170,11 @@ public class JsonSchemaWriter {
         qexec = QueryExecutionFactory.sparqlService(services.getCoreSparqlAddress(), pss.asQuery());
 
         results = qexec.execSelect();
-
+        
+        
         if(!results.hasNext()) return null;
         
 
-        
         while (results.hasNext()) {
             QuerySolution soln = results.nextSolution();
             //String predicateID = soln.getResource("predicate").toString();
@@ -211,7 +230,14 @@ public class JsonSchemaWriter {
             properties.add(predicateName,predicate.build());
         }
         
-        return createDefaultSchema(schema, properties, required);
+            return createDefaultSchema(schema, properties, required);
+        
+        } 
+            else 
+         {
+             /* Return dummy schema if resource is not a class */
+            return createDummySchema(schema, properties, required);
+         }
         
     }
     
