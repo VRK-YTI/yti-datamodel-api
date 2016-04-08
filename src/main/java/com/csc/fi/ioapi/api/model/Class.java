@@ -254,7 +254,6 @@ public class Class {
         return Response.status(204).entity("{\"identifier\":\"urn:uuid:"+provUUID+"\"}").build();
         
   }
-  
  
   @PUT
   @ApiOperation(value = "Create new class to certain model", notes = "PUT Body should be json-ld")
