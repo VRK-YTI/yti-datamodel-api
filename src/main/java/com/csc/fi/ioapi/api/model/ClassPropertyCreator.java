@@ -67,6 +67,7 @@ public class ClassPropertyCreator {
 
       queryString = "CONSTRUCT { "
               + "?uuid sh:predicate ?predicate . "
+              + "?uuid dcterms:type ?predicateType . "
               + "?uuid dcterms:created ?creation . "
               + "?uuid dcterms:identifier ?localIdentifier . "
               + "?uuid rdfs:label ?label . "
@@ -79,6 +80,7 @@ public class ClassPropertyCreator {
               + "OPTIONAL { "
               + "GRAPH ?predicate { "
               + "?predicate rdfs:label ?label .  "
+              + "?predicate a ?predicateType . "
               + "OPTIONAL{ ?predicate rdfs:comment ?comment . } "
               + "OPTIONAL{ ?predicate a owl:DatatypeProperty . "
               + "?predicate rdfs:range ?datatype . } "
