@@ -119,10 +119,10 @@ public class ExternalPredicate {
             pss.setNsPrefixes(LDHelper.PREFIX_MAP);
      
            String queryString = "CONSTRUCT { "
-                      + "?externalModel rdfs:label ?externalModelLabel . "
-                   + "?predicate rdfs:isDefinedBy ?externalModel . "
+                + "?externalModel rdfs:label ?externalModelLabel . "
+                + "?predicate rdfs:isDefinedBy ?externalModel . "
                 + "?predicate rdfs:label ?label . "
-                   + "?predicate rdfs:label ?comment . "
+                + "?predicate rdfs:comment ?comment . "
                 + "?predicate a ?type . "
                 + "?predicate dcterms:modified ?modified . "
                 + "?predicate rdfs:range ?range . "
