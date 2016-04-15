@@ -124,7 +124,7 @@ public class ClassPropertyCreator {
               + "?uuid rdfs:label ?label . "
               + "?uuid rdfs:comment ?comment . "
               + "?uuid sh:valueShape ?valueClass . "
-              + "?uuid sh:datatype ?datatype . } "
+              + "?uuid sh:datatype ?prefDatatype . } "
               + "WHERE { "
               + "BIND(now() as ?creation) "
               + "BIND(UUID() as ?uuid) "
@@ -133,7 +133,8 @@ public class ClassPropertyCreator {
               + "?predicate a ?predicateType . "              
               + "OPTIONAL { ?predicate rdfs:comment ?comment . } "
               + "OPTIONAL { ?predicate a owl:DatatypeProperty . "
-              + "?predicate rdfs:range ?datatype . } "
+              + "?predicate rdfs:range ?datatype . "
+              + "BIND(IF(?datatype=rdfs:Literal,xsd:string,?datatype) as ?prefDatatype) } "
               + "OPTIONAL { ?predicate a owl:ObjectProperty . "
               + "?predicate rdfs:range ?valueClass . }}"
               + "}";
