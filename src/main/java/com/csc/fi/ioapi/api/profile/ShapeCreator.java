@@ -84,6 +84,8 @@ public class ShapeCreator {
                     + "?shapeIRI rdfs:label ?label . "
                     + "?shapeIRI rdfs:comment ?comment . "
                     + "?shapeIRI sh:property ?property . "
+                    + "?shapeIRI dcterms:subject ?subject . "
+                    + "?subject ?sp ?so . "
                     + "?property ?p ?o . "
                     + "} WHERE { "
                     + "BIND(now() as ?creation) "
@@ -93,13 +95,14 @@ public class ShapeCreator {
                     + "?classIRI a rdfs:Class . "
                     + "?classIRI rdfs:label ?label . "
                     + "OPTIONAL { ?classIRI rdfs:comment ?comment . } "
+                    + "OPTIONAL { ?classIRI dcterms:subject ?subject . "
+                    + " ?subject ?sp ?so . }"
                     + "OPTIONAL { "
                     + "?classIRI sh:property ?property . "
                     + "?property ?p ?o . } "
                     + "}}";
 
-            } else {
-                
+            } else {           
             /* Create Shape from external IMPORT */   
                 service = services.getImportsSparqlAddress();
                 queryString = "CONSTRUCT  { "
@@ -148,8 +151,7 @@ public class ShapeCreator {
                     + "}"
                     + "}"    
                     + "}";
-                
-                
+                               
             }
    
             pss.setCommandText(queryString);

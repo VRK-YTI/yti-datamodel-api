@@ -125,7 +125,7 @@ public class ExternalClass {
                     + "?classIRI rdfs:comment ?comment . "
                     + "?classIRI sh:property ?property . "
                     + "?property sh:datatype ?datatype . "
-                    + "?property dcterms:type ?predicateType . "   
+                    + "?property dcterms:type ?predicateType . "
                     + "?property sh:valueShape ?valueClass . "
                     + "?property sh:predicate ?predicate . "
                     + "?property rdfs:label ?propertyLabel . "
