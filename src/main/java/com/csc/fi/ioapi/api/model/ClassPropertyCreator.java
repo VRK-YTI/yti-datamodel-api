@@ -66,7 +66,7 @@ public class ClassPropertyCreator {
          IRIFactory iri = IRIFactory.semanticWebImplementation();
          predicateIRI = iri.construct(predicateID);
          
-         if(predicateID.startsWith(ApplicationProperties.getDefaultDomain())) {
+        if(GraphManager.isExistingServiceGraph(SplitIRI.namespace(predicateID))) {
          /* Local predicate */
            if(!GraphManager.isExistingGraph(predicateIRI)) {
               return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();

@@ -14,6 +14,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 import com.csc.fi.ioapi.config.EndpointServices;
 import com.csc.fi.ioapi.utils.ErrorMessage;
+import com.csc.fi.ioapi.utils.GraphManager;
 import com.csc.fi.ioapi.utils.JerseyFusekiClient;
 import com.csc.fi.ioapi.utils.LDHelper;
 import com.csc.fi.ioapi.utils.NamespaceResolver;
@@ -27,6 +28,7 @@ import com.wordnik.swagger.annotations.ApiResponses;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
 import org.apache.jena.iri.IRIFactory;
+import org.apache.jena.util.SplitIRI;
  
 /**
  * Root resource (exposed at "modelCreator" path)
@@ -66,7 +68,7 @@ public class ModeRequirementlCreator {
             boolean isResolvedNamespace = true;
             boolean isLocalNamespace = true;
             
-            if(!namespace.startsWith(ApplicationProperties.getDefaultDomain())) {
+            if(!GraphManager.isExistingServiceGraph(namespace)) {
                isResolvedNamespace = NamespaceResolver.resolveNamespace(namespace);
                isLocalNamespace = false;
             }
