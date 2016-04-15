@@ -64,7 +64,6 @@ public class ShapeCreator {
                     return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
             }
 
-            
             ParameterizedSparqlString pss = new ParameterizedSparqlString();
             pss.setNsPrefixes(LDHelper.PREFIX_MAP);
             
@@ -100,6 +99,7 @@ public class ShapeCreator {
                     + "}}";
 
             } else {
+                
             /* Create Shape from external IMPORT */   
                 service = services.getImportsSparqlAddress();
                 queryString = "CONSTRUCT  { "
@@ -153,8 +153,6 @@ public class ShapeCreator {
             pss.setLiteral("profileNamespace", profileID+"#");
             pss.setLiteral("draft", "Unstable");
             pss.setIri("shapeIRI",shapeIRI);
-                
-            System.out.println(pss.toString());
             
             return JerseyFusekiClient.constructGraphFromService(pss.toString(), service);
     }   

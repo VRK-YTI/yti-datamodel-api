@@ -15,8 +15,10 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import com.csc.fi.ioapi.config.EndpointServices;
 import com.csc.fi.ioapi.utils.ErrorMessage;
+import com.csc.fi.ioapi.utils.GraphManager;
 import com.csc.fi.ioapi.utils.JerseyFusekiClient;
 import com.csc.fi.ioapi.utils.LDHelper;
+import com.csc.fi.ioapi.utils.NamespaceManager;
 import org.apache.jena.query.ParameterizedSparqlString;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
@@ -55,24 +57,24 @@ public class ClassPropertyCreator {
       IRI predicateIRI;
       IRI typeIRI = null;
         
-      try {
-         IRIFactory iri = IRIFactory.semanticWebImplementation();
-         predicateIRI = iri.construct(predicateID);
-         if(type!=null && !type.equals("undefined") && !predicateID.startsWith(ApplicationProperties.getDefaultDomain())) {
-             String typeURI = type.replace("owl:", "http://www.w3.org/2002/07/owl#");
-             typeIRI = iri.construct(typeURI);
-         }
-        } catch (IRIException e) {
-                return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
-      }
-       
-      logger.info(""+SplitIRI.localname(predicateID));
-      
+      String service;
       String queryString;
       ParameterizedSparqlString pss = new ParameterizedSparqlString();
       pss.setNsPrefixes(LDHelper.PREFIX_MAP);
 
-      queryString = "CONSTRUCT { "
+      try {         
+         IRIFactory iri = IRIFactory.semanticWebImplementation();
+         predicateIRI = iri.construct(predicateID);
+         
+         if(predicateID.startsWith(ApplicationProperties.getDefaultDomain())) {
+         /* Local predicate */
+           if(!GraphManager.isExistingGraph(predicateIRI)) {
+              return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
+           }
+           
+        service = services.getCoreSparqlAddress();
+              
+        queryString = "CONSTRUCT { "
               + "?uuid sh:predicate ?predicate . "
               + "?uuid dcterms:type ?predicateType . "
               + "?uuid dcterms:type ?externalType . "
@@ -98,12 +100,57 @@ public class ClassPropertyCreator {
       pss.setCommandText(queryString);
       pss.setIri("predicate", predicateIRI);
       pss.setLiteral("localIdentifier", SplitIRI.localname(predicateID));
+          
+      } else {
+             
+         /* External predicate */
+         String predicateType = NamespaceManager.getExternalPredicateType(predicateIRI);
+         
+         if(predicateType==null && type!=null && !type.equals("undefined")) {
+             String typeURI = type.replace("owl:", "http://www.w3.org/2002/07/owl#");
+             typeIRI = iri.construct(typeURI);
+          } else {
+             if(predicateType==null) return Response.status(403).entity(ErrorMessage.INVALIDPARAMETER).build();
+             else typeIRI = iri.construct(predicateType);
+         }
+           
+         service = services.getImportsSparqlAddress();
       
-      if(typeIRI!=null) {
-          pss.setIri("externalType", typeIRI);
-      }
+         queryString = "CONSTRUCT { "
+              + "?uuid sh:predicate ?predicate . "
+              + "?uuid dcterms:type ?predicateType . "
+              + "?uuid dcterms:created ?creation . "
+              + "?uuid dcterms:identifier ?localIdentifier . "
+              + "?uuid rdfs:label ?label . "
+              + "?uuid rdfs:comment ?comment . "
+              + "?uuid sh:valueShape ?valueClass . "
+              + "?uuid sh:datatype ?datatype . } "
+              + "WHERE { "
+              + "BIND(now() as ?creation) "
+              + "BIND(UUID() as ?uuid) "
+              + "OPTIONAL { "
+              + "?predicate rdfs:label ?label .  " 
+              + "?predicate a ?predicateType . "              
+              + "OPTIONAL { ?predicate rdfs:comment ?comment . } "
+              + "OPTIONAL { ?predicate a owl:DatatypeProperty . "
+              + "?predicate rdfs:range ?datatype . } "
+              + "OPTIONAL { ?predicate a owl:ObjectProperty . "
+              + "?predicate rdfs:range ?valueClass . }}"
+              + "}";
 
-      return JerseyFusekiClient.constructGraphFromService(pss.toString(), services.getCoreSparqlAddress());
+            pss.setCommandText(queryString);
+            pss.setIri("predicate", predicateIRI);
+            pss.setLiteral("localIdentifier", SplitIRI.localname(predicateID));
+            pss.setIri("predicateType", typeIRI);
+
+         }
+        } catch (IRIException e) {
+           return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
+      }
+       
+      //logger.info(""+SplitIRI.localname(predicateID));
+      
+      return JerseyFusekiClient.constructGraphFromService(pss.toString(), service);
 
   }
   

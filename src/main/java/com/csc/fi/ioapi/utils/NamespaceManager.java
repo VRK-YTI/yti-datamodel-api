@@ -20,6 +20,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.logging.Logger;
 import javax.ws.rs.core.Response;
+import org.apache.jena.iri.IRI;
 import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
@@ -191,6 +192,38 @@ public class NamespaceManager {
         }
 
         return namespaceMap;
+
+    }
+    
+    /* Get predicate type from external model */
+    public static String getExternalPredicateType(IRI predicate) {
+
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        String selectResources
+                = "SELECT ?type WHERE { "
+                + "?predicate a ?type . "
+                + "VALUES ?type { owl:DatatypeProperty owl:ObjectProperty }"
+                + "}";
+
+        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+        pss.setCommandText(selectResources);
+        pss.setIri("predicate", predicate);
+
+        QueryExecution qexec = QueryExecutionFactory.sparqlService(services.getImportsSparqlAddress(), pss.asQuery());
+
+        ResultSet results = qexec.execSelect();
+
+        String type = null;
+        
+        while (results.hasNext()) {
+            QuerySolution soln = results.nextSolution();
+            if(soln.contains("type")) {
+                Resource resType = soln.getResource("type");
+                type = resType.getURI();
+            }
+        }
+
+        return type;
 
     }
 
