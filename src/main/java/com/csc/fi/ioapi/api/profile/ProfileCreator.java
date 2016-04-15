@@ -55,7 +55,7 @@ public class ProfileCreator {
             @ApiParam(value = "Initial language", required = true, allowableValues="fi,en") @QueryParam("lang") String lang) {
 
             prefix = LDHelper.modelName(prefix);
-            String namespace = ApplicationProperties.getProfileNamespace()+prefix;
+            String namespace = ApplicationProperties.getDefaultNamespace()+prefix;
             
             IRI groupIRI,namespaceIRI,namespaceSKOSIRI;
             

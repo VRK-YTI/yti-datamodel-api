@@ -72,7 +72,7 @@ public class ShapeCreator {
             String service;
                 
             /* Create Shape from Class */
-            if(classID.startsWith(ApplicationProperties.getDefaultNamespace()) || classID.startsWith(ApplicationProperties.getProfileNamespace())) {
+            if(classID.startsWith(ApplicationProperties.getDefaultDomain())) {
 
                 service = services.getCoreSparqlAddress();
                 queryString = "CONSTRUCT  { "

@@ -3,6 +3,7 @@
  */
 package com.csc.fi.ioapi.api.model;
 
+import com.csc.fi.ioapi.config.ApplicationProperties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.servlet.ServletContext;
@@ -48,13 +49,19 @@ public class ClassPropertyCreator {
       @ApiResponse(code = 500, message = "Internal server error")
   })
   public Response json(
-	@ApiParam(value = "Predicate ID", required = true) @QueryParam("predicateID") String predicateID) {
+	@ApiParam(value = "Predicate ID", required = true) @QueryParam("predicateID") String predicateID,
+        @ApiParam(value = "Predicate type", allowableValues="owl:DatatypeProperty,owl:ObjectProperty") @QueryParam("type") String type) {
 
       IRI predicateIRI;
+      IRI typeIRI = null;
         
       try {
-            IRIFactory iri = IRIFactory.semanticWebImplementation();
-            predicateIRI = iri.construct(predicateID);
+         IRIFactory iri = IRIFactory.semanticWebImplementation();
+         predicateIRI = iri.construct(predicateID);
+         if(type!=null && !type.equals("undefined") && !predicateID.startsWith(ApplicationProperties.getDefaultDomain())) {
+             String typeURI = type.replace("owl:", "http://www.w3.org/2002/07/owl#");
+             typeIRI = iri.construct(typeURI);
+         }
         } catch (IRIException e) {
                 return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
       }
@@ -68,6 +75,7 @@ public class ClassPropertyCreator {
       queryString = "CONSTRUCT { "
               + "?uuid sh:predicate ?predicate . "
               + "?uuid dcterms:type ?predicateType . "
+              + "?uuid dcterms:type ?externalType . "
               + "?uuid dcterms:created ?creation . "
               + "?uuid dcterms:identifier ?localIdentifier . "
               + "?uuid rdfs:label ?label . "
@@ -90,6 +98,10 @@ public class ClassPropertyCreator {
       pss.setCommandText(queryString);
       pss.setIri("predicate", predicateIRI);
       pss.setLiteral("localIdentifier", SplitIRI.localname(predicateID));
+      
+      if(typeIRI!=null) {
+          pss.setIri("externalType", typeIRI);
+      }
 
       return JerseyFusekiClient.constructGraphFromService(pss.toString(), services.getCoreSparqlAddress());
 

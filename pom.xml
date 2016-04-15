@@ -15,9 +15,7 @@
         <project.debug>true</project.debug>
         <project.debugGroup>https://tt.eduuni.fi/sites/csc-iow#IOW_ADMINS;https://tt.eduuni.fi/sites/csc-iow#JHS_ADMINS;https://tt.eduuni.fi/sites/csc-iow#KTK_ADMINS</project.debugGroup>
         <project.debugAdress>http://localhost:9001</project.debugAdress>
-        <project.defaultNamespace>http://iow.csc.fi/id/ns/</project.defaultNamespace>
         <project.defaultDomain>http://iow.csc.fi/</project.defaultDomain>
-        <project.defaultProfileNamespace>http://iow.csc.fi/id/ap/</project.defaultProfileNamespace>
         <project.groupdomain>https://tt.eduuni.fi/sites/csc-iow#</project.groupdomain>
         <endorsed.dir>${project.build.directory}/endorsed</endorsed.dir>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

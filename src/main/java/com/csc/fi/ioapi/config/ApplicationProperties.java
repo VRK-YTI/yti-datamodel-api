@@ -41,10 +41,6 @@ public final static String getDefaultDomain() {
     return PropertyUtil.getProperty("application.defaultDomain");  
 }
 
-public final static String getProfileNamespace() {
-    return getDefaultDomain()+"ap/";
-}
-    
 public final static boolean getProvenanceMode() {
     return Boolean.parseBoolean(PropertyUtil.getProperty("application.provenance"));  
 }
