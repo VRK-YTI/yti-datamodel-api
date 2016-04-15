@@ -97,7 +97,7 @@ public class ExternalClass {
         
 
         pss.setIri("library", model);
-        pss.setIri("modelService",services.getCoreSparqlAddress());
+        pss.setIri("modelService",services.getLocalhostCoreSparqlAddress());
          
         
         pss.setCommandText(queryString);

@@ -29,6 +29,10 @@ public String getCoreSparqlAddress() {
     return endpoint+"/core/sparql";
 }
 
+public String getLocalhostCoreSparqlAddress() {
+    return "http://localhost/core/sparql";
+}
+
 public String getCoreSparqlUpdateAddress() {
     return endpoint+"/core/update";
 }
