@@ -97,7 +97,7 @@ public class ExternalPredicate {
                  + "}";
         
         pss.setIri("library", model);
-        pss.setIri("modelService",services.getCoreSparqlAddress());
+        pss.setIri("modelService",services.getLocalhostCoreSparqlAddress());
          
         pss.setCommandText(queryString);
 
@@ -154,7 +154,7 @@ public class ExternalPredicate {
             pss.setCommandText(queryString);
 
             pss.setIri("predicate", idIRI);   
-            pss.setIri("modelService",services.getCoreSparqlAddress());
+            pss.setIri("modelService",services.getLocalhostCoreSparqlAddress());
          
 
             if(model!=null && !model.equals("undefined")) {

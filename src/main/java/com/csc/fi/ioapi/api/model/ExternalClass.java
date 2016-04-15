@@ -51,8 +51,6 @@ public class ExternalClass {
       @ApiParam(value = "Model id")
       @QueryParam("model") String model) {
       
-        logger.info("--- EXTERNAL TEST !!!!!!!!!!! --- ");
-         
         IRIFactory iriFactory = IRIFactory.semanticWebImplementation();
         IRI modelIRI, idIRI;   
         
@@ -91,7 +89,6 @@ public class ExternalClass {
                  + "?class a ?type . "
                  + "VALUES ?type { rdfs:Class owl:Class sh:Shape } "
                  + "?class rdfs:label ?labelStr . BIND(STRLANG(?labelStr,'en') as ?label) "
-              //   + "OPTIONAL { ?class rdfs:isDefinedBy ?source . ?source rdfs:label ?sourceLabelStr .  BIND(STRLANG(?sourceLabelStr,'en') as ?sourceLabel)} "
                  + "} "
                  + "}";
         
@@ -102,8 +99,6 @@ public class ExternalClass {
         
         pss.setCommandText(queryString);
 
-        logger.info(pss.toString());
-        
         return JerseyFusekiClient.constructGraphFromService(pss.toString(), services.getImportsSparqlAddress());
 
       } else {
@@ -164,13 +159,11 @@ public class ExternalClass {
                     + "} }";
             
             pss.setIri("library", model);
-            pss.setIri("modelService",services.getCoreSparqlAddress());
+            pss.setIri("modelService",services.getLocalhostCoreSparqlAddress());
             pss.setCommandText(queryString);
 
             pss.setIri("classIRI", idIRI);
             
-            logger.info(pss.toString());
-
             if(model!=null && !model.equals("undefined")) {
                   pss.setIri("library", model);
             }
