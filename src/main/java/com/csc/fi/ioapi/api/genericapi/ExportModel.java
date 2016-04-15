@@ -147,8 +147,6 @@ public class ExportModel {
             pss.setIri("modelHasPartGraph", graph+"#HasPartGraph");
 
             OutputStream out = new ByteArrayOutputStream();
-
-            logger.info(contentType.getContentType());
             
             ClientResponse response = JerseyFusekiClient.clientResponseFromConstruct(pss.toString(), services.getCoreSparqlAddress(), contentType);
 
@@ -176,12 +174,8 @@ public class ExportModel {
 
                 context.putAll(LDHelper.CONTEXT_MAP);
 
-                logger.info(context.toString());
-
                 frame.put("@context", context);
                 frame.put("@type", "owl:Ontology");
-
-                logger.info(frame.toString());
 
                 Object data;
 

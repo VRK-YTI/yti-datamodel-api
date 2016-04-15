@@ -107,8 +107,7 @@ public class Models {
             
             pss.setCommandText(queryString);
             
-            logger.info(pss.toString());
-            
+           
             return JerseyFusekiClient.constructGraphFromService(pss.toString(), sparqlService);
              
      } else if(group!=null && !group.equals("undefined")) {

@@ -51,7 +51,8 @@ public class ExternalClass {
       @ApiParam(value = "Model id")
       @QueryParam("model") String model) {
       
-      
+        logger.info("--- EXTERNAL TEST !!!!!!!!!!! --- ");
+         
         IRIFactory iriFactory = IRIFactory.semanticWebImplementation();
         IRI modelIRI, idIRI;   
         
