@@ -30,7 +30,8 @@ public String getCoreSparqlAddress() {
 }
 
 public String getLocalhostCoreSparqlAddress() {
-    return "http://localhost/core/sparql";
+    if(ApplicationProperties.getDebugMode()) return endpoint+"/core/sparql"; 
+    else return "http://localhost/core/sparql";
 }
 
 public String getCoreSparqlUpdateAddress() {

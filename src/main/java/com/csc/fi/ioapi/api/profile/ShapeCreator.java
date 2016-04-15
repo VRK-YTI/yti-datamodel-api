@@ -15,6 +15,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import com.csc.fi.ioapi.config.EndpointServices;
 import com.csc.fi.ioapi.utils.ErrorMessage;
+import com.csc.fi.ioapi.utils.GraphManager;
 import com.csc.fi.ioapi.utils.JerseyFusekiClient;
 import com.csc.fi.ioapi.utils.LDHelper;
 import org.apache.jena.query.ParameterizedSparqlString;
@@ -71,7 +72,7 @@ public class ShapeCreator {
             String service;
                 
             /* Create Shape from Class */
-            if(classID.startsWith(ApplicationProperties.getDefaultDomain())) {
+           if(GraphManager.isExistingServiceGraph(SplitIRI.namespace(classID))) {
 
                 service = services.getCoreSparqlAddress();
                 queryString = "CONSTRUCT  { "

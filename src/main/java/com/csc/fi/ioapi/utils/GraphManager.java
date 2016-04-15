@@ -122,7 +122,37 @@ public class GraphManager {
         }
     }
     
-        public static boolean isExistingGraph(String graphIRI) {
+    public static boolean isExistingServiceGraph(String graphIRI) {
+
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+        
+        String queryString = " ASK { GRAPH <urn:csc:iow:sd> { " +
+                " ?service a sd:Service . "+
+                " ?service sd:availableGraphs ?graphCollection . "+
+                " ?graphCollection a sd:GraphCollection . "+
+                " ?graphCollection sd:namedGraph ?graph . "+
+                " ?graph sd:name ?graphName . "+
+                "}}";
+        
+        // TODO: FIXME. Graph IRIs dont end in #
+        if(graphIRI.endsWith("#")) graphIRI = graphIRI.substring(0,graphIRI.length()-1);
+        
+        pss.setCommandText(queryString);
+        pss.setIri("graphName", graphIRI);
+
+        Query query = pss.asQuery();
+        QueryExecution qexec = QueryExecutionFactory.sparqlService(services.getCoreSparqlAddress(), query);
+
+        try {
+            boolean b = qexec.execAsk();
+            return b;
+        } catch (Exception ex) {
+            return false;
+        }
+    }
+    
+    public static boolean isExistingGraph(String graphIRI) {
 
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         String queryString = " ASK { GRAPH ?graph { ?s ?p ?o }}";
