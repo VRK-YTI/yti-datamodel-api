@@ -59,6 +59,7 @@ public class LDHelper {
         put("afn","http://jena.hpl.hp.com/ARQ/function#");
         put("schema","http://schema.org/");
         put("ts","http://www.w3.org/2003/06/sw-vocab-status/ns#");
+        put("dcam","http://purl.org/dc/dcam/");
     }});
    
     public static final Map<String, Object> CONTEXT_MAP = 
@@ -97,7 +98,8 @@ public class LDHelper {
                             "PREFIX dcap: <http://purl.org/ws-mmi-dc/terms/> " +
                             "PREFIX afn: <http://jena.hpl.hp.com/ARQ/function#>"+
                             "PREFIX schema: <http://schema.org/>"+
-                            "PREFIX ts: <http://www.w3.org/2003/06/sw-vocab-status/ns#>";
+                            "PREFIX ts: <http://www.w3.org/2003/06/sw-vocab-status/ns#>"+
+                            "PREFIX dcam: <http://purl.org/dc/dcam/>";
     
    
     ParameterizedSparqlString pss = new ParameterizedSparqlString();

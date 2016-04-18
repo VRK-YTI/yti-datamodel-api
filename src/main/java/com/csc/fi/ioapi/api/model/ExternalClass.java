@@ -88,7 +88,9 @@ public class ExternalClass {
                  + "GRAPH ?externalModel { "
                  + "?class a ?type . "
                  + "VALUES ?type { rdfs:Class owl:Class sh:Shape } "
-                 + "?class rdfs:label ?labelStr . BIND(STRLANG(?labelStr,'en') as ?label) "
+                 + "{?class rdfs:label ?labelStr . FILTER(LANG(?labelStr) = '') BIND(STRLANG(?labelStr,'en') as ?label) }"
+                 + "UNION"
+                 + "{ ?class rdfs:label ?label . FILTER(LANG(?label)!='') }"
                  + "} "
                  + "}";
         
@@ -99,6 +101,9 @@ public class ExternalClass {
         
         pss.setCommandText(queryString);
 
+        
+          logger.info(pss.toString());
+          
         return JerseyFusekiClient.constructGraphFromService(pss.toString(), services.getImportsSparqlAddress());
 
       } else {
@@ -116,6 +121,8 @@ public class ExternalClass {
 
             pss.setNsPrefixes(LDHelper.PREFIX_MAP);
 
+            /* TODO: FIX dublin core etc. rdf:Property properties */
+            
             String queryString = "CONSTRUCT { "
                     + "?externalModel rdfs:label ?externalModelLabel . "
                     + "?classIRI rdfs:isDefinedBy ?externalModel . "
@@ -137,12 +144,17 @@ public class ExternalClass {
                      + "}}"
                     + "GRAPH ?externalModel {"
                     + "?classIRI a ?type . "
-                    + "OPTIONAL { ?classIRI rdfs:label ?labelStr . BIND(STRLANG(?labelStr,'en') as ?label) }"
-                    + "OPTIONAL { ?classIRI ?commentPred ?commentStr . "
-                    + "VALUES ?commentPred { rdfs:comment skos:definition dcterms:description dc:description }"
-                    + "BIND(STRLANG(?commentStr,'en') as ?comment) "
-                    + "}"
-                    + "OPTIONAL { ?classIRI rdfs:comment ?commentStr . BIND(STRLANG(?commentStr,'en') as ?comment)}"
+                    + "VALUES ?type { rdfs:Class owl:Class sh:Shape } "
+                     + "{?classIRI rdfs:label ?labelStr . FILTER(LANG(?labelStr) = '') BIND(STRLANG(?labelStr,'en') as ?label) }"
+                      + "UNION"
+                     + "{ ?classIRI rdfs:label ?label . FILTER(LANG(?label)!='') }"
+                     + "{ ?classIRI ?commentPred ?commentStr . "
+                        + "VALUES ?commentPred { rdfs:comment skos:definition dcterms:description dc:description }"
+                        + "FILTER(LANG(?commentStr) = '') BIND(STRLANG(?commentStr,'en') as ?comment) }"
+                      + "UNION"
+                     + "{ ?classIRI ?commentPred ?comment . "
+                     + "VALUES ?commentPred { rdfs:comment skos:definition dcterms:description dc:description }"
+                     + " FILTER(LANG(?comment)!='') }"
                     + "OPTIONAL { "
                     + "?classIRI rdfs:subClassOf* ?superclass . "
                     + "?predicate rdfs:domain ?superclass ."

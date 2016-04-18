@@ -87,9 +87,24 @@ public class ExternalPredicate {
                     + "?externalModel rdfs:label ?externalModelLabel . "
                      + "}}"
                  + "GRAPH ?externalModel { "
-                 + "?predicate a ?type . "
+                + "{"
+                + "?predicate a ?type . "
+                + " VALUES ?type { owl:DatatypeProperty owl:ObjectProperty } "
+                + "} UNION {"
+                + "?predicate a rdf:Property . "
+                + "?predicate rdfs:range rdfs:Literal ."
+                + "BIND(owl:DatatypeProperty as ?type) "
+                + "} UNION {"
+                + "?predicate a rdf:Property . "
+                + "OPTIONAL { ?predicate rdfs:range ?range . } "
+                + "BIND(owl:ObjectProperty as ?type)"
+                + "FILTER(?range!=rdfs:Literal)"
+                + "}"
+                + "OPTIONAL { ?predicate rdfs:label ?labelStr . FILTER(LANG(?labelStr) = '') BIND(STRLANG(?labelStr,'en') as ?label) }"
+                + "OPTIONAL { ?predicate rdfs:label ?label . FILTER(LANG(?label)!='') }"
+        /*         + "?predicate a ?type . "
                  + "VALUES ?type { owl:DatatypeProperty owl:ObjectProperty } "
-                 + "?predicate rdfs:label ?labelStr . BIND(STRLANG(?labelStr,'en') as ?label) "
+                 + "?predicate rdfs:label ?labelStr . BIND(STRLANG(?labelStr,'en') as ?label) " */
               /*   + "OPTIONAL { ?predicate rdfs:isDefinedBy ?source . "
                 + "?source rdfs:label ?sourceLabelStr .  "
                 + "BIND(STRLANG(?sourceLabelStr,'en') as ?sourceLabel)} " */
@@ -100,6 +115,8 @@ public class ExternalPredicate {
         pss.setIri("modelService",services.getLocalhostCoreSparqlAddress());
          
         pss.setCommandText(queryString);
+        
+          logger.info(pss.toString());
 
         return JerseyFusekiClient.constructGraphFromService(pss.toString(), services.getImportsSparqlAddress());
 
@@ -136,11 +153,23 @@ public class ExternalPredicate {
                     + "?externalModel rdfs:label ?externalModelLabel . "
                      + "}}"
                  + "GRAPH ?externalModel { "
-                 + "?predicate a ?type . "
-                 + "VALUES ?type { owl:DatatypeProperty owl:ObjectProperty rdf:Property } "
+                + "{"
+                + "?predicate a ?type . "
+                + " VALUES ?type { owl:DatatypeProperty owl:ObjectProperty } "
+                + "} UNION {"
+                + "?predicate a rdf:Property . "
+                + "?predicate rdfs:range rdfs:Literal ."
+                + "BIND(owl:DatatypeProperty as ?type) "
+                + "} UNION {"
+                + "?predicate a rdf:Property . "
+                + "OPTIONAL { ?predicate rdfs:range ?range . } "
+                + "BIND(owl:ObjectProperty as ?type)"
+                + "FILTER(?range!=rdfs:Literal)"
+                + "}"
                  + "OPTIONAL { ?predicate rdfs:range ?range . }"
                  + "OPTIONAL { ?predicate rdfs:domain ?domain . }"
-                 + "?predicate rdfs:label ?labelStr . BIND(STRLANG(?labelStr,'en') as ?label) "
+                + "OPTIONAL { ?predicate rdfs:label ?labelStr . FILTER(LANG(?labelStr) = '') BIND(STRLANG(?labelStr,'en') as ?label) }"
+                + "OPTIONAL { ?predicate rdfs:label ?label . FILTER(LANG(?label)!='') }"      
                  + "OPTIONAL { ?predicate ?commentPred ?commentStr . "
                  + "VALUES ?commentPred { rdfs:comment skos:definition dcterms:description dc:description }"
                  + "BIND(STRLANG(?commentStr,'en') as ?comment) "
@@ -160,6 +189,9 @@ public class ExternalPredicate {
             if(model!=null && !model.equals("undefined")) {
                   pss.setIri("library", model);
             }
+            
+            logger.info(pss.toString());
+            
                         return JerseyFusekiClient.constructGraphFromService(pss.toString(), sparqlService);         
 
       }

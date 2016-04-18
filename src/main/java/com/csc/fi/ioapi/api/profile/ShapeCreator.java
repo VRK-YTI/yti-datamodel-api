@@ -127,10 +127,9 @@ public class ShapeCreator {
                     + "BIND(now() as ?modified) "
                     + "OPTIONAL { ?classIRI a ?type . "
                     + "VALUES ?type { owl:Class rdfs:Class }}"
-                    //+ "BIND(iri(concat(?profileNamespace,concat('s',afn:localname(?classIRI)))) as ?shapeIRI)"   
-                    + "OPTIONAL { ?classIRI rdfs:label ?labelStr . "
-                    + "BIND(STRLANG(?labelStr,'en') as ?label) "
-                    + "}"
+                     + "{?classIRI rdfs:label ?labelStr . FILTER(LANG(?labelStr) = '') BIND(STRLANG(?labelStr,'en') as ?label) }"
+                      + "UNION"
+                     + "{ ?classIRI rdfs:label ?label . FILTER(LANG(?label)!='') }"
                     + "OPTIONAL { ?classIRI rdfs:comment ?commentStr . "
                     + "BIND(STRLANG(?commentStr,'en') as ?comment) "
                     + "}"
@@ -161,6 +160,8 @@ public class ShapeCreator {
             pss.setLiteral("profileNamespace", profileID+"#");
             pss.setLiteral("draft", "Unstable");
             pss.setIri("shapeIRI",shapeIRI);
+            
+            logger.info(pss.toString());
             
             return JerseyFusekiClient.constructGraphFromService(pss.toString(), service);
     }   

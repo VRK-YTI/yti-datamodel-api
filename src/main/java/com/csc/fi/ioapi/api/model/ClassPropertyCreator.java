@@ -116,9 +116,11 @@ public class ClassPropertyCreator {
            
          service = services.getImportsSparqlAddress();
       
+         /* TODO: ADD LANGUAGE TAG TO COMMENTS */
+         
          queryString = "CONSTRUCT { "
               + "?uuid sh:predicate ?predicate . "
-              + "?uuid dcterms:type ?predicateType . "
+              + "?uuid dcterms:type ?type. "
               + "?uuid dcterms:created ?creation . "
               + "?uuid dcterms:identifier ?localIdentifier . "
               + "?uuid rdfs:label ?label . "
@@ -128,15 +130,29 @@ public class ClassPropertyCreator {
               + "WHERE { "
               + "BIND(now() as ?creation) "
               + "BIND(UUID() as ?uuid) "
-              + "OPTIONAL { "
-              + "?predicate rdfs:label ?label .  " 
-              + "?predicate a ?predicateType . "              
+              + "{"
+                + "?predicate a ?type . "
+                + " VALUES ?type { owl:DatatypeProperty owl:ObjectProperty } "
+                + "} UNION {"
+                + "?predicate a rdf:Property . "
+                + "?predicate rdfs:range rdfs:Literal ."
+                + "BIND(owl:DatatypeProperty as ?type) "
+                + "BIND(xsd:string as ?prefDatatype) "
+                + "} UNION {"
+                + "?predicate a rdf:Property . "
+                + "OPTIONAL { ?predicate rdfs:range ?valueClass . } "
+                + "BIND(owl:ObjectProperty as ?type)"
+                + "FILTER(?valueClass!=rdfs:Literal)"
+                + "FILTER(!STRSTARTS(STR(?valueClass), 'http://www.w3.org/2001/XMLSchema#'))"
+                + "}"   
+              + "OPTIONAL { ?predicate rdfs:label ?labelStr . FILTER(LANG(?labelStr) = '') BIND(STRLANG(?labelStr,'en') as ?label) }"
+              + "OPTIONAL { ?predicate rdfs:label ?label . FILTER(LANG(?label)!='') }"   
               + "OPTIONAL { ?predicate rdfs:comment ?comment . } "
               + "OPTIONAL { ?predicate a owl:DatatypeProperty . "
               + "?predicate rdfs:range ?datatype . "
               + "BIND(IF(?datatype=rdfs:Literal,xsd:string,?datatype) as ?prefDatatype) } "
               + "OPTIONAL { ?predicate a owl:ObjectProperty . "
-              + "?predicate rdfs:range ?valueClass . }}"
+              + "?predicate rdfs:range ?valueClass . }"
               + "}";
 
             pss.setCommandText(queryString);
