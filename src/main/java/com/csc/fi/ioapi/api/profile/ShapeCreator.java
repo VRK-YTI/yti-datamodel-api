@@ -142,12 +142,19 @@ public class ShapeCreator {
                     + "?predicate rdfs:range ?datatype . "
                     + "BIND(IF(?datatype=rdfs:Literal,xsd:string,?datatype) as ?prefDatatype) } "
                     + "OPTIONAL { ?predicate a owl:ObjectProperty . ?predicate rdfs:range ?valueClass . } "
-                    + "OPTIONAL { ?predicate rdfs:label ?propertyStrLabel . "
-                    + "BIND(STRLANG(?propertyStrLabel,'en') as ?propertyLabel) "
-                    + "}"
-                    + "OPTIONAL { ?predicate rdfs:comment ?propertyStrComment . "
-                    + "BIND(STRLANG(?propertyStrComment,'en') as ?propertyComment) "
-                    + "}"
+                        
+                    /* Predicate label - if lang unknown create english tag */
+                    + "OPTIONAL {?predicate rdfs:label ?propertyLabelStr . FILTER(LANG(?propertyLabelStr) = '') BIND(STRLANG(?propertyLabelStr,'en') as ?propertyLabel) }"
+                    + "OPTIONAL { ?predicate rdfs:label ?propertyLabel . FILTER(LANG(?propertyLabel)!='') }"
+                    
+                    /* Predicate comments - if lang unknown create english tag */
+                    + "OPTIONAL { ?predicate ?predicateCommentPred ?propertyCommentStr . "
+                    + "VALUES ?predicateCommentPred { rdfs:comment skos:definition dcterms:description dc:description }"
+                    + "FILTER(LANG(?propertyCommentStr) = '') BIND(STRLANG(?propertyCommentStr,'en') as ?propertyComment) }"
+                    + "OPTIONAL { ?predicate ?predicateCommentPred ?propertyComment . "
+                    + "VALUES ?predicateCommentPred { rdfs:comment skos:definition dcterms:description dc:description }"
+                    + " FILTER(LANG(?propertyComment)!='') }"
+                        
                     + "}"    
                     + "}";
                                
