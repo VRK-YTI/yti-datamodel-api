@@ -201,8 +201,18 @@ public class NamespaceManager {
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         String selectResources
                 = "SELECT ?type WHERE { "
+                + "{"
                 + "?predicate a ?type . "
-                + "VALUES ?type { owl:DatatypeProperty owl:ObjectProperty }"
+                + " VALUES ?type { owl:DatatypeProperty owl:ObjectProperty } "
+                + "} UNION {"
+                + "?predicate a rdf:Property . "
+                + "?predicate rdfs:range rdfs:Literal . "
+                + "BIND(owl:DatatypeProperty as ?type) "
+                + "} UNION {"
+                + "?predicate a rdf:Property . "
+                + "FILTER NOT EXISTS {?predicate rdfs:range rdfs:Literal . }"
+                + "BIND(rdf:Property as ?type)"
+                + "}"   
                 + "}";
 
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);

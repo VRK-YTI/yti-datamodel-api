@@ -106,21 +106,24 @@ public class ClassPropertyCreator {
          /* External predicate */
          String predicateType = NamespaceManager.getExternalPredicateType(predicateIRI);
          
-         if(predicateType==null && type!=null && !type.equals("undefined")) {
+         if((predicateType==null || predicateType.equals("http://www.w3.org/1999/02/22-rdf-syntax-ns#Property")) && type!=null && !type.equals("undefined")) {
              String typeURI = type.replace("owl:", "http://www.w3.org/2002/07/owl#");
              typeIRI = iri.construct(typeURI);
+             logger.info("jee");
           } else {
-             if(predicateType==null) return Response.status(403).entity(ErrorMessage.INVALIDPARAMETER).build();
+             if(predicateType==null || predicateType.equals("http://www.w3.org/1999/02/22-rdf-syntax-ns#Property")) return Response.status(403).entity(ErrorMessage.INVALIDPARAMETER).build();
              else typeIRI = iri.construct(predicateType);
          }
            
+         logger.info(predicateType);
+         
          service = services.getImportsSparqlAddress();
       
          /* TODO: ADD LANGUAGE TAG TO COMMENTS */
          
          queryString = "CONSTRUCT { "
               + "?uuid sh:predicate ?predicate . "
-              + "?uuid dcterms:type ?type. "
+              + "?uuid dcterms:type ?type . "
               + "?uuid dcterms:created ?creation . "
               + "?uuid dcterms:identifier ?localIdentifier . "
               + "?uuid rdfs:label ?label . "
@@ -140,10 +143,8 @@ public class ClassPropertyCreator {
                 + "BIND(xsd:string as ?prefDatatype) "
                 + "} UNION {"
                 + "?predicate a rdf:Property . "
-                + "OPTIONAL { ?predicate rdfs:range ?valueClass . } "
-                + "BIND(owl:ObjectProperty as ?type)"
-                + "FILTER(?valueClass!=rdfs:Literal)"
-                + "FILTER(!STRSTARTS(STR(?valueClass), 'http://www.w3.org/2001/XMLSchema#'))"
+                + "FILTER NOT EXISTS { ?predicate rdfs:range rdfs:Literal . }"
+                + "BIND(?predicateType as ?type)"
                 + "}"   
               + "OPTIONAL { ?predicate rdfs:label ?labelStr . FILTER(LANG(?labelStr) = '') BIND(STRLANG(?labelStr,'en') as ?label) }"
               + "OPTIONAL { ?predicate rdfs:label ?label . FILTER(LANG(?label)!='') }"   
