@@ -87,17 +87,20 @@ public class ExternalPredicate {
                     + "?externalModel rdfs:label ?externalModelLabel . "
                      + "}}"
                  + "GRAPH ?externalModel { "
+                /* IF Predicate type is known */
                 + "{"
                 + "?predicate a ?type . "
                 + " VALUES ?type { owl:DatatypeProperty owl:ObjectProperty } "
                 + "} UNION {"
+                /* IF Predicate Type is rdf:Property and range is rdfs:Literal = DatatypeProperty */
                 + "?predicate a rdf:Property . "
                 + "?predicate rdfs:range rdfs:Literal ."
                 + "BIND(owl:DatatypeProperty as ?type) "
                 + "} UNION {"
+                /* IF Predicate type cannot be guessed */
                 + "?predicate a rdf:Property . "
                 + "OPTIONAL { ?predicate rdfs:range ?range . } "
-                + "BIND(owl:ObjectProperty as ?type)"
+                + "BIND(rdf:Property as ?type)"
                 + "FILTER(?range!=rdfs:Literal)"
                 + "}"
                 + "OPTIONAL { ?predicate rdfs:label ?labelStr . FILTER(LANG(?labelStr) = '') BIND(STRLANG(?labelStr,'en') as ?label) }"
@@ -153,17 +156,19 @@ public class ExternalPredicate {
                     + "?externalModel rdfs:label ?externalModelLabel . "
                      + "}}"
                  + "GRAPH ?externalModel { "
+                /* IF Predicate type is defined */
                 + "{"
                 + "?predicate a ?type . "
                 + " VALUES ?type { owl:DatatypeProperty owl:ObjectProperty } "
                 + "} UNION {"
+                /* IF Predicate type is not defined but predicate range is Literal */
                 + "?predicate a rdf:Property . "
                 + "?predicate rdfs:range rdfs:Literal ."
                 + "BIND(owl:DatatypeProperty as ?type) "
                 + "} UNION {"
+                /* IF Predicate type is unknown rdf:Property and range is not Literal */
                 + "?predicate a rdf:Property . "
-                + "OPTIONAL { ?predicate rdfs:range ?range . } "
-                + "BIND(owl:ObjectProperty as ?type)"
+                + "BIND(rdf:Property as ?type)"
                 + "FILTER(?range!=rdfs:Literal)"
                 + "}"
                  + "OPTIONAL { ?predicate rdfs:range ?range . }"
