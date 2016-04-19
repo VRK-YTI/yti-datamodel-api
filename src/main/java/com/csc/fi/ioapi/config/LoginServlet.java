@@ -27,6 +27,7 @@ import com.csc.fi.ioapi.utils.UserManager;
 public class LoginServlet extends HttpServlet {
 
     private static String SHIBBOLETH_PROVIDER_ATTRIBUTE = "Shib-Identity-Provider";
+    private static final Logger logger = Logger.getLogger(LoginServlet.class.getName());
     
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
@@ -53,7 +54,14 @@ public class LoginServlet extends HttpServlet {
             }
         }
         
-        response.sendRedirect(resolveFrontendAddress(debug));
+        String target = getParameterAsString(request, "target");
+        
+        logger.info(target);
+        
+        if(target==null)
+            response.sendRedirect(resolveFrontendAddress(debug));
+        else 
+            response.sendRedirect(target);
     }
 
     private static String resolveFrontendAddress(boolean debug) {
@@ -91,6 +99,11 @@ public class LoginServlet extends HttpServlet {
     
     private static String getAttributeAsString(HttpServletRequest request, String attributeName) {
         Object attribute = request.getAttribute(attributeName);
+        return attribute != null ? attribute.toString() : null;
+    }
+    
+    private static String getParameterAsString(HttpServletRequest request, String attributeName) {
+        Object attribute = request.getParameter(attributeName) ;
         return attribute != null ? attribute.toString() : null;
     }
 
