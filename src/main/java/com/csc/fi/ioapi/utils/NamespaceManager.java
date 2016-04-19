@@ -201,18 +201,37 @@ public class NamespaceManager {
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         String selectResources
                 = "SELECT ?type WHERE { "
-                + "{"
-                + "?predicate a ?type . "
+                + "{ ?predicate a ?type . "
                 + " VALUES ?type { owl:DatatypeProperty owl:ObjectProperty } "
                 + "} UNION {"
+                /* IF Predicate Type is rdf:Property and range is rdfs:Literal = DatatypeProperty */
                 + "?predicate a rdf:Property . "
-                + "?predicate rdfs:range rdfs:Literal . "
+                + "?predicate rdfs:range rdfs:Literal ."
                 + "BIND(owl:DatatypeProperty as ?type) "
-                + "} UNION {"
+                + "FILTER NOT EXISTS { ?predicate a ?multiType . VALUES ?multiType { owl:DatatypeProperty owl:ObjectProperty } }"
+                 + "} UNION {"
+                /* IF Predicate Type is rdf:Property and range is rdfs:Resource then property is object property */
                 + "?predicate a rdf:Property . "
-                + "FILTER NOT EXISTS {?predicate rdfs:range rdfs:Literal . }"
+                + "?predicate rdfs:range rdfs:Resource ."
+                + "BIND(owl:ObjectProperty as ?type) "
+                + "FILTER NOT EXISTS { ?predicate a ?multiType . VALUES ?multiType { owl:DatatypeProperty owl:ObjectProperty } }"
+                + "}UNION {"
+                /* IF Predicate Type is rdf:Property and range is resource that is class or thing */
+                + "?predicate a rdf:Property . "
+                + "FILTER NOT EXISTS { ?predicate a ?multiType . VALUES ?multiType { owl:DatatypeProperty owl:ObjectProperty } }"
+                + "?predicate rdfs:range ?rangeClass . "
+                + "?rangeClass a ?rangeClassType . "
+                + "VALUES ?rangeClassType { skos:Concept owl:Thing rdfs:Class }"
+                + "BIND(owl:ObjectProperty as ?type) "
+                + "} UNION {"
+                /* IF Predicate type cannot be guessed */
+                + "?predicate a rdf:Property . "
                 + "BIND(rdf:Property as ?type)"
-                + "}"   
+                + "FILTER NOT EXISTS { ?predicate a ?multiType . VALUES ?multiType { owl:DatatypeProperty owl:ObjectProperty } }"
+                + "FILTER NOT EXISTS { ?predicate rdfs:range rdfs:Literal . }"
+                + "FILTER NOT EXISTS { ?predicate rdfs:range rdfs:Resource . }"
+                + "FILTER NOT EXISTS { ?predicate rdfs:range ?rangeClass . ?rangeClass a ?rangeClassType . }"
+                + "} "  
                 + "}";
 
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);

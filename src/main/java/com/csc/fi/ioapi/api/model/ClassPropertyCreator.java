@@ -109,13 +109,11 @@ public class ClassPropertyCreator {
          if((predicateType==null || predicateType.equals("http://www.w3.org/1999/02/22-rdf-syntax-ns#Property")) && type!=null && !type.equals("undefined")) {
              String typeURI = type.replace("owl:", "http://www.w3.org/2002/07/owl#");
              typeIRI = iri.construct(typeURI);
-             logger.info("jee");
           } else {
              if(predicateType==null || predicateType.equals("http://www.w3.org/1999/02/22-rdf-syntax-ns#Property")) return Response.status(403).entity(ErrorMessage.INVALIDPARAMETER).build();
              else typeIRI = iri.construct(predicateType);
          }
            
-         logger.info(predicateType);
          
          service = services.getImportsSparqlAddress();
       
