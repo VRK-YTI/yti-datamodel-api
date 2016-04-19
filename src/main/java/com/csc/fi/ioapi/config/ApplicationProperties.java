@@ -18,7 +18,10 @@ public final static String getEndpoint() {
 }
 
 public final static boolean getDebugMode() {
-    return Boolean.parseBoolean(PropertyUtil.getProperty("application.debug"));
+    if(getEndpoint().startsWith("http://localhost")) 
+        return true;       
+    else
+        return Boolean.parseBoolean(PropertyUtil.getProperty("application.debug"));
 } 
 
 public final static String getGroupDomain() {
