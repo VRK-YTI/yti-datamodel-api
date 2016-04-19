@@ -58,10 +58,11 @@ public class LoginServlet extends HttpServlet {
         
         logger.info(target);
         
-        if(target==null)
-            response.sendRedirect(resolveFrontendAddress(debug));
-        else 
+        if(target!=null && target.startsWith(ApplicationProperties.getDefaultDomain()))
             response.sendRedirect(target);
+        else 
+            response.sendRedirect(resolveFrontendAddress(debug));
+            
     }
 
     private static String resolveFrontendAddress(boolean debug) {
