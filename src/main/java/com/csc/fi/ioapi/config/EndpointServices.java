@@ -5,6 +5,7 @@
  */
 package com.csc.fi.ioapi.config;
 
+
 /**
  *
  * @author malonen
@@ -30,8 +31,12 @@ public String getCoreSparqlAddress() {
 }
 
 public String getLocalhostCoreSparqlAddress() {
-    if(ApplicationProperties.getDebugMode()) return endpoint+"/core/sparql"; 
-    else return "http://localhost/core/sparql";
+    if(!ApplicationProperties.getEndpoint().startsWith("http://localhost"))
+        return "http://localhost/core/sparql";
+    else if(ApplicationProperties.getDebugMode()) 
+        return endpoint+"/core/sparql"; 
+    else 
+        return "http://localhost/core/sparql";
 }
 
 public String getCoreSparqlUpdateAddress() {
