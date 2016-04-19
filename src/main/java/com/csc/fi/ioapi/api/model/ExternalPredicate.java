@@ -99,9 +99,10 @@ public class ExternalPredicate {
                 + "} UNION {"
                 /* IF Predicate type cannot be guessed */
                 + "?predicate a rdf:Property . "
-                + "OPTIONAL { ?predicate rdfs:range ?range . } "
-                + "BIND(rdf:Property as ?type)"
+                + "OPTIONAL { ?predicate rdfs:range ?range . "
                 + "FILTER(?range!=rdfs:Literal)"
+                + "} "
+                + "BIND(rdf:Property as ?type)"
                 + "}"
                 + "OPTIONAL { ?predicate rdfs:label ?labelStr . FILTER(LANG(?labelStr) = '') BIND(STRLANG(?labelStr,'en') as ?label) }"
                 + "OPTIONAL { ?predicate rdfs:label ?label . FILTER(LANG(?label)!='') }"
