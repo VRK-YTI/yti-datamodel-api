@@ -18,6 +18,7 @@ import javax.servlet.http.HttpSession;
 
 import com.csc.fi.ioapi.api.usermanagement.UserDefinition;
 import com.csc.fi.ioapi.utils.UserManager;
+import java.net.URLDecoder;
 
 /**
  *
@@ -55,7 +56,15 @@ public class LoginServlet extends HttpServlet {
         }
         
         String target = getParameterAsString(request, "target");
+        
         logger.info(target);
+        
+        String decodedTarget = URLDecoder.decode(target, "UTF-8");
+        
+        if(decodedTarget.startsWith(ApplicationProperties.getDefaultDomain()))
+            target = decodedTarget;
+        
+        logger.info(decodedTarget);
         
         if(target!=null && (debug || target.startsWith(ApplicationProperties.getDefaultDomain())))
             response.sendRedirect(target);
