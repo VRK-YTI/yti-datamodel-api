@@ -59,9 +59,9 @@ public class LoginServlet extends HttpServlet {
         
         logger.info(target);
         
-        String decodedTarget = URLDecoder.decode(target, "UTF-8");
+        String decodedTarget = URLDecoder.decode(target, "ISO-8859-1");
         
-        if(decodedTarget.startsWith(ApplicationProperties.getDefaultDomain()))
+        if(decodedTarget!=null && decodedTarget.startsWith(ApplicationProperties.getDefaultDomain()))
             target = decodedTarget;
         
         logger.info(decodedTarget);
