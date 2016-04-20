@@ -55,10 +55,9 @@ public class LoginServlet extends HttpServlet {
         }
         
         String target = getParameterAsString(request, "target");
-        
         logger.info(target);
         
-        if(target!=null && target.startsWith(ApplicationProperties.getDefaultDomain()))
+        if(target!=null && (debug || target.startsWith(ApplicationProperties.getDefaultDomain())))
             response.sendRedirect(target);
         else 
             response.sendRedirect(resolveFrontendAddress(debug));
