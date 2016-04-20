@@ -57,14 +57,10 @@ public class LoginServlet extends HttpServlet {
         
         String target = getParameterAsString(request, "target");
         
-        logger.info(target);
-        
         String decodedTarget = URLDecoder.decode(target, "ISO-8859-1");
         
         if(decodedTarget!=null && decodedTarget.startsWith(ApplicationProperties.getDefaultDomain()))
             target = decodedTarget;
-        
-        logger.info(decodedTarget);
         
         if(target!=null && (debug || target.startsWith(ApplicationProperties.getDefaultDomain())))
             response.sendRedirect(target);
