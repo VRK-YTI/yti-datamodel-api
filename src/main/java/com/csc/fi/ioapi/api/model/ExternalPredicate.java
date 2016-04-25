@@ -99,6 +99,7 @@ public class ExternalPredicate {
                 + "} UNION {"
                 /* Treat owl:AnnotationProperty as DatatypeProperty */
                 + "?predicate a owl:AnnotationProperty. "
+                + "?predicate rdfs:label ?atLeastSomeLabel . "
                 + "FILTER NOT EXISTS { ?predicate a owl:DatatypeProperty }"
                 + "BIND(owl:DatatypeProperty as ?type) "
                 + "} UNION {"
@@ -189,6 +190,7 @@ public class ExternalPredicate {
                 + "} UNION {"
                 /* Treat owl:AnnotationProperty as DatatypeProperty */
                 + "?predicate a owl:AnnotationProperty. "
+                + "?predicate rdfs:label ?atLeastSomeLabel . "
                 + "FILTER NOT EXISTS { ?predicate a owl:DatatypeProperty }"
                 + "BIND(owl:DatatypeProperty as ?type) "
                 + "} UNION {"
