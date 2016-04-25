@@ -141,6 +141,10 @@ public class ClassPropertyCreator {
               + "OPTIONAL { ?predicate a owl:DatatypeProperty . "
               + "?predicate rdfs:range ?datatype . "
               + "BIND(IF(?datatype=rdfs:Literal,xsd:string,?datatype) as ?prefDatatype) } "
+              + "OPTIONAL { ?predicate a rdf:Property . "
+              + "FILTER NOT EXISTS { ?predicate a owl:DatatypeProperty . }"
+              + "?predicate rdfs:range rdfs:Literal . "
+              + "BIND(xsd:string as ?prefDatatype) } "
               + "}";
 
             pss.setCommandText(queryString);
