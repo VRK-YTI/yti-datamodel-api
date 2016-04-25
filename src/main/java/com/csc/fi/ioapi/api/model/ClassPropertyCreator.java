@@ -164,7 +164,7 @@ public class ClassPropertyCreator {
                 + "FILTER NOT EXISTS { ?predicate rdfs:range rdfs:Resource . }"
                 + "FILTER NOT EXISTS { ?predicate rdfs:range ?rangeClass . ?rangeClass a ?rangeClassType . }"
                 + "} UNION { "
-                + "FILTER NOT EXISTS { ?predicate a ?type . }"
+                + "FILTER NOT EXISTS { ?predicate a ?predicateType . }"
                 + "BIND(?predicateType as ?type)"
                 + "}"
               + "OPTIONAL { ?predicate rdfs:label ?labelStr . FILTER(LANG(?labelStr) = '') BIND(STRLANG(?labelStr,'en') as ?label) }"
