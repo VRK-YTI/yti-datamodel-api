@@ -54,8 +54,7 @@ public class ClassPropertyCreator {
 	@ApiParam(value = "Predicate ID", required = true) @QueryParam("predicateID") String predicateID,
         @ApiParam(value = "Predicate type", allowableValues="owl:DatatypeProperty,owl:ObjectProperty") @QueryParam("type") String type) {
 
-      IRI predicateIRI;
-      IRI typeIRI = null;
+      IRI predicateIRI, typeIRI;
         
       String service;
       String queryString;
@@ -103,7 +102,7 @@ public class ClassPropertyCreator {
           
       } else {
              
-         /* External predicate */
+         /* Removed predicate addition
          String predicateType = NamespaceManager.getExternalPredicateType(predicateIRI);
          
          if((predicateType==null || predicateType.equals("http://www.w3.org/1999/02/22-rdf-syntax-ns#Property")) && type!=null && !type.equals("undefined")) {
@@ -112,8 +111,14 @@ public class ClassPropertyCreator {
           } else {
              if(predicateType==null || predicateType.equals("http://www.w3.org/1999/02/22-rdf-syntax-ns#Property")) return Response.status(403).entity(ErrorMessage.INVALIDPARAMETER).build();
              else typeIRI = iri.construct(predicateType);
-         }
+         } */
            
+         if(type==null || type.equals("undefined"))
+               return Response.status(403).entity(ErrorMessage.INVALIDPARAMETER).build();
+         
+         String typeURI = type.replace("owl:", "http://www.w3.org/2002/07/owl#");
+         typeIRI = iri.construct(typeURI);
+         
          
          service = services.getImportsSparqlAddress();
       
@@ -121,60 +126,21 @@ public class ClassPropertyCreator {
          
          queryString = "CONSTRUCT { "
               + "?uuid sh:predicate ?predicate . "
-              + "?uuid dcterms:type ?type . "
+              + "?uuid dcterms:type ?predicateType . "
               + "?uuid dcterms:created ?creation . "
               + "?uuid dcterms:identifier ?localIdentifier . "
               + "?uuid rdfs:label ?label . "
               + "?uuid rdfs:comment ?comment . "
-              + "?uuid sh:valueShape ?valueClass . "
               + "?uuid sh:datatype ?prefDatatype . } "
               + "WHERE { "
               + "BIND(now() as ?creation) "
               + "BIND(UUID() as ?uuid) "
-              /* IF Predicate type is known */
-                + "{"
-                + "?predicate a ?type . "
-                + " VALUES ?type { owl:DatatypeProperty owl:ObjectProperty } "
-                + "} UNION {"
-                /* IF Predicate Type is rdf:Property and range is rdfs:Literal = DatatypeProperty */
-                + "?predicate a rdf:Property . "
-                + "?predicate rdfs:range rdfs:Literal ."
-                + "BIND(owl:DatatypeProperty as ?type) "
-                + "FILTER NOT EXISTS { ?predicate a ?multiType . VALUES ?multiType { owl:DatatypeProperty owl:ObjectProperty } }"
-                 + "} UNION {"
-                /* IF Predicate Type is rdf:Property and range is rdfs:Resource then property is object property */
-                + "?predicate a rdf:Property . "
-                + "?predicate rdfs:range rdfs:Resource ."
-                + "BIND(owl:ObjectProperty as ?type) "
-                + "FILTER NOT EXISTS { ?predicate a ?multiType . VALUES ?multiType { owl:DatatypeProperty owl:ObjectProperty } }"
-                + "} UNION {"
-                /* IF Predicate Type is rdf:Property and range is resource that is class or thing */
-                + "?predicate a rdf:Property . "
-                + "FILTER NOT EXISTS { ?predicate a ?multiType . VALUES ?multiType { owl:DatatypeProperty owl:ObjectProperty } }"
-                + "?predicate rdfs:range ?rangeClass . "
-                + "?rangeClass a ?rangeClassType . "
-                + "VALUES ?rangeClassType { skos:Concept owl:Thing rdfs:Class }"
-                + "BIND(owl:ObjectProperty as ?type) "
-                + "} UNION {"
-                /* IF Predicate type cannot be guessed */
-                + "?predicate a rdf:Property . "
-                + "BIND(rdf:Property as ?type)"
-                + "FILTER NOT EXISTS { ?predicate a ?multiType . VALUES ?multiType { owl:DatatypeProperty owl:ObjectProperty } }"
-                + "FILTER NOT EXISTS { ?predicate rdfs:range rdfs:Literal . }"
-                + "FILTER NOT EXISTS { ?predicate rdfs:range rdfs:Resource . }"
-                + "FILTER NOT EXISTS { ?predicate rdfs:range ?rangeClass . ?rangeClass a ?rangeClassType . }"
-                + "} UNION { "
-                + "FILTER NOT EXISTS { ?predicate a ?predicateType . }"
-                + "BIND(?predicateType as ?type)"
-                + "}"
               + "OPTIONAL { ?predicate rdfs:label ?labelStr . FILTER(LANG(?labelStr) = '') BIND(STRLANG(?labelStr,'en') as ?label) }"
               + "OPTIONAL { ?predicate rdfs:label ?label . FILTER(LANG(?label)!='') }"   
               + "OPTIONAL { ?predicate rdfs:comment ?comment . } "
               + "OPTIONAL { ?predicate a owl:DatatypeProperty . "
               + "?predicate rdfs:range ?datatype . "
               + "BIND(IF(?datatype=rdfs:Literal,xsd:string,?datatype) as ?prefDatatype) } "
-              + "OPTIONAL { ?predicate a owl:ObjectProperty . "
-              + "?predicate rdfs:range ?valueClass . }"
               + "}";
 
             pss.setCommandText(queryString);
