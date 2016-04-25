@@ -109,6 +109,10 @@ public class LDHelper {
         return  UriComponent.encode(queryString,UriComponent.Type.QUERY_PARAM); // URLEncoder.encode(queryString, "UTF-8");
     }
     
+    public static boolean isAlphaString(String name) {
+        return name.matches("[a-zA-Z]+");
+    }
+    
     public static String modelName(String name) {
         name = name.toLowerCase();
         return removeInvalidCharacters(name);

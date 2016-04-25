@@ -52,8 +52,34 @@ public class ProfileCreator {
             @ApiParam(value = "Profile prefix", required = true) @QueryParam("prefix") String prefix,
             @ApiParam(value = "Profile label", required = true) @QueryParam("label") String label,
             @ApiParam(value = "Group ID", required = true) @QueryParam("group") String group,
-            @ApiParam(value = "Initial language", required = true, allowableValues="fi,en") @QueryParam("lang") String lang) {
+            @ApiParam(value = "Initial language", required = true, allowableValues="fi,en") @QueryParam("lang") String lang,
+            @ApiParam(value = "Allowed languages as space list: 'en sv pl'. Default 'fi en'") @QueryParam("langList") String allowedLang) {
 
+            if(allowedLang==null || allowedLang.equals("undefined") || allowedLang.length()<2) {
+                allowedLang = "('fi' 'en')"; }
+            else if(allowedLang.length()==2 && LDHelper.isAlphaString(lang)) {
+                 allowedLang="('"+allowedLang+"')";
+            }
+            else {
+                
+                if(!allowedLang.contains(" "))
+                    return Response.status(403).entity(ErrorMessage.INVALIDPARAMETER).build();
+                
+                String[] languages = allowedLang.split(" ");
+                String builtLang = "(";
+                
+                for(String s: languages) {
+                   if(s.length()>2 || !LDHelper.isAlphaString(s)) {
+                       return Response.status(403).entity(ErrorMessage.INVALIDPARAMETER).build();
+                   } 
+                   builtLang = builtLang.concat(" '"+s+"'");
+                }
+                
+                builtLang = builtLang.concat(" )");
+                allowedLang = builtLang;
+                
+            }
+                
             prefix = LDHelper.modelName(prefix);
             String namespace = ApplicationProperties.getDefaultNamespace()+prefix;
             
@@ -85,6 +111,7 @@ public class ProfileCreator {
                     + "?modelIRI owl:versionInfo ?draft . "
                     + "?modelIRI dcterms:created ?creation . "
                     + "?modelIRI dcterms:modified ?creation . "
+                    + "?modelIRI dcterms:language "+allowedLang+" . "
                     + "?modelIRI dcap:preferredXMLNamespaceName ?namespace . "
                     + "?modelIRI dcap:preferredXMLNamespacePrefix ?prefix . "
                     + "?modelIRI dcterms:isPartOf ?group . "
@@ -102,6 +129,7 @@ public class ProfileCreator {
                     + "GRAPH <urn:csc:groups> { "
                     + "?group a foaf:Group . "
                     + "?group rdfs:label ?groupLabel . "
+                    + "FILTER(lang(?groupLabel) = ?defLang)"
                     + "}"
                     + "}";
 
@@ -114,6 +142,7 @@ public class ProfileCreator {
             pss.setIri("group", groupIRI);
             pss.setLiteral("draft", "Unstable");
             pss.setLiteral("profileLabel", ResourceFactory.createLangLiteral(label, lang));
+            pss.setLiteral("defLang", lang);
 
             
             return JerseyFusekiClient.constructGraphFromService(pss.toString(), services.getCoreSparqlAddress());
