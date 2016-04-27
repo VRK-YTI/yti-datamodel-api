@@ -15,6 +15,8 @@ import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiParam;
 import com.wordnik.swagger.annotations.ApiResponse;
 import com.wordnik.swagger.annotations.ApiResponses;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.QueryParam;
  
 /**
@@ -35,13 +37,36 @@ public class ResolveNamespace {
       @ApiResponse(code = 404, message = "Service description not found"),
       @ApiResponse(code = 500, message = "Internal server error")
   })
-  public Response json(@ApiParam(value = "Namespace", required = true) @QueryParam("namespace") String namespace)  {
+  public Response getJson(@ApiParam(value = "Namespace", required = true) @QueryParam("namespace") String namespace)  {
 
-        if(NamespaceResolver.resolveNamespace(namespace)) {
+        if(NamespaceResolver.resolveNamespace(namespace,null,false)) {
              return JerseyFusekiClient.getGraphResponseFromService(namespace,services.getImportsReadAddress());
         } else {
             return Response.serverError().entity("{\"errorMessage\":\"Namespace could not be resolved\"}").build();
         }
+        
+}
+  
+  @POST
+  @Produces("application/json")
+  @ApiOperation(value = "Get service description", notes = "More notes about this method")
+  @ApiResponses(value = {
+      @ApiResponse(code = 400, message = "Invalid model supplied"),
+      @ApiResponse(code = 404, message = "Service description not found"),
+      @ApiResponse(code = 500, message = "Internal server error")
+  })
+  public Response json(@ApiParam(value = "Namespace", required = true) @QueryParam("namespace") String namespace,
+          @ApiParam(value = "Alternative url for the RDF") @QueryParam("altURL") String alternativeURL,
+          @ApiParam(value = "Force update", required = true) @QueryParam("force") boolean force)  {
+
+        if(NamespaceResolver.resolveNamespace(namespace,(alternativeURL!=null&&!alternativeURL.equals("undefined")?alternativeURL:null),force)) {
+             return Response.ok().entity("{\"Message\":\"Resolved\"}").build();
+        } else {
+            return Response.serverError().entity("{\"errorMessage\":\"Namespace could not be resolved\"}").build();
+        }
+        
+       
+        
 }
   
    

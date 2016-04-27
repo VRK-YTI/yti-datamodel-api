@@ -56,7 +56,7 @@ public class NamespaceManager {
           
            if(LDHelper.isPrefixResolvable(prefix)) {
             // TODO: Check & optimize resolving
-            NamespaceResolver.resolveNamespace(namespace);
+            NamespaceResolver.resolveNamespace(namespace,null,false);
            } 
            
            Resource nsResource = nsModel.createResource(namespace);
