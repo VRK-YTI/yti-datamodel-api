@@ -1,0 +1,292 @@
+/*
+ * Licensed under the European Union Public Licence (EUPL) V.1.1 
+ */
+package com.csc.fi.ioapi.utils;
+
+import com.csc.fi.ioapi.api.concepts.CodeList;
+import com.csc.fi.ioapi.config.EndpointServices;
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.WebResource;
+import java.util.Iterator;
+import java.util.UUID;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.json.Json;
+import javax.json.JsonArray;
+import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
+import javax.json.JsonReader;
+import javax.json.JsonValue;
+import javax.json.JsonValue.ValueType;
+import javax.ws.rs.core.Response;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.rdf.model.Property;
+import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.rdf.model.ResourceFactory;
+import org.apache.jena.riot.Lang;
+import org.apache.jena.riot.RDFDataMgr;
+import org.apache.jena.vocabulary.RDF;
+import org.apache.jena.web.DatasetAdapter;
+import org.apache.jena.web.DatasetGraphAccessorHTTP;
+
+/**
+ *
+ * @author malonen
+ */
+public class OPHCodeServer {
+    
+    EndpointServices services = new EndpointServices();
+    static final private Logger logger = Logger.getLogger(OPHCodeServer.class.getName());
+    public boolean status;
+    
+    public OPHCodeServer() {
+        this.status = false;
+    }
+    
+    public OPHCodeServer(String uri, boolean force) {
+        DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(services.getSchemesReadWriteAddress());
+        DatasetAdapter adapter = new DatasetAdapter(accessor);
+       
+        if(force) 
+            this.status = copyCodelistsFromServer(uri);
+        else 
+            this.status = adapter.containsModel(uri);
+   
+    }
+    
+    
+    private boolean copyCodelistsFromServer(String uri) {
+            Model model = ModelFactory.createDefaultModel();
+            model.setNsPrefix("dcterms", "http://purl.org/dc/terms/");
+            model.setNsPrefix("iow", "http://iow.csc.fi/ns/iow#");
+            
+            Response.ResponseBuilder rb;
+            Client client = Client.create();
+            
+            WebResource webResource = client.resource(uri).queryParam("format","application/json");
+
+            WebResource.Builder builder = webResource.accept("application/json");
+            ClientResponse response = builder.get(ClientResponse.class);
+
+            if (response.getStatusInfo().getFamily() == Response.Status.Family.SUCCESSFUL) {
+                
+             
+                JsonReader jsonReader = Json.createReader(response.getEntityInputStream());
+                JsonArray codeListArray = jsonReader.readArray();
+                jsonReader.close();
+                
+                Iterator<JsonValue> groupIterator = codeListArray.iterator();
+                
+                while(groupIterator.hasNext()) {
+
+                JsonObject codeList = (JsonObject) groupIterator.next();
+               
+                
+                JsonArray locGroupName = codeList.getJsonArray("metadata");
+                    
+                Iterator<JsonValue> groupNameIterator = locGroupName.iterator();
+                
+                UUID groupUUID = UUID.randomUUID();
+                
+                Resource group = model.createResource("urn:uuid:"+groupUUID);
+                
+                String FINameCheck = null;
+                
+                    while(groupNameIterator.hasNext()) {
+                        JsonObject groupName = (JsonObject) groupNameIterator.next();
+                        String lang = groupName.getString("kieli").toLowerCase();
+                        String label = groupName.getString("nimi");
+                        group.addProperty(RDF.type, ResourceFactory.createResource("http://iow.csc.fi/ns/iow#FCodeGroup"));
+                        
+                        /* Remove duplicate labels */
+                        if(lang.equals("fi")) {
+                            FINameCheck = label;
+                            Property name = ResourceFactory.createProperty("http://purl.org/dc/terms/", "title"); 
+                            group.addLiteral(name, ResourceFactory.createLangLiteral(label,lang));
+                        }
+                        else {
+                          if(FINameCheck != null && label.equals(FINameCheck)) {
+                              break;
+                          } else {
+                            Property name = ResourceFactory.createProperty("http://purl.org/dc/terms/", "title"); 
+                            group.addLiteral(name, ResourceFactory.createLangLiteral(label,lang));
+                          }
+                        }
+                        
+                    }
+
+                JsonArray codeSchemeArr = codeList.getJsonArray("koodistos");
+                
+                Iterator<JsonValue> codeListIterator = codeSchemeArr.iterator();
+                
+                while(codeListIterator.hasNext()) {
+                    
+                    JsonObject codes = (JsonObject) codeListIterator.next();
+                    // codes.getString("resourceUri")
+                    Resource valueScheme = model.createResource(uri+codes.getString("koodistoUri")+"/koodi");
+                    valueScheme.addProperty(RDF.type, ResourceFactory.createResource("http://iow.csc.fi/ns/iow#FCodeScheme"));
+                    
+                    Property hasPart = ResourceFactory.createProperty("http://purl.org/dc/terms/", "hasPart");    
+                    group.addProperty(hasPart, valueScheme);
+                    
+                    Property id = ResourceFactory.createProperty("http://purl.org/dc/terms/", "identifier");
+                    Property creator = ResourceFactory.createProperty("http://purl.org/dc/terms/", "creator");
+                
+                    valueScheme.addLiteral(id, ResourceFactory.createPlainLiteral(codes.getString("koodistoUri")));
+                    JsonValue owner = codes.get("omistaja");
+                    
+                    if(owner.getValueType()==ValueType.STRING)
+                        valueScheme.addLiteral(creator, ResourceFactory.createPlainLiteral(codes.getString("omistaja")));
+                    
+                    JsonArray locArr = codes.getJsonObject("latestKoodistoVersio").getJsonArray("metadata");
+                    
+                    Iterator<JsonValue> codeNameIterator = locArr.iterator();
+                    
+                    String FINLabelCheck = null;
+                    
+                    while(codeNameIterator.hasNext()) {
+                        JsonObject codeName = (JsonObject) codeNameIterator.next();
+                        
+                        String lang = codeName.getString("kieli").toLowerCase();
+                        String label = codeName.getString("nimi");
+                        
+                        /* Remove duplicate labels */
+                        if(lang.equals("fi")) {
+                            FINLabelCheck = label;
+                            Property name = ResourceFactory.createProperty("http://purl.org/dc/terms/", "title"); 
+                            valueScheme.addLiteral(name, ResourceFactory.createLangLiteral(label,lang));
+                        }
+                        else {
+                          if(FINLabelCheck != null && label.equals(FINLabelCheck)) {
+                              break;
+                          } else {
+                                Property name = ResourceFactory.createProperty("http://purl.org/dc/terms/", "title"); 
+                                valueScheme.addLiteral(name, ResourceFactory.createLangLiteral(label,lang));
+                          }
+                        }
+                        
+                    }
+                    
+                }
+                
+                }
+                
+              
+                   DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(services.getSchemesReadWriteAddress());
+                   DatasetAdapter adapter = new DatasetAdapter(accessor);
+                
+                   adapter.putModel(uri, model);
+                   
+                return true;
+                
+            } else {
+                return false;
+            }
+        
+        
+    }
+    
+    
+    /* 
+    
+    {
+    "koodiUri": "talonrakennusalanatjarjestys_12",
+    "resourceUri": "https:\/\/virkailija.opintopolku.fi\/koodisto-service\/rest\/codeelement\/talonrakennusalanatjarjestys_12",
+    "version": 9,
+    "versio": 2,
+    "koodisto": {
+      "koodistoUri": "talonrakennusalanatjarjestys",
+      "organisaatioOid": "1.2.246.562.10.00000000001",
+      "koodistoVersios": [
+        1,
+        2
+      ]
+    },
+    "koodiArvo": "12",
+    "paivitysPvm": 1453362929927,
+    "voimassaAlkuPvm": "2014-09-01",
+    "voimassaLoppuPvm": null,
+    "tila": "HYVAKSYTTY",
+    "metadata": [
+      {
+        "nimi": "Puuelementtien asennus",
+        "kuvaus": "valinnainen",
+        "lyhytNimi": "at",
+        "kayttoohje": "",
+        "kasite": "",
+        "sisaltaaMerkityksen": "",
+        "eiSisallaMerkitysta": "",
+        "huomioitavaKoodi": "",
+        "sisaltaaKoodiston": "",
+        "kieli": "FI"
+      }
+    ]
+  },
+    
+    */
+    public boolean updateCodes(String uri) {
+        
+        Model model = ModelFactory.createDefaultModel();
+        model.setNsPrefix("dcterms", "http://purl.org/dc/terms/");
+        model.setNsPrefix("iow", "http://iow.csc.fi/ns/iow#");
+            
+            Response.ResponseBuilder rb;
+            Client client = Client.create();
+            
+            WebResource webResource = client.resource(uri).queryParam("format","application/json");
+
+            WebResource.Builder builder = webResource.accept("application/json");
+            ClientResponse response = builder.get(ClientResponse.class);
+
+            if (response.getStatusInfo().getFamily() == Response.Status.Family.SUCCESSFUL) {
+                
+                logger.info("STATUS OK");
+                
+                JsonReader jsonReader = Json.createReader(response.getEntityInputStream());
+                JsonArray codeListArray = jsonReader.readArray();
+                jsonReader.close();
+                
+                Iterator<JsonValue> codeIterator = codeListArray.iterator();
+                
+                while(codeIterator.hasNext()) {
+                    
+                    JsonObject codeObj = (JsonObject) codeIterator.next();
+                    Resource codeRes = model.createResource(codeObj.getString("resourceUri"));
+                    codeRes.addProperty(RDF.type, ResourceFactory.createResource("http://iow.csc.fi/ns/iow#FCode"));
+                    Property id = ResourceFactory.createProperty("http://purl.org/dc/terms/", "identifier"); 
+
+                    codeRes.addLiteral(id, ResourceFactory.createPlainLiteral(codeObj.getString("koodiArvo")));
+                        
+                    JsonArray locArr = codeObj.getJsonArray("metadata");
+                    
+                    Iterator<JsonValue> codeNameIterator = locArr.iterator();
+                    
+                    while(codeNameIterator.hasNext()) {
+                        JsonObject codeName = (JsonObject) codeNameIterator.next();
+                        Property name = ResourceFactory.createProperty("http://purl.org/dc/terms/", "title"); 
+                        codeRes.addLiteral(name, ResourceFactory.createLangLiteral(codeName.getString("nimi"),codeName.getString("kieli").toLowerCase()));
+                        
+                    }
+                    
+                }
+                
+                //   RDFDataMgr.write(System.out, model, Lang.TURTLE) ;
+                   
+                   DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(services.getSchemesReadWriteAddress());
+                   DatasetAdapter adapter = new DatasetAdapter(accessor);
+                
+                   adapter.putModel(uri, model);
+                
+                return true;
+            } else {
+                logger.info(""+response.getStatus());
+                return false;
+            }
+            
+        
+    }
+    
+    
+}

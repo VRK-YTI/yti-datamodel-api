@@ -8,6 +8,7 @@ package com.csc.fi.ioapi.config;
 import com.csc.fi.ioapi.utils.GraphManager;
 import com.csc.fi.ioapi.utils.GroupManager;
 import com.csc.fi.ioapi.utils.NamespaceManager;
+import com.csc.fi.ioapi.utils.OPHCodeServer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -31,6 +32,7 @@ public class StartUpListener implements ServletContextListener {
         initDefaultGraph();
         initDefaultGroups();
         initDefaultNamespaces();
+        initCodeServers();
         
     }
     
@@ -38,6 +40,14 @@ public class StartUpListener implements ServletContextListener {
     public void contextDestroyed(ServletContextEvent sce) {
        System.out.println("System is closing ...");
        logger.log(Level.INFO, "System is closing ...");
+    }
+    
+    private static void initCodeServers() {
+        
+    OPHCodeServer codeServer = new OPHCodeServer("https://virkailija.opintopolku.fi/koodisto-service/rest/json/", true);    
+    
+    if(!codeServer.status) logger.warning("Code server was not initialized!");
+    
     }
     
     private static void initDefaultGraph() {

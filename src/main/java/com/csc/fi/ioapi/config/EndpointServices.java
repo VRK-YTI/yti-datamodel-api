@@ -10,7 +10,7 @@ package com.csc.fi.ioapi.config;
  *
  * @author malonen
  */
-public class EndpointServices {
+public final class EndpointServices {
     
 private String endpoint;
     
@@ -28,6 +28,18 @@ public String getCoreReadWriteAddress() {
 
 public String getCoreSparqlAddress() {
     return endpoint+"/core/sparql";
+}
+
+public String getSchemesReadAddress() {
+    return endpoint+"/scheme/get";
+}
+
+public String getSchemesReadWriteAddress() {
+    return endpoint+"/scheme/data";
+}
+
+public String getSchemesSparqlAddress() {
+    return endpoint+"/scheme/sparql";
 }
 
 public String getLocalhostCoreSparqlAddress() {
