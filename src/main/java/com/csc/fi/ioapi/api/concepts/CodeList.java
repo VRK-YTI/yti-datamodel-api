@@ -78,7 +78,7 @@ public class CodeList {
                 + "?codeList a ?codeType . "
                 + "} WHERE { "
                 + "GRAPH ?codeServer {"
-                 + "?codeGroup dcterms:hasPart ?codeList . "
+                + "?codeGroup dcterms:hasPart ?codeList . "
                 + "?codeGroup dcterms:title ?groupTitle . "
                 + "?codeGroup a ?groupType . "
                 + "?codeList dcterms:identifier ?id . "
