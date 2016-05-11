@@ -98,7 +98,7 @@ public class OPHCodeServer {
                         JsonObject groupName = (JsonObject) groupNameIterator.next();
                         String lang = groupName.getString("kieli").toLowerCase();
                         String label = groupName.getString("nimi");
-                        group.addProperty(RDF.type, ResourceFactory.createResource("http://iow.csc.fi/ns/iow#FCodeGroup"));
+                        group.addProperty(RDF.type, ResourceFactory.createResource("http://iow.csc.fi/ns/iow#CFodeGroup"));
                         
                         /* Remove duplicate labels */
                         if(lang.equals("fi")) {
@@ -128,8 +128,9 @@ public class OPHCodeServer {
                     Resource valueScheme = model.createResource(uri+codes.getString("koodistoUri")+"/koodi");
                     valueScheme.addProperty(RDF.type, ResourceFactory.createResource("http://iow.csc.fi/ns/iow#FCodeScheme"));
                     
-                    Property hasPart = ResourceFactory.createProperty("http://purl.org/dc/terms/", "hasPart");    
-                    group.addProperty(hasPart, valueScheme);
+                    Property isPartOf = ResourceFactory.createProperty("http://purl.org/dc/terms/", "isPartOf");    
+                    //group.addProperty(hasPart, valueScheme);
+                    valueScheme.addProperty(isPartOf, group);
                     
                     Property id = ResourceFactory.createProperty("http://purl.org/dc/terms/", "identifier");
                     Property creator = ResourceFactory.createProperty("http://purl.org/dc/terms/", "creator");
