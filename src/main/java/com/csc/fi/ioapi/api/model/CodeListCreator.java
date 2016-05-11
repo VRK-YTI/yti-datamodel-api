@@ -74,6 +74,9 @@ public class CodeListCreator {
                     + "?iri dcterms:title ?label . "
                     + "?iri dcterms:description ?description . "
                     + "?iri dcterms:identifier ?uuid . "
+                    + "?iri dcterms:isPartOf iow:OtherCodeGroup . "
+                    + "iow:OtherCodeGroup dcterms:title 'Muut luokitukset'@fi . "
+                    + "iow:OtherCodeGroup dcterms:title 'Reference data'@en . "
                     + "} WHERE { "
                     + "BIND(UUID() as ?uuid) "
                     + " }";

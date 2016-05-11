@@ -311,7 +311,6 @@ public class OPHCodeServer {
         }
         
         JsonArrayBuilder arrBuild = Json.createArrayBuilder();
-        //JsonArray newArray = Json.createArrayBuilder().build();
         Iterator<String> it = jsonMap.keySet().iterator();
         while(it.hasNext()) {
             String key = it.next();
