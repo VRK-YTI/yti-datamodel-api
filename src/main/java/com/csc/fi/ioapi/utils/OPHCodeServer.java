@@ -8,12 +8,14 @@ import com.csc.fi.ioapi.config.EndpointServices;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.json.Json;
 import javax.json.JsonArray;
+import javax.json.JsonArrayBuilder;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 import javax.json.JsonReader;
@@ -86,34 +88,28 @@ public class OPHCodeServer {
                 
                 JsonArray locGroupName = codeList.getJsonArray("metadata");
                     
+                locGroupName = clean(locGroupName);
+                
                 Iterator<JsonValue> groupNameIterator = locGroupName.iterator();
                 
                 UUID groupUUID = UUID.randomUUID();
                 
                 Resource group = model.createResource("urn:uuid:"+groupUUID);
-                
-                String FINameCheck = null;
+               
                 
                     while(groupNameIterator.hasNext()) {
                         JsonObject groupName = (JsonObject) groupNameIterator.next();
                         String lang = groupName.getString("kieli").toLowerCase();
                         String label = groupName.getString("nimi");
+                        JsonValue kuvausValue = groupName.get("kuvaus");
+                        if(kuvausValue!=null && kuvausValue.getValueType()==ValueType.STRING) {
+                            String comment = groupName.getString("kuvaus");
+                            Property description = ResourceFactory.createProperty("http://purl.org/dc/terms/", "description"); 
+                            group.addLiteral(description, ResourceFactory.createLangLiteral(comment,lang));
+                        }
                         group.addProperty(RDF.type, ResourceFactory.createResource("http://iow.csc.fi/ns/iow#CFodeGroup"));
-                        
-                        /* Remove duplicate labels */
-                        if(lang.equals("fi")) {
-                            FINameCheck = label;
-                            Property name = ResourceFactory.createProperty("http://purl.org/dc/terms/", "title"); 
-                            group.addLiteral(name, ResourceFactory.createLangLiteral(label,lang));
-                        }
-                        else {
-                          if(FINameCheck != null && label.equals(FINameCheck)) {
-                              break;
-                          } else {
-                            Property name = ResourceFactory.createProperty("http://purl.org/dc/terms/", "title"); 
-                            group.addLiteral(name, ResourceFactory.createLangLiteral(label,lang));
-                          }
-                        }
+                        Property name = ResourceFactory.createProperty("http://purl.org/dc/terms/", "title"); 
+                        group.addLiteral(name, ResourceFactory.createLangLiteral(label,lang));
                         
                     }
 
@@ -143,9 +139,9 @@ public class OPHCodeServer {
                     
                     JsonArray locArr = codes.getJsonObject("latestKoodistoVersio").getJsonArray("metadata");
                     
-                    Iterator<JsonValue> codeNameIterator = locArr.iterator();
+                    locArr = clean(locArr);
                     
-                    String FINLabelCheck = null;
+                    Iterator<JsonValue> codeNameIterator = locArr.iterator();
                     
                     while(codeNameIterator.hasNext()) {
                         JsonObject codeName = (JsonObject) codeNameIterator.next();
@@ -153,23 +149,21 @@ public class OPHCodeServer {
                         String lang = codeName.getString("kieli").toLowerCase();
                         String label = codeName.getString("nimi");
                         
-                        /* Remove duplicate labels */
-                        if(lang.equals("fi")) {
-                            FINLabelCheck = label;
-                            Property name = ResourceFactory.createProperty("http://purl.org/dc/terms/", "title"); 
-                            valueScheme.addLiteral(name, ResourceFactory.createLangLiteral(label,lang));
+                        JsonValue kuvausValue = codeName.get("kuvaus");
+                        if(kuvausValue!=null && kuvausValue.getValueType()==ValueType.STRING) {
+                               String comment = codeName.getString("kuvaus");
+                               Property description = ResourceFactory.createProperty("http://purl.org/dc/terms/", "description"); 
+                               valueScheme.addLiteral(description, ResourceFactory.createLangLiteral(comment,lang));
                         }
-                        else {
-                          if(FINLabelCheck != null && label.equals(FINLabelCheck)) {
-                              break;
-                          } else {
-                                Property name = ResourceFactory.createProperty("http://purl.org/dc/terms/", "title"); 
-                                valueScheme.addLiteral(name, ResourceFactory.createLangLiteral(label,lang));
-                          }
+                     
+                        Property name = ResourceFactory.createProperty("http://purl.org/dc/terms/", "title");
+                      
+                        valueScheme.addLiteral(name, ResourceFactory.createLangLiteral(label,lang));
+        
+                       
                         }
-                        
-                    }
-                    
+              
+                  
                 }
                 
                 }
@@ -262,12 +256,25 @@ public class OPHCodeServer {
                         
                     JsonArray locArr = codeObj.getJsonArray("metadata");
                     
+                    locArr = clean(locArr);
+                    
                     Iterator<JsonValue> codeNameIterator = locArr.iterator();
                     
                     while(codeNameIterator.hasNext()) {
                         JsonObject codeName = (JsonObject) codeNameIterator.next();
+                        
+                        String lang = codeName.getString("kieli").toLowerCase();
+                        String label = codeName.getString("nimi");
+                        
                         Property name = ResourceFactory.createProperty("http://purl.org/dc/terms/", "title"); 
-                        codeRes.addLiteral(name, ResourceFactory.createLangLiteral(codeName.getString("nimi"),codeName.getString("kieli").toLowerCase()));
+                        codeRes.addLiteral(name, ResourceFactory.createLangLiteral(label, lang));
+                        
+                        JsonValue kuvausValue = codeName.get("kuvaus");
+                        if(kuvausValue!=null && kuvausValue.getValueType()==ValueType.STRING) {
+                               String comment = codeName.getString("kuvaus");
+                               Property description = ResourceFactory.createProperty("http://purl.org/dc/terms/", "description"); 
+                               codeRes.addLiteral(description, ResourceFactory.createLangLiteral(comment,lang));
+                        }
                         
                     }
                     
@@ -288,6 +295,31 @@ public class OPHCodeServer {
             
         
     }
+    
+    
+   private JsonArray clean(JsonArray argh) {
+        
+        HashMap<String,JsonObject> jsonMap = new HashMap<String,JsonObject>(); 
+        Iterator arrIte = argh.iterator();
+        
+        while(arrIte.hasNext()) {
+            JsonObject obj = (JsonObject) arrIte.next();
+            String name = obj.getString("nimi");
+            String lang = obj.getString("kieli").toLowerCase();
+            if(!jsonMap.containsKey(name) || (jsonMap.containsKey(name) && lang.equals("fi")))
+                jsonMap.put(name, obj);
+        }
+        
+        JsonArrayBuilder arrBuild = Json.createArrayBuilder();
+        //JsonArray newArray = Json.createArrayBuilder().build();
+        Iterator<String> it = jsonMap.keySet().iterator();
+        while(it.hasNext()) {
+            String key = it.next();
+            arrBuild.add((JsonValue)jsonMap.get(key));
+        }
+        
+        return arrBuild.build();
+    } 
     
     
 }
