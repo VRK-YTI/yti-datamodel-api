@@ -13,13 +13,10 @@ import com.csc.fi.ioapi.utils.LDHelper;
 import org.apache.jena.query.ParameterizedSparqlString;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.servlet.ServletContext;
-import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
-import javax.ws.rs.core.Response;
 import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.sparql.engine.http.QueryExceptionHTTP;
 import org.apache.jena.update.UpdateExecutionFactory;
@@ -35,10 +32,13 @@ import com.wordnik.swagger.annotations.ApiParam;
 import com.wordnik.swagger.annotations.ApiResponse;
 import com.wordnik.swagger.annotations.ApiResponses;
 import java.util.UUID;
+import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
+import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
+import javax.ws.rs.core.Response;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
 import org.apache.jena.iri.IRIFactory;
@@ -231,8 +231,8 @@ public class ConceptSuggestion {
   })
   public Response postJson(
           @ApiParam(value = "New graph in application/ld+json", required = false) String body, 
-          @ApiParam(value = "ConceptSuggestion ID", required = true) String conceptID,
-          @QueryParam("model") String model,
+          @ApiParam(value = "ConceptSuggestion ID", required = true) @QueryParam("concept") String conceptID,
+          @ApiParam(value = "Model ID", required = true) @QueryParam("model") String model,
           @Context HttpServletRequest request) {
               
         HttpSession session = request.getSession();
