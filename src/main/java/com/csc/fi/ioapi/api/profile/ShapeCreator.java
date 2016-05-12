@@ -14,6 +14,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import com.csc.fi.ioapi.config.EndpointServices;
+import com.csc.fi.ioapi.utils.ConceptMapper;
 import com.csc.fi.ioapi.utils.ErrorMessage;
 import com.csc.fi.ioapi.utils.GraphManager;
 import com.csc.fi.ioapi.utils.JerseyFusekiClient;
@@ -168,6 +169,9 @@ public class ShapeCreator {
             pss.setIri("shapeIRI",shapeIRI);
             
             logger.info(pss.toString());
+            
+            
+            ConceptMapper.addConceptFromReferencedClass(profileID,classID);
             
             return JerseyFusekiClient.constructGraphFromService(pss.toString(), service);
     }   

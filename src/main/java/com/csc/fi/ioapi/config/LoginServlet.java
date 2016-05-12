@@ -57,11 +57,12 @@ public class LoginServlet extends HttpServlet {
         
         String target = getParameterAsString(request, "target");
         
-        String decodedTarget = URLDecoder.decode(target, "ISO-8859-1");
+        if(target!=null) {
+            String decodedTarget = URLDecoder.decode(target, "ISO-8859-1");
         
-        if(!debug && decodedTarget!=null && decodedTarget.startsWith(ApplicationProperties.getDefaultDomain()))
-            target = decodedTarget;
-        
+            if(!debug && decodedTarget!=null && decodedTarget.startsWith(ApplicationProperties.getDefaultDomain()))
+                target = decodedTarget;
+        }
         if(target!=null && (debug || target.startsWith(ApplicationProperties.getDefaultDomain())))
             response.sendRedirect(target);
         else 

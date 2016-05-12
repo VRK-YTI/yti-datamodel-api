@@ -15,6 +15,8 @@ import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
 import org.apache.jena.iri.IRIFactory;
 import com.csc.fi.ioapi.config.EndpointServices;
+import com.csc.fi.ioapi.config.LoginSession;
+import com.csc.fi.ioapi.utils.ConceptMapper;
 import com.csc.fi.ioapi.utils.ErrorMessage;
 import com.csc.fi.ioapi.utils.JerseyFusekiClient;
 import com.csc.fi.ioapi.utils.LDHelper;
@@ -24,6 +26,10 @@ import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiParam;
 import com.wordnik.swagger.annotations.ApiResponse;
 import com.wordnik.swagger.annotations.ApiResponses;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.PUT;
  
 /**
  * Root resource (exposed at "class" path)
@@ -112,4 +118,75 @@ public class ModelConcepts {
      
   }
  
+  @PUT
+  @ApiOperation(value = "PUT existing concept reference to model", notes = "Adds concept reference to model concetps")
+  @ApiResponses(value = {
+      @ApiResponse(code = 404, message = "No such resource"),
+      @ApiResponse(code = 400, message = "Invalid model supplied"),
+      @ApiResponse(code = 404, message = "Service not found"),
+      @ApiResponse(code = 500, message = "Internal server error")
+  })
+  public Response putConceptToModel(
+      @ApiParam(value = "Concept id", required = true)
+      @QueryParam("id") String id,
+      @ApiParam(value = "Model id", required = true)
+      @QueryParam("model") String model) {
+  
+      IRIFactory iriFactory = IRIFactory.iriImplementation();
+       /* Check that URIs are valid */
+      IRI modelIRI,idIRI;
+        try {
+            modelIRI = iriFactory.construct(model);
+            idIRI = iriFactory.construct(id);
+        }
+        catch (IRIException e) {
+            return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
+        }
+      
+      ConceptMapper.addConceptToLocalSKOSCollection(model,id);
+  
+       return Response.status(200).entity("{}").build();
+  }
+  
+  @DELETE
+  @ApiOperation(value = "Delete concept reference from model", notes = "Delete concept reference from model")
+  @ApiResponses(value = {
+      @ApiResponse(code = 404, message = "No such resource"),
+      @ApiResponse(code = 400, message = "Cannot be removed"),
+      @ApiResponse(code = 404, message = "Service not found"),
+      @ApiResponse(code = 500, message = "Internal server error")
+  })
+  public Response deleteConceptFromModel(
+      @ApiParam(value = "Concept id", required = true)
+      @QueryParam("id") String id,
+      @ApiParam(value = "Model id", required = true)
+      @QueryParam("model") String model,
+      @Context HttpServletRequest request) {
+  
+      IRIFactory iriFactory = IRIFactory.iriImplementation();
+       /* Check that URIs are valid */
+      IRI modelIRI,idIRI;
+        try {
+            modelIRI = iriFactory.construct(model);
+            idIRI = iriFactory.construct(id);
+        }
+        catch (IRIException e) {
+            return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
+        }
+        
+       HttpSession session = request.getSession();
+
+       if(session==null) return Response.status(401).entity(ErrorMessage.UNAUTHORIZED).build();
+
+       LoginSession login = new LoginSession(session);
+
+       if(!login.isLoggedIn() || !login.hasRightToEditModel(model))
+          return Response.status(401).entity(ErrorMessage.UNAUTHORIZED).build();
+      
+      if(ConceptMapper.deleteModelReference(model,id))
+         return Response.status(200).entity("{}").build();
+      else
+         return Response.status(400).entity(ErrorMessage.USEDIRI).build();
+  }
+  
 }
