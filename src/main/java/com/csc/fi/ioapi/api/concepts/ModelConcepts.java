@@ -28,13 +28,13 @@ import com.wordnik.swagger.annotations.ApiResponses;
 /**
  * Root resource (exposed at "class" path)
  */
-@Path("localConcept")
-@Api(value = "/localConcept", description = "Local concept operations")
-public class LocalConcepts {
+@Path("modelConcepts")
+@Api(value = "/modelConcepts", description = "Local concept operations")
+public class ModelConcepts {
 
     @Context ServletContext context;
     EndpointServices services = new EndpointServices();
-    private static final Logger logger = Logger.getLogger(LocalConcepts.class.getName());
+    private static final Logger logger = Logger.getLogger(ModelConcepts.class.getName());
     
   @GET
   @Produces("application/ld+json")
@@ -106,7 +106,7 @@ public class LocalConcepts {
 
         
         pss.setCommandText(queryString);
-logger.info(pss.toString());
+        logger.info(pss.toString());
 
         return JerseyFusekiClient.constructGraphFromService(pss.toString(), services.getTempConceptReadSparqlAddress());
      

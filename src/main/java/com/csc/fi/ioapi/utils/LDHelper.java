@@ -52,7 +52,7 @@ public class LDHelper {
         put("sd","http://www.w3.org/ns/sparql-service-description#");
         put("text","http://jena.apache.org/text#");
         put("sh","http://www.w3.org/ns/shacl#");
-        put("iow","http://urn.fi/urn:nbn:fi:csc-iow-meta#");
+        put("iow","http://iow.csc.fi/ns/iow#");
         put("skos","http://www.w3.org/2004/02/skos/core#");
         put("prov","http://www.w3.org/ns/prov#");
         put("dcap","http://purl.org/ws-mmi-dc/terms/");

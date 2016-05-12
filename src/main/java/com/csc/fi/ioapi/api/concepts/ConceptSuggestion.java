@@ -7,6 +7,8 @@ package com.csc.fi.ioapi.api.concepts;
 
 import com.csc.fi.ioapi.config.EndpointServices;
 import com.csc.fi.ioapi.config.LoginSession;
+import com.csc.fi.ioapi.utils.ErrorMessage;
+import com.csc.fi.ioapi.utils.JerseyFusekiClient;
 import com.csc.fi.ioapi.utils.LDHelper;
 import org.apache.jena.query.ParameterizedSparqlString;
 import java.util.logging.Level;
@@ -35,10 +37,12 @@ import com.wordnik.swagger.annotations.ApiResponses;
 import java.util.UUID;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
+import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
 import org.apache.jena.iri.IRIFactory;
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
 /**
  * REST Web Service
@@ -57,7 +61,7 @@ public class ConceptSuggestion {
   
   @GET
   @Produces("application/ld+json")
-  @ApiOperation(value = "Get property from model", notes = "Get concept suggestions with concept ID, scheme ID or user ID. Concept suggestions with Scheme ID should be most useful. ")
+  @ApiOperation(value = "Get concept suggestion", notes = "Get concept suggestions with concept ID, scheme ID or user ID. Concept suggestions with Scheme ID should be most useful. ")
   @ApiResponses(value = {
       @ApiResponse(code = 400, message = "Invalid model supplied"),
       @ApiResponse(code = 404, message = "Service not found"),
@@ -130,13 +134,14 @@ public class ConceptSuggestion {
  
 
     	@PUT
-	@ApiOperation(value = "Create new class property", notes = "Create new class property")
-	@ApiResponses(value = { @ApiResponse(code = 200, message = "New property is created"),
+	@ApiOperation(value = "Create concept suggestion", notes = "Create new concept suggestion")
+	@ApiResponses(value = { @ApiResponse(code = 200, message = "New concept is created"),
 			@ApiResponse(code = 400, message = "Invalid ID supplied"),
 			@ApiResponse(code = 403, message = "Invalid IRI in parameter"),
                         @ApiResponse(code = 401, message = "User is not logged in"),
 			@ApiResponse(code = 404, message = "Service not found") })
-	public Response newClassProperty(
+	public Response newConceptSuggestion(
+                @ApiParam(value = "Model ID", required = true) @QueryParam("modelID") String modelID,
                 @ApiParam(value = "Scheme ID", required = true) @QueryParam("schemeID") String schemeID,
                 @ApiParam(value = "Label", required = true) @QueryParam("label") String label,
 		@ApiParam(value = "Comment", required = true) @QueryParam("comment") String comment,
@@ -153,16 +158,22 @@ public class ConceptSuggestion {
                 if(!login.isLoggedIn()) return Response.status(401).build();
             
 		IRI schemeIRI;
+                IRI modelIRI;
                 IRI topIRI = null;
                 
+                
 		try {
-			IRIFactory iri = IRIFactory.semanticWebImplementation();
+			IRIFactory iri = IRIFactory.iriImplementation();
 			schemeIRI = iri.construct(schemeID);
+                        modelIRI = iri.construct(modelID);
                         if(topConceptID!=null && !topConceptID.equals("undefined")) topIRI = iri.construct(topConceptID);
 		} catch (IRIException e) {
 			logger.log(Level.WARNING, "CLASS OR PROPERTY ID is invalid IRI!");
-			return Response.status(403).build();
-		}
+			return Response.status(401).entity(ErrorMessage.INVALIDIRI).build();
+		} catch(NullPointerException e) {
+                    	logger.log(Level.WARNING, "CLASS OR PROPERTY ID is invalid IRI!");
+			return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
+                }
                 
                 UUID conceptUUID = UUID.randomUUID();
                 
@@ -173,6 +184,7 @@ public class ConceptSuggestion {
 		
                 queryString = "INSERT { "
                         + "GRAPH ?concept { "
+                        + "?concept rdfs:isDefinedBy ?model . "
                         + "?concept skos:inScheme ?scheme . "
                         + "?concept skos:broader ?top . "
                         + "?concept a skos:Concept . "
@@ -184,6 +196,7 @@ public class ConceptSuggestion {
                         + "WHERE { BIND(NOW() as ?time)}";
 		
                 pss.setCommandText(queryString);
+                pss.setIri("model",modelIRI);
 		pss.setIri("scheme", schemeIRI);
                 pss.setLiteral("label", ResourceFactory.createLangLiteral(label,lang));
                 pss.setLiteral("comment", ResourceFactory.createLangLiteral(comment,lang));
@@ -203,5 +216,64 @@ public class ConceptSuggestion {
 			return Response.status(400).build();
 		}
 	}
+        
+        
+  @POST
+  @ApiOperation(value = "Update concept suggestion", notes = "PUT Body should be json-ld")
+  @ApiResponses(value = {
+      @ApiResponse(code = 201, message = "Graph is created"),
+      @ApiResponse(code = 204, message = "Graph is saved"),
+      @ApiResponse(code = 401, message = "Unauthorized"),
+      @ApiResponse(code = 405, message = "Update not allowed"),
+      @ApiResponse(code = 403, message = "Illegal graph parameter"),
+      @ApiResponse(code = 400, message = "Invalid graph supplied"),
+      @ApiResponse(code = 500, message = "Bad data?") 
+  })
+  public Response postJson(
+          @ApiParam(value = "New graph in application/ld+json", required = false) String body, 
+          @ApiParam(value = "ConceptSuggestion ID", required = true) String conceptID,
+          @QueryParam("model") String model,
+          @Context HttpServletRequest request) {
+              
+        HttpSession session = request.getSession();
+        
+        if(session==null) return Response.status(401).entity(ErrorMessage.UNAUTHORIZED).build();
+        
+        LoginSession login = new LoginSession(session);
+        
+        if(!login.isLoggedIn() || !login.hasRightToEditModel(model))
+            return Response.status(401).entity(ErrorMessage.UNAUTHORIZED).build();
+                
+        IRIFactory iriFactory = IRIFactory.iriImplementation();
+        IRI modelIRI;    
+        
+        /* Check that URIs are valid */
+        try {
+            modelIRI = iriFactory.construct(model);
+        }
+        catch (IRIException e) {
+            return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
+        }
+
+        if(isNotEmpty(body)) {
+            
+        /* Put graph to database */ 
+        ClientResponse response = JerseyFusekiClient.putGraphToTheService(conceptID, body, services.getTempConceptReadWriteAddress());
+           
+           if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
+               /* TODO: Create prov events from failed updates? */
+               logger.log(Level.WARNING, "Unexpected: Not updated: "+conceptID);
+               return Response.status(response.getStatus()).entity(ErrorMessage.UNEXPECTED).build();
+           } 
+            
+        } else {
+             return Response.status(403).entity(ErrorMessage.INVALIDPARAMETER).build();
+        }
+        
+        return Response.status(204).entity("{}").build();
+        
+  }
+        
+        
   
 }
