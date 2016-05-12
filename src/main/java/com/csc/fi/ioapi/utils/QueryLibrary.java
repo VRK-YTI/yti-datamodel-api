@@ -20,6 +20,8 @@ public class QueryLibrary {
     final public static String modelQuery = LDHelper.expandSparqlQuery(
                      "CONSTRUCT { "
                      + "?s ?p ?o . "
+                     + "?graph iow:codeLists ?codeList . "
+                     + "?codeList ?codeP ?codeO . "
                      + "?graph dcterms:references ?ref . "
                      + "?ref a ?refType . "
                      + "?ref dcterms:title ?title . "
