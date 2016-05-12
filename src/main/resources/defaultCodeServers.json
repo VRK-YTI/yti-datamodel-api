@@ -1,9 +1,9 @@
 {
   "@id": "https://virkailija.opintopolku.fi/koodisto-service/rest/json/",
-  "dcterms:description": {"fi":"Opintohallinnon koodistopalvelu joka sisältää opintopolun ja viranomaistiedonkeruun koodistoja"
+  "description": {"fi":"Opintohallinnon koodistopalvelu joka sisältää opintopolun ja viranomaistiedonkeruun koodistoja"
   },
   "identifier": "urn:uuid:25e23b99-7b67-493b-af08-8d86dc068b08",
-  "dcterms:title": {"fi":"OPH koodistopalvelu"
+  "title": {"fi":"OPH koodistopalvelu"
   },
   "@context": {
     "identifier": {
