@@ -21,6 +21,8 @@ public class QueryLibrary {
                      "CONSTRUCT { "
                      + "?s ?p ?o . "
                      + "?graph iow:codeLists ?codeList . "
+                     + "?codeList dcterms:isPartOf ?codeGroup ."
+                     + "?codeGroup ?codeGP ?codeGO . "
                      + "?codeList ?codeP ?codeO . "
                      + "?graph dcterms:references ?ref . "
                      + "?ref a ?refType . "
