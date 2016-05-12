@@ -7,7 +7,9 @@ package com.csc.fi.ioapi.api.concepts;
 
 import com.csc.fi.ioapi.config.EndpointServices;
 import com.csc.fi.ioapi.config.LoginSession;
+import com.csc.fi.ioapi.utils.ConceptMapper;
 import com.csc.fi.ioapi.utils.ErrorMessage;
+import com.csc.fi.ioapi.utils.GraphManager;
 import com.csc.fi.ioapi.utils.JerseyFusekiClient;
 import com.csc.fi.ioapi.utils.LDHelper;
 import org.apache.jena.query.ParameterizedSparqlString;
@@ -35,6 +37,7 @@ import java.util.UUID;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -206,7 +209,8 @@ public class ConceptSuggestion {
          
 		UpdateRequest query = pss.asUpdate();
 		UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(query, services.getTempConceptSparqlUpdateAddress());
-
+                ConceptMapper.addConceptToLocalSKOSCollection(modelID,"urn:uuid:"+conceptUUID);
+                
 		try {
 			qexec.execute();
                         // TODO: Create JSON-LD?
@@ -231,8 +235,8 @@ public class ConceptSuggestion {
   })
   public Response postJson(
           @ApiParam(value = "New graph in application/ld+json", required = false) String body, 
-          @ApiParam(value = "ConceptSuggestion ID", required = true) @QueryParam("concept") String conceptID,
-          @ApiParam(value = "Model ID", required = true) @QueryParam("model") String model,
+          @ApiParam(value = "ConceptSuggestion ID", required = true) @QueryParam("conceptID") String conceptID,
+          @ApiParam(value = "Model ID", required = true) @QueryParam("modelID") String model,
           @Context HttpServletRequest request) {
               
         HttpSession session = request.getSession();
@@ -274,6 +278,46 @@ public class ConceptSuggestion {
         
   }
         
+  
+  @DELETE
+  @ApiOperation(value = "Delete concept suggestion", notes = "Deletes graph and references to it")
+  @ApiResponses(value = {
+      @ApiResponse(code = 204, message = "Graph is deleted"),
+      @ApiResponse(code = 403, message = "Illegal graph parameter"),
+      @ApiResponse(code = 404, message = "No such graph"),
+      @ApiResponse(code = 401, message = "Unauthorized")
+  })
+  public Response deleteConceptSuggestion(
+          @ApiParam(value = "Model ID", required = true) 
+          @QueryParam("modelID") String model,
+          @ApiParam(value = "Concept ID", required = true) 
+          @QueryParam("conceptID") String id,
+          @Context HttpServletRequest request) {
+      
+      IRIFactory iriFactory = IRIFactory.iriImplementation();
+       /* Check that URIs are valid */
+      IRI modelIRI,idIRI;
+        try {
+            modelIRI = iriFactory.construct(model);
+            idIRI = iriFactory.construct(id);
+        }
+        catch (IRIException e) {
+            return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
+        }
+      
+       HttpSession session = request.getSession();
+
+       if(session==null) return Response.status(401).entity(ErrorMessage.UNAUTHORIZED).build();
+
+       LoginSession login = new LoginSession(session);
+
+       if(!login.isLoggedIn() || !login.hasRightToEditModel(model))
+          return Response.status(401).entity(ErrorMessage.UNAUTHORIZED).build();
+       
+       ConceptMapper.deleteConceptSuggestion(model,id);
+       
+       return Response.status(204).entity("{}").build();
+  }
         
   
 }

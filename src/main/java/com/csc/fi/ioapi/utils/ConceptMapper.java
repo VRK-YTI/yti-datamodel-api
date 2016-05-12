@@ -23,6 +23,8 @@ import javax.ws.rs.core.Response;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.riot.RDFLanguages;
+import org.apache.jena.web.DatasetAdapter;
+import org.apache.jena.web.DatasetGraphAccessorHTTP;
 
 /**
  *
@@ -70,6 +72,32 @@ public class ConceptMapper {
         String query
                 = " INSERT { GRAPH ?skosCollection { ?skosCollection skos:member ?concept . }}"
                 + " WHERE { GRAPH ?concept { ?s ?p ?o . } }";
+
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+        pss.setIri("skosCollection", model+"/skos#");
+        pss.setIri("concept", concept);
+        pss.setCommandText(query);
+        
+        logger.info(pss.toString());
+
+        UpdateRequest queryObj = pss.asUpdate();
+        UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, services.getTempConceptSparqlUpdateAddress());
+        qexec.execute();
+
+    }
+    
+    
+        public static void deleteConceptSuggestion(String model, String concept) {
+        
+        DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(services.getTempConceptReadWriteAddress());
+        DatasetAdapter adapter = new DatasetAdapter(accessor);
+        
+        adapter.deleteModel(concept);
+                   
+        String query
+                = " DELETE { GRAPH ?skosCollection { ?skosCollection skos:member ?concept . }}"
+                + " WHERE { GRAPH ?skosCollection { ?skosCollection skos:member ?concept . }}";
 
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);

@@ -107,7 +107,7 @@ public class OPHCodeServer {
                             Property description = ResourceFactory.createProperty("http://purl.org/dc/terms/", "description"); 
                             group.addLiteral(description, ResourceFactory.createLangLiteral(comment,lang));
                         }
-                        group.addProperty(RDF.type, ResourceFactory.createResource("http://iow.csc.fi/ns/iow#CFodeGroup"));
+                        group.addProperty(RDF.type, ResourceFactory.createResource("http://iow.csc.fi/ns/iow#FCodeGroup"));
                         Property name = ResourceFactory.createProperty("http://purl.org/dc/terms/", "title"); 
                         group.addLiteral(name, ResourceFactory.createLangLiteral(label,lang));
                         
