@@ -31,7 +31,7 @@ import org.apache.jena.iri.IRIFactory;
 /**
  * Root resource (exposed at "valueSchemeCreator" path)
  */
-@Path("coreListCreator")
+@Path("codeListCreator")
 @Api(value = "/codeListCreator", description = "Create reusable code list that is not resolved")
 public class CodeListCreator {
 
