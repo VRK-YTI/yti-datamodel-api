@@ -46,8 +46,8 @@ public class ModelConcepts {
   @Produces("application/ld+json")
   @ApiOperation(value = "Get used concepts from model", notes = "Get used concepts in JSON-LD")
   @ApiResponses(value = {
-      @ApiResponse(code = 404, message = "No such resource"),
-      @ApiResponse(code = 400, message = "Invalid model supplied"),
+      @ApiResponse(code = 404, message = "No such resource"), 
+     @ApiResponse(code = 400, message = "Invalid model supplied"),
       @ApiResponse(code = 404, message = "Service not found"),
       @ApiResponse(code = 500, message = "Internal server error")
   })
