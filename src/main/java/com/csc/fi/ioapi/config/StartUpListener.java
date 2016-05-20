@@ -44,7 +44,7 @@ public class StartUpListener implements ServletContextListener {
     
     private static void initCodeServers() {
         
-    OPHCodeServer codeServer = new OPHCodeServer("https://virkailija.opintopolku.fi/koodisto-service/rest/json/", true);    
+    OPHCodeServer codeServer = new OPHCodeServer("https://virkailija.opintopolku.fi/koodisto-service/rest/json/", true);   
     
     if(!codeServer.status) logger.warning("Code server was not initialized!");
     

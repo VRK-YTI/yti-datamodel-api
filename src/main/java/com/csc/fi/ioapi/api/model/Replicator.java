@@ -80,7 +80,7 @@ public class Replicator {
       @ApiResponse(code = 500, message = "Bad data?") 
   })
   public Response postJson(
-          @ApiParam(value = "Service ID", required = true) 
+          @ApiParam(value = "IOW Service ID in form of http://domain/api/rest/ ", required = true) 
                 @QueryParam("service") 
                 String service,
                 @ApiParam(value = "Model ID") 
