@@ -3,6 +3,7 @@
  */
 package com.csc.fi.ioapi.utils;
 
+import com.csc.fi.ioapi.config.ApplicationProperties;
 import com.csc.fi.ioapi.config.EndpointServices;
 import org.apache.jena.query.DatasetAccessor;
 import org.apache.jena.query.DatasetAccessorFactory;
@@ -84,13 +85,14 @@ public class GraphManager {
         }
     }
     
-    public static boolean isExistingPrefix(String prefix) {
+public static boolean isExistingPrefix(String prefix) {
 
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
-        String queryString = " ASK { GRAPH ?graph { ?s dcap:preferredXMLNamespacePrefix ?prefix . }}";
+        String queryString = " ASK { {GRAPH ?graph { ?s ?p ?o . }} UNION { ?s a dcterms:Standard . ?s dcap:preferredXMLNamespacePrefix ?prefix . }}";
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
         pss.setCommandText(queryString);
-        pss.setLiteral("prefix",prefix);
+        pss.setLiteral("prefix", prefix);
+        pss.setIri("graph",ApplicationProperties.getDefaultDomain()+"ns/"+prefix);
 
         Query query = pss.asQuery();
         QueryExecution qexec = QueryExecutionFactory.sparqlService(services.getCoreSparqlAddress(), query);
