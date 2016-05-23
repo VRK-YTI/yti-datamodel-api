@@ -108,7 +108,7 @@ public class NamespaceManager {
         
         DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(services.getCoreReadWriteAddress());
 	DatasetAdapter adapter = new DatasetAdapter(accessor);
-	adapter.add("urn:csc:iow:namespaces", getDefaultNamespaceModel());
+	adapter.putModel("urn:csc:iow:namespaces", getDefaultNamespaceModel());
         
     }
     
@@ -125,7 +125,7 @@ public class NamespaceManager {
         
       	DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(services.getImportsReadWriteAddress());
 	DatasetAdapter adapter = new DatasetAdapter(accessor);
-	adapter.add(namespace, model);
+	adapter.putModel(namespace, model);
     
     }
     

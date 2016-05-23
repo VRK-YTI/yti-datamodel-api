@@ -28,7 +28,6 @@
     "afn": "http://jena.hpl.hp.com/ARQ/function#",
     "skos": "http://www.w3.org/2004/02/skos/core#",
     "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
-    "iow": "http://urn.fi/urn:nbn:fi:csc-iow-meta#",
     "sd": "http://www.w3.org/ns/sparql-service-description#",
     "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "sh": "http://www.w3.org/ns/shacl#",

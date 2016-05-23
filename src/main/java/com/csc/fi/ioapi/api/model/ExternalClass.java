@@ -149,11 +149,11 @@ public class ExternalClass {
                       + "UNION"
                      + "{ ?classIRI rdfs:label ?label . FILTER(LANG(?label)!='') }"
                      + "{ ?classIRI ?commentPred ?commentStr . "
-                        + "VALUES ?commentPred { rdfs:comment skos:definition dcterms:description dc:description }"
+                        + "VALUES ?commentPred { rdfs:comment skos:definition dcterms:description dc:description prov:definition }"
                         + "FILTER(LANG(?commentStr) = '') BIND(STRLANG(?commentStr,'en') as ?comment) }"
                       + "UNION"
                      + "{ ?classIRI ?commentPred ?comment . "
-                     + "VALUES ?commentPred { rdfs:comment skos:definition dcterms:description dc:description }"
+                     + "VALUES ?commentPred { rdfs:comment skos:definition dcterms:description dc:description prov:definition }"
                      + " FILTER(LANG(?comment)!='') }"
                     + "OPTIONAL { "
                     + "?classIRI rdfs:subClassOf* ?superclass . "
@@ -184,6 +184,8 @@ public class ExternalClass {
             pss.setCommandText(queryString);
 
             pss.setIri("classIRI", idIRI);
+            
+            logger.info(pss.toString());
             
             if(model!=null && !model.equals("undefined")) {
                   pss.setIri("library", model);

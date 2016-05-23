@@ -128,8 +128,10 @@ public class ShapeCreator {
                     + "BIND(now() as ?modified) "
                     + "OPTIONAL { ?classIRI a ?type . "
                     + "VALUES ?type { owl:Class rdfs:Class }}"
+                        
                     + "OPTIONAL {?classIRI rdfs:label ?labelStr . FILTER(LANG(?labelStr) = '') BIND(STRLANG(?labelStr,'en') as ?label) }"
                     + "OPTIONAL {?classIRI rdfs:label ?label . FILTER(LANG(?label)!='') }"
+                        
                     + "OPTIONAL { ?classIRI rdfs:comment ?commentStr . "
                     + "BIND(STRLANG(?commentStr,'en') as ?comment) "
                     + "}"
@@ -150,10 +152,10 @@ public class ShapeCreator {
                     
                     /* Predicate comments - if lang unknown create english tag */
                     + "OPTIONAL { ?predicate ?predicateCommentPred ?propertyCommentStr . "
-                    + "VALUES ?predicateCommentPred { rdfs:comment skos:definition dcterms:description dc:description }"
+                    + "VALUES ?predicateCommentPred { rdfs:comment skos:definition prov:definition dcterms:description dc:description }"
                     + "FILTER(LANG(?propertyCommentStr) = '') BIND(STRLANG(?propertyCommentStr,'en') as ?propertyComment) }"
                     + "OPTIONAL { ?predicate ?predicateCommentPred ?propertyComment . "
-                    + "VALUES ?predicateCommentPred { rdfs:comment skos:definition dcterms:description dc:description }"
+                    + "VALUES ?predicateCommentPred { rdfs:comment skos:definition prov:definition dcterms:description dc:description }"
                     + " FILTER(LANG(?propertyComment)!='') }"
                         
                     + "}"    

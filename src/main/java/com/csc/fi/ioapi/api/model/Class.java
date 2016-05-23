@@ -24,6 +24,7 @@ import org.apache.jena.iri.IRIException;
 import org.apache.jena.iri.IRIFactory;
 import com.csc.fi.ioapi.config.EndpointServices;
 import com.csc.fi.ioapi.config.LoginSession;
+import com.csc.fi.ioapi.utils.ConceptMapper;
 import com.csc.fi.ioapi.utils.ErrorMessage;
 import com.csc.fi.ioapi.utils.GraphManager;
 import com.csc.fi.ioapi.utils.JerseyFusekiClient;
@@ -244,6 +245,7 @@ public class Class {
                 // Selfreferences not allowed
                 Response.status(403).entity(ErrorMessage.USEDIRI).build();
             } else {
+                ConceptMapper.addConceptFromReferencedClass(model,id);
                 GraphManager.insertExistingGraphReferenceToModel(id, model);
                 return Response.status(204).build();
             }

@@ -89,6 +89,7 @@ public class ConceptMapper {
         pss.setIri("modelService",services.getLocalhostCoreSparqlAddress());
         pss.setCommandText(query);
         
+        logger.info("ADDING CONCEPT from "+classID);
         logger.info(pss.toString());
 
         UpdateRequest queryObj = pss.asUpdate();

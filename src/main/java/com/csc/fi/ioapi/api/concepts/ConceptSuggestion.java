@@ -100,11 +100,13 @@ public class ConceptSuggestion {
           queryString = "CONSTRUCT { "
                   + "?concept a ?type . "
                   + "?concept skos:inScheme ?scheme . "
+                  + "?concept rdfs:isDefinedBy ?model . "
                   + "?concept skos:broader ?top . "
                   + "?concept prov:generatedAtTime ?time . "
                   + "?concept skos:prefLabel ?label . "
                   + "?concept skos:definition ?comment . "
-                  + "?concept prov:wasAssociatedWith ?user . } "
+                  + "?concept prov:wasAssociatedWith ?user . "
+                  + "?concept rdfs:isDefinedBy ?} "
                   + "WHERE {"
                   + "GRAPH ?concept { "
                   + "?concept a ?type . "
@@ -114,6 +116,7 @@ public class ConceptSuggestion {
                   + "?concept skos:definition ?comment . "
                   + "?concept prov:wasAssociatedWith ?user . "
                   + "OPTIONAL { ?concept skos:broader ?top . }"
+                  + "OPTIONAL { ?concept rdfs:isDefinedBy ?model . }"
                   + "}}";
   	  
           pss.setCommandText(queryString);
@@ -191,7 +194,7 @@ public class ConceptSuggestion {
                         + "?concept skos:inScheme ?scheme . "
                         + "?concept skos:broader ?top . "
                         + "?concept a skos:Concept . "
-                        + "?concept a prov:Entity . "
+                        + "?concept a iow:ConceptSuggestion . "
                         + "?concept skos:prefLabel ?label . "
                         + "?concept skos:definition ?comment . "
                         + "?concept prov:generatedAtTime ?time . "
