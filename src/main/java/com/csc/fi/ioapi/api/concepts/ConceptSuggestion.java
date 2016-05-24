@@ -106,7 +106,7 @@ public class ConceptSuggestion {
                   + "?concept skos:prefLabel ?label . "
                   + "?concept skos:definition ?comment . "
                   + "?concept prov:wasAssociatedWith ?user . "
-                  + "?concept rdfs:isDefinedBy ?} "
+                  + "?concept rdfs:isDefinedBy ?model . } "
                   + "WHERE {"
                   + "GRAPH ?concept { "
                   + "?concept a ?type . "
