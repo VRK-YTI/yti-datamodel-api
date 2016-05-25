@@ -280,8 +280,9 @@ public class ConceptSuggestion {
         return Response.status(204).entity("{}").build();
         
   }
-        
   
+  // TODO: DO THIS FROM MODELCONCEPTS API: ConceptMapper.deleteConceptSuggestion(model,id);
+  /*
   @DELETE
   @ApiOperation(value = "Delete concept suggestion", notes = "Deletes graph and references to it")
   @ApiResponses(value = {
@@ -298,7 +299,6 @@ public class ConceptSuggestion {
           @Context HttpServletRequest request) {
       
       IRIFactory iriFactory = IRIFactory.iriImplementation();
-       /* Check that URIs are valid */
       IRI modelIRI,idIRI;
         try {
             modelIRI = iriFactory.construct(model);
@@ -321,6 +321,6 @@ public class ConceptSuggestion {
        
        return Response.status(204).entity("{}").build();
   }
-        
+ */    
   
 }
