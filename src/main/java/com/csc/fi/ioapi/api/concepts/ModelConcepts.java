@@ -188,7 +188,7 @@ public class ModelConcepts {
       if(ConceptMapper.deleteModelReference(model,id))
          return Response.status(200).entity("{}").build();
       else
-         return Response.status(400).entity(ErrorMessage.USEDIRI).build();
+         return Response.status(400).entity(ErrorMessage.DEPEDENCIES).build();
   }
   
 }
