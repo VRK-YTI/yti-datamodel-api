@@ -80,17 +80,15 @@ public class Usage {
                     + "?resourceModel rdfs:label ?modelLabel . "
                     + "} WHERE { "
                     + "GRAPH ?resource { "
+                    + "?resource dcterms:subject ?concept . "
                     + "?resource a ?type . "
                     + "?resource rdfs:label ?label . "
-                    + "?resource rdfs:comment ?comment . "
-                    + "?resource rdfs:isDefinedBy ?resourceModel . "
-                    + "?resource dcterms:subject ?concept . "
-                    + "?concept skos:prefLabel ?prefLabel . "
-                    + "}"
+                    + "OPTIONAL { ?resource rdfs:comment ?comment . }"
+                    + "OPTIONAL {?resource rdfs:isDefinedBy ?resourceModel . }"
                     + "GRAPH ?resourceModel {"
                     + "?resourceModel a ?modelType . "
                     + "?resourceModel rdfs:label ?modelLabel . }"
-                    + "}";
+                    + "}}";
             
             String queryString = "CONSTRUCT  { "
                     + "?resource a ?type . "

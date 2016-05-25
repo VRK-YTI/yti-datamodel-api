@@ -118,10 +118,12 @@ public class ConceptSuggestion {
                   + "?concept skos:definition ?comment . "
                   + "?concept prov:wasAssociatedWith ?user . "
                   + "OPTIONAL { ?concept skos:broader ?top . }"
-                  + "OPTIONAL { ?concept rdfs:isDefinedBy ?model . }"
-                  + "OPTIONAL {?model a ?modelType . "
-                  + "?model rdfs:label ?modelLabel . "
-                  +"}"
+                  + "OPTIONAL { ?concept rdfs:isDefinedBy ?model . "
+                  + "SERVICE ?modelService { "
+                        + "GRAPH ?model {"
+                        + " ?model a ?modelType . "
+                        + " ?model rdfs:label ?modelLabel . "
+                        + "}}}"
                   + "}}";
   	  
           pss.setCommandText(queryString);
@@ -129,7 +131,8 @@ public class ConceptSuggestion {
           if(conceptIRI!=null) pss.setIri("concept", conceptIRI);
           if(userIRI!=null) pss.setIri("user", userIRI);
           if(schemeIRI!=null) pss.setIri("scheme", schemeIRI);
-          
+          pss.setIri("modelService",services.getLocalhostCoreSparqlAddress());
+                
           WebResource webResource = client.resource(services.getTempConceptReadSparqlAddress())
                                       .queryParam("query", UriComponent.encode(pss.toString(),UriComponent.Type.QUERY));
 
