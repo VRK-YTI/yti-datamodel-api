@@ -238,8 +238,7 @@ public class ConceptSuggestion {
   })
   public Response postJson(
           @ApiParam(value = "New graph in application/ld+json", required = false) String body, 
-          @ApiParam(value = "ConceptSuggestion ID", required = true) @QueryParam("conceptID") String conceptID,
-          @ApiParam(value = "Model ID", required = true) @QueryParam("modelID") String model,
+          @ApiParam(value = "ConceptSuggestion ID", required = true) @QueryParam("conceptID") String conceptID,          
           @Context HttpServletRequest request) {
               
         HttpSession session = request.getSession();
@@ -248,15 +247,16 @@ public class ConceptSuggestion {
         
         LoginSession login = new LoginSession(session);
         
-        if(!login.isLoggedIn() || !login.hasRightToEditModel(model))
+        // TODO: !login.hasRightToEditModel(model) for concepts
+        if(!login.isLoggedIn())
             return Response.status(401).entity(ErrorMessage.UNAUTHORIZED).build();
                 
-        IRIFactory iriFactory = IRIFactory.iriImplementation();
-        IRI modelIRI;    
+        IRIFactory iriFactory = IRIFactory.iriImplementation(); 
+        IRI conceptIRI;
         
         /* Check that URIs are valid */
         try {
-            modelIRI = iriFactory.construct(model);
+            conceptIRI = iriFactory.construct(conceptID);
         }
         catch (IRIException e) {
             return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
