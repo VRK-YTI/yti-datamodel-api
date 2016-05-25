@@ -106,7 +106,9 @@ public class ConceptSuggestion {
                   + "?concept skos:prefLabel ?label . "
                   + "?concept skos:definition ?comment . "
                   + "?concept prov:wasAssociatedWith ?user . "
-                  + "?concept rdfs:isDefinedBy ?model . } "
+                  + "?concept rdfs:isDefinedBy ?model . "
+                  + "?model a ?modelType . "
+                  + "?model rdfs:label ?modelLabel . } "
                   + "WHERE {"
                   + "GRAPH ?concept { "
                   + "?concept a ?type . "
@@ -117,6 +119,9 @@ public class ConceptSuggestion {
                   + "?concept prov:wasAssociatedWith ?user . "
                   + "OPTIONAL { ?concept skos:broader ?top . }"
                   + "OPTIONAL { ?concept rdfs:isDefinedBy ?model . }"
+                  + "OPTIONAL {?model a ?modelType . "
+                  + "?model rdfs:label ?modelLabel . "
+                  +"}"
                   + "}}";
   	  
           pss.setCommandText(queryString);
@@ -191,6 +196,8 @@ public class ConceptSuggestion {
                 queryString = "INSERT { "
                         + "GRAPH ?concept { "
                         + "?concept rdfs:isDefinedBy ?model . "
+                        + "?model a ?modelType ."
+                        + "?model rdfs:label ?modelLabel . "
                         + "?concept skos:inScheme ?scheme . "
                         + "?concept skos:broader ?top . "
                         + "?concept a skos:Concept . "
@@ -199,7 +206,13 @@ public class ConceptSuggestion {
                         + "?concept skos:definition ?comment . "
                         + "?concept prov:generatedAtTime ?time . "
                         + "?concept prov:wasAssociatedWith ?user . } } "
-                        + "WHERE { BIND(NOW() as ?time)}";
+                        + "WHERE { BIND(NOW() as ?time)"
+                        + "SERVICE ?modelService { "
+                        + "GRAPH ?model {"
+                        + " ?model a ?modelType . "
+                        + " ?model rdfs:label ?modelLabel . "
+                        + "}}"
+                        + "}";
 		
                 pss.setCommandText(queryString);
                 pss.setIri("model",modelIRI);
@@ -207,7 +220,9 @@ public class ConceptSuggestion {
                 pss.setLiteral("label", ResourceFactory.createLangLiteral(label,lang));
                 pss.setLiteral("comment", ResourceFactory.createLangLiteral(comment,lang));
                 pss.setIri("concept", "urn:uuid:"+conceptUUID);
-                pss.setIri("user", "mailto:"+login.getEmail());      
+                pss.setIri("user", "mailto:"+login.getEmail());        
+                pss.setIri("modelService",services.getLocalhostCoreSparqlAddress());
+          
                 if(topIRI!=null) pss.setIri("top", topIRI);
          
 		UpdateRequest query = pss.asUpdate();

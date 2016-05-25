@@ -87,7 +87,9 @@ public class ModelConcepts {
                 + "?concept skos:definition ?comment . "
                 + "?concept prov:generatedAtTime ?time . "
                 + "?concept prov:wasAssociatedWith ?user . "
-                + "?concept rdfs:isDefinedBy ?model . }"
+                + "?concept rdfs:isDefinedBy ?model . "
+                + "?model a ?modelType . "
+                + "?model rdfs:label ?modelLabel . }"
                 + " WHERE { "
                 + "GRAPH ?skosCollection {"
                 + "?skosCollection skos:member ?concept . "
@@ -102,7 +104,9 @@ public class ModelConcepts {
                     + "?concept prov:generatedAtTime ?time . "
                     + "?concept prov:wasAssociatedWith ?user . "
                     + "}"
-                + "OPTIONAL { ?concept rdfs:isDefinedBy ?model . }"
+                + "OPTIONAL { ?concept rdfs:isDefinedBy ?model . "
+                + "?model a ?modelType ."
+                + "?model rdfs:label ?modelLabel . }"
                 + "}"
                 + "}";
 
