@@ -70,7 +70,7 @@ public class Usage {
             pss.setNsPrefixes(namespaces);
             
             String conceptQueryString = "CONSTRUCT  { "
-                    + "?concept rdfs:isReferencedBy ?resource . "
+                    + "?concept dcterms:isReferencedBy ?resource . "
                     + "?concept skos:prefLabel ?prefLabel . "
                     + "?resource a ?type . "
                     + "?resource rdfs:label ?label . "
