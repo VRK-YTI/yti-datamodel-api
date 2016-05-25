@@ -81,21 +81,27 @@ public class ModelConcepts {
                 + "?skosCollection skos:member ?concept . "
                 + "?skosCollection a skos:Collection . "
                 + "?concept skos:inScheme ?scheme . "
+                + "?scheme dcterms:title ?title . "
                 + "?concept skos:broader ?top . "
                 + "?concept a ?type . "
                 + "?concept skos:prefLabel ?label . "
                 + "?concept skos:definition ?comment . "
                 + "?concept prov:generatedAtTime ?time . "
                 + "?concept prov:wasAssociatedWith ?user . "
-                + "?concept rdfs:isDefinedBy ?model . "
-                + "?model a ?modelType . "
-                + "?model rdfs:label ?modelLabel . }"
+                + "?concept rdfs:isDefinedBy ?sugModel . "
+                + "?sugModel a ?modelType . "
+                + "?sugModel rdfs:label ?modelLabel . }"
                 + " WHERE { "
                 + "GRAPH ?skosCollection {"
                 + "?skosCollection skos:member ?concept . "
                 + "}"
                 + "GRAPH ?concept { "
                 + "?concept skos:inScheme ?scheme . "
+                + "SERVICE ?modelService { "
+                    + "GRAPH ?model {"
+                    + "OPTIONAL { ?model dcterms:references ?scheme . "
+                    + "?scheme dcterms:title ?title . }"
+                + "}}" 
                 + "OPTIONAL { ?concept skos:broader ?top . }"
                 + "?concept a ?type . "
                 + "?concept skos:prefLabel ?label . "
@@ -104,14 +110,16 @@ public class ModelConcepts {
                     + "?concept prov:generatedAtTime ?time . "
                     + "?concept prov:wasAssociatedWith ?user . "
                     + "}"
-                + "OPTIONAL { ?concept rdfs:isDefinedBy ?model . "
-                + "?model a ?modelType ."
-                + "?model rdfs:label ?modelLabel . }"
+                + "OPTIONAL { ?concept rdfs:isDefinedBy ?sugModel . "
+                + "?sugModel a ?modelType ."
+                + "?sugModel rdfs:label ?modelLabel . }"
                 + "}"
                 + "}";
 
          pss.setIri("skosCollection", model+"/skos#");
-
+         pss.setIri("model",model);
+         pss.setIri("modelService",services.getLocalhostCoreSparqlAddress());
+          
          if(id!=null && !id.equals("undefined")) {
              pss.setIri("concept",id);
          }
