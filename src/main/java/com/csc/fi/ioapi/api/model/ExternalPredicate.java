@@ -132,6 +132,7 @@ public class ExternalPredicate {
                 + "FILTER NOT EXISTS { ?predicate rdfs:range ?rangeClass . ?rangeClass a ?rangeClassType . }"
                 + "BIND(rdf:Property as ?type)"
                 + "} "
+                + "FILTER(STRSTARTS(STR(?predicate), STR(?externalModel)))"
                 + "OPTIONAL { ?predicate rdfs:label ?labelStr . FILTER(LANG(?labelStr) = '') BIND(STRLANG(?labelStr,'en') as ?label) }"
                 + "OPTIONAL { ?predicate rdfs:label ?label . FILTER(LANG(?label)!='') }"
                  + "} "

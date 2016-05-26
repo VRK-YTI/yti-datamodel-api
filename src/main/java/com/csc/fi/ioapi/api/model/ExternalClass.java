@@ -144,6 +144,7 @@ public class ExternalClass {
                      + "}}"
                     + "GRAPH ?externalModel {"
                     + "?classIRI a ?type . "
+                    + "FILTER(STRSTARTS(STR(?classIRI), STR(?externalModel)))"
                     + "VALUES ?type { rdfs:Class owl:Class sh:Shape } "
                      + "{?classIRI rdfs:label ?labelStr . FILTER(LANG(?labelStr) = '') BIND(STRLANG(?labelStr,'en') as ?label) }"
                       + "UNION"
