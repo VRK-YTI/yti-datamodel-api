@@ -13,9 +13,11 @@ package com.csc.fi.ioapi.config;
 public final class EndpointServices {
     
 private String endpoint;
-    
+private String scheme;
+
 public EndpointServices() {
     this.endpoint = ApplicationProperties.getEndpoint();
+    this.scheme = ApplicationProperties.getSchemeId();
 }
 
 public String getCoreReadAddress() {
@@ -71,8 +73,8 @@ public String getUsersSparqlUpdateAddress() {
     return endpoint+"/users/update";
 }
 
-public String getConceptServiceUri() {
-     return "http://dev.finto.fi";
+public String getConceptSchemeUri() {
+     return scheme;
 }
 
 public String getConceptAPI() {

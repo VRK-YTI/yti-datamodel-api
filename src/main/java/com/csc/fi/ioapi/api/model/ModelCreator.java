@@ -62,7 +62,6 @@ public class ModelCreator {
                  allowedLang="('"+allowedLang+"')";
             }
             else {
-                
                 if(!allowedLang.contains(" "))
                     return Response.status(403).entity(ErrorMessage.INVALIDPARAMETER).build();
                 
@@ -120,8 +119,8 @@ public class ModelCreator {
                     + "?localSKOSNamespace a skos:Collection ; "
                     + " dcterms:identifier ?prefix ; "
                     + " dcterms:title ?profileLabelSKOS . "
-                    + "?modelIRI dcterms:references <http://jhsmeta.fi/skos/> . "
-                    + "<http://jhsmeta.fi/skos/> a skos:ConceptScheme ; "
+                    + "?modelIRI dcterms:references ?jhsScheme . "
+                    + "?jhsScheme a skos:ConceptScheme ; "
                     + " dcterms:identifier 'jhsmeta' ; "
                     + " dcterms:title 'JHSmeta'@fi . "
                     + "} WHERE { "
@@ -138,6 +137,7 @@ public class ModelCreator {
             pss.setLiteral("profileLabelSKOS", ResourceFactory.createLangLiteral("Sisäinen käsitteistö", lang));
             pss.setLiteral("namespace", namespace+"#");
             pss.setLiteral("prefix", prefix);
+            pss.setIri("jhsScheme", services.getConceptSchemeUri()+"jhsmeta/");
             pss.setIri("modelIRI", namespaceIRI);
             pss.setIri("group", groupIRI);
             pss.setLiteral("draft", "Unstable");
