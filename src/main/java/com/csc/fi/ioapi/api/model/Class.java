@@ -80,7 +80,6 @@ public class Class {
         String queryString = "CONSTRUCT { "
                 + "?class rdfs:label ?label . "
                 + "?class a ?type . "
-               // + "?class dcterms:modified ?date . "
                 + "?class dcterms:modified ?modified . "
                 + "?class rdfs:isDefinedBy ?source . "
                 + "?source rdfs:label ?sourceLabel . "
@@ -247,8 +246,8 @@ public class Class {
                 // Selfreferences not allowed
                 Response.status(403).entity(ErrorMessage.USEDIRI).build();
             } else {
-                ConceptMapper.addConceptFromReferencedResource(model,id);
                 GraphManager.insertExistingGraphReferenceToModel(id, model);
+                ConceptMapper.addConceptFromReferencedResource(model,id);
                 return Response.status(204).build();
             }
         }
@@ -325,7 +324,7 @@ public class Class {
                return Response.status(response.getStatus()).entity(ErrorMessage.UNEXPECTED).build();
            }
            
-            ConceptMapper.addConceptFromReferencedResource(model,id);
+
 
             UUID provUUID = UUID.randomUUID();
             
@@ -338,6 +337,7 @@ public class Class {
             
             logger.log(Level.INFO, id+" updated sucessfully!");
             
+            ConceptMapper.addConceptFromReferencedResource(model,id);
             
           return Response.status(204).entity("{\"identifier\":\"urn:uuid:"+provUUID+"\"}").build();
 
@@ -386,11 +386,14 @@ public class Class {
        if(id.startsWith(model)) {
            /* Remove graph */
            /* TODO: Remove references ? */ 
-            return JerseyFusekiClient.deleteGraphFromService(id, services.getCoreReadWriteAddress());   
+            Response resp = JerseyFusekiClient.deleteGraphFromService(id, services.getCoreReadWriteAddress());   
+            ConceptMapper.removeUnusedConcepts(model);
+            return resp;
         } else {
         /* If removing referenced class */   
         /* TODO: Add response to GraphManager? */   
-             GraphManager.deleteGraphReferenceFromModel(idIRI,modelIRI);  
+             GraphManager.deleteGraphReferenceFromModel(idIRI,modelIRI); 
+             ConceptMapper.removeUnusedConcepts(model);
              return Response.status(204).build();   
        }
   }

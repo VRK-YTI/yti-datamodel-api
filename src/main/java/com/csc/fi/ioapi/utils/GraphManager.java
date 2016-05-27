@@ -215,7 +215,6 @@ public class GraphManager {
         pss.setIri("graph", id);
 
         logger.info("Removing model from " + id);
-        logger.info(query);
 
         UpdateRequest queryObj = pss.asUpdate();
         UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, services.getCoreSparqlUpdateAddress());
@@ -338,8 +337,6 @@ public class GraphManager {
         pss.setLiteral("date", timestamp);
         pss.setCommandText(query);
 
-        logger.log(Level.WARNING, pss.toString() + " " + services.getCoreSparqlUpdateAddress());
-
         UpdateRequest queryObj = pss.asUpdate();
         UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, services.getCoreSparqlUpdateAddress());
         qexec.execute();
@@ -358,8 +355,6 @@ public class GraphManager {
         pss.setIri("model", model);
         pss.setIri("hasPartGraph", model+"#HasPartGraph");
         pss.setCommandText(query);
-
-        logger.log(Level.WARNING, pss.toString() + " " + services.getCoreSparqlUpdateAddress());
 
         UpdateRequest queryObj = pss.asUpdate();
         UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, services.getCoreSparqlUpdateAddress());

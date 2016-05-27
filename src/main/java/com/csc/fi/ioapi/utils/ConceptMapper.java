@@ -47,30 +47,36 @@ public class ConceptMapper {
       public static void updateConceptFromConceptService(String uri) {
         
         /* Only if concept IDs are not local UUIDs */ 
-        if(!uri.startsWith("urn:uuid:")) {                
-         
-            Client client = Client.create();
-            
-            WebResource webResource = client.resource(services.getConceptAPI())
-                                      .queryParam("uri", UriComponent.encode(uri,UriComponent.Type.QUERY))
-                                      .queryParam("format","application/json");
-
-            WebResource.Builder builder = webResource.accept("application/json");
-            ClientResponse response = builder.get(ClientResponse.class);
-
-            if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-                logger.warning("Could not find the concept");
-            }
-
-            Model model = ModelFactory.createDefaultModel(); 
-            
-            RDFDataMgr.read(model, response.getEntityInputStream(), RDFLanguages.JSONLD);
+        if(!uri.startsWith("urn:uuid:")) {   
             
             DatasetAccessor accessor = DatasetAccessorFactory.createHTTP(services.getTempConceptReadWriteAddress());
-            accessor.add(uri, model);
             
-            logger.info("Updated "+uri+" from "+services.getConceptAPI());
-            
+            if(!accessor.containsModel(uri)) {
+         
+                Client client = Client.create();
+
+                WebResource webResource = client.resource(services.getConceptAPI())
+                                          .queryParam("uri", UriComponent.encode(uri,UriComponent.Type.QUERY))
+                                          .queryParam("format","application/json");
+
+                WebResource.Builder builder = webResource.accept("application/json");
+                ClientResponse response = builder.get(ClientResponse.class);
+
+                if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
+                    logger.warning("Could not find the concept");
+                }
+
+                Model model = ModelFactory.createDefaultModel(); 
+
+                RDFDataMgr.read(model, response.getEntityInputStream(), RDFLanguages.JSONLD);
+                
+                accessor.add(uri, model);
+
+                logger.info("Updated "+uri+" from "+services.getConceptAPI());
+                
+            } else {
+                logger.info("Concept already exists!");
+            }
         } 
 
   
@@ -103,29 +109,35 @@ public class ConceptMapper {
         UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, services.getTempConceptSparqlUpdateAddress());
         qexec.execute();
         
+       // removeReferencesFromCollection(model);
         removeUnusedConcepts(model);
           
     }
     
-    /* Todo: query concept id:s and use graph protocol to drop graphs */ 
     public static void removeUnusedConcepts(String model) {
         
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         String selectResources = "SELECT DISTINCT ?subject "
                 + "WHERE { "
-                + "GRAPH ?skosCollection { ?skosCollection skos:member ?subject . }"
-                + "GRAPH ?subject { ?s ?p ?o . }"
-                + "SERVICE ?modelService {"
-                + "FILTER NOT EXISTS {"
-                + "GRAPH ?resource { ?resource dcterms:subject ?subject . }"
+                + "{GRAPH ?skosCollection { ?skosCollection skos:member ?subject . }} "
+                + " MINUS "
+                + "{SERVICE ?modelService {"
+                + "GRAPH ?hasPartGraph { "
+                + " ?model dcterms:hasPart ?resource . "
                 + "}"
-                + "}}";
+                + "GRAPH ?resource {"
+                + "?resource rdfs:isDefinedBy ?model . "
+                + "?resource dcterms:subject ?subject . "
+                + "}}}"
+                + "}";
 
         pss.setIri("modelService",services.getLocalhostCoreSparqlAddress());
+        pss.setIri("model", model);
+        pss.setIri("hasPartGraph", model+"#HasPartGraph");
         pss.setIri("skosCollection", model+"/skos#");
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
         pss.setCommandText(selectResources);
-
+        
         logger.info(pss.toString());
         
         QueryExecution qexec = QueryExecutionFactory.sparqlService(services.getTempConceptReadSparqlAddress(), pss.asQuery());
@@ -140,13 +152,14 @@ public class ConceptMapper {
             Resource resSubject = soln.getResource("subject");
             if(resSubject!=null) {
             String subject = soln.getResource("subject").toString();
-            logger.info("DROPPING UNUSED CONCEPT: "+subject);
-            adapter.deleteModel(subject);
+            logger.info("Unused concept: "+subject);
+            deleteConceptReference(model,subject);
+            
+            if(!isUsedConceptGlobal(subject)) adapter.deleteModel(subject);
+            
             }
         }
-        
-        removeReferencesFromCollection(model);
-        
+
     }
     
     public static void removeReferencesFromCollection(String model) {
@@ -154,14 +167,21 @@ public class ConceptMapper {
          String query
                 = "DELETE { GRAPH ?skosCollection { ?skosCollection skos:member ?subject . } }"
                 + " WHERE { "
-                +" GRAPH ?skosCollection { ?skosCollection skos:member ?subject . } "
-                + "FILTER NOT EXISTS {"
-                + "GRAPH ?subject { ?s ?p ?o . } "
+                + "SERVICE ?modelService {"
+                + "GRAPH ?hasPartGraph { "
+                + " ?model dcterms:hasPart ?resource . "
                 + "}"
-                + "}";
+                + "GRAPH ?resource {"
+                + "?resource rdfs:isDefinedBy ?model . "
+                + "?resource dcterms:subject ?usedSubject  "
+                + "}}"
+                + "GRAPH ?skosCollection { ?skosCollection skos:member ?subject . FILTER(?subject!=?usedSubject) }"
+                +"}";
 
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+        pss.setIri("model", model);
+        pss.setIri("hasPartGraph", model+"#HasPartGraph");
         pss.setIri("skosCollection", model+"/skos#");
         pss.setIri("modelService",services.getLocalhostCoreSparqlAddress());
         pss.setCommandText(query);
@@ -186,9 +206,11 @@ public class ConceptMapper {
 
         while (results.hasNext()) {
             QuerySolution soln = results.nextSolution();
-            String subject = soln.getResource("subject").toString();
-            if(subject!=null)
+             Resource resSubject = soln.getResource("subject");
+            if(resSubject!=null) {
+                String subject = resSubject.toString();
                 ConceptMapper.updateConceptFromConceptService(subject);
+            }
         }
     }
      
@@ -231,6 +253,26 @@ public class ConceptMapper {
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
         pss.setIri("concept", concept);
         pss.setIri("model",model);
+
+        Query query = pss.asQuery();
+        QueryExecution qexec = QueryExecutionFactory.sparqlService(services.getCoreSparqlAddress(), query);
+
+        try {
+            boolean b = qexec.execAsk();
+            return b;
+        } catch (Exception ex) {
+            return false;
+        }
+    }
+    
+    
+        public static boolean isUsedConceptGlobal(String concept) {
+
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        String queryString = " ASK { GRAPH ?graph { ?graph dcterms:subject ?concept }}";
+        pss.setCommandText(queryString);
+        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+        pss.setIri("concept", concept);
 
         Query query = pss.asQuery();
         QueryExecution qexec = QueryExecutionFactory.sparqlService(services.getCoreSparqlAddress(), query);
