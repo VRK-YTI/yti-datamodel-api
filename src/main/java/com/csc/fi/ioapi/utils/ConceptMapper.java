@@ -138,8 +138,6 @@ public class ConceptMapper {
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
         pss.setCommandText(selectResources);
         
-        logger.info(pss.toString());
-        
         QueryExecution qexec = QueryExecutionFactory.sparqlService(services.getTempConceptReadSparqlAddress(), pss.asQuery());
 
         ResultSet results = qexec.execSelect();
@@ -160,35 +158,6 @@ public class ConceptMapper {
             }
         }
 
-    }
-    
-    public static void removeReferencesFromCollection(String model) {
-                
-         String query
-                = "DELETE { GRAPH ?skosCollection { ?skosCollection skos:member ?subject . } }"
-                + " WHERE { "
-                + "SERVICE ?modelService {"
-                + "GRAPH ?hasPartGraph { "
-                + " ?model dcterms:hasPart ?resource . "
-                + "}"
-                + "GRAPH ?resource {"
-                + "?resource rdfs:isDefinedBy ?model . "
-                + "?resource dcterms:subject ?usedSubject  "
-                + "}}"
-                + "GRAPH ?skosCollection { ?skosCollection skos:member ?subject . FILTER(?subject!=?usedSubject) }"
-                +"}";
-
-        ParameterizedSparqlString pss = new ParameterizedSparqlString();
-        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
-        pss.setIri("model", model);
-        pss.setIri("hasPartGraph", model+"#HasPartGraph");
-        pss.setIri("skosCollection", model+"/skos#");
-        pss.setIri("modelService",services.getLocalhostCoreSparqlAddress());
-        pss.setCommandText(query);
-        
-        UpdateRequest queryObj = pss.asUpdate();
-        UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, services.getTempConceptSparqlUpdateAddress());
-        qexec.execute();
     }
     
     public static void resolveConcept(String resource) {
