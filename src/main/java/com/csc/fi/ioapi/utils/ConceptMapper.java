@@ -5,6 +5,7 @@ package com.csc.fi.ioapi.utils;
 
 import com.csc.fi.ioapi.config.EndpointServices;
 import static com.csc.fi.ioapi.utils.GraphManager.services;
+import static com.csc.fi.ioapi.utils.ImportManager.services;
 import org.apache.jena.query.DatasetAccessor;
 import org.apache.jena.query.DatasetAccessorFactory;
 import org.apache.jena.query.ParameterizedSparqlString;
@@ -17,6 +18,7 @@ import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.uri.UriComponent;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ws.rs.core.Response;
@@ -24,8 +26,12 @@ import org.apache.jena.iri.IRI;
 import org.apache.jena.query.Query;
 import org.apache.jena.query.QueryExecution;
 import org.apache.jena.query.QueryExecutionFactory;
+import org.apache.jena.query.QuerySolution;
+import org.apache.jena.query.ResultSet;
+import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.riot.RDFLanguages;
+import static org.apache.jena.vocabulary.RDFS.Nodes.Resource;
 import org.apache.jena.web.DatasetAdapter;
 import org.apache.jena.web.DatasetGraphAccessorHTTP;
 
@@ -38,7 +44,7 @@ public class ConceptMapper {
      private static EndpointServices services = new EndpointServices();
      private static final Logger logger = Logger.getLogger(ConceptMapper.class.getName());
     
-     public static void updateConceptFromConceptService(String uri) {
+      public static void updateConceptFromConceptService(String uri) {
         
         /* Only if concept IDs are not local UUIDs */ 
         if(!uri.startsWith("urn:uuid:")) {                
@@ -70,11 +76,13 @@ public class ConceptMapper {
   
     }    
      
-    public static void addConceptFromReferencedClass(String model, String classID) {
+    public static void addConceptFromReferencedResource(String model, String classID) {
         
+        resolveConcept(classID);
+                
         String query
-                = " INSERT { GRAPH ?skosCollection { ?skosCollection skos:member ?concept . }}"
-                + " WHERE { "
+                = "INSERT { GRAPH ?skosCollection { ?skosCollection skos:member ?concept . }}"
+                + "WHERE { "
                 + "SERVICE ?modelService {"
                 + "GRAPH ?class {"
                 + "?class dcterms:subject ?concept . "
@@ -90,13 +98,98 @@ public class ConceptMapper {
         pss.setCommandText(query);
         
         logger.info("ADDING CONCEPT from "+classID);
-        logger.info(pss.toString());
 
         UpdateRequest queryObj = pss.asUpdate();
         UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, services.getTempConceptSparqlUpdateAddress());
         qexec.execute();
-       
+        
+        removeUnusedConcepts(model);
+          
+    }
+    
+    /* Todo: query concept id:s and use graph protocol to drop graphs */ 
+    public static void removeUnusedConcepts(String model) {
+        
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        String selectResources = "SELECT DISTINCT ?subject "
+                + "WHERE { "
+                + "GRAPH ?skosCollection { ?skosCollection skos:member ?subject . }"
+                + "GRAPH ?subject { ?s ?p ?o . }"
+                + "SERVICE ?modelService {"
+                + "FILTER NOT EXISTS {"
+                + "GRAPH ?resource { ?resource dcterms:subject ?subject . }"
+                + "}"
+                + "}}";
+
+        pss.setIri("modelService",services.getLocalhostCoreSparqlAddress());
+        pss.setIri("skosCollection", model+"/skos#");
+        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+        pss.setCommandText(selectResources);
+
+        logger.info(pss.toString());
+        
+        QueryExecution qexec = QueryExecutionFactory.sparqlService(services.getTempConceptReadSparqlAddress(), pss.asQuery());
+
+        ResultSet results = qexec.execSelect();
+
+        DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(services.getTempConceptReadWriteAddress());
+        DatasetAdapter adapter = new DatasetAdapter(accessor);
+        
+        while (results.hasNext()) {
+            QuerySolution soln = results.nextSolution();
+            Resource resSubject = soln.getResource("subject");
+            if(resSubject!=null) {
+            String subject = soln.getResource("subject").toString();
+            logger.info("DROPPING UNUSED CONCEPT: "+subject);
+            adapter.deleteModel(subject);
+            }
+        }
+        
+        removeReferencesFromCollection(model);
+        
+    }
+    
+    public static void removeReferencesFromCollection(String model) {
                 
+         String query
+                = "DELETE { GRAPH ?skosCollection { ?skosCollection skos:member ?subject . } }"
+                + " WHERE { "
+                +" GRAPH ?skosCollection { ?skosCollection skos:member ?subject . } "
+                + "FILTER NOT EXISTS {"
+                + "GRAPH ?subject { ?s ?p ?o . } "
+                + "}"
+                + "}";
+
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+        pss.setIri("skosCollection", model+"/skos#");
+        pss.setIri("modelService",services.getLocalhostCoreSparqlAddress());
+        pss.setCommandText(query);
+        
+        UpdateRequest queryObj = pss.asUpdate();
+        UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, services.getTempConceptSparqlUpdateAddress());
+        qexec.execute();
+    }
+    
+    public static void resolveConcept(String resource) {
+
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        String selectResources = "SELECT ?subject WHERE { GRAPH ?resource { ?resource dcterms:subject ?subject . }}";
+
+        pss.setIri("resource", resource);
+        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+        pss.setCommandText(selectResources);
+
+        QueryExecution qexec = QueryExecutionFactory.sparqlService(services.getCoreSparqlAddress(), pss.asQuery());
+
+        ResultSet results = qexec.execSelect();
+
+        while (results.hasNext()) {
+            QuerySolution soln = results.nextSolution();
+            String subject = soln.getResource("subject").toString();
+            if(subject!=null)
+                ConceptMapper.updateConceptFromConceptService(subject);
+        }
     }
      
 
@@ -111,8 +204,6 @@ public class ConceptMapper {
         pss.setIri("skosCollection", model+"/skos#");
         pss.setIri("concept", concept);
         pss.setCommandText(query);
-        
-        logger.info(pss.toString());
 
         UpdateRequest queryObj = pss.asUpdate();
         UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, services.getTempConceptSparqlUpdateAddress());
@@ -166,7 +257,6 @@ public class ConceptMapper {
         pss.setIri("concept", concept);
         pss.setCommandText(query);
         
-        logger.info(pss.toString());
 
         UpdateRequest queryObj = pss.asUpdate();
         UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, services.getTempConceptSparqlUpdateAddress());

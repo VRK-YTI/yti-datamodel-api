@@ -106,7 +106,7 @@ public class UserManager {
         pss.setLiteral("timestamp", timestamp,XSDDatatype.XSDdateTime);
         pss.setCommandText(query);
         
-        logger.info(pss.toString());
+
         
         UpdateRequest queryObj = pss.asUpdate();
         UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj,services.getUsersSparqlUpdateAddress());

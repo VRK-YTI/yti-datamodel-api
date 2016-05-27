@@ -92,7 +92,6 @@ public class ServiceDescriptionManager {
          
          String endpoint = services.getCoreSparqlAddress();
         
-         logger.info(pss.toString());
          
          Query query = pss.asQuery();
          QueryExecution qexec = QueryExecutionFactory.sparqlService(endpoint, query);

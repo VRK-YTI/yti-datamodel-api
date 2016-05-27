@@ -98,7 +98,8 @@ public class ModelConcepts {
                 + "?skosCollection skos:member ?concept . "
                 + "}"
                 + "GRAPH ?concept { "
-                + "OPTIONAL { ?concept skos:inScheme ?scheme . "
+                + "?concept skos:inScheme ?scheme . "
+                + "OPTIONAL {  "
                 + "?scheme dcterms:title ?schemeTitle . "
                 + "?scheme dcterms:identifier ?schemeId . "
                 + "?scheme a ?schemeType . }"
@@ -127,7 +128,6 @@ public class ModelConcepts {
 
         
         pss.setCommandText(queryString);
-        logger.info(pss.toString());
 
         return JerseyFusekiClient.constructGraphFromService(pss.toString(), services.getTempConceptReadSparqlAddress());
      

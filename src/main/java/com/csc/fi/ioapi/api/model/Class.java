@@ -227,6 +227,8 @@ public class Class {
             
            /* Create new graph with new id */ 
            ClientResponse response = JerseyFusekiClient.putGraphToTheService(id, body, services.getCoreReadWriteAddress());
+
+           ConceptMapper.addConceptFromReferencedResource(model,id);
            
            if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
                /* TODO: Create prov events from failed updates? */
@@ -245,7 +247,7 @@ public class Class {
                 // Selfreferences not allowed
                 Response.status(403).entity(ErrorMessage.USEDIRI).build();
             } else {
-                ConceptMapper.addConceptFromReferencedClass(model,id);
+                ConceptMapper.addConceptFromReferencedResource(model,id);
                 GraphManager.insertExistingGraphReferenceToModel(id, model);
                 return Response.status(204).build();
             }
@@ -317,12 +319,14 @@ public class Class {
           
            /* Create new graph with new id */ 
            ClientResponse response = JerseyFusekiClient.putGraphToTheService(id, body, services.getCoreReadWriteAddress());
-          
+
            if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
                logger.log(Level.WARNING, "Unexpected: Not created: "+id);
                return Response.status(response.getStatus()).entity(ErrorMessage.UNEXPECTED).build();
            }
            
+            ConceptMapper.addConceptFromReferencedResource(model,id);
+
             UUID provUUID = UUID.randomUUID();
             
            /* If new class was created succesfully create prov activity */

@@ -63,7 +63,6 @@ public class ClassCreator {
             }
 
             ConceptMapper.updateConceptFromConceptService(conceptID);
-            ConceptMapper.addConceptToLocalSKOSCollection(modelID,conceptID);
 
             ParameterizedSparqlString pss = new ParameterizedSparqlString();
             pss.setNsPrefixes(LDHelper.PREFIX_MAP);

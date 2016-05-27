@@ -142,8 +142,6 @@ public class ContextWriter {
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
         pss.setCommandText(selectResources);
         
-        logger.info(pss.toString());
-        
         QueryExecution qexec = QueryExecutionFactory.sparqlService(services.getCoreSparqlAddress(), pss.asQuery());
 
         ResultSet results = qexec.execSelect();

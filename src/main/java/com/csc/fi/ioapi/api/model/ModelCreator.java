@@ -144,7 +144,6 @@ public class ModelCreator {
             pss.setLiteral("mlabel", ResourceFactory.createLangLiteral(label, lang));
             pss.setLiteral("defLang", lang);
 
-            logger.info(pss.toString());
             
             return JerseyFusekiClient.constructGraphFromService(pss.toString(), services.getCoreSparqlAddress());
             

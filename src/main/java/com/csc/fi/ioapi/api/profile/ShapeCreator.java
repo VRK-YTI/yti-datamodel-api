@@ -169,12 +169,8 @@ public class ShapeCreator {
             pss.setLiteral("profileNamespace", profileID+"#");
             pss.setLiteral("draft", "Unstable");
             pss.setIri("shapeIRI",shapeIRI);
-            
-            logger.info(pss.toString());
-            
-            
-            ConceptMapper.addConceptFromReferencedClass(profileID,classID);
-            
+
+
             return JerseyFusekiClient.constructGraphFromService(pss.toString(), service);
     }   
  

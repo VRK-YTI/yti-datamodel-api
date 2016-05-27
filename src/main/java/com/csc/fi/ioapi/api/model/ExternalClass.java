@@ -102,8 +102,6 @@ public class ExternalClass {
         pss.setCommandText(queryString);
 
         
-          logger.info(pss.toString());
-          
         return JerseyFusekiClient.constructGraphFromService(pss.toString(), services.getImportsSparqlAddress());
 
       } else {
@@ -186,7 +184,6 @@ public class ExternalClass {
 
             pss.setIri("classIRI", idIRI);
             
-            logger.info(pss.toString());
             
             if(model!=null && !model.equals("undefined")) {
                   pss.setIri("library", model);

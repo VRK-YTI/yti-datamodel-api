@@ -271,7 +271,6 @@ public class ImportManager {
         pss.setLiteral("prefix", prefix);
         pss.setCommandText(query);
 
-        logger.info(pss.toString());
 
         UpdateRequest queryObj = pss.asUpdate();
         UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, services.getCoreSparqlUpdateAddress());
