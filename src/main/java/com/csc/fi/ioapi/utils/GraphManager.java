@@ -268,6 +268,26 @@ public class GraphManager {
         
          */
     }
+    
+    
+        public static void updateModifyDates(String resource) {
+
+        String query =
+                  "DELETE { GRAPH ?resource { ?resource dcterms:modified ?oldModDate . } } "
+                + "INSERT { GRAPH ?resource { ?resource dcterms:modified ?time . } } "
+                + "WHERE { GRAPH ?resource { ?resource dcterms:modified ?oldModDate .  } BIND(now() as ?time) }";
+
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+        pss.setIri("resource", resource);
+
+        pss.setCommandText(query);
+
+        UpdateRequest queryObj = pss.asUpdate();
+        UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, services.getCoreSparqlUpdateAddress());
+        qexec.execute();
+    
+    }
 
     public static void deleteGraphs() {
 

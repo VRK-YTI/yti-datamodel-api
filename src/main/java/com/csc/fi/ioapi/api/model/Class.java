@@ -229,6 +229,8 @@ public class Class {
 
            ConceptMapper.addConceptFromReferencedResource(model,id);
            
+           GraphManager.updateModifyDates(id);
+           
            if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
                /* TODO: Create prov events from failed updates? */
                logger.log(Level.WARNING, "Unexpected: Not updated: "+id);
