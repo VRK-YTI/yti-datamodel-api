@@ -67,7 +67,6 @@ public class PredicateCreator {
         }
 
         ConceptMapper.updateConceptFromConceptService(conceptID);
-        ConceptMapper.addConceptToLocalSKOSCollection(modelID,conceptID);
 
         String queryString;
         ParameterizedSparqlString pss = new ParameterizedSparqlString();

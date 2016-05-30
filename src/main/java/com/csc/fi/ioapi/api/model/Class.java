@@ -141,10 +141,13 @@ public class Class {
 
             pss.setIri("graph", id);
 
+            
             if(model!=null && !model.equals("undefined")) {
                   pss.setIri("library", model);
             }
 
+            logger.info(pss.toString());
+            
             return JerseyFusekiClient.constructGraphFromService(pss.toString(), sparqlService);         
 
       }
