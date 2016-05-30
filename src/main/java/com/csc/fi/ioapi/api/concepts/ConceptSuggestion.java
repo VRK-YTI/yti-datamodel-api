@@ -100,6 +100,9 @@ public class ConceptSuggestion {
           queryString = "CONSTRUCT { "
                   + "?concept a ?type . "
                   + "?concept skos:inScheme ?scheme . "
+                  + "?scheme a ?schemeType . "
+                  + "?scheme dcterms:identifier ?schemeID . "
+                  + "?scheme dcterms:title ?schemeTitle . "
                   + "?concept rdfs:isDefinedBy ?model . "
                   + "?concept skos:broader ?top . "
                   + "?concept prov:generatedAtTime ?time . "
@@ -123,6 +126,10 @@ public class ConceptSuggestion {
                         + "GRAPH ?model {"
                         + " ?model a ?modelType . "
                         + " ?model rdfs:label ?modelLabel . "
+                        + " ?model dcterms:references ?scheme . "
+                        + " ?scheme a ?schemeType . "
+                        + " ?scheme dcterms:identifier ?schemeID . "
+                        + " ?scheme dcterms:title ?schemeTitle . "
                         + "}}}"
                   + "}}";
   	  
