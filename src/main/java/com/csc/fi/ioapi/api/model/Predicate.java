@@ -372,12 +372,12 @@ public class Predicate {
     if(id.startsWith(model)) {
         /* Remove graph */
             Response resp = JerseyFusekiClient.deleteGraphFromService(id, services.getCoreReadWriteAddress());   
-            ConceptMapper.removeUnusedConcepts(model);
+         //   ConceptMapper.removeUnusedConcepts(model);
             return resp;
     } else {
         /* If removing referenced predicate */   
          GraphManager.deleteGraphReferenceFromModel(idIRI,modelIRI);  
-         ConceptMapper.removeUnusedConcepts(model);
+        // ConceptMapper.removeUnusedConcepts(model);
          return Response.status(204).build();   
        }
   }

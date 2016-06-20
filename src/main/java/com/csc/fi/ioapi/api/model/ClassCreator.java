@@ -68,6 +68,7 @@ public class ClassCreator {
             pss.setNsPrefixes(LDHelper.PREFIX_MAP);
             
             String queryString = "CONSTRUCT  { "
+                    + "?classIRI iow:contextIdentifier ?localIdentifier . "
                     + "?classIRI owl:versionInfo ?draft . "
                     + "?classIRI dcterms:modified ?modified . "
                     + "?classIRI dcterms:created ?creation . "
