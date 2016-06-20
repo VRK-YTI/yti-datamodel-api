@@ -94,7 +94,8 @@ public class ConceptMapper {
                 + "?class dcterms:subject ?concept . "
                 + "}"
                 + "}"
-                + "GRAPH ?concept { ?s ?p ?o . } }";
+                + "GRAPH ?concept { ?s ?p ?o }"
+                + "}";
 
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
@@ -110,7 +111,7 @@ public class ConceptMapper {
         qexec.execute();
         
        // removeReferencesFromCollection(model);
-        removeUnusedConcepts(model);
+       // removeUnusedConcepts(model);
           
     }
     
