@@ -390,7 +390,6 @@ public class Class {
        /* If Class is defined in the model */
        if(id.startsWith(model)) {
            /* Remove graph */
-           /* TODO: Remove references ? */ 
             Response resp = JerseyFusekiClient.deleteGraphFromService(id, services.getCoreReadWriteAddress());   
            // ConceptMapper.removeUnusedConcepts(model);
             return resp;
