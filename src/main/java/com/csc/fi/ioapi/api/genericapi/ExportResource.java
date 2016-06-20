@@ -55,9 +55,18 @@ public class ExportResource {
             @ApiParam(value = "Requested resource", defaultValue = "default") @QueryParam("graph") String graph,
             @ApiParam(value = "Raw / PlainText boolean", defaultValue = "false") @QueryParam("raw") boolean raw,
             @ApiParam(value = "Languages to export") @QueryParam("lang") String lang,
+            @ApiParam(value = "Service to export") @QueryParam("service") String serviceString,
             @ApiParam(value = "Content-type", allowableValues = "application/ld+json,text/turtle,application/rdf+xml,application/ld+json+context,application/schema+json") @QueryParam("content-type") String ctype) {
 
         if(ctype==null || ctype.equals("undefined")) ctype = accept;
+        
+        String service = services.getCoreReadAddress();
+        
+        if(serviceString!=null && !serviceString.equals("undefined")) {
+            if(serviceString.equals("concept")) {
+                service = services.getTempConceptReadWriteAddress();
+            }
+        }
         
          IRI resourceIRI;
          
@@ -93,7 +102,7 @@ public class ExportResource {
                 //return Response.status(403).entity(ErrorMessage.NOTFOUND).build();
             }
                         
-            return  JerseyFusekiClient.getGraphResponseFromService(graph, services.getCoreReadAddress(), contentType, raw);
+            return  JerseyFusekiClient.getGraphResponseFromService(graph, service, contentType, raw);
         } catch (UniformInterfaceException | ClientHandlerException ex) {
             logger.log(Level.WARNING, "Expect the unexpected!", ex);
             return Response.serverError().entity("{}").build();
