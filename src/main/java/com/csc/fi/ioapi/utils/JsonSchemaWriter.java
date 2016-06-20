@@ -135,7 +135,9 @@ public class JsonSchemaWriter {
             schema.add("title", title);
             
             logger.info(soln.getResource("type").getLocalName());
-            if(soln.getResource("type").getLocalName().equals("Class")) {
+            String sType = soln.getResource("type").getLocalName();
+            
+            if(sType.equals("Class") || sType.equals("Shape")) {
                 classMetadata = true;
             }
             
@@ -153,7 +155,7 @@ public class JsonSchemaWriter {
          if(classMetadata) {
         
         String selectResources = 
-                "SELECT ?predicate ?predicateName ?datatype ?shapeRef ?min ?max"
+                "SELECT ?predicate ?predicateName ?label ?datatype ?shapeRef ?min ?max"
                 + "WHERE { "
                 + "GRAPH ?resourceID {"
                 + "?resourceID sh:property ?property . "
