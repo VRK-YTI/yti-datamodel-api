@@ -54,6 +54,7 @@ public class ExportResource {
             @HeaderParam("Accept") String accept,
             @ApiParam(value = "Requested resource", defaultValue = "default") @QueryParam("graph") String graph,
             @ApiParam(value = "Raw / PlainText boolean", defaultValue = "false") @QueryParam("raw") boolean raw,
+            @ApiParam(value = "Languages to export") @QueryParam("lang") String lang,
             @ApiParam(value = "Content-type", allowableValues = "application/ld+json,text/turtle,application/rdf+xml,application/ld+json+context,application/schema+json") @QueryParam("content-type") String ctype) {
 
         if(ctype==null || ctype.equals("undefined")) ctype = accept;
