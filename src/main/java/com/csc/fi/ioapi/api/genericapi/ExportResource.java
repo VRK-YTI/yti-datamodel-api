@@ -76,7 +76,7 @@ public class ExportResource {
                     return Response.status(403).entity(ErrorMessage.NOTFOUND).build();
                 }
             } else if(ctype.equals("application/schema+json")) {
-                String schema = JsonSchemaWriter.newClassSchema(graph);
+                String schema = JsonSchemaWriter.newClassSchema(graph,lang);
                 if(schema!=null) {
                     return Response.ok().entity(schema).type(raw?"text/plain;charset=utf-8":"application/schema+json").build();
                 } else {

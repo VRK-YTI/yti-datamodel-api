@@ -88,7 +88,7 @@ public class JsonSchemaWriter {
         return jsonObjectToPrettyString(schema.build());
 }
     
-    public static String newClassSchema(String classID) { 
+    public static String newClassSchema(String classID, String lang) { 
     
         JsonArrayBuilder required = Json.createArrayBuilder();
         JsonObjectBuilder schema = Json.createObjectBuilder();
@@ -96,16 +96,20 @@ public class JsonSchemaWriter {
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         
         String selectClass = 
-                "SELECT ?type (group_concat(concat(?label,'@',lang(?label)); separator=\", \" ) as ?title) (group_concat(concat(?comment,'@',lang(?comment)); separator=\", \" ) as ?description) "
+                "SELECT ?type ?label ?description "
                 + "WHERE { "
                 + "GRAPH ?resourceID { "
                 + "?resourceID a ?type . "
                 + "?resourceID rdfs:label ?label . "
-                + "OPTIONAL { ?resourceID rdfs:comment ?comment . }"
+                + "FILTER (langMatches(lang(?label),?lang))"
+                + "OPTIONAL { ?resourceID rdfs:comment ?description . "
+                + "FILTER (langMatches(lang(?description),?lang))"
+                + "}"
                 + "} "
-                + "} GROUP BY ?type ";
+                + "} ";
         
         pss.setIri("resourceID", classID);
+        pss.setLiteral("lang",lang);
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
         
         pss.setCommandText(selectClass);
@@ -121,7 +125,7 @@ public class JsonSchemaWriter {
         while (results.hasNext()) {
             
             QuerySolution soln = results.nextSolution();
-            String title = soln.getLiteral("title").getString();
+            String title = soln.getLiteral("label").getString();
             if(soln.contains("description")) {
                 String description = soln.getLiteral("description").getString();
                 schema.add("description", description);
@@ -149,23 +153,27 @@ public class JsonSchemaWriter {
          if(classMetadata) {
         
         String selectResources = 
-                "SELECT ?predicate ?predicateName ?datatype ?shapeRef ?min ?max (group_concat(concat(?label,'@',lang(?label)); separator=\", \" ) as ?title) (group_concat(concat(?comment,'@',lang(?comment)); separator=\", \" ) as ?description)"
+                "SELECT ?predicate ?predicateName ?datatype ?shapeRef ?min ?max"
                 + "WHERE { "
                 + "GRAPH ?resourceID {"
                 + "?resourceID sh:property ?property . "
                 + "?property sh:predicate ?predicate . "
                 + "?property rdfs:label ?label . "
-                + "OPTIONAL { ?property rdfs:comment ?comment . }"
+                + "FILTER (langMatches(lang(?label),?lang))"
+                + "OPTIONAL { ?property rdfs:comment ?description . "
+                + "FILTER (langMatches(lang(?description),?lang))"
+                + "}"
                 + "OPTIONAL { ?property sh:datatype ?datatype . }"
                 + "OPTIONAL { ?property sh:valueShape ?shapeRef . }"
                 + "OPTIONAL { ?property sh:minCount ?min . }"
                 + "OPTIONAL { ?property sh:maxCount ?max . }"
                 + "BIND(afn:localname(?predicate) as ?predicateName)"
                 + "}"
-                + "} GROUP BY ?predicate ?predicateName ?datatype ?shapeRef ?min ?max";
+                + "}";
         
         
         pss.setCommandText(selectResources);
+        pss.setLiteral("lang",lang);
 
         qexec = QueryExecutionFactory.sparqlService(services.getCoreSparqlAddress(), pss.asQuery());
 
@@ -179,7 +187,7 @@ public class JsonSchemaWriter {
             QuerySolution soln = results.nextSolution();
             //String predicateID = soln.getResource("predicate").toString();
             String predicateName = soln.getLiteral("predicateName").toString();
-            String title = soln.getLiteral("title").toString();
+            String title = soln.getLiteral("label").toString();
             
             JsonObjectBuilder predicate = Json.createObjectBuilder();
             
@@ -252,22 +260,26 @@ public class JsonSchemaWriter {
     }
     
     
-    public static String newModelSchema(String modelID) { 
+    public static String newModelSchema(String modelID,String lang) { 
     
         JsonObjectBuilder schema = Json.createObjectBuilder();
 
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         
         String selectClass = 
-                "SELECT (group_concat(concat(?label,'@',lang(?label)); separator=\", \" ) as ?title) (group_concat(concat(?comment,'@',lang(?comment)); separator=\", \" ) as ?description) "
+                "SELECT ?label ?description "
                 + "WHERE { "
                 + "GRAPH ?modelID { "
                 + "?modelID rdfs:label ?label . "
-                + "OPTIONAL { ?modelID rdfs:comment ?comment . }"
+                + "FILTER (langMatches(lang(?label),?lang))"
+                + "OPTIONAL { ?modelID rdfs:comment ?description . "
+                + "FILTER (langMatches(lang(?description),?lang))"
+                + "}"
                 + "} "
                 + "} ";
         
         pss.setIri("modelID", modelID);
+        pss.setLiteral("lang",lang);
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
         
         pss.setCommandText(selectClass);
@@ -278,11 +290,12 @@ public class JsonSchemaWriter {
 
         if(!results.hasNext()) return null;
         
+        logger.info("!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
         
         while (results.hasNext()) {
             
             QuerySolution soln = results.nextSolution();
-            String title = soln.getLiteral("title").getString();
+            String title = soln.getLiteral("label").getString();
             if(soln.contains("description")) {
                 String description = soln.getLiteral("description").getString();
                 schema.add("description", description);
@@ -294,30 +307,37 @@ public class JsonSchemaWriter {
         }
         
         String selectResources = 
-                "SELECT ?resource ?className (group_concat(concat(?classLabel,'@',lang(?classLabel)); separator=\", \" ) as ?classTitle) (group_concat(concat(?classComment,'@',lang(?classComment)); separator=\", \" ) as ?classDescription) ?predicate ?predicateName ?datatype ?shapeRef ?shapeRefName ?min ?max (group_concat(concat(?label,'@',lang(?label)); separator=\", \" ) as ?title) (group_concat(concat(?comment,'@',lang(?comment)); separator=\", \" ) as ?description)"
+                "SELECT ?resource ?className ?classTitle ?classDescription ?predicate ?title ?description ?predicateName ?datatype ?shapeRef ?shapeRefName ?min ?max"
                 + "WHERE { "
                 + "GRAPH ?modelPartGraph {"
                 + "?model dcterms:hasPart ?resource . "
                 + "}"
                 + "GRAPH ?resource {"
-                + "?resource rdfs:label ?classLabel . "
-                + "OPTIONAL { ?resource rdfs:comment ?classComment . }"
+                + "?resource rdfs:label ?classTitle . "
+                + "FILTER (langMatches(lang(?classTitle),?lang))"
+                + "OPTIONAL { ?resource rdfs:comment ?classDescription . "
+                + "FILTER (langMatches(lang(?classDescription),?lang))"
+                + "}"
                 + "?resource sh:property ?property . "
                 + "?property sh:predicate ?predicate . "
-                + "?property rdfs:label ?label . "
+                + "?property rdfs:label ?title . "
+                + "FILTER (langMatches(lang(?title),?lang))"
                 + "BIND(afn:localname(?resource) as ?className)"
-                + "OPTIONAL { ?property rdfs:comment ?comment . }"
+                + "OPTIONAL { ?property rdfs:comment ?description . "
+                + "FILTER (langMatches(lang(?description),?lang))"
+                + "}"
                 + "OPTIONAL { ?property sh:datatype ?datatype . }"
                 + "OPTIONAL { ?property sh:valueShape ?shapeRef . BIND(afn:localname(?shapeRef) as ?shapeRefName) }"
                 + "OPTIONAL { ?property sh:minCount ?min . }"
                 + "OPTIONAL { ?property sh:maxCount ?max . }"
                 + "BIND(afn:localname(?predicate) as ?predicateName)"
                 + "}"
-                + "} GROUP BY ?resource ?className ?classLabel ?classComment ?predicate ?predicateName ?datatype ?shapeRef ?shapeRefName ?min ?max "
+                + "}"
                 + "ORDER BY ?resource";
         
         
         pss.setIri("modelPartGraph", modelID+"#HasPartGraph");
+        pss.setLiteral("lang",lang);
         pss.setCommandText(selectResources);
         
         qexec = QueryExecutionFactory.sparqlService(services.getCoreSparqlAddress(), pss.asQuery());

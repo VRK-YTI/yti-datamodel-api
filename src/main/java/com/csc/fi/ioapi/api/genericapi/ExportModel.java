@@ -89,7 +89,7 @@ public class ExportModel {
                     return Response.status(403).entity(ErrorMessage.NOTFOUND).build();
                 }
             } else if(ctype.equals("application/schema+json")) {
-                String schema = JsonSchemaWriter.newModelSchema(graph);
+                String schema = JsonSchemaWriter.newModelSchema(graph,lang);
                 if(schema!=null) {
                     return Response.ok().entity(schema).type(raw?"text/plain;charset=utf-8":"application/schema+json").build();
                 } else {
