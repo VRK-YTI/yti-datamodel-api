@@ -93,6 +93,8 @@ public class ModelCreator {
             } catch (IRIException e) {
                     logger.warning("INVALID: "+namespace);
                     return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
+            } catch (NullPointerException e) {
+                    return Response.status(403).entity(ErrorMessage.INVALIDPARAMETER).build();
             }
             
         if(GraphManager.isExistingPrefix(prefix)) {
