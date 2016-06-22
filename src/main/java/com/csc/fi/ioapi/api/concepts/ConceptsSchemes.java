@@ -4,6 +4,7 @@
 package com.csc.fi.ioapi.api.concepts;
 
 import com.csc.fi.ioapi.config.EndpointServices;
+import com.csc.fi.ioapi.utils.JerseyFusekiClient;
 import com.csc.fi.ioapi.utils.LDHelper;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
@@ -31,9 +32,9 @@ import javax.ws.rs.core.Response.Status;
  *
  * @author malonen
  */
-@Path("scheme")
-@Api(value = "/scheme", description = "Concepts available vocabularies")
-public class ConceptsScheme {
+@Path("conceptSchemes")
+@Api(value = "/conceptSchemes", description = "Available concept schemes in Finto")
+public class ConceptsSchemes {
 
     @Context ServletContext context;
     EndpointServices services = new EndpointServices();
@@ -48,35 +49,10 @@ public class ConceptsScheme {
       @ApiResponse(code = 500, message = "Internal server error")
   })
   public Response vocab(
-          @ApiParam(value = "Lang", required = true) 
+          @ApiParam(value = "Lang") 
           @QueryParam("lang") String lang) {
    
-            ResponseBuilder rb;
-          
-
-            if((lang==null || lang.equals("undefined")) ) return Response.status(Response.Status.NOT_ACCEPTABLE).entity("{}").build();
-            
-            /* Schemes query commented out for now - waiting for finto vocabulary type support */
-            
-            /*
-            Client client = Client.create();
-            WebResource webResource = client.resource(services.getSchemeSearchAPI())
-                                      .queryParam("lang",lang);
-           
-            Builder builder = webResource.accept("application/ld+json");
-            ClientResponse response = builder.get(ClientResponse.class);
-
-            if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-               Logger.getLogger(ConceptsScheme.class.getName()).log(Level.INFO, response.getStatus()+" from CONCEPT SERVICE");
-               return Response.status(response.getStatus()).entity("{}").build();
-            }
-            */        
-            
-            rb = Response.status(Status.OK);
-            rb.type("application/ld+json");
-            rb.entity(LDHelper.getDefaultSchemes());
-       
-            return rb.build();
+           return JerseyFusekiClient.getGraphResponseFromService("urn:csc:schemes", services.getTempConceptReadWriteAddress());
     
       
   }

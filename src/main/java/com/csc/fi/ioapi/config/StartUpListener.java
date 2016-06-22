@@ -5,6 +5,7 @@
  */
 package com.csc.fi.ioapi.config;
 
+import com.csc.fi.ioapi.utils.ConceptMapper;
 import com.csc.fi.ioapi.utils.GraphManager;
 import com.csc.fi.ioapi.utils.GroupManager;
 import com.csc.fi.ioapi.utils.NamespaceManager;
@@ -33,6 +34,7 @@ public class StartUpListener implements ServletContextListener {
         initDefaultGroups();
         initDefaultNamespaces();
         initCodeServers();
+        loadSchemesFromFinto();
         
     }
     
@@ -48,6 +50,10 @@ public class StartUpListener implements ServletContextListener {
     
     if(!codeServer.status) logger.warning("Code server was not initialized!");
     
+    }
+    
+    private static void loadSchemesFromFinto() {
+        ConceptMapper.updateSchemesFromFinto();
     }
     
     private static void initDefaultGraph() {

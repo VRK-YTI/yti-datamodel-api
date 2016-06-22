@@ -107,15 +107,19 @@ public String getProvSparqlUpdateAddress() {
 }
 
 public String getConceptSearchAPI() {
-     return "http://dev.finto.fi/rest/v1/search";
+     return scheme+"rest/v1/search";
 }
 
 public String getConceptSearchAPI(String id) {
-     return "http://dev.finto.fi/rest/v1/"+id+"/search";
+     return scheme+"rest/v1/"+id+"/search";
 }
 
 public String getSchemeSearchAPI() {
-     return "http://dev.finto.fi/rest/v1/vocabularies";
+     return scheme+"rest/v1/vocabularies";
+}
+
+public String getVocabExportAPI(String vocab) {
+    return scheme+"rest/v1/"+vocab+"/data";
 }
 
 public String getImportsReadWriteAddress() {

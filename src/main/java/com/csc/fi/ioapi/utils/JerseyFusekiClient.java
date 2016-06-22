@@ -11,6 +11,7 @@ import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.WebResource.Builder;
 import com.sun.jersey.api.uri.UriComponent;
+import java.io.InputStream;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ws.rs.core.Response;
@@ -29,9 +30,26 @@ public class JerseyFusekiClient {
     
     static final private Logger logger = Logger.getLogger(JerseyFusekiClient.class.getName());
     
+    
+    public static Model getJSONLDResponseAsJenaModel(Response response) {
+         Model model = ModelFactory.createDefaultModel();
+         
+         try {
+         RDFReader reader = model.getReader(Lang.JSONLD.getName());
+         /* TODO: Base uri input? */
+         reader.read(model, (InputStream)response.getEntity(), "http://example.org/");
+         } catch(RiotException ex) {
+             logger.info(ex.getMessage());
+             return model;
+         }
+         
+         return model;
+        
+    }
+    
+    
     public static Model getResourceAsJenaModel(String resourceURI) {
         
-     
         Client client = Client.create();
         WebResource webResource = client.resource(resourceURI);
         Builder builder = webResource.accept("text/turtle");

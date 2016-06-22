@@ -47,8 +47,8 @@ public class Concept {
       @ApiResponse(code = 500, message = "Internal server error")
   })
   public Response concept(
-          @ApiParam(value = "uri", required = true) 
-          @QueryParam("uri") String uri) {
+          @ApiParam(value = "uri", required = true) @QueryParam("uri") String uri,
+          @ApiParam(value = "vocab") @QueryParam("vocab") String vocab) {
    
             ResponseBuilder rb;
             Client client = Client.create();

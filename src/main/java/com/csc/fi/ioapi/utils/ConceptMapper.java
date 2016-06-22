@@ -3,6 +3,8 @@
  */
 package com.csc.fi.ioapi.utils;
 
+import com.csc.fi.ioapi.api.concepts.ConceptsScheme;
+import com.csc.fi.ioapi.config.ApplicationProperties;
 import com.csc.fi.ioapi.config.EndpointServices;
 import static com.csc.fi.ioapi.utils.GraphManager.services;
 import static com.csc.fi.ioapi.utils.ImportManager.services;
@@ -22,16 +24,28 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.ResponseBuilder;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.query.Query;
 import org.apache.jena.query.QueryExecution;
 import org.apache.jena.query.QueryExecutionFactory;
 import org.apache.jena.query.QuerySolution;
 import org.apache.jena.query.ResultSet;
+import org.apache.jena.rdf.model.NodeIterator;
+import org.apache.jena.rdf.model.Property;
+import org.apache.jena.rdf.model.ResIterator;
 import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.rdf.model.ResourceFactory;
+import org.apache.jena.rdf.model.StmtIterator;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.riot.RDFLanguages;
+import org.apache.jena.sparql.vocabulary.FOAF;
+import org.apache.jena.vocabulary.DC;
+import org.apache.jena.vocabulary.DCTerms;
+import org.apache.jena.vocabulary.DC_11;
+import org.apache.jena.vocabulary.RDF;
 import static org.apache.jena.vocabulary.RDFS.Nodes.Resource;
+import org.apache.jena.vocabulary.SKOS;
 import org.apache.jena.web.DatasetAdapter;
 import org.apache.jena.web.DatasetGraphAccessorHTTP;
 
@@ -44,6 +58,83 @@ public class ConceptMapper {
      private static EndpointServices services = new EndpointServices();
      private static final Logger logger = Logger.getLogger(ConceptMapper.class.getName());
     
+     public static Response getFintoIDs() {
+         /* Dummy function to load schemes from json */
+        ResponseBuilder rb = Response.status(Response.Status.OK);
+        
+        rb.type("application/ld+json");
+        rb.entity(LDHelper.getDefaultSchemes());
+       
+        return rb.build();
+     }
+     
+     public static Model getModelFromFinto(String id) {
+         
+          Client client = Client.create();
+
+          WebResource webResource = client.resource(services.getVocabExportAPI(id))
+                                          .queryParam("format","text/turtle");
+
+                WebResource.Builder builder = webResource.accept("text/turtle");
+                ClientResponse response = builder.get(ClientResponse.class);
+
+                if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
+                    logger.warning("Could not find the vocabulary");
+                }
+                
+                Model model = ModelFactory.createDefaultModel(); 
+
+                RDFDataMgr.read(model, response.getEntityInputStream(), RDFLanguages.TURTLE);
+                
+                return model;
+     }
+      
+     public static void updateSchemesFromFinto() {
+         
+         Response resp = getFintoIDs();
+         Model model = JerseyFusekiClient.getJSONLDResponseAsJenaModel(resp);
+         Model schemeModel = ModelFactory.createDefaultModel();
+         schemeModel.setNsPrefixes(LDHelper.PREFIX_MAP);
+         
+         Property vID = ResourceFactory.createProperty("http://schema.onki.fi/onki#vocabularyIdentifier");
+         NodeIterator idIter = model.listObjectsOfProperty(vID);
+         DatasetAccessor accessor = DatasetAccessorFactory.createHTTP(services.getTempConceptReadWriteAddress());
+         
+         while(idIter.hasNext()) {
+             String fintoID = idIter.next().asLiteral().toString();
+         //  if(!accessor.containsModel(ApplicationProperties.getSchemeId()+fintoID)) {
+              logger.info("Loading "+fintoID+" from "+ApplicationProperties.getSchemeId());
+              Model vocabModel = getModelFromFinto(fintoID);
+              
+              ResIterator resIter = vocabModel.listResourcesWithProperty(RDF.type, SKOS.ConceptScheme);
+              
+              while(resIter.hasNext()) {
+                  Resource schemeResource = resIter.next();
+                  schemeResource.addLiteral(DC.identifier, fintoID);
+                  schemeResource.addProperty(DCTerms.isFormatOf, ApplicationProperties.getSchemeId()+fintoID);
+                          
+                  accessor.putModel(ApplicationProperties.getSchemeId()+fintoID, vocabModel);
+                  
+                  StmtIterator titles = schemeResource.listProperties(DC.title);
+                  StmtIterator desc = schemeResource.listProperties(DC.description);
+                  
+                  schemeModel.add(desc);
+                  schemeModel.add(titles);
+                  schemeModel.add(schemeResource, RDF.type, SKOS.ConceptScheme);
+                  schemeModel.add(schemeResource, DC.identifier, fintoID);
+                  schemeModel.add(schemeResource, DCTerms.isFormatOf, ResourceFactory.createResource(ApplicationProperties.getSchemeId()+fintoID));
+              }
+             
+           // }
+             
+           if(schemeModel.size()>1) {
+                accessor.putModel("urn:csc:schemes",schemeModel);
+           }
+         }
+         
+         
+     }
+     
       public static void updateConceptFromConceptService(String uri) {
         
         /* Only if concept IDs are not local UUIDs */ 
@@ -81,7 +172,7 @@ public class ConceptMapper {
 
   
     }    
-     
+    
     public static void addConceptFromReferencedResource(String model, String classID) {
         
         resolveConcept(classID);
@@ -110,10 +201,7 @@ public class ConceptMapper {
         UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, services.getTempConceptSparqlUpdateAddress());
         qexec.execute();
         
-       // removeReferencesFromCollection(model);
-       // removeUnusedConcepts(model);
-          
-    }
+    }  
     
     public static void removeUnusedConcepts(String model) {
         
@@ -183,7 +271,6 @@ public class ConceptMapper {
             }
         }
     }
-     
 
     public static void addConceptToLocalSKOSCollection(String model, String concept) {
         
