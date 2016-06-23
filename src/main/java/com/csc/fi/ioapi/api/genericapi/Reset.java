@@ -6,6 +6,7 @@
 package com.csc.fi.ioapi.api.genericapi;
 
 import com.csc.fi.ioapi.config.ApplicationProperties;
+import com.csc.fi.ioapi.utils.ConceptMapper;
 import com.csc.fi.ioapi.utils.GraphManager;
 import com.csc.fi.ioapi.utils.GroupManager;
 import com.csc.fi.ioapi.utils.NamespaceManager;
@@ -51,6 +52,7 @@ public class Reset {
             GraphManager.createDefaultGraph();
             GroupManager.createDefaultGroups();
             NamespaceManager.addDefaultNamespacesToCore();
+            ConceptMapper.updateSchemesFromFinto();
         }
         
         rb = Response.status(Response.Status.OK);

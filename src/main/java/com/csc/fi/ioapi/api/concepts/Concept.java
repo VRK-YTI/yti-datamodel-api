@@ -4,6 +4,7 @@
 package com.csc.fi.ioapi.api.concepts;
 
 import com.csc.fi.ioapi.config.EndpointServices;
+import com.csc.fi.ioapi.utils.LDHelper;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
@@ -24,6 +25,10 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
+import org.apache.jena.iri.IRI;
+import org.apache.jena.iri.IRIException;
+import org.apache.jena.iri.IRIFactory;
+import org.apache.jena.query.ParameterizedSparqlString;
 
 /**
  * REST Web Service
@@ -35,7 +40,8 @@ import javax.ws.rs.core.Response.ResponseBuilder;
 public class Concept {
 
     @Context ServletContext context;
-    EndpointServices services = new EndpointServices();
+  private EndpointServices services = new EndpointServices();
+  private static final Logger logger = Logger.getLogger(ConceptSuggestion.class.getName());
    
     
   @GET
@@ -47,9 +53,65 @@ public class Concept {
       @ApiResponse(code = 500, message = "Internal server error")
   })
   public Response concept(
-          @ApiParam(value = "uri", required = true) @QueryParam("uri") String uri,
-          @ApiParam(value = "vocab") @QueryParam("vocab") String vocab) {
-   
+          @ApiParam(value = "uri", required = true) @QueryParam("uri") String uri) {
+  
+       IRI conceptIRI = null;
+       
+	try {
+                    IRIFactory iri = IRIFactory.uriImplementation();
+                    
+                    if(uri!=null && !uri.equals("undefined")) conceptIRI = iri.construct(uri);
+		} catch (IRIException e) {
+			logger.log(Level.WARNING, "ID is invalid IRI!");
+			return Response.status(403).build();
+		}
+                
+          Response.ResponseBuilder rb;
+          
+          Client client = Client.create();
+          String queryString;
+          ParameterizedSparqlString pss = new ParameterizedSparqlString();
+          pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+            
+          queryString = "CONSTRUCT { "
+                      + "?concept a skos:Concept . " 
+                      + "?concept skos:prefLabel ?label . "
+                      + "?concept skos:definition ?definition . "
+                      + "?concept skos:inScheme ?scheme . "
+                      + "?scheme a skos:ConceptScheme . "
+                      + "?scheme dcterms:identifier ?id . "
+                      + "?scheme dcterms:title ?title .  "
+                      + "?scheme dcterms:description ?description . "
+                      + "?scheme dcterms:isFormatOf ?FintoLink . "
+                      + "} WHERE { "
+                      + "?concept a skos:Concept . "
+                      + "?concept skos:prefLabel ?label . "
+                      + "?concept skos:definition ?definition . "
+                      + "?concept skos:inScheme ?scheme . "
+                      + "?scheme dc:identifier ?id . "
+                      + "?scheme dc:title ?title . "
+                      + "?scheme dc:description ?description . "
+                      + "?scheme dcterms:isFormatOf ?FintoLink . "
+                      + "}";
+
+  	  
+          pss.setCommandText(queryString);
+          
+          if(conceptIRI!=null) pss.setIri("concept", conceptIRI);
+                
+          WebResource webResource = client.resource(services.getTempConceptReadSparqlAddress())
+                                      .queryParam("query", UriComponent.encode(pss.toString(),UriComponent.Type.QUERY));
+
+          WebResource.Builder builder = webResource.accept("application/ld+json");
+
+          ClientResponse response = builder.get(ClientResponse.class);
+          rb = Response.status(response.getStatus()); 
+          rb.entity(response.getEntityInputStream());
+            
+          return rb.build();
+
+
+      /*
             ResponseBuilder rb;
             Client client = Client.create();
 
@@ -72,7 +134,7 @@ public class Concept {
        
            return rb.build();
     
-
+*/
           
   }
   

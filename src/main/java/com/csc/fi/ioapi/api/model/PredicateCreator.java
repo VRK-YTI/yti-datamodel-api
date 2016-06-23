@@ -66,7 +66,7 @@ public class PredicateCreator {
                 return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
         }
 
-        ConceptMapper.updateConceptFromConceptService(conceptID);
+       // ConceptMapper.updateConceptFromConceptService(conceptID);
 
         String queryString;
         ParameterizedSparqlString pss = new ParameterizedSparqlString();

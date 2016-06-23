@@ -102,7 +102,7 @@ public class ConceptMapper {
          
          while(idIter.hasNext()) {
              String fintoID = idIter.next().asLiteral().toString();
-         //  if(!accessor.containsModel(ApplicationProperties.getSchemeId()+fintoID)) {
+           if(!accessor.containsModel(ApplicationProperties.getSchemeId()+fintoID)) {
               logger.info("Loading "+fintoID+" from "+ApplicationProperties.getSchemeId());
               Model vocabModel = getModelFromFinto(fintoID);
               
@@ -111,7 +111,7 @@ public class ConceptMapper {
               while(resIter.hasNext()) {
                   Resource schemeResource = resIter.next();
                   schemeResource.addLiteral(DC.identifier, fintoID);
-                  schemeResource.addProperty(DCTerms.isFormatOf, ApplicationProperties.getSchemeId()+fintoID);
+                  schemeResource.addProperty(DCTerms.isFormatOf, ResourceFactory.createResource(ApplicationProperties.getSchemeId()+fintoID));
                           
                   accessor.putModel(ApplicationProperties.getSchemeId()+fintoID, vocabModel);
                   
@@ -125,19 +125,19 @@ public class ConceptMapper {
                   schemeModel.add(schemeResource, DCTerms.isFormatOf, ResourceFactory.createResource(ApplicationProperties.getSchemeId()+fintoID));
               }
              
-           // }
+           }
              
            if(schemeModel.size()>1) {
-                accessor.putModel("urn:csc:schemes",schemeModel);
+                accessor.add("urn:csc:schemes",schemeModel);
            }
          }
          
          
      }
      
+     /*
       public static void updateConceptFromConceptService(String uri) {
         
-        /* Only if concept IDs are not local UUIDs */ 
         if(!uri.startsWith("urn:uuid:")) {   
             
             DatasetAccessor accessor = DatasetAccessorFactory.createHTTP(services.getTempConceptReadWriteAddress());
@@ -172,10 +172,9 @@ public class ConceptMapper {
 
   
     }    
-    
+    */
+
     public static void addConceptFromReferencedResource(String model, String classID) {
-        
-        resolveConcept(classID);
                 
         String query
                 = "INSERT { GRAPH ?skosCollection { ?skosCollection skos:member ?concept . }}"
@@ -183,9 +182,9 @@ public class ConceptMapper {
                 + "SERVICE ?modelService {"
                 + "GRAPH ?class {"
                 + "?class dcterms:subject ?concept . "
-                + "}"
-                + "}"
-                + "GRAPH ?concept { ?s ?p ?o }"
+                + "}}"
+                + "GRAPH ?vocabulary { "
+                + "?concept a skos:Concept . }"
                 + "}";
 
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
@@ -196,7 +195,7 @@ public class ConceptMapper {
         pss.setCommandText(query);
         
         logger.info("ADDING CONCEPT from "+classID);
-
+        logger.info(pss.toString());
         UpdateRequest queryObj = pss.asUpdate();
         UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, services.getTempConceptSparqlUpdateAddress());
         qexec.execute();
@@ -248,7 +247,7 @@ public class ConceptMapper {
         }
 
     }
-    
+    /*
     public static void resolveConcept(String resource) {
 
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
@@ -271,12 +270,13 @@ public class ConceptMapper {
             }
         }
     }
-
+*/
+    
     public static void addConceptToLocalSKOSCollection(String model, String concept) {
         
         String query
                 = " INSERT { GRAPH ?skosCollection { ?skosCollection skos:member ?concept . }}"
-                + " WHERE { GRAPH ?concept { ?s ?p ?o . } }";
+                + " WHERE { ?concept a skos:concept . }";
 
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);

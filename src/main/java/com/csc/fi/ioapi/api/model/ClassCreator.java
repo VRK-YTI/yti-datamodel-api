@@ -62,7 +62,7 @@ public class ClassCreator {
                     return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
             }
 
-            ConceptMapper.updateConceptFromConceptService(conceptID);
+           // ConceptMapper.updateConceptFromConceptService(conceptID);
 
             ParameterizedSparqlString pss = new ParameterizedSparqlString();
             pss.setNsPrefixes(LDHelper.PREFIX_MAP);

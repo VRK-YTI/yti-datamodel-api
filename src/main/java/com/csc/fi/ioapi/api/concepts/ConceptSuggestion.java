@@ -60,8 +60,6 @@ public class ConceptSuggestion {
   private EndpointServices services = new EndpointServices();
   private static final Logger logger = Logger.getLogger(ConceptSuggestion.class.getName());
     
-  
-  
   @GET
   @Produces("application/ld+json")
   @ApiOperation(value = "Get concept suggestion", notes = "Get concept suggestions with concept ID, scheme ID or user ID. Concept suggestions with Scheme ID should be most useful. ")
