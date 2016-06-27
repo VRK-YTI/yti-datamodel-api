@@ -124,7 +124,7 @@ public class ModelCreator {
                     + "?modelIRI dcterms:references ?jhsScheme . "
                     + "?jhsScheme a skos:ConceptScheme ; "
                     + " dcterms:identifier 'jhsmeta' ; "
-                    + " dcterms:title 'JHSMeta - Julkishallinnon määrittelevä sanasto'@fi . "
+                    + " rdfs:label 'JHSMeta - Julkishallinnon määrittelevä sanasto'@fi . "
                     + "} WHERE { "
                     + "BIND(now() as ?creation) "
                     + "GRAPH <urn:csc:groups> { "
