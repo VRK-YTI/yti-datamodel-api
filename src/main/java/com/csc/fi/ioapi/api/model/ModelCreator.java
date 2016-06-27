@@ -139,7 +139,7 @@ public class ModelCreator {
             pss.setLiteral("profileLabelSKOS", ResourceFactory.createLangLiteral("Sisäinen käsitteistö", lang));
             pss.setLiteral("namespace", namespace+"#");
             pss.setLiteral("prefix", prefix);
-            pss.setIri("jhsScheme", services.getConceptSchemeUri()+"jhsmeta/");
+            pss.setIri("jhsScheme", "http://jhsmeta.fi/skos/");
             pss.setIri("modelIRI", namespaceIRI);
             pss.setIri("group", groupIRI);
             pss.setLiteral("draft", "Unstable");
