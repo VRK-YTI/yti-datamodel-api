@@ -119,11 +119,11 @@ public class ProfileCreator {
                     + "?modelIRI dcterms:references ?localSKOSNamespace . "
                     + "?localSKOSNamespace a skos:Collection ; "
                     + " dcterms:identifier ?prefix ; "
-                    + " dcterms:title ?profileLabelSKOS . "
-                    + "?modelIRI dcterms:references <http://jhsmeta.fi/skos/> . "
-                    + "<http://jhsmeta.fi/skos/> a skos:ConceptScheme ; "
+                    + " rdfs:label ?profileLabelSKOS . "
+                    + "?modelIRI dcterms:references ?jhsScheme . "
+                    + "?jhsScheme a skos:ConceptScheme ; "
                     + " dcterms:identifier 'jhsmeta' ; "
-                    + " dcterms:title 'JHSmeta'@fi . "
+                    + " rdfs:label 'JHSMeta - Julkishallinnon määrittelevä sanasto'@fi . "
                     + "} WHERE { "
                     + "BIND(now() as ?creation) "
                     + "GRAPH <urn:csc:groups> { "
@@ -135,6 +135,7 @@ public class ProfileCreator {
 
             pss.setCommandText(queryString);
             pss.setIri("localSKOSNamespace", namespaceSKOSIRI);
+            pss.setIri("jhsScheme", "http://jhsmeta.fi/skos/");
             pss.setLiteral("profileLabelSKOS", ResourceFactory.createLangLiteral("Sisäinen käsitteistö", lang));
             pss.setLiteral("namespace", namespace+"#");
             pss.setLiteral("prefix", prefix);

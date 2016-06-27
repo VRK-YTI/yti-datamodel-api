@@ -120,7 +120,7 @@ public class ModelCreator {
                     + "?modelIRI dcterms:references ?localSKOSNamespace . "
                     + "?localSKOSNamespace a skos:Collection ; "
                     + " dcterms:identifier ?prefix ; "
-                    + " dcterms:title ?profileLabelSKOS . "
+                    + " rdfs:label ?profileLabelSKOS . "
                     + "?modelIRI dcterms:references ?jhsScheme . "
                     + "?jhsScheme a skos:ConceptScheme ; "
                     + " dcterms:identifier 'jhsmeta' ; "
