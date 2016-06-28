@@ -18,6 +18,8 @@ import com.csc.fi.ioapi.utils.GraphManager;
 import com.csc.fi.ioapi.utils.JerseyFusekiClient;
 import com.csc.fi.ioapi.utils.LDHelper;
 import com.csc.fi.ioapi.utils.NamespaceResolver;
+import com.csc.fi.ioapi.utils.OPHCodeServer;
+import com.sun.jersey.api.client.ClientResponse;
 import org.apache.jena.query.ParameterizedSparqlString;
 import org.apache.jena.rdf.model.ResourceFactory;
 import com.wordnik.swagger.annotations.Api;
@@ -25,6 +27,7 @@ import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiParam;
 import com.wordnik.swagger.annotations.ApiResponse;
 import com.wordnik.swagger.annotations.ApiResponses;
+import javax.ws.rs.core.Response.Status;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
 import org.apache.jena.iri.IRIFactory;
@@ -33,12 +36,12 @@ import org.apache.jena.util.SplitIRI;
 /**
  * Root resource (exposed at "valueSchemeCreator" path)
  */
-@Path("valueSchemeCreator")
-@Api(value = "/valueSchemeCreator", description = "Construct new requirement")
-public class ValueSchemeCreator {
+@Path("coreServerCreator")
+@Api(value = "/codeServerCreator", description = "Create new reference to code server")
+public class CodeServerCreator {
 
     EndpointServices services = new EndpointServices();
-    private static final Logger logger = Logger.getLogger(ValueSchemeCreator.class.getName());
+    private static final Logger logger = Logger.getLogger(CodeServerCreator.class.getName());
     
     @GET
     @Produces("application/ld+json")
@@ -49,29 +52,49 @@ public class ValueSchemeCreator {
                     @ApiResponse(code = 404, message = "Service not found"),
                     @ApiResponse(code = 401, message = "No right to create new")})
     public Response newValueScheme(
-            @ApiParam(value = "Value scheme IRI", required = true) @QueryParam("namespace") String valueScheme,
-            @ApiParam(value = "Value scheme name", required = true) @QueryParam("label") String label,
-            @ApiParam(value = "Value scheme comment", required = true) @QueryParam("comment") String comment,
-            @ApiParam(value = "Initial language", required = true, allowableValues="fi,en") @QueryParam("lang") String lang) {
+            @ApiParam(value = "Code server api uri", required = true) @QueryParam("uri") String uri,
+            @ApiParam(value = "Code server name", required = true) @QueryParam("label") String label,
+            @ApiParam(value = "Code server description", required = true) @QueryParam("description") String comment,
+            @ApiParam(value = "Initial language", required = true, allowableValues="fi,en") @QueryParam("lang") String lang,
+            @ApiParam(value = "Update codelists", defaultValue = "false") @QueryParam("update") boolean force) {
 
-            IRI valueSchemeIRI;
-
-            try {
-                    IRIFactory iri = IRIFactory.iriImplementation();
-                    valueSchemeIRI = iri.construct(valueScheme);
-            } catch (IRIException e) {
+                    
+            IRIFactory iri = IRIFactory.iriImplementation();
+            IRI codeServerIRI = null;
+        
+            if(uri!=null && !uri.equals("undefined")) {
+                
+                OPHCodeServer codeServer = new OPHCodeServer(uri, true);
+                
+                if(codeServer==null || !codeServer.status) {
+                    return Response.status(403).entity(ErrorMessage.INVALIDPARAMETER).build();
+                }
+                try{
+                    codeServerIRI = iri.construct(uri);
+                } catch(IRIException e) {
                     return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
-            }
+                }
 
+            } else
+                return Response.status(403).entity(ErrorMessage.INVALIDPARAMETER).build();
+
+           
             String queryString;
             ParameterizedSparqlString pss = new ParameterizedSparqlString();
             pss.setNsPrefixes(LDHelper.PREFIX_MAP);
             queryString = "CONSTRUCT  { "
-                    + "?valueScheme a dcam:VocabularyEncodingScheme . "
-                    + "?valueScheme rdfs:label ?label . "
-                    + "?valueScheme rdfs:comment ?description . "
-                    + "} WHERE { }";
+                    + "?iri a ?type . "
+                    + "?iri dcterms:title ?label . "
+                    + "?iri dcterms:description ?description . "
+                    + "?iri dcterms:identifier ?uuid . "
+                    + "} WHERE { "
+                    + "BIND(UUID() as ?uuid) "
+                    + " }";
 
+            pss.setLiteral("label", ResourceFactory.createLangLiteral(label, lang));
+            pss.setLiteral("description", ResourceFactory.createLangLiteral(comment, lang));
+            pss.setIri("iri",uri);
+            
             pss.setCommandText(queryString);
 
             return JerseyFusekiClient.constructGraphFromService(pss.toString(), services.getTempConceptReadSparqlAddress());

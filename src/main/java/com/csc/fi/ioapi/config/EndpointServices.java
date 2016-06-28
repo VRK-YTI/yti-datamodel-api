@@ -10,12 +10,14 @@ package com.csc.fi.ioapi.config;
  *
  * @author malonen
  */
-public class EndpointServices {
+public final class EndpointServices {
     
 private String endpoint;
-    
+private String scheme;
+
 public EndpointServices() {
     this.endpoint = ApplicationProperties.getEndpoint();
+    this.scheme = ApplicationProperties.getSchemeId();
 }
 
 public String getCoreReadAddress() {
@@ -28,6 +30,18 @@ public String getCoreReadWriteAddress() {
 
 public String getCoreSparqlAddress() {
     return endpoint+"/core/sparql";
+}
+
+public String getSchemesReadAddress() {
+    return endpoint+"/scheme/get";
+}
+
+public String getSchemesReadWriteAddress() {
+    return endpoint+"/scheme/data";
+}
+
+public String getSchemesSparqlAddress() {
+    return endpoint+"/scheme/sparql";
 }
 
 public String getLocalhostCoreSparqlAddress() {
@@ -59,8 +73,8 @@ public String getUsersSparqlUpdateAddress() {
     return endpoint+"/users/update";
 }
 
-public String getConceptServiceUri() {
-     return "http://dev.finto.fi";
+public String getConceptSchemeUri() {
+     return scheme;
 }
 
 public String getConceptAPI() {
@@ -93,15 +107,19 @@ public String getProvSparqlUpdateAddress() {
 }
 
 public String getConceptSearchAPI() {
-     return "http://dev.finto.fi/rest/v1/search";
+     return scheme+"rest/v1/search";
 }
 
 public String getConceptSearchAPI(String id) {
-     return "http://dev.finto.fi/rest/v1/"+id+"/search";
+     return scheme+"rest/v1/"+id+"/search";
 }
 
 public String getSchemeSearchAPI() {
-     return "http://dev.finto.fi/rest/v1/vocabularies";
+     return scheme+"rest/v1/vocabularies";
+}
+
+public String getVocabExportAPI(String vocab) {
+    return scheme+"rest/v1/"+vocab+"/data";
 }
 
 public String getImportsReadWriteAddress() {

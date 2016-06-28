@@ -52,7 +52,7 @@ public class LDHelper {
         put("sd","http://www.w3.org/ns/sparql-service-description#");
         put("text","http://jena.apache.org/text#");
         put("sh","http://www.w3.org/ns/shacl#");
-        put("iow","http://urn.fi/urn:nbn:fi:csc-iow-meta#");
+        put("iow","http://iow.csc.fi/ns/iow#");
         put("skos","http://www.w3.org/2004/02/skos/core#");
         put("prov","http://www.w3.org/ns/prov#");
         put("dcap","http://purl.org/ws-mmi-dc/terms/");
@@ -66,6 +66,14 @@ public class LDHelper {
     Collections.unmodifiableMap(new HashMap<String, Object>() {{
         put("subClassOf", jsonObject("{ '@id': 'http://www.w3.org/2000/01/rdf-schema#subClassOf', '@type': '@id' }"));
         put("property", jsonObject("{ '@id': 'http://www.w3.org/ns/shacl#property', '@type': '@id' }"));
+        put("predicate", jsonObject("{ '@id': 'http://www.w3.org/ns/shacl#predicate', '@type': '@id' }"));
+    }});
+    
+    
+        public static final Map<String, Object> OPH_MAP = 
+    Collections.unmodifiableMap(new HashMap<String, Object>() {{
+        put("koodistos", jsonObject("{ '@id': 'http://www.w3.org/2000/01/rdf-schema#subClassOf', '@type': '@id' }"));
+        put("koodistoUrl", jsonObject("{ '@id': 'http://www.w3.org/ns/shacl#property', '@type': '@id' }"));
         put("predicate", jsonObject("{ '@id': 'http://www.w3.org/ns/shacl#predicate', '@type': '@id' }"));
     }});
 
@@ -94,7 +102,7 @@ public class LDHelper {
                             "PREFIX sh: <http://www.w3.org/ns/shacl#> "+
                             "PREFIX skos: <http://www.w3.org/2004/02/skos/core#> "+
                             "PREFIX prov: <http://www.w3.org/ns/prov#> " +
-                            "PREFIX iow: <http://urn.fi/urn:nbn:fi:csc-iow-meta#>" +
+                            "PREFIX iow: <http://iow.csc.fi/ns/iow#>" +
                             "PREFIX dcap: <http://purl.org/ws-mmi-dc/terms/> " +
                             "PREFIX afn: <http://jena.hpl.hp.com/ARQ/function#>"+
                             "PREFIX schema: <http://schema.org/>"+
@@ -107,6 +115,10 @@ public class LDHelper {
     static String query(String queryString) {
         queryString = prefix+queryString;
         return  UriComponent.encode(queryString,UriComponent.Type.QUERY_PARAM); // URLEncoder.encode(queryString, "UTF-8");
+    }
+    
+    public static boolean isAlphaString(String name) {
+        return name.matches("[a-zA-Z]+");
     }
     
     public static String modelName(String name) {
@@ -144,6 +156,10 @@ public class LDHelper {
     public static final InputStream getDefaultSchemes() {
            return LDHelper.class.getClassLoader().getResourceAsStream("defaultSchemes.json");
     }
+    
+    public static final InputStream getDefaultCodeServers() {
+           return LDHelper.class.getClassLoader().getResourceAsStream("defaultCodeServers.json");
+    }
       
     public static final InputStream getDefaultGroupsInputStream() {
            return LDHelper.class.getClassLoader().getResourceAsStream("defaultGroups.json");
@@ -179,6 +195,15 @@ public class LDHelper {
     public static Object getExportContext() {
        try {
            return JsonUtils.fromInputStream(LDHelper.class.getClassLoader().getResourceAsStream("export.json"));
+       } catch (IOException ex) {
+           Logger.getLogger(LDHelper.class.getName()).log(Level.SEVERE, null, ex);
+           return null;
+       }
+    }
+    
+    public static Object getOPHContext() {
+       try {
+           return JsonUtils.fromInputStream(LDHelper.class.getClassLoader().getResourceAsStream("oph.json"));
        } catch (IOException ex) {
            Logger.getLogger(LDHelper.class.getName()).log(Level.SEVERE, null, ex);
            return null;

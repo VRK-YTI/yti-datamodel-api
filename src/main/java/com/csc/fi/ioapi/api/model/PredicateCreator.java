@@ -66,8 +66,7 @@ public class PredicateCreator {
                 return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
         }
 
-        ConceptMapper.updateConceptFromConceptService(conceptID);
-        ConceptMapper.addConceptToLocalSKOSCollection(modelID,conceptID);
+       // ConceptMapper.updateConceptFromConceptService(conceptID);
 
         String queryString;
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
@@ -82,12 +81,17 @@ public class PredicateCreator {
                 + "?predicateIRI rdfs:comment ?comment . "
                 + "?predicateIRI dcterms:subject ?concept . "
                 + "?concept skos:prefLabel ?label . "
-                + "?concept rdfs:comment ?comment . } "
+                + "?concept a ?conceptType . "
+                + "?concept skos:definition ?comment . "
+                + "?concept skos:inScheme ?scheme ."
+                + "} "
                 + "WHERE { "
                 + "BIND(now() as ?creation) "
                 + "BIND(now() as ?modified) "
-                + "?concept a skos:Concept . "
-                + "VALUES ?someLabel { rdfs:label skos:prefLabel} "
+                + "VALUES ?conceptType { skos:Concept iow:ConceptSuggestion }"
+                + "?concept a ?conceptType . "
+                + "?concept skos:inScheme ?scheme ."
+                + "VALUES ?someLabel { rdfs:label skos:prefLabel dc:title dcterms:title } "
                 + "?concept ?someLabel ?label . "
                 + "OPTIONAL {"
                 + "VALUES ?someDefinition { rdfs:comment skos:definition } "

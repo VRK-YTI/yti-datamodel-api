@@ -14,6 +14,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import com.csc.fi.ioapi.config.EndpointServices;
+import com.csc.fi.ioapi.utils.ConceptMapper;
 import com.csc.fi.ioapi.utils.ErrorMessage;
 import com.csc.fi.ioapi.utils.GraphManager;
 import com.csc.fi.ioapi.utils.JerseyFusekiClient;
@@ -127,8 +128,10 @@ public class ShapeCreator {
                     + "BIND(now() as ?modified) "
                     + "OPTIONAL { ?classIRI a ?type . "
                     + "VALUES ?type { owl:Class rdfs:Class }}"
+                        
                     + "OPTIONAL {?classIRI rdfs:label ?labelStr . FILTER(LANG(?labelStr) = '') BIND(STRLANG(?labelStr,'en') as ?label) }"
                     + "OPTIONAL {?classIRI rdfs:label ?label . FILTER(LANG(?label)!='') }"
+                        
                     + "OPTIONAL { ?classIRI rdfs:comment ?commentStr . "
                     + "BIND(STRLANG(?commentStr,'en') as ?comment) "
                     + "}"
@@ -149,10 +152,10 @@ public class ShapeCreator {
                     
                     /* Predicate comments - if lang unknown create english tag */
                     + "OPTIONAL { ?predicate ?predicateCommentPred ?propertyCommentStr . "
-                    + "VALUES ?predicateCommentPred { rdfs:comment skos:definition dcterms:description dc:description }"
+                    + "VALUES ?predicateCommentPred { rdfs:comment skos:definition prov:definition dcterms:description dc:description }"
                     + "FILTER(LANG(?propertyCommentStr) = '') BIND(STRLANG(?propertyCommentStr,'en') as ?propertyComment) }"
                     + "OPTIONAL { ?predicate ?predicateCommentPred ?propertyComment . "
-                    + "VALUES ?predicateCommentPred { rdfs:comment skos:definition dcterms:description dc:description }"
+                    + "VALUES ?predicateCommentPred { rdfs:comment skos:definition prov:definition dcterms:description dc:description }"
                     + " FILTER(LANG(?propertyComment)!='') }"
                         
                     + "}"    
@@ -166,9 +169,8 @@ public class ShapeCreator {
             pss.setLiteral("profileNamespace", profileID+"#");
             pss.setLiteral("draft", "Unstable");
             pss.setIri("shapeIRI",shapeIRI);
-            
-            logger.info(pss.toString());
-            
+
+
             return JerseyFusekiClient.constructGraphFromService(pss.toString(), service);
     }   
  

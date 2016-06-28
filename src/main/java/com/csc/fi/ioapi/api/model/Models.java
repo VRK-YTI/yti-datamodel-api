@@ -220,6 +220,8 @@ public class Models {
                return Response.status(response.getStatus()).entity(ErrorMessage.UNEXPECTED).build();
         }
         
+        GraphManager.updateModifyDates(graph);
+        
         UUID provUUID = UUID.randomUUID();
                 
         /* If update is successfull create new prov entity */ 

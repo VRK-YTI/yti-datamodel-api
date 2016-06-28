@@ -26,6 +26,7 @@ import org.apache.jena.iri.IRIFactory;
 
 import com.csc.fi.ioapi.config.EndpointServices;
 import com.csc.fi.ioapi.config.LoginSession;
+import com.csc.fi.ioapi.utils.ConceptMapper;
 import com.csc.fi.ioapi.utils.ErrorMessage;
 import com.csc.fi.ioapi.utils.GraphManager;
 import com.csc.fi.ioapi.utils.JerseyFusekiClient;
@@ -220,7 +221,10 @@ public class Predicate {
             
         /* Create new graph with new id */ 
         ClientResponse response = JerseyFusekiClient.putGraphToTheService(id, body, services.getCoreReadWriteAddress());
+        ConceptMapper.addConceptFromReferencedResource(model,id);
            
+        GraphManager.updateModifyDates(id);
+        
         if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
             /* TODO: Create prov events from failed updates? */
                logger.log(Level.WARNING, "Unexpected: Predicate update failed: "+id);
@@ -239,6 +243,7 @@ public class Predicate {
                  return Response.status(403).entity(ErrorMessage.USEDIRI).build();
             } else {
                 GraphManager.insertExistingGraphReferenceToModel(id, model);
+                ConceptMapper.addConceptFromReferencedResource(model,id);
                 return Response.status(204).build();
             }
         }
@@ -307,6 +312,8 @@ public class Predicate {
                return Response.status(response.getStatus()).entity(ErrorMessage.UNEXPECTED).build();
            }
            
+
+           
             UUID provUUID = UUID.randomUUID();
             
            /* If predicate is created succesfully create prov activity */
@@ -315,6 +322,8 @@ public class Predicate {
            }
             
            GraphManager.insertNewGraphReferenceToModel(id, model);
+          
+           ConceptMapper.addConceptFromReferencedResource(model,id);
             
            logger.log(Level.INFO, id + " updated sucessfully!");
             
@@ -359,13 +368,16 @@ public class Predicate {
        if(!login.isLoggedIn() || !login.hasRightToEditModel(model))
           return Response.status(401).entity(ErrorMessage.UNAUTHORIZED).build();
        
-    /* If Class is defined in the model */
+    /* If Predicate is defined in the model */
     if(id.startsWith(model)) {
         /* Remove graph */
-        return JerseyFusekiClient.deleteGraphFromService(id, services.getCoreReadWriteAddress());  
+            Response resp = JerseyFusekiClient.deleteGraphFromService(id, services.getCoreReadWriteAddress());   
+         //   ConceptMapper.removeUnusedConcepts(model);
+            return resp;
     } else {
         /* If removing referenced predicate */   
          GraphManager.deleteGraphReferenceFromModel(idIRI,modelIRI);  
+        // ConceptMapper.removeUnusedConcepts(model);
          return Response.status(204).build();   
        }
   }

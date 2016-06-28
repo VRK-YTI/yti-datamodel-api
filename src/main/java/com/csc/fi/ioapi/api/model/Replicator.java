@@ -37,6 +37,7 @@ import com.wordnik.swagger.annotations.ApiParam;
 import com.wordnik.swagger.annotations.ApiResponse;
 import com.wordnik.swagger.annotations.ApiResponses;
 import java.io.DataInputStream;
+import java.util.HashMap;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import org.apache.jena.iri.IRI;
@@ -80,7 +81,7 @@ public class Replicator {
       @ApiResponse(code = 500, message = "Bad data?") 
   })
   public Response postJson(
-          @ApiParam(value = "Service ID", required = true) 
+          @ApiParam(value = "IOW Service ID in form of http://domain/api/rest/ ", required = true) 
                 @QueryParam("service") 
                 String service,
                 @ApiParam(value = "Model ID") 
@@ -155,6 +156,10 @@ public class Replicator {
            DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(services.getCoreReadWriteAddress());
            DatasetAdapter adapter = new DatasetAdapter(accessor);
            
+           DatasetGraphAccessorHTTP conceptAccessor = new DatasetGraphAccessorHTTP(services.getTempConceptReadWriteAddress());
+           DatasetAdapter conceptAdapter = new DatasetAdapter(conceptAccessor);
+           
+           
            while (iter.hasNext()) {
                 Resource res = iter.nextResource();
                 Resource modelURI = res.getPropertyResourceValue(ResourceFactory.createProperty(SD, "name"));
@@ -162,14 +167,17 @@ public class Replicator {
                 if(GraphManager.isExistingGraph(modelURI.toString())) {
                     logger.info("Exists! Skipping "+modelURI.toString());
                 } else {
-                
+              
                  logger.info("---------------------------------------------------------");    
-                 
                  logger.info(modelURI.toString());
+                 
+                /* Replicate local concepts */ 
+                String localConcepts = service+"exportResource?graph="+UriComponent.encode(modelURI.toString()+"/skos#",UriComponent.Type.QUERY_PARAM)+"&service=concept";
+                Model localConceptModel = JerseyFusekiClient.getResourceAsJenaModel(localConcepts);
+                conceptAdapter.add(modelURI.toString()+"/skos#",localConceptModel);
                  
                 Resource modelGROUP = res.getPropertyResourceValue(DCTerms.isPartOf);
                 
-                logger.info(modelGROUP.toString());
                 
                 ServiceDescriptionManager.createGraphDescription(modelURI.toString(), modelGROUP.toString(), null);
                 
@@ -182,14 +190,32 @@ public class Replicator {
                 adapter.add(modelURI.toString()+"#HasPartGraph", hasPartModel);
                 
                 NodeIterator nodIter = hasPartModel.listObjectsOfProperty(DCTerms.hasPart);
+                HashMap conceptMap = new HashMap<String, String>();
+                    
                 while(nodIter.hasNext()) {
                     Resource part = nodIter.nextNode().asResource();
                     
                     String resourceURI = service+"exportResource?graph="+UriComponent.encode(part.toString(),UriComponent.Type.QUERY_PARAM);
                     Model resourceModel = JerseyFusekiClient.getResourceAsJenaModel(resourceURI);
-
-                    logger.info(part.toString());
                     adapter.add(part.toString(), resourceModel);
+                    
+                    NodeIterator subIter = resourceModel.listObjectsOfProperty(DCTerms.subject);
+                   
+                    while(subIter.hasNext()) {
+                        String coConcept = subIter.nextNode().asResource().toString();
+                        
+                        if(!conceptMap.containsKey(coConcept)) {
+                            String conceptURI = service+"exportResource?graph="+UriComponent.encode(coConcept,UriComponent.Type.QUERY_PARAM)+"&service=concept";
+                          //logger.info(conceptURI);
+                            Model conceptModel = JerseyFusekiClient.getResourceAsJenaModel(conceptURI);
+                          //  logger.info(""+conceptModel.size());
+                            conceptMap.put(coConcept, "true");
+                            conceptAdapter.putModel(coConcept, conceptModel);
+                        }
+                        
+                        
+                    }
+                        
                     
                 }
                 

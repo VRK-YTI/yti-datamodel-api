@@ -30,22 +30,28 @@ public class NamespaceResolver {
    
     static final private Logger logger = Logger.getLogger(NamespaceResolver.class.getName());
     	
-	public static Boolean resolveNamespace(String namespace) {
+	public static Boolean resolveNamespace(String namespace, String alternativeURL, boolean force) {
 		
  
             try { // Unexpected exception
                 
-                IRI namespaceIRI;
-
+                IRI namespaceIRI = null;
+                IRI alternativeIRI = null;
+                
                 try {
                         IRIFactory iri = IRIFactory.semanticWebImplementation();
                         namespaceIRI = iri.construct(namespace);
+                        
+                        if(alternativeURL!=null) {
+                            alternativeIRI = iri.construct(alternativeURL); 
+                       }
+                        
                 } catch (IRIException e) {
                         logger.warning("Namespace is invalid IRI!");
                         return false;
                 }
 
-		if (NamespaceManager.isSchemaInStore(namespace)) {
+		if (NamespaceManager.isSchemaInStore(namespace) && !force ) {
 			logger.info("Schema found in store: "+namespace);
 			return true;
 		} else {
@@ -55,7 +61,11 @@ public class NamespaceResolver {
                         URL url;
              
                         try {
-                            url = new URL(namespace);
+                            if(alternativeIRI!=null) {
+                                url = new URL(alternativeURL);
+                            } else {
+                                url = new URL(namespace);
+                            }
                         } catch (MalformedURLException e) {
                             logger.warning("Malformed Namespace URL: "+namespace);
                             return false;
@@ -110,10 +120,15 @@ public class NamespaceResolver {
                                             connection.disconnect();
                                             return false;
                                     }
-
+                                    
                                     ContentType guess = ContentType.create(contentType);
                                     Lang testLang = RDFLanguages.contentTypeToLang(guess);
+                                    
+                                    if(connection.getURL().toString().endsWith(".ttl"))
+                                        testLang = RDFLanguages.fileExtToLang("ttl");
+                                    
 
+                                    
                                     if(testLang!=null) {
 
                                         logger.info("Trying to parse "+testLang.getName()+" from "+namespace);

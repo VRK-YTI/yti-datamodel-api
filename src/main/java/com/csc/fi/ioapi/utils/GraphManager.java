@@ -117,7 +117,7 @@ public static boolean isExistingPrefix(String prefix) {
 
         try {
             boolean b = qexec.execAsk();
-            logger.info(""+b);
+            logger.info(graphIRI.toDisplayString()+": "+b);
             return b;
         } catch (Exception ex) {
             return false;
@@ -215,7 +215,6 @@ public static boolean isExistingPrefix(String prefix) {
         pss.setIri("graph", id);
 
         logger.info("Removing model from " + id);
-        logger.info(query);
 
         UpdateRequest queryObj = pss.asUpdate();
         UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, services.getCoreSparqlUpdateAddress());
@@ -268,6 +267,26 @@ public static boolean isExistingPrefix(String prefix) {
          UpdateAction.execute(request, graphStore) ;
         
          */
+    }
+    
+    
+        public static void updateModifyDates(String resource) {
+
+        String query =
+                  "DELETE { GRAPH ?resource { ?resource dcterms:modified ?oldModDate . } } "
+                + "INSERT { GRAPH ?resource { ?resource dcterms:modified ?time . } } "
+                + "WHERE { GRAPH ?resource { ?resource dcterms:modified ?oldModDate .  } BIND(now() as ?time) }";
+
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+        pss.setIri("resource", resource);
+
+        pss.setCommandText(query);
+
+        UpdateRequest queryObj = pss.asUpdate();
+        UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, services.getCoreSparqlUpdateAddress());
+        qexec.execute();
+    
     }
 
     public static void deleteGraphs() {
@@ -338,8 +357,6 @@ public static boolean isExistingPrefix(String prefix) {
         pss.setLiteral("date", timestamp);
         pss.setCommandText(query);
 
-        logger.log(Level.WARNING, pss.toString() + " " + services.getCoreSparqlUpdateAddress());
-
         UpdateRequest queryObj = pss.asUpdate();
         UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, services.getCoreSparqlUpdateAddress());
         qexec.execute();
@@ -358,8 +375,6 @@ public static boolean isExistingPrefix(String prefix) {
         pss.setIri("model", model);
         pss.setIri("hasPartGraph", model+"#HasPartGraph");
         pss.setCommandText(query);
-
-        logger.log(Level.WARNING, pss.toString() + " " + services.getCoreSparqlUpdateAddress());
 
         UpdateRequest queryObj = pss.asUpdate();
         UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, services.getCoreSparqlUpdateAddress());

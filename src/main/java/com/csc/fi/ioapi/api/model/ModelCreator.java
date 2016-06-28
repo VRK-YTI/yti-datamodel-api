@@ -53,8 +53,33 @@ public class ModelCreator {
             @ApiParam(value = "Model prefix", required = true) @QueryParam("prefix") String prefix,
             @ApiParam(value = "Model label", required = true) @QueryParam("label") String label,
             @ApiParam(value = "Group ID", required = true) @QueryParam("group") String group,
-            @ApiParam(value = "Initial language", required = true, allowableValues="fi,en") @QueryParam("lang") String lang) {
+            @ApiParam(value = "Label language", required = true, allowableValues="fi,en") @QueryParam("lang") String lang,
+            @ApiParam(value = "Allowed languages as space list: 'en sv pl'. Default 'fi en'") @QueryParam("langList") String allowedLang) {
 
+            if(allowedLang==null || allowedLang.equals("undefined") || allowedLang.length()<2) {
+                allowedLang = "('fi' 'en')"; }
+            else if(allowedLang.length()==2 && LDHelper.isAlphaString(lang)) {
+                 allowedLang="('"+allowedLang+"')";
+            }
+            else {
+                if(!allowedLang.contains(" "))
+                    return Response.status(403).entity(ErrorMessage.INVALIDPARAMETER).build();
+                
+                String[] languages = allowedLang.split(" ");
+                String builtLang = "(";
+                
+                for(String s: languages) {
+                   if(s.length()>2 || !LDHelper.isAlphaString(s)) {
+                       return Response.status(403).entity(ErrorMessage.INVALIDPARAMETER).build();
+                   } 
+                   builtLang = builtLang.concat(" '"+s+"'");
+                }
+                
+                builtLang = builtLang.concat(" )");
+                allowedLang = builtLang;
+                
+            }
+                      
             prefix = LDHelper.modelName(prefix);
             String namespace = ApplicationProperties.getDefaultNamespace()+prefix;
             
@@ -68,6 +93,8 @@ public class ModelCreator {
             } catch (IRIException e) {
                     logger.warning("INVALID: "+namespace);
                     return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
+            } catch (NullPointerException e) {
+                    return Response.status(403).entity(ErrorMessage.INVALIDPARAMETER).build();
             }
             
         if(GraphManager.isExistingPrefix(prefix)) {
@@ -85,6 +112,7 @@ public class ModelCreator {
                     + "?modelIRI owl:versionInfo ?draft . "
                     + "?modelIRI dcterms:created ?creation . "
                     + "?modelIRI dcterms:modified ?creation . "
+                    + "?modelIRI dcterms:language "+allowedLang+" . "
                     + "?modelIRI dcap:preferredXMLNamespaceName ?namespace . "
                     + "?modelIRI dcap:preferredXMLNamespacePrefix ?prefix . "
                     + "?modelIRI dcterms:isPartOf ?group . "
@@ -93,15 +121,16 @@ public class ModelCreator {
                     + "?localSKOSNamespace a skos:Collection ; "
                     + " dcterms:identifier ?prefix ; "
                     + " dcterms:title ?profileLabelSKOS . "
-                    + "?modelIRI dcterms:references <http://jhsmeta.fi/skos/> . "
-                    + "<http://jhsmeta.fi/skos/> a skos:ConceptScheme ; "
+                    + "?modelIRI dcterms:references ?jhsScheme . "
+                    + "?jhsScheme a skos:ConceptScheme ; "
                     + " dcterms:identifier 'jhsmeta' ; "
-                    + " dcterms:title 'JHSmeta'@fi . "
+                    + " dcterms:title 'JHSMeta - Julkishallinnon määrittelevä sanasto'@fi . "
                     + "} WHERE { "
                     + "BIND(now() as ?creation) "
                     + "GRAPH <urn:csc:groups> { "
                     + "?group a foaf:Group . "
                     + "?group rdfs:label ?groupLabel . "
+                    + "FILTER(lang(?groupLabel) = ?defLang)"
                     + "}"
                     + "}";
 
@@ -110,12 +139,13 @@ public class ModelCreator {
             pss.setLiteral("profileLabelSKOS", ResourceFactory.createLangLiteral("Sisäinen käsitteistö", lang));
             pss.setLiteral("namespace", namespace+"#");
             pss.setLiteral("prefix", prefix);
+            pss.setIri("jhsScheme", "http://jhsmeta.fi/skos/");
             pss.setIri("modelIRI", namespaceIRI);
             pss.setIri("group", groupIRI);
             pss.setLiteral("draft", "Unstable");
             pss.setLiteral("mlabel", ResourceFactory.createLangLiteral(label, lang));
+            pss.setLiteral("defLang", lang);
 
-            logger.info(pss.toString());
             
             return JerseyFusekiClient.constructGraphFromService(pss.toString(), services.getCoreSparqlAddress());
             

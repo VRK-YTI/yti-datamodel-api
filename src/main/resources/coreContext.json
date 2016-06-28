@@ -23,14 +23,6 @@
       "@id": "http://www.w3.org/2000/01/rdf-schema#subClassOf",
       "@type": "@id"
     },
-    "attributes": {
-      "@id": "http://urn.fi/urn:nbn:fi:csc-iow-meta#attributes",
-      "@type": "@id"
-    },
-    "classes": {
-      "@id": "http://urn.fi/urn:nbn:fi:csc-iow-meta#classes",
-      "@type": "@id"
-    },
     "versionInfo": "http://www.w3.org/2002/07/owl#versionInfo",
     "predicate": {
       "@id": "http://www.w3.org/ns/shacl#predicate",
@@ -52,7 +44,6 @@
     "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
     "xsd": "http://www.w3.org/2001/XMLSchema#",
     "owl": "http://www.w3.org/2002/07/owl#",
-    "iow": "http://urn.fi/urn:nbn:fi:csc-iow-meta#",
     "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "sh": "http://www.w3.org/ns/shacl#",
     "skos": "http://www.w3.org/2004/02/skos/core#",

@@ -69,7 +69,7 @@ public class ModeRequirementlCreator {
             boolean isLocalNamespace = true;
             
             if(!GraphManager.isExistingServiceGraph(namespace)) {
-               isResolvedNamespace = NamespaceResolver.resolveNamespace(namespace);
+               isResolvedNamespace = NamespaceResolver.resolveNamespace(namespace,null,false);
                isLocalNamespace = false;
             }
 

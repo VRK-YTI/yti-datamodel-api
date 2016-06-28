@@ -50,7 +50,6 @@ public class ProvenanceManager {
         pss.setLiteral("versionID", "urn:uuid:"+provUUID);
         pss.setCommandText(query);
         
-        logger.info(pss.toString());
 
         UpdateRequest queryObj = pss.asUpdate();
         UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, services.getCoreSparqlUpdateAddress());
@@ -78,8 +77,6 @@ public class ProvenanceManager {
         pss.setIri("graph", graph);
         pss.setLiteral("versionID", "urn:uuid:"+provUUID);
         pss.setCommandText(query);
-        
-        logger.info(pss.toString());
 
         UpdateRequest queryObj = pss.asUpdate();
         UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, services.getCoreSparqlUpdateAddress());
@@ -189,7 +186,6 @@ public class ProvenanceManager {
         pss.setIri("jsonld", "urn:uuid:"+provUUID);
         pss.setCommandText(query);
         
-        logger.info(pss.toString());
 
         UpdateRequest queryObj = pss.asUpdate();
         UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, services.getProvSparqlUpdateAddress());

@@ -62,13 +62,13 @@ public class ClassCreator {
                     return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
             }
 
-            ConceptMapper.updateConceptFromConceptService(conceptID);
-            ConceptMapper.addConceptToLocalSKOSCollection(modelID,conceptID);
+           // ConceptMapper.updateConceptFromConceptService(conceptID);
 
             ParameterizedSparqlString pss = new ParameterizedSparqlString();
             pss.setNsPrefixes(LDHelper.PREFIX_MAP);
             
             String queryString = "CONSTRUCT  { "
+                    + "?classIRI iow:contextIdentifier ?localIdentifier . "
                     + "?classIRI owl:versionInfo ?draft . "
                     + "?classIRI dcterms:modified ?modified . "
                     + "?classIRI dcterms:created ?creation . "
@@ -77,13 +77,17 @@ public class ClassCreator {
                     + "?classIRI rdfs:label ?classLabel . "
                     + "?classIRI rdfs:comment ?comment . "
                     + "?classIRI dcterms:subject ?concept . "
+                    + "?concept a ?conceptType . "
                     + "?concept skos:prefLabel ?label . "
                     + "?concept skos:definition ?comment . "
+                    + "?concept skos:inScheme ?scheme . "
                     + "} WHERE { "
                     + "BIND(now() as ?creation) "
                     + "BIND(now() as ?modified) "
-                    + "?concept a skos:Concept . "
-                    + "VALUES ?someLabel { rdfs:label skos:prefLabel} "
+                    + "VALUES ?conceptType { skos:Concept iow:ConceptSuggestion }"
+                    + "?concept a ?conceptType . "
+                    + "?concept skos:inScheme ?scheme ."
+                    + "VALUES ?someLabel { rdfs:label skos:prefLabel dc:title dcterms:title } "
                     + "?concept ?someLabel ?label . "
                     + "OPTIONAL {"
                     + "VALUES ?someDefinition { rdfs:comment skos:definition } "

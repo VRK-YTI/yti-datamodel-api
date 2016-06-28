@@ -57,7 +57,14 @@ public class ContextWriter {
                 "SELECT ?resource ?resourceName ?datatype "
                 + "WHERE { "
                 + "{GRAPH ?resourceID { "
-                + "?resourceID a ?type . "
+                + "?resourceID a sh:Shape . "
+                + "?resourceID sh:scopeClass ?scopeClass . "
+                + "BIND(?scopeClass as ?resource)"
+                + "BIND(afn:localname(?resourceID) as ?resourceName)"
+                + "OPTIONAL { ?resourceID a owl:DatatypeProperty . ?resourceID rdfs:range ?datatype . }"
+                + "}} UNION "
+                + "{GRAPH ?resourceID { "
+                + "?resourceID a rdfs:Class . "
                 + "BIND(?resourceID as ?resource)"
                 + "BIND(afn:localname(?resourceID) as ?resourceName)"
                 + "OPTIONAL { ?resourceID a owl:DatatypeProperty . ?resourceID rdfs:range ?datatype . }"
@@ -120,29 +127,28 @@ public class ContextWriter {
 
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         String selectResources = 
-                "SELECT ?resource ?resourceName ?datatype "
+                "SELECT ?resource ?type ?resourceName ?datatype ?scopeClass "
                 + "WHERE { "
                 + "GRAPH ?modelPartGraph {"
                 + "?model dcterms:hasPart ?resource . "
                 + "}"
                 + "GRAPH ?resource {"
+                + "?resource a ?type . "
+                + "OPTIONAL { ?resource sh:scopeClass ?scopeClass }"
                 + "BIND(afn:localname(?resource) as ?resourceName)"
                 + "}"
                 + "OPTIONAL {"
                 + "GRAPH ?class {"
                 + "?class sh:property ?property . "
                 + "?property sh:predicate ?resource . "
-                + "?property sh:datatype ?datatype . "
+                + "?property sh:datatype ?datatype . "                
                 + "}"
-                + "}"
-                + "}";
+                + "} }";
 
         pss.setIri("model", modelID);
         pss.setIri("modelPartGraph",modelID+"#HasPartGraph");
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
         pss.setCommandText(selectResources);
-        
-        logger.info(pss.toString());
         
         QueryExecution qexec = QueryExecutionFactory.sparqlService(services.getCoreSparqlAddress(), pss.asQuery());
 
@@ -155,7 +161,12 @@ public class ContextWriter {
             String predicateID = soln.getResource("resource").toString();
             String predicateName = soln.getLiteral("resourceName").toString();
             
+            if(soln.contains("scopeClass")) {
+                predicateID = soln.getResource("scopeClass").toString();
+            }
+            
             JsonObjectBuilder predicate = Json.createObjectBuilder();
+            
             predicate.add("@id",predicateID);
             
             if(soln.contains("datatype")) {

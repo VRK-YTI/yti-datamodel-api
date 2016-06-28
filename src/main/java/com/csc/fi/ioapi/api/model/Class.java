@@ -24,6 +24,7 @@ import org.apache.jena.iri.IRIException;
 import org.apache.jena.iri.IRIFactory;
 import com.csc.fi.ioapi.config.EndpointServices;
 import com.csc.fi.ioapi.config.LoginSession;
+import com.csc.fi.ioapi.utils.ConceptMapper;
 import com.csc.fi.ioapi.utils.ErrorMessage;
 import com.csc.fi.ioapi.utils.GraphManager;
 import com.csc.fi.ioapi.utils.JerseyFusekiClient;
@@ -79,7 +80,6 @@ public class Class {
         String queryString = "CONSTRUCT { "
                 + "?class rdfs:label ?label . "
                 + "?class a ?type . "
-               // + "?class dcterms:modified ?date . "
                 + "?class dcterms:modified ?modified . "
                 + "?class rdfs:isDefinedBy ?source . "
                 + "?source rdfs:label ?sourceLabel . "
@@ -141,10 +141,13 @@ public class Class {
 
             pss.setIri("graph", id);
 
+            
             if(model!=null && !model.equals("undefined")) {
                   pss.setIri("library", model);
             }
 
+           // logger.info(pss.toString());
+            
             return JerseyFusekiClient.constructGraphFromService(pss.toString(), sparqlService);         
 
       }
@@ -226,6 +229,10 @@ public class Class {
             
            /* Create new graph with new id */ 
            ClientResponse response = JerseyFusekiClient.putGraphToTheService(id, body, services.getCoreReadWriteAddress());
+
+           ConceptMapper.addConceptFromReferencedResource(model,id);
+           
+           GraphManager.updateModifyDates(id);
            
            if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
                /* TODO: Create prov events from failed updates? */
@@ -245,6 +252,7 @@ public class Class {
                 Response.status(403).entity(ErrorMessage.USEDIRI).build();
             } else {
                 GraphManager.insertExistingGraphReferenceToModel(id, model);
+                ConceptMapper.addConceptFromReferencedResource(model,id);
                 return Response.status(204).build();
             }
         }
@@ -315,12 +323,13 @@ public class Class {
           
            /* Create new graph with new id */ 
            ClientResponse response = JerseyFusekiClient.putGraphToTheService(id, body, services.getCoreReadWriteAddress());
-          
+
            if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
                logger.log(Level.WARNING, "Unexpected: Not created: "+id);
                return Response.status(response.getStatus()).entity(ErrorMessage.UNEXPECTED).build();
            }
-           
+
+
             UUID provUUID = UUID.randomUUID();
             
            /* If new class was created succesfully create prov activity */
@@ -332,6 +341,7 @@ public class Class {
             
             logger.log(Level.INFO, id+" updated sucessfully!");
             
+            ConceptMapper.addConceptFromReferencedResource(model,id);
             
           return Response.status(204).entity("{\"identifier\":\"urn:uuid:"+provUUID+"\"}").build();
 
@@ -379,12 +389,14 @@ public class Class {
        /* If Class is defined in the model */
        if(id.startsWith(model)) {
            /* Remove graph */
-           /* TODO: Remove references ? */ 
-            return JerseyFusekiClient.deleteGraphFromService(id, services.getCoreReadWriteAddress());   
+            Response resp = JerseyFusekiClient.deleteGraphFromService(id, services.getCoreReadWriteAddress());   
+           // ConceptMapper.removeUnusedConcepts(model);
+            return resp;
         } else {
         /* If removing referenced class */   
         /* TODO: Add response to GraphManager? */   
-             GraphManager.deleteGraphReferenceFromModel(idIRI,modelIRI);  
+             GraphManager.deleteGraphReferenceFromModel(idIRI,modelIRI); 
+          // ConceptMapper.removeUnusedConcepts(model);
              return Response.status(204).build();   
        }
   }

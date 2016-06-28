@@ -12,7 +12,11 @@ import com.csc.fi.ioapi.utils.PropertyUtil;
  * @author malonen
  */
 public final class ApplicationProperties {    
-    
+
+public final static String getSchemeId() {
+    return PropertyUtil.getProperty("application.defaultScheme");
+}
+   
 public final static String getEndpoint() {
     return PropertyUtil.getProperty("application.endpoint");
 }

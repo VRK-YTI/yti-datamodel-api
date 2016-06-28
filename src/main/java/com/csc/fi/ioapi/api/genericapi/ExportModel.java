@@ -70,6 +70,7 @@ public class ExportModel {
     public Response json(
             @ApiParam(value = "Requested resource", defaultValue = "default") @QueryParam("graph") String graph,
             @ApiParam(value = "Raw / PlainText boolean", defaultValue = "false") @QueryParam("raw") boolean raw,
+            @ApiParam(value = "Languages to export") @QueryParam("lang") String lang,
             @ApiParam(value = "Content-type", required = true, allowableValues = "application/ld+json,text/turtle,application/rdf+xml,application/ld+json+context,application/schema+json") @QueryParam("content-type") String ctype) {
 
          IRI modelIRI;
@@ -88,7 +89,7 @@ public class ExportModel {
                     return Response.status(403).entity(ErrorMessage.NOTFOUND).build();
                 }
             } else if(ctype.equals("application/schema+json")) {
-                String schema = JsonSchemaWriter.newModelSchema(graph);
+                String schema = JsonSchemaWriter.newModelSchema(graph,lang);
                 if(schema!=null) {
                     return Response.ok().entity(schema).type(raw?"text/plain;charset=utf-8":"application/schema+json").build();
                 } else {
@@ -116,8 +117,9 @@ public class ExportModel {
                 + "?ms ?p ?o . "
                 + "?rs ?rp ?ro . "
                 + " } WHERE { "
+                + "GRAPH ?modelHasPartGraph { "
                 + "?model <http://purl.org/dc/terms/hasPart> ?resource . "
-                + "GRAPH ?model {"
+                +"} GRAPH ?model {"
                 + "?ms ?p ?o . "
                 + "} GRAPH ?resource { "
                 + "?rs ?rp ?ro . "

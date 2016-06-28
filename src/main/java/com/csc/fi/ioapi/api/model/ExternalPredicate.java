@@ -142,8 +142,6 @@ public class ExternalPredicate {
         pss.setIri("modelService",services.getLocalhostCoreSparqlAddress());
          
         pss.setCommandText(queryString);
-        
-          logger.info(pss.toString());
 
         return JerseyFusekiClient.constructGraphFromService(pss.toString(), services.getImportsSparqlAddress());
 
@@ -248,7 +246,6 @@ public class ExternalPredicate {
                   pss.setIri("library", model);
             }
             
-            logger.info(pss.toString());
             
                         return JerseyFusekiClient.constructGraphFromService(pss.toString(), sparqlService);         
 

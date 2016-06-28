@@ -48,27 +48,47 @@ public class Usage {
                     @ApiResponse(code = 404, message = "Service not found") })
     public Response newClass(
             @ApiParam(value = "Resource ID") @QueryParam("id") String id,
-            @ApiParam(value = "Model ID") @QueryParam("model") String model) {
+            @ApiParam(value = "Model ID") @QueryParam("model") String model,
+            @ApiParam(value = "Concept ID") @QueryParam("concept") String concept) {
 
             IRI resourceIRI = null;
             IRI modelIRI = null;
+            IRI conceptIRI = null;
             
             try {
-                    IRIFactory iri = IRIFactory.semanticWebImplementation();
+                    IRIFactory iri = IRIFactory.iriImplementation();
                     if(id!=null && !id.equals("undefined")) resourceIRI = iri.construct(id);
                     if(model!=null && !model.equals("undefined")) modelIRI = iri.construct(model);
+                    if(concept!=null && !concept.equals("undefined")) conceptIRI = iri.construct(concept);
             } catch (IRIException e) {
                     return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
             }
-            
-            if(resourceIRI==null && modelIRI==null || resourceIRI!=null && modelIRI!=null) {
-                 return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
-            } 
 
             ParameterizedSparqlString pss = new ParameterizedSparqlString();
             Map<String,String> namespaces = NamespaceManager.getCoreNamespaceMap();
             namespaces.putAll(LDHelper.PREFIX_MAP);
             pss.setNsPrefixes(namespaces);
+            
+            String conceptQueryString = "CONSTRUCT  { "
+                    + "?concept dcterms:isReferencedBy ?resource . "
+                    + "?concept skos:prefLabel ?prefLabel . "
+                    + "?resource a ?type . "
+                    + "?resource rdfs:label ?label . "
+                    + "?resource rdfs:comment ?comment . "
+                    + "?resource rdfs:isDefinedBy ?resourceModel . "
+                    + "?resourceModel a ?modelType . "
+                    + "?resourceModel rdfs:label ?modelLabel . "
+                    + "} WHERE { "
+                    + "GRAPH ?resource { "
+                    + "?resource dcterms:subject ?concept . "
+                    + "?resource a ?type . "
+                    + "?resource rdfs:label ?label . "
+                    + "OPTIONAL { ?resource rdfs:comment ?comment . }"
+                    + "OPTIONAL {?resource rdfs:isDefinedBy ?resourceModel . }"
+                    + "GRAPH ?resourceModel {"
+                    + "?resourceModel a ?modelType . "
+                    + "?resourceModel rdfs:label ?modelLabel . }"
+                    + "}}";
             
             String queryString = "CONSTRUCT  { "
                     + "?resource a ?type . "
@@ -119,13 +139,16 @@ public class Usage {
                     + "FILTER(?usageModel!=?resourceModel)"
                     + "}";
 
-            if(modelIRI==null) {
+            if(resourceIRI!=null) {
                 pss.setCommandText(queryString);
                 pss.setIri("resource", resourceIRI);
-            } else {
+            } else if(modelIRI!=null) {
                 pss.setCommandText(modelQueryString);
                 pss.setIri("resourceModel", modelIRI);
-            }
+            } else if(conceptIRI!=null) {
+                pss.setCommandText(conceptQueryString);
+                pss.setIri("concept", conceptIRI);
+            } else return Response.status(403).entity(ErrorMessage.INVALIDPARAMETER).build();
            
             return JerseyFusekiClient.constructGraphFromService(pss.toString(), services.getCoreSparqlAddress());
     }   
