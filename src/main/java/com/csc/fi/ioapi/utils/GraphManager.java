@@ -117,7 +117,7 @@ public class GraphManager {
 
         try {
             boolean b = qexec.execAsk();
-            logger.info(""+b);
+            logger.info(graphIRI.toDisplayString()+": "+b);
             return b;
         } catch (Exception ex) {
             return false;

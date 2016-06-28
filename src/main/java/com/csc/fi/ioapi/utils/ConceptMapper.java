@@ -2,8 +2,6 @@
  * Licensed under the European Union Public Licence (EUPL) V.1.1 
  */
 package com.csc.fi.ioapi.utils;
-
-import com.csc.fi.ioapi.api.concepts.ConceptsScheme;
 import com.csc.fi.ioapi.config.ApplicationProperties;
 import com.csc.fi.ioapi.config.EndpointServices;
 import static com.csc.fi.ioapi.utils.GraphManager.services;
@@ -183,7 +181,7 @@ public class ConceptMapper {
                 + "GRAPH ?class {"
                 + "?class dcterms:subject ?concept . "
                 + "}}"
-                + "GRAPH ?vocabulary { "
+                + "GRAPH ?vocabulary {"
                 + "?concept a skos:Concept . }"
                 + "}";
 
@@ -194,8 +192,8 @@ public class ConceptMapper {
         pss.setIri("modelService",services.getLocalhostCoreSparqlAddress());
         pss.setCommandText(query);
         
-        logger.info("ADDING CONCEPT from "+classID);
-        logger.info(pss.toString());
+       // logger.info("ADDING CONCEPT from "+classID);
+       // logger.info(pss.toString());
         UpdateRequest queryObj = pss.asUpdate();
         UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, services.getTempConceptSparqlUpdateAddress());
         qexec.execute();

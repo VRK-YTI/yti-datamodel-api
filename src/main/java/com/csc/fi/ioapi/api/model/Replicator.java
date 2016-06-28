@@ -167,12 +167,8 @@ public class Replicator {
                 if(GraphManager.isExistingGraph(modelURI.toString())) {
                     logger.info("Exists! Skipping "+modelURI.toString());
                 } else {
-                    
-                
-                    
-                
+              
                  logger.info("---------------------------------------------------------");    
-                 
                  logger.info(modelURI.toString());
                  
                 /* Replicate local concepts */ 
@@ -182,7 +178,6 @@ public class Replicator {
                  
                 Resource modelGROUP = res.getPropertyResourceValue(DCTerms.isPartOf);
                 
-                logger.info(modelGROUP.toString());
                 
                 ServiceDescriptionManager.createGraphDescription(modelURI.toString(), modelGROUP.toString(), null);
                 
@@ -195,7 +190,6 @@ public class Replicator {
                 adapter.add(modelURI.toString()+"#HasPartGraph", hasPartModel);
                 
                 NodeIterator nodIter = hasPartModel.listObjectsOfProperty(DCTerms.hasPart);
-                
                 HashMap conceptMap = new HashMap<String, String>();
                     
                 while(nodIter.hasNext()) {
@@ -203,19 +197,18 @@ public class Replicator {
                     
                     String resourceURI = service+"exportResource?graph="+UriComponent.encode(part.toString(),UriComponent.Type.QUERY_PARAM);
                     Model resourceModel = JerseyFusekiClient.getResourceAsJenaModel(resourceURI);
-
-                    //logger.info(part.toString());
                     adapter.add(part.toString(), resourceModel);
                     
                     NodeIterator subIter = resourceModel.listObjectsOfProperty(DCTerms.subject);
                    
                     while(subIter.hasNext()) {
                         String coConcept = subIter.nextNode().asResource().toString();
+                        
                         if(!conceptMap.containsKey(coConcept)) {
-                            
                             String conceptURI = service+"exportResource?graph="+UriComponent.encode(coConcept,UriComponent.Type.QUERY_PARAM)+"&service=concept";
+                          //logger.info(conceptURI);
                             Model conceptModel = JerseyFusekiClient.getResourceAsJenaModel(conceptURI);
-
+                          //  logger.info(""+conceptModel.size());
                             conceptMap.put(coConcept, "true");
                             conceptAdapter.putModel(coConcept, conceptModel);
                         }
