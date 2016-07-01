@@ -216,6 +216,9 @@ public class Predicate {
                     /* Remove old graph and add update references */
                     GraphManager.removeGraph(oldIdIRI);
                     GraphManager.renameID(oldIdIRI,idIRI);
+                    if(ProvenanceManager.getProvMode()) {
+                        ProvenanceManager.renameID(oldid,id);
+                    }
                 }
             }
             
