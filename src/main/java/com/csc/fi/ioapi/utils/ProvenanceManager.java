@@ -13,6 +13,9 @@ import com.sun.jersey.api.client.ClientResponse;
 import java.util.UUID;
 import java.util.logging.Logger;
 import javax.ws.rs.core.Response;
+import org.apache.jena.iri.IRI;
+import org.apache.jena.web.DatasetAdapter;
+import org.apache.jena.web.DatasetGraphAccessorHTTP;
 
 /**
  *
@@ -186,11 +189,56 @@ public class ProvenanceManager {
         pss.setIri("jsonld", "urn:uuid:"+provUUID);
         pss.setCommandText(query);
         
+        UpdateRequest queryObj = pss.asUpdate();
+        UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, services.getProvSparqlUpdateAddress());
+        qexec.execute();
+        
+    }
+    
+    public static void renameID(String oldid, String newid) {
+         
+            String query
+                = "INSERT { "
+                + "GRAPH ?newid { "
+                + "?newid prov:generated ?jsonld . "
+                + "?newid prov:startedAtTime ?creation . "
+                + "?newid prov:used ?any . "
+                + "?newid a prov:Activity . "
+                + "?newid prov:wasAttributedTo ?user . "                
+                + "?jsonld a prov:Entity . "
+                + "?jsonld prov:wasAttributedTo ?user . "
+                + "?jsonld prov:generatedAtTime ?creation . "
+                + "?jsonld prov:wasRevisionOf ?oldEntity . " 
+                + "}}"
+                + "WHERE { "
+                + "GRAPH ?oldid { "
+                + "?oldid prov:startedAtTime ?creation . "
+                + "?oldid prov:generated ?jsonld . "
+                + "?oldid prov:used ?any . "
+                + "?oldid a prov:Activity . "
+                + "?oldid prov:wasAttributedTo ?user . "
+                + "?jsonld a prov:Entity . "
+                + "?jsonld prov:wasAttributedTo ?user . "
+                + "?jsonld prov:generatedAtTime ?creation . "
+                + "OPTIONAL {?jsonld prov:wasRevisionOf ?oldEntity . }"
+                + "}"
+                + "}";
+
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+        
+        pss.setIri("oldid", oldid);
+        pss.setIri("newid", newid);
+        pss.setCommandText(query);
 
         UpdateRequest queryObj = pss.asUpdate();
         UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, services.getProvSparqlUpdateAddress());
         qexec.execute();
         
+        
+        DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(services.getProvReadWriteAddress());
+        DatasetAdapter adapter = new DatasetAdapter(accessor);
+        adapter.deleteModel(oldid);
         
     }
     
