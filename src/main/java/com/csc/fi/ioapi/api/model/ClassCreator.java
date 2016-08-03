@@ -86,7 +86,7 @@ public class ClassCreator {
                     + "} WHERE { "
                     + "SERVICE ?modelService { "
                     + "GRAPH ?model { "
-                    + "?model a owl:Ontology . "
+                    + "?model a ?modelType . "
                     + "?model rdfs:label ?modelLabel . "
                     + "}}"
                     + "BIND(now() as ?creation) "
