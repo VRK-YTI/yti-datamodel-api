@@ -169,8 +169,6 @@ public class ExternalPredicate {
                 + "?predicate dcterms:modified ?modified . "
                 + "?predicate rdfs:range ?range . "
                 + "?predicate rdfs:domain ?domain . "
-                + "?predicate rdfs:isDefinedBy ?source . "
-                + "?source rdfs:label ?sourceLabel . "
                 + "} WHERE { "
                  + "SERVICE ?modelService { "
                      + "GRAPH ?library { "
@@ -230,9 +228,6 @@ public class ExternalPredicate {
                  + "VALUES ?commentPred { rdfs:comment skos:definition dcterms:description dc:description }"
                  + "BIND(STRLANG(?commentStr,'en') as ?comment) "
                  + "}"
-                 + "OPTIONAL { ?predicate rdfs:isDefinedBy ?source . "
-                + "?source rdfs:label ?sourceLabelStr .  "
-                + "BIND(STRLANG(?sourceLabelStr,'en') as ?sourceLabel)} "
                  + "} "
                  + "}";
         
