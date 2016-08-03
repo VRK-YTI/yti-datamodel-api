@@ -77,6 +77,7 @@ public class PredicateCreator {
                 + "?predicateIRI dcterms:modified ?modified . "
                 + "?predicateIRI a ?type .  "
                 + "?predicateIRI rdfs:isDefinedBy ?model . "
+                + "?model rdfs:label ?modelLabel . "
                 + "?predicateIRI rdfs:label ?predicateLabel . "
                 + "?predicateIRI rdfs:comment ?comment . "
                 + "?predicateIRI dcterms:subject ?concept . "
@@ -86,6 +87,11 @@ public class PredicateCreator {
                 + "?concept skos:inScheme ?scheme ."
                 + "} "
                 + "WHERE { "
+                + "SERVICE ?modelService { "
+                 + "GRAPH ?model { "
+                 + "?model a owl:Ontology . "
+                 + "?model rdfs:label ?modelLabel . "
+                 + "}}"
                 + "BIND(now() as ?creation) "
                 + "BIND(now() as ?modified) "
                 + "VALUES ?conceptType { skos:Concept iow:ConceptSuggestion }"
@@ -105,7 +111,9 @@ public class PredicateCreator {
         pss.setLiteral("draft", "Unstable");
         pss.setLiteral("predicateLabel", ResourceFactory.createLangLiteral(predicateLabel, lang));
         pss.setIri("predicateIRI",modelID+"#"+LDHelper.propertyName(predicateLabel));
-
+        pss.setIri("modelService",services.getLocalhostCoreSparqlAddress());
+       
+        
         return JerseyFusekiClient.constructGraphFromService(pss.toString(), services.getTempConceptReadSparqlAddress());
 
     }   

@@ -74,6 +74,7 @@ public class ClassCreator {
                     + "?classIRI dcterms:created ?creation . "
                     + "?classIRI a rdfs:Class . "
                     + "?classIRI rdfs:isDefinedBy ?model . "
+                    + "?model rdfs:label ?modelLabel . "
                     + "?classIRI rdfs:label ?classLabel . "
                     + "?classIRI rdfs:comment ?comment . "
                     + "?classIRI dcterms:subject ?concept . "
@@ -82,6 +83,11 @@ public class ClassCreator {
                     + "?concept skos:definition ?comment . "
                     + "?concept skos:inScheme ?scheme . "
                     + "} WHERE { "
+                    + "SERVICE ?modelService { "
+                    + "GRAPH ?model { "
+                    + "?model a owl:Ontology . "
+                    + "?model rdfs:label ?modelLabel . "
+                    + "}}"
                     + "BIND(now() as ?creation) "
                     + "BIND(now() as ?modified) "
                     + "VALUES ?conceptType { skos:Concept iow:ConceptSuggestion }"
@@ -100,6 +106,7 @@ public class ClassCreator {
             pss.setLiteral("draft", "Unstable");
             pss.setLiteral("classLabel", ResourceFactory.createLangLiteral(classLabel, lang));
             pss.setIri("classIRI",modelID+"#"+LDHelper.resourceName(classLabel));
+            pss.setIri("modelService",services.getLocalhostCoreSparqlAddress());
 
             logger.info("New classCreator template from "+conceptID);
             
