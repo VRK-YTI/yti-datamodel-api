@@ -75,6 +75,7 @@ public class ClassCreator {
                     + "?classIRI a rdfs:Class . "
                     + "?classIRI rdfs:isDefinedBy ?model . "
                     + "?model rdfs:label ?modelLabel . "
+                    + "?model a ?modelType . "
                     + "?classIRI rdfs:label ?classLabel . "
                     + "?classIRI rdfs:comment ?comment . "
                     + "?classIRI dcterms:subject ?concept . "
