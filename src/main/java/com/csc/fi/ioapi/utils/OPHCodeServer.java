@@ -3,21 +3,17 @@
  */
 package com.csc.fi.ioapi.utils;
 
-import com.csc.fi.ioapi.api.concepts.CodeList;
 import com.csc.fi.ioapi.config.EndpointServices;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.UUID;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonArrayBuilder;
 import javax.json.JsonObject;
-import javax.json.JsonObjectBuilder;
 import javax.json.JsonReader;
 import javax.json.JsonValue;
 import javax.json.JsonValue.ValueType;
@@ -27,8 +23,6 @@ import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.ResourceFactory;
-import org.apache.jena.riot.Lang;
-import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.web.DatasetAdapter;
 import org.apache.jena.web.DatasetGraphAccessorHTTP;
@@ -85,6 +79,7 @@ public class OPHCodeServer {
 
                 JsonObject codeList = (JsonObject) groupIterator.next();
                
+                String groupID = codeList.getJsonString("koodistoRyhmaUri").getString();
                 
                 JsonArray locGroupName = codeList.getJsonArray("metadata");
                     
@@ -92,9 +87,9 @@ public class OPHCodeServer {
                 
                 Iterator<JsonValue> groupNameIterator = locGroupName.iterator();
                 
-                UUID groupUUID = UUID.randomUUID();
+                // UUID groupUUID = UUID.randomUUID();
                 
-                Resource group = model.createResource("urn:uuid:"+groupUUID);
+                Resource group = model.createResource(groupID);
                
                 
                     while(groupNameIterator.hasNext()) {
