@@ -60,7 +60,7 @@ public class ShapeCreator {
                     IRIFactory iri = IRIFactory.semanticWebImplementation();
                     classIRI = iri.construct(classID);
                     profileIRI = iri.construct(profileID);
-                    shapeIRI = iri.construct(profileIRI+"#s"+SplitIRI.localname(classID));
+                    shapeIRI = iri.construct(profileIRI+"#"+SplitIRI.localname(classID));
             } catch (IRIException e) {
                     logger.log(Level.WARNING, "ID is invalid IRI!");
                     return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();

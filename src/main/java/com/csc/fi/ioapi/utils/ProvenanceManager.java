@@ -60,9 +60,7 @@ public class ProvenanceManager {
         
     }
     
-    
-    
-        public static void createVersionIdToResource(String graph, UUID provUUID) {
+    public static void createVersionIdToResource(String graph, UUID provUUID) {
         
             String query
                 = "INSERT { "
