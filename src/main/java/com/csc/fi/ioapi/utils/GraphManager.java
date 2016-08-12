@@ -58,6 +58,8 @@ public class GraphManager {
     
     public static void createExportGraph(String graph) {
                    
+        new Thread(() -> {
+        
              String queryString = "CONSTRUCT { "
                 + "?model <http://purl.org/dc/terms/hasPart> ?resource . "    
                 + "?ms ?p ?o . "
@@ -90,10 +92,10 @@ public class GraphManager {
 
         DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(services.getCoreReadWriteAddress());
         DatasetAdapter adapter = new DatasetAdapter(accessor);
-        
-        exportModel.write(System.out, "TTL") ;
+        logger.info("Exporting graph "+graph);
         adapter.putModel(graph+"#ExportGraph", exportModel);
-           
+          
+        }).start();
         
     }
     
