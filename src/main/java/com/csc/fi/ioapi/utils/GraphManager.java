@@ -55,11 +55,12 @@ public class GraphManager {
         }
     }
     
-    
     public static void createExportGraph(String graph) {
+        ThreadExecutor.getInstance().pool.execute(new ExportGraphRunnable(graph));
+    }
+    
+    public static void createExportGraphInRunnable(String graph) {
                    
-        new Thread(() -> {
-        
              String queryString = "CONSTRUCT { "
                 + "?model <http://purl.org/dc/terms/hasPart> ?resource . "    
                 + "?ms ?p ?o . "
@@ -95,16 +96,12 @@ public class GraphManager {
         logger.info("Exporting graph "+graph);
         adapter.putModel(graph+"#ExportGraph", exportModel);
           
-        }).start();
-        
     }
     
     public static void deleteExportModel(String graph) {
         DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(services.getCoreReadWriteAddress());
-        DatasetAdapter adapter = new DatasetAdapter(accessor);
-        
+        DatasetAdapter adapter = new DatasetAdapter(accessor);  
         adapter.deleteModel(graph+"#ExportGraph");
-        
     }
 
     
