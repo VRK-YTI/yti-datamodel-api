@@ -136,7 +136,12 @@ public class ProvenanceManager {
     }
     
     public static void createProvenanceGraph(String graph, String jsonld, String user, UUID provUUID) {
+            ThreadExecutor.pool.execute(new ProvenanceGraphRunnable(graph, jsonld, user, provUUID));
+    }
+    
+    public static void createProvenanceGraphInRunnable(String graph, String jsonld, String user, UUID provUUID) {
         
+        logger.info("Creating prov graph "+graph+" "+provUUID.toString());
         ClientResponse response = JerseyFusekiClient.putGraphToTheService("urn:uuid:"+provUUID.toString(), jsonld, services.getProvReadWriteAddress());
         
         if (response.getStatusInfo().getFamily() == Response.Status.Family.SUCCESSFUL) {
