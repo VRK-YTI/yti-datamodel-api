@@ -25,6 +25,8 @@ import java.util.logging.Logger;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.riot.RDFLanguages;
+import org.apache.jena.web.DatasetAdapter;
+import org.apache.jena.web.DatasetGraphAccessorHTTP;
 
 /**
  *
@@ -52,7 +54,85 @@ public class GraphManager {
             return false;
         }
     }
+    
+    
+    public static void createExportGraph(String graph) {
+                   
+             String queryString = "CONSTRUCT { "
+                + "?model <http://purl.org/dc/terms/hasPart> ?resource . "    
+                + "?ms ?p ?o . "
+                + "?rs ?rp ?ro . "
+                + "?resource ?anyp ?anyx . "
+                + " } WHERE {"
+                + "GRAPH ?modelHasPartGraph { "
+                + "?model <http://purl.org/dc/terms/hasPart> ?resource . "
+                + " } GRAPH ?model {"
+                + "?ms ?p ?o . "
+                + "} GRAPH ?resource { "
+                + "?rs ?rp ?ro . "
+                + "}"
+                + "OPTIONAL {GRAPH ?modelPositionGraph {"
+                + "?resource ?anyp ?anyx . "
+                + "}}"
+                + "}"; 
+             
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        pss.setCommandText(queryString);
+        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+        pss.setIri("model", graph);
+        pss.setIri("modelHasPartGraph", graph+"#HasPartGraph");
+        pss.setIri("modelPositionGraph", graph+"#PositionGraph");
 
+        Query query = pss.asQuery();
+        QueryExecution qexec = QueryExecutionFactory.sparqlService(services.getCoreSparqlAddress(), query);
+
+        Model exportModel = qexec.execConstruct();
+
+        DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(services.getCoreReadWriteAddress());
+        DatasetAdapter adapter = new DatasetAdapter(accessor);
+        
+        exportModel.write(System.out, "TTL") ;
+        adapter.putModel(graph+"#ExportGraph", exportModel);
+           
+        
+    }
+    
+    public static void deleteExportModel(String graph) {
+        DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(services.getCoreReadWriteAddress());
+        DatasetAdapter adapter = new DatasetAdapter(accessor);
+        
+        adapter.deleteModel(graph+"#ExportGraph");
+        
+    }
+
+    
+    public static void updateAllExportGraphs() {
+            
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        
+        String selectResources = "SELECT ?name WHERE { "
+                + "GRAPH <urn:csc:iow:sd> { "
+                + "?graph a sd:NamedGraph . "
+                + "?graph sd:name ?name . "
+                + "}}";
+        
+        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+        pss.setCommandText(selectResources);
+
+        QueryExecution qexec = QueryExecutionFactory.sparqlService(services.getCoreSparqlAddress(), pss.asQuery());
+
+        ResultSet results = qexec.execSelect();
+
+        while (results.hasNext()) {
+            QuerySolution soln = results.nextSolution();
+            String graphName = soln.getResource("name").toString();
+            logger.info(graphName);
+            createExportGraph(graphName);
+        }
+
+    }
+    
+    
     public static boolean modelStatusRestrictsRemoving(IRI graphIRI) {
 
         ParameterizedSparqlString pss = new ParameterizedSparqlString();

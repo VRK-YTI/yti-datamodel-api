@@ -260,6 +260,8 @@ public class Class {
             }
         }
         
+        GraphManager.createExportGraph(model);
+        
         Logger.getLogger(Class.class.getName()).log(Level.INFO, id+" updated sucessfully");
         return Response.status(204).entity("{\"identifier\":\"urn:uuid:"+provUUID+"\"}").build();
         
@@ -346,6 +348,9 @@ public class Class {
             
             ConceptMapper.addConceptFromReferencedResource(model,id);
             
+            
+            GraphManager.createExportGraph(model);
+            
           return Response.status(204).entity("{\"identifier\":\"urn:uuid:"+provUUID+"\"}").build();
 
       } catch(UniformInterfaceException | ClientHandlerException ex) {
@@ -398,7 +403,8 @@ public class Class {
         } else {
         /* If removing referenced class */   
         /* TODO: Add response to GraphManager? */   
-             GraphManager.deleteGraphReferenceFromModel(idIRI,modelIRI); 
+             GraphManager.deleteGraphReferenceFromModel(idIRI,modelIRI);
+             GraphManager.createExportGraph(model);
           // ConceptMapper.removeUnusedConcepts(model);
              return Response.status(204).build();   
        }

@@ -251,6 +251,8 @@ public class Predicate {
             }
         }
         
+        GraphManager.createExportGraph(model);
+        
         logger.log(Level.INFO, id + " updated sucessfully!");
 
         return Response.status(204).entity("{\"identifier\":\"urn:uuid:"+provUUID+"\"}").build();
@@ -329,6 +331,8 @@ public class Predicate {
            ConceptMapper.addConceptFromReferencedResource(model,id);
             
            logger.log(Level.INFO, id + " updated sucessfully!");
+           
+           GraphManager.createExportGraph(model);
             
            return Response.status(204).entity("{\"identifier\":\"urn:uuid:"+provUUID+"\"}").build();
            
@@ -379,7 +383,9 @@ public class Predicate {
             return resp;
     } else {
         /* If removing referenced predicate */   
-         GraphManager.deleteGraphReferenceFromModel(idIRI,modelIRI);  
+         GraphManager.deleteGraphReferenceFromModel(idIRI,modelIRI);
+         
+         GraphManager.createExportGraph(model);
         // ConceptMapper.removeUnusedConcepts(model);
          return Response.status(204).build();   
        }

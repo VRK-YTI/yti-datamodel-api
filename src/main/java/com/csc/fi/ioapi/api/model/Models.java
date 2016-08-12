@@ -244,6 +244,9 @@ public class Models {
                 }
         }
 
+           
+        GraphManager.createExportGraph(graph);
+           
         Logger.getLogger(Models.class.getName()).log(Level.INFO, graph+" updated sucessfully!");
 
         return Response.status(204).entity("{\"identifier\":\"urn:uuid:"+provUUID+"\"}").build();
@@ -320,6 +323,9 @@ public class Models {
 
             Logger.getLogger(Models.class.getName()).log(Level.INFO, graph+" updated sucessfully!");
            
+            
+            GraphManager.createExportGraph(graph);
+            
             return Response.status(204).entity("{\"identifier\":\"urn:uuid:"+provUUID+"\"}").build();
 
   }
@@ -333,7 +339,7 @@ public class Models {
       @ApiResponse(code = 401, message = "Unauthorized"),
       @ApiResponse(code = 406, message = "Not acceptable")
   })
-  public Response deleteClass(
+  public Response deleteModel(
           @ApiParam(value = "Model ID", required = true) 
           @QueryParam("id") String id,
           @Context HttpServletRequest request) {
@@ -365,6 +371,9 @@ public class Models {
        
        ServiceDescriptionManager.deleteGraphDescription(id);
        GraphManager.removeModel(modelIRI);
+       
+       
+       GraphManager.deleteExportModel(id);
        
        return Response.status(200).build();
     }

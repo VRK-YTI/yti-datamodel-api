@@ -133,6 +133,7 @@ public class ExportModel {
                 + "?model <http://purl.org/dc/terms/hasPart> ?resource . "    
                 + "?ms ?p ?o . "
                 + "?rs ?rp ?ro . "
+           //     + "?resource ?anyp ?anyx . "
                 + " } WHERE {"
                 + "GRAPH ?modelHasPartGraph { "
                 + "?model <http://purl.org/dc/terms/hasPart> ?resource . "
@@ -140,17 +141,23 @@ public class ExportModel {
                 + "?ms ?p ?o . "
                 + "} GRAPH ?resource { "
                 + "?rs ?rp ?ro . "
-                + "}}"; 
+                + "}"
+            //    + "OPTIONAL {GRAPH ?modelPositionGraph {"
+            //   + "?resource ?anyp ?anyx . "
+            //    + "}}"
+                + "}"; 
 
             } 
             
             pss.setCommandText(queryString);
             pss.setIri("model", graph);
             pss.setIri("modelHasPartGraph", graph+"#HasPartGraph");
+            pss.setIri("modelPositionGraph", graph+"#PositionGraph");
 
             OutputStream out = new ByteArrayOutputStream();
             
-            ClientResponse response = JerseyFusekiClient.clientResponseFromConstruct(pss.toString(), services.getCoreSparqlAddress(), contentType);
+            ClientResponse response = JerseyFusekiClient.getGraphClientResponseFromService(graph+"#ExportGraph", services.getCoreReadAddress());
+            // ClientResponse response = JerseyFusekiClient.clientResponseFromConstruct(pss.toString(), services.getCoreSparqlAddress(), contentType);
 
             if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
                 return Response.status(401).entity(ErrorMessage.UNEXPECTED).build();

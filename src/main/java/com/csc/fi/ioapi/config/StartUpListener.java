@@ -42,6 +42,7 @@ public class StartUpListener implements ServletContextListener {
         initDefaultNamespaces();
         initCodeServers();
         loadSchemesFromFinto();
+        createExportGraphs();
         
      //   runPeriodicUpdates();
         
@@ -79,6 +80,12 @@ public class StartUpListener implements ServletContextListener {
        /* scheduler.
                 .scheduleAtFixedRate(FintoLoad), initalDelay,
                                       24*60*60, TimeUnit.SECONDS); */
+        
+    }
+    
+    private static void createExportGraphs() {
+        
+      GraphManager.updateAllExportGraphs();
         
     }
     
