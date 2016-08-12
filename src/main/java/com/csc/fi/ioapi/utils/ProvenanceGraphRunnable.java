@@ -5,10 +5,6 @@ package com.csc.fi.ioapi.utils;
 
 import java.util.UUID;
 
-/**
- *
- * @author malonen
- */
 public class ProvenanceGraphRunnable implements Runnable {
     private final String graph;
     private final String jsonld;

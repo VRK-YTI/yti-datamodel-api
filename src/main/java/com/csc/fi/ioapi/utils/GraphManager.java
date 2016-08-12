@@ -90,6 +90,8 @@ public class GraphManager {
         QueryExecution qexec = QueryExecutionFactory.sparqlService(services.getCoreSparqlAddress(), query);
 
         Model exportModel = qexec.execConstruct();
+        
+        qexec.close();
 
         DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(services.getCoreReadWriteAddress());
         DatasetAdapter adapter = new DatasetAdapter(accessor);
