@@ -19,6 +19,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
 import javax.json.Json;
+import javax.json.JsonArray;
 import javax.json.JsonArrayBuilder;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
@@ -76,8 +77,14 @@ public class JsonSchemaWriter {
     
     private static String createDummySchema(JsonObjectBuilder schema, JsonObjectBuilder properties, JsonArrayBuilder required) {
         
+        /* TODO: Create basic dummy schema without properties */
+        
         schema.add("$schema", "http://json-schema.org/draft-04/schema#");
         schema.add("properties", properties.build());
+        JsonArray reqArray = required.build();
+        if(!reqArray.isEmpty()) {
+            schema.add("required",reqArray);
+        }
         
         return jsonObjectToPrettyString(schema.build());
   }
@@ -88,7 +95,11 @@ public class JsonSchemaWriter {
         schema.add("$schema", "http://json-schema.org/draft-04/schema#");
         schema.add("type","object");
         schema.add("properties", properties.build());
-        schema.add("required",required.build());
+        JsonArray reqArray = required.build();
+        
+        if(!reqArray.isEmpty()) {
+            schema.add("required",reqArray);
+        }
         
         return jsonObjectToPrettyString(schema.build());
 }
@@ -148,21 +159,23 @@ public class JsonSchemaWriter {
                 classMetadata = true;
             }
             
-            
         }
 
         JsonObjectBuilder properties = Json.createObjectBuilder();
+        
+       /* TODO: Add context as link usin undefined @context
         JsonObjectBuilder contextDef = Json.createObjectBuilder();
         
         contextDef.add("type", "string");
         contextDef.add("format","uri");
         contextDef.add("default",classID+".context");
         properties.add("@context", contextDef.build());
-        
+        */
+       
          if(classMetadata) {
         
         String selectResources = 
-                "SELECT ?predicate ?predicateName ?label ?datatype ?shapeRef ?min ?max"
+                "SELECT ?predicate ?predicateName ?label ?datatype ?shapeRef ?min ?max "
                 + "WHERE { "
                 + "GRAPH ?resourceID {"
                 + "?resourceID sh:property ?property . "
@@ -220,11 +233,19 @@ public class JsonSchemaWriter {
                  
                 
                  if(!soln.contains("max") || soln.getLiteral("max").getInt()>1) {
-                     logger.info(""+soln.getLiteral("max").getInt());
-                        if(soln.contains("min")) predicate.add("minItems",soln.getLiteral("min").getInt());
-                        if(soln.contains("max")) predicate.add("maxItems",soln.getLiteral("max").getInt());
+                        if(soln.contains("min")) {
+                            predicate.add("minItems",soln.getLiteral("min").getInt());
+                        }
+                        if(soln.contains("max")) {
+                            predicate.add("maxItems",soln.getLiteral("max").getInt());
+                        }
+                        
                         predicate.add("type", "array");
-                        predicate.add("items", Json.createObjectBuilder().add("type", jsonDatatype).build());                    
+
+                        if(jsonDatatype!=null) {
+                            predicate.add("items", Json.createObjectBuilder().add("type", jsonDatatype).build());
+                        } 
+                        
                 } else {
                     predicate.add("type", jsonDatatype);
                 }
@@ -506,7 +527,13 @@ public class JsonSchemaWriter {
                         classDefinition.add("description",soln.getLiteral("classDescription").toString());
                     }
                     classDefinition.add("properties", properties.build());
-                    classDefinition.add("required", required.build());
+                    
+                    JsonArray reqArray = required.build();
+                    
+                     if(!reqArray.isEmpty()) {
+                        classDefinition.add("required", reqArray);
+                    }
+                    
                     definitions.add(className, classDefinition.build());
                     properties = Json.createObjectBuilder();
                     required = Json.createArrayBuilder();
