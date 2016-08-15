@@ -56,7 +56,7 @@ public class GraphManager {
     }
     
     public static void createExportGraph(String graph) {
-        ThreadExecutor.getInstance().pool.execute(new ExportGraphRunnable(graph));
+        ThreadExecutor.pool.execute(new ExportGraphRunnable(graph));
     }
     
     public static void createExportGraphInRunnable(String graph) {
@@ -108,7 +108,7 @@ public class GraphManager {
 
     
     public static void updateAllExportGraphs() {
-            
+        
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         
         String selectResources = "SELECT ?name WHERE { "
@@ -127,8 +127,9 @@ public class GraphManager {
         while (results.hasNext()) {
             QuerySolution soln = results.nextSolution();
             String graphName = soln.getResource("name").toString();
-            logger.info(graphName);
-            createExportGraph(graphName);
+            if(!isExistingGraph(graphName+"#ExportGraph")) {
+                createExportGraph(graphName);
+            }
         }
 
     }

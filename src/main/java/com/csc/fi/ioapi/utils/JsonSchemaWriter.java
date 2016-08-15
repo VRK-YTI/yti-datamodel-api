@@ -4,6 +4,7 @@
 package com.csc.fi.ioapi.utils;
 
 import com.csc.fi.ioapi.config.EndpointServices;
+import static com.csc.fi.ioapi.utils.GraphManager.services;
 import org.apache.jena.query.ParameterizedSparqlString;
 import org.apache.jena.query.QueryExecution;
 import org.apache.jena.query.QueryExecutionFactory;
@@ -12,6 +13,7 @@ import org.apache.jena.query.ResultSet;
 import org.apache.jena.query.ResultSetFactory;
 import org.apache.jena.sparql.resultset.ResultSetPeekable;
 import java.io.StringWriter;
+import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -23,6 +25,9 @@ import javax.json.JsonObjectBuilder;
 import javax.json.JsonWriter;
 import javax.json.JsonWriterFactory;
 import javax.json.stream.JsonGenerator;
+import org.apache.jena.iri.IRI;
+import org.apache.jena.query.Query;
+import org.apache.jena.util.SplitIRI;
 
 /**
  *
@@ -88,6 +93,8 @@ public class JsonSchemaWriter {
         return jsonObjectToPrettyString(schema.build());
 }
     
+   
+    
     public static String newClassSchema(String classID, String lang) { 
     
         JsonArrayBuilder required = Json.createArrayBuilder();
@@ -134,7 +141,7 @@ public class JsonSchemaWriter {
             schema.add("id",classID+".jschema");
             schema.add("title", title);
             
-            logger.info(soln.getResource("type").getLocalName());
+         //   logger.info(soln.getResource("type").getLocalName());
             String sType = soln.getResource("type").getLocalName();
             
             if(sType.equals("Class") || sType.equals("Shape")) {
@@ -211,7 +218,9 @@ public class JsonSchemaWriter {
                 String datatype = soln.getResource("datatype").toString();
                 String jsonDatatype = DATATYPE_MAP.get(datatype);
                  
+                
                  if(!soln.contains("max") || soln.getLiteral("max").getInt()>1) {
+                     logger.info(""+soln.getLiteral("max").getInt());
                         if(soln.contains("min")) predicate.add("minItems",soln.getLiteral("min").getInt());
                         if(soln.contains("max")) predicate.add("maxItems",soln.getLiteral("max").getInt());
                         predicate.add("type", "array");
@@ -261,9 +270,58 @@ public class JsonSchemaWriter {
         
     }
     
+    public static boolean hasModelRoot(String graphIRI) {
+
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        String queryString = " ASK { GRAPH ?graph { ?graph void:rootResource ?root . }}";
+        
+        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+        pss.setCommandText(queryString);
+        pss.setIri("graph", graphIRI);
+
+        Query query = pss.asQuery();
+        QueryExecution qexec = QueryExecutionFactory.sparqlService(services.getCoreSparqlAddress(), query);
+
+        try {
+            boolean b = qexec.execAsk();
+            return b;
+        } catch (Exception ex) {
+            return false;
+        }
+    }
     
-    public static String newModelSchema(String modelID,String lang) { 
     
+    public static String getModelRoot(String graph) {
+        
+         ParameterizedSparqlString pss = new ParameterizedSparqlString();
+                String selectResources = 
+                "SELECT ?root WHERE {"
+                + "GRAPH ?graph { ?graph void:rootResource ?root . }"
+                + "}";
+        
+        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+        pss.setCommandText(selectResources);
+        pss.setIri("graph", graph);
+
+        QueryExecution qexec = QueryExecutionFactory.sparqlService(services.getCoreSparqlAddress(), pss.asQuery());
+        qexec = QueryExecutionFactory.sparqlService(services.getCoreSparqlAddress(), pss.asQuery());
+
+        ResultSet results = qexec.execSelect();
+        
+        if(!results.hasNext()) return null;
+        else {
+            QuerySolution soln = results.next();
+            if(soln.contains("root")) {
+                return soln.getResource("root").toString();
+            } else return null;
+        }
+    }
+    
+    
+    public static String newModelSchema(String modelID, String lang) { 
+    
+        logger.info("Building JSON Schema from "+modelID);
+        
         JsonObjectBuilder schema = Json.createObjectBuilder();
 
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
@@ -292,8 +350,6 @@ public class JsonSchemaWriter {
 
         if(!results.hasNext()) return null;
         
-        logger.info("!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-        
         while (results.hasNext()) {
             
             QuerySolution soln = results.nextSolution();
@@ -309,7 +365,7 @@ public class JsonSchemaWriter {
         }
         
         String selectResources = 
-                "SELECT ?resource ?className ?classTitle ?classDescription ?predicate ?title ?description ?predicateName ?datatype ?shapeRef ?shapeRefName ?min ?max"
+                "SELECT ?resource ?className ?classTitle ?classDescription ?predicate ?title ?description ?predicateName ?datatype ?shapeRef ?shapeRefName ?min ?max "
                 + "WHERE { "
                 + "GRAPH ?modelPartGraph {"
                 + "?model dcterms:hasPart ?resource . "
@@ -330,8 +386,8 @@ public class JsonSchemaWriter {
                 + "}"
                 + "OPTIONAL { ?property sh:datatype ?datatype . }"
                 + "OPTIONAL { ?property sh:valueShape ?shapeRef . BIND(afn:localname(?shapeRef) as ?shapeRefName) }"
-                + "OPTIONAL { ?property sh:minCount ?min . }"
                 + "OPTIONAL { ?property sh:maxCount ?max . }"
+                + "OPTIONAL { ?property sh:minCount ?min . }"
                 + "BIND(afn:localname(?predicate) as ?predicateName)"
                 + "}"
                 + "}"
@@ -373,6 +429,8 @@ public class JsonSchemaWriter {
                 }
             } 
             
+           
+            
             if(soln.contains("description")) {
                 String description = soln.getLiteral("description").getString();
                 predicate.add("description", description);
@@ -380,33 +438,52 @@ public class JsonSchemaWriter {
             
             if(soln.contains("datatype")) {
                 String datatype = soln.getResource("datatype").toString();
-                logger.info(datatype);
+                
                 String jsonDatatype = DATATYPE_MAP.get(datatype);
                 
-                
-                if(!soln.contains("max") || soln.getLiteral("max").getInt()>1) {
-                        if(soln.contains("min")) predicate.add("minItems",soln.getLiteral("min").getInt());
-                        if(soln.contains("max")) predicate.add("maxItems",soln.getLiteral("max").getInt());
-                        predicate.add("type", "array");
-                        if(jsonDatatype!=null) {
-                            predicate.add("items", Json.createObjectBuilder().add("type", jsonDatatype).build());
-                        }                    
-                } else {
-                    if(jsonDatatype!=null) {
-                        predicate.add("type", jsonDatatype);
-                    }
+
+              
+                if(soln.contains("min")) {
+                    predicate.add("minItems",soln.getLiteral("min").getInt());
                 }
-                
+                        
+                if(soln.contains("max") && soln.getLiteral("max").getInt()<=1) {
+
+                    predicate.add("maxItems",1);
+
+                    if(jsonDatatype!=null) {
+                       predicate.add("type", jsonDatatype);
+                    }
+
+                } else {
+
+                    if(soln.contains("max") && soln.getLiteral("max").getInt()>1) {
+                      predicate.add("maxItems",soln.getLiteral("max").getInt()); 
+                    }
+
+                    predicate.add("type", "array");
+
+                    if(jsonDatatype!=null) {
+                        predicate.add("items", Json.createObjectBuilder().add("type", jsonDatatype).build());
+                    } 
+
+                }
+                        
+
                 if(FORMAT_MAP.containsKey(datatype)) {
                     predicate.add("format",FORMAT_MAP.get(datatype));
                 }
+                
             } else {
                 if(soln.contains("shapeRefName")) {
                     String shapeRefName = soln.getLiteral("shapeRefName").toString();
 
                      if(!soln.contains("max") || soln.getLiteral("max").getInt()>1) {
                              if(soln.contains("min")) predicate.add("minItems",soln.getLiteral("min").getInt());
-                             if(soln.contains("max")) predicate.add("maxItems",soln.getLiteral("max").getInt());
+                             if(soln.contains("max")) {
+                                 predicate.add("maxItems",soln.getLiteral("max").getInt());                             
+                                logger.info(""+soln.getLiteral("max").getInt());
+                             }
                              predicate.add("type", "array");
                              predicate.add("items", Json.createObjectBuilder().add("type","object").add("$ref","#/definitions/"+shapeRefName).build());                    
                      } else {
@@ -439,6 +516,15 @@ public class JsonSchemaWriter {
             
         }
         
+        String modelRoot = getModelRoot(modelID);
+        
+        
+        if(modelRoot!=null) {
+            JsonObjectBuilder modelProperties = Json.createObjectBuilder();
+            modelProperties.add("$ref", "#/definitions/"+SplitIRI.localname(modelRoot));
+            return createModelSchemaWithRoot(schema, modelProperties, definitions);
+        }
+        
         return createDefaultModelSchema(schema, definitions);
         
     }
@@ -451,6 +537,17 @@ public class JsonSchemaWriter {
         
         return jsonObjectToPrettyString(schema.build());
 }
+    
+    private static String createModelSchemaWithRoot(JsonObjectBuilder schema, JsonObjectBuilder properties, JsonObjectBuilder definitions) {
+        
+        schema.add("$schema", "http://json-schema.org/draft-04/schema#");
+        schema.add("type","object");
+        schema.add("allOf", Json.createArrayBuilder().add(properties.build()).build());
+        schema.add("definitions", definitions.build());
+        
+        return jsonObjectToPrettyString(schema.build());
+}
+    
     
     
 }

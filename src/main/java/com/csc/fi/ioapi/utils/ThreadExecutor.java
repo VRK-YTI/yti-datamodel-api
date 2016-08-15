@@ -8,12 +8,4 @@ import java.util.concurrent.Executors;
 
 public class ThreadExecutor {
    public static final ExecutorService pool = Executors.newCachedThreadPool();
-   private static final ThreadExecutor instance = new ThreadExecutor();
-
-   private ThreadExecutor() {
-   }
-
-   public static ThreadExecutor getInstance() {
-       return instance;
-   }        
 }
