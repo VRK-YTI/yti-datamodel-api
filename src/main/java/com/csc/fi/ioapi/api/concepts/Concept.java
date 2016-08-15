@@ -86,7 +86,7 @@ public class Concept {
                       + "} WHERE { "
                       + "?concept a skos:Concept . "
                       + "?concept skos:prefLabel ?label . "
-                      + "?concept skos:definition ?definition . "
+                      + "OPTIONAL { ?concept skos:definition ?definition . }"
                       + "?concept skos:inScheme ?scheme . "
                       + "?scheme dc:identifier ?id . "
                       + "?scheme dc:title ?title . "
