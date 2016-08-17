@@ -85,8 +85,9 @@ public class Class {
                 + "?source rdfs:label ?sourceLabel . "
                 + "?source a ?sourceType . "
                 + "} WHERE { "
-                + "?library dcterms:hasPart ?class . "
-                + "GRAPH ?graph { "
+                + "GRAPH ?hasPartGraph { "
+                + "?library dcterms:hasPart ?class . } "
+                + "GRAPH ?class { "
                 + "?class dcterms:modified ?modified . "
                 + "?class rdfs:label ?label . "
                 + "?class a ?type . "
@@ -100,6 +101,7 @@ public class Class {
 
          if(model!=null && !model.equals("undefined")) {
               pss.setIri("library", model);
+              pss.setIri("hasPartGraph",model+"#HasPartGraph");
          }
 
         pss.setCommandText(queryString);

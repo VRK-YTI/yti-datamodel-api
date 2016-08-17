@@ -136,7 +136,8 @@ public class ProvenanceManager {
     }
     
     public static void createProvenanceGraph(String graph, String jsonld, String user, UUID provUUID) {
-            ThreadExecutor.pool.execute(new ProvenanceGraphRunnable(graph, jsonld, user, provUUID));
+        //createProvenanceGraphInRunnable(graph,jsonld,user,provUUID);
+        ThreadExecutor.pool.execute(new ProvenanceGraphRunnable(graph, jsonld, user, provUUID));
     }
     
     public static void createProvenanceGraphInRunnable(String graph, String jsonld, String user, UUID provUUID) {

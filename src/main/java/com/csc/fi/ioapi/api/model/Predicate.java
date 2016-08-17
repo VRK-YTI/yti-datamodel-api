@@ -31,6 +31,7 @@ import com.csc.fi.ioapi.utils.ErrorMessage;
 import com.csc.fi.ioapi.utils.GraphManager;
 import com.csc.fi.ioapi.utils.JerseyFusekiClient;
 import com.csc.fi.ioapi.utils.LDHelper;
+import com.csc.fi.ioapi.utils.ModelManager;
 import com.csc.fi.ioapi.utils.NamespaceManager;
 import com.csc.fi.ioapi.utils.ProvenanceManager;
 import com.csc.fi.ioapi.utils.QueryLibrary;
@@ -41,9 +42,14 @@ import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiParam;
 import com.wordnik.swagger.annotations.ApiResponse;
 import com.wordnik.swagger.annotations.ApiResponses;
+import java.io.ByteArrayOutputStream;
+import java.io.OutputStream;
 import java.util.Map;
 import java.util.UUID;
 import javax.ws.rs.DELETE;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.riot.Lang;
+import org.apache.jena.riot.RDFDataMgr;
 
  
 /**
@@ -85,8 +91,9 @@ public class Predicate {
                 + "?source a ?sourceType . "
                 + "?property dcterms:modified ?date . } "
                 + "WHERE { "
-                + "?library dcterms:hasPart ?property . "
-                + "GRAPH ?graph { ?property rdfs:label ?label . "
+                + "GRAPH ?hasPartGraph { "
+                + "?library dcterms:hasPart ?property . } "
+                + "GRAPH ?property { ?property rdfs:label ?label . "
                 + "VALUES ?type { owl:ObjectProperty owl:DatatypeProperty } "
                 + "?property a ?type . "
                 + "?property rdfs:isDefinedBy ?source . "
@@ -95,10 +102,13 @@ public class Predicate {
 
          if(model!=null && !model.equals("undefined")) {
               pss.setIri("library", model);
+              pss.setIri("hasPartGraph",model+"#HasPartGraph");
          }
 
         pss.setCommandText(queryString);
 
+        // return Response.ok().entity(GraphManager.constructFromGraph(pss.toString())).build();
+        
         return JerseyFusekiClient.constructGraphFromService(pss.toString(), services.getCoreSparqlAddress());
 
       } else {
@@ -222,14 +232,21 @@ public class Predicate {
                 }
             }
             
+        Model predicateModel = ModelManager.createModelFromString(body);
+        
+        logger.info("modelSize:"+predicateModel.size());
+            
+       // GraphManager.putToGraph(predicateModel, id);
+        
         /* Create new graph with new id */ 
         ClientResponse response = JerseyFusekiClient.putGraphToTheService(id, body, services.getCoreReadWriteAddress());
+        
         ConceptMapper.addConceptFromReferencedResource(model,id);
            
         GraphManager.updateModifyDates(id);
         
+       
         if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-            /* TODO: Create prov events from failed updates? */
                logger.log(Level.WARNING, "Unexpected: Predicate update failed: "+id);
                return Response.status(response.getStatus()).entity(ErrorMessage.UNEXPECTED).build();
         } 

@@ -5,6 +5,7 @@ package com.csc.fi.ioapi.utils;
 
 import com.csc.fi.ioapi.config.ApplicationProperties;
 import com.csc.fi.ioapi.config.EndpointServices;
+import java.io.ByteArrayOutputStream;
 import org.apache.jena.query.DatasetAccessor;
 import org.apache.jena.query.DatasetAccessorFactory;
 import org.apache.jena.query.ParameterizedSparqlString;
@@ -23,6 +24,7 @@ import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.jena.iri.IRI;
+import org.apache.jena.query.ResultSetFormatter;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.riot.RDFLanguages;
 import org.apache.jena.web.DatasetAdapter;
@@ -56,6 +58,7 @@ public class GraphManager {
     }
     
     public static void createExportGraph(String graph) {
+        //createExportGraphInRunnable(graph);
         ThreadExecutor.pool.execute(new ExportGraphRunnable(graph));
     }
     
@@ -395,6 +398,12 @@ public static boolean isExistingPrefix(String prefix) {
         qexec.execute();
             
     }
+    
+    
+    public static void renameIDReferences(IRI oldIdIRI, IRI idIRI) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+    
 
     public static void renameID(IRI oldID, IRI newID) {
 
@@ -497,6 +506,26 @@ public static boolean isExistingPrefix(String prefix) {
         toAccessor.add(toGraph, graphModel);
         
     }
+
+    public static void putToGraph(Model model, String id) {
+        
+      DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(services.getCoreReadWriteAddress());
+      DatasetAdapter adapter = new DatasetAdapter(accessor);
+      
+      adapter.putModel(id, model);
+ 
+        
+    }
     
+    
+    public static String constructFromGraph(String query){
+        
+        QueryExecution qexec = QueryExecutionFactory.sparqlService(services.getCoreSparqlAddress(), query);
+        Model results = qexec.execConstruct();
+        return ModelManager.writeModelToString(results);
+       
+    }
+
+
     
 }
