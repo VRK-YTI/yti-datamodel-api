@@ -14,6 +14,7 @@ import com.sun.jersey.api.uri.UriComponent;
 import java.io.InputStream;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import org.apache.jena.atlas.json.JSON;
@@ -200,6 +201,10 @@ public class JerseyFusekiClient {
                return Response.status(response.getStatus()).entity(ErrorMessage.UNEXPECTED).build();
             }
             
+           // rb.cacheControl(CacheControl.valueOf("no-cache"));
+           // rb.header("Access-Control-Allow-Origin", "*");
+	   // rb.header("Access-Control-Allow-Methods", "GET, POST, DELETE, PUT");
+           
             return rb.build();
             
     }

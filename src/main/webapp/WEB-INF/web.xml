@@ -9,17 +9,13 @@
         <servlet-class>
             com.sun.jersey.spi.container.servlet.ServletContainer
         </servlet-class>
-      <!--  <init-param>
+        <init-param>
             <param-name>com.sun.jersey.spi.container.ContainerRequestFilters</param-name>
             <param-value>com.sun.jersey.api.container.filter.GZIPContentEncodingFilter</param-value>
         </init-param>
         <init-param>
             <param-name>com.sun.jersey.spi.container.ContainerResponseFilters</param-name>
-            <param-value>com.sun.jersey.api.container.filter.GZIPContentEncodingFilter</param-value> 
-        </init-param> -->
-        <init-param>
-            <param-name>com.sun.jersey.spi.container.ContainerResponseFilters</param-name>
-            <param-value>com.csc.fi.ioapi.config.CORSFilter</param-value>
+            <param-value>com.sun.jersey.api.container.filter.GZIPContentEncodingFilter;com.csc.fi.ioapi.config.CustomResponseFilter</param-value> 
         </init-param>
         <init-param>
             <param-name>com.sun.jersey.config.property.packages</param-name>
