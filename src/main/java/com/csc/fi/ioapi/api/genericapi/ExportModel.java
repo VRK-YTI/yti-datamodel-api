@@ -113,7 +113,7 @@ public class ExportModel {
             ClientResponse response = JerseyFusekiClient.getGraphClientResponseFromService(graph+"#ExportGraph", services.getCoreReadAddress(),ctype);
           
             if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-                return Response.status(401).entity(ErrorMessage.UNEXPECTED).build();
+                return Response.status(400).entity(ErrorMessage.UNEXPECTED).build();
             }
 
             ResponseBuilder rb;
@@ -126,7 +126,7 @@ public class ExportModel {
                     jsonModel = (Map<String, Object>) JsonUtils.fromString(out.toString());
                 } catch (IOException ex) {
                     Logger.getLogger(ExportModel.class.getName()).log(Level.SEVERE, null, ex);
-                    return Response.status(401).entity(ErrorMessage.UNEXPECTED).build();
+                    return Response.status(400).entity(ErrorMessage.UNEXPECTED).build();
                 }
 
                 Map<String, Object> frame = new HashMap<String, Object>();

@@ -57,6 +57,7 @@ public class GraphManager {
         }
     }
     
+    
     public static void createExportGraph(String graph) {
         //createExportGraphInRunnable(graph);
         ThreadExecutor.pool.execute(new ExportGraphRunnable(graph));
@@ -505,6 +506,18 @@ public static boolean isExistingPrefix(String prefix) {
         DatasetAccessor toAccessor = DatasetAccessorFactory.createHTTP(toService);
         toAccessor.add(toGraph, graphModel);
         
+    }
+        
+    public static void addCoreGraphToCoreGraph(String fromGraph, String toGraph) throws NullPointerException {
+        
+        DatasetAccessor fromAccessor = DatasetAccessorFactory.createHTTP(services.getCoreReadWriteAddress());
+        Model graphModel = fromAccessor.getModel(fromGraph);
+        
+        if(graphModel==null) {
+            throw new NullPointerException();
+        }
+        
+        fromAccessor.putModel(toGraph, graphModel);
     }
 
     public static void putToGraph(Model model, String id) {
