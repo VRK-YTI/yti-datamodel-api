@@ -24,7 +24,9 @@ public class CustomResponseFilter implements ContainerResponseFilter {
         resp.getHttpHeaders().add(HttpHeaders.ACCESS_CONTROL_ALLOW_HEADERS, "Content-Type, Accept, X-Requested-With");
      */
 
-        resp.getHttpHeaders().add(HttpHeaders.CACHE_CONTROL, "no-cache");
+        resp.getHttpHeaders().add("Cache-Control", "no-cache, no-store, must-revalidate");
+        resp.getHttpHeaders().add("Pragma", "no-cache");
+        resp.getHttpHeaders().add("Expires", "0");
 
         return resp;
 
