@@ -108,57 +108,10 @@ public class ExportModel {
             DatasetAccessor accessor = DatasetAccessorFactory.createHTTP(services.getCoreReadAddress());
             Model model = accessor.getModel(graph);
 
-            /* If no id is provided create a list of classes */
-            ParameterizedSparqlString pss = new ParameterizedSparqlString();
-
-            pss.setNsPrefixes(model.getNsPrefixMap());
-
-            String queryString = "CONSTRUCT { "
-                + "?ms ?p ?o . "
-                + "?rs ?rp ?ro . "
-                + " } WHERE { "
-                + "GRAPH ?modelHasPartGraph { "
-                + "?model <http://purl.org/dc/terms/hasPart> ?resource . "
-                +"} GRAPH ?model {"
-                + "?ms ?p ?o . "
-                + "} GRAPH ?resource { "
-                + "?rs ?rp ?ro . "
-                + "}}"; 
-
-            if (rdfLang.equals(Lang.JSONLD)) {
-                
-                /* ADD hasPart list to JSON-LD Response */
-                
-                queryString = "CONSTRUCT { "
-                + "?model <http://purl.org/dc/terms/hasPart> ?resource . "    
-                + "?ms ?p ?o . "
-                + "?rs ?rp ?ro . "
-           //     + "?resource ?anyp ?anyx . "
-                + " } WHERE {"
-                + "GRAPH ?modelHasPartGraph { "
-                + "?model <http://purl.org/dc/terms/hasPart> ?resource . "
-                + " } GRAPH ?model {"
-                + "?ms ?p ?o . "
-                + "} GRAPH ?resource { "
-                + "?rs ?rp ?ro . "
-                + "}"
-            //    + "OPTIONAL {GRAPH ?modelPositionGraph {"
-            //   + "?resource ?anyp ?anyx . "
-            //    + "}}"
-                + "}"; 
-
-            } 
-            
-            pss.setCommandText(queryString);
-            pss.setIri("model", graph);
-            pss.setIri("modelHasPartGraph", graph+"#HasPartGraph");
-            pss.setIri("modelPositionGraph", graph+"#PositionGraph");
-
             OutputStream out = new ByteArrayOutputStream();
             
-            ClientResponse response = JerseyFusekiClient.getGraphClientResponseFromService(graph+"#ExportGraph", services.getCoreReadAddress());
-            // ClientResponse response = JerseyFusekiClient.clientResponseFromConstruct(pss.toString(), services.getCoreSparqlAddress(), contentType);
-
+            ClientResponse response = JerseyFusekiClient.getGraphClientResponseFromService(graph+"#ExportGraph", services.getCoreReadAddress(),ctype);
+          
             if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
                 return Response.status(401).entity(ErrorMessage.UNEXPECTED).build();
             }

@@ -370,8 +370,8 @@ public class Models {
        }
        
        ServiceDescriptionManager.deleteGraphDescription(id);
-       GraphManager.removeModel(modelIRI);
        
+       GraphManager.removeModel(modelIRI);
        
        GraphManager.deleteExportModel(id);
        
