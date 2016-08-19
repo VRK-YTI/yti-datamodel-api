@@ -82,7 +82,7 @@ public class GraphManager {
                 + "?resource ?anyp ?anyx . "
                 + "}}"
                 + "}"; 
-             
+          
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         pss.setCommandText(queryString);
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
@@ -275,6 +275,7 @@ public static boolean isExistingPrefix(String prefix) {
         String selectResources = "SELECT ?graph WHERE { GRAPH ?hasPartGraph { ?model dcterms:hasPart ?graph . } GRAPH ?graph { ?graph rdfs:isDefinedBy ?model . }}";
 
         pss.setIri("model", model);
+        pss.setIri("hasPartGraph",model+"#HasPartGraph");
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
         pss.setCommandText(selectResources);
 
@@ -282,6 +283,8 @@ public static boolean isExistingPrefix(String prefix) {
 
         ResultSet results = qexec.execSelect();
         String newQuery = "DROP SILENT GRAPH <" + model + ">; ";
+               newQuery += "DROP SILENT GRAPH <" + model + "#HasPartGraph>; ";
+               newQuery += "DROP SILENT GRAPH <" + model + "#ExportGraph>; ";
 
         while (results.hasNext()) {
             QuerySolution soln = results.nextSolution();
@@ -301,15 +304,26 @@ public static boolean isExistingPrefix(String prefix) {
         pss.setIri("graph", id);
 
         logger.info("Removing model from " + id);
+        logger.info(query);
 
         UpdateRequest queryObj = pss.asUpdate();
         UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, services.getCoreSparqlUpdateAddress());
-
+        
+        /* TODO: remove when resolved JENA-1255 */
+        namespaceBugFix(id.toString());
+        
         try {
             qexec.execute();
         } catch (UpdateException ex) {
             logger.log(Level.WARNING, ex.toString());
         }
+    }
+    
+    public static void namespaceBugFix(String id) {
+        DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(services.getCoreReadWriteAddress());
+        DatasetAdapter adapter = new DatasetAdapter(accessor);
+        Model empty = ModelFactory.createDefaultModel();
+        adapter.putModel(id, empty);
     }
 
     public static void removeGraph(IRI id) {

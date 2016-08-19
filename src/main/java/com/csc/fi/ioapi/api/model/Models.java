@@ -376,8 +376,6 @@ public class Models {
        
        GraphManager.removeModel(modelIRI);
        
-       GraphManager.deleteExportModel(id);
-       
        return Response.status(200).build();
     }
   

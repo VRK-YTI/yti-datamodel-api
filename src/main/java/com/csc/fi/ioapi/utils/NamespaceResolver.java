@@ -21,6 +21,7 @@ import org.apache.jena.iri.IRIException;
 import org.apache.jena.iri.IRIFactory;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFLanguages;
+import org.apache.jena.riot.RiotException;
 
 /**
  *
@@ -136,7 +137,13 @@ public class NamespaceResolver {
                                         RDFReader reader = model.getReader(testLang.getName());
 
                                         reader.setProperty("error-mode", "lax");
-                                        reader.read(model, connection.getInputStream(), namespace);
+                                        
+                                        try {
+                                             reader.read(model, connection.getInputStream(), namespace);
+                                        } catch(RiotException e) {
+                                             logger.info("Could not read file from "+namespace);
+                                            return false;
+                                        }
 
                                         stream.close();
                                         connection.disconnect();
@@ -161,7 +168,7 @@ public class NamespaceResolver {
 			} catch (IOException e) {
                             logger.info("Could not read file from "+namespace);
                             return false;
-			}  
+			} 
 				
                         logger.info("Model-size is: "+model.size());
 
