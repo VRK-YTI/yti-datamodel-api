@@ -94,9 +94,6 @@ public class ModelPositions {
           @ApiParam(value = "Model ID", required = true) 
           @QueryParam("model") 
                 String model,
-          @ApiParam(value = "Group", required = true) 
-          @QueryParam("group") 
-                String group,
           @Context HttpServletRequest request) {
       
         if(model.equals("default")) {
@@ -119,7 +116,7 @@ public class ModelPositions {
         
         LoginSession login = new LoginSession(session);
         
-        if(!login.isLoggedIn() || !login.hasRightToEditGroup(group))
+        if(!login.isLoggedIn() || !login.hasRightToEditModel(model))
             return Response.status(403).entity(ErrorMessage.UNAUTHORIZED).build();
            
             String service = services.getCoreReadWriteAddress();
