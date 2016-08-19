@@ -3,6 +3,7 @@
  */
 package com.csc.fi.ioapi.api.model;
 
+import com.csc.fi.ioapi.config.ApplicationProperties;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
 import java.util.logging.Level;
@@ -350,8 +351,9 @@ public class Class {
             
             ConceptMapper.addConceptFromReferencedResource(model,id);
             
-            
-            GraphManager.createExportGraph(model);
+            if(!ApplicationProperties.getDebugMode()) {
+                GraphManager.createExportGraph(model);
+            }
             
           return Response.status(204).entity("{\"identifier\":\"urn:uuid:"+provUUID+"\"}").build();
 
