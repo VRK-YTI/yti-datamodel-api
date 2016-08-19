@@ -134,4 +134,12 @@ public String getImportsSparqlAddress() {
       return endpoint+"/imports/sparql";
 }
 
+public String getLocalhostConceptSparqlAddress() {
+    if(!ApplicationProperties.getEndpoint().startsWith("http://localhost"))
+        return "http://localhost/concept/sparql";
+    else if(ApplicationProperties.getDebugMode()) 
+        return endpoint+"/concept/sparql"; 
+    else 
+        return "http://localhost/concept/sparql";
+    }
 }

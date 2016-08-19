@@ -296,7 +296,8 @@ public class ConceptSuggestion {
             
         /* Put graph to database */ 
         ClientResponse response = JerseyFusekiClient.putGraphToTheService(conceptID, body, services.getTempConceptReadWriteAddress());
-           
+        
+        
            if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
                /* TODO: Create prov events from failed updates? */
                logger.log(Level.WARNING, "Unexpected: Not updated: "+conceptID);
@@ -306,6 +307,8 @@ public class ConceptSuggestion {
         } else {
              return Response.status(403).entity(ErrorMessage.INVALIDPARAMETER).build();
         }
+
+        ConceptMapper.updateConceptSuggestion(conceptID);
         
         return Response.status(204).entity("{}").build();
         

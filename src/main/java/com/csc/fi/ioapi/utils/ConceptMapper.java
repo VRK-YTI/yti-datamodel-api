@@ -373,5 +373,26 @@ public class ConceptMapper {
 
     }
 
+    public static void updateConceptSuggestion(String conceptID) {
+        
+        String query
+                = " DELETE { GRAPH ?graph { ?graph dcterms:subject ?concept . ?concept skos:definition ?oldDefinition . }}"
+                + " INSERT { GRAPH ?graph { ?graph dcterms:subject ?concept . ?concept skos:definition ?definition . }}"
+                + " WHERE { "
+                + "GRAPH ?graph { ?graph dcterms:subject ?concept . ?concept skos:definition ?oldDefinition . }"
+                + "SERVICE ?conceptService { GRAPH ?concept { ?concept skos:definition ?definition . }}"
+                + "}";
+
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+        pss.setIri("conceptService", services.getLocalhostConceptSparqlAddress());
+        pss.setIri("concept", conceptID);
+        pss.setCommandText(query);
+
+        UpdateRequest queryObj = pss.asUpdate();
+        UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, services.getCoreSparqlUpdateAddress());
+        qexec.execute();
+    }
+
     
 }
