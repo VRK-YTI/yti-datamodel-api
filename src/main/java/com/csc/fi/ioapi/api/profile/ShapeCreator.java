@@ -114,6 +114,7 @@ public class ShapeCreator {
                     + "?shapeIRI sh:scopeClass ?classIRI . "
                     + "?shapeIRI a sh:Shape . "
                     + "?shapeIRI rdfs:isDefinedBy ?model . "
+                    + "?model rdfs:label ?externalModelLabel . "
                     + "?shapeIRI rdfs:label ?label . "
                     + "?shapeIRI rdfs:comment ?comment . "
                     + "?shapeIRI sh:property ?property . "
@@ -126,8 +127,17 @@ public class ShapeCreator {
                     + "} WHERE { "
                     + "BIND(now() as ?creation) "
                     + "BIND(now() as ?modified) "
-                    + "OPTIONAL { ?classIRI a ?type . "
-                    + "VALUES ?type { owl:Class rdfs:Class }}"
+                    + "SERVICE ?modelService { "
+                    + "GRAPH ?model { "
+                    + "?model dcterms:requires ?externalModel . "
+                    + "?externalModel rdfs:label ?externalModelLabel . "
+                    + "}}"
+                    + "GRAPH ?externalModel {"
+
+                    + "?classIRI a ?type . "
+                    + "FILTER(STRSTARTS(STR(?classIRI), STR(?externalModel)))"
+                    + "VALUES ?type { rdfs:Class owl:Class sh:Shape } "
+                        
                         
                     + "OPTIONAL {?classIRI rdfs:label ?labelStr . FILTER(LANG(?labelStr) = '') BIND(STRLANG(?labelStr,'en') as ?label) }"
                     + "OPTIONAL {?classIRI rdfs:label ?label . FILTER(LANG(?label)!='') }"
@@ -138,12 +148,47 @@ public class ShapeCreator {
                     + "OPTIONAL { "
                     + "?classIRI rdfs:subClassOf* ?superclass . "
                     + "?predicate rdfs:domain ?superclass .  "
-                    + "?predicate a ?predicateType . "
-                    + "VALUES ?predicateType { owl:DatatypeProperty owl:ObjectProperty }"
                     + "BIND(UUID() AS ?property)"    
-                    + "OPTIONAL { ?predicate a owl:DatatypeProperty . "
-                    + "?predicate rdfs:range ?datatype . "
-                    + "BIND(IF(?datatype=rdfs:Literal,xsd:string,?datatype) as ?prefDatatype) } "
+                    
+
+                    + "{"
+                    + "?predicate a owl:DatatypeProperty . "
+                    + "FILTER NOT EXISTS { ?predicate a owl:ObjectProperty }"
+                    + "BIND(owl:DatatypeProperty as ?propertyType) "
+                    + "} UNION {"
+                    + "?predicate a owl:ObjectProperty . "
+                    + "FILTER NOT EXISTS { ?predicate a owl:DatatypeProperty }"
+                    + "BIND(owl:ObjectProperty as ?propertyType) "
+                    + "} UNION {"
+                    /* Treat owl:AnnotationProperty as DatatypeProperty */
+                    + "?predicate a owl:AnnotationProperty. "
+                    + "?predicate rdfs:label ?atLeastSomeLabel . "
+                    + "FILTER NOT EXISTS { ?predicate a owl:DatatypeProperty }"
+                    + "BIND(owl:DatatypeProperty as ?propertyType) "
+                    + "} UNION {"
+                    /* IF Predicate Type is rdf:Property and range is rdfs:Literal = DatatypeProperty */
+                    + "?predicate a rdf:Property . "
+                    + "?predicate rdfs:range rdfs:Literal ."
+                    + "BIND(owl:DatatypeProperty as ?propertyType) "
+                    + "FILTER NOT EXISTS { ?predicate a ?multiType . VALUES ?multiType { owl:DatatypeProperty owl:ObjectProperty } }"
+                     + "} UNION {"
+                    /* IF Predicate Type is rdf:Property and range is rdfs:Resource then property is object property */
+                    + "?predicate a rdf:Property . "
+                    + "?predicate rdfs:range rdfs:Resource ."
+                    + "BIND(owl:ObjectProperty as ?propertyType) "
+                    + "FILTER NOT EXISTS { ?predicate a ?multiType . VALUES ?multiType { owl:DatatypeProperty owl:ObjectProperty } }"
+                    + "}UNION {"
+                    /* IF Predicate Type is rdf:Property and range is resource that is class or thing */
+                    + "?predicate a rdf:Property . "
+                    + "FILTER NOT EXISTS { ?predicate a ?multiType . VALUES ?multiType { owl:DatatypeProperty owl:ObjectProperty } }"
+                    + "?predicate rdfs:range ?rangeClass . "
+                    + "FILTER(?rangeClass!=rdfs:Literal)"
+                    + "?rangeClass a ?rangeClassType . "
+                    + "VALUES ?rangeClassType { skos:Concept owl:Thing rdfs:Class }"
+                    + "BIND(owl:ObjectProperty as ?propertyType) "
+                    + "}"
+                    
+                    + "OPTIONAL { ?predicate a owl:DatatypeProperty . ?predicate rdfs:range ?datatype . } "
                     + "OPTIONAL { ?predicate a owl:ObjectProperty . ?predicate rdfs:range ?valueClass . } "
                         
                     /* Predicate label - if lang unknown create english tag */
@@ -159,6 +204,7 @@ public class ShapeCreator {
                     + " FILTER(LANG(?propertyComment)!='') }"
                         
                     + "}"    
+                    + "}"
                     + "}";
                                
             }
@@ -166,6 +212,7 @@ public class ShapeCreator {
             pss.setCommandText(queryString);
             pss.setIri("classIRI", classIRI);
             pss.setIri("model", profileIRI);
+            pss.setIri("modelService",services.getLocalhostCoreSparqlAddress());
             pss.setLiteral("profileNamespace", profileID+"#");
             pss.setLiteral("draft", "Unstable");
             pss.setIri("shapeIRI",shapeIRI);

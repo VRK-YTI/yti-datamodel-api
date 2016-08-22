@@ -195,17 +195,17 @@ public class ExternalPredicate {
                 + "?predicate a rdf:Property . "
                 + "?predicate rdfs:range rdfs:Literal ."
                 + "BIND(owl:DatatypeProperty as ?type) "
-                + "FILTER NOT EXISTS { ?predicate a ?multiType . VALUES ?multiType { owl:DatatypeProperty owl:ObjectProperty } }"
+                + "FILTER NOT EXISTS { ?predicate a ?multiType . VALUES ?multiType { owl:DatatypeProperty owl:ObjectProperty owl:AnnotationProperty } }"
                  + "} UNION {"
                 /* IF Predicate Type is rdf:Property and range is rdfs:Resource then property is object property */
                 + "?predicate a rdf:Property . "
                 + "?predicate rdfs:range rdfs:Resource ."
                 + "BIND(owl:ObjectProperty as ?type) "
-                + "FILTER NOT EXISTS { ?predicate a ?multiType . VALUES ?multiType { owl:DatatypeProperty owl:ObjectProperty } }"
-                + "}UNION {"
+                + "FILTER NOT EXISTS { ?predicate a ?multiType . VALUES ?multiType { owl:DatatypeProperty owl:ObjectProperty owl:AnnotationProperty  } }"
+                + "} UNION {"
                 /* IF Predicate Type is rdf:Property and range is resource that is class or thing */
                 + "?predicate a rdf:Property . "
-                + "FILTER NOT EXISTS { ?predicate a ?multiType . VALUES ?multiType { owl:DatatypeProperty owl:ObjectProperty } }"
+                + "FILTER NOT EXISTS { ?predicate a ?multiType . VALUES ?multiType { owl:DatatypeProperty owl:ObjectProperty owl:AnnotationProperty } }"
                 + "?predicate rdfs:range ?rangeClass . "
                 + "FILTER(?rangeClass!=rdfs:Literal)"
                 + "?rangeClass a ?rangeClassType . "
@@ -214,22 +214,23 @@ public class ExternalPredicate {
                 + "} UNION {"
                 /* IF Predicate type cannot be guessed */
                 + "?predicate a rdf:Property . "
-                + "BIND(rdf:Property as ?type)"
-                + "FILTER NOT EXISTS { ?predicate a ?multiType . VALUES ?multiType { owl:DatatypeProperty owl:ObjectProperty } }"
+                + "FILTER NOT EXISTS { ?predicate a ?multiType . VALUES ?multiType { owl:DatatypeProperty owl:ObjectProperty owl:AnnotationProperty } }"
                 + "FILTER NOT EXISTS { ?predicate rdfs:range rdfs:Literal . }"
                 + "FILTER NOT EXISTS { ?predicate rdfs:range rdfs:Resource . }"
                 + "FILTER NOT EXISTS { ?predicate rdfs:range ?rangeClass . ?rangeClass a ?rangeClassType . }"
+                + "BIND(rdf:Property as ?type)"
                 + "} "
-                 + "OPTIONAL { ?predicate rdfs:range ?range . }"
-                 + "OPTIONAL { ?predicate rdfs:domain ?domain . }"
+                + "OPTIONAL { ?predicate rdfs:range ?range . FILTER (!isBlank(?range)) }"
+                /* Support only direct range no OWL unions */
+                + "OPTIONAL { ?predicate rdfs:domain ?domain .  }"
                 + "OPTIONAL { ?predicate rdfs:label ?labelStr . FILTER(LANG(?labelStr) = '') BIND(STRLANG(?labelStr,'en') as ?label) }"
                 + "OPTIONAL { ?predicate rdfs:label ?label . FILTER(LANG(?label)!='') }"      
-                 + "OPTIONAL { ?predicate ?commentPred ?commentStr . "
-                 + "VALUES ?commentPred { rdfs:comment skos:definition dcterms:description dc:description }"
-                 + "BIND(STRLANG(?commentStr,'en') as ?comment) "
-                 + "}"
-                 + "} "
-                 + "}";
+                + "OPTIONAL { ?predicate ?commentPred ?commentStr . "
+                + "VALUES ?commentPred { rdfs:comment skos:definition dcterms:description dc:description }"
+                + "BIND(STRLANG(?commentStr,'en') as ?comment) "
+                + "}"
+                + "} "
+                + "}";
         
             pss.setCommandText(queryString);
 
