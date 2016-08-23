@@ -76,6 +76,6 @@
     </servlet-mapping>
     <servlet-mapping>
         <servlet-name>ResolveResource</servlet-name>
-        <url-pattern>/resolve</url-pattern>
+        <url-pattern>/resolve/*</url-pattern>
     </servlet-mapping>
 </web-app>
