@@ -66,22 +66,24 @@ public class ResolveResource extends HttpServlet {
                 modelIRI = iriFactory.construct(modelURL);
             }
             catch (IRIException e) {
+                logger.warning("Invalid URL: "+modelURL);
                 response.sendError(HttpServletResponse.SC_NOT_FOUND);
             } 
 
         if(GraphManager.isExistingServiceGraph(modelURL)) {
                     
-            if(rdfLang==null) {
+                if(rdfLang==null) {
+                    logger.info("Redirecting to root");
                     response.sendRedirect("/");
-
-            } else {
-
-              String dis = "/rest/exportModel?graph="+modelURL+"&content-type="+accept;
-              RequestDispatcher dispatcher = getServletContext().getRequestDispatcher(dis);
-              dispatcher.forward(request,response);
-            }    
+                } else {
+                    String dis = "/rest/exportModel?graph="+modelURL+"&content-type="+accept;
+                    logger.info("Redirecting to export: "+dis);
+                    RequestDispatcher dispatcher = getServletContext().getRequestDispatcher(dis);
+                    dispatcher.forward(request,response);
+                }    
             
             } else {
+                logger.info("Model not found: "+modelURL);
                 response.sendError(HttpServletResponse.SC_NOT_FOUND);
              }
         
