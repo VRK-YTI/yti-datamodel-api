@@ -99,10 +99,16 @@ public class ExportModel {
             
         try {
             
+            ctype = ctype.replace(" ", "+");
             ContentType contentType = ContentType.create(ctype);
+            
             Lang rdfLang = RDFLanguages.contentTypeToLang(contentType);
             
-            if(rdfLang==null) return Response.status(403).entity(ErrorMessage.NOTFOUND).build();
+            
+            if(rdfLang==null) {
+                logger.info("Unknown RDF type: "+ctype);
+                return Response.status(403).entity(ErrorMessage.NOTFOUND).build();
+            }
 
             
             DatasetAccessor accessor = DatasetAccessorFactory.createHTTP(services.getCoreReadAddress());

@@ -43,18 +43,10 @@ public class ResolveResource extends HttpServlet {
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-		
-                logger.info(request.getContextPath());
-		logger.info(request.getContentType());
-		logger.info(request.getHeader("Accept"));
-        
-
         String accept = request.getHeader("Accept");
         
         Lang rdfLang = RDFLanguages.contentTypeToLang(accept);
-        
-
-        
+    
         String requestURI = request.getRequestURI();
         String modelID = requestURI.substring(requestURI.lastIndexOf("/") + 1, requestURI.length());
         String modelURL = ApplicationProperties.getDefaultDomain()+"ns/"+modelID;
@@ -66,15 +58,15 @@ public class ResolveResource extends HttpServlet {
                 modelIRI = iriFactory.construct(modelURL);
             }
             catch (IRIException e) {
-                logger.warning("Invalid URL: "+modelURL);
-                response.sendError(HttpServletResponse.SC_NOT_FOUND);
+                logger.warning("Invalid URL: "+modelURL); 
+               response.sendError(HttpServletResponse.SC_NOT_FOUND);
             } 
 
         if(GraphManager.isExistingServiceGraph(modelURL)) {
                     
                 if(rdfLang==null) {
                     logger.info("Redirecting to root");
-                    response.sendRedirect("/");
+                    response.sendRedirect("/#/model?urn="+modelURL);
                 } else {
                     String dis = "/rest/exportModel?graph="+modelURL+"&content-type="+accept;
                     logger.info("Redirecting to export: "+dis);
