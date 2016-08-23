@@ -49,6 +49,16 @@ public class ResolveResource extends HttpServlet {
     
         String requestURI = request.getRequestURI();
         String modelID = requestURI.substring(requestURI.lastIndexOf("/") + 1, requestURI.length());
+        String graphName = GraphManager.getServiceGraphNameWithPrefix(modelID);
+        
+        logger.info(graphName);
+        
+        if(graphName==null) {
+            logger.info("Graphname is null");
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+        }
+        
+        /*
         String modelURL = ApplicationProperties.getDefaultDomain()+"ns/"+modelID;
        
         
@@ -61,23 +71,18 @@ public class ResolveResource extends HttpServlet {
                 logger.warning("Invalid URL: "+modelURL); 
                response.sendError(HttpServletResponse.SC_NOT_FOUND);
             } 
+        */
 
-        if(GraphManager.isExistingServiceGraph(modelURL)) {
-                    
                 if(rdfLang==null) {
                     logger.info("Redirecting to root");
-                    response.sendRedirect("/#/model?urn="+modelURL);
+                    response.sendRedirect("/#/model?urn="+graphName);
                 } else {
-                    String dis = "/rest/exportModel?graph="+modelURL+"&content-type="+accept;
+                    String dis = "/rest/exportModel?graph="+graphName+"&content-type="+accept;
                     logger.info("Redirecting to export: "+dis);
                     RequestDispatcher dispatcher = getServletContext().getRequestDispatcher(dis);
                     dispatcher.forward(request,response);
                 }    
             
-            } else {
-                logger.info("Model not found: "+modelURL);
-                response.sendError(HttpServletResponse.SC_NOT_FOUND);
-             }
         
            /*
             response.setContentType("text/html;charset=UTF-8");    

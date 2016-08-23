@@ -50,6 +50,7 @@ public class ModelCreator {
                     @ApiResponse(code = 404, message = "Service not found"),
                     @ApiResponse(code = 401, message = "No right to create new")})
     public Response newModel(
+            @ApiParam(value = "Redirection service") @QueryParam("redirect") String redirect,
             @ApiParam(value = "Model prefix", required = true) @QueryParam("prefix") String prefix,
             @ApiParam(value = "Model label", required = true) @QueryParam("label") String label,
             @ApiParam(value = "Group ID", required = true) @QueryParam("group") String group,
@@ -84,12 +85,16 @@ public class ModelCreator {
             String namespace = ApplicationProperties.getDefaultNamespace()+prefix;
             
             IRI groupIRI, namespaceIRI, namespaceSKOSIRI;
+            IRI redirectIRI = null;
             
             try {
                     IRIFactory iri = IRIFactory.semanticWebImplementation();
                     namespaceIRI = iri.construct(namespace);
                     namespaceSKOSIRI = iri.construct(namespace+"/skos#");
                     groupIRI = iri.construct(group);
+                    if(redirect!=null || !redirect.equals("undefined")) {
+                        redirectIRI = iri.construct(redirect);
+                    }
             } catch (IRIException e) {
                     logger.warning("INVALID: "+namespace);
                     return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
@@ -137,10 +142,16 @@ public class ModelCreator {
             pss.setCommandText(queryString);
             pss.setIri("localSKOSNamespace", namespaceSKOSIRI);
             pss.setLiteral("profileLabelSKOS", ResourceFactory.createLangLiteral("Sisäinen käsitteistö", lang));
-            pss.setLiteral("namespace", namespace+"#");
+            if(redirectIRI!=null) {
+                pss.setLiteral("namespace", redirect+"#");
+            } else {
+                pss.setLiteral("namespace", namespace+"#");
+            }
             pss.setLiteral("prefix", prefix);
             pss.setIri("jhsScheme", "http://jhsmeta.fi/skos/");
-            pss.setIri("modelIRI", namespaceIRI);
+            if(redirectIRI!=null) {
+                pss.setIri("modelIRI",redirectIRI);
+            } else pss.setIri("modelIRI", namespaceIRI);
             pss.setIri("group", groupIRI);
             pss.setLiteral("draft", "Unstable");
             pss.setLiteral("mlabel", ResourceFactory.createLangLiteral(label, lang));

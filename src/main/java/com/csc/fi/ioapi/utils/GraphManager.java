@@ -25,6 +25,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.query.ResultSetFormatter;
+import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.riot.RDFLanguages;
 import org.apache.jena.web.DatasetAdapter;
@@ -209,6 +210,58 @@ public static boolean isExistingPrefix(String prefix) {
             return false;
         }
     }
+    
+    public static boolean isExistingGraphBasedOnPrefix(String prefix) {
+
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+        String queryString = " ASK { GRAPH ?graph { ?graph a owl:Ontology . ?graph dcap:preferredXMLNamespacePrefix ?prefix . }}";
+        pss.setCommandText(queryString);
+        pss.setIri("prefix", prefix);
+
+        Query query = pss.asQuery();
+        QueryExecution qexec = QueryExecutionFactory.sparqlService(services.getCoreSparqlAddress(), query);
+
+        try {
+            boolean b = qexec.execAsk();
+            return b;
+        } catch (Exception ex) {
+            return false;
+        }
+    }
+    
+    public static String getServiceGraphNameWithPrefix(String prefix) {
+
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        String selectResources =
+                "SELECT ?graph WHERE { "
+                + "GRAPH ?graph { "+
+                " ?graph a owl:Ontology . "
+                + "?graph dcap:preferredXMLNamespacePrefix ?prefix . "+
+                "}}";
+
+        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+        pss.setCommandText(selectResources);
+        pss.setLiteral("prefix",prefix);
+
+        QueryExecution qexec = QueryExecutionFactory.sparqlService(services.getCoreSparqlAddress(), pss.asQuery());
+
+        ResultSet results = qexec.execSelect();
+
+        String graphUri = null;
+        
+        while (results.hasNext()) {
+            QuerySolution soln = results.nextSolution();
+            if(soln.contains("graph")) {
+                Resource resType = soln.getResource("graph");
+                graphUri = resType.getURI();
+            }
+        }
+
+        return graphUri;
+
+    }
+    
     
     public static boolean isExistingServiceGraph(String graphIRI) {
 
