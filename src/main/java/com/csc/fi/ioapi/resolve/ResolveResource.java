@@ -53,11 +53,12 @@ public class ResolveResource extends HttpServlet {
         
         Lang rdfLang = RDFLanguages.contentTypeToLang(accept);
         
+
+        
         String requestURI = request.getRequestURI();
         String modelID = requestURI.substring(requestURI.lastIndexOf("/") + 1, requestURI.length());
         String modelURL = ApplicationProperties.getDefaultDomain()+"ns/"+modelID;
        
-        logger.info(modelURL);
         
         IRIFactory iriFactory = IRIFactory.iriImplementation();
             IRI modelIRI;
@@ -66,22 +67,24 @@ public class ResolveResource extends HttpServlet {
             }
             catch (IRIException e) {
                 response.sendError(HttpServletResponse.SC_NOT_FOUND);
-            }  
-        
-        if(GraphManager.isExistingServiceGraph(modelURL)) {
-            
-          //  String nextJSP = "/rest/class";
-          //  RequestDispatcher dispatcher = getServletContext().getRequestDispatcher(nextJSP);
-          //  dispatcher.forward(request,response);
+            } 
 
-           if(rdfLang==null) {
-                response.sendRedirect("/");
+        if(GraphManager.isExistingServiceGraph(modelURL)) {
+                    
+            if(rdfLang==null) {
+                    response.sendRedirect("/");
+
             } else {
+
               String dis = "/rest/exportModel?graph="+modelURL+"&content-type="+accept;
               RequestDispatcher dispatcher = getServletContext().getRequestDispatcher(dis);
               dispatcher.forward(request,response);
-            }
-          
+            }    
+            
+            } else {
+                response.sendError(HttpServletResponse.SC_NOT_FOUND);
+             }
+        
            /*
             response.setContentType("text/html;charset=UTF-8");    
                 try (PrintWriter out = response.getWriter()) {
@@ -103,16 +106,7 @@ public class ResolveResource extends HttpServlet {
                 }
 
             */
-            
-        } else response.sendError(HttpServletResponse.SC_NOT_FOUND);
-        /*
-        if(rdfLang==null) {
-            response.sendRedirect("/");
-        } else {
-            
-        }*/
-        
-  
+
 
       
     }
