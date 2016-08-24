@@ -324,7 +324,7 @@ public class Models {
             Logger.getLogger(Models.class.getName()).log(Level.INFO, graph+" updated sucessfully!");
            
             try {
-                GraphManager.createNewEmptyResourceGraph(graph+"#PositionGraph",graph);
+                GraphManager.createNewEmptyResourceGraph(graph+"#PositionGraph",graph+"#PositionGraph");
                 GraphManager.addCoreGraphToCoreGraph(graph, graph+"#ExportGraph");
             } catch(Exception ex) {
                 logger.warning("Unexpected error in creating Export graph");
