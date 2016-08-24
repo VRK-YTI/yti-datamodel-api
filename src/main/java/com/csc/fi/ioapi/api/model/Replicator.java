@@ -194,14 +194,14 @@ public class Replicator {
                 
                 String euri = service+"exportResource?graph="+UriComponent.encode(modelURI.toString()+"#ExportGraph",UriComponent.Type.QUERY_PARAM);
      
-                Model exportModel = JerseyFusekiClient.getResourceAsJenaModel(uri);
+                Model exportModel = JerseyFusekiClient.getResourceAsJenaModel(euri);
                 adapter.add(modelURI.toString()+"#ExportGraph", exportModel);
                 
                 // PositionGraph
                 
                 String puri = service+"exportResource?graph="+UriComponent.encode(modelURI.toString()+"#PositionGraph",UriComponent.Type.QUERY_PARAM);
      
-                Model positionModel = JerseyFusekiClient.getResourceAsJenaModel(uri);
+                Model positionModel = JerseyFusekiClient.getResourceAsJenaModel(puri);
                 adapter.add(modelURI.toString()+"#PositionGraph", positionModel);
                 
                 
