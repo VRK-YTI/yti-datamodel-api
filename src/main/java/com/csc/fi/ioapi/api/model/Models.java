@@ -312,7 +312,7 @@ public class Models {
             if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
                Logger.getLogger(Models.class.getName()).log(Level.WARNING, graph+" was not created! Status "+response.getStatus());
                return Response.status(response.getStatus()).entity("{\"errorMessage\":\"Resource was not created\"}").build();
-            }
+            } 
            
            UUID provUUID = UUID.randomUUID();
                     
@@ -324,13 +324,14 @@ public class Models {
             Logger.getLogger(Models.class.getName()).log(Level.INFO, graph+" updated sucessfully!");
            
             try {
+                GraphManager.createNewEmptyResourceGraph(graph+"#PositionGraph",graph);
                 GraphManager.addCoreGraphToCoreGraph(graph, graph+"#ExportGraph");
             } catch(Exception ex) {
                 logger.warning("Unexpected error in creating Export graph");
             }
             
             return Response.status(204).entity("{\"identifier\":\"urn:uuid:"+provUUID+"\"}").build();
-
+            
   }
   
   @DELETE

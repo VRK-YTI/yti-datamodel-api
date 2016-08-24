@@ -50,7 +50,7 @@ public class ModelCreator {
                     @ApiResponse(code = 404, message = "Service not found"),
                     @ApiResponse(code = 401, message = "No right to create new")})
     public Response newModel(
-            @ApiParam(value = "Redirection service") @QueryParam("redirect") String redirect,
+            @ApiParam(value = "Redirection service", required = false) @QueryParam("redirect") String redirect,
             @ApiParam(value = "Model prefix", required = true) @QueryParam("prefix") String prefix,
             @ApiParam(value = "Model label", required = true) @QueryParam("label") String label,
             @ApiParam(value = "Group ID", required = true) @QueryParam("group") String group,
@@ -92,13 +92,14 @@ public class ModelCreator {
                     namespaceIRI = iri.construct(namespace);
                     namespaceSKOSIRI = iri.construct(namespace+"/skos#");
                     groupIRI = iri.construct(group);
-                    if(redirect!=null || !redirect.equals("undefined")) {
+                    if(redirect!=null && !redirect.equals("undefined")) {
                         redirectIRI = iri.construct(redirect);
                     }
             } catch (IRIException e) {
                     logger.warning("INVALID: "+namespace);
                     return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
             } catch (NullPointerException e) {
+                logger.info("wrf?");
                     return Response.status(403).entity(ErrorMessage.INVALIDPARAMETER).build();
             }
             

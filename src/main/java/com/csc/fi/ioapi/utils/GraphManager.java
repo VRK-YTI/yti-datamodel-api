@@ -25,9 +25,14 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.query.ResultSetFormatter;
+import org.apache.jena.rdf.model.ModelMaker;
 import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.riot.RDFLanguages;
+import org.apache.jena.vocabulary.OWL;
+import org.apache.jena.vocabulary.RDF;
+import org.apache.jena.vocabulary.RDFS;
 import org.apache.jena.web.DatasetAdapter;
 import org.apache.jena.web.DatasetGraphAccessorHTTP;
 
@@ -110,7 +115,17 @@ public class GraphManager {
         DatasetAdapter adapter = new DatasetAdapter(accessor);  
         adapter.deleteModel(graph+"#ExportGraph");
     }
-
+    
+    public static void createNewEmptyResourceGraph(String graph, String resource) {
+        logger.info("Creating empty graph to "+graph);
+        DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(services.getCoreReadWriteAddress());
+        DatasetAdapter adapter = new DatasetAdapter(accessor);
+        Model empty = ModelFactory.createDefaultModel();
+        empty.setNsPrefixes(LDHelper.PREFIX_MAP);
+        empty.add(ResourceFactory.createResource(resource), RDF.type, OWL.Ontology);
+        adapter.putModel(graph, empty);
+        logger.info(""+adapter.containsModel(graph));
+    }
     
     public static void updateAllExportGraphs() {
         
@@ -338,6 +353,7 @@ public static boolean isExistingPrefix(String prefix) {
         String newQuery = "DROP SILENT GRAPH <" + model + ">; ";
                newQuery += "DROP SILENT GRAPH <" + model + "#HasPartGraph>; ";
                newQuery += "DROP SILENT GRAPH <" + model + "#ExportGraph>; ";
+               newQuery += "DROP SILENT GRAPH <" +model + "#PositionGraph>; ";
 
         while (results.hasNext()) {
             QuerySolution soln = results.nextSolution();
