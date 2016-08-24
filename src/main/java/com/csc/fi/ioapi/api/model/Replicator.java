@@ -184,10 +184,28 @@ public class Replicator {
                 Model exportedModel = JerseyFusekiClient.getResourceAsJenaModel(service+"exportResource?graph="+modelURI.toString());
                 adapter.add(modelURI.toString(), exportedModel);
                 
+                // HasPartGraph
                 String uri = service+"exportResource?graph="+UriComponent.encode(modelURI.toString()+"#HasPartGraph",UriComponent.Type.QUERY_PARAM);
      
                 Model hasPartModel = JerseyFusekiClient.getResourceAsJenaModel(uri);
                 adapter.add(modelURI.toString()+"#HasPartGraph", hasPartModel);
+                
+                // ExportGraph
+                
+                String euri = service+"exportResource?graph="+UriComponent.encode(modelURI.toString()+"#ExportGraph",UriComponent.Type.QUERY_PARAM);
+     
+                Model exportModel = JerseyFusekiClient.getResourceAsJenaModel(uri);
+                adapter.add(modelURI.toString()+"#ExportGraph", exportModel);
+                
+                // PositionGraph
+                
+                String puri = service+"exportResource?graph="+UriComponent.encode(modelURI.toString()+"#PositionGraph",UriComponent.Type.QUERY_PARAM);
+     
+                Model positionModel = JerseyFusekiClient.getResourceAsJenaModel(uri);
+                adapter.add(modelURI.toString()+"#PositionGraph", positionModel);
+                
+                
+                // Resources
                 
                 NodeIterator nodIter = hasPartModel.listObjectsOfProperty(DCTerms.hasPart);
                 HashMap conceptMap = new HashMap<String, String>();

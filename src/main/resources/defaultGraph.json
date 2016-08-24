@@ -8,7 +8,6 @@
     "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
     "sd": "http://www.w3.org/ns/sparql-service-description#",
-    "usr": "http://urn.fi/urn:nbn:fi:csc-iow-default#",
     "vann": "http://purl.org/vocab/vann/",
     "void": "http://rdfs.org/ns/void#",
     "xsd": "http://www.w3.org/2001/XMLSchema#"

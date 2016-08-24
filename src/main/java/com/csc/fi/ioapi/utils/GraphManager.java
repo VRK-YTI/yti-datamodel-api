@@ -73,20 +73,16 @@ public class GraphManager {
                    
              String queryString = "CONSTRUCT { "
                 + "?model <http://purl.org/dc/terms/hasPart> ?resource . "    
-                + "?ms ?p ?o . "
+                + "?ms ?mp ?mo . "
                 + "?rs ?rp ?ro . "
-                + "?resource ?anyp ?anyx . "
                 + " } WHERE {"
-                + "GRAPH ?modelHasPartGraph { "
-                + "?model <http://purl.org/dc/terms/hasPart> ?resource . "
-                + " } GRAPH ?model {"
-                + "?ms ?p ?o . "
-                + "} GRAPH ?resource { "
+                + " GRAPH ?model {"
+                + "?ms ?mp ?mo . "
+                + "} GRAPH ?modelHasPartGraph { "
+                + " ?model <http://purl.org/dc/terms/hasPart> ?resource . "
+                + " } GRAPH ?resource { "
                 + "?rs ?rp ?ro . "
                 + "}"
-                + "OPTIONAL {GRAPH ?modelPositionGraph {"
-                + "?resource ?anyp ?anyx . "
-                + "}}"
                 + "}"; 
           
         ParameterizedSparqlString pss = new ParameterizedSparqlString();

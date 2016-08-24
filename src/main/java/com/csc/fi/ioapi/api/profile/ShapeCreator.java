@@ -25,6 +25,7 @@ import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiParam;
 import com.wordnik.swagger.annotations.ApiResponse;
 import com.wordnik.swagger.annotations.ApiResponses;
+import java.util.UUID;
 import javax.servlet.http.HttpServletRequest;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
@@ -85,24 +86,27 @@ public class ShapeCreator {
                     + "?shapeIRI rdfs:isDefinedBy ?model . "
                     + "?shapeIRI rdfs:label ?label . "
                     + "?shapeIRI rdfs:comment ?comment . "
-                    + "?shapeIRI sh:property ?property . "
+                    + "?shapeIRI sh:property ?shapeuuid . "
                     + "?shapeIRI dcterms:subject ?subject . "
                     + "?subject ?sp ?so . "
-                    + "?property ?p ?o . "
+                    + "?shapeuuid ?p ?o . "
                     + "} WHERE { "
                     + "BIND(now() as ?creation) "
                     + "BIND(now() as ?modified) "
-                   // + "BIND(iri(concat(?profileNamespace,concat('s',afn:localname(?classIRI)))) as ?shapeIRI)"   
                     + "GRAPH ?classIRI { "
                     + "?classIRI a rdfs:Class . "
                     + "?classIRI rdfs:label ?label . "
                     + "OPTIONAL { ?classIRI rdfs:comment ?comment . } "
                     + "OPTIONAL { ?classIRI dcterms:subject ?subject . "
-                    + " ?subject ?sp ?so . }"
-                    + "OPTIONAL { "
-                    + "?classIRI sh:property ?property . "
-                    + "?property ?p ?o . } "
+                    + " ?subject ?sp ?so . } "
+                    + "OPTIONAL {"
+                    + "?classIRI sh:property ?property .  "
+                    + "BIND(IRI(CONCAT(STR(?property),?shapePropertyID)) as ?shapeuuid)" 
+                    + "?property ?p ?o . "
+                    + "} "
                     + "}}";
+                
+                pss.setLiteral("shapePropertyID", "-"+UUID.randomUUID().toString());
 
             } else {           
             /* Create Shape from external IMPORT */   
