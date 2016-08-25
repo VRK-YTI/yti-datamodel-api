@@ -175,7 +175,7 @@ public class JsonSchemaWriter {
          if(classMetadata) {
         
         String selectResources = 
-                "SELECT ?predicate ?predicateName ?label ?datatype ?shapeRef ?min ?max ?minLength ?maxLenght ?pattern "
+                "SELECT ?predicate ?predicateName ?label ?datatype ?shapeRef ?min ?max "
                 + "WHERE { "
                 + "GRAPH ?resourceID {"
                 + "?resourceID sh:property ?property . "
@@ -189,9 +189,6 @@ public class JsonSchemaWriter {
                 + "OPTIONAL { ?property sh:valueShape ?shapeRef . }"
                 + "OPTIONAL { ?property sh:minCount ?min . }"
                 + "OPTIONAL { ?property sh:maxCount ?max . }"
-                + "OPTIONAL { ?property sh:pattern ?pattern . }"
-                + "OPTIONAL { ?property sh:minLenght ?minLength . }"
-                + "OPTIONAL { ?property sh:maxLength ?maxLength . }"
                 + "BIND(afn:localname(?predicate) as ?predicateName)"
                 + "}"
                 + "}";
@@ -218,7 +215,7 @@ public class JsonSchemaWriter {
             
             predicate.add("title", title);
             
-            if(soln.contains("min") ) {
+            if(soln.contains("min")) {
                 int min = soln.getLiteral("min").getInt();
                 if(min>0) {
                     required.add(predicateName);
@@ -234,46 +231,24 @@ public class JsonSchemaWriter {
                 String datatype = soln.getResource("datatype").toString();
                 String jsonDatatype = DATATYPE_MAP.get(datatype);
                  
-                if(soln.contains("min") && soln.getLiteral("min").getInt()>0) {
-                    predicate.add("minItems",soln.getLiteral("min").getInt());
-                 }
                 
+                 if(!soln.contains("max") || soln.getLiteral("max").getInt()>1) {
+                        if(soln.contains("min")) {
+                            predicate.add("minItems",soln.getLiteral("min").getInt());
+                        }
+                        if(soln.contains("max")) {
+                            predicate.add("maxItems",soln.getLiteral("max").getInt());
+                        }
+                        
+                        predicate.add("type", "array");
 
-               if(soln.contains("max") && soln.getLiteral("max").getInt()<=1) {
-
-                    predicate.add("maxItems",1);
-
-                    if(jsonDatatype!=null) {
-                       predicate.add("type", jsonDatatype);
-                    }
-
+                        if(jsonDatatype!=null) {
+                            predicate.add("items", Json.createObjectBuilder().add("type", jsonDatatype).build());
+                        } 
+                        
                 } else {
-
-                    if(soln.contains("max") && soln.getLiteral("max").getInt()>1) {
-                      predicate.add("maxItems",soln.getLiteral("max").getInt()); 
-                    }
-
-                    predicate.add("type", "array");
-
-                    if(jsonDatatype!=null) {
-                        predicate.add("items", Json.createObjectBuilder().add("type", jsonDatatype).build());
-                    } 
-
+                    predicate.add("type", jsonDatatype);
                 }
-                
-                 
-                if(soln.contains("maxLength"))  {
-                    predicate.add("maxLength",soln.getLiteral("maxLength").getInt());
-                }
-                
-                if(soln.contains("minLength"))  {
-                    predicate.add("minLength",soln.getLiteral("minLength").getInt());
-                }
-                
-                if(soln.contains("pattern"))  {
-                    predicate.add("pattern",soln.getLiteral("pattern").toString());
-                }
-                 
                 
                 if(FORMAT_MAP.containsKey(datatype)) {
                     predicate.add("format",FORMAT_MAP.get(datatype));
@@ -415,7 +390,7 @@ public class JsonSchemaWriter {
         }
         
         String selectResources = 
-                "SELECT ?resource ?className ?classTitle ?classDescription ?predicate ?title ?description ?predicateName ?datatype ?shapeRef ?shapeRefName ?min ?max ?minLength ?maxLength ?pattern "
+                "SELECT ?resource ?className ?classTitle ?classDescription ?predicate ?title ?description ?predicateName ?datatype ?shapeRef ?shapeRefName ?min ?max "
                 + "WHERE { "
                 + "GRAPH ?modelPartGraph {"
                 + "?model dcterms:hasPart ?resource . "
@@ -438,9 +413,6 @@ public class JsonSchemaWriter {
                 + "OPTIONAL { ?property sh:valueShape ?shapeRef . BIND(afn:localname(?shapeRef) as ?shapeRefName) }"
                 + "OPTIONAL { ?property sh:maxCount ?max . }"
                 + "OPTIONAL { ?property sh:minCount ?min . }"
-                + "OPTIONAL { ?property sh:pattern ?pattern . }"
-                + "OPTIONAL { ?property sh:minLenght ?minLength . }"
-                + "OPTIONAL { ?property sh:maxLength ?maxLength . }"
                 + "BIND(afn:localname(?predicate) as ?predicateName)"
                 + "}"
                 + "}"
@@ -495,22 +467,11 @@ public class JsonSchemaWriter {
                 String jsonDatatype = DATATYPE_MAP.get(datatype);
                 
 
-                if(soln.contains("min") && soln.getLiteral("min").getInt()>0) {
+              
+                if(soln.contains("min")) {
                     predicate.add("minItems",soln.getLiteral("min").getInt());
                 }
-       
-                if(soln.contains("maxLength"))  {
-                    predicate.add("maxLength",soln.getLiteral("maxLength").getInt());
-                }
-                
-                if(soln.contains("minLength"))  {
-                    predicate.add("minLength",soln.getLiteral("minLength").getInt());
-                }
-                
-                if(soln.contains("pattern"))  {
-                    predicate.add("pattern",soln.getLiteral("pattern").toString());
-                }
-                
+                        
                 if(soln.contains("max") && soln.getLiteral("max").getInt()<=1) {
 
                     predicate.add("maxItems",1);
@@ -542,7 +503,6 @@ public class JsonSchemaWriter {
                 if(soln.contains("shapeRefName")) {
                     String shapeRefName = soln.getLiteral("shapeRefName").toString();
 
-                    
                      if(!soln.contains("max") || soln.getLiteral("max").getInt()>1) {
                              if(soln.contains("min")) predicate.add("minItems",soln.getLiteral("min").getInt());
                              if(soln.contains("max")) {

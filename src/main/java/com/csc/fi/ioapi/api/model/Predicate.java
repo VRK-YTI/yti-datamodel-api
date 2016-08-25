@@ -350,9 +350,7 @@ public class Predicate {
             
            logger.log(Level.INFO, id + " updated sucessfully!");
            
-           if(!ApplicationProperties.getDebugMode()) {
-                GraphManager.createExportGraph(model);
-           }
+           JerseyFusekiClient.postGraphToTheService(model+"#ExportGraph", body, services.getCoreReadWriteAddress());
             
            return Response.status(204).entity("{\"identifier\":\"urn:uuid:"+provUUID+"\"}").build();
            

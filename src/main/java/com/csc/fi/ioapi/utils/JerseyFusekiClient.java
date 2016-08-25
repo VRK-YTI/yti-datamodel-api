@@ -174,6 +174,13 @@ public class JerseyFusekiClient {
         return builder.put(ClientResponse.class, body);
     }
     
+    public static ClientResponse postGraphToTheService(String graph, String body, String service) {
+        Client client = Client.create();
+        WebResource webResource = client.resource(service).queryParam("graph", graph);
+        WebResource.Builder builder = webResource.header("Content-type", "application/ld+json");
+        return builder.post(ClientResponse.class, body);
+    }
+    
     public static ClientResponse clientResponseFromConstruct(String query, String service) {
                    
             Client client = Client.create();
