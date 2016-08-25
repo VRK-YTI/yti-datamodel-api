@@ -175,11 +175,12 @@ public class JsonSchemaWriter {
          if(classMetadata) {
         
         String selectResources = 
-                "SELECT ?predicate ?predicateName ?label ?datatype ?shapeRef ?min ?max ?minLength ?maxLenght ?pattern "
+                "SELECT ?predicate ?id ?predicateName ?label ?datatype ?shapeRef ?min ?max ?minLength ?maxLenght ?pattern "
                 + "WHERE { "
                 + "GRAPH ?resourceID {"
                 + "?resourceID sh:property ?property . "
                 + "?property sh:predicate ?predicate . "
+                + "OPTIONAL { ?property dcterms:identifier ?id . }"
                 + "?property rdfs:label ?label . "
                 + "FILTER (langMatches(lang(?label),?lang))"
                 + "OPTIONAL { ?property rdfs:comment ?description . "
@@ -212,6 +213,12 @@ public class JsonSchemaWriter {
             QuerySolution soln = results.nextSolution();
             //String predicateID = soln.getResource("predicate").toString();
             String predicateName = soln.getLiteral("predicateName").toString();
+            
+            if(soln.contains("id")) {
+                predicateName = soln.getLiteral("id").toString();
+            }
+                        
+                        
             String title = soln.getLiteral("label").toString();
             
             JsonObjectBuilder predicate = Json.createObjectBuilder();
@@ -415,7 +422,7 @@ public class JsonSchemaWriter {
         }
         
         String selectResources = 
-                "SELECT ?resource ?className ?classTitle ?classDescription ?predicate ?title ?description ?predicateName ?datatype ?shapeRef ?shapeRefName ?min ?max ?minLength ?maxLength ?pattern "
+                "SELECT ?resource ?className ?classTitle ?classDescription ?predicate ?id ?title ?description ?predicateName ?datatype ?shapeRef ?shapeRefName ?min ?max ?minLength ?maxLength ?pattern "
                 + "WHERE { "
                 + "GRAPH ?modelPartGraph {"
                 + "?model dcterms:hasPart ?resource . "
@@ -428,6 +435,7 @@ public class JsonSchemaWriter {
                 + "}"
                 + "?resource sh:property ?property . "
                 + "?property sh:predicate ?predicate . "
+                + "OPTIONAL { ?property dcterms:identifier ?id . }"
                 + "?property rdfs:label ?title . "
                 + "FILTER (langMatches(lang(?title),?lang))"
                 + "BIND(afn:localname(?resource) as ?className)"
@@ -468,7 +476,13 @@ public class JsonSchemaWriter {
             if(!soln.contains("className")) return null;
             
             String className = soln.getLiteral("className").toString();
+            
             String predicateName = soln.getLiteral("predicateName").toString();
+            
+            if(soln.contains("id")) {
+                predicateName = soln.getLiteral("id").toString();
+            }
+            
             String title = soln.getLiteral("title").toString();
 
             JsonObjectBuilder predicate = Json.createObjectBuilder();
