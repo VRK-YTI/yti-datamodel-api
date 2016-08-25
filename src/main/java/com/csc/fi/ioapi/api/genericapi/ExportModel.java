@@ -104,13 +104,12 @@ public class ExportModel {
             
             Lang rdfLang = RDFLanguages.contentTypeToLang(contentType);
             
-            
             if(rdfLang==null) {
                 logger.info("Unknown RDF type: "+ctype);
                 return Response.status(403).entity(ErrorMessage.NOTFOUND).build();
             }
 
-            
+
             DatasetAccessor accessor = DatasetAccessorFactory.createHTTP(services.getCoreReadAddress());
             Model model = accessor.getModel(graph);
 

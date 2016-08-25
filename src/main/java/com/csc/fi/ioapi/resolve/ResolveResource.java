@@ -56,14 +56,14 @@ public class ResolveResource extends HttpServlet {
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
         } else {
         
-                if(rdfLang==null) {
-                    logger.info("Redirecting to root");
-                    response.sendRedirect("/#/model?urn="+graphName);
-                } else {
+                if(rdfLang!=null || accept.equals("application/schema+json")) {
                     String dis = "/rest/exportModel?graph="+graphName+"&content-type="+accept;
                     logger.info("Redirecting to export: "+dis);
                     RequestDispatcher dispatcher = getServletContext().getRequestDispatcher(dis);
                     dispatcher.forward(request,response);
+                } else {
+                    logger.info("Redirecting to root");
+                    response.sendRedirect("/#/model?urn="+graphName);
                 }    
         } 
       

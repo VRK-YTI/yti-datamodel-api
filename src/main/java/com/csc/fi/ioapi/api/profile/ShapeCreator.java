@@ -86,9 +86,9 @@ public class ShapeCreator {
                     + "?shapeIRI rdfs:isDefinedBy ?model . "
                     + "?shapeIRI rdfs:label ?label . "
                     + "?shapeIRI rdfs:comment ?comment . "
-                    + "?shapeIRI sh:property ?shapeuuid . "
                     + "?shapeIRI dcterms:subject ?subject . "
                     + "?subject ?sp ?so . "
+                    + "?shapeIRI sh:property ?shapeuuid . "
                     + "?shapeuuid ?p ?o . "
                     + "} WHERE { "
                     + "BIND(now() as ?creation) "
@@ -101,6 +101,7 @@ public class ShapeCreator {
                     + " ?subject ?sp ?so . } "
                     + "OPTIONAL {"
                     + "?classIRI sh:property ?property .  "
+                    /* Todo: Issue 472 */
                     + "BIND(IRI(CONCAT(STR(?property),?shapePropertyID)) as ?shapeuuid)" 
                     + "?property ?p ?o . "
                     + "} "
