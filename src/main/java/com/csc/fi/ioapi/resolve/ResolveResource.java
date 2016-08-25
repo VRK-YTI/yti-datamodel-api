@@ -44,6 +44,7 @@ public class ResolveResource extends HttpServlet {
             throws ServletException, IOException {
 
         String accept = request.getHeader("Accept");
+        String acceptLang = request.getHeader("Accept-Language");
         
         Lang rdfLang = RDFLanguages.contentTypeToLang(accept);
     
@@ -57,7 +58,7 @@ public class ResolveResource extends HttpServlet {
         } else {
         
                 if(rdfLang!=null || accept.equals("application/schema+json")) {
-                    String dis = "/rest/exportModel?graph="+graphName+"&content-type="+accept;
+                    String dis = "/rest/exportModel?graph="+graphName+"&content-type="+accept+"&lang="+acceptLang;
                     logger.info("Redirecting to export: "+dis);
                     RequestDispatcher dispatcher = getServletContext().getRequestDispatcher(dis);
                     dispatcher.forward(request,response);

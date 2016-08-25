@@ -127,7 +127,7 @@ public class JsonSchemaWriter {
                 + "} ";
         
         pss.setIri("resourceID", classID);
-        pss.setLiteral("lang",lang);
+        if(lang!=null) pss.setLiteral("lang",lang);
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
         
         pss.setCommandText(selectClass);
@@ -195,7 +195,7 @@ public class JsonSchemaWriter {
         
         
         pss.setCommandText(selectResources);
-        pss.setLiteral("lang",lang);
+        if(lang!=null) pss.setLiteral("lang",lang);
 
         qexec = QueryExecutionFactory.sparqlService(services.getCoreSparqlAddress(), pss.asQuery());
 
@@ -360,12 +360,16 @@ public class JsonSchemaWriter {
                 + "} ";
         
         pss.setIri("modelID", modelID);
-        pss.setLiteral("lang",lang);
+        if(lang!=null) pss.setLiteral("lang",lang);
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
         
         pss.setCommandText(selectClass);
         
-        QueryExecution qexec = QueryExecutionFactory.sparqlService(services.getCoreSparqlAddress(), pss.asQuery());
+        logger.info(""+services.getCoreSparqlAddress());
+        logger.info(""+pss);
+       
+        
+        QueryExecution qexec =  QueryExecutionFactory.sparqlService(services.getCoreSparqlAddress(), pss.toString());
 
         ResultSet results = qexec.execSelect();
 
@@ -416,7 +420,7 @@ public class JsonSchemaWriter {
         
         
         pss.setIri("modelPartGraph", modelID+"#HasPartGraph");
-        pss.setLiteral("lang",lang);
+        if(lang!=null) pss.setLiteral("lang",lang);
         pss.setCommandText(selectResources);
         
         qexec = QueryExecutionFactory.sparqlService(services.getCoreSparqlAddress(), pss.asQuery());
