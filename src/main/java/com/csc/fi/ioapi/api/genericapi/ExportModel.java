@@ -81,6 +81,8 @@ public class ExportModel {
                     return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
             }
             
+            ctype = ctype.replace(" ", "+");
+            
             if(ctype.equals("application/ld+json+context")) {
                 String context = ContextWriter.newModelContext(graph);
                 if(context!=null) {
@@ -99,7 +101,6 @@ public class ExportModel {
             
         try {
             
-            ctype = ctype.replace(" ", "+");
             ContentType contentType = ContentType.create(ctype);
             
             Lang rdfLang = RDFLanguages.contentTypeToLang(contentType);
