@@ -211,15 +211,15 @@ public class JsonSchemaWriter {
 
         while (results.hasNext()) {
             QuerySolution soln = results.nextSolution();
-            //String predicateID = soln.getResource("predicate").toString();
-            String predicateName = soln.getLiteral("predicateName").toString();
+            //String predicateID = soln.getResource("predicate").getString();
+            String predicateName = soln.getLiteral("predicateName").getString();
             
             if(soln.contains("id")) {
-                predicateName = soln.getLiteral("id").toString();
+                predicateName = soln.getLiteral("id").getString();
             }
                         
                         
-            String title = soln.getLiteral("label").toString();
+            String title = soln.getLiteral("label").getString();
             
             JsonObjectBuilder predicate = Json.createObjectBuilder();
             
@@ -278,7 +278,7 @@ public class JsonSchemaWriter {
                 }
                 
                 if(soln.contains("pattern"))  {
-                    predicate.add("pattern",soln.getLiteral("pattern").toString());
+                    predicate.add("pattern",soln.getLiteral("pattern").getString());
                 }
                  
                 
@@ -475,15 +475,15 @@ public class JsonSchemaWriter {
             
             if(!soln.contains("className")) return null;
             
-            String className = soln.getLiteral("className").toString();
+            String className = soln.getLiteral("className").getString();
             
-            String predicateName = soln.getLiteral("predicateName").toString();
+            String predicateName = soln.getLiteral("predicateName").getString();
             
             if(soln.contains("id")) {
-                predicateName = soln.getLiteral("id").toString();
+                predicateName = soln.getLiteral("id").getString();
             }
             
-            String title = soln.getLiteral("title").toString();
+            String title = soln.getLiteral("title").getString();
 
             JsonObjectBuilder predicate = Json.createObjectBuilder();
             
@@ -522,7 +522,7 @@ public class JsonSchemaWriter {
                 }
                 
                 if(soln.contains("pattern"))  {
-                    predicate.add("pattern",soln.getLiteral("pattern").toString());
+                    predicate.add("pattern",soln.getLiteral("pattern").getString());
                 }
                 
                 if(soln.contains("max") && soln.getLiteral("max").getInt()<=1) {
@@ -554,7 +554,7 @@ public class JsonSchemaWriter {
                 
             } else {
                 if(soln.contains("shapeRefName")) {
-                    String shapeRefName = soln.getLiteral("shapeRefName").toString();
+                    String shapeRefName = soln.getLiteral("shapeRefName").getString();
 
                     
                      if(!soln.contains("max") || soln.getLiteral("max").getInt()>1) {
@@ -578,11 +578,11 @@ public class JsonSchemaWriter {
            
             
                 /* If not build props and requires */
-                if(!pResults.hasNext() || !className.equals(pResults.peek().getLiteral("className").toString())) {
+                if(!pResults.hasNext() || !className.equals(pResults.peek().getLiteral("className").getString())) {
                     JsonObjectBuilder classDefinition = Json.createObjectBuilder();
-                    classDefinition.add("title",soln.getLiteral("classTitle").toString());
+                    classDefinition.add("title",soln.getLiteral("classTitle").getString());
                     if(soln.contains("classDescription")) {
-                        classDefinition.add("description",soln.getLiteral("classDescription").toString());
+                        classDefinition.add("description",soln.getLiteral("classDescription").getString());
                     }
                     classDefinition.add("properties", properties.build());
                     
