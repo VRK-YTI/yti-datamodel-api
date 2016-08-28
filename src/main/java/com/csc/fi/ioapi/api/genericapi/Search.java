@@ -52,14 +52,15 @@ public class Search {
       @ApiResponse(code = 200, message = "OK")
   })
   public Response search(
-          @ApiParam(value = "Search in graph", defaultValue="default") @QueryParam("graph") String graph,
+          @ApiParam(value = "Search in graph") @QueryParam("graph") String graph,
           @ApiParam(value = "Searchstring", required = true) @QueryParam("search") String search,
-          @ApiParam(value = "Language", required = true) @QueryParam("lang") String lang) {      
+          @ApiParam(value = "Language") @QueryParam("lang") String lang) {      
 
       /* TODO: ADD TEXTDATASET ONCE NAMESPACE BUG IS RESOLVED */
       // if(!search.endsWith("~")||!search.endsWith("*")) search = search+"*";
       
-            String queryString = "CONSTRUCT {"
+            String queryString = 
+                    "CONSTRUCT {"
                   + "?resource rdf:type ?type ."
                   + "?resource rdfs:label ?label ."
                   + "?resource rdfs:comment ?comment ."
@@ -67,20 +68,21 @@ public class Search {
                   + "} WHERE { "
                   + "?resource ?p ?literal ."
                   + "?resource rdf:type ?type ."
+                  + "?resource rdfs:label ?label . "
+                  // + (graph==null||graph.equals("undefined")||graph.equals("default")?"":"<"+graph+"> dcterms:hasPart ?resource . ")
                   + "FILTER contains(lcase(?literal),lcase(?search)) "  
                   //+ "?resource text:query '"+search+"' . "
-                  + "OPTIONAL{?resource sh:predicate ?type .}"
+                  //+ "OPTIONAL{?resource sh:predicate ?predicateType .}"
                   + "OPTIONAL{?resource rdfs:comment ?comment .}"
                   + "OPTIONAL{?super sh:property ?resource .}"
-                  + "?resource rdfs:label ?label . "
-                  + "FILTER langMatches(lang(?label),'"+lang+"')}"; 
+                  + (lang==null||lang.equals("undefined")?"":"FILTER langMatches(lang(?label),'"+lang+"')")
+                  + "}"; 
 
             ParameterizedSparqlString pss = new ParameterizedSparqlString();
             pss.setNsPrefixes(LDHelper.PREFIX_MAP);
             pss.setLiteral("search", search);
             pss.setCommandText(queryString);
             
-
             Logger.getLogger(Search.class.getName()).log(Level.INFO, "Searching "+graph+" with query: "+queryString);
 
             ResponseBuilder rb;
