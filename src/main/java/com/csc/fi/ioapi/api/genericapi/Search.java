@@ -64,19 +64,21 @@ public class Search {
                   + "?resource rdf:type ?type ."
                   + "?resource rdfs:label ?label ."
                   + "?resource rdfs:comment ?comment ."
-                  + "?resource rdfs:isDefinedBy ?super ."
+                  + "?resource rdfs:isDefinedBy ?super . "
+                  + "?super rdfs:label ?superLabel . "
                   + "} WHERE { "
-                  + "?resource ?p ?literal ."
-                  + "?resource rdf:type ?type ."
-                  + "?resource rdfs:label ?label . "
-                  // + (graph==null||graph.equals("undefined")||graph.equals("default")?"":"<"+graph+"> dcterms:hasPart ?resource . ")
-                  + "FILTER contains(lcase(?literal),lcase(?search)) "  
+                  + (graph==null||graph.equals("undefined")||graph.equals("default")?"":"GRAPH <"+graph+"#HasPartGraph> { <"+graph+"> dcterms:hasPart ?graph . } ")
+                  + "GRAPH ?graph {"
+                  + "?resource ?p ?literal . "
+                  + "FILTER contains(lcase(?literal),lcase(?search)) " 
+                  + "?resource rdf:type ?type . ?resource rdfs:isDefinedBy ?super . GRAPH ?super { ?super rdfs:label ?superLabel . }"
+                  //+ "UNION"
+                 // + "{?resource sh:predicate ?predicate . ?super sh:property ?resource . ?super rdfs:label ?superLabel . BIND(sh:Constraint as ?type)}"
+                  + "?resource rdfs:label ?label . " 
                   //+ "?resource text:query '"+search+"' . "
-                  //+ "OPTIONAL{?resource sh:predicate ?predicateType .}"
                   + "OPTIONAL{?resource rdfs:comment ?comment .}"
-                  + "OPTIONAL{?super sh:property ?resource .}"
                   + (lang==null||lang.equals("undefined")?"":"FILTER langMatches(lang(?label),'"+lang+"')")
-                  + "}"; 
+                  + "}}"; 
 
             ParameterizedSparqlString pss = new ParameterizedSparqlString();
             pss.setNsPrefixes(LDHelper.PREFIX_MAP);
