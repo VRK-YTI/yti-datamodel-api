@@ -151,7 +151,7 @@ public class ExternalClass {
                     
                      + "{ ?classIRI ?commentPred ?commentStr . "
                      + "VALUES ?commentPred { rdfs:comment skos:definition dcterms:description dc:description prov:definition }"
-                     + "FILTER(LANG(?commentStr) = '') BIND(STRLANG(?commentStr,'en') as ?comment) }"
+                     + "FILTER(LANG(?commentStr) = '') BIND(STRLANG(STR(?commentStr),'en') as ?comment) }"
                      + "UNION"
                      + "{ ?classIRI ?commentPred ?comment . "
                      + "VALUES ?commentPred { rdfs:comment skos:definition dcterms:description dc:description prov:definition }"
@@ -209,7 +209,8 @@ public class ExternalClass {
                     /* Predicate comments - if lang unknown create english tag */
                     + "OPTIONAL { ?predicate ?predicateCommentPred ?propertyCommentStr . "
                     + "VALUES ?predicateCommentPred { rdfs:comment skos:definition dcterms:description dc:description }"
-                    + "FILTER(LANG(?propertyCommentStr) = '') BIND(STRLANG(?propertyCommentStr,'en') as ?propertyComment) }"
+                    + "FILTER(LANG(?propertyCommentStr) = '') BIND(STRLANG(STR(?propertyCommentStr),'en') as ?propertyComment) }"
+                    
                     + "OPTIONAL { ?predicate ?predicateCommentPred ?propertyComment . "
                     + "VALUES ?predicateCommentPred { rdfs:comment skos:definition dcterms:description dc:description }"
                     + " FILTER(LANG(?propertyComment)!='') }"

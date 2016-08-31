@@ -135,8 +135,8 @@ public class ExternalPredicate {
                 + "FILTER(STRSTARTS(STR(?predicate), STR(?externalModel)))"
                 + "OPTIONAL { ?predicate rdfs:label ?labelStr . FILTER(LANG(?labelStr) = '') BIND(STRLANG(?labelStr,'en') as ?label) }"
                 + "OPTIONAL { ?predicate rdfs:label ?label . FILTER(LANG(?label)!='') }"
-                 + "} "
-                 + "}";
+                + "} "
+                + "}";
         
         pss.setIri("library", model);
         pss.setIri("modelService",services.getLocalhostCoreSparqlAddress());
@@ -222,13 +222,16 @@ public class ExternalPredicate {
                 + "} "
                 + "OPTIONAL { ?predicate rdfs:range ?range . FILTER (!isBlank(?range)) }"
                 /* Support only direct range no OWL unions */
-                + "OPTIONAL { ?predicate rdfs:domain ?domain .  }"
-                + "OPTIONAL { ?predicate rdfs:label ?labelStr . FILTER(LANG(?labelStr) = '') BIND(STRLANG(?labelStr,'en') as ?label) }"
-                + "OPTIONAL { ?predicate rdfs:label ?label . FILTER(LANG(?label)!='') }"      
-                + "OPTIONAL { ?predicate ?commentPred ?commentStr . "
+             //   + "OPTIONAL { ?predicate rdfs:domain ?domain .  }"
+                + "OPTIONAL { ?predicate rdfs:label ?labelStr . FILTER(LANG(?labelStr) = '') BIND(STRLANG(STR(?labelStr),'en') as ?label) }"
+                + "OPTIONAL { ?predicate rdfs:label ?label . FILTER(LANG(?label)!='') }"
                 + "VALUES ?commentPred { rdfs:comment skos:definition dcterms:description dc:description }"
-                + "BIND(STRLANG(?commentStr,'en') as ?comment) "
-                + "}"
+                + "OPTIONAL { ?predicate ?commentPred ?commentStr . FILTER(LANG(?commentStr) = '') BIND(STRLANG(STR(?commentStr),'en') as ?comment) } "
+                + "OPTIONAL { ?predicate ?commentPred ?comment . FILTER(LANG(?comment)!='') }"
+               //  + "OPTIONAL { ?predicate ?commentPred ?commentStr . "
+                 
+              //  + "BIND(STRLANG(?commentStr,'en') as ?comment) "
+              //  + "}"
                 + "} "
                 + "}";
         
