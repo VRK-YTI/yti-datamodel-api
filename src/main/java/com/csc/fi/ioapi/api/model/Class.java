@@ -80,8 +80,10 @@ public class Class {
              if(id==null) {
                     logger.log(Level.WARNING, "Invalid prefix: "+prefix);
                    return Response.status(403).entity(ErrorMessage.INVALIDPREFIX).build();
+             } else {
+                id = namespace+"#"+id;
+                model = namespace;
              }
-          id = namespace+"#"+id;
         }    
       
       if(id==null || id.equals("undefined") || id.equals("default")) {
