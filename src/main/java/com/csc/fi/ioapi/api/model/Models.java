@@ -67,27 +67,37 @@ public class Models {
           @ApiParam(value = "Graph id", defaultValue="default") 
           @QueryParam("id") String id,
           @ApiParam(value = "group")
-          @QueryParam("group") String group) {
+          @QueryParam("group") String group,
+          @ApiParam(value = "prefix")
+          @QueryParam("prefix") String prefix) {
 
           String queryString = QueryLibrary.modelQuery;
           
           ParameterizedSparqlString pss = new ParameterizedSparqlString();
           
+          if(prefix!=null || !prefix.equals("undefined")) { 
+                 id = GraphManager.getServiceGraphNameWithPrefix(prefix);
+                 if(id==null) {
+                        logger.log(Level.WARNING, "Invalid prefix: "+prefix);
+                       return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
+                 }
+           }             
+                       
           if((group==null || group.equals("undefined")) && (id!=null && !id.equals("undefined") && !id.equals("default"))) {
-              
-            IRI modelIRI;
-            try {
-                    IRIFactory iri = IRIFactory.semanticWebImplementation();
-                    modelIRI = iri.construct(id);
-            } catch (IRIException e) {
-                    logger.log(Level.WARNING, "ID is invalid IRI!");
-                   return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
-       
-            }
             
-            if(id.startsWith("urn:")) {
-               return JerseyFusekiClient.getGraphResponseFromService(id, services.getProvReadWriteAddress());
-            }   
+            IRI modelIRI;
+            
+                try {
+                        IRIFactory iri = IRIFactory.semanticWebImplementation();
+                        modelIRI = iri.construct(id);
+                } catch (IRIException e) {
+                        logger.log(Level.WARNING, "ID is invalid IRI!");
+                       return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
+                }
+
+                if(id.startsWith("urn:")) {
+                   return JerseyFusekiClient.getGraphResponseFromService(id, services.getProvReadWriteAddress());
+                }
            
             String sparqlService = services.getCoreSparqlAddress();
             String graphService = services.getCoreReadWriteAddress();
