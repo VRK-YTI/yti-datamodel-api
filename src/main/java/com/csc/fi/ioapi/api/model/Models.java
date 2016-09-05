@@ -75,7 +75,7 @@ public class Models {
           
           ParameterizedSparqlString pss = new ParameterizedSparqlString();
           
-          if(prefix!=null || !prefix.equals("undefined")) { 
+          if((id==null || id.equals("undefined")) && (prefix!=null || !prefix.equals("undefined"))) { 
                  id = GraphManager.getServiceGraphNameWithPrefix(prefix);
                  if(id==null) {
                         logger.log(Level.WARNING, "Invalid prefix: "+prefix);

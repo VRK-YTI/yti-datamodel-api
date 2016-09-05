@@ -77,8 +77,20 @@ public class Predicate {
       @ApiParam(value = "Property id")
       @QueryParam("id") String id,
       @ApiParam(value = "Model id")
-      @QueryParam("model") String model) {
+      @QueryParam("model") String model,
+      @ApiParam(value = "prefix")
+      @QueryParam("prefix") String prefix) {
 
+      
+        if(prefix!=null || !prefix.equals("undefined")) { 
+         String namespace = GraphManager.getServiceGraphNameWithPrefix(prefix);
+             if(id==null) {
+                    logger.log(Level.WARNING, "Invalid prefix: "+prefix);
+                   return Response.status(403).entity(ErrorMessage.INVALIDPREFIX).build();
+             }
+          id = namespace+"#"+id;
+        } 
+      
       if(id==null || id.equals("undefined") || id.equals("default")) {
 
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
