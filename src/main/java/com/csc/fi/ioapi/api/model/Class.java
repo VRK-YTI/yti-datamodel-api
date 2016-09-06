@@ -250,6 +250,8 @@ public class Class {
            if(ProvenanceManager.getProvMode()) {
                 ProvenanceManager.createProvenanceGraph(id, body, login.getEmail(), provUUID); 
            }
+           
+           GraphManager.createExportGraph(model);
 
         } else {
              /* IF NO JSON-LD POSTED TRY TO CREATE REFERENCE FROM MODEL TO CLASS ID */
@@ -258,12 +260,13 @@ public class Class {
                 Response.status(403).entity(ErrorMessage.USEDIRI).build();
             } else {
                 GraphManager.insertExistingGraphReferenceToModel(id, model);
+                GraphManager.createExportGraph(model);
                 ConceptMapper.addConceptFromReferencedResource(model,id);
                 return Response.status(204).build();
             }
         }
         
-        GraphManager.createExportGraph(model);
+        
         
         Logger.getLogger(Class.class.getName()).log(Level.INFO, id+" updated sucessfully");
         return Response.status(204).entity("{\"identifier\":\"urn:uuid:"+provUUID+"\"}").build();
