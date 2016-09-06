@@ -55,17 +55,15 @@ public class ResolveResource extends HttpServlet {
         String ifModifiedSince = request.getHeader(HttpHeaders.IF_MODIFIED_SINCE);
         Date modifiedSince = null;
         Date modified = null;
+        SimpleDateFormat format = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz");
         
         if(ifModifiedSince!=null) {
             try {
-                SimpleDateFormat format = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz");
                 modifiedSince = format.parse(ifModifiedSince);
             } catch (ParseException ex) {
                 Logger.getLogger(ResolveResource.class.getName()).log(Level.SEVERE, null, ex);
             } 
         }
-        
-       
         
         Lang rdfLang = RDFLanguages.contentTypeToLang(accept);
     
@@ -74,20 +72,18 @@ public class ResolveResource extends HttpServlet {
         String graphName = GraphManager.getServiceGraphNameWithPrefix(modelID);
         
          if(modifiedSince!=null) {
-             logger.info(""+modifiedSince.getTime());
                 modified = GraphManager.lastModified(graphName);
                 if(modified!=null) {
-                    logger.info(""+modified.getTime());
                     if(modifiedSince.after(modified)) {
-                        logger.info("modifiedSince < modified");
+                        response.setHeader("Last-Modified", format.format(modified));
                         response.sendError(HttpServletResponse.SC_NOT_MODIFIED);
+                        
                         return;
                     }
                 }
         }
      
         if(graphName==null) {
-            logger.info("Graphname is null");
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
         } else {
         
