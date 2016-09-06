@@ -73,10 +73,13 @@ public class ResolveResource extends HttpServlet {
         String modelID = requestURI.substring(requestURI.lastIndexOf("/") + 1, requestURI.length());
         String graphName = GraphManager.getServiceGraphNameWithPrefix(modelID);
         
-         if(modifiedSince!=null) {       
+         if(modifiedSince!=null) {
+             logger.info(""+modifiedSince.getTime());
                 modified = GraphManager.lastModified(graphName);
                 if(modified!=null) {
+                    logger.info(""+modified.getTime());
                     if(modifiedSince.after(modified)) {
+                        logger.info("modifiedSince < modified");
                         response.sendError(HttpServletResponse.SC_NOT_MODIFIED);
                     }
                 }
