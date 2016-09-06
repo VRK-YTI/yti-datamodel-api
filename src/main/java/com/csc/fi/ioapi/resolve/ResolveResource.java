@@ -74,10 +74,11 @@ public class ResolveResource extends HttpServlet {
          if(modifiedSince!=null) {
                 modified = GraphManager.lastModified(graphName);
                 if(modified!=null) {
+                    String dateModified = format.format(modified);
                     if(modifiedSince.after(modified)) {
-                        response.setHeader("Last-Modified", format.format(modified));
                         response.sendError(HttpServletResponse.SC_NOT_MODIFIED);
-                        
+                        logger.info("Last-Modified:"+dateModified);
+                        response.setHeader("Last-Modified", dateModified);
                         return;
                     }
                 }
