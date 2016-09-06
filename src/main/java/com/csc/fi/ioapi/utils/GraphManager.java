@@ -25,6 +25,7 @@ import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ws.rs.core.Response;
+import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.datatypes.xsd.XSDDateTime;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
@@ -671,7 +672,7 @@ public static boolean isExistingPrefix(String prefix) {
 
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
         pss.setCommandText(selectResources);
-        pss.setLiteral("graph",graphName);
+        pss.setIri("graph",graphName);
         pss.setIri("exportGraph",graphName+"#ExportGraph");
 
         QueryExecution qexec = QueryExecutionFactory.sparqlService(services.getCoreSparqlAddress(), pss.asQuery());
@@ -684,9 +685,7 @@ public static boolean isExistingPrefix(String prefix) {
             QuerySolution soln = results.nextSolution();
             if(soln.contains("date")) {
                 Literal liteDate = soln.getLiteral("date");
-                    if (liteDate instanceof XSDDateTime) {
-                        modified = ((XSDDateTime) liteDate).asCalendar().getTime();
-                    }
+                modified = ((XSDDateTime)XSDDatatype.XSDdateTime.parse(liteDate.getString())).asCalendar().getTime();
                 }
             }
         
