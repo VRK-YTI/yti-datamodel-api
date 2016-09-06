@@ -23,7 +23,10 @@ import org.apache.jena.update.UpdateRequest;
 import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.ws.rs.core.Response;
 import org.apache.jena.iri.IRI;
+import org.apache.jena.iri.IRIException;
+import org.apache.jena.iri.IRIFactory;
 import org.apache.jena.query.ResultSetFormatter;
 import org.apache.jena.rdf.model.ModelMaker;
 import org.apache.jena.rdf.model.Resource;
@@ -90,7 +93,6 @@ public class GraphManager {
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
         pss.setIri("model", graph);
         pss.setIri("modelHasPartGraph", graph+"#HasPartGraph");
-        pss.setIri("modelPositionGraph", graph+"#PositionGraph");
 
         Query query = pss.asQuery();
         QueryExecution qexec = QueryExecutionFactory.sparqlService(services.getCoreSparqlAddress(), query);
@@ -239,6 +241,16 @@ public static boolean isExistingPrefix(String prefix) {
         } catch (Exception ex) {
             return false;
         }
+    }
+    
+    public static boolean testIRI(String iriString) {
+           try {
+              IRI iri = IRIFactory.uriImplementation().construct(iriString);
+            }
+            catch (IRIException e) {
+                return false;
+            }  
+           return true;
     }
     
     public static String getServiceGraphNameWithPrefix(String prefix) {
@@ -533,6 +545,32 @@ public static boolean isExistingPrefix(String prefix) {
         qexec.execute();
 
     }
+    
+     public static void insertNewGraphReferenceToExportGraph(String graph, String model) {
+
+        String query
+                = " INSERT { "
+                + "GRAPH ?exportGraph { "
+                + "?model dcterms:hasPart ?graph . "
+                + "}} WHERE { "
+                + "GRAPH ?exportGraph { "
+                + "?model a owl:Ontology . "
+                + "}}";
+                
+
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+        pss.setIri("graph", graph);
+        pss.setIri("model", model);
+        pss.setIri("exportGraph", model+"#ExportGraph");
+        pss.setCommandText(query);
+
+        UpdateRequest queryObj = pss.asUpdate();
+        UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, services.getCoreSparqlUpdateAddress());
+        qexec.execute();
+
+    }
+    
 
     public static void insertExistingGraphReferenceToModel(String graph, String model) {
 
