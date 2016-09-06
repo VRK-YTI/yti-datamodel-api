@@ -354,6 +354,7 @@ public class Class {
             
             ConceptMapper.addConceptFromReferencedResource(model,id);
             
+            GraphManager.insertNewGraphReferenceToExportGraph(id,model);
             JerseyFusekiClient.postGraphToTheService(model+"#ExportGraph", body, services.getCoreReadWriteAddress());
             
           return Response.status(204).entity("{\"identifier\":\"urn:uuid:"+provUUID+"\"}").build();
