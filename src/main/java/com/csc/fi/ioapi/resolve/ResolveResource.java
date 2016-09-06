@@ -81,6 +81,7 @@ public class ResolveResource extends HttpServlet {
                     if(modifiedSince.after(modified)) {
                         logger.info("modifiedSince < modified");
                         response.sendError(HttpServletResponse.SC_NOT_MODIFIED);
+                        return;
                     }
                 }
         }
