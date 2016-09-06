@@ -136,16 +136,25 @@ public class Models {
                      + "?graphName rdfs:label ?label . "
                      + "?graphName a ?type . "
                      + "?graphName dcterms:isPartOf ?group . "
+                     + "?graphName dcap:preferredXMLNamespaceName ?namespace . "
+                     + "?graphName dcap:preferredXMLNamespacePrefix ?prefix .  "
                      + "?group a foaf:Group . "
                      + "?group rdfs:label ?groupLabel . "
                      + "} WHERE { "
+                     + "GRAPH <urn:csc:iow:sd> {"
                      + "?graph sd:name ?graphName . "
                      + "?graph a sd:NamedGraph . "
                      + "?graph dcterms:isPartOf ?group . "
+                     + "}"
+                     + "GRAPH <urn:csc:groups> { "
                      + "?group rdfs:label ?groupLabel . "
+                     + "}"
                      + "GRAPH ?graphName { "
                      + "?graphName a ?type . "
-                     + "?graphName rdfs:label ?label . }}";
+                     + "?graphName rdfs:label ?label . "
+                     + "?graphName dcap:preferredXMLNamespaceName ?namespace . "
+                     + "?graphName dcap:preferredXMLNamespacePrefix ?prefix .  "
+                     + "}}";
              
              pss.setIri("group", groupIRI);
              
