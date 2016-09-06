@@ -256,6 +256,9 @@ public class Predicate {
         if(ProvenanceManager.getProvMode()) {
            ProvenanceManager.createProvenanceGraph(id, body, login.getEmail(), provUUID); 
         }
+        
+        GraphManager.createExportGraph(model);
+        
             
         } else {
              /* IF NO JSON-LD POSTED TRY TO CREATE REFERENCE FROM MODEL TO CLASS ID */
@@ -265,11 +268,12 @@ public class Predicate {
             } else {
                 GraphManager.insertExistingGraphReferenceToModel(id, model);
                 ConceptMapper.addConceptFromReferencedResource(model,id);
+                GraphManager.createExportGraph(model);
+        
                 return Response.status(204).build();
             }
         }
         
-        GraphManager.createExportGraph(model);
         
         logger.log(Level.INFO, id + " updated sucessfully!");
 
