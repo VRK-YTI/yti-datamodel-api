@@ -6,6 +6,7 @@ package com.csc.fi.ioapi.utils;
 import com.csc.fi.ioapi.config.ApplicationProperties;
 import com.csc.fi.ioapi.config.EndpointServices;
 import java.io.ByteArrayOutputStream;
+import java.text.SimpleDateFormat;
 import org.apache.jena.query.DatasetAccessor;
 import org.apache.jena.query.DatasetAccessorFactory;
 import org.apache.jena.query.ParameterizedSparqlString;
@@ -24,10 +25,12 @@ import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ws.rs.core.Response;
+import org.apache.jena.datatypes.xsd.XSDDateTime;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
 import org.apache.jena.iri.IRIFactory;
 import org.apache.jena.query.ResultSetFormatter;
+import org.apache.jena.rdf.model.Literal;
 import org.apache.jena.rdf.model.ModelMaker;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.ResourceFactory;
@@ -654,6 +657,41 @@ public static boolean isExistingPrefix(String prefix) {
         Model results = qexec.execConstruct();
         return ModelManager.writeModelToString(results);
        
+    }
+
+    public static Date lastModified(String graphName) {
+    
+     ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        String selectResources =
+                "SELECT ?date WHERE { "
+                + "GRAPH ?exportGraph { "+
+                " ?graph a owl:Ontology . "
+                + "?graph dcterms:modified ?date . "+
+                "}}";
+
+        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+        pss.setCommandText(selectResources);
+        pss.setLiteral("graph",graphName);
+        pss.setIri("exportGraph",graphName+"#ExportGraph");
+
+        QueryExecution qexec = QueryExecutionFactory.sparqlService(services.getCoreSparqlAddress(), pss.asQuery());
+
+        ResultSet results = qexec.execSelect();
+
+        Date modified = null;
+        
+        while (results.hasNext()) {
+            QuerySolution soln = results.nextSolution();
+            if(soln.contains("date")) {
+                Literal liteDate = soln.getLiteral("date");
+                    if (liteDate instanceof XSDDateTime) {
+                        modified = ((XSDDateTime) liteDate).asCalendar().getTime();
+                    }
+                }
+            }
+        
+        return modified;
+        
     }
 
 

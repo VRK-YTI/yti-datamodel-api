@@ -9,6 +9,11 @@ import com.csc.fi.ioapi.utils.ErrorMessage;
 import com.csc.fi.ioapi.utils.GraphManager;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletContext;
@@ -16,6 +21,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.Response;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
@@ -43,8 +49,23 @@ public class ResolveResource extends HttpServlet {
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        String accept = request.getHeader("Accept");
-        String acceptLang = request.getHeader("Accept-Language");
+        String accept = request.getHeader(HttpHeaders.ACCEPT);
+        String acceptLang = request.getHeader(HttpHeaders.ACCEPT_LANGUAGE);
+        
+        String ifModifiedSince = request.getHeader(HttpHeaders.IF_MODIFIED_SINCE);
+        Date modifiedSince = null;
+        Date modified = null;
+        
+        if(ifModifiedSince!=null) {
+            try {
+                SimpleDateFormat format = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz");
+                modifiedSince = format.parse(ifModifiedSince);
+            } catch (ParseException ex) {
+                Logger.getLogger(ResolveResource.class.getName()).log(Level.SEVERE, null, ex);
+            } 
+        }
+        
+       
         
         Lang rdfLang = RDFLanguages.contentTypeToLang(accept);
     
@@ -52,6 +73,15 @@ public class ResolveResource extends HttpServlet {
         String modelID = requestURI.substring(requestURI.lastIndexOf("/") + 1, requestURI.length());
         String graphName = GraphManager.getServiceGraphNameWithPrefix(modelID);
         
+         if(modifiedSince!=null) {       
+                modified = GraphManager.lastModified(graphName);
+                if(modified!=null) {
+                    if(modifiedSince.after(modified)) {
+                        response.sendError(HttpServletResponse.SC_NOT_MODIFIED);
+                    }
+                }
+        }
+     
         if(graphName==null) {
             logger.info("Graphname is null");
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
