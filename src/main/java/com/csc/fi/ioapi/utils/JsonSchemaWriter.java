@@ -417,7 +417,13 @@ public class JsonSchemaWriter {
                 String description = soln.getLiteral("description").getString();
                 schema.add("description", description);
             }
-            schema.add("id",modelID+"#");
+            
+            if(!modelID.endsWith("/") || !modelID.endsWith("#")) 
+                schema.add("id",modelID+"#");
+            else 
+                schema.add("id",modelID);
+            
+            
             schema.add("title", title);
             
              Date modified = GraphManager.lastModified(modelID);

@@ -63,7 +63,7 @@ public class ClassCreator {
             }
 
            // ConceptMapper.updateConceptFromConceptService(conceptID);
-
+           
             ParameterizedSparqlString pss = new ParameterizedSparqlString();
             pss.setNsPrefixes(LDHelper.PREFIX_MAP);
             
@@ -106,7 +106,8 @@ public class ClassCreator {
             pss.setIri("model", modelIRI);
             pss.setLiteral("draft", "Unstable");
             pss.setLiteral("classLabel", ResourceFactory.createLangLiteral(classLabel, lang));
-            pss.setIri("classIRI",modelID+"#"+LDHelper.resourceName(classLabel));
+            String resourceName = LDHelper.resourceName(classLabel);
+            pss.setIri("classIRI",LDHelper.resourceIRI(modelID,resourceName));
             pss.setIri("modelService",services.getLocalhostCoreSparqlAddress());
 
             logger.info("New classCreator template from "+conceptID);

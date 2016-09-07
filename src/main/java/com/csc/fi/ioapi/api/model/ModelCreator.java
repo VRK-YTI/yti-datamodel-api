@@ -93,7 +93,12 @@ public class ModelCreator {
                     namespaceSKOSIRI = iri.construct(namespace+"/skos#");
                     groupIRI = iri.construct(group);
                     if(redirect!=null && !redirect.equals("undefined")) {
-                        redirectIRI = iri.construct(redirect);
+                        if(redirect.endsWith("/") || redirect.endsWith("#")) {
+                            redirectIRI = iri.construct(redirect);
+                        } else {
+                            redirect+="#";
+                            redirectIRI = iri.construct(redirect);
+                        }
                     }
             } catch (IRIException e) {
                     logger.warning("INVALID: "+namespace);
@@ -144,7 +149,7 @@ public class ModelCreator {
             pss.setIri("localSKOSNamespace", namespaceSKOSIRI);
             pss.setLiteral("profileLabelSKOS", ResourceFactory.createLangLiteral("Sisäinen käsitteistö", lang));
             if(redirectIRI!=null) {
-                pss.setLiteral("namespace", redirect+"#");
+                pss.setLiteral("namespace", redirect);
             } else {
                 pss.setLiteral("namespace", namespace+"#");
             }

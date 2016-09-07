@@ -61,7 +61,12 @@ public class ShapeCreator {
                     IRIFactory iri = IRIFactory.semanticWebImplementation();
                     classIRI = iri.construct(classID);
                     profileIRI = iri.construct(profileID);
-                    shapeIRI = iri.construct(profileIRI+"#"+SplitIRI.localname(classID));
+                    if(profileID.endsWith("/") || profileID.endsWith("#")) {
+                       shapeIRI = iri.construct(profileIRI+SplitIRI.localname(classID)); 
+                    } else {
+                        shapeIRI = iri.construct(profileIRI+"#"+SplitIRI.localname(classID));
+                    }
+                    
             } catch (IRIException e) {
                     logger.log(Level.WARNING, "ID is invalid IRI!");
                     return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
@@ -218,7 +223,6 @@ public class ShapeCreator {
             pss.setIri("classIRI", classIRI);
             pss.setIri("model", profileIRI);
             pss.setIri("modelService",services.getLocalhostCoreSparqlAddress());
-            pss.setLiteral("profileNamespace", profileID+"#");
             pss.setLiteral("draft", "Unstable");
             pss.setIri("shapeIRI",shapeIRI);
 

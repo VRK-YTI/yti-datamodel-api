@@ -5,6 +5,7 @@ package com.csc.fi.ioapi.utils;
 
 import com.csc.fi.ioapi.config.EndpointServices;
 import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientHandlerException;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import java.util.HashMap;
@@ -54,6 +55,9 @@ public class OPHCodeServer {
     
     
     private boolean copyCodelistsFromServer(String uri) {
+        
+        try {
+    
             Model model = ModelFactory.createDefaultModel();
             model.setNsPrefix("dcterms", "http://purl.org/dc/terms/");
             model.setNsPrefix("iow", "http://iow.csc.fi/ns/iow#");
@@ -64,8 +68,11 @@ public class OPHCodeServer {
             WebResource webResource = client.resource(uri).queryParam("format","application/json");
 
             WebResource.Builder builder = webResource.accept("application/json");
-            ClientResponse response = builder.get(ClientResponse.class);
+            
+    
+           ClientResponse response = builder.get(ClientResponse.class);
 
+            
             if (response.getStatusInfo().getFamily() == Response.Status.Family.SUCCESSFUL) {
                 
              
@@ -175,7 +182,10 @@ public class OPHCodeServer {
                 return false;
             }
         
-        
+            } catch(ClientHandlerException ex) {
+                logger.info("Not connected to the code server");
+                return false;
+            } 
     }
     
     

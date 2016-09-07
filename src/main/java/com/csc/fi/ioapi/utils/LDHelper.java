@@ -136,6 +136,14 @@ public class LDHelper {
          return removeInvalidCharacters(name);
     }
     
+    public static String resourceIRI(String namespace, String name) {
+        if(namespace.endsWith("/")) {
+            return namespace+name;
+        } else {
+            return namespace+"#"+name;
+        }
+    }
+    
     public static String removeInvalidCharacters(String name) {
         name = removeAccents(name);
         name = name.replaceAll("[^a-zA-Z0-9_-]", "");
