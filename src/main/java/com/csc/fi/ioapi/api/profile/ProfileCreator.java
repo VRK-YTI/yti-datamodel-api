@@ -112,7 +112,12 @@ public class ProfileCreator {
             
             ParameterizedSparqlString pss = new ParameterizedSparqlString();
             pss.setNsPrefixes(LDHelper.PREFIX_MAP);
-            pss.setNsPrefix(prefix, namespace+"#");
+            
+            if(redirectIRI==null) {
+                pss.setNsPrefix(prefix, namespace+"#");
+            } else {
+                pss.setNsPrefix(prefix, redirect);
+            }
             
             String queryString = "CONSTRUCT  { "
                     + "?modelIRI a owl:Ontology . "
