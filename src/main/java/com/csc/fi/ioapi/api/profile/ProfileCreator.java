@@ -93,10 +93,12 @@ public class ProfileCreator {
                     namespaceSKOSIRI = iri.construct(namespace+"/skos#");
                     groupIRI = iri.construct(group);                    
                     if(redirect!=null && !redirect.equals("undefined")) {
-                        if(redirect.endsWith("/") || redirect.endsWith("#")) {
+                        if(redirect.endsWith("/")) {
+                            redirectIRI = iri.construct(redirect);
+                        } else if(redirect.endsWith("#")){
+                            redirect=redirect.substring(0, redirect.length()-1);
                             redirectIRI = iri.construct(redirect);
                         } else {
-                            redirect+="#";
                             redirectIRI = iri.construct(redirect);
                         }
                     }
@@ -113,11 +115,11 @@ public class ProfileCreator {
             ParameterizedSparqlString pss = new ParameterizedSparqlString();
             pss.setNsPrefixes(LDHelper.PREFIX_MAP);
             
-            if(redirectIRI==null) {
-                pss.setNsPrefix(prefix, namespace+"#");
-            } else {
-                pss.setNsPrefix(prefix, redirect);
-            }
+            if(redirectIRI!=null) {
+                if(redirect.endsWith("/")) {
+                    pss.setNsPrefix(prefix, redirect);
+                } else pss.setNsPrefix(prefix, redirect+"#");
+            } else pss.setNsPrefix(prefix, namespace+"#");
             
             String queryString = "CONSTRUCT  { "
                     + "?modelIRI a owl:Ontology . "
@@ -153,7 +155,9 @@ public class ProfileCreator {
             pss.setIri("jhsScheme", "http://jhsmeta.fi/skos/");
             pss.setLiteral("profileLabelSKOS", ResourceFactory.createLangLiteral("Sisäinen käsitteistö", lang));
             if(redirectIRI!=null) {
-                pss.setLiteral("namespace", redirect);
+                if(redirect.endsWith("/")) {
+                    pss.setLiteral("namespace", redirect);
+                } else pss.setLiteral("namespace", redirect+"#");
             } else {
                 pss.setLiteral("namespace", namespace+"#");
             }

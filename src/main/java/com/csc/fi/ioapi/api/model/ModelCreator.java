@@ -93,10 +93,12 @@ public class ModelCreator {
                     namespaceSKOSIRI = iri.construct(namespace+"/skos#");
                     groupIRI = iri.construct(group);
                     if(redirect!=null && !redirect.equals("undefined")) {
-                        if(redirect.endsWith("/") || redirect.endsWith("#")) {
+                        if(redirect.endsWith("/")) {
+                            redirectIRI = iri.construct(redirect);
+                        } else if(redirect.endsWith("#")){
+                            redirect=redirect.substring(0, redirect.length()-1);
                             redirectIRI = iri.construct(redirect);
                         } else {
-                            redirect+="#";
                             redirectIRI = iri.construct(redirect);
                         }
                     }
@@ -104,7 +106,6 @@ public class ModelCreator {
                     logger.warning("INVALID: "+namespace);
                     return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
             } catch (NullPointerException e) {
-                logger.info("wrf?");
                     return Response.status(403).entity(ErrorMessage.INVALIDPARAMETER).build();
             }
             
@@ -115,11 +116,12 @@ public class ModelCreator {
             ParameterizedSparqlString pss = new ParameterizedSparqlString();
             pss.setNsPrefixes(LDHelper.PREFIX_MAP);
             
-            if(redirectIRI==null) {
-                pss.setNsPrefix(prefix, namespace+"#");
-            } else {
-                pss.setNsPrefix(prefix, redirect);
-            }
+            if(redirectIRI!=null) {
+                if(redirect.endsWith("/")) {
+                    pss.setNsPrefix(prefix, redirect);
+                } else pss.setNsPrefix(prefix, redirect+"#");
+            } else pss.setNsPrefix(prefix, namespace+"#");
+           
             
             String queryString = "CONSTRUCT  { "
                     + "?modelIRI a owl:Ontology . "
@@ -154,7 +156,9 @@ public class ModelCreator {
             pss.setIri("localSKOSNamespace", namespaceSKOSIRI);
             pss.setLiteral("profileLabelSKOS", ResourceFactory.createLangLiteral("Sisäinen käsitteistö", lang));
             if(redirectIRI!=null) {
-                pss.setLiteral("namespace", redirect);
+                if(redirect.endsWith("/")) {
+                    pss.setLiteral("namespace", redirect);
+                } else pss.setLiteral("namespace", redirect+"#");
             } else {
                 pss.setLiteral("namespace", namespace+"#");
             }
