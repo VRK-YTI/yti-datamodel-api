@@ -76,9 +76,9 @@ public class ResolveResource extends HttpServlet {
                 if(modified!=null) {
                     String dateModified = format.format(modified);
                     if(modifiedSince.after(modified)) {
-                        response.sendError(HttpServletResponse.SC_NOT_MODIFIED);
-                        logger.info("Last-Modified:"+dateModified);
-                        response.setHeader("Last-Modified", dateModified);
+                        response.reset();
+                        response.addHeader("Last-Modified", dateModified);
+                        response.sendError(HttpServletResponse.SC_NOT_MODIFIED,"Last-Modified: "+dateModified);
                         return;
                     }
                 }

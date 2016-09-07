@@ -14,7 +14,9 @@ import org.apache.jena.query.ResultSetFactory;
 import org.apache.jena.sparql.resultset.ResultSetPeekable;
 import java.io.StringWriter;
 import java.math.BigDecimal;
+import java.text.SimpleDateFormat;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
@@ -417,6 +419,14 @@ public class JsonSchemaWriter {
             }
             schema.add("id",modelID+".jschema");
             schema.add("title", title);
+            
+             Date modified = GraphManager.lastModified(modelID);
+             SimpleDateFormat format = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz");
+             
+                if(modified!=null) {
+                    String dateModified = format.format(modified);
+                    schema.add("modified",dateModified);
+                }
             
             
         }
