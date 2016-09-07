@@ -112,7 +112,7 @@ public class PredicateCreator {
         pss.setLiteral("draft", "Unstable");
         pss.setLiteral("predicateLabel", ResourceFactory.createLangLiteral(predicateLabel, lang));
         String predicateName = LDHelper.propertyName(predicateLabel);
-        pss.setIri("predicateIRI",LDHelper.resourceIRI(predicateName, predicateName));
+        pss.setIri("predicateIRI",LDHelper.resourceIRI(modelID, predicateName));
         pss.setIri("modelService",services.getLocalhostCoreSparqlAddress());
        
         
