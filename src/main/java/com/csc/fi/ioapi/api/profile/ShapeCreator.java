@@ -109,8 +109,8 @@ public class ShapeCreator {
                     /* Todo: Issue 472 */
                     + "BIND(IRI(CONCAT(STR(?property),?shapePropertyID)) as ?shapeuuid)" 
                     + "?property ?p ?o . "
-                    + "} "
-                    + "}}";
+                    + "}} "
+                    + "}";
                 
                 pss.setLiteral("shapePropertyID", "-"+UUID.randomUUID().toString());
 
@@ -132,7 +132,7 @@ public class ShapeCreator {
                     + "?property sh:predicate ?predicate . "
                     + "?property rdfs:comment ?propertyComment .  "
                     + "?property rdfs:label ?propertyLabel .  "
-                    + "?property sh:valueShape ?valueClass . "
+                    + "?property sh:class ?valueClass . "
                     + "?property sh:datatype ?datatype . "
                     + "} WHERE { "
                     + "BIND(now() as ?creation) "

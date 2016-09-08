@@ -128,7 +128,7 @@ public class ContextWriter {
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         String selectResources = 
                 "SELECT ?resource ?type ?resourceName ?datatype ?scopeClass "
-                + "WHERE { "
+                + "WHERE { {"
                 + "GRAPH ?modelPartGraph {"
                 + "?model dcterms:hasPart ?resource . "
                 + "}"
@@ -142,6 +142,17 @@ public class ContextWriter {
                 + "?class sh:property ?property . "
                 + "?property sh:predicate ?resource . "
                 + "?property sh:datatype ?datatype . "                
+                + "}"
+                + "} } UNION {"
+                + "GRAPH ?modelPartGraph {"
+                + "?model dcterms:hasPart ?shapes . "
+                + "}"
+                + "GRAPH ?shapes {"
+                + "?shapes sh:property ?property . "
+                + "?property sh:predicate ?resource . "
+                + "?property dcterms:type ?type . "
+                + "BIND(afn:localname(?resource) as ?resourceName)"
+                + "OPTIONAL { ?property sh:datatype ?datatype . }"
                 + "}"
                 + "} }";
 
