@@ -25,6 +25,7 @@ import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiParam;
 import com.wordnik.swagger.annotations.ApiResponse;
 import com.wordnik.swagger.annotations.ApiResponses;
+import java.util.UUID;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
 import org.apache.jena.iri.IRIFactory;
@@ -65,12 +66,14 @@ public class ClassPropertyCreator {
          IRIFactory iri = IRIFactory.semanticWebImplementation();
          predicateIRI = iri.construct(predicateID);
          
+        UUID classPropertyUUID = UUID.randomUUID(); 
+         
         if(GraphManager.isExistingServiceGraph(SplitIRI.namespace(predicateID))) {
          /* Local predicate */
            if(!GraphManager.isExistingGraph(predicateIRI)) {
               return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
            }
-           
+                
         service = services.getCoreSparqlAddress();
               
         queryString = "CONSTRUCT { "
@@ -85,7 +88,6 @@ public class ClassPropertyCreator {
               + "?uuid sh:datatype ?datatype . } "
               + "WHERE { "
               + "BIND(now() as ?creation) "
-              + "BIND(UUID() as ?uuid) "
               + "OPTIONAL { "
               + "GRAPH ?predicate { "
               + "?predicate rdfs:label ?label .  "
@@ -98,6 +100,7 @@ public class ClassPropertyCreator {
 
       pss.setCommandText(queryString);
       pss.setIri("predicate", predicateIRI);
+      pss.setIri("uuid", "urn:uuid:"+classPropertyUUID.toString());
       pss.setLiteral("localIdentifier", SplitIRI.localname(predicateID));
           
       } else {
@@ -131,10 +134,10 @@ public class ClassPropertyCreator {
               + "?uuid dcterms:identifier ?localIdentifier . "
               + "?uuid rdfs:label ?label . "
               + "?uuid rdfs:comment ?comment . "
+              + "?uuid sh:class ?valueClass . "
               + "?uuid sh:datatype ?prefDatatype . } "
               + "WHERE { "
               + "BIND(now() as ?creation) "
-              + "BIND(UUID() as ?uuid) "
               + "OPTIONAL { ?predicate rdfs:label ?labelStr . FILTER(LANG(?labelStr) = '') BIND(STRLANG(STR(?labelStr),'en') as ?label) }"
               + "OPTIONAL { ?predicate rdfs:label ?label . FILTER(LANG(?label)!='') }"   
               + "VALUES ?commentPred { rdfs:comment skos:definition dcterms:description dc:description }"
@@ -143,6 +146,7 @@ public class ClassPropertyCreator {
               + "OPTIONAL { ?predicate a owl:DatatypeProperty . "
               + "?predicate rdfs:range ?datatype . "
               + "BIND(IF(?datatype=rdfs:Literal,xsd:string,?datatype) as ?prefDatatype) } "
+              + "OPTIONAL { ?predicate a owl:ObjectProperty . ?predicate rdfs:range ?valueClass . } "
               + "OPTIONAL { ?predicate a rdf:Property . "
               + "FILTER NOT EXISTS { ?predicate a owl:DatatypeProperty . }"
               + "?predicate rdfs:range rdfs:Literal . "
@@ -152,6 +156,7 @@ public class ClassPropertyCreator {
             pss.setCommandText(queryString);
             pss.setIri("predicate", predicateIRI);
             pss.setLiteral("localIdentifier", SplitIRI.localname(predicateID));
+            pss.setIri("uuid", "urn:uuid:"+classPropertyUUID.toString());
             pss.setIri("predicateType", typeIRI);
 
          }

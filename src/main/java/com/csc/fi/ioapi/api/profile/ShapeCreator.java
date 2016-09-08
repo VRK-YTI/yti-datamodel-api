@@ -153,14 +153,14 @@ public class ShapeCreator {
                     + "OPTIONAL {?classIRI rdfs:label ?label . FILTER(LANG(?label)!='') }"
                         
                     + "OPTIONAL { ?classIRI rdfs:comment ?commentStr . "
-                    + "BIND(STRLANG(?commentStr,'en') as ?comment) "
+                    + "BIND(STRLANG(STR(?commentStr),'en') as ?comment) "
                     + "}"
+                        
                     + "OPTIONAL { "
                     + "?classIRI rdfs:subClassOf* ?superclass . "
                     + "?predicate rdfs:domain ?superclass .  "
                     + "BIND(UUID() AS ?property)"    
                     
-
                     + "{"
                     + "?predicate a owl:DatatypeProperty . "
                     + "FILTER NOT EXISTS { ?predicate a owl:ObjectProperty }"
