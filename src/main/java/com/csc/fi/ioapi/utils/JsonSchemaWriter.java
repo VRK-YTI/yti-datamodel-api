@@ -419,9 +419,9 @@ public class JsonSchemaWriter {
             }
             
             if(!modelID.endsWith("/") || !modelID.endsWith("#")) 
-                schema.add("id",modelID+"#");
+                schema.add("@id",modelID+"#");
             else 
-                schema.add("id",modelID);
+                schema.add("@id",modelID);
             
             
             schema.add("title", title);
@@ -438,7 +438,7 @@ public class JsonSchemaWriter {
         }
         
         String selectResources = 
-                "SELECT ?resource ?className ?classTitle ?classDescription ?predicate ?id ?title ?description ?predicateName ?datatype ?shapeRef ?shapeRefName ?min ?max ?minLength ?maxLength ?pattern "
+                "SELECT ?resource ?scopeClass ?className ?classTitle ?classDescription ?predicate ?id ?title ?description ?predicateName ?datatype ?shapeRef ?shapeRefName ?min ?max ?minLength ?maxLength ?pattern "
                 + "WHERE { "
                 + "GRAPH ?modelPartGraph {"
                 + "?model dcterms:hasPart ?resource . "
@@ -446,6 +446,7 @@ public class JsonSchemaWriter {
                 + "GRAPH ?resource {"
                 + "?resource rdfs:label ?classTitle . "
                 + "FILTER (langMatches(lang(?classTitle),?lang))"
+                + "OPTIONAL { ?resource sh:scopeClass ?scopeClass . }"
                 + "OPTIONAL { ?resource rdfs:comment ?classDescription . "
                 + "FILTER (langMatches(lang(?classDescription),?lang))"
                 + "}"
@@ -491,6 +492,8 @@ public class JsonSchemaWriter {
             
             if(!soln.contains("className")) return null;
             
+            
+            
             String className = soln.getLiteral("className").getString();
             
             String predicateName = soln.getLiteral("predicateName").getString();
@@ -519,8 +522,20 @@ public class JsonSchemaWriter {
                 predicate.add("description", description);
             }
             
+            
+            if(soln.contains("predicate")) {
+                String predicateID = soln.getResource("predicate").toString();
+                predicate.add("@id", predicateID);
+            }
+            
             if(soln.contains("datatype")) {
+                
+                
+                
+                
                 String datatype = soln.getResource("datatype").toString();
+                
+                predicate.add("@type", datatype);
                 
                 String jsonDatatype = DATATYPE_MAP.get(datatype);
                 
@@ -570,6 +585,9 @@ public class JsonSchemaWriter {
                 
             } else {
                 if(soln.contains("shapeRefName")) {
+                    
+                    predicate.add("@type", "@id");
+                    
                     String shapeRefName = soln.getLiteral("shapeRefName").getString();
 
                     
@@ -597,6 +615,11 @@ public class JsonSchemaWriter {
                 if(!pResults.hasNext() || !className.equals(pResults.peek().getLiteral("className").getString())) {
                     JsonObjectBuilder classDefinition = Json.createObjectBuilder();
                     classDefinition.add("title",soln.getLiteral("classTitle").getString());
+                    if(soln.contains("scopeClass")) {
+                        classDefinition.add("@id",soln.getResource("scopeClass").toString());
+                    } else {
+                        classDefinition.add("@id",soln.getResource("resource").toString());
+                    }
                     if(soln.contains("classDescription")) {
                         classDefinition.add("description",soln.getLiteral("classDescription").getString());
                     }
