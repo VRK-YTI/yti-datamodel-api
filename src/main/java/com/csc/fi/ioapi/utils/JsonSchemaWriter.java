@@ -81,7 +81,9 @@ public class JsonSchemaWriter {
         
         /* TODO: Create basic dummy schema without properties */
         
-        schema.add("$schema", "http://json-schema.org/draft-04/schema#");
+        schema.add("$schema", "http://iow.csc.fi/api/draft04jsonld.json");
+        schema.add("schemaDescription", "Additional modified, @id and @type properties added");
+        
         schema.add("properties", properties.build());
         JsonArray reqArray = required.build();
         if(!reqArray.isEmpty()) {
@@ -94,7 +96,9 @@ public class JsonSchemaWriter {
     
     private static String createDefaultSchema(JsonObjectBuilder schema, JsonObjectBuilder properties, JsonArrayBuilder required) {
         
-        schema.add("$schema", "http://json-schema.org/draft-04/schema#");
+        schema.add("$schema", "http://iow.csc.fi/api/draft04jsonld.json");
+        schema.add("schemaDescription", "Additional modified, @id and @type properties added");
+        
         schema.add("type","object");
         schema.add("properties", properties.build());
         JsonArray reqArray = required.build();
@@ -346,6 +350,98 @@ public class JsonSchemaWriter {
     }
     
     
+    public static JsonArray getSchemeValueList(String schemeID) {
+        JsonArrayBuilder builder = Json.createArrayBuilder();
+        
+         ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        
+        String selectList = 
+                "SELECT ?value "
+                + "WHERE { "
+                + "GRAPH ?scheme { "
+                + "?code dcterms:identifier ?value . "
+                + "} "
+                + "} ORDER BY ?value";
+        
+        pss.setIri("scheme", schemeID);
+        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+        pss.setCommandText(selectList);
+        
+        logger.info(""+pss);
+       
+        QueryExecution qexec =  QueryExecutionFactory.sparqlService(services.getSchemesSparqlAddress(), pss.toString());
+
+        ResultSet results = qexec.execSelect();
+
+        if(!results.hasNext()) return null;
+        
+        while (results.hasNext()) {
+            QuerySolution soln = results.next();
+            if(soln.contains("value")) {
+                builder.add(soln.getLiteral("value").getString());
+            }
+        }
+        
+        return builder.build();
+    }
+    
+    public static JsonArray getValueList(String classID, String propertyID) {
+        JsonArrayBuilder builder = Json.createArrayBuilder();
+        
+         ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        
+        String selectList = 
+                "SELECT ?value "
+                + "WHERE { "
+                + "GRAPH ?resource { "
+                + "?resource sh:property ?property . "
+                + "?property sh:in/rdf:rest*/rdf:first ?value"
+                + "} "
+                + "} ";
+        
+        pss.setIri("resource", classID);
+        pss.setIri("property", propertyID);
+        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+        pss.setCommandText(selectList);
+        
+        logger.info(""+pss);
+       
+        QueryExecution qexec =  QueryExecutionFactory.sparqlService(services.getCoreSparqlAddress(), pss.toString());
+
+        ResultSet results = qexec.execSelect();
+
+        if(!results.hasNext()) return null;
+        
+        while (results.hasNext()) {
+            QuerySolution soln = results.next();
+            builder.add(soln.getLiteral("value").getString());
+        }
+        
+        return builder.build();
+    }
+    
+    
+    /*
+    Ways to describe codelists, by "type"-list.
+    
+        {
+        type:[
+        {enum:["22PC"], description:"a description for the first enum"},
+        {enum:["42GP"], description:"a description for the second enum"},
+        {enum:["45GP"], description:"a description for the third enum"},
+        {enum:["45UP"], description:"a description for the fourth enum"},
+        {enum:["22GP"], description:"a description for the fifth enum"}
+        ]
+        }
+
+     or by using custom parameters:
+    
+        enum:[1,2,3],
+        options:[{value:1,descrtiption:"this is one"},{value:2,description:"this is two"}],
+    
+    
+    */
+    
     public static String getModelRoot(String graph) {
         
          ParameterizedSparqlString pss = new ParameterizedSparqlString();
@@ -371,14 +467,22 @@ public class JsonSchemaWriter {
             } else return null;
         }
     }
-    
+
+    public static JsonObject idProperty() {
+        JsonObjectBuilder idPredicate = Json.createObjectBuilder();
+        idPredicate.add("title", "JSON-LD identifier");
+        idPredicate.add("description","It is highly recommended to use @id to uniquely identify object with IRIs. May be omitted if objects are considered to be non unique or blank nodes.");
+        idPredicate.add("type", "string");
+        idPredicate.add("format","uri");
+        return idPredicate.build();
+    }
     
     public static String newModelSchema(String modelID, String lang) { 
     
         logger.info("Building JSON Schema from "+modelID);
         
         JsonObjectBuilder schema = Json.createObjectBuilder();
-
+        
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         
         String selectClass = 
@@ -438,7 +542,7 @@ public class JsonSchemaWriter {
         }
         
         String selectResources = 
-                "SELECT ?resource ?scopeClass ?className ?classTitle ?classDescription ?predicate ?id ?title ?description ?predicateName ?datatype ?shapeRef ?shapeRefName ?min ?max ?minLength ?maxLength ?pattern "
+                "SELECT ?resource ?scopeClass ?className ?classTitle ?classDescription ?property ?valueList ?schemeList ?predicate ?id ?title ?description ?predicateName ?datatype ?shapeRef ?shapeRefName ?min ?max ?minLength ?maxLength ?pattern "
                 + "WHERE { "
                 + "GRAPH ?modelPartGraph {"
                 + "?model dcterms:hasPart ?resource . "
@@ -451,6 +555,7 @@ public class JsonSchemaWriter {
                 + "FILTER (langMatches(lang(?classDescription),?lang))"
                 + "}"
                 + "?resource sh:property ?property . "
+                + "?property sh:index ?index . "
                 + "?property sh:predicate ?predicate . "
                 + "OPTIONAL { ?property dcterms:identifier ?id . }"
                 + "?property rdfs:label ?title . "
@@ -466,10 +571,12 @@ public class JsonSchemaWriter {
                 + "OPTIONAL { ?property sh:pattern ?pattern . }"
                 + "OPTIONAL { ?property sh:minLenght ?minLength . }"
                 + "OPTIONAL { ?property sh:maxLength ?maxLength . }"
+                + "OPTIONAL { ?property sh:in ?valueList . } "
+                + "OPTIONAL { ?property dcam:memberOf ?schemeList . } "
                 + "BIND(afn:localname(?predicate) as ?predicateName)"
                 + "}"
                 + "}"
-                + "ORDER BY ?resource";
+                + "ORDER BY ?resource ?index";
         
         
         pss.setIri("modelPartGraph", modelID+"#HasPartGraph");
@@ -487,11 +594,13 @@ public class JsonSchemaWriter {
         JsonObjectBuilder properties = Json.createObjectBuilder();
         JsonArrayBuilder required = Json.createArrayBuilder();
         
+
+        properties.add("@id", idProperty());
+        
         while (pResults.hasNext()) {
             QuerySolution soln = pResults.nextSolution();
             
             if(!soln.contains("className")) return null;
-            
             
             
             String className = soln.getLiteral("className").getString();
@@ -522,12 +631,20 @@ public class JsonSchemaWriter {
                 predicate.add("description", description);
             }
             
+
             
             if(soln.contains("predicate")) {
                 String predicateID = soln.getResource("predicate").toString();
                 predicate.add("@id", predicateID);
+                             
             }
             
+            if(soln.contains("valueList")) {
+                predicate.add("enum",getValueList(soln.getResource("resource").toString(),soln.getResource("property").toString()));    
+             } else if(soln.contains("schemeList")) {
+                predicate.add("enum",getSchemeValueList(soln.getResource("schemeList").toString()));    
+             }
+                   
             if(soln.contains("datatype")) {
                 
                 
@@ -634,6 +751,7 @@ public class JsonSchemaWriter {
                     definitions.add(className, classDefinition.build());
                     properties = Json.createObjectBuilder();
                     required = Json.createArrayBuilder();
+                    properties.add("@id", idProperty());
                 } 
             
             
@@ -655,7 +773,9 @@ public class JsonSchemaWriter {
     
     private static String createDefaultModelSchema(JsonObjectBuilder schema, JsonObjectBuilder definitions) {
         
-        schema.add("$schema", "http://json-schema.org/draft-04/schema#");
+        schema.add("$schema", "http://iow.csc.fi/api/draft04jsonld.json");
+        schema.add("schemaDescription", "Additional modified, @id and @type properties added");
+        
         schema.add("type","object");
         schema.add("definitions", definitions.build());
         
@@ -664,7 +784,9 @@ public class JsonSchemaWriter {
     
     private static String createModelSchemaWithRoot(JsonObjectBuilder schema, JsonObjectBuilder properties, JsonObjectBuilder definitions) {
         
-        schema.add("$schema", "http://json-schema.org/draft-04/schema#");
+        schema.add("$schema", "http://iow.csc.fi/api/draft04jsonld.json");
+        schema.add("schemaDescription", "Additional modified, @id and @type properties added");
+        
         schema.add("type","object");
         schema.add("allOf", Json.createArrayBuilder().add(properties.build()).build());
         schema.add("definitions", definitions.build());
