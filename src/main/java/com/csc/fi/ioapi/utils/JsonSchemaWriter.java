@@ -82,7 +82,6 @@ public class JsonSchemaWriter {
         /* TODO: Create basic dummy schema without properties */
         
         schema.add("$schema", "http://iow.csc.fi/api/draft04jsonld.json");
-        schema.add("schemaDescription", "Additional modified, @id and @type properties added");
         
         schema.add("properties", properties.build());
         JsonArray reqArray = required.build();
@@ -97,7 +96,6 @@ public class JsonSchemaWriter {
     private static String createDefaultSchema(JsonObjectBuilder schema, JsonObjectBuilder properties, JsonArrayBuilder required) {
         
         schema.add("$schema", "http://iow.csc.fi/api/draft04jsonld.json");
-        schema.add("schemaDescription", "Additional modified, @id and @type properties added");
         
         schema.add("type","object");
         schema.add("properties", properties.build());
@@ -793,7 +791,6 @@ public class JsonSchemaWriter {
     private static String createDefaultModelSchema(JsonObjectBuilder schema, JsonObjectBuilder definitions) {
         
         schema.add("$schema", "http://iow.csc.fi/api/draft04jsonld.json");
-        schema.add("schemaDescription", "Additional modified, @id and @type properties added");
         
         schema.add("type","object");
         schema.add("definitions", definitions.build());
@@ -804,7 +801,6 @@ public class JsonSchemaWriter {
     private static String createModelSchemaWithRoot(JsonObjectBuilder schema, JsonObjectBuilder properties, JsonObjectBuilder definitions) {
         
         schema.add("$schema", "http://iow.csc.fi/api/draft04jsonld.json");
-        schema.add("schemaDescription", "Additional modified, @id and @type properties added");
         
         schema.add("type","object");
         schema.add("allOf", Json.createArrayBuilder().add(properties.build()).build());

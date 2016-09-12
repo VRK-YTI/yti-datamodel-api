@@ -34,9 +34,6 @@
             "type": "string",
             "format": "uri"
         },
-        "schemaDesc": {
-            "type": "string"
-        },
         "@id": {
             "type": "string",
             "format": "uri"
