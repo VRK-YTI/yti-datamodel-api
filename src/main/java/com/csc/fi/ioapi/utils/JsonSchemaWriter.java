@@ -245,9 +245,15 @@ public class JsonSchemaWriter {
             }
             
             if(soln.contains("valueList")) {
-                predicate.add("enum",getValueList(soln.getResource("resource").toString(),soln.getResource("property").toString()));    
+                JsonArray valueList = getValueList(soln.getResource("resource").toString(),soln.getResource("property").toString());
+                if(valueList!=null) {
+                    predicate.add("enum",valueList);    
+                }
              } else if(soln.contains("schemeList")) {
-                predicate.add("enum",getSchemeValueList(soln.getResource("schemeList").toString()));    
+                 JsonArray schemeList = getSchemeValueList(soln.getResource("schemeList").toString());
+                 if(schemeList!=null) {
+                    predicate.add("enum",schemeList);
+                 }
              }
             
             if(soln.contains("datatype")) {
@@ -647,9 +653,15 @@ public class JsonSchemaWriter {
             }
             
             if(soln.contains("valueList")) {
-                predicate.add("enum",getValueList(soln.getResource("resource").toString(),soln.getResource("property").toString()));    
+                JsonArray valueList = getValueList(soln.getResource("resource").toString(),soln.getResource("property").toString());
+                if(valueList!=null) {
+                    predicate.add("enum",valueList);    
+                }
              } else if(soln.contains("schemeList")) {
-                predicate.add("enum",getSchemeValueList(soln.getResource("schemeList").toString()));    
+                 JsonArray schemeList = getSchemeValueList(soln.getResource("schemeList").toString());
+                 if(schemeList!=null) {
+                    predicate.add("enum",schemeList);
+                 }
              }
                    
             if(soln.contains("datatype")) {
