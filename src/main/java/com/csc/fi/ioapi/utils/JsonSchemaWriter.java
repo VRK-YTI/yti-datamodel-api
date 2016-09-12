@@ -484,7 +484,7 @@ public class JsonSchemaWriter {
     public static JsonObject idProperty() {
         JsonObjectBuilder idPredicate = Json.createObjectBuilder();
         idPredicate.add("title", "JSON-LD identifier");
-        idPredicate.add("description","It is highly recommended to use @id to uniquely identify object with IRIs. May be omitted if objects are considered to be non unique or blank nodes.");
+        idPredicate.add("description","This property is reserved for IRI identifiers. It is highly recommended to use @id to uniquely identify object with IRIs. May be omitted if objects are considered to be non unique or blank nodes.");
         idPredicate.add("type", "string");
         idPredicate.add("format","uri");
         return idPredicate.build();
