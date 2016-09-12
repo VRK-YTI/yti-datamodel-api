@@ -158,7 +158,8 @@ public class JsonSchemaWriter {
             schema.add("id",classID+".jschema");
             schema.add("title", title);
             
-         //   logger.info(soln.getResource("type").getLocalName());
+            schema.add("@id",classID);
+            
             String sType = soln.getResource("type").getLocalName();
             
             if(sType.equals("Class") || sType.equals("Shape")) {
@@ -169,19 +170,11 @@ public class JsonSchemaWriter {
 
         JsonObjectBuilder properties = Json.createObjectBuilder();
         
-       /* TODO: Add context as link usin undefined @context
-        JsonObjectBuilder contextDef = Json.createObjectBuilder();
-        
-        contextDef.add("type", "string");
-        contextDef.add("format","uri");
-        contextDef.add("default",classID+".context");
-        properties.add("@context", contextDef.build());
-        */
        
          if(classMetadata) {
         
         String selectResources = 
-                "SELECT ?predicate ?id ?predicateName ?label ?datatype ?shapeRef ?min ?max ?minLength ?maxLenght ?pattern "
+                "SELECT ?predicate ?id ?property ?valueList ?schemeList ?predicateName ?label ?datatype ?shapeRef ?min ?max ?minLength ?maxLenght ?pattern "
                 + "WHERE { "
                 + "GRAPH ?resourceID {"
                 + "?resourceID sh:property ?property . "
@@ -199,6 +192,8 @@ public class JsonSchemaWriter {
                 + "OPTIONAL { ?property sh:pattern ?pattern . }"
                 + "OPTIONAL { ?property sh:minLenght ?minLength . }"
                 + "OPTIONAL { ?property sh:maxLength ?maxLength . }"
+                + "OPTIONAL { ?property sh:in ?valueList . } "
+                + "OPTIONAL { ?property dcam:memberOf ?schemeList . } "
                 + "BIND(afn:localname(?predicate) as ?predicateName)"
                 + "}"
                 + "}";
@@ -214,7 +209,8 @@ public class JsonSchemaWriter {
         
         if(!results.hasNext()) return null;
         
-
+        properties.add("@id", idProperty());   
+        
         while (results.hasNext()) {
             QuerySolution soln = results.nextSolution();
             //String predicateID = soln.getResource("predicate").getString();
@@ -243,8 +239,20 @@ public class JsonSchemaWriter {
                 predicate.add("description", description);
             }
             
+            if(soln.contains("predicate")) {
+                String predicateID = soln.getResource("predicate").toString();
+                predicate.add("@id", predicateID);         
+            }
+            
+            if(soln.contains("valueList")) {
+                predicate.add("enum",getValueList(soln.getResource("resource").toString(),soln.getResource("property").toString()));    
+             } else if(soln.contains("schemeList")) {
+                predicate.add("enum",getSchemeValueList(soln.getResource("schemeList").toString()));    
+             }
+            
             if(soln.contains("datatype")) {
                 String datatype = soln.getResource("datatype").toString();
+                predicate.add("@type", datatype);  
                 String jsonDatatype = DATATYPE_MAP.get(datatype);
                  
                 if(soln.contains("min") && soln.getLiteral("min").getInt()>0) {
@@ -287,13 +295,12 @@ public class JsonSchemaWriter {
                     predicate.add("pattern",soln.getLiteral("pattern").getString());
                 }
                  
-                
                 if(FORMAT_MAP.containsKey(datatype)) {
                     predicate.add("format",FORMAT_MAP.get(datatype));
                 }
             } else {
                 String shapeRef = soln.getResource("shapeRef").toString();
-               
+                  predicate.add("@type", "@id");
                 if(!soln.contains("max") || soln.getLiteral("max").getInt()>1) {
                         if(soln.contains("min")) predicate.add("minItems",soln.getLiteral("min").getInt());
                         if(soln.contains("max")) predicate.add("maxItems",soln.getLiteral("max").getInt());
@@ -304,7 +311,7 @@ public class JsonSchemaWriter {
                     predicate.add("$ref",shapeRef+".jschema");
                 }
             }
-                        
+                     
             properties.add(predicateName,predicate.build());
         }
         
