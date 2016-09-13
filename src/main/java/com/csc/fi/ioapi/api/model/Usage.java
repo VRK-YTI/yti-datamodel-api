@@ -107,6 +107,10 @@ public class Usage {
                     + "?usage a ?usageType . "
                     + "?usage rdfs:label ?usageLabel . "
                     + "?usage rdfs:isDefinedBy ?usageModel . "
+                    + "?usageModel a ?usageModelType . "
+                    + "?usageModel rdfs:label ?usageModelLabel . "
+                    + "?usageModel dcap:preferredXMLNamespaceName ?usageNamespace . "
+                    + "?usageModel dcap:preferredXMLNamespacePrefix ?usagePrefix . "
                     + "} WHERE { "
                     + "GRAPH ?resource { "
                     + "?resource a ?type . "
@@ -124,6 +128,12 @@ public class Usage {
                     + "?usage rdfs:label ?usageLabel . "
                     + "OPTIONAL {?usage rdfs:isDefinedBy ?usageModel . }}"
                     + "FILTER(?usage!=?resourceModel)"
+                     + "GRAPH ?usageModel {"
+                    + "?usageModel a ?usageModelType . "
+                    + "?usageModel rdfs:label ?usageModelLabel . "
+                    + "?usageModel dcap:preferredXMLNamespaceName ?usageNamespace . "
+                    + "?usageModel dcap:preferredXMLNamespacePrefix ?usagePrefix . "
+                    + "}"
                     + "}";
             
                 String modelQueryString = "CONSTRUCT  { "
@@ -135,6 +145,12 @@ public class Usage {
                     + "?usage a ?usageType . "
                     + "?usage rdfs:label ?usageLabel . "
                     + "?usage rdfs:isDefinedBy ?usageModel . "
+                         
+                    + "?usageModel a ?usageModelType . "
+                    + "?usageModel rdfs:label ?usageModelLabel . "
+                    + "?usageModel dcap:preferredXMLNamespaceName ?usageNamespace . "
+                    + "?usageModel dcap:preferredXMLNamespacePrefix ?usagePrefix . "
+         
                     + "} WHERE { "
                     + "GRAPH ?resource { "
                     + "?resource a ?type . "
@@ -150,8 +166,15 @@ public class Usage {
                     + "?subject ?property ?resource . "
                     + "?usage a ?usageType . "
                     + "?usage rdfs:label ?usageLabel . "
-                    + "?usage rdfs:isDefinedBy ?usageModel . }"
+                    + "?usage rdfs:isDefinedBy ?usageModel . "    
+                    + "}"
                     + "FILTER(?usageModel!=?resourceModel)"
+                    + "GRAPH ?usageModel {"
+                    + "?usageModel a ?usageModelType . "
+                    + "?usageModel rdfs:label ?usageModelLabel . "
+                    + "?usageModel dcap:preferredXMLNamespaceName ?usageNamespace . "
+                    + "?usageModel dcap:preferredXMLNamespacePrefix ?usagePrefix . "
+                    + "}"
                     + "}";
 
             if(resourceIRI!=null) {
