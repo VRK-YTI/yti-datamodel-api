@@ -43,7 +43,7 @@
  
 },
 {
-  "@id": "http://iowkoodisto.csc.fi/koodisto-service/rest/json/",
+  "@id": "http://iowkoodisto.csc.fi:8080/koodisto-service/rest/json/",
   "description": {"fi":"IOW Testikoodistopalvelu"
   },
   "identifier": "urn:uuid:3a19d262-797f-11e6-8b77-86f30ca893d3",
