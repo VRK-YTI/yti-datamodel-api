@@ -91,7 +91,13 @@ public class ExportModel {
                     return Response.status(403).entity(ErrorMessage.NOTFOUND).build();
                 }
             } else if(ctype.equals("application/schema+json")) {
-                String schema = JsonSchemaWriter.newModelSchema(graph,lang);
+                String schema = null;
+                if(lang!=null && !lang.equals("undefined") && !lang.equals("null")) {
+                     logger.info("Exporting schema in "+lang);
+                     schema = JsonSchemaWriter.newModelSchema(graph,lang);
+                } else {
+                    schema = JsonSchemaWriter.newMultilingualModelSchema(graph);
+                }
                 if(schema!=null) {
                     return Response.ok().entity(schema).type(raw?"text/plain;charset=utf-8":"application/schema+json").build();
                 } else {

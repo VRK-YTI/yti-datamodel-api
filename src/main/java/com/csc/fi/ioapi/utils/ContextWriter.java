@@ -48,7 +48,7 @@ public class ContextWriter {
         return jsonObjectToPrettyString(contextBuilder.build());
 }
     
-    public static String newClassContext(String classID) { 
+    public static String newResourceContext(String classID) { 
     
         JsonObjectBuilder context = Json.createObjectBuilder();
 
