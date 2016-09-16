@@ -243,7 +243,7 @@ public class JsonSchemaWriter {
             }
             
             if(soln.contains("valueList")) {
-                JsonArray valueList = getValueList(soln.getResource("resource").toString(),soln.getResource("property").toString());
+                JsonArray valueList = getValueList(classID,soln.getResource("property").toString());
                 if(valueList!=null) {
                     predicate.add("enum",valueList);    
                 }
@@ -303,16 +303,18 @@ public class JsonSchemaWriter {
                     predicate.add("format",FORMAT_MAP.get(datatype));
                 }
             } else {
-                String shapeRef = soln.getResource("shapeRef").toString();
-                  predicate.add("@type", "@id");
-                if(!soln.contains("max") || soln.getLiteral("max").getInt()>1) {
-                        if(soln.contains("min")) predicate.add("minItems",soln.getLiteral("min").getInt());
-                        if(soln.contains("max")) predicate.add("maxItems",soln.getLiteral("max").getInt());
-                        predicate.add("type", "array");
-                        predicate.add("items", Json.createObjectBuilder().add("type","object").add("$ref",shapeRef+".jschema").build());                    
-                } else {
-                    predicate.add("type","object");
-                    predicate.add("$ref",shapeRef+".jschema");
+                if(soln.contains("shapeRef")) {
+                    String shapeRef = soln.getResource("shapeRef").toString();
+                      predicate.add("@type", "@id");
+                    if(!soln.contains("max") || soln.getLiteral("max").getInt()>1) {
+                            if(soln.contains("min")) predicate.add("minItems",soln.getLiteral("min").getInt());
+                            if(soln.contains("max")) predicate.add("maxItems",soln.getLiteral("max").getInt());
+                            predicate.add("type", "array");
+                            predicate.add("items", Json.createObjectBuilder().add("type","object").add("$ref",shapeRef+".jschema").build());                    
+                    } else {
+                        predicate.add("type","object");
+                        predicate.add("$ref",shapeRef+".jschema");
+                    }
                 }
             }
                      
@@ -424,7 +426,9 @@ public class JsonSchemaWriter {
         
         while (results.hasNext()) {
             QuerySolution soln = results.next();
-            builder.add(soln.getLiteral("value").getString());
+            if(soln.contains("value")) {
+                 builder.add(soln.getLiteral("value").getString());
+            }
         }
         
         return builder.build();

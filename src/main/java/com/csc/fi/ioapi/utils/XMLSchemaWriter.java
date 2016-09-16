@@ -12,7 +12,13 @@ import com.predic8.schema.ComplexType;
 import com.predic8.schema.Documentation;
 import com.predic8.schema.Element;
 import com.predic8.schema.Schema;
+import com.predic8.schema.SchemaParser;
 import com.predic8.schema.Sequence;
+import com.predic8.schema.creator.SchemaCreator;
+import com.predic8.schema.creator.SchemaCreatorContext;
+import com.predic8.soamodel.CreatorContext;
+import com.predic8.wsdl.Definitions;
+import java.io.File;
 import org.apache.jena.query.ParameterizedSparqlString;
 import org.apache.jena.query.QueryExecution;
 import org.apache.jena.query.QueryExecutionFactory;
@@ -22,9 +28,16 @@ import org.apache.jena.query.ResultSetFactory;
 import org.apache.jena.sparql.resultset.ResultSetPeekable;
 import java.io.StringWriter;
 import java.math.BigDecimal;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.file.Paths;
+import java.text.SimpleDateFormat;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.json.Json;
 import javax.json.JsonArray;
@@ -83,10 +96,9 @@ public class XMLSchemaWriter {
         factory = Json.createWriterFactory(config);
     }
     
-    
+    /*
     private static String createDummySchema(JsonObjectBuilder schema, JsonObjectBuilder properties, JsonArrayBuilder required) {
         
-        /* TODO: Create basic dummy schema without properties */
         
         schema.add("$schema", "http://json-schema.org/draft-04/schema#");
         schema.add("properties", properties.build());
@@ -96,9 +108,9 @@ public class XMLSchemaWriter {
         }
         
         return jsonObjectToPrettyString(schema.build());
-  }
+  }*/
     
-    
+    /*
     private static String createDefaultSchema(JsonObjectBuilder schema, JsonObjectBuilder properties, JsonArrayBuilder required) {
         
         schema.add("$schema", "http://json-schema.org/draft-04/schema#");
@@ -111,7 +123,7 @@ public class XMLSchemaWriter {
         }
         
         return jsonObjectToPrettyString(schema.build());
-}
+}*/
     
 
     public static Annotation createAnnotation(String documentation, String lang) {
@@ -124,9 +136,20 @@ public class XMLSchemaWriter {
         return comment;
     }
     
+    
+    public static Annotation createDCAnnotation(String documentation, String lang) {
+                Annotation comment = new Annotation();
+                Documentation documentationItem = new Documentation();
+                documentationItem.setLang(lang);
+                //documentation.setProperty("xml:lang", lang);
+                documentationItem.setContent(documentation);
+                comment.setContents(documentationItem);
+        return comment;
+    }
+        
+        
     /* 
     Alternative way to document?
-    
         <ccts:Component>
                  <ccts:ComponentType>BBIE</ccts:ComponentType>
                  <ccts:DictionaryEntryName>Winning Party. Rank.
@@ -145,8 +168,24 @@ public class XMLSchemaWriter {
        
     public static String newClassSchema(String classID, String lang) { 
         logger.info("Creating schema");
-        Schema schema = new Schema("urn:uuid:test");
+
+        SchemaParser parser = new SchemaParser();
+
+        Schema schema = parser.parse(XMLSchemaWriter.class.getClassLoader().getResource("base.xsd").toString());
+        
         //   Element newClass = new Element();
+        /*
+        SchemaCreator creator = new SchemaCreator();
+        CreatorContext ctx = new CreatorContext();
+        SchemaCreatorContext ctse = new SchemaCreatorContext();
+        ctse.setDeclNS(ctx);
+        Definitions dfntns = new Definitions();
+        
+        List namespaceList = new 
+        
+       schema.setAttributes(namespaceList);
+          */      
+          
         
         String className = SplitIRI.localname(classID);
      
@@ -315,6 +354,77 @@ public class XMLSchemaWriter {
        
         return schema.getAsString();
     }
+    
+    
+    
+    /*
+     public static String newModelSchema(String modelID, String lang) { 
+    
+        Schema schema = new Schema("urn:uuid:test");
+       
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        
+        String selectClass = 
+                "SELECT ?label ?description "
+                + "WHERE { "
+                + "GRAPH ?modelID { "
+                + "?modelID rdfs:label ?label . "
+                + "FILTER (langMatches(lang(?label),?lang))"
+                + "OPTIONAL { ?modelID rdfs:comment ?description . "
+                + "FILTER (langMatches(lang(?description),?lang))"
+                + "}"
+                + "} "
+                + "} ";
+        
+        pss.setIri("modelID", modelID);
+        if(lang!=null) pss.setLiteral("lang",lang);
+        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+        
+        pss.setCommandText(selectClass);
+        
+        QueryExecution qexec =  QueryExecutionFactory.sparqlService(services.getCoreSparqlAddress(), pss.toString());
+
+        ResultSet results = qexec.execSelect();
+
+        if(!results.hasNext()) return null;
+        
+        while (results.hasNext()) {
+            
+            QuerySolution soln = results.nextSolution();
+            String title = soln.getLiteral("label").getString();
+            if(soln.contains("description")) {
+                String description = soln.getLiteral("description").getString();
+                schema.setAnnotation(createAnnotation(description,lang));
+            }
+            
+            if(!modelID.endsWith("/") || !modelID.endsWith("#")) 
+                schema.add("@id",modelID+"#");
+            else 
+                schema.add("@id",modelID);
+            
+            
+            schema.add("title", title);
+            
+             Date modified = GraphManager.lastModified(modelID);
+             SimpleDateFormat format = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz");
+             
+                if(modified!=null) {
+                    String dateModified = format.format(modified);
+                    schema.add("modified",dateModified);
+                }
+            
+            
+        }
+        
+        String modelRoot = getModelRoot(modelID);
+
+        if(modelRoot!=null) {
+            
+        }
+        
+        return schema.toString();
+        
+    }
         
     
     
@@ -375,28 +485,8 @@ public class XMLSchemaWriter {
         }
     }
     
-    
-    
-    
-    private static String createDefaultModelSchema(JsonObjectBuilder schema, JsonObjectBuilder definitions) {
-        
-        schema.add("$schema", "http://json-schema.org/draft-04/schema#");
-        schema.add("type","object");
-        schema.add("definitions", definitions.build());
-        
-        return jsonObjectToPrettyString(schema.build());
-}
-    
-    private static String createModelSchemaWithRoot(JsonObjectBuilder schema, JsonObjectBuilder properties, JsonObjectBuilder definitions) {
-        
-        schema.add("$schema", "http://json-schema.org/draft-04/schema#");
-        schema.add("type","object");
-        schema.add("allOf", Json.createArrayBuilder().add(properties.build()).build());
-        schema.add("definitions", definitions.build());
-        
-        return jsonObjectToPrettyString(schema.build());
-}
-    
+    */
+
     
     
 }
