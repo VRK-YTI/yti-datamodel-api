@@ -14,6 +14,7 @@ import com.csc.fi.ioapi.utils.ContextWriter;
 import com.csc.fi.ioapi.utils.ErrorMessage;
 import com.csc.fi.ioapi.utils.JerseyFusekiClient;
 import com.csc.fi.ioapi.utils.JsonSchemaWriter;
+import com.csc.fi.ioapi.utils.XMLSchemaWriter;
 import com.sun.jersey.api.client.ClientHandlerException;
 import com.sun.jersey.api.client.UniformInterfaceException;
 import com.wordnik.swagger.annotations.Api;
@@ -56,7 +57,7 @@ public class ExportResource {
             @ApiParam(value = "Raw / PlainText boolean", defaultValue = "false") @QueryParam("raw") boolean raw,
             @ApiParam(value = "Languages to export") @QueryParam("lang") String lang,
             @ApiParam(value = "Service to export") @QueryParam("service") String serviceString,
-            @ApiParam(value = "Content-type", allowableValues = "application/ld+json,text/turtle,application/rdf+xml,application/ld+json+context,application/schema+json") @QueryParam("content-type") String ctype) {
+            @ApiParam(value = "Content-type", allowableValues = "application/ld+json,text/turtle,application/rdf+xml,application/ld+json+context,application/schema+json,application/xml") @QueryParam("content-type") String ctype) {
 
         if(ctype==null || ctype.equals("undefined")) ctype = accept;
         
@@ -78,20 +79,30 @@ public class ExportResource {
             }
             
             if(ctype.equals("application/ld+json+context")) {
-                String context = ContextWriter.newClassContext(graph);
+                String context = ContextWriter.newResourceContext(graph);
                 if(context!=null) {
                     return Response.ok().entity(context).type(raw?"text/plain;charset=utf-8":"application/json").build();
                 } else {
                     return Response.status(403).entity(ErrorMessage.NOTFOUND).build();
                 }
             } else if(ctype.equals("application/schema+json")) {
-                String schema = JsonSchemaWriter.newClassSchema(graph,lang);
+                String schema = JsonSchemaWriter.newResourceSchema(graph,lang);
+                if(schema!=null) {
+                    return Response.ok().entity(schema).type(raw?"text/plain;charset=utf-8":"application/schema+json").build();
+                } else {
+                    return Response.status(403).entity(ErrorMessage.NOTFOUND).build();
+                }
+            } else if(ctype.equals("application/xml")) {
+                
+                String schema = XMLSchemaWriter.newClassSchema(graph,lang);
+               
                 if(schema!=null) {
                     return Response.ok().entity(schema).type(raw?"text/plain;charset=utf-8":"application/schema+json").build();
                 } else {
                     return Response.status(403).entity(ErrorMessage.NOTFOUND).build();
                 }
             }
+            
             
         try {
             ContentType contentType = ContentType.create(ctype);
