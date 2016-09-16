@@ -1072,7 +1072,7 @@ public class JsonSchemaWriter {
      
    private static String createV5ModelSchema(JsonObjectBuilder schema, JsonObjectBuilder definitions) {
         
-        schema.add("$schema", "http://iow.csc.fi/api/draft04jsonld.json");
+        schema.add("$schema", "http://iow.csc.fi/api/draft05jsonld.json");
         
         schema.add("type","object");
         schema.add("definitions", definitions.build());
