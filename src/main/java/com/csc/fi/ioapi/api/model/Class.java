@@ -404,6 +404,7 @@ public class Class {
        if(id.startsWith(model)) {
            /* Remove graph */
             Response resp = JerseyFusekiClient.deleteGraphFromService(id, services.getCoreReadWriteAddress());   
+            GraphManager.createExportGraph(model);
            // ConceptMapper.removeUnusedConcepts(model);
             return resp;
         } else {
