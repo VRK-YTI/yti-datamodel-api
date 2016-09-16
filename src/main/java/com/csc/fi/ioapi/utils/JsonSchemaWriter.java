@@ -534,6 +534,7 @@ public class JsonSchemaWriter {
         pss.setIri("modelPartGraph", modelID+"#HasPartGraph");
         if(lang!=null) pss.setLiteral("lang",lang);
         pss.setCommandText(selectResources);
+        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
         
         QueryExecution qexec = QueryExecutionFactory.sparqlService(services.getCoreSparqlAddress(), pss.asQuery());
 
