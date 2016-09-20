@@ -213,6 +213,7 @@ public class Class {
         }
         
         UUID provUUID = UUID.randomUUID();
+        ClientResponse response = null;
         
         if(isNotEmpty(body)) {
             
@@ -227,19 +228,25 @@ public class Class {
                     
                     /* Remove old graph and add update references */
                     /* TODO: Not allowed if model is draft!?*/
+                    response = JerseyFusekiClient.putGraphToTheService(id, body, services.getCoreReadWriteAddress());
+                    
+                    if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
+                        logger.log(Level.WARNING, "Unexpected: ID not changed: "+id);
+                        return Response.status(response.getStatus()).entity(ErrorMessage.UNEXPECTED).build();
+                    } 
                     
                     GraphManager.removeGraph(oldIdIRI);
                     GraphManager.renameID(oldIdIRI,idIRI);
-                    GraphManager.updateReferencesInModel(modelIRI, oldIdIRI, idIRI);
+                    GraphManager.updateClassReferencesInModel(modelIRI, oldIdIRI, idIRI);
                     if(ProvenanceManager.getProvMode()) {
                         ProvenanceManager.renameID(oldid,id);
                     }
                 }
+            } else {
+                /* Overwrite existing graph */ 
+                response = JerseyFusekiClient.putGraphToTheService(id, body, services.getCoreReadWriteAddress());
             }
             
-           /* Create new graph with new id */ 
-           ClientResponse response = JerseyFusekiClient.putGraphToTheService(id, body, services.getCoreReadWriteAddress());
-
            ConceptMapper.addConceptFromReferencedResource(model,id);
            
            GraphManager.updateModifyDates(id);

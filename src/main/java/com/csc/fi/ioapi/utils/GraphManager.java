@@ -522,14 +522,40 @@ public static boolean isExistingPrefix(String prefix) {
 
     }
     
-        public static void updateReferencesInModel(IRI modelID, IRI oldID, IRI newID) {
+    public static void updateClassReferencesInModel(IRI modelID, IRI oldID, IRI newID) {
 
         String query
-                = " DELETE { GRAPH ?graph { ?any ?reference ?oldID }} "
-                + " INSERT { GRAPH ?graph { ?any ?reference ?newID }} "
+                = " DELETE { GRAPH ?graph { ?any sh:valueShape ?oldID }} "
+                + " INSERT { GRAPH ?graph { ?any sh:valueShape ?newID }} "
                 + " WHERE { "
                 + "GRAPH ?hasPartGraph { ?model dcterms:hasPart ?graph . } "
-                + "GRAPH ?graph { ?graph rdfs:isDefinedBy ?model . ?any ?reference ?oldID}}";
+                + "GRAPH ?graph { ?graph rdfs:isDefinedBy ?model . ?any sh:valueShape ?oldID}}";
+
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+        pss.setIri("oldID", oldID);
+        pss.setIri("newID", newID);
+        pss.setIri("model", modelID);
+        pss.setIri("hasPartGraph", modelID+"#HasPartGraph");
+        pss.setCommandText(query);
+
+        logger.info(pss.toString());
+        logger.log(Level.WARNING, "Updating references in "+modelID.toString());
+
+        UpdateRequest queryObj = pss.asUpdate();
+        UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, services.getCoreSparqlUpdateAddress());
+        qexec.execute();
+
+    }
+    
+       public static void updatePredicateReferencesInModel(IRI modelID, IRI oldID, IRI newID) {
+
+        String query
+                = " DELETE { GRAPH ?graph { ?any sh:predicate ?oldID }} "
+                + " INSERT { GRAPH ?graph { ?any sh:predicate ?newID }} "
+                + " WHERE { "
+                + "GRAPH ?hasPartGraph { ?model dcterms:hasPart ?graph . } "
+                + "GRAPH ?graph { ?graph rdfs:isDefinedBy ?model . ?any sh:predicate ?oldID}}";
 
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);

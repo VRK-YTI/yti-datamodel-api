@@ -227,7 +227,7 @@ public class Predicate {
                     /* Remove old graph and add update references */
                     GraphManager.removeGraph(oldIdIRI);
                     GraphManager.renameID(oldIdIRI,idIRI);
-                    GraphManager.updateReferencesInModel(modelIRI, oldIdIRI, idIRI);
+                    GraphManager.updatePredicateReferencesInModel(modelIRI, oldIdIRI, idIRI);
                     if(ProvenanceManager.getProvMode()) {
                         ProvenanceManager.renameID(oldid,id);
                     }
