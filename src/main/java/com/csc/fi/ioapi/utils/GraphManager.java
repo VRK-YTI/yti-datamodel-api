@@ -521,6 +521,32 @@ public static boolean isExistingPrefix(String prefix) {
         qexec.execute();
 
     }
+    
+        public static void updateReferencesInModel(IRI modelID, IRI oldID, IRI newID) {
+
+        String query
+                = " DELETE { GRAPH ?graph { ?any ?reference ?oldID }} "
+                + " INSERT { GRAPH ?graph { ?any ?reference ?newID }} "
+                + " WHERE { "
+                + "GRAPH ?hasPartGraph { ?model dcterms:hasPart ?graph . } "
+                + "GRAPH ?graph { ?graph rdfs:isDefinedBy ?model . ?any ?reference ?oldID}}";
+
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+        pss.setIri("oldID", oldID);
+        pss.setIri("newID", newID);
+        pss.setIri("model", modelID);
+        pss.setIri("hasPartGraph", modelID+"#HasPartGraph");
+        pss.setCommandText(query);
+
+        logger.info(pss.toString());
+        logger.log(Level.WARNING, "Updating references in "+modelID.toString());
+
+        UpdateRequest queryObj = pss.asUpdate();
+        UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, services.getCoreSparqlUpdateAddress());
+        qexec.execute();
+
+    }
 
     public static void insertNewGraphReferenceToModel(String graph, String model) {
 

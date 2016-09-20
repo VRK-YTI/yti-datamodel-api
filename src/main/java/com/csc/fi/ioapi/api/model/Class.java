@@ -224,9 +224,13 @@ public class Class {
                     return Response.status(403).entity(ErrorMessage.USEDIRI).build();
                 }
                 else {
+                    
                     /* Remove old graph and add update references */
+                    /* TODO: Not allowed if model is draft!?*/
+                    
                     GraphManager.removeGraph(oldIdIRI);
                     GraphManager.renameID(oldIdIRI,idIRI);
+                    GraphManager.updateReferencesInModel(modelIRI, oldIdIRI, idIRI);
                     if(ProvenanceManager.getProvMode()) {
                         ProvenanceManager.renameID(oldid,id);
                     }
