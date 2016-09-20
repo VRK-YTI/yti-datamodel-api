@@ -121,7 +121,7 @@ public class ExternalPredicate {
                 + "?predicate rdfs:range ?rangeClass . "
                 + "FILTER(?rangeClass!=rdfs:Literal)"
                 + "?rangeClass a ?rangeClassType . "
-                + "VALUES ?rangeClassType { skos:Concept owl:Thing rdfs:Class }"
+                + "VALUES ?rangeClassType { skos:Concept owl:Thing }"
                 + "BIND(owl:ObjectProperty as ?type) "
                 + "} UNION {"
                 /* IF Predicate type cannot be guessed */
