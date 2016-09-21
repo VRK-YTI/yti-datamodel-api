@@ -98,7 +98,8 @@ public class Predicate {
                 + "VALUES ?type { owl:ObjectProperty owl:DatatypeProperty } "
                 + "?property a ?type . "
                 + "?property rdfs:isDefinedBy ?source . "
-                + "?property dcterms:modified ?date .  } "
+                + "OPTIONAL {?property dcterms:modified ?date . } "
+                + "} "
                 + "GRAPH ?source { ?source a ?sourceType . ?source rdfs:label ?sourceLabel . }}"; 
 
          if(model!=null && !model.equals("undefined")) {
