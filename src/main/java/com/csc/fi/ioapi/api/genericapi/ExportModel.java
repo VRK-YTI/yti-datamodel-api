@@ -39,6 +39,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import org.apache.jena.atlas.web.ContentType;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
@@ -74,9 +75,29 @@ public class ExportModel {
             @ApiParam(value = "Languages to export") @QueryParam("lang") String lang,
             @ApiParam(value = "Content-type", required = true, allowableValues = "application/ld+json,text/turtle,application/rdf+xml,application/ld+json+context,application/schema+json") @QueryParam("content-type") String ctype) {
 
-        
+        out:
         if(GraphManager.lock.isLocked()) {
-            return Response.status(423).entity(ErrorMessage.LOCKED).build();
+            try {
+                TimeUnit.SECONDS.sleep(5);
+                if(GraphManager.lock.isLocked()) {
+                    TimeUnit.SECONDS.sleep(5);
+                    if(GraphManager.lock.isLocked()) {
+                        TimeUnit.SECONDS.sleep(5);
+                        if(GraphManager.lock.isLocked()) {
+                            TimeUnit.SECONDS.sleep(10);
+                            if(GraphManager.lock.isLocked()) {
+                                TimeUnit.SECONDS.sleep(10);
+                                if(GraphManager.lock.isLocked()) {
+                                    return Response.status(423).entity(ErrorMessage.LOCKED).build();
+                                } else break out;
+                             } else break out;
+                        } else break out;
+                    } else break out;
+                } else break out;
+                } catch (InterruptedException ex) {
+                Logger.getLogger(ExportModel.class.getName()).log(Level.SEVERE, null, ex);
+                return Response.status(423).entity(ErrorMessage.LOCKED).build();
+            }
         }
         
          IRI modelIRI;
