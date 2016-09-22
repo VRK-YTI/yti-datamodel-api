@@ -6,6 +6,7 @@ package com.csc.fi.ioapi.utils;
 final public class ErrorMessage {
     
     final public static String UNAUTHORIZED = toJs("{'errorMessage':'Unauthorized'}");
+    final public static String LOCKED = toJs("{'errorMessage':'Locked'}");
     final public static String INVALIDIRI = toJs("{'errorMessage':'Invalid ID'}");
     final public static String INVALIDPREFIX = toJs("{'errorMessage':'Invalid PREFIX'}");
     final public static String USEDIRI = toJs("{'errorMessage':'ID is already in use'}");

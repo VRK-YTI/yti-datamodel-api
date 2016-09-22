@@ -14,6 +14,7 @@ import javax.ws.rs.core.Response.ResponseBuilder;
 import com.csc.fi.ioapi.config.EndpointServices;
 import com.csc.fi.ioapi.utils.ContextWriter;
 import com.csc.fi.ioapi.utils.ErrorMessage;
+import com.csc.fi.ioapi.utils.GraphManager;
 import com.csc.fi.ioapi.utils.JerseyFusekiClient;
 import com.csc.fi.ioapi.utils.JsonSchemaWriter;
 import com.csc.fi.ioapi.utils.LDHelper;
@@ -73,6 +74,11 @@ public class ExportModel {
             @ApiParam(value = "Languages to export") @QueryParam("lang") String lang,
             @ApiParam(value = "Content-type", required = true, allowableValues = "application/ld+json,text/turtle,application/rdf+xml,application/ld+json+context,application/schema+json") @QueryParam("content-type") String ctype) {
 
+        
+        if(GraphManager.lock.isLocked()) {
+            return Response.status(423).entity(ErrorMessage.LOCKED).build();
+        }
+        
          IRI modelIRI;
             try {
                     IRIFactory iri = IRIFactory.semanticWebImplementation();

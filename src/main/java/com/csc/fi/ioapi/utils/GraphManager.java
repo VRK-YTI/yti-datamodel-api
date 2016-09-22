@@ -22,6 +22,7 @@ import org.apache.jena.update.UpdateExecutionFactory;
 import org.apache.jena.update.UpdateProcessor;
 import org.apache.jena.update.UpdateRequest;
 import java.util.Date;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ws.rs.core.Response;
@@ -51,6 +52,8 @@ public class GraphManager {
 
     static EndpointServices services = new EndpointServices();
     private static final Logger logger = Logger.getLogger(GraphManager.class.getName());
+    
+    public static ReentrantLock lock = new ReentrantLock();
 
     public static boolean testDefaultGraph() {
 
@@ -77,7 +80,8 @@ public class GraphManager {
     }
     
     public static void createExportGraphInRunnable(String graph) {
-                   
+             lock.lock();
+             
              String queryString = "CONSTRUCT { "
                 + "?model <http://purl.org/dc/terms/hasPart> ?resource . "    
                 + "?ms ?mp ?mo . "
@@ -109,6 +113,8 @@ public class GraphManager {
         DatasetAdapter adapter = new DatasetAdapter(accessor);
         logger.info("Exporting graph "+graph);
         adapter.putModel(graph+"#ExportGraph", exportModel);
+        
+        lock.unlock();
           
     }
     
