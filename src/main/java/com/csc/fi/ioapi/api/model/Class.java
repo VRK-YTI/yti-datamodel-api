@@ -80,6 +80,7 @@ public class Class {
         
         String queryString = "CONSTRUCT { "
                 + "?class rdfs:label ?label . "
+                + "?class rdfs:comment ?description . "
                 + "?class a ?type . "
                 + "?class dcterms:modified ?modified . "
                 + "?class rdfs:isDefinedBy ?source . "
@@ -91,6 +92,7 @@ public class Class {
                 + "GRAPH ?class { "
                 + "?class dcterms:modified ?modified . "
                 + "?class rdfs:label ?label . "
+                + "OPTIONAL { ?class rdfs:comment ?description . } "
                 + "?class a ?type . "
                 + "VALUES ?type { rdfs:Class sh:Shape } "
                 + "?class rdfs:isDefinedBy ?source .  } "

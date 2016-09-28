@@ -15,7 +15,7 @@
             "allOf": [ { "$ref": "#/definitions/positiveInteger" }, { "default": 0 } ]
         },
         "simpleTypes": {
-            "enum": [ "array", "boolean", "integer", "null", "number", "object", "string" ]
+            "enum": [ "array", "boolean", "integer", "null", "number", "object", "string", "langString" ]
         },
         "stringArray": {
             "type": "array",
@@ -23,7 +23,7 @@
             "minItems": 1,
             "uniqueItems": true
         },
-        "multilingual":{
+        "langString":{
             "type":"object",
             "patternProperties":{"^[a-z]{2,3}(?:-[A-Z]{2,3}(?:-[a-zA-Z]{4})?)?$":{"type":"string"}},
             "additionalProperties":false
@@ -56,13 +56,13 @@
          "title": {
             "oneOf":[
               {"type":"string"},
-              {"$ref":"#/definitions/multilingual"}
+              {"$ref":"#/definitions/langString"}
               ]
         },
         "description": {
             "oneOf":[
               {"type":"string"},
-              {"$ref":"#/definitions/multilingual"}
+              {"$ref":"#/definitions/langString"}
               ]
         },
         "default": {},

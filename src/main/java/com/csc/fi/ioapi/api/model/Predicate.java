@@ -86,6 +86,7 @@ public class Predicate {
 
         String queryString = "CONSTRUCT { "
                 + "?property rdfs:label ?label . "
+                + "?property rdfs:comment ?description . "
                 + "?property a ?type . "
                 + "?property rdfs:isDefinedBy ?source . "
                 + "?source rdfs:label ?sourceLabel . "
@@ -95,6 +96,7 @@ public class Predicate {
                 + "GRAPH ?hasPartGraph { "
                 + "?library dcterms:hasPart ?property . } "
                 + "GRAPH ?property { ?property rdfs:label ?label . "
+                + "OPTIONAL { ?property rdfs:comment ?description . } "
                 + "VALUES ?type { owl:ObjectProperty owl:DatatypeProperty } "
                 + "?property a ?type . "
                 + "?property rdfs:isDefinedBy ?source . "
