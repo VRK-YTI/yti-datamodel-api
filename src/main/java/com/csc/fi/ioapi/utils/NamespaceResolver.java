@@ -14,6 +14,7 @@ import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.net.UnknownHostException;
 import java.util.logging.Logger;
+import org.apache.jena.atlas.RuntimeIOException;
 import org.apache.jena.atlas.web.ContentType;
 import org.apache.jena.atlas.web.HttpException;
 import org.apache.jena.iri.IRI;
@@ -128,7 +129,11 @@ public class NamespaceResolver {
                                     if(connection.getURL().toString().endsWith(".ttl"))
                                         testLang = RDFLanguages.fileExtToLang("ttl");
                                     
-
+                                    if(connection.getURL().toString().endsWith(".nt"))
+                                        testLang = RDFLanguages.fileExtToLang("nt");
+                                    
+                                    if(connection.getURL().toString().endsWith(".jsonld"))
+                                        testLang = RDFLanguages.fileExtToLang("jsonld");
                                     
                                     if(testLang!=null) {
 
@@ -139,7 +144,8 @@ public class NamespaceResolver {
                                         reader.setProperty("error-mode", "lax");
                                         
                                         try {
-                                             reader.read(model, connection.getInputStream(), namespace);
+                                            logger.info(""+stream.available());
+                                             reader.read(model, stream, namespace);
                                         } catch(RiotException e) {
                                              logger.info("Could not read file from "+namespace);
                                             return false;
@@ -161,6 +167,10 @@ public class NamespaceResolver {
                                 return false;
                             } catch (SocketTimeoutException e) {
                                 logger.info("Timeout from "+namespace);
+                                e.printStackTrace();
+                                return false;
+                            } catch (RuntimeIOException e) {
+                                logger.info("Could not parse "+namespace);
                                 e.printStackTrace();
                                 return false;
                             }
