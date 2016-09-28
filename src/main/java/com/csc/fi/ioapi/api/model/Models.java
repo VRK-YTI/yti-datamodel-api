@@ -240,6 +240,8 @@ public class Models {
         }
         
         GraphManager.updateModifyDates(graph);
+        /* TODO: Remove this once ext labels are not stored to graphs */
+        GraphManager.deleteExternalGraphReferences(graph);
         
         UUID provUUID = UUID.randomUUID();
                 

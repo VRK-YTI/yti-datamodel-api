@@ -79,6 +79,9 @@ public class GraphManager {
         ThreadExecutor.pool.execute(new ExportGraphRunnable(graph));
     }
     
+    
+   
+    
     public static void createExportGraphInRunnable(String graph) {
              lock.lock();
              
@@ -456,6 +459,24 @@ public static boolean isExistingPrefix(String prefix) {
          */
     }
     
+        public static void deleteExternalGraphReferences(String model) {
+
+        String query = "DELETE { GRAPH ?graph { ?any rdfs:label ?label . } } WHERE { GRAPH ?graph { "
+                + "?graph dcterms:requires ?any . "
+                + "?any a dcap:MetadataVocabulary . "
+                + "?any rdfs:label ?label . "
+                + "}}";
+
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+        pss.setIri("graph", model);
+
+        pss.setCommandText(query);
+
+        UpdateRequest queryObj = pss.asUpdate();
+        UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, services.getCoreSparqlUpdateAddress());
+        qexec.execute();
+    }
     
         public static void updateModifyDates(String resource) {
 
