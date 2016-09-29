@@ -1,5 +1,18 @@
 {
   "@graph": [
+          {
+      "@id": "https://tt.eduuni.fi/sites/csc-iow#RAK",
+      "@type": "foaf:Group",
+      "label": {
+	  "fi":"Rakennettu ympäristö",
+	  "en":"Built environment"
+  },
+  "homepage": "https://tt.eduuni.fi/sites/csc-iow/koulutuskulttuuri",
+  "comment": {
+  "fi":"Ympäristöministeriön toimialalle kuuluvat asumisen, alueiden sekä maankäytön ja rakentamisen yhteiset tietomääritykset",
+  "en":"A domain for the core concepts regarding housing, land use and building, administered by the Ministry of the Environment"
+  }
+    },
     {
       "@id": "https://tt.eduuni.fi/sites/csc-iow#KTK",
       "@type": "foaf:Group",
