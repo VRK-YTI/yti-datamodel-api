@@ -4,16 +4,21 @@
 package com.csc.fi.ioapi.utils;
 
 import static com.csc.fi.ioapi.utils.UserManager.services;
+import java.util.logging.Logger;
 import org.apache.jena.query.DatasetAccessor;
 import org.apache.jena.query.DatasetAccessorFactory;
+import org.apache.jena.query.ParameterizedSparqlString;
 import org.apache.jena.query.Query;
 import org.apache.jena.query.QueryExecution;
 import org.apache.jena.query.QueryExecutionFactory;
 import org.apache.jena.query.QueryFactory;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.rdf.model.NodeIterator;
+import org.apache.jena.rdf.model.ResIterator;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.riot.RDFLanguages;
+import org.apache.jena.vocabulary.RDF;
 
 /**
  *
@@ -21,12 +26,27 @@ import org.apache.jena.riot.RDFLanguages;
  */
 public class GroupManager {
     
+    private static final Logger logger = Logger.getLogger(GroupManager.class.getName());
     
      public static boolean testDefaultGroups() {
          
-         String queryString = "ASK { ?s a foaf:Group . }";
-    
-         Query query = QueryFactory.create(LDHelper.prefix+queryString);        
+         Model m = ModelFactory.createDefaultModel();
+         RDFDataMgr.read(m, LDHelper.getDefaultGroupsInputStream(), RDFLanguages.JSONLD);
+         
+         ResIterator nodes = m.listResourcesWithProperty(RDF.type);
+         int groupCount = nodes.toList().size();
+         logger.info("Comparing groups to "+groupCount);
+          
+         String queryString = "ASK {  "
+                 + "{ SELECT (count(distinct ?s) as ?c) WHERE { ?s a foaf:Group . } }"
+                 + " FILTER(?c=?groupCount) }";
+        
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        pss.setCommandText(queryString);
+        pss.setLiteral("groupCount", groupCount);
+        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+        
+         Query query = QueryFactory.create(pss.toString());        
          QueryExecution qexec = QueryExecutionFactory.sparqlService(services.getCoreSparqlAddress(), query);
         
          try
