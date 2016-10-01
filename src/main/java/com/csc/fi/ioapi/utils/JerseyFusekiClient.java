@@ -24,14 +24,18 @@ import org.apache.jena.atlas.web.ContentType;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RiotException;
 /**
- *
+ * 
  * @author malonen
  */
 public class JerseyFusekiClient {
     
     static final private Logger logger = Logger.getLogger(JerseyFusekiClient.class.getName());
     
-    
+    /**
+     * Returns JENA model from JSONLD Response
+     * @param response  Response object
+     * @return          Jena model parsed from Reponse entity or empty model
+     */
     public static Model getJSONLDResponseAsJenaModel(Response response) {
          Model model = ModelFactory.createDefaultModel();
          
@@ -48,7 +52,11 @@ public class JerseyFusekiClient {
         
     }
     
-    
+    /**
+     *
+     * @param resourceURI
+     * @return
+     */
     public static Model getResourceAsJenaModel(String resourceURI) {
         
         Client client = Client.create();
@@ -69,6 +77,12 @@ public class JerseyFusekiClient {
         
     }
     
+    /**
+     *
+     * @param id
+     * @param service
+     * @return
+     */
     public static JsonValue getGraphContextFromService(String id, String service) {
          
         Client client = Client.create();
@@ -87,6 +101,12 @@ public class JerseyFusekiClient {
        
     }
     
+    /**
+     *
+     * @param id
+     * @param service
+     * @return
+     */
     public static ClientResponse getGraphClientResponseFromService(String id, String service) {
                    
             Client client = Client.create();
@@ -97,7 +117,14 @@ public class JerseyFusekiClient {
             return builder.get(ClientResponse.class);
     }
     
-        public static ClientResponse getGraphClientResponseFromService(String id, String service, String ctype) {
+    /**
+     *
+     * @param id
+     * @param service
+     * @param ctype
+     * @return
+     */
+    public static ClientResponse getGraphClientResponseFromService(String id, String service, String ctype) {
                    
             Client client = Client.create();
             WebResource webResource = client.resource(service)
@@ -107,6 +134,12 @@ public class JerseyFusekiClient {
             return builder.get(ClientResponse.class);
     }
     
+    /**
+     *
+     * @param id
+     * @param service
+     * @return
+     */
     public static Response getGraphResponseFromService(String id, String service) {
         try {
         Client client = Client.create();
@@ -132,7 +165,15 @@ public class JerseyFusekiClient {
         }
     }
     
-        public static Response getGraphResponseFromService(String id, String service, ContentType contentType, boolean raw) {
+    /**
+     *
+     * @param id
+     * @param service
+     * @param contentType
+     * @param raw
+     * @return
+     */
+    public static Response getGraphResponseFromService(String id, String service, ContentType contentType, boolean raw) {
         try {
         Client client = Client.create();
 
@@ -167,6 +208,13 @@ public class JerseyFusekiClient {
         }
     }
     
+    /**
+     *
+     * @param graph
+     * @param body
+     * @param service
+     * @return
+     */
     public static ClientResponse putGraphToTheService(String graph, String body, String service) {
         Client client = Client.create();
         WebResource webResource = client.resource(service).queryParam("graph", graph);
@@ -174,6 +222,13 @@ public class JerseyFusekiClient {
         return builder.put(ClientResponse.class, body);
     }
     
+    /**
+     *
+     * @param graph
+     * @param body
+     * @param service
+     * @return
+     */
     public static ClientResponse postGraphToTheService(String graph, String body, String service) {
         Client client = Client.create();
         WebResource webResource = client.resource(service).queryParam("graph", graph);
@@ -181,6 +236,12 @@ public class JerseyFusekiClient {
         return builder.post(ClientResponse.class, body);
     }
     
+    /**
+     *
+     * @param query
+     * @param service
+     * @return
+     */
     public static ClientResponse clientResponseFromConstruct(String query, String service) {
                    
             Client client = Client.create();
@@ -191,7 +252,14 @@ public class JerseyFusekiClient {
 
     }
     
-        public static ClientResponse clientResponseFromConstruct(String query, String service, ContentType contentType) {
+    /**
+     *
+     * @param query
+     * @param service
+     * @param contentType
+     * @return
+     */
+    public static ClientResponse clientResponseFromConstruct(String query, String service, ContentType contentType) {
                      
             Client client = Client.create();
             WebResource webResource = client.resource(service)
@@ -201,6 +269,12 @@ public class JerseyFusekiClient {
 
     }
     
+    /**
+     *
+     * @param query
+     * @param service
+     * @return
+     */
     public static Response constructGraphFromService(String query, String service) {
         
             Client client = Client.create();
@@ -226,7 +300,15 @@ public class JerseyFusekiClient {
             
     }
     
-        public static ClientResponse constructGraphFromServiceToService(String query, String fromService, String toService, String toGraph) {
+    /**
+     *
+     * @param query
+     * @param fromService
+     * @param toService
+     * @param toGraph
+     * @return
+     */
+    public static ClientResponse constructGraphFromServiceToService(String query, String fromService, String toService, String toGraph) {
         
             
             /* TODO: TEST! Not yet in use. */
@@ -252,7 +334,12 @@ public class JerseyFusekiClient {
             
     }
     
-    
+    /**
+     *
+     * @param graph
+     * @param service
+     * @return
+     */
     public static Response deleteGraphFromService(String graph, String service) {
         
         try {

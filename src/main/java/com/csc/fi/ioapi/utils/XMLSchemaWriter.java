@@ -3,21 +3,8 @@
  */
 package com.csc.fi.ioapi.utils;
 
+
 import com.csc.fi.ioapi.config.EndpointServices;
-import static com.csc.fi.ioapi.utils.GraphManager.services;
-import com.predic8.schema.Annotation;
-import com.predic8.schema.Appinfo;
-import com.predic8.schema.Attribute;
-import com.predic8.schema.ComplexType;
-import com.predic8.schema.Documentation;
-import com.predic8.schema.Element;
-import com.predic8.schema.Schema;
-import com.predic8.schema.SchemaParser;
-import com.predic8.schema.Sequence;
-import com.predic8.schema.creator.SchemaCreator;
-import com.predic8.schema.creator.SchemaCreatorContext;
-import com.predic8.soamodel.CreatorContext;
-import com.predic8.wsdl.Definitions;
 import java.io.File;
 import org.apache.jena.query.ParameterizedSparqlString;
 import org.apache.jena.query.QueryExecution;
@@ -51,6 +38,7 @@ import javax.xml.namespace.QName;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.query.Query;
 import org.apache.jena.util.SplitIRI;
+import org.w3c.dom.Element;
 
 /**
  *
@@ -63,91 +51,26 @@ public class XMLSchemaWriter {
     
     public static final Map<String, String> DATATYPE_MAP = 
     Collections.unmodifiableMap(new HashMap<String, String>() {{
-        put("http://www.w3.org/2001/XMLSchema#int", "integer");
-        put("http://www.w3.org/2001/XMLSchema#integer", "integer");
-        put("http://www.w3.org/2001/XMLSchema#long", "integer");
-        put("http://www.w3.org/2001/XMLSchema#float", "number");
-        put("http://www.w3.org/2001/XMLSchema#double", "number");
-        put("http://www.w3.org/2001/XMLSchema#decimal", "number");
-        put("http://www.w3.org/2001/XMLSchema#boolean", "boolean");
-        put("http://www.w3.org/2001/XMLSchema#date", "string");
-        put("http://www.w3.org/2001/XMLSchema#dateTime", "string");
-        put("http://www.w3.org/2001/XMLSchema#time", "string");
-        put("http://www.w3.org/2001/XMLSchema#gYear", "string");
-        put("http://www.w3.org/2001/XMLSchema#gMonth", "string");
-        put("http://www.w3.org/2001/XMLSchema#gDay", "string");
-        put("http://www.w3.org/2001/XMLSchema#string", "string");
-        put("http://www.w3.org/2001/XMLSchema#anyUri", "string");
-        put("http://www.w3.org/2001/XMLSchema#langString", "string");
-        put("http://www.w3.org/2001/XMLSchema#anyUri", "string");
+        put("http://www.w3.org/2001/XMLSchema#int", "xs:int");
+        put("http://www.w3.org/2001/XMLSchema#integer", "xs:integer");
+        put("http://www.w3.org/2001/XMLSchema#long", "xs:long");
+        put("http://www.w3.org/2001/XMLSchema#float", "xs:float");
+        put("http://www.w3.org/2001/XMLSchema#double", "xs:double");
+        put("http://www.w3.org/2001/XMLSchema#decimal", "xs:decimal");
+        put("http://www.w3.org/2001/XMLSchema#boolean", "xs:boolean");
+        put("http://www.w3.org/2001/XMLSchema#date", "xs:date");
+        put("http://www.w3.org/2001/XMLSchema#dateTime", "xs:dateTime");
+        put("http://www.w3.org/2001/XMLSchema#time", "xs:time");
+        put("http://www.w3.org/2001/XMLSchema#gYear", "xs:gYear");
+        put("http://www.w3.org/2001/XMLSchema#gMonth", "xs:gMont");
+        put("http://www.w3.org/2001/XMLSchema#gDay", "xs:gDay");
+        put("http://www.w3.org/2001/XMLSchema#string", "xs:string");
+        put("http://www.w3.org/2001/XMLSchema#anyUri", "xs:anyUri");
+        put("http://www.w3.org/1999/02/22-rdf-syntax-ns#langString", "xs:string");
+        put("http://www.w3.org/2000/01/rdf-schema#Literal", "xs:string");
+        put("http://www.w3.org/2001/XMLSchema#anyUri", "xs:anyUri");
     }});
-    
-    public static final Map<String, String> FORMAT_MAP = 
-    Collections.unmodifiableMap(new HashMap<String, String>() {{
-        put("http://www.w3.org/2001/XMLSchema#dateTime", "date-time");
-        put("http://www.w3.org/2001/XMLSchema#anyUri", "uri");
-    }});
- 
-    private static final Map<String, Boolean> config;
-    private static final JsonWriterFactory factory;
-    static {
-        config = new HashMap<>();
-        config.put(JsonGenerator.PRETTY_PRINTING, Boolean.TRUE);
-        factory = Json.createWriterFactory(config);
-    }
-    
-    /*
-    private static String createDummySchema(JsonObjectBuilder schema, JsonObjectBuilder properties, JsonArrayBuilder required) {
-        
-        
-        schema.add("$schema", "http://json-schema.org/draft-04/schema#");
-        schema.add("properties", properties.build());
-        JsonArray reqArray = required.build();
-        if(!reqArray.isEmpty()) {
-            schema.add("required",reqArray);
-        }
-        
-        return jsonObjectToPrettyString(schema.build());
-  }*/
-    
-    /*
-    private static String createDefaultSchema(JsonObjectBuilder schema, JsonObjectBuilder properties, JsonArrayBuilder required) {
-        
-        schema.add("$schema", "http://json-schema.org/draft-04/schema#");
-        schema.add("type","object");
-        schema.add("properties", properties.build());
-        JsonArray reqArray = required.build();
-        
-        if(!reqArray.isEmpty()) {
-            schema.add("required",reqArray);
-        }
-        
-        return jsonObjectToPrettyString(schema.build());
-}*/
-    
-
-    public static Annotation createAnnotation(String documentation, String lang) {
-                Annotation comment = new Annotation();
-                Documentation documentationItem = new Documentation();
-                documentationItem.setLang(lang);
-                //documentation.setProperty("xml:lang", lang);
-                documentationItem.setContent(documentation);
-                comment.setContents(documentationItem);
-        return comment;
-    }
-    
-    
-    public static Annotation createDCAnnotation(String documentation, String lang) {
-                Annotation comment = new Annotation();
-                Documentation documentationItem = new Documentation();
-                documentationItem.setLang(lang);
-                //documentation.setProperty("xml:lang", lang);
-                documentationItem.setContent(documentation);
-                comment.setContents(documentationItem);
-        return comment;
-    }
-        
-        
+       
     /* 
     Alternative way to document?
         <ccts:Component>
@@ -168,29 +91,14 @@ public class XMLSchemaWriter {
        
     public static String newClassSchema(String classID, String lang) { 
         logger.info("Creating schema");
-
-        SchemaParser parser = new SchemaParser();
-
-        Schema schema = parser.parse(XMLSchemaWriter.class.getClassLoader().getResource("base.xsd").toString());
-        
-        //   Element newClass = new Element();
-        /*
-        SchemaCreator creator = new SchemaCreator();
-        CreatorContext ctx = new CreatorContext();
-        SchemaCreatorContext ctse = new SchemaCreatorContext();
-        ctse.setDeclNS(ctx);
-        Definitions dfntns = new Definitions();
-        
-        List namespaceList = new 
-        
-       schema.setAttributes(namespaceList);
-          */      
-          
-        
+        XMLSchemaBuilder xml = new XMLSchemaBuilder();
+        logger.info(xml.toString());   
+       
         String className = SplitIRI.localname(classID);
-     
-        schema.newElement(className, className+"Type");
-        ComplexType newClassType = schema.newComplexType(className+"Type");
+        
+        Element complexType = xml.newComplexType(className);
+        
+        logger.info(xml.toString());     
         
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         
@@ -219,23 +127,19 @@ public class XMLSchemaWriter {
 
         if(!results.hasNext()) return null;
         
-        
         boolean classMetadata = false;
         
         while (results.hasNext()) {
             
             QuerySolution soln = results.nextSolution();
-            String title = soln.getLiteral("label").getString();
-            
-            
+            String title = soln.getLiteral("label").getString();    
             
             if(soln.contains("description")) {
                 String description = soln.getLiteral("description").getString();
                // seq.newElement("description", new QName("http://www.w3.org/2001/XMLSchema","string"));
-                newClassType.setAnnotation(createAnnotation(description,lang));
+                // newClassType.setAnnotation(createAnnotation(description,lang));
             }
             
-          
          //   logger.info(soln.getResource("type").getLocalName());
             String sType = soln.getResource("type").getLocalName();
             
@@ -248,8 +152,10 @@ public class XMLSchemaWriter {
        
         if(classMetadata) {
         
+         logger.info("querying class");
+            
         String selectResources = 
-                "SELECT ?predicate ?id ?predicateName ?label ?datatype ?shapeRef ?min ?max ?minLength ?maxLenght ?pattern "
+                "SELECT ?predicate ?id ?predicateName ?label ?description ?datatype ?shapeRef ?shapeRefName ?min ?max ?minLength ?maxLenght ?pattern "
                 + "WHERE { "
                 + "GRAPH ?resourceID {"
                 + "?resourceID sh:property ?property . "
@@ -261,7 +167,7 @@ public class XMLSchemaWriter {
                 + "FILTER (langMatches(lang(?description),?lang))"
                 + "}"
                 + "OPTIONAL { ?property sh:datatype ?datatype . }"
-                + "OPTIONAL { ?property sh:valueShape ?shapeRef . }"
+                + "OPTIONAL { ?property sh:valueShape ?shapeRef . BIND(afn:localname(?shapeRef) as ?shapeRefName) }"
                 + "OPTIONAL { ?property sh:minCount ?min . }"
                 + "OPTIONAL { ?property sh:maxCount ?max . }"
                 + "OPTIONAL { ?property sh:pattern ?pattern . }"
@@ -282,9 +188,8 @@ public class XMLSchemaWriter {
         
         if(!results.hasNext()) return null;
         
+        Element seq = xml.newSequence(complexType);
         
-        Sequence seq = newClassType.newSequence();
-
         while (results.hasNext()) {
             QuerySolution soln = results.nextSolution();
             String predicateName = soln.getLiteral("predicateName").getString();
@@ -295,36 +200,57 @@ public class XMLSchemaWriter {
                 predicateName = soln.getLiteral("id").getString();
             }
             
-            
-            Element newElement = new Element();
-            newElement.setName(predicateName);
-            
             String title = soln.getLiteral("label").getString();
             
-            JsonObjectBuilder predicate = Json.createObjectBuilder();
+            Element newElement = xml.newSimpleElement(seq, predicateName);
+            Element documentation = xml.newDocumentation(newElement);
             
-            predicate.add("title", title);
+            xml.appendElementValue(documentation, "dcterms:title", title);
             
             if(soln.contains("min") ) {
                 int min = soln.getLiteral("min").getInt();
                 if(min>0) {
-                    newElement.setMinOccurs(""+min);
+                    newElement.setAttribute("minOccurs", ""+min);
                 }
             } 
             
             if(soln.contains("description")) {
                 String description = soln.getLiteral("description").getString();
-                newElement.setAnnotation(createAnnotation(description,lang));
+                xml.appendElementValue(documentation, "dcterms:description", description);
             }
             
             if(soln.contains("datatype")) {
                 String datatype = soln.getResource("datatype").toString();
-               // String jsonDatatype = DATATYPE_MAP.get(datatype);
+                newElement.setAttribute("type", DATATYPE_MAP.get(datatype));
             }
+            
+            /* 
+            http://examples.oreilly.com/9780596002527/creating-simple-types.html
+            <xs:attribute name="lang" type="xs:language"/> OR
+            
+              <xs:simpleType name="supportedLanguages">
+    <xs:restriction base="xs:language">
+      <xs:enumeration value="en"/>
+      <xs:enumeration value="es"/>
+    </xs:restriction>
+  </xs:simpleType>
+            
+              <xs:attribute name="lang" type="supportedLanguages"/>
+  <xs:element name="title">
+    <xs:complexType>
+      <xs:simpleContent>
+        <xs:extension base="string255">
+          <xs:attribute ref="lang"/>
+        </xs:extension>
+      </xs:simpleContent>
+    </xs:complexType>
+  </xs:element>
+            
+            */
             
             if(soln.contains("max") && soln.getLiteral("max").getInt()>0) {
                 int max = soln.getLiteral("max").getInt();
-                    newElement.setMaxOccurs(""+max);
+                newElement.setAttribute("maxOccurs", ""+max);
             }
 
                     /*
@@ -340,19 +266,16 @@ public class XMLSchemaWriter {
                     predicate.add("pattern",soln.getLiteral("pattern").getString());
                 }*/
                  
-                if(soln.contains("shapeRef")) {
-                    String shapeRef = soln.getResource("shapeRef").toString();
-                    newElement.setRefValue(shapeRef+"Type");
+                if(soln.contains("shapeRefName")) {
+                    String shapeRef = soln.getLiteral("shapeRefName").toString();
+                    newElement.setAttribute("type", shapeRef);
                 }
                 
-            seq.add(newElement);
         }     
         
         }
-       
-       logger.info(schema.getAsString());
-       
-        return schema.getAsString();
+      
+        return xml.toString();
     }
     
     
@@ -428,15 +351,6 @@ public class XMLSchemaWriter {
         
     
     
-    private static String jsonObjectToPrettyString(JsonObject object) {
-        
-        StringWriter stringWriter = new StringWriter();
-        JsonWriter writer = factory.createWriter(stringWriter);
-        writer.writeObject(object);
-        writer.close();
-        return stringWriter.getBuffer().toString();
-        
-    }
     
     public static boolean hasModelRoot(String graphIRI) {
 

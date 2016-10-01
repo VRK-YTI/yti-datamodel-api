@@ -58,8 +58,8 @@ public class JsonSchemaWriter {
         put("http://www.w3.org/2001/XMLSchema#gDay", "string");
         put("http://www.w3.org/2001/XMLSchema#string", "string");
         put("http://www.w3.org/2001/XMLSchema#anyUri", "string");
-        put("http://www.w3.org/2001/XMLSchema#langString", "string");
-        put("http://www.w3.org/2001/XMLSchema#anyUri", "string");
+        put("http://www.w3.org/1999/02/22-rdf-syntax-ns#langString", "langString");
+        put("http://www.w3.org/2000/01/rdf-schema#Literal", "string");
     }});
     
     public static final Map<String, String> FORMAT_MAP = 
@@ -798,6 +798,32 @@ public class JsonSchemaWriter {
         
     }
     
+    public static JsonObject getLangStringObject() {
+        
+        /* "langString":{
+            "type":"object",
+            "patternProperties":{"^[a-z]{2,3}(?:-[A-Z]{2,3}(?:-[a-zA-Z]{4})?)?$":{"type":"string"}},
+            "additionalProperties":false
+        
+                OR 
+
+                {
+          "description": "localised strings",
+          "type":"object",
+          "additionalProperties": {"type":"string"}
+        }
+        
+        }*/
+        
+        JsonObjectBuilder builder = Json.createObjectBuilder();
+        JsonObjectBuilder add = Json.createObjectBuilder();
+        builder.add("type", "object");
+        builder.add("title","Multilingual string");
+        builder.add("description","Object type for localized strings");
+        builder.add("additionalProperties",add.add("type", "string").build());
+        return builder.build();
+    }
+    
     
      public static String newMultilingualModelSchema(String modelID) { 
     
@@ -892,6 +918,9 @@ public class JsonSchemaWriter {
         }
         
         JsonObjectBuilder definitions = Json.createObjectBuilder();
+        
+        definitions.add("langString", getLangStringObject());
+        
         JsonObjectBuilder properties = Json.createObjectBuilder();
         properties.add("@id", idProperty());
         JsonArrayBuilder required = Json.createArrayBuilder();
@@ -965,6 +994,7 @@ public class JsonSchemaWriter {
 
                     String jsonDatatype = DATATYPE_MAP.get(datatype);
 
+                    
 
                     if(soln.contains("min") && soln.getLiteral("min").getInt()>0) {
                         propertyBuilder.add("minItems",soln.getLiteral("min").getInt());
@@ -987,7 +1017,12 @@ public class JsonSchemaWriter {
                         propertyBuilder.add("maxItems",1);
 
                         if(jsonDatatype!=null) {
-                           propertyBuilder.add("type", jsonDatatype);
+                           if(jsonDatatype.equals("langString")) {
+                               propertyBuilder.add("type","object");
+                               propertyBuilder.add("$ref","#/definitions/langString");
+                           }
+                           else
+                               propertyBuilder.add("type", jsonDatatype);
                         }
 
                     } else {
@@ -999,7 +1034,17 @@ public class JsonSchemaWriter {
                         propertyBuilder.add("type", "array");
 
                         if(jsonDatatype!=null) {
-                            propertyBuilder.add("items", Json.createObjectBuilder().add("type", jsonDatatype).build());
+                            
+                            JsonObjectBuilder typeObject = Json.createObjectBuilder();
+                            
+                            if(jsonDatatype.equals("langString")) {
+                                typeObject.add("type", "object");
+                                typeObject.add("$ref","#/definitions/langString");
+                            } else {
+                                typeObject.add("type",jsonDatatype);
+                            }
+                            
+                            propertyBuilder.add("items", typeObject.build());
                         } 
 
                     }
