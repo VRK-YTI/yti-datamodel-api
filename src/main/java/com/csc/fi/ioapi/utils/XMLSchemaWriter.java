@@ -155,7 +155,7 @@ public class XMLSchemaWriter {
          logger.info("querying class");
             
         String selectResources = 
-                "SELECT ?predicate ?id ?predicateName ?label ?description ?datatype ?shapeRef ?shapeRefName ?min ?max ?minLength ?maxLenght ?pattern "
+                "SELECT ?predicate ?id ?predicateName ?label ?description ?datatype ?shapeRef ?shapeRefName ?min ?max ?minLength ?maxLength ?pattern "
                 + "WHERE { "
                 + "GRAPH ?resourceID {"
                 + "?resourceID sh:property ?property . "
@@ -171,7 +171,7 @@ public class XMLSchemaWriter {
                 + "OPTIONAL { ?property sh:minCount ?min . }"
                 + "OPTIONAL { ?property sh:maxCount ?max . }"
                 + "OPTIONAL { ?property sh:pattern ?pattern . }"
-                + "OPTIONAL { ?property sh:minLenght ?minLength . }"
+                + "OPTIONAL { ?property sh:minLength ?minLength . }"
                 + "OPTIONAL { ?property sh:maxLength ?maxLength . }"
                 + "BIND(afn:localname(?predicate) as ?predicateName)"
                 + "}"
@@ -191,6 +191,7 @@ public class XMLSchemaWriter {
         Element seq = xml.newSequence(complexType);
         
         while (results.hasNext()) {
+            
             QuerySolution soln = results.nextSolution();
             String predicateName = soln.getLiteral("predicateName").getString();
             
@@ -236,6 +237,7 @@ public class XMLSchemaWriter {
   </xs:simpleType>
             
               <xs:attribute name="lang" type="supportedLanguages"/>
+            
   <xs:element name="title">
     <xs:complexType>
       <xs:simpleContent>
@@ -253,18 +255,27 @@ public class XMLSchemaWriter {
                 newElement.setAttribute("maxOccurs", ""+max);
             }
 
-                    /*
-                if(soln.contains("maxLength"))  {
-                    predicate.add("maxLength",soln.getLiteral("maxLength").getInt());
+            /* If shape contains pattern or other type of restriction */
+            
+            if(soln.contains("pattern") || soln.contains("maxLength") || soln.contains("minLength"))  {
+                    Element simpleType = xml.newSimpleType(predicateName+"Type");
+                    
+                    logger.info(predicateName+"Type");
+                    
+                    if(soln.contains("pattern")) {
+                        Element restriction = xml.newStringRestriction(simpleType);
+                         xml.appendElementValueAttribute(restriction, "xs:maxInclusive", soln.getLiteral("pattern").toString());
+                    } else {
+                        Element restriction = xml.newIntRestriction(simpleType);
+                           if(soln.contains("maxLength")) {
+                              xml.appendElementValueAttribute(restriction, "xs:maxInclusive", ""+soln.getLiteral("maxLength").getInt());
+                           }
+                           if(soln.contains("minLength"))  {
+                              xml.appendElementValueAttribute(restriction, "xs:minInclusive", ""+soln.getLiteral("minLength").getInt());
+                           }
+                    }
+                    newElement.setAttribute("type", predicateName+"Type");
                 }
-                
-                if(soln.contains("minLength"))  {
-                    predicate.add("minLength",soln.getLiteral("minLength").getInt());
-                }
-                
-                if(soln.contains("pattern"))  {
-                    predicate.add("pattern",soln.getLiteral("pattern").getString());
-                }*/
                  
                 if(soln.contains("shapeRefName")) {
                     String shapeRef = soln.getLiteral("shapeRefName").toString();

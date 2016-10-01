@@ -16,8 +16,14 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 /**
  *
@@ -35,6 +41,7 @@ public XMLSchemaBuilder() {
     this.domFactory = DocumentBuilderFactory.newInstance();
     this.domFactory.setNamespaceAware(true);
     this.domFactory.setValidating(false);
+    this.domFactory.setIgnoringElementContentWhitespace(true);
     try {
         this.domBuilder = this.domFactory.newDocumentBuilder();
         this.document = domBuilder.newDocument();
@@ -69,6 +76,27 @@ public Element newSimpleElement(Element sequence, String name) {
     return simpleElement;
 }
 
+public Element newSimpleType(String name) {
+    Element simpleType = this.document.createElement("xs:simpleType");
+    simpleType.setAttribute("name", name);
+    this.schema.appendChild(simpleType);
+    return simpleType;
+}
+
+public Element newIntRestriction(Element simpleType) {
+    Element restriction = this.document.createElement("xs:restriction");
+    simpleType.setAttribute("base", "xs:integer");
+    simpleType.appendChild(restriction);
+    return restriction;
+}
+
+public Element newStringRestriction(Element simpleType) {
+    Element restriction = this.document.createElement("xs:restriction");
+    simpleType.setAttribute("base", "xs:string");
+    simpleType.appendChild(restriction);
+    return restriction;
+}
+
 public Element newDocumentation(Element elem) {
     Element annotation = this.document.createElement("xs:annotation");
     Element documentation = this.document.createElement("xs:documentation");
@@ -78,22 +106,35 @@ public Element newDocumentation(Element elem) {
 }
 
 public void appendElementValue(Element element, String name, String value) {
+    value = value.trim();
     Element docElem = this.document.createElement(name);
     docElem.setTextContent(value);
     element.appendChild(docElem);
 }
 
+public void appendElementValueAttribute(Element element, String name, String value) {
+    value = value.trim();
+    Element docElem = this.document.createElement(name);
+    docElem.setAttribute("value", value);
+    element.appendChild(docElem);
+}
+
+
 public String toString() {
     try {
+        
         StringWriter sw = new StringWriter();
         StreamResult result = new StreamResult(sw);
         TransformerFactory tf = TransformerFactory.newInstance();
+        //tf.setAttribute("indent-number", new Integer(10));
         Transformer transformer = tf.newTransformer();
         transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "no");
         transformer.setOutputProperty(OutputKeys.METHOD, "xml");
         transformer.setOutputProperty(OutputKeys.INDENT, "yes");
         transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
-        //transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "4");
+        transformer.setOutputProperty(OutputKeys.DOCTYPE_PUBLIC,"yes");
+        transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "6"); 
+      
         DOMSource source = new DOMSource(this.document);
         transformer.transform(source, result);
         return sw.toString();
