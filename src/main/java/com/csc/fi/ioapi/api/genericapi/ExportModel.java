@@ -18,6 +18,7 @@ import com.csc.fi.ioapi.utils.GraphManager;
 import com.csc.fi.ioapi.utils.JerseyFusekiClient;
 import com.csc.fi.ioapi.utils.JsonSchemaWriter;
 import com.csc.fi.ioapi.utils.LDHelper;
+import com.csc.fi.ioapi.utils.XMLSchemaWriter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.jsonldjava.core.JsonLdError;
 import com.github.jsonldjava.core.JsonLdOptions;
@@ -73,7 +74,7 @@ public class ExportModel {
             @ApiParam(value = "Requested resource", defaultValue = "default") @QueryParam("graph") String graph,
             @ApiParam(value = "Raw / PlainText boolean", defaultValue = "false") @QueryParam("raw") boolean raw,
             @ApiParam(value = "Languages to export") @QueryParam("lang") String lang,
-            @ApiParam(value = "Content-type", required = true, allowableValues = "application/ld+json,text/turtle,application/rdf+xml,application/ld+json+context,application/schema+json") @QueryParam("content-type") String ctype) {
+            @ApiParam(value = "Content-type", required = true, allowableValues = "application/ld+json,text/turtle,application/rdf+xml,application/ld+json+context,application/schema+json,application/xml") @QueryParam("content-type") String ctype) {
 
         out:
         if(GraphManager.lock.isLocked()) {
@@ -125,6 +126,15 @@ public class ExportModel {
                 } else {
                     schema = JsonSchemaWriter.newMultilingualModelSchema(graph);
                 }
+                if(schema!=null) {
+                    return Response.ok().entity(schema).type(raw?"text/plain;charset=utf-8":"application/schema+json").build();
+                } else {
+                    return Response.status(403).entity(ErrorMessage.NOTFOUND).build();
+                }
+            } else if(ctype.equals("application/xml")) {
+                
+                String schema = XMLSchemaWriter.newModelSchema(graph, lang);
+               
                 if(schema!=null) {
                     return Response.ok().entity(schema).type(raw?"text/plain;charset=utf-8":"application/schema+json").build();
                 } else {

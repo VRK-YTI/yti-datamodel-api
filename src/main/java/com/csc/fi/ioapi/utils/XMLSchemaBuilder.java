@@ -48,15 +48,20 @@ public XMLSchemaBuilder() {
         this.schema = this.document.createElementNS("http://www.w3.org/2001/XMLSchema", "schema");
         schema.setPrefix("xs");
         schema.setAttribute("xmlns:dcterms", "http://purl.org/dc/terms/");
+        schema.setAttribute("xmlns:sawsdl","http://www.w3.org/ns/sawsdl");
         this.document.appendChild(schema);
-        // schema.setAttribute("xmlns:xs", "http://www.w3.org/2001/XMLSchema");
     } catch (ParserConfigurationException ex) {
         Logger.getLogger(XMLSchemaBuilder.class.getName()).log(Level.SEVERE, null, ex);
     }
 }
 
-public Element newComplexType(String name) {
+public Element getRoot() {
+    return this.schema;
+}
+
+public Element newComplexType(String name, String id) {
     Element complexType = this.document.createElement("xs:complexType");
+    complexType.setAttribute("sawsdl:modelReference", id);
     complexType.setAttribute("name", name);
     this.schema.appendChild(complexType);
     return complexType;
@@ -69,8 +74,9 @@ public Element newSequence(Element complexType) {
     return sequence;
 }
 
-public Element newSimpleElement(Element sequence, String name) {
+public Element newSimpleElement(Element sequence, String name, String id) {
     Element simpleElement = this.document.createElement("xs:element");
+    simpleElement.setAttribute("sawsdl:modelReference", id);
     simpleElement.setAttribute("name", name);
     sequence.appendChild(simpleElement);
     return simpleElement;
