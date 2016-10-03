@@ -7,7 +7,7 @@
 	  "fi":"Rakennettu ympäristö",
 	  "en":"Built environment"
   },
-  "homepage": "https://tt.eduuni.fi/sites/csc-iow/koulutuskulttuuri",
+  "homepage": "https://tt.eduuni.fi/sites/csc-iow/rak",
   "comment": {
   "fi":"Ympäristöministeriön toimialalle kuuluvat asumisen, alueiden sekä maankäytön ja rakentamisen yhteiset tietomääritykset",
   "en":"A domain for the core concepts regarding housing, land use and building, administered by the Ministry of the Environment"
@@ -22,8 +22,8 @@
   },
   "homepage": "https://tt.eduuni.fi/sites/csc-iow/koulutuskulttuuri",
   "comment": {
-  "fi":"Kohdealueella on viisi osa-aluetta: Koulutus ja tutkimus, Taide ja kulttuuri, Kirjastot, arkistot, museot, Liikunta ja Nuorisotyö.",
-  "en":"This domain has five primary parts: Education and research, Arts and Culture, Libraries, Archives, Museums, Sports and Youth work."
+  "fi":"Koulutus ja tutkimus, Taide ja kulttuuri, Kirjastot, arkistot, museot, Liikunta ja Nuorisotyö.",
+  "en":"Education and research, Arts and Culture, Libraries, Archives, Museums, Sports and Youth work."
   }
     },
     {

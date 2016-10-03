@@ -30,6 +30,12 @@ import org.w3c.dom.NodeList;
  * @author malonen
  */
 
+/* 
+
+TODO: Add Literal Type. Add xml:lang parameter.
+
+*/
+
 public class XMLSchemaBuilder {
 
 DocumentBuilderFactory domFactory;

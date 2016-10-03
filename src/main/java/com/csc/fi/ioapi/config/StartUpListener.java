@@ -102,7 +102,7 @@ public class StartUpListener implements ServletContextListener {
               }
     }
     private static void initDefaultGroups() {
-         if(GroupManager.testDefaultGroups()) {
+         if(GroupManager.compareDefaultGroups()) {
                 logger.log(Level.INFO,"Default groups are initialized!");
          }
          else {
@@ -110,7 +110,7 @@ public class StartUpListener implements ServletContextListener {
                 
                 GroupManager.createDefaultGroups();
                 
-                if(GroupManager.testDefaultGroups())
+                if(GroupManager.compareDefaultGroups())
                     logger.log(Level.INFO,"Created default groups!");
                 else
                     logger.log(Level.WARNING,"Failed to create default groups!");

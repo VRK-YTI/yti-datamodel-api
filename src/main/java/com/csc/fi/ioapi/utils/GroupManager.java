@@ -28,6 +28,19 @@ public class GroupManager {
     
     private static final Logger logger = Logger.getLogger(GroupManager.class.getName());
     
+    
+     public static boolean compareDefaultGroups() {
+         
+         DatasetAccessor accessor = DatasetAccessorFactory.createHTTP(services.getCoreReadWriteAddress());
+         Model oldM = accessor.getModel("urn:csc:groups");
+         
+         Model m = ModelFactory.createDefaultModel();
+         RDFDataMgr.read(m, LDHelper.getDefaultGroupsInputStream(), RDFLanguages.JSONLD);
+         
+         return m.isIsomorphicWith(oldM);
+         
+     }
+    
      public static boolean testDefaultGroups() {
          
          Model m = ModelFactory.createDefaultModel();
