@@ -34,10 +34,12 @@ public class GroupManager {
          DatasetAccessor accessor = DatasetAccessorFactory.createHTTP(services.getCoreReadWriteAddress());
          Model oldM = accessor.getModel("urn:csc:groups");
          
-         Model m = ModelFactory.createDefaultModel();
-         RDFDataMgr.read(m, LDHelper.getDefaultGroupsInputStream(), RDFLanguages.JSONLD);
-         
-         return m.isIsomorphicWith(oldM);
+         if(oldM!=null && !oldM.isEmpty()) {
+            Model m = ModelFactory.createDefaultModel();
+            RDFDataMgr.read(m, LDHelper.getDefaultGroupsInputStream(), RDFLanguages.JSONLD);
+
+            return m.isIsomorphicWith(oldM);
+         } else return false;
          
      }
     
