@@ -77,8 +77,6 @@ public class ExternalClass {
                 + "?class rdfs:label ?label . "
                 + "?class a rdfs:Class . "
                 + "?class dcterms:modified ?modified . "
-                + "?class rdfs:isDefinedBy ?source . "
-                + "?source rdfs:label ?sourceLabel . "
                 + "} WHERE { "
                  + "SERVICE ?modelService { "
                  + "GRAPH ?library { "
