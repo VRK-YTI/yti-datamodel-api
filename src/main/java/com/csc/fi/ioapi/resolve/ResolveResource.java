@@ -54,8 +54,6 @@ public class ResolveResource extends HttpServlet {
         String acceptLang = request.getHeader(HttpHeaders.ACCEPT_LANGUAGE);
         Locale locale = Locale.forLanguageTag(acceptLang);
         String language = locale.getDefault().toString().substring(0,2).toLowerCase();
-        String fileExt = null;
-        Lang langFromFileExt = null;
         
         String ifModifiedSince = request.getHeader(HttpHeaders.IF_MODIFIED_SINCE);
         Date modifiedSince = null;
@@ -76,12 +74,13 @@ public class ResolveResource extends HttpServlet {
         String modelID = requestURI.substring(requestURI.lastIndexOf("/") + 1, requestURI.length());
         
         if(modelID.contains(".")) {
-            fileExt = modelID.split("\\.")[1];
+            String fileExt = modelID.split("\\.")[1];
             if(fileExt.equals("jschema")) accept = "application/schema+json";
             else if(fileExt.equals("xml")) accept = "application/xml";
-            langFromFileExt = RDFLanguages.filenameToLang(modelID);
+            if(rdfLang==null) rdfLang = RDFLanguages.filenameToLang(modelID);
             modelID = modelID.split("\\.")[0];
         }
+        
         String graphName = GraphManager.getServiceGraphNameWithPrefix(modelID);
         
          if(modifiedSince!=null) {
@@ -101,7 +100,7 @@ public class ResolveResource extends HttpServlet {
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
         } else {
         
-                if(accept!=null && accept.equals("application/schema+json") || accept.equals("application/schema+xml")) {
+                if(accept!=null && accept.equals("application/schema+json") || accept.equals("application/xml")) {
                     String dis = "/rest/exportModel?graph="+graphName+"&content-type="+accept+"&lang="+language;
                     logger.info("Redirecting to export: "+dis);
                     RequestDispatcher dispatcher = getServletContext().getRequestDispatcher(dis);
