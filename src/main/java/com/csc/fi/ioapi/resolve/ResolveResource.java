@@ -13,6 +13,7 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.servlet.RequestDispatcher;
@@ -51,6 +52,10 @@ public class ResolveResource extends HttpServlet {
 
         String accept = request.getHeader(HttpHeaders.ACCEPT);
         String acceptLang = request.getHeader(HttpHeaders.ACCEPT_LANGUAGE);
+        Locale locale = Locale.forLanguageTag(acceptLang);
+        String language = locale.getDefault().toString().substring(0,2).toLowerCase();
+        String fileExt = null;
+        Lang langFromFileExt = null;
         
         String ifModifiedSince = request.getHeader(HttpHeaders.IF_MODIFIED_SINCE);
         Date modifiedSince = null;
@@ -69,6 +74,14 @@ public class ResolveResource extends HttpServlet {
     
         String requestURI = request.getRequestURI();
         String modelID = requestURI.substring(requestURI.lastIndexOf("/") + 1, requestURI.length());
+        
+        if(modelID.contains(".")) {
+            fileExt = modelID.split("\\.")[1];
+            if(fileExt.equals("jschema")) accept = "application/schema+json";
+            else if(fileExt.equals("xml")) accept = "application/xml";
+            langFromFileExt = RDFLanguages.filenameToLang(modelID);
+            modelID = modelID.split("\\.")[0];
+        }
         String graphName = GraphManager.getServiceGraphNameWithPrefix(modelID);
         
          if(modifiedSince!=null) {
@@ -88,8 +101,14 @@ public class ResolveResource extends HttpServlet {
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
         } else {
         
-                if(rdfLang!=null || accept.equals("application/schema+json")) {
-                    String dis = "/rest/exportModel?graph="+graphName+"&content-type="+accept+"&lang="+acceptLang;
+                if(accept!=null && accept.equals("application/schema+json") || accept.equals("application/schema+xml")) {
+                    String dis = "/rest/exportModel?graph="+graphName+"&content-type="+accept+"&lang="+language;
+                    logger.info("Redirecting to export: "+dis);
+                    RequestDispatcher dispatcher = getServletContext().getRequestDispatcher(dis);
+                    dispatcher.forward(request,response);
+                }
+                else if(rdfLang!=null) {
+                    String dis = "/rest/exportModel?graph="+graphName+"&content-type="+rdfLang.getHeaderString();
                     logger.info("Redirecting to export: "+dis);
                     RequestDispatcher dispatcher = getServletContext().getRequestDispatcher(dis);
                     dispatcher.forward(request,response);

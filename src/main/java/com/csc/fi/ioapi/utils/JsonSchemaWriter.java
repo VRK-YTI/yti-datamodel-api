@@ -269,7 +269,13 @@ public class JsonSchemaWriter {
                     predicate.add("maxItems",1);
 
                     if(jsonDatatype!=null) {
-                       predicate.add("type", jsonDatatype);
+                       
+                           if(jsonDatatype.equals("langString")) {
+                               predicate.add("type","object");
+                               predicate.add("$ref","#/definitions/langString");
+                           }
+                           else
+                               predicate.add("type", jsonDatatype);
                     }
 
                 } else {
@@ -281,7 +287,19 @@ public class JsonSchemaWriter {
                     predicate.add("type", "array");
 
                     if(jsonDatatype!=null) {
-                        predicate.add("items", Json.createObjectBuilder().add("type", jsonDatatype).build());
+                      
+                          JsonObjectBuilder typeObject = Json.createObjectBuilder();
+                            
+                            if(jsonDatatype.equals("langString")) {
+                                typeObject.add("type", "object");
+                                typeObject.add("$ref","#/definitions/langString");
+                            } else {
+                                typeObject.add("type",jsonDatatype);
+                            }
+                            
+                            predicate.add("items", typeObject.build());
+                        
+                        
                     } 
 
                 }
@@ -638,7 +656,12 @@ public class JsonSchemaWriter {
                     predicate.add("maxItems",1);
 
                     if(jsonDatatype!=null) {
-                       predicate.add("type", jsonDatatype);
+                            if(jsonDatatype.equals("langString")) {
+                               predicate.add("type","object");
+                               predicate.add("$ref","#/definitions/langString");
+                           }
+                           else
+                               predicate.add("type", jsonDatatype);
                     }
 
                 } else {
@@ -650,7 +673,19 @@ public class JsonSchemaWriter {
                     predicate.add("type", "array");
 
                     if(jsonDatatype!=null) {
-                        predicate.add("items", Json.createObjectBuilder().add("type", jsonDatatype).build());
+                        
+                        
+                        JsonObjectBuilder typeObject = Json.createObjectBuilder();
+                            
+                            if(jsonDatatype.equals("langString")) {
+                                typeObject.add("type", "object");
+                                typeObject.add("$ref","#/definitions/langString");
+                            } else {
+                                typeObject.add("type",jsonDatatype);
+                            }
+                            
+                            predicate.add("items", typeObject.build());
+                        
                     } 
 
                 }
@@ -1124,8 +1159,8 @@ public class JsonSchemaWriter {
         schema.add("$schema", "http://iow.csc.fi/api/draft05jsonld.json");
         
         schema.add("type","object");
+        definitions.add("langString", getLangStringObject());
         schema.add("definitions", definitions.build());
-        
         return jsonObjectToPrettyString(schema.build());
 }
     
@@ -1135,6 +1170,7 @@ public class JsonSchemaWriter {
         schema.add("$schema", "http://iow.csc.fi/api/draft04jsonld.json");
         
         schema.add("type","object");
+        definitions.add("langString", getLangStringObject());
         schema.add("definitions", definitions.build());
         
         return jsonObjectToPrettyString(schema.build());
@@ -1146,6 +1182,7 @@ public class JsonSchemaWriter {
         
         schema.add("type","object");
         schema.add("allOf", Json.createArrayBuilder().add(properties.build()).build());
+        definitions.add("langString", getLangStringObject());
         schema.add("definitions", definitions.build());
         
         return jsonObjectToPrettyString(schema.build());
