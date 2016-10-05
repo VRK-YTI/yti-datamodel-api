@@ -41,6 +41,8 @@ import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
 import org.apache.jena.atlas.web.ContentType;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
@@ -76,31 +78,24 @@ public class ExportModel {
             @ApiParam(value = "Languages to export") @QueryParam("lang") String lang,
             @ApiParam(value = "Content-type", required = true, allowableValues = "application/ld+json,text/turtle,application/rdf+xml,application/ld+json+context,application/schema+json,application/xml") @QueryParam("content-type") String ctype) {
 
-        out:
-        if(GraphManager.lock.isLocked()) {
+        
+        int wCount = 0;
+        
+        while(GraphManager.lock.isLocked()) {
+            wCount+=1;
             try {
-                TimeUnit.SECONDS.sleep(5);
-                if(GraphManager.lock.isLocked()) {
-                    TimeUnit.SECONDS.sleep(5);
-                    if(GraphManager.lock.isLocked()) {
-                        TimeUnit.SECONDS.sleep(5);
-                        if(GraphManager.lock.isLocked()) {
-                            TimeUnit.SECONDS.sleep(10);
-                            if(GraphManager.lock.isLocked()) {
-                                TimeUnit.SECONDS.sleep(10);
-                                if(GraphManager.lock.isLocked()) {
-                                    return Response.status(423).entity(ErrorMessage.LOCKED).build();
-                                } else break out;
-                             } else break out;
-                        } else break out;
-                    } else break out;
-                } else break out;
-                } catch (InterruptedException ex) {
+                logger.info("Sleeping ...");
+                TimeUnit.SECONDS.sleep(1);
+            } catch (InterruptedException ex) {
                 Logger.getLogger(ExportModel.class.getName()).log(Level.SEVERE, null, ex);
                 return Response.status(423).entity(ErrorMessage.LOCKED).build();
             }
+            if(wCount>500) {
+                logger.warning("GraphManager seems to be locked too long ...");
+                return Response.status(423).entity(ErrorMessage.LOCKED).build();
+            }
         }
-        
+                
          IRI modelIRI;
             try {
                     IRIFactory iri = IRIFactory.semanticWebImplementation();
@@ -129,7 +124,7 @@ public class ExportModel {
                 if(schema!=null) {
                     return Response.ok().entity(schema).type(raw?"text/plain;charset=utf-8":"application/schema+json").build();
                 } else {
-                    return Response.status(403).entity(ErrorMessage.NOTFOUND).build();
+                    return Response.status(403).entity(ErrorMessage.LANGNOTDEFINED).build();
                 }
             } else if(ctype.equals("application/xml")) {
                 
@@ -138,7 +133,7 @@ public class ExportModel {
                 if(schema!=null) {
                     return Response.ok().entity(schema).type(raw?"text/plain;charset=utf-8":"application/schema+json").build();
                 } else {
-                    return Response.status(403).entity(ErrorMessage.NOTFOUND).build();
+                    return Response.status(403).entity(ErrorMessage.LANGNOTDEFINED).build();
                 }
             }
             
