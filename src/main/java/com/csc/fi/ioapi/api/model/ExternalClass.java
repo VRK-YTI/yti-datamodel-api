@@ -186,7 +186,7 @@ public class ExternalClass {
                     + "?predicate rdfs:range rdfs:Resource ."
                     + "BIND(owl:ObjectProperty as ?propertyType) "
                     + "FILTER NOT EXISTS { ?predicate a ?multiType . VALUES ?multiType { owl:DatatypeProperty owl:ObjectProperty } }"
-                    + "}UNION {"
+                    + "} UNION {"
                     /* IF Predicate Type is rdf:Property and range is resource that is class or thing */
                     + "?predicate a rdf:Property . "
                     + "FILTER NOT EXISTS { ?predicate a ?multiType . VALUES ?multiType { owl:DatatypeProperty owl:ObjectProperty } }"
@@ -197,7 +197,7 @@ public class ExternalClass {
                     + "BIND(owl:ObjectProperty as ?propertyType) "
                     + "}"
                     
-                    + "OPTIONAL { ?predicate a owl:DatatypeProperty . ?predicate rdfs:range ?datatype . FILTER (!isBlank(?range))  } "
+                    + "OPTIONAL { ?predicate a owl:DatatypeProperty . ?predicate rdfs:range ?datatype . FILTER (!isBlank(?datatype))  } "
                     + "OPTIONAL { ?predicate a owl:ObjectProperty . ?predicate rdfs:range ?valueClass . } "
 
                     /* Predicate label - if lang unknown create english tag */

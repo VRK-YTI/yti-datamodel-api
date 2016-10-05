@@ -121,7 +121,7 @@ public class ExternalPredicate {
                 + "?predicate rdfs:range ?rangeClass . "
                 + "FILTER(?rangeClass!=rdfs:Literal)"
                 + "?rangeClass a ?rangeClassType . "
-                + "VALUES ?rangeClassType { skos:Concept owl:Thing }"
+                + "VALUES ?rangeClassType { skos:Concept owl:Thing rdfs:Class }"
                 + "BIND(owl:ObjectProperty as ?type) "
                 + "} UNION {"
                 /* IF Predicate type cannot be guessed */
@@ -221,17 +221,19 @@ public class ExternalPredicate {
                 + "BIND(rdf:Property as ?type)"
                 + "} "
                 + "OPTIONAL { ?predicate rdfs:range ?range . FILTER (!isBlank(?range)) }"
-                /* Support only direct range no OWL unions */
-             //   + "OPTIONAL { ?predicate rdfs:domain ?domain .  }"
+                /* TODO: Support only direct range no OWL unions */
+                //   + "OPTIONAL { ?predicate rdfs:domain ?domain .  }"
                 + "OPTIONAL { ?predicate rdfs:label ?labelStr . FILTER(LANG(?labelStr) = '') BIND(STRLANG(STR(?labelStr),'en') as ?label) }"
                 + "OPTIONAL { ?predicate rdfs:label ?label . FILTER(LANG(?label)!='') }"
-                + "VALUES ?commentPred { rdfs:comment skos:definition dcterms:description dc:description }"
-                + "OPTIONAL { ?predicate ?commentPred ?commentStr . FILTER(LANG(?commentStr) = '') BIND(STRLANG(STR(?commentStr),'en') as ?comment) } "
-                + "OPTIONAL { ?predicate ?commentPred ?comment . FILTER(LANG(?comment)!='') }"
-               //  + "OPTIONAL { ?predicate ?commentPred ?commentStr . "
-                 
-              //  + "BIND(STRLANG(?commentStr,'en') as ?comment) "
-              //  + "}"
+                + "VALUES ?predicateCommentPred { rdfs:comment skos:definition dcterms:description dc:description }"
+                   
+                      /* Predicate comments - if lang unknown create english tag */
+                    + "OPTIONAL { ?predicate ?predicateCommentPred ?propertyCommentStr . FILTER(LANG(?propertyCommentStr) = '') "
+                    + "BIND(STRLANG(STR(?propertyCommentStr),'en') as ?comment) }"
+                    
+                    + "OPTIONAL { ?predicate ?predicateCommentPred ?propertyCommentToStr . FILTER(LANG(?propertyCommentToStr)!='') "
+                    + "BIND(STR(?propertyCommentToStr) as ?comment) }"
+
                 + "} "
                 + "}";
         
