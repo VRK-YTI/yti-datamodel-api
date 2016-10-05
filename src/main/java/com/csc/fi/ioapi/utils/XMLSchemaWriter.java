@@ -77,7 +77,6 @@ public class XMLSchemaWriter {
         
         Element complexType = xml.newComplexType(className+"Type",classID);
         
-        logger.info(xml.toString());     
         
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         
@@ -134,7 +133,6 @@ public class XMLSchemaWriter {
        
         if(classMetadata) {
         
-         logger.info("querying class");
             
         String selectResources = 
                 "SELECT ?predicate ?id ?predicateName ?label ?description ?datatype ?shapeRef ?shapeRefName ?min ?max ?minLength ?maxLength ?pattern "
@@ -177,7 +175,6 @@ public class XMLSchemaWriter {
             QuerySolution soln = results.nextSolution();
             String predicateName = soln.getLiteral("predicateName").getString();
             
-            logger.info(predicateName);
             
             if(soln.contains("id")) {
                 predicateName = soln.getLiteral("id").getString();
@@ -246,7 +243,6 @@ public class XMLSchemaWriter {
             if(soln.contains("pattern") || soln.contains("maxLength") || soln.contains("minLength"))  {
                     Element simpleType = xml.newSimpleType(predicateName+"Type");
                     
-                    logger.info(predicateName+"Type");
                     
                     if(soln.contains("pattern")) {
                         Element restriction = xml.newStringRestriction(simpleType);
@@ -477,7 +473,6 @@ public class XMLSchemaWriter {
             if(soln.contains("pattern") || soln.contains("maxLength") || soln.contains("minLength"))  {
                     Element simpleType = xml.newSimpleType(predicateName+"Type");
                     
-                    logger.info(predicateName+"Type");
                     
                     if(soln.contains("pattern")) {
                         Element restriction = xml.newStringRestriction(simpleType);
