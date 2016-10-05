@@ -73,6 +73,13 @@ public class ResolveResource extends HttpServlet {
         String requestURI = request.getRequestURI();
         String modelID = requestURI.substring(requestURI.lastIndexOf("/") + 1, requestURI.length());
         
+        
+        logger.info("Resolving resource:");
+        logger.info(modelID);
+        logger.info(accept);
+        logger.info(language);
+        
+        
         if(modelID.contains(".")) {
             String fileExt = modelID.split("\\.")[1];
             if(fileExt.equals("jschema")) accept = "application/schema+json";
