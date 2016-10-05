@@ -25,22 +25,18 @@ import java.util.Date;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.ws.rs.core.Response;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.datatypes.xsd.XSDDateTime;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
 import org.apache.jena.iri.IRIFactory;
-import org.apache.jena.query.ResultSetFormatter;
 import org.apache.jena.rdf.model.Literal;
-import org.apache.jena.rdf.model.ModelMaker;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.riot.RDFLanguages;
 import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDF;
-import org.apache.jena.vocabulary.RDFS;
 import org.apache.jena.web.DatasetAdapter;
 import org.apache.jena.web.DatasetGraphAccessorHTTP;
 
@@ -54,7 +50,6 @@ public class GraphManager {
     private static final Logger logger = Logger.getLogger(GraphManager.class.getName());
     
     public static ReentrantLock lock = new ReentrantLock();
-
     public static boolean testDefaultGraph() {
 
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
@@ -84,7 +79,6 @@ public class GraphManager {
     
     public static void createExportGraphInRunnable(String graph) {
              lock.lock();
-             
              String queryString = "CONSTRUCT { "
                 + "?model <http://purl.org/dc/terms/hasPart> ?resource . "    
                 + "?ms ?mp ?mo . "
