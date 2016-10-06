@@ -75,6 +75,7 @@ public class ExternalClass {
                 + "?externalModel rdfs:label ?externalModelLabel . "
                 + "?class rdfs:isDefinedBy ?externalModel . "
                 + "?class rdfs:label ?label . "
+                + "?class rdfs:comment ?comment . "
                 + "?class a rdfs:Class . "
                 + "?class dcterms:modified ?modified . "
                 + "} WHERE { "
@@ -86,10 +87,20 @@ public class ExternalClass {
                  + "GRAPH ?externalModel { "
                  + "?class a ?type . "
                  + "VALUES ?type { rdfs:Class owl:Class sh:Shape } "
+                /* GET LABEL */
                  + "{?class rdfs:label ?labelStr . FILTER(LANG(?labelStr) = '') BIND(STRLANG(?labelStr,'en') as ?label) }"
                  + "UNION"
                  + "{ ?class rdfs:label ?label . FILTER(LANG(?label)!='') }"
+                /* GET COMMENT */
+                 + "{ ?class ?commentPred ?commentStr . "
+                 + "VALUES ?commentPred { rdfs:comment skos:definition dcterms:description dc:description prov:definition }"
+                 + "FILTER(LANG(?commentStr) = '') BIND(STRLANG(STR(?commentStr),'en') as ?comment) }"
+                 + "UNION"
+                 + "{ ?class ?commentPred ?comment . "
+                 + "VALUES ?commentPred { rdfs:comment skos:definition dcterms:description dc:description prov:definition }"
+                 + " FILTER(LANG(?comment)!='') }"       
                  + "} "
+
                  + "}";
         
 
@@ -142,12 +153,12 @@ public class ExternalClass {
                     + "?classIRI a ?type . "
                     + "FILTER(STRSTARTS(STR(?classIRI), STR(?externalModel)))"
                     + "VALUES ?type { rdfs:Class owl:Class sh:Shape } "
-                    
+                    /* Get class label */
                      + "{?classIRI rdfs:label ?labelStr . FILTER(LANG(?labelStr) = '') BIND(STRLANG(?labelStr,'en') as ?label) }"
                      + "UNION"
                      + "{ ?classIRI rdfs:label ?label . FILTER(LANG(?label)!='') }"
-                    
-                     + "{ ?classIRI ?commentPred ?commentStr . "
+                     /* Get class comment */
+                    + "{ ?classIRI ?commentPred ?commentStr . "
                      + "VALUES ?commentPred { rdfs:comment skos:definition dcterms:description dc:description prov:definition }"
                      + "FILTER(LANG(?commentStr) = '') BIND(STRLANG(STR(?commentStr),'en') as ?comment) }"
                      + "UNION"
@@ -203,15 +214,16 @@ public class ExternalClass {
                     /* Predicate label - if lang unknown create english tag */
                     + "OPTIONAL {?predicate rdfs:label ?propertyLabelStr . FILTER(LANG(?propertyLabelStr) = '') BIND(STRLANG(?propertyLabelStr,'en') as ?propertyLabel) }"
                     + "OPTIONAL { ?predicate rdfs:label ?propertyLabel . FILTER(LANG(?propertyLabel)!='') }"
-                    
+                   
                     /* Predicate comments - if lang unknown create english tag */
-                    + "OPTIONAL { ?predicate ?predicateCommentPred ?propertyCommentStr . "
+                    + "OPTIONAL { "
                     + "VALUES ?predicateCommentPred { rdfs:comment skos:definition dcterms:description dc:description }"
-                    + "FILTER(LANG(?propertyCommentStr) = '') BIND(STRLANG(STR(?propertyCommentStr),'en') as ?propertyComment) }"
-                    
-                    + "OPTIONAL { ?predicate ?predicateCommentPred ?propertyComment . "
+                    + "?predicate ?predicateCommentPred ?propertyCommentStr . FILTER(LANG(?propertyCommentStr) = '') "
+                    + "BIND(STRLANG(STR(?propertyCommentStr),'en') as ?propertyComment) }"
+                    + "OPTIONAL { "
                     + "VALUES ?predicateCommentPred { rdfs:comment skos:definition dcterms:description dc:description }"
-                    + " FILTER(LANG(?propertyComment)!='') }"
+                    + "?predicate ?predicateCommentPred ?propertyCommentToStr . FILTER(LANG(?propertyCommentToStr)!='') "
+                    + "BIND(?propertyCommentToStr as ?propertyComment) }"
                     
                     + "}"
                     + "} }";

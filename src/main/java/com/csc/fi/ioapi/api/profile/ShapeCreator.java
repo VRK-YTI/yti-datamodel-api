@@ -152,9 +152,13 @@ public class ShapeCreator {
                     + "OPTIONAL {?classIRI rdfs:label ?labelStr . FILTER(LANG(?labelStr) = '') BIND(STRLANG(?labelStr,'en') as ?label) }"
                     + "OPTIONAL {?classIRI rdfs:label ?label . FILTER(LANG(?label)!='') }"
                         
-                    + "OPTIONAL { ?classIRI rdfs:comment ?commentStr . "
-                    + "BIND(STRLANG(STR(?commentStr),'en') as ?comment) "
-                    + "}"
+                    + "VALUES ?commentPred { rdfs:comment skos:definition dcterms:description dc:description }"
+     
+                    + "OPTIONAL { ?classIRI ?commentPred ?classCommentStr . FILTER(LANG(?classCommentStr) = '') "
+                    + "BIND(STRLANG(STR(?classCommentStr),'en') as ?comment) }"
+                    + "OPTIONAL { ?classIRI ?commentPred ?classCommentStr . FILTER(LANG(?classCommentStr)!='') "
+                    + "BIND(STR(?classCommentStr) as ?comment) }"
+                    
                         
                     + "OPTIONAL { "
                     + "?classIRI rdfs:subClassOf* ?superclass . "
@@ -205,13 +209,13 @@ public class ShapeCreator {
                     + "OPTIONAL {?predicate rdfs:label ?propertyLabelStr . FILTER(LANG(?propertyLabelStr) = '') BIND(STRLANG(?propertyLabelStr,'en') as ?propertyLabel) }"
                     + "OPTIONAL { ?predicate rdfs:label ?propertyLabel . FILTER(LANG(?propertyLabel)!='') }"
                     
+                    + "VALUES ?predicateCommentPred { rdfs:comment skos:definition dcterms:description dc:description }"
                     /* Predicate comments - if lang unknown create english tag */
-                    + "OPTIONAL { ?predicate ?predicateCommentPred ?propertyCommentStr . "
-                    + "VALUES ?predicateCommentPred { rdfs:comment skos:definition prov:definition dcterms:description dc:description }"
-                    + "FILTER(LANG(?propertyCommentStr) = '') BIND(STRLANG(?propertyCommentStr,'en') as ?propertyComment) }"
-                    + "OPTIONAL { ?predicate ?predicateCommentPred ?propertyComment . "
-                    + "VALUES ?predicateCommentPred { rdfs:comment skos:definition prov:definition dcterms:description dc:description }"
-                    + " FILTER(LANG(?propertyComment)!='') }"
+                    + "OPTIONAL { ?predicate ?predicateCommentPred ?propertyCommentStr . FILTER(LANG(?propertyCommentStr) = '') "
+                    + "BIND(STRLANG(STR(?propertyCommentStr),'en') as ?propertyComment) }"
+                    + "OPTIONAL { ?predicate ?predicateCommentPred ?propertyCommentToStr . FILTER(LANG(?propertyCommentToStr)!='') "
+                    + "BIND(STR(?propertyCommentToStr) as ?propertyComment) }"
+                    
                         
                     + "}"    
                     + "}"
