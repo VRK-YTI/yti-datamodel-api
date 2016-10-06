@@ -1178,6 +1178,8 @@ public class JsonSchemaWriter {
     
     private static String createModelSchemaWithRoot(JsonObjectBuilder schema, JsonObjectBuilder properties, JsonObjectBuilder definitions) {
         
+        if(definitions==null) return null;
+        
         schema.add("$schema", "http://iow.csc.fi/api/draft04jsonld.json");
         
         schema.add("type","object");

@@ -73,8 +73,6 @@ public class GraphManager {
         //createExportGraphInRunnable(graph);
         ThreadExecutor.pool.execute(new ExportGraphRunnable(graph));
     }
-    
-    
    
     
     public static void createExportGraphInRunnable(String graph) {
@@ -86,12 +84,13 @@ public class GraphManager {
                 + " } WHERE {"
                 + " GRAPH ?model {"
                 + "?ms ?mp ?mo . "
-                + "} GRAPH ?modelHasPartGraph { "
+                + "} OPTIONAL {"
+                + "GRAPH ?modelHasPartGraph { "
                 + " ?model <http://purl.org/dc/terms/hasPart> ?resource . "
                 + " } GRAPH ?resource { "
                 + "?rs ?rp ?ro . "
                 + "}"
-                + "}"; 
+                + "}}"; 
           
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         pss.setCommandText(queryString);
@@ -562,6 +561,30 @@ public static boolean isExistingPrefix(String prefix) {
 
         logger.info(pss.toString());
         logger.log(Level.WARNING, "Updating references in "+modelID.toString());
+
+        UpdateRequest queryObj = pss.asUpdate();
+        UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, services.getCoreSparqlUpdateAddress());
+        qexec.execute();
+
+    }
+    
+     public static void updateReferencesInPositionGraph(IRI modelID, IRI oldID, IRI newID) {
+
+        String query
+                = " DELETE { GRAPH ?graph { ?oldID ?anyp ?anyo . }} "
+                + " INSERT { GRAPH ?graph { ?newID ?anyp ?anyo . }} "
+                + " WHERE { "
+                + "GRAPH ?graph { ?oldID ?anyp ?anyo . }}";
+
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+        pss.setIri("oldID", oldID);
+        pss.setIri("newID", newID);
+        pss.setIri("graph", modelID+"#PositionGraph");
+        pss.setCommandText(query);
+
+        logger.info(pss.toString());
+        logger.log(Level.WARNING, "Updating references in "+modelID.toString()+"#PositionGraph");
 
         UpdateRequest queryObj = pss.asUpdate();
         UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, services.getCoreSparqlUpdateAddress());

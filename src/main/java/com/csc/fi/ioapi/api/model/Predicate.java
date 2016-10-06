@@ -231,6 +231,8 @@ public class Predicate {
                     GraphManager.removeGraph(oldIdIRI);
                     GraphManager.renameID(oldIdIRI,idIRI);
                     GraphManager.updatePredicateReferencesInModel(modelIRI, oldIdIRI, idIRI);
+                    GraphManager.updateReferencesInPositionGraph(modelIRI, oldIdIRI, idIRI);
+                    
                     if(ProvenanceManager.getProvMode()) {
                         ProvenanceManager.renameID(oldid,id);
                     }

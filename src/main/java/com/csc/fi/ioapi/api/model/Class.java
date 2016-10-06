@@ -240,6 +240,8 @@ public class Class {
                     GraphManager.removeGraph(oldIdIRI);
                     GraphManager.renameID(oldIdIRI,idIRI);
                     GraphManager.updateClassReferencesInModel(modelIRI, oldIdIRI, idIRI);
+                    GraphManager.updateReferencesInPositionGraph(modelIRI, oldIdIRI, idIRI);
+                    
                     if(ProvenanceManager.getProvMode()) {
                         ProvenanceManager.renameID(oldid,id);
                     }
