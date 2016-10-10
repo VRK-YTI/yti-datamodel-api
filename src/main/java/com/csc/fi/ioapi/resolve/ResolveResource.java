@@ -16,6 +16,7 @@ import java.util.Date;
 import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
@@ -81,14 +82,14 @@ public class ResolveResource extends HttpServlet {
         
         
         if(modelID.contains(".")) {
-            String fileExt = modelID.split("\\.")[1];
+            String fileExt = modelID.split(Pattern.quote("."))[1];
             if(fileExt.equals("jschema")) accept = "application/schema+json";
             else if(fileExt.equals("xml")) accept = "application/xml";
             if(rdfLang==null) rdfLang = RDFLanguages.filenameToLang(modelID);
-            modelID = modelID.split("\\.")[0];
+            modelID = modelID.split(Pattern.quote("."))[0];
             if(modelID.contains("-")) {
-                modelID = modelID.split("-")[0];
-                language = modelID.split("-")[1];
+                language = modelID.split(Pattern.quote("-"))[1];
+                modelID = modelID.split(Pattern.quote("-"))[0];
             }
         }
         
