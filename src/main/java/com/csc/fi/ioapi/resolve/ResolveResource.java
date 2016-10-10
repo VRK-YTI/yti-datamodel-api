@@ -86,6 +86,10 @@ public class ResolveResource extends HttpServlet {
             else if(fileExt.equals("xml")) accept = "application/xml";
             if(rdfLang==null) rdfLang = RDFLanguages.filenameToLang(modelID);
             modelID = modelID.split("\\.")[0];
+            if(modelID.contains("-")) {
+                modelID = modelID.split("-")[0];
+                language = modelID.split("-")[1];
+            }
         }
         
         String graphName = GraphManager.getServiceGraphNameWithPrefix(modelID);
