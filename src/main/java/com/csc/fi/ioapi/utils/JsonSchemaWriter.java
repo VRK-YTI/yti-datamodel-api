@@ -919,7 +919,7 @@ public class JsonSchemaWriter {
                 + "OPTIONAL { ?property iow:isResourceIdentifier ?idBoolean . }"
                 + "BIND(afn:localname(?predicate) as ?predicateName)"
                 + "}"
-                + "} GROUP BY ?resource ?property ?lang ?className ?classTitle ?classDescription ?predicate ?predicateName ?datatype ?shapeRef ?shapeRefName ?min ?max ?propertyLabel ?propertyDescription "
+                + "} GROUP BY ?resource ?property ?lang ?className ?classTitle ?classDescription ?predicate ?predicateName ?datatype ?shapeRef ?shapeRefName ?min ?max ?propertyLabel ?propertyDescription ?idBoolean "
                 + "ORDER BY ?resource ?property ?lang";
         
         pss.setIri("modelPartGraph", modelID+"#HasPartGraph");
