@@ -90,7 +90,7 @@ public class ResolveResource extends HttpServlet {
             if(modelID.contains("-")) {
                 language = modelID.split(Pattern.quote("-"))[1];
                 modelID = modelID.split(Pattern.quote("-"))[0];
-            }
+            } else language = null;
         }
         
         String graphName = GraphManager.getServiceGraphNameWithPrefix(modelID);
@@ -113,7 +113,7 @@ public class ResolveResource extends HttpServlet {
         } else {
         
                 if(accept!=null && accept.equals("application/schema+json") || accept.equals("application/xml")) {
-                    String dis = "/rest/exportModel?graph="+graphName+"&content-type="+accept+"&lang="+language;
+                    String dis = "/rest/exportModel?graph="+graphName+"&content-type="+accept+(language==null?"":"&lang="+language);
                     logger.info("Redirecting to export: "+dis);
                     RequestDispatcher dispatcher = getServletContext().getRequestDispatcher(dis);
                     dispatcher.forward(request,response);
