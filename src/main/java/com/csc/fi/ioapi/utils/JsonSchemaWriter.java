@@ -77,39 +77,6 @@ public class JsonSchemaWriter {
     }
     
     
-    private static String createDummySchema(JsonObjectBuilder schema, JsonObjectBuilder properties, JsonArrayBuilder required) {
-        
-        /* TODO: Create basic dummy schema without properties */
-        
-        schema.add("$schema", "http://iow.csc.fi/api/draft04jsonld.json");
-        
-        schema.add("properties", properties.build());
-        JsonArray reqArray = required.build();
-        if(!reqArray.isEmpty()) {
-            schema.add("required",reqArray);
-        }
-        
-        return jsonObjectToPrettyString(schema.build());
-  }
-    
-    
-    private static String createDefaultSchema(JsonObjectBuilder schema, JsonObjectBuilder properties, JsonArrayBuilder required) {
-        
-        schema.add("$schema", "http://iow.csc.fi/api/draft04jsonld.json");
-        
-        schema.add("type","object");
-        schema.add("properties", properties.build());
-        JsonArray reqArray = required.build();
-        
-        if(!reqArray.isEmpty()) {
-            schema.add("required",reqArray);
-        }
-        
-        return jsonObjectToPrettyString(schema.build());
-}
-    
-   
-    
     public static String newResourceSchema(String classID, String lang) { 
     
         JsonArrayBuilder required = Json.createArrayBuilder();
@@ -1171,7 +1138,7 @@ public class JsonSchemaWriter {
         
         if(definitions==null) return null;
         
-        schema.add("$schema", "http://iow.csc.fi/api/draft04jsonld.json");
+        schema.add("$schema", "http://json-schema.org/draft-04/schema#");
         
         schema.add("type","object");
         definitions.add("langString", getLangStringObject());
@@ -1184,12 +1151,44 @@ public class JsonSchemaWriter {
         
         if(definitions==null) return null;
         
-        schema.add("$schema", "http://iow.csc.fi/api/draft04jsonld.json");
+        schema.add("$schema", "http://json-schema.org/draft-04/schema#");
         
         schema.add("type","object");
         schema.add("allOf", Json.createArrayBuilder().add(properties.build()).build());
         definitions.add("langString", getLangStringObject());
         schema.add("definitions", definitions.build());
+        
+        return jsonObjectToPrettyString(schema.build());
+}
+    
+    
+    private static String createDummySchema(JsonObjectBuilder schema, JsonObjectBuilder properties, JsonArrayBuilder required) {
+        
+        /* TODO: Create basic dummy schema without properties */
+        
+        schema.add("$schema", "http://json-schema.org/draft-04/schema#");
+        
+        schema.add("properties", properties.build());
+        JsonArray reqArray = required.build();
+        if(!reqArray.isEmpty()) {
+            schema.add("required",reqArray);
+        }
+        
+        return jsonObjectToPrettyString(schema.build());
+  }
+    
+    
+    private static String createDefaultSchema(JsonObjectBuilder schema, JsonObjectBuilder properties, JsonArrayBuilder required) {
+        
+        schema.add("$schema", "http://json-schema.org/draft-04/schema#");
+        
+        schema.add("type","object");
+        schema.add("properties", properties.build());
+        JsonArray reqArray = required.build();
+        
+        if(!reqArray.isEmpty()) {
+            schema.add("required",reqArray);
+        }
         
         return jsonObjectToPrettyString(schema.build());
 }

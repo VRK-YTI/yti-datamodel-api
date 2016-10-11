@@ -151,7 +151,7 @@ public class Class {
                   pss.setIri("library", model);
             }
 
-           // logger.info(pss.toString());
+            logger.info(pss.toString());
             
             return JerseyFusekiClient.constructGraphFromService(pss.toString(), sparqlService);         
 
