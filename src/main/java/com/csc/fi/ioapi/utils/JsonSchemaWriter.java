@@ -1155,7 +1155,9 @@ public class JsonSchemaWriter {
     
      
    private static String createV5ModelSchema(JsonObjectBuilder schema, JsonObjectBuilder definitions) {
-        
+       
+       if(definitions==null) return null;
+       
         schema.add("$schema", "http://iow.csc.fi/api/draft05jsonld.json");
         
         schema.add("type","object");
@@ -1166,6 +1168,8 @@ public class JsonSchemaWriter {
     
      
     private static String createDefaultModelSchema(JsonObjectBuilder schema, JsonObjectBuilder definitions) {
+        
+        if(definitions==null) return null;
         
         schema.add("$schema", "http://iow.csc.fi/api/draft04jsonld.json");
         
