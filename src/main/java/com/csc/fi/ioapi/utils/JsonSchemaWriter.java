@@ -139,7 +139,7 @@ public class JsonSchemaWriter {
          if(classMetadata) {
         
         String selectResources = 
-                "SELECT ?predicate ?id ?property ?valueList ?schemeList ?predicateName ?label ?datatype ?shapeRef ?min ?max ?minLength ?maxLenght ?pattern "
+                "SELECT ?predicate ?id ?property ?valueList ?schemeList ?predicateName ?label ?datatype ?shapeRef ?min ?max ?minLength ?maxLenght ?pattern ?idBoolean "
                 + "WHERE { "
                 + "GRAPH ?resourceID {"
                 + "?resourceID sh:property ?property . "
@@ -159,6 +159,7 @@ public class JsonSchemaWriter {
                 + "OPTIONAL { ?property sh:maxLength ?maxLength . }"
                 + "OPTIONAL { ?property sh:in ?valueList . } "
                 + "OPTIONAL { ?property dcam:memberOf ?schemeList . } "
+                + "OPTIONAL { ?property iow:isResourceIdentifier ?idBoolean . }"
                 + "BIND(afn:localname(?predicate) as ?predicateName)"
                 + "}"
                 + "}";
@@ -174,8 +175,6 @@ public class JsonSchemaWriter {
         
         
         if(!results.hasNext()) return null;
-        
-        properties.add("@id", idProperty());   
         
         while (results.hasNext()) {
             QuerySolution soln = results.nextSolution();
@@ -223,7 +222,17 @@ public class JsonSchemaWriter {
             
             if(soln.contains("datatype")) {
                 String datatype = soln.getResource("datatype").toString();
-                predicate.add("@type", datatype);  
+                
+                    if(soln.contains("idBoolean")) {
+                        Boolean isId = soln.getLiteral("idBoolean").getBoolean();
+                        if(isId) {
+                                 predicate.add("@type", "@id");
+                        } else predicate.add("@type", datatype);
+                    } else {
+                        predicate.add("@type", datatype);
+                    }
+                
+                
                 String jsonDatatype = DATATYPE_MAP.get(datatype);
                  
                 if(soln.contains("min") && soln.getLiteral("min").getInt()>0) {
@@ -483,7 +492,7 @@ public class JsonSchemaWriter {
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         
         String selectResources = 
-                "SELECT ?resource ?scopeClass ?className ?classTitle ?classDescription ?property ?valueList ?schemeList ?predicate ?id ?title ?description ?predicateName ?datatype ?shapeRef ?shapeRefName ?min ?max ?minLength ?maxLength ?pattern "
+                "SELECT ?resource ?scopeClass ?className ?classTitle ?classDescription ?property ?valueList ?schemeList ?predicate ?id ?title ?description ?predicateName ?datatype ?shapeRef ?shapeRefName ?min ?max ?minLength ?maxLength ?pattern ?idBoolean "
                 + "WHERE { "
                 + "GRAPH ?modelPartGraph {"
                 + "?model dcterms:hasPart ?resource . "
@@ -514,6 +523,7 @@ public class JsonSchemaWriter {
                 + "OPTIONAL { ?property sh:maxLength ?maxLength . }"
                 + "OPTIONAL { ?property sh:in ?valueList . } "
                 + "OPTIONAL { ?property dcam:memberOf ?schemeList . } "
+                + "OPTIONAL { ?property iow:isResourceIdentifier ?idBoolean . }"
                 + "BIND(afn:localname(?predicate) as ?predicateName)"
                 + "}"
                 + "}"
@@ -535,9 +545,7 @@ public class JsonSchemaWriter {
         JsonObjectBuilder definitions = Json.createObjectBuilder();
         JsonObjectBuilder properties = Json.createObjectBuilder();
         JsonArrayBuilder required = Json.createArrayBuilder();
-        
-
-        properties.add("@id", idProperty());
+       
         
         while (pResults.hasNext()) {
             QuerySolution soln = pResults.nextSolution();
@@ -597,7 +605,14 @@ public class JsonSchemaWriter {
                   
                 String datatype = soln.getResource("datatype").toString();
                 
-                predicate.add("@type", datatype);
+                    if(soln.contains("idBoolean")) {
+                        Boolean isId = soln.getLiteral("idBoolean").getBoolean();
+                        if(isId) {
+                                 predicate.add("@type", "@id");
+                        } else predicate.add("@type", datatype);
+                    } else {
+                        predicate.add("@type", datatype);
+                    }
                 
                 String jsonDatatype = DATATYPE_MAP.get(datatype);
                 
@@ -713,7 +728,6 @@ public class JsonSchemaWriter {
                     definitions.add(className, classDefinition.build());
                     properties = Json.createObjectBuilder();
                     required = Json.createArrayBuilder();
-                    properties.add("@id", idProperty());
                 } 
             
         }
@@ -879,7 +893,7 @@ public class JsonSchemaWriter {
         
         
         String selectResources = 
-                "SELECT ?resource ?property ?lang ?className ?classTitle ?classDescription ?predicate ?predicateName ?datatype ?shapeRef ?shapeRefName ?min ?max ?propertyLabel ?propertyDescription "
+                "SELECT ?resource ?property ?lang ?className ?classTitle ?classDescription ?predicate ?predicateName ?datatype ?shapeRef ?shapeRefName ?min ?max ?propertyLabel ?propertyDescription ?idBoolean "
                 + "WHERE { "
                 + "GRAPH ?modelPartGraph {"
                 + "?model dcterms:hasPart ?resource . "
@@ -902,6 +916,7 @@ public class JsonSchemaWriter {
                 + "OPTIONAL { ?property sh:valueShape ?shapeRef . BIND(afn:localname(?shapeRef) as ?shapeRefName) }"
                 + "OPTIONAL { ?property sh:minCount ?min . }"
                 + "OPTIONAL { ?property sh:maxCount ?max . }"
+                + "OPTIONAL { ?property iow:isResourceIdentifier ?idBoolean . }"
                 + "BIND(afn:localname(?predicate) as ?predicateName)"
                 + "}"
                 + "} GROUP BY ?resource ?property ?lang ?className ?classTitle ?classDescription ?predicate ?predicateName ?datatype ?shapeRef ?shapeRefName ?min ?max ?propertyLabel ?propertyDescription "
@@ -924,7 +939,6 @@ public class JsonSchemaWriter {
         definitions.add("langString", getLangStringObject());
         
         JsonObjectBuilder properties = Json.createObjectBuilder();
-        properties.add("@id", idProperty());
         JsonArrayBuilder required = Json.createArrayBuilder();
 
         String propertyID = null;
@@ -992,7 +1006,14 @@ public class JsonSchemaWriter {
 
                     String datatype = soln.getResource("datatype").toString();
 
-                    propertyBuilder.add("@type", datatype);
+                    if(soln.contains("idBoolean")) {
+                        Boolean isId = soln.getLiteral("idBoolean").getBoolean();
+                        if(isId) {
+                                 propertyBuilder.add("@type", "@id");
+                        } else propertyBuilder.add("@type", datatype);
+                    } else {
+                        propertyBuilder.add("@type", datatype);
+                    }
 
                     String jsonDatatype = DATATYPE_MAP.get(datatype);
 
@@ -1108,7 +1129,6 @@ public class JsonSchemaWriter {
                     classTitleObject = Json.createObjectBuilder();
                     classDescriptionObject = Json.createObjectBuilder();
                     
-                     properties.add("@id", idProperty());
                     
                 } 
             
