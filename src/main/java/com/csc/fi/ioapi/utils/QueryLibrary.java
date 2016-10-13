@@ -260,6 +260,8 @@ public class QueryLibrary {
                     + "?property sh:predicate ?predicate . "
                     + "?property rdfs:comment ?propertyComment .  "
                     + "?property rdfs:label ?propertyLabel .  "
+                    /* TODO: Fix pointing to AP classes? */
+                    + "?property sh:valueShape ?valueClass . "
                     + "?property sh:class ?valueClass . "
                     + "?property sh:datatype ?datatype . "
                     + "} WHERE { "
