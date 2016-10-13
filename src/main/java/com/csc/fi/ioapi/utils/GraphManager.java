@@ -131,6 +131,12 @@ public class GraphManager {
         logger.info(""+adapter.containsModel(graph));
     }
     
+    public static Model getCoreGraph(String graph){
+        DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(services.getCoreReadWriteAddress());
+        DatasetAdapter adapter = new DatasetAdapter(accessor);
+        return adapter.getModel(graph);
+    }
+    
     public static void updateAllExportGraphs() {
         
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
