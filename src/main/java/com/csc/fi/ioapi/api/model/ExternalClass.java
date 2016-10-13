@@ -131,7 +131,12 @@ public class ExternalClass {
 
             /* TODO: FIX dublin core etc. rdf:Property properties */
             
+            logger.info("Using ext query:");
+            
             String queryString = QueryLibrary.externalClassQuery;
+            
+            
+            logger.info(queryString);
             
             pss.setIri("library", model);
             pss.setIri("modelService",services.getLocalhostCoreSparqlAddress());

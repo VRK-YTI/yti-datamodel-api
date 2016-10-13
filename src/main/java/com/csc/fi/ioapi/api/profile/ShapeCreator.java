@@ -118,8 +118,9 @@ public class ShapeCreator {
             } else {           
             /* Create Shape from external IMPORT */   
                 service = services.getImportsSparqlAddress();
+                logger.info("Using ext query:");
                 queryString = QueryLibrary.externalClassQuery;
-                               
+                logger.info(queryString);           
             }
    
             pss.setCommandText(queryString);
