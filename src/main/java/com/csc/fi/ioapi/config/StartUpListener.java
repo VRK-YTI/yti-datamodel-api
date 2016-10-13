@@ -35,9 +35,9 @@ public class StartUpListener implements ServletContextListener {
         initDefaultNamespaces();
         initCodeServers();
         loadSchemesFromFinto();
-        createExportGraphs();
+        // createExportGraphs();
         
-     //   runPeriodicUpdates();
+       //  runPeriodicUpdates();
         
     }
     

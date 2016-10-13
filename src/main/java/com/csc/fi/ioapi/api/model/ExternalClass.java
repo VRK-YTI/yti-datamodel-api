@@ -18,6 +18,7 @@ import com.csc.fi.ioapi.config.EndpointServices;
 import com.csc.fi.ioapi.utils.ErrorMessage;
 import com.csc.fi.ioapi.utils.JerseyFusekiClient;
 import com.csc.fi.ioapi.utils.LDHelper;
+import com.csc.fi.ioapi.utils.QueryLibrary;
 import org.apache.jena.query.ParameterizedSparqlString;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
@@ -130,103 +131,7 @@ public class ExternalClass {
 
             /* TODO: FIX dublin core etc. rdf:Property properties */
             
-            String queryString = "CONSTRUCT { "
-                    + "?externalModel rdfs:label ?externalModelLabel . "
-                    + "?classIRI rdfs:isDefinedBy ?externalModel . "
-                    + "?classIRI a rdfs:Class . "
-                    + "?classIRI rdfs:label ?label . "
-                    + "?classIRI rdfs:comment ?comment . "
-                    + "?classIRI sh:property ?property . "
-                    + "?property sh:datatype ?datatype . "
-                    + "?property dcterms:type ?propertyType . "
-                    + "?property sh:valueShape ?valueClass . "
-                    + "?property sh:predicate ?predicate . "
-                    + "?property rdfs:label ?propertyLabel . "
-                    + "?property rdfs:comment ?propertyComment . "
-                     + "} WHERE { "
-                     + "SERVICE ?modelService { "
-                     + "GRAPH ?library { "
-                     + "?library dcterms:requires ?externalModel . "
-                    + "?externalModel rdfs:label ?externalModelLabel . "
-                     + "}}"
-                    + "GRAPH ?externalModel {"
-                    + "?classIRI a ?type . "
-                    + "FILTER(STRSTARTS(STR(?classIRI), STR(?externalModel)))"
-                    + "VALUES ?type { rdfs:Class owl:Class sh:Shape } "
-                    /* Get class label */
-                     + "{?classIRI rdfs:label ?labelStr . FILTER(LANG(?labelStr) = '') BIND(STRLANG(?labelStr,'en') as ?label) }"
-                     + "UNION"
-                     + "{ ?classIRI rdfs:label ?label . FILTER(LANG(?label)!='') }"
-                     /* Get class comment */
-                    + "{ ?classIRI ?commentPred ?commentStr . "
-                     + "VALUES ?commentPred { rdfs:comment skos:definition dcterms:description dc:description prov:definition }"
-                     + "FILTER(LANG(?commentStr) = '') BIND(STRLANG(STR(?commentStr),'en') as ?comment) }"
-                     + "UNION"
-                     + "{ ?classIRI ?commentPred ?comment . "
-                     + "VALUES ?commentPred { rdfs:comment skos:definition dcterms:description dc:description prov:definition }"
-                     + " FILTER(LANG(?comment)!='') }"
-                    
-                    + "OPTIONAL { "
-                    + "?classIRI rdfs:subClassOf* ?superclass . "
-                    + "?predicate rdfs:domain ?superclass ."
-                    + "BIND(UUID() AS ?property)"
-                    
-                     + "{"
-                    + "?predicate a owl:DatatypeProperty . "
-                    + "FILTER NOT EXISTS { ?predicate a owl:ObjectProperty }"
-                    + "BIND(owl:DatatypeProperty as ?propertyType) "
-                    + "} UNION {"
-                    + "?predicate a owl:ObjectProperty . "
-                    + "FILTER NOT EXISTS { ?predicate a owl:DatatypeProperty }"
-                    + "BIND(owl:ObjectProperty as ?propertyType) "
-                    + "} UNION {"
-                    /* Treat owl:AnnotationProperty as DatatypeProperty */
-                    + "?predicate a owl:AnnotationProperty. "
-                    + "?predicate rdfs:label ?atLeastSomeLabel . "
-                    + "FILTER NOT EXISTS { ?predicate a owl:DatatypeProperty }"
-                    + "BIND(owl:DatatypeProperty as ?propertyType) "
-                    + "} UNION {"
-                    /* IF Predicate Type is rdf:Property and range is rdfs:Literal = DatatypeProperty */
-                    + "?predicate a rdf:Property . "
-                    + "?predicate rdfs:range rdfs:Literal ."
-                    + "BIND(owl:DatatypeProperty as ?propertyType) "
-                    + "FILTER NOT EXISTS { ?predicate a ?multiType . VALUES ?multiType { owl:DatatypeProperty owl:ObjectProperty } }"
-                     + "} UNION {"
-                    /* IF Predicate Type is rdf:Property and range is rdfs:Resource then property is object property */
-                    + "?predicate a rdf:Property . "
-                    + "?predicate rdfs:range rdfs:Resource ."
-                    + "BIND(owl:ObjectProperty as ?propertyType) "
-                    + "FILTER NOT EXISTS { ?predicate a ?multiType . VALUES ?multiType { owl:DatatypeProperty owl:ObjectProperty } }"
-                    + "} UNION {"
-                    /* IF Predicate Type is rdf:Property and range is resource that is class or thing */
-                    + "?predicate a rdf:Property . "
-                    + "FILTER NOT EXISTS { ?predicate a ?multiType . VALUES ?multiType { owl:DatatypeProperty owl:ObjectProperty } }"
-                    + "?predicate rdfs:range ?rangeClass . "
-                    + "FILTER(?rangeClass!=rdfs:Literal)"
-                    + "?rangeClass a ?rangeClassType . "
-                    + "VALUES ?rangeClassType { skos:Concept owl:Thing }"
-                    + "BIND(owl:ObjectProperty as ?propertyType) "
-                    + "}"
-                    
-                    + "OPTIONAL { ?predicate a owl:DatatypeProperty . ?predicate rdfs:range ?datatype . FILTER (!isBlank(?datatype))  } "
-                    + "OPTIONAL { ?predicate a owl:ObjectProperty . ?predicate rdfs:range ?valueClass . } "
-
-                    /* Predicate label - if lang unknown create english tag */
-                    + "OPTIONAL {?predicate rdfs:label ?propertyLabelStr . FILTER(LANG(?propertyLabelStr) = '') BIND(STRLANG(?propertyLabelStr,'en') as ?propertyLabel) }"
-                    + "OPTIONAL { ?predicate rdfs:label ?propertyLabel . FILTER(LANG(?propertyLabel)!='') }"
-                   
-                    /* Predicate comments - if lang unknown create english tag */
-                    + "OPTIONAL { "
-                    + "VALUES ?predicateCommentPred { rdfs:comment skos:definition dcterms:description dc:description }"
-                    + "?predicate ?predicateCommentPred ?propertyCommentStr . FILTER(LANG(?propertyCommentStr) = '') "
-                    + "BIND(STRLANG(STR(?propertyCommentStr),'en') as ?propertyComment) }"
-                    + "OPTIONAL { "
-                    + "VALUES ?predicateCommentPred { rdfs:comment skos:definition dcterms:description dc:description }"
-                    + "?predicate ?predicateCommentPred ?propertyCommentToStr . FILTER(LANG(?propertyCommentToStr)!='') "
-                    + "BIND(?propertyCommentToStr as ?propertyComment) }"
-                    
-                    + "}"
-                    + "} }";
+            String queryString = QueryLibrary.externalClassQuery;
             
             pss.setIri("library", model);
             pss.setIri("modelService",services.getLocalhostCoreSparqlAddress());
