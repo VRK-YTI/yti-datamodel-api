@@ -244,12 +244,8 @@ public class QueryLibrary {
                     + "}"
                     + "} }");
         
-        
-        
-        /* 
-        Old shape creator query:
-        
-        "CONSTRUCT  { "
+                final public static String externalShapeQuery = LDHelper.expandSparqlQuery(
+                    "CONSTRUCT  { "
                     + "?shapeIRI owl:versionInfo ?draft . "
                     + "?shapeIRI dcterms:modified ?modified . "
                     + "?shapeIRI dcterms:created ?creation . "
@@ -275,28 +271,28 @@ public class QueryLibrary {
                     + "?externalModel rdfs:label ?externalModelLabel . "
                     + "}}"
                     + "GRAPH ?externalModel {"
-
                     + "?classIRI a ?type . "
                     + "FILTER(STRSTARTS(STR(?classIRI), STR(?externalModel)))"
                     + "VALUES ?type { rdfs:Class owl:Class sh:Shape } "
-                        
-                        
-                    + "OPTIONAL {?classIRI rdfs:label ?labelStr . FILTER(LANG(?labelStr) = '') BIND(STRLANG(?labelStr,'en') as ?label) }"
-                    + "OPTIONAL {?classIRI rdfs:label ?label . FILTER(LANG(?label)!='') }"
-                        
-                    + "VALUES ?commentPred { rdfs:comment skos:definition dcterms:description dc:description }"
-     
-                    + "OPTIONAL { ?classIRI ?commentPred ?classCommentStr . FILTER(LANG(?classCommentStr) = '') "
-                    + "BIND(STRLANG(STR(?classCommentStr),'en') as ?comment) }"
-                    + "OPTIONAL { ?classIRI ?commentPred ?classCommentStr . FILTER(LANG(?classCommentStr)!='') "
-                    + "BIND(STR(?classCommentStr) as ?comment) }"
-                    
-                        
+                    /* Labels */
+                     + "{?classIRI rdfs:label ?labelStr . FILTER(LANG(?labelStr) = '') BIND(STRLANG(?labelStr,'en') as ?label) }"
+                     + "UNION"
+                     + "{ ?classIRI rdfs:label ?label . FILTER(LANG(?label)!='') }"
+                    /* Comments */
+                     + "{ ?classIRI ?commentPred ?commentStr . "
+                     + "VALUES ?commentPred { rdfs:comment skos:definition dcterms:description dc:description prov:definition }"
+                     + "FILTER(LANG(?commentStr) = '') BIND(STRLANG(STR(?commentStr),'en') as ?comment) }"
+                     + "UNION"
+                     + "{ ?classIRI ?commentPred ?comment . "
+                     + "VALUES ?commentPred { rdfs:comment skos:definition dcterms:description dc:description prov:definition }"
+                     + " FILTER(LANG(?comment)!='') }"
+                            
                     + "OPTIONAL { "
                     + "?classIRI rdfs:subClassOf* ?superclass . "
                     + "?predicate rdfs:domain ?superclass .  "
-                    + "BIND(UUID() AS ?property)"    
-                    
+                    + "BIND(UUID() AS ?property)"   
+                            
+                    /* Types of properties */        
                     + "{"
                     + "?predicate a owl:DatatypeProperty . "
                     + "FILTER NOT EXISTS { ?predicate a owl:ObjectProperty }"
@@ -330,23 +326,33 @@ public class QueryLibrary {
                     + "BIND(owl:ObjectProperty as ?propertyType) "
                     + "}"
                     
-                    + "OPTIONAL { ?predicate a owl:DatatypeProperty . ?predicate rdfs:range ?datatype . } "
+                            
+                     + "OPTIONAL { ?predicate a owl:DatatypeProperty . ?predicate rdfs:range ?datatype . FILTER (!isBlank(?datatype))  } "
                     + "OPTIONAL { ?predicate a owl:ObjectProperty . ?predicate rdfs:range ?valueClass . } "
-                        
+
+                    /* Predicate label - if lang unknown create english tag */
                     + "OPTIONAL {?predicate rdfs:label ?propertyLabelStr . FILTER(LANG(?propertyLabelStr) = '') BIND(STRLANG(?propertyLabelStr,'en') as ?propertyLabel) }"
                     + "OPTIONAL { ?predicate rdfs:label ?propertyLabel . FILTER(LANG(?propertyLabel)!='') }"
-                    
+                            
+                            
+                   
+                            
+                    /* Predicate comments - if lang unknown create english tag */
+                    + "OPTIONAL { "
                     + "VALUES ?predicateCommentPred { rdfs:comment skos:definition dcterms:description dc:description }"
-                     + "OPTIONAL { ?predicate ?predicateCommentPred ?propertyCommentStr . FILTER(LANG(?propertyCommentStr) = '') "
+                    + "?predicate ?predicateCommentPred ?propertyCommentStr . FILTER(LANG(?propertyCommentStr) = '') "
                     + "BIND(STRLANG(STR(?propertyCommentStr),'en') as ?propertyComment) }"
-                    + "OPTIONAL { ?predicate ?predicateCommentPred ?propertyCommentToStr . FILTER(LANG(?propertyCommentToStr)!='') "
-                    + "BIND(STR(?propertyCommentToStr) as ?propertyComment) }"
-                    
-                        
+                    + "OPTIONAL { "
+                    + "VALUES ?predicateCommentPred { rdfs:comment skos:definition dcterms:description dc:description }"
+                    + "?predicate ?predicateCommentPred ?propertyCommentToStr . FILTER(LANG(?propertyCommentToStr)!='') "
+                    + "BIND(?propertyCommentToStr as ?propertyComment) }"        
+                            
+                            
+                            
+                
+
                     + "}"    
                     + "}"
-                    + "}";
-        
-        */
+                    + "}");
      
 }
