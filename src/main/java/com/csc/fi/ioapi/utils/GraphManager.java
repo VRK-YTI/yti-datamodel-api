@@ -5,8 +5,6 @@ package com.csc.fi.ioapi.utils;
 
 import com.csc.fi.ioapi.config.ApplicationProperties;
 import com.csc.fi.ioapi.config.EndpointServices;
-import java.io.ByteArrayOutputStream;
-import java.text.SimpleDateFormat;
 import org.apache.jena.query.DatasetAccessor;
 import org.apache.jena.query.DatasetAccessorFactory;
 import org.apache.jena.query.ParameterizedSparqlString;
@@ -49,7 +47,15 @@ public class GraphManager {
     static EndpointServices services = new EndpointServices();
     private static final Logger logger = Logger.getLogger(GraphManager.class.getName());
     
+    /**
+     * TODO: Static lock - should be fixed
+     */
     public static ReentrantLock lock = new ReentrantLock();
+
+    /**
+     * Returns true if there are some services defined
+     * @return boolean
+     */
     public static boolean testDefaultGraph() {
 
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
@@ -68,14 +74,20 @@ public class GraphManager {
         }
     }
     
-    
-    public static void createExportGraph(String graph) {
+    /**
+     * Runs createExportGraphInRunnable in runnable
+     * @param graph
+     */
+    public static void createExportGraphInRunnable(String graph) {
         //createExportGraphInRunnable(graph);
         ThreadExecutor.pool.execute(new ExportGraphRunnable(graph));
     }
    
-    
-    public static void createExportGraphInRunnable(String graph) {
+    /**
+     * Creates export graph by joining all the resources to one graph
+     * @param graph model IRI that is used to create export graph
+     */
+    public static void constructExportGraph(String graph) {
              lock.lock();
              String queryString = "CONSTRUCT { "
                 + "?model <http://purl.org/dc/terms/hasPart> ?resource . "    
@@ -114,29 +126,43 @@ public class GraphManager {
           
     }
     
+    /**
+     * Deleted export graph
+     * @param graph IRI of the graph that is going to be deleted
+     */
     public static void deleteExportModel(String graph) {
         DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(services.getCoreReadWriteAddress());
         DatasetAdapter adapter = new DatasetAdapter(accessor);  
         adapter.deleteModel(graph+"#ExportGraph");
     }
     
-    public static void createNewEmptyResourceGraph(String graph, String resource) {
-        logger.info("Creating empty graph to "+graph);
+    /**
+     * Creates new graph with owl:Ontology type
+     * @param graph IRI of the graph to be created
+     */
+    public static void createNewOntologyGraph(String graph) {
         DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(services.getCoreReadWriteAddress());
         DatasetAdapter adapter = new DatasetAdapter(accessor);
         Model empty = ModelFactory.createDefaultModel();
         empty.setNsPrefixes(LDHelper.PREFIX_MAP);
-        empty.add(ResourceFactory.createResource(resource), RDF.type, OWL.Ontology);
+        empty.add(ResourceFactory.createResource(graph), RDF.type, OWL.Ontology);
         adapter.putModel(graph, empty);
-        logger.info(""+adapter.containsModel(graph));
     }
     
+    /**
+     * Returns graph from core service
+     * @param graph IRI of the graph
+     * @return Returns graph as Jena model
+     */
     public static Model getCoreGraph(String graph){
         DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(services.getCoreReadWriteAddress());
         DatasetAdapter adapter = new DatasetAdapter(accessor);
         return adapter.getModel(graph);
     }
     
+    /**
+     * Updates all export graphs
+     */
     public static void updateAllExportGraphs() {
         
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
@@ -158,13 +184,17 @@ public class GraphManager {
             QuerySolution soln = results.nextSolution();
             String graphName = soln.getResource("name").toString();
             if(!isExistingGraph(graphName+"#ExportGraph")) {
-                createExportGraph(graphName);
+                constructExportGraph(graphName);
             }
         }
 
     }
     
-    
+    /**
+     * Test if model status restricts removing of the model
+     * @param graphIRI IRI of the graph
+     * @return Returns true if model status or resource status is "Draft" or "Recommendation".
+     */
     public static boolean modelStatusRestrictsRemoving(IRI graphIRI) {
 
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
@@ -197,7 +227,12 @@ public class GraphManager {
         }
     }
     
-public static boolean isExistingPrefix(String prefix) {
+    /**
+     * TODO: Check also against known model from lov etc?
+     * @param prefix Used prefix of the namespace
+     * @return true if prefix is in use by existing model or standard
+     */
+    public static boolean isExistingPrefix(String prefix) {
 
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         String queryString = " ASK { {GRAPH ?graph { ?s ?p ?o . }} UNION { ?s a dcterms:Standard . ?s dcap:preferredXMLNamespacePrefix ?prefix . }}";
@@ -217,6 +252,11 @@ public static boolean isExistingPrefix(String prefix) {
         }
     }
     
+    /**
+     * Check if Graph is existing
+     * @param graphIRI IRI of the graphs
+     * @return Returns true if Graph with the given IRI
+     */
     public static boolean isExistingGraph(IRI graphIRI) {
 
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
@@ -236,6 +276,11 @@ public static boolean isExistingPrefix(String prefix) {
         }
     }
     
+    /**
+     * Check if there exists a Graph that uses the given prefix
+     * @param prefix Prefix given to the namespace
+     * @return Returns true prefix is in use
+     */
     public static boolean isExistingGraphBasedOnPrefix(String prefix) {
 
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
@@ -255,6 +300,11 @@ public static boolean isExistingPrefix(String prefix) {
         }
     }
     
+    /**
+     * Test if IRI is valid
+     * @param iriString String representation of a IRI to be tested
+     * @return Returns true if IRI can be created with the given parameter
+     */
     public static boolean testIRI(String iriString) {
            try {
               IRI iri = IRIFactory.uriImplementation().construct(iriString);
@@ -265,6 +315,11 @@ public static boolean isExistingPrefix(String prefix) {
            return true;
     }
     
+    /**
+     * Returns service graph IRI as string with given prefix
+     * @param prefix Prefix used in some model
+     * @return Returns graph IRI with given prefix
+     */
     public static String getServiceGraphNameWithPrefix(String prefix) {
 
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
@@ -297,7 +352,11 @@ public static boolean isExistingPrefix(String prefix) {
 
     }
     
-    
+    /**
+     * Test if namespace exists as NamedGraph in GraphCollection
+     * @param graphIRI IRI of the graph as String
+     * @return Returns true if there is a graph in Service description
+     */
     public static boolean isExistingServiceGraph(String graphIRI) {
 
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
@@ -311,7 +370,6 @@ public static boolean isExistingPrefix(String prefix) {
                 " ?graph sd:name ?graphName . "+
                 "}}";
         
-        // TODO: FIXME. Graph IRIs dont end in #
         if(graphIRI.endsWith("#")) graphIRI = graphIRI.substring(0,graphIRI.length()-1);
         
         pss.setCommandText(queryString);
@@ -328,6 +386,11 @@ public static boolean isExistingPrefix(String prefix) {
         }
     }
     
+    /**
+     * Test if Core graph exists with some triples in it
+     * @param graphIRI Graph IRI as String
+     * @return Returns true if there exists Graph identified with the given IRI 
+     */
     public static boolean isExistingGraph(String graphIRI) {
 
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
@@ -346,6 +409,9 @@ public static boolean isExistingPrefix(String prefix) {
         }
     }
 
+    /**
+     * Initializes Core service with default Graph from static resources file
+     */
     public static void createDefaultGraph() {
 
         DatasetAccessor accessor = DatasetAccessorFactory.createHTTP(services.getCoreReadWriteAddress());
@@ -357,6 +423,11 @@ public static boolean isExistingPrefix(String prefix) {
 
     }
 
+    /**
+     * Builds DROP query by querying model resource graphs
+     * @param model Model id as IRI String
+     * @return Returns remove query as string
+     */
     public static String buildRemoveModelQuery(String model) {
 
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
@@ -384,6 +455,10 @@ public static boolean isExistingPrefix(String prefix) {
 
     }
 
+    /**
+     * Removes all graphs related to the model graph
+     * @param id IRI of the graph
+     */
     public static void removeModel(IRI id) {
 
         String query = buildRemoveModelQuery(id.toString());
@@ -408,6 +483,10 @@ public static boolean isExistingPrefix(String prefix) {
         }
     }
     
+    /**
+     * TODO: remove when resolved JENA-1255. This removes model graph by putting empty model to the graph.
+     * @param id
+     */
     public static void namespaceBugFix(String id) {
         DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(services.getCoreReadWriteAddress());
         DatasetAdapter adapter = new DatasetAdapter(accessor);
@@ -415,6 +494,10 @@ public static boolean isExistingPrefix(String prefix) {
         adapter.putModel(id, empty);
     }
 
+    /**
+     * Tries to remove single graph
+     * @param id IRI of the graph to be removed
+     */
     public static void removeGraph(IRI id) {
 
         String query = "DROP GRAPH ?graph ;";
@@ -435,6 +518,10 @@ public static boolean isExistingPrefix(String prefix) {
         }
     }
 
+    /**
+     * Tries to Delete contents of the resource graphs linked to the model graph
+     * @param model String representing the IRI of an model graph
+     */
     public static void deleteResourceGraphs(String model) {
 
         String query = "DELETE { GRAPH ?graph { ?s ?p ?o . } } WHERE { GRAPH ?graph { ?s ?p ?o . ?graph rdfs:isDefinedBy ?model . } }";
@@ -449,7 +536,7 @@ public static boolean isExistingPrefix(String prefix) {
         UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, services.getCoreSparqlUpdateAddress());
         qexec.execute();
 
-        /* OPTIONALLY
+        /* OPTIONALLY. Ummm. Not really?
         
          UpdateRequest request = UpdateFactory.create() ;
          request.add("DROP ALL")
@@ -458,9 +545,15 @@ public static boolean isExistingPrefix(String prefix) {
          */
     }
     
-        public static void deleteExternalGraphReferences(String model) {
+    /**
+     * TODO: Remove!? Not in use. Fixed in front?
+     * @param model
+     */
+    public static void deleteExternalGraphReferences(String model) {
 
-        String query = "DELETE { GRAPH ?graph { ?any rdfs:label ?label . } } WHERE { GRAPH ?graph { "
+        String query = "DELETE { "
+                + "GRAPH ?graph { ?any rdfs:label ?label . } } "
+                + "WHERE { GRAPH ?graph { "
                 + "?graph dcterms:requires ?any . "
                 + "?any a dcap:MetadataVocabulary . "
                 + "?any rdfs:label ?label . "
@@ -477,7 +570,11 @@ public static boolean isExistingPrefix(String prefix) {
         qexec.execute();
     }
     
-        public static void updateModifyDates(String resource) {
+    /**
+     * Tries to update the dcterms:modified date of an resource
+     * @param resource IRI of an Resource as String
+     */
+    public static void updateModifyDates(String resource) {
 
         String query =
                   "DELETE { GRAPH ?resource { ?resource dcterms:modified ?oldModDate . } } "
@@ -496,6 +593,9 @@ public static boolean isExistingPrefix(String prefix) {
     
     }
 
+    /**
+     * Deletes all graphs from Core service.
+     */
     public static void deleteGraphs() {
 
         String query = "DROP ALL";
@@ -522,11 +622,11 @@ public static boolean isExistingPrefix(String prefix) {
     }
     
     
-    public static void renameIDReferences(IRI oldIdIRI, IRI idIRI) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-    
-
+    /**
+     * Renames IRI:s in HasPart-graph
+     * @param oldID Old id IRI
+     * @param newID New id IRI
+     */
     public static void renameID(IRI oldID, IRI newID) {
 
         String query
@@ -548,6 +648,12 @@ public static boolean isExistingPrefix(String prefix) {
 
     }
     
+    /**
+     * Renames Association target IRI:s
+     * @param modelID Model IRI
+     * @param oldID Old resource IRI
+     * @param newID New resource IRI
+     */
     public static void updateClassReferencesInModel(IRI modelID, IRI oldID, IRI newID) {
 
         String query
@@ -574,7 +680,13 @@ public static boolean isExistingPrefix(String prefix) {
 
     }
     
-     public static void updateReferencesInPositionGraph(IRI modelID, IRI oldID, IRI newID) {
+    /**
+     * Updates IRI:s in Position-graph
+     * @param modelID Model IRI
+     * @param oldID Old resource IRI
+     * @param newID New resource IRI
+     */
+    public static void updateReferencesInPositionGraph(IRI modelID, IRI oldID, IRI newID) {
 
         String query
                 = " DELETE { GRAPH ?graph { ?oldID ?anyp ?anyo . }} "
@@ -598,7 +710,13 @@ public static boolean isExistingPrefix(String prefix) {
 
     }
     
-       public static void updatePredicateReferencesInModel(IRI modelID, IRI oldID, IRI newID) {
+    /**
+     * Renames Predicate IRI:s
+     * @param modelID Model IRI
+     * @param oldID Old Predicate IRI
+     * @param newID New Predicate IRI
+     */
+    public static void updatePredicateReferencesInModel(IRI modelID, IRI oldID, IRI newID) {
 
         String query
                 = " DELETE { GRAPH ?graph { ?any sh:predicate ?oldID }} "
@@ -624,6 +742,11 @@ public static boolean isExistingPrefix(String prefix) {
 
     }
 
+    /**
+     * Inserts Resource reference to models HasPartGraph and model reference to Resource graph
+     * @param graph Resource graph IRI as String
+     * @param model Model graph IRI as String
+     */
     public static void insertNewGraphReferenceToModel(String graph, String model) {
 
         String timestamp = SafeDateFormat.fmt().format(new Date());
@@ -652,7 +775,12 @@ public static boolean isExistingPrefix(String prefix) {
 
     }
     
-     public static void insertNewGraphReferenceToExportGraph(String graph, String model) {
+    /**
+     * Insert new graph reference to export graph. In some cases it makes more sense to do small changes than create the whole export graph again.
+     * @param graph Resource IRI as String
+     * @param model Model IRI as String
+     */
+    public static void insertNewGraphReferenceToExportGraph(String graph, String model) {
 
         String query
                 = " INSERT { "
@@ -677,7 +805,11 @@ public static boolean isExistingPrefix(String prefix) {
 
     }
     
-
+    /**
+     * Add existing Resource to the model as Resource reference. Inserts only the reference to models HasPartGraph.
+     * @param graph Resource IRI as String
+     * @param model Model IRI as String
+     */
     public static void insertExistingGraphReferenceToModel(String graph, String model) {
 
         String query
@@ -697,6 +829,11 @@ public static boolean isExistingPrefix(String prefix) {
 
     }
 
+    /**
+     * Removes Resource-graph reference from models HasPartGraph
+     * @param graph Resource IRI reference to be removed
+     * @param model Model IRI
+     */
     public static void deleteGraphReferenceFromModel(IRI graph, IRI model) {
 
         String query
@@ -717,7 +854,15 @@ public static boolean isExistingPrefix(String prefix) {
 
     }
 
-        public static void addGraphFromServiceToService(String fromGraph, String toGraph, String fromService, String toService) throws NullPointerException {
+    /**
+     * Copies graph from one Service to another Service
+     * @param fromGraph Existing graph in original service as String
+     * @param toGraph  New graph IRI as String
+     * @param fromService Service where graph exists
+     * @param toService Service where graph is copied
+     * @throws NullPointerException
+     */
+    public static void addGraphFromServiceToService(String fromGraph, String toGraph, String fromService, String toService) throws NullPointerException {
         
         DatasetAccessor fromAccessor = DatasetAccessorFactory.createHTTP(fromService);
         Model graphModel = fromAccessor.getModel(fromGraph);
@@ -731,6 +876,12 @@ public static boolean isExistingPrefix(String prefix) {
         
     }
         
+    /**
+     * Copies graph to another graph in Core service
+     * @param fromGraph Graph IRI as string
+     * @param toGraph New copied graph IRI as string
+     * @throws NullPointerException
+     */
     public static void addCoreGraphToCoreGraph(String fromGraph, String toGraph) throws NullPointerException {
         
         DatasetAccessor fromAccessor = DatasetAccessorFactory.createHTTP(services.getCoreReadWriteAddress());
@@ -743,6 +894,11 @@ public static boolean isExistingPrefix(String prefix) {
         fromAccessor.putModel(toGraph, graphModel);
     }
 
+    /**
+     * Put model to graph
+     * @param model Jena model
+     * @param id IRI of the graph as String
+     */
     public static void putToGraph(Model model, String id) {
         
       DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(services.getCoreReadWriteAddress());
@@ -753,7 +909,11 @@ public static boolean isExistingPrefix(String prefix) {
         
     }
     
-    
+    /**
+     * Constructs JSON-LD from graph
+     * @param query SPARQL query as string
+     * @return Returns JSON-LD object
+     */
     public static String constructFromGraph(String query){
         
         QueryExecution qexec = QueryExecutionFactory.sparqlService(services.getCoreSparqlAddress(), query);
@@ -762,6 +922,11 @@ public static boolean isExistingPrefix(String prefix) {
        
     }
 
+    /**
+     * Returns date when the model was last modified from the Export graph
+     * @param graphName Graph IRI as string
+     * @return Returns date
+     */
     public static Date lastModified(String graphName) {
     
      ParameterizedSparqlString pss = new ParameterizedSparqlString();

@@ -264,7 +264,7 @@ public class Models {
         }
 
            
-        GraphManager.createExportGraph(graph);
+        GraphManager.createExportGraphInRunnable(graph);
            
         Logger.getLogger(Models.class.getName()).log(Level.INFO, graph+" updated sucessfully!");
 
@@ -343,7 +343,7 @@ public class Models {
             Logger.getLogger(Models.class.getName()).log(Level.INFO, graph+" updated sucessfully!");
            
             try {
-                GraphManager.createNewEmptyResourceGraph(graph+"#PositionGraph",graph+"#PositionGraph");
+                GraphManager.createNewOntologyGraph(graph+"#PositionGraph");
                 GraphManager.addCoreGraphToCoreGraph(graph, graph+"#ExportGraph");
             } catch(Exception ex) {
                 logger.warning("Unexpected error in creating Export graph");

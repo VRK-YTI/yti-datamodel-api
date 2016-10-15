@@ -266,7 +266,7 @@ public class Class {
                 ProvenanceManager.createProvenanceGraph(id, body, login.getEmail(), provUUID); 
            }
            
-           GraphManager.createExportGraph(model);
+           GraphManager.createExportGraphInRunnable(model);
 
         } else {
              /* IF NO JSON-LD POSTED TRY TO CREATE REFERENCE FROM MODEL TO CLASS ID */
@@ -275,7 +275,7 @@ public class Class {
                 Response.status(403).entity(ErrorMessage.USEDIRI).build();
             } else {
                 GraphManager.insertExistingGraphReferenceToModel(id, model);
-                GraphManager.createExportGraph(model);
+                GraphManager.createExportGraphInRunnable(model);
                 ConceptMapper.addConceptFromReferencedResource(model,id);
                 return Response.status(204).build();
             }
@@ -419,14 +419,14 @@ public class Class {
        if(id.startsWith(model)) {
            /* Remove graph */
             Response resp = JerseyFusekiClient.deleteGraphFromService(id, services.getCoreReadWriteAddress());   
-            GraphManager.createExportGraph(model);
+            GraphManager.createExportGraphInRunnable(model);
            // ConceptMapper.removeUnusedConcepts(model);
             return resp;
         } else {
         /* If removing referenced class */   
         /* TODO: Add response to GraphManager? */   
              GraphManager.deleteGraphReferenceFromModel(idIRI,modelIRI);
-             GraphManager.createExportGraph(model);
+             GraphManager.createExportGraphInRunnable(model);
           // ConceptMapper.removeUnusedConcepts(model);
              return Response.status(204).build();   
        }

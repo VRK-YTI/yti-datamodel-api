@@ -263,7 +263,7 @@ public class Predicate {
            ProvenanceManager.createProvenanceGraph(id, body, login.getEmail(), provUUID); 
         }
         
-        GraphManager.createExportGraph(model);
+        GraphManager.createExportGraphInRunnable(model);
         
             
         } else {
@@ -274,7 +274,7 @@ public class Predicate {
             } else {
                 GraphManager.insertExistingGraphReferenceToModel(id, model);
                 ConceptMapper.addConceptFromReferencedResource(model,id);
-                GraphManager.createExportGraph(model);
+                GraphManager.createExportGraphInRunnable(model);
         
                 return Response.status(204).build();
             }
@@ -413,7 +413,7 @@ public class Predicate {
         /* If removing referenced predicate */   
          GraphManager.deleteGraphReferenceFromModel(idIRI,modelIRI);
          
-         GraphManager.createExportGraph(model);
+         GraphManager.createExportGraphInRunnable(model);
         // ConceptMapper.removeUnusedConcepts(model);
          return Response.status(204).build();   
        }

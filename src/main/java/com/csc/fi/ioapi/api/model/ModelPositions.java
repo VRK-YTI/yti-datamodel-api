@@ -130,7 +130,7 @@ public class ModelPositions {
                           
             Logger.getLogger(ModelPositions.class.getName()).log(Level.INFO, model+" coordinates updated sucessfully!");
           
-            GraphManager.createExportGraph(model);
+            GraphManager.createExportGraphInRunnable(model);
             
             return Response.status(204).entity("{}").build();
 

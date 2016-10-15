@@ -19,7 +19,7 @@ public class ExportGraphRunnable implements Runnable {
     
     @Override
     public void run() {
-        GraphManager.createExportGraphInRunnable(graph);
+        GraphManager.constructExportGraph(graph);
     }
     
 }
