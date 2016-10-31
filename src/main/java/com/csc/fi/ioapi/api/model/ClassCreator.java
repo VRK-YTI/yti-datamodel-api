@@ -13,6 +13,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import com.csc.fi.ioapi.config.EndpointServices;
 import com.csc.fi.ioapi.utils.ConceptMapper;
+import com.csc.fi.ioapi.utils.JerseyResponseManager;
 import com.csc.fi.ioapi.utils.ErrorMessage;
 import com.csc.fi.ioapi.utils.JerseyFusekiClient;
 import com.csc.fi.ioapi.utils.LDHelper;
@@ -55,11 +56,11 @@ public class ClassCreator {
 
             IRI conceptIRI,modelIRI;
             try {
-                    IRIFactory iri = IRIFactory.semanticWebImplementation();
+                    IRIFactory iri = IRIFactory.iriImplementation();
                     conceptIRI = iri.construct(conceptID);
                     modelIRI = iri.construct(modelID);
             } catch (IRIException e) {
-                    return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
+                    return JerseyResponseManager.invalidIRI();
             }
 
            // ConceptMapper.updateConceptFromConceptService(conceptID);

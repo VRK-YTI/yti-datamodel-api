@@ -41,7 +41,7 @@ public class NamespaceResolver {
                 IRI alternativeIRI = null;
                 
                 try {
-                        IRIFactory iri = IRIFactory.semanticWebImplementation();
+                        IRIFactory iri = IRIFactory.iriImplementation();
                         namespaceIRI = iri.construct(namespace);
                         
                         if(alternativeURL!=null) {

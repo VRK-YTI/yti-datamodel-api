@@ -27,6 +27,7 @@ import com.github.jsonldjava.utils.JsonUtils;
 import org.apache.jena.query.DatasetAccessor;
 import org.apache.jena.query.DatasetAccessorFactory;
 import org.apache.jena.query.ParameterizedSparqlString;
+import com.csc.fi.ioapi.utils.JerseyResponseManager;
 import org.apache.jena.rdf.model.Model;
 import com.sun.jersey.api.client.ClientHandlerException;
 import com.sun.jersey.api.client.ClientResponse;
@@ -88,20 +89,20 @@ public class ExportModel {
                 TimeUnit.SECONDS.sleep(1);
             } catch (InterruptedException ex) {
                 Logger.getLogger(ExportModel.class.getName()).log(Level.SEVERE, null, ex);
-                return Response.status(423).entity(ErrorMessage.LOCKED).build();
+                return JerseyResponseManager.locked();
             }
             if(wCount>500) {
                 logger.warning("GraphManager seems to be locked too long ...");
-                return Response.status(423).entity(ErrorMessage.LOCKED).build();
+                return JerseyResponseManager.locked();
             }
         }
                 
          IRI modelIRI;
             try {
-                    IRIFactory iri = IRIFactory.semanticWebImplementation();
+                    IRIFactory iri = IRIFactory.iriImplementation();
                     modelIRI = iri.construct(graph);
             } catch (IRIException e) {
-                    return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
+                    return JerseyResponseManager.invalidIRI();
             }
             
             ctype = ctype.replace(" ", "+");
@@ -109,9 +110,9 @@ public class ExportModel {
             if(ctype.equals("application/ld+json+context")) {
                 String context = ContextWriter.newModelContext(graph);
                 if(context!=null) {
-                    return Response.ok().entity(context).type(raw?"text/plain;charset=utf-8":"application/json").build();
+                    return JerseyResponseManager.ok(context,raw?"text/plain;charset=utf-8":"application/json");
                 } else {
-                    return Response.status(403).entity(ErrorMessage.NOTFOUND).build();
+                    return JerseyResponseManager.notFound();
                 }
             } else if(ctype.equals("application/schema+json")) {
                 String schema = null;
@@ -122,18 +123,18 @@ public class ExportModel {
                     schema = JsonSchemaWriter.newMultilingualModelSchema(graph);
                 }
                 if(schema!=null) {
-                    return Response.ok().entity(schema).type(raw?"text/plain;charset=utf-8":"application/schema+json").build();
+                    return JerseyResponseManager.ok(schema,raw?"text/plain;charset=utf-8":"application/schema+json");
                 } else {
-                    return Response.status(403).entity(ErrorMessage.LANGNOTDEFINED).build();
+                    return JerseyResponseManager.langNotDefined();
                 }
             } else if(ctype.equals("application/xml")) {
                 
                 String schema = XMLSchemaWriter.newModelSchema(graph, lang);
                
                 if(schema!=null) {
-                    return Response.ok().entity(schema).type(raw?"text/plain;charset=utf-8":"application/schema+json").build();
+                    return JerseyResponseManager.ok(schema,raw?"text/plain;charset=utf-8":"application/xml");
                 } else {
-                    return Response.status(403).entity(ErrorMessage.LANGNOTDEFINED).build();
+                    return JerseyResponseManager.langNotDefined();
                 }
             }
             
@@ -145,7 +146,7 @@ public class ExportModel {
             
             if(rdfLang==null) {
                 logger.info("Unknown RDF type: "+ctype);
-                return Response.status(403).entity(ErrorMessage.NOTFOUND).build();
+                return JerseyResponseManager.notFound();
             }
 
 
@@ -157,9 +158,10 @@ public class ExportModel {
             ClientResponse response = JerseyFusekiClient.getGraphClientResponseFromService(graph+"#ExportGraph", services.getCoreReadAddress(),ctype);
           
             if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-                return Response.status(400).entity(ErrorMessage.UNEXPECTED).build();
+                return JerseyResponseManager.unexpected();
             }
 
+            /* TODO: Remove builders */
             ResponseBuilder rb;
             RDFDataMgr.write(out, model, rdfLang);
 
@@ -170,7 +172,7 @@ public class ExportModel {
                     jsonModel = (Map<String, Object>) JsonUtils.fromString(out.toString());
                 } catch (IOException ex) {
                     Logger.getLogger(ExportModel.class.getName()).log(Level.SEVERE, null, ex);
-                    return Response.status(400).entity(ErrorMessage.UNEXPECTED).build();
+                    return JerseyResponseManager.unexpected();
                 }
 
                 Map<String, Object> frame = new HashMap<String, Object>();
@@ -203,12 +205,12 @@ public class ExportModel {
                         return rb.entity(JsonUtils.toString(data)).build();
                     } catch (JsonLdError ex) {
                         logger.log(Level.SEVERE, null, ex);
-                        return Response.serverError().entity("{}").build();
+                        return JerseyResponseManager.serverError();
                     }
 
                 } catch (IOException ex) {
                     logger.log(Level.SEVERE, null, ex);
-                    return Response.serverError().entity("{}").build();
+                    return JerseyResponseManager.serverError();
                 }
 
             } else {
@@ -226,7 +228,7 @@ public class ExportModel {
 
         } catch (UniformInterfaceException | ClientHandlerException ex) {
             logger.log(Level.WARNING, "Expect the unexpected!", ex);
-            return Response.serverError().entity("{}").build();
+            return JerseyResponseManager.serverError();
         }
 
     }

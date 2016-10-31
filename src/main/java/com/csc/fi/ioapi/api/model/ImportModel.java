@@ -13,7 +13,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import com.csc.fi.ioapi.config.EndpointServices;
 import com.csc.fi.ioapi.utils.ErrorMessage;
-import com.csc.fi.ioapi.utils.GraphManager;
+import com.csc.fi.ioapi.utils.JerseyResponseManager;
 import com.csc.fi.ioapi.utils.ImportManager;
 import com.csc.fi.ioapi.utils.JerseyFusekiClient;
 import com.csc.fi.ioapi.utils.ServiceDescriptionManager;
@@ -65,17 +65,17 @@ public class ImportModel {
       /* TODO: Add API key? */
       
        if(graph.equals("default")) {
-           return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
+           return JerseyResponseManager.invalidIRI();
        }
        
        IRI graphIRI, namespaceIRI;
        
        try {
-            IRIFactory iri = IRIFactory.semanticWebImplementation();
+            IRIFactory iri = IRIFactory.iriImplementation();
             graphIRI = iri.construct(graph);
             namespaceIRI = iri.construct(graph+"#");
         } catch (IRIException e) {
-            return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
+            return JerseyResponseManager.invalidIRI();
         }
        
        ServiceDescriptionManager.createGraphDescription(graph, group, null);
@@ -85,7 +85,7 @@ public class ImportModel {
 
        if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
                logger.log(Level.WARNING, "Unexpected: import failed: "+graph);
-               return Response.status(response.getStatus()).entity(ErrorMessage.UNEXPECTED).build();
+               return JerseyResponseManager.unexpected(response.getStatus());
        }
 
         logger.log(Level.INFO, graph+" updated sucessfully!");
@@ -100,7 +100,7 @@ public class ImportModel {
         ImportManager.updateModelNamespaceInfo(graph, namespaceIRI.toString(), model.getNsURIPrefix(namespaceIRI.toString()));
         ImportManager.createResourceGraphs(graph, prefixMap);
 
-        return Response.status(204).build();
+        return JerseyResponseManager.okNoContent();
 
   }
   

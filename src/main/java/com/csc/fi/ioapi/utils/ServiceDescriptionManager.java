@@ -181,4 +181,39 @@ public class ServiceDescriptionManager {
     }
     
     
+    public static void renameServiceGraphName(String oldGraph, String newGraph) {
+    
+        String query = 
+        "DELETE { "+
+         "GRAPH <urn:csc:iow:sd> { "+
+  	 "?namedGraph sd:name ?graph . "+
+         "}"+
+        "}"+
+        "INSERT {"+
+          "GRAPH <urn:csc:iow:sd> {"+
+ 	  "?namedGraph sd:name ?newIRI . "+
+          "}"+
+        "}"+
+        "WHERE { "+
+          "GRAPH <urn:csc:iow:sd> {"+
+          "?graphs sd:namedGraph ?namedGraph ."+
+          "?namedGraph sd:name ?graph . }"+
+          //"FILTER(?graph=<http://iow.csc.fi/ap/oiliu>)"+
+          //"BIND(IRI(STR('http://iow.csc.fi/ns/oiliu')) as ?newIRI) }"
+        "}";
+        
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+
+        pss.setIri("graph", oldGraph);
+        pss.setIri("newIRI", newGraph);
+        pss.setCommandText(query);
+
+        UpdateRequest queryObj = pss.asUpdate();
+        UpdateProcessor qexec=UpdateExecutionFactory.createRemoteForm(queryObj,services.getCoreSparqlUpdateAddress());
+        qexec.execute();
+        
+    }
+    
+    
 }

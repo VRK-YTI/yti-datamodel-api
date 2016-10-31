@@ -5,6 +5,7 @@ package com.csc.fi.ioapi.utils;
 
 import com.csc.fi.ioapi.config.ApplicationProperties;
 import com.csc.fi.ioapi.config.EndpointServices;
+import static com.csc.fi.ioapi.utils.GraphManager.services;
 import org.apache.jena.query.ParameterizedSparqlString;
 import org.apache.jena.update.UpdateExecutionFactory;
 import org.apache.jena.update.UpdateProcessor;
@@ -14,6 +15,7 @@ import java.util.UUID;
 import java.util.logging.Logger;
 import javax.ws.rs.core.Response;
 import org.apache.jena.iri.IRI;
+import org.apache.jena.rdf.model.Model;
 import org.apache.jena.web.DatasetAdapter;
 import org.apache.jena.web.DatasetGraphAccessorHTTP;
 
@@ -28,6 +30,20 @@ public class ProvenanceManager {
     
     public static boolean getProvMode() {
         return ApplicationProperties.getProvenanceMode();
+    }
+    
+    /**
+     * Put model to provenance graph
+     * @param model Jena model
+     * @param id IRI of the graph as String
+     */
+    public static void putToProvenanceGraph(Model model, String id) {
+        
+      DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(services.getProvReadWriteAddress());
+      DatasetAdapter adapter = new DatasetAdapter(accessor);
+      
+      adapter.putModel(id, model);
+        
     }
     
     public static void updateVersionIdToResource(String graph, UUID provUUID) {
@@ -153,6 +169,11 @@ public class ProvenanceManager {
             logger.warning("Failed in creating PROV graph from "+graph);
             /* TODO: Else failed entity? */
         }
+    }
+    
+    public static void createProvenanceGraphFromModel(String graph, Model model, String user, UUID provUUID) {
+        putToProvenanceGraph(model,"urn:uuid:"+provUUID.toString());
+        createProvEntity(graph, provUUID, user);
     }
     
     public static void createProvEntity(String graph, UUID provUUID, String user) {

@@ -19,6 +19,10 @@ import com.csc.fi.ioapi.config.LoginSession;
 import com.csc.fi.ioapi.utils.ErrorMessage;
 import com.csc.fi.ioapi.utils.GraphManager;
 import com.csc.fi.ioapi.utils.JerseyFusekiClient;
+import com.csc.fi.ioapi.utils.ModelManager;
+import com.csc.fi.ioapi.utils.NamespaceManager;
+import com.csc.fi.ioapi.utils.ProvenanceManager;
+import com.csc.fi.ioapi.utils.JerseyResponseManager;
 import com.csc.fi.ioapi.utils.ServiceDescriptionManager;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.NodeIterator;
@@ -80,36 +84,30 @@ public class RenameNamespace {
       
       
        if(modelID==null || modelID.equals("undefined")) {
-            return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
+            return JerseyResponseManager.invalidIRI();
        } 
        
        if(newModelID==null || newModelID.equals("undefined")) {
-            return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
+            return JerseyResponseManager.invalidIRI();
        } 
        
         HttpSession session = request.getSession();
         
-        if(session==null) return Response.status(403).entity(ErrorMessage.UNAUTHORIZED).build();
+        if(session==null) return JerseyResponseManager.unauthorized();
         
         LoginSession login = new LoginSession(session);
         
         if(!(login.isLoggedIn() && login.isSuperAdmin())) {
-            return Response.status(403).entity(ErrorMessage.UNAUTHORIZED).build();
+            return JerseyResponseManager.unauthorized();
         }
         
         if(!GraphManager.isExistingGraph(modelID)) {
-            return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
+            return JerseyResponseManager.invalidIRI();
         }
         
-        Model oldModel = GraphManager.getCoreGraph(modelID);
+       NamespaceManager.renameNamespace(modelID,newModelID, login);
         
-        Resource modelResource = oldModel.getResource(modelID);
-        
-        ResourceUtils.renameResource(modelResource,newModelID);
-        
-        oldModel.write(System.out);
-
-       return Response.status(200).entity("{}").build();
+       return JerseyResponseManager.okEmptyContent();
 
   }
   

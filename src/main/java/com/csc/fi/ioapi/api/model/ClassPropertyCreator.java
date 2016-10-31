@@ -18,7 +18,7 @@ import com.csc.fi.ioapi.utils.ErrorMessage;
 import com.csc.fi.ioapi.utils.GraphManager;
 import com.csc.fi.ioapi.utils.JerseyFusekiClient;
 import com.csc.fi.ioapi.utils.LDHelper;
-import com.csc.fi.ioapi.utils.NamespaceManager;
+import com.csc.fi.ioapi.utils.JerseyResponseManager;
 import org.apache.jena.query.ParameterizedSparqlString;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
@@ -63,7 +63,7 @@ public class ClassPropertyCreator {
       pss.setNsPrefixes(LDHelper.PREFIX_MAP);
 
       try {         
-         IRIFactory iri = IRIFactory.semanticWebImplementation();
+         IRIFactory iri = IRIFactory.iriImplementation();
          predicateIRI = iri.construct(predicateID);
          
         UUID classPropertyUUID = UUID.randomUUID(); 
@@ -71,7 +71,7 @@ public class ClassPropertyCreator {
         if(GraphManager.isExistingServiceGraph(SplitIRI.namespace(predicateID))) {
          /* Local predicate */
            if(!GraphManager.isExistingGraph(predicateIRI)) {
-              return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
+              return JerseyResponseManager.invalidIRI();
            }
                 
         service = services.getCoreSparqlAddress();
@@ -114,12 +114,12 @@ public class ClassPropertyCreator {
              String typeURI = type.replace("owl:", "http://www.w3.org/2002/07/owl#");
              typeIRI = iri.construct(typeURI);
           } else {
-             if(predicateType==null || predicateType.equals("http://www.w3.org/1999/02/22-rdf-syntax-ns#Property")) return Response.status(403).entity(ErrorMessage.INVALIDPARAMETER).build();
+             if(predicateType==null || predicateType.equals("http://www.w3.org/1999/02/22-rdf-syntax-ns#Property")) return JerseyResponseManager.invalidParameter();
              else typeIRI = iri.construct(predicateType);
          } */
            
          if(type==null || type.equals("undefined"))
-               return Response.status(403).entity(ErrorMessage.INVALIDPARAMETER).build();
+               return JerseyResponseManager.invalidParameter();
          
          String typeURI = type.replace("owl:", "http://www.w3.org/2002/07/owl#");
          typeIRI = iri.construct(typeURI);
@@ -163,7 +163,7 @@ public class ClassPropertyCreator {
 
          }
         } catch (IRIException e) {
-           return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
+           return JerseyResponseManager.invalidIRI();
       }
        
       //logger.info(""+SplitIRI.localname(predicateID));

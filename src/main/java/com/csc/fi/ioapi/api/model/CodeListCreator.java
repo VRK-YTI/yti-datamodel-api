@@ -16,7 +16,7 @@ import com.csc.fi.ioapi.config.EndpointServices;
 import com.csc.fi.ioapi.utils.ErrorMessage;
 import com.csc.fi.ioapi.utils.JerseyFusekiClient;
 import com.csc.fi.ioapi.utils.LDHelper;
-import com.csc.fi.ioapi.utils.OPHCodeServer;
+import com.csc.fi.ioapi.utils.JerseyResponseManager;
 import org.apache.jena.query.ParameterizedSparqlString;
 import org.apache.jena.rdf.model.ResourceFactory;
 import com.wordnik.swagger.annotations.Api;
@@ -60,10 +60,10 @@ public class CodeListCreator {
                 try{
                     codeListIRI = iri.construct(uri.toLowerCase());
                 } catch(IRIException e) {
-                    return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
+                    return JerseyResponseManager.invalidIRI();
                 }
             } else
-                return Response.status(403).entity(ErrorMessage.INVALIDPARAMETER).build();
+                return JerseyResponseManager.invalidParameter();
 
            
             String queryString;

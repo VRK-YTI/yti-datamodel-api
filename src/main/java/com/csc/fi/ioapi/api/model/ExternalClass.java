@@ -16,6 +16,7 @@ import org.apache.jena.iri.IRIException;
 import org.apache.jena.iri.IRIFactory;
 import com.csc.fi.ioapi.config.EndpointServices;
 import com.csc.fi.ioapi.utils.ErrorMessage;
+import com.csc.fi.ioapi.utils.JerseyResponseManager;
 import com.csc.fi.ioapi.utils.JerseyFusekiClient;
 import com.csc.fi.ioapi.utils.LDHelper;
 import com.csc.fi.ioapi.utils.QueryLibrary;
@@ -52,7 +53,7 @@ public class ExternalClass {
       @ApiParam(value = "Model id")
       @QueryParam("model") String model) {
       
-        IRIFactory iriFactory = IRIFactory.semanticWebImplementation();
+        IRIFactory iriFactory = IRIFactory.iriImplementation();
         IRI modelIRI, idIRI;   
         
         /* Check that Model URI is valid */
@@ -60,10 +61,10 @@ public class ExternalClass {
             modelIRI = iriFactory.construct(model);
         }
         catch(NullPointerException e) {
-            return Response.status(403).entity(ErrorMessage.UNEXPECTED).build();
+            return JerseyResponseManager.unexpected();
         }
         catch (IRIException e) {
-            return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
+            return JerseyResponseManager.invalidIRI();
         }
 
       if(id==null || id.equals("undefined") || id.equals("default")) {
@@ -120,7 +121,7 @@ public class ExternalClass {
                 idIRI = iriFactory.construct(id);
             }
             catch (IRIException e) {
-                return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
+                return JerseyResponseManager.invalidIRI();
             }  
               
             String sparqlService = services.getImportsSparqlAddress();

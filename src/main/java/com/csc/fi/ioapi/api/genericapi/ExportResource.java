@@ -6,6 +6,7 @@ import javax.servlet.ServletContext;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import com.csc.fi.ioapi.utils.JerseyResponseManager;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
@@ -72,34 +73,34 @@ public class ExportResource {
          IRI resourceIRI;
          
             try {
-                    IRIFactory iri = IRIFactory.semanticWebImplementation();
+                    IRIFactory iri = IRIFactory.iriImplementation();
                     resourceIRI = iri.construct(graph);
             } catch (IRIException e) {
-                    return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
+                    return JerseyResponseManager.invalidIRI();
             }
             
             if(ctype.equals("application/ld+json+context")) {
                 String context = ContextWriter.newResourceContext(graph);
                 if(context!=null) {
-                    return Response.ok().entity(context).type(raw?"text/plain;charset=utf-8":"application/json").build();
+                    return JerseyResponseManager.ok(context,raw?"text/plain;charset=utf-8":"application/json");
                 } else {
-                    return Response.status(403).entity(ErrorMessage.NOTFOUND).build();
+                    return JerseyResponseManager.notFound();
                 }
             } else if(ctype.equals("application/schema+json")) {
                 String schema = JsonSchemaWriter.newResourceSchema(graph,lang);
                 if(schema!=null) {
-                    return Response.ok().entity(schema).type(raw?"text/plain;charset=utf-8":"application/schema+json").build();
+                    return JerseyResponseManager.ok(schema,raw?"text/plain;charset=utf-8":"application/schema+json");
                 } else {
-                    return Response.status(403).entity(ErrorMessage.NOTFOUND).build();
+                    return JerseyResponseManager.notFound();
                 }
             } else if(ctype.equals("application/xml")) {
                 
                 String schema = XMLSchemaWriter.newClassSchema(graph,lang);
                
                 if(schema!=null) {
-                    return Response.ok().entity(schema).type(raw?"text/plain;charset=utf-8":"application/schema+json").build();
+                    return JerseyResponseManager.ok(schema,raw?"text/plain;charset=utf-8":"application/schema+json");
                 } else {
-                    return Response.status(403).entity(ErrorMessage.NOTFOUND).build();
+                    return JerseyResponseManager.notFound();
                 }
             }
             
@@ -110,13 +111,13 @@ public class ExportResource {
             
             if(rdfLang==null) {
                 rdfLang = Lang.TURTLE;
-                //return Response.status(403).entity(ErrorMessage.NOTFOUND).build();
+                //return JerseyResponseManager.notFound();
             }
                         
             return  JerseyFusekiClient.getGraphResponseFromService(graph, service, contentType, raw);
         } catch (UniformInterfaceException | ClientHandlerException ex) {
             logger.log(Level.WARNING, "Expect the unexpected!", ex);
-            return Response.serverError().entity("{}").build();
+            return JerseyResponseManager.serverError();
         }
 
     }

@@ -17,7 +17,7 @@ import com.csc.fi.ioapi.utils.ErrorMessage;
 import com.csc.fi.ioapi.utils.GraphManager;
 import com.csc.fi.ioapi.utils.JerseyFusekiClient;
 import com.csc.fi.ioapi.utils.LDHelper;
-import com.csc.fi.ioapi.utils.NamespaceResolver;
+import com.csc.fi.ioapi.utils.JerseyResponseManager;
 import com.csc.fi.ioapi.utils.OPHCodeServer;
 import com.sun.jersey.api.client.ClientResponse;
 import org.apache.jena.query.ParameterizedSparqlString;
@@ -67,16 +67,16 @@ public class CodeServerCreator {
                 OPHCodeServer codeServer = new OPHCodeServer(uri, true);
                 
                 if(codeServer==null || !codeServer.status) {
-                    return Response.status(403).entity(ErrorMessage.INVALIDPARAMETER).build();
+                    return JerseyResponseManager.invalidParameter();
                 }
                 try{
                     codeServerIRI = iri.construct(uri);
                 } catch(IRIException e) {
-                    return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
+                    return JerseyResponseManager.invalidIRI();
                 }
 
             } else
-                return Response.status(403).entity(ErrorMessage.INVALIDPARAMETER).build();
+                return JerseyResponseManager.invalidParameter();
 
            
             String queryString;

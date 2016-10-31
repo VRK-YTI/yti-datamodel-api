@@ -26,6 +26,7 @@ import com.csc.fi.ioapi.config.LoginSession;
 import com.csc.fi.ioapi.utils.ErrorMessage;
 import com.csc.fi.ioapi.utils.GraphManager;
 import com.csc.fi.ioapi.utils.JerseyFusekiClient;
+import com.csc.fi.ioapi.utils.JerseyResponseManager;
 import com.csc.fi.ioapi.utils.LDHelper;
 import com.csc.fi.ioapi.utils.NamespaceManager;
 import com.csc.fi.ioapi.utils.ProvenanceManager;
@@ -117,23 +118,23 @@ public class Version {
         HttpSession session = request.getSession();
         
         if(session==null) {
-            return Response.status(401).entity(ErrorMessage.UNAUTHORIZED).build();
+            return JerseyResponseManager.unauthorized();
         }
        
         LoginSession login = new LoginSession(session);
         
         if(!login.isLoggedIn() || !login.hasRightToEditModel(modelID)) {
-            return Response.status(401).entity(ErrorMessage.UNAUTHORIZED).build();
+            return JerseyResponseManager.unauthorized();
         }
 
             IRI modelIRI;
 
             try {
-                    IRIFactory iri = IRIFactory.semanticWebImplementation();
+                    IRIFactory iri = IRIFactory.iriImplementation();
                     modelIRI = iri.construct(modelID); 
             } catch (IRIException e) {
                     logger.log(Level.WARNING, "CLASS OR PROPERTY ID is invalid IRI!");
-                    return Response.status(403).build();
+                    return JerseyResponseManager.invalidIRI();
             }
           
         UUID versionUUID = UUID.randomUUID();
@@ -147,7 +148,7 @@ public class Version {
         
         ProvenanceManager.createNewVersionModel(modelID, login.getEmail(), versionUUID);
         
-        return Response.status(200).entity("{\"@id\":\"urn:uuid:"+versionUUID+"\"}").build();
+        return JerseyResponseManager.okUUID(versionUUID);
          
     }
 

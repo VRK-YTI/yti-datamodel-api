@@ -4,6 +4,7 @@
 package com.csc.fi.ioapi.api.concepts;
 
 import com.csc.fi.ioapi.config.EndpointServices;
+import com.csc.fi.ioapi.utils.JerseyResponseManager;
 import com.csc.fi.ioapi.utils.LDHelper;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
@@ -61,7 +62,7 @@ public class Concept {
                     if(uri!=null && !uri.equals("undefined")) conceptIRI = iri.construct(uri);
 		} catch (IRIException e) {
 			logger.log(Level.WARNING, "ID is invalid IRI!");
-			return Response.status(403).build();
+			return JerseyResponseManager.invalidIRI();
 		}
                 
           Response.ResponseBuilder rb;
@@ -113,7 +114,7 @@ public class Concept {
             ResponseBuilder rb;
             Client client = Client.create();
 
-            if((uri==null || uri.equals("undefined")) ) return Response.status(Response.Status.NOT_ACCEPTABLE).entity("{}").build();
+            if((uri==null || uri.equals("undefined")) ) return JerseyResponseManager.notAcceptable();
             
             WebResource webResource = client.resource(services.getConceptAPI())
                                       .queryParam("uri", UriComponent.encode(uri,UriComponent.Type.QUERY))
@@ -124,7 +125,7 @@ public class Concept {
 
             if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
                Logger.getLogger(Concept.class.getName()).log(Level.INFO, response.getStatus()+" from CONCEPT SERVICE");
-               return Response.status(response.getStatus()).entity("{}").build();
+               return JerseyResponseManager.unexpected(response.getStatus());
             }
             
             rb = Response.status(response.getStatus()); 

@@ -519,6 +519,31 @@ public class GraphManager {
     }
 
     /**
+     * Tries to remove single graph
+     * @param id String IRI of the graph to be removed
+     */
+    public static void removeGraph(String id) {
+
+        String query = "DROP GRAPH ?graph ;";
+
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        pss.setCommandText(query);
+        pss.setIri("graph", id);
+
+        logger.log(Level.WARNING, "Removing graph " + id);
+
+        UpdateRequest queryObj = pss.asUpdate();
+        UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, services.getCoreSparqlUpdateAddress());
+
+        try {
+            qexec.execute();
+        } catch (UpdateException ex) {
+            logger.log(Level.WARNING, ex.toString());
+        }
+    }
+    
+    
+    /**
      * Tries to Delete contents of the resource graphs linked to the model graph
      * @param model String representing the IRI of an model graph
      */
@@ -703,6 +728,38 @@ public class GraphManager {
 
         logger.info(pss.toString());
         logger.log(Level.WARNING, "Updating references in "+modelID.toString()+"#PositionGraph");
+
+        UpdateRequest queryObj = pss.asUpdate();
+        UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, services.getCoreSparqlUpdateAddress());
+        qexec.execute();
+
+    }
+
+    /**
+     * Renames Predicate IRI:s
+     * @param modelID Model IRI
+     * @param oldID Old Predicate IRI
+     * @param newID New Predicate IRI
+     */
+    public static void updateResourceReferencesInModel(IRI modelID, IRI oldID, IRI newID) {
+
+        String query
+                = " DELETE { GRAPH ?graph { ?any ?predicate ?oldID }} "
+                + " INSERT { GRAPH ?graph { ?any ?predicate ?newID }} "
+                + " WHERE { "
+                + "GRAPH ?hasPartGraph { ?model dcterms:hasPart ?graph . } "
+                + "GRAPH ?graph { ?graph rdfs:isDefinedBy ?model . ?any ?predicate ?oldID . }}";
+
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+        pss.setIri("oldID", oldID);
+        pss.setIri("newID", newID);
+        pss.setIri("model", modelID);
+        pss.setIri("hasPartGraph", modelID+"#HasPartGraph");
+        pss.setCommandText(query);
+
+        logger.info(pss.toString());
+        logger.log(Level.WARNING, "Updating references in "+modelID.toString());
 
         UpdateRequest queryObj = pss.asUpdate();
         UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, services.getCoreSparqlUpdateAddress());

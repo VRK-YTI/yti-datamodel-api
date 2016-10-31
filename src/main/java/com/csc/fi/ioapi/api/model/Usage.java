@@ -14,6 +14,7 @@ import javax.ws.rs.core.Response;
 import com.csc.fi.ioapi.config.EndpointServices;
 import com.csc.fi.ioapi.utils.ErrorMessage;
 import com.csc.fi.ioapi.utils.GraphManager;
+import com.csc.fi.ioapi.utils.JerseyResponseManager;
 import com.csc.fi.ioapi.utils.JerseyFusekiClient;
 import com.csc.fi.ioapi.utils.LDHelper;
 import com.csc.fi.ioapi.utils.NamespaceManager;
@@ -61,7 +62,7 @@ public class Usage {
                     if(model!=null && !model.equals("undefined")) modelIRI = iri.construct(model);
                     if(concept!=null && !concept.equals("undefined")) conceptIRI = iri.construct(concept);
             } catch (IRIException e) {
-                    return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
+                    return JerseyResponseManager.invalidIRI();
             }
 
             ParameterizedSparqlString pss = new ParameterizedSparqlString();
@@ -186,7 +187,7 @@ public class Usage {
             } else if(conceptIRI!=null) {
                 pss.setCommandText(conceptQueryString);
                 pss.setIri("concept", conceptIRI);
-            } else return Response.status(403).entity(ErrorMessage.INVALIDPARAMETER).build();
+            } else return JerseyResponseManager.invalidParameter();
            
             return JerseyFusekiClient.constructGraphFromService(pss.toString(), services.getCoreSparqlAddress());
     }   

@@ -72,11 +72,11 @@ public class Group {
             IRI groupIRI;
        
             try {
-                IRIFactory iri = IRIFactory.semanticWebImplementation();
+                IRIFactory iri = IRIFactory.iriImplementation();
                 groupIRI = iri.construct(groupID);
             } catch (IRIException e) {
                 logger.log(Level.WARNING, "GROUP ID is invalid IRI!");
-                return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
+                return JerseyResponseManager.invalidIRI();
             } 
             
             if(GraphManager.isExistingGraph(groupIRI)) {
@@ -85,12 +85,12 @@ public class Group {
             
             HttpSession session = request.getSession();
 
-            if(session==null) return Response.status(401).entity(ErrorMessage.UNAUTHORIZED).build();
+            if(session==null) return JerseyResponseManager.unauthorized();
 
             LoginSession login = new LoginSession(session);
 
             if(!login.isLoggedIn() || !login.isAdminOfGroup(groupID)) {
-                return Response.status(401).entity(ErrorMessage.UNAUTHORIZED).build();
+                return JerseyResponseManager.unauthorized();
             }
 
 		try {
@@ -105,7 +105,7 @@ public class Group {
 
                     logger.log(Level.INFO, "Group added sucessfully!");
 
-                    return Response.status(204).build();
+                    return JerseyResponseManager.okNoContent();
 
 		} catch (UniformInterfaceException | ClientHandlerException ex) {
 			Logger.getLogger(Group.class.getName()).log(Level.WARNING, "Expect the unexpected!", ex);
@@ -128,11 +128,11 @@ public class Group {
             IRI groupIRI;
 
             try {
-                IRIFactory iri = IRIFactory.semanticWebImplementation();
+                IRIFactory iri = IRIFactory.iriImplementation();
                 groupIRI = iri.construct(groupID);
             } catch (IRIException e) {
                 logger.log(Level.WARNING, "GROUP ID is invalid IRI!");
-                return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
+                return JerseyResponseManager.invalidIRI();
             } 
 
             if(!GraphManager.isExistingGraph(groupIRI)) {
@@ -141,12 +141,12 @@ public class Group {
 
             HttpSession session = request.getSession();
 
-            if(session==null) return Response.status(401).entity(ErrorMessage.UNAUTHORIZED).build();
+            if(session==null) return JerseyResponseManager.unauthorized();
 
             LoginSession login = new LoginSession(session);
 
             if(!login.isLoggedIn() || !login.isAdminOfGroup(groupID)) {
-                return Response.status(401).entity(ErrorMessage.UNAUTHORIZED).build();
+                return JerseyResponseManager.unauthorized();
             }
 
             try {
@@ -161,7 +161,7 @@ public class Group {
 
                     logger.log(Level.INFO, "Group added sucessfully!");
 
-                    return Response.status(204).build();
+                    return JerseyResponseManager.okNoContent();
 
                 } catch (UniformInterfaceException | ClientHandlerException ex) {
                         Logger.getLogger(Group.class.getName()).log(Level.WARNING, "Expect the unexpected!", ex);

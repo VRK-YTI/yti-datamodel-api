@@ -15,6 +15,7 @@ import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
 import org.apache.jena.iri.IRIFactory;
 import com.csc.fi.ioapi.config.EndpointServices;
+import com.csc.fi.ioapi.utils.JerseyResponseManager;
 import com.csc.fi.ioapi.config.LoginSession;
 import com.csc.fi.ioapi.utils.ConceptMapper;
 import com.csc.fi.ioapi.utils.ErrorMessage;
@@ -57,7 +58,7 @@ public class ModelConcepts {
       @ApiParam(value = "Model id", required = true)
       @QueryParam("model") String model) {
 
-        IRIFactory iriFactory = IRIFactory.semanticWebImplementation();
+        IRIFactory iriFactory = IRIFactory.iriImplementation();
         IRI modelIRI,idIRI;   
         
         /* Check that URIs are valid */
@@ -68,10 +69,10 @@ public class ModelConcepts {
             
         }
         catch(NullPointerException e) {
-            return Response.status(403).entity(ErrorMessage.UNEXPECTED).build();
+            return JerseyResponseManager.unexpected();
         }
         catch (IRIException e) {
-            return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
+            return JerseyResponseManager.invalidIRI();
         }
      
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
@@ -155,12 +156,12 @@ public class ModelConcepts {
             idIRI = iriFactory.construct(id);
         }
         catch (IRIException e) {
-            return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
+            return JerseyResponseManager.invalidIRI();
         }
       
       ConceptMapper.addConceptToLocalSKOSCollection(model,id);
   
-       return Response.status(200).entity("{}").build();
+       return JerseyResponseManager.okEmptyContent();
   }
   
   @DELETE
@@ -186,22 +187,22 @@ public class ModelConcepts {
             idIRI = iriFactory.construct(id);
         }
         catch (IRIException e) {
-            return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
+            return JerseyResponseManager.invalidIRI();
         }
         
        HttpSession session = request.getSession();
 
-       if(session==null) return Response.status(401).entity(ErrorMessage.UNAUTHORIZED).build();
+       if(session==null) return JerseyResponseManager.unauthorized();
 
        LoginSession login = new LoginSession(session);
 
        if(!login.isLoggedIn() || !login.hasRightToEditModel(model))
-          return Response.status(401).entity(ErrorMessage.UNAUTHORIZED).build();
+          return JerseyResponseManager.unauthorized();
       
       if(ConceptMapper.deleteModelReference(model,id))
-         return Response.status(200).entity("{}").build();
+         return JerseyResponseManager.okEmptyContent();
       else
-         return Response.status(400).entity(ErrorMessage.DEPEDENCIES).build();
+         return JerseyResponseManager.depedencies();
   }
   
 }

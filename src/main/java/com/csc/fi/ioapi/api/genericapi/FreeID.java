@@ -9,6 +9,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import com.csc.fi.ioapi.config.EndpointServices;
 import com.csc.fi.ioapi.utils.GraphManager;
+import com.csc.fi.ioapi.utils.JerseyResponseManager;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiParam;
@@ -39,13 +40,13 @@ public class FreeID {
       IRI idIRI;
             
             try {
-                IRIFactory iri = IRIFactory.semanticWebImplementation();
+                IRIFactory iri = IRIFactory.iriImplementation();
                 idIRI = iri.construct(id);
             } catch(NullPointerException | IRIException e) {
-                return Response.status(Status.OK).entity(false).build();
+                return JerseyResponseManager.sendBoolean(false);
             }
             
-    return Response.status(Status.OK).entity(!GraphManager.isExistingGraph(idIRI)).build();
+    return JerseyResponseManager.sendBoolean(!GraphManager.isExistingGraph(idIRI));
 
 }
   

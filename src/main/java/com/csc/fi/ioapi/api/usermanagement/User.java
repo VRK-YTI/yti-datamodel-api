@@ -19,6 +19,7 @@ import com.csc.fi.ioapi.config.EndpointServices;
 import com.csc.fi.ioapi.config.LoginSession;
 import com.csc.fi.ioapi.utils.ErrorMessage;
 import com.csc.fi.ioapi.utils.JerseyFusekiClient;
+import com.csc.fi.ioapi.utils.JerseyResponseManager;
 import com.csc.fi.ioapi.utils.LDHelper;
 import org.apache.jena.query.ParameterizedSparqlString;
 import com.wordnik.swagger.annotations.Api;
@@ -55,7 +56,7 @@ public class User {
         if(login.isLoggedIn()){
             Logger.getLogger(User.class.getName()).log(Level.INFO, "User is logged in with: "+login.getEmail());
         } else {
-             return Response.status(401).entity(ErrorMessage.UNAUTHORIZED).build();
+             return JerseyResponseManager.unauthorized();
         }
         
         String email = login.getEmail();

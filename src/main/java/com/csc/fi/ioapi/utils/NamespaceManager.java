@@ -4,6 +4,7 @@
 package com.csc.fi.ioapi.utils;
 
 import com.csc.fi.ioapi.config.EndpointServices;
+import com.csc.fi.ioapi.config.LoginSession;
 import static com.csc.fi.ioapi.utils.GraphManager.services;
 import static com.csc.fi.ioapi.utils.LDHelper.PREFIX_MAP;
 import org.apache.jena.query.DatasetAccessor;
@@ -25,6 +26,7 @@ import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.ResourceFactory;
+import org.apache.jena.util.ResourceUtils;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
 import org.apache.jena.web.DatasetAdapter;
@@ -254,6 +256,52 @@ public class NamespaceManager {
 
         return type;
 
+    }
+    
+   
+    public static void renameNamespace(String modelID, String newModelID, LoginSession login) {
+        
+        
+        Model newModel = GraphManager.getCoreGraph(modelID);
+        Resource modelResource = newModel.getResource(modelID);
+        ResourceUtils.renameResource(modelResource,newModelID);
+        ModelManager.updateModel(modelID, newModel , login);
+        GraphManager.removeGraph(modelID);
+        
+        /* TODO: GET hasPartGraph and loop resources ... update with new id and update references */
+        
+        ProvenanceManager.renameID(modelID, newModelID);
+        ServiceDescriptionManager.renameServiceGraphName(modelID, newModelID);
+        
+   
+        
+    }
+    
+    public static void renameHasPartResources(String graph, String newGraph) {
+        
+        /* Use Jena to change namespace? */
+        
+            String query = 
+                  "DELETE {"
+                +  "GRAPH ?hasPartGraph { "
+                +  "?graph dcterms:hasPart ?resource . }"
+                + "}"
+                + "INSERT { "
+                +  "GRAPH ?hasPartGraph { "
+                +  "?graph dcterms:hasPart ?newIRI . }"
+                + "} "
+                +"WHERE { "
+                + "GRAPH ?graph { "
+                + "?graph a owl:Ontology . "
+                + "} "
+                + "GRAPH ?hasPartGraph { "
+                + "?graph dcterms:hasPart ?resource . "
+                + "FILTER(STRSTARTS(STR(?resource),STR(?graph)))"
+                /* TODO : not working with / namespace ? */
+                + "BIND(STRAFTER(STR(?resource), '#') AS ?localName)"
+                + "BIND(IRI(CONCAT(STR(?newIRI),?localName)) as ?newIRI)}"
+                + "}";
+  
     }
 
 

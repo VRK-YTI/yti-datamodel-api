@@ -152,7 +152,7 @@ public class JerseyFusekiClient {
 
         if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
            logger.log(Level.INFO, response.getStatus()+" from SERVICE "+service+" and GRAPH "+id);
-           return Response.status(response.getStatus()).entity(ErrorMessage.NOTFOUND).build();
+           return JerseyResponseManager.notFound();
         }
 
         ResponseBuilder rb = Response.status(response.getStatus()); 
@@ -161,7 +161,7 @@ public class JerseyFusekiClient {
        return rb.build();
         } catch(ClientHandlerException ex) {
           logger.log(Level.WARNING, "Expect the unexpected!", ex);
-          return Response.serverError().entity(ErrorMessage.UNEXPECTED).build();
+          return JerseyResponseManager.unexpected();
         }
     }
     
@@ -185,7 +185,7 @@ public class JerseyFusekiClient {
 
         if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
            logger.log(Level.INFO, response.getStatus()+" from SERVICE "+service+" and GRAPH "+id);
-           return Response.status(response.getStatus()).entity(ErrorMessage.NOTFOUND).build();
+           return JerseyResponseManager.notFound();
         }
 
         ResponseBuilder rb = Response.status(response.getStatus()); 
@@ -204,7 +204,7 @@ public class JerseyFusekiClient {
        return rb.build();
         } catch(ClientHandlerException ex) {
           logger.log(Level.WARNING, "Expect the unexpected!", ex);
-          return Response.serverError().entity(ErrorMessage.UNEXPECTED).build();
+          return JerseyResponseManager.unexpected();
         }
     }
     
@@ -221,6 +221,29 @@ public class JerseyFusekiClient {
         WebResource.Builder builder = webResource.header("Content-type", "application/ld+json");
         return builder.put(ClientResponse.class, body);
     }
+    
+    
+     /**
+     *
+     * @param graph
+     * @param body
+     * @param service
+     * @return
+     */
+    public static boolean graphIsUpdatedToTheService(String graph, String body, String service) {
+        Client client = Client.create();
+        WebResource webResource = client.resource(service).queryParam("graph", graph);
+        WebResource.Builder builder = webResource.header("Content-type", "application/ld+json");
+        
+        ClientResponse response = builder.put(ClientResponse.class, body);
+        
+        if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
+               logger.log(Level.WARNING, "Unexpected: Model update failed: "+graph);
+               return false;
+        } else return true;
+        
+    }
+    
     
     /**
      *
@@ -289,7 +312,7 @@ public class JerseyFusekiClient {
             rb.entity(response.getEntityInputStream());
             
             if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-               return Response.status(response.getStatus()).entity(ErrorMessage.UNEXPECTED).build();
+               return JerseyResponseManager.unexpected(response.getStatus());
             }
             
            // rb.cacheControl(CacheControl.valueOf("no-cache"));
@@ -353,14 +376,14 @@ public class JerseyFusekiClient {
 
              if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
                 logger.log(Level.WARNING, "Database connection error: "+graph+" was not deleted from "+service+"! Status "+response.getStatus());
-                return Response.serverError().entity(ErrorMessage.NOTREMOVED).build();
+                return JerseyResponseManager.unexpected();
              }
              
-             return Response.status(204).build();
+             return JerseyResponseManager.okNoContent();
 
        } catch(Exception ex) {
             logger.log(Level.WARNING, "Expect the unexpected!", ex);
-            return Response.serverError().entity(ErrorMessage.UNEXPECTED).build();
+            return JerseyResponseManager.unexpected();
        }
         
         

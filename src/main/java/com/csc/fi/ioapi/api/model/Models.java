@@ -20,7 +20,9 @@ import com.csc.fi.ioapi.config.LoginSession;
 import com.csc.fi.ioapi.utils.ErrorMessage;
 import com.csc.fi.ioapi.utils.GraphManager;
 import com.csc.fi.ioapi.utils.JerseyFusekiClient;
+import com.csc.fi.ioapi.utils.JerseyResponseManager;
 import com.csc.fi.ioapi.utils.LDHelper;
+import com.csc.fi.ioapi.utils.ModelManager;
 import com.csc.fi.ioapi.utils.ProvenanceManager;
 import com.csc.fi.ioapi.utils.QueryLibrary;
 import com.csc.fi.ioapi.utils.ServiceDescriptionManager;
@@ -79,7 +81,7 @@ public class Models {
                  id = GraphManager.getServiceGraphNameWithPrefix(prefix);
                  if(id==null) {
                         logger.log(Level.WARNING, "Invalid prefix: "+prefix);
-                       return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
+                       return JerseyResponseManager.invalidIRI();
                  }
            }             
                        
@@ -88,11 +90,11 @@ public class Models {
             IRI modelIRI;
             
                 try {
-                        IRIFactory iri = IRIFactory.semanticWebImplementation();
+                        IRIFactory iri = IRIFactory.iriImplementation();
                         modelIRI = iri.construct(id);
                 } catch (IRIException e) {
                         logger.log(Level.WARNING, "ID is invalid IRI!");
-                       return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
+                       return JerseyResponseManager.invalidIRI();
                 }
 
                 if(id.startsWith("urn:")) {
@@ -108,7 +110,7 @@ public class Models {
             
             if(model==null) {
                 /* TODO: Add error message */
-                return Response.status(403).build();
+                return JerseyResponseManager.unexpected();
             }
             
             pss.setNsPrefixes(model.getNsPrefixMap());
@@ -124,11 +126,11 @@ public class Models {
          
            IRI groupIRI;
             try {
-                    IRIFactory iri = IRIFactory.semanticWebImplementation();
+                    IRIFactory iri = IRIFactory.iriImplementation();
                     groupIRI = iri.construct(group);
             } catch (IRIException e) {
                     logger.log(Level.WARNING, "ID is invalid IRI!");
-                    return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
+                    return JerseyResponseManager.invalidIRI();
             }
              pss.setNsPrefixes(LDHelper.PREFIX_MAP);
             /* IF group parameter is available list of core vocabularies is created */
@@ -207,68 +209,32 @@ public class Models {
           @Context HttpServletRequest request) {
       
        if(graph.equals("default") || graph.equals("undefined")) {
-            return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
+            return JerseyResponseManager.invalidIRI();
        } 
        
        IRI graphIRI;
        
             try {
-                    IRIFactory iri = IRIFactory.semanticWebImplementation();
+                    IRIFactory iri = IRIFactory.iriImplementation();
                     graphIRI = iri.construct(graph);
             } catch (IRIException e) {
                     logger.log(Level.WARNING, "GRAPH ID is invalid IRI!");
-                   return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
+                   return JerseyResponseManager.invalidIRI();
             }
  
         HttpSession session = request.getSession();
         
-        if(session==null) return Response.status(403).entity(ErrorMessage.UNAUTHORIZED).build();
+        if(session==null) return JerseyResponseManager.unauthorized();
         
         LoginSession login = new LoginSession(session);
         
         if(!login.isLoggedIn() || !login.hasRightToEditModel(graph))
-            return Response.status(403).entity(ErrorMessage.UNAUTHORIZED).build();
+            return JerseyResponseManager.unauthorized();
         
-        String service = services.getCoreReadWriteAddress();
-        ServiceDescriptionManager.updateGraphDescription(graph);
-
-        ClientResponse response = JerseyFusekiClient.putGraphToTheService(graph, body, service);
-
-        if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-               logger.log(Level.WARNING, "Unexpected: Model update failed: "+graph);
-               return Response.status(response.getStatus()).entity(ErrorMessage.UNEXPECTED).build();
-        }
+        UUID provUUID = ModelManager.updateModel(graph, body, login);
         
-        GraphManager.updateModifyDates(graph);
-        
-        UUID provUUID = UUID.randomUUID();
-                
-        /* If update is successfull create new prov entity */ 
-           if(ProvenanceManager.getProvMode()) {
-           
-               ProvenanceManager.createProvenanceGraph(graph, body, login.getEmail(), provUUID); 
-           
-                if(version) {
-                  
-                  UUID versionUUID = UUID.randomUUID();
-                  
-                  /* Create version model from current model */
-                  GraphManager.addGraphFromServiceToService(graph, "urn:uuid:"+versionUUID, services.getCoreReadAddress(), services.getProvReadWriteAddress());  
-                  /* Add hasPartList to model graph */  
-                  GraphManager.addGraphFromServiceToService(graph+"#HasPartGraph", graph+"#HasPartGraph", services.getCoreReadAddress(), services.getProvReadWriteAddress());  
-  
-                  ProvenanceManager.createNewVersionModel(graph, login.getEmail(), versionUUID);
-                  
-                  return Response.status(204).entity("{\"identifier\":\"urn:uuid:"+versionUUID+"\"}").build();
-                }
-        }
-
-           
-        GraphManager.createExportGraphInRunnable(graph);
-           
-        Logger.getLogger(Models.class.getName()).log(Level.INFO, graph+" updated sucessfully!");
-
-        return Response.status(204).entity("{\"identifier\":\"urn:uuid:"+provUUID+"\"}").build();
+        if(provUUID==null) return JerseyResponseManager.error();
+        else return JerseyResponseManager.successUuid(provUUID);
 
   }
   
@@ -295,61 +261,36 @@ public class Models {
           @Context HttpServletRequest request) {
       
         if(graph.equals("default")) {
-            return Response.status(403).entity("{\"errorMessage\":\"Invalid id\"}").build();
+            return JerseyResponseManager.invalidIRI();
         }
         
        IRI graphIRI;
        
             try {
-                IRIFactory iri = IRIFactory.semanticWebImplementation();
+                IRIFactory iri = IRIFactory.iriImplementation();
                 graphIRI = iri.construct(graph);
             } catch (IRIException e) {
                 logger.log(Level.WARNING, "GRAPH ID is invalid IRI!");
-                return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
+                return JerseyResponseManager.invalidIRI();
             } 
             
         HttpSession session = request.getSession();
         
-        if(session==null) return Response.status(403).entity(ErrorMessage.UNAUTHORIZED).build();
+        if(session==null) return JerseyResponseManager.unauthorized();
         
         LoginSession login = new LoginSession(session);
         
         if(!login.isLoggedIn() || !login.hasRightToEditGroup(group))
-            return Response.status(403).entity(ErrorMessage.UNAUTHORIZED).build();
+            return JerseyResponseManager.unauthorized();
         
-        if(GraphManager.isExistingGraph(graphIRI)) {
-            return Response.status(405).entity(ErrorMessage.USEDIRI).build();
-        }
-        
-        if(!graph.equals("undefined")) {
-            ServiceDescriptionManager.createGraphDescription(graph, group, login.getEmail());
-        }
-           
-            String service = services.getCoreReadWriteAddress();
-            ClientResponse response = JerseyFusekiClient.putGraphToTheService(graph, body, service);
-
-            if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-               Logger.getLogger(Models.class.getName()).log(Level.WARNING, graph+" was not created! Status "+response.getStatus());
-               return Response.status(response.getStatus()).entity("{\"errorMessage\":\"Resource was not created\"}").build();
-            } 
-           
-           UUID provUUID = UUID.randomUUID();
-                    
-           /* If new model was created succesfully create prov activity */
-           if(ProvenanceManager.getProvMode()) {
-                ProvenanceManager.createProvenanceActivity(graph, login.getEmail(), body, provUUID);
-           }
-
-            Logger.getLogger(Models.class.getName()).log(Level.INFO, graph+" updated sucessfully!");
-           
-            try {
-                GraphManager.createNewOntologyGraph(graph+"#PositionGraph");
-                GraphManager.addCoreGraphToCoreGraph(graph, graph+"#ExportGraph");
-            } catch(Exception ex) {
-                logger.warning("Unexpected error in creating Export graph");
+            if(GraphManager.isExistingGraph(graphIRI)) {
+                return JerseyResponseManager.usedIRI();
             }
-            
-            return Response.status(204).entity("{\"identifier\":\"urn:uuid:"+provUUID+"\"}").build();
+        
+            UUID provUUID = ModelManager.createNewModel(graph, group, body, login);
+        
+            if(provUUID==null) return JerseyResponseManager.error();
+            else return JerseyResponseManager.successUuid(provUUID);
             
   }
   
@@ -367,36 +308,33 @@ public class Models {
           @QueryParam("id") String id,
           @Context HttpServletRequest request) {
      
-      /* TODO: Check model status ... prevent removing if Draft resources? */
-      
-      IRIFactory iriFactory = IRIFactory.semanticWebImplementation();
+      IRIFactory iriFactory = IRIFactory.iriImplementation();
        /* Check that URIs are valid */
       IRI modelIRI;
         try {
             modelIRI = iriFactory.construct(id);
         }
         catch (IRIException e) {
-            return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
+            return JerseyResponseManager.invalidIRI();
         }
        
        HttpSession session = request.getSession();
 
-       if(session==null) return Response.status(403).entity(ErrorMessage.UNAUTHORIZED).build();
+       if(session==null) return JerseyResponseManager.unauthorized();
 
        LoginSession login = new LoginSession(session);
 
        if(!login.isLoggedIn() || !login.hasRightToEditModel(id))
-          return Response.status(403).entity(ErrorMessage.UNAUTHORIZED).build();
+          return JerseyResponseManager.unauthorized();
        
        if(GraphManager.modelStatusRestrictsRemoving(modelIRI)) {
-          return Response.status(406).entity(ErrorMessage.STATUS).build();
+          return JerseyResponseManager.cannotRemove();
        }
        
-       ServiceDescriptionManager.deleteGraphDescription(id);
-       
+       ServiceDescriptionManager.deleteGraphDescription(id);  
        GraphManager.removeModel(modelIRI);
        
-       return Response.status(200).build();
+       return JerseyResponseManager.ok();
     }
   
 }

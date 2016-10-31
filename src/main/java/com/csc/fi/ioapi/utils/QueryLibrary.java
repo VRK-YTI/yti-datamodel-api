@@ -56,6 +56,32 @@ public class QueryLibrary {
                      + "}"
                      + "}");
     
+    
+        final public static String listClassesQuery = LDHelper.expandSparqlQuery(
+                    "CONSTRUCT { "
+                    + "?class rdfs:label ?label . "
+                    + "?class rdfs:comment ?description . "
+                    + "?class a ?type . "
+                    + "?class dcterms:modified ?modified . "
+                    + "?class rdfs:isDefinedBy ?source . "
+                    + "?source rdfs:label ?sourceLabel . "
+                    + "?source a ?sourceType . "
+                    + "} WHERE { "
+                    + "GRAPH ?hasPartGraph { "
+                    + "?library dcterms:hasPart ?class . } "
+                    + "GRAPH ?class { "
+                    + "?class dcterms:modified ?modified . "
+                    + "?class rdfs:label ?label . "
+                    + "OPTIONAL { ?class rdfs:comment ?description . } "
+                    + "?class a ?type . "
+                    + "VALUES ?type { rdfs:Class sh:Shape } "
+                    + "?class rdfs:isDefinedBy ?source .  } "
+                    + "GRAPH ?source { "
+                    + "?source a ?sourceType . "
+                    + "?source rdfs:label ?sourceLabel . "
+                    + "}}"      
+        );
+    
      final public static String classQuery = LDHelper.expandSparqlQuery(
                      "CONSTRUCT { "
                      + "?s ?p ?o . "
@@ -103,6 +129,29 @@ public class QueryLibrary {
                      + " ?collection dcterms:title ?collectionTitle . }"
                      + "}}"
                      + "}");
+     
+     
+     final public static String listPredicatesQuery = LDHelper.expandSparqlQuery(
+             "CONSTRUCT { "
+                + "?property rdfs:label ?label . "
+                + "?property rdfs:comment ?description . "
+                + "?property a ?type . "
+                + "?property rdfs:isDefinedBy ?source . "
+                + "?source rdfs:label ?sourceLabel . "
+                + "?source a ?sourceType . "
+                + "?property dcterms:modified ?date . } "
+                + "WHERE { "
+                + "GRAPH ?hasPartGraph { "
+                + "?library dcterms:hasPart ?property . } "
+                + "GRAPH ?property { ?property rdfs:label ?label . "
+                + "OPTIONAL { ?property rdfs:comment ?description . } "
+                + "VALUES ?type { owl:ObjectProperty owl:DatatypeProperty } "
+                + "?property a ?type . "
+                + "?property rdfs:isDefinedBy ?source . "
+                + "OPTIONAL {?property dcterms:modified ?date . } "
+                + "} "
+                + "GRAPH ?source { ?source a ?sourceType . ?source rdfs:label ?sourceLabel . }}"
+     );
      
       final public static String predicateQuery = LDHelper.expandSparqlQuery(
                  "CONSTRUCT { "

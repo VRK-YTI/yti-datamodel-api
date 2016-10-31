@@ -5,6 +5,7 @@ package com.csc.fi.ioapi.api.concepts;
 
 import com.csc.fi.ioapi.config.EndpointServices;
 import com.csc.fi.ioapi.utils.ErrorMessage;
+import com.csc.fi.ioapi.utils.JerseyResponseManager;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
@@ -59,7 +60,7 @@ public class ConceptSearch {
             ResponseBuilder rb;
             Client client = Client.create();
             
-            if((term==null || term.equals("undefined")) || (lang==null || lang.equals("undefined")) ) return Response.status(Response.Status.NOT_ACCEPTABLE).entity(ErrorMessage.INVALIDPARAMETER).build();
+            if((term==null || term.equals("undefined")) || (lang==null || lang.equals("undefined")) ) return JerseyResponseManager.invalidParameter();
             
             if(!term.contains("*")) term+="*";
             
@@ -80,7 +81,7 @@ public class ConceptSearch {
 
             if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
                Logger.getLogger(ConceptSearch.class.getName()).log(Level.INFO, response.getStatus()+" from CONCEPT SERVICE");
-               return Response.status(response.getStatus()).entity("{}").build();
+               return JerseyResponseManager.unexpected(response.getStatus());
             }
             
             rb = Response.status(response.getStatus()); 

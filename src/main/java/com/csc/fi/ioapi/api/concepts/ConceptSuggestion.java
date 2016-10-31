@@ -10,6 +10,7 @@ import com.csc.fi.ioapi.config.LoginSession;
 import com.csc.fi.ioapi.utils.ConceptMapper;
 import com.csc.fi.ioapi.utils.ErrorMessage;
 import com.csc.fi.ioapi.utils.GraphManager;
+import com.csc.fi.ioapi.utils.JerseyResponseManager;
 import com.csc.fi.ioapi.utils.JerseyFusekiClient;
 import com.csc.fi.ioapi.utils.LDHelper;
 import org.apache.jena.query.ParameterizedSparqlString;
@@ -78,14 +79,14 @@ public class ConceptSuggestion {
         IRI schemeIRI = null;
        
 	try {
-                    IRIFactory iri = IRIFactory.semanticWebImplementation();
+                    IRIFactory iri = IRIFactory.iriImplementation();
                     
                     if(conceptID!=null && !conceptID.equals("undefined")) conceptIRI = iri.construct(conceptID);
                     if(userID!=null && !userID.equals("undefined")) userIRI = iri.construct(userID);
                     if(schemeID!=null && !schemeID.equals("undefined")) schemeIRI = iri.construct(schemeID);
 		} catch (IRIException e) {
 			logger.log(Level.WARNING, "ID is invalid IRI!");
-			return Response.status(403).build();
+			return JerseyResponseManager.invalidIRI();
 		}
                 
           Response.ResponseBuilder rb;
@@ -170,11 +171,11 @@ public class ConceptSuggestion {
 
                 HttpSession session = request.getSession();
 
-                if(session==null) return Response.status(401).build();
+                if(session==null) return JerseyResponseManager.unauthorized();
 
                 LoginSession login = new LoginSession(session);
 
-                if(!login.isLoggedIn()) return Response.status(401).build();
+                if(!login.isLoggedIn()) return JerseyResponseManager.unauthorized();
             
 		IRI schemeIRI;
                 IRI modelIRI;
@@ -188,10 +189,10 @@ public class ConceptSuggestion {
                         if(topConceptID!=null && !topConceptID.equals("undefined")) topIRI = iri.construct(topConceptID);
 		} catch (IRIException e) {
 			logger.log(Level.WARNING, "CLASS OR PROPERTY ID is invalid IRI!");
-			return Response.status(401).entity(ErrorMessage.INVALIDIRI).build();
+			return JerseyResponseManager.invalidIRI();
 		} catch(NullPointerException e) {
                     	logger.log(Level.WARNING, "CLASS OR PROPERTY ID is invalid IRI!");
-			return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
+			return JerseyResponseManager.invalidIRI();
                 }
                 
                 UUID conceptUUID = UUID.randomUUID();
@@ -247,10 +248,11 @@ public class ConceptSuggestion {
 		try {
 			qexec.execute();
                         // TODO: Create JSON-LD?
-			return Response.status(200).entity("{\"@id\":\"urn:uuid:"+conceptUUID+"\"}").build();
+                        return JerseyResponseManager.okUUID(conceptUUID);
+			
 		} catch (QueryExceptionHTTP ex) {
 			logger.log(Level.WARNING, "Expect the unexpected!", ex);
-			return Response.status(400).build();
+			return JerseyResponseManager.unexpected();
 		}
 	}
         
@@ -273,13 +275,13 @@ public class ConceptSuggestion {
               
         HttpSession session = request.getSession();
         
-        if(session==null) return Response.status(401).entity(ErrorMessage.UNAUTHORIZED).build();
+        if(session==null) return JerseyResponseManager.unauthorized();
         
         LoginSession login = new LoginSession(session);
         
         // TODO: !login.hasRightToEditModel(model) for concepts
         if(!login.isLoggedIn())
-            return Response.status(401).entity(ErrorMessage.UNAUTHORIZED).build();
+            return JerseyResponseManager.unauthorized();
                 
         IRIFactory iriFactory = IRIFactory.iriImplementation(); 
         IRI conceptIRI;
@@ -289,7 +291,7 @@ public class ConceptSuggestion {
             conceptIRI = iriFactory.construct(conceptID);
         }
         catch (IRIException e) {
-            return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
+            return JerseyResponseManager.invalidIRI();
         }
 
         if(isNotEmpty(body)) {
@@ -301,16 +303,16 @@ public class ConceptSuggestion {
            if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
                /* TODO: Create prov events from failed updates? */
                logger.log(Level.WARNING, "Unexpected: Not updated: "+conceptID);
-               return Response.status(response.getStatus()).entity(ErrorMessage.UNEXPECTED).build();
+               return JerseyResponseManager.unexpected(response.getStatus());
            } 
             
         } else {
-             return Response.status(403).entity(ErrorMessage.INVALIDPARAMETER).build();
+             return JerseyResponseManager.invalidParameter();
         }
 
         ConceptMapper.updateConceptSuggestion(conceptID);
         
-        return Response.status(204).entity("{}").build();
+        return JerseyResponseManager.okEmptyContent();
         
   }
   
@@ -338,21 +340,21 @@ public class ConceptSuggestion {
             idIRI = iriFactory.construct(id);
         }
         catch (IRIException e) {
-            return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
+            return JerseyResponseManager.invalidIRI();
         }
       
        HttpSession session = request.getSession();
 
-       if(session==null) return Response.status(401).entity(ErrorMessage.UNAUTHORIZED).build();
+       if(session==null) return JerseyResponseManager.unauthorized();
 
        LoginSession login = new LoginSession(session);
 
        if(!login.isLoggedIn() || !login.hasRightToEditModel(model))
-          return Response.status(401).entity(ErrorMessage.UNAUTHORIZED).build();
+          return JerseyResponseManager.unauthorized();
        
        ConceptMapper.deleteConceptSuggestion(model,id);
        
-       return Response.status(204).entity("{}").build();
+       return return JerseyResponseManager.okEmptyContent();
   }
  */    
   

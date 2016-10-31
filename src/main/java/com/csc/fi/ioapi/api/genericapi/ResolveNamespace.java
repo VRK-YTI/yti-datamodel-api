@@ -9,6 +9,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import com.csc.fi.ioapi.config.EndpointServices;
 import com.csc.fi.ioapi.utils.JerseyFusekiClient;
+import com.csc.fi.ioapi.utils.JerseyResponseManager;
 import com.csc.fi.ioapi.utils.NamespaceResolver;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
@@ -42,7 +43,7 @@ public class ResolveNamespace {
         if(NamespaceResolver.resolveNamespace(namespace,null,false)) {
              return JerseyFusekiClient.getGraphResponseFromService(namespace,services.getImportsReadAddress());
         } else {
-            return Response.serverError().entity("{\"errorMessage\":\"Namespace could not be resolved\"}").build();
+            return JerseyResponseManager.invalidIRI();
         }
         
 }
@@ -60,9 +61,9 @@ public class ResolveNamespace {
           @ApiParam(value = "Force update", required = true) @QueryParam("force") boolean force)  {
 
         if(NamespaceResolver.resolveNamespace(namespace,(alternativeURL!=null&&!alternativeURL.equals("undefined")?alternativeURL:null),force)) {
-             return Response.ok().entity("{\"Message\":\"Resolved\"}").build();
+             return JerseyResponseManager.okEmptyContent();
         } else {
-            return Response.serverError().entity("{\"errorMessage\":\"Namespace could not be resolved\"}").build();
+            return JerseyResponseManager.invalidIRI();
         }
         
        

@@ -5,6 +5,7 @@ package com.csc.fi.ioapi.api.concepts;
 
 import com.csc.fi.ioapi.config.EndpointServices;
 import com.csc.fi.ioapi.utils.JerseyFusekiClient;
+import com.csc.fi.ioapi.utils.JerseyResponseManager;
 import com.csc.fi.ioapi.utils.OPHCodeServer;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
@@ -51,7 +52,7 @@ public class Codes {
           
           if(!codeServer.status) {
                boolean codeStatus = codeServer.updateCodes(uri);
-               if(!codeStatus) return Response.status(Response.Status.NOT_ACCEPTABLE).entity("{}").build();
+               if(!codeStatus) return JerseyResponseManager.notAcceptable();
           } 
       
            return JerseyFusekiClient.getGraphResponseFromService(uri, services.getSchemesReadAddress());
@@ -78,7 +79,7 @@ public class Codes {
             rb = Response.status(Status.OK);
             
             if(status) return rb.entity("{}").build();
-            else return Response.status(Response.Status.NOT_ACCEPTABLE).entity("{}").build();
+            else return JerseyResponseManager.notAcceptable();
           
   }
   

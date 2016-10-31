@@ -5,6 +5,7 @@ package com.csc.fi.ioapi.utils;
 
 final public class ErrorMessage {
     
+    final public static String NOTCREATED = toJs("{'errorMessage':'Resource was not created'}");
     final public static String UNAUTHORIZED = toJs("{'errorMessage':'Unauthorized'}");
     final public static String LOCKED = toJs("{'errorMessage':'Locked'}");
     final public static String INVALIDIRI = toJs("{'errorMessage':'Invalid ID'}");

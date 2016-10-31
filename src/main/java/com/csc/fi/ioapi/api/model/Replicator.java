@@ -24,6 +24,7 @@ import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.NodeIterator;
 import org.apache.jena.rdf.model.ResIterator;
 import org.apache.jena.rdf.model.Resource;
+import com.csc.fi.ioapi.utils.JerseyResponseManager;
 import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.RDF;
@@ -94,17 +95,17 @@ public class Replicator {
       
       
        if(service==null || service.equals("undefined")) {
-            return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
+            return JerseyResponseManager.invalidIRI();
        } 
        
         HttpSession session = request.getSession();
         
-        if(session==null) return Response.status(403).entity(ErrorMessage.UNAUTHORIZED).build();
+        if(session==null) return JerseyResponseManager.unauthorized();
         
         LoginSession login = new LoginSession(session);
         
         if(!(login.isLoggedIn() && login.isSuperAdmin())) {
-            return Response.status(403).entity(ErrorMessage.UNAUTHORIZED).build();
+            return JerseyResponseManager.unauthorized();
         }
         
         Boolean replicate;
@@ -121,14 +122,14 @@ public class Replicator {
             if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
                 logger.info(service);
                 logger.info(""+response.getStatus());
-                  return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
+                  return JerseyResponseManager.invalidIRI();
             }
 
             DataInputStream dis = new DataInputStream(response.getEntityInputStream());
             replicate = new Boolean(dis.readBoolean());
         
         } catch(Exception ex) {
-            return Response.status(403).entity(ErrorMessage.NOTFOUND).build();
+            return JerseyResponseManager.notFound();
         }
         
         if(replicate!=null && replicate.booleanValue()) {
@@ -143,7 +144,7 @@ public class Replicator {
                 if(group!=null && !group.equals("undefined")) groupIRI = iri.construct(group);
         } catch (IRIException e) {
                 logger.log(Level.WARNING, "Parameter is invalid IRI!");
-               return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
+               return JerseyResponseManager.invalidIRI();
         }
         
        String SD = "http://www.w3.org/ns/sparql-service-description#";
@@ -246,7 +247,7 @@ public class Replicator {
        
 
        logger.info("Returning 200 !?!?");
-       return Response.status(200).entity("{}").build();
+       return JerseyResponseManager.okEmptyContent();
 
   }
   

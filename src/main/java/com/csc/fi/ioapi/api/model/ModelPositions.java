@@ -2,14 +2,10 @@
  * Licensed under the European Union Public Licence (EUPL) V.1.1 
  */
 package com.csc.fi.ioapi.api.model;
-
-import com.csc.fi.ioapi.api.genericapi.Data;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
 import javax.servlet.ServletContext;
 import javax.ws.rs.GET;
-import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -21,30 +17,15 @@ import com.csc.fi.ioapi.config.LoginSession;
 import com.csc.fi.ioapi.utils.ErrorMessage;
 import com.csc.fi.ioapi.utils.GraphManager;
 import com.csc.fi.ioapi.utils.JerseyFusekiClient;
-import com.csc.fi.ioapi.utils.LDHelper;
-import com.csc.fi.ioapi.utils.ProvenanceManager;
-import com.csc.fi.ioapi.utils.QueryLibrary;
-import com.csc.fi.ioapi.utils.ServiceDescriptionManager;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientHandlerException;
-import org.apache.jena.query.DatasetAccessor;
-import org.apache.jena.query.DatasetAccessorFactory;
-import org.apache.jena.query.ParameterizedSparqlString;
-import org.apache.jena.rdf.model.Model;
 import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.UniformInterfaceException;
-import com.sun.jersey.api.client.WebResource;
+import com.csc.fi.ioapi.utils.JerseyResponseManager;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiParam;
 import com.wordnik.swagger.annotations.ApiResponse;
 import com.wordnik.swagger.annotations.ApiResponses;
-import java.util.UUID;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
-import javax.ws.rs.DELETE;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
 import org.apache.jena.atlas.web.ContentType;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
@@ -97,7 +78,7 @@ public class ModelPositions {
           @Context HttpServletRequest request) {
       
         if(model.equals("default")) {
-            return Response.status(403).entity("{\"errorMessage\":\"Invalid id\"}").build();
+            return JerseyResponseManager.invalidIRI();
         }
         
        IRI graphIRI;
@@ -107,17 +88,17 @@ public class ModelPositions {
                 graphIRI = iri.construct(model+"#PositionGraph");
             } catch (IRIException e) {
                 logger.log(Level.WARNING, "GRAPH ID is invalid IRI!");
-                return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
+                return JerseyResponseManager.invalidIRI();
             } 
             
         HttpSession session = request.getSession();
         
-        if(session==null) return Response.status(403).entity(ErrorMessage.UNAUTHORIZED).build();
+        if(session==null) return JerseyResponseManager.unauthorized();
         
         LoginSession login = new LoginSession(session);
         
         if(!login.isLoggedIn() || !login.hasRightToEditModel(model))
-            return Response.status(403).entity(ErrorMessage.UNAUTHORIZED).build();
+            return JerseyResponseManager.unauthorized();
            
             String service = services.getCoreReadWriteAddress();
         
@@ -125,14 +106,14 @@ public class ModelPositions {
 
             if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
                Logger.getLogger(ModelPositions.class.getName()).log(Level.WARNING, model+" coordinates were not saved! Status "+response.getStatus());
-               return Response.status(response.getStatus()).entity("{\"errorMessage\":\"Resource was not created\"}").build();
+               return JerseyResponseManager.notCreated(response.getStatus());
             }
                           
             Logger.getLogger(ModelPositions.class.getName()).log(Level.INFO, model+" coordinates updated sucessfully!");
           
             GraphManager.createExportGraphInRunnable(model);
             
-            return Response.status(204).entity("{}").build();
+            return JerseyResponseManager.okEmptyContent();
 
   }
   

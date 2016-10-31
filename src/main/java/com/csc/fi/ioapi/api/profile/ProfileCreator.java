@@ -14,6 +14,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import com.csc.fi.ioapi.config.ApplicationProperties;
 import com.csc.fi.ioapi.config.EndpointServices;
+import com.csc.fi.ioapi.utils.JerseyResponseManager;
 import com.csc.fi.ioapi.utils.ErrorMessage;
 import com.csc.fi.ioapi.utils.GraphManager;
 import com.csc.fi.ioapi.utils.JerseyFusekiClient;
@@ -64,14 +65,14 @@ public class ProfileCreator {
             else {
                 
                 if(!allowedLang.contains(" "))
-                    return Response.status(403).entity(ErrorMessage.INVALIDPARAMETER).build();
+                    return JerseyResponseManager.invalidParameter();
                 
                 String[] languages = allowedLang.split(" ");
                 String builtLang = "(";
                 
                 for(String s: languages) {
                    if(s.length()>2 || !LDHelper.isAlphaString(s)) {
-                       return Response.status(403).entity(ErrorMessage.INVALIDPARAMETER).build();
+                       return JerseyResponseManager.invalidParameter();
                    } 
                    builtLang = builtLang.concat(" '"+s+"'");
                 }
@@ -88,7 +89,7 @@ public class ProfileCreator {
             IRI redirectIRI = null;
             
             try {
-                    IRIFactory iri = IRIFactory.semanticWebImplementation();
+                    IRIFactory iri = IRIFactory.iriImplementation();
                     namespaceIRI = iri.construct(namespace);
                     namespaceSKOSIRI = iri.construct(namespace+"/skos#");
                     groupIRI = iri.construct(group);                    
@@ -104,12 +105,12 @@ public class ProfileCreator {
                     }
             } catch (IRIException e) {
                     logger.log(Level.WARNING, "ID is invalid IRI!");
-                    return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
+                    return JerseyResponseManager.invalidIRI();
             }
 
             
             if(GraphManager.isExistingPrefix(prefix)) {
-                return Response.status(405).entity(ErrorMessage.USEDIRI).build();
+                return JerseyResponseManager.usedIRI();
             }
             
             ParameterizedSparqlString pss = new ParameterizedSparqlString();

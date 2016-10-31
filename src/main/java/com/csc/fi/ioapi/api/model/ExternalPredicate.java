@@ -17,6 +17,7 @@ import org.apache.jena.iri.IRIFactory;
 import com.csc.fi.ioapi.config.EndpointServices;
 import com.csc.fi.ioapi.utils.ErrorMessage;
 import com.csc.fi.ioapi.utils.JerseyFusekiClient;
+import com.csc.fi.ioapi.utils.JerseyResponseManager;
 import com.csc.fi.ioapi.utils.LDHelper;
 import org.apache.jena.query.ParameterizedSparqlString;
 import com.wordnik.swagger.annotations.Api;
@@ -52,7 +53,7 @@ public class ExternalPredicate {
       @QueryParam("model") String model) {
       
       
-        IRIFactory iriFactory = IRIFactory.semanticWebImplementation();
+        IRIFactory iriFactory = IRIFactory.iriImplementation();
         IRI modelIRI, idIRI;   
         
         /* Check that Model URI is valid */
@@ -60,10 +61,10 @@ public class ExternalPredicate {
             modelIRI = iriFactory.construct(model);
         }
         catch(NullPointerException e) {
-            return Response.status(403).entity(ErrorMessage.UNEXPECTED).build();
+            return JerseyResponseManager.unexpected();
         }
         catch (IRIException e) {
-            return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
+            return JerseyResponseManager.invalidIRI();
         }
 
       if(id==null || id.equals("undefined") || id.equals("default")) {
@@ -151,7 +152,7 @@ public class ExternalPredicate {
                 idIRI = iriFactory.construct(id);
             }
             catch (IRIException e) {
-                return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
+                return JerseyResponseManager.invalidIRI();
             }  
               
             String sparqlService = services.getImportsSparqlAddress();
@@ -248,7 +249,7 @@ public class ExternalPredicate {
             }
             
             
-                        return JerseyFusekiClient.constructGraphFromService(pss.toString(), sparqlService);         
+            return JerseyFusekiClient.constructGraphFromService(pss.toString(), sparqlService);         
 
       }
          

@@ -14,6 +14,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 import com.csc.fi.ioapi.config.EndpointServices;
 import com.csc.fi.ioapi.utils.ErrorMessage;
+import com.csc.fi.ioapi.utils.JerseyResponseManager;
 import com.csc.fi.ioapi.utils.GraphManager;
 import com.csc.fi.ioapi.utils.JerseyFusekiClient;
 import com.csc.fi.ioapi.utils.LDHelper;
@@ -54,15 +55,15 @@ public class ModeRequirementlCreator {
             @ApiParam(value = "Model label", required = true) @QueryParam("label") String label,
             @ApiParam(value = "Initial language", required = true, allowableValues="fi,en") @QueryParam("lang") String lang) {
 
-            if(namespace==null || (!namespace.endsWith("#") && !namespace.endsWith("/"))) return Response.status(403).build();
+            if(namespace==null || (!namespace.endsWith("#") && !namespace.endsWith("/"))) return JerseyResponseManager.invalidIRI();
 
             IRI namespaceIRI;
 
             try {
-                    IRIFactory iri = IRIFactory.semanticWebImplementation();
+                    IRIFactory iri = IRIFactory.iriImplementation();
                     namespaceIRI = iri.construct(namespace);
             } catch (IRIException e) {
-                    return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
+                    return JerseyResponseManager.invalidIRI();
             }
             
             boolean isResolvedNamespace = true;

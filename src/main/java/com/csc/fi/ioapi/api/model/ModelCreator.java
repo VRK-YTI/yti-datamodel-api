@@ -17,6 +17,7 @@ import com.csc.fi.ioapi.config.ApplicationProperties;
 import com.csc.fi.ioapi.config.EndpointServices;
 import com.csc.fi.ioapi.utils.ErrorMessage;
 import com.csc.fi.ioapi.utils.GraphManager;
+import com.csc.fi.ioapi.utils.JerseyResponseManager;
 import com.csc.fi.ioapi.utils.JerseyFusekiClient;
 import com.csc.fi.ioapi.utils.LDHelper;
 import org.apache.jena.query.ParameterizedSparqlString;
@@ -64,14 +65,14 @@ public class ModelCreator {
             }
             else {
                 if(!allowedLang.contains(" "))
-                    return Response.status(403).entity(ErrorMessage.INVALIDPARAMETER).build();
+                    return JerseyResponseManager.invalidParameter();
                 
                 String[] languages = allowedLang.split(" ");
                 String builtLang = "(";
                 
                 for(String s: languages) {
                    if(s.length()>2 || !LDHelper.isAlphaString(s)) {
-                       return Response.status(403).entity(ErrorMessage.INVALIDPARAMETER).build();
+                       return JerseyResponseManager.invalidParameter();
                    } 
                    builtLang = builtLang.concat(" '"+s+"'");
                 }
@@ -88,7 +89,7 @@ public class ModelCreator {
             IRI redirectIRI = null;
             
             try {
-                    IRIFactory iri = IRIFactory.semanticWebImplementation();
+                    IRIFactory iri = IRIFactory.iriImplementation();
                     namespaceIRI = iri.construct(namespace);
                     namespaceSKOSIRI = iri.construct(namespace+"/skos#");
                     groupIRI = iri.construct(group);
@@ -104,13 +105,13 @@ public class ModelCreator {
                     }
             } catch (IRIException e) {
                     logger.warning("INVALID: "+namespace);
-                    return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
+                    return JerseyResponseManager.invalidIRI();
             } catch (NullPointerException e) {
-                    return Response.status(403).entity(ErrorMessage.INVALIDPARAMETER).build();
+                    return JerseyResponseManager.invalidParameter();
             }
             
         if(GraphManager.isExistingPrefix(prefix)) {
-            return Response.status(405).entity(ErrorMessage.USEDIRI).build();
+            return JerseyResponseManager.usedIRI();
         }
 
             ParameterizedSparqlString pss = new ParameterizedSparqlString();

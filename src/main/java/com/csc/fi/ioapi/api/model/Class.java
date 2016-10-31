@@ -25,10 +25,12 @@ import org.apache.jena.iri.IRIException;
 import org.apache.jena.iri.IRIFactory;
 import com.csc.fi.ioapi.config.EndpointServices;
 import com.csc.fi.ioapi.config.LoginSession;
+import com.csc.fi.ioapi.utils.ResourceManager;
 import com.csc.fi.ioapi.utils.ConceptMapper;
 import com.csc.fi.ioapi.utils.ErrorMessage;
 import com.csc.fi.ioapi.utils.GraphManager;
 import com.csc.fi.ioapi.utils.JerseyFusekiClient;
+import com.csc.fi.ioapi.utils.JerseyResponseManager;
 import com.csc.fi.ioapi.utils.LDHelper;
 import com.csc.fi.ioapi.utils.NamespaceManager;
 import com.csc.fi.ioapi.utils.ProvenanceManager;
@@ -78,29 +80,7 @@ public class Class {
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
         
-        String queryString = "CONSTRUCT { "
-                + "?class rdfs:label ?label . "
-                + "?class rdfs:comment ?description . "
-                + "?class a ?type . "
-                + "?class dcterms:modified ?modified . "
-                + "?class rdfs:isDefinedBy ?source . "
-                + "?source rdfs:label ?sourceLabel . "
-                + "?source a ?sourceType . "
-                + "} WHERE { "
-                + "GRAPH ?hasPartGraph { "
-                + "?library dcterms:hasPart ?class . } "
-                + "GRAPH ?class { "
-                + "?class dcterms:modified ?modified . "
-                + "?class rdfs:label ?label . "
-                + "OPTIONAL { ?class rdfs:comment ?description . } "
-                + "?class a ?type . "
-                + "VALUES ?type { rdfs:Class sh:Shape } "
-                + "?class rdfs:isDefinedBy ?source .  } "
-                + "GRAPH ?source { "
-                + "?source a ?sourceType . "
-                + "?source rdfs:label ?sourceLabel . "
-                + "} }"; 
-        
+        String queryString = QueryLibrary.listClassesQuery;
 
          if(model!=null && !model.equals("undefined")) {
               pss.setIri("library", model);
@@ -113,13 +93,13 @@ public class Class {
 
       } else {
           
-            IRIFactory iriFactory = IRIFactory.semanticWebImplementation();
+            IRIFactory iriFactory = IRIFactory.iriImplementation();
             IRI idIRI;
             try {
                 idIRI = iriFactory.construct(id);
             }
             catch (IRIException e) {
-                return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
+                return JerseyResponseManager.invalidIRI();
             }  
             
             
@@ -136,7 +116,7 @@ public class Class {
             Map<String, String> namespaceMap = NamespaceManager.getCoreNamespaceMap(id, graphService);
 
             if(namespaceMap==null) {
-                return Response.status(404).entity(ErrorMessage.NOTFOUND).build();
+                return JerseyResponseManager.error();
             }
 
             pss.setNsPrefixes(namespaceMap);
@@ -150,8 +130,6 @@ public class Class {
             if(model!=null && !model.equals("undefined")) {
                   pss.setIri("library", model);
             }
-
-            logger.info(pss.toString());
             
             return JerseyFusekiClient.constructGraphFromService(pss.toString(), sparqlService);         
 
@@ -187,14 +165,14 @@ public class Class {
               
         HttpSession session = request.getSession();
         
-        if(session==null) return Response.status(401).entity(ErrorMessage.UNAUTHORIZED).build();
+        if(session==null) return JerseyResponseManager.unauthorized();
         
         LoginSession login = new LoginSession(session);
         
         if(!login.isLoggedIn() || !login.hasRightToEditModel(model))
-            return Response.status(401).entity(ErrorMessage.UNAUTHORIZED).build();
+            return JerseyResponseManager.unauthorized();
                 
-        IRIFactory iriFactory = IRIFactory.semanticWebImplementation();
+        IRIFactory iriFactory = IRIFactory.iriImplementation();
         IRI modelIRI,idIRI,oldIdIRI = null;        
         
         /* Check that URIs are valid */
@@ -205,17 +183,16 @@ public class Class {
             if(oldid!=null && !oldid.equals("undefined")) {
                 if(oldid.equals(id)) {
                   /* id and newid cant be the same */
-                  return Response.status(403).entity(ErrorMessage.USEDIRI).build();
+                  return JerseyResponseManager.usedIRI();
                 }
                 oldIdIRI = iriFactory.construct(oldid);
             }
         }
         catch (IRIException e) {
-            return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
+            return JerseyResponseManager.invalidIRI();
         }
         
-        UUID provUUID = UUID.randomUUID();
-        ClientResponse response = null;
+        UUID provUUID = null;
         
         if(isNotEmpty(body)) {
             
@@ -224,68 +201,34 @@ public class Class {
                 /* Prevent overwriting existing resources */
                 if(GraphManager.isExistingGraph(idIRI)) {
                     logger.log(Level.WARNING, idIRI+" is existing graph!");
-                    return Response.status(403).entity(ErrorMessage.USEDIRI).build();
-                }
-                else {
-                    
-                    /* Remove old graph and add update references */
-                    /* TODO: Not allowed if model is draft!?*/
-                    response = JerseyFusekiClient.putGraphToTheService(id, body, services.getCoreReadWriteAddress());
-                    
-                    if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-                        logger.log(Level.WARNING, "Unexpected: ID not changed: "+id);
-                        return Response.status(response.getStatus()).entity(ErrorMessage.UNEXPECTED).build();
-                    } 
-                    
-                    GraphManager.removeGraph(oldIdIRI);
-                    GraphManager.renameID(oldIdIRI,idIRI);
+                    return JerseyResponseManager.usedIRI();
+                } else {
+                    provUUID = ResourceManager.updateResourceWithNewId(idIRI, oldIdIRI, modelIRI, body, login);
                     GraphManager.updateClassReferencesInModel(modelIRI, oldIdIRI, idIRI);
-                    GraphManager.updateReferencesInPositionGraph(modelIRI, oldIdIRI, idIRI);
-                    
-                    if(ProvenanceManager.getProvMode()) {
-                        ProvenanceManager.renameID(oldid,id);
-                    }
+                    logger.info("Changed id from:"+oldid+" to "+id);
                 }
             } else {
-                /* Overwrite existing graph */ 
-                response = JerseyFusekiClient.putGraphToTheService(id, body, services.getCoreReadWriteAddress());
+                provUUID = ResourceManager.updateClass(id, model, body, login);
             }
-            
-           ConceptMapper.addConceptFromReferencedResource(model,id);
-           
-           GraphManager.updateModifyDates(id);
-           
-           if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-               /* TODO: Create prov events from failed updates? */
-               logger.log(Level.WARNING, "Unexpected: Not updated: "+id);
-               return Response.status(response.getStatus()).entity(ErrorMessage.UNEXPECTED).build();
-           } 
-            
-           /* If update is successfull create new prov entity */ 
-           if(ProvenanceManager.getProvMode()) {
-                ProvenanceManager.createProvenanceGraph(id, body, login.getEmail(), provUUID); 
-           }
-           
-           GraphManager.createExportGraphInRunnable(model);
-
         } else {
              /* IF NO JSON-LD POSTED TRY TO CREATE REFERENCE FROM MODEL TO CLASS ID */
             if(id.startsWith(model)) {
                 // Selfreferences not allowed
-                Response.status(403).entity(ErrorMessage.USEDIRI).build();
+                return JerseyResponseManager.usedIRI();
             } else {
                 GraphManager.insertExistingGraphReferenceToModel(id, model);
                 GraphManager.createExportGraphInRunnable(model);
                 ConceptMapper.addConceptFromReferencedResource(model,id);
-                return Response.status(204).build();
+                return JerseyResponseManager.ok();
             }
         }
         
-        
-        
-        Logger.getLogger(Class.class.getName()).log(Level.INFO, id+" updated sucessfully");
-        return Response.status(204).entity("{\"identifier\":\"urn:uuid:"+provUUID+"\"}").build();
-        
+        if(provUUID!=null) {
+            return JerseyResponseManager.successUuid(provUUID);
+        }
+        else {
+            return JerseyResponseManager.notCreated();
+        }
   }
  
   @PUT
@@ -312,7 +255,7 @@ public class Class {
       
     try {
         
-        IRIFactory iriFactory = IRIFactory.semanticWebImplementation();
+        IRIFactory iriFactory = IRIFactory.iriImplementation();
         IRI modelIRI,idIRI;   
         
         /* Check that URIs are valid */
@@ -321,62 +264,40 @@ public class Class {
             idIRI = iriFactory.construct(id);
         }
         catch(NullPointerException e) {
-            return Response.status(403).entity(ErrorMessage.UNEXPECTED).build();
+            return JerseyResponseManager.unexpected();
         }
         catch (IRIException e) {
-            return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
+            return JerseyResponseManager.invalidIRI();
         }
                
         HttpSession session = request.getSession();
 
-        if(session==null) return Response.status(401).entity(ErrorMessage.UNAUTHORIZED).build();
+        if(session==null) return JerseyResponseManager.unauthorized();
 
         LoginSession login = new LoginSession(session);
 
             if(!login.isLoggedIn() || !login.hasRightToEditModel(model))
-                return Response.status(401).entity(ErrorMessage.UNAUTHORIZED).build();
+                return JerseyResponseManager.unauthorized();
 
              if(!id.startsWith(model)) {
                 Logger.getLogger(Class.class.getName()).log(Level.WARNING, id+" ID must start with "+model);
-                return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
+                return JerseyResponseManager.invalidIRI();
              }
 
             /* Prevent overwriting existing classes */ 
             if(GraphManager.isExistingGraph(idIRI)) {
                logger.log(Level.WARNING, idIRI+" is existing class!");
-               return Response.status(403).entity(ErrorMessage.USEDIRI).build();
+               return JerseyResponseManager.usedIRI();
             }
           
-           /* Create new graph with new id */ 
-           ClientResponse response = JerseyFusekiClient.putGraphToTheService(id, body, services.getCoreReadWriteAddress());
-
-           if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-               logger.log(Level.WARNING, "Unexpected: Not created: "+id);
-               return Response.status(response.getStatus()).entity(ErrorMessage.UNEXPECTED).build();
-           }
-
-
-            UUID provUUID = UUID.randomUUID();
-            
-           /* If new class was created succesfully create prov activity */
-           if(ProvenanceManager.getProvMode()) {
-               ProvenanceManager.createProvenanceActivity(id, login.getEmail(), body, provUUID);
-           }
-            
-            GraphManager.insertNewGraphReferenceToModel(id, model);
-            
-            logger.log(Level.INFO, id+" updated sucessfully!");
-            
-            ConceptMapper.addConceptFromReferencedResource(model,id);
-            
-            GraphManager.insertNewGraphReferenceToExportGraph(id,model);
-            JerseyFusekiClient.postGraphToTheService(model+"#ExportGraph", body, services.getCoreReadWriteAddress());
-            
-          return Response.status(204).entity("{\"identifier\":\"urn:uuid:"+provUUID+"\"}").build();
+           UUID provUUID = ResourceManager.putNewResource(id, model, body, login);
+          
+           if(provUUID!=null) return JerseyResponseManager.successUuid(provUUID);
+           else return JerseyResponseManager.notCreated();
 
       } catch(UniformInterfaceException | ClientHandlerException ex) {
         Logger.getLogger(Class.class.getName()).log(Level.WARNING, "Expect the unexpected!", ex);
-        return Response.status(400).entity(ErrorMessage.UNEXPECTED).build();
+        return JerseyResponseManager.unexpected();
       }
   }
  
@@ -395,7 +316,7 @@ public class Class {
           @QueryParam("id") String id,
           @Context HttpServletRequest request) {
       
-      IRIFactory iriFactory = IRIFactory.semanticWebImplementation();
+      IRIFactory iriFactory = IRIFactory.iriImplementation();
        /* Check that URIs are valid */
       IRI modelIRI,idIRI;
         try {
@@ -403,17 +324,17 @@ public class Class {
             idIRI = iriFactory.construct(id);
         }
         catch (IRIException e) {
-            return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
+            return JerseyResponseManager.invalidIRI();
         }
       
        HttpSession session = request.getSession();
 
-       if(session==null) return Response.status(401).entity(ErrorMessage.UNAUTHORIZED).build();
+       if(session==null) return JerseyResponseManager.unauthorized();
 
        LoginSession login = new LoginSession(session);
 
        if(!login.isLoggedIn() || !login.hasRightToEditModel(model))
-          return Response.status(401).entity(ErrorMessage.UNAUTHORIZED).build();
+          return JerseyResponseManager.unauthorized();
        
        /* If Class is defined in the model */
        if(id.startsWith(model)) {
@@ -423,12 +344,12 @@ public class Class {
            // ConceptMapper.removeUnusedConcepts(model);
             return resp;
         } else {
-        /* If removing referenced class */   
-        /* TODO: Add response to GraphManager? */   
+        /* If removing referenced class */    
              GraphManager.deleteGraphReferenceFromModel(idIRI,modelIRI);
              GraphManager.createExportGraphInRunnable(model);
-          // ConceptMapper.removeUnusedConcepts(model);
-             return Response.status(204).build();   
+        /* TODO: Remove unused concepts? */
+        // ConceptMapper.removeUnusedConcepts(model);
+             return JerseyResponseManager.ok();
        }
   }
 

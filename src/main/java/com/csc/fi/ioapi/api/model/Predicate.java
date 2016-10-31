@@ -31,11 +31,13 @@ import com.csc.fi.ioapi.utils.ConceptMapper;
 import com.csc.fi.ioapi.utils.ErrorMessage;
 import com.csc.fi.ioapi.utils.GraphManager;
 import com.csc.fi.ioapi.utils.JerseyFusekiClient;
+import com.csc.fi.ioapi.utils.JerseyResponseManager;
 import com.csc.fi.ioapi.utils.LDHelper;
 import com.csc.fi.ioapi.utils.ModelManager;
 import com.csc.fi.ioapi.utils.NamespaceManager;
 import com.csc.fi.ioapi.utils.ProvenanceManager;
 import com.csc.fi.ioapi.utils.QueryLibrary;
+import com.csc.fi.ioapi.utils.ResourceManager;
 import org.apache.jena.query.ParameterizedSparqlString;
 import com.sun.jersey.api.client.ClientResponse;
 import com.wordnik.swagger.annotations.Api;
@@ -48,6 +50,7 @@ import java.io.OutputStream;
 import java.util.Map;
 import java.util.UUID;
 import javax.ws.rs.DELETE;
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFDataMgr;
@@ -84,25 +87,7 @@ public class Predicate {
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
 
-        String queryString = "CONSTRUCT { "
-                + "?property rdfs:label ?label . "
-                + "?property rdfs:comment ?description . "
-                + "?property a ?type . "
-                + "?property rdfs:isDefinedBy ?source . "
-                + "?source rdfs:label ?sourceLabel . "
-                + "?source a ?sourceType . "
-                + "?property dcterms:modified ?date . } "
-                + "WHERE { "
-                + "GRAPH ?hasPartGraph { "
-                + "?library dcterms:hasPart ?property . } "
-                + "GRAPH ?property { ?property rdfs:label ?label . "
-                + "OPTIONAL { ?property rdfs:comment ?description . } "
-                + "VALUES ?type { owl:ObjectProperty owl:DatatypeProperty } "
-                + "?property a ?type . "
-                + "?property rdfs:isDefinedBy ?source . "
-                + "OPTIONAL {?property dcterms:modified ?date . } "
-                + "} "
-                + "GRAPH ?source { ?source a ?sourceType . ?source rdfs:label ?sourceLabel . }}"; 
+        String queryString = QueryLibrary.listPredicatesQuery;
 
          if(model!=null && !model.equals("undefined")) {
               pss.setIri("library", model);
@@ -110,20 +95,18 @@ public class Predicate {
          }
 
         pss.setCommandText(queryString);
-
-        // return Response.ok().entity(GraphManager.constructFromGraph(pss.toString())).build();
         
         return JerseyFusekiClient.constructGraphFromService(pss.toString(), services.getCoreSparqlAddress());
 
       } else {
           
-                      IRIFactory iriFactory = IRIFactory.semanticWebImplementation();
+            IRIFactory iriFactory = IRIFactory.iriImplementation();
             IRI idIRI;
             try {
                 idIRI = iriFactory.construct(id);
             }
             catch (IRIException e) {
-                return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
+                return JerseyResponseManager.invalidIRI();
             }  
             
             if(id.startsWith("urn:")) {
@@ -139,7 +122,7 @@ public class Predicate {
             Map<String, String> namespaceMap = NamespaceManager.getCoreNamespaceMap(id, graphService);
 
             if(namespaceMap==null) {
-                return Response.status(404).entity(ErrorMessage.NOTFOUND).build();
+                return JerseyResponseManager.error();
             }
 
             pss.setNsPrefixes(namespaceMap);
@@ -188,14 +171,14 @@ public class Predicate {
  
         HttpSession session = request.getSession();
         
-        if(session==null) return Response.status(403).entity(ErrorMessage.UNAUTHORIZED).build();
+        if(session==null) return JerseyResponseManager.unauthorized();
         
         LoginSession login = new LoginSession(session);
         
         if(!login.isLoggedIn() || !login.hasRightToEditModel(model))
-            return Response.status(403).entity(ErrorMessage.UNAUTHORIZED).build();
+            return JerseyResponseManager.unauthorized();
                 
-        IRIFactory iriFactory = IRIFactory.semanticWebImplementation();
+        IRIFactory iriFactory = IRIFactory.iriImplementation();
         IRI modelIRI,idIRI,oldIdIRI = null; 
         
        /* Check that URIs are valid */
@@ -206,84 +189,50 @@ public class Predicate {
             if(oldid!=null && !oldid.equals("undefined")) {
                 if(oldid.equals(id)) {
                   /* id and oldid cant be the same */
-                  return Response.status(403).entity(ErrorMessage.USEDIRI).build();
+                  return JerseyResponseManager.usedIRI();
                 }
                 oldIdIRI = iriFactory.construct(oldid);
             }
         }
         catch (IRIException e) {
-            return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
+            return JerseyResponseManager.invalidIRI();
         }
         
-        UUID provUUID = UUID.randomUUID();
+         UUID provUUID = null;
         
         if(isNotEmpty(body)) {
             
-            /* Rename ID */
+            /* Rename ID if oldIdIRI exists */
             if(oldIdIRI!=null) {
                 /* Prevent overwriting existing resources */
                 if(GraphManager.isExistingGraph(idIRI)) {
                     logger.log(Level.WARNING, idIRI+" is existing graph!");
-                    return Response.status(403).entity(ErrorMessage.USEDIRI).build();
-                }
-                else {
-                    /* Remove old graph and add update references */
-                    GraphManager.removeGraph(oldIdIRI);
-                    GraphManager.renameID(oldIdIRI,idIRI);
+                    return JerseyResponseManager.usedIRI();
+                } else {
+                    provUUID = ResourceManager.updateResourceWithNewId(idIRI, oldIdIRI, modelIRI, body, login);
                     GraphManager.updatePredicateReferencesInModel(modelIRI, oldIdIRI, idIRI);
-                    GraphManager.updateReferencesInPositionGraph(modelIRI, oldIdIRI, idIRI);
-                    
-                    if(ProvenanceManager.getProvMode()) {
-                        ProvenanceManager.renameID(oldid,id);
-                    }
+                    logger.info("Changed id from:"+oldid+" to "+id);
                 }
+            } else {
+                provUUID = ResourceManager.updateClass(id, model, body, login);
             }
-            
-        Model predicateModel = ModelManager.createModelFromString(body);
-        
-        logger.info("modelSize:"+predicateModel.size());
-            
-       // GraphManager.putToGraph(predicateModel, id);
-        
-        /* Create new graph with new id */ 
-        ClientResponse response = JerseyFusekiClient.putGraphToTheService(id, body, services.getCoreReadWriteAddress());
-        
-        ConceptMapper.addConceptFromReferencedResource(model,id);
-           
-        GraphManager.updateModifyDates(id);
-        
-       
-        if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-               logger.log(Level.WARNING, "Unexpected: Predicate update failed: "+id);
-               return Response.status(response.getStatus()).entity(ErrorMessage.UNEXPECTED).build();
-        } 
-        
-        /* If update is successfull create new prov entity */ 
-        if(ProvenanceManager.getProvMode()) {
-           ProvenanceManager.createProvenanceGraph(id, body, login.getEmail(), provUUID); 
-        }
-        
-        GraphManager.createExportGraphInRunnable(model);
-        
-            
         } else {
              /* IF NO JSON-LD POSTED TRY TO CREATE REFERENCE FROM MODEL TO CLASS ID */
             if(id.startsWith(model)) {
                 // Selfreferences not allowed
-                 return Response.status(403).entity(ErrorMessage.USEDIRI).build();
+                return JerseyResponseManager.usedIRI();
             } else {
                 GraphManager.insertExistingGraphReferenceToModel(id, model);
-                ConceptMapper.addConceptFromReferencedResource(model,id);
                 GraphManager.createExportGraphInRunnable(model);
-        
-                return Response.status(204).build();
+                ConceptMapper.addConceptFromReferencedResource(model,id);
+                return JerseyResponseManager.ok();
             }
         }
         
-        
-        logger.log(Level.INFO, id + " updated sucessfully!");
-
-        return Response.status(204).entity("{\"identifier\":\"urn:uuid:"+provUUID+"\"}").build();
+        if(provUUID!=null) {
+            return JerseyResponseManager.successUuid(provUUID);
+        }
+        else return JerseyResponseManager.notCreated();
         
   }
   
@@ -312,57 +261,36 @@ public class Predicate {
         
             HttpSession session = request.getSession();
 
-            if(session==null) return Response.status(403).entity(ErrorMessage.UNAUTHORIZED).build();
+            if(session==null) return JerseyResponseManager.unauthorized();
 
             LoginSession login = new LoginSession(session);
 
             if(!login.isLoggedIn() || !login.hasRightToEditModel(model))
-                return Response.status(403).entity(ErrorMessage.UNAUTHORIZED).build();
-
+                return JerseyResponseManager.unauthorized();
+            
             if(!id.startsWith(model))
-                return Response.status(403).build();
+                return JerseyResponseManager.invalidIRI();
 
-            IRIFactory iriFactory = IRIFactory.semanticWebImplementation();
+            IRIFactory iriFactory = IRIFactory.iriImplementation();
             IRI modelIRI,idIRI;
             try {
                 modelIRI = iriFactory.construct(model);
                 idIRI = iriFactory.construct(id);
             }
             catch (IRIException e) {
-                return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
+                return JerseyResponseManager.invalidIRI();
             }
 
             /* Prevent overwriting existing predicate */ 
             if(GraphManager.isExistingGraph(idIRI)) {
                logger.log(Level.WARNING, idIRI+" is existing predicate!");
-               return Response.status(403).entity(ErrorMessage.USEDIRI).build();
+               return JerseyResponseManager.usedIRI();
             }
-        
-           ClientResponse response = JerseyFusekiClient.putGraphToTheService(id, body, services.getCoreReadWriteAddress());
            
-           if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-               logger.log(Level.WARNING, "Unexpected: Predicate creation failed: "+id);
-               return Response.status(response.getStatus()).entity(ErrorMessage.UNEXPECTED).build();
-           }
-           
-
-           
-            UUID provUUID = UUID.randomUUID();
-            
-           /* If predicate is created succesfully create prov activity */
-           if(ProvenanceManager.getProvMode()) {
-                ProvenanceManager.createProvenanceActivity(id, login.getEmail(), body, provUUID);
-           }
-            
-           GraphManager.insertNewGraphReferenceToModel(id, model);
+           UUID provUUID = ResourceManager.putNewResource(id, model, body, login);
           
-           ConceptMapper.addConceptFromReferencedResource(model,id);
-            
-           logger.log(Level.INFO, id + " updated sucessfully!");
-           
-           JerseyFusekiClient.postGraphToTheService(model+"#ExportGraph", body, services.getCoreReadWriteAddress());
-            
-           return Response.status(204).entity("{\"identifier\":\"urn:uuid:"+provUUID+"\"}").build();
+           if(provUUID!=null) return JerseyResponseManager.successUuid(provUUID);
+           else return JerseyResponseManager.notCreated();
            
   }
   
@@ -382,7 +310,7 @@ public class Predicate {
           @QueryParam("id") String id,
           @Context HttpServletRequest request) {
       
-      IRIFactory iriFactory = IRIFactory.semanticWebImplementation();
+      IRIFactory iriFactory = IRIFactory.iriImplementation();
        /* Check that URIs are valid */
       IRI modelIRI,idIRI;
         try {
@@ -390,33 +318,34 @@ public class Predicate {
             idIRI = iriFactory.construct(id);
         }
         catch (IRIException e) {
-            return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
+            return JerseyResponseManager.invalidIRI();
         }
       
        
        HttpSession session = request.getSession();
 
-       if(session==null) return Response.status(401).entity(ErrorMessage.UNAUTHORIZED).build();
+       if(session==null) return JerseyResponseManager.unauthorized();
 
        LoginSession login = new LoginSession(session);
 
        if(!login.isLoggedIn() || !login.hasRightToEditModel(model))
-          return Response.status(401).entity(ErrorMessage.UNAUTHORIZED).build();
+          return JerseyResponseManager.unauthorized();
        
-    /* If Predicate is defined in the model */
-    if(id.startsWith(model)) {
-        /* Remove graph */
-            Response resp = JerseyFusekiClient.deleteGraphFromService(id, services.getCoreReadWriteAddress());   
-         //   ConceptMapper.removeUnusedConcepts(model);
-            return resp;
-    } else {
-        /* If removing referenced predicate */   
-         GraphManager.deleteGraphReferenceFromModel(idIRI,modelIRI);
-         
-         GraphManager.createExportGraphInRunnable(model);
-        // ConceptMapper.removeUnusedConcepts(model);
-         return Response.status(204).build();   
-       }
+        /* If Predicate is defined in the model */
+        if(id.startsWith(model)) {
+            /* Remove graph */
+                Response resp = JerseyFusekiClient.deleteGraphFromService(id, services.getCoreReadWriteAddress());
+             /* TODO: Remove unused concepts?*/
+             //   ConceptMapper.removeUnusedConcepts(model);
+                return resp;
+        } else {
+            /* If removing referenced predicate */   
+             GraphManager.deleteGraphReferenceFromModel(idIRI,modelIRI);
+
+             GraphManager.createExportGraphInRunnable(model);
+            // ConceptMapper.removeUnusedConcepts(model);
+             return JerseyResponseManager.ok();
+           }
   }
   
  

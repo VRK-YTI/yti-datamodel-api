@@ -15,6 +15,7 @@ import javax.ws.rs.core.Response;
 import com.csc.fi.ioapi.config.EndpointServices;
 import com.csc.fi.ioapi.utils.ConceptMapper;
 import com.csc.fi.ioapi.utils.ErrorMessage;
+import com.csc.fi.ioapi.utils.JerseyResponseManager;
 import com.csc.fi.ioapi.utils.JerseyFusekiClient;
 import com.csc.fi.ioapi.utils.LDHelper;
 import org.apache.jena.query.ParameterizedSparqlString;
@@ -58,12 +59,12 @@ public class PredicateCreator {
         IRI conceptIRI,modelIRI,typeIRI;
         try {
                 String typeURI = type.replace("owl:", "http://www.w3.org/2002/07/owl#");
-                IRIFactory iri = IRIFactory.semanticWebImplementation();
+                IRIFactory iri = IRIFactory.iriImplementation();
                 conceptIRI = iri.construct(conceptID);
                 modelIRI = iri.construct(modelID);
                 typeIRI = iri.construct(typeURI);
         } catch (IRIException e) {
-                return Response.status(403).entity(ErrorMessage.INVALIDIRI).build();
+                return JerseyResponseManager.invalidIRI();
         }
 
        // ConceptMapper.updateConceptFromConceptService(conceptID);
