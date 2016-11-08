@@ -212,7 +212,8 @@ public class Class {
             }
         } else {
              /* IF NO JSON-LD POSTED TRY TO CREATE REFERENCE FROM MODEL TO CLASS ID */
-            if(id.startsWith(model)) {
+   
+            if(LDHelper.isResourceDefinedInNamespace(id, model)) {
                 // Selfreferences not allowed
                 return JerseyResponseManager.usedIRI();
             } else {

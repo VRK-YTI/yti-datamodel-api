@@ -32,6 +32,7 @@ import org.apache.commons.lang3.text.WordUtils;
  */
 public class LDHelper {
     
+   private static final Logger logger = Logger.getLogger(LDHelper.class.getName());
    public static final String[] UNRESOLVABLE = {"xsd","iow","text","sh","afn","schema","dcap"};
    
    public static boolean isPrefixResolvable(String item) {
@@ -141,6 +142,23 @@ public class LDHelper {
             return namespace+name;
         } else {
             return namespace+"#"+name;
+        }
+    }
+    
+    public static boolean isResourceDefinedInNamespace(String resource, String namespace) {
+        
+        if(!namespace.endsWith("/")) {
+            namespace = namespace+"#";
+        }
+      
+        return guessNamespaceFromResourceURI(resource).equals(namespace);
+    }
+    
+    public static String guessNamespaceFromResourceURI(String resource) {
+        if(resource.contains("#")) {
+            return resource.substring(0,resource.lastIndexOf("#")+1);
+        } else {
+            return resource.substring(0,resource.lastIndexOf("/")+1);
         }
     }
     
