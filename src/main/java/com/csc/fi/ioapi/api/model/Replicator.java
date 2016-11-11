@@ -16,9 +16,8 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import com.csc.fi.ioapi.config.EndpointServices;
 import com.csc.fi.ioapi.config.LoginSession;
-import com.csc.fi.ioapi.utils.ErrorMessage;
 import com.csc.fi.ioapi.utils.GraphManager;
-import com.csc.fi.ioapi.utils.JerseyFusekiClient;
+import com.csc.fi.ioapi.utils.JerseyJsonLDClient;
 import com.csc.fi.ioapi.utils.ServiceDescriptionManager;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.NodeIterator;
@@ -28,16 +27,12 @@ import com.csc.fi.ioapi.utils.JerseyResponseManager;
 import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.RDF;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.uri.UriComponent;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiParam;
 import com.wordnik.swagger.annotations.ApiResponse;
 import com.wordnik.swagger.annotations.ApiResponses;
-import java.io.DataInputStream;
 import java.util.HashMap;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
@@ -108,30 +103,8 @@ public class Replicator {
             return JerseyResponseManager.unauthorized();
         }
         
-        Boolean replicate;
-        
-        try {
-            
-            String replicateURI = service+"replicate";
-            
-            Client client = Client.create();
-            WebResource webResource = client.resource(replicateURI);
-            WebResource.Builder builder = webResource.accept("application/json");
-            ClientResponse response = builder.get(ClientResponse.class);
+        Boolean replicate = JerseyJsonLDClient.readBooleanFromURL(service+"replicate");
 
-            if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-                logger.info(service);
-                logger.info(""+response.getStatus());
-                  return JerseyResponseManager.invalidIRI();
-            }
-
-            DataInputStream dis = new DataInputStream(response.getEntityInputStream());
-            replicate = new Boolean(dis.readBoolean());
-        
-        } catch(Exception ex) {
-            return JerseyResponseManager.notFound();
-        }
-        
         if(replicate!=null && replicate.booleanValue()) {
             logger.info("Replicating data from "+replicate);
         }
@@ -151,7 +124,7 @@ public class Replicator {
          
        if(modelIRI==null && groupIRI==null) {
            
-           Model modelList = JerseyFusekiClient.getResourceAsJenaModel(service+"serviceDescription");
+           Model modelList = JerseyJsonLDClient.getResourceAsJenaModel(service+"serviceDescription");
            ResIterator iter = modelList.listResourcesWithProperty(RDF.type, ResourceFactory.createResource(SD+"NamedGraph"));
            
            DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(services.getCoreReadWriteAddress());
@@ -174,7 +147,7 @@ public class Replicator {
                  
                 /* Replicate local concepts */ 
                 String localConcepts = service+"exportResource?graph="+UriComponent.encode(modelURI.toString()+"/skos#",UriComponent.Type.QUERY_PARAM)+"&service=concept";
-                Model localConceptModel = JerseyFusekiClient.getResourceAsJenaModel(localConcepts);
+                Model localConceptModel = JerseyJsonLDClient.getResourceAsJenaModel(localConcepts);
                 conceptAdapter.add(modelURI.toString()+"/skos#",localConceptModel);
                  
                 Resource modelGROUP = res.getPropertyResourceValue(DCTerms.isPartOf);
@@ -182,27 +155,27 @@ public class Replicator {
                 
                 ServiceDescriptionManager.createGraphDescription(modelURI.toString(), modelGROUP.toString(), null);
                 
-                Model exportedModel = JerseyFusekiClient.getResourceAsJenaModel(service+"exportResource?graph="+modelURI.toString());
+                Model exportedModel = JerseyJsonLDClient.getResourceAsJenaModel(service+"exportResource?graph="+modelURI.toString());
                 adapter.add(modelURI.toString(), exportedModel);
                 
                 // HasPartGraph
                 String uri = service+"exportResource?graph="+UriComponent.encode(modelURI.toString()+"#HasPartGraph",UriComponent.Type.QUERY_PARAM);
      
-                Model hasPartModel = JerseyFusekiClient.getResourceAsJenaModel(uri);
+                Model hasPartModel = JerseyJsonLDClient.getResourceAsJenaModel(uri);
                 adapter.add(modelURI.toString()+"#HasPartGraph", hasPartModel);
                 
                 // ExportGraph
                 
                 String euri = service+"exportResource?graph="+UriComponent.encode(modelURI.toString()+"#ExportGraph",UriComponent.Type.QUERY_PARAM);
      
-                Model exportModel = JerseyFusekiClient.getResourceAsJenaModel(euri);
+                Model exportModel = JerseyJsonLDClient.getResourceAsJenaModel(euri);
                 adapter.add(modelURI.toString()+"#ExportGraph", exportModel);
                 
                 // PositionGraph
                 
                 String puri = service+"exportResource?graph="+UriComponent.encode(modelURI.toString()+"#PositionGraph",UriComponent.Type.QUERY_PARAM);
      
-                Model positionModel = JerseyFusekiClient.getResourceAsJenaModel(puri);
+                Model positionModel = JerseyJsonLDClient.getResourceAsJenaModel(puri);
                 adapter.add(modelURI.toString()+"#PositionGraph", positionModel);
                 
                 
@@ -215,7 +188,7 @@ public class Replicator {
                     Resource part = nodIter.nextNode().asResource();
                     
                     String resourceURI = service+"exportResource?graph="+UriComponent.encode(part.toString(),UriComponent.Type.QUERY_PARAM);
-                    Model resourceModel = JerseyFusekiClient.getResourceAsJenaModel(resourceURI);
+                    Model resourceModel = JerseyJsonLDClient.getResourceAsJenaModel(resourceURI);
                     adapter.add(part.toString(), resourceModel);
                     
                     NodeIterator subIter = resourceModel.listObjectsOfProperty(DCTerms.subject);
@@ -226,7 +199,7 @@ public class Replicator {
                         if(!conceptMap.containsKey(coConcept)) {
                             String conceptURI = service+"exportResource?graph="+UriComponent.encode(coConcept,UriComponent.Type.QUERY_PARAM)+"&service=concept";
                           //logger.info(conceptURI);
-                            Model conceptModel = JerseyFusekiClient.getResourceAsJenaModel(conceptURI);
+                            Model conceptModel = JerseyJsonLDClient.getResourceAsJenaModel(conceptURI);
                           //  logger.info(""+conceptModel.size());
                             conceptMap.put(coConcept, "true");
                             conceptAdapter.putModel(coConcept, conceptModel);

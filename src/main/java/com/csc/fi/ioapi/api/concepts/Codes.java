@@ -4,7 +4,7 @@
 package com.csc.fi.ioapi.api.concepts;
 
 import com.csc.fi.ioapi.config.EndpointServices;
-import com.csc.fi.ioapi.utils.JerseyFusekiClient;
+import com.csc.fi.ioapi.utils.JerseyJsonLDClient;
 import com.csc.fi.ioapi.utils.JerseyResponseManager;
 import com.csc.fi.ioapi.utils.OPHCodeServer;
 import com.wordnik.swagger.annotations.Api;
@@ -55,7 +55,7 @@ public class Codes {
                if(!codeStatus) return JerseyResponseManager.notAcceptable();
           } 
       
-           return JerseyFusekiClient.getGraphResponseFromService(uri, services.getSchemesReadAddress());
+           return JerseyJsonLDClient.getGraphResponseFromService(uri, services.getSchemesReadAddress());
 
   }
   

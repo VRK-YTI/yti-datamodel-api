@@ -18,7 +18,7 @@ import javax.ws.rs.core.Response;
 import com.csc.fi.ioapi.config.EndpointServices;
 import com.csc.fi.ioapi.config.LoginSession;
 import com.csc.fi.ioapi.utils.ErrorMessage;
-import com.csc.fi.ioapi.utils.JerseyFusekiClient;
+import com.csc.fi.ioapi.utils.JerseyJsonLDClient;
 import com.csc.fi.ioapi.utils.JerseyResponseManager;
 import com.csc.fi.ioapi.utils.LDHelper;
 import org.apache.jena.query.ParameterizedSparqlString;
@@ -86,7 +86,7 @@ public class User {
         pss.setLiteral("email", email);
         pss.setLiteral("login", login.isLoggedIn());
 
-        return JerseyFusekiClient.constructGraphFromService(pss.toString(), services.getUsersSparqlAddress());
+        return JerseyJsonLDClient.constructGraphFromService(pss.toString(), services.getUsersSparqlAddress());
 
     }
     

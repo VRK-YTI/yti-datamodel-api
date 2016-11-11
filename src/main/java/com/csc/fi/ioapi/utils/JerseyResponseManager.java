@@ -61,7 +61,7 @@ public class JerseyResponseManager {
     }
     
     public static Response notAcceptable() {
-        return Response.status(Response.Status.NOT_ACCEPTABLE).entity("{}").build();
+        return Response.status(Response.Status.NOT_ACCEPTABLE).entity(ErrorMessage.NOTACCEPTED).build();
     }
     
     public static Response notCreated(int status) {

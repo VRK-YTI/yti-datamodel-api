@@ -25,7 +25,7 @@ import com.csc.fi.ioapi.config.EndpointServices;
 import com.csc.fi.ioapi.config.LoginSession;
 import com.csc.fi.ioapi.utils.ErrorMessage;
 import com.csc.fi.ioapi.utils.GraphManager;
-import com.csc.fi.ioapi.utils.JerseyFusekiClient;
+import com.csc.fi.ioapi.utils.JerseyJsonLDClient;
 import com.csc.fi.ioapi.utils.JerseyResponseManager;
 import com.csc.fi.ioapi.utils.LDHelper;
 import com.csc.fi.ioapi.utils.NamespaceManager;
@@ -95,10 +95,10 @@ public class Version {
             pss.setIri("activity", id);
         }
 
-        return JerseyFusekiClient.constructGraphFromService(pss.toString(), services.getProvReadSparqlAddress());
+        return JerseyJsonLDClient.constructGraphFromService(pss.toString(), services.getProvReadSparqlAddress());
       
       } else {
-        return JerseyFusekiClient.getGraphResponseFromService(id, services.getProvReadWriteAddress());
+        return JerseyJsonLDClient.getGraphResponseFromService(id, services.getProvReadWriteAddress());
       }
       
     }

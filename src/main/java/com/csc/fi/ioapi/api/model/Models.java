@@ -17,20 +17,17 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import com.csc.fi.ioapi.config.EndpointServices;
 import com.csc.fi.ioapi.config.LoginSession;
-import com.csc.fi.ioapi.utils.ErrorMessage;
 import com.csc.fi.ioapi.utils.GraphManager;
-import com.csc.fi.ioapi.utils.JerseyFusekiClient;
+import com.csc.fi.ioapi.utils.JerseyJsonLDClient;
 import com.csc.fi.ioapi.utils.JerseyResponseManager;
 import com.csc.fi.ioapi.utils.LDHelper;
 import com.csc.fi.ioapi.utils.ModelManager;
-import com.csc.fi.ioapi.utils.ProvenanceManager;
 import com.csc.fi.ioapi.utils.QueryLibrary;
 import com.csc.fi.ioapi.utils.ServiceDescriptionManager;
 import org.apache.jena.query.DatasetAccessor;
 import org.apache.jena.query.DatasetAccessorFactory;
 import org.apache.jena.query.ParameterizedSparqlString;
 import org.apache.jena.rdf.model.Model;
-import com.sun.jersey.api.client.ClientResponse;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiParam;
@@ -40,8 +37,6 @@ import java.util.UUID;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import javax.ws.rs.DELETE;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
 import org.apache.jena.iri.IRIFactory;
@@ -98,7 +93,7 @@ public class Models {
                 }
 
                 if(id.startsWith("urn:")) {
-                   return JerseyFusekiClient.getGraphResponseFromService(id, services.getProvReadWriteAddress());
+                   return JerseyJsonLDClient.getGraphResponseFromService(id, services.getProvReadWriteAddress());
                 }
            
             String sparqlService = services.getCoreSparqlAddress();
@@ -120,7 +115,7 @@ public class Models {
             pss.setCommandText(queryString);
             
            
-            return JerseyFusekiClient.constructGraphFromService(pss.toString(), sparqlService);
+            return JerseyJsonLDClient.constructGraphFromService(pss.toString(), sparqlService);
              
      } else if(group!=null && !group.equals("undefined")) {
          
@@ -178,7 +173,7 @@ public class Models {
             
             pss.setCommandText(queryString);
             
-            return JerseyFusekiClient.constructGraphFromService(pss.toString(), services.getCoreSparqlAddress());
+            return JerseyJsonLDClient.constructGraphFromService(pss.toString(), services.getCoreSparqlAddress());
 
   }
    

@@ -29,7 +29,7 @@ import com.csc.fi.ioapi.utils.ResourceManager;
 import com.csc.fi.ioapi.utils.ConceptMapper;
 import com.csc.fi.ioapi.utils.ErrorMessage;
 import com.csc.fi.ioapi.utils.GraphManager;
-import com.csc.fi.ioapi.utils.JerseyFusekiClient;
+import com.csc.fi.ioapi.utils.JerseyJsonLDClient;
 import com.csc.fi.ioapi.utils.JerseyResponseManager;
 import com.csc.fi.ioapi.utils.LDHelper;
 import com.csc.fi.ioapi.utils.NamespaceManager;
@@ -37,7 +37,6 @@ import com.csc.fi.ioapi.utils.ProvenanceManager;
 import com.csc.fi.ioapi.utils.QueryLibrary;
 import org.apache.jena.query.ParameterizedSparqlString;
 import com.sun.jersey.api.client.ClientHandlerException;
-import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.UniformInterfaceException;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
@@ -89,7 +88,7 @@ public class Class {
 
         pss.setCommandText(queryString);
 
-        return JerseyFusekiClient.constructGraphFromService(pss.toString(), services.getCoreSparqlAddress());
+        return JerseyJsonLDClient.constructGraphFromService(pss.toString(), services.getCoreSparqlAddress());
 
       } else {
           
@@ -104,7 +103,7 @@ public class Class {
             
             
             if(id.startsWith("urn:")) {
-               return JerseyFusekiClient.getGraphResponseFromService(id, services.getProvReadWriteAddress());
+               return JerseyJsonLDClient.getGraphResponseFromService(id, services.getProvReadWriteAddress());
             }   
            
             String sparqlService = services.getCoreSparqlAddress();
@@ -131,7 +130,7 @@ public class Class {
                   pss.setIri("library", model);
             }
             
-            return JerseyFusekiClient.constructGraphFromService(pss.toString(), sparqlService);         
+            return JerseyJsonLDClient.constructGraphFromService(pss.toString(), sparqlService);         
 
       }
          
@@ -340,7 +339,7 @@ public class Class {
        /* If Class is defined in the model */
        if(id.startsWith(model)) {
            /* Remove graph */
-            Response resp = JerseyFusekiClient.deleteGraphFromService(id, services.getCoreReadWriteAddress());   
+            Response resp = JerseyJsonLDClient.deleteGraphFromService(id, services.getCoreReadWriteAddress());   
             GraphManager.createExportGraphInRunnable(model);
            // ConceptMapper.removeUnusedConcepts(model);
             return resp;

@@ -14,10 +14,8 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import com.csc.fi.ioapi.config.EndpointServices;
 import com.csc.fi.ioapi.config.LoginSession;
-import com.csc.fi.ioapi.utils.ErrorMessage;
 import com.csc.fi.ioapi.utils.GraphManager;
-import com.csc.fi.ioapi.utils.JerseyFusekiClient;
-import com.sun.jersey.api.client.ClientResponse;
+import com.csc.fi.ioapi.utils.JerseyJsonLDClient;
 import com.csc.fi.ioapi.utils.JerseyResponseManager;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
@@ -26,6 +24,7 @@ import com.wordnik.swagger.annotations.ApiResponse;
 import com.wordnik.swagger.annotations.ApiResponses;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
+import javax.ws.rs.core.Response.StatusType;
 import org.apache.jena.atlas.web.ContentType;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
@@ -54,7 +53,7 @@ public class ModelPositions {
           @ApiParam(value = "Graph id", defaultValue="default") 
           @QueryParam("model") String model) {
   
-      return JerseyFusekiClient.getGraphResponseFromService(model+"#PositionGraph",services.getCoreReadAddress(), ContentType.create("application/ld+json"), false);
+      return JerseyJsonLDClient.getGraphResponseFromService(model+"#PositionGraph",services.getCoreReadAddress(), ContentType.create("application/ld+json"), false);
   
   }
    
@@ -102,11 +101,11 @@ public class ModelPositions {
            
             String service = services.getCoreReadWriteAddress();
         
-            ClientResponse response = JerseyFusekiClient.putGraphToTheService(model+"#PositionGraph", body, service);
+            StatusType status = JerseyJsonLDClient.putGraphToTheService(model+"#PositionGraph", body, service);
 
-            if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-               Logger.getLogger(ModelPositions.class.getName()).log(Level.WARNING, model+" coordinates were not saved! Status "+response.getStatus());
-               return JerseyResponseManager.notCreated(response.getStatus());
+            if (status.getFamily() != Response.Status.Family.SUCCESSFUL) {
+               Logger.getLogger(ModelPositions.class.getName()).log(Level.WARNING, model+" coordinates were not saved! Status "+status.getStatusCode());
+               return JerseyResponseManager.notCreated(status.getStatusCode());
             }
                           
             Logger.getLogger(ModelPositions.class.getName()).log(Level.INFO, model+" coordinates updated sucessfully!");

@@ -19,7 +19,8 @@ final public class ErrorMessage {
     final public static String DEPEDENCIES = toJs("{'errorMessage':'Resource dependencies restricts removing'}");
     final public static String INVALIDVOCABULARY = toJs("{'errorMessage':'Invalid SKOSMOS ID'}");
     final public static String INVALIDPARAMETER = toJs("{'errorMessage':'Invalid API parameters'}");
- 
+    final public static String NOTACCEPTED = toJs("{'errorMessage':'Not accepted'}");
+    
     private static String toJs(String jsonString) {
         return jsonString.replaceAll("'", "\"");
     } 

@@ -8,10 +8,8 @@ package com.csc.fi.ioapi.api.concepts;
 import com.csc.fi.ioapi.config.EndpointServices;
 import com.csc.fi.ioapi.config.LoginSession;
 import com.csc.fi.ioapi.utils.ConceptMapper;
-import com.csc.fi.ioapi.utils.ErrorMessage;
-import com.csc.fi.ioapi.utils.GraphManager;
 import com.csc.fi.ioapi.utils.JerseyResponseManager;
-import com.csc.fi.ioapi.utils.JerseyFusekiClient;
+import com.csc.fi.ioapi.utils.JerseyJsonLDClient;
 import com.csc.fi.ioapi.utils.LDHelper;
 import org.apache.jena.query.ParameterizedSparqlString;
 import java.util.logging.Level;
@@ -25,10 +23,6 @@ import org.apache.jena.sparql.engine.http.QueryExceptionHTTP;
 import org.apache.jena.update.UpdateExecutionFactory;
 import org.apache.jena.update.UpdateProcessor;
 import org.apache.jena.update.UpdateRequest;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.uri.UriComponent;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiParam;
@@ -38,11 +32,11 @@ import java.util.UUID;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
-import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.StatusType;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
 import org.apache.jena.iri.IRIFactory;
@@ -89,9 +83,6 @@ public class ConceptSuggestion {
 			return JerseyResponseManager.invalidIRI();
 		}
                 
-          Response.ResponseBuilder rb;
-          
-          Client client = Client.create();
           String queryString;
           ParameterizedSparqlString pss = new ParameterizedSparqlString();
           pss.setNsPrefixes(LDHelper.PREFIX_MAP);
@@ -139,16 +130,8 @@ public class ConceptSuggestion {
           if(schemeIRI!=null) pss.setIri("scheme", schemeIRI);
           pss.setIri("modelService",services.getLocalhostCoreSparqlAddress());
                 
-          WebResource webResource = client.resource(services.getTempConceptReadSparqlAddress())
-                                      .queryParam("query", UriComponent.encode(pss.toString(),UriComponent.Type.QUERY));
-
-          WebResource.Builder builder = webResource.accept("application/ld+json");
-
-          ClientResponse response = builder.get(ClientResponse.class);
-          rb = Response.status(response.getStatus()); 
-          rb.entity(response.getEntityInputStream());
-            
-          return rb.build();
+          return JerseyJsonLDClient.constructGraphFromService(pss.toString(), services.getTempConceptReadSparqlAddress());
+                  
            
   }
  
@@ -297,13 +280,12 @@ public class ConceptSuggestion {
         if(isNotEmpty(body)) {
             
         /* Put graph to database */ 
-        ClientResponse response = JerseyFusekiClient.putGraphToTheService(conceptID, body, services.getTempConceptReadWriteAddress());
+        StatusType status = JerseyJsonLDClient.putGraphToTheService(conceptID, body, services.getTempConceptReadWriteAddress());
         
-        
-           if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
+           if (status.getFamily() != Response.Status.Family.SUCCESSFUL) {
                /* TODO: Create prov events from failed updates? */
                logger.log(Level.WARNING, "Unexpected: Not updated: "+conceptID);
-               return JerseyResponseManager.unexpected(response.getStatus());
+               return JerseyResponseManager.unexpected(status.getStatusCode());
            } 
             
         } else {

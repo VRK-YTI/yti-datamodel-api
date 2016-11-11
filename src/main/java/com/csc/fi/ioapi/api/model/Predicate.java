@@ -28,32 +28,23 @@ import org.apache.jena.iri.IRIFactory;
 import com.csc.fi.ioapi.config.EndpointServices;
 import com.csc.fi.ioapi.config.LoginSession;
 import com.csc.fi.ioapi.utils.ConceptMapper;
-import com.csc.fi.ioapi.utils.ErrorMessage;
 import com.csc.fi.ioapi.utils.GraphManager;
-import com.csc.fi.ioapi.utils.JerseyFusekiClient;
+import com.csc.fi.ioapi.utils.JerseyJsonLDClient;
 import com.csc.fi.ioapi.utils.JerseyResponseManager;
 import com.csc.fi.ioapi.utils.LDHelper;
-import com.csc.fi.ioapi.utils.ModelManager;
 import com.csc.fi.ioapi.utils.NamespaceManager;
-import com.csc.fi.ioapi.utils.ProvenanceManager;
 import com.csc.fi.ioapi.utils.QueryLibrary;
 import com.csc.fi.ioapi.utils.ResourceManager;
 import org.apache.jena.query.ParameterizedSparqlString;
-import com.sun.jersey.api.client.ClientResponse;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiParam;
 import com.wordnik.swagger.annotations.ApiResponse;
 import com.wordnik.swagger.annotations.ApiResponses;
-import java.io.ByteArrayOutputStream;
-import java.io.OutputStream;
 import java.util.Map;
 import java.util.UUID;
 import javax.ws.rs.DELETE;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.riot.Lang;
-import org.apache.jena.riot.RDFDataMgr;
 
  
 /**
@@ -96,7 +87,7 @@ public class Predicate {
 
         pss.setCommandText(queryString);
         
-        return JerseyFusekiClient.constructGraphFromService(pss.toString(), services.getCoreSparqlAddress());
+        return JerseyJsonLDClient.constructGraphFromService(pss.toString(), services.getCoreSparqlAddress());
 
       } else {
           
@@ -110,7 +101,7 @@ public class Predicate {
             }  
             
             if(id.startsWith("urn:")) {
-               return JerseyFusekiClient.getGraphResponseFromService(id, services.getProvReadWriteAddress());
+               return JerseyJsonLDClient.getGraphResponseFromService(id, services.getProvReadWriteAddress());
             }   
            
             String sparqlService = services.getCoreSparqlAddress();
@@ -136,7 +127,7 @@ public class Predicate {
                   pss.setIri("library", model);
             }
 
-            return JerseyFusekiClient.constructGraphFromService(pss.toString(), sparqlService);         
+            return JerseyJsonLDClient.constructGraphFromService(pss.toString(), sparqlService);         
 
       }
 
@@ -334,7 +325,7 @@ public class Predicate {
         /* If Predicate is defined in the model */
         if(id.startsWith(model)) {
             /* Remove graph */
-                Response resp = JerseyFusekiClient.deleteGraphFromService(id, services.getCoreReadWriteAddress());
+                Response resp = JerseyJsonLDClient.deleteGraphFromService(id, services.getCoreReadWriteAddress());
              /* TODO: Remove unused concepts?*/
              //   ConceptMapper.removeUnusedConcepts(model);
                 return resp;

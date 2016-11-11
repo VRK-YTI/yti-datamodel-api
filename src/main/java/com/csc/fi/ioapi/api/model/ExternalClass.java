@@ -17,7 +17,7 @@ import org.apache.jena.iri.IRIFactory;
 import com.csc.fi.ioapi.config.EndpointServices;
 import com.csc.fi.ioapi.utils.ErrorMessage;
 import com.csc.fi.ioapi.utils.JerseyResponseManager;
-import com.csc.fi.ioapi.utils.JerseyFusekiClient;
+import com.csc.fi.ioapi.utils.JerseyJsonLDClient;
 import com.csc.fi.ioapi.utils.LDHelper;
 import com.csc.fi.ioapi.utils.QueryLibrary;
 import org.apache.jena.query.ParameterizedSparqlString;
@@ -113,7 +113,7 @@ public class ExternalClass {
         pss.setCommandText(queryString);
 
         
-        return JerseyFusekiClient.constructGraphFromService(pss.toString(), services.getImportsSparqlAddress());
+        return JerseyJsonLDClient.constructGraphFromService(pss.toString(), services.getImportsSparqlAddress());
 
       } else {
           
@@ -149,7 +149,7 @@ public class ExternalClass {
             if(model!=null && !model.equals("undefined")) {
                   pss.setIri("library", model);
             }
-                        return JerseyFusekiClient.constructGraphFromService(pss.toString(), sparqlService);         
+                        return JerseyJsonLDClient.constructGraphFromService(pss.toString(), sparqlService);         
 
       }
          

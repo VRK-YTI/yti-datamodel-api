@@ -4,12 +4,8 @@
 package com.csc.fi.ioapi.api.concepts;
 
 import com.csc.fi.ioapi.config.EndpointServices;
-import com.csc.fi.ioapi.utils.JerseyFusekiClient;
+import com.csc.fi.ioapi.utils.JerseyJsonLDClient;
 import com.csc.fi.ioapi.utils.LDHelper;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.uri.UriComponent;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiResponse;
@@ -28,7 +24,7 @@ import org.apache.jena.query.ParameterizedSparqlString;
  * @author malonen
  */
 @Path("conceptSchemes")
-@Api(value = "/conceptSchemes", description = "Available concept schemes in Finto")
+@Api(value = "/conceptSchemes", description = "Available concept schemes from Term editor")
 public class ConceptsSchemes {
 
     @Context ServletContext context;
@@ -37,18 +33,14 @@ public class ConceptsSchemes {
     
   @GET
   @Produces("application/ld+json")
-  @ApiOperation(value = "Get available concepts", notes = "Search from finto API & concept temp")
+  @ApiOperation(value = "Get available concepts", notes = "Lists terminologies from Termeditor")
   @ApiResponses(value = {
       @ApiResponse(code = 200, message = "Concepts"),
       @ApiResponse(code = 406, message = "Term not defined"),
       @ApiResponse(code = 500, message = "Internal server error")
   })
   public Response vocab() {
-          // return JerseyFusekiClient.getGraphResponseFromService("urn:csc:schemes", services.getTempConceptReadWriteAddress());
-  
-          Response.ResponseBuilder rb;
-          
-          Client client = Client.create();
+
           String queryString;
           ParameterizedSparqlString pss = new ParameterizedSparqlString();
           pss.setNsPrefixes(LDHelper.PREFIX_MAP);
@@ -72,17 +64,11 @@ public class ConceptsSchemes {
 
   	  
           pss.setCommandText(queryString);
-                
-          WebResource webResource = client.resource(services.getTempConceptReadSparqlAddress())
-                                      .queryParam("query", UriComponent.encode(pss.toString(),UriComponent.Type.QUERY));
-
-          WebResource.Builder builder = webResource.accept("application/ld+json");
-
-          ClientResponse response = builder.get(ClientResponse.class);
-          rb = Response.status(response.getStatus()); 
-          rb.entity(response.getEntityInputStream());
-            
-          return rb.build();
+          
+          return JerseyJsonLDClient.constructGraphFromService(pss.toString(), services.getTempConceptReadSparqlAddress());
+          
+       // return JerseyFusekiClient.getGraphResponseFromService("urn:csc:schemes", services.getTempConceptReadWriteAddress());      
+      //    return JerseyJsonLDClient.getGraphFromTermedAPI(ApplicationProperties.getDefaultTermAPI()+"graphs");
   }
   
   

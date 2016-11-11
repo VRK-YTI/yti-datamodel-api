@@ -8,7 +8,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import com.csc.fi.ioapi.config.EndpointServices;
-import com.csc.fi.ioapi.utils.JerseyFusekiClient;
+import com.csc.fi.ioapi.utils.JerseyJsonLDClient;
 import com.csc.fi.ioapi.utils.JerseyResponseManager;
 import com.csc.fi.ioapi.utils.NamespaceResolver;
 import com.wordnik.swagger.annotations.Api;
@@ -41,7 +41,7 @@ public class ResolveNamespace {
   public Response getJson(@ApiParam(value = "Namespace", required = true) @QueryParam("namespace") String namespace)  {
 
         if(NamespaceResolver.resolveNamespace(namespace,null,false)) {
-             return JerseyFusekiClient.getGraphResponseFromService(namespace,services.getImportsReadAddress());
+             return JerseyJsonLDClient.getGraphResponseFromService(namespace,services.getImportsReadAddress());
         } else {
             return JerseyResponseManager.invalidIRI();
         }

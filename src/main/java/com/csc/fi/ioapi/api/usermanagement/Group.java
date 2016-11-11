@@ -4,34 +4,18 @@
 package com.csc.fi.ioapi.api.usermanagement;
 
 import com.csc.fi.ioapi.config.EndpointServices;
-import com.csc.fi.ioapi.config.LoginSession;
-import com.csc.fi.ioapi.utils.ErrorMessage;
-import com.csc.fi.ioapi.utils.GraphManager;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.servlet.ServletContext;
 import javax.ws.rs.GET;
-import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status.Family;
-import com.csc.fi.ioapi.utils.JerseyFusekiClient;
-import com.sun.jersey.api.client.ClientHandlerException;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.UniformInterfaceException;
+import com.csc.fi.ioapi.utils.JerseyJsonLDClient;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
-import com.wordnik.swagger.annotations.ApiParam;
 import com.wordnik.swagger.annotations.ApiResponse;
 import com.wordnik.swagger.annotations.ApiResponses;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
-import javax.ws.rs.POST;
-import org.apache.jena.iri.IRI;
-import org.apache.jena.iri.IRIException;
-import org.apache.jena.iri.IRIFactory;
 
 /**
  * REST Web Service
@@ -54,7 +38,7 @@ public class Group {
 	@Produces("application/ld+json")
 	public Response getGroup() {
                 /* TODO: Join group graphs on allow editing */
-		return JerseyFusekiClient.getGraphResponseFromService("urn:csc:groups",services.getCoreReadAddress());
+		return JerseyJsonLDClient.getGraphResponseFromService("urn:csc:groups",services.getCoreReadAddress());
 	}
 
         /*

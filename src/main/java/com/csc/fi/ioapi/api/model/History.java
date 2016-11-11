@@ -14,7 +14,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import com.csc.fi.ioapi.config.EndpointServices;
-import com.csc.fi.ioapi.utils.JerseyFusekiClient;
+import com.csc.fi.ioapi.utils.JerseyJsonLDClient;
 import com.csc.fi.ioapi.utils.LDHelper;
 import com.csc.fi.ioapi.utils.NamespaceManager;
 import org.apache.jena.query.ParameterizedSparqlString;
@@ -82,10 +82,10 @@ public class History {
             pss.setIri("activity", id);
         }
 
-        return JerseyFusekiClient.constructGraphFromService(pss.toString(), services.getProvReadSparqlAddress());
+        return JerseyJsonLDClient.constructGraphFromService(pss.toString(), services.getProvReadSparqlAddress());
       
       } else {
-        return JerseyFusekiClient.getGraphResponseFromService(id, services.getProvReadWriteAddress());
+        return JerseyJsonLDClient.getGraphResponseFromService(id, services.getProvReadWriteAddress());
       }
       
     }

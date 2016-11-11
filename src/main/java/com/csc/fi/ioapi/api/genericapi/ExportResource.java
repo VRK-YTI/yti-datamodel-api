@@ -13,7 +13,7 @@ import javax.ws.rs.core.Response;
 import com.csc.fi.ioapi.config.EndpointServices;
 import com.csc.fi.ioapi.utils.ContextWriter;
 import com.csc.fi.ioapi.utils.ErrorMessage;
-import com.csc.fi.ioapi.utils.JerseyFusekiClient;
+import com.csc.fi.ioapi.utils.JerseyJsonLDClient;
 import com.csc.fi.ioapi.utils.JsonSchemaWriter;
 import com.csc.fi.ioapi.utils.XMLSchemaWriter;
 import com.sun.jersey.api.client.ClientHandlerException;
@@ -114,7 +114,7 @@ public class ExportResource {
                 //return JerseyResponseManager.notFound();
             }
                         
-            return  JerseyFusekiClient.getGraphResponseFromService(graph, service, contentType, raw);
+            return  JerseyJsonLDClient.getGraphResponseFromService(graph, service, contentType, raw);
         } catch (UniformInterfaceException | ClientHandlerException ex) {
             logger.log(Level.WARNING, "Expect the unexpected!", ex);
             return JerseyResponseManager.serverError();

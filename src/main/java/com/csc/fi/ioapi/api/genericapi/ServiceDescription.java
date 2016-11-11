@@ -8,7 +8,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import com.csc.fi.ioapi.config.EndpointServices;
-import com.csc.fi.ioapi.utils.JerseyFusekiClient;
+import com.csc.fi.ioapi.utils.JerseyJsonLDClient;
 import javax.ws.rs.core.HttpHeaders;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
@@ -37,7 +37,7 @@ public class ServiceDescription {
       @ApiResponse(code = 500, message = "Internal server error")
   })
   public Response json(@HeaderParam("Accept") String accept) {
-    return JerseyFusekiClient.getGraphResponseFromService("urn:csc:iow:sd",services.getCoreReadAddress(), ContentType.create(accept), false);
+    return JerseyJsonLDClient.getGraphResponseFromService("urn:csc:iow:sd",services.getCoreReadAddress(), ContentType.create(accept), false);
 }
   
 }

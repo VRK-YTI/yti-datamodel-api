@@ -90,7 +90,7 @@ public class ConceptMapper {
      public static void updateSchemesFromFinto() {
          
          Response resp = getFintoIDs();
-         Model model = JerseyFusekiClient.getJSONLDResponseAsJenaModel(resp);
+         Model model = JerseyJsonLDClient.getJSONLDResponseAsJenaModel(resp);
          Model schemeModel = ModelFactory.createDefaultModel();
          schemeModel.setNsPrefixes(LDHelper.PREFIX_MAP);
          

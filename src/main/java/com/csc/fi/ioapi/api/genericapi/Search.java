@@ -16,14 +16,10 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.ResponseBuilder;
 import com.csc.fi.ioapi.config.EndpointServices;
+import com.csc.fi.ioapi.utils.JerseyJsonLDClient;
 import com.csc.fi.ioapi.utils.LDHelper;
 import org.apache.jena.query.ParameterizedSparqlString;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.uri.UriComponent;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiParam;
@@ -99,21 +95,7 @@ public class Search {
             pss.setLiteral("search", search);
             pss.setCommandText(queryString);
             
-            Logger.getLogger(Search.class.getName()).log(Level.INFO, "Searching "+graph+" with query: "+queryString);
-
-            ResponseBuilder rb;
-            Client client = Client.create();
-
-            WebResource webResource = client.resource(services.getCoreSparqlAddress())
-                                      .queryParam("query", UriComponent.encode(pss.toString(),UriComponent.Type.QUERY));
-
-            WebResource.Builder builder = webResource.accept("application/ld+json");
-
-            ClientResponse response = builder.get(ClientResponse.class);
-            rb = Response.status(response.getStatus()); 
-            rb.entity(response.getEntityInputStream());
-
-           return rb.build();    
+            return JerseyJsonLDClient.constructGraphFromService(pss.toString(), services.getCoreReadAddress());
 
   }
   

@@ -15,7 +15,7 @@ import com.csc.fi.ioapi.config.EndpointServices;
 import com.csc.fi.ioapi.utils.ErrorMessage;
 import com.csc.fi.ioapi.utils.GraphManager;
 import com.csc.fi.ioapi.utils.JerseyResponseManager;
-import com.csc.fi.ioapi.utils.JerseyFusekiClient;
+import com.csc.fi.ioapi.utils.JerseyJsonLDClient;
 import com.csc.fi.ioapi.utils.LDHelper;
 import com.csc.fi.ioapi.utils.NamespaceManager;
 import org.apache.jena.query.ParameterizedSparqlString;
@@ -189,7 +189,7 @@ public class Usage {
                 pss.setIri("concept", conceptIRI);
             } else return JerseyResponseManager.invalidParameter();
            
-            return JerseyFusekiClient.constructGraphFromService(pss.toString(), services.getCoreSparqlAddress());
+            return JerseyJsonLDClient.constructGraphFromService(pss.toString(), services.getCoreSparqlAddress());
     }   
  
 }

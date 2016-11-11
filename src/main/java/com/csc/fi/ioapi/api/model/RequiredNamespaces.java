@@ -11,7 +11,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import com.csc.fi.ioapi.config.EndpointServices;
-import com.csc.fi.ioapi.utils.JerseyFusekiClient;
+import com.csc.fi.ioapi.utils.JerseyJsonLDClient;
 import com.csc.fi.ioapi.utils.LDHelper;
 import com.csc.fi.ioapi.utils.QueryLibrary;
 import org.apache.jena.query.ParameterizedSparqlString;
@@ -68,7 +68,7 @@ public class RequiredNamespaces {
            
             pss.setCommandText(queryString);
             
-            return JerseyFusekiClient.constructGraphFromService(pss.toString(), services.getCoreSparqlAddress());
+            return JerseyJsonLDClient.constructGraphFromService(pss.toString(), services.getCoreSparqlAddress());
 
   }
    

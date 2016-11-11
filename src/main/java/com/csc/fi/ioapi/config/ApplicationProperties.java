@@ -49,4 +49,8 @@ public final static boolean getProvenanceMode() {
     return Boolean.parseBoolean(PropertyUtil.getProperty("application.provenance"));  
 }
 
+public final static String getDefaultTermAPI() {
+    return PropertyUtil.getProperty("application.defaultTermedAPI");
+}
+
 }

@@ -18,7 +18,7 @@ import com.csc.fi.ioapi.utils.ConceptMapper;
 import com.csc.fi.ioapi.utils.ErrorMessage;
 import com.csc.fi.ioapi.utils.JerseyResponseManager;
 import com.csc.fi.ioapi.utils.GraphManager;
-import com.csc.fi.ioapi.utils.JerseyFusekiClient;
+import com.csc.fi.ioapi.utils.JerseyJsonLDClient;
 import com.csc.fi.ioapi.utils.LDHelper;
 import com.csc.fi.ioapi.utils.QueryLibrary;
 import org.apache.jena.query.ParameterizedSparqlString;
@@ -132,7 +132,7 @@ public class ShapeCreator {
             pss.setIri("shapeIRI",shapeIRI);
 
 
-            return JerseyFusekiClient.constructGraphFromService(pss.toString(), service);
+            return JerseyJsonLDClient.constructGraphFromService(pss.toString(), service);
     }   
  
 }

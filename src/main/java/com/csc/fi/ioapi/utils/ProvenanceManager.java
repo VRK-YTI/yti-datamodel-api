@@ -5,16 +5,14 @@ package com.csc.fi.ioapi.utils;
 
 import com.csc.fi.ioapi.config.ApplicationProperties;
 import com.csc.fi.ioapi.config.EndpointServices;
-import static com.csc.fi.ioapi.utils.GraphManager.services;
 import org.apache.jena.query.ParameterizedSparqlString;
 import org.apache.jena.update.UpdateExecutionFactory;
 import org.apache.jena.update.UpdateProcessor;
 import org.apache.jena.update.UpdateRequest;
-import com.sun.jersey.api.client.ClientResponse;
 import java.util.UUID;
 import java.util.logging.Logger;
 import javax.ws.rs.core.Response;
-import org.apache.jena.iri.IRI;
+import javax.ws.rs.core.Response.StatusType;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.web.DatasetAdapter;
 import org.apache.jena.web.DatasetGraphAccessorHTTP;
@@ -105,9 +103,9 @@ public class ProvenanceManager {
         
         createVersionIdToResource(graph, provUUID);
         
-        ClientResponse response = JerseyFusekiClient.putGraphToTheService("urn:uuid:"+provUUID.toString(), jsonld, services.getProvReadWriteAddress());
+        StatusType status = JerseyJsonLDClient.putGraphToTheService("urn:uuid:"+provUUID.toString(), jsonld, services.getProvReadWriteAddress());
         
-        if (response.getStatusInfo().getFamily() == Response.Status.Family.SUCCESSFUL) {
+        if (status.getFamily() == Response.Status.Family.SUCCESSFUL) {
             
         String query
                 = "INSERT { "
@@ -143,8 +141,8 @@ public class ProvenanceManager {
         qexec.execute();
         
         } else {
-            logger.info(response.getStatusInfo().getFamily().toString());
-            logger.info(response.getStatusInfo().toString());
+            logger.info(status.getFamily().toString());
+            logger.info(status.toString());
             logger.warning("Failed in creating PROV graph from "+graph);
             /* TODO: Else failed entity? */
         }
@@ -159,13 +157,13 @@ public class ProvenanceManager {
     public static void createProvenanceGraphInRunnable(String graph, String jsonld, String user, UUID provUUID) {
         
         logger.info("Creating prov graph "+graph+" "+provUUID.toString());
-        ClientResponse response = JerseyFusekiClient.putGraphToTheService("urn:uuid:"+provUUID.toString(), jsonld, services.getProvReadWriteAddress());
+        StatusType status = JerseyJsonLDClient.putGraphToTheService("urn:uuid:"+provUUID.toString(), jsonld, services.getProvReadWriteAddress());
         
-        if (response.getStatusInfo().getFamily() == Response.Status.Family.SUCCESSFUL) {
+        if (status.getFamily() == Response.Status.Family.SUCCESSFUL) {
             createProvEntity(graph, provUUID, user);
         } else {
-            logger.info(response.getStatusInfo().getFamily().toString());
-            logger.info(response.getStatusInfo().toString());
+            logger.info(status.getFamily().toString());
+            logger.info(status.toString());
             logger.warning("Failed in creating PROV graph from "+graph);
             /* TODO: Else failed entity? */
         }

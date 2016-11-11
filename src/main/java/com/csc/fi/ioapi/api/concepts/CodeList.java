@@ -4,7 +4,7 @@
 package com.csc.fi.ioapi.api.concepts;
 
 import com.csc.fi.ioapi.config.EndpointServices;
-import com.csc.fi.ioapi.utils.JerseyFusekiClient;
+import com.csc.fi.ioapi.utils.JerseyJsonLDClient;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiParam;
@@ -73,7 +73,7 @@ public class CodeList {
         return JerseyFusekiClient.constructGraphFromService(pss.toString(), services.getSchemesSparqlAddress()); */
    
         /* Use graph protocol instead for now ... */
-        return JerseyFusekiClient.getGraphResponseFromService(uri, services.getSchemesReadAddress());
+        return JerseyJsonLDClient.getGraphResponseFromService(uri, services.getSchemesReadAddress());
 
           
   }

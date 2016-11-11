@@ -5,11 +5,9 @@ package com.csc.fi.ioapi.utils;
 
 import com.csc.fi.ioapi.config.EndpointServices;
 import com.csc.fi.ioapi.config.LoginSession;
-import com.sun.jersey.api.client.ClientResponse;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.ws.rs.core.Response;
 import org.apache.jena.iri.IRI;
 
 /**
@@ -24,7 +22,7 @@ public class ResourceManager {
     public static UUID putNewResource(String id, String model, String body, LoginSession login) {
         
             /* Create new graph */ 
-           boolean success = JerseyFusekiClient.graphIsUpdatedToTheService(id, body, services.getCoreReadWriteAddress());
+           boolean success = JerseyJsonLDClient.graphIsUpdatedToTheService(id, body, services.getCoreReadWriteAddress());
 
            if (!success) {
                logger.log(Level.WARNING, "Unexpected: Not created: "+id);
@@ -45,7 +43,7 @@ public class ResourceManager {
             ConceptMapper.addConceptFromReferencedResource(model,id);
             
             GraphManager.insertNewGraphReferenceToExportGraph(id,model);
-            JerseyFusekiClient.postGraphToTheService(model+"#ExportGraph", body, services.getCoreReadWriteAddress());
+            JerseyJsonLDClient.postGraphToTheService(model+"#ExportGraph", body, services.getCoreReadWriteAddress());
            
             return provUUID;
     }
@@ -54,7 +52,7 @@ public class ResourceManager {
      
                     /* Remove old graph and add update references */
                     /* TODO: Not allowed if model is draft!?*/
-                    boolean success = JerseyFusekiClient.graphIsUpdatedToTheService(idIRI.toString(), body, services.getCoreReadWriteAddress());
+                    boolean success = JerseyJsonLDClient.graphIsUpdatedToTheService(idIRI.toString(), body, services.getCoreReadWriteAddress());
                     
                     if (!success) {
                         logger.log(Level.WARNING, "Unexpected: ID not changed: "+idIRI.toString());
@@ -84,7 +82,7 @@ public class ResourceManager {
         
             
         /* Overwrite existing graph */ 
-        boolean success = JerseyFusekiClient.graphIsUpdatedToTheService(id, body, services.getCoreReadWriteAddress());
+        boolean success = JerseyJsonLDClient.graphIsUpdatedToTheService(id, body, services.getCoreReadWriteAddress());
             
 
        if (!success) {

@@ -4,12 +4,9 @@
 package com.csc.fi.ioapi.api.concepts;
 
 import com.csc.fi.ioapi.config.EndpointServices;
+import com.csc.fi.ioapi.utils.JerseyJsonLDClient;
 import com.csc.fi.ioapi.utils.JerseyResponseManager;
 import com.csc.fi.ioapi.utils.LDHelper;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.uri.UriComponent;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiParam;
@@ -64,10 +61,10 @@ public class Concept {
 			logger.log(Level.WARNING, "ID is invalid IRI!");
 			return JerseyResponseManager.invalidIRI();
 		}
-                
-          Response.ResponseBuilder rb;
+        
+      //  return JerseyJsonLDClient.getGraphFromTermedAPI(uri);
           
-          Client client = Client.create();
+       
           String queryString;
           ParameterizedSparqlString pss = new ParameterizedSparqlString();
           pss.setNsPrefixes(LDHelper.PREFIX_MAP);
@@ -97,18 +94,8 @@ public class Concept {
           pss.setCommandText(queryString);
           
           if(conceptIRI!=null) pss.setIri("concept", conceptIRI);
-                
-          WebResource webResource = client.resource(services.getTempConceptReadSparqlAddress())
-                                      .queryParam("query", UriComponent.encode(pss.toString(),UriComponent.Type.QUERY));
-
-          WebResource.Builder builder = webResource.accept("application/ld+json");
-
-          ClientResponse response = builder.get(ClientResponse.class);
-          rb = Response.status(response.getStatus()); 
-          rb.entity(response.getEntityInputStream());
-            
-          return rb.build();
-
+          
+          return JerseyJsonLDClient.constructGraphFromService(pss.toString(), services.getTempConceptReadSparqlAddress());
 
       /*
             ResponseBuilder rb;

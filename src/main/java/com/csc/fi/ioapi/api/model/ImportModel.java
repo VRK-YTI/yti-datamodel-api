@@ -12,14 +12,12 @@ import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import com.csc.fi.ioapi.config.EndpointServices;
-import com.csc.fi.ioapi.utils.ErrorMessage;
 import com.csc.fi.ioapi.utils.JerseyResponseManager;
 import com.csc.fi.ioapi.utils.ImportManager;
-import com.csc.fi.ioapi.utils.JerseyFusekiClient;
+import com.csc.fi.ioapi.utils.JerseyJsonLDClient;
 import com.csc.fi.ioapi.utils.ServiceDescriptionManager;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
-import com.sun.jersey.api.client.ClientResponse;
 import com.wordnik.swagger.annotations.Api;
 import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiParam;
@@ -33,6 +31,7 @@ import org.apache.jena.iri.IRIFactory;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.riot.RDFLanguages;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.StatusType;
  
 /**
  * Root resource (exposed at "importModel" path)
@@ -81,11 +80,11 @@ public class ImportModel {
        ServiceDescriptionManager.createGraphDescription(graph, group, null);
 
        /* Create new graph with the graph id */ 
-       ClientResponse response = JerseyFusekiClient.putGraphToTheService(graph, body, services.getCoreReadWriteAddress());
+       StatusType status = JerseyJsonLDClient.putGraphToTheService(graph, body, services.getCoreReadWriteAddress());
 
-       if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
+       if (status.getFamily() != Response.Status.Family.SUCCESSFUL) {
                logger.log(Level.WARNING, "Unexpected: import failed: "+graph);
-               return JerseyResponseManager.unexpected(response.getStatus());
+               return JerseyResponseManager.unexpected(status.getStatusCode());
        }
 
         logger.log(Level.INFO, graph+" updated sucessfully!");

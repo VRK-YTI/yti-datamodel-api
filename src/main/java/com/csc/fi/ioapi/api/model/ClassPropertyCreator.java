@@ -16,7 +16,7 @@ import javax.ws.rs.core.Response;
 import com.csc.fi.ioapi.config.EndpointServices;
 import com.csc.fi.ioapi.utils.ErrorMessage;
 import com.csc.fi.ioapi.utils.GraphManager;
-import com.csc.fi.ioapi.utils.JerseyFusekiClient;
+import com.csc.fi.ioapi.utils.JerseyJsonLDClient;
 import com.csc.fi.ioapi.utils.LDHelper;
 import com.csc.fi.ioapi.utils.JerseyResponseManager;
 import org.apache.jena.query.ParameterizedSparqlString;
@@ -168,7 +168,7 @@ public class ClassPropertyCreator {
        
       //logger.info(""+SplitIRI.localname(predicateID));
       
-      return JerseyFusekiClient.constructGraphFromService(pss.toString(), service);
+      return JerseyJsonLDClient.constructGraphFromService(pss.toString(), service);
 
   }
   

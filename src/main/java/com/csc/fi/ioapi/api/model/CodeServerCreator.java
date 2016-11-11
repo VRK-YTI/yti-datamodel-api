@@ -2,24 +2,17 @@
  * Licensed under the European Union Public Licence (EUPL) V.1.1 
  */
 package com.csc.fi.ioapi.api.model;
-
-import com.csc.fi.ioapi.config.ApplicationProperties;
-import java.util.logging.Level;
 import java.util.logging.Logger;
-
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 import com.csc.fi.ioapi.config.EndpointServices;
-import com.csc.fi.ioapi.utils.ErrorMessage;
-import com.csc.fi.ioapi.utils.GraphManager;
-import com.csc.fi.ioapi.utils.JerseyFusekiClient;
+import com.csc.fi.ioapi.utils.JerseyJsonLDClient;
 import com.csc.fi.ioapi.utils.LDHelper;
 import com.csc.fi.ioapi.utils.JerseyResponseManager;
 import com.csc.fi.ioapi.utils.OPHCodeServer;
-import com.sun.jersey.api.client.ClientResponse;
 import org.apache.jena.query.ParameterizedSparqlString;
 import org.apache.jena.rdf.model.ResourceFactory;
 import com.wordnik.swagger.annotations.Api;
@@ -27,11 +20,9 @@ import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiParam;
 import com.wordnik.swagger.annotations.ApiResponse;
 import com.wordnik.swagger.annotations.ApiResponses;
-import javax.ws.rs.core.Response.Status;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
 import org.apache.jena.iri.IRIFactory;
-import org.apache.jena.util.SplitIRI;
  
 /**
  * Root resource (exposed at "valueSchemeCreator" path)
@@ -97,7 +88,7 @@ public class CodeServerCreator {
             
             pss.setCommandText(queryString);
 
-            return JerseyFusekiClient.constructGraphFromService(pss.toString(), services.getTempConceptReadSparqlAddress());
+            return JerseyJsonLDClient.constructGraphFromService(pss.toString(), services.getTempConceptReadSparqlAddress());
 
         }
 }

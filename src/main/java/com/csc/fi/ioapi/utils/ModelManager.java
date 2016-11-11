@@ -65,7 +65,7 @@ public class ModelManager {
         
         String service = services.getCoreReadWriteAddress();
         
-        boolean success = JerseyFusekiClient.graphIsUpdatedToTheService(graph, body, service);
+        boolean success = JerseyJsonLDClient.graphIsUpdatedToTheService(graph, body, service);
 
         if(!success) return null;
             
@@ -95,7 +95,7 @@ public class ModelManager {
         String service = services.getCoreReadWriteAddress();
         ServiceDescriptionManager.updateGraphDescription(graph);
 
-        boolean updateStatus = JerseyFusekiClient.graphIsUpdatedToTheService(graph, body, service);
+        boolean updateStatus = JerseyJsonLDClient.graphIsUpdatedToTheService(graph, body, service);
         
         if(!updateStatus) return null;
         
