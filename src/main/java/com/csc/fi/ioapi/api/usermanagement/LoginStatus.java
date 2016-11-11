@@ -8,8 +8,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 
 import com.csc.fi.ioapi.config.LoginSession;
-import com.wordnik.swagger.annotations.Api;
-import com.wordnik.swagger.annotations.ApiOperation;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 
 @Path("loginstatus")
 @Api(value = "/loginstatus", description = "Check if user is logged in")

@@ -13,15 +13,6 @@ import com.github.jsonldjava.utils.JsonUtils;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.RDFReader;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientHandlerException;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.UniformInterfaceException;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.WebResource.Builder;
-import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
-import com.sun.jersey.api.uri.UriComponent;
-import com.sun.jersey.core.util.MultivaluedMapImpl;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -31,6 +22,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
@@ -47,6 +42,8 @@ import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.riot.RDFLanguages;
 import org.apache.jena.riot.RiotException;
+import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
+import org.glassfish.jersey.uri.UriComponent;
 /**
  * 
  * @author malonen
@@ -60,17 +57,16 @@ public class JerseyJsonLDClient {
     public static Boolean readBooleanFromURL(String url) {
         try {
             
-            Client client = Client.create();
-            WebResource webResource = client.resource(url);
-            WebResource.Builder builder = webResource.accept("application/json");
-            ClientResponse response = builder.get(ClientResponse.class);
-
+            Client client = ClientBuilder.newClient();
+            WebTarget target = client.target(services.getVocabExportAPI(url));
+            Response response = target.request("application/json").get();
+            
             if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
                 logger.info("Failed to read boolean from: "+url+" "+response.getStatus());
                 return Boolean.FALSE;
             }
 
-            DataInputStream dis = new DataInputStream(response.getEntityInputStream());
+            DataInputStream dis = new DataInputStream(response.readEntity(InputStream.class));
             return new Boolean(dis.readBoolean());
         
         } catch(Exception ex) {
@@ -97,7 +93,7 @@ public class JerseyJsonLDClient {
 
             OutputStream out = new ByteArrayOutputStream();
             
-            ClientResponse response = JerseyJsonLDClient.getGraphClientResponseFromService(graph+"#ExportGraph", services.getCoreReadAddress(),ctype);
+            Response response = JerseyJsonLDClient.getGraphResponseFromService(graph+"#ExportGraph", services.getCoreReadAddress(),ctype);
           
             if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
                 return JerseyResponseManager.unexpected();
@@ -130,7 +126,7 @@ public class JerseyJsonLDClient {
                 Object data;
 
                 try {                 
-                    data = JsonUtils.fromInputStream(response.getEntityInputStream());
+                    data = JsonUtils.fromInputStream(response.readEntity(InputStream.class));
                     
                     rb = Response.status(response.getStatus());
 
@@ -157,7 +153,7 @@ public class JerseyJsonLDClient {
 
             } else {
                  rb = Response.status(response.getStatus());
-                 rb.entity(response.getEntityInputStream());
+                 rb.entity(response.readEntity(InputStream.class));
             }
 
             if(!raw) {
@@ -168,7 +164,7 @@ public class JerseyJsonLDClient {
             
             return rb.build();
 
-        } catch (UniformInterfaceException | ClientHandlerException ex) {
+        } catch (Exception ex) {
             logger.log(Level.WARNING, "Expect the unexpected!", ex);
             return JerseyResponseManager.serverError();
         }
@@ -177,31 +173,23 @@ public class JerseyJsonLDClient {
     
     public static Response getSearchResultFromFinto(String vocid, String term, String lang) {
         
-            ResponseBuilder rb;
-            Client client = Client.create();
-            
+          
+            Client client = ClientBuilder.newClient();
             String service = services.getConceptSearchAPI();
-
-            MultivaluedMap<String, String> params = new MultivaluedMapImpl();
-            params.add("query", term);
-            params.add("lang",lang);
-            
+            WebTarget target = client.target(service).queryParam("lang", lang).queryParam("query", term);
+                       
             if(vocid!=null && !vocid.equals("undefined")) 
-               params.add("vocab",vocid);
+               target.queryParam("vocid", vocid);
             
-            WebResource webResource = client.resource(service)
-                                            .queryParams(params);
-
-            Builder builder = webResource.accept("application/ld+json");
-            ClientResponse response = builder.get(ClientResponse.class);
-
+            Response response = target.request("application/ld+json").get();
+            
             if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
                Logger.getLogger(ConceptSearch.class.getName()).log(Level.INFO, response.getStatus()+" from CONCEPT SERVICE");
                return JerseyResponseManager.unexpected(response.getStatus());
             }
             
-            rb = Response.status(response.getStatus()); 
-            rb.entity(response.getEntityInputStream());
+            ResponseBuilder rb = Response.status(response.getStatus()); 
+            rb.entity(response.readEntity(InputStream.class));
        
            return rb.build();
         
@@ -237,16 +225,14 @@ public class JerseyJsonLDClient {
      */
     public static Model getResourceAsJenaModel(String resourceURI) {
                 
-
-        Client client = Client.create();
-        WebResource webResource = client.resource(resourceURI);
-        Builder builder = webResource.accept("text/turtle");
-        ClientResponse response = builder.get(ClientResponse.class);
+         Client client = ClientBuilder.newClient();
+         WebTarget target = client.target(resourceURI);
+         Response response = target.request("text/turtle").get();
          Model model = ModelFactory.createDefaultModel();
          
          try {
          RDFReader reader = model.getReader(Lang.TURTLE.getName());
-         reader.read(model, response.getEntityInputStream(), resourceURI);
+         reader.read(model, response.readEntity(InputStream.class), resourceURI);
          } catch(RiotException ex) {
              return model;
          }
@@ -263,15 +249,12 @@ public class JerseyJsonLDClient {
      */
     public static JsonValue getGraphContextFromService(String id, String service) {
          
-        Client client = Client.create();
+         Client client = ClientBuilder.newClient();
+         WebTarget target = client.target(service).queryParam("graph", id);
+         Response response = target.request("text/turtle").get();
 
-        WebResource webResource = client.resource(service)
-                                  .queryParam("graph", id);
 
-        Builder builder = webResource.accept("application/ld+json");
-        ClientResponse response = builder.get(ClientResponse.class);
-
-        JsonObject json = JSON.parse(response.getEntityInputStream());
+        JsonObject json = JSON.parse(response.readEntity(InputStream.class));
         JsonValue jsonContext = json.get("@context");
         
         return jsonContext;
@@ -285,14 +268,20 @@ public class JerseyJsonLDClient {
      * @param service
      * @return
      */
-    public static ClientResponse getGraphClientResponseFromService(String id, String service) {
-                   
-            Client client = Client.create();
-            WebResource webResource = client.resource(service)
-                                  .queryParam("graph", id);
-           
-            WebResource.Builder builder = webResource.accept("application/ld+json");
-            return builder.get(ClientResponse.class);
+    public static Response getGraphResponseFromService(String id, String service) {
+         
+         Client client = ClientBuilder.newClient();
+         WebTarget target = client.target(service).queryParam("graph", id);
+         Response response = target.request("application/ld+json").get();
+         
+        if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
+           logger.log(Level.INFO, response.getStatus()+" from SERVICE "+service+" and GRAPH "+id);
+           return JerseyResponseManager.notFound();
+        } else {
+            ResponseBuilder rb = Response.status(response.getStatus()); 
+            rb.entity(response.readEntity(InputStream.class));
+            return rb.build();
+        }
     }
     
     /**
@@ -302,76 +291,14 @@ public class JerseyJsonLDClient {
      * @param ctype
      * @return
      */
-    public static ClientResponse getGraphClientResponseFromService(String id, String service, String ctype) {
+    public static Response getGraphResponseFromService(String id, String service, String ctype) {
                    
-            Client client = Client.create();
-            WebResource webResource = client.resource(service)
-                                  .queryParam("graph", id);
-           
-            WebResource.Builder builder = webResource.accept(ctype);
-            return builder.get(ClientResponse.class);
+         Client client = ClientBuilder.newClient();
+         WebTarget target = client.target(service).queryParam("graph", id);
+         return target.request(ctype).get();
+         
     }
     
-    /**
-     *
-     * @param id
-     * @param service
-     * @return
-     */
-    public static Response getGraphResponseFromService(String id, String service) {
-        try {
-        Client client = Client.create();
-
-        WebResource webResource = client.resource(service)
-                                  .queryParam("graph", id);
-
-        Builder builder = webResource.accept("application/ld+json");
-        ClientResponse response = builder.get(ClientResponse.class);
-
-        if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-           logger.log(Level.INFO, response.getStatus()+" from SERVICE "+service+" and GRAPH "+id);
-           return JerseyResponseManager.notFound();
-        }
-
-        ResponseBuilder rb = Response.status(response.getStatus()); 
-        rb.entity(response.getEntityInputStream());
-
-       return rb.build();
-        } catch(ClientHandlerException ex) {
-          logger.log(Level.WARNING, "Expect the unexpected!", ex);
-          return JerseyResponseManager.unexpected();
-        }
-    }
-    
-    /**
-     *
-     * @param service
-     * @return
-     */
-    public static Response getGraphFromTermedAPI(String url) {
-        try {
-        Client client = Client.create();
-        client.addFilter(new HTTPBasicAuthFilter("admin", "admin"));
-
-        WebResource webResource = client.resource(url);
-        logger.info(url);
-        Builder builder = webResource.accept("application/ld+json");
-        ClientResponse response = builder.get(ClientResponse.class);
-
-        if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-           logger.log(Level.INFO, response.getStatus()+" from URL: "+url);
-           return JerseyResponseManager.notFound();
-        }
-
-        ResponseBuilder rb = Response.status(response.getStatus()); 
-        rb.entity(response.getEntityInputStream());
-
-       return rb.build();
-        } catch(ClientHandlerException ex) {
-          logger.log(Level.WARNING, "Expect the unexpected!", ex);
-          return JerseyResponseManager.notAcceptable();
-        }
-    }
     
     /**
      *
@@ -383,21 +310,18 @@ public class JerseyJsonLDClient {
      */
     public static Response getGraphResponseFromService(String id, String service, ContentType contentType, boolean raw) {
         try {
-        Client client = Client.create();
-
-        WebResource webResource = client.resource(service)
-                                  .queryParam("graph", id);
-
-        Builder builder = webResource.accept(contentType.getContentType());
-        ClientResponse response = builder.get(ClientResponse.class);
+            
+         Client client = ClientBuilder.newClient();
+         WebTarget target = client.target(service).queryParam("graph", id);
+         Response response = target.request(contentType.getContentType()).get();
 
         if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
            logger.log(Level.INFO, response.getStatus()+" from SERVICE "+service+" and GRAPH "+id);
            return JerseyResponseManager.notFound();
         }
-
+        
         ResponseBuilder rb = Response.status(response.getStatus()); 
-        rb.entity(response.getEntityInputStream());
+        rb.entity(response.readEntity(InputStream.class));
         
         if(!raw) {
             try {
@@ -410,11 +334,42 @@ public class JerseyJsonLDClient {
         }
 
        return rb.build();
-        } catch(ClientHandlerException ex) {
+        } catch(Exception ex) {
           logger.log(Level.WARNING, "Expect the unexpected!", ex);
           return JerseyResponseManager.unexpected();
         }
     }
+    
+    /**
+     *
+     * @param service
+     * @return
+     */
+    public static Response getGraphFromTermedAPI(String url) {
+        try {
+        Client client = ClientBuilder.newClient();
+        HttpAuthenticationFeature feature = HttpAuthenticationFeature.basic("admin", "admin");
+        client.register(feature);
+                
+        WebTarget target = client.target(url);
+        Response response = target.request("application/ld+json").get();
+        
+        if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
+           logger.log(Level.INFO, response.getStatus()+" from URL: "+url);
+           return JerseyResponseManager.notFound();
+        }
+
+        ResponseBuilder rb = Response.status(response.getStatus()); 
+        rb.entity(response.readEntity(InputStream.class));
+
+       return rb.build();
+        } catch(Exception ex) {
+          logger.log(Level.WARNING, "Expect the unexpected!", ex);
+          return JerseyResponseManager.notAcceptable();
+        }
+    }
+    
+    
     
     /**
      *
@@ -424,11 +379,13 @@ public class JerseyJsonLDClient {
      * @return
      */
     public static StatusType putGraphToTheService(String graph, String body, String service) {
-        Client client = Client.create();
-        WebResource webResource = client.resource(service).queryParam("graph", graph);
-        WebResource.Builder builder = webResource.header("Content-type", "application/ld+json");
-
-        return builder.put(ClientResponse.class, body).getStatusInfo();
+        
+         Client client = ClientBuilder.newClient();
+         WebTarget target = client.target(service).queryParam("graph", graph);
+         Response response = target.request().put(Entity.entity(body, "application/ld+json"));
+         
+         return response.getStatusInfo();
+         
     }
     
     
@@ -440,12 +397,10 @@ public class JerseyJsonLDClient {
      * @return
      */
     public static boolean graphIsUpdatedToTheService(String graph, String body, String service) {
-        Client client = Client.create();
-        WebResource webResource = client.resource(service).queryParam("graph", graph);
-        WebResource.Builder builder = webResource.header("Content-type", "application/ld+json");
-        
-        ClientResponse response = builder.put(ClientResponse.class, body);
-        
+         Client client = ClientBuilder.newClient();
+         WebTarget target = client.target(service).queryParam("graph", graph);
+         Response response = target.request().put(Entity.entity(body, "application/ld+json"));
+         
         if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
                logger.log(Level.WARNING, "Unexpected: Model update failed: "+graph);
                return false;
@@ -461,49 +416,16 @@ public class JerseyJsonLDClient {
      * @param service
      * @return
      */
-    public static ClientResponse postGraphToTheService(String graph, String body, String service) {
-        Client client = Client.create();
-        WebResource webResource = client.resource(service).queryParam("graph", graph);
-        WebResource.Builder builder = webResource.header("Content-type", "application/ld+json");
-        return builder.post(ClientResponse.class, body);
+    public static StatusType postGraphToTheService(String graph, String body, String service) {
+         Client client = ClientBuilder.newClient();
+         WebTarget target = client.target(service).queryParam("graph", graph);
+         Response response = target.request().post(Entity.entity(body, "application/ld+json"));
+         
+         return response.getStatusInfo();
     }
     
     
     
-    
-    
-    /**
-     *
-     * @param query
-     * @param service
-     * @return
-     */
-    public static ClientResponse clientResponseFromConstruct(String query, String service) {
-                   
-            Client client = Client.create();
-            WebResource webResource = client.resource(service)
-                                      .queryParam("query", UriComponent.encode(query,UriComponent.Type.QUERY));
-            WebResource.Builder builder = webResource.accept("application/ld+json");
-            return builder.get(ClientResponse.class);
-
-    }
-    
-    /**
-     *
-     * @param query
-     * @param service
-     * @param contentType
-     * @return
-     */
-    public static ClientResponse clientResponseFromConstruct(String query, String service, ContentType contentType) {
-                     
-            Client client = Client.create();
-            WebResource webResource = client.resource(service)
-                                      .queryParam("query", UriComponent.encode(query,UriComponent.Type.QUERY));
-            WebResource.Builder builder = webResource.accept(contentType.getContentType());
-            return builder.get(ClientResponse.class);
-
-    }
     
     
     /**
@@ -513,29 +435,25 @@ public class JerseyJsonLDClient {
      * @return
      */
     public static Response constructGraphFromService(String query, String service) {
-        
-            Client client = Client.create();
-
-            WebResource webResource = client.resource(service)
-                                      .queryParam("query", UriComponent.encode(query,UriComponent.Type.QUERY));
-
-            WebResource.Builder builder = webResource.accept("application/ld+json");
-
-            ClientResponse response = builder.get(ClientResponse.class);
-            ResponseBuilder rb = Response.status(response.getStatus()); 
-            rb.entity(response.getEntityInputStream());
+                   
+            Client client = ClientBuilder.newClient();
+            WebTarget target = client.target(service)
+                                          .queryParam("query", UriComponent.encode(query,UriComponent.Type.QUERY));
             
-            if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
+            Response response = target.request("application/ld+json").get();
+            
+             if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
                return JerseyResponseManager.unexpected(response.getStatus());
-            }
-            
-           // rb.cacheControl(CacheControl.valueOf("no-cache"));
-           // rb.header("Access-Control-Allow-Origin", "*");
-	   // rb.header("Access-Control-Allow-Methods", "GET, POST, DELETE, PUT");
-           
-            return rb.build();
-            
+            } else {
+                ResponseBuilder rb = Response.status(response.getStatus()); 
+                rb.entity(response.readEntity(InputStream.class));
+                return rb.build();
+             }
+          
     }
+    
+    
+  
     
     /**
      *
@@ -547,28 +465,16 @@ public class JerseyJsonLDClient {
      */
     public static StatusType constructGraphFromServiceToService(String query, String fromService, String toService, String toGraph) {
         
-            
-            /* TODO: TEST! Not yet in use. */
-            
-            Client client = Client.create();
-
-            WebResource webResource = client.resource(fromService)
-                                      .queryParam("query", UriComponent.encode(query,UriComponent.Type.QUERY));
-
-            WebResource.Builder builder = webResource.accept("application/ld+json");
-
-            ClientResponse response = builder.get(ClientResponse.class);
-            ResponseBuilder rb = Response.status(response.getStatus());
-            rb.entity(response.getEntityInputStream());
-            
-            if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-              return builder.get(ClientResponse.class).getStatusInfo();
-            }
-            
-            logger.info(rb.toString());
-            
-            return putGraphToTheService(toGraph, rb.toString(), toService);
-            
+        Client client = ClientBuilder.newClient();
+        WebTarget target = client.target(fromService).queryParam("query", UriComponent.encode(query,UriComponent.Type.QUERY));
+        Response response = target.request("application/ld+json").get();
+        
+        if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
+           return response.getStatusInfo();
+        } else {
+            return putGraphToTheService(toGraph, response.readEntity(String.class), toService);
+        }
+        
     }
     
     /**
@@ -581,12 +487,11 @@ public class JerseyJsonLDClient {
         
         try {
 
-             Client client = Client.create();
-             WebResource webResource = client.resource(service)
-                                       .queryParam("graph", graph);
+            Client client = ClientBuilder.newClient();
+            WebTarget target = client.target(service)
+                                           .queryParam("graph", graph);
 
-             WebResource.Builder builder = webResource.header("Content-type", "application/ld+json");
-             ClientResponse response = builder.delete(ClientResponse.class);
+            Response response = target.request("application/ld+json").delete();
 
              if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
                 logger.log(Level.WARNING, "Database connection error: "+graph+" was not deleted from "+service+"! Status "+response.getStatus());

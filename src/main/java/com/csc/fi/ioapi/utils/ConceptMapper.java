@@ -6,6 +6,7 @@ import com.csc.fi.ioapi.config.ApplicationProperties;
 import com.csc.fi.ioapi.config.EndpointServices;
 import static com.csc.fi.ioapi.utils.GraphManager.services;
 import static com.csc.fi.ioapi.utils.ImportManager.services;
+import java.io.InputStream;
 import org.apache.jena.query.DatasetAccessor;
 import org.apache.jena.query.DatasetAccessorFactory;
 import org.apache.jena.query.ParameterizedSparqlString;
@@ -14,13 +15,12 @@ import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.update.UpdateExecutionFactory;
 import org.apache.jena.update.UpdateProcessor;
 import org.apache.jena.update.UpdateRequest;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.uri.UriComponent;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import org.apache.jena.iri.IRI;
@@ -68,21 +68,20 @@ public class ConceptMapper {
      
      public static Model getModelFromFinto(String id) {
          
-          Client client = Client.create();
-
-          WebResource webResource = client.resource(services.getVocabExportAPI(id))
+           Client client = ClientBuilder.newClient();
+            WebTarget target = client.target(services.getVocabExportAPI(id))
                                           .queryParam("format","text/turtle");
-
-                WebResource.Builder builder = webResource.accept("text/turtle");
-                ClientResponse response = builder.get(ClientResponse.class);
+            
+            Response response = target.request("text/turtle").get();
+           
 
                 if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
                     logger.warning("Could not find the vocabulary");
                 }
                 
                 Model model = ModelFactory.createDefaultModel(); 
-
-                RDFDataMgr.read(model, response.getEntityInputStream(), RDFLanguages.TURTLE);
+                
+                RDFDataMgr.read(model, response.readEntity(InputStream.class), RDFLanguages.TURTLE);
                 
                 return model;
      }

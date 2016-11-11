@@ -36,13 +36,11 @@ import com.csc.fi.ioapi.utils.NamespaceManager;
 import com.csc.fi.ioapi.utils.ProvenanceManager;
 import com.csc.fi.ioapi.utils.QueryLibrary;
 import org.apache.jena.query.ParameterizedSparqlString;
-import com.sun.jersey.api.client.ClientHandlerException;
-import com.sun.jersey.api.client.UniformInterfaceException;
-import com.wordnik.swagger.annotations.Api;
-import com.wordnik.swagger.annotations.ApiOperation;
-import com.wordnik.swagger.annotations.ApiParam;
-import com.wordnik.swagger.annotations.ApiResponse;
-import com.wordnik.swagger.annotations.ApiResponses;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 import java.util.Map;
 import java.util.UUID;
 import javax.ws.rs.DELETE;
@@ -295,7 +293,7 @@ public class Class {
            if(provUUID!=null) return JerseyResponseManager.successUuid(provUUID);
            else return JerseyResponseManager.notCreated();
 
-      } catch(UniformInterfaceException | ClientHandlerException ex) {
+      } catch(Exception ex) {
         Logger.getLogger(Class.class.getName()).log(Level.WARNING, "Expect the unexpected!", ex);
         return JerseyResponseManager.unexpected();
       }

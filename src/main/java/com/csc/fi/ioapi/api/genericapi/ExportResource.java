@@ -16,13 +16,11 @@ import com.csc.fi.ioapi.utils.ErrorMessage;
 import com.csc.fi.ioapi.utils.JerseyJsonLDClient;
 import com.csc.fi.ioapi.utils.JsonSchemaWriter;
 import com.csc.fi.ioapi.utils.XMLSchemaWriter;
-import com.sun.jersey.api.client.ClientHandlerException;
-import com.sun.jersey.api.client.UniformInterfaceException;
-import com.wordnik.swagger.annotations.Api;
-import com.wordnik.swagger.annotations.ApiOperation;
-import com.wordnik.swagger.annotations.ApiParam;
-import com.wordnik.swagger.annotations.ApiResponse;
-import com.wordnik.swagger.annotations.ApiResponses;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 import javax.ws.rs.HeaderParam;
 import org.apache.jena.atlas.web.ContentType;
 import org.apache.jena.iri.IRI;
@@ -115,7 +113,7 @@ public class ExportResource {
             }
                         
             return  JerseyJsonLDClient.getGraphResponseFromService(graph, service, contentType, raw);
-        } catch (UniformInterfaceException | ClientHandlerException ex) {
+        } catch (Exception ex) {
             logger.log(Level.WARNING, "Expect the unexpected!", ex);
             return JerseyResponseManager.serverError();
         }

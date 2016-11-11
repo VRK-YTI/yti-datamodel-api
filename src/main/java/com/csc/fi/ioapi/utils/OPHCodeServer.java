@@ -4,10 +4,7 @@
 package com.csc.fi.ioapi.utils;
 
 import com.csc.fi.ioapi.config.EndpointServices;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientHandlerException;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.logging.Logger;
@@ -18,6 +15,9 @@ import javax.json.JsonObject;
 import javax.json.JsonReader;
 import javax.json.JsonValue;
 import javax.json.JsonValue.ValueType;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
@@ -63,20 +63,17 @@ public class OPHCodeServer {
             model.setNsPrefix("iow", "http://iow.csc.fi/ns/iow#");
             
             Response.ResponseBuilder rb;
-            Client client = Client.create();
+           
             
-            WebResource webResource = client.resource(uri).queryParam("format","application/json");
-
-            WebResource.Builder builder = webResource.accept("application/json");
-            
-    
-           ClientResponse response = builder.get(ClientResponse.class);
+            Client client = ClientBuilder.newClient();
+            WebTarget target = client.target(uri).queryParam("format","application/json");
+            Response response = target.request("application/json").get();
 
             
             if (response.getStatusInfo().getFamily() == Response.Status.Family.SUCCESSFUL) {
                 
              
-                JsonReader jsonReader = Json.createReader(response.getEntityInputStream());
+                JsonReader jsonReader = Json.createReader(response.readEntity(InputStream.class));
                 JsonArray codeListArray = jsonReader.readArray();
                 jsonReader.close();
                 
@@ -182,7 +179,8 @@ public class OPHCodeServer {
                 return false;
             }
         
-            } catch(ClientHandlerException ex) {
+            } catch(Exception ex) {
+                logger.warning(ex.getStackTrace().toString());
                 logger.info("Not connected to the code server");
                 return false;
             } 
@@ -233,18 +231,16 @@ public class OPHCodeServer {
         model.setNsPrefix("iow", "http://iow.csc.fi/ns/iow#");
             
             Response.ResponseBuilder rb;
-            Client client = Client.create();
-            
-            WebResource webResource = client.resource(uri).queryParam("format","application/json");
 
-            WebResource.Builder builder = webResource.accept("application/json");
-            ClientResponse response = builder.get(ClientResponse.class);
+            Client client = ClientBuilder.newClient();
+            WebTarget target = client.target(uri).queryParam("format","application/json");
+            Response response = target.request("application/json").get();
 
             if (response.getStatusInfo().getFamily() == Response.Status.Family.SUCCESSFUL) {
                 
                 logger.info("STATUS OK");
                 
-                JsonReader jsonReader = Json.createReader(response.getEntityInputStream());
+                JsonReader jsonReader = Json.createReader(response.readEntity(InputStream.class));
                 JsonArray codeListArray = jsonReader.readArray();
                 jsonReader.close();
                 

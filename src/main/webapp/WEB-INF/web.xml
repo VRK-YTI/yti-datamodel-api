@@ -4,33 +4,42 @@
     <listener>
         <listener-class>com.csc.fi.ioapi.config.StartUpListener</listener-class>
     </listener>
-    <servlet>
-        <servlet-name>rest-ws</servlet-name>
-        <servlet-class>
-            com.sun.jersey.spi.container.servlet.ServletContainer
-        </servlet-class>
-        <init-param>
-            <param-name>com.sun.jersey.spi.container.ContainerRequestFilters</param-name>
-            <param-value>com.sun.jersey.api.container.filter.GZIPContentEncodingFilter</param-value>
+    
+    <!--
+        <servlet>
+        <servlet-name>jersey</servlet-name>
+        <servlet-class>org.glassfish.jersey.servlet.ServletContainer</servlet-class>
+         <init-param>
+            <param-name>javax.ws.rs.container.ContainerRequestFilters</param-name>
+            <param-value>javax.ws.rs.container.filter.GZIPContentEncodingFilter</param-value>
         </init-param>
         <init-param>
-            <param-name>com.sun.jersey.spi.container.ContainerResponseFilters</param-name>
-            <param-value>com.sun.jersey.api.container.filter.GZIPContentEncodingFilter;com.csc.fi.ioapi.config.CustomResponseFilter</param-value> 
+            <param-name>javax.ws.rs.container.ContainerResponseFilters</param-name>
+            <param-value>javax.ws.rs.container.filter.GZIPContentEncodingFilter;com.csc.fi.ioapi.config.CustomResponseFilter</param-value> 
         </init-param>
         <init-param>
-            <param-name>com.sun.jersey.config.property.packages</param-name>
-            <param-value>com.csc.fi.ioapi.api.usermanagement;
+            <param-name>jersey.config.server.provider.packages</param-name>
+            <param-value>
+                         com.wordnik.swagger.jaxrs.json,
+                         com.csc.fi.ioapi.api.usermanagement;
                          com.csc.fi.ioapi.api.model;
                          com.csc.fi.ioapi.api.profile;
                          com.csc.fi.ioapi.api.genericapi;
                          com.csc.fi.ioapi.api.concepts;
-                         com.wordnik.swagger.jersey.listing</param-value>
+                         io.swagger.jaxrs.listing</param-value>
         </init-param>
-        <load-on-startup>1</load-on-startup>
+        <init-param>
+            <param-name>jersey.config.server.provider.classnames</param-name>
+            <param-value>
+                com.wordnik.swagger.jersey.listing.ApiListingResourceJSON,
+                com.wordnik.swagger.jersey.listing.JerseyApiDeclarationProvider,
+                com.wordnik.swagger.jersey.listing.JerseyResourceListingProvider
+            </param-value>
+        </init-param>
     </servlet>
-    <!--
-    TEST:
-        <servlet>
+   
+    
+    <servlet>
         <servlet-name>Jersey2Config</servlet-name>
         <servlet-class>io.swagger.jersey.config.JerseyJaxrsConfig</servlet-class>
         <init-param>
@@ -39,12 +48,14 @@
         </init-param>
         <init-param>
             <param-name>swagger.api.basepath</param-name>
-            <param-value>http://localhost:8080/api</param-value>
+            <param-value>/api/rest</param-value>
         </init-param>
         <load-on-startup>2</load-on-startup>
     </servlet>
     
     -->
+    
+    <!--
     <servlet>
         <servlet-name>JerseyJaxrsConfig</servlet-name>
         <servlet-class>com.wordnik.swagger.jersey.config.JerseyJaxrsConfig</servlet-class>
@@ -58,6 +69,45 @@
         </init-param>
         <load-on-startup>2</load-on-startup>
     </servlet>
+-->
+
+
+ <servlet>
+      <servlet-name>jersey</servlet-name>
+      <servlet-class>org.glassfish.jersey.servlet.ServletContainer</servlet-class>
+      <init-param>
+        <param-name>jersey.config.server.provider.packages</param-name>
+        <param-value>
+            io.swagger.jaxrs.listing,
+            com.csc.fi.ioapi.api.usermanagement,
+            com.csc.fi.ioapi.api.model,
+            com.csc.fi.ioapi.api.profile,
+            com.csc.fi.ioapi.api.genericapi,
+            com.csc.fi.ioapi.api.concepts
+        </param-value>
+      </init-param>
+      <load-on-startup>1</load-on-startup>
+    </servlet>
+    
+    <servlet>
+        <servlet-name>Jersey2Config</servlet-name>
+        <servlet-class>io.swagger.jersey.config.JerseyJaxrsConfig</servlet-class>
+        <init-param>
+            <param-name>api.version</param-name>
+            <param-value>1.0.0</param-value>
+        </init-param>
+        <init-param>
+            <param-name>swagger.api.basepath</param-name>
+            <param-value>/api/rest/</param-value>
+        </init-param>
+        <load-on-startup>2</load-on-startup>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>jersey</servlet-name>
+        <url-pattern>/api/rest/*</url-pattern>
+    </servlet-mapping>
+
     <servlet>
         <servlet-name>LoginServlet</servlet-name>
         <servlet-class>com.csc.fi.ioapi.config.LoginServlet</servlet-class>
@@ -66,10 +116,6 @@
         <servlet-name>ResolveResource</servlet-name>
         <servlet-class>com.csc.fi.ioapi.resolve.ResolveResource</servlet-class>
     </servlet>
-    <servlet-mapping>
-        <servlet-name>rest-ws</servlet-name>
-        <url-pattern>/rest/*</url-pattern>
-    </servlet-mapping>
     <servlet-mapping>
         <servlet-name>LoginServlet</servlet-name>
         <url-pattern>/login</url-pattern>
