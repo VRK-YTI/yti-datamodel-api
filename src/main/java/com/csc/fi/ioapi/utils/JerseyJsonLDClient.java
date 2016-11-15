@@ -179,7 +179,7 @@ public class JerseyJsonLDClient {
             WebTarget target = client.target(service).queryParam("lang", lang).queryParam("query", term);
                        
             if(vocid!=null && !vocid.equals("undefined")) 
-               target.queryParam("vocid", vocid);
+               target = target.queryParam("vocab", vocid);
             
             Response response = target.request("application/ld+json").get();
             
