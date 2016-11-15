@@ -58,7 +58,7 @@ public class JerseyJsonLDClient {
         try {
             
             Client client = ClientBuilder.newClient();
-            WebTarget target = client.target(services.getVocabExportAPI(url));
+            WebTarget target = client.target(url);
             Response response = target.request("application/json").get();
             
             if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {

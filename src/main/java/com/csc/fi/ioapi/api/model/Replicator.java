@@ -106,7 +106,7 @@ public class Replicator {
         Boolean replicate = JerseyJsonLDClient.readBooleanFromURL(service+"replicate");
 
         if(replicate!=null && replicate.booleanValue()) {
-            logger.info("Replicating data from "+replicate);
+            logger.info("Replicating data from "+service);
         }
         
         IRI modelIRI = null, groupIRI = null;
