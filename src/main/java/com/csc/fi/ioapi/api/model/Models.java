@@ -104,8 +104,7 @@ public class Models {
             Model model = accessor.getModel(id);
             
             if(model==null) {
-                /* TODO: Add error message */
-                return JerseyResponseManager.unexpected();
+                return JerseyResponseManager.notFound();
             }
             
             pss.setNsPrefixes(model.getNsPrefixMap());
@@ -315,6 +314,10 @@ public class Models {
        
        HttpSession session = request.getSession();
 
+       if(!GraphManager.isExistingGraph(modelIRI)) {
+           return JerseyResponseManager.notFound();
+       }
+       
        if(session==null) return JerseyResponseManager.unauthorized();
 
        LoginSession login = new LoginSession(session);

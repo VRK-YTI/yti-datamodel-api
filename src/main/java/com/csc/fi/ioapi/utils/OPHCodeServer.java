@@ -64,7 +64,6 @@ public class OPHCodeServer {
             
             Response.ResponseBuilder rb;
            
-            
             Client client = ClientBuilder.newClient();
             WebTarget target = client.target(uri).queryParam("format","application/json");
             Response response = target.request("application/json").get();
