@@ -49,79 +49,13 @@ public class Concept {
       @ApiResponse(code = 500, message = "Internal server error")
   })
   public Response concept(
-          @ApiParam(value = "uri", required = true) @QueryParam("uri") String uri) {
-  
-       IRI conceptIRI = null;
-       
-	try {
-                    IRIFactory iri = IRIFactory.uriImplementation();
-                    
-                    if(uri!=null && !uri.equals("undefined")) conceptIRI = iri.construct(uri);
-		} catch (IRIException e) {
-			logger.log(Level.WARNING, "ID is invalid IRI!");
-			return JerseyResponseManager.invalidIRI();
-		}
-        
-      //  return JerseyJsonLDClient.getGraphFromTermedAPI(uri);
-          
-       
-          String queryString;
-          ParameterizedSparqlString pss = new ParameterizedSparqlString();
-          pss.setNsPrefixes(LDHelper.PREFIX_MAP);
-            
-          queryString = "CONSTRUCT { "
-                      + "?concept a skos:Concept . " 
-                      + "?concept skos:prefLabel ?label . "
-                      + "?concept skos:definition ?definition . "
-                      + "?concept skos:inScheme ?scheme . "
-                      + "?scheme a skos:ConceptScheme . "
-                      + "?scheme dcterms:identifier ?id . "
-                      + "?scheme dcterms:title ?title .  "
-                      + "?scheme dcterms:description ?description . "
-                      + "?scheme dcterms:isFormatOf ?FintoLink . "
-                      + "} WHERE { "
-                      + "?concept a skos:Concept . "
-                      + "?concept skos:prefLabel ?label . "
-                      + "OPTIONAL { ?concept skos:definition ?definition . }"
-                      + "?concept skos:inScheme ?scheme . "
-                      + "?scheme dc:identifier ?id . "
-                      + "?scheme dc:title ?title . "
-                      + "?scheme dc:description ?description . "
-                      + "?scheme dcterms:isFormatOf ?FintoLink . "
-                      + "}";
+          @ApiParam(value = "uri", required = true) 
+          @QueryParam("uri") String uri,
+          @ApiParam(value = "vocid") 
+          @QueryParam("vocid") String vocid) {
 
-  	  
-          pss.setCommandText(queryString);
-          
-          if(conceptIRI!=null) pss.setIri("concept", conceptIRI);
-          
-          return JerseyJsonLDClient.constructGraphFromService(pss.toString(), services.getTempConceptReadSparqlAddress());
-
-      /*
-            ResponseBuilder rb;
-            Client client = Client.create();
-
-            if((uri==null || uri.equals("undefined")) ) return JerseyResponseManager.notAcceptable();
-            
-            WebResource webResource = client.resource(services.getConceptAPI())
-                                      .queryParam("uri", UriComponent.encode(uri,UriComponent.Type.QUERY))
-                                      .queryParam("format","application/json");
-
-            Builder builder = webResource.accept("application/json");
-            ClientResponse response = builder.get(ClientResponse.class);
-
-            if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-               Logger.getLogger(Concept.class.getName()).log(Level.INFO, response.getStatus()+" from CONCEPT SERVICE");
-               return JerseyResponseManager.unexpected(response.getStatus());
-            }
-            
-            rb = Response.status(response.getStatus()); 
-            rb.entity(response.getEntityInputStream());
-       
-           return rb.build();
-    
-*/
-          
+        return JerseyJsonLDClient.getConceptFromTermedAPI(uri,vocid);          
+      
   }
   
   

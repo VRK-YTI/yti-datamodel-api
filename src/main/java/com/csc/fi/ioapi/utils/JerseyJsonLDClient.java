@@ -4,6 +4,7 @@
 package com.csc.fi.ioapi.utils;
 import com.csc.fi.ioapi.api.concepts.ConceptSearch;
 import com.csc.fi.ioapi.api.genericapi.ExportModel;
+import com.csc.fi.ioapi.config.ApplicationProperties;
 import com.csc.fi.ioapi.config.EndpointServices;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.jsonldjava.core.JsonLdError;
@@ -27,6 +28,7 @@ import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.CacheControl;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
@@ -340,29 +342,142 @@ public class JerseyJsonLDClient {
         }
     }
     
+    
+            /**
+     *
+     * @param service
+     * @return
+     */
+    public static Response saveConceptSuggestion(String body, String scheme) {
+        
+        // TODO: Add scheme when API is ready
+        if(scheme.startsWith("urn:uuid:"))
+            scheme = scheme.substring(scheme.indexOf("urn:uuid:"));
+        
+        String url = ApplicationProperties.getDefaultTermAPI()+"graphs/"+scheme+"/nodes";
+        
+        try {
+            Client client = ClientBuilder.newClient();
+            HttpAuthenticationFeature feature = HttpAuthenticationFeature.basic("admin", "admin");
+            client.register(feature);
+
+            WebTarget target = client.target(url);
+            Response response = target.request().post(Entity.entity(body, "application/ld+json"));
+
+            logger.info("TERMED CALL: "+target.getUri().toString());
+            
+            if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
+               logger.log(Level.INFO, response.getStatus()+" from URL: "+url);
+               return JerseyResponseManager.notFound();
+            }
+
+            ResponseBuilder rb = Response.status(response.getStatus()); 
+            return rb.build();
+            
+        } catch(Exception ex) {
+          logger.log(Level.WARNING, "Expect the unexpected!", ex);
+          return JerseyResponseManager.notAcceptable();
+        }
+    }
+    
+     /**
+     *
+     * @param service
+     * @return
+     */
+    public static Response searchConceptFromTermedAPI(String query, String scheme) {
+        
+        // TODO: Add scheme when API is ready
+        
+        String url = ApplicationProperties.getDefaultTermAPI()+"ext";
+        
+        try {
+            Client client = ClientBuilder.newClient();
+            HttpAuthenticationFeature feature = HttpAuthenticationFeature.basic("admin", "admin");
+            client.register(feature);
+
+            WebTarget target = client.target(url).queryParam("typeId", "Concept").queryParam("useUriKeys",true).queryParam("loadGraph", true).queryParam("query", query);
+            Response response = target.request("application/ld+json").get();
+
+            logger.info("TERMED CALL: "+target.getUri().toString());
+            
+            if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
+               logger.log(Level.INFO, response.getStatus()+" from URL: "+url);
+               return JerseyResponseManager.notFound();
+            }
+
+            ResponseBuilder rb = Response.status(response.getStatus()); 
+            rb.entity(response.readEntity(InputStream.class));
+
+           return rb.build();
+        } catch(Exception ex) {
+          logger.log(Level.WARNING, "Expect the unexpected!", ex);
+          return JerseyResponseManager.notAcceptable();
+        }
+    }
+    
+    
+    
     /**
      *
      * @param service
      * @return
      */
-    public static Response getGraphFromTermedAPI(String url) {
+    public static Response getSchemesFromTermedAPI() {
+        String url = ApplicationProperties.getDefaultTermAPI()+"ext";
         try {
-        Client client = ClientBuilder.newClient();
-        HttpAuthenticationFeature feature = HttpAuthenticationFeature.basic("admin", "admin");
-        client.register(feature);
-                
-        WebTarget target = client.target(url);
-        Response response = target.request("application/ld+json").get();
-        
-        if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-           logger.log(Level.INFO, response.getStatus()+" from URL: "+url);
-           return JerseyResponseManager.notFound();
+            Client client = ClientBuilder.newClient();
+            HttpAuthenticationFeature feature = HttpAuthenticationFeature.basic("admin", "admin");
+            client.register(feature);
+
+
+            WebTarget target = client.target(url).queryParam("typeId", "ConceptScheme").queryParam("useUriKeys",true).queryParam("loadGraph", true);
+            Response response = target.request("application/ld+json").get();
+
+            logger.info("TERMED CALL: "+target.getUri().toString());
+            
+            if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
+               logger.log(Level.INFO, response.getStatus()+" from URL: "+url);
+               return JerseyResponseManager.notFound();
+            }
+
+            ResponseBuilder rb = Response.status(response.getStatus()); 
+            rb.entity(response.readEntity(InputStream.class));
+
+           return rb.build();
+        } catch(Exception ex) {
+          logger.log(Level.WARNING, "Expect the unexpected!", ex);
+          return JerseyResponseManager.notAcceptable();
         }
+    }
+    
+    /**
+     *
+     * @param service
+     * @return
+     */
+    public static Response getConceptFromTermedAPI(String uri, String scheme) {
+        // TODO: Remove/replace scheme when API is ready
+        String url = ApplicationProperties.getDefaultTermAPI()+"ext";
+        try {
+            Client client = ClientBuilder.newClient();
+            HttpAuthenticationFeature feature = HttpAuthenticationFeature.basic("admin", "admin");
+            client.register(feature);
+            
+            WebTarget target = client.target(url+"/"+scheme).queryParam("typeId", "Concept").queryParam("useUriKeys",true).queryParam("loadGraph", true).queryParam("uri",uri);
+            Response response = target.request("application/ld+json").get();
 
-        ResponseBuilder rb = Response.status(response.getStatus()); 
-        rb.entity(response.readEntity(InputStream.class));
+            logger.info("TERMED CALL: "+target.getUri().toString());
+            
+            if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
+               logger.log(Level.INFO, response.getStatus()+" from URL: "+url);
+               return JerseyResponseManager.notFound();
+            }
 
-       return rb.build();
+            ResponseBuilder rb = Response.status(response.getStatus()); 
+            rb.entity(response.readEntity(InputStream.class));
+
+           return rb.build();
         } catch(Exception ex) {
           logger.log(Level.WARNING, "Expect the unexpected!", ex);
           return JerseyResponseManager.notAcceptable();

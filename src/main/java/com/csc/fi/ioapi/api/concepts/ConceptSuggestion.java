@@ -11,6 +11,7 @@ import com.csc.fi.ioapi.utils.ConceptMapper;
 import com.csc.fi.ioapi.utils.JerseyResponseManager;
 import com.csc.fi.ioapi.utils.JerseyJsonLDClient;
 import com.csc.fi.ioapi.utils.LDHelper;
+import com.csc.fi.ioapi.utils.ModelManager;
 import org.apache.jena.query.ParameterizedSparqlString;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -41,6 +42,12 @@ import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
 import org.apache.jena.iri.IRIFactory;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
+import org.apache.jena.rdf.model.Literal;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.vocabulary.RDF;
+import org.apache.jena.vocabulary.SKOS;
 
 /**
  * REST Web Service
@@ -54,88 +61,7 @@ public class ConceptSuggestion {
   @Context ServletContext context;
   private EndpointServices services = new EndpointServices();
   private static final Logger logger = Logger.getLogger(ConceptSuggestion.class.getName());
-    
-  @GET
-  @Produces("application/ld+json")
-  @ApiOperation(value = "Get concept suggestion", notes = "Get concept suggestions with concept ID, scheme ID or user ID. Concept suggestions with Scheme ID should be most useful. ")
-  @ApiResponses(value = {
-      @ApiResponse(code = 400, message = "Invalid model supplied"),
-      @ApiResponse(code = 404, message = "Service not found"),
-      @ApiResponse(code = 500, message = "Internal server error")
-  })
-  public Response json(
-	@ApiParam(value = "Concept ID") @QueryParam("conceptID") String conceptID,
-        @ApiParam(value = "User ID") @QueryParam("userID") String userID,
-        @ApiParam(value = "Scheme ID") @QueryParam("schemeID") String schemeID) {
-
-        IRI conceptIRI = null;
-        IRI userIRI = null;
-        IRI schemeIRI = null;
-       
-	try {
-                    IRIFactory iri = IRIFactory.iriImplementation();
-                    
-                    if(conceptID!=null && !conceptID.equals("undefined")) conceptIRI = iri.construct(conceptID);
-                    if(userID!=null && !userID.equals("undefined")) userIRI = iri.construct(userID);
-                    if(schemeID!=null && !schemeID.equals("undefined")) schemeIRI = iri.construct(schemeID);
-		} catch (IRIException e) {
-			logger.log(Level.WARNING, "ID is invalid IRI!");
-			return JerseyResponseManager.invalidIRI();
-		}
-                
-          String queryString;
-          ParameterizedSparqlString pss = new ParameterizedSparqlString();
-          pss.setNsPrefixes(LDHelper.PREFIX_MAP);
-            
-          queryString = "CONSTRUCT { "
-                  + "?concept a ?type . "
-                  + "?concept skos:inScheme ?scheme . "
-                  + "?scheme a ?schemeType . "
-                  + "?scheme dcterms:identifier ?schemeID . "
-                  + "?scheme dcterms:title ?schemeTitle . "
-                  + "?concept rdfs:isDefinedBy ?model . "
-                  + "?concept skos:broader ?top . "
-                  + "?concept prov:generatedAtTime ?time . "
-                  + "?concept skos:prefLabel ?label . "
-                  + "?concept skos:definition ?comment . "
-                  + "?concept prov:wasAssociatedWith ?user . "
-                  + "?concept rdfs:isDefinedBy ?model . "
-                  + "?model a ?modelType . "
-                  + "?model rdfs:label ?modelLabel . } "
-                  + "WHERE {"
-                  + "GRAPH ?concept { "
-                  + "?concept a ?type . "
-                  + "?concept skos:inScheme ?scheme . "
-                  + "?concept skos:prefLabel ?label . "
-                  + "?concept prov:generatedAtTime ?time . "
-                  + "?concept skos:definition ?comment . "
-                  + "?concept prov:wasAssociatedWith ?user . "
-                  + "OPTIONAL { ?concept skos:broader ?top . }"
-                  + "OPTIONAL { ?concept rdfs:isDefinedBy ?model . "
-                  + "SERVICE ?modelService { "
-                        + "GRAPH ?model {"
-                        + " ?model a ?modelType . "
-                        + " ?model rdfs:label ?modelLabel . "
-                        + " ?model dcterms:references ?scheme . "
-                        + " ?scheme a ?schemeType . "
-                        + " ?scheme dcterms:identifier ?schemeID . "
-                        + " ?scheme dcterms:title ?schemeTitle . "
-                        + "}}}"
-                  + "}}";
-  	  
-          pss.setCommandText(queryString);
-          
-          if(conceptIRI!=null) pss.setIri("concept", conceptIRI);
-          if(userIRI!=null) pss.setIri("user", userIRI);
-          if(schemeIRI!=null) pss.setIri("scheme", schemeIRI);
-          pss.setIri("modelService",services.getLocalhostCoreSparqlAddress());
-                
-          return JerseyJsonLDClient.constructGraphFromService(pss.toString(), services.getTempConceptReadSparqlAddress());
-                  
-           
-  }
- 
-
+  
     	@PUT
 	@ApiOperation(value = "Create concept suggestion", notes = "Create new concept suggestion")
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "New concept is created"),
@@ -144,7 +70,7 @@ public class ConceptSuggestion {
                         @ApiResponse(code = 401, message = "User is not logged in"),
 			@ApiResponse(code = 404, message = "Service not found") })
 	public Response newConceptSuggestion(
-                @ApiParam(value = "Model ID", required = true) @QueryParam("modelID") String modelID,
+                @ApiParam(value = "Model ID") @QueryParam("modelID") String modelID,
                 @ApiParam(value = "Scheme ID", required = true) @QueryParam("schemeID") String schemeID,
                 @ApiParam(value = "Label", required = true) @QueryParam("label") String label,
 		@ApiParam(value = "Comment", required = true) @QueryParam("comment") String comment,
@@ -164,11 +90,10 @@ public class ConceptSuggestion {
                 IRI modelIRI;
                 IRI topIRI = null;
                 
-                
 		try {
 			IRIFactory iri = IRIFactory.iriImplementation();
 			schemeIRI = iri.construct(schemeID);
-                        modelIRI = iri.construct(modelID);
+                        if(modelID!=null && !modelID.equals("undefined")) modelIRI = iri.construct(modelID);
                         if(topConceptID!=null && !topConceptID.equals("undefined")) topIRI = iri.construct(topConceptID);
 		} catch (IRIException e) {
 			logger.log(Level.WARNING, "CLASS OR PROPERTY ID is invalid IRI!");
@@ -180,164 +105,23 @@ public class ConceptSuggestion {
                 
                 UUID conceptUUID = UUID.randomUUID();
                 
-		String queryString;
-		ParameterizedSparqlString pss = new ParameterizedSparqlString();
-		
-                pss.setNsPrefixes(LDHelper.PREFIX_MAP);
-		
-                queryString = "INSERT { "
-                        + "GRAPH ?concept { "
-                        + "?concept rdfs:isDefinedBy ?model . "
-                        + "?model a ?modelType ."
-                        + "?model rdfs:label ?modelLabel . "
-                        + "?concept skos:inScheme ?scheme . "
-                        + " ?scheme dcterms:title ?schemeTitle ."
-                        + " ?scheme dcterms:identifier ?schemeIdentifier . "
-                        + " ?scheme a ?schemeType . "
-                        + "?concept skos:broader ?top . "
-                        + "?concept a skos:Concept . "
-                        + "?concept a iow:ConceptSuggestion . "
-                        + "?concept skos:prefLabel ?label . "
-                        + "?concept skos:definition ?comment . "
-                        + "?concept prov:generatedAtTime ?time . "
-                        + "?concept prov:wasAssociatedWith ?user . } } "
-                        + "WHERE { BIND(NOW() as ?time)"
-                        + "SERVICE ?modelService { "
-                        + "GRAPH ?model {"
-                        + " ?model dcterms:references ?scheme . "
-                        + " ?scheme dcterms:title ?schemeTitle ."
-                        + " ?scheme dcterms:identifier ?schemeIdentifier . "
-                        + " ?scheme a ?schemeType . "
-                        + " ?model a ?modelType . "
-                        + " ?model rdfs:label ?modelLabel . "
-                        + "}}"
-                        + "}";
-		
-                pss.setCommandText(queryString);
-                pss.setIri("model",modelIRI);
-		pss.setIri("scheme", schemeIRI);
-                pss.setLiteral("label", ResourceFactory.createLangLiteral(label,lang));
-                pss.setLiteral("comment", ResourceFactory.createLangLiteral(comment,lang));
-                pss.setIri("concept", "urn:uuid:"+conceptUUID);
-                pss.setIri("user", "mailto:"+login.getEmail());        
-                pss.setIri("modelService",services.getLocalhostCoreSparqlAddress());
-          
-                if(topIRI!=null) pss.setIri("top", topIRI);
-         
-		UpdateRequest query = pss.asUpdate();
-		UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(query, services.getTempConceptSparqlUpdateAddress());
-                ConceptMapper.addConceptToLocalSKOSCollection(modelID,"urn:uuid:"+conceptUUID);
+                // TODO: TEST CONCEPT SAVING.
+
+                Model model = ModelFactory.createDefaultModel();
+                Resource concept = model.createResource("urn:uuid:"+conceptUUID);
+                Literal prefLabel = ResourceFactory.createLangLiteral(label, lang);
+                Literal definition = ResourceFactory.createLangLiteral(comment, lang);
+                concept.addLiteral(SKOS.prefLabel, prefLabel);
+                concept.addLiteral(SKOS.definition, definition);
+                concept.addProperty(RDF.type, SKOS.Concept);
                 
-		try {
-			qexec.execute();
-                        // TODO: Create JSON-LD?
-                        return JerseyResponseManager.okUUID(conceptUUID);
-			
-		} catch (QueryExceptionHTTP ex) {
-			logger.log(Level.WARNING, "Expect the unexpected!", ex);
-			return JerseyResponseManager.unexpected();
-		}
-	}
-        
-        
-  @POST
-  @ApiOperation(value = "Update concept suggestion", notes = "PUT Body should be json-ld")
-  @ApiResponses(value = {
-      @ApiResponse(code = 201, message = "Graph is created"),
-      @ApiResponse(code = 204, message = "Graph is saved"),
-      @ApiResponse(code = 401, message = "Unauthorized"),
-      @ApiResponse(code = 405, message = "Update not allowed"),
-      @ApiResponse(code = 403, message = "Illegal graph parameter"),
-      @ApiResponse(code = 400, message = "Invalid graph supplied"),
-      @ApiResponse(code = 500, message = "Bad data?") 
-  })
-  public Response postJson(
-          @ApiParam(value = "New graph in application/ld+json", required = false) String body, 
-          @ApiParam(value = "ConceptSuggestion ID", required = true) @QueryParam("conceptID") String conceptID,          
-          @Context HttpServletRequest request) {
-              
-        HttpSession session = request.getSession();
-        
-        if(session==null) return JerseyResponseManager.unauthorized();
-        
-        LoginSession login = new LoginSession(session);
-        
-        // TODO: !login.hasRightToEditModel(model) for concepts
-        if(!login.isLoggedIn())
-            return JerseyResponseManager.unauthorized();
+                String modelString = ModelManager.writeModelToString(model);
+                System.out.println(modelString);
                 
-        IRIFactory iriFactory = IRIFactory.iriImplementation(); 
-        IRI conceptIRI;
-        
-        /* Check that URIs are valid */
-        try {
-            conceptIRI = iriFactory.construct(conceptID);
-        }
-        catch (IRIException e) {
-            return JerseyResponseManager.invalidIRI();
-        }
+                JerseyJsonLDClient.saveConceptSuggestion(modelString,schemeID);
 
-        if(isNotEmpty(body)) {
-            
-        /* Put graph to database */ 
-        StatusType status = JerseyJsonLDClient.putGraphToTheService(conceptID, body, services.getTempConceptReadWriteAddress());
-        
-           if (status.getFamily() != Response.Status.Family.SUCCESSFUL) {
-               /* TODO: Create prov events from failed updates? */
-               logger.log(Level.WARNING, "Unexpected: Not updated: "+conceptID);
-               return JerseyResponseManager.unexpected(status.getStatusCode());
-           } 
-            
-        } else {
-             return JerseyResponseManager.invalidParameter();
+                return JerseyResponseManager.okUUID(conceptUUID);
+
         }
-
-        ConceptMapper.updateConceptSuggestion(conceptID);
-        
-        return JerseyResponseManager.okEmptyContent();
-        
-  }
-  
-  // TODO: DO THIS FROM MODELCONCEPTS API: ConceptMapper.deleteConceptSuggestion(model,id);
-  /*
-  @DELETE
-  @ApiOperation(value = "Delete concept suggestion", notes = "Deletes graph and references to it")
-  @ApiResponses(value = {
-      @ApiResponse(code = 204, message = "Graph is deleted"),
-      @ApiResponse(code = 403, message = "Illegal graph parameter"),
-      @ApiResponse(code = 404, message = "No such graph"),
-      @ApiResponse(code = 401, message = "Unauthorized")
-  })
-  public Response deleteConceptSuggestion(
-          @ApiParam(value = "Model ID", required = true) 
-          @QueryParam("modelID") String model,
-          @ApiParam(value = "Concept ID", required = true) 
-          @QueryParam("conceptID") String id,
-          @Context HttpServletRequest request) {
-      
-      IRIFactory iriFactory = IRIFactory.iriImplementation();
-      IRI modelIRI,idIRI;
-        try {
-            modelIRI = iriFactory.construct(model);
-            idIRI = iriFactory.construct(id);
-        }
-        catch (IRIException e) {
-            return JerseyResponseManager.invalidIRI();
-        }
-      
-       HttpSession session = request.getSession();
-
-       if(session==null) return JerseyResponseManager.unauthorized();
-
-       LoginSession login = new LoginSession(session);
-
-       if(!login.isLoggedIn() || !login.hasRightToEditModel(model))
-          return JerseyResponseManager.unauthorized();
-       
-       ConceptMapper.deleteConceptSuggestion(model,id);
-       
-       return return JerseyResponseManager.okEmptyContent();
-  }
- */    
   
 }

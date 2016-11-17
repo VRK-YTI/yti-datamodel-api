@@ -3,6 +3,7 @@
  */
 package com.csc.fi.ioapi.api.concepts;
 
+import com.csc.fi.ioapi.config.ApplicationProperties;
 import com.csc.fi.ioapi.config.EndpointServices;
 import com.csc.fi.ioapi.utils.JerseyJsonLDClient;
 import com.csc.fi.ioapi.utils.LDHelper;
@@ -41,34 +42,10 @@ public class ConceptsSchemes {
   })
   public Response vocab() {
 
-          String queryString;
-          ParameterizedSparqlString pss = new ParameterizedSparqlString();
-          pss.setNsPrefixes(LDHelper.PREFIX_MAP);
-            
-          queryString = "CONSTRUCT { "
-                      + "?scheme a skos:ConceptScheme . "
-                      + "?scheme dcterms:identifier ?id . "
-                      + "?scheme dcterms:title ?title .  "
-                      + "?scheme dcterms:description ?description . "
-                      + "?scheme dcterms:isFormatOf ?FintoLink . "
-                      + "} WHERE { "
-                      + "?concept a skos:Concept . "
-                      + "?concept skos:prefLabel ?label . "
-                      + "?concept skos:definition ?definition . "
-                      + "?concept skos:inScheme ?scheme . "
-                      + "?scheme dc:identifier ?id . "
-                      + "?scheme dc:title ?title . "
-                      + "?scheme dc:description ?description . "
-                      + "?scheme dcterms:isFormatOf ?FintoLink . "
-                      + "}";
+      
+      return JerseyJsonLDClient.getSchemesFromTermedAPI();
+      
 
-  	  
-          pss.setCommandText(queryString);
-          
-          return JerseyJsonLDClient.constructGraphFromService(pss.toString(), services.getTempConceptReadSparqlAddress());
-          
-       // return JerseyFusekiClient.getGraphResponseFromService("urn:csc:schemes", services.getTempConceptReadWriteAddress());      
-      //    return JerseyJsonLDClient.getGraphFromTermedAPI(ApplicationProperties.getDefaultTermAPI()+"graphs");
   }
   
   

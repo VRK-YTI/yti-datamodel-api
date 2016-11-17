@@ -43,21 +43,11 @@ public class ConceptSearch {
   public Response concept(
           @ApiParam(value = "Term", required = true) 
           @QueryParam("term") String term,
-          @ApiParam(value = "Lang", required = true) 
-          @QueryParam("lang") String lang,
           @ApiParam(value = "vocid") 
           @QueryParam("vocid") String vocid) {
-            
-          //  return JerseyJsonLDClient.getGraphFromTermedAPI(ApplicationProperties.getDefaultTermAPI()+"nodes?query="+term);
-  
-         
-            
-            if((term==null || term.equals("undefined")) || (lang==null || lang.equals("undefined")) ) return JerseyResponseManager.invalidParameter();
-            
-            if(!term.contains("*")) term+="*";
-            
-            return JerseyJsonLDClient.getSearchResultFromFinto(vocid, term, lang);
-
+          
+          return JerseyJsonLDClient.searchConceptFromTermedAPI(term, vocid);
+          
           
   }
   
