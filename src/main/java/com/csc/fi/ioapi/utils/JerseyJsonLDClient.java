@@ -396,7 +396,7 @@ public class JerseyJsonLDClient {
             HttpAuthenticationFeature feature = HttpAuthenticationFeature.basic("admin", "admin");
             client.register(feature);
 
-            WebTarget target = client.target(url).queryParam("typeId", "Concept").queryParam("useUriKeys",true).queryParam("loadGraph", true).queryParam("query", query);
+            WebTarget target = client.target(url).queryParam("typeId", "Concept").queryParam("useUriKeys",true).queryParam("loadGraph", true).queryParam("loadType", true).queryParam("query", query);
             Response response = target.request("application/ld+json").get();
 
             logger.info("TERMED CALL: "+target.getUri().toString());
@@ -431,7 +431,7 @@ public class JerseyJsonLDClient {
             client.register(feature);
 
 
-            WebTarget target = client.target(url).queryParam("typeId", "ConceptScheme").queryParam("useUriKeys",true).queryParam("loadGraph", true);
+            WebTarget target = client.target(url).queryParam("typeId", "ConceptScheme").queryParam("useUriKeys",true).queryParam("loadGraph", true).queryParam("loadType", true);
             Response response = target.request("application/ld+json").get();
 
             logger.info("TERMED CALL: "+target.getUri().toString());
