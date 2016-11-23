@@ -4,7 +4,9 @@
  * and open the template in the editor.
  */
 
+import com.csc.fi.ioapi.api.usermanagement.Group;
 import com.csc.fi.ioapi.config.ApplicationProperties;
+import java.util.logging.Logger;
 import org.apache.jena.query.Query;
 import org.apache.jena.query.QueryExecution;
 import org.apache.jena.query.QueryExecutionFactory;
@@ -43,6 +45,8 @@ public class EndpointConnectionTest {
     public void tearDown() {
     }
 
+    private static final Logger logger = Logger.getLogger(EndpointConnectionTest.class.getName());
+        
     // TODO add test methods here.
     // The methods must be annotated with annotation @Test. For example:
     //
@@ -51,8 +55,9 @@ public class EndpointConnectionTest {
         String queryString = "SELECT ?s ?p ?o WHERE { ?s ?p ?o } LIMIT 1";
     
          String endpoint = ApplicationProperties.getEndpoint()+"/core/sparql";
-         System.out.println();
         
+         logger.info("Testing "+endpoint);
+         
          Query query = QueryFactory.create(queryString);        
          QueryExecution qexec = QueryExecutionFactory.sparqlService(endpoint, query);
          try
