@@ -38,6 +38,7 @@ public class User {
 
     @Context ServletContext context;
     EndpointServices services = new EndpointServices();
+    private static final Logger logger = Logger.getLogger(User.class.getName());
 
     @GET
     @ApiOperation(value = "Get user id", notes = "Get user from service")
@@ -50,6 +51,8 @@ public class User {
     @Produces("application/ld+json")
     public Response getUser(@Context HttpServletRequest request) {
         
+        logger.info("Getting user");
+            
         HttpSession session = request.getSession(); 
         LoginSession login = new LoginSession(session);
  

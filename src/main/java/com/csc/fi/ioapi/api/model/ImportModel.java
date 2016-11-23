@@ -12,6 +12,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import com.csc.fi.ioapi.config.EndpointServices;
+import com.csc.fi.ioapi.utils.IDManager;
 import com.csc.fi.ioapi.utils.JerseyResponseManager;
 import com.csc.fi.ioapi.utils.ImportManager;
 import com.csc.fi.ioapi.utils.JerseyJsonLDClient;
@@ -27,7 +28,6 @@ import java.io.ByteArrayInputStream;
 import java.util.Map;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
-import org.apache.jena.iri.IRIFactory;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.riot.RDFLanguages;
 import javax.ws.rs.core.Response;
@@ -70,9 +70,8 @@ public class ImportModel {
        IRI graphIRI, namespaceIRI;
        
        try {
-            IRIFactory iri = IRIFactory.iriImplementation();
-            graphIRI = iri.construct(graph);
-            namespaceIRI = iri.construct(graph+"#");
+            graphIRI = IDManager.constructIRI(graph);
+            namespaceIRI = IDManager.constructIRI(graph+"#");
         } catch (IRIException e) {
             return JerseyResponseManager.invalidIRI();
         }

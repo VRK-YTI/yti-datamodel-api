@@ -13,9 +13,9 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 import com.csc.fi.ioapi.config.EndpointServices;
-import com.csc.fi.ioapi.utils.ErrorMessage;
 import com.csc.fi.ioapi.utils.JerseyResponseManager;
 import com.csc.fi.ioapi.utils.GraphManager;
+import com.csc.fi.ioapi.utils.IDManager;
 import com.csc.fi.ioapi.utils.JerseyJsonLDClient;
 import com.csc.fi.ioapi.utils.LDHelper;
 import com.csc.fi.ioapi.utils.NamespaceResolver;
@@ -28,7 +28,6 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
-import org.apache.jena.iri.IRIFactory;
 import org.apache.jena.util.SplitIRI;
  
 /**
@@ -60,8 +59,7 @@ public class ModeRequirementlCreator {
             IRI namespaceIRI;
 
             try {
-                    IRIFactory iri = IRIFactory.iriImplementation();
-                    namespaceIRI = iri.construct(namespace);
+                    namespaceIRI = IDManager.constructIRI(namespace);
             } catch (IRIException e) {
                     return JerseyResponseManager.invalidIRI();
             }

@@ -12,9 +12,8 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import com.csc.fi.ioapi.config.EndpointServices;
-import com.csc.fi.ioapi.utils.ConceptMapper;
 import com.csc.fi.ioapi.utils.JerseyResponseManager;
-import com.csc.fi.ioapi.utils.ErrorMessage;
+import com.csc.fi.ioapi.utils.IDManager;
 import com.csc.fi.ioapi.utils.JerseyJsonLDClient;
 import com.csc.fi.ioapi.utils.LDHelper;
 import org.apache.jena.query.ParameterizedSparqlString;
@@ -27,7 +26,6 @@ import io.swagger.annotations.ApiResponses;
 import javax.servlet.http.HttpServletRequest;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
-import org.apache.jena.iri.IRIFactory;
 
 /**
  * Root resource (exposed at "classCreator" path)
@@ -56,9 +54,8 @@ public class ClassCreator {
 
             IRI conceptIRI,modelIRI;
             try {
-                    IRIFactory iri = IRIFactory.iriImplementation();
-                    conceptIRI = iri.construct(conceptID);
-                    modelIRI = iri.construct(modelID);
+                    conceptIRI = IDManager.constructIRI(conceptID);
+                    modelIRI = IDManager.constructIRI(modelID);
             } catch (IRIException e) {
                     return JerseyResponseManager.invalidIRI();
             }

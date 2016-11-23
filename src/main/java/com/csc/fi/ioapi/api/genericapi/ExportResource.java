@@ -5,14 +5,13 @@ import java.util.logging.Logger;
 import javax.servlet.ServletContext;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
 import com.csc.fi.ioapi.utils.JerseyResponseManager;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import com.csc.fi.ioapi.config.EndpointServices;
 import com.csc.fi.ioapi.utils.ContextWriter;
-import com.csc.fi.ioapi.utils.ErrorMessage;
+import com.csc.fi.ioapi.utils.IDManager;
 import com.csc.fi.ioapi.utils.JerseyJsonLDClient;
 import com.csc.fi.ioapi.utils.JsonSchemaWriter;
 import com.csc.fi.ioapi.utils.XMLSchemaWriter;
@@ -23,9 +22,6 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import javax.ws.rs.HeaderParam;
 import org.apache.jena.atlas.web.ContentType;
-import org.apache.jena.iri.IRI;
-import org.apache.jena.iri.IRIException;
-import org.apache.jena.iri.IRIFactory;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFLanguages;
 
@@ -68,14 +64,10 @@ public class ExportResource {
             }
         }
         
-         IRI resourceIRI;
-         
-            try {
-                    IRIFactory iri = IRIFactory.iriImplementation();
-                    resourceIRI = iri.construct(graph);
-            } catch (IRIException e) {
-                    return JerseyResponseManager.invalidIRI();
-            }
+        /* Check that URIs are valid */
+        if(IDManager.isInvalid(graph)) {
+            return JerseyResponseManager.invalidIRI();
+        }
             
             if(ctype.equals("application/ld+json+context")) {
                 String context = ContextWriter.newResourceContext(graph);

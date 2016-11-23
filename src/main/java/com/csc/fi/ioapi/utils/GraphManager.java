@@ -26,8 +26,6 @@ import java.util.logging.Logger;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.datatypes.xsd.XSDDateTime;
 import org.apache.jena.iri.IRI;
-import org.apache.jena.iri.IRIException;
-import org.apache.jena.iri.IRIFactory;
 import org.apache.jena.rdf.model.Literal;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.ResourceFactory;
@@ -276,6 +274,65 @@ public class GraphManager {
         }
     }
     
+        /**
+     * Check if Graph is existing
+     * @param graphIRI IRI of the graphs
+     * @return Returns true if Graph with the given URL String
+     */
+    public static boolean isExistingGraph(String graphIRI) {
+
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        String queryString = " ASK { GRAPH ?graph { ?s ?p ?o }}";
+        pss.setCommandText(queryString);
+        pss.setIri("graph", graphIRI);
+
+        Query query = pss.asQuery();
+        QueryExecution qexec = QueryExecutionFactory.sparqlService(services.getCoreSparqlAddress(), query);
+
+        try {
+            boolean b = qexec.execAsk();
+            logger.info(graphIRI+": "+b);
+            return b;
+        } catch (Exception ex) {
+            return false;
+        }
+    }
+    
+        /**
+     * Test if namespace exists as NamedGraph in GraphCollection
+     * @param graphIRI IRI of the graph as String
+     * @return Returns true if there is a graph in Service description
+     */
+    public static boolean isExistingServiceGraph(String graphIRI) {
+
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+        
+        String queryString = " ASK { GRAPH <urn:csc:iow:sd> { " +
+                " ?service a sd:Service . "+
+                " ?service sd:availableGraphs ?graphCollection . "+
+                " ?graphCollection a sd:GraphCollection . "+
+                " ?graphCollection sd:namedGraph ?graph . "+
+                " ?graph sd:name ?graphName . "+
+                "}}";
+        
+        if(graphIRI.endsWith("#")) graphIRI = graphIRI.substring(0,graphIRI.length()-1);
+        
+        pss.setCommandText(queryString);
+        pss.setIri("graphName", graphIRI);
+
+        Query query = pss.asQuery();
+        QueryExecution qexec = QueryExecutionFactory.sparqlService(services.getCoreSparqlAddress(), query);
+
+        try {
+            boolean b = qexec.execAsk();
+            return b;
+        } catch (Exception ex) {
+            return false;
+        }
+    }
+ 
+    
     /**
      * Check if there exists a Graph that uses the given prefix
      * @param prefix Prefix given to the namespace
@@ -298,21 +355,6 @@ public class GraphManager {
         } catch (Exception ex) {
             return false;
         }
-    }
-    
-    /**
-     * Test if IRI is valid
-     * @param iriString String representation of a IRI to be tested
-     * @return Returns true if IRI can be created with the given parameter
-     */
-    public static boolean testIRI(String iriString) {
-           try {
-              IRI iri = IRIFactory.uriImplementation().construct(iriString);
-            }
-            catch (IRIException e) {
-                return false;
-            }  
-           return true;
     }
     
     /**
@@ -350,63 +392,6 @@ public class GraphManager {
 
         return graphUri;
 
-    }
-    
-    /**
-     * Test if namespace exists as NamedGraph in GraphCollection
-     * @param graphIRI IRI of the graph as String
-     * @return Returns true if there is a graph in Service description
-     */
-    public static boolean isExistingServiceGraph(String graphIRI) {
-
-        ParameterizedSparqlString pss = new ParameterizedSparqlString();
-        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
-        
-        String queryString = " ASK { GRAPH <urn:csc:iow:sd> { " +
-                " ?service a sd:Service . "+
-                " ?service sd:availableGraphs ?graphCollection . "+
-                " ?graphCollection a sd:GraphCollection . "+
-                " ?graphCollection sd:namedGraph ?graph . "+
-                " ?graph sd:name ?graphName . "+
-                "}}";
-        
-        if(graphIRI.endsWith("#")) graphIRI = graphIRI.substring(0,graphIRI.length()-1);
-        
-        pss.setCommandText(queryString);
-        pss.setIri("graphName", graphIRI);
-
-        Query query = pss.asQuery();
-        QueryExecution qexec = QueryExecutionFactory.sparqlService(services.getCoreSparqlAddress(), query);
-
-        try {
-            boolean b = qexec.execAsk();
-            return b;
-        } catch (Exception ex) {
-            return false;
-        }
-    }
-    
-    /**
-     * Test if Core graph exists with some triples in it
-     * @param graphIRI Graph IRI as String
-     * @return Returns true if there exists Graph identified with the given IRI 
-     */
-    public static boolean isExistingGraph(String graphIRI) {
-
-        ParameterizedSparqlString pss = new ParameterizedSparqlString();
-        String queryString = " ASK { GRAPH ?graph { ?s ?p ?o }}";
-        pss.setCommandText(queryString);
-        pss.setIri("graph", graphIRI);
-
-        Query query = pss.asQuery();
-        QueryExecution qexec = QueryExecutionFactory.sparqlService(services.getCoreSparqlAddress(), query);
-
-        try {
-            boolean b = qexec.execAsk();
-            return b;
-        } catch (Exception ex) {
-            return false;
-        }
     }
 
     /**

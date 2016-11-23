@@ -22,18 +22,16 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
-import org.apache.jena.iri.IRIFactory;
 import com.csc.fi.ioapi.config.EndpointServices;
 import com.csc.fi.ioapi.config.LoginSession;
 import com.csc.fi.ioapi.utils.ResourceManager;
 import com.csc.fi.ioapi.utils.ConceptMapper;
-import com.csc.fi.ioapi.utils.ErrorMessage;
 import com.csc.fi.ioapi.utils.GraphManager;
+import com.csc.fi.ioapi.utils.IDManager;
 import com.csc.fi.ioapi.utils.JerseyJsonLDClient;
 import com.csc.fi.ioapi.utils.JerseyResponseManager;
 import com.csc.fi.ioapi.utils.LDHelper;
 import com.csc.fi.ioapi.utils.NamespaceManager;
-import com.csc.fi.ioapi.utils.ProvenanceManager;
 import com.csc.fi.ioapi.utils.QueryLibrary;
 import org.apache.jena.query.ParameterizedSparqlString;
 import io.swagger.annotations.Api;
@@ -90,15 +88,10 @@ public class Class {
 
       } else {
           
-            IRIFactory iriFactory = IRIFactory.iriImplementation();
-            IRI idIRI;
-            try {
-                idIRI = iriFactory.construct(id);
-            }
-            catch (IRIException e) {
+
+            if(!IDManager.isValidUrl(id)) {
                 return JerseyResponseManager.invalidIRI();
             }  
-            
             
             if(id.startsWith("urn:")) {
                return JerseyJsonLDClient.getGraphResponseFromService(id, services.getProvReadWriteAddress());
@@ -169,20 +162,19 @@ public class Class {
         if(!login.isLoggedIn() || !login.hasRightToEditModel(model))
             return JerseyResponseManager.unauthorized();
                 
-        IRIFactory iriFactory = IRIFactory.iriImplementation();
         IRI modelIRI,idIRI,oldIdIRI = null;        
         
         /* Check that URIs are valid */
         try {
-            modelIRI = iriFactory.construct(model);
-            idIRI = iriFactory.construct(id);
+            modelIRI = IDManager.constructIRI(model);
+            idIRI = IDManager.constructIRI(id);
             /* If newid exists */
             if(oldid!=null && !oldid.equals("undefined")) {
                 if(oldid.equals(id)) {
                   /* id and newid cant be the same */
                   return JerseyResponseManager.usedIRI();
                 }
-                oldIdIRI = iriFactory.construct(oldid);
+                oldIdIRI = IDManager.constructIRI(oldid);
             }
         }
         catch (IRIException e) {
@@ -253,13 +245,12 @@ public class Class {
       
     try {
         
-        IRIFactory iriFactory = IRIFactory.iriImplementation();
         IRI modelIRI,idIRI;   
         
         /* Check that URIs are valid */
         try {
-            modelIRI = iriFactory.construct(model);
-            idIRI = iriFactory.construct(id);
+            modelIRI = IDManager.constructIRI(model);
+            idIRI = IDManager.constructIRI(id);
         }
         catch(NullPointerException e) {
             return JerseyResponseManager.unexpected();
@@ -314,12 +305,14 @@ public class Class {
           @QueryParam("id") String id,
           @Context HttpServletRequest request) {
       
-      IRIFactory iriFactory = IRIFactory.iriImplementation();
        /* Check that URIs are valid */
       IRI modelIRI,idIRI;
         try {
-            modelIRI = iriFactory.construct(model);
-            idIRI = iriFactory.construct(id);
+            modelIRI = IDManager.constructIRI(model);
+            idIRI = IDManager.constructIRI(id);
+        }
+        catch(NullPointerException e) {
+            return JerseyResponseManager.invalidIRI();
         }
         catch (IRIException e) {
             return JerseyResponseManager.invalidIRI();

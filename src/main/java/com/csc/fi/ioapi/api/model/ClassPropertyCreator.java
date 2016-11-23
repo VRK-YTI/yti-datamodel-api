@@ -14,8 +14,8 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import com.csc.fi.ioapi.config.EndpointServices;
-import com.csc.fi.ioapi.utils.ErrorMessage;
 import com.csc.fi.ioapi.utils.GraphManager;
+import com.csc.fi.ioapi.utils.IDManager;
 import com.csc.fi.ioapi.utils.JerseyJsonLDClient;
 import com.csc.fi.ioapi.utils.LDHelper;
 import com.csc.fi.ioapi.utils.JerseyResponseManager;
@@ -28,7 +28,6 @@ import io.swagger.annotations.ApiResponses;
 import java.util.UUID;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
-import org.apache.jena.iri.IRIFactory;
 import org.apache.jena.util.SplitIRI;
 
 /**
@@ -62,9 +61,9 @@ public class ClassPropertyCreator {
       ParameterizedSparqlString pss = new ParameterizedSparqlString();
       pss.setNsPrefixes(LDHelper.PREFIX_MAP);
 
-      try {         
-         IRIFactory iri = IRIFactory.iriImplementation();
-         predicateIRI = iri.construct(predicateID);
+      try {
+        // Parse IRI:s
+        predicateIRI = IDManager.constructIRI(predicateID);
          
         UUID classPropertyUUID = UUID.randomUUID(); 
          
@@ -112,17 +111,17 @@ public class ClassPropertyCreator {
          
          if((predicateType==null || predicateType.equals("http://www.w3.org/1999/02/22-rdf-syntax-ns#Property")) && type!=null && !type.equals("undefined")) {
              String typeURI = type.replace("owl:", "http://www.w3.org/2002/07/owl#");
-             typeIRI = iri.construct(typeURI);
+             typeIRI = IDManager.constructIRI(typeURI);
           } else {
              if(predicateType==null || predicateType.equals("http://www.w3.org/1999/02/22-rdf-syntax-ns#Property")) return JerseyResponseManager.invalidParameter();
-             else typeIRI = iri.construct(predicateType);
+             else typeIRI = IDManager.constructIRI(predicateType);
          } */
            
          if(type==null || type.equals("undefined"))
                return JerseyResponseManager.invalidParameter();
          
          String typeURI = type.replace("owl:", "http://www.w3.org/2002/07/owl#");
-         typeIRI = iri.construct(typeURI);
+         typeIRI = IDManager.constructIRI(typeURI);
          
          
          service = services.getImportsSparqlAddress();

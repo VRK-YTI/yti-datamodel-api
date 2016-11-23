@@ -9,6 +9,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 import com.csc.fi.ioapi.config.EndpointServices;
+import com.csc.fi.ioapi.utils.IDManager;
 import com.csc.fi.ioapi.utils.JerseyJsonLDClient;
 import com.csc.fi.ioapi.utils.LDHelper;
 import com.csc.fi.ioapi.utils.JerseyResponseManager;
@@ -20,9 +21,6 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import org.apache.jena.iri.IRI;
-import org.apache.jena.iri.IRIException;
-import org.apache.jena.iri.IRIFactory;
  
 /**
  * Root resource (exposed at "valueSchemeCreator" path)
@@ -49,10 +47,6 @@ public class CodeServerCreator {
             @ApiParam(value = "Initial language", required = true, allowableValues="fi,en") @QueryParam("lang") String lang,
             @ApiParam(value = "Update codelists", defaultValue = "false") @QueryParam("update") boolean force) {
 
-                    
-            IRIFactory iri = IRIFactory.iriImplementation();
-            IRI codeServerIRI = null;
-        
             if(uri!=null && !uri.equals("undefined")) {
                 
                 OPHCodeServer codeServer = new OPHCodeServer(uri, true);
@@ -60,14 +54,14 @@ public class CodeServerCreator {
                 if(codeServer==null || !codeServer.status) {
                     return JerseyResponseManager.invalidParameter();
                 }
-                try{
-                    codeServerIRI = iri.construct(uri);
-                } catch(IRIException e) {
+                
+                if(IDManager.isInvalid(uri)) {
                     return JerseyResponseManager.invalidIRI();
                 }
 
-            } else
+            } else {
                 return JerseyResponseManager.invalidParameter();
+            }
 
            
             String queryString;

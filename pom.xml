@@ -22,8 +22,27 @@
         <endorsed.dir>${project.build.directory}/endorsed</endorsed.dir>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
+    <repositories>
+        <repository>
+             <id>svn-export-repo</id>
+             <name>svn-export repository on GitHub</name>
+             <url>http://bripkens.github.com/svg-export/repository/</url>
+        </repository>
+    </repositories>
     <dependencies>
         
+        <dependency>
+             <groupId>org.slf4j</groupId>
+             <artifactId>slf4j-api</artifactId>
+             <version>1.7.5</version>
+         </dependency>
+
+         <dependency>
+             <groupId>org.slf4j</groupId>
+             <artifactId>slf4j-simple</artifactId>
+             <version>1.6.4</version>
+         </dependency>
+   
         <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>javax.servlet-api</artifactId>
@@ -91,6 +110,12 @@
             <artifactId>jersey-media-sse</artifactId>
             <version>2.24</version>
         </dependency>
+        
+        <dependency>
+            <groupId>org.glassfish.jersey.media</groupId>
+            <artifactId>jersey-media-multipart</artifactId>
+            <version>2.24</version>
+        </dependency>
 
         <dependency>
          <groupId>org.glassfish</groupId>
@@ -156,6 +181,12 @@
             <groupId>io.swagger</groupId>
             <artifactId>swagger-jersey2-jaxrs</artifactId>
             <version>1.5.10</version>
+        </dependency>
+
+        <dependency>
+            <groupId>de.bripkens</groupId>
+            <artifactId>svg-export</artifactId>
+            <version>0.2</version>
         </dependency>
 
     </dependencies>

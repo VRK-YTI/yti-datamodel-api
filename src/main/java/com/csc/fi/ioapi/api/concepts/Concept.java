@@ -5,14 +5,11 @@ package com.csc.fi.ioapi.api.concepts;
 
 import com.csc.fi.ioapi.config.EndpointServices;
 import com.csc.fi.ioapi.utils.JerseyJsonLDClient;
-import com.csc.fi.ioapi.utils.JerseyResponseManager;
-import com.csc.fi.ioapi.utils.LDHelper;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.servlet.ServletContext;
 import javax.ws.rs.core.Context;
@@ -21,10 +18,6 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
-import org.apache.jena.iri.IRI;
-import org.apache.jena.iri.IRIException;
-import org.apache.jena.iri.IRIFactory;
-import org.apache.jena.query.ParameterizedSparqlString;
 
 /**
  * REST Web Service

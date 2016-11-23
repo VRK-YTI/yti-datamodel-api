@@ -15,6 +15,7 @@ import javax.ws.rs.core.Response;
 import com.csc.fi.ioapi.config.EndpointServices;
 import com.csc.fi.ioapi.config.LoginSession;
 import com.csc.fi.ioapi.utils.GraphManager;
+import com.csc.fi.ioapi.utils.IDManager;
 import com.csc.fi.ioapi.utils.JerseyJsonLDClient;
 import com.csc.fi.ioapi.utils.JerseyResponseManager;
 import io.swagger.annotations.Api;
@@ -28,7 +29,6 @@ import javax.ws.rs.core.Response.StatusType;
 import org.apache.jena.atlas.web.ContentType;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
-import org.apache.jena.iri.IRIFactory;
  
 /**
  * Root resource (exposed at "myresource" path)
@@ -83,8 +83,7 @@ public class ModelPositions {
        IRI graphIRI;
        
             try {
-                IRIFactory iri = IRIFactory.iriImplementation();
-                graphIRI = iri.construct(model+"#PositionGraph");
+                graphIRI = IDManager.constructIRI(model+"#PositionGraph");
             } catch (IRIException e) {
                 logger.log(Level.WARNING, "GRAPH ID is invalid IRI!");
                 return JerseyResponseManager.invalidIRI();

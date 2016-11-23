@@ -15,6 +15,7 @@ import javax.ws.rs.core.Response;
 import com.csc.fi.ioapi.config.EndpointServices;
 import com.csc.fi.ioapi.utils.ConceptMapper;
 import com.csc.fi.ioapi.utils.ErrorMessage;
+import com.csc.fi.ioapi.utils.IDManager;
 import com.csc.fi.ioapi.utils.JerseyResponseManager;
 import com.csc.fi.ioapi.utils.JerseyJsonLDClient;
 import com.csc.fi.ioapi.utils.LDHelper;
@@ -28,7 +29,6 @@ import io.swagger.annotations.ApiResponses;
 import javax.servlet.http.HttpServletRequest;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
-import org.apache.jena.iri.IRIFactory;
 
 /**
  * Root resource (exposed at "myresource" path)
@@ -59,11 +59,14 @@ public class PredicateCreator {
         IRI conceptIRI,modelIRI,typeIRI;
         try {
                 String typeURI = type.replace("owl:", "http://www.w3.org/2002/07/owl#");
-                IRIFactory iri = IRIFactory.iriImplementation();
-                conceptIRI = iri.construct(conceptID);
-                modelIRI = iri.construct(modelID);
-                typeIRI = iri.construct(typeURI);
-        } catch (IRIException e) {
+                conceptIRI = IDManager.constructIRI(conceptID);
+                modelIRI = IDManager.constructIRI(modelID);
+                typeIRI = IDManager.constructIRI(typeURI);
+        } 
+        catch (NullPointerException e) {
+                return JerseyResponseManager.invalidParameter();
+        }
+         catch (IRIException e) {
                 return JerseyResponseManager.invalidIRI();
         }
 

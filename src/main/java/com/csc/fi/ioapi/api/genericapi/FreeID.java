@@ -9,6 +9,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import com.csc.fi.ioapi.config.EndpointServices;
 import com.csc.fi.ioapi.utils.GraphManager;
+import com.csc.fi.ioapi.utils.IDManager;
 import com.csc.fi.ioapi.utils.JerseyResponseManager;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -16,10 +17,6 @@ import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Response.Status;
-import org.apache.jena.iri.IRI;
-import org.apache.jena.iri.IRIException;
-import org.apache.jena.iri.IRIFactory;
  
 @Path("freeID")
 @Api(value = "/freeID", description = "Test if ID is valid and not in use")
@@ -37,16 +34,11 @@ public class FreeID {
   })
   public Response json(@ApiParam(value = "ID", required = true) @QueryParam("id") String id) {
      
-      IRI idIRI;
+    if(IDManager.isInvalid(id)) {
+        return JerseyResponseManager.sendBoolean(false);
+    }
             
-            try {
-                IRIFactory iri = IRIFactory.iriImplementation();
-                idIRI = iri.construct(id);
-            } catch(NullPointerException | IRIException e) {
-                return JerseyResponseManager.sendBoolean(false);
-            }
-            
-    return JerseyResponseManager.sendBoolean(!GraphManager.isExistingGraph(idIRI));
+    return JerseyResponseManager.sendBoolean(!GraphManager.isExistingGraph(id));
 
 }
   

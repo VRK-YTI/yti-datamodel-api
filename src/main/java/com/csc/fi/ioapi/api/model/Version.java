@@ -16,15 +16,10 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
-
-import org.apache.jena.iri.IRI;
-import org.apache.jena.iri.IRIException;
-import org.apache.jena.iri.IRIFactory;
-
 import com.csc.fi.ioapi.config.EndpointServices;
 import com.csc.fi.ioapi.config.LoginSession;
-import com.csc.fi.ioapi.utils.ErrorMessage;
 import com.csc.fi.ioapi.utils.GraphManager;
+import com.csc.fi.ioapi.utils.IDManager;
 import com.csc.fi.ioapi.utils.JerseyJsonLDClient;
 import com.csc.fi.ioapi.utils.JerseyResponseManager;
 import com.csc.fi.ioapi.utils.LDHelper;
@@ -127,16 +122,10 @@ public class Version {
             return JerseyResponseManager.unauthorized();
         }
 
-            IRI modelIRI;
-
-            try {
-                    IRIFactory iri = IRIFactory.iriImplementation();
-                    modelIRI = iri.construct(modelID); 
-            } catch (IRIException e) {
-                    logger.log(Level.WARNING, "CLASS OR PROPERTY ID is invalid IRI!");
-                    return JerseyResponseManager.invalidIRI();
-            }
-          
+        if(IDManager.isInvalid(modelID)) {
+            return JerseyResponseManager.invalidIRI();
+        }
+    
         UUID versionUUID = UUID.randomUUID();
         
         try {

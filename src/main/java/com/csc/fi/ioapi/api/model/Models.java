@@ -18,6 +18,7 @@ import javax.ws.rs.core.Response;
 import com.csc.fi.ioapi.config.EndpointServices;
 import com.csc.fi.ioapi.config.LoginSession;
 import com.csc.fi.ioapi.utils.GraphManager;
+import com.csc.fi.ioapi.utils.IDManager;
 import com.csc.fi.ioapi.utils.JerseyJsonLDClient;
 import com.csc.fi.ioapi.utils.JerseyResponseManager;
 import com.csc.fi.ioapi.utils.LDHelper;
@@ -39,7 +40,6 @@ import javax.servlet.http.HttpSession;
 import javax.ws.rs.DELETE;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
-import org.apache.jena.iri.IRIFactory;
  
 /**
  * Root resource (exposed at "myresource" path)
@@ -85,8 +85,7 @@ public class Models {
             IRI modelIRI;
             
                 try {
-                        IRIFactory iri = IRIFactory.iriImplementation();
-                        modelIRI = iri.construct(id);
+                        modelIRI = IDManager.constructIRI(id);
                 } catch (IRIException e) {
                         logger.log(Level.WARNING, "ID is invalid IRI!");
                        return JerseyResponseManager.invalidIRI();
@@ -120,8 +119,7 @@ public class Models {
          
            IRI groupIRI;
             try {
-                    IRIFactory iri = IRIFactory.iriImplementation();
-                    groupIRI = iri.construct(group);
+                    groupIRI = IDManager.constructIRI(group);
             } catch (IRIException e) {
                     logger.log(Level.WARNING, "ID is invalid IRI!");
                     return JerseyResponseManager.invalidIRI();
@@ -206,15 +204,9 @@ public class Models {
             return JerseyResponseManager.invalidIRI();
        } 
        
-       IRI graphIRI;
-       
-            try {
-                    IRIFactory iri = IRIFactory.iriImplementation();
-                    graphIRI = iri.construct(graph);
-            } catch (IRIException e) {
-                    logger.log(Level.WARNING, "GRAPH ID is invalid IRI!");
-                   return JerseyResponseManager.invalidIRI();
-            }
+       if(IDManager.isInvalid(graph)) {
+           return JerseyResponseManager.invalidIRI();
+       }
  
         HttpSession session = request.getSession();
         
@@ -261,8 +253,7 @@ public class Models {
        IRI graphIRI;
        
             try {
-                IRIFactory iri = IRIFactory.iriImplementation();
-                graphIRI = iri.construct(graph);
+                graphIRI = IDManager.constructIRI(graph);
             } catch (IRIException e) {
                 logger.log(Level.WARNING, "GRAPH ID is invalid IRI!");
                 return JerseyResponseManager.invalidIRI();
@@ -302,11 +293,10 @@ public class Models {
           @QueryParam("id") String id,
           @Context HttpServletRequest request) {
      
-      IRIFactory iriFactory = IRIFactory.iriImplementation();
        /* Check that URIs are valid */
       IRI modelIRI;
         try {
-            modelIRI = iriFactory.construct(id);
+            modelIRI = IDManager.constructIRI(id);
         }
         catch (IRIException e) {
             return JerseyResponseManager.invalidIRI();

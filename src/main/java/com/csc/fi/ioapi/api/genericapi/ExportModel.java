@@ -13,6 +13,7 @@ import javax.ws.rs.core.Response;
 import com.csc.fi.ioapi.config.EndpointServices;
 import com.csc.fi.ioapi.utils.ContextWriter;
 import com.csc.fi.ioapi.utils.GraphManager;
+import com.csc.fi.ioapi.utils.IDManager;
 import com.csc.fi.ioapi.utils.JerseyJsonLDClient;
 import com.csc.fi.ioapi.utils.JsonSchemaWriter;
 import com.csc.fi.ioapi.utils.XMLSchemaWriter;
@@ -23,9 +24,6 @@ import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import java.util.concurrent.TimeUnit;
-import org.apache.jena.iri.IRI;
-import org.apache.jena.iri.IRIException;
-import org.apache.jena.iri.IRIFactory;
 
 /**
  * Root resource (exposed at "myresource" path)
@@ -72,13 +70,10 @@ public class ExportModel {
             }
         }
                 
-         IRI modelIRI;
-            try {
-                    IRIFactory iri = IRIFactory.iriImplementation();
-                    modelIRI = iri.construct(graph);
-            } catch (IRIException e) {
-                    return JerseyResponseManager.invalidIRI();
-            }
+        /* Check that URIs are valid */
+        if(IDManager.isInvalid(graph)) {
+            return JerseyResponseManager.invalidIRI();
+        }
             
             ctype = ctype.replace(" ", "+");
             

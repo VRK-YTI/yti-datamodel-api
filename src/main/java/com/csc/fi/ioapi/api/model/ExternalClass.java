@@ -13,9 +13,8 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
-import org.apache.jena.iri.IRIFactory;
 import com.csc.fi.ioapi.config.EndpointServices;
-import com.csc.fi.ioapi.utils.ErrorMessage;
+import com.csc.fi.ioapi.utils.IDManager;
 import com.csc.fi.ioapi.utils.JerseyResponseManager;
 import com.csc.fi.ioapi.utils.JerseyJsonLDClient;
 import com.csc.fi.ioapi.utils.LDHelper;
@@ -53,17 +52,10 @@ public class ExternalClass {
       @ApiParam(value = "Model id")
       @QueryParam("model") String model) {
       
-        IRIFactory iriFactory = IRIFactory.iriImplementation();
-        IRI modelIRI, idIRI;   
+        IRI idIRI;   
         
         /* Check that Model URI is valid */
-        try {
-            modelIRI = iriFactory.construct(model);
-        }
-        catch(NullPointerException e) {
-            return JerseyResponseManager.unexpected();
-        }
-        catch (IRIException e) {
+        if(!IDManager.isValidUrl(model)) {
             return JerseyResponseManager.invalidIRI();
         }
 
@@ -118,7 +110,7 @@ public class ExternalClass {
       } else {
           
             try {
-                idIRI = iriFactory.construct(id);
+                idIRI = IDManager.constructIRI(id);
             }
             catch (IRIException e) {
                 return JerseyResponseManager.invalidIRI();
@@ -142,7 +134,6 @@ public class ExternalClass {
             pss.setIri("library", model);
             pss.setIri("modelService",services.getLocalhostCoreSparqlAddress());
             pss.setCommandText(queryString);
-
             pss.setIri("classIRI", idIRI);
             
             

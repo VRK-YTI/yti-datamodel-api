@@ -16,6 +16,10 @@
         <init-param>
             <param-name>javax.ws.rs.container.ContainerResponseFilters</param-name>
             <param-value>javax.ws.rs.container.filter.GZIPContentEncodingFilter;com.csc.fi.ioapi.config.CustomResponseFilter</param-value> 
+      </init-param>
+      <init-param>
+        <param-name>jersey.config.server.provider.classnames</param-name>
+        <param-value>org.glassfish.jersey.media.multipart.MultiPartFeature</param-value>
       </init-param> 
       <init-param>
         <param-name>jersey.config.server.provider.packages</param-name>

@@ -3,7 +3,6 @@
  */
 package com.csc.fi.ioapi.api.profile;
 
-import com.csc.fi.ioapi.config.ApplicationProperties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.servlet.ServletContext;
@@ -14,10 +13,9 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import com.csc.fi.ioapi.config.EndpointServices;
-import com.csc.fi.ioapi.utils.ConceptMapper;
-import com.csc.fi.ioapi.utils.ErrorMessage;
 import com.csc.fi.ioapi.utils.JerseyResponseManager;
 import com.csc.fi.ioapi.utils.GraphManager;
+import com.csc.fi.ioapi.utils.IDManager;
 import com.csc.fi.ioapi.utils.JerseyJsonLDClient;
 import com.csc.fi.ioapi.utils.LDHelper;
 import com.csc.fi.ioapi.utils.QueryLibrary;
@@ -31,7 +29,6 @@ import java.util.UUID;
 import javax.servlet.http.HttpServletRequest;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
-import org.apache.jena.iri.IRIFactory;
 import org.apache.jena.util.SplitIRI;
 
 /**
@@ -60,13 +57,12 @@ public class ShapeCreator {
 
             IRI classIRI,profileIRI,shapeIRI;
             try {
-                    IRIFactory iri = IRIFactory.iriImplementation();
-                    classIRI = iri.construct(classID);
-                    profileIRI = iri.construct(profileID);
+                    classIRI = IDManager.constructIRI(classID);
+                    profileIRI = IDManager.constructIRI(profileID);
                     if(profileID.endsWith("/") || profileID.endsWith("#")) {
-                       shapeIRI = iri.construct(profileIRI+SplitIRI.localname(classID)); 
+                       shapeIRI = IDManager.constructIRI(profileIRI+SplitIRI.localname(classID)); 
                     } else {
-                        shapeIRI = iri.construct(profileIRI+"#"+SplitIRI.localname(classID));
+                        shapeIRI = IDManager.constructIRI(profileIRI+"#"+SplitIRI.localname(classID));
                     }
                     
             } catch (IRIException e) {

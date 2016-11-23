@@ -14,6 +14,7 @@ import javax.ws.rs.core.Response;
 import com.csc.fi.ioapi.config.EndpointServices;
 import com.csc.fi.ioapi.utils.ErrorMessage;
 import com.csc.fi.ioapi.utils.GraphManager;
+import com.csc.fi.ioapi.utils.IDManager;
 import com.csc.fi.ioapi.utils.JerseyResponseManager;
 import com.csc.fi.ioapi.utils.JerseyJsonLDClient;
 import com.csc.fi.ioapi.utils.LDHelper;
@@ -27,7 +28,6 @@ import io.swagger.annotations.ApiResponses;
 import java.util.Map;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
-import org.apache.jena.iri.IRIFactory;
 
 /**
  * Root resource (exposed at "usage" path)
@@ -57,11 +57,14 @@ public class Usage {
             IRI conceptIRI = null;
             
             try {
-                    IRIFactory iri = IRIFactory.iriImplementation();
-                    if(id!=null && !id.equals("undefined")) resourceIRI = iri.construct(id);
-                    if(model!=null && !model.equals("undefined")) modelIRI = iri.construct(model);
-                    if(concept!=null && !concept.equals("undefined")) conceptIRI = iri.construct(concept);
-            } catch (IRIException e) {
+                    if(id!=null && !id.equals("undefined")) resourceIRI = IDManager.constructIRI(id);
+                    if(model!=null && !model.equals("undefined")) modelIRI = IDManager.constructIRI(model);
+                    if(concept!=null && !concept.equals("undefined")) conceptIRI = IDManager.constructIRI(concept);
+            } 
+            catch (NullPointerException e) {
+                    return JerseyResponseManager.invalidParameter();
+            }
+            catch (IRIException e) {
                     return JerseyResponseManager.invalidIRI();
             }
 

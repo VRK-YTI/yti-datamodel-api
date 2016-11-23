@@ -13,12 +13,11 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
-import org.apache.jena.iri.IRIFactory;
 import com.csc.fi.ioapi.config.EndpointServices;
 import com.csc.fi.ioapi.utils.JerseyResponseManager;
 import com.csc.fi.ioapi.config.LoginSession;
 import com.csc.fi.ioapi.utils.ConceptMapper;
-import com.csc.fi.ioapi.utils.ErrorMessage;
+import com.csc.fi.ioapi.utils.IDManager;
 import com.csc.fi.ioapi.utils.JerseyJsonLDClient;
 import com.csc.fi.ioapi.utils.LDHelper;
 import org.apache.jena.query.ParameterizedSparqlString;
@@ -57,24 +56,12 @@ public class ModelConcepts {
       @QueryParam("id") String id,
       @ApiParam(value = "Model id", required = true)
       @QueryParam("model") String model) {
-
-        IRIFactory iriFactory = IRIFactory.iriImplementation();
-        IRI modelIRI,idIRI;   
         
         /* Check that URIs are valid */
-        try {
-            
-            modelIRI = iriFactory.construct(model);
-            if(id!=null && !id.equals("undefined")) idIRI = iriFactory.construct(id);
-            
-        }
-        catch(NullPointerException e) {
-            return JerseyResponseManager.unexpected();
-        }
-        catch (IRIException e) {
+        if(IDManager.isInvalid(model) || IDManager.isInvalid(id)) {
             return JerseyResponseManager.invalidIRI();
         }
-     
+       
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
         
@@ -148,20 +135,13 @@ public class ModelConcepts {
       @ApiParam(value = "Model id", required = true)
       @QueryParam("model") String model) {
   
-      IRIFactory iriFactory = IRIFactory.iriImplementation();
-       /* Check that URIs are valid */
-      IRI modelIRI,idIRI;
-        try {
-            modelIRI = iriFactory.construct(model);
-            idIRI = iriFactory.construct(id);
-        }
-        catch (IRIException e) {
-            return JerseyResponseManager.invalidIRI();
-        }
+      if(IDManager.isInvalid(id) || IDManager.isInvalid(model)) {
+          return JerseyResponseManager.invalidIRI();
+      }
       
       ConceptMapper.addConceptToLocalSKOSCollection(model,id);
   
-       return JerseyResponseManager.okEmptyContent();
+      return JerseyResponseManager.okEmptyContent();
   }
   
   @DELETE
@@ -179,14 +159,8 @@ public class ModelConcepts {
       @QueryParam("model") String model,
       @Context HttpServletRequest request) {
   
-      IRIFactory iriFactory = IRIFactory.iriImplementation();
-       /* Check that URIs are valid */
-      IRI modelIRI,idIRI;
-        try {
-            modelIRI = iriFactory.construct(model);
-            idIRI = iriFactory.construct(id);
-        }
-        catch (IRIException e) {
+        /* Check that URIs are valid */
+        if(IDManager.isInvalid(model) || IDManager.isInvalid(id)) {
             return JerseyResponseManager.invalidIRI();
         }
         

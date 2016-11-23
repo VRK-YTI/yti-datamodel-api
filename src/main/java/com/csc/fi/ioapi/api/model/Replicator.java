@@ -17,6 +17,7 @@ import javax.ws.rs.core.Response;
 import com.csc.fi.ioapi.config.EndpointServices;
 import com.csc.fi.ioapi.config.LoginSession;
 import com.csc.fi.ioapi.utils.GraphManager;
+import com.csc.fi.ioapi.utils.IDManager;
 import com.csc.fi.ioapi.utils.JerseyJsonLDClient;
 import com.csc.fi.ioapi.utils.ServiceDescriptionManager;
 import org.apache.jena.rdf.model.Model;
@@ -37,7 +38,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
-import org.apache.jena.iri.IRIFactory;
 import org.apache.jena.web.DatasetAdapter;
 import org.apache.jena.web.DatasetGraphAccessorHTTP;
 import org.glassfish.jersey.uri.UriComponent;
@@ -112,9 +112,8 @@ public class Replicator {
         IRI modelIRI = null, groupIRI = null;
        
         try {
-                IRIFactory iri = IRIFactory.iriImplementation();
-                if(model!=null && !model.equals("undefined")) modelIRI = iri.construct(model);
-                if(group!=null && !group.equals("undefined")) groupIRI = iri.construct(group);
+                if(model!=null && !model.equals("undefined")) modelIRI = IDManager.constructIRI(model);
+                if(group!=null && !group.equals("undefined")) groupIRI = IDManager.constructIRI(group);
         } catch (IRIException e) {
                 logger.log(Level.WARNING, "Parameter is invalid IRI!");
                return JerseyResponseManager.invalidIRI();

@@ -57,8 +57,7 @@ public class Group {
             IRI groupIRI;
        
             try {
-                IRIFactory iri = IRIFactory.iriImplementation();
-                groupIRI = iri.construct(groupID);
+                groupIRI = IDManager.constructIRI(groupID);
             } catch (IRIException e) {
                 logger.log(Level.WARNING, "GROUP ID is invalid IRI!");
                 return JerseyResponseManager.invalidIRI();
@@ -113,8 +112,7 @@ public class Group {
             IRI groupIRI;
 
             try {
-                IRIFactory iri = IRIFactory.iriImplementation();
-                groupIRI = iri.construct(groupID);
+                groupIRI = IDManager.constructIRI(groupID);
             } catch (IRIException e) {
                 logger.log(Level.WARNING, "GROUP ID is invalid IRI!");
                 return JerseyResponseManager.invalidIRI();

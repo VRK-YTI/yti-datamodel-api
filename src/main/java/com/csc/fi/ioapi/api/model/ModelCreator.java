@@ -3,9 +3,7 @@
  */
 package com.csc.fi.ioapi.api.model;
 
-import java.util.logging.Level;
 import java.util.logging.Logger;
-
 import javax.servlet.ServletContext;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -15,8 +13,8 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import com.csc.fi.ioapi.config.ApplicationProperties;
 import com.csc.fi.ioapi.config.EndpointServices;
-import com.csc.fi.ioapi.utils.ErrorMessage;
 import com.csc.fi.ioapi.utils.GraphManager;
+import com.csc.fi.ioapi.utils.IDManager;
 import com.csc.fi.ioapi.utils.JerseyResponseManager;
 import com.csc.fi.ioapi.utils.JerseyJsonLDClient;
 import com.csc.fi.ioapi.utils.LDHelper;
@@ -29,7 +27,6 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
-import org.apache.jena.iri.IRIFactory;
  
 /**
  * Root resource (exposed at "modelCreator" path)
@@ -89,18 +86,17 @@ public class ModelCreator {
             IRI redirectIRI = null;
             
             try {
-                    IRIFactory iri = IRIFactory.iriImplementation();
-                    namespaceIRI = iri.construct(namespace);
-                    namespaceSKOSIRI = iri.construct(namespace+"/skos#");
-                    groupIRI = iri.construct(group);
+                    namespaceIRI = IDManager.constructIRI(namespace);
+                    namespaceSKOSIRI = IDManager.constructIRI(namespace+"/skos#");
+                    groupIRI = IDManager.constructIRI(group);
                     if(redirect!=null && !redirect.equals("undefined")) {
                         if(redirect.endsWith("/")) {
-                            redirectIRI = iri.construct(redirect);
+                            redirectIRI = IDManager.constructIRI(redirect);
                         } else if(redirect.endsWith("#")){
                             redirect=redirect.substring(0, redirect.length()-1);
-                            redirectIRI = iri.construct(redirect);
+                            redirectIRI = IDManager.constructIRI(redirect);
                         } else {
-                            redirectIRI = iri.construct(redirect);
+                            redirectIRI = IDManager.constructIRI(redirect);
                         }
                     }
             } catch (IRIException e) {
