@@ -89,7 +89,7 @@ public class JerseyResponseManager {
     }
     
     public static Response notFound() {
-        return Response.status(403).entity(ErrorMessage.NOTFOUND).build();
+        return Response.status(404).entity(ErrorMessage.NOTFOUND).build();
     }
     
     public static Response depedencies() {

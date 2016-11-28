@@ -32,6 +32,7 @@ import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.vocabulary.RDF;
+import org.apache.jena.vocabulary.RDFS;
 import org.apache.jena.vocabulary.SKOS;
 
 /**
@@ -56,7 +57,8 @@ public class ConceptSuggestion {
 			@ApiResponse(code = 404, message = "Service not found") })
 	public Response newConceptSuggestion(
                 @ApiParam(value = "Model ID") @QueryParam("modelID") String modelID,
-                @ApiParam(value = "Scheme ID", required = true) @QueryParam("schemeID") String schemeID,
+                @ApiParam(value = "GRAPH UUID", required = true) @QueryParam("graphUUID") String graphUUID,
+                @ApiParam(value = "Scheme URI", required = true) @QueryParam("schemeID") String schemeID,
                 @ApiParam(value = "Label", required = true) @QueryParam("label") String label,
 		@ApiParam(value = "Comment", required = true) @QueryParam("comment") String comment,
                 @ApiParam(value = "Initial language", required = true, allowableValues="fi,en") @QueryParam("lang") String lang,
@@ -71,8 +73,20 @@ public class ConceptSuggestion {
 
                 if(!login.isLoggedIn()) return JerseyResponseManager.unauthorized();
                 
-                if(IDManager.isInvalid(schemeID) || IDManager.isInvalid(modelID) || IDManager.isInvalid(topConceptID)) {
+                if(IDManager.isInvalid(schemeID)) {
                     return JerseyResponseManager.invalidIRI();
+                }
+                
+                if(modelID!=null && !modelID.equals("undefined")) {
+                    if(IDManager.isInvalid(modelID)) {
+                        return JerseyResponseManager.invalidIRI();
+                 }
+                }
+                
+                if(topConceptID!=null && !topConceptID.equals("undefined")) {
+                    if(IDManager.isInvalid(topConceptID)) {
+                        return JerseyResponseManager.invalidIRI();
+                 }
                 }
                 
                 UUID conceptUUID = UUID.randomUUID();
@@ -81,16 +95,18 @@ public class ConceptSuggestion {
 
                 Model model = ModelFactory.createDefaultModel();
                 Resource concept = model.createResource("urn:uuid:"+conceptUUID);
+                Resource inScheme = model.createResource(schemeID);
                 Literal prefLabel = ResourceFactory.createLangLiteral(label, lang);
                 Literal definition = ResourceFactory.createLangLiteral(comment, lang);
                 concept.addLiteral(SKOS.prefLabel, prefLabel);
                 concept.addLiteral(SKOS.definition, definition);
+                concept.addProperty(RDFS.isDefinedBy,inScheme);
                 concept.addProperty(RDF.type, SKOS.Concept);
                 
                 String modelString = ModelManager.writeModelToString(model);
                 System.out.println(modelString);
                 
-                JerseyJsonLDClient.saveConceptSuggestion(modelString,schemeID);
+                JerseyJsonLDClient.saveConceptSuggestion(modelString,graphUUID);
 
                 return JerseyResponseManager.okUUID(conceptUUID);
 

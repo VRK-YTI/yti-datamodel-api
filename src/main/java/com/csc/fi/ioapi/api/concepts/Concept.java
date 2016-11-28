@@ -42,7 +42,7 @@ public class Concept {
       @ApiResponse(code = 500, message = "Internal server error")
   })
   public Response concept(
-          @ApiParam(value = "uri", required = true) 
+          @ApiParam(value = "uri") 
           @QueryParam("uri") String uri,
           @ApiParam(value = "vocid") 
           @QueryParam("vocid") String vocid) {

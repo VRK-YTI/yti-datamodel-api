@@ -6,6 +6,7 @@ import com.csc.fi.ioapi.api.concepts.ConceptSearch;
 import com.csc.fi.ioapi.api.genericapi.ExportModel;
 import com.csc.fi.ioapi.config.ApplicationProperties;
 import com.csc.fi.ioapi.config.EndpointServices;
+import static com.csc.fi.ioapi.utils.GraphManager.services;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.jsonldjava.core.JsonLdError;
 import com.github.jsonldjava.core.JsonLdOptions;
@@ -40,6 +41,8 @@ import org.apache.jena.atlas.json.JsonValue;
 import org.apache.jena.atlas.web.ContentType;
 import org.apache.jena.query.DatasetAccessor;
 import org.apache.jena.query.DatasetAccessorFactory;
+import org.apache.jena.query.QueryExecution;
+import org.apache.jena.query.QueryExecutionFactory;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.riot.RDFLanguages;
@@ -391,12 +394,16 @@ public class JerseyJsonLDClient {
         
         String url = ApplicationProperties.getDefaultTermAPI()+"ext";
         
+        if(scheme!=null && !scheme.isEmpty() && !scheme.equals("undefined")) {
+            url = url+"/"+scheme;
+        }
+        
         try {
             Client client = ClientBuilder.newClient();
             HttpAuthenticationFeature feature = HttpAuthenticationFeature.basic("admin", "admin");
             client.register(feature);
 
-            WebTarget target = client.target(url).queryParam("typeId", "Concept").queryParam("useUriKeys",true).queryParam("loadGraph", true).queryParam("loadType", true).queryParam("query", query);
+            WebTarget target = client.target(url).queryParam("typeId", "Concept").queryParam("where.properties.prefLabel", query);
             Response response = target.request("application/ld+json").get();
 
             logger.info("TERMED CALL: "+target.getUri().toString());
@@ -431,7 +438,7 @@ public class JerseyJsonLDClient {
             client.register(feature);
 
 
-            WebTarget target = client.target(url).queryParam("typeId", "ConceptScheme").queryParam("useUriKeys",true).queryParam("loadGraph", true).queryParam("loadType", true);
+            WebTarget target = client.target(url).queryParam("typeId", "ConceptScheme");
             Response response = target.request("application/ld+json").get();
 
             logger.info("TERMED CALL: "+target.getUri().toString());
@@ -458,13 +465,24 @@ public class JerseyJsonLDClient {
      */
     public static Response getConceptFromTermedAPI(String uri, String scheme) {
         // TODO: Remove/replace scheme when API is ready
+        
         String url = ApplicationProperties.getDefaultTermAPI()+"ext";
+        
+         if(scheme!=null && !scheme.isEmpty() && !scheme.equals("undefined")) {
+            url = url+"/"+scheme;
+        }
+        
         try {
             Client client = ClientBuilder.newClient();
             HttpAuthenticationFeature feature = HttpAuthenticationFeature.basic("admin", "admin");
             client.register(feature);
             
-            WebTarget target = client.target(url+"/"+scheme).queryParam("typeId", "Concept").queryParam("useUriKeys",true).queryParam("loadGraph", true).queryParam("uri",uri);
+            WebTarget target = client.target(url).queryParam("typeId", "Concept");
+            
+            if(uri!=null && !uri.isEmpty() && !uri.equals("undefined")) {
+                target = target.queryParam("uri",uri);
+            }
+            
             Response response = target.request("application/ld+json").get();
 
             logger.info("TERMED CALL: "+target.getUri().toString());
@@ -549,7 +567,7 @@ public class JerseyJsonLDClient {
      * @param service
      * @return
      */
-    public static Response constructGraphFromService(String query, String service) {
+    public static Response constructGraphFromServiceDirect(String query, String service) {
                    
             Client client = ClientBuilder.newClient();
             WebTarget target = client.target(service)
@@ -567,8 +585,20 @@ public class JerseyJsonLDClient {
           
     }
     
-    
-  
+    public static Response constructGraphFromService(String query, String service) {
+        
+            QueryExecution qexec = QueryExecutionFactory.sparqlService(services.getCoreSparqlAddress(), query);
+            Model constructModel = qexec.execConstruct();
+        
+            if(constructModel.size()<=0) {
+                return JerseyResponseManager.notFound();
+            }
+
+            ResponseBuilder rb = Response.ok();
+            rb.entity(ModelManager.writeModelToString(constructModel));
+            return rb.build();
+          
+    }
     
     /**
      *
