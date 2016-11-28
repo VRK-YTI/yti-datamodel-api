@@ -89,7 +89,7 @@ public class User {
         pss.setLiteral("email", email);
         pss.setLiteral("login", login.isLoggedIn());
 
-        return JerseyJsonLDClient.constructGraphFromService(pss.toString(), services.getUsersSparqlAddress());
+        return JerseyJsonLDClient.constructGraphFromServiceDirect(pss.toString(), services.getUsersSparqlAddress());
 
     }
     
