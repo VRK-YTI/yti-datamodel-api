@@ -388,22 +388,26 @@ public class JerseyJsonLDClient {
      * @param service
      * @return
      */
-    public static Response searchConceptFromTermedAPI(String query, String scheme) {
-        
-        // TODO: Add scheme when API is ready
+    public static Response searchConceptFromTermedAPI(String query, String graphCode, String schemeURI) {
         
         String url = ApplicationProperties.getDefaultTermAPI()+"ext";
         
-        if(scheme!=null && !scheme.isEmpty() && !scheme.equals("undefined")) {
-            url = url+"/"+scheme;
+        if(graphCode!=null && !graphCode.isEmpty() && !graphCode.equals("undefined")) {
+            url = url+"/"+graphCode;
         }
         
         try {
+            
             Client client = ClientBuilder.newClient();
             HttpAuthenticationFeature feature = HttpAuthenticationFeature.basic("admin", "admin");
             client.register(feature);
 
             WebTarget target = client.target(url).queryParam("typeId", "Concept").queryParam("where.properties.prefLabel", query);
+            
+            if(schemeURI!=null && !schemeURI.isEmpty() && !schemeURI.equals("undefined")) {
+                target = target.queryParam("where.references.inScheme",schemeURI);
+            }
+            
             Response response = target.request("application/ld+json").get();
 
             logger.info("TERMED CALL: "+target.getUri().toString());
@@ -463,13 +467,12 @@ public class JerseyJsonLDClient {
      * @param service
      * @return
      */
-    public static Response getConceptFromTermedAPI(String uri, String scheme) {
-        // TODO: Remove/replace scheme when API is ready
+    public static Response getConceptFromTermedAPI(String uri, String graphCode) {
         
         String url = ApplicationProperties.getDefaultTermAPI()+"ext";
         
-         if(scheme!=null && !scheme.isEmpty() && !scheme.equals("undefined")) {
-            url = url+"/"+scheme;
+         if(graphCode!=null && !graphCode.isEmpty() && !graphCode.equals("undefined")) {
+            url = url+"/"+graphCode;
         }
         
         try {

@@ -30,7 +30,6 @@ public class ConceptsSchemes {
 
     @Context ServletContext context;
     EndpointServices services = new EndpointServices();
-   
     
   @GET
   @Produces("application/ld+json")
