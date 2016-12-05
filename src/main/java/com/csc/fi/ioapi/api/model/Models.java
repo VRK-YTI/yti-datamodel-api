@@ -61,7 +61,7 @@ public class Models {
       @ApiResponse(code = 500, message = "Internal server error")
   })
   public Response json(
-          @ApiParam(value = "Graph id", defaultValue="default") 
+          @ApiParam(value = "Graph id") 
           @QueryParam("id") String id,
           @ApiParam(value = "group")
           @QueryParam("group") String group,

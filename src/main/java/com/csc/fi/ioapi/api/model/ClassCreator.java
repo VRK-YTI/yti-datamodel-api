@@ -86,6 +86,8 @@ public class ClassCreator {
                     + "?concept skos:prefLabel ?label . "
                     + "?concept skos:definition ?comment . "
                     + "?concept skos:inScheme ?scheme . "
+                    + "?concept termed:graph ?termedGraph . "
+                    + "?termedGraph termed:id ?termedGraphId . "
                     + "} WHERE { "
                     + "BIND(now() as ?creation) "
                     + "BIND(now() as ?modified) "
@@ -94,6 +96,8 @@ public class ClassCreator {
                     + "?concept a skos:Concept . "
                     + "?concept skos:inScheme ?scheme ."
                     + "?concept skos:prefLabel ?label . "
+                    + "?concept termed:graph ?termedGraph . "
+                    + "?termedGraph termed:id ?termedGraphId . "
                     + "OPTIONAL {"
                     + "?concept skos:definition ?comment . } "
                     + "}";
