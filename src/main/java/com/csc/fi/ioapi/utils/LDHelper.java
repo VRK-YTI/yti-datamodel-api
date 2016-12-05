@@ -33,7 +33,7 @@ import org.glassfish.jersey.uri.UriComponent;
 public class LDHelper {
     
    private static final Logger logger = Logger.getLogger(LDHelper.class.getName());
-   public static final String[] UNRESOLVABLE = {"xsd","iow","text","sh","afn","schema","dcap"};
+   public static final String[] UNRESOLVABLE = {"xsd","iow","text","sh","afn","schema","dcap", "termed"};
    
    public static boolean isPrefixResolvable(String item) {
       return !Arrays.stream(UNRESOLVABLE).anyMatch(item::equals);
@@ -61,6 +61,7 @@ public class LDHelper {
         put("schema","http://schema.org/");
         put("ts","http://www.w3.org/2003/06/sw-vocab-status/ns#");
         put("dcam","http://purl.org/dc/dcam/");
+        put("termed","http://termed.thl.fi/meta/");
     }});
    
     public static final Map<String, Object> CONTEXT_MAP = 
@@ -108,7 +109,8 @@ public class LDHelper {
                             "PREFIX afn: <http://jena.hpl.hp.com/ARQ/function#>"+
                             "PREFIX schema: <http://schema.org/>"+
                             "PREFIX ts: <http://www.w3.org/2003/06/sw-vocab-status/ns#>"+
-                            "PREFIX dcam: <http://purl.org/dc/dcam/>";
+                            "PREFIX dcam: <http://purl.org/dc/dcam/>"+
+                            "PREFIX termed <http://termed.thl.fi/meta/>";
     
    
     ParameterizedSparqlString pss = new ParameterizedSparqlString();

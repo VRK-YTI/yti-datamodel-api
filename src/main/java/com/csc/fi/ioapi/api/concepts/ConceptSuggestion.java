@@ -100,15 +100,23 @@ public class ConceptSuggestion {
                 Literal definition = ResourceFactory.createLangLiteral(comment, lang);
                 concept.addLiteral(SKOS.prefLabel, prefLabel);
                 concept.addLiteral(SKOS.definition, definition);
-                concept.addProperty(RDFS.isDefinedBy,inScheme);
+                concept.addProperty(SKOS.inScheme,inScheme);
                 concept.addProperty(RDF.type, SKOS.Concept);
+                
+                Model schemeModel = JerseyJsonLDClient.getSchemeAsModelFromTermedAPI(schemeID);
+                
+                if(schemeModel!=null) {
+                    model.add(schemeModel);
+                }
                 
                 String modelString = ModelManager.writeModelToString(model);
                 System.out.println(modelString);
                 
                 JerseyJsonLDClient.saveConceptSuggestion(modelString,graphUUID);
 
-                return JerseyResponseManager.okUUID(conceptUUID);
+                return JerseyResponseManager.okModel(model); 
+                
+              //  return JerseyResponseManager.okUUID(conceptUUID);
 
         }
   

@@ -26,6 +26,13 @@ import io.swagger.annotations.ApiResponses;
 import javax.servlet.http.HttpServletRequest;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
+import org.apache.jena.query.Dataset;
+import org.apache.jena.query.DatasetAccessor;
+import org.apache.jena.query.DatasetAccessorFactory;
+import org.apache.jena.query.DatasetFactory;
+import org.apache.jena.query.QueryExecution;
+import org.apache.jena.query.QueryExecutionFactory;
+import org.apache.jena.rdf.model.Model;
 
 /**
  * Root resource (exposed at "classCreator" path)
@@ -60,8 +67,6 @@ public class ClassCreator {
                     return JerseyResponseManager.invalidIRI();
             }
 
-           // ConceptMapper.updateConceptFromConceptService(conceptID);
-           
             ParameterizedSparqlString pss = new ParameterizedSparqlString();
             pss.setNsPrefixes(LDHelper.PREFIX_MAP);
             
@@ -77,26 +82,20 @@ public class ClassCreator {
                     + "?classIRI rdfs:label ?classLabel . "
                     + "?classIRI rdfs:comment ?comment . "
                     + "?classIRI dcterms:subject ?concept . "
-                    + "?concept a ?conceptType . "
+                    + "?concept a skos:Concept . "
                     + "?concept skos:prefLabel ?label . "
                     + "?concept skos:definition ?comment . "
                     + "?concept skos:inScheme ?scheme . "
                     + "} WHERE { "
-                    + "SERVICE ?modelService { "
-                    + "GRAPH ?model { "
-                    + "?model a ?modelType . "
-                    + "?model rdfs:label ?modelLabel . "
-                    + "}}"
                     + "BIND(now() as ?creation) "
                     + "BIND(now() as ?modified) "
-                    + "VALUES ?conceptType { skos:Concept iow:ConceptSuggestion }"
-                    + "?concept a ?conceptType . "
+                    + "?model a ?modelType . "
+                    + "?model rdfs:label ?modelLabel . "
+                    + "?concept a skos:Concept . "
                     + "?concept skos:inScheme ?scheme ."
-                    + "VALUES ?someLabel { rdfs:label skos:prefLabel dc:title dcterms:title } "
-                    + "?concept ?someLabel ?label . "
+                    + "?concept skos:prefLabel ?label . "
                     + "OPTIONAL {"
-                    + "VALUES ?someDefinition { rdfs:comment skos:definition } "
-                    + "?concept ?someDefinition ?comment . } "
+                    + "?concept skos:definition ?comment . } "
                     + "}";
 
             pss.setCommandText(queryString);
@@ -106,11 +105,12 @@ public class ClassCreator {
             pss.setLiteral("classLabel", ResourceFactory.createLangLiteral(classLabel, lang));
             String resourceName = LDHelper.resourceName(classLabel);
             pss.setIri("classIRI",LDHelper.resourceIRI(modelID,resourceName));
-            pss.setIri("modelService",services.getLocalhostCoreSparqlAddress());
+           // pss.setIri("modelService",services.getLocalhostCoreSparqlAddress());
 
             logger.info("New classCreator template from "+conceptID);
+           
+            return JerseyJsonLDClient.constructFromTermedAndCore(conceptID, modelID, pss.asQuery());
             
-            return JerseyJsonLDClient.constructGraphFromService(pss.toString(), services.getTempConceptReadSparqlAddress());
     }   
  
 }

@@ -5,6 +5,7 @@ package com.csc.fi.ioapi.utils;
 
 import java.util.UUID;
 import javax.ws.rs.core.Response;
+import org.apache.jena.rdf.model.Model;
 
 /**
  *
@@ -14,6 +15,10 @@ public class JerseyResponseManager {
     
     public static Response ok() {
         return Response.status(200).build();    
+    }
+    
+    public static Response okModel(Model model) {
+        return Response.status(200).entity(ModelManager.writeModelToString(model)).build();
     }
     
     public static Response ok(String content, String contentType) {

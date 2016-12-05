@@ -78,6 +78,8 @@ public class ModelCreator {
                 allowedLang = builtLang;
                 
             }
+            
+            logger.info("Langlist: "+allowedLang);
                       
             prefix = LDHelper.modelName(prefix);
             String namespace = ApplicationProperties.getDefaultNamespace()+prefix;
@@ -105,10 +107,14 @@ public class ModelCreator {
             } catch (NullPointerException e) {
                     return JerseyResponseManager.invalidParameter();
             }
-            
+        
         if(GraphManager.isExistingPrefix(prefix)) {
             return JerseyResponseManager.usedIRI();
         }
+        
+        
+        logger.info("Building query");
+            
 
             ParameterizedSparqlString pss = new ParameterizedSparqlString();
             pss.setNsPrefixes(LDHelper.PREFIX_MAP);
@@ -132,18 +138,28 @@ public class ModelCreator {
                     + "?modelIRI dcap:preferredXMLNamespacePrefix ?prefix . "
                     + "?modelIRI dcterms:isPartOf ?group . "
                     + "?group rdfs:label ?groupLabel . "
-                    + "?modelIRI dcterms:references ?localSKOSNamespace . "
+                    + "?group dcterms:references ?skosScheme . "
+                    + "?skosScheme skos:prefLabel ?schemeTitle . "
+                    + "?skosScheme termed:graph ?termedGraph . "
+                    + "?termedGraph termed:id ?termedGraphId . "
+                    + "?termedGraph termed:code ?termedGraphCode . "
+                 /* + "?modelIRI dcterms:references ?localSKOSNamespace . "
                     + "?localSKOSNamespace a skos:Collection ; "
                     + " dcterms:identifier ?prefix ; "
                     + " dcterms:title ?profileLabelSKOS . "
                     + "?modelIRI dcterms:references ?jhsScheme . "
                     + "?jhsScheme a skos:ConceptScheme ; "
                     + " dcterms:identifier 'jhsmeta' ; "
-                    + " dcterms:title 'JHSMeta - Julkishallinnon määrittelevä sanasto'@fi . "
+                    + " dcterms:title 'JHSMeta - Julkishallinnon määrittelevä sanasto'@fi . " */
                     + "} WHERE { "
                     + "BIND(now() as ?creation) "
                     + "GRAPH <urn:csc:groups> { "
                     + "?group a foaf:Group . "
+                    + "?group dcterms:references ?skosScheme . "
+                    + "?skosScheme skos:prefLabel ?schemeTitle . "
+                    + "?skosScheme termed:graph ?termedGraph . "
+                    + "?termedGraph termed:id ?termedGraphId . "
+                    + "?termedGraph termed:code ?termedGraphCode . "
                     + "?group rdfs:label ?groupLabel . "
                     + "FILTER(lang(?groupLabel) = ?defLang)"
                     + "}"
@@ -169,6 +185,7 @@ public class ModelCreator {
             pss.setLiteral("mlabel", ResourceFactory.createLangLiteral(label, lang));
             pss.setLiteral("defLang", lang);
 
+            logger.info(pss.toString());
             
             return JerseyJsonLDClient.constructGraphFromService(pss.toString(), services.getCoreSparqlAddress());
             

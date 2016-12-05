@@ -44,12 +44,11 @@ public class Concept {
   public Response concept(
           @ApiParam(value = "uri") 
           @QueryParam("uri") String uri,
-          @ApiParam(value = "graphCode") 
-          @QueryParam("graphCode") String graphCode) {
-
-        return JerseyJsonLDClient.getConceptFromTermedAPI(uri,graphCode);          
+          @ApiParam(value = "schemeUUID") 
+          @QueryParam("schemeUUID") String schemeUUID) {
+      
+        return JerseyJsonLDClient.getConceptFromTermedAPI(uri,schemeUUID);          
       
   }
-  
-  
+   
 }

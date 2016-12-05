@@ -92,21 +92,15 @@ public class PredicateCreator {
                 + "?concept skos:inScheme ?scheme ."
                 + "} "
                 + "WHERE { "
-                + "SERVICE ?modelService { "
-                 + "GRAPH ?model { "
                  + "?model a ?modelType . "
                  + "?model rdfs:label ?modelLabel . "
-                 + "}}"
                 + "BIND(now() as ?creation) "
                 + "BIND(now() as ?modified) "
-                + "VALUES ?conceptType { skos:Concept iow:ConceptSuggestion }"
-                + "?concept a ?conceptType . "
+                + "?concept a skos:Concept . "
                 + "?concept skos:inScheme ?scheme ."
-                + "VALUES ?someLabel { rdfs:label skos:prefLabel dc:title dcterms:title } "
-                + "?concept ?someLabel ?label . "
+                + "?concept skos:prefLabel ?label . "
                 + "OPTIONAL {"
-                + "VALUES ?someDefinition { rdfs:comment skos:definition } "
-                + "?concept ?someDefinition ?comment . } "
+                + "?concept skos:definition ?comment . } "
                 + "}";
 
         pss.setCommandText(queryString);
@@ -119,8 +113,8 @@ public class PredicateCreator {
         pss.setIri("predicateIRI",LDHelper.resourceIRI(modelID, predicateName));
         pss.setIri("modelService",services.getLocalhostCoreSparqlAddress());
        
-        
-        return JerseyJsonLDClient.constructGraphFromService(pss.toString(), services.getTempConceptReadSparqlAddress());
+        return JerseyJsonLDClient.constructFromTermedAndCore(conceptID, modelID, pss.asQuery());
+       // return JerseyJsonLDClient.constructGraphFromService(pss.toString(), services.getTempConceptReadSparqlAddress());
 
     }   
  

@@ -1,8 +1,26 @@
 {
   "@graph": [
           {
+      "@id": "http://jhsmeta.fi/skos/",
+      "@type": "skos:ConceptScheme",
+      "graph": "http://termed.csc.fi/graphs/fb4213d3-a7e4-4f25-b1eb-994e8aa786bf",
+      "id": "61bec1e5-70b4-34fc-acfb-ab70428fb6f8",
+      "typeId": "ConceptScheme",
+      "prefLabel": {
+        "@language": "fi",
+        "@value": "JHSMeta - Julkishallinnon terminologinen sanasto"
+      }
+    },
+    {
+      "@id": "http://termed.csc.fi/graphs/fb4213d3-a7e4-4f25-b1eb-994e8aa786bf",
+      "@type": "termed:Graph",
+      "code": "jhsmeta",
+      "id": "fb4213d3-a7e4-4f25-b1eb-994e8aa786bf"
+    },
+    {
       "@id": "https://tt.eduuni.fi/sites/csc-iow#RAK",
       "@type": "foaf:Group",
+      "references":"http://jhsmeta.fi/skos/",
       "label": {
 	  "fi":"Rakennettu ympäristö",
 	  "en":"Built environment"
@@ -16,6 +34,7 @@
     {
       "@id": "https://tt.eduuni.fi/sites/csc-iow#KTK",
       "@type": "foaf:Group",
+      "references":"http://jhsmeta.fi/skos/",
       "label": {
 	  "fi":"Koulutus, tiede ja kulttuuri",
 	  "en":"Learning, Science and Culture"
@@ -29,6 +48,7 @@
     {
       "@id": "https://tt.eduuni.fi/sites/csc-iow#JHS",
       "@type": "foaf:Group",
+      "references":"http://jhsmeta.fi/skos/",
       "label": {
 	  "fi":"Yhteiset tietokomponentit",
 	  "en":"Common vocabularies"
@@ -42,6 +62,7 @@
      {
       "@id": "https://tt.eduuni.fi/sites/csc-iow#TRA",
       "@type": "foaf:Group",
+      "references":"http://jhsmeta.fi/skos/",
       "label": {
 	  "fi":"Liikenne",
 	  "en":"Transport"
@@ -58,12 +79,32 @@
       "@id": "http://www.w3.org/2000/01/rdf-schema#label",
       "@container": "@language"
     },
+    "prefLabel": {
+      "@id": "http://www.w3.org/2004/02/skos/core#prefLabel"
+    },
     "comment": {
       "@id": "http://www.w3.org/2000/01/rdf-schema#comment",
       "@container": "@language"
     },
     "homepage": {
       "@id":"http://xmlns.com/foaf/0.1/homepage"
+    },
+    "typeId": {
+      "@id": "http://termed.thl.fi/meta/typeId"
+    },
+    "id": {
+      "@id": "http://termed.thl.fi/meta/id"
+    },
+    "code": {
+      "@id": "http://termed.thl.fi/meta/code"
+    },
+    "graph": {
+      "@id": "http://termed.thl.fi/meta/graph",
+      "@type": "@id"
+    },
+    "references": {
+      "@id": "http://purl.org/dc/terms/references",
+      "@type": "@id"
     },
     "adms": "http://www.w3.org/ns/adms#",
     "dc": "http://purl.org/dc/elements/1.1/",
@@ -75,6 +116,8 @@
     "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "void": "http://rdfs.org/ns/void#",
     "vann": "http://purl.org/vocab/vann/",
-    "dcterms": "http://purl.org/dc/terms/"
+    "dcterms": "http://purl.org/dc/terms/",
+    "termed": "http://termed.thl.fi/meta/",
+    "skos": "http://www.w3.org/2004/02/skos/core#"
   }
 }

@@ -41,6 +41,7 @@ import org.apache.jena.atlas.json.JsonValue;
 import org.apache.jena.atlas.web.ContentType;
 import org.apache.jena.query.DatasetAccessor;
 import org.apache.jena.query.DatasetAccessorFactory;
+import org.apache.jena.query.Query;
 import org.apache.jena.query.QueryExecution;
 import org.apache.jena.query.QueryExecutionFactory;
 import org.apache.jena.riot.Lang;
@@ -388,13 +389,14 @@ public class JerseyJsonLDClient {
      * @param service
      * @return
      */
-    public static Response searchConceptFromTermedAPI(String query, String graphCode, String schemeURI) {
+    public static Response searchConceptFromTermedAPI(String query, String schemeURI) {
         
         String url = ApplicationProperties.getDefaultTermAPI()+"ext";
         
+        /*
         if(graphCode!=null && !graphCode.isEmpty() && !graphCode.equals("undefined")) {
             url = url+"/"+graphCode;
-        }
+        }*/
         
         try {
             
@@ -441,7 +443,6 @@ public class JerseyJsonLDClient {
             HttpAuthenticationFeature feature = HttpAuthenticationFeature.basic("admin", "admin");
             client.register(feature);
 
-
             WebTarget target = client.target(url).queryParam("typeId", "ConceptScheme");
             Response response = target.request("application/ld+json").get();
 
@@ -467,13 +468,77 @@ public class JerseyJsonLDClient {
      * @param service
      * @return
      */
-    public static Response getConceptFromTermedAPI(String uri, String graphCode) {
+    public static Model getSchemeAsModelFromTermedAPI(String uri) {
+        String url = ApplicationProperties.getDefaultTermAPI()+"ext";
+        try {
+            Client client = ClientBuilder.newClient();
+            HttpAuthenticationFeature feature = HttpAuthenticationFeature.basic("admin", "admin");
+            client.register(feature);
+
+            WebTarget target = client.target(url).queryParam("typeId", "ConceptScheme").queryParam("uri",uri);
+            Response response = target.request("application/rdf+xml").get();
+
+            logger.info("TERMED CALL: "+target.getUri().toString());
+            
+            if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
+               logger.log(Level.INFO, response.getStatus()+" from URL: "+url);
+               return null;
+            }
+
+            Model schemeModel = ModelFactory.createDefaultModel();
+            schemeModel.read(response.readEntity(InputStream.class), uri);
+
+           return schemeModel;
+           
+        } catch(Exception ex) {
+          logger.log(Level.WARNING, "Expect the unexpected!", ex);
+          return null;
+        }
+    }
+
+
+    /**
+     *
+     * @param resourceURI
+     * @return
+     */
+    public static Model getConceptAsJenaModel(String resourceURI) {
+         
+        String url = ApplicationProperties.getDefaultTermAPI()+"ext";
+        
+         Client client = ClientBuilder.newClient();
+         HttpAuthenticationFeature feature = HttpAuthenticationFeature.basic("admin", "admin");
+         client.register(feature);
+            
+         WebTarget target = client.target(url).queryParam("typeId", "Concept").queryParam("uri",resourceURI);
+            
+         Response response = target.request("text/turtle").get();
+         Model model = ModelFactory.createDefaultModel();
+         
+         try {
+         RDFReader reader = model.getReader(Lang.TURTLE.getName());
+         reader.read(model, response.readEntity(InputStream.class), resourceURI);
+         } catch(RiotException ex) {
+             return model;
+         }
+         
+         return model;
+        
+    }
+    
+    /**
+     *
+     * @param service
+     * @return
+     */
+    public static Response getConceptFromTermedAPI(String uri, String schemeUUID) {
         
         String url = ApplicationProperties.getDefaultTermAPI()+"ext";
         
+        /*
          if(graphCode!=null && !graphCode.isEmpty() && !graphCode.equals("undefined")) {
             url = url+"/"+graphCode;
-        }
+        }*/
         
         try {
             Client client = ClientBuilder.newClient();
@@ -484,6 +549,10 @@ public class JerseyJsonLDClient {
             
             if(uri!=null && !uri.isEmpty() && !uri.equals("undefined")) {
                 target = target.queryParam("uri",uri);
+            }
+            
+            if(schemeUUID!=null && !schemeUUID.isEmpty() && !schemeUUID.equals("undefined")) {
+                target = target.queryParam("where.references.inScheme",schemeUUID);
             }
             
             Response response = target.request("application/ld+json").get();
@@ -587,6 +656,24 @@ public class JerseyJsonLDClient {
              }
           
     }
+    
+    
+    public static Response constructFromTermedAndCore(String conceptID, String modelID, Query query) {
+        
+            Model conceptModel = JerseyJsonLDClient.getConceptAsJenaModel(conceptID);
+            
+            DatasetAccessor testAcc = DatasetAccessorFactory.createHTTP(services.getCoreReadAddress());
+            conceptModel.add(testAcc.getModel(modelID));
+            
+            QueryExecution qexec = QueryExecutionFactory.create(query,conceptModel);
+            Model resultModel = qexec.execConstruct();
+            
+            qexec.close();
+            
+            return JerseyResponseManager.okModel(resultModel);
+        
+    }
+    
     
     public static Response constructGraphFromService(String query, String service) {
         

@@ -43,13 +43,11 @@ public class ConceptSearch {
   public Response concept(
           @ApiParam(value = "Term", required = true) 
           @QueryParam("term") String term,
-          @ApiParam(value = "graphCode") 
-          @QueryParam("graphCode") String graphCode,
-          @ApiParam(value = "schemeURI") 
-          @QueryParam("schemeURI") String schemeURI) {
+          @ApiParam(value = "schemeUUID") 
+          @QueryParam("schemeUUID") String schemeUUID) {
           
-          return JerseyJsonLDClient.searchConceptFromTermedAPI(term, graphCode, schemeURI);
-          
+          return JerseyJsonLDClient.searchConceptFromTermedAPI(term, schemeUUID);
+        
           
   }
   
