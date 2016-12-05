@@ -36,7 +36,6 @@ import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.vocabulary.RDF;
-import org.apache.jena.vocabulary.RDFS;
 import org.apache.jena.vocabulary.SKOS;
 
 /**
@@ -95,8 +94,6 @@ public class ConceptSuggestion {
                 
                 UUID conceptUUID = UUID.randomUUID();
                 
-                
-                        
                 Model model = ModelFactory.createDefaultModel();
                 Property statusProp = model.createProperty("https://www.w3.org/2003/06/sw-vocab-status/ns#term_status");
                 Resource concept = model.createResource("urn:uuid:"+conceptUUID);
