@@ -95,9 +95,10 @@ public class ConceptSuggestion {
                 
                 UUID conceptUUID = UUID.randomUUID();
                 
-                // TODO: TEST CONCEPT SAVING.
-
+                
+                        
                 Model model = ModelFactory.createDefaultModel();
+                Property statusProp = model.createProperty("https://www.w3.org/2003/06/sw-vocab-status/ns#term_status");
                 Resource concept = model.createResource("urn:uuid:"+conceptUUID);
                 Resource inScheme = model.createResource(schemeID);
                 Literal prefLabel = ResourceFactory.createLangLiteral(label, lang);
@@ -106,6 +107,7 @@ public class ConceptSuggestion {
                 concept.addLiteral(SKOS.definition, definition);
                 concept.addProperty(SKOS.inScheme,inScheme);
                 concept.addProperty(RDF.type, SKOS.Concept);
+                concept.addLiteral(statusProp, "Unstable");
                 
                 Model schemeModel = JerseyJsonLDClient.getSchemeAsModelFromTermedAPI(schemeID);
                 Property graphProp = schemeModel.createProperty(LDHelper.getNamespaceWithPrefix("termed")+"graph");
