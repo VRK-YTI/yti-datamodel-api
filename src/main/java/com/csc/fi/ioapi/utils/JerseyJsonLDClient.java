@@ -513,6 +513,18 @@ public class JerseyJsonLDClient {
          WebTarget target = client.target(url).queryParam("typeId", "Concept").queryParam("uri",resourceURI);
             
          Response response = target.request("text/turtle").get();
+    
+         /* TODO: Remove thread sleep once termed responds faster */
+         if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
+            try {
+                Thread.sleep(3000);
+            } catch (InterruptedException ex) {
+                Logger.getLogger(JerseyJsonLDClient.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            response = target.request("text/turtle").get();
+         }
+         
+         
          Model model = ModelFactory.createDefaultModel();
          
          try {

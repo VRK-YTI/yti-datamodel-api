@@ -109,7 +109,6 @@ public class ClassCreator {
             pss.setLiteral("classLabel", ResourceFactory.createLangLiteral(classLabel, lang));
             String resourceName = LDHelper.resourceName(classLabel);
             pss.setIri("classIRI",LDHelper.resourceIRI(modelID,resourceName));
-           // pss.setIri("modelService",services.getLocalhostCoreSparqlAddress());
 
             logger.info("New classCreator template from "+conceptID);
            
