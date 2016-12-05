@@ -113,7 +113,7 @@ public class ClassCreator {
 
             logger.info("New classCreator template from "+conceptID);
            
-            return JerseyJsonLDClient.constructFromTermedAndCore(conceptID, modelID, pss.asQuery());
+            return JerseyJsonLDClient.constructFromTermedAndCore(conceptIRI.toString(), modelIRI.toString(), pss.asQuery());
             
     }   
  
