@@ -10,6 +10,7 @@ import com.csc.fi.ioapi.config.LoginSession;
 import com.csc.fi.ioapi.utils.IDManager;
 import com.csc.fi.ioapi.utils.JerseyResponseManager;
 import com.csc.fi.ioapi.utils.JerseyJsonLDClient;
+import com.csc.fi.ioapi.utils.LDHelper;
 import com.csc.fi.ioapi.utils.ModelManager;
 import java.util.logging.Logger;
 import javax.ws.rs.Path;
@@ -30,6 +31,9 @@ import javax.ws.rs.core.Response;
 import org.apache.jena.rdf.model.Literal;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.rdf.model.NodeIterator;
+import org.apache.jena.rdf.model.Property;
+import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
@@ -104,6 +108,14 @@ public class ConceptSuggestion {
                 concept.addProperty(RDF.type, SKOS.Concept);
                 
                 Model schemeModel = JerseyJsonLDClient.getSchemeAsModelFromTermedAPI(schemeID);
+                Property graphProp = schemeModel.createProperty(LDHelper.getNamespaceWithPrefix("termed")+"graph");
+               
+                NodeIterator nodeit = schemeModel.listObjectsOfProperty(graphProp);
+                
+                while(nodeit.hasNext()) {
+                    RDFNode node = nodeit.next();
+                    concept.addProperty(graphProp, node);
+                }
                 
                 if(schemeModel!=null) {
                     model.add(schemeModel);
