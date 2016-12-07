@@ -123,7 +123,7 @@ public class Class {
             
             logger.info(pss.toString());
             
-            return JerseyJsonLDClient.constructGraphFromService(pss.toString(), sparqlService);         
+            return JerseyJsonLDClient.constructNotEmptyGraphFromService(pss.toString(), sparqlService);         
 
       }
          
