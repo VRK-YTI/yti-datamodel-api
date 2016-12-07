@@ -695,7 +695,7 @@ public class JerseyJsonLDClient {
             Model constructModel = qexec.execConstruct();
         
             if(constructModel.size()<=0) {
-                ResponseBuilder rb = Response.noContent();
+                ResponseBuilder rb = Response.ok().type("application/ld+json");
                 rb.entity(ModelManager.writeModelToString(constructModel));
                 return rb.build();
             }
