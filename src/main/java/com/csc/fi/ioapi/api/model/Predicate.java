@@ -107,7 +107,7 @@ public class Predicate {
             Map<String, String> namespaceMap = NamespaceManager.getCoreNamespaceMap(id, graphService);
 
             if(namespaceMap==null) {
-                return JerseyResponseManager.error();
+                return JerseyResponseManager.notFound();
             }
 
             pss.setNsPrefixes(namespaceMap);

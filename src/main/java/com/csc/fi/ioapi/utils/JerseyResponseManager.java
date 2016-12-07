@@ -50,7 +50,7 @@ public class JerseyResponseManager {
     }
     
     public static Response error() {
-        return Response.status(403).entity(ErrorMessage.NOTCREATED).build();
+        return Response.status(403).entity(ErrorMessage.NOTACCEPTED).build();
     }
     
     public static Response serverError() {
