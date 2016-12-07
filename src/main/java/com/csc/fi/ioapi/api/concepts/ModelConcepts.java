@@ -57,14 +57,18 @@ public class ModelConcepts {
       @ApiParam(value = "Model id", required = true)
       @QueryParam("model") String model) {
         
-        /* Check that URIs are valid */
-        if(IDManager.isInvalid(model) || IDManager.isInvalid(id)) {
+        if(id!=null && !id.equals("undefined") && IDManager.isInvalid(id)) {
+            return JerseyResponseManager.invalidIRI();
+        }
+      
+        if(IDManager.isInvalid(model)) {
             return JerseyResponseManager.invalidIRI();
         }
        
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
         
+        /*
         String queryString = "CONSTRUCT { "
                 + "?skosCollection skos:member ?concept . "
                 + "?skosCollection a skos:Collection . "
@@ -107,9 +111,38 @@ public class ModelConcepts {
                 + "}}";
 
          pss.setIri("skosCollection", model+"/skos#");
-         pss.setIri("model",model);
-         pss.setIri("modelService",services.getLocalhostCoreSparqlAddress());
-          
+         
+         pss.setIri("modelService",services.getLocalhostCoreSparqlAddress());*/
+
+        String queryString = "CONSTRUCT { "
+                + "?skosCollection skos:member ?concept . "
+                + "?concept skos:inScheme ?scheme . "
+                + "?scheme dcterms:title ?schemeTitle . "
+                + "?scheme termed:graph ?graph . "
+                + "?graph termed:id ?graphId . "
+                + "?concept skos:prefLabel ?label . "
+                + "?concept skos:definition ?definition . "
+                + "?concept prov:generatedAtTime ?time . "
+                + "?concept prov:wasAssociatedWith ?user . "
+                + "} WHERE {"
+                + "GRAPH ?modelParts { "
+                + "?model dcterms:hasPart ?resource . "
+                + "}"
+                + "GRAPH ?resource {"
+                + "?resource dcterms:subject ?concept ."
+                + "?concept skos:prefLabel ?label . "
+                + "?concept skos:definition ?definition . "
+                + "OPTIONAL { ?concept prov:generatedAtTime ?time . }"
+                + "OPTIONAL { ?concept prov:wasAssociatedWith ?user . }"
+                + "?concept skos:inScheme ?scheme . "
+                + "OPTIONAL { ?scheme dcterms:title ?schemeTitle . }"
+                + "OPTIONAL { ?scheme termed:id ?schemeId . ?scheme termed:graph ?graph . ?graph termed:id ?graphId . }"
+                + "}"
+                + "}";
+        
+        pss.setIri("model",model);
+        pss.setIri("modelParts",model+"#HasPartGraph");
+        
          if(id!=null && !id.equals("undefined")) {
              pss.setIri("concept",id);
          }
@@ -117,7 +150,7 @@ public class ModelConcepts {
         
         pss.setCommandText(queryString);
 
-        return JerseyJsonLDClient.constructGraphFromService(pss.toString(), services.getTempConceptReadSparqlAddress());
+        return JerseyJsonLDClient.constructGraphFromService(pss.toString(), services.getCoreSparqlAddress());
      
   }
  

@@ -6,7 +6,7 @@
       "graph": "http://termed.csc.fi/graphs/fb4213d3-a7e4-4f25-b1eb-994e8aa786bf",
       "id": "61bec1e5-70b4-34fc-acfb-ab70428fb6f8",
       "typeId": "ConceptScheme",
-      "prefLabel": {
+      "title": {
         "@language": "fi",
         "@value": "JHSMeta - Julkishallinnon terminologinen sanasto"
       }
@@ -79,8 +79,8 @@
       "@id": "http://www.w3.org/2000/01/rdf-schema#label",
       "@container": "@language"
     },
-    "prefLabel": {
-      "@id": "http://www.w3.org/2004/02/skos/core#prefLabel"
+    "title": {
+      "@id": "http://purl.org/dc/terms/title"
     },
     "comment": {
       "@id": "http://www.w3.org/2000/01/rdf-schema#comment",

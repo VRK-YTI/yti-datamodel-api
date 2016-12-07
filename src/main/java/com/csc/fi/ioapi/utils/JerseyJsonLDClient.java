@@ -347,7 +347,7 @@ public class JerseyJsonLDClient {
     }
     
     
-            /**
+     /**
      *
      * @param service
      * @return

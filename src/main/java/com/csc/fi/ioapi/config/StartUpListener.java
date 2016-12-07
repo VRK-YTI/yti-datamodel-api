@@ -34,7 +34,7 @@ public class StartUpListener implements ServletContextListener {
         initDefaultGroups();
         initDefaultNamespaces();
         initCodeServers();
-        loadSchemesFromFinto();
+        //loadSchemesFromFinto();
         // createExportGraphs();
         
        //  runPeriodicUpdates();
@@ -85,7 +85,7 @@ public class StartUpListener implements ServletContextListener {
     }
     
     private static void loadSchemesFromFinto() {
-        ConceptMapper.updateSchemesFromFinto();
+       // ConceptMapper.updateSchemesFromFinto();
     }
     
     private static void initDefaultGraph() {

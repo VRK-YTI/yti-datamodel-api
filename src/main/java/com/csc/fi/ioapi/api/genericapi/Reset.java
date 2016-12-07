@@ -52,7 +52,7 @@ public class Reset {
             GraphManager.createDefaultGraph();
             GroupManager.createDefaultGroups();
             NamespaceManager.addDefaultNamespacesToCore();
-            ConceptMapper.updateSchemesFromFinto();
+            //ConceptMapper.updateSchemesFromFinto();
         }
         
         rb = Response.status(Response.Status.OK);

@@ -18,7 +18,7 @@ public class QueryUtil {
     
     public static void main(String args[]) {
 
-        ConceptMapper.updateSchemesFromFinto();
+       // ConceptMapper.updateSchemesFromFinto();
         
         /*
         String query = "PREFIX ex: <http://example.org/>"

@@ -51,6 +51,9 @@ import org.apache.jena.web.DatasetGraphAccessorHTTP;
  *
  * @author malonen
  */
+
+/* TODO: REMOVE AFTER TERMED INTEGRATION */
+
 public class ConceptMapper {
     
      private static EndpointServices services = new EndpointServices();
@@ -172,7 +175,7 @@ public class ConceptMapper {
     */
 
     public static void addConceptFromReferencedResource(String model, String classID) {
-                
+                /*
         String query
                 = "INSERT { GRAPH ?skosCollection { ?skosCollection skos:member ?concept . }}"
                 + "WHERE { "
@@ -191,16 +194,15 @@ public class ConceptMapper {
         pss.setIri("modelService",services.getLocalhostCoreSparqlAddress());
         pss.setCommandText(query);
         
-       // logger.info("ADDING CONCEPT from "+classID);
-       // logger.info(pss.toString());
         UpdateRequest queryObj = pss.asUpdate();
         UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, services.getTempConceptSparqlUpdateAddress());
         qexec.execute();
+        */
         
     }  
     
     public static void removeUnusedConcepts(String model) {
-        
+        /*
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         String selectResources = "SELECT DISTINCT ?subject "
                 + "WHERE { "
@@ -242,7 +244,7 @@ public class ConceptMapper {
             
             }
         }
-
+*/
     }
     /*
     public static void resolveConcept(String resource) {
@@ -270,7 +272,7 @@ public class ConceptMapper {
 */
     
     public static void addConceptToLocalSKOSCollection(String model, String concept) {
-        
+        /*
         String query
                 = " INSERT { GRAPH ?skosCollection { ?skosCollection skos:member ?concept . }}"
                 + " WHERE { ?concept a skos:concept . }";
@@ -283,19 +285,20 @@ public class ConceptMapper {
 
         UpdateRequest queryObj = pss.asUpdate();
         UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, services.getTempConceptSparqlUpdateAddress());
-        qexec.execute();
+        qexec.execute(); */
 
     }
     
         public static boolean deleteModelReference(String model, String concept) {
-            
+            /*
             if(isUsedConcept(model, concept)) {
                return false;
             }
             else {
              deleteConceptReference(model, concept);  
              return true;
-            }
+            }*/
+            return true;
         }
         
         
@@ -342,7 +345,7 @@ public class ConceptMapper {
     
     public static void deleteConceptReference(String model, String concept) {
         
-          
+          /*
         String query
                 = " DELETE { GRAPH ?skosCollection { ?skosCollection skos:member ?concept . }}"
                 + " WHERE { GRAPH ?skosCollection { ?skosCollection skos:member ?concept . }}";
@@ -356,26 +359,24 @@ public class ConceptMapper {
 
         UpdateRequest queryObj = pss.asUpdate();
         UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, services.getTempConceptSparqlUpdateAddress());
-        qexec.execute();
+        qexec.execute(); */
 
     }
         
     
     public static void deleteConceptSuggestion(String model, String concept) {
-        
+        /*
         DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(services.getTempConceptReadWriteAddress());
         DatasetAdapter adapter = new DatasetAdapter(accessor);
         
         adapter.deleteModel(concept);
                    
-       deleteConceptReference(model, concept);
+       deleteConceptReference(model, concept); */
 
     }
 
     public static void updateConceptSuggestion(String conceptID) {
-        
-        String query
-                = " DELETE { GRAPH ?graph { ?graph dcterms:subject ?concept . ?concept skos:definition ?oldDefinition . }}"
+        /* dcterms:subject ?concept . ?concept skos:definition ?oldDefinition . }}"
                 + " INSERT { GRAPH ?graph { ?graph dcterms:subject ?concept . ?concept skos:definition ?definition . }}"
                 + " WHERE { "
                 + "GRAPH ?graph { ?graph dcterms:subject ?concept . ?concept skos:definition ?oldDefinition . }"
@@ -390,7 +391,7 @@ public class ConceptMapper {
 
         UpdateRequest queryObj = pss.asUpdate();
         UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, services.getCoreSparqlUpdateAddress());
-        qexec.execute();
+        qexec.execute(); */
     }
 
     
