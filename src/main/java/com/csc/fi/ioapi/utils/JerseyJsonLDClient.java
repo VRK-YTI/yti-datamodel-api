@@ -362,7 +362,7 @@ public class JerseyJsonLDClient {
         
         try {
             Client client = ClientBuilder.newClient();
-            HttpAuthenticationFeature feature = HttpAuthenticationFeature.basic("admin", "admin");
+            HttpAuthenticationFeature feature = TermedAuthentication.getTermedAuth();
             client.register(feature);
 
             WebTarget target = client.target(url);
@@ -373,6 +373,14 @@ public class JerseyJsonLDClient {
             if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
                logger.log(Level.INFO, response.getStatus()+" from URL: "+url);
                return JerseyResponseManager.notFound();
+            }
+            
+            /* TODO: FIXME: Remove sleep once termed responds faster */
+            
+            try {
+                Thread.sleep(2000);
+            } catch (InterruptedException ex) {
+                Logger.getLogger(JerseyJsonLDClient.class.getName()).log(Level.SEVERE, null, ex);
             }
 
             ResponseBuilder rb = Response.status(response.getStatus()); 
@@ -401,7 +409,7 @@ public class JerseyJsonLDClient {
         try {
             
             Client client = ClientBuilder.newClient();
-            HttpAuthenticationFeature feature = HttpAuthenticationFeature.basic("admin", "admin");
+            HttpAuthenticationFeature feature = TermedAuthentication.getTermedAuth();
             client.register(feature);
 
             WebTarget target = client.target(url).queryParam("typeId", "Concept").queryParam("where.properties.prefLabel", query);
@@ -440,7 +448,7 @@ public class JerseyJsonLDClient {
         String url = ApplicationProperties.getDefaultTermAPI()+"ext";
         try {
             Client client = ClientBuilder.newClient();
-            HttpAuthenticationFeature feature = HttpAuthenticationFeature.basic("admin", "admin");
+            HttpAuthenticationFeature feature = TermedAuthentication.getTermedAuth();
             client.register(feature);
 
             WebTarget target = client.target(url).queryParam("typeId", "ConceptScheme");
@@ -472,7 +480,7 @@ public class JerseyJsonLDClient {
         String url = ApplicationProperties.getDefaultTermAPI()+"ext";
         try {
             Client client = ClientBuilder.newClient();
-            HttpAuthenticationFeature feature = HttpAuthenticationFeature.basic("admin", "admin");
+            HttpAuthenticationFeature feature = TermedAuthentication.getTermedAuth();
             client.register(feature);
 
             WebTarget target = client.target(url).queryParam("typeId", "ConceptScheme").queryParam("uri",uri);
@@ -507,7 +515,7 @@ public class JerseyJsonLDClient {
         String url = ApplicationProperties.getDefaultTermAPI()+"ext";
         
          Client client = ClientBuilder.newClient();
-         HttpAuthenticationFeature feature = HttpAuthenticationFeature.basic("admin", "admin");
+         HttpAuthenticationFeature feature = TermedAuthentication.getTermedAuth();
          client.register(feature);
             
          WebTarget target = client.target(url).queryParam("typeId", "Concept").queryParam("uri",resourceURI);
@@ -516,14 +524,8 @@ public class JerseyJsonLDClient {
     
          /* TODO: Remove thread sleep once termed responds faster */
          if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-            try {
-                Thread.sleep(3000);
-            } catch (InterruptedException ex) {
-                Logger.getLogger(JerseyJsonLDClient.class.getName()).log(Level.SEVERE, null, ex);
-            }
-            response = target.request("text/turtle").get();
+            return null;
          }
-         
          
          Model model = ModelFactory.createDefaultModel();
          
@@ -554,7 +556,7 @@ public class JerseyJsonLDClient {
         
         try {
             Client client = ClientBuilder.newClient();
-            HttpAuthenticationFeature feature = HttpAuthenticationFeature.basic("admin", "admin");
+            HttpAuthenticationFeature feature = TermedAuthentication.getTermedAuth();
             client.register(feature);
             
             WebTarget target = client.target(url).queryParam("typeId", "Concept");
@@ -643,8 +645,6 @@ public class JerseyJsonLDClient {
     
     
     
-    
-    
     /**
      *
      * @param query
@@ -673,6 +673,8 @@ public class JerseyJsonLDClient {
     public static Response constructFromTermedAndCore(String conceptID, String modelID, Query query) {
         
             Model conceptModel = JerseyJsonLDClient.getConceptAsJenaModel(conceptID);
+            
+            if(conceptModel==null) return JerseyResponseManager.notFound();
             
             DatasetAccessor testAcc = DatasetAccessorFactory.createHTTP(services.getCoreReadAddress());
             conceptModel.add(testAcc.getModel(modelID));
