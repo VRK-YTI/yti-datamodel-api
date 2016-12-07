@@ -107,6 +107,7 @@ public class Predicate {
             Map<String, String> namespaceMap = NamespaceManager.getCoreNamespaceMap(id, graphService);
 
             if(namespaceMap==null) {
+                logger.info("No model for "+id);
                 return JerseyResponseManager.notFound();
             }
 
@@ -121,6 +122,7 @@ public class Predicate {
                   pss.setIri("library", model);
             }
 
+            logger.info(pss.toString());
             return JerseyJsonLDClient.constructNotEmptyGraphFromService(pss.toString(), sparqlService);         
 
       }
