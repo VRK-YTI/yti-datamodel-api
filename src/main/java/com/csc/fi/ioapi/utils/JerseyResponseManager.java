@@ -30,7 +30,7 @@ public class JerseyResponseManager {
     }
     
     public static Response successUuid(UUID uuid) {
-        return Response.status(204).entity("{\"identifier\":\"urn:uuid:"+uuid+"\"}").build();
+        return Response.status(200).entity("{\"identifier\":\"urn:uuid:"+uuid+"\"}").build();
     }
     
     public static Response langNotDefined() {
@@ -86,7 +86,7 @@ public class JerseyResponseManager {
     }
     
     public static Response okEmptyContent() {
-        return Response.status(204).entity("{}").build();
+        return Response.status(200).entity("{}").build();
     }
         
     public static Response invalidParameter() {
