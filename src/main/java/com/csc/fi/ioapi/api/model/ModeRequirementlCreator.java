@@ -90,7 +90,7 @@ public class ModeRequirementlCreator {
             pss.setLiteral("prefix", prefix);
             if(!isLocalNamespace) pss.setLiteral("resolved", isResolvedNamespace);
 
-            return JerseyJsonLDClient.constructGraphFromService(pss.toString(), services.getTempConceptReadSparqlAddress());
+            return JerseyJsonLDClient.constructNotEmptyGraphFromService(pss.toString(), services.getTempConceptReadSparqlAddress());
 
         }
 }

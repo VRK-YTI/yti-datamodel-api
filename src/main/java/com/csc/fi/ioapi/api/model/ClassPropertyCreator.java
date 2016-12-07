@@ -167,7 +167,7 @@ public class ClassPropertyCreator {
        
       //logger.info(""+SplitIRI.localname(predicateID));
       
-      return JerseyJsonLDClient.constructGraphFromService(pss.toString(), service);
+      return JerseyJsonLDClient.constructNotEmptyGraphFromService(pss.toString(), service);
 
   }
   

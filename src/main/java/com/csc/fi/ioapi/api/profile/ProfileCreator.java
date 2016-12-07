@@ -180,7 +180,7 @@ public class ProfileCreator {
             pss.setLiteral("defLang", lang);
 
             
-            return JerseyJsonLDClient.constructGraphFromService(pss.toString(), services.getCoreSparqlAddress());
+            return JerseyJsonLDClient.constructNotEmptyGraphFromService(pss.toString(), services.getCoreSparqlAddress());
             
     }   
  

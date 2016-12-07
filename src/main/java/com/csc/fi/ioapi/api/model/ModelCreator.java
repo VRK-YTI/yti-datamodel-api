@@ -187,7 +187,7 @@ public class ModelCreator {
 
             logger.info(pss.toString());
             
-            return JerseyJsonLDClient.constructGraphFromService(pss.toString(), services.getCoreSparqlAddress());
+            return JerseyJsonLDClient.constructNotEmptyGraphFromService(pss.toString(), services.getCoreSparqlAddress());
             
     }   
  

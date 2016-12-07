@@ -86,7 +86,7 @@ public class CodeListCreator {
             
             pss.setCommandText(queryString);
 
-            return JerseyJsonLDClient.constructGraphFromService(pss.toString(), services.getTempConceptReadSparqlAddress());
+            return JerseyJsonLDClient.constructNotEmptyGraphFromService(pss.toString(), services.getTempConceptReadSparqlAddress());
 
         }
 }

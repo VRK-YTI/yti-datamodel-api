@@ -128,7 +128,7 @@ public class ShapeCreator {
             pss.setIri("shapeIRI",shapeIRI);
 
 
-            return JerseyJsonLDClient.constructGraphFromService(pss.toString(), service);
+            return JerseyJsonLDClient.constructNotEmptyGraphFromService(pss.toString(), service);
     }   
  
 }

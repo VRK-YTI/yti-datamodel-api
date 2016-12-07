@@ -695,6 +695,24 @@ public class JerseyJsonLDClient {
             Model constructModel = qexec.execConstruct();
         
             if(constructModel.size()<=0) {
+                ResponseBuilder rb = Response.noContent();
+                rb.entity(ModelManager.writeModelToString(constructModel));
+                return rb.build();
+            }
+
+            ResponseBuilder rb = Response.ok();
+            rb.entity(ModelManager.writeModelToString(constructModel));
+            return rb.build();
+          
+    }
+    
+    
+    public static Response constructNotEmptyGraphFromService(String query, String service) {
+        
+            QueryExecution qexec = QueryExecutionFactory.sparqlService(service, query);
+            Model constructModel = qexec.execConstruct();
+        
+            if(constructModel.size()<=0) {
                 return JerseyResponseManager.notFound();
             }
 
