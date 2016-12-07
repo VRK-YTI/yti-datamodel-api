@@ -378,7 +378,7 @@ public class JerseyJsonLDClient {
             /* TODO: FIXME: Remove sleep once termed responds faster */
             
             try {
-                Thread.sleep(2000);
+                Thread.sleep(5000);
             } catch (InterruptedException ex) {
                 Logger.getLogger(JerseyJsonLDClient.class.getName()).log(Level.SEVERE, null, ex);
             }
