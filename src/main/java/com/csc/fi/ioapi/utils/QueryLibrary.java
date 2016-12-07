@@ -141,7 +141,7 @@ public class QueryLibrary {
                         + " ?library rdfs:label ?label . "
                         + "OPTIONAL { ?library dcterms:references ?collection . "
                         + " ?collection a ?collectionType . "
-                        + " ?collection dcterms:title ?collectionTitle . "
+                        + " ?collection dcterms:title ?collectionTitle . " 
                         + "}" 
                         + "}"
                      + "}"
