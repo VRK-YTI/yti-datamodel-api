@@ -122,7 +122,7 @@ public class Replicator {
        String SD = "http://www.w3.org/ns/sparql-service-description#";
          
        if(modelIRI==null && groupIRI==null) {
-           
+                   
            Model modelList = JerseyJsonLDClient.getResourceAsJenaModel(service+"serviceDescription");
            ResIterator iter = modelList.listResourcesWithProperty(RDF.type, ResourceFactory.createResource(SD+"NamedGraph"));
            
@@ -136,6 +136,7 @@ public class Replicator {
            while (iter.hasNext()) {
                 Resource res = iter.nextResource();
                 Resource modelURI = res.getPropertyResourceValue(ResourceFactory.createProperty(SD, "name"));
+ 
                 
                 if(GraphManager.isExistingGraph(modelURI.toString())) {
                     logger.info("Exists! Skipping "+modelURI.toString());
@@ -160,6 +161,8 @@ public class Replicator {
                 // HasPartGraph
                 String uri = service+"exportResource?graph="+UriComponent.encode(modelURI.toString()+"#HasPartGraph",UriComponent.Type.QUERY_PARAM);
      
+               // logger.info("HasPartGraph:"+uri);
+                
                 Model hasPartModel = JerseyJsonLDClient.getResourceAsJenaModel(uri);
                 adapter.add(modelURI.toString()+"#HasPartGraph", hasPartModel);
                 
@@ -167,6 +170,8 @@ public class Replicator {
                 
                 String euri = service+"exportResource?graph="+UriComponent.encode(modelURI.toString()+"#ExportGraph",UriComponent.Type.QUERY_PARAM);
      
+               // logger.info("ExportGraph:"+euri);
+                
                 Model exportModel = JerseyJsonLDClient.getResourceAsJenaModel(euri);
                 adapter.add(modelURI.toString()+"#ExportGraph", exportModel);
                 
@@ -174,11 +179,13 @@ public class Replicator {
                 
                 String puri = service+"exportResource?graph="+UriComponent.encode(modelURI.toString()+"#PositionGraph",UriComponent.Type.QUERY_PARAM);
      
+               // logger.info("PositionGraph:"+puri);
+                
                 Model positionModel = JerseyJsonLDClient.getResourceAsJenaModel(puri);
                 adapter.add(modelURI.toString()+"#PositionGraph", positionModel);
-                
-                
+                 
                 // Resources
+                
                 
                 NodeIterator nodIter = hasPartModel.listObjectsOfProperty(DCTerms.hasPart);
                 HashMap conceptMap = new HashMap<String, String>();
@@ -186,28 +193,34 @@ public class Replicator {
                 while(nodIter.hasNext()) {
                     Resource part = nodIter.nextNode().asResource();
                     
+                    
+                    
                     String resourceURI = service+"exportResource?graph="+UriComponent.encode(part.toString(),UriComponent.Type.QUERY_PARAM);
+                    
+                  //  logger.info("Resource:"+resourceURI);
+                    
                     Model resourceModel = JerseyJsonLDClient.getResourceAsJenaModel(resourceURI);
                     adapter.add(part.toString(), resourceModel);
                     
+   
+                    /*
                     NodeIterator subIter = resourceModel.listObjectsOfProperty(DCTerms.subject);
-                   
-                    while(subIter.hasNext()) {
-                        String coConcept = subIter.nextNode().asResource().toString();
-                        
-                        if(!conceptMap.containsKey(coConcept)) {
-                            String conceptURI = service+"exportResource?graph="+UriComponent.encode(coConcept,UriComponent.Type.QUERY_PARAM)+"&service=concept";
-                          //logger.info(conceptURI);
-                            Model conceptModel = JerseyJsonLDClient.getResourceAsJenaModel(conceptURI);
-                          //  logger.info(""+conceptModel.size());
-                            conceptMap.put(coConcept, "true");
-                            conceptAdapter.putModel(coConcept, conceptModel);
-                        }
-                        
-                        
-                    }
-                        
                     
+                   
+                         while(subIter.hasNext()) {
+                             String coConcept = subIter.nextNode().asResource().toString();
+
+                             if(!conceptMap.containsKey(coConcept)) {
+                                 String conceptURI = service+"exportResource?graph="+UriComponent.encode(coConcept,UriComponent.Type.QUERY_PARAM)+"&service=concept";
+                               //logger.info(conceptURI);
+                                 Model conceptModel = JerseyJsonLDClient.getResourceAsJenaModel(conceptURI);
+                               //  logger.info(""+conceptModel.size());
+                                 conceptMap.put(coConcept, "true");
+                                 conceptAdapter.putModel(coConcept, conceptModel);
+                             }
+
+                         } */
+                        
                 }
                 
            }
