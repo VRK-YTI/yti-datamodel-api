@@ -121,7 +121,7 @@ public class Predicate {
                   pss.setIri("library", model);
             }
 
-            return JerseyJsonLDClient.constructGraphFromService(pss.toString(), sparqlService);         
+            return JerseyJsonLDClient.constructNotEmptyGraphFromService(pss.toString(), sparqlService);         
 
       }
 
