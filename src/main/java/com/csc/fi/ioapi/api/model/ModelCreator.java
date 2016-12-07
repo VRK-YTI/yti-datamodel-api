@@ -156,7 +156,7 @@ public class ModelCreator {
                     + "GRAPH <urn:csc:groups> { "
                     + "?group a foaf:Group . "
                     + "?group dcterms:references ?skosScheme . "
-                    + "?skosScheme skos:prefLabel ?schemeTitle . "
+                    + "?skosScheme dcterms:title ?schemeTitle . "
                     + "?skosScheme termed:graph ?termedGraph . "
                     + "?termedGraph termed:id ?termedGraphId . "
                     + "?termedGraph termed:code ?termedGraphCode . "
