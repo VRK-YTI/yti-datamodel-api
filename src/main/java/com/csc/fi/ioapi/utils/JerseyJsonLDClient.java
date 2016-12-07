@@ -233,12 +233,12 @@ public class JerseyJsonLDClient {
                 
          Client client = ClientBuilder.newClient();
          WebTarget target = client.target(resourceURI);
-         Response response = target.request("text/turtle").get();
+         Response response = target.request("application/rdf+xml").get();
          Model model = ModelFactory.createDefaultModel();
          
          try {
-         RDFReader reader = model.getReader(Lang.TURTLE.getName());
-         reader.read(model, response.readEntity(InputStream.class), resourceURI);
+            RDFReader reader = model.getReader(Lang.RDFXML.getName());
+            reader.read(model, response.readEntity(InputStream.class), resourceURI);
          } catch(RiotException ex) {
              return model;
          }
@@ -257,7 +257,7 @@ public class JerseyJsonLDClient {
          
          Client client = ClientBuilder.newClient();
          WebTarget target = client.target(service).queryParam("graph", id);
-         Response response = target.request("text/turtle").get();
+         Response response = target.request("application/ld+json").get();
 
 
         JsonObject json = JSON.parse(response.readEntity(InputStream.class));

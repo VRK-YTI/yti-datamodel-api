@@ -879,15 +879,19 @@ public class GraphManager {
     public static void deleteGraphReferenceFromModel(IRI graph, IRI model) {
 
         String query
-                = " DELETE { GRAPH ?hasPartGraph { ?model dcterms:hasPart ?graph }} "
+                = " DELETE { "
+                + "GRAPH ?hasPartGraph { ?model dcterms:hasPart ?graph } "
+                + "} "
                 + " WHERE { "
-                + "GRAPH ?model { ?model a ?type . }"
-                + "GRAPH ?hasPartGraph { ?model dcterms:hasPart ?graph }}";
+                + "GRAPH ?model { ?model a ?type . } "
+                + "GRAPH ?hasPartGraph { ?model dcterms:hasPart ?graph } "
+                + "}";
 
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
         pss.setIri("graph", graph);
         pss.setIri("model", model);
+        pss.setIri("hasPartGraph", model+"#HasPartGraph");
         pss.setCommandText(query);
 
         UpdateRequest queryObj = pss.asUpdate();
