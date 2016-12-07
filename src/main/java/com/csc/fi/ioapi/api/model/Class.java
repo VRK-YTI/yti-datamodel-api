@@ -121,6 +121,8 @@ public class Class {
                   pss.setIri("library", model);
             }
             
+            logger.info(pss.toString());
+            
             return JerseyJsonLDClient.constructGraphFromService(pss.toString(), sparqlService);         
 
       }

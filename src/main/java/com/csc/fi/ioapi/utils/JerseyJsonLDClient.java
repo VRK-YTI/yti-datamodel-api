@@ -691,7 +691,7 @@ public class JerseyJsonLDClient {
     
     public static Response constructGraphFromService(String query, String service) {
         
-            QueryExecution qexec = QueryExecutionFactory.sparqlService(services.getCoreSparqlAddress(), query);
+            QueryExecution qexec = QueryExecutionFactory.sparqlService(service, query);
             Model constructModel = qexec.execConstruct();
         
             if(constructModel.size()<=0) {

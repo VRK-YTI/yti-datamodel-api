@@ -148,7 +148,7 @@ public class Models {
                      + "GRAPH <urn:csc:groups> { "
                      + "?group rdfs:label ?groupLabel . "
                      + "?group dcterms:references ?skosScheme . "
-                     + "?skosScheme skos:prefLabel ?schemeTitle . "
+                     + "?skosScheme dcterms:title ?schemeTitle . "
                      + "?skosScheme termed:graph ?termedGraph . "
                      + "?termedGraph termed:id ?termedGraphId . "
                      + "?termedGraph termed:code ?termedGraphCode . "
@@ -161,7 +161,7 @@ public class Models {
                      + "}}";
              
              pss.setIri("group", groupIRI);
-             
+                     
            } else {
              pss.setNsPrefixes(LDHelper.PREFIX_MAP);
              /* IF ID is null or default and no group available */
