@@ -86,6 +86,8 @@ public class ClassCreator {
                     + "?concept skos:prefLabel ?label . "
                     + "?concept skos:definition ?comment . "
                     + "?concept skos:inScheme ?scheme . "
+                    + "?scheme dcterms:title ?title . "
+                    + "?scheme termed:graph ?termedGraph . "
                     + "?concept termed:graph ?termedGraph . "
                     + "?termedGraph termed:id ?termedGraphId . "
                     + "} WHERE { "
@@ -98,6 +100,8 @@ public class ClassCreator {
                     + "?concept skos:prefLabel ?label . "
                     + "?concept termed:graph ?termedGraph . "
                     + "?termedGraph termed:id ?termedGraphId . "
+                    + "?scheme dcterms:title ?title . "
+                    + "?scheme termed:graph ?termedGraph . "
                     + "OPTIONAL {"
                     + "?concept skos:definition ?comment . } "
                     + "}";
