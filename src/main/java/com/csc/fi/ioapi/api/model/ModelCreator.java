@@ -140,7 +140,7 @@ public class ModelCreator {
                     + "?group rdfs:label ?groupLabel . "
                     + "?group dcterms:references ?skosScheme . "
                     + "?skosScheme termed:id ?schemeId . "
-                    + "?skosScheme skos:prefLabel ?schemeTitle . "
+                    + "?skosScheme dcterms:title ?schemeTitle . "
                     + "?skosScheme termed:graph ?termedGraph . "
                     + "?termedGraph termed:id ?termedGraphId . "
                     + "?termedGraph termed:code ?termedGraphCode . "

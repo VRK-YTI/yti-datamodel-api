@@ -133,7 +133,7 @@ public class ProfileCreator {
                     + "?modelIRI dcterms:isPartOf ?group . "
                     + "?group rdfs:label ?groupLabel . "
                     + "?group dcterms:references ?skosScheme . "
-                    + "?skosScheme skos:prefLabel ?schemeTitle . "
+                    + "?skosScheme dcterms:title ?schemeTitle . "
                     + "?skosScheme termed:graph ?termedGraph . "
                     + "?termedGraph termed:id ?termedGraphId . "
                     + "?termedGraph termed:code ?termedGraphCode . "
