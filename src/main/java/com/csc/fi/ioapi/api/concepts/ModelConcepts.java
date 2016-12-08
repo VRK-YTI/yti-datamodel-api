@@ -67,59 +67,16 @@ public class ModelConcepts {
        
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
-        
-        /*
-        String queryString = "CONSTRUCT { "
-                + "?skosCollection skos:member ?concept . "
-                + "?skosCollection a skos:Collection . "
-                + "?concept skos:inScheme ?scheme . "
-                + "?scheme dcterms:title ?schemeTitle . "
-                + "?scheme dcterms:identifier ?schemeId . "
-                + "?scheme a ?schemeType . "
-                + "?concept skos:broader ?top . "
-                + "?concept a ?type . "
-                + "?concept skos:prefLabel ?label . "
-                + "?concept skos:definition ?comment . "
-                + "?concept prov:generatedAtTime ?time . "
-                + "?concept prov:wasAssociatedWith ?user . "
-                + "?concept rdfs:isDefinedBy ?sugModel . "
-                + "?sugModel a ?modelType . "
-                + "?sugModel rdfs:label ?modelLabel . }"
-                + " WHERE { "
-                + "GRAPH ?skosCollection {"
-                + "?skosCollection skos:member ?concept . "
-                + "}"
-                + "GRAPH ?vocabulary { "
-                + "?concept skos:inScheme ?scheme . "
-                + "OPTIONAL {  "
-                + "?scheme dcterms:title|dc:title ?schemeTitle . "
-                + "?scheme dcterms:identifier|dc:identifier ?schemeId . "
-                + "?scheme a ?schemeType . }"
-                + "OPTIONAL { ?concept skos:broader ?top . }"
-                + "?concept a ?type . "
-                + "?concept skos:prefLabel ?label . "
-                + "OPTIONAL { ?concept skos:definition ?comment . }"
-                + "OPTIONAL { "
-                + "?concept prov:generatedAtTime ?time . "
-                + "?concept prov:wasAssociatedWith ?user . "
-                + "}"
-                + "OPTIONAL { ?concept rdfs:isDefinedBy ?sugModel . "
-                + "SERVICE ?modelService {"
-                + "GRAPH ?sugModel {"
-                + "?sugModel a ?modelType ."
-                + "?sugModel rdfs:label  ?modelLabel . }}}"
-                + "}}";
-
-         pss.setIri("skosCollection", model+"/skos#");
-         
-         pss.setIri("modelService",services.getLocalhostCoreSparqlAddress());*/
 
         String queryString = "CONSTRUCT { "
                 + "?skosCollection skos:member ?concept . "
                 + "?concept skos:inScheme ?scheme . "
                 + "?concept a skos:Concept . "
+                + "?concept termed:id ?conceptId . "
+                + "?concept termed:graph ?graph . "
                 + "?scheme dcterms:title ?schemeTitle . "
                 + "?scheme a skos:ConceptScheme . "
+                + "?scheme termed:id ?schemeId . "
                 + "?scheme termed:graph ?graph . "
                 + "?graph termed:id ?graphId . "
                 + "?concept skos:prefLabel ?label . "
@@ -134,11 +91,11 @@ public class ModelConcepts {
                 + "?resource dcterms:subject ?concept ."
                 + "?concept skos:prefLabel ?label . "
                 + "?concept skos:definition ?definition . "
+                + "?concept skos:inScheme ?scheme . "
                 + "OPTIONAL { ?concept prov:generatedAtTime ?time . }"
                 + "OPTIONAL { ?concept prov:wasAssociatedWith ?user . }"
-                + "?concept skos:inScheme ?scheme . "
                 + "OPTIONAL { ?scheme dcterms:title ?schemeTitle . }"
-                + "OPTIONAL { ?scheme termed:id ?schemeId . ?scheme termed:graph ?graph . ?graph termed:id ?graphId . }"
+                + "OPTIONAL { ?concept termed:id ?conceptId. ?scheme termed:id ?schemeId . ?scheme termed:graph ?graph . ?graph termed:id ?graphId . }"
                 + "}"
                 + "}";
         
