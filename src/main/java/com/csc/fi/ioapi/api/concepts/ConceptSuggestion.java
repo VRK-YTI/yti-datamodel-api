@@ -105,6 +105,8 @@ public class ConceptSuggestion {
                 concept.addProperty(SKOS.inScheme,inScheme);
                 concept.addProperty(RDF.type, SKOS.Concept);
                 concept.addLiteral(statusProp, "Unstable");
+                Property idProp = model.createProperty(LDHelper.getNamespaceWithPrefix("termed")+"id");
+                concept.addProperty(idProp, conceptUUID.toString());
                 
                 Model schemeModel = JerseyJsonLDClient.getSchemeAsModelFromTermedAPI(schemeID);
                 Property graphProp = schemeModel.createProperty(LDHelper.getNamespaceWithPrefix("termed")+"graph");
@@ -115,6 +117,8 @@ public class ConceptSuggestion {
                     RDFNode node = nodeit.next();
                     concept.addProperty(graphProp, node);
                 }
+                
+
                 
                 if(schemeModel!=null) {
                     model.add(schemeModel);

@@ -87,7 +87,7 @@ public class ModelConcepts {
                 + "GRAPH ?modelParts { "
                 + "?model dcterms:hasPart ?resource . "
                 + "}"
-                + "GRAPH ?resource {"
+                + "GRAPH ?resource { "
                 + "?resource dcterms:subject ?concept ."
                 + "?concept skos:prefLabel ?label . "
                 + "?concept skos:definition ?definition . "
@@ -95,7 +95,8 @@ public class ModelConcepts {
                 + "OPTIONAL { ?concept prov:generatedAtTime ?time . }"
                 + "OPTIONAL { ?concept prov:wasAssociatedWith ?user . }"
                 + "OPTIONAL { ?scheme dcterms:title ?schemeTitle . }"
-                + "OPTIONAL { ?concept termed:id ?conceptId. ?scheme termed:id ?schemeId . ?scheme termed:graph ?graph . ?graph termed:id ?graphId . }"
+                + "OPTIONAL { ?concept termed:id ?conceptId . }"
+                + "OPTIONAL { ?scheme termed:id ?schemeId . ?scheme termed:graph ?graph . ?graph termed:id ?graphId . }"
                 + "}"
                 + "}";
         

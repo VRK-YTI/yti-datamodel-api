@@ -122,7 +122,7 @@ public class Predicate {
                   pss.setIri("library", model);
             }
 
-            logger.info(pss.toString());
+          //  logger.info(pss.toString());
             return JerseyJsonLDClient.constructNotEmptyGraphFromService(pss.toString(), sparqlService);         
 
       }
