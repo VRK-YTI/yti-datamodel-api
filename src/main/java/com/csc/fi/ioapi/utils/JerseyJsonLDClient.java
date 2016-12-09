@@ -412,7 +412,7 @@ public class JerseyJsonLDClient {
             HttpAuthenticationFeature feature = TermedAuthentication.getTermedAuth();
             client.register(feature);
 
-            WebTarget target = client.target(url).queryParam("typeId", "Concept").queryParam("where.properties.prefLabel", query);
+            WebTarget target = client.target(url).queryParam("typeId", "Concept").queryParam("where.properties.prefLabel", query).queryParam("max", "-1");
             
             if(schemeURI!=null && !schemeURI.isEmpty() && !schemeURI.equals("undefined")) {
                 target = target.queryParam("where.references.inScheme",schemeURI);
@@ -451,7 +451,7 @@ public class JerseyJsonLDClient {
             HttpAuthenticationFeature feature = TermedAuthentication.getTermedAuth();
             client.register(feature);
 
-            WebTarget target = client.target(url).queryParam("typeId", "ConceptScheme");
+            WebTarget target = client.target(url).queryParam("typeId", "ConceptScheme").queryParam("max", "-1");
             Response response = target.request("application/ld+json").get();
 
             logger.info("TERMED CALL: "+target.getUri().toString());
@@ -483,7 +483,7 @@ public class JerseyJsonLDClient {
             HttpAuthenticationFeature feature = TermedAuthentication.getTermedAuth();
             client.register(feature);
 
-            WebTarget target = client.target(url).queryParam("typeId", "ConceptScheme").queryParam("uri",uri);
+            WebTarget target = client.target(url).queryParam("typeId", "ConceptScheme").queryParam("uri",uri).queryParam("max", "-1");
             Response response = target.request("application/rdf+xml").get();
 
             logger.info("TERMED CALL: "+target.getUri().toString());
@@ -518,7 +518,7 @@ public class JerseyJsonLDClient {
          HttpAuthenticationFeature feature = TermedAuthentication.getTermedAuth();
          client.register(feature);
             
-         WebTarget target = client.target(url).queryParam("typeId", "Concept").queryParam("uri",resourceURI);
+         WebTarget target = client.target(url).queryParam("typeId", "Concept").queryParam("uri",resourceURI).queryParam("max", "-1").queryParam("bypassIndex", true);
             
          Response response = target.request("text/turtle").get();
     
@@ -559,7 +559,7 @@ public class JerseyJsonLDClient {
             HttpAuthenticationFeature feature = TermedAuthentication.getTermedAuth();
             client.register(feature);
             
-            WebTarget target = client.target(url).queryParam("typeId", "Concept");
+            WebTarget target = client.target(url).queryParam("typeId", "Concept").queryParam("max", "-1");
             
             if(uri!=null && !uri.isEmpty() && !uri.equals("undefined")) {
                 target = target.queryParam("uri",uri).queryParam("bypassIndex", true);
