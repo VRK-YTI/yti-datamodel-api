@@ -365,7 +365,7 @@ public class JerseyJsonLDClient {
             HttpAuthenticationFeature feature = TermedAuthentication.getTermedAuth();
             client.register(feature);
 
-            WebTarget target = client.target(url).property("stream", true);
+            WebTarget target = client.target(url).queryParam("stream", true);
             Response response = target.request().post(Entity.entity(body, "application/ld+json"));
 
             logger.info("TERMED CALL: "+target.getUri().toString());
