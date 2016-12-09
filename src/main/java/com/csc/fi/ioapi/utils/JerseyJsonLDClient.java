@@ -375,13 +375,13 @@ public class JerseyJsonLDClient {
                return JerseyResponseManager.notFound();
             }
             
-            /* TODO: FIXME: Remove sleep once termed responds faster 
+            /* TODO: FIXME: Remove sleep once termed responds faster */
             
             try {
                 Thread.sleep(5000);
             } catch (InterruptedException ex) {
                 Logger.getLogger(JerseyJsonLDClient.class.getName()).log(Level.SEVERE, null, ex);
-            } */
+            } 
 
             ResponseBuilder rb = Response.status(response.getStatus()); 
             return rb.build();
@@ -522,10 +522,13 @@ public class JerseyJsonLDClient {
             
          Response response = target.request("text/turtle").get();
     
-         /* TODO: Remove thread sleep once termed responds faster */
+         
          if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
+            logger.info("FAIL: "+target.getUri().toString());
             return null;
          }
+         
+        logger.info(target.getUri().toString());
          
          Model model = ModelFactory.createDefaultModel();
          
