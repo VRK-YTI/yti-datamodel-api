@@ -471,10 +471,8 @@ public class QueryLibrary {
                     + "?model dcterms:requires ?externalModel . "
                     + "?externalModel rdfs:label ?externalModelLabel . "
                     + "}}"
-                    + "GRAPH ?externalModel {"
-                    + "?classIRI a ?type . "
-                    + "FILTER(STRSTARTS(STR(?classIRI), STR(?externalModel)))"
-                    + "VALUES ?type { rdfs:Class owl:Class sh:Shape } "
+                    + "GRAPH ?externalModel { "
+                    + "OPTIONAL {"
                     /* Labels */
                      + "{?classIRI rdfs:label ?labelStr . FILTER(LANG(?labelStr) = '') BIND(STRLANG(?labelStr,'en') as ?label) }"
                      + "UNION"
@@ -487,6 +485,7 @@ public class QueryLibrary {
                      + "{ ?classIRI ?commentPred ?comment . "
                      + "VALUES ?commentPred { rdfs:comment skos:definition dcterms:description dc:description prov:definition }"
                      + " FILTER(LANG(?comment)!='') }"
+                     + "}"
                             
                     + "OPTIONAL { "
                     + "?classIRI rdfs:subClassOf* ?superclass . "
