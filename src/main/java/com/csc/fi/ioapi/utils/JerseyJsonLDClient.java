@@ -451,7 +451,7 @@ public class JerseyJsonLDClient {
             HttpAuthenticationFeature feature = TermedAuthentication.getTermedAuth();
             client.register(feature);
 
-            WebTarget target = client.target(url).queryParam("typeId", "ConceptScheme").queryParam("max", "-1");
+            WebTarget target = client.target(url).queryParam("typeId", "ConceptScheme").queryParam("max", "-1").queryParam("bypassIndex", true);
             Response response = target.request("application/ld+json").get();
 
             logger.info("TERMED CALL: "+target.getUri().toString());
@@ -483,7 +483,7 @@ public class JerseyJsonLDClient {
             HttpAuthenticationFeature feature = TermedAuthentication.getTermedAuth();
             client.register(feature);
 
-            WebTarget target = client.target(url).queryParam("typeId", "ConceptScheme").queryParam("uri",uri).queryParam("max", "-1");
+            WebTarget target = client.target(url).queryParam("typeId", "ConceptScheme").queryParam("uri",uri).queryParam("max", "-1").queryParam("bypassIndex", true);
             Response response = target.request("application/rdf+xml").get();
 
             logger.info("TERMED CALL: "+target.getUri().toString());
