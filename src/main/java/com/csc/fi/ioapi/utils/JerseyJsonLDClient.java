@@ -365,7 +365,7 @@ public class JerseyJsonLDClient {
             HttpAuthenticationFeature feature = TermedAuthentication.getTermedAuth();
             client.register(feature);
 
-            WebTarget target = client.target(url);
+            WebTarget target = client.target(url).property("stream", true);
             Response response = target.request().post(Entity.entity(body, "application/ld+json"));
 
             logger.info("TERMED CALL: "+target.getUri().toString());
@@ -375,13 +375,13 @@ public class JerseyJsonLDClient {
                return JerseyResponseManager.notFound();
             }
             
-            /* TODO: FIXME: Remove sleep once termed responds faster */
+            /* TODO: FIXME: Remove sleep once termed responds faster 
             
             try {
                 Thread.sleep(5000);
             } catch (InterruptedException ex) {
                 Logger.getLogger(JerseyJsonLDClient.class.getName()).log(Level.SEVERE, null, ex);
-            } 
+            } */
 
             ResponseBuilder rb = Response.status(response.getStatus()); 
             return rb.build();
@@ -451,7 +451,7 @@ public class JerseyJsonLDClient {
             HttpAuthenticationFeature feature = TermedAuthentication.getTermedAuth();
             client.register(feature);
 
-            WebTarget target = client.target(url).queryParam("typeId", "ConceptScheme").queryParam("max", "-1").queryParam("bypassIndex", true);
+            WebTarget target = client.target(url).queryParam("typeId", "ConceptScheme").queryParam("max", "-1");
             Response response = target.request("application/ld+json").get();
 
             logger.info("TERMED CALL: "+target.getUri().toString());
@@ -483,7 +483,7 @@ public class JerseyJsonLDClient {
             HttpAuthenticationFeature feature = TermedAuthentication.getTermedAuth();
             client.register(feature);
 
-            WebTarget target = client.target(url).queryParam("typeId", "ConceptScheme").queryParam("uri",uri).queryParam("max", "-1").queryParam("bypassIndex", true);
+            WebTarget target = client.target(url).queryParam("typeId", "ConceptScheme").queryParam("uri",uri).queryParam("max", "-1");
             Response response = target.request("application/rdf+xml").get();
 
             logger.info("TERMED CALL: "+target.getUri().toString());
@@ -518,7 +518,7 @@ public class JerseyJsonLDClient {
          HttpAuthenticationFeature feature = TermedAuthentication.getTermedAuth();
          client.register(feature);
             
-         WebTarget target = client.target(url).queryParam("typeId", "Concept").queryParam("uri",resourceURI).queryParam("max", "-1").queryParam("bypassIndex", true);
+         WebTarget target = client.target(url).queryParam("typeId", "Concept").queryParam("uri",resourceURI).queryParam("max", "-1");
             
          Response response = target.request("text/turtle").get();
     
@@ -565,7 +565,7 @@ public class JerseyJsonLDClient {
             WebTarget target = client.target(url).queryParam("typeId", "Concept").queryParam("max", "-1");
             
             if(uri!=null && !uri.isEmpty() && !uri.equals("undefined")) {
-                target = target.queryParam("uri",uri).queryParam("bypassIndex", true);
+                target = target.queryParam("uri",uri);
             }
             
             if(schemeUUID!=null && !schemeUUID.isEmpty() && !schemeUUID.equals("undefined")) {
