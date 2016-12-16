@@ -96,7 +96,7 @@ public class ProvenanceManager {
         UpdateRequest queryObj = pss.asUpdate();
         UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, services.getCoreSparqlUpdateAddress());
         qexec.execute();
-        
+       
     }
     
     public static void createProvenanceActivity(String graph, String user, String jsonld, UUID provUUID) {
