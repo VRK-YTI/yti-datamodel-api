@@ -38,6 +38,20 @@
   "fi":"Kaikkille toimialueille yhteiset tietokomponentit.",
   "en":"Core vocabulary that should be reused in all of the domains to ensure the semantic interoperability."
   }
+    },
+    {
+      "@id": "https://tt.eduuni.fi/sites/csc-iow#TRA",
+      "@type": "foaf:Group",
+      "references":"http://jhsmeta.fi/skos/",
+      "label": {
+	  "fi":"Liikenne",
+	  "en":"Transport"
+  },
+  "homepage":"https://tt.eduuni.fi/sites/csc-iow/liikenne",
+  "comment": {
+  "fi":"Liikenne yms.",
+  "en":"Transport, transportation, traffic etc."
+  }
     }
   ],
   "@context": {
