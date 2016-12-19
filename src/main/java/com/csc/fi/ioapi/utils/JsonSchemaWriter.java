@@ -557,20 +557,28 @@ public class JsonSchemaWriter {
         boolean arrayType = false;
             
         int pIndex = 1;
-        
+        String predicateName = null;
+        String predicateID = null;
+        String className = null;
+            
         while (pResults.hasNext()) {
             QuerySolution soln = pResults.nextSolution();
             
             if(!soln.contains("className")) return null;
             
-            String className = soln.getLiteral("className").getString();
-            String predicateName = soln.getLiteral("predicateName").getString();
-            String predicateID = soln.getResource("predicate").toString();
+            
+            /* First run per predicate */
             
             if(pIndex==1) {
                 
+                className = soln.getLiteral("className").getString();
+            
+                predicateID = soln.getResource("predicate").toString();
+                
                 predicate.add("@id", predicateID);
             
+                predicateName = soln.getLiteral("predicateName").getString();
+                
                 if(soln.contains("id")) {
                     predicateName = soln.getLiteral("id").getString();
                 }
@@ -703,10 +711,10 @@ public class JsonSchemaWriter {
                          }
                     }
                 }
-                        
-            /* Check if next result is about the same class */
-           
+                                  
             } 
+            
+            /* Every run per predicate*/
             
             if(soln.contains("example")) {
                 String example = soln.getLiteral("example").getString();
@@ -720,7 +728,8 @@ public class JsonSchemaWriter {
                 
             } else {
                 
-
+                /* Last run per class */
+                
                 if(!exampleSet.isEmpty()) {
                     
                     Iterator<String> i = exampleSet.iterator();
@@ -744,7 +753,6 @@ public class JsonSchemaWriter {
                         predicate.add("chance", chanceObject.build());
                     }
                 }
-                
                 
                 properties.add(predicateName,predicate.build());
                 predicate = Json.createObjectBuilder();
