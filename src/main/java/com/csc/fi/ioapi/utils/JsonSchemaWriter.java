@@ -692,7 +692,7 @@ public class JsonSchemaWriter {
                                  if(soln.contains("min")) predicate.add("minItems",soln.getLiteral("min").getInt());
                                  if(soln.contains("max")) {
                                      predicate.add("maxItems",soln.getLiteral("max").getInt());                             
-                                    logger.info(""+soln.getLiteral("max").getInt());
+                                
                                  }
                                  predicate.add("type", "array");
                                  
@@ -710,7 +710,6 @@ public class JsonSchemaWriter {
             
             if(soln.contains("example")) {
                 String example = soln.getLiteral("example").getString();
-                logger.info(example);
                 exampleSet.add(example); 
             }
             
@@ -825,9 +824,7 @@ public class JsonSchemaWriter {
         pss.setCommandText(selectClass);
         
         logger.info(""+services.getCoreSparqlAddress());
-       // logger.info(""+pss);
        
-        
         QueryExecution qexec =  QueryExecutionFactory.sparqlService(services.getCoreSparqlAddress(), pss.toString());
 
         ResultSet results = qexec.execSelect();
