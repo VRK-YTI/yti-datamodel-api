@@ -566,8 +566,11 @@ public class JsonSchemaWriter {
             
             String className = soln.getLiteral("className").getString();
             String predicateName = soln.getLiteral("predicateName").getString();
+            String predicateID = soln.getResource("predicate").toString();
             
             if(pIndex==1) {
+                
+                predicate.add("@id", predicateID);
             
                 if(soln.contains("id")) {
                     predicateName = soln.getLiteral("id").getString();
@@ -587,18 +590,9 @@ public class JsonSchemaWriter {
                 } 
 
 
-
                 if(soln.contains("description")) {
                     String description = soln.getLiteral("description").getString();
                     predicate.add("description", description);
-                }
-
-
-
-                if(soln.contains("predicate")) {
-                    String predicateID = soln.getResource("predicate").toString();
-                    predicate.add("@id", predicateID);
-
                 }
 
                 if(soln.contains("valueList")) {
@@ -717,12 +711,14 @@ public class JsonSchemaWriter {
             
             if(soln.contains("example")) {
                 String example = soln.getLiteral("example").getString();
+                logger.info(example);
                 exampleSet.add(example); 
             }
             
-            if(pResults.hasNext() && predicateName.equals(pResults.peek().getLiteral("predicateName").getString())) {
+
+            if(pResults.hasNext() && predicateID.equals(pResults.peek().getResource("predicate").toString())) {
                 
-                pIndex+=1;    
+                pIndex+=1;
                 
             } else {
                 
@@ -731,8 +727,8 @@ public class JsonSchemaWriter {
                     
                     Iterator<String> i = exampleSet.iterator();
 
-                    while(i.hasNext()) {
-                        String ex = i.next();
+                    while(i.hasNext()) { 
+                       String ex = i.next();
                         exampleList.add(ex);
                     }
                 
@@ -758,6 +754,7 @@ public class JsonSchemaWriter {
                 arrayType = false;
                 pIndex=1;
                 exampleSet = new HashSet<String>();
+                exampleList = Json.createArrayBuilder();
             }
             
             
