@@ -13,7 +13,6 @@ import org.apache.jena.query.ResultSet;
 import org.apache.jena.query.ResultSetFactory;
 import org.apache.jena.sparql.resultset.ResultSetPeekable;
 import java.io.StringWriter;
-import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
 import java.util.Collections;
 import java.util.Date;
@@ -546,11 +545,11 @@ public class JsonSchemaWriter {
         
         JsonObjectBuilder definitions = Json.createObjectBuilder();
         JsonObjectBuilder properties = Json.createObjectBuilder();
-        JsonArrayBuilder required = Json.createArrayBuilder();
         
         JsonObjectBuilder predicate = Json.createObjectBuilder();
         
         HashSet<String> exampleSet = new HashSet<String>();
+        HashSet<String> requiredPredicates = new HashSet<String>();
         
         JsonArrayBuilder exampleList = Json.createArrayBuilder();
         JsonObjectBuilder typeObject = Json.createObjectBuilder();
@@ -585,7 +584,7 @@ public class JsonSchemaWriter {
                 if(soln.contains("min")) {
                     int min = soln.getLiteral("min").getInt();
                     if(min>0) {
-                        required.add(predicateName);
+                        requiredPredicates.add(predicateName);
                     }
                 } 
 
@@ -773,6 +772,15 @@ public class JsonSchemaWriter {
                     }
                     classDefinition.add("properties", properties.build());
                     
+                    JsonArrayBuilder required = Json.createArrayBuilder();
+                    
+                    Iterator<String> ri = requiredPredicates.iterator();
+
+                    while(ri.hasNext()) { 
+                       String ex = ri.next();
+                        required.add(ex);
+                    }
+                    
                     JsonArray reqArray = required.build();
                     
                      if(!reqArray.isEmpty()) {
@@ -781,7 +789,7 @@ public class JsonSchemaWriter {
                     
                     definitions.add(className, classDefinition.build());
                     properties = Json.createObjectBuilder();
-                    required = Json.createArrayBuilder();
+                    requiredPredicates = new HashSet<String>();
                 } 
             
         }
