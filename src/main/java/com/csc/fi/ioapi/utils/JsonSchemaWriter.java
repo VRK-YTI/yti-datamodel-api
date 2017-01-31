@@ -730,7 +730,7 @@ public class JsonSchemaWriter {
             } else {
                 
                 /* Last run per class */
-                
+                 
                 if(!exampleSet.isEmpty()) {
                     
                     Iterator<String> i = exampleSet.iterator();
@@ -742,20 +742,20 @@ public class JsonSchemaWriter {
                 
                     JsonObjectBuilder chanceObject = Json.createObjectBuilder();
                     JsonArrayBuilder picksetArray = Json.createArrayBuilder();
-                    
+                      
                     /* Add examples to chance pickset or pickone list */
                     
                     if(arrayType) {
                         chanceObject.add("pickset",  picksetArray.add(exampleList.build()).build());                
                         typeObject.add("chance", chanceObject.build());
-                         
                     } else {
                         chanceObject.add("pickone",  picksetArray.add(exampleList.build()).build());                
-                        predicate.add("chance", chanceObject.build());
+                        predicate.add("chance", chanceObject.build());       
                     }
-                    
-                    predicate.add("items", typeObject.build());   
-                    
+                }
+                
+                if(arrayType) {
+                    predicate.add("items", typeObject.build());    
                 }
                 
                 properties.add(predicateName,predicate.build());
