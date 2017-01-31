@@ -58,7 +58,7 @@ public class JsonSchemaWriter {
         put("http://www.w3.org/2001/XMLSchema#gMonth", "string");
         put("http://www.w3.org/2001/XMLSchema#gDay", "string");
         put("http://www.w3.org/2001/XMLSchema#string", "string");
-        put("http://www.w3.org/2001/XMLSchema#anyUri", "string");
+        put("http://www.w3.org/2001/XMLSchema#anyURI", "string");
         put("http://www.w3.org/1999/02/22-rdf-syntax-ns#langString", "langString");
         put("http://www.w3.org/2000/01/rdf-schema#Literal", "string");
     }});
@@ -656,9 +656,9 @@ public class JsonSchemaWriter {
                                 if(jsonDatatype.equals("langString")) {
                                    predicate.add("type","object");
                                    predicate.add("$ref","#/definitions/langString");
-                               }
-                               else
+                               } else {
                                    predicate.add("type", jsonDatatype);
+                                }
                         }
 
                     } else {
