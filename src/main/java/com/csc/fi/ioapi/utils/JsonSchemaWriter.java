@@ -262,6 +262,8 @@ public class JsonSchemaWriter {
                     }
 
                     predicate.add("type", "array");
+                    
+                    logger.info(jsonDatatype);
 
                     if(jsonDatatype!=null) {
                       
@@ -671,7 +673,6 @@ public class JsonSchemaWriter {
                         
                         if(jsonDatatype!=null) {
 
-
                                 if(jsonDatatype.equals("langString")) {
                                     typeObject.add("type", "object");
                                     typeObject.add("$ref","#/definitions/langString");
@@ -747,11 +748,14 @@ public class JsonSchemaWriter {
                     if(arrayType) {
                         chanceObject.add("pickset",  picksetArray.add(exampleList.build()).build());                
                         typeObject.add("chance", chanceObject.build());
-                        predicate.add("items", typeObject.build());    
+                         
                     } else {
                         chanceObject.add("pickone",  picksetArray.add(exampleList.build()).build());                
                         predicate.add("chance", chanceObject.build());
                     }
+                    
+                    predicate.add("items", typeObject.build());   
+                    
                 }
                 
                 properties.add(predicateName,predicate.build());
