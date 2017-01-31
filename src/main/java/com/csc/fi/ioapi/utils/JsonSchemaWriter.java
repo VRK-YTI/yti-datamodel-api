@@ -59,6 +59,7 @@ public class JsonSchemaWriter {
         put("http://www.w3.org/2001/XMLSchema#gDay", "string");
         put("http://www.w3.org/2001/XMLSchema#string", "string");
         put("http://www.w3.org/2001/XMLSchema#anyURI", "string");
+        put("http://www.w3.org/2001/XMLSchema#hexBinary", "string");
         put("http://www.w3.org/1999/02/22-rdf-syntax-ns#langString", "langString");
         put("http://www.w3.org/2000/01/rdf-schema#Literal", "string");
     }});
