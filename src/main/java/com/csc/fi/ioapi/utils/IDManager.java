@@ -16,7 +16,12 @@ public class IDManager {
     
     private static final Logger logger = Logger.getLogger(IDManager.class.getName());
     private static final IRIFactory iriFactory = IRIFactory.iriImplementation();
-    
+
+    /**
+     * Returns true if url is absolute
+     * @param URL as string
+     * @return boolean
+     */
     public static boolean isValidUrl(String url) {
         
         if(url==null || url.isEmpty()) return false;
@@ -34,11 +39,23 @@ public class IDManager {
         }
         
     }
-    
+
+    /**
+     * Returns true if url is not absolute
+     * @param url
+     * @return boolean
+     */
     public static boolean isInvalid(String url) {
         return !isValidUrl(url);
     }
-    
+
+    /**
+     * Creates IRI from string
+     * @param url
+     * @return returns created IRI
+     * @throws IRIException
+     * @throws NullPointerException
+     */
     public static IRI constructIRI(String url) throws IRIException, NullPointerException {
         return iriFactory.construct(url);
     }

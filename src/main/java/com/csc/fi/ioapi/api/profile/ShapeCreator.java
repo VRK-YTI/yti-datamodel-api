@@ -35,7 +35,7 @@ import org.apache.jena.util.SplitIRI;
  * Root resource (exposed at "classCreator" path)
  */
 @Path("shapeCreator")
-@Api(value = "/shapeCreator", description = "Construct new Shape template")
+@Api(tags = {"Profile"}, description = "Construct new Shape template")
 public class ShapeCreator {
 
     @Context ServletContext context;

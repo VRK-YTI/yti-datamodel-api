@@ -1,7 +1,7 @@
 /*
  * Licensed under the European Union Public Licence (EUPL) V.1.1 
  */
-package com.csc.fi.ioapi.api.concepts;
+package com.csc.fi.ioapi.api.codes;
 
 import com.csc.fi.ioapi.config.EndpointServices;
 import com.csc.fi.ioapi.utils.LDHelper;
@@ -24,13 +24,12 @@ import javax.ws.rs.core.Response.Status;
  * @author malonen
  */
 @Path("codeServer")
-@Api(tags = {"Codes"}, value = "/codeServer", description = "Available code servers")
+@Api(tags = {"Codes"}, description = "Available code servers")
 public class CodeServer {
 
     @Context ServletContext context;
     EndpointServices services = new EndpointServices();
-   
-    
+
   @GET
   @Produces("application/ld+json")
   @ApiOperation(value = "Get available code servers", notes = "Get list of available code servers")

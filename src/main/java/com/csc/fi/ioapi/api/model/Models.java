@@ -45,7 +45,7 @@ import org.apache.jena.iri.IRIException;
  * Root resource (exposed at "myresource" path)
  */
 @Path("model")
-@Api(value = "/model", description = "Operations about models")
+@Api(tags = {"Model"}, description = "Operations about models")
 public class Models {
   
     @Context ServletContext context;

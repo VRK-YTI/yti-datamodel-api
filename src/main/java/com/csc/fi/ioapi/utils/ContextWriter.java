@@ -37,7 +37,12 @@ public class ContextWriter {
         config.put(JsonGenerator.PRETTY_PRINTING, Boolean.TRUE);
         factory = Json.createWriterFactory(config);
     }
-    
+
+    /**
+     * Creates context from JSONObjectBuilder
+     * @param context
+     * @return Returns JSON-LD Context
+     */
     private static String createDefaultContext(JsonObjectBuilder context) {
         
         JsonObjectBuilder contextBuilder = Json.createObjectBuilder();
@@ -45,9 +50,14 @@ public class ContextWriter {
         //context.add("id","@id");
         contextBuilder.add("@context", context.build());
         
-        return jsonObjectToPrettyString(contextBuilder.build());
+        return JsonSchemaWriter.jsonObjectToPrettyString(contextBuilder.build());
 }
-    
+
+    /**
+     * Creates context object from resource od
+     * @param classID Id of the class
+     * @return Returns generated JSON-LD context from the SHACL spec
+     */
     public static String newResourceContext(String classID) { 
     
         JsonObjectBuilder context = Json.createObjectBuilder();
@@ -109,18 +119,12 @@ public class ContextWriter {
         return createDefaultContext(context);
         
     }
-    
-    private static String jsonObjectToPrettyString(JsonObject object) {
-        
-        StringWriter stringWriter = new StringWriter();
-        JsonWriter writer = factory.createWriter(stringWriter);
-        writer.writeObject(object);
-        writer.close();
-        return stringWriter.getBuffer().toString();
-        
-    }
-    
-    
+
+    /**
+     * Return JSON-LD context for the model
+     * @param modelID Model id
+     * @return Generated JSON-LD context from the model
+     */
     public static String newModelContext(String modelID) { 
     
         JsonObjectBuilder context = Json.createObjectBuilder();

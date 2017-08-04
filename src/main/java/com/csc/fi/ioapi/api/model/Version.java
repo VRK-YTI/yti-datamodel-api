@@ -38,7 +38,7 @@ import java.util.UUID;
  * Root resource (exposed at "myresource" path)
  */
 @Path("version")
-@Api(value = "/version", description = "Get list of model versions from version history")
+@Api(tags = {"Deprecated"}, description = "Get list of model versions from version history")
 public class Version {
 
     private static final Logger logger = Logger.getLogger(Version.class.getName());

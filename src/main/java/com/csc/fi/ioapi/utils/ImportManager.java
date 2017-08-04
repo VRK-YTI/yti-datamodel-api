@@ -28,6 +28,11 @@ public class ImportManager {
     static EndpointServices services = new EndpointServices();
     private static final Logger logger = Logger.getLogger(ImportManager.class.getName());
 
+    /**
+     * Creates separate resource graph from existing export graph that is imported with importModel API
+     * @param graph ID of the graph
+     * @param map Prefix map used in the model
+     */
     public static void createResourceGraphs(String graph, Map<String, String> map) {
 
         String timestamp = SafeDateFormat.fmt().format(new Date());
@@ -86,7 +91,11 @@ public class ImportManager {
 
     }
 
-    public static void removeDuplicatesFromModel(String graph) {
+    /**
+     * Removes resource references from imported model graph
+     * @param graph ID of the model
+     */
+    private static void removeDuplicatesFromModel(String graph) {
 
         String query
                 = "DELETE { "
@@ -121,7 +130,7 @@ public class ImportManager {
         qexec.execute();
     }
 
-    public static void updateResourceGraphs(String model, Map<String, String> map) {
+    private static void updateResourceGraphs(String model, Map<String, String> map) {
 
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         String selectResources = "SELECT ?resource WHERE { GRAPH ?resource { ?resource rdfs:isDefinedBy ?model . }}";
@@ -144,7 +153,7 @@ public class ImportManager {
 
     }
 
-    public static void addIndexNumberToProperties(String resource) {
+    private static void addIndexNumberToProperties(String resource) {
 
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         String selectResources = "SELECT ?property WHERE { GRAPH ?resource { ?resource rdfs:isDefinedBy ?model . ?resource sh:property ?property . ?property sh:predicate ?predicate . }} ORDER BY ?predicate ";
@@ -165,7 +174,7 @@ public class ImportManager {
 
     }
 
-    public static void addIndexToProperty(String resource, String property, int index) {
+    private static void addIndexToProperty(String resource, String property, int index) {
 
         String query
                 = " INSERT { "
@@ -191,7 +200,7 @@ public class ImportManager {
 
     }
 
-    public static void constructGraphs(String graph, String resource, Map<String, String> map) {
+    private static void constructGraphs(String graph, String resource, Map<String, String> map) {
 
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
 
@@ -256,6 +265,12 @@ public class ImportManager {
 
     }
 
+    /**
+     * Adds namespace and prefix to the model
+     * @param model ID of the model
+     * @param namespace New namespace as string
+     * @param prefix New prefix as string
+     */
     public static void updateModelNamespaceInfo(String model, String namespace, String prefix) {
 
         String query = "INSERT { "

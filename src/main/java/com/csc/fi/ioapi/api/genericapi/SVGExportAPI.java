@@ -29,7 +29,7 @@ import org.glassfish.jersey.media.multipart.FormDataParam;
  * @author malonen
  */
 @Path("svg")
-@Api(value = "/svg", description = "SVG to ... ")
+@Api(tags = {"Deprecated"}, description = "SVG to ... ")
 public class SVGExportAPI {
     
     /* TODO: not working? */

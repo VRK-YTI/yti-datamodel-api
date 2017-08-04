@@ -33,7 +33,7 @@ import org.apache.jena.iri.IRIException;
  * Root resource (exposed at "modelCreator" path)
  */
 @Path("profileCreator")
-@Api(value = "/profileCreator", description = "Construct new profile template")
+@Api(tags = {"Profile"}, description = "Construct new profile template")
 public class ProfileCreator {
 
     @Context ServletContext context;

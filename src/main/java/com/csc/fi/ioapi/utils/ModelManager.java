@@ -42,12 +42,22 @@ public class ModelManager {
     static EndpointServices services = new EndpointServices();
     private static final Logger logger = Logger.getLogger(ModelManager.class.getName());
 
+    /**
+     * Writes jena model to string
+     * @param model model to be written as json-ld string
+     * @return string
+     */
     public static String writeModelToString(Model model) {
         StringWriter writer = new StringWriter();
         RDFDataMgr.write(writer, model, RDFFormat.JSONLD);
         return writer.toString();
     }
 
+    /**
+     * Create jena model from json-ld string
+     * @param modelString RDF as JSON-LD string
+     * @return Model
+     */
     public static Model createModelFromString(String modelString) {
         Model model = ModelFactory.createDefaultModel();
         
@@ -60,7 +70,15 @@ public class ModelManager {
         return model;
         
     }
-    
+
+    /**
+     * Creates new model to the core database
+     * @param graph Graph of the model
+     * @param group Group of the model
+     * @param body Content of the model as json-ld string
+     * @param login User session
+     * @return UUID of the model
+     */
     public static UUID createNewModel(String graph, String group, String body, LoginSession login) {
         
         String service = services.getCoreReadWriteAddress();
@@ -89,7 +107,14 @@ public class ModelManager {
         
         return provUUID;
     }
-    
+
+    /**
+     * Updates / rewrites model to the service
+     * @param graph Graph to update the model
+     * @param body Model as json-ld string
+     * @param login Login session
+     * @return UUID of the model
+     */
     public static UUID updateModel(String graph, String body, LoginSession login) {
         
         String service = services.getCoreReadWriteAddress();
@@ -114,6 +139,14 @@ public class ModelManager {
                 
         return provUUID;
     }
+
+    /**
+     * Updates model
+     * @param graph Graph to be updated
+     * @param model New model as jena model
+     * @param login Login session
+     * @return UUID of the model
+     */
     
     public static UUID updateModel(String graph, Model model, LoginSession login) {
         

@@ -27,8 +27,11 @@ import org.apache.jena.vocabulary.RDF;
 public class GroupManager {
     
     private static final Logger logger = Logger.getLogger(GroupManager.class.getName());
-    
-    
+
+    /**
+     * Returns true if groups have changed from the previous version
+     * @return Returns boolean
+     */
      public static boolean compareDefaultGroups() {
          
          DatasetAccessor accessor = DatasetAccessorFactory.createHTTP(services.getCoreReadWriteAddress());
@@ -42,8 +45,14 @@ public class GroupManager {
          } else return false;
          
      }
-    
-     public static boolean testDefaultGroups() {
+
+    /**
+     *@deprecated
+     * Comparing groups instead of number of groups for now
+     *
+     */
+    @Deprecated
+    public static boolean testDefaultGroups() {
          
          Model m = ModelFactory.createDefaultModel();
          RDFDataMgr.read(m, LDHelper.getDefaultGroupsInputStream(), RDFLanguages.JSONLD);
@@ -74,8 +83,10 @@ public class GroupManager {
               return false; 
            }
     }
-    
-  
+
+    /**
+     * Creates default groups by reading the JSON file from resources
+     */
    public static void createDefaultGroups() {
        
         DatasetAccessor accessor = DatasetAccessorFactory.createHTTP(services.getCoreReadWriteAddress());

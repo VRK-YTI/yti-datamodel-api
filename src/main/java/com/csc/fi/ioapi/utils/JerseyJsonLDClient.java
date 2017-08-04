@@ -6,7 +6,6 @@ import com.csc.fi.ioapi.api.concepts.ConceptSearch;
 import com.csc.fi.ioapi.api.genericapi.ExportModel;
 import com.csc.fi.ioapi.config.ApplicationProperties;
 import com.csc.fi.ioapi.config.EndpointServices;
-import static com.csc.fi.ioapi.utils.GraphManager.services;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.jsonldjava.core.JsonLdError;
 import com.github.jsonldjava.core.JsonLdOptions;
@@ -24,16 +23,13 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.net.ssl.SSLContext;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.CacheControl;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
-import javax.ws.rs.core.Response.Status.Family;
 import javax.ws.rs.core.Response.StatusType;
 import org.apache.jena.atlas.json.JSON;
 import org.apache.jena.atlas.json.JsonObject;
@@ -50,6 +46,11 @@ import org.apache.jena.riot.RDFLanguages;
 import org.apache.jena.riot.RiotException;
 import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
 import org.glassfish.jersey.uri.UriComponent;
+import org.glassfish.jersey.client.ClientProperties;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 /**
  * 
  * @author malonen
@@ -58,8 +59,12 @@ public class JerseyJsonLDClient {
     
     static final private Logger logger = Logger.getLogger(JerseyJsonLDClient.class.getName());
     static final private EndpointServices services = new EndpointServices();
-    
-    
+
+    /**
+     * Reads boolean from any url or returns false
+     * @param url Url as string
+     * @return boolean
+     */
     public static Boolean readBooleanFromURL(String url) {
         try {
             
@@ -80,7 +85,15 @@ public class JerseyJsonLDClient {
             return Boolean.FALSE;
         }
     }
-    
+
+    /**
+     * Returns Export graph as Jersey Response
+     * @param graph ID of the graph
+     * @param raw If true returns content as text
+     * @param lang Language of the required graph
+     * @param ctype Required content type
+     * @return Response
+     */
     public static Response getExportGraph(String graph, boolean raw, String lang, String ctype) {
         
         try {
@@ -176,7 +189,8 @@ public class JerseyJsonLDClient {
         }
         
     }
-    
+
+    @Deprecated
     public static Response getSearchResultFromFinto(String vocid, String term, String lang) {
         
           
@@ -225,9 +239,9 @@ public class JerseyJsonLDClient {
     }
     
     /**
-     *
-     * @param resourceURI
-     * @return
+     * Returns Jena model from the resource graph
+     * @param resourceURI ID of the resource
+     * @return Model
      */
     public static Model getResourceAsJenaModel(String resourceURI) {
                 
@@ -248,10 +262,10 @@ public class JerseyJsonLDClient {
     }
     
     /**
-     *
-     * @param id
-     * @param service
-     * @return
+     * Returns Context from the graph
+     * @param id ID of the graph
+     * @param service ID of the service
+     * @return JSON-LD Context object
      */
     public static JsonValue getGraphContextFromService(String id, String service) {
          
@@ -269,10 +283,10 @@ public class JerseyJsonLDClient {
     }
     
     /**
-     *
-     * @param id
-     * @param service
-     * @return
+     * Returns Jersey response from the Fuseki service
+     * @param id Id of the graph
+     * @param service Id of the service
+     * @return Response
      */
     public static Response getGraphResponseFromService(String id, String service) {
          
@@ -291,11 +305,11 @@ public class JerseyJsonLDClient {
     }
     
     /**
-     *
-     * @param id
-     * @param service
-     * @param ctype
-     * @return
+     * Returns Jersey response from Fuseki service
+     * @param id Id of the graph
+     * @param service Id of the service
+     * @param ctype Requested content-type
+     * @return Response
      */
     public static Response getGraphResponseFromService(String id, String service, String ctype) {
                    
@@ -304,15 +318,14 @@ public class JerseyJsonLDClient {
          return target.request(ctype).get();
          
     }
-    
-    
+
     /**
-     *
-     * @param id
-     * @param service
-     * @param contentType
-     * @param raw
-     * @return
+     * Returns Jersey response from Fuseki service
+     * @param id Id of the graph
+     * @param service Id of the service
+     * @param contentType Requested content-type
+     * @param raw boolean that states if Response is needed as raw text
+     * @return Response
      */
     public static Response getGraphResponseFromService(String id, String service, ContentType contentType, boolean raw) {
         try {
@@ -348,24 +361,24 @@ public class JerseyJsonLDClient {
     
     
      /**
-     *
-     * @param service
-     * @return
+     * Saves new concept suggestion to termed
+     * @param body JSON-ld as body
+      * @param scheme Scheme / namespace of the vocabulary
+     * @return Response
      */
     public static Response saveConceptSuggestion(String body, String scheme) {
-        
-        // TODO: Add scheme when API is ready
+
         if(scheme.startsWith("urn:uuid:"))
             scheme = scheme.substring(scheme.indexOf("urn:uuid:"));
         
         String url = ApplicationProperties.getDefaultTermAPI()+"graphs/"+scheme+"/nodes";
         
         try {
-            Client client = ClientBuilder.newClient();
+            Client client = IgnoreSSLClient(); // ClientBuilder.newClient();
             HttpAuthenticationFeature feature = TermedAuthentication.getTermedAuth();
             client.register(feature);
 
-            WebTarget target = client.target(url).queryParam("stream", true);
+            WebTarget target = client.target(url).queryParam("stream", true).queryParam("batch",true);
             Response response = target.request().post(Entity.entity(body, "application/ld+json"));
 
             logger.info("TERMED CALL: "+target.getUri().toString());
@@ -375,7 +388,8 @@ public class JerseyJsonLDClient {
                return JerseyResponseManager.notFound();
             }
             
-            /* TODO: FIXME: Remove sleep once termed responds faster 
+            /* TODO: FIXME: Remove sleep once termed responds faster
+                TODO: Check if fixed?
             
             try {
                 Thread.sleep(5000);
@@ -393,14 +407,17 @@ public class JerseyJsonLDClient {
     }
     
      /**
-     *
-     * @param service
-     * @return
+     * Returns concepts from Termed api
+     * @param query query string
+      *              * @param schemeURI ID of the scheme
+     * @return Response
      */
     public static Response searchConceptFromTermedAPI(String query, String schemeURI) {
         
         String url = ApplicationProperties.getDefaultTermAPI()+"ext";
-        
+
+        //FIXME: This isnt really working ... Returns TERMS instead of Concepts. Tried also with node-trees api but there is no RDF support. Options, create JENA model from JSON API or use elastic search index in frontend?
+
         /*
         if(graphCode!=null && !graphCode.isEmpty() && !graphCode.equals("undefined")) {
             url = url+"/"+graphCode;
@@ -408,14 +425,14 @@ public class JerseyJsonLDClient {
         
         try {
             
-            Client client = ClientBuilder.newClient();
+            Client client = IgnoreSSLClient(); //ClientBuilder.newClient();
             HttpAuthenticationFeature feature = TermedAuthentication.getTermedAuth();
             client.register(feature);
 
-            WebTarget target = client.target(url).queryParam("typeId", "Concept").queryParam("where.properties.prefLabel", query).queryParam("max", "-1");
+            WebTarget target = client.target(url).queryParam("select.referrers","prefLabelXl").queryParam("recurse.referrers.prefLabelXl","2").queryParam("where.properties.prefLabel", query).queryParam("max", "-1");
             
-            if(schemeURI!=null && !schemeURI.isEmpty() && !schemeURI.equals("undefined")) {
-                target = target.queryParam("where.references.inScheme",schemeURI);
+           if(schemeURI!=null && !schemeURI.isEmpty() && !schemeURI.equals("undefined")) {
+                target = target.queryParam("graphId",schemeURI);
             }
             
             Response response = target.request("application/ld+json").get();
@@ -440,18 +457,17 @@ public class JerseyJsonLDClient {
     
     
     /**
-     *
-     * @param service
-     * @return
+     * Returns available schemes
+     * @return Response
      */
     public static Response getSchemesFromTermedAPI() {
         String url = ApplicationProperties.getDefaultTermAPI()+"ext";
         try {
-            Client client = ClientBuilder.newClient();
+            Client client = IgnoreSSLClient(); // ClientBuilder.newClient();
             HttpAuthenticationFeature feature = TermedAuthentication.getTermedAuth();
             client.register(feature);
 
-            WebTarget target = client.target(url).queryParam("typeId", "ConceptScheme").queryParam("max", "-1");
+            WebTarget target = client.target(url).queryParam("typeId", "TerminologicalVocabulary").queryParam("max", "-1");
             Response response = target.request("application/ld+json").get();
 
             logger.info("TERMED CALL: "+target.getUri().toString());
@@ -472,18 +488,18 @@ public class JerseyJsonLDClient {
     }
     
     /**
-     *
-     * @param service
-     * @return
+     * Returns Jena model of the terminology
+     * @param uri
+     * @return Model
      */
     public static Model getSchemeAsModelFromTermedAPI(String uri) {
         String url = ApplicationProperties.getDefaultTermAPI()+"ext";
         try {
-            Client client = ClientBuilder.newClient();
+            Client client = IgnoreSSLClient(); //ClientBuilder.newClient();
             HttpAuthenticationFeature feature = TermedAuthentication.getTermedAuth();
             client.register(feature);
 
-            WebTarget target = client.target(url).queryParam("typeId", "ConceptScheme").queryParam("uri",uri).queryParam("max", "-1");
+            WebTarget target = client.target(url).queryParam("typeId", "TerminologicalVocabulary").queryParam("uri",uri).queryParam("max", "-1");
             Response response = target.request("application/rdf+xml").get();
 
             logger.info("TERMED CALL: "+target.getUri().toString());
@@ -506,47 +522,54 @@ public class JerseyJsonLDClient {
 
 
     /**
-     *
+     * Returns concept as Jena model
      * @param resourceURI
-     * @return
+     * @return Model
      */
     public static Model getConceptAsJenaModel(String resourceURI) {
          
         String url = ApplicationProperties.getDefaultTermAPI()+"ext";
-        
-         Client client = ClientBuilder.newClient();
-         HttpAuthenticationFeature feature = TermedAuthentication.getTermedAuth();
-         client.register(feature);
-            
-         WebTarget target = client.target(url).queryParam("typeId", "Concept").queryParam("uri",resourceURI).queryParam("max", "-1");
-            
-         Response response = target.request("text/turtle").get();
-    
-         
-         if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-            logger.info("FAIL: "+target.getUri().toString());
-            return null;
-         }
-         
-        logger.info(target.getUri().toString());
-         
-         Model model = ModelFactory.createDefaultModel();
-         
-         try {
-         RDFReader reader = model.getReader(Lang.TURTLE.getName());
-         reader.read(model, response.readEntity(InputStream.class), resourceURI);
-         } catch(RiotException ex) {
+
+        try {
+
+             Client client = IgnoreSSLClient(); //ClientBuilder.newClient();
+             HttpAuthenticationFeature feature = TermedAuthentication.getTermedAuth();
+             client.register(feature);
+
+             WebTarget target = client.target(url).queryParam("typeId", "Concept").queryParam("uri",resourceURI).queryParam("max", "-1");
+
+             Response response = target.request("text/turtle").get();
+
+
+             if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
+                logger.info("FAIL: "+target.getUri().toString());
+                return null;
+             }
+
+            logger.info(target.getUri().toString());
+
+             Model model = ModelFactory.createDefaultModel();
+
+             try {
+             RDFReader reader = model.getReader(Lang.TURTLE.getName());
+             reader.read(model, response.readEntity(InputStream.class), resourceURI);
+             } catch(RiotException ex) {
+                 return model;
+             }
+
              return model;
-         }
-         
-         return model;
-        
+
+        } catch(Exception ex) {
+            logger.log(Level.WARNING, "Expect the unexpected!", ex);
+            return null;
+        }
     }
     
     /**
-     *
-     * @param service
-     * @return
+     * Returns concept as Jersey Response
+     * @param uri uri of the concept
+     * @param schemeUUID of the vocabulary
+     * @return Response
      */
     public static Response getConceptFromTermedAPI(String uri, String schemeUUID) {
         
@@ -558,30 +581,33 @@ public class JerseyJsonLDClient {
         }*/
         
         try {
-            Client client = ClientBuilder.newClient();
+            Client client = IgnoreSSLClient(); //ClientBuilder.newClient();
             HttpAuthenticationFeature feature = TermedAuthentication.getTermedAuth();
             client.register(feature);
-            
+
             WebTarget target = client.target(url).queryParam("typeId", "Concept").queryParam("max", "-1");
             
             if(uri!=null && !uri.isEmpty() && !uri.equals("undefined")) {
-                target = target.queryParam("uri",uri);
+                logger.info(uri);
+                target = target.queryParam("uri", uri);
             }
             
             if(schemeUUID!=null && !schemeUUID.isEmpty() && !schemeUUID.equals("undefined")) {
                 target = target.queryParam("where.references.inScheme",schemeUUID);
             }
             
-            Response response = target.request("application/ld+json").get();
+            Response response = target.request("application/ld+json").property(ClientProperties.FOLLOW_REDIRECTS, Boolean.TRUE).get();
 
             logger.info("TERMED CALL: "+target.getUri().toString());
             
             if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
                logger.log(Level.INFO, response.getStatus()+" from URL: "+url);
+               logger.info("Location: "+response.getLocation().toString());
                return JerseyResponseManager.notFound();
             }
 
-            ResponseBuilder rb = Response.status(response.getStatus()); 
+          //  logger.info(response.readEntity(String.class));
+            ResponseBuilder rb = Response.status(response.getStatus());
             rb.entity(response.readEntity(InputStream.class));
 
            return rb.build();
@@ -590,15 +616,30 @@ public class JerseyJsonLDClient {
           return JerseyResponseManager.notAcceptable();
         }
     }
-    
+
+    /**
+     * This hack is needed to support self signed sertificates used in development
+     * @return Client
+     * @throws Exception
+     */
+    public static Client IgnoreSSLClient() throws Exception {
+        SSLContext sslcontext = SSLContext.getInstance("TLS");
+        sslcontext.init(null, new TrustManager[]{new X509TrustManager() {
+            public void checkClientTrusted(X509Certificate[] arg0, String arg1) throws CertificateException {}
+            public void checkServerTrusted(X509Certificate[] arg0, String arg1) throws CertificateException {}
+            public X509Certificate[] getAcceptedIssuers() { return new X509Certificate[0]; }
+
+        }}, new java.security.SecureRandom());
+        return ClientBuilder.newBuilder().sslContext(sslcontext).hostnameVerifier((s1, s2) -> true).build();
+    }
     
     
     /**
-     *
-     * @param graph
-     * @param body
-     * @param service
-     * @return
+     * Creates new graph to the service
+     * @param graph Id of the graph
+     * @param body Body as JSON-LD object
+     * @param service service
+     * @return HTTP StatusType
      */
     public static StatusType putGraphToTheService(String graph, String body, String service) {
         
@@ -612,11 +653,11 @@ public class JerseyJsonLDClient {
     
     
      /**
-     *
-     * @param graph
-     * @param body
-     * @param service
-     * @return
+     * Returns true if graph is updated
+     * @param graph ID of te graph
+     * @param body Body as JSON-LD object
+     * @param service ID of the service
+     * @return boolean
      */
     public static boolean graphIsUpdatedToTheService(String graph, String body, String service) {
          Client client = ClientBuilder.newClient();
@@ -632,11 +673,11 @@ public class JerseyJsonLDClient {
     
     
     /**
-     *
-     * @param graph
-     * @param body
-     * @param service
-     * @return
+     * Updates graph
+     * @param graph ID of the graph
+     * @param body Body as JSON-LD object
+     * @param service ID of the service
+     * @return HTTP StatusType
      */
     public static StatusType postGraphToTheService(String graph, String body, String service) {
          Client client = ClientBuilder.newClient();
@@ -649,10 +690,10 @@ public class JerseyJsonLDClient {
     
     
     /**
-     *
-     * @param query
-     * @param service
-     * @return
+     * Construct query to the service using Jerseys
+     * @param query Construct query
+     * @param service ID of the service
+     * @return Response
      */
     public static Response constructGraphFromServiceDirect(String query, String service) {
                    
@@ -671,8 +712,14 @@ public class JerseyJsonLDClient {
              }
           
     }
-    
-    
+
+    /**
+     * Construct from combined model of Concept and Model
+     * @param conceptID ID of concept
+     * @param modelID ID of model
+     * @param query Construct SPARQL query
+     * @return Responses
+     */
     public static Response constructFromTermedAndCore(String conceptID, String modelID, Query query) {
         
             Model conceptModel = JerseyJsonLDClient.getConceptAsJenaModel(conceptID);
@@ -708,8 +755,13 @@ public class JerseyJsonLDClient {
             return rb.build();
           
     }
-    
-    
+
+    /**
+     * Constructs existing graph or returns NOT FOUND
+     * @param query Construct query
+     * @param service ID of the service
+     * @return Response
+     */
     public static Response constructNotEmptyGraphFromService(String query, String service) {
         
             QueryExecution qexec = QueryExecutionFactory.sparqlService(service, query);
@@ -726,12 +778,12 @@ public class JerseyJsonLDClient {
     }
     
     /**
-     *
-     * @param query
-     * @param fromService
-     * @param toService
-     * @param toGraph
-     * @return
+     * Constructs graph from one service and adds it to another
+     * @param query Construct query
+     * @param fromService ID of the original service
+     * @param toService ID of the new service
+     * @param toGraph ID of the graph
+     * @return HTTP StatusType
      */
     public static StatusType constructGraphFromServiceToService(String query, String fromService, String toService, String toGraph) {
         
@@ -748,10 +800,10 @@ public class JerseyJsonLDClient {
     }
     
     /**
-     *
-     * @param graph
-     * @param service
-     * @return
+     * Deletes Graph from service
+     * @param graph ID of the graph
+     * @param service ID of the service
+     * @return Response
      */
     public static Response deleteGraphFromService(String graph, String service) {
         

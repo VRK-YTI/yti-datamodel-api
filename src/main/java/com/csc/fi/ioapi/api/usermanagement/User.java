@@ -33,7 +33,7 @@ import io.swagger.annotations.ApiResponses;
  * @author malonen
  */
 @Path("user")
-@Api(value = "/user", description = "Get user")
+@Api(tags = {"Users"}, description = "Get user")
 public class User {
 
     @Context ServletContext context;

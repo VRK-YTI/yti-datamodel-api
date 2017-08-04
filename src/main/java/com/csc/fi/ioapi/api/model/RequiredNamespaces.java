@@ -24,7 +24,7 @@ import io.swagger.annotations.ApiResponses;
  * Root resource (exposed at "myresource" path)
  */
 @Path("listNamespaces")
-@Api(value = "/listNamespaces", description = "Get list of available namespaces")
+@Api(tags = {"Models"}, description = "Get list of available namespaces")
 public class RequiredNamespaces {
   
     @Context ServletContext context;

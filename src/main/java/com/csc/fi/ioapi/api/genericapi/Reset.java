@@ -33,7 +33,7 @@ import javax.ws.rs.core.Response;
  * @author malonen
  */
 @Path("reset")
-@Api(value = "/reset", description = "DROP ALL and Recover")
+@Api(tags = {"Admin"}, description = "DROP ALL and Recover")
 public class Reset {
 
     @Context ServletContext context;

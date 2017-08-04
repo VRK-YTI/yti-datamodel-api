@@ -3,7 +3,7 @@
           {
       "@id": "http://jhsmeta.fi/skos/",
       "@type": "skos:ConceptScheme",
-      "graph": "http://termed.csc.fi/graphs/fb4213d3-a7e4-4f25-b1eb-994e8aa786bf",
+      "graph": "http://termed.csc.fi/graphs/0043fa54-18b2-4f31-80cf-32eeb0bbb297",
       "id": "61bec1e5-70b4-34fc-acfb-ab70428fb6f8",
       "typeId": "ConceptScheme",
       "title": {
@@ -12,10 +12,10 @@
       }
     },
     {
-      "@id": "http://termed.csc.fi/graphs/fb4213d3-a7e4-4f25-b1eb-994e8aa786bf",
+      "@id": "http://termed.csc.fi/graphs/0043fa54-18b2-4f31-80cf-32eeb0bbb297",
       "@type": "termed:Graph",
       "code": "jhsmeta",
-      "id": "fb4213d3-a7e4-4f25-b1eb-994e8aa786bf"
+      "id": "0043fa54-18b2-4f31-80cf-32eeb0bbb297"
     },
     {
       "@id": "https://tt.eduuni.fi/sites/csc-iow#RAK",

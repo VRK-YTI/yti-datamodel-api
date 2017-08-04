@@ -34,7 +34,7 @@ import org.apache.jena.util.SplitIRI;
  * Root resource (exposed at "modelCreator" path)
  */
 @Path("modelRequirementCreator")
-@Api(value = "/modelRequirementCreator", description = "Construct new requirement")
+@Api(tags = {"Model"}, description = "Construct new requirement")
 public class ModeRequirementlCreator {
 
     EndpointServices services = new EndpointServices();

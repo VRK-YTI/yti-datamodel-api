@@ -38,7 +38,7 @@ import org.apache.jena.rdf.model.Model;
  * Root resource (exposed at "classCreator" path)
  */
 @Path("classCreator")
-@Api(value = "/classCreator", description = "Construct new Class template")
+@Api(tags = {"Class"}, description = "Construct new Class template")
 public class ClassCreator {
 
     @Context ServletContext context;

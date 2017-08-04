@@ -29,7 +29,7 @@ import org.apache.jena.riot.RDFLanguages;
  * Root resource (exposed at "myresource" path)
  */
 @Path("exportResource")
-@Api(value = "/exportResource", description = "Export Classes, Predicates, Shapes etc.")
+@Api(tags = {"Resource"}, description = "Export Classes, Predicates, Shapes etc.")
 public class ExportResource {
 
     @Context

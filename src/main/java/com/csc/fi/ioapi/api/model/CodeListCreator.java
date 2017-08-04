@@ -31,7 +31,7 @@ import org.apache.jena.iri.IRIException;
  * Root resource (exposed at "valueSchemeCreator" path)
  */
 @Path("codeListCreator")
-@Api(value = "/codeListCreator", description = "Create reusable code list that is not resolved")
+@Api(tags = {"Codes"}, description = "Create reusable code list that is not resolved")
 public class CodeListCreator {
 
     EndpointServices services = new EndpointServices();

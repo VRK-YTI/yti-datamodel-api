@@ -34,7 +34,7 @@ import org.apache.jena.iri.IRIException;
  * Root resource (exposed at "myresource" path)
  */
 @Path("predicateCreator")
-@Api(value = "/predicateCreator", description = "Creates new RDF properties based on SKOS concepts")
+@Api(tags = {"Predicate"}, description = "Creates new RDF properties based on SKOS concepts")
 public class PredicateCreator {
 
     @Context ServletContext context;

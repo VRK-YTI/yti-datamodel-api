@@ -12,7 +12,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 
 @Path("loginstatus")
-@Api(value = "/loginstatus", description = "Check if user is logged in")
+@Api(tags = {"Login"}, description = "Check if user is logged in")
 public class LoginStatus {
 
     @Context

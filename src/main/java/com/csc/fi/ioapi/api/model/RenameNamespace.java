@@ -27,7 +27,7 @@ import javax.servlet.http.HttpSession;
  * Root resource (exposed at "myresource" path)
  */
 @Path("renameNamespace")
-@Api(value = "/renameNamespace", description = "HAZARD operation")
+@Api(tags = {"Admin"}, description = "HAZARD operation")
 public class RenameNamespace {
   
     @Context ServletContext context;

@@ -24,7 +24,7 @@ import javax.ws.rs.QueryParam;
  * Root resource (exposed at "myresource" path)
  */
 @Path("resolveNamespace")
-@Api(value = "/resolveNamespace", description = "Import for external references")
+@Api(tags = {"Admin"}, description = "Import for external references")
 public class ResolveNamespace {
 
    @Context ServletContext context;

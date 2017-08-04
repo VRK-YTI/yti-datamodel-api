@@ -23,7 +23,7 @@ import io.swagger.annotations.ApiResponses;
  * @author malonen
  */
 @Path("groups")
-@Api(value = "/groups", description = "Edit groups")
+@Api(tags = {"Groups"}, description = "Edit groups")
 public class Group {
 
 	@Context ServletContext context;

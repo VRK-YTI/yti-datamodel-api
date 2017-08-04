@@ -39,7 +39,7 @@ import io.swagger.annotations.ApiResponses;
  * @author malonen
  */
 @Path("sparql")
-@Api(value = "/sparql", description = "Edit resources")
+@Api(tags = {"Admin"}, description = "Edit resources")
 public class Sparql {
 
     @Context ServletContext context;

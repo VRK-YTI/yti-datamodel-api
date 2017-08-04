@@ -37,6 +37,7 @@ import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.SKOS;
+import org.apache.jena.vocabulary.SKOSXL;
 
 /**
  * REST Web Service
@@ -44,26 +45,26 @@ import org.apache.jena.vocabulary.SKOS;
  * @author malonen
  */
 @Path("conceptSuggestion")
-@Api(value = "/conceptSuggestion", description = "Edit resources")
+@Api(tags = {"Concept"}, description = "Create concept suggestions")
 public class ConceptSuggestion {
 
   @Context ServletContext context;
   private EndpointServices services = new EndpointServices();
   private static final Logger logger = Logger.getLogger(ConceptSuggestion.class.getName());
   
-    	@PUT
+    @PUT
 	@ApiOperation(value = "Create concept suggestion", notes = "Create new concept suggestion")
 	@ApiResponses(value = { @ApiResponse(code = 200, message = "New concept is created"),
 			@ApiResponse(code = 400, message = "Invalid ID supplied"),
 			@ApiResponse(code = 403, message = "Invalid IRI in parameter"),
-                        @ApiResponse(code = 401, message = "User is not logged in"),
+            @ApiResponse(code = 401, message = "User is not logged in"),
 			@ApiResponse(code = 404, message = "Service not found") })
 	public Response newConceptSuggestion(
                 @ApiParam(value = "Model ID") @QueryParam("modelID") String modelID,
                 @ApiParam(value = "GRAPH UUID", required = true) @QueryParam("graphUUID") String graphUUID,
                 @ApiParam(value = "Scheme URI", required = true) @QueryParam("schemeID") String schemeID,
                 @ApiParam(value = "Label", required = true) @QueryParam("label") String label,
-		@ApiParam(value = "Comment", required = true) @QueryParam("comment") String comment,
+		        @ApiParam(value = "Comment", required = true) @QueryParam("comment") String comment,
                 @ApiParam(value = "Initial language", required = true, allowableValues="fi,en") @QueryParam("lang") String lang,
                 @ApiParam(value = "Broader concept ID") @QueryParam("topConceptID") String topConceptID,
                 @Context HttpServletRequest request) {
@@ -93,22 +94,28 @@ public class ConceptSuggestion {
                 }
                 
                 UUID conceptUUID = UUID.randomUUID();
-                
+                UUID termUUID = UUID.randomUUID();
+
                 Model model = ModelFactory.createDefaultModel();
                 Property statusProp = model.createProperty("https://www.w3.org/2003/06/sw-vocab-status/ns#term_status");
                 Resource concept = model.createResource("urn:uuid:"+conceptUUID);
-                Resource inScheme = model.createResource(schemeID);
+            //    Resource inScheme = model.createResource(schemeID);
+                Resource term = model.createResource("urn:uuid:"+termUUID);
                 Literal prefLabel = ResourceFactory.createLangLiteral(label, lang);
                 Literal definition = ResourceFactory.createLangLiteral(comment, lang);
-                concept.addLiteral(SKOS.prefLabel, prefLabel);
+                term.addLiteral(SKOSXL.literalForm, prefLabel);
+                term.addProperty(RDF.type,SKOSXL.Label);
                 concept.addLiteral(SKOS.definition, definition);
-                concept.addProperty(SKOS.inScheme,inScheme);
+                concept.addProperty(SKOSXL.prefLabel,term);
+            //    concept.addProperty(SKOS.inScheme,inScheme);
                 concept.addProperty(RDF.type, SKOS.Concept);
                 concept.addLiteral(statusProp, "Unstable");
                 Property idProp = model.createProperty(LDHelper.getNamespaceWithPrefix("termed")+"id");
                 concept.addProperty(idProp, conceptUUID.toString());
-                
+
+                /*
                 Model schemeModel = JerseyJsonLDClient.getSchemeAsModelFromTermedAPI(schemeID);
+
                 Property graphProp = schemeModel.createProperty(LDHelper.getNamespaceWithPrefix("termed")+"graph");
                
                 NodeIterator nodeit = schemeModel.listObjectsOfProperty(graphProp);
@@ -117,12 +124,10 @@ public class ConceptSuggestion {
                     RDFNode node = nodeit.next();
                     concept.addProperty(graphProp, node);
                 }
-                
 
-                
                 if(schemeModel!=null) {
                     model.add(schemeModel);
-                }
+                }*/
                 
                 String modelString = ModelManager.writeModelToString(model);
                 System.out.println(modelString);

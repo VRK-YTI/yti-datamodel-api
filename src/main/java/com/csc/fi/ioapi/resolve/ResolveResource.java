@@ -30,6 +30,9 @@ public class ResolveResource extends HttpServlet {
     private static final Logger logger = Logger.getLogger(ResolveResource.class.getName());
    
     /**
+     *
+     * Redirects namespace to the Schema file or the application depending on the Accept header
+     *
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
      * methods.
      *

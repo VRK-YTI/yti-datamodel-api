@@ -25,7 +25,7 @@ import javax.ws.rs.core.Response;
  * @author malonen
  */
 @Path("conceptSearch")
-@Api(value = "/conceptSearch", description = "Concepts search from finto")
+@Api(tags = {"Concept"}, description = "Concepts search from termed")
 public class ConceptSearch {
 
     @Context ServletContext context;

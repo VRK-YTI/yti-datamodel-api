@@ -26,7 +26,7 @@ import io.swagger.annotations.ApiResponses;
  * Root resource (exposed at "valueSchemeCreator" path)
  */
 @Path("coreServerCreator")
-@Api(value = "/codeServerCreator", description = "Create new reference to code server")
+@Api(tags = {"Codes"}, description = "Create new reference to code server")
 public class CodeServerCreator {
 
     EndpointServices services = new EndpointServices();

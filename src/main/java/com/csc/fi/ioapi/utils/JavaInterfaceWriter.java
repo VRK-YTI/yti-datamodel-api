@@ -13,6 +13,7 @@ import org.jboss.forge.roaster.model.source.JavaInterfaceSource;
  *
  * @author malonen
  */
+@Deprecated
 public class JavaInterfaceWriter {
     
     public static void main(String[] args) {

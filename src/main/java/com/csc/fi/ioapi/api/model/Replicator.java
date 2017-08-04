@@ -46,7 +46,7 @@ import org.glassfish.jersey.uri.UriComponent;
  * Root resource (exposed at "myresource" path)
  */
 @Path("replicate")
-@Api(value = "/replicate", description = "Returns information about replicable models")
+@Api(tags = {"Admin"}, description = "Returns information about replicable models")
 public class Replicator {
   
     @Context ServletContext context;

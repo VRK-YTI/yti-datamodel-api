@@ -32,6 +32,11 @@ public class UserManager {
     static EndpointServices services = new EndpointServices();
     static final private Logger logger = Logger.getLogger(UserManager.class.getName());
 
+    /**
+     * Check if user with given email exists
+     * @param email email of the user
+     * @return boolean
+     */
     private static boolean isExistingUser(String email) {
         
          String queryString = " ASK {?id a foaf:Person . ?id foaf:mbox ?email . }";
@@ -56,9 +61,12 @@ public class UserManager {
            }
         
     }
-    
 
-    
+
+    /**
+     * Check if user exists in the system and create new if not
+     * @param loginSession
+     */
     public static void checkUser(LoginSession loginSession) {
         
             if(isExistingUser(loginSession.getEmail())) {
@@ -69,7 +77,11 @@ public class UserManager {
             }
      
     }
-    
+
+    /**
+     * Creates new user
+     * @param loginSession Login session
+     */
     public static void createUser(LoginSession loginSession) {
         
         String timestamp = SafeDateFormat.fmt().format(new Date());
@@ -114,7 +126,11 @@ public class UserManager {
        
  
     }
-    
+
+    /**
+     * Delete ALL users
+     */
+    @Deprecated
     public static void deleteUsers() {
        
         String query = 
@@ -131,9 +147,12 @@ public class UserManager {
         qexec.execute();
        
     }
-    
-    
-        public static void updateUser(LoginSession loginSession) {
+
+    /**
+     * Update users groups from session
+     * @param loginSession Login session
+     */
+    public static void updateUser(LoginSession loginSession) {
         
         String timestamp = SafeDateFormat.fmt().format(new Date());
         

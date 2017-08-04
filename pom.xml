@@ -18,7 +18,7 @@
         <project.defaultDomain>http://iow.csc.fi/</project.defaultDomain>
         <project.defaultScheme>http://dev.finto.fi/</project.defaultScheme>
         <project.groupdomain>https://tt.eduuni.fi/sites/csc-iow#</project.groupdomain>
-        <project.defaultTermedAPI>http://termed.csc.fi/api/</project.defaultTermedAPI>
+        <project.defaultTermedAPI>https://sanasto-dev.csc.fi/api/</project.defaultTermedAPI>
         <endorsed.dir>${project.build.directory}/endorsed</endorsed.dir>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
@@ -224,6 +224,7 @@
                 <configuration>
                     <source>1.8</source>
                     <target>1.8</target>
+                    <encoding>UTF-8</encoding>
                     <compilerArguments>
                         <endorseddirs>${endorsed.dir}</endorseddirs>
                     </compilerArguments>
@@ -285,8 +286,9 @@
                 <artifactId>tomcat7-maven-plugin</artifactId>
                 <version>2.2</version>
                 <configuration>
-                  <port>8084</port>
-                  <path>/api</path>
+                    <uriEncoding>UTF-8</uriEncoding>
+                    <port>8084</port>
+                    <path>/api</path>
                 </configuration>
             </plugin>
         </plugins>

@@ -40,7 +40,11 @@ public class NamespaceManager {
 
     static EndpointServices services = new EndpointServices();
     private static final Logger logger = Logger.getLogger(NamespaceManager.class.getName());
-      
+
+    /**
+     * Creates model of the namespaces and tries to resolve namespaces to import service
+     * @return model of the namespaces
+     */
     public static final Model getDefaultNamespaceModelAndResolve() {
        
        Model nsModel = ModelFactory.createDefaultModel();
@@ -71,15 +75,22 @@ public class NamespaceManager {
        return nsModel;
        
    }
-    
+
+    /**
+     * Tries to resolve default namespaces and saves to the fixed namespace graph
+     */
     public static void resolveDefaultNamespaceToTheCore() {
         
         DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(services.getCoreReadWriteAddress());
-	DatasetAdapter adapter = new DatasetAdapter(accessor);
-	adapter.add("urn:csc:iow:namespaces", getDefaultNamespaceModelAndResolve());
+	    DatasetAdapter adapter = new DatasetAdapter(accessor);
+	    adapter.add("urn:csc:iow:namespaces", getDefaultNamespaceModelAndResolve());
         
     }
-    
+
+    /**
+     * Creates namespace model from default prefix-map
+     * @return
+     */
     public static final Model getDefaultNamespaceModel() {
        
        Model nsModel = ModelFactory.createDefaultModel();
@@ -105,16 +116,23 @@ public class NamespaceManager {
        return nsModel;
        
    }
-    
+
+    /**
+     * Adds default namespaces to the fixed namespace graph
+     */
     public static void addDefaultNamespacesToCore() {
         
         DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(services.getCoreReadWriteAddress());
-	DatasetAdapter adapter = new DatasetAdapter(accessor);
-	adapter.putModel("urn:csc:iow:namespaces", getDefaultNamespaceModel());
+	    DatasetAdapter adapter = new DatasetAdapter(accessor);
+	    adapter.putModel("urn:csc:iow:namespaces", getDefaultNamespaceModel());
         
     }
-    
-    
+
+    /**
+     * Returns true if schema is already stored
+     * @param namespace namespace of the schema
+     * @return boolean
+     */
     public static boolean isSchemaInStore(String namespace) {
         
         DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(services.getImportsReadAddress());
@@ -123,15 +141,25 @@ public class NamespaceManager {
         
     }
 
+    /**
+     * Saves model to import service
+     * @param namespace namespace of the schema
+     * @param model schema as jena model
+     */
     public static void putSchemaToStore(String namespace, Model model) {
         
       	DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(services.getImportsReadWriteAddress());
-	DatasetAdapter adapter = new DatasetAdapter(accessor);
-	adapter.putModel(namespace, model);
+	    DatasetAdapter adapter = new DatasetAdapter(accessor);
+	    adapter.putModel(namespace, model);
     
     }
-    
-    /* Get exact namespaces from graph */
+
+    /**
+     * Returns namespaces from the graph
+     * @param graph Graph of the model
+     * @param service Used service
+     * @return Returns prefix-map
+     */
     public static Map<String, String> getCoreNamespaceMap(String graph, String service) {
         
         DatasetAccessor accessor = DatasetAccessorFactory.createHTTP(service);
@@ -144,10 +172,18 @@ public class NamespaceManager {
             return classModel.getNsPrefixMap();
        
     }
-    
+
+    /**
+     * Copies namespaces from one graph to another
+     * @param fromGraph origin graph
+     * @param toGraph new graph for namespaces
+     * @param fromService origin service
+     * @param toService new service
+     * @throws NullPointerException
+     */
     public static void copyNamespacesFromGraphToGraph(String fromGraph, String toGraph, String fromService, String toService) throws NullPointerException {
         
-        /* TODO: j.0 namespace ISSUE!? */ 
+        /* FIXME: j.0 namespace ISSUE!? */
         
         DatasetAccessor fromAccessor = DatasetAccessorFactory.createHTTP(fromService);
         Model classModel = fromAccessor.getModel(fromGraph);
@@ -166,8 +202,11 @@ public class NamespaceManager {
         toAccessor.add(toGraph, copyNamespaces);
         
     }
-    
-    /* Get namespaces from all graphs */
+
+    /**
+     * Queries and returns all prefixes and namespaces used by models
+     * @return Prefix map
+     */
     public static Map<String, String> getCoreNamespaceMap() {
 
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
@@ -196,8 +235,8 @@ public class NamespaceManager {
         return namespaceMap;
 
     }
-    
-    /* Get predicate type from external model */
+
+    @Deprecated
     public static String getExternalPredicateType(IRI predicate) {
 
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
@@ -257,11 +296,15 @@ public class NamespaceManager {
         return type;
 
     }
-    
-   
+
+    /**
+     * Renames namespace of the model
+     * @param modelID Old model id
+     * @param newModelID New model id
+     * @param login Login session
+     */
     public static void renameNamespace(String modelID, String newModelID, LoginSession login) {
-        
-        
+
         Model newModel = GraphManager.getCoreGraph(modelID);
         Resource modelResource = newModel.getResource(modelID);
         ResourceUtils.renameResource(modelResource,newModelID);
@@ -273,10 +316,9 @@ public class NamespaceManager {
         ProvenanceManager.renameID(modelID, newModelID);
         ServiceDescriptionManager.renameServiceGraphName(modelID, newModelID);
         
-   
-        
     }
-    
+
+    @Deprecated
     public static void renameHasPartResources(String graph, String newGraph) {
         
         /* Use Jena to change namespace? */

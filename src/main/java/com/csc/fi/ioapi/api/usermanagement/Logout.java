@@ -23,7 +23,7 @@ import javax.ws.rs.core.Response;
  * @author malonen
  */
 @Path("logout")
-@Api(value = "/logout", description = "logout user")
+@Api(tags = {"Login"}, description = "logout user")
 public class Logout {
 
     @Context ServletContext context;

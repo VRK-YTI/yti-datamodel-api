@@ -30,7 +30,7 @@ import java.util.Map;
  * Root resource (exposed at "myresource" path)
  */
 @Path("history")
-@Api(value = "/history", description = "Get list of revisions of the resource from change history")
+@Api(tags = {"History"}, description = "Get list of revisions of the resource from change history")
 public class History {
 
     private static final Logger logger = Logger.getLogger(History.class.getName());

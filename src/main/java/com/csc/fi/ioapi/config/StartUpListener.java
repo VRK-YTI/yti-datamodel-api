@@ -36,7 +36,6 @@ public class StartUpListener implements ServletContextListener {
         initCodeServers();
         //loadSchemesFromFinto();
         // createExportGraphs();
-        
        //  runPeriodicUpdates();
         
     }
@@ -50,10 +49,10 @@ public class StartUpListener implements ServletContextListener {
     private static void initCodeServers() {
        
             OPHCodeServer codeServer = new OPHCodeServer("https://virkailija.opintopolku.fi/koodisto-service/rest/json/", true);   
-            OPHCodeServer testCodeServer = new OPHCodeServer("http://iowkoodisto.csc.fi:8080/koodisto-service/rest/json/", true);   
+          //  OPHCodeServer testCodeServer = new OPHCodeServer("http://iowkoodisto.csc.fi:8080/koodisto-service/rest/json/", true);
             
             if(!codeServer.status) logger.warning("Code server was not initialized!");
-            if(!testCodeServer.status) logger.warning("TESTCode server was not initialized!");
+         //   if(!testCodeServer.status) logger.warning("TESTCode server was not initialized!");
     
     }
     

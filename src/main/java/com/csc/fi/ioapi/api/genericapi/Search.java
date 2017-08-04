@@ -32,7 +32,7 @@ import io.swagger.annotations.ApiResponses;
  * @author malonen
  */
 @Path("search")
-@Api(value = "/search", description = "Search resources")
+@Api(tags = {"Resource"}, description = "Search resources")
 public class Search {
 
     @Context ServletContext context;

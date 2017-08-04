@@ -29,7 +29,7 @@ import io.swagger.annotations.ApiResponses;
  * Root resource (exposed at "class" path)
  */
 @Path("externalPredicate")
-@Api(value = "/externalPredicate", description = "External predicate operations")
+@Api(tags = {"Predicate"}, description = "External predicate operations")
 public class ExternalPredicate {
 
     @Context ServletContext context;

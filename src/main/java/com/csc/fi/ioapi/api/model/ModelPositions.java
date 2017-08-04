@@ -34,7 +34,7 @@ import org.apache.jena.iri.IRIException;
  * Root resource (exposed at "myresource" path)
  */
 @Path("modelPositions")
-@Api(value = "/modelPositions", description = "Operations about coordinates")
+@Api(tags = {"Model"}, description = "Operations about coordinates")
 public class ModelPositions {
   
     @Context ServletContext context;

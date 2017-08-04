@@ -3,7 +3,6 @@
  */
 package com.csc.fi.ioapi.api.model;
 
-import com.csc.fi.ioapi.config.ApplicationProperties;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
 import java.util.logging.Level;
@@ -47,7 +46,7 @@ import javax.ws.rs.DELETE;
  * Root resource (exposed at "class" path)
  */
 @Path("class")
-@Api(value = "/class", description = "Class operations")
+@Api(tags = {"Class"}, description = "Class operations")
 public class Class {
 
     @Context ServletContext context;
@@ -199,7 +198,7 @@ public class Class {
                     logger.info("Changed id from:"+oldid+" to "+id);
                 }
             } else {
-                provUUID = ResourceManager.updateClass(id, model, body, login);
+                provUUID = ResourceManager.updateResource(id, model, body, login);
             }
         } else {
              /* IF NO JSON-LD POSTED TRY TO CREATE REFERENCE FROM MODEL TO CLASS ID */

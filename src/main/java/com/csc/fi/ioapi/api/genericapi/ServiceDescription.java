@@ -21,7 +21,7 @@ import org.apache.jena.atlas.web.ContentType;
  * Root resource (exposed at "myresource" path)
  */
 @Path("serviceDescription")
-@Api(value = "/serviceDescription", description = "IOW service description")
+@Api(tags = {"Model"}, description = "IOW service description")
 public class ServiceDescription {
 
     @Context ServletContext context;

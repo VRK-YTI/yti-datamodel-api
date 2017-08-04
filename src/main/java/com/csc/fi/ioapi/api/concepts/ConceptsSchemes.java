@@ -25,7 +25,7 @@ import org.apache.jena.query.ParameterizedSparqlString;
  * @author malonen
  */
 @Path("conceptSchemes")
-@Api(value = "/conceptSchemes", description = "Available concept schemes from Term editor")
+@Api(tags = {"Concept"}, description = "Available concept schemes from Term editor")
 public class ConceptsSchemes {
 
     @Context ServletContext context;

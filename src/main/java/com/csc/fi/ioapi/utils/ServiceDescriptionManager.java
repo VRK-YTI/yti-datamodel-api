@@ -31,7 +31,11 @@ public class ServiceDescriptionManager {
     
     static EndpointServices services = new EndpointServices();
     static final private Logger logger = Logger.getLogger(ServiceDescriptionManager.class.getName());
-    
+
+    /**
+     * Updates modified time to service description
+     * @param graph graph of the model
+     */
     public static void updateGraphDescription(String graph) {
         
         String timestamp = SafeDateFormat.fmt().format(new Date());
@@ -63,8 +67,13 @@ public class ServiceDescriptionManager {
         qexec.execute();
       
     }
-    
-    
+
+    /**
+     * Checks if model is in the list of groups given
+     * @param model ID of the model
+     * @param groupList List of group IDs
+     * @return boolean
+     */
     public static boolean isModelInGroup(String model, HashMap<String,Boolean> groupList) {
         
         Iterator<String> groupIterator = groupList.keySet().iterator();
@@ -108,9 +117,14 @@ public class ServiceDescriptionManager {
            }
         
     }
-    
-    
-        public static void createGraphDescription(String graph, String group, String userMail) {
+
+    /**
+     * Creates graph description for the new model
+     * @param graph ID of the graph
+     * @param group ID of the group
+     * @param userMail User email
+     */
+    public static void createGraphDescription(String graph, String group, String userMail) {
         
         String timestamp = SafeDateFormat.fmt().format(new Date());
         
@@ -150,7 +164,11 @@ public class ServiceDescriptionManager {
         
  
     }
-        
+
+    /**
+     * Deletes graph description
+     * @param graph ID of the graph
+     */
     public static void deleteGraphDescription(String graph) {
         
         String query =
@@ -179,8 +197,12 @@ public class ServiceDescriptionManager {
         
       
     }
-    
-    
+
+    /**
+     * Renames ID of the graph in service description
+     * @param oldGraph Old graph ID
+     * @param newGraph New graph ID
+     */
     public static void renameServiceGraphName(String oldGraph, String newGraph) {
     
         String query = 

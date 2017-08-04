@@ -25,7 +25,7 @@ import javax.ws.rs.core.Response;
  * @author malonen
  */
 @Path("concept")
-@Api(value = "/concept", description = "Get concept with id")
+@Api(tags = {"Concept"}, description = "Get concept with id")
 public class Concept {
 
     @Context ServletContext context;

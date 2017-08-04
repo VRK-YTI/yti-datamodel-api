@@ -34,7 +34,7 @@ import org.apache.jena.util.SplitIRI;
  * Root resource (exposed at "myresource" path)
  */
 @Path("classProperty")
-@Api(value = "/classProperty", description = "Operations about property")
+@Api(tags = {"Class"}, description = "Operations about property")
 public class ClassPropertyCreator {
 
     @Context ServletContext context;

@@ -35,7 +35,7 @@ import javax.ws.rs.PUT;
  * Root resource (exposed at "class" path)
  */
 @Path("modelConcepts")
-@Api(value = "/modelConcepts", description = "Local concept operations")
+@Api(tags = {"Concept"}, description = "Local concept operations")
 public class ModelConcepts {
 
     @Context ServletContext context;

@@ -34,7 +34,12 @@ public class LDHelper {
     
    private static final Logger logger = Logger.getLogger(LDHelper.class.getName());
    public static final String[] UNRESOLVABLE = {"xsd","iow","text","sh","afn","schema","dcap", "termed"};
-   
+
+    /**
+     * Used in startup to load external schemas. Returns false if matches any of UNRESOLVABLE array
+     * @param item
+     * @return boolean
+     */
    public static boolean isPrefixResolvable(String item) {
       return !Arrays.stream(UNRESOLVABLE).anyMatch(item::equals);
    }
@@ -123,26 +128,55 @@ public class LDHelper {
         queryString = prefix+queryString;
         return  UriComponent.encode(queryString,UriComponent.Type.QUERY_PARAM); // URLEncoder.encode(queryString, "UTF-8");
     }
-    
+
+    /**
+     * Returns true of string uses alphanumerics only
+     * @param name name used in something
+     * @return boolean
+     */
     public static boolean isAlphaString(String name) {
         return name.matches("[a-zA-Z]+");
     }
-    
+
+    /**
+     * Used to strip invalid characters from model name
+     * @param name model name
+     * @return stripped name
+     */
+
     public static String modelName(String name) {
         name = name.toLowerCase();
         return removeInvalidCharacters(name);
     }
-    
+
+    /**
+     * Used to mangle property name
+     * @param name property name
+     * @return uncapitalized property name
+     */
     public static String propertyName(String name) {
         name = StringUtils.uncapitalize(name);
         return removeInvalidCharacters(name);
     }
-    
+
+
+    /**
+     * Used to mangle resource name
+     * @param name resource name
+     * @return Capitalized resource name
+     */
+
     public static String resourceName(String name) {
          name = WordUtils.capitalize(name);
          return removeInvalidCharacters(name);
     }
-    
+
+    /**
+     * Creates URI based on namespace and resource name
+     * @param namespace namespace
+     * @param name resource name
+     * @return URI as string
+     */
     public static String resourceIRI(String namespace, String name) {
         if(namespace.endsWith("/")) {
             return namespace+name;
@@ -150,7 +184,13 @@ public class LDHelper {
             return namespace+"#"+name;
         }
     }
-    
+
+    /**
+     * Returns true if resouce URI as string is defined in namespace
+     * @param resource Resource URI as string
+     * @param namespace Namespace
+     * @return boolean
+     */
     public static boolean isResourceDefinedInNamespace(String resource, String namespace) {
         
         if(!namespace.endsWith("/")) {
@@ -159,7 +199,12 @@ public class LDHelper {
       
         return guessNamespaceFromResourceURI(resource).equals(namespace);
     }
-    
+
+    /**
+     * Tries to parse namespace from Resource uri by quessing last index of # or /
+     * @param resource resource uri as string
+     * @return namespace as string
+     */
     public static String guessNamespaceFromResourceURI(String resource) {
         if(resource.contains("#")) {
             return resource.substring(0,resource.lastIndexOf("#")+1);
@@ -167,13 +212,24 @@ public class LDHelper {
             return resource.substring(0,resource.lastIndexOf("/")+1);
         }
     }
+
+    /**
+     * Removes invalid characters from resource names
+     * @param name resource name
+     * @return stripped resource name
+     */
     
     public static String removeInvalidCharacters(String name) {
         name = removeAccents(name);
         name = name.replaceAll("[^a-zA-Z0-9_-]", "");
         return name;
     }
-    
+
+    /**
+     * Removes accents from string
+     * @param text input text
+     * @return stripped text
+     */
    public static String removeAccents(String text) {
     return text == null ? null :
         Normalizer.normalize(text, Form.NFD)
@@ -241,11 +297,22 @@ public class LDHelper {
            return null;
        }
     }
-   
+
+    /**
+     * Expands sparql query with default namespaces
+     * @param query SPARQL query as string
+     * @return expanded sparql query
+     */
    public static String expandSparqlQuery(String query) {
        return expandSparqlQuery(query,LDHelper.PREFIX_MAP);
    }
-    
+
+    /**
+     * Expands SPARQL query by removing prefixes. Useful cases when prefixes are mixed.
+     * @param query SPARQL query to be expanded
+     * @param prefix_map Prefix-map to be used in expand
+     * @return SPARQL query as string
+     */
    public static String expandSparqlQuery(String query, Map<String, String> prefix_map) {
   
     for(Map.Entry<String, String> namespaces : prefix_map.entrySet()) {

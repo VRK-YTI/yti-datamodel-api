@@ -37,7 +37,7 @@ import javax.ws.rs.core.Response.StatusType;
  * Root resource (exposed at "importModel" path)
  */
 @Path("importModel")
-@Api(value = "/importModel", description = "Import existing model")
+@Api(tags = {"Admin"}, description = "Import existing model")
 public class ImportModel {
 
     @Context ServletContext context;

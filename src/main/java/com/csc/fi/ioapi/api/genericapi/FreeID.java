@@ -19,7 +19,7 @@ import io.swagger.annotations.ApiResponses;
 import javax.ws.rs.QueryParam;
  
 @Path("freeID")
-@Api(value = "/freeID", description = "Test if ID is valid and not in use")
+@Api(tags = {"Resource"}, description = "Test if ID is valid and not in use")
 public class FreeID {
 
   @Context ServletContext context;

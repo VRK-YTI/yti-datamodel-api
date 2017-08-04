@@ -3,7 +3,6 @@
  */
 package com.csc.fi.ioapi.api.model;
 
-import com.csc.fi.ioapi.config.ApplicationProperties;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
 import java.util.logging.Level;
@@ -43,14 +42,13 @@ import io.swagger.annotations.ApiResponses;
 import java.util.Map;
 import java.util.UUID;
 import javax.ws.rs.DELETE;
-import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
- 
+
 /**
  * Root resource (exposed at "myresource" path)
  */
 @Path("predicate")
-@Api(value = "/predicate", description = "Operations about property")
+@Api(tags = {"Predicate"}, description = "Operations about reusable properties")
 public class Predicate {
 
     private static final Logger logger = Logger.getLogger(Predicate.class.getName());
@@ -200,7 +198,7 @@ public class Predicate {
                     logger.info("Changed id from:"+oldid+" to "+id);
                 }
             } else {
-                provUUID = ResourceManager.updateClass(id, model, body, login);
+                provUUID = ResourceManager.updateResource(id, model, body, login);
             }
         } else {
              /* IF NO JSON-LD POSTED TRY TO CREATE REFERENCE FROM MODEL TO CLASS ID */

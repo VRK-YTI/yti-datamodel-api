@@ -29,7 +29,7 @@ import java.util.concurrent.TimeUnit;
  * Root resource (exposed at "myresource" path)
  */
 @Path("exportModel")
-@Api(value = "/exportModel", description = "Export models")
+@Api(tags = {"Model"}, description = "Export models")
 public class ExportModel {
 
     @Context

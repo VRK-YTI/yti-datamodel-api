@@ -11,6 +11,8 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+
+import io.swagger.annotations.Api;
 import org.glassfish.jersey.media.sse.EventOutput;
 import org.glassfish.jersey.media.sse.OutboundEvent;
 import org.glassfish.jersey.media.sse.SseBroadcaster;
@@ -18,6 +20,7 @@ import org.glassfish.jersey.media.sse.SseFeature;
 
 @Singleton
 @Path("events")
+@Api(tags = {"Deprecated"}, description = "Event API not working?")
 public class Events {
 			
     private static final Logger logger = Logger.getLogger(Events.class.getName());

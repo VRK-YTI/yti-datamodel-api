@@ -30,7 +30,7 @@ import io.swagger.annotations.ApiResponses;
  * Root resource (exposed at "class" path)
  */
 @Path("externalClass")
-@Api(value = "/externalClass", description = "External class operations")
+@Api(tags = {"Class"}, description = "External class operations")
 public class ExternalClass {
 
     @Context ServletContext context;

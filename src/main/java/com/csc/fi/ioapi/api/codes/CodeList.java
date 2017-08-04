@@ -1,7 +1,7 @@
 /*
  * Licensed under the European Union Public Licence (EUPL) V.1.1 
  */
-package com.csc.fi.ioapi.api.concepts;
+package com.csc.fi.ioapi.api.codes;
 
 import com.csc.fi.ioapi.config.EndpointServices;
 import com.csc.fi.ioapi.utils.JerseyJsonLDClient;
@@ -27,7 +27,7 @@ import javax.ws.rs.core.Response;
  * @author malonen
  */
 @Path("codeList")
-@Api(tags = {"Codes"}, value = "/codeList", description = "Get list of codes from code sercer")
+@Api(tags = {"Codes"}, description = "Get list of codes from code sercer")
 public class CodeList {
 
     @Context ServletContext context;

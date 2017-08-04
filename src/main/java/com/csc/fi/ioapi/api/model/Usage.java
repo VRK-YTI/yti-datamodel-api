@@ -33,7 +33,7 @@ import org.apache.jena.iri.IRIException;
  * Root resource (exposed at "usage" path)
  */
 @Path("usage")
-@Api(value = "/usage", description = "Returns all known references to the given resource. Resource ID and Model ID are alternative parameters")
+@Api(tags = {"Resource"}, description = "Returns all known references to the given resource. Resource ID and Model ID are alternative parameters")
 public class Usage {
 
     @Context ServletContext context;

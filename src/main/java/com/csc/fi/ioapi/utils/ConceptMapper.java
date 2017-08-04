@@ -4,31 +4,21 @@
 package com.csc.fi.ioapi.utils;
 import com.csc.fi.ioapi.config.ApplicationProperties;
 import com.csc.fi.ioapi.config.EndpointServices;
-import static com.csc.fi.ioapi.utils.GraphManager.services;
-import static com.csc.fi.ioapi.utils.ImportManager.services;
 import java.io.InputStream;
 import org.apache.jena.query.DatasetAccessor;
 import org.apache.jena.query.DatasetAccessorFactory;
 import org.apache.jena.query.ParameterizedSparqlString;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
-import org.apache.jena.update.UpdateExecutionFactory;
-import org.apache.jena.update.UpdateProcessor;
-import org.apache.jena.update.UpdateRequest;
-import java.util.Map;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
-import org.apache.jena.iri.IRI;
 import org.apache.jena.query.Query;
 import org.apache.jena.query.QueryExecution;
 import org.apache.jena.query.QueryExecutionFactory;
-import org.apache.jena.query.QuerySolution;
-import org.apache.jena.query.ResultSet;
 import org.apache.jena.rdf.model.NodeIterator;
 import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.ResIterator;
@@ -37,15 +27,10 @@ import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.rdf.model.StmtIterator;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.riot.RDFLanguages;
-import org.apache.jena.sparql.vocabulary.FOAF;
 import org.apache.jena.vocabulary.DC;
 import org.apache.jena.vocabulary.DCTerms;
-import org.apache.jena.vocabulary.DC_11;
 import org.apache.jena.vocabulary.RDF;
-import static org.apache.jena.vocabulary.RDFS.Nodes.Resource;
 import org.apache.jena.vocabulary.SKOS;
-import org.apache.jena.web.DatasetAdapter;
-import org.apache.jena.web.DatasetGraphAccessorHTTP;
 
 /**
  *
@@ -174,6 +159,7 @@ public class ConceptMapper {
     }    
     */
 
+    @Deprecated
     public static void addConceptFromReferencedResource(String model, String classID) {
                 /*
         String query
@@ -199,8 +185,9 @@ public class ConceptMapper {
         qexec.execute();
         */
         
-    }  
-    
+    }
+
+    @Deprecated
     public static void removeUnusedConcepts(String model) {
         /*
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
@@ -270,7 +257,7 @@ public class ConceptMapper {
         }
     }
 */
-    
+    @Deprecated
     public static void addConceptToLocalSKOSCollection(String model, String concept) {
         /*
         String query
@@ -288,7 +275,8 @@ public class ConceptMapper {
         qexec.execute(); */
 
     }
-    
+
+    @Deprecated
         public static boolean deleteModelReference(String model, String concept) {
             /*
             if(isUsedConcept(model, concept)) {
@@ -342,7 +330,7 @@ public class ConceptMapper {
         }
     }
     
-    
+    @Deprecated
     public static void deleteConceptReference(String model, String concept) {
         
           /*
@@ -362,8 +350,8 @@ public class ConceptMapper {
         qexec.execute(); */
 
     }
-        
-    
+
+    @Deprecated
     public static void deleteConceptSuggestion(String model, String concept) {
         /*
         DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(services.getTempConceptReadWriteAddress());
@@ -375,6 +363,7 @@ public class ConceptMapper {
 
     }
 
+    @Deprecated
     public static void updateConceptSuggestion(String conceptID) {
         /* dcterms:subject ?concept . ?concept skos:definition ?oldDefinition . }}"
                 + " INSERT { GRAPH ?graph { ?graph dcterms:subject ?concept . ?concept skos:definition ?definition . }}"

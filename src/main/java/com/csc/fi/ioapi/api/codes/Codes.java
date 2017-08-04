@@ -1,7 +1,7 @@
 /*
  * Licensed under the European Union Public Licence (EUPL) V.1.1 
  */
-package com.csc.fi.ioapi.api.concepts;
+package com.csc.fi.ioapi.api.codes;
 
 import com.csc.fi.ioapi.config.EndpointServices;
 import com.csc.fi.ioapi.utils.JerseyJsonLDClient;
@@ -29,7 +29,7 @@ import javax.ws.rs.core.Response.Status;
  * @author malonen
  */
 @Path("codeValues")
-@Api(tags = {"Codes"}, value = "/codeValues", description = "Get codevalues with ID")
+@Api(tags = {"Codes"}, description = "Get codevalues with ID")
 public class Codes {
 
     @Context ServletContext context;
@@ -38,7 +38,7 @@ public class Codes {
     
   @GET
   @Produces("application/ld+json")
-  @ApiOperation(value = "Get code values with id", notes = "Codes will be loaded to TEMP database when used the first time")
+  @ApiOperation(value = "Get code values with id", notes = "codes will be loaded to TEMP database when used the first time")
   @ApiResponses(value = {
       @ApiResponse(code = 200, message = "codes"),
       @ApiResponse(code = 406, message = "code not defined"),
