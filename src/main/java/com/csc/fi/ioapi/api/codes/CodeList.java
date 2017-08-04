@@ -27,7 +27,7 @@ import javax.ws.rs.core.Response;
  * @author malonen
  */
 @Path("codeList")
-@Api(value = "/codeList", description = "Get list of codes from code sercer")
+@Api(tags = {"Codes"}, value = "/codeList", description = "Get list of codes from code sercer")
 public class CodeList {
 
     @Context ServletContext context;

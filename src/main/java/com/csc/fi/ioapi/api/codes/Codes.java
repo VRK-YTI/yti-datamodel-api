@@ -29,7 +29,7 @@ import javax.ws.rs.core.Response.Status;
  * @author malonen
  */
 @Path("codeValues")
-@Api(value = "/codeValues", description = "Get codevalues with ID")
+@Api(tags = {"Codes"}, value = "/codeValues", description = "Get codevalues with ID")
 public class Codes {
 
     @Context ServletContext context;

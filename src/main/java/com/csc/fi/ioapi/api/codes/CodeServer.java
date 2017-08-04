@@ -24,7 +24,7 @@ import javax.ws.rs.core.Response.Status;
  * @author malonen
  */
 @Path("codeServer")
-@Api(value = "/codeServer", description = "Available code servers")
+@Api(tags = {"Codes"}, value = "/codeServer", description = "Available code servers")
 public class CodeServer {
 
     @Context ServletContext context;
