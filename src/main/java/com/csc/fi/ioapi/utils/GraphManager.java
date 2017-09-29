@@ -62,6 +62,7 @@ public class GraphManager {
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
 
         Query query = pss.asQuery();
+        logger.info("Querying: " + services.getCoreSparqlAddress());
         QueryExecution qexec = QueryExecutionFactory.sparqlService(services.getCoreSparqlAddress(), query, "urn:csc:iow:sd");
 
         try {
