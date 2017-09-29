@@ -68,6 +68,7 @@ public class GraphManager {
             boolean b = qexec.execAsk();
             return b;
         } catch (Exception ex) {
+            logger.log(Level.WARNING, "Default graph test failed", ex);
             return false;
         }
     }
