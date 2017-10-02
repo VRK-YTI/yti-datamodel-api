@@ -1,3 +1,3 @@
 #!/bin/bash
 
-docker build $* -t iow-api .
+docker build $* -t yti-datamodel-api .

@@ -3,7 +3,7 @@
     <display-name>IOW API</display-name>
    
    <listener>
-        <listener-class>com.csc.fi.ioapi.config.StartUpListener</listener-class>
+        <listener-class>fi.vm.yti.datamodel.api.config.StartUpListener</listener-class>
     </listener>
 
  <servlet>
@@ -15,7 +15,7 @@
         </init-param>
         <init-param>
             <param-name>javax.ws.rs.container.ContainerResponseFilters</param-name>
-            <param-value>javax.ws.rs.container.filter.GZIPContentEncodingFilter;com.csc.fi.ioapi.config.CustomResponseFilter</param-value> 
+            <param-value>javax.ws.rs.container.filter.GZIPContentEncodingFilter;fi.vm.yti.datamodel.api.config.CustomResponseFilter</param-value>
       </init-param>
       <init-param>
         <param-name>jersey.config.server.provider.classnames</param-name>
@@ -25,12 +25,12 @@
         <param-name>jersey.config.server.provider.packages</param-name>
         <param-value>
             io.swagger.jaxrs.listing,
-            com.csc.fi.ioapi.api.usermanagement,
-            com.csc.fi.ioapi.api.model,
-            com.csc.fi.ioapi.api.profile,
-            com.csc.fi.ioapi.api.genericapi,
-            com.csc.fi.ioapi.api.concepts,
-            com.csc.fi.ioapi.api.codes
+            fi.vm.yti.datamodel.api.endpoint.usermanagement,
+            fi.vm.yti.datamodel.api.endpoint.model,
+            fi.vm.yti.datamodel.api.endpoint.profile,
+            fi.vm.yti.datamodel.api.endpoint.genericapi,
+            fi.vm.yti.datamodel.api.endpoint.concepts,
+            fi.vm.yti.datamodel.api.endpoint.codes
         </param-value>
       </init-param>
       <load-on-startup>1</load-on-startup>
@@ -59,12 +59,12 @@
 
     <servlet>
         <servlet-name>LoginServlet</servlet-name>
-        <servlet-class>com.csc.fi.ioapi.config.LoginServlet</servlet-class>
+        <servlet-class>fi.vm.yti.datamodel.api.config.LoginServlet</servlet-class>
         <async-supported>true</async-supported> 
     </servlet>
     <servlet>
         <servlet-name>ResolveResource</servlet-name>
-        <servlet-class>com.csc.fi.ioapi.resolve.ResolveResource</servlet-class>
+        <servlet-class>fi.vm.yti.datamodel.api.resolve.ResolveResource</servlet-class>
         <async-supported>true</async-supported> 
     </servlet>
     <servlet-mapping>

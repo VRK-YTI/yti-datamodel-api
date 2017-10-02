@@ -4,8 +4,7 @@
  * and open the template in the editor.
  */
 
-import com.csc.fi.ioapi.api.usermanagement.Group;
-import com.csc.fi.ioapi.config.ApplicationProperties;
+import fi.vm.yti.datamodel.api.config.ApplicationProperties;
 import java.util.logging.Logger;
 import org.apache.jena.query.Query;
 import org.apache.jena.query.QueryExecution;

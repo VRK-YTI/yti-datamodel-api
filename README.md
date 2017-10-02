@@ -1,4 +1,4 @@
-# iow-api
-Interoperability workbench application interface
+# yti-datamodel-api
+Interoperability workbench data model editor backend
 
-Info and issues in: https://github.com/CSC-IT-Center-for-Science/iow-ui
+Info and issues in: https://github.com/VRK-YTI/yti-datamodel-api
