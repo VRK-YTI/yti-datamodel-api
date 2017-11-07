@@ -83,17 +83,13 @@ public class LoginServlet extends HttpServlet {
     }
 
     private static UserDefinition createUser(HttpServletRequest request) {
-        String prov = getAttributeAsString(request, SHIBBOLETH_PROVIDER_ATTRIBUTE);
-        String displayName = getAttributeAsString(request, "displayName");
-        String group = getAttributeAsString(request, "group");
-        String mail = getAttributeAsString(request, "mail");
-        String sn = getAttributeAsString(request, "sn");
-        String uid = getAttributeAsString(request, "uid");
 
-        Logger.getLogger(LoginServlet.class.getName()).log(Level.INFO, displayName + " logged in from " + prov);
-        Logger.getLogger(LoginServlet.class.getName()).log(Level.INFO, mail+" groups: "+group);
-        
-        return new UserDefinition(displayName, group, mail);
+        UserDefinition userDefinition = new UserDefinition(new ShibbolethAuthenticationDetails(request));
+
+        logger.log(Level.INFO, "User logged in");
+        logger.log(Level.INFO, userDefinition.toString());
+
+        return userDefinition;
     }
 
     private static UserDefinition createDebugUser() {
@@ -103,14 +99,9 @@ public class LoginServlet extends HttpServlet {
     private static boolean isLoggedIn(HttpServletRequest request) {
         return request.getAttribute(SHIBBOLETH_PROVIDER_ATTRIBUTE) != null;
     }
-    
-    private static String getAttributeAsString(HttpServletRequest request, String attributeName) {
-        Object attribute = request.getAttribute(attributeName);
-        return attribute != null ? attribute.toString() : null;
-    }
-    
-    private static String getParameterAsString(HttpServletRequest request, String attributeName) {
-        Object attribute = request.getParameter(attributeName) ;
+
+    private static String getParameterAsString(HttpServletRequest request, String parameterName) {
+        Object attribute = request.getParameter(parameterName) ;
         return attribute != null ? attribute.toString() : null;
     }
 

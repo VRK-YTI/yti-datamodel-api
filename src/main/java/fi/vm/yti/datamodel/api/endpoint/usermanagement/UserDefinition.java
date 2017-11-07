@@ -1,6 +1,6 @@
 package fi.vm.yti.datamodel.api.endpoint.usermanagement;
 
-import java.nio.charset.Charset;
+import fi.vm.yti.datamodel.api.config.ShibbolethAuthenticationDetails;
 
 public class UserDefinition {
 
@@ -9,15 +9,13 @@ public class UserDefinition {
     private final String mail;
 
     public UserDefinition(String displayName, String group, String mail) {
- 
-        /* FIXME: This should be done elsewhere ... filter of httpd config? */
-        Charset iso88591charset = Charset.forName("ISO-8859-1");
-        Charset utf8charset = Charset.forName("UTF-8");
-        byte[] iso88591String = displayName.getBytes(iso88591charset);
-        this.displayName = new String (iso88591String, utf8charset );
-   
+        this.displayName = displayName;
         this.group = group;
         this.mail = mail;
+    }
+
+    public UserDefinition(ShibbolethAuthenticationDetails details) {
+        this(details.getFirstName(), details.getGroup(), details.getEmail());
     }
 
     public String getDisplayName() {
