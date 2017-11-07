@@ -15,7 +15,7 @@ public class UserDefinition {
     }
 
     public UserDefinition(ShibbolethAuthenticationDetails details) {
-        this(details.getFirstName(), details.getGroup(), details.getEmail());
+        this(details.getDisplayName(), details.getGroup(), details.getEmail());
     }
 
     public String getDisplayName() {
