@@ -42,7 +42,7 @@ public class LoginServlet extends HttpServlet {
 
     private static String SHIBBOLETH_PROVIDER_ATTRIBUTE = "Shib-Identity-Provider";
     private static final Logger logger = Logger.getLogger(LoginServlet.class.getName());
-    
+
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
      * methods.
@@ -64,29 +64,28 @@ public class LoginServlet extends HttpServlet {
             if (isLoggedIn(request)) {
                 initializeUser(session, createUser(request));
             } else {
-                Logger.getLogger(LoginServlet.class.getName()).log(Level.INFO, "NOT LOGGED IN");   
+                Logger.getLogger(LoginServlet.class.getName()).log(Level.INFO, "NOT LOGGED IN");
             }
         }
-        
+
         String target = getParameterAsString(request, "target");
-        
+
         if(target!=null) {
             String decodedTarget = URLDecoder.decode(target, "ISO-8859-1");
-        
+
             if(!debug && decodedTarget!=null && decodedTarget.startsWith(ApplicationProperties.getDefaultDomain()))
                 target = decodedTarget;
         }
         if(target!=null && (debug || target.startsWith(ApplicationProperties.getDefaultDomain())))
             response.sendRedirect(target);
-        else 
+        else
             response.sendRedirect(resolveFrontendAddress(debug));
-            
     }
 
     private static String resolveFrontendAddress(boolean debug) {
         return debug ? ApplicationProperties.getDebugAdress() : "/";
     }
-    
+
     private static void initializeUser(HttpSession session, UserDefinition userDefinition) {
         session.setAttribute("displayName", userDefinition.getDisplayName());
         session.setAttribute("group", userDefinition.getGroup());
@@ -116,7 +115,6 @@ public class LoginServlet extends HttpServlet {
                 .request(MediaType.APPLICATION_JSON)
                 .get();
 
-
         User user = response.readEntity(User.class);
 
         Map<UUID, Set<Role>> rolesInOrganizations = new HashMap<>();
@@ -132,7 +130,6 @@ public class LoginServlet extends HttpServlet {
         }
 
         return new YtiUser(user.email, user.firstName, user.lastName, user.superuser, user.newlyCreated, rolesInOrganizations);
-
     }
 
     private static boolean isRoleMappableToEnum(String roleString) {
@@ -154,8 +151,6 @@ public class LoginServlet extends HttpServlet {
             return SSLContexts.custom()
                     .loadTrustMaterial(null, naivelyAcceptingTrustStrategy)
                     .build();
-
-
         } catch (NoSuchAlgorithmException | KeyManagementException | KeyStoreException e) {
             throw new RuntimeException(e);
         }
