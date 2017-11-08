@@ -53,4 +53,8 @@ public final static String getDefaultTermAPI() {
     return PropertyUtil.getProperty("application.defaultTermedAPI");
 }
 
+public static String getDefaultGroupManagementAPI() {
+    return PropertyUtil.getProperty("application.defaultGroupManagementAPI");
+}
+
 }

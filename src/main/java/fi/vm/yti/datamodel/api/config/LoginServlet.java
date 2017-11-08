@@ -5,21 +5,33 @@
  */
 package fi.vm.yti.datamodel.api.config;
 
-import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import fi.vm.yti.datamodel.api.endpoint.usermanagement.UserDefinition;
+import fi.vm.yti.datamodel.api.model.Role;
+import fi.vm.yti.datamodel.api.model.YtiUser;
+import fi.vm.yti.datamodel.api.utils.UserManager;
+import org.apache.http.ssl.SSLContexts;
+import org.apache.http.ssl.TrustStrategy;
 
+import javax.net.ssl.SSLContext;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-
-import fi.vm.yti.datamodel.api.endpoint.usermanagement.UserDefinition;
-import fi.vm.yti.datamodel.api.utils.UserManager;
-
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import java.io.IOException;
 import java.net.URLDecoder;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.X509Certificate;
+import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 /**
  *
@@ -84,13 +96,71 @@ public class LoginServlet extends HttpServlet {
 
     private static UserDefinition createUser(HttpServletRequest request) {
 
-        UserDefinition userDefinition = new UserDefinition(new ShibbolethAuthenticationDetails(request));
+        ShibbolethAuthenticationDetails details = new ShibbolethAuthenticationDetails(request);
+        UserDefinition userDefinition = new UserDefinition(getUser(details));
 
         logger.log(Level.INFO, "User logged in");
         logger.log(Level.INFO, userDefinition.toString());
 
         return userDefinition;
     }
+
+    private static YtiUser getUser(ShibbolethAuthenticationDetails authenticationDetails) {
+
+        String url = ApplicationProperties.getDefaultGroupManagementAPI() + "/user";
+
+        Response response = ClientBuilder.newBuilder()
+                .sslContext(naiveSSLContext())
+                .build().target(url)
+                .queryParam("email", authenticationDetails.getEmail())
+                .request(MediaType.APPLICATION_JSON)
+                .get();
+
+
+        User user = response.readEntity(User.class);
+
+        Map<UUID, Set<Role>> rolesInOrganizations = new HashMap<>();
+
+        for (Organization organization : user.organization) {
+
+            Set<Role> roles = organization.role.stream()
+                    .filter(LoginServlet::isRoleMappableToEnum)
+                    .map(Role::valueOf)
+                    .collect(Collectors.toSet());
+
+            rolesInOrganizations.put(organization.uuid, roles);
+        }
+
+        return new YtiUser(user.email, user.firstName, user.lastName, user.superuser, user.newlyCreated, rolesInOrganizations);
+
+    }
+
+    private static boolean isRoleMappableToEnum(String roleString) {
+
+        boolean contains = Role.contains(roleString);
+
+        if (!contains) {
+            logger.warning("Cannot map role (" + roleString + ")" + " to role enum");
+        }
+
+        return contains;
+    }
+
+    private static SSLContext naiveSSLContext() {
+
+        TrustStrategy naivelyAcceptingTrustStrategy = (X509Certificate[] chain, String authType) -> true;
+
+        try {
+            return SSLContexts.custom()
+                    .loadTrustMaterial(null, naivelyAcceptingTrustStrategy)
+                    .build();
+
+
+        } catch (NoSuchAlgorithmException | KeyManagementException | KeyStoreException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
 
     private static UserDefinition createDebugUser() {
         return new UserDefinition("Testi Testaaja", ApplicationProperties.getDebugGroups(), "testi@example.org");
@@ -144,4 +214,20 @@ public class LoginServlet extends HttpServlet {
         return "Short description";
     }// </editor-fold>
 
+}
+
+class User {
+
+    public String email;
+    public String firstName;
+    public String lastName;
+    public boolean superuser;
+    public boolean newlyCreated;
+    public List<Organization> organization;
+}
+
+class Organization {
+
+    public UUID uuid;
+    public List<String> role;
 }
