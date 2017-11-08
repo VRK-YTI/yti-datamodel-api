@@ -108,6 +108,8 @@ public class LoginServlet extends HttpServlet {
 
         String url = ApplicationProperties.getDefaultGroupManagementAPI() + "/user";
 
+        logger.info("Fetching user from URL: " + url);
+
         Response response = ClientBuilder.newBuilder()
                 .sslContext(naiveSSLContext())
                 .build().target(url)
