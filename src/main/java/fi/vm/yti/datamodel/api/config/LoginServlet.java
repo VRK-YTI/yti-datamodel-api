@@ -131,7 +131,11 @@ public class LoginServlet extends HttpServlet {
             rolesInOrganizations.put(organization.uuid, roles);
         }
 
-        return new YtiUser(user.email, user.firstName, user.lastName, user.superuser, user.newlyCreated, rolesInOrganizations);
+        YtiUser ytiUser = new YtiUser(user.email, user.firstName, user.lastName, user.superuser, user.newlyCreated, rolesInOrganizations);
+
+        logger.info("User fetched: " + user);
+
+        return ytiUser;
     }
 
     private static boolean isRoleMappableToEnum(String roleString) {
