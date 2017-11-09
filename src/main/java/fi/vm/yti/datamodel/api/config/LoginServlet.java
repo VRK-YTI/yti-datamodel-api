@@ -5,7 +5,6 @@
  */
 package fi.vm.yti.datamodel.api.config;
 
-import fi.vm.yti.datamodel.api.endpoint.usermanagement.UserDefinition;
 import fi.vm.yti.datamodel.api.model.Role;
 import fi.vm.yti.datamodel.api.model.YtiUser;
 import fi.vm.yti.datamodel.api.utils.UserManager;
