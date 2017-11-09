@@ -33,6 +33,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import static java.util.Collections.emptyMap;
+
 /**
  *
  * @author malonen
@@ -62,7 +64,7 @@ public class LoginServlet extends HttpServlet {
             initializeUser(session, createDebugUser());
         } else {
             if (isLoggedIn(request)) {
-                initializeUser(session, createUser(request));
+                initializeUser(session, getAuthenticatedUser(new ShibbolethAuthenticationDetails(request)));
             } else {
                 Logger.getLogger(LoginServlet.class.getName()).log(Level.INFO, "NOT LOGGED IN");
             }
@@ -86,25 +88,12 @@ public class LoginServlet extends HttpServlet {
         return debug ? ApplicationProperties.getDebugAdress() : "/";
     }
 
-    private static void initializeUser(HttpSession session, UserDefinition userDefinition) {
-        session.setAttribute("displayName", userDefinition.getDisplayName());
-        session.setAttribute("group", userDefinition.getGroup());
-        session.setAttribute("mail", userDefinition.getMail());
+    private static void initializeUser(HttpSession session, YtiUser authenticatedUser) {
+        session.setAttribute("authenticatedUser", authenticatedUser);
         UserManager.checkUser(new LoginSession(session));
     }
 
-    private static UserDefinition createUser(HttpServletRequest request) {
-
-        ShibbolethAuthenticationDetails details = new ShibbolethAuthenticationDetails(request);
-        UserDefinition userDefinition = new UserDefinition(getUser(details));
-
-        logger.log(Level.INFO, "User logged in");
-        logger.log(Level.INFO, userDefinition.toString());
-
-        return userDefinition;
-    }
-
-    private static YtiUser getUser(ShibbolethAuthenticationDetails authenticationDetails) {
+    private static YtiUser getAuthenticatedUser(ShibbolethAuthenticationDetails authenticationDetails) {
 
         String url = ApplicationProperties.getDefaultGroupManagementAPI() + "/user";
 
@@ -162,9 +151,8 @@ public class LoginServlet extends HttpServlet {
         }
     }
 
-
-    private static UserDefinition createDebugUser() {
-        return new UserDefinition("Testi Testaaja", ApplicationProperties.getDebugGroups(), "testi@example.org");
+    private static YtiUser createDebugUser() {
+        return new YtiUser("testi@example.org", "Testi", "Testaaja", true, false, emptyMap());
     }
 
     private static boolean isLoggedIn(HttpServletRequest request) {

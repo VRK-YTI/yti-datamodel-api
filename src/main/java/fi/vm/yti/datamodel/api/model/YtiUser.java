@@ -1,5 +1,6 @@
 package fi.vm.yti.datamodel.api.model;
 
+import java.io.Serializable;
 import java.util.*;
 
 import static fi.vm.yti.datamodel.api.utils.CollectionUtil.containsAny;
@@ -8,7 +9,7 @@ import static fi.vm.yti.datamodel.api.utils.CollectionUtil.unmodifiable;
 import static java.util.Arrays.asList;
 import static java.util.Collections.*;
 
-public final class YtiUser {
+public final class YtiUser implements Serializable {
 
     public static final YtiUser ANONYMOUS_USER =
             new YtiUser(true, "anonymous@example.org", "Anonymous", "User", false, false, emptyMap());

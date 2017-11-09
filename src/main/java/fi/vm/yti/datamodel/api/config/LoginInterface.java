@@ -5,9 +5,6 @@
  */
 package fi.vm.yti.datamodel.api.config;
 
-import java.util.HashMap;
-import javax.servlet.http.HttpSession;
-
 /**
  *
  * @author malonen
@@ -29,7 +26,5 @@ public interface LoginInterface {
     public String getDisplayName();
     
     public String getEmail();
-    
-    public HashMap<String,Boolean> getGroups();
-    
+
 }

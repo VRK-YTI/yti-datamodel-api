@@ -5,11 +5,17 @@
  */
 package fi.vm.yti.datamodel.api.config;
 
-import fi.vm.yti.datamodel.api.utils.ServiceDescriptionManager;
+import fi.vm.yti.datamodel.api.model.YtiUser;
 
-import java.util.HashMap;
-import java.util.logging.Logger;
 import javax.servlet.http.HttpSession;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
+import java.util.logging.Logger;
+
+import static fi.vm.yti.datamodel.api.model.Role.ADMIN;
+import static fi.vm.yti.datamodel.api.model.Role.DATA_MODEL_EDITOR;
+import static java.util.Arrays.asList;
 
 /**
  *
@@ -26,87 +32,73 @@ public class LoginSession implements LoginInterface {
 
     @Override
     public boolean isLoggedIn() {
-        return (session.getAttribute("mail")!=null);
+        return !getUser().isAnonymous();
     }
-
 
     @Override
     public boolean isInGroup(String group) {
-        return session.getAttribute("group").toString().contains(group);
+
+        // TODO actual group to organization mapping
+        UUID organizationID = UUID.randomUUID();
+
+        return getUser().isInOrganization(organizationID, ADMIN, DATA_MODEL_EDITOR);
     }
 
     @Override
     public String getDisplayName() {
-        return session.getAttribute("displayName").toString();
+        return getUser().getDisplayName();
     }
     
     public boolean isSuperAdmin() {
-        return session.getAttribute("group").toString().contains("https://tt.eduuni.fi/sites/csc-iow#IOW_ADMINS");
+        return getUser().isSuperuser();
     }
 
     @Override
     public String getEmail() {
-       return session.getAttribute("mail").toString();
-    }
-
-    @Override
-    public HashMap<String,Boolean> getGroups() {
-        
-        /* Group string format: https://example.org#GROUOP_ADMINS;https://example.org#GROUP_MEMBERS;...;*/
-        
-        String[] groupString;
-        
-        if(ApplicationProperties.getDebugMode()) {
-            groupString = ApplicationProperties.getDebugGroups().split(";");
-        } else if(session.getAttribute("group")==null) {
-            return null;
-        } else {
-            groupString = session.getAttribute("group").toString().split(";");
-        }
-        
-        HashMap groups = new HashMap();
-
-        for (int i = 0; i<groupString.length;i++){
-            
-            String[] myGroup = groupString[i].split("_");
-            
-            if(myGroup[0].startsWith(ApplicationProperties.getGroupDomain())) {
-                if(myGroup[1].equals("ADMINS")) {
-                    groups.put(myGroup[0], Boolean.TRUE); }
-                else {
-                    groups.put(myGroup[0], Boolean.FALSE); }
-            }
-        }
-        
-        return groups;
-       
+       return getUser().getEmail();
     }
 
     @Override
     public boolean hasRightToEditModel(String model) {
-        
-        if(this.getGroups()==null) return false;
 
-        return ServiceDescriptionManager.isModelInGroup(model,this.getGroups());
+        if (getUser().isSuperuser()) {
+            return true;
+        }
+
+        // TODO model organizations mapping
+        // ServiceDescriptionManager.isModelInGroup(model, this.getGroups());
+        List<UUID> organizations = Collections.emptyList();
+
+        return getUser().isInAnyOrganization(organizations, asList(ADMIN, DATA_MODEL_EDITOR));
     }
     
     @Override
     public boolean hasRightToEditGroup(String group) {
-        
-        if(this.getGroups()==null) return false;
-        
-        if(ApplicationProperties.getDebugMode()) return true;
-       
-        return isInGroup(group);
+
+        return getUser().isSuperuser() || ApplicationProperties.getDebugMode() || isInGroup(group);
     }
 
     @Override
     public boolean isAdminOfGroup(String group) {
-      
-        if(this.getGroups()==null) return false;
-        
-        return session.getAttribute("group").toString().contains(group.concat("_ADMINS"));
-        
+
+        if (getUser().isSuperuser()) {
+            return true;
+        }
+
+        // TODO actual group to organization mapping
+        UUID organizationID = UUID.randomUUID();
+
+        return getUser().isInRole(ADMIN, organizationID);
     }
-    
+
+    private YtiUser getUser() {
+
+        Object authenticatedUser = session.getAttribute("authenticatedUser");
+
+        if (authenticatedUser != null) {
+            return (YtiUser) authenticatedUser;
+        } else {
+            return YtiUser.ANONYMOUS_USER;
+        }
+    }
 }

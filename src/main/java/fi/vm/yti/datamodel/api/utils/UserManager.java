@@ -5,13 +5,9 @@
  */
 package fi.vm.yti.datamodel.api.utils;
 
-import fi.vm.yti.datamodel.api.config.LoginSession;
 import fi.vm.yti.datamodel.api.config.EndpointServices;
-import java.util.Date;
-
+import fi.vm.yti.datamodel.api.config.LoginSession;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
-import org.apache.jena.graph.Node;
-import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.query.ParameterizedSparqlString;
 import org.apache.jena.query.Query;
 import org.apache.jena.query.QueryExecution;
@@ -19,8 +15,8 @@ import org.apache.jena.query.QueryExecutionFactory;
 import org.apache.jena.update.UpdateExecutionFactory;
 import org.apache.jena.update.UpdateProcessor;
 import org.apache.jena.update.UpdateRequest;
-import java.util.HashMap;
-import java.util.Iterator;
+
+import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -89,20 +85,21 @@ public class UserManager {
         
         
         String groups = "";
-        
-        HashMap<String,Boolean> allGroups = loginSession.getGroups();
-        
-        if(allGroups!=null) {
-            
-            Iterator<String> groupIterator = allGroups.keySet().iterator();
 
-            while(groupIterator.hasNext()) {
-                String group = groupIterator.next();
-                Node n = NodeFactory.createURI(group);
-                groups = groups+"?id dcterms:isPartOf <"+n.getURI()+"> . "+(allGroups.get(group).booleanValue()?" ?id iow:isAdminOf <"+n.getURI()+"> . ":"");
-            }
-        
-        }
+        // TODO not relevant?
+//        HashMap<String,Boolean> allGroups = loginSession.getGroups();
+//
+//        if(allGroups!=null) {
+//
+//            Iterator<String> groupIterator = allGroups.keySet().iterator();
+//
+//            while(groupIterator.hasNext()) {
+//                String group = groupIterator.next();
+//                Node n = NodeFactory.createURI(group);
+//                groups = groups+"?id dcterms:isPartOf <"+n.getURI()+"> . "+(allGroups.get(group).booleanValue()?" ?id iow:isAdminOf <"+n.getURI()+"> . ":"");
+//            }
+//
+//        }
         
         String query = 
                 "INSERT DATA { GRAPH <urn:csc:users> { ?id a foaf:Person . "+
@@ -159,19 +156,20 @@ public class UserManager {
         
         
         String groups = "";
-        
-        HashMap<String,Boolean> allGroups = loginSession.getGroups();
-        
-        if(allGroups!=null) {
-            Iterator<String> groupIterator = allGroups.keySet().iterator();
 
-            while(groupIterator.hasNext()) {
-                String group = groupIterator.next();
-                Node n = NodeFactory.createURI(group);
-                logger.log(Level.INFO, group+" is "+allGroups.get(group).booleanValue());
-                groups = groups+"?id dcterms:isPartOf <"+n.getURI()+"> . "+(allGroups.get(group).booleanValue()?" ?id iow:isAdminOf <"+n.getURI()+"> . ":"");
-            }
-        }
+        // TODO not relevant
+//        HashMap<String,Boolean> allGroups = loginSession.getGroups();
+//
+//        if(allGroups!=null) {
+//            Iterator<String> groupIterator = allGroups.keySet().iterator();
+//
+//            while(groupIterator.hasNext()) {
+//                String group = groupIterator.next();
+//                Node n = NodeFactory.createURI(group);
+//                logger.log(Level.INFO, group+" is "+allGroups.get(group).booleanValue());
+//                groups = groups+"?id dcterms:isPartOf <"+n.getURI()+"> . "+(allGroups.get(group).booleanValue()?" ?id iow:isAdminOf <"+n.getURI()+"> . ":"");
+//            }
+//        }
          
          String query = 
                 "WITH <urn:csc:users> "+
