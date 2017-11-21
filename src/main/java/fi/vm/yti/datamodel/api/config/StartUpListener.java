@@ -94,7 +94,7 @@ public class StartUpListener implements ServletContextListener {
                     logger.log(Level.WARNING,"Failed to create default graph!");
               }
     }
-    
+
     private static void initDefaultGroups() {
          if(GroupManager.compareDefaultGroups()) {
                 logger.log(Level.INFO,"Default groups are initialized!");
