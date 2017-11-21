@@ -11,16 +11,17 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.jsonldjava.utils.JsonUtils;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.security.InvalidParameterException;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.jena.iri.IRI;
+import org.apache.jena.iri.IRIException;
+import org.apache.jena.iri.IRIFactory;
 import org.apache.jena.query.ParameterizedSparqlString;
 import java.text.Normalizer;
 import java.text.Normalizer.Form;
-import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.apache.commons.lang3.text.WordUtils;
@@ -31,9 +32,15 @@ import org.glassfish.jersey.uri.UriComponent;
  * @author malonen
  */
 public class LDHelper {
-    
-   private static final Logger logger = Logger.getLogger(LDHelper.class.getName());
-   public static final String[] UNRESOLVABLE = {"xsd","iow","text","sh","afn","schema","dcap", "termed"};
+
+    private static final IRIFactory iriFactory = IRIFactory.iriImplementation() ;
+    private static final Logger logger = Logger.getLogger(LDHelper.class.getName());
+    public static final String[] UNRESOLVABLE = {"xsd","iow","text","sh","afn","schema","dcap", "termed"};
+
+
+    public static IRI toIRI(String url) {
+        return iriFactory.create(url);
+    }
 
     /**
      * Used in startup to load external schemas. Returns false if matches any of UNRESOLVABLE array
@@ -67,9 +74,16 @@ public class LDHelper {
         put("ts","http://www.w3.org/2003/06/sw-vocab-status/ns#");
         put("dcam","http://purl.org/dc/dcam/");
         put("termed","http://termed.thl.fi/meta/");
+        put("at","http://publications.europa.eu/ontology/authority/");
+        put("skosxl","http://www.w3.org/2008/05/skos-xl#");
     }});
-   
-    public static final Map<String, Object> CONTEXT_MAP = 
+
+    public static String curieToURI(String curie) {
+        String[] splitted = curie.split(":");
+        return PREFIX_MAP.get(splitted[0])+splitted[1];
+    }
+
+    public static final Map<String, Object> CONTEXT_MAP =
     Collections.unmodifiableMap(new HashMap<String, Object>() {{
         put("subClassOf", jsonObject("{ '@id': 'http://www.w3.org/2000/01/rdf-schema#subClassOf', '@type': '@id' }"));
         put("property", jsonObject("{ '@id': 'http://www.w3.org/ns/shacl#property', '@type': '@id' }"));
@@ -112,6 +126,7 @@ public class LDHelper {
                             "PREFIX text: <http://jena.apache.org/text#> "+
                             "PREFIX sh: <http://www.w3.org/ns/shacl#> "+
                             "PREFIX skos: <http://www.w3.org/2004/02/skos/core#> "+
+                            "PREFIX skosxl <http://www.w3.org/2008/05/skos-xl#> "+
                             "PREFIX prov: <http://www.w3.org/ns/prov#> " +
                             "PREFIX iow: <http://iow.csc.fi/ns/iow#>" +
                             "PREFIX dcap: <http://purl.org/ws-mmi-dc/terms/> " +
@@ -119,7 +134,8 @@ public class LDHelper {
                             "PREFIX schema: <http://schema.org/>"+
                             "PREFIX ts: <http://www.w3.org/2003/06/sw-vocab-status/ns#>"+
                             "PREFIX dcam: <http://purl.org/dc/dcam/>"+
-                            "PREFIX termed <http://termed.thl.fi/meta/>";
+                            "PREFIX termed <http://termed.thl.fi/meta/>"+
+                            "PREFIX at: <http://publications.europa.eu/ontology/authority/>";
     
    
     ParameterizedSparqlString pss = new ParameterizedSparqlString();
@@ -128,6 +144,73 @@ public class LDHelper {
         queryString = prefix+queryString;
         return  UriComponent.encode(queryString,UriComponent.Type.QUERY_PARAM); // URLEncoder.encode(queryString, "UTF-8");
     }
+
+
+    public static String concatWithReplace(List<UUID> orgs, String sep, String replace)
+    {
+        StringBuilder sb = new StringBuilder();
+        Iterator<UUID> orgIt = orgs.iterator();
+        while(orgIt.hasNext())
+        {
+            String orgID = orgIt.next().toString();
+
+            sb.append(replace.replaceAll("@this", orgID));
+            if(orgIt.hasNext()) sb.append(sep);
+        }
+        return sb.toString();
+    }
+
+
+    public static String concatStringList(List<String> services, String sep, String wrap)
+    {
+        StringBuilder sb = new StringBuilder();
+        Iterator<String> seIt = services.iterator();
+        while(seIt.hasNext())
+        {
+            sb.append(wrap+seIt.next()+wrap);
+            if(seIt.hasNext()) sb.append(sep);
+        }
+        return sb.toString();
+    }
+
+
+    /**
+     * Parses allowed languages from , separated string
+     * @param allowedLang list of languages separated by ",". If allowedLang is null ('fi','en') is returned.
+     * @return parsed language list eg. "('fi','en','sv')"
+     */
+    public static String  parseAllowedLangString(String allowedLang) throws InvalidParameterException {
+
+        if(allowedLang==null || allowedLang.equals("undefined") || allowedLang.length()<2) {
+            allowedLang = "('fi' 'en')";
+        }
+        else if(allowedLang.length()==2 && LDHelper.isAlphaString(allowedLang)) {
+            allowedLang="('"+allowedLang+"')";
+        }
+        else {
+            if(!allowedLang.contains(" ")) {
+                throw new InvalidParameterException();
+            }
+
+            String[] languages = allowedLang.split(" ");
+            String builtLang = "(";
+
+            for(String s: languages) {
+                if(s.length()>2 || !LDHelper.isAlphaString(s)) {
+                    throw new InvalidParameterException();
+                }
+                builtLang = builtLang.concat(" '"+s+"'");
+            }
+
+            builtLang = builtLang.concat(" )");
+            allowedLang = builtLang;
+
+        }
+
+        logger.info("Built langlist: "+allowedLang);
+        return allowedLang;
+    }
+
 
     /**
      * Returns true of string uses alphanumerics only
@@ -306,6 +389,11 @@ public class LDHelper {
    public static String expandSparqlQuery(String query) {
        return expandSparqlQuery(query,LDHelper.PREFIX_MAP);
    }
+
+    public static String expandSparqlQuery(boolean skip, String query) {
+        if(skip) return query;
+        return expandSparqlQuery(query,LDHelper.PREFIX_MAP);
+    }
 
     /**
      * Expands SPARQL query by removing prefixes. Useful cases when prefixes are mixed.

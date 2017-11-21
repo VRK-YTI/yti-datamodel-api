@@ -5,6 +5,9 @@
  */
 package fi.vm.yti.datamodel.api.config;
 
+import java.util.List;
+import java.util.UUID;
+
 /**
  *
  * @author malonen
@@ -14,15 +17,24 @@ public interface LoginInterface {
     public boolean isLoggedIn();
     
     public boolean isSuperAdmin();
-    
+
+    @Deprecated
     public boolean isInGroup(String group);
-    
+
+    public boolean isInOrganization(String org);
+
+    @Deprecated
     public boolean isAdminOfGroup(String group);
     
     public boolean hasRightToEditModel(String resource);
-   
+
+    @Deprecated
     public boolean hasRightToEditGroup(String resource);
-    
+
+    public boolean isUserInOrganization(UUID organization);
+
+    public boolean isUserInOrganization(List<UUID> organization);
+
     public String getDisplayName();
     
     public String getEmail();

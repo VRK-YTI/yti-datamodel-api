@@ -35,7 +35,8 @@ public class ServiceDescription {
       @ApiResponse(code = 500, message = "Internal server error")
   })
   public Response json(@HeaderParam("Accept") String accept) {
-    return JerseyJsonLDClient.getGraphResponseFromService("urn:csc:iow:sd",services.getCoreReadAddress(), ContentType.create(accept), false);
+    return JerseyJsonLDClient.getGraphResponseFromService("urn:csc:iow:sd", services.getCoreReadAddress());
+            //.getGraphResponseFromService("urn:csc:iow:sd",services.getCoreReadAddress(), ContentType.create(accept), false);
 }
   
 }

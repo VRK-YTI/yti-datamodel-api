@@ -44,7 +44,7 @@ public class ProvenanceManager {
         
     }
     
-    public static void updateVersionIdToResource(String graph, UUID provUUID) {
+    public static void updateVersionIdToResource(String graph, String provUUID) {
         
             String query
                 = "DELETE { "
@@ -64,7 +64,7 @@ public class ProvenanceManager {
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
         
         pss.setIri("graph", graph);
-        pss.setLiteral("versionID", "urn:uuid:"+provUUID);
+        pss.setIri("versionID", provUUID);
         pss.setCommandText(query);
         
 
@@ -149,15 +149,15 @@ public class ProvenanceManager {
 
     }
     
-    public static void createProvenanceGraph(String graph, String jsonld, String user, UUID provUUID) {
+    public static void createProvenanceGraph(String graph, String jsonld, String user, String provUUID) {
         //createProvenanceGraphInRunnable(graph,jsonld,user,provUUID);
         ThreadExecutor.pool.execute(new ProvenanceGraphRunnable(graph, jsonld, user, provUUID));
     }
     
-    public static void createProvenanceGraphInRunnable(String graph, String jsonld, String user, UUID provUUID) {
+    public static void createProvenanceGraphInRunnable(String graph, String jsonld, String user, String provUUID) {
         
         logger.info("Creating prov graph "+graph+" "+provUUID.toString());
-        StatusType status = JerseyJsonLDClient.putGraphToTheService("urn:uuid:"+provUUID.toString(), jsonld, services.getProvReadWriteAddress());
+        StatusType status = JerseyJsonLDClient.putGraphToTheService(provUUID, jsonld, services.getProvReadWriteAddress());
         
         if (status.getFamily() == Response.Status.Family.SUCCESSFUL) {
             createProvEntity(graph, provUUID, user);
@@ -169,12 +169,12 @@ public class ProvenanceManager {
         }
     }
     
-    public static void createProvenanceGraphFromModel(String graph, Model model, String user, UUID provUUID) {
-        putToProvenanceGraph(model,"urn:uuid:"+provUUID.toString());
+    public static void createProvenanceGraphFromModel(String graph, Model model, String user, String provUUID) {
+        putToProvenanceGraph(model,provUUID);
         createProvEntity(graph, provUUID, user);
     }
     
-    public static void createProvEntity(String graph, UUID provUUID, String user) {
+    public static void createProvEntity(String graph, String provUUID, String user) {
         
         updateVersionIdToResource(graph, provUUID);
         
@@ -209,7 +209,7 @@ public class ProvenanceManager {
         
         pss.setIri("graph", graph);
         pss.setIri("user", "mailto:"+user);
-        pss.setIri("jsonld", "urn:uuid:"+provUUID);
+        pss.setIri("jsonld", provUUID);
         pss.setCommandText(query);
         
         UpdateRequest queryObj = pss.asUpdate();

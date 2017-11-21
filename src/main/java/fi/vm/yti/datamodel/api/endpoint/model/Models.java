@@ -3,6 +3,7 @@
  */
 package fi.vm.yti.datamodel.api.endpoint.model;
 
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -18,6 +19,7 @@ import javax.ws.rs.core.Response;
 
 import fi.vm.yti.datamodel.api.config.LoginSession;
 import fi.vm.yti.datamodel.api.config.EndpointServices;
+import fi.vm.yti.datamodel.api.model.DataModel;
 import fi.vm.yti.datamodel.api.utils.GraphManager;
 import fi.vm.yti.datamodel.api.utils.IDManager;
 import fi.vm.yti.datamodel.api.utils.JerseyJsonLDClient;
@@ -64,16 +66,17 @@ public class Models {
   public Response json(
           @ApiParam(value = "Graph id") 
           @QueryParam("id") String id,
-          @ApiParam(value = "group")
-          @QueryParam("group") String group,
+          @ApiParam(value = "Service category")
+          @QueryParam("serviceCategory") String group,
           @ApiParam(value = "prefix")
           @QueryParam("prefix") String prefix) {
 
           String queryString = QueryLibrary.modelQuery;
-          
+
           ParameterizedSparqlString pss = new ParameterizedSparqlString();
           
-          if((id==null || id.equals("undefined")) && (prefix!=null && !prefix.equals("undefined"))) { 
+          if((id==null || id.equals("undefined")) && (prefix!=null && !prefix.equals("undefined"))) {
+              logger.info("Resolving prefix: "+prefix);
                  id = GraphManager.getServiceGraphNameWithPrefix(prefix);
                  if(id==null) {
                         logger.log(Level.WARNING, "Invalid prefix: "+prefix);
@@ -82,7 +85,7 @@ public class Models {
            }             
                        
           if((group==null || group.equals("undefined")) && (id!=null && !id.equals("undefined") && !id.equals("default"))) {
-            
+            logger.info("Model id:"+id);
             IRI modelIRI;
             
                 try {
@@ -95,7 +98,8 @@ public class Models {
                 if(id.startsWith("urn:")) {
                    return JerseyJsonLDClient.getGraphResponseFromService(id, services.getProvReadWriteAddress());
                 }
-           
+
+
             String sparqlService = services.getCoreSparqlAddress();
             String graphService = services.getCoreReadWriteAddress();
 
@@ -112,58 +116,22 @@ public class Models {
             pss.setIri("graph", modelIRI);
             
             pss.setCommandText(queryString);
-            
+            logger.info(pss.toString());
            
             return JerseyJsonLDClient.constructGraphFromService(pss.toString(), sparqlService);
              
      } else if(group!=null && !group.equals("undefined")) {
-         
-           IRI groupIRI;
-            try {
-                    groupIRI = IDManager.constructIRI(group);
-            } catch (IRIException e) {
-                    logger.log(Level.WARNING, "ID is invalid IRI!");
-                    return JerseyResponseManager.invalidIRI();
-            }
+              logger.info("Service category: "+group);
              pss.setNsPrefixes(LDHelper.PREFIX_MAP);
             /* IF group parameter is available list of core vocabularies is created */
-             queryString = "CONSTRUCT { "
-                     + "?graphName rdfs:label ?label . "
-                     + "?graphName a ?type . "
-                     + "?graphName dcterms:isPartOf ?group . "
-                     + "?graphName dcap:preferredXMLNamespaceName ?namespace . "
-                     + "?graphName dcap:preferredXMLNamespacePrefix ?prefix .  "
-                     + "?group a foaf:Group . "
-                     + "?group dcterms:references ?skosScheme . "
-                     + "?skosScheme skos:prefLabel ?schemeTitle . "
-                     + "?skosScheme termed:graph ?termedGraph . "
-                     + "?termedGraph termed:id ?termedGraphId . "
-                     + "?termedGraph termed:code ?termedGraphCode . "
-                     + "?group rdfs:label ?groupLabel . "
-                     + "} WHERE { "
-                     + "GRAPH <urn:csc:iow:sd> {"
-                     + "?graph sd:name ?graphName . "
-                     + "?graph a sd:NamedGraph . "
-                     + "?graph dcterms:isPartOf ?group . "
-                     + "}"
-                     + "GRAPH <urn:csc:groups> { "
-                     + "?group rdfs:label ?groupLabel . "
-                     + "?group dcterms:references ?skosScheme . "
-                     + "?skosScheme dcterms:title ?schemeTitle . "
-                     + "?skosScheme termed:graph ?termedGraph . "
-                     + "?termedGraph termed:id ?termedGraphId . "
-                     + "?termedGraph termed:code ?termedGraphCode . "
-                     + "}"
-                     + "GRAPH ?graphName { "
-                     + "?graphName a ?type . "
-                     + "?graphName rdfs:label ?label . "
-                     + "?graphName dcap:preferredXMLNamespaceName ?namespace . "
-                     + "?graphName dcap:preferredXMLNamespacePrefix ?prefix .  "
-                     + "}}";
+             queryString = QueryLibrary.modelsByGroupQuery;
              
-             pss.setIri("group", groupIRI);
+             pss.setLiteral("groupCode", group);
+
+             logger.info(pss.toString());
                      
            } else {
+              logger.info("Listing all models");
              pss.setNsPrefixes(LDHelper.PREFIX_MAP);
              /* IF ID is null or default and no group available */
              queryString = "CONSTRUCT { "
@@ -203,14 +171,50 @@ public class Models {
   public Response postJson(
           @ApiParam(value = "Updated model in application/ld+json", required = true) 
                 String body, 
-          @ApiParam(value = "Model ID", required = true) 
+                @ApiParam(value = "Model ID")
                 @QueryParam("id") 
                 String graph,
-                @ApiParam(value = "version flag", defaultValue="false") 
-                @QueryParam("version") 
-                boolean version,
           @Context HttpServletRequest request) {
-      
+
+      HttpSession session = request.getSession();
+
+      if(session==null) return JerseyResponseManager.unauthorized();
+
+      LoginSession login = new LoginSession(session);
+
+      if(!login.isLoggedIn())
+          return JerseyResponseManager.unauthorized();
+
+      try {
+
+          DataModel newVocabulary = new DataModel(body);
+
+          logger.info("Getting old vocabulary:"+newVocabulary.getId());
+          DataModel oldVocabulary = new DataModel(newVocabulary.getIRI());
+
+          if(login.isUserInOrganization(oldVocabulary.getOrganizations())) {
+              return JerseyResponseManager.unauthorized();
+          }
+
+          if(login.isUserInOrganization(newVocabulary.getOrganizations())) {
+              return JerseyResponseManager.unauthorized();
+          }
+
+          UUID provUUID = UUID.fromString(newVocabulary.getProvUUID().replaceFirst("urn:uuid:",""));
+
+          if (provUUID == null) {
+              return JerseyResponseManager.error();
+          } else {
+              ModelManager.updateModel(newVocabulary, login);
+              return JerseyResponseManager.successUuid(provUUID);
+          }
+
+      } catch(IllegalArgumentException ex) {
+          logger.info(ex.toString());
+          return JerseyResponseManager.error();
+      }
+
+      /*
        if(graph.equals("default") || graph.equals("undefined")) {
             return JerseyResponseManager.invalidIRI();
        } 
@@ -232,7 +236,7 @@ public class Models {
         
         if(provUUID==null) return JerseyResponseManager.error();
         else return JerseyResponseManager.successUuid(provUUID);
-
+*/
   }
   
   @PUT
@@ -247,16 +251,52 @@ public class Models {
       @ApiResponse(code = 500, message = "Bad data?") 
   })
   public Response putJson(
-          @ApiParam(value = "New graph in application/ld+json", required = true) 
-                String body, 
-          @ApiParam(value = "Model ID", required = true) 
-          @QueryParam("id") 
-                String graph,
-          @ApiParam(value = "Group", required = true) 
-          @QueryParam("group") 
-                String group,
+          @ApiParam(value = "New graph in application/ld+json", required = true) String body,
+          @ApiParam(value = "Model ID")
+          @QueryParam("id") String graph,
+          @ApiParam(value = "Organization UUIDs")
+          @QueryParam("orgList") List<UUID> orgList,
+          @ApiParam(value = "Service URIs")
+          @QueryParam("serviceList") List<String> serviceList,
           @Context HttpServletRequest request) {
-      
+
+      HttpSession session = request.getSession();
+
+      if(session==null) return JerseyResponseManager.unauthorized();
+
+      LoginSession login = new LoginSession(session);
+
+      if(!login.isLoggedIn())
+          return JerseyResponseManager.unauthorized();
+
+      try {
+
+          DataModel newVocabulary = new DataModel(body);
+
+          if(login.isUserInOrganization(newVocabulary.getOrganizations())) {
+              return JerseyResponseManager.unauthorized();
+          }
+
+          if(GraphManager.isExistingGraph(newVocabulary.getId())) {
+              return JerseyResponseManager.usedIRI();
+          }
+
+          String provUUID = newVocabulary.getProvUUID();
+
+          if (provUUID == null) {
+              return JerseyResponseManager.error();
+          }
+          else {
+              ModelManager.createNewModel(newVocabulary.getId(), newVocabulary.asGraph(), login, provUUID, newVocabulary.getOrganizations());
+              return JerseyResponseManager.successUuid(provUUID);
+          }
+
+      } catch(IllegalArgumentException ex) {
+          logger.info(ex.toString());
+          return JerseyResponseManager.error();
+      }
+
+      /*
         if(graph.equals("default")) {
             return JerseyResponseManager.invalidIRI();
         }
@@ -276,18 +316,18 @@ public class Models {
         
         LoginSession login = new LoginSession(session);
         
-        if(!login.isLoggedIn() || !login.hasRightToEditGroup(group))
+        if(!login.isLoggedIn() || !login.isUserInOrganization(orgList) || !login.isSuperAdmin())
             return JerseyResponseManager.unauthorized();
         
             if(GraphManager.isExistingGraph(graphIRI)) {
                 return JerseyResponseManager.usedIRI();
             }
         
-            UUID provUUID = ModelManager.createNewModel(graph, group, body, login);
+            UUID provUUID = ModelManager.createNewModel(graph, orgList, body, login);
         
             if(provUUID==null) return JerseyResponseManager.error();
             else return JerseyResponseManager.successUuid(provUUID);
-            
+            */
   }
   
   @DELETE

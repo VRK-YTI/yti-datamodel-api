@@ -92,12 +92,12 @@ public class ClassCreator {
                     + "?model rdfs:label ?modelLabel . "
                     + "?concept a skos:Concept . "
                     + "?concept skos:inScheme ?scheme . "
-                    + "?scheme termed:id ?schemeId . "
-                    + "?concept skos:prefLabel ?label . "
+                    + "?scheme dcterms:title ?title . "
+                    + "?scheme a skos:ConceptScheme . "
+                    + "{ ?concept skos:prefLabel ?label . }"
+                    + "UNION { ?concept skosxl:prefLabel ?literalForm . ?literalForm skosxl:literalForm ?label . }"
                     + "?concept termed:graph ?termedGraph . "
                     + "?termedGraph termed:id ?termedGraphId . "
-                    + "?scheme dcterms:title ?title . "
-                    + "?scheme termed:graph ?termedGraph . "
                     + "OPTIONAL {"
                     + "?concept skos:definition ?comment . } "
                     + "}";
@@ -110,8 +110,6 @@ public class ClassCreator {
             String resourceName = LDHelper.resourceName(classLabel);
             pss.setIri("classIRI",LDHelper.resourceIRI(modelID,resourceName));
 
-            logger.info("New classCreator template from "+conceptID);
-           
             return JerseyJsonLDClient.constructFromTermedAndCore(conceptIRI.toString(), modelIRI.toString(), pss.asQuery());
             
     }   

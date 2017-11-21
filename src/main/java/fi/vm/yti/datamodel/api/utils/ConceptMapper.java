@@ -38,7 +38,7 @@ import org.apache.jena.vocabulary.SKOS;
  */
 
 /* TODO: REMOVE AFTER TERMED INTEGRATION */
-
+@Deprecated
 public class ConceptMapper {
     
      private static EndpointServices services = new EndpointServices();
@@ -289,47 +289,7 @@ public class ConceptMapper {
             return true;
         }
         
-        
-    public static boolean isUsedConcept(String model, String concept) {
 
-        ParameterizedSparqlString pss = new ParameterizedSparqlString();
-        String queryString = " ASK { GRAPH ?graph { ?s rdfs:isDefinedBy ?model . ?s ?p ?concept }}";
-        pss.setCommandText(queryString);
-        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
-        pss.setIri("concept", concept);
-        pss.setIri("model",model);
-
-        Query query = pss.asQuery();
-        QueryExecution qexec = QueryExecutionFactory.sparqlService(services.getCoreSparqlAddress(), query);
-
-        try {
-            boolean b = qexec.execAsk();
-            return b;
-        } catch (Exception ex) {
-            return false;
-        }
-    }
-    
-    
-        public static boolean isUsedConceptGlobal(String concept) {
-
-        ParameterizedSparqlString pss = new ParameterizedSparqlString();
-        String queryString = " ASK { GRAPH ?graph { ?graph dcterms:subject ?concept }}";
-        pss.setCommandText(queryString);
-        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
-        pss.setIri("concept", concept);
-
-        Query query = pss.asQuery();
-        QueryExecution qexec = QueryExecutionFactory.sparqlService(services.getCoreSparqlAddress(), query);
-
-        try {
-            boolean b = qexec.execAsk();
-            return b;
-        } catch (Exception ex) {
-            return false;
-        }
-    }
-    
     @Deprecated
     public static void deleteConceptReference(String model, String concept) {
         

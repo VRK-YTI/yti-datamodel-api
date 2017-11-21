@@ -86,7 +86,7 @@ public class ResourceManager {
                     
                     if(ProvenanceManager.getProvMode()) {
                         ProvenanceManager.renameID(oldIdIRI.toString(),idIRI.toString());
-                        ProvenanceManager.createProvenanceGraph(idIRI.toString(), body, login.getEmail(), provUUID);
+                        ProvenanceManager.createProvenanceGraph(idIRI.toString(), body, login.getEmail(), "urn:uuid:"+provUUID.toString());
                     }
                     
                     return provUUID;
@@ -115,7 +115,7 @@ public class ResourceManager {
             
         /* If update is successfull create new prov entity */ 
         if(ProvenanceManager.getProvMode()) {
-            ProvenanceManager.createProvenanceGraph(id, body, login.getEmail(), provUUID); 
+            ProvenanceManager.createProvenanceGraph(id, body, login.getEmail(), "urn:uuid:"+provUUID.toString());
         }
            
         GraphManager.createExportGraphInRunnable(model);

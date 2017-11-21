@@ -3,6 +3,8 @@
  */
 package fi.vm.yti.datamodel.api.endpoint.model;
 
+import java.util.List;
+import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -58,8 +60,10 @@ public class ImportModel {
           @ApiParam(value = "New model in application/ld+json", required = true) String body, 
           @ApiParam(value = "Model ID (graph)", required = true) 
           @QueryParam("graph") String graph,
-          @ApiParam(value = "Group", required = true) 
-          @QueryParam("group") String group) {
+          @ApiParam(value = "Service categories", required = true)
+          @QueryParam("orgList") List<String> serviceList,
+          @ApiParam(value = "Organization UUIDs", required = true)
+          @QueryParam("orgList") List<UUID> orgList) {
       
       /* TODO: Add API key? */
       
@@ -76,7 +80,7 @@ public class ImportModel {
             return JerseyResponseManager.invalidIRI();
         }
        
-       ServiceDescriptionManager.createGraphDescription(graph, group, null);
+       ServiceDescriptionManager.createGraphDescription(graph,null, orgList);
 
        /* Create new graph with the graph id */ 
        StatusType status = JerseyJsonLDClient.putGraphToTheService(graph, body, services.getCoreReadWriteAddress());

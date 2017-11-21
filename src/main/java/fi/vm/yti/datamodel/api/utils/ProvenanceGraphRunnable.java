@@ -9,9 +9,9 @@ public class ProvenanceGraphRunnable implements Runnable {
     private final String graph;
     private final String jsonld;
     private final String user;
-    private final UUID provUUID;
+    private final String provUUID;
     
-    ProvenanceGraphRunnable(String graph, String jsonld, String user, UUID provUUID) {
+    ProvenanceGraphRunnable(String graph, String jsonld, String user, String provUUID) {
         this.graph = graph;
         this.jsonld = jsonld;
         this.user = user;

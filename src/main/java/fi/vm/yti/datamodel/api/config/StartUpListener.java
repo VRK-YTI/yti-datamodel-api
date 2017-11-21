@@ -5,11 +5,11 @@
  */
 package fi.vm.yti.datamodel.api.config;
 
-import fi.vm.yti.datamodel.api.utils.GraphManager;
-import fi.vm.yti.datamodel.api.utils.OPHCodeServer;
-import fi.vm.yti.datamodel.api.utils.GroupManager;
-import fi.vm.yti.datamodel.api.utils.NamespaceManager;
+import fi.vm.yti.datamodel.api.utils.*;
 
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -29,15 +29,17 @@ public class StartUpListener implements ServletContextListener {
         
         System.out.println("System is starting ...");
         logger.log(Level.INFO, "System is starting ...");
-        
+
         initDefaultGraph();
         initDefaultGroups();
         initDefaultNamespaces();
         initCodeServers();
-        //loadSchemesFromFinto();
+        initServiceCategories();
+        TermedTerminologyManager.initConceptsFromTermed();
+
         // createExportGraphs();
-       //  runPeriodicUpdates();
-        
+        runPeriodicUpdates();
+
     }
     
     @Override
@@ -45,36 +47,32 @@ public class StartUpListener implements ServletContextListener {
        System.out.println("System is closing ...");
        logger.log(Level.INFO, "System is closing ...");
     }
-    
+
+    private static void initRHPOrganizations() {
+        RHPOrganizationManager.initOrganizationsFromRHP();
+    }
+
+    private static void initServiceCategories() {
+        GraphManager.initServiceCategories();
+    }
+
     private static void initCodeServers() {
        
             OPHCodeServer codeServer = new OPHCodeServer("https://virkailija.opintopolku.fi/koodisto-service/rest/json/", true);
-          //  OPHCodeServer testCodeServer = new OPHCodeServer("http://iowkoodisto.csc.fi:8080/koodisto-service/rest/json/", true);
-            
             if(!codeServer.status) logger.warning("Code server was not initialized!");
-         //   if(!testCodeServer.status) logger.warning("TESTCode server was not initialized!");
-    
+
     }
     
     private static void runPeriodicUpdates() {
-        /*
-        LocalDateTime localNow = LocalDateTime.now();
-        ZoneId currentZone = ZoneId.of("America/Los_Angeles");
-        ZonedDateTime zonedNow = ZonedDateTime.of(localNow, currentZone);
-        ZonedDateTime zonedNext5 ;
-        zonedNext5 = zonedNow.withHour(5).withMinute(0).withSecond(0);
-        if(zonedNow.compareTo(zonedNext5) > 0)
-            zonedNext5 = zonedNext5.plusDays(1);
 
-        Duration duration = Duration.between(zonedNow, zonedNext5);
-        long initialDelay = duration.getSeconds();
+        Runnable runUpdates = () -> {
+            logger.info("Updating organizations");
+            initRHPOrganizations();
+        };
 
-        ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1); */
-        /* TODO: Create runnable to loadSchemesFromFinto() */
-       /* scheduler.
-                .scheduleAtFixedRate(FintoLoad), initalDelay,
-                                      24*60*60, TimeUnit.SECONDS); */
-        
+        ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
+        service.scheduleAtFixedRate(runUpdates, 0, 5, TimeUnit.MINUTES);
+
     }
     
     private static void createExportGraphs() {
@@ -82,11 +80,7 @@ public class StartUpListener implements ServletContextListener {
       GraphManager.updateAllExportGraphs();
         
     }
-    
-    private static void loadSchemesFromFinto() {
-       // ConceptMapper.updateSchemesFromFinto();
-    }
-    
+
     private static void initDefaultGraph() {
          if(GraphManager.testDefaultGraph()) {
                 logger.log(Level.INFO,"Default graph is initialized!");
@@ -100,6 +94,7 @@ public class StartUpListener implements ServletContextListener {
                     logger.log(Level.WARNING,"Failed to create default graph!");
               }
     }
+    
     private static void initDefaultGroups() {
          if(GroupManager.compareDefaultGroups()) {
                 logger.log(Level.INFO,"Default groups are initialized!");

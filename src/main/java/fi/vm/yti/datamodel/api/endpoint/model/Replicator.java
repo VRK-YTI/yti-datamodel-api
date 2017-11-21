@@ -3,6 +3,9 @@
  */
 package fi.vm.yti.datamodel.api.endpoint.model;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -21,12 +24,8 @@ import fi.vm.yti.datamodel.api.utils.GraphManager;
 import fi.vm.yti.datamodel.api.utils.IDManager;
 import fi.vm.yti.datamodel.api.utils.JerseyJsonLDClient;
 import fi.vm.yti.datamodel.api.utils.ServiceDescriptionManager;
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.NodeIterator;
-import org.apache.jena.rdf.model.ResIterator;
-import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.rdf.model.*;
 import fi.vm.yti.datamodel.api.utils.JerseyResponseManager;
-import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.RDF;
 import io.swagger.annotations.Api;
@@ -152,9 +151,14 @@ public class Replicator {
                 conceptAdapter.add(modelURI.toString()+"/skos#",localConceptModel);
                  
                 Resource modelGROUP = res.getPropertyResourceValue(DCTerms.isPartOf);
-                
-                
-                ServiceDescriptionManager.createGraphDescription(modelURI.toString(), modelGROUP.toString(), null);
+
+                 StmtIterator orgIt = res.listProperties(DCTerms.contributor);
+                 List<UUID> orgUUIDs = new ArrayList();
+                 while(orgIt.hasNext()) {
+                     orgUUIDs.add(UUID.fromString(orgIt.next().getResource().getLocalName()));
+                 }
+
+                ServiceDescriptionManager.createGraphDescription(modelURI.toString(),null, orgUUIDs);
                 
                 Model exportedModel = JerseyJsonLDClient.getResourceAsJenaModel(service+"exportResource?graph="+modelURI.toString());
                 adapter.add(modelURI.toString(), exportedModel);

@@ -5,9 +5,12 @@
  */
 package fi.vm.yti.datamodel.api.config;
 
+import fi.vm.yti.datamodel.api.model.Role;
 import fi.vm.yti.datamodel.api.model.YtiUser;
+import fi.vm.yti.datamodel.api.utils.ServiceDescriptionManager;
 
 import javax.servlet.http.HttpSession;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -35,13 +38,19 @@ public class LoginSession implements LoginInterface {
         return !getUser().isAnonymous();
     }
 
-    @Override
+    @Deprecated
     public boolean isInGroup(String group) {
+        return false;
+    }
 
-        // TODO actual group to organization mapping
-        UUID organizationID = UUID.randomUUID();
-
-        return getUser().isInOrganization(organizationID, ADMIN, DATA_MODEL_EDITOR);
+    @Override
+    public boolean isInOrganization(String org) {
+        try {
+            UUID organizationUUID = UUID.fromString(org);
+            return getUser().isInOrganization(organizationUUID);
+        } catch(IllegalArgumentException ex) {
+            return false;
+        }
     }
 
     @Override
@@ -65,33 +74,30 @@ public class LoginSession implements LoginInterface {
             return true;
         }
 
-        // TODO model organizations mapping
-        // ServiceDescriptionManager.isModelInGroup(model, this.getGroups());
-        List<UUID> organizations = Collections.emptyList();
+        Collection<UUID> modelOrganizations = ServiceDescriptionManager.getModelOrganizations(model);
 
+        return getUser().isInAnyOrganization(modelOrganizations, asList(ADMIN, DATA_MODEL_EDITOR));
+    }
+
+    @Deprecated
+    public boolean isAdminOfGroup(String group) {
+        return false;
+    }
+
+    @Deprecated
+    public boolean hasRightToEditGroup(String group) {
+        return false;
+    }
+
+    public boolean isUserInOrganization(UUID organization) {
+        return getUser().isInOrganization(organization, asList(ADMIN, DATA_MODEL_EDITOR));
+    }
+
+    public boolean isUserInOrganization(List<UUID> organizations) {
         return getUser().isInAnyOrganization(organizations, asList(ADMIN, DATA_MODEL_EDITOR));
     }
-    
-    @Override
-    public boolean hasRightToEditGroup(String group) {
 
-        return getUser().isSuperuser() || ApplicationProperties.getDebugMode() || isInGroup(group);
-    }
-
-    @Override
-    public boolean isAdminOfGroup(String group) {
-
-        if (getUser().isSuperuser()) {
-            return true;
-        }
-
-        // TODO actual group to organization mapping
-        UUID organizationID = UUID.randomUUID();
-
-        return getUser().isInRole(ADMIN, organizationID);
-    }
-
-    private YtiUser getUser() {
+    public YtiUser getUser() {
 
         Object authenticatedUser = session.getAttribute("authenticatedUser");
 

@@ -48,6 +48,7 @@
     {
       "@id": "https://tt.eduuni.fi/sites/csc-iow#JHS",
       "@type": "foaf:Group",
+      "code":"EDUC",
       "references":"http://jhsmeta.fi/skos/",
       "label": {
 	  "fi":"Yhteiset tietokomponentit",

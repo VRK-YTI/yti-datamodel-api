@@ -190,6 +190,21 @@ public class JerseyJsonLDClient {
         
     }
 
+
+    public static Response getOrganizationsFromRHP() {
+
+        Response response = RHPOrganizationManager.getOrganizations();
+
+        if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
+            return JerseyResponseManager.unexpected(response.getStatus());
+        }
+
+        ResponseBuilder rb = Response.status(response.getStatus());
+        rb.entity(response.readEntity(InputStream.class));
+
+        return rb.build();
+    }
+
     @Deprecated
     public static Response getSearchResultFromFinto(String vocid, String term, String lang) {
         
@@ -488,84 +503,6 @@ public class JerseyJsonLDClient {
     }
     
     /**
-     * Returns Jena model of the terminology
-     * @param uri
-     * @return Model
-     */
-    public static Model getSchemeAsModelFromTermedAPI(String uri) {
-        String url = ApplicationProperties.getDefaultTermAPI()+"ext";
-        try {
-            Client client = IgnoreSSLClient(); //ClientBuilder.newClient();
-            HttpAuthenticationFeature feature = TermedAuthentication.getTermedAuth();
-            client.register(feature);
-
-            WebTarget target = client.target(url).queryParam("typeId", "TerminologicalVocabulary").queryParam("uri",uri).queryParam("max", "-1");
-            Response response = target.request("application/rdf+xml").get();
-
-            logger.info("TERMED CALL: "+target.getUri().toString());
-            
-            if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-               logger.log(Level.INFO, response.getStatus()+" from URL: "+url);
-               return null;
-            }
-
-            Model schemeModel = ModelFactory.createDefaultModel();
-            schemeModel.read(response.readEntity(InputStream.class), uri);
-
-           return schemeModel;
-           
-        } catch(Exception ex) {
-          logger.log(Level.WARNING, "Expect the unexpected!", ex);
-          return null;
-        }
-    }
-
-
-    /**
-     * Returns concept as Jena model
-     * @param resourceURI
-     * @return Model
-     */
-    public static Model getConceptAsJenaModel(String resourceURI) {
-         
-        String url = ApplicationProperties.getDefaultTermAPI()+"ext";
-
-        try {
-
-             Client client = IgnoreSSLClient(); //ClientBuilder.newClient();
-             HttpAuthenticationFeature feature = TermedAuthentication.getTermedAuth();
-             client.register(feature);
-
-             WebTarget target = client.target(url).queryParam("typeId", "Concept").queryParam("uri",resourceURI).queryParam("max", "-1");
-
-             Response response = target.request("text/turtle").get();
-
-
-             if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-                logger.info("FAIL: "+target.getUri().toString());
-                return null;
-             }
-
-            logger.info(target.getUri().toString());
-
-             Model model = ModelFactory.createDefaultModel();
-
-             try {
-             RDFReader reader = model.getReader(Lang.TURTLE.getName());
-             reader.read(model, response.readEntity(InputStream.class), resourceURI);
-             } catch(RiotException ex) {
-                 return model;
-             }
-
-             return model;
-
-        } catch(Exception ex) {
-            logger.log(Level.WARNING, "Expect the unexpected!", ex);
-            return null;
-        }
-    }
-    
-    /**
      * Returns concept as Jersey Response
      * @param uri uri of the concept
      * @param schemeUUID of the vocabulary
@@ -722,7 +659,7 @@ public class JerseyJsonLDClient {
      */
     public static Response constructFromTermedAndCore(String conceptID, String modelID, Query query) {
         
-            Model conceptModel = JerseyJsonLDClient.getConceptAsJenaModel(conceptID);
+            Model conceptModel = TermedTerminologyManager.getConceptAsJenaModel(conceptID);
             
             if(conceptModel==null) return JerseyResponseManager.notFound();
             
@@ -776,7 +713,24 @@ public class JerseyJsonLDClient {
             return rb.build();
           
     }
-    
+
+    /**
+     * Constructs Jersey response from Jena model or returns error
+     * @param graph Jena model
+     * @return Response
+     */
+
+    public static Response constructResponseFromGraph(Model graph) {
+
+        if(graph==null ||graph.size()<=0) {
+            return JerseyResponseManager.error();
+        }
+
+        ResponseBuilder rb = Response.ok();
+        rb.entity(ModelManager.writeModelToString(graph));
+        return rb.build();
+    }
+
     /**
      * Constructs graph from one service and adds it to another
      * @param query Construct query

@@ -48,7 +48,7 @@ public class User {
       @ApiResponse(code = 401, message = "Not logged in"),
       @ApiResponse(code = 404, message = "Service not found") 
   })
-    @Produces("application/ld+json")
+    @Produces("application/json")
     public Response getUser(@Context HttpServletRequest request) {
         
         logger.info("Getting user");
@@ -61,35 +61,8 @@ public class User {
         } else {
              return JerseyResponseManager.unauthorized();
         }
-        
-        String email = login.getEmail();
-        
-        String queryString;
-        ParameterizedSparqlString pss = new ParameterizedSparqlString();
-        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
-            
-        queryString = "CONSTRUCT { "
-                + "?id a foaf:Person ; foaf:name ?name . "
-                + "?id iow:login ?login . "
-                + "?id dcterms:created ?created . "
-                + "?id dcterms:modified ?modified . "
-                + "?id dcterms:isPartOf ?group . "
-                + "?id dcterms:isAdminOf ?group . "
-                + "} WHERE { "
-                + "GRAPH <urn:csc:users> { "
-                + "?id a foaf:Person ; foaf:name ?name; foaf:mbox ?email ; "
-                + "dcterms:created ?created . "
-                + "OPTIONAL { ?id dcterms:isPartOf ?group . } "
-                + "OPTIONAL { ?id iow:isAdminOf ?group . } "
-                + "OPTIONAL { ?id dcterms:modified ?modified . }"
-                + "}}"; 
-         
-        pss.setCommandText(queryString);
-        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
-        pss.setLiteral("email", email);
-        pss.setLiteral("login", login.isLoggedIn());
 
-        return JerseyJsonLDClient.constructGraphFromServiceDirect(pss.toString(), services.getUsersSparqlAddress());
+        return Response.status(200).entity(login.getUser()).build();
 
     }
     

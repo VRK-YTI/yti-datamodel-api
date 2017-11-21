@@ -16,8 +16,30 @@ public class QueryLibrary {
                 + "GRAPH ?graph {"
                 + " ?every ?darn ?thing . }"
                 + "}";
+
+    final public static String conceptQuery = LDHelper.expandSparqlQuery(true,
+            "CONSTRUCT {" +
+                    "?concept skos:prefLabel ?label . " +
+                    "?concept rdf:type skos:Concept . " +
+                    "?concept skos:definition ?definition . " +
+                    "?concept skos:inScheme ?scheme . " +
+                    "?scheme a skos:ConceptScheme . " +
+                    "?scheme dcterms:title ?title . " +
+                    "?concept termed:graph ?graph . " +
+                    "?graph termed:id ?schemeUUID . }" +
+                    "WHERE {" +
+                    "?concept skosxl:prefLabel ?xlLabel . " +
+                    "?concept skos:definition ?definition . " +
+                    "?xlLabel skosxl:literalForm ?label . " +
+                    "?concept termed:graph ?graph . " +
+                    "?graph termed:id ?schemeUUID . " +
+                    "?scheme termed:graph ?graph . " +
+                    "?scheme dcterms:title ?title . " +
+                    "?scheme a skos:ConceptScheme . " +
+                    "}" +
+            "");
     
-    final public static String modelQuery = LDHelper.expandSparqlQuery(
+    final public static String modelQuery = LDHelper.expandSparqlQuery(true,
                      "CONSTRUCT { "
                      + "?s ?p ?o . "
                      + "?graph dcterms:requires ?req . "
@@ -27,17 +49,14 @@ public class QueryLibrary {
                      + "?req dcap:preferredXMLNamespacePrefix ?prefixes . "
                      + "?graph dcterms:isPartOf ?group . "
                      + "?group a foaf:Group . "
-                     + "?group dcterms:references ?skosScheme . "
-                     + "?skosScheme termed:id ?schemeId . "
-                     + "?skosScheme dcterms:title ?schemeTitle . "
-                     + "?skosScheme termed:graph ?termedGraph . "
-                     + "?termedGraph termed:id ?termedGraphId . "
-                     + "?termedGraph termed:code ?termedGraphCode . "
                      + "?group rdfs:label ?groupLabel . "
                      + "?group foaf:homepage ?homepage . "
+                     + "?graph dcterms:contributor ?org . "
+                     + "?org skos:prefLabel ?orgLabel . "
                      + "} WHERE { "
                      + "GRAPH ?graph { "
                      + " ?s ?p ?o . "
+                     + " ?graph dcterms:isPartOf ?group . "
                      + "} "
                      + "OPTIONAL { "
                      + "GRAPH ?graph {"
@@ -49,25 +68,49 @@ public class QueryLibrary {
                      + "  ?req dcap:preferredXMLNamespaceName ?namespaces . "
                      + "  ?req dcap:preferredXMLNamespacePrefix ?prefixes . "
                      + " }"
-                     + "}" 
+                     + "}"
+                     + "GRAPH <urn:yti:servicecategories> { "
+                     + "?group skos:prefLabel ?groupLabel . "
+                     + "}"
                      + "GRAPH <urn:csc:iow:sd> { "
                      + " ?metaGraph a sd:NamedGraph . "
                      + " ?metaGraph sd:name ?graph . "
-                     + " ?metaGraph dcterms:isPartOf ?group . "
+                     + " ?metaGraph dcterms:contributor ?org . "
                      + "} "
-                     + "GRAPH <urn:csc:groups> { "
-                     + " ?group a foaf:Group . "
-                     + "?group dcterms:references ?skosScheme . "
-                     + "?skosScheme termed:id ?schemeId . "
-                     + "?skosScheme dcterms:title ?schemeTitle . "
-                     + "?skosScheme termed:graph ?termedGraph . "
-                     + "?termedGraph termed:id ?termedGraphId . "
-                     + "?termedGraph termed:code ?termedGraphCode . "
-                     + " ?group foaf:homepage ?homepage . "
-                     + " ?group rdfs:label ?groupLabel . "
+                     + "GRAPH <urn:yti:organizations> {"
+                     + "?org skos:prefLabel ?orgLabel . "
                      + "}"
                      + "}");
-    
+
+    final public static String modelsByGroupQuery = LDHelper.expandSparqlQuery(true,
+            "CONSTRUCT { "
+                + "?graphName rdfs:label ?label . "
+                + "?graphName a ?type . "
+                + "?graphName dcterms:isPartOf ?group . "
+                + "?graphName dcap:preferredXMLNamespaceName ?namespace . "
+                + "?graphName dcap:preferredXMLNamespacePrefix ?prefix .  "
+                + "?group a foaf:Group . "
+                + "?group rdfs:label ?groupLabel . "
+                + "?graphName dcterms:contributor ?org . "
+                + "?org skos:prefLabel ?orgLabel . "
+                + "} WHERE { "
+                + "GRAPH <urn:yti:servicecategories> { "
+                + "?group at:op-code ?groupCode . "
+                + "?group skos:prefLabel ?groupLabel . "
+                + "}"
+                + "GRAPH ?graphName { "
+                + "?graphName dcterms:isPartOf ?group . "
+                + "?graphName dcterms:contributor ?org . "
+                + "?graphName a ?type . "
+                + "?graphName rdfs:label ?label . "
+                + "?graphName dcap:preferredXMLNamespaceName ?namespace . "
+                + "?graphName dcap:preferredXMLNamespacePrefix ?prefix .  "
+                + "}"
+                + "GRAPH <urn:yti:organizations> {"
+                + "?org skos:prefLabel ?orgLabel . "
+                + "}"
+                + "}");
+
     
         final public static String listClassesQuery = LDHelper.expandSparqlQuery(
                     "CONSTRUCT { "

@@ -5,11 +5,16 @@ package fi.vm.yti.datamodel.api.endpoint.concepts;
 
 import fi.vm.yti.datamodel.api.utils.JerseyJsonLDClient;
 import fi.vm.yti.datamodel.api.config.EndpointServices;
+import fi.vm.yti.datamodel.api.utils.LDHelper;
+import fi.vm.yti.datamodel.api.utils.QueryLibrary;
+import fi.vm.yti.datamodel.api.utils.TermedTerminologyManager;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import org.apache.jena.query.ParameterizedSparqlString;
+
 import java.util.logging.Logger;
 import javax.servlet.ServletContext;
 import javax.ws.rs.core.Context;
@@ -46,8 +51,17 @@ public class Concept {
           @QueryParam("uri") String uri,
           @ApiParam(value = "schemeUUID") 
           @QueryParam("schemeUUID") String schemeUUID) {
-      
-        return JerseyJsonLDClient.getConceptFromTermedAPI(uri,schemeUUID);
+
+          ParameterizedSparqlString pss = new ParameterizedSparqlString();
+          pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+          if(uri!=null && !uri.equals("undefined")) pss.setIri("concept",uri);
+          if(schemeUUID!=null && !schemeUUID.equals("undefined")) pss.setLiteral("schemeUUID",schemeUUID);
+          pss.setCommandText(QueryLibrary.conceptQuery);
+          logger.info(pss.toString());
+
+
+       return JerseyJsonLDClient.constructResponseFromGraph(TermedTerminologyManager.constructCleanedModelFromTempConceptService(pss.toString()));
+       // return JerseyJsonLDClient.getConceptFromTermedAPI(uri,schemeUUID);
       
   }
    

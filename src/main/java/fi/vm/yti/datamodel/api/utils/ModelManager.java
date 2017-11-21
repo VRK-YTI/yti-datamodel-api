@@ -11,8 +11,10 @@ import java.io.ByteArrayInputStream;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 
+import fi.vm.yti.datamodel.api.model.AbstractModel;
 import org.apache.jena.rdf.model.Model;
 
+import java.util.List;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -41,33 +43,78 @@ public class ModelManager {
         return writer.toString();
     }
 
+
+
+
     /**
      * Create jena model from json-ld string
      * @param modelString RDF as JSON-LD string
      * @return Model
      */
-    public static Model createModelFromString(String modelString) {
+    public static Model createModelFromString(String modelString) throws IllegalArgumentException {
         Model model = ModelFactory.createDefaultModel();
         
         try {
             RDFDataMgr.read(model, new ByteArrayInputStream(modelString.getBytes("UTF-8")), Lang.JSONLD) ;
         } catch (UnsupportedEncodingException ex) {
             Logger.getLogger(ModelManager.class.getName()).log(Level.SEVERE, null, ex);
+            throw new IllegalArgumentException("Could not parse the model");
         }
        
         return model;
         
     }
 
+    public static boolean createNewModel(String id, Model graph, LoginSession login, String provUUID, List<UUID> orgList) {
+
+        if (GraphManager.isExistingGraph(id)) {
+            return false;
+        } else {
+            GraphManager.putToGraph(graph, id);
+            ServiceDescriptionManager.createGraphDescription(id, login.getEmail(), orgList);
+
+            if(ProvenanceManager.getProvMode()) {
+
+                ProvenanceManager.createProvenanceGraphFromModel(id, graph, login.getEmail(),provUUID);
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Created new model with jena model
+     * @param graph Parsed jena model
+     * @param login User session
+     * @return UUID of the model
+     */
+    @Deprecated
+    public static String createNewModel(String id, Model graph, LoginSession login) {
+
+        String provUUID = "urn:uuid:"+UUID.randomUUID();
+
+        if (GraphManager.isExistingGraph(id)) {
+            return null;
+        } else {
+            GraphManager.putToGraph(graph, id);
+
+            if(ProvenanceManager.getProvMode()) {
+
+                ProvenanceManager.createProvenanceGraphFromModel(id, graph, login.getEmail(),provUUID);
+            }
+        }
+
+        return provUUID;
+    }
+
     /**
      * Creates new model to the core database
      * @param graph Graph of the model
-     * @param group Group of the model
      * @param body Content of the model as json-ld string
      * @param login User session
      * @return UUID of the model
      */
-    public static UUID createNewModel(String graph, String group, String body, LoginSession login) {
+    public static UUID createNewModel(String graph, List<UUID> orgList, String body, LoginSession login) {
         
         String service = services.getCoreReadWriteAddress();
         
@@ -75,7 +122,7 @@ public class ModelManager {
 
         if(!success) return null;
             
-        ServiceDescriptionManager.createGraphDescription(graph, group, login.getEmail());
+        ServiceDescriptionManager.createGraphDescription(graph, login.getEmail(), orgList);
        
         UUID provUUID = UUID.randomUUID();
                     
@@ -118,7 +165,7 @@ public class ModelManager {
                 
         /* If update is successfull create new prov entity */ 
         if(ProvenanceManager.getProvMode()) {
-            ProvenanceManager.createProvenanceGraph(graph, body, login.getEmail(), provUUID); 
+            ProvenanceManager.createProvenanceGraph(graph, body, login.getEmail(), "urn:uuid:"+provUUID);
         }
 
         GraphManager.createExportGraphInRunnable(graph);
@@ -128,6 +175,34 @@ public class ModelManager {
         return provUUID;
     }
 
+
+    /**
+     * Updates model
+     * @param graph Graph to be updated
+     */
+
+    public static void updateModel(AbstractModel graph, LoginSession login) {
+
+        String service = services.getCoreReadWriteAddress();
+        ServiceDescriptionManager.updateGraphDescription(graph.getId());
+
+        GraphManager.putToGraph(graph.asGraph(), graph.getId());
+
+        // TODO: Update model dates instead?
+        GraphManager.updateModifyDates(graph.getId());
+
+        String provUUID = graph.getProvUUID();
+
+        if(ProvenanceManager.getProvMode()) {
+            ProvenanceManager.createProvenanceGraphFromModel(graph.getId(), graph.asGraph(), login.getEmail(), provUUID);
+        }
+
+        GraphManager.createExportGraphInRunnable(graph.getId());
+
+        logger.info("Updated :"+graph.getId());
+
+    }
+
     /**
      * Updates model
      * @param graph Graph to be updated
@@ -135,8 +210,8 @@ public class ModelManager {
      * @param login Login session
      * @return UUID of the model
      */
-    
-    public static UUID updateModel(String graph, Model model, LoginSession login) {
+    @Deprecated
+    public static String updateModel(String graph, Model model, LoginSession login) {
         
         String service = services.getCoreReadWriteAddress();
         ServiceDescriptionManager.updateGraphDescription(graph);
@@ -145,7 +220,7 @@ public class ModelManager {
         
         GraphManager.updateModifyDates(graph);
         
-        UUID provUUID = UUID.randomUUID();
+        String provUUID = "urn:uuid:"+UUID.randomUUID();
                 
         /* If update is successfull create new prov entity */ 
         if(ProvenanceManager.getProvMode()) {

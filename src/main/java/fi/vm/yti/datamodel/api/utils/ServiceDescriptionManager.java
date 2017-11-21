@@ -6,20 +6,19 @@
 package fi.vm.yti.datamodel.api.utils;
 
 import fi.vm.yti.datamodel.api.config.EndpointServices;
-import java.util.Date;
+
+import java.util.*;
 
 import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.NodeFactory;
-import org.apache.jena.query.ParameterizedSparqlString;
-import org.apache.jena.query.Query;
-import org.apache.jena.query.QueryExecution;
-import org.apache.jena.query.QueryExecutionFactory;
+import org.apache.jena.iri.IRI;
+import org.apache.jena.iri.IRIException;
+import org.apache.jena.query.*;
 import org.apache.jena.update.UpdateExecutionFactory;
 import org.apache.jena.update.UpdateProcessor;
 import org.apache.jena.update.UpdateRequest;
-import java.util.HashMap;
-import java.util.Iterator;
+
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -69,11 +68,46 @@ public class ServiceDescriptionManager {
     }
 
     /**
+     * Get Collection of related organization UUIDs from the model
+     * @param model ID of the model
+     * @return Collection<UUID>
+     */
+
+    public static HashSet<UUID> getModelOrganizations(String model) {
+
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        String getOrgs
+                = "SELECT ?org WHERE { "
+                + "GRAPH <urn:csc:iow:sd> { "
+                + "?graph sd:name ?graphName ."
+                + "?graph dcterms:contributor ?org . "
+                + "}}";
+
+        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+        pss.setIri("graphName",model);
+        pss.setCommandText(getOrgs);
+
+        QueryExecution qexec = QueryExecutionFactory.sparqlService(services.getCoreSparqlAddress(), pss.asQuery());
+
+        ResultSet results = qexec.execSelect();
+        HashSet<UUID> orgUUIDs = new HashSet<>();
+
+        while (results.hasNext()) {
+            QuerySolution soln = results.nextSolution();
+            orgUUIDs.add(UUID.fromString(soln.getResource("org").getLocalName().toString()));
+        }
+
+        return orgUUIDs;
+
+    }
+
+    /**
      * Checks if model is in the list of groups given
      * @param model ID of the model
      * @param groupList List of group IDs
      * @return boolean
      */
+    @Deprecated
     public static boolean isModelInGroup(String model, HashMap<String,Boolean> groupList) {
         
         Iterator<String> groupIterator = groupList.keySet().iterator();
@@ -121,22 +155,34 @@ public class ServiceDescriptionManager {
     /**
      * Creates graph description for the new model
      * @param graph ID of the graph
-     * @param group ID of the group
+     * @param orgs UUIDs of the organizations
      * @param userMail User email
      */
-    public static void createGraphDescription(String graph, String group, String userMail) {
+    public static void createGraphDescription(String graph, String userMail, List<UUID> orgs) throws IRIException {
         
         String timestamp = SafeDateFormat.fmt().format(new Date());
-        
+
+        if(orgs==null || orgs.isEmpty()) {
+            logger.warning("Cannot create graph description without organizations");
+            throw new NullPointerException();
+        }
+
+        String orgString = LDHelper.concatWithReplace(orgs, ",","<urn:uuid:@this>");
+        logger.info("Parsed org UUIDs: "+orgString);
+
+        //String serviceString = concatServices(serviceCategories);
+       // logger.info("Parsed services: "+serviceString);
+
          String query = 
                 "WITH <urn:csc:iow:sd>"+
                 "INSERT { ?graphCollection sd:namedGraph _:graph . "+
                 " _:graph a sd:NamedGraph . "+
                 " _:graph sd:name ?graphName . "+
                 " _:graph dcterms:created ?timestamp . "+
-                 " _:graph dcterms:isPartOf ?group . "+
+              //   " _:graph dcterms:isPartOf "+serviceString+" . "+
+                 "_:graph dcterms:contributor "+orgString+" . "+
                  " _:graph dcterms:creator ?creator . "+
-                "} WHERE {"+
+                "} WHERE { "+
                 " ?service a sd:Service . "+
                 " ?service sd:availableGraphs ?graphCollection . "+
                 " ?graphCollection a sd:GraphCollection . "+
@@ -144,14 +190,11 @@ public class ServiceDescriptionManager {
                 " ?graphCollection sd:namedGraph ?graph . "+
                 " ?graph sd:name ?graphName . "+
                 "}}";
-        
-          
-         
+
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
 
         pss.setIri("graphName", graph);
-        pss.setIri("group", group);
         if(userMail!=null) pss.setIri("creator", "mailto:"+userMail);
         pss.setLiteral("timestamp", timestamp,XSDDatatype.XSDdateTime);
         pss.setCommandText(query);

@@ -31,6 +31,7 @@ import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.riot.RDFLanguages;
+import org.apache.jena.util.FileManager;
 import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.web.DatasetAdapter;
@@ -125,6 +126,13 @@ public class GraphManager {
         lock.unlock();
           
     }
+
+    public static void initServiceCategories() {
+        Model m = FileManager.get().loadModel("data-theme-skos.rdf");
+        DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(services.getCoreReadWriteAddress());
+        DatasetAdapter adapter = new DatasetAdapter(accessor);
+        adapter.putModel("urn:yti:servicecategories",m);
+    }
     
     /**
      * Deleted export graph
@@ -134,6 +142,7 @@ public class GraphManager {
         DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(services.getCoreReadWriteAddress());
         DatasetAdapter adapter = new DatasetAdapter(accessor);  
         adapter.deleteModel(graph+"#ExportGraph");
+
     }
     
     /**
@@ -151,13 +160,24 @@ public class GraphManager {
     
     /**
      * Returns graph from core service
-     * @param graph IRI of the graph
+     * @param graph String IRI of the graph
      * @return Returns graph as Jena model
      */
     public static Model getCoreGraph(String graph){
         DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(services.getCoreReadWriteAddress());
         DatasetAdapter adapter = new DatasetAdapter(accessor);
         return adapter.getModel(graph);
+    }
+
+    /**
+     * Returns graph from core service
+     * @param graph IRI of the graph
+     * @return Returns graph as Jena model
+     */
+    public static Model getCoreGraph(IRI graph){
+        DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(services.getCoreReadWriteAddress());
+        DatasetAdapter adapter = new DatasetAdapter(accessor);
+        return adapter.getModel(graph.toString());
     }
     
     /**
@@ -251,6 +271,7 @@ public class GraphManager {
             return false;
         }
     }
+
     
     /**
      * Check if Graph is existing
@@ -951,7 +972,6 @@ public class GraphManager {
         
       DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(services.getCoreReadWriteAddress());
       DatasetAdapter adapter = new DatasetAdapter(accessor);
-      
       adapter.putModel(id, model);
  
         
