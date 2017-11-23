@@ -51,7 +51,7 @@ public class ModelManager {
      * @param modelString RDF as JSON-LD string
      * @return Model
      */
-    public static Model createModelFromString(String modelString) throws IllegalArgumentException {
+    public static Model createJenaModelFromJSONLDString(String modelString) throws IllegalArgumentException {
         Model model = ModelFactory.createDefaultModel();
         
         try {

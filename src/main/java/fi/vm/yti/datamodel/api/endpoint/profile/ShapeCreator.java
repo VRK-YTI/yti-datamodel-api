@@ -14,6 +14,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 
 import fi.vm.yti.datamodel.api.config.EndpointServices;
+import fi.vm.yti.datamodel.api.model.Shape;
 import fi.vm.yti.datamodel.api.utils.JerseyResponseManager;
 import fi.vm.yti.datamodel.api.utils.GraphManager;
 import fi.vm.yti.datamodel.api.utils.IDManager;
@@ -30,6 +31,7 @@ import java.util.UUID;
 import javax.servlet.http.HttpServletRequest;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
+import org.apache.jena.rdf.model.Model;
 import org.apache.jena.util.SplitIRI;
 
 /**
@@ -40,7 +42,6 @@ import org.apache.jena.util.SplitIRI;
 public class ShapeCreator {
 
     @Context ServletContext context;
-    EndpointServices services = new EndpointServices();
     private static final Logger logger = Logger.getLogger(ShapeCreator.class.getName());
     
     @GET
@@ -71,92 +72,9 @@ public class ShapeCreator {
                     return JerseyResponseManager.invalidIRI();
             }
 
-            ParameterizedSparqlString pss = new ParameterizedSparqlString();
-            pss.setNsPrefixes(LDHelper.PREFIX_MAP);
-            
-            String queryString;
-            String service;
-                
-            /* Create Shape from Class */
-           if(GraphManager.isExistingServiceGraph(SplitIRI.namespace(classID))) {
+           Shape newShape = new Shape(classIRI,profileIRI,shapeIRI);
 
-                service = services.getCoreSparqlAddress();
-                queryString = "CONSTRUCT  { "
-                    + "?shapeIRI owl:versionInfo ?draft . "
-                    + "?shapeIRI dcterms:modified ?modified . "
-                    + "?shapeIRI dcterms:created ?creation . "
-                    + "?shapeIRI sh:scopeClass ?classIRI . "
-                    + "?shapeIRI a sh:Shape . "
-                    + "?shapeIRI rdfs:isDefinedBy ?model . "
-                    + "?shapeIRI rdfs:label ?label . "
-                    + "?shapeIRI rdfs:comment ?comment . "
-                    + "?shapeIRI dcterms:subject ?concept . "
-                    + "?concept skos:prefLabel ?prefLabel . "
-                    + "?concept skos:definition ?definition . "
-                    + "?concept skos:inScheme ?scheme . "
-                    + "?scheme dcterms:title ?title . "
-                    + "?scheme termed:id ?schemeId . "
-                    + "?scheme termed:graph ?termedGraph . "
-                    + "?concept termed:graph ?termedGraph . "
-                    + "?termedGraph termed:id ?termedGraphId . "
-                    + "?shapeIRI sh:property ?shapeuuid . "
-                    + "?shapeuuid ?p ?o . "
-                    + "} WHERE { "
-                    + "BIND(now() as ?creation) "
-                    + "BIND(now() as ?modified) "
-                    + "GRAPH ?classIRI { "
-                    + "?classIRI a rdfs:Class . "
-                    + "?classIRI rdfs:label ?label . "
-                    + "OPTIONAL { ?classIRI rdfs:comment ?comment . } "
-                    + "{ "
-                    + "?classIRI dcterms:subject ?concept . "
-                    + "?concept skos:prefLabel ?prefLabel . "
-                    + "?concept skos:definition ?definition . "
-                    + "} UNION { "
-                    + "?classIRI dcterms:subject ?concept . "
-                    + "?concept skos:prefLabel ?prefLabel . "
-                    + "?concept skos:definition ?definition . "
-                    + "?concept skos:inScheme ?collection . "
-                    + "?collection dcterms:title ?title . "
-                    + "} UNION { "
-                    + "?classIRI dcterms:subject ?concept . "
-                    + "?concept skos:inScheme ?scheme . "
-                    + "?concept skos:prefLabel ?prefLabel . "
-                    + "?concept skos:definition ?definition . "
-                    + "?scheme dcterms:title ?title . "
-                    + "?scheme termed:id ?schemeId . "
-                    + "?scheme termed:graph ?termedGraph . "
-                    + "?concept termed:graph ?termedGraph . "
-                    + "?termedGraph termed:id ?termedGraphId . "
-                    + "}"
-                        
-                    + "OPTIONAL {"
-                    + "?classIRI sh:property ?property .  "
-                    /* Todo: Issue 472 */
-                   + "BIND(IRI(CONCAT(STR(?property),?shapePropertyID)) as ?shapeuuid)" 
-                   + "?property ?p ?o . "
-                    + "}} "
-                    + "}";
-                
-                pss.setLiteral("shapePropertyID", "-"+UUID.randomUUID().toString());
-
-            } else {           
-            /* Create Shape from external IMPORT */   
-                service = services.getImportsSparqlAddress();
-                logger.info("Using ext query:");
-                queryString = QueryLibrary.externalShapeQuery;
-                logger.info(queryString);           
-            }
-   
-            pss.setCommandText(queryString);
-            pss.setIri("classIRI", classIRI);
-            pss.setIri("model", profileIRI);
-            pss.setIri("modelService",services.getLocalhostCoreSparqlAddress());
-            pss.setLiteral("draft", "Unstable");
-            pss.setIri("shapeIRI",shapeIRI);
-
-
-            return JerseyJsonLDClient.constructNotEmptyGraphFromService(pss.toString(), service);
+           return JerseyJsonLDClient.constructResponseFromGraph(newShape.asGraph());
     }   
  
 }

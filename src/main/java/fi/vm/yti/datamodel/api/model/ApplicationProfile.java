@@ -6,28 +6,28 @@ import org.apache.jena.iri.IRI;
 import org.apache.jena.query.ParameterizedSparqlString;
 import org.apache.jena.query.QueryExecution;
 import org.apache.jena.query.QueryExecutionFactory;
-import org.apache.jena.rdf.model.*;
+import org.apache.jena.rdf.model.ResourceFactory;
 
 import java.util.List;
 import java.util.UUID;
 import java.util.logging.Logger;
 
 /**
- * Created by malonen on 14.11.2017.
+ * Created by malonen on 22.11.2017.
  */
-public class DataModel extends AbstractModel {
+public class ApplicationProfile extends AbstractModel {
 
-    private static final Logger logger = Logger.getLogger(DataModel.class.getName());
+    private static final Logger logger = Logger.getLogger(ApplicationProfile.class.getName());
 
-    public DataModel(IRI graphId) throws IllegalArgumentException {
-        super(graphId);
+    public ApplicationProfile(IRI profileId) {
+        super(profileId);
     }
 
-    public DataModel(String jsonld) throws IllegalArgumentException {
+    public ApplicationProfile(String jsonld) {
         super(ModelManager.createJenaModelFromJSONLDString(jsonld));
     }
 
-    public DataModel(String prefix, IRI namespace, String label, String lang, String allowedLang, List<String> serviceList, List<UUID> orgList) {
+    public ApplicationProfile(String prefix, IRI namespace, String label, String lang, String allowedLang, List<String> serviceList, List<UUID> orgList) {
 
         this.modelOrganizations = orgList;
         logger.info("Creating new datamodel with SPARQL CONSTRUCT");
@@ -44,7 +44,7 @@ public class DataModel extends AbstractModel {
         //TODO: Return list of recommended skos schemes?
         String queryString = "CONSTRUCT  { "
                 + "?modelIRI a owl:Ontology . "
-                + "?modelIRI a dcap:MetadataVocabulary . "
+                + "?modelIRI a dcap:DCAP . "
                 + "?modelIRI rdfs:label ?mlabel . "
                 + "?modelIRI owl:versionInfo ?draft . "
                 + "?modelIRI dcterms:created ?creation . "
@@ -67,6 +67,41 @@ public class DataModel extends AbstractModel {
                 + "}"
                 + "}";
 
+        /*
+
+         String queryString = "CONSTRUCT  { "
+                + "?modelIRI a owl:Ontology . "
+                + "?modelIRI a dcap:DCAP . "
+                + "?modelIRI rdfs:label ?profileLabel . "
+                + "?modelIRI owl:versionInfo ?draft . "
+                + "?modelIRI dcterms:created ?creation . "
+                + "?modelIRI dcterms:modified ?creation . "
+                + "?modelIRI dcterms:language "+allowedLang+" . "
+                + "?modelIRI dcap:preferredXMLNamespaceName ?namespace . "
+                + "?modelIRI dcap:preferredXMLNamespacePrefix ?prefix . "
+                + "?modelIRI dcterms:isPartOf ?group . "
+                + "?group rdfs:label ?groupLabel . "
+                + "?group dcterms:references ?skosScheme . "
+                + "?skosScheme dcterms:title ?schemeTitle . "
+                + "?skosScheme termed:graph ?termedGraph . "
+                + "?termedGraph termed:id ?termedGraphId . "
+                + "?termedGraph termed:code ?termedGraphCode . "
+        + "} WHERE { "
+                + "BIND(now() as ?creation) "
+                + "GRAPH <urn:csc:groups> { "
+                + "?group a foaf:Group . "
+                + "?group dcterms:references ?skosScheme . "
+                + "?skosScheme dcterms:title ?schemeTitle . "
+                + "?skosScheme termed:graph ?termedGraph . "
+                + "?termedGraph termed:id ?termedGraphId . "
+                + "?termedGraph termed:code ?termedGraphCode . "
+                + "?group rdfs:label ?groupLabel . "
+                + "FILTER(lang(?groupLabel) = ?defLang)"
+                + "}"
+                + "}";
+
+         */
+
         pss.setCommandText(queryString);
 
         if(namespace.toString().endsWith("/")) {
@@ -86,8 +121,7 @@ public class DataModel extends AbstractModel {
         QueryExecution qexec = QueryExecutionFactory.sparqlService(services.getCoreSparqlAddress(), pss.toString());
         this.graph = qexec.execConstruct();
 
+
     }
-
-
 
 }

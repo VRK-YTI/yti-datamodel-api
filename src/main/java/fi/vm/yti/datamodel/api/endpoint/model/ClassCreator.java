@@ -11,14 +11,11 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
-
+import fi.vm.yti.datamodel.api.model.ReusableClass;
 import fi.vm.yti.datamodel.api.utils.JerseyJsonLDClient;
 import fi.vm.yti.datamodel.api.utils.JerseyResponseManager;
-import fi.vm.yti.datamodel.api.utils.LDHelper;
 import fi.vm.yti.datamodel.api.config.EndpointServices;
 import fi.vm.yti.datamodel.api.utils.IDManager;
-import org.apache.jena.query.ParameterizedSparqlString;
-import org.apache.jena.rdf.model.ResourceFactory;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -61,56 +58,9 @@ public class ClassCreator {
                     return JerseyResponseManager.invalidIRI();
             }
 
-            ParameterizedSparqlString pss = new ParameterizedSparqlString();
-            pss.setNsPrefixes(LDHelper.PREFIX_MAP);
-            
-            String queryString = "CONSTRUCT  { "
-                    + "?classIRI iow:contextIdentifier ?localIdentifier . "
-                    + "?classIRI owl:versionInfo ?draft . "
-                    + "?classIRI dcterms:modified ?modified . "
-                    + "?classIRI dcterms:created ?creation . "
-                    + "?classIRI a rdfs:Class . "
-                    + "?classIRI rdfs:isDefinedBy ?model . "
-                    + "?model rdfs:label ?modelLabel . "
-                    + "?model a ?modelType . "
-                    + "?classIRI rdfs:label ?classLabel . "
-                    + "?classIRI rdfs:comment ?comment . "
-                    + "?classIRI dcterms:subject ?concept . "
-                    + "?concept a skos:Concept . "
-                    + "?concept skos:prefLabel ?label . "
-                    + "?concept skos:definition ?comment . "
-                    + "?concept skos:inScheme ?scheme . "
-                    + "?scheme dcterms:title ?title . "
-                    + "?scheme termed:id ?schemeId . "
-                    + "?scheme termed:graph ?termedGraph . "
-                    + "?concept termed:graph ?termedGraph . "
-                    + "?termedGraph termed:id ?termedGraphId . "
-                    + "} WHERE { "
-                    + "BIND(now() as ?creation) "
-                    + "BIND(now() as ?modified) "
-                    + "?model a ?modelType . "
-                    + "?model rdfs:label ?modelLabel . "
-                    + "?concept a skos:Concept . "
-                    + "?concept skos:inScheme ?scheme . "
-                    + "?scheme dcterms:title ?title . "
-                    + "?scheme a skos:ConceptScheme . "
-                    + "{ ?concept skos:prefLabel ?label . }"
-                    + "UNION { ?concept skosxl:prefLabel ?literalForm . ?literalForm skosxl:literalForm ?label . }"
-                    + "?concept termed:graph ?termedGraph . "
-                    + "?termedGraph termed:id ?termedGraphId . "
-                    + "OPTIONAL {"
-                    + "?concept skos:definition ?comment . } "
-                    + "}";
+            ReusableClass newClass = new ReusableClass(conceptIRI, modelIRI, classLabel, lang);
 
-            pss.setCommandText(queryString);
-            pss.setIri("concept", conceptIRI);
-            pss.setIri("model", modelIRI);
-            pss.setLiteral("draft", "Unstable");
-            pss.setLiteral("classLabel", ResourceFactory.createLangLiteral(classLabel, lang));
-            String resourceName = LDHelper.resourceName(classLabel);
-            pss.setIri("classIRI",LDHelper.resourceIRI(modelID,resourceName));
-
-            return JerseyJsonLDClient.constructFromTermedAndCore(conceptIRI.toString(), modelIRI.toString(), pss.asQuery());
+            return JerseyJsonLDClient.constructResponseFromGraph(newClass.asGraph());
             
     }   
  

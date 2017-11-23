@@ -982,13 +982,46 @@ public class GraphManager {
      * @param query SPARQL query as string
      * @return Returns JSON-LD object
      */
-    public static String constructFromGraph(String query){
-        
+    public static String constructStringFromGraph(String query){
         QueryExecution qexec = QueryExecutionFactory.sparqlService(services.getCoreSparqlAddress(), query);
         Model results = qexec.execConstruct();
         return ModelManager.writeModelToString(results);
-       
     }
+
+    /**
+     * Constructs JSON-LD from graph
+     * @param query SPARQL query as string
+     * @param service SPARQL service as string
+     * @return Returns JSON-LD object
+     */
+    public static Model constructModelFromGraph(String query, String service){
+        QueryExecution qexec = QueryExecutionFactory.sparqlService(service, query);
+        return qexec.execConstruct();
+    }
+
+
+    /**
+     * Construct from combined model of Concept and Model
+     * @param conceptID ID of concept
+     * @param modelID ID of model
+     * @param query Construct SPARQL query
+     * @return created Jena model
+     */
+    public static Model constructModelFromConceptAndCore(String conceptID, String modelID, Query query) {
+
+        Model conceptModel = TermedTerminologyManager.getConceptAsJenaModel(conceptID);
+
+        DatasetAccessor testAcc = DatasetAccessorFactory.createHTTP(services.getCoreReadAddress());
+        conceptModel.add(testAcc.getModel(modelID));
+
+        QueryExecution qexec = QueryExecutionFactory.create(query,conceptModel);
+        Model resultModel = qexec.execConstruct();
+
+        qexec.close();
+
+        return resultModel;
+    }
+
 
     /**
      * Returns date when the model was last modified from the Export graph

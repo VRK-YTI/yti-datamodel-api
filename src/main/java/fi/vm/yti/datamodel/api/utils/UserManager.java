@@ -64,6 +64,7 @@ public class UserManager {
      * Check if user exists in the system and create new if not
      * @param loginSession
      */
+    @Deprecated
     public static void checkUser(LoginSession loginSession) {
         
             if(isExistingUser(loginSession.getEmail())) {
@@ -79,6 +80,7 @@ public class UserManager {
      * Creates new user
      * @param loginSession Login session
      */
+    @Deprecated
     public static void createUser(LoginSession loginSession) {
         
         String timestamp = SafeDateFormat.fmt().format(new Date());
@@ -150,6 +152,7 @@ public class UserManager {
      * Update users groups from session
      * @param loginSession Login session
      */
+    @Deprecated
     public static void updateUser(LoginSession loginSession) {
         
         String timestamp = SafeDateFormat.fmt().format(new Date());

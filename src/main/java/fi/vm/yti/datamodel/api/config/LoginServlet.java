@@ -56,8 +56,11 @@ public class LoginServlet extends HttpServlet {
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
+        logger.info("Prosessing login");
         HttpSession session = request.getSession();
         boolean debug = ApplicationProperties.getDebugMode();
+
+        logger.info("Session id:"+session.getId());
 
         if (debug) {
             initializeUser(session, createDebugUser());
@@ -77,10 +80,13 @@ public class LoginServlet extends HttpServlet {
             if(!debug && decodedTarget!=null && decodedTarget.startsWith(ApplicationProperties.getDefaultDomain()))
                 target = decodedTarget;
         }
-        if(target!=null && (debug || target.startsWith(ApplicationProperties.getDefaultDomain())))
+        if(target!=null && (debug || target.startsWith(ApplicationProperties.getDefaultDomain()))) {
             response.sendRedirect(target);
-        else
+        } else {
+            //TODO: This doesnt work with junit tests & jax rs client. Remove redirect - it is no longer needed in dev/prod anyways?
             response.sendRedirect(resolveFrontendAddress(debug));
+        }
+
     }
 
     private static String resolveFrontendAddress(boolean debug) {
@@ -89,7 +95,7 @@ public class LoginServlet extends HttpServlet {
 
     private static void initializeUser(HttpSession session, YtiUser authenticatedUser) {
         session.setAttribute("authenticatedUser", authenticatedUser);
-        UserManager.checkUser(new LoginSession(session));
+       // UserManager.checkUser(new LoginSession(session));
     }
 
     private static YtiUser getAuthenticatedUser(ShibbolethAuthenticationDetails authenticationDetails) {

@@ -43,6 +43,12 @@
             <version>1.11.1</version>
         </dependency>
 
+
+        <dependency>
+            <groupId>org.topbraid</groupId>
+            <artifactId>shacl</artifactId>
+            <version>1.0.1</version>
+        </dependency>
         <dependency>
              <groupId>org.slf4j</groupId>
              <artifactId>slf4j-api</artifactId>
@@ -61,11 +67,11 @@
             <version>3.0.1</version>
             <scope>provided</scope>
         </dependency>
-        
+
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <version>4.10</version>
+            <version>4.12</version>
             <scope>test</scope>
         </dependency>
         

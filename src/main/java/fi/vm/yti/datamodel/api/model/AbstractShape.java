@@ -38,6 +38,11 @@ public abstract class AbstractShape {
             throw new IllegalArgumentException("Expected 1 model (isDefinedBy)");
         }
 
+        List<Resource> scopeList = this.graph.listResourcesWithProperty(LDHelper.curieToProperty("sh:scopeClass")).toList();
+        if(scopeList==null || scopeList.size()!=1) {
+            throw new IllegalArgumentException("Expected 1 Reusable Class (scopeClass)");
+        }
+
         this.dataModel = new DataModel(modelList.get(0).getURI());
         this.modelOrganizations = dataModel.getOrganizations();
 

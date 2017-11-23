@@ -87,8 +87,10 @@ public class TermedTerminologyManager {
 
         DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(services.getTempConceptReadWriteAddress());
         DatasetAdapter adapter = new DatasetAdapter(accessor);
-        adapter.putModel(id, model);
-
+        try { adapter.putModel(id, model); }
+        catch(NullPointerException ex) {
+            logger.warning("Failed to update "+id);
+        }
 
     }
 
