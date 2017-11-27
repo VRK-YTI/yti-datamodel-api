@@ -1,9 +1,9 @@
 /**
  * Created by malonen on 23.11.2017.
  */
+
 import org.glassfish.jersey.client.ClientProperties;
 import org.junit.Assert;
-import org.junit.BeforeClass;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
@@ -12,8 +12,6 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriBuilder;
-import java.net.URI;
 import java.util.logging.Logger;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
@@ -34,14 +32,7 @@ public class ModelTest  {
     }
 
     @Test
-    public void test2_loginStatus() {
-        Assert.assertEquals("Loginstatus","true",target.path("rest/loginstatus").request().get().readEntity(String.class));
-    }
-
-    @Test
     public void test3_user() {
         Assert.assertEquals("User",200,target.path("rest/user").request().get().getStatus());
     }
-
-
 }
