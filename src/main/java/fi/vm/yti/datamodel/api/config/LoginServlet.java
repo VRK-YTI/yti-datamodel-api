@@ -113,6 +113,8 @@ public class LoginServlet extends HttpServlet {
                 .sslContext(naiveSSLContext())
                 .build().target(url)
                 .queryParam("email", authenticationDetails.getEmail())
+                .queryParam("firstName", authenticationDetails.getFirstName())
+                .queryParam("lastName", authenticationDetails.getLastName())
                 .request(MediaType.APPLICATION_JSON)
                 .get();
 
