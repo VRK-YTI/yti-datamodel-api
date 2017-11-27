@@ -4,7 +4,6 @@
 package fi.vm.yti.datamodel.api.utils;
 
 import fi.vm.yti.datamodel.api.config.ApplicationProperties;
-import javafx.application.Application;
 import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
 
 /**
