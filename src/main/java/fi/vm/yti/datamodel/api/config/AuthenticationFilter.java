@@ -7,8 +7,6 @@ import java.io.IOException;
 
 public class AuthenticationFilter implements Filter {
 
-    private static String SHIBBOLETH_MAIL_ATTRIBUTE = "mail";
-
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
 
@@ -30,19 +28,11 @@ public class AuthenticationFilter implements Filter {
 
     private static ShibbolethAuthenticationDetails resolveAuthenticationDetails(HttpServletRequest request) {
 
-        boolean debug = ApplicationProperties.getDebugMode();
-
-        if (debug) {
+        if (ApplicationProperties.getDebugMode()) {
             return new ShibbolethAuthenticationDetails(ApplicationProperties.getDebugUserEmail(), ApplicationProperties.getDebugUserFirstname(), ApplicationProperties.getDebugUserLastname());
-        } else if (isLoggedIn(request)) {
-            return new ShibbolethAuthenticationDetails(request);
         } else {
-            return new ShibbolethAuthenticationDetails("", "", "");
+            return new ShibbolethAuthenticationDetails(request);
         }
-    }
-
-    private static boolean isLoggedIn(ServletRequest request) {
-        return request.getAttribute(SHIBBOLETH_MAIL_ATTRIBUTE) != null;
     }
 
     @Override
