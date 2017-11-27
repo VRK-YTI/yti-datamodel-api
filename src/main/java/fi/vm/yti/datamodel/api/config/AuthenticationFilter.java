@@ -20,6 +20,8 @@ public class AuthenticationFilter implements Filter {
 
             if (authenticationDetails.isAuthenticated()) {
                 AuthenticationHandler.initialize(session, authenticationDetails);
+            } else {
+                AuthenticationHandler.remove(session);
             }
         }
 

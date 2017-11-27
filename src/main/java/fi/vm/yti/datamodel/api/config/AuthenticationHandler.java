@@ -35,6 +35,10 @@ public class AuthenticationHandler {
         }
     }
 
+    public static void remove(HttpSession session) {
+        session.removeAttribute(AUTHENTICATED_USER_ATTRIBUTE);
+    }
+
     private static void initializeUser(HttpSession session, YtiUser authenticatedUser) {
         session.setAttribute(AUTHENTICATED_USER_ATTRIBUTE, authenticatedUser);
     }
