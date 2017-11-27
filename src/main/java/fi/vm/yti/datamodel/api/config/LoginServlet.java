@@ -42,6 +42,10 @@ import static java.util.Collections.emptyMap;
 public class LoginServlet extends HttpServlet {
 
     private static String SHIBBOLETH_PROVIDER_ATTRIBUTE = "Shib-Identity-Provider";
+    private static String SHIBBOLETH_MAIL_ATTRIBUTE = "mail";
+    private static String SHIBBOLETH_GIVENNAME_ATTRIBUTE = "givenname";
+    private static String SHIBBOLETH_SURNAME_ATTRIBUTE = "surname";
+
     private static final Logger logger = Logger.getLogger(LoginServlet.class.getName());
 
     /**
@@ -63,13 +67,16 @@ public class LoginServlet extends HttpServlet {
         logger.info("Session id:"+session.getId());
 
         if (debug) {
-            initializeUser(session, createDebugUser());
-        } else {
-            if (isLoggedIn(request)) {
+            request.setAttribute(SHIBBOLETH_PROVIDER_ATTRIBUTE, "fake");
+            request.setAttribute(SHIBBOLETH_MAIL_ATTRIBUTE, ApplicationProperties.getDebugUserEmail());
+            request.setAttribute(SHIBBOLETH_GIVENNAME_ATTRIBUTE, ApplicationProperties.getDebugUserFirstname());
+            request.setAttribute(SHIBBOLETH_SURNAME_ATTRIBUTE, ApplicationProperties.getDebugUserLastname());
+        }
+
+        if (isLoggedIn(request)) {
                 initializeUser(session, getAuthenticatedUser(new ShibbolethAuthenticationDetails(request)));
-            } else {
+        } else {
                 Logger.getLogger(LoginServlet.class.getName()).log(Level.INFO, "NOT LOGGED IN");
-            }
         }
 
         String target = getParameterAsString(request, "target");
@@ -83,7 +90,6 @@ public class LoginServlet extends HttpServlet {
         if(target!=null && (debug || target.startsWith(ApplicationProperties.getDefaultDomain()))) {
             response.sendRedirect(target);
         } else {
-            //TODO: This doesnt work with junit tests & jax rs client. Remove redirect - it is no longer needed in dev/prod anyways?
             response.sendRedirect(resolveFrontendAddress(debug));
         }
 
@@ -95,12 +101,11 @@ public class LoginServlet extends HttpServlet {
 
     private static void initializeUser(HttpSession session, YtiUser authenticatedUser) {
         session.setAttribute("authenticatedUser", authenticatedUser);
-       // UserManager.checkUser(new LoginSession(session));
     }
 
     private static YtiUser getAuthenticatedUser(ShibbolethAuthenticationDetails authenticationDetails) {
 
-        String url = ApplicationProperties.getDefaultGroupManagementAPI() + "/user";
+        String url = ApplicationProperties.getDefaultGroupManagementAPI() + "user";
 
         logger.info("Fetching user from URL: " + url);
 
@@ -127,7 +132,7 @@ public class LoginServlet extends HttpServlet {
 
         YtiUser ytiUser = new YtiUser(user.email, user.firstName, user.lastName, user.superuser, user.newlyCreated, rolesInOrganizations);
 
-        logger.info("User fetched: " + user);
+        logger.info("User fetched: " + ytiUser);
 
         return ytiUser;
     }
@@ -156,12 +161,12 @@ public class LoginServlet extends HttpServlet {
         }
     }
 
-    private static YtiUser createDebugUser() {
-        return new YtiUser("testi@example.org", "Testi", "Testaaja", true, false, emptyMap());
+    private static YtiUser createDebugUser(String email) {
+        return new YtiUser(email, "Testi", "Testaaja", true, false, emptyMap());
     }
 
     private static boolean isLoggedIn(HttpServletRequest request) {
-        return request.getAttribute(SHIBBOLETH_PROVIDER_ATTRIBUTE) != null;
+        return request.getAttribute(SHIBBOLETH_MAIL_ATTRIBUTE) != null;
     }
 
     private static String getParameterAsString(HttpServletRequest request, String parameterName) {

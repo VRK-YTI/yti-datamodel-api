@@ -9,15 +9,19 @@
 
     <name>yti-datamodel-api</name>
     <properties>
+        <project.debugUserEmail>testi.testaaja@example.org</project.debugUserEmail>
+        <project.debugUserFirstname>Testi</project.debugUserFirstname>
+        <project.debugUserLastname>Testaaja</project.debugUserLastname>
         <project.provenance>true</project.provenance>
         <project.endpoint>http://localhost:3030</project.endpoint>
         <project.debug>true</project.debug>
-        <project.debugGroup>https://tt.eduuni.fi/sites/csc-iow#IOW_ADMINS;https://tt.eduuni.fi/sites/csc-iow#JHS_ADMINS;https://tt.eduuni.fi/sites/csc-iow#KTK_ADMINS</project.debugGroup>
         <project.debugAdress>http://localhost:9001</project.debugAdress>
         <project.defaultDomain>http://iow.csc.fi/</project.defaultDomain>
         <project.defaultScheme>http://dev.finto.fi/</project.defaultScheme>
         <project.groupdomain>https://tt.eduuni.fi/sites/csc-iow#</project.groupdomain>
         <project.defaultTermedAPI>https://sanastot-dev.suomi.fi/termed-api/</project.defaultTermedAPI>
+        <project.defaultTermedAPIUser>admin</project.defaultTermedAPIUser>
+        <project.defaultTermedAPIUserSecret>admin</project.defaultTermedAPIUserSecret>
         <project.defaultGroupManagementAPI>https://rhp-dev.suomi.fi/public-api/</project.defaultGroupManagementAPI>
         <endorsed.dir>${project.build.directory}/endorsed</endorsed.dir>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -42,7 +46,6 @@
             <artifactId>jsoup</artifactId>
             <version>1.11.1</version>
         </dependency>
-
 
         <dependency>
             <groupId>org.topbraid</groupId>

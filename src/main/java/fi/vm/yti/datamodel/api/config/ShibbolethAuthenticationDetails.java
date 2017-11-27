@@ -11,26 +11,22 @@ public final class ShibbolethAuthenticationDetails {
     private final String email;
     private final String firstName;
     private final String lastName;
-    private final String group;
 
     public ShibbolethAuthenticationDetails(HttpServletRequest request) {
         this(
                 getAttributeAsString(request, "mail"),
                 getAttributeAsString(request, "givenname"),
-                getAttributeAsString(request, "surname"),
-                getAttributeAsString(request, "group")
+                getAttributeAsString(request, "surname")
         );
     }
 
-    public ShibbolethAuthenticationDetails(String email, String firstName, String lastName, String group) {
+    public ShibbolethAuthenticationDetails(String email, String firstName, String lastName) {
         this.email = email;
         this.firstName = firstName;
         this.lastName = lastName;
-        this.group = group;
     }
 
     private static String getAttributeAsString(HttpServletRequest request, String attributeName) {
-
         Object attribute = requireNonNull(request.getAttribute(attributeName), "Request attribute missing: " + attributeName);
         return convertLatinToUTF8(attribute.toString());
     }
@@ -55,17 +51,12 @@ public final class ShibbolethAuthenticationDetails {
         return firstName + " " + lastName;
     }
 
-    public String getGroup() {
-        return group;
-    }
-
     @Override
     public String toString() {
         return "ShibbolethAuthenticationDetails{" +
                 "email='" + email + '\'' +
                 ", firstName='" + firstName + '\'' +
                 ", lastName='" + lastName + '\'' +
-                ", group='" + group + '\'' +
                 '}';
     }
 }

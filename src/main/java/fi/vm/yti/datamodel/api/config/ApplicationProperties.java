@@ -23,15 +23,13 @@ public final static String getEndpoint() {
 
 public final static boolean getDebugMode() {
     return Boolean.parseBoolean(PropertyUtil.getProperty("application.debug"));
-} 
-
-public final static String getGroupDomain() {
-    return PropertyUtil.getProperty("application.groupdomain");
 }
 
-public final static String getDebugGroups() {
-    return PropertyUtil.getProperty("application.debugGroup");  
-}
+public final static String getDebugUserFirstname() { return PropertyUtil.getProperty("application.debugUserFirstname"); }
+
+public final static String getDebugUserLastname() { return PropertyUtil.getProperty("application.debugUserLastname"); }
+
+public final static String getDebugUserEmail() { return PropertyUtil.getProperty("application.debugUserEmail"); }
 
 public final static String getDebugAdress() {
     return PropertyUtil.getProperty("application.debugAdress");  
@@ -53,7 +51,15 @@ public final static String getDefaultTermAPI() {
     return PropertyUtil.getProperty("application.defaultTermedAPI");
 }
 
-public static String getDefaultGroupManagementAPI() {
+    public final static String getDefaultTermAPIUser() {
+        return PropertyUtil.getProperty("application.defaultTermedAPIUser");
+    }
+
+    public final static String getDefaultTermAPIUserSecret() {
+        return PropertyUtil.getProperty("application.defaultTermedAPIUserSecret");
+    }
+
+public final static String getDefaultGroupManagementAPI() {
     return PropertyUtil.getProperty("application.defaultGroupManagementAPI");
 }
 

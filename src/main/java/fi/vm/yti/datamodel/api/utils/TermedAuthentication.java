@@ -3,6 +3,8 @@
  */
 package fi.vm.yti.datamodel.api.utils;
 
+import fi.vm.yti.datamodel.api.config.ApplicationProperties;
+import javafx.application.Application;
 import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
 
 /**
@@ -10,11 +12,9 @@ import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
  * @author malonen
  */
 public class TermedAuthentication {
-    
-    /* TODO: Add to pom ? */
-    
+
     public static HttpAuthenticationFeature getTermedAuth() {
-        return HttpAuthenticationFeature.basic("admin", "admin");
+        return HttpAuthenticationFeature.basic(ApplicationProperties.getDefaultTermAPIUser(), ApplicationProperties.getDefaultTermAPIUserSecret());
     }
     
 }
