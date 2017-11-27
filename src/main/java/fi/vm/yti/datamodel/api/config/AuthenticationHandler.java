@@ -15,7 +15,6 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.X509Certificate;
 import java.util.*;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -26,9 +25,6 @@ class AuthenticationHandler {
     private static final String AUTHENTICATED_USER_ATTRIBUTE = "authenticatedUser";
 
     static void initializeUser(HttpSession session, ShibbolethAuthenticationDetails authenticationDetails) {
-
-        // TODO remove logging after debugging is done
-        logger.log(Level.INFO, "Authentication: " + authenticationDetails.toString());
 
         if (authenticationDetails.isAuthenticated()) {
             // No need to fetch user every time if session is already authenticated
