@@ -1,10 +1,7 @@
 package fi.vm.yti.datamodel.api.config;
 
 import javax.servlet.http.HttpServletRequest;
-
 import java.nio.charset.StandardCharsets;
-
-import static java.util.Objects.requireNonNull;
 
 public final class ShibbolethAuthenticationDetails {
 
@@ -27,8 +24,8 @@ public final class ShibbolethAuthenticationDetails {
     }
 
     private static String getAttributeAsString(HttpServletRequest request, String attributeName) {
-        Object attribute = requireNonNull(request.getAttribute(attributeName), "Request attribute missing: " + attributeName);
-        return convertLatinToUTF8(attribute.toString());
+        Object attribute = request.getAttribute(attributeName);
+        return convertLatinToUTF8(attribute != null ? attribute.toString() : "");
     }
 
     private static String convertLatinToUTF8(String s) {
