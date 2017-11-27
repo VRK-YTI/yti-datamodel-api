@@ -92,7 +92,8 @@ class AuthenticationHandler {
     }
 
     private static boolean isAuthenticatedSession(HttpSession session) {
-        return session.getAttribute(AUTHENTICATED_USER_ATTRIBUTE) != null;
+        YtiUser user = getUser(session);
+        return user != null && !user.isAnonymous();
     }
 
     private static SSLContext naiveSSLContext() {
