@@ -5,13 +5,11 @@
  */
 package fi.vm.yti.datamodel.api.config;
 
-import fi.vm.yti.datamodel.api.model.Role;
 import fi.vm.yti.datamodel.api.model.YtiUser;
 import fi.vm.yti.datamodel.api.utils.ServiceDescriptionManager;
 
 import javax.servlet.http.HttpSession;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.logging.Logger;
@@ -98,13 +96,6 @@ public class LoginSession implements LoginInterface {
     }
 
     public YtiUser getUser() {
-
-        Object authenticatedUser = session.getAttribute("authenticatedUser");
-
-        if (authenticatedUser != null) {
-            return (YtiUser) authenticatedUser;
-        } else {
-            return YtiUser.ANONYMOUS_USER;
-        }
+        return AuthenticationHandler.getUser(session);
     }
 }

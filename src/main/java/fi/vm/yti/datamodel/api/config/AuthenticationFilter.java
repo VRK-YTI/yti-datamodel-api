@@ -14,13 +14,8 @@ public class AuthenticationFilter implements Filter {
 
             HttpServletRequest request = (HttpServletRequest) servletRequest;
             HttpSession session = request.getSession();
-            ShibbolethAuthenticationDetails authenticationDetails = resolveAuthenticationDetails(request);
 
-            if (authenticationDetails.isAuthenticated()) {
-                AuthenticationHandler.initialize(session, authenticationDetails);
-            } else {
-                AuthenticationHandler.remove(session);
-            }
+            AuthenticationHandler.initializeUser(session, resolveAuthenticationDetails(request));
         }
 
         filterChain.doFilter(servletRequest, servletResponse);

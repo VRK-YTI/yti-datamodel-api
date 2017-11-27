@@ -18,28 +18,29 @@ import java.util.*;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-public class AuthenticationHandler {
+class AuthenticationHandler {
 
     private static final Logger logger = Logger.getLogger(AuthenticationHandler.class.getName());
 
-    public static final String AUTHENTICATED_USER_ATTRIBUTE = "authenticatedUser";
+    private static final String AUTHENTICATED_USER_ATTRIBUTE = "authenticatedUser";
 
-    public static void initialize(HttpSession session, ShibbolethAuthenticationDetails authenticationDetails) {
+    static void initializeUser(HttpSession session, ShibbolethAuthenticationDetails authenticationDetails) {
 
-        if (!authenticationDetails.isAuthenticated()) {
-            throw new RuntimeException("Trying to initialize non-authenticated user details");
-        }
-
-        if (!isAuthenticatedSession(session)) {
-            initializeUser(session, getAuthenticatedUser(authenticationDetails));
+        if (authenticationDetails.isAuthenticated()) {
+            // No need to fetch user every time if session is already authenticated
+            if (!isAuthenticatedSession(session)) {
+                setUser(session, getAuthenticatedUser(authenticationDetails));
+            }
+        } else {
+            setUser(session, YtiUser.ANONYMOUS_USER);
         }
     }
 
-    public static void remove(HttpSession session) {
-        session.removeAttribute(AUTHENTICATED_USER_ATTRIBUTE);
+    static YtiUser getUser(HttpSession session) {
+        return (YtiUser) session.getAttribute(AUTHENTICATED_USER_ATTRIBUTE);
     }
 
-    private static void initializeUser(HttpSession session, YtiUser authenticatedUser) {
+    private static void setUser(HttpSession session, YtiUser authenticatedUser) {
         session.setAttribute(AUTHENTICATED_USER_ATTRIBUTE, authenticatedUser);
     }
 
@@ -107,7 +108,7 @@ public class AuthenticationHandler {
         }
     }
 
-    static class User {
+    private static class User {
 
         public String email;
         public String firstName;
@@ -117,7 +118,7 @@ public class AuthenticationHandler {
         public List<Organization> organization;
     }
 
-    static class Organization {
+    private static class Organization {
 
         public UUID uuid;
         public List<String> role;
