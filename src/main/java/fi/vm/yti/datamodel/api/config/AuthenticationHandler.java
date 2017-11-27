@@ -18,16 +18,25 @@ import java.util.*;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-public class LoginHandler {
+public class AuthenticationHandler {
 
-    private static final Logger logger = Logger.getLogger(LoginHandler.class.getName());
+    private static final Logger logger = Logger.getLogger(AuthenticationHandler.class.getName());
+
+    public static final String AUTHENTICATED_USER_ATTRIBUTE = "authenticatedUser";
 
     public static void initialize(HttpSession session, ShibbolethAuthenticationDetails authenticationDetails) {
-        initializeUser(session, getAuthenticatedUser(authenticationDetails));
+
+        if (!authenticationDetails.isAuthenticated()) {
+            throw new RuntimeException("Trying to initialize non-authenticated user details");
+        }
+
+        if (!isAuthenticatedSession(session)) {
+            initializeUser(session, getAuthenticatedUser(authenticationDetails));
+        }
     }
 
     private static void initializeUser(HttpSession session, YtiUser authenticatedUser) {
-        session.setAttribute("authenticatedUser", authenticatedUser);
+        session.setAttribute(AUTHENTICATED_USER_ATTRIBUTE, authenticatedUser);
     }
 
     private static YtiUser getAuthenticatedUser(ShibbolethAuthenticationDetails authenticationDetails) {
@@ -52,7 +61,7 @@ public class LoginHandler {
         for (Organization organization : user.organization) {
 
             Set<Role> roles = organization.role.stream()
-                    .filter(LoginHandler::isRoleMappableToEnum)
+                    .filter(AuthenticationHandler::isRoleMappableToEnum)
                     .map(Role::valueOf)
                     .collect(Collectors.toSet());
 
@@ -75,6 +84,10 @@ public class LoginHandler {
         }
 
         return contains;
+    }
+
+    private static boolean isAuthenticatedSession(HttpSession session) {
+        return session.getAttribute(AUTHENTICATED_USER_ATTRIBUTE) != null;
     }
 
     private static SSLContext naiveSSLContext() {

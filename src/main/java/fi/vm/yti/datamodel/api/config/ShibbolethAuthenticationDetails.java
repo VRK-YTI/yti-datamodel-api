@@ -51,6 +51,10 @@ public final class ShibbolethAuthenticationDetails {
         return firstName + " " + lastName;
     }
 
+    public boolean isAuthenticated() {
+        return email != null && !email.isEmpty();
+    }
+
     @Override
     public String toString() {
         return "ShibbolethAuthenticationDetails{" +

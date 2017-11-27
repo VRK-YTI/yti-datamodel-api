@@ -58,25 +58,26 @@
     </servlet-mapping>
 
     <servlet>
-        <servlet-name>LoginServlet</servlet-name>
-        <servlet-class>fi.vm.yti.datamodel.api.config.LoginServlet</servlet-class>
-        <async-supported>true</async-supported> 
-    </servlet>
-    <servlet>
         <servlet-name>ResolveResource</servlet-name>
         <servlet-class>fi.vm.yti.datamodel.api.resolve.ResolveResource</servlet-class>
         <async-supported>true</async-supported> 
     </servlet>
-    <servlet-mapping>
-        <servlet-name>LoginServlet</servlet-name>
-        <url-pattern>/login</url-pattern>
-    </servlet-mapping>
+
     <servlet-mapping>
         <servlet-name>ResolveResource</servlet-name>
         <url-pattern>/resolve/*</url-pattern>
     </servlet-mapping>
-    
-    
+
+    <filter>
+        <filter-name>authentication</filter-name>
+        <filter-class>fi.vm.yti.datamodel.api.config.AuthenticationFilter</filter-class>
+    </filter>
+
+    <filter-mapping>
+        <filter-name>authentication</filter-name>
+        <url-pattern>/rest/*</url-pattern>
+    </filter-mapping>
+
     <!--
       // Ei toimi!? ... tai sama lopputulos: java.lang.IllegalStateException: A filter or servlet of the current chain does not support asynchronous operations.
         <servlet>
