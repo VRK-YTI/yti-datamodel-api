@@ -74,7 +74,6 @@ public class ModelManager {
             ServiceDescriptionManager.createGraphDescription(id, login.getEmail(), orgList);
 
             if(ProvenanceManager.getProvMode()) {
-
                 ProvenanceManager.createProvenanceGraphFromModel(id, graph, login.getEmail(),provUUID);
             }
         }

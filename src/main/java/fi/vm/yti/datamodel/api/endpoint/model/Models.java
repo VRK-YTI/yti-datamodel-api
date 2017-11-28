@@ -240,24 +240,16 @@ public class Models {
   }
   
   @PUT
-  @ApiOperation(value = "Create new graph and update service description", notes = "PUT Body should be json-ld")
+  @ApiOperation(value = "Create new model and update service description", notes = "PUT Body should be json-ld")
   @ApiResponses(value = {
-      @ApiResponse(code = 201, message = "Graph is created"),
-      @ApiResponse(code = 204, message = "Graph is saved"),
+      @ApiResponse(code = 200, message = "New model created"),
+      @ApiResponse(code = 200, message = "Bad request"),
       @ApiResponse(code = 401, message = "Unauthorized"),
-      @ApiResponse(code = 405, message = "Update not allowed"),
-      @ApiResponse(code = 403, message = "Illegal graph parameter"),
-      @ApiResponse(code = 400, message = "Invalid graph supplied"),
-      @ApiResponse(code = 500, message = "Bad data?") 
+      @ApiResponse(code = 403, message = "Overwrite is forbidden"),
+      @ApiResponse(code = 500, message = "Internal server error")
   })
   public Response putJson(
           @ApiParam(value = "New graph in application/ld+json", required = true) String body,
-          @ApiParam(value = "Model ID")
-          @QueryParam("id") String graph,
-          @ApiParam(value = "Organization UUIDs")
-          @QueryParam("orgList") List<UUID> orgList,
-          @ApiParam(value = "Service URIs")
-          @QueryParam("serviceList") List<String> serviceList,
           @Context HttpServletRequest request) {
 
       HttpSession session = request.getSession();
@@ -284,11 +276,11 @@ public class Models {
           String provUUID = newVocabulary.getProvUUID();
 
           if (provUUID == null) {
-              return JerseyResponseManager.error();
+              return JerseyResponseManager.serverError();
           }
           else {
               ModelManager.createNewModel(newVocabulary.getId(), newVocabulary.asGraph(), login, provUUID, newVocabulary.getOrganizations());
-              return JerseyResponseManager.successUuid(provUUID);
+              return JerseyResponseManager.successUuid(provUUID,newVocabulary.getId());
           }
 
       } catch(IllegalArgumentException ex) {
@@ -296,38 +288,6 @@ public class Models {
           return JerseyResponseManager.error();
       }
 
-      /*
-        if(graph.equals("default")) {
-            return JerseyResponseManager.invalidIRI();
-        }
-        
-       IRI graphIRI;
-       
-            try {
-                graphIRI = IDManager.constructIRI(graph);
-            } catch (IRIException e) {
-                logger.log(Level.WARNING, "GRAPH ID is invalid IRI!");
-                return JerseyResponseManager.invalidIRI();
-            } 
-            
-        HttpSession session = request.getSession();
-        
-        if(session==null) return JerseyResponseManager.unauthorized();
-        
-        LoginSession login = new LoginSession(session);
-        
-        if(!login.isLoggedIn() || !login.isUserInOrganization(orgList) || !login.isSuperAdmin())
-            return JerseyResponseManager.unauthorized();
-        
-            if(GraphManager.isExistingGraph(graphIRI)) {
-                return JerseyResponseManager.usedIRI();
-            }
-        
-            UUID provUUID = ModelManager.createNewModel(graph, orgList, body, login);
-        
-            if(provUUID==null) return JerseyResponseManager.error();
-            else return JerseyResponseManager.successUuid(provUUID);
-            */
   }
   
   @DELETE

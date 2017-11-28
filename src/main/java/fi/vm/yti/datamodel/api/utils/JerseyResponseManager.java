@@ -38,6 +38,10 @@ public class JerseyResponseManager {
         return Response.status(200).entity("{\"identifier\":\"urn:uuid:"+uuid+"\"}").build();
     }
 
+    public static Response successUuid(String uuid, String id) {
+        return Response.status(200).entity("{\"@id\":\"" + id + "\", \"identifier\":\"urn:uuid:"+uuid+"\"}").build();
+    }
+
     public static Response successUuid(String uuid) {
         return Response.status(200).entity("{\"identifier\":\""+uuid+"\"}").build();
     }
@@ -47,7 +51,7 @@ public class JerseyResponseManager {
     }
     
     public static Response unauthorized() {
-        return Response.status(403).entity(ErrorMessage.UNAUTHORIZED).build();
+        return Response.status(401).entity(ErrorMessage.UNAUTHORIZED).build();
     }
     
     public static Response invalidIRI() {
@@ -59,7 +63,7 @@ public class JerseyResponseManager {
     }
     
     public static Response error() {
-        return Response.status(403).entity(ErrorMessage.NOTACCEPTED).build();
+        return Response.status(400).entity(ErrorMessage.NOTACCEPTED).build();
     }
     
     public static Response serverError() {

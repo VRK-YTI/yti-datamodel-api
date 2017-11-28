@@ -69,6 +69,7 @@ public class ModelCreator {
                 return JerseyResponseManager.invalidParameter();
             }
 
+            logger.info("prefix "+prefix);
             prefix = LDHelper.modelName(prefix);
 
             if(GraphManager.isExistingPrefix(prefix)) {
