@@ -12,6 +12,7 @@ import org.apache.jena.vocabulary.RDF;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.logging.Logger;
 
 /**
  * Created by malonen on 17.11.2017.
@@ -24,6 +25,7 @@ public abstract class AbstractModel {
     protected List<UUID> modelOrganizations;
     protected List<String> modelServiceCategories;
 
+    private static final Logger logger = Logger.getLogger(AbstractModel.class.getName());
 
     public AbstractModel() {}
 
@@ -82,8 +84,9 @@ public abstract class AbstractModel {
             if(!orgModel.containsResource(orgRes)) {
                 throw new IllegalArgumentException("Organization does not exist!");
             }
-
-            this.modelOrganizations.add(UUID.fromString(orgRes.asResource().getURI().replaceFirst("urn:uuid:","")));
+            String orgId = orgRes.asResource().getURI().replaceFirst("urn:uuid:","");
+            logger.info("New model is part of "+orgId);
+            this.modelOrganizations.add(UUID.fromString(orgId));
         }
 
         this.provUUID = "urn:uuid:"+UUID.randomUUID().toString();

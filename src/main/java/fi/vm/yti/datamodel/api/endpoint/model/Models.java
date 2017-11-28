@@ -3,6 +3,7 @@
  */
 package fi.vm.yti.datamodel.api.endpoint.model;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -20,6 +21,7 @@ import javax.ws.rs.core.Response;
 import fi.vm.yti.datamodel.api.config.LoginSession;
 import fi.vm.yti.datamodel.api.config.EndpointServices;
 import fi.vm.yti.datamodel.api.model.DataModel;
+import fi.vm.yti.datamodel.api.model.Role;
 import fi.vm.yti.datamodel.api.utils.GraphManager;
 import fi.vm.yti.datamodel.api.utils.IDManager;
 import fi.vm.yti.datamodel.api.utils.JerseyJsonLDClient;
@@ -266,6 +268,15 @@ public class Models {
           DataModel newVocabulary = new DataModel(body);
 
           if(login.isUserInOrganization(newVocabulary.getOrganizations())) {
+
+              // TEST: Returns true for single organization
+              Iterator<UUID> test = newVocabulary.getOrganizations().iterator();
+              while(test.hasNext()) {
+                  String orgId = test.next().toString();
+                  logger.info(orgId+" : "+login.isInOrganization(orgId));
+              }
+
+              logger.info("User is not in organization");
               return JerseyResponseManager.unauthorized();
           }
 
