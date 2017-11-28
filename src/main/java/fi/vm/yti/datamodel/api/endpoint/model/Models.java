@@ -267,16 +267,10 @@ public class Models {
 
           DataModel newVocabulary = new DataModel(body);
 
-          if(login.isUserInOrganization(newVocabulary.getOrganizations())) {
-
-              // TEST: Returns true for single organization
-              Iterator<UUID> test = newVocabulary.getOrganizations().iterator();
-              while(test.hasNext()) {
-                  String orgId = test.next().toString();
-                  logger.info(orgId+" : "+login.isInOrganization(orgId));
-              }
+          if(!login.isUserInOrganization(newVocabulary.getOrganizations())) {
 
               logger.info("User is not in organization");
+
               return JerseyResponseManager.unauthorized();
           }
 
