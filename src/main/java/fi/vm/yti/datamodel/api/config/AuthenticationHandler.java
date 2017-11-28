@@ -18,6 +18,8 @@ import java.util.*;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import static java.util.Objects.requireNonNull;
+
 class AuthenticationHandler {
 
     private static final Logger logger = Logger.getLogger(AuthenticationHandler.class.getName());
@@ -31,17 +33,23 @@ class AuthenticationHandler {
             if (!isAuthenticatedSession(session)) {
                 setUser(session, getAuthenticatedUser(authenticationDetails));
             }
-        } else {
-            setUser(session, YtiUser.ANONYMOUS_USER);
+        } else if (isAuthenticatedSession(session)) {
+            clearUser(session);
+            session.invalidate();
         }
     }
 
     static YtiUser getUser(HttpSession session) {
-        return (YtiUser) session.getAttribute(AUTHENTICATED_USER_ATTRIBUTE);
+        YtiUser user = (YtiUser) session.getAttribute(AUTHENTICATED_USER_ATTRIBUTE);
+        return user != null ? user : YtiUser.ANONYMOUS_USER;
     }
 
     private static void setUser(HttpSession session, YtiUser authenticatedUser) {
-        session.setAttribute(AUTHENTICATED_USER_ATTRIBUTE, authenticatedUser);
+        session.setAttribute(AUTHENTICATED_USER_ATTRIBUTE, requireNonNull(authenticatedUser));
+    }
+
+    private static void clearUser(HttpSession session) {
+        session.removeAttribute(AUTHENTICATED_USER_ATTRIBUTE);
     }
 
     private static YtiUser getAuthenticatedUser(ShibbolethAuthenticationDetails authenticationDetails) {
