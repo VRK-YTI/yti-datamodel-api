@@ -61,6 +61,10 @@ public class JerseyResponseManager {
     public static Response usedIRI() {
         return Response.status(403).entity(ErrorMessage.USEDIRI).build();
     }
+
+    public static Response usedIRI(String id) {
+        return Response.status(403).entity("{\"errorMessage\":\""+id+" ID is already in use\"}").build();
+    }
     
     public static Response error() {
         return Response.status(400).entity(ErrorMessage.NOTACCEPTED).build();

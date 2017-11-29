@@ -7,10 +7,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import fi.vm.yti.datamodel.api.config.EndpointServices;
 import fi.vm.yti.datamodel.api.model.ServiceCategory;
-import fi.vm.yti.datamodel.api.utils.GraphManager;
-import fi.vm.yti.datamodel.api.utils.IDManager;
-import fi.vm.yti.datamodel.api.utils.JerseyJsonLDClient;
-import fi.vm.yti.datamodel.api.utils.JerseyResponseManager;
+import fi.vm.yti.datamodel.api.utils.*;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -33,7 +30,7 @@ public class ServiceCategories {
     })
     public Response json(@HeaderParam("Accept") String header) {
         if(header!=null && header.equals("application/ld+json")) {
-            return JerseyJsonLDClient.getGraphResponseFromService("urn:yti:servicecategories", services.getCoreReadAddress());
+            return JerseyJsonLDClient.constructGraphFromService(QueryLibrary.constructServiceCategories, services.getCoreSparqlAddress());
         }
         else {
             return Response.status(200).entity(ServiceCategory.values()).build();

@@ -180,6 +180,14 @@ public class TermedTerminologyManager {
         return constructFromTempConceptService(pss.toString());
     }
 
+    public static Model getCleanedConceptAsJenaModel(String resourceURI) {
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+        pss.setCommandText(QueryLibrary.conceptQuery);
+        pss.setIri("concept",resourceURI);
+        return constructCleanedModelFromTempConceptService(pss.toString());
+    }
+
 
     public static boolean isUsedConcept(String model, String concept) {
 

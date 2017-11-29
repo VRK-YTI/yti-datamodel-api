@@ -5,6 +5,7 @@ package fi.vm.yti.datamodel.api.endpoint.model;
 
 import java.util.logging.Logger;
 import javax.servlet.ServletContext;
+import javax.validation.constraints.Null;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -12,6 +13,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import fi.vm.yti.datamodel.api.model.ReusableClass;
+import fi.vm.yti.datamodel.api.utils.GraphManager;
 import fi.vm.yti.datamodel.api.utils.JerseyJsonLDClient;
 import fi.vm.yti.datamodel.api.utils.JerseyResponseManager;
 import fi.vm.yti.datamodel.api.config.EndpointServices;
@@ -46,19 +48,39 @@ public class ClassCreator {
     public Response newClass(
             @ApiParam(value = "Model ID", required = true) @QueryParam("modelID") String modelID,
             @ApiParam(value = "Class label", required = true) @QueryParam("classLabel") String classLabel,
-            @ApiParam(value = "Concept ID", required = true) @QueryParam("conceptID") String conceptID,
+            @ApiParam(value = "Concept ID") @QueryParam("conceptID") String conceptID,
             @ApiParam(value = "Language", required = true, allowableValues="fi,en") @QueryParam("lang") String lang,
             @Context HttpServletRequest request) {
 
-            IRI conceptIRI,modelIRI;
+            IRI conceptIRI = null;
+            IRI modelIRI;
+
             try {
-                    conceptIRI = IDManager.constructIRI(conceptID);
+
+                    if(conceptID!=null) {
+                        logger.info("!null");
+                        conceptIRI = IDManager.constructIRI(conceptID);
+                    }
+
                     modelIRI = IDManager.constructIRI(modelID);
             } catch (IRIException e) {
                     return JerseyResponseManager.invalidIRI();
+            } catch (NullPointerException e) {
+                return JerseyResponseManager.invalidParameter();
             }
 
-            ReusableClass newClass = new ReusableClass(conceptIRI, modelIRI, classLabel, lang);
+            if(!GraphManager.isExistingGraph(modelIRI)) {
+                return JerseyResponseManager.notFound();
+            }
+
+            ReusableClass newClass;
+
+            if(conceptIRI!=null) {
+                newClass = new ReusableClass(conceptIRI, modelIRI, classLabel, lang);
+            }
+            else {
+                newClass = new ReusableClass(modelIRI, classLabel, lang);
+            }
 
             return JerseyJsonLDClient.constructResponseFromGraph(newClass.asGraph());
             

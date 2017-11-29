@@ -260,22 +260,21 @@ public class Models {
 
       LoginSession login = new LoginSession(session);
 
-      if(!login.isLoggedIn())
+      if(!login.isLoggedIn()) {
           return JerseyResponseManager.unauthorized();
+      }
 
       try {
 
           DataModel newVocabulary = new DataModel(body);
 
           if(!login.isUserInOrganization(newVocabulary.getOrganizations())) {
-
               logger.info("User is not in organization");
-
               return JerseyResponseManager.unauthorized();
           }
 
           if(GraphManager.isExistingGraph(newVocabulary.getId())) {
-              return JerseyResponseManager.usedIRI();
+              return JerseyResponseManager.usedIRI(newVocabulary.getId());
           }
 
           String provUUID = newVocabulary.getProvUUID();

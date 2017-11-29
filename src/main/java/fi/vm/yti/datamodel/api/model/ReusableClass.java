@@ -54,6 +54,7 @@ public class ReusableClass extends AbstractClass {
                 + "BIND(now() as ?modified) "
                 + "?model a ?modelType . "
                 + "?model rdfs:label ?modelLabel . "
+                + "OPTIONAL {"
                 + "?concept a skos:Concept . "
                 + "?concept skos:inScheme ?scheme . "
                 + "?scheme dcterms:title ?title . "
@@ -64,7 +65,7 @@ public class ReusableClass extends AbstractClass {
                 + "?termedGraph termed:id ?termedGraphId . "
                 + "OPTIONAL {"
                 + "?concept skos:definition ?comment . } "
-                + "}";
+                + "}}";
 
         pss.setCommandText(queryString);
         pss.setIri("concept", conceptIRI);
@@ -75,6 +76,39 @@ public class ReusableClass extends AbstractClass {
         pss.setIri("classIRI",LDHelper.resourceIRI(modelIRI.toString(),resourceName));
 
         this.graph = GraphManager.constructModelFromConceptAndCore(conceptIRI.toString(),modelIRI.toString(),pss.asQuery());
+
+    }
+
+    public ReusableClass(IRI modelIRI, String classLabel, String lang) {
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+
+        String queryString = "CONSTRUCT  { "
+                + "?classIRI iow:contextIdentifier ?localIdentifier . "
+                + "?classIRI owl:versionInfo ?draft . "
+                + "?classIRI dcterms:modified ?modified . "
+                + "?classIRI dcterms:created ?creation . "
+                + "?classIRI a rdfs:Class . "
+                + "?classIRI rdfs:isDefinedBy ?model . "
+                + "?model rdfs:label ?modelLabel . "
+                + "?model a ?modelType . "
+                + "?classIRI rdfs:label ?classLabel . "
+                + "?classIRI rdfs:comment ?comment . "
+                + "} WHERE { "
+                + "BIND(now() as ?creation) "
+                + "BIND(now() as ?modified) "
+                + "?model a ?modelType . "
+                + "?model rdfs:label ?modelLabel . "
+                + "}";
+
+        pss.setCommandText(queryString);
+        pss.setIri("model", modelIRI);
+        pss.setLiteral("draft", "Unstable");
+        pss.setLiteral("classLabel", ResourceFactory.createLangLiteral(classLabel, lang));
+        String resourceName = LDHelper.resourceName(classLabel);
+        pss.setIri("classIRI",LDHelper.resourceIRI(modelIRI.toString(),resourceName));
+
+        this.graph = GraphManager.constructModelFromGraph(pss.toString(),services.getCoreSparqlAddress());
 
     }
 

@@ -17,7 +17,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.jena.iri.IRI;
-import org.apache.jena.iri.IRIException;
 import org.apache.jena.iri.IRIFactory;
 import org.apache.jena.query.ParameterizedSparqlString;
 import java.text.Normalizer;
@@ -133,7 +132,7 @@ public class LDHelper {
                             "PREFIX text: <http://jena.apache.org/text#> "+
                             "PREFIX sh: <http://www.w3.org/ns/shacl#> "+
                             "PREFIX skos: <http://www.w3.org/2004/02/skos/core#> "+
-                            "PREFIX skosxl <http://www.w3.org/2008/05/skos-xl#> "+
+                            "PREFIX skosxl: <http://www.w3.org/2008/05/skos-xl#> "+
                             "PREFIX prov: <http://www.w3.org/ns/prov#> " +
                             "PREFIX iow: <http://iow.csc.fi/ns/iow#>" +
                             "PREFIX dcap: <http://purl.org/ws-mmi-dc/terms/> " +
@@ -141,15 +140,19 @@ public class LDHelper {
                             "PREFIX schema: <http://schema.org/>"+
                             "PREFIX ts: <http://www.w3.org/2003/06/sw-vocab-status/ns#>"+
                             "PREFIX dcam: <http://purl.org/dc/dcam/>"+
-                            "PREFIX termed <http://termed.thl.fi/meta/>"+
+                            "PREFIX termed: <http://termed.thl.fi/meta/>"+
                             "PREFIX at: <http://publications.europa.eu/ontology/authority/>";
     
    
     ParameterizedSparqlString pss = new ParameterizedSparqlString();
 
-    static String query(String queryString) {
+    static String encodeQuery(String queryString) {
         queryString = prefix+queryString;
         return  UriComponent.encode(queryString,UriComponent.Type.QUERY_PARAM); // URLEncoder.encode(queryString, "UTF-8");
+    }
+
+    static String prefixQuery(String queryString) {
+        return prefix+queryString;
     }
 
 
@@ -398,7 +401,7 @@ public class LDHelper {
    }
 
     public static String expandSparqlQuery(boolean skip, String query) {
-        if(skip) return query;
+        if(skip) { return prefixQuery(query); }
         return expandSparqlQuery(query,LDHelper.PREFIX_MAP);
     }
 

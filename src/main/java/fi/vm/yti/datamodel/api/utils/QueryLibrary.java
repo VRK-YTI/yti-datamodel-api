@@ -38,6 +38,19 @@ public class QueryLibrary {
                     "?scheme a skos:ConceptScheme . " +
                     "}" +
             "");
+
+    final public static String constructServiceCategories = LDHelper.expandSparqlQuery(true,
+            "CONSTRUCT {" +
+                    "?concept skos:prefLabel ?label . " +
+                    "?concept rdf:type skos:Concept . " +
+                    "?concept dcterms:identifier ?id . " +
+                    "} WHERE {" +
+                    "GRAPH <urn:yti:servicecategories> { " +
+                    "?concept skos:prefLabel ?label . " +
+                    "?concept dc:identifier ?id . " +
+                    "FILTER langMatches(lang(?label),?lang)" +
+                    "VALUES ?lang { 'fi' 'sv' 'en'}" +
+                    "}}");
     
     final public static String modelQuery = LDHelper.expandSparqlQuery(true,
                      "CONSTRUCT { "
