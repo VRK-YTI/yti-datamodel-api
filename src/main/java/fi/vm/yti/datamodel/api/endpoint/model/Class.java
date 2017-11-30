@@ -21,18 +21,11 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 
 import fi.vm.yti.datamodel.api.config.LoginSession;
+import fi.vm.yti.datamodel.api.model.ReusableClass;
+import fi.vm.yti.datamodel.api.utils.*;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
 import fi.vm.yti.datamodel.api.config.EndpointServices;
-import fi.vm.yti.datamodel.api.utils.ResourceManager;
-import fi.vm.yti.datamodel.api.utils.ConceptMapper;
-import fi.vm.yti.datamodel.api.utils.GraphManager;
-import fi.vm.yti.datamodel.api.utils.IDManager;
-import fi.vm.yti.datamodel.api.utils.JerseyJsonLDClient;
-import fi.vm.yti.datamodel.api.utils.JerseyResponseManager;
-import fi.vm.yti.datamodel.api.utils.LDHelper;
-import fi.vm.yti.datamodel.api.utils.NamespaceManager;
-import fi.vm.yti.datamodel.api.utils.QueryLibrary;
 import org.apache.jena.query.ParameterizedSparqlString;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -120,9 +113,7 @@ public class Class {
             if(model!=null && !model.equals("undefined")) {
                   pss.setIri("library", model);
             }
-            
-           // logger.info(pss.toString());
-            
+
             return JerseyJsonLDClient.constructNotEmptyGraphFromService(pss.toString(), sparqlService);         
 
       }
@@ -143,28 +134,28 @@ public class Class {
   })
   public Response postJson(
           @ApiParam(value = "New graph in application/ld+json", required = false) 
-                String body, 
-          @ApiParam(value = "Class ID", required = true) 
-          @QueryParam("id") 
+                String body,
+          @ApiParam(value = "Class ID", required = true)
+          @QueryParam("id")
                 String id,
           @ApiParam(value = "OLD Class ID") 
-          @QueryParam("oldid") 
+          @QueryParam("oldid")
                 String oldid,
-          @ApiParam(value = "Model ID", required = true) 
-          @QueryParam("model") 
+          @ApiParam(value = "Model ID", required = true)
+          @QueryParam("model")
                 String model,
           @Context HttpServletRequest request) {
-              
-        HttpSession session = request.getSession();
-        
-        if(session==null) return JerseyResponseManager.unauthorized();
-        
-        LoginSession login = new LoginSession(session);
-        
-        if(!login.isLoggedIn() || !login.hasRightToEditModel(model))
-            return JerseyResponseManager.unauthorized();
-                
-        IRI modelIRI,idIRI,oldIdIRI = null;        
+
+      HttpSession session = request.getSession();
+
+      if(session==null) return JerseyResponseManager.unauthorized();
+
+      LoginSession login = new LoginSession(session);
+
+      if(!login.isLoggedIn() || !login.hasRightToEditModel(model))
+          return JerseyResponseManager.unauthorized();
+
+        IRI modelIRI,idIRI,oldIdIRI = null;
         
         /* Check that URIs are valid */
         try {
@@ -182,11 +173,18 @@ public class Class {
         catch (IRIException e) {
             return JerseyResponseManager.invalidIRI();
         }
-        
-        UUID provUUID = null;
-        
+
+        String provUUID = null;
+
         if(isNotEmpty(body)) {
-            
+
+            ReusableClass updateClass = new ReusableClass(body);
+
+            if(!login.isUserInOrganization(updateClass.getOrganizations())) {
+                logger.info("User is not in organization");
+                return JerseyResponseManager.unauthorized();
+            }
+
             /* Rename ID if oldIdIRI exists */
             if(oldIdIRI!=null) {
                 /* Prevent overwriting existing resources */
@@ -194,12 +192,16 @@ public class Class {
                     logger.log(Level.WARNING, idIRI+" is existing graph!");
                     return JerseyResponseManager.usedIRI();
                 } else {
-                    provUUID = ResourceManager.updateResourceWithNewId(idIRI, oldIdIRI, modelIRI, body, login);
+                    updateClass.save();
+                    provUUID = updateClass.getProvUUID();
+                   // provUUID = ResourceManager.updateResourceWithNewId(idIRI, oldIdIRI, modelIRI, body, login);
                     GraphManager.updateClassReferencesInModel(modelIRI, oldIdIRI, idIRI);
                     logger.info("Changed id from:"+oldid+" to "+id);
                 }
             } else {
-                provUUID = ResourceManager.updateResource(id, model, body, login);
+                updateClass.save();
+                provUUID = updateClass.getProvUUID();
+               // provUUID = ResourceManager.updateResource(id, model, body, login);
             }
         } else {
              /* IF NO JSON-LD POSTED TRY TO CREATE REFERENCE FROM MODEL TO CLASS ID */
@@ -235,56 +237,48 @@ public class Class {
       @ApiResponse(code = 500, message = "Bad data?") 
   })
   public Response putJson(
-          @ApiParam(value = "New graph in application/ld+json", required = true) 
-                String body, 
-          @ApiParam(value = "Class ID", required = true) 
-          @QueryParam("id") 
-                String id,
-          @ApiParam(value = "Model ID", required = true) 
-          @QueryParam("model") 
-                String model,
+          @ApiParam(value = "New graph in application/ld+json", required = true) String body,
           @Context HttpServletRequest request) {
       
     try {
-        
-        IRI modelIRI,idIRI;   
-        
-        /* Check that URIs are valid */
-        try {
-            modelIRI = IDManager.constructIRI(model);
-            idIRI = IDManager.constructIRI(id);
-        }
-        catch(NullPointerException e) {
-            return JerseyResponseManager.unexpected();
-        }
-        catch (IRIException e) {
-            return JerseyResponseManager.invalidIRI();
-        }
-               
+
         HttpSession session = request.getSession();
 
         if(session==null) return JerseyResponseManager.unauthorized();
 
         LoginSession login = new LoginSession(session);
 
-            if(!login.isLoggedIn() || !login.hasRightToEditModel(model))
-                return JerseyResponseManager.unauthorized();
+        if(!login.isLoggedIn()) {
+            return JerseyResponseManager.unauthorized();
+        }
 
-             if(!id.startsWith(model)) {
-                Logger.getLogger(Class.class.getName()).log(Level.WARNING, id+" ID must start with "+model);
-                return JerseyResponseManager.invalidIRI();
-             }
+        ReusableClass newClass = new ReusableClass(body);
 
-            /* Prevent overwriting existing classes */ 
-            if(GraphManager.isExistingGraph(idIRI)) {
-               logger.log(Level.WARNING, idIRI+" is existing class!");
+        /* Prevent overwriting existing classes */
+        if(GraphManager.isExistingGraph(newClass.getId())) {
+               logger.log(Level.WARNING, newClass.getId()+" is existing class!");
                return JerseyResponseManager.usedIRI();
+        }
+
+        if(!login.isUserInOrganization(newClass.getOrganizations())) {
+            logger.info("User is not in organization");
+            return JerseyResponseManager.unauthorized();
+        }
+
+        String provUUID = newClass.getProvUUID();
+
+        if (provUUID == null) {
+            return JerseyResponseManager.serverError();
+        }
+        else {
+            newClass.save();
+
+            if (ProvenanceManager.getProvMode()) {
+                ProvenanceManager.createProvenanceGraphFromModel(newClass.getId(), newClass.asGraph(), login.getEmail(), newClass.getProvUUID());
             }
-          
-           UUID provUUID = ResourceManager.putNewResource(id, model, body, login);
-          
-           if(provUUID!=null) return JerseyResponseManager.successUuid(provUUID);
-           else return JerseyResponseManager.notCreated();
+
+            return JerseyResponseManager.successUuid(newClass.getProvUUID(), newClass.getId());
+        }
 
       } catch(Exception ex) {
         Logger.getLogger(Class.class.getName()).log(Level.WARNING, "Expect the unexpected!", ex);
@@ -292,7 +286,7 @@ public class Class {
       }
   }
  
-@DELETE
+  @DELETE
   @ApiOperation(value = "Delete graph from service and service description", notes = "Delete graph")
   @ApiResponses(value = {
       @ApiResponse(code = 204, message = "Graph is deleted"),

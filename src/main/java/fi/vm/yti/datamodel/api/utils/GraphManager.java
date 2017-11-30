@@ -1009,7 +1009,7 @@ public class GraphManager {
      */
     public static Model constructModelFromConceptAndCore(String conceptID, String modelID, Query query) {
 
-        Model conceptModel = TermedTerminologyManager.getCleanedConceptAsJenaModel(conceptID);
+        Model conceptModel = TermedTerminologyManager.getConceptAsJenaModel(conceptID);
 
         DatasetAccessor testAcc = DatasetAccessorFactory.createHTTP(services.getCoreReadAddress());
         conceptModel.add(testAcc.getModel(modelID));

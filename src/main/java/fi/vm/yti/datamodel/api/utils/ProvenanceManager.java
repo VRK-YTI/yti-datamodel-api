@@ -73,7 +73,8 @@ public class ProvenanceManager {
         qexec.execute();
         
     }
-    
+
+    @Deprecated
     public static void createVersionIdToResource(String graph, UUID provUUID) {
         
             String query
@@ -98,7 +99,8 @@ public class ProvenanceManager {
         qexec.execute();
        
     }
-    
+
+    @Deprecated
     public static void createProvenanceActivity(String graph, String user, String jsonld, UUID provUUID) {
         
         createVersionIdToResource(graph, provUUID);

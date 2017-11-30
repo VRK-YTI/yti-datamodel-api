@@ -20,19 +20,12 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 
+import fi.vm.yti.datamodel.api.model.ReusablePredicate;
+import fi.vm.yti.datamodel.api.utils.*;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
 import fi.vm.yti.datamodel.api.config.EndpointServices;
 import fi.vm.yti.datamodel.api.config.LoginSession;
-import fi.vm.yti.datamodel.api.utils.ConceptMapper;
-import fi.vm.yti.datamodel.api.utils.GraphManager;
-import fi.vm.yti.datamodel.api.utils.IDManager;
-import fi.vm.yti.datamodel.api.utils.JerseyJsonLDClient;
-import fi.vm.yti.datamodel.api.utils.JerseyResponseManager;
-import fi.vm.yti.datamodel.api.utils.LDHelper;
-import fi.vm.yti.datamodel.api.utils.NamespaceManager;
-import fi.vm.yti.datamodel.api.utils.QueryLibrary;
-import fi.vm.yti.datamodel.api.utils.ResourceManager;
 import org.apache.jena.query.ParameterizedSparqlString;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -152,16 +145,17 @@ public class Predicate {
           @QueryParam("model") 
                 String model,
           @Context HttpServletRequest request) {
-      
- 
-        HttpSession session = request.getSession();
-        
-        if(session==null) return JerseyResponseManager.unauthorized();
-        
-        LoginSession login = new LoginSession(session);
-        
-        if(!login.isLoggedIn() || !login.hasRightToEditModel(model))
-            return JerseyResponseManager.unauthorized();
+
+
+      HttpSession session = request.getSession();
+
+      if(session==null) return JerseyResponseManager.unauthorized();
+
+      LoginSession login = new LoginSession(session);
+
+      if(!login.isLoggedIn() || !login.hasRightToEditModel(model))
+          return JerseyResponseManager.unauthorized();
+
                 
         IRI modelIRI,idIRI,oldIdIRI = null; 
         
@@ -182,10 +176,17 @@ public class Predicate {
             return JerseyResponseManager.invalidIRI();
         }
         
-         UUID provUUID = null;
+         String provUUID = null;
         
         if(isNotEmpty(body)) {
-            
+
+            ReusablePredicate updatePredicate = new ReusablePredicate(body);
+
+            if(!login.isUserInOrganization(updatePredicate.getOrganizations())) {
+                logger.info("User is not in organization");
+                return JerseyResponseManager.unauthorized();
+            }
+
             /* Rename ID if oldIdIRI exists */
             if(oldIdIRI!=null) {
                 /* Prevent overwriting existing resources */
@@ -193,12 +194,16 @@ public class Predicate {
                     logger.log(Level.WARNING, idIRI+" is existing graph!");
                     return JerseyResponseManager.usedIRI();
                 } else {
-                    provUUID = ResourceManager.updateResourceWithNewId(idIRI, oldIdIRI, modelIRI, body, login);
+                    updatePredicate.save();
+                    provUUID = updatePredicate.getProvUUID();
+                   // provUUID = ResourceManager.updateResourceWithNewId(idIRI, oldIdIRI, modelIRI, body, login);
                     GraphManager.updatePredicateReferencesInModel(modelIRI, oldIdIRI, idIRI);
                     logger.info("Changed id from:"+oldid+" to "+id);
                 }
             } else {
-                provUUID = ResourceManager.updateResource(id, model, body, login);
+                updatePredicate.save();
+                provUUID = updatePredicate.getProvUUID();
+              //  provUUID = ResourceManager.updateResource(id, model, body, login);
             }
         } else {
              /* IF NO JSON-LD POSTED TRY TO CREATE REFERENCE FROM MODEL TO CLASS ID */
@@ -233,48 +238,47 @@ public class Predicate {
       @ApiResponse(code = 500, message = "Bad data?") 
   })
   public Response putJson(
-          @ApiParam(value = "New graph in application/ld+json", required = true) 
-                String body, 
-          @ApiParam(value = "Property ID", required = true) 
-          @QueryParam("id") 
-                String id,
-          @ApiParam(value = "Model ID", required = true) 
-          @QueryParam("model") 
-                String model,
+          @ApiParam(value = "New graph in application/ld+json", required = true) String body,
           @Context HttpServletRequest request) {
-        
-            HttpSession session = request.getSession();
 
-            if(session==null) return JerseyResponseManager.unauthorized();
+      try {
+          HttpSession session = request.getSession();
 
-            LoginSession login = new LoginSession(session);
+          if(session==null) return JerseyResponseManager.unauthorized();
 
-            if(!login.isLoggedIn() || !login.hasRightToEditModel(model))
-                return JerseyResponseManager.unauthorized();
-            
-            if(!id.startsWith(model))
-                return JerseyResponseManager.invalidIRI();
+          LoginSession login = new LoginSession(session);
 
-            IRI modelIRI,idIRI;
-            try {
-                modelIRI = IDManager.constructIRI(model);
-                idIRI = IDManager.constructIRI(id);
-            }
-            catch (IRIException e) {
-                return JerseyResponseManager.invalidIRI();
-            }
+          if(!login.isLoggedIn()) {
+              return JerseyResponseManager.unauthorized();
+          }
+
+          ReusablePredicate newPredicate = new ReusablePredicate(body);
 
             /* Prevent overwriting existing predicate */ 
-            if(GraphManager.isExistingGraph(idIRI)) {
-               logger.log(Level.WARNING, idIRI+" is existing predicate!");
+            if(GraphManager.isExistingGraph(newPredicate.getId())) {
+               logger.log(Level.WARNING, newPredicate.getId()+" is existing predicate!");
                return JerseyResponseManager.usedIRI();
             }
+
+          if(!login.isUserInOrganization(newPredicate.getOrganizations())) {
+              logger.info("User is not in organization");
+              return JerseyResponseManager.unauthorized();
+          }
            
-           UUID provUUID = ResourceManager.putNewResource(id, model, body, login);
+           String provUUID = newPredicate.getProvUUID();
+           newPredicate.save();
+
+          if(ProvenanceManager.getProvMode()) {
+              ProvenanceManager.createProvenanceGraphFromModel(newPredicate.getId(),newPredicate.asGraph(),login.getEmail(),newPredicate.getProvUUID());
+          }
           
-           if(provUUID!=null) return JerseyResponseManager.successUuid(provUUID);
-           else return JerseyResponseManager.notCreated();
-           
+          if(provUUID!=null) return JerseyResponseManager.successUuid(provUUID,newPredicate.getId());
+          else return JerseyResponseManager.notCreated();
+
+      } catch(Exception ex) {
+          Logger.getLogger(Class.class.getName()).log(Level.WARNING, "Expect the unexpected!", ex);
+          return JerseyResponseManager.unexpected();
+      }
   }
   
   

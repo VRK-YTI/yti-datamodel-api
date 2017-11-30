@@ -3,8 +3,11 @@
  */
 
 import com.jayway.jsonpath.Configuration;
+import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.matchers.JsonPathMatchers;
+import fi.vm.yti.datamodel.api.model.ReusableClass;
+import fi.vm.yti.datamodel.api.model.ReusablePredicate;
 import fi.vm.yti.datamodel.api.utils.ModelManager;
 import org.apache.jena.rdf.model.Model;
 import org.glassfish.jersey.client.ClientProperties;
@@ -55,8 +58,6 @@ public class ModelTest  {
                 .get()
                 .readEntity(String.class);
 
-        logger.info(model);
-
         Model newModel = ModelManager.createJenaModelFromJSONLDString(model);
 
         if(newModel.size()<=0) {
@@ -80,7 +81,6 @@ public class ModelTest  {
 
     }
 
-
     @Test
     public void test3_createNewClassToModel() {
 
@@ -94,8 +94,31 @@ public class ModelTest  {
                 .readEntity(String.class);
 
         Model classModel = ModelManager.createJenaModelFromJSONLDString(testClass);
+        String classString = ModelManager.writeModelToString(classModel);
 
-        logger.info(testClass);
+        Response newClassResponse = target.path("class").request().put(Entity.entity(classString,"application/ld+json"));
+        Assert.assertEquals(200,newClassResponse.getStatus());
+        String classId = JsonPath.read(newClassResponse.readEntity(String.class),"$.@id");
+
+        logger.info("Created "+classId);
+
+        Response classResponse = target.path("class").queryParam("id",classId).request().get();
+        Assert.assertEquals(200,classResponse.getStatus());
+        String classResponseString = classResponse.readEntity(String.class);
+
+        DocumentContext json = JsonPath.parse(classResponseString);
+        String jsonPath = "$.@graph[?(@.['@id']=='"+classId+"')].label.@value";
+        json.set(jsonPath,"Test 2" ).jsonString();
+
+       //  Object json2 = Configuration.defaultConfiguration().jsonProvider().parse(classResponseString);
+       //  String lof = JsonPath.read(json2,"$.@graph[?(@.created)].created");
+       //  logger.info(lof);
+
+         ReusableClass updateClass = new ReusableClass(json.jsonString());
+
+         Response updateClassResponse = target.path("class").queryParam("id",updateClass.getId()).queryParam("model",updateClass.getModelId()).request().post(Entity.entity(ModelManager.writeModelToString(updateClass.asGraph()),"application/ld+json"));
+
+         Assert.assertEquals(200,updateClassResponse.getStatus());
 
     }
 
@@ -113,8 +136,28 @@ public class ModelTest  {
                 .readEntity(String.class);
 
         Model predicateModel = ModelManager.createJenaModelFromJSONLDString(testPredicate);
+        String predicateString = ModelManager.writeModelToString(predicateModel);
 
-        logger.info(testPredicate);
+        Response newPredicateResponse = target.path("predicate").request().put(Entity.entity(predicateString,"application/ld+json"));
+        Assert.assertEquals(200,newPredicateResponse.getStatus());
+        String newPredicateString = newPredicateResponse.readEntity(String.class);
+        logger.info(newPredicateString);
+        String predicateId = JsonPath.read(newPredicateString,"$.@id");
+
+        logger.info("Created "+predicateId);
+
+        Response predicateResponse = target.path("predicate").queryParam("id",predicateId).request().get();
+        Assert.assertEquals(200,predicateResponse.getStatus());
+        String predicateResponseString = predicateResponse.readEntity(String.class);
+
+        DocumentContext json = JsonPath.parse(predicateResponseString);
+        String jsonPath = "$.@graph[?(@.['@id']=='"+predicateId+"')].label.@value";
+        json.set(jsonPath,"Test 2 Edit" ).jsonString();
+
+        ReusablePredicate updatePredicate = new ReusablePredicate(json.jsonString());
+        Response updatePredicateResponse = target.path("predicate").queryParam("id",updatePredicate.getId()).queryParam("model",updatePredicate.getModelId()).request().post(Entity.entity(ModelManager.writeModelToString(updatePredicate.asGraph()),"application/ld+json"));
+
+        Assert.assertEquals(200,updatePredicateResponse.getStatus());
     }
 
 

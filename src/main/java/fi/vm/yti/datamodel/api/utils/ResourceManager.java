@@ -16,6 +16,7 @@ import org.apache.jena.iri.IRI;
  *
  * @author malonen
  */
+@Deprecated
 public class ResourceManager {
     
     static EndpointServices services = new EndpointServices();
