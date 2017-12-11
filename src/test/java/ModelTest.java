@@ -109,10 +109,6 @@ public class ModelTest  {
         String jsonPath = "$.@graph[?(@.['@id']=='"+classId+"')].label.@value";
         json.set(jsonPath,"Test 2" ).jsonString();
 
-       //  Object json2 = Configuration.defaultConfiguration().jsonProvider().parse(classResponseString);
-       //  String lof = JsonPath.read(json2,"$.@graph[?(@.created)].created");
-       //  logger.info(lof);
-
          ReusableClass updateClass = new ReusableClass(json.jsonString());
 
          Response updateClassResponse = target.path("class").queryParam("id",updateClass.getId()).queryParam("model",updateClass.getModelId()).request().post(Entity.entity(ModelManager.writeModelToString(updateClass.asGraph()),"application/ld+json"));

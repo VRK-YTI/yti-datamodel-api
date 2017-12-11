@@ -65,6 +65,7 @@ public class ModelCreator {
 
         try {
                 allowedLang = LDHelper.parseAllowedLangString(allowedLang);
+                logger.info("LANGUAGES: "+allowedLang);
             } catch(InvalidParameterException ex) {
                 return JerseyResponseManager.invalidParameter();
             }

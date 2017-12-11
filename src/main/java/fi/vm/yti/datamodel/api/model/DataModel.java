@@ -62,7 +62,7 @@ public class DataModel extends AbstractModel {
                 + "VALUES ?code { "+LDHelper.concatStringList(serviceList, " ", "'")+"}"
                 + "}"
                 + "GRAPH <urn:yti:organizations> {"
-                + "?org skos:prefLabel ?orgLabel ."
+                + "?org a ?orgType . "
                 + "VALUES ?org { "+LDHelper.concatWithReplace(orgList," ", "<urn:uuid:@this>")+" }"
                 + "}"
                 + "}";
