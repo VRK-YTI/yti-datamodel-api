@@ -59,9 +59,7 @@ public class Concept {
           pss.setCommandText(QueryLibrary.conceptQuery);
           logger.info(pss.toString());
 
-
-       return JerseyJsonLDClient.constructResponseFromGraph(TermedTerminologyManager.constructCleanedModelFromTempConceptService(pss.toString()));
-       // return JerseyJsonLDClient.getConceptFromTermedAPI(uri,schemeUUID);
+          return JerseyJsonLDClient.constructResponseFromGraph(TermedTerminologyManager.constructCleanedModelFromTermedAPI(uri, pss.toString()));
       
   }
    

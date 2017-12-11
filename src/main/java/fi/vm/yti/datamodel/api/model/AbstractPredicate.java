@@ -61,7 +61,7 @@ public class AbstractPredicate {
 
         List<RDFNode> modelList = this.graph.listObjectsOfProperty(RDFS.isDefinedBy).toList();
         if(modelList==null || modelList.size()!=1) {
-            throw new IllegalArgumentException("Expected 1 class (isDefinedBy)");
+            throw new IllegalArgumentException("Expected 1 class (isDefinedBy) got "+modelList.size());
         }
 
         this.dataModel = new DataModel(LDHelper.toIRI(modelList.get(0).asResource().getURI()));

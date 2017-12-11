@@ -7,6 +7,7 @@ import fi.vm.yti.datamodel.api.utils.RHPOrganizationManager;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.rdf.model.*;
 import org.apache.jena.vocabulary.DCTerms;
+import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDF;
 
 import java.util.ArrayList;
@@ -59,12 +60,17 @@ public abstract class AbstractModel {
         Model orgModel = RHPOrganizationManager.getOrganizationModel();
         this.graph = graph;
 
-        List<Resource> vocabList = this.graph.listSubjectsWithProperty(RDF.type, ResourceFactory.createResource(LDHelper.curieToURI("owl:Ontology"))).toList();
-        if(vocabList.size()<=0) {
-            throw new IllegalArgumentException("Expected at least 1 model!");
+        List<Resource> vocabList = this.graph.listSubjectsWithProperty(OWL.versionInfo).toList();
+
+        if(!(vocabList.size()==1)) {
+            throw new IllegalArgumentException("Expected 1 versioned resource");
         }
 
         Resource modelResource = vocabList.get(0);
+
+        if(!modelResource.hasProperty(RDF.type, OWL.Ontology)) {
+            throw new IllegalArgumentException("Expected model resource");
+        }
 
         // TODO: Validate that namespace is same as in model id
         this.id =  LDHelper.toIRI(modelResource.getURI());

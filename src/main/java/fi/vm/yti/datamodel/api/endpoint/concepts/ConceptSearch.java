@@ -46,8 +46,7 @@ public class ConceptSearch {
           @QueryParam("schemeUUID") String schemeUUID) {
           
           return JerseyJsonLDClient.searchConceptFromTermedAPI(term, schemeUUID);
-        
-          
+
   }
   
   

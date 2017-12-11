@@ -429,26 +429,19 @@ public class JerseyJsonLDClient {
      */
     public static Response searchConceptFromTermedAPI(String query, String schemeURI) {
         
-        String url = ApplicationProperties.getDefaultTermAPI()+"ext";
+        String url = ApplicationProperties.getDefaultTermAPI()+"node-trees";
 
-        //FIXME: This isnt really working ... Returns TERMS instead of Concepts. Tried also with node-trees api but there is no RDF support. Options, create JENA model from JSON API or use elastic search index in frontend?
-
-        /*
-        if(graphCode!=null && !graphCode.isEmpty() && !graphCode.equals("undefined")) {
-            url = url+"/"+graphCode;
-        }*/
-        
         try {
             
             Client client = IgnoreSSLClient(); //ClientBuilder.newClient();
             HttpAuthenticationFeature feature = TermedAuthentication.getTermedAuth();
             client.register(feature);
 
-            WebTarget target = client.target(url).queryParam("select.referrers","prefLabelXl").queryParam("recurse.referrers.prefLabelXl","2").queryParam("where.properties.prefLabel", query).queryParam("max", "-1");
-            
-           if(schemeURI!=null && !schemeURI.isEmpty() && !schemeURI.equals("undefined")) {
-                target = target.queryParam("graphId",schemeURI);
-            }
+            WebTarget target = client.target(url)
+                    .queryParam("select","properties.prefLabel,properties.definition")
+                    .queryParam("where", "references.prefLabelXl.properties.prefLabel:"+query)
+                    .queryParam("where", "graph.uri:"+schemeURI)
+                    .queryParam("max", "-1");
             
             Response response = target.request("application/ld+json").get();
 
@@ -468,9 +461,7 @@ public class JerseyJsonLDClient {
           return JerseyResponseManager.notAcceptable();
         }
     }
-    
-    
-    
+
     /**
      * Returns available schemes
      * @return Response
@@ -508,34 +499,23 @@ public class JerseyJsonLDClient {
     /**
      * Returns concept as Jersey Response
      * @param uri uri of the concept
-     * @param schemeUUID of the vocabulary
      * @return Response
      */
-    public static Response getConceptFromTermedAPI(String uri, String schemeUUID) {
+    public static Response getConceptFromTermedAPI(String uri) {
         
-        String url = ApplicationProperties.getDefaultTermAPI()+"ext";
-        
-        /*
-         if(graphCode!=null && !graphCode.isEmpty() && !graphCode.equals("undefined")) {
-            url = url+"/"+graphCode;
-        }*/
-        
+        String url = ApplicationProperties.getDefaultTermAPI()+"node-trees";
+
         try {
             Client client = IgnoreSSLClient(); //ClientBuilder.newClient();
             HttpAuthenticationFeature feature = TermedAuthentication.getTermedAuth();
             client.register(feature);
 
-            WebTarget target = client.target(url).queryParam("typeId", "Concept").queryParam("max", "-1");
+            WebTarget target = client.target(url)
+                    .queryParam("select", "id,uri,properties.prefLabel")
+                    .queryParam("where","typeId:Concept AND "+uri)
+                    .queryParam("max", "-1");
             
-            if(uri!=null && !uri.isEmpty() && !uri.equals("undefined")) {
-                logger.info(uri);
-                target = target.queryParam("uri", uri);
-            }
-            
-            if(schemeUUID!=null && !schemeUUID.isEmpty() && !schemeUUID.equals("undefined")) {
-                target = target.queryParam("where.references.inScheme",schemeUUID);
-            }
-            
+
             Response response = target.request("application/ld+json").property(ClientProperties.FOLLOW_REDIRECTS, Boolean.TRUE).get();
 
             logger.info("TERMED CALL: "+target.getUri().toString());
@@ -546,7 +526,6 @@ public class JerseyJsonLDClient {
                return JerseyResponseManager.notFound();
             }
 
-          //  logger.info(response.readEntity(String.class));
             ResponseBuilder rb = Response.status(response.getStatus());
             rb.entity(response.readEntity(InputStream.class));
 

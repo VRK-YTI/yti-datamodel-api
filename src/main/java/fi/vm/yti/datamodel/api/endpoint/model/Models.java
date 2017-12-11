@@ -315,6 +315,8 @@ public class Models {
         }
         catch (IRIException e) {
             return JerseyResponseManager.invalidIRI();
+        } catch(NullPointerException ex) {
+            return JerseyResponseManager.invalidParameter();
         }
        
        HttpSession session = request.getSession();

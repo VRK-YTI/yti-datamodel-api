@@ -36,10 +36,6 @@ public class TermedTerminologyManager {
     private final static Resource termedGraph = ResourceFactory.createResource("http://termed.thl.fi/meta/Graph");
     private final static Property termedGraphProperty = ResourceFactory.createProperty("http://termed.thl.fi/meta/graph");
 
-
-
-
-
     public static void initConceptsFromTermed() {
         Model schemeModel = getSchemesAsModelFromTermedAPI();
         putToConceptGraph(schemeModel,"urn:yti:terminology");
@@ -63,20 +59,51 @@ public class TermedTerminologyManager {
     public static Model constructCleanedModelFromTempConceptService(String query) {
             QueryExecution qexec = QueryExecutionFactory.sparqlService(services.getTempConceptReadSparqlAddress(), query);
             Model objects = qexec.execConstruct();
-            Selector definitionSelector = new SimpleSelector(null, SKOS.definition, (String) null);
-
-            Iterator<Statement> defStatement = objects.listStatements(definitionSelector).toList().iterator();
-
-            while(defStatement.hasNext()) {
-                Statement defStat = defStatement.next();
-                Parser markdownParser = Parser.builder().build();
-
-                Node defNode = markdownParser.parse(defStat.getString());
-                defStat.changeObject(Jsoup.parse(HtmlRenderer.builder().build().render(defNode)).text());
-            }
-
-            return objects;
+            return cleanModelDefinitions(objects);
     }
+
+    public static Model cleanModelDefinitions(Model objects) {
+        Selector definitionSelector = new SimpleSelector(null, SKOS.definition, (String) null);
+
+        Iterator<Statement> defStatement = objects.listStatements(definitionSelector).toList().iterator();
+
+        while(defStatement.hasNext()) {
+            Statement defStat = defStatement.next();
+            Parser markdownParser = Parser.builder().build();
+            Node defNode = markdownParser.parse(defStat.getString());
+            defStat.changeObject(Jsoup.parse(HtmlRenderer.builder().build().render(defNode)).text());
+        }
+
+        return objects;
+    }
+
+    public static Model cleanedConceptModel(Model objects) {
+        Selector definitionSelector = new SimpleSelector(null, SKOS.definition, (String) null);
+
+        Iterator<Statement> defStatement = objects.listStatements(definitionSelector).toList().iterator();
+
+        while(defStatement.hasNext()) {
+            Statement defStat = defStatement.next();
+            Parser markdownParser = Parser.builder().build();
+            Node defNode = markdownParser.parse(defStat.getString());
+            defStat.changeObject(Jsoup.parse(HtmlRenderer.builder().build().render(defNode)).text());
+        }
+
+        return objects;
+    }
+
+
+    public static Model constructCleanedModelFromTermedAPI(String conceptUri, String query) {
+
+        Response jerseyResponse = JerseyJsonLDClient.getConceptFromTermedAPI(conceptUri);
+        Model conceptModel = JerseyJsonLDClient.getJSONLDResponseAsJenaModel(jerseyResponse);
+        QueryExecution qexec = QueryExecutionFactory.create(query,conceptModel);
+        Model objects = qexec.execConstruct();
+
+        return cleanModelDefinitions(objects);
+
+    }
+
 
     /**
      * Put model to concept graph

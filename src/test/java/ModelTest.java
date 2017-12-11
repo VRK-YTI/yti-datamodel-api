@@ -8,6 +8,7 @@ import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.matchers.JsonPathMatchers;
 import fi.vm.yti.datamodel.api.model.ReusableClass;
 import fi.vm.yti.datamodel.api.model.ReusablePredicate;
+import fi.vm.yti.datamodel.api.utils.LDHelper;
 import fi.vm.yti.datamodel.api.utils.ModelManager;
 import org.apache.jena.rdf.model.Model;
 import org.glassfish.jersey.client.ClientProperties;
@@ -73,7 +74,6 @@ public class ModelTest  {
             testModelId = JsonPath.read(jsonObject, "$.@id");
 
             Assert.assertEquals(403,target.path("model").request().put(Entity.entity(ModelManager.writeModelToString(newModel),"application/ld+json")).getStatus());
-
 
 
         }
