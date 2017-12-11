@@ -44,7 +44,7 @@ public class PredicateCreator {
     public Response newPredicate(
             @ApiParam(value = "Model ID", required = true) @QueryParam("modelID") String modelID,
             @ApiParam(value = "Predicate label", required = true) @QueryParam("predicateLabel") String predicateLabel,
-            @ApiParam(value = "Concept ID", required = true) @QueryParam("conceptID") String conceptID,
+            @ApiParam(value = "Concept ID") @QueryParam("conceptID") String conceptID,
             @ApiParam(value = "Predicate type", required = true, allowableValues="owl:DatatypeProperty,owl:ObjectProperty") @QueryParam("type") String type,
             @ApiParam(value = "Language", required = true, allowableValues="fi,en") @QueryParam("lang") String lang,
             @Context HttpServletRequest request) {

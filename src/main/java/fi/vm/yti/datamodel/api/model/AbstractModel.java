@@ -33,9 +33,8 @@ public abstract class AbstractModel {
         this.graph = GraphManager.getCoreGraph(graphIRI);
 
         List<Resource> vocabList = this.graph.listSubjectsWithProperty(RDF.type, ResourceFactory.createResource(LDHelper.curieToURI("owl:Ontology"))).toList();
-        if(vocabList.size()>1) {
-            throw new IllegalArgumentException("Expected 1 model in graph!");
-
+        if(vocabList.size()<=0) {
+            throw new IllegalArgumentException("Expected at least 1 model");
         }
 
         Resource modelResource = vocabList.get(0);
@@ -61,9 +60,8 @@ public abstract class AbstractModel {
         this.graph = graph;
 
         List<Resource> vocabList = this.graph.listSubjectsWithProperty(RDF.type, ResourceFactory.createResource(LDHelper.curieToURI("owl:Ontology"))).toList();
-        if(vocabList.size()>1) {
-            throw new IllegalArgumentException("Expected 1 model in graph!");
-
+        if(vocabList.size()<=0) {
+            throw new IllegalArgumentException("Expected at least 1 model!");
         }
 
         Resource modelResource = vocabList.get(0);
