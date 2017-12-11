@@ -329,7 +329,7 @@ public class JsonSchemaWriter {
 
     }
 
-    private static String jsonObjectToPrettyString(JsonObject object) {
+    public static String jsonObjectToPrettyString(JsonObject object) {
 
         StringWriter stringWriter = new StringWriter();
         JsonWriter writer = factory.createWriter(stringWriter);

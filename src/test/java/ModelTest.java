@@ -34,7 +34,6 @@ public class ModelTest  {
 
     public ModelTest() {
     }
-    
     @Test
     public void test1_user() {
 

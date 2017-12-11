@@ -43,8 +43,6 @@ public class ContextWriter {
     private static String createDefaultContext(JsonObjectBuilder context) {
         
         JsonObjectBuilder contextBuilder = Json.createObjectBuilder();
-        //context.add("type","@type");
-        //context.add("id","@id");
         contextBuilder.add("@context", context.build());
         
         return JsonSchemaWriter.jsonObjectToPrettyString(contextBuilder.build());
