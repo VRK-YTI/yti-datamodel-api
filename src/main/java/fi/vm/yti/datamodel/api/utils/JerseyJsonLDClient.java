@@ -476,13 +476,16 @@ public class JerseyJsonLDClient {
      * @return Response
      */
     public static Response getSchemesFromTermedAPI() {
-        String url = ApplicationProperties.getDefaultTermAPI()+"ext";
+        String url = ApplicationProperties.getDefaultTermAPI()+"node-trees";
         try {
             Client client = IgnoreSSLClient(); // ClientBuilder.newClient();
             HttpAuthenticationFeature feature = TermedAuthentication.getTermedAuth();
             client.register(feature);
 
-            WebTarget target = client.target(url).queryParam("typeId", "TerminologicalVocabulary").queryParam("max", "-1");
+            WebTarget target = client.target(url)
+                    .queryParam("select","uri,id,properties.prefLabel")
+                    .queryParam("where", "typeId:TerminologicalVocabulary")
+                    .queryParam("max", "-1");
             Response response = target.request("application/ld+json").get();
 
             logger.info("TERMED CALL: "+target.getUri().toString());
