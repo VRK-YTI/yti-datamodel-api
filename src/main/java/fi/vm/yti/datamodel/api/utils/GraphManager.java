@@ -973,7 +973,6 @@ public class GraphManager {
       DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(services.getCoreReadWriteAddress());
       DatasetAdapter adapter = new DatasetAdapter(accessor);
       adapter.putModel(id, model);
- 
         
     }
     

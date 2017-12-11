@@ -22,6 +22,7 @@ import org.apache.jena.vocabulary.RDF;
  *
  * @author malonen
  */
+@Deprecated
 public class GroupManager {
     
     private static final Logger logger = Logger.getLogger(GroupManager.class.getName());

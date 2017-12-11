@@ -140,6 +140,7 @@ public class RHPOrganizationManager {
         Model graph = getOrganizationModelFromRHP();
         if(graph!=null) {
             GraphManager.putToGraph(graph, "urn:yti:organizations");
+            logger.info("Organizations initialized");
         }
     }
 
@@ -150,16 +151,18 @@ public class RHPOrganizationManager {
     public static boolean isExistingOrganization(List<UUID> orgList) {
 
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
-        String queryString = " ASK { GRAPH <urn:yti:organizations> { "+LDHelper.concatWithReplace(orgList," ","<urn:uuid:@this> a foaf:Organization . ")+" } }";
+        String sparqlOrgList = LDHelper.concatWithReplace(orgList," ","<urn:uuid:@this> a foaf:Organization . ");
+        String queryString = " ASK { GRAPH <urn:yti:organizations> { "+sparqlOrgList+" } }";
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
         pss.setCommandText(queryString);
-        logger.info(pss.toString());
         Query query = pss.asQuery();
 
+        //logger.info(pss.toString());
         QueryExecution qexec = QueryExecutionFactory.sparqlService(services.getCoreSparqlAddress(), query);
 
         try {
             boolean b = qexec.execAsk();
+            logger.info("EXISTS "+sparqlOrgList+":"+b);
             return b;
         } catch (Exception ex) {
             return false;

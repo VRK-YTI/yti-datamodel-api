@@ -217,7 +217,7 @@ public class LDHelper {
 
         }
 
-        logger.info("Built langlist: "+allowedLang);
+        //logger.info("Built langlist: "+allowedLang);
         return allowedLang;
     }
 

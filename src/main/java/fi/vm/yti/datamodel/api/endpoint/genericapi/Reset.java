@@ -9,6 +9,7 @@ import fi.vm.yti.datamodel.api.config.ApplicationProperties;
 import fi.vm.yti.datamodel.api.utils.GraphManager;
 import fi.vm.yti.datamodel.api.utils.GroupManager;
 import fi.vm.yti.datamodel.api.utils.NamespaceManager;
+import fi.vm.yti.datamodel.api.utils.RHPOrganizationManager;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
@@ -32,10 +33,9 @@ public class Reset {
     @Context ServletContext context;
 
     @GET
-    @ApiOperation(value = "Log user out", notes = "Removes session used by API")
+    @ApiOperation(value = "Drops everything", notes = "Works only in debug mode")
       @ApiResponses(value = {
-      @ApiResponse(code = 200, message = "Logged out"),
-      @ApiResponse(code = 400, message = "Not logged in")
+      @ApiResponse(code = 200, message = "OK")
   })
     public Response drop(@Context HttpServletRequest request) {
         Response.ResponseBuilder rb;
@@ -43,9 +43,9 @@ public class Reset {
         if(ApplicationProperties.getDebugMode()) {
             GraphManager.deleteGraphs();
             GraphManager.createDefaultGraph();
-            GroupManager.createDefaultGroups();
+            RHPOrganizationManager.initOrganizationsFromRHP();
+            GraphManager.initServiceCategories();
             NamespaceManager.addDefaultNamespacesToCore();
-            //ConceptMapper.updateSchemesFromFinto();
         }
         
         rb = Response.status(Response.Status.OK);
