@@ -64,17 +64,20 @@ public class PredicateCreator {
                 return JerseyResponseManager.invalidIRI();
         }
 
-        ReusablePredicate newPredicate;
+        try {
+            ReusablePredicate newPredicate;
 
-        if(conceptIRI!=null) {
-            newPredicate = new ReusablePredicate(conceptIRI, modelIRI, predicateLabel, lang, typeIRI);
+            if (conceptIRI != null) {
+                newPredicate = new ReusablePredicate(conceptIRI, modelIRI, predicateLabel, lang, typeIRI);
+            } else {
+                newPredicate = new ReusablePredicate(modelIRI, predicateLabel, lang, typeIRI);
+            }
+
+            return JerseyJsonLDClient.constructResponseFromGraph(newPredicate.asGraph());
+        } catch(IllegalArgumentException ex) {
+            logger.info(ex.toString());
+            return JerseyResponseManager.error();
         }
-        else {
-            newPredicate = new ReusablePredicate(modelIRI, predicateLabel, lang, typeIRI);
-        }
-
-        return JerseyJsonLDClient.constructResponseFromGraph(newPredicate.asGraph());
-
     }   
  
 }

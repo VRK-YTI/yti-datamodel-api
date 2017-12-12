@@ -146,6 +146,7 @@ public class Class {
                 String model,
           @Context HttpServletRequest request) {
 
+      try {
       HttpSession session = request.getSession();
 
       if(session==null) return JerseyResponseManager.unauthorized();
@@ -223,6 +224,14 @@ public class Class {
         else {
             return JerseyResponseManager.notCreated();
         }
+
+      } catch(IllegalArgumentException ex) {
+          logger.warning(ex.toString());
+          return JerseyResponseManager.invalidParameter();
+      } catch(Exception ex) {
+          Logger.getLogger(Class.class.getName()).log(Level.WARNING, "Expect the unexpected!", ex);
+          return JerseyResponseManager.unexpected();
+      }
   }
  
   @PUT
@@ -280,6 +289,9 @@ public class Class {
             return JerseyResponseManager.successUuid(newClass.getProvUUID(), newClass.getId());
         }
 
+      } catch(IllegalArgumentException ex) {
+        logger.warning(ex.toString());
+        return JerseyResponseManager.invalidParameter();
       } catch(Exception ex) {
         Logger.getLogger(Class.class.getName()).log(Level.WARNING, "Expect the unexpected!", ex);
         return JerseyResponseManager.unexpected();

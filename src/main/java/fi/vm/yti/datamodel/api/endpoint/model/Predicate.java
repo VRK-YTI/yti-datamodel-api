@@ -146,7 +146,7 @@ public class Predicate {
                 String model,
           @Context HttpServletRequest request) {
 
-
+      try {
       HttpSession session = request.getSession();
 
       if(session==null) return JerseyResponseManager.unauthorized();
@@ -222,7 +222,14 @@ public class Predicate {
             return JerseyResponseManager.successUuid(provUUID);
         }
         else return JerseyResponseManager.notCreated();
-        
+
+      } catch(IllegalArgumentException ex) {
+          logger.warning(ex.toString());
+          return JerseyResponseManager.invalidParameter();
+      } catch(Exception ex) {
+          Logger.getLogger(Class.class.getName()).log(Level.WARNING, "Expect the unexpected!", ex);
+          return JerseyResponseManager.unexpected();
+      }
   }
   
   
@@ -275,6 +282,9 @@ public class Predicate {
           if(provUUID!=null) return JerseyResponseManager.successUuid(provUUID,newPredicate.getId());
           else return JerseyResponseManager.notCreated();
 
+      } catch(IllegalArgumentException ex) {
+          logger.warning(ex.toString());
+          return JerseyResponseManager.invalidParameter();
       } catch(Exception ex) {
           Logger.getLogger(Class.class.getName()).log(Level.WARNING, "Expect the unexpected!", ex);
           return JerseyResponseManager.unexpected();

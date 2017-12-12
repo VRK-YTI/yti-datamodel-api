@@ -212,7 +212,7 @@ public class Models {
           }
 
       } catch(IllegalArgumentException ex) {
-          logger.info(ex.toString());
+          logger.warning(ex.toString());
           return JerseyResponseManager.error();
       }
 
@@ -283,12 +283,14 @@ public class Models {
               return JerseyResponseManager.serverError();
           }
           else {
+              logger.info("Storing new model: "+newVocabulary.getId());
               ModelManager.createNewModel(newVocabulary.getId(), newVocabulary.asGraph(), login, provUUID, newVocabulary.getOrganizations());
+              logger.info("Created new model: "+newVocabulary.getId());
               return JerseyResponseManager.successUuid(provUUID,newVocabulary.getId());
           }
 
       } catch(IllegalArgumentException ex) {
-          logger.info(ex.toString());
+          logger.warning(ex.toString());
           return JerseyResponseManager.error();
       }
 

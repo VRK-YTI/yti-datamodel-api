@@ -73,17 +73,20 @@ public class ClassCreator {
                 return JerseyResponseManager.notFound();
             }
 
-            ReusableClass newClass;
+            try {
+                ReusableClass newClass;
 
-            if(conceptIRI!=null) {
-                newClass = new ReusableClass(conceptIRI, modelIRI, classLabel, lang);
-            }
-            else {
-                newClass = new ReusableClass(modelIRI, classLabel, lang);
-            }
+                if (conceptIRI != null) {
+                    newClass = new ReusableClass(conceptIRI, modelIRI, classLabel, lang);
+                } else {
+                    newClass = new ReusableClass(modelIRI, classLabel, lang);
+                }
 
-            return JerseyJsonLDClient.constructResponseFromGraph(newClass.asGraph());
-            
+                return JerseyJsonLDClient.constructResponseFromGraph(newClass.asGraph());
+            } catch(IllegalArgumentException ex) {
+                logger.info(ex.toString());
+                return JerseyResponseManager.error();
+            }
     }   
  
 }

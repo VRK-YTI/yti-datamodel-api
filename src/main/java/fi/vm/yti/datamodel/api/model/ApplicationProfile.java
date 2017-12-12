@@ -30,7 +30,6 @@ public class ApplicationProfile extends AbstractModel {
     public ApplicationProfile(String prefix, IRI namespace, String label, String lang, String allowedLang, List<String> serviceList, List<UUID> orgList) {
 
         this.modelOrganizations = orgList;
-        logger.info("Creating new datamodel with SPARQL CONSTRUCT");
 
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
@@ -115,8 +114,6 @@ public class ApplicationProfile extends AbstractModel {
         pss.setLiteral("draft", "Unstable");
         pss.setLiteral("mlabel", ResourceFactory.createLangLiteral(label, lang));
         pss.setLiteral("defLang", lang);
-
-        logger.info(pss.toString());
 
         QueryExecution qexec = QueryExecutionFactory.sparqlService(services.getCoreSparqlAddress(), pss.toString());
         this.graph = qexec.execConstruct();

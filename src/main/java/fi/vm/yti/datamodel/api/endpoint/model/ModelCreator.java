@@ -104,9 +104,12 @@ public class ModelCreator {
                     return JerseyResponseManager.invalidParameter();
             }
 
-            DataModel newModel = new DataModel(prefix, namespaceIRI, label, lang, allowedLang, serviceList, orgList);
-
-            return JerseyJsonLDClient.constructResponseFromGraph(newModel.asGraph());
+            try {
+                DataModel newModel = new DataModel(prefix, namespaceIRI, label, lang, allowedLang, serviceList, orgList);
+                return JerseyJsonLDClient.constructResponseFromGraph(newModel.asGraph());
+            } catch(IllegalArgumentException ex) {
+                return JerseyResponseManager.invalidParameter();
+            }
             
     }   
  

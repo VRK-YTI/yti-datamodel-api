@@ -33,12 +33,20 @@ public abstract class AbstractModel {
     public AbstractModel(IRI graphIRI) {
         this.graph = GraphManager.getCoreGraph(graphIRI);
 
-        List<Resource> vocabList = this.graph.listSubjectsWithProperty(RDF.type, ResourceFactory.createResource(LDHelper.curieToURI("owl:Ontology"))).toList();
-        if(vocabList.size()<=0) {
-            throw new IllegalArgumentException("Expected at least 1 model");
+        List<Resource> vocabList = this.graph.listSubjectsWithProperty(OWL.versionInfo).toList();
+
+        if(!(vocabList.size()==1)) {
+            logger.warning("Expected 1 versioned resource, got "+vocabList.size());
+            throw new IllegalArgumentException("Expected 1 versioned resource");
         }
 
         Resource modelResource = vocabList.get(0);
+
+        if(!modelResource.hasProperty(RDF.type, OWL.Ontology)) {
+            logger.warning("Expected main resource type as owl:Ontology");
+            throw new IllegalArgumentException("Expected model resource");
+        }
+
         this.id = LDHelper.toIRI(modelResource.getURI());
 
         NodeIterator orgList = this.graph.listObjectsOfProperty(DCTerms.contributor);
@@ -50,6 +58,7 @@ public abstract class AbstractModel {
 
         List<Statement> provIdList = modelResource.listProperties(DCTerms.identifier).toList();
         if(provIdList == null || provIdList.size()==0 || provIdList.size()>1) {
+            logger.warning("Expected only 1 provenance ID, got "+provIdList.size());
             throw new IllegalArgumentException("Expected only 1 provenance ID, got "+provIdList.size());
         } else {
             this.provUUID = provIdList.get(0).getResource().getURI();
@@ -63,12 +72,14 @@ public abstract class AbstractModel {
         List<Resource> vocabList = this.graph.listSubjectsWithProperty(OWL.versionInfo).toList();
 
         if(!(vocabList.size()==1)) {
+            logger.warning("Expected 1 versioned resource, got "+vocabList.size());
             throw new IllegalArgumentException("Expected 1 versioned resource");
         }
 
         Resource modelResource = vocabList.get(0);
 
         if(!modelResource.hasProperty(RDF.type, OWL.Ontology)) {
+            logger.warning("Expected main resource type as owl:Ontology");
             throw new IllegalArgumentException("Expected model resource");
         }
 
@@ -80,12 +91,14 @@ public abstract class AbstractModel {
         this.modelOrganizations = new ArrayList<>();
 
         if(!orgList.hasNext()) {
+            logger.warning("Expected at least 1 organization");
             throw new IllegalArgumentException("Expected at least 1 organization");
         }
 
         while(orgList.hasNext()) {
             RDFNode orgRes = orgList.next();
             if(!orgModel.containsResource(orgRes)) {
+                logger.warning("Organization does not exists!");
                 throw new IllegalArgumentException("Organization does not exist!");
             }
             String orgId = orgRes.asResource().getURI().replaceFirst("urn:uuid:","");
