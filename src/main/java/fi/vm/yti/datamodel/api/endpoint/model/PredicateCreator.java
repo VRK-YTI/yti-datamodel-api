@@ -16,6 +16,7 @@ import fi.vm.yti.datamodel.api.model.ReusablePredicate;
 import fi.vm.yti.datamodel.api.utils.IDManager;
 import fi.vm.yti.datamodel.api.utils.JerseyResponseManager;
 import fi.vm.yti.datamodel.api.utils.JerseyJsonLDClient;
+import fi.vm.yti.datamodel.api.utils.LDHelper;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -53,7 +54,9 @@ public class PredicateCreator {
         IRI modelIRI,typeIRI;
         try {
                 String typeURI = type.replace("owl:", "http://www.w3.org/2002/07/owl#");
-                if(conceptID!=null) conceptIRI = IDManager.constructIRI(conceptID);
+                if(conceptID!=null && IDManager.isValidUrl(conceptID)) {
+                    conceptIRI = IDManager.constructIRI(conceptID);
+                }
                 modelIRI = IDManager.constructIRI(modelID);
                 typeIRI = IDManager.constructIRI(typeURI);
         } 

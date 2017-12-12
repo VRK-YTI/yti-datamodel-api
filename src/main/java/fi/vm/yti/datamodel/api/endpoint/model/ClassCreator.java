@@ -57,9 +57,13 @@ public class ClassCreator {
 
             try {
 
-                    if(conceptID!=null) {
+                    if(conceptID!=null && IDManager.isValidUrl(conceptID)) {
                         logger.info("Using concept "+conceptID);
                         conceptIRI = IDManager.constructIRI(conceptID);
+                    } else {
+                        if(conceptID!=null) {
+                            logger.warning("Concept is not URI: "+conceptID);
+                        }
                     }
 
                     modelIRI = IDManager.constructIRI(modelID);
@@ -74,6 +78,7 @@ public class ClassCreator {
             }
 
             try {
+
                 ReusableClass newClass;
 
                 if (conceptIRI != null) {
