@@ -290,7 +290,6 @@ public class GraphManager {
 
         try {
             boolean b = qexec.execAsk();
-            logger.info(graphIRI.toDisplayString()+": "+b);
             return b;
         } catch (Exception ex) {
             return false;
@@ -314,7 +313,6 @@ public class GraphManager {
 
         try {
             boolean b = qexec.execAsk();
-            logger.info(graphIRI+": "+b);
             return b;
         } catch (Exception ex) {
             return false;
@@ -476,7 +474,6 @@ public class GraphManager {
         pss.setIri("graph", id);
 
         logger.info("Removing model from " + id);
-        logger.info(query);
 
         UpdateRequest queryObj = pss.asUpdate();
         UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, services.getCoreSparqlUpdateAddress());

@@ -113,7 +113,6 @@ public class Predicate {
                   pss.setIri("library", model);
             }
 
-          //  logger.info(pss.toString());
             return JerseyJsonLDClient.constructNotEmptyGraphFromService(pss.toString(), sparqlService);         
 
       }
@@ -196,14 +195,13 @@ public class Predicate {
                 } else {
                     updatePredicate.save();
                     provUUID = updatePredicate.getProvUUID();
-                   // provUUID = ResourceManager.updateResourceWithNewId(idIRI, oldIdIRI, modelIRI, body, login);
                     GraphManager.updatePredicateReferencesInModel(modelIRI, oldIdIRI, idIRI);
                     logger.info("Changed id from:"+oldid+" to "+id);
                 }
             } else {
                 updatePredicate.save();
+                logger.info("Updated "+updatePredicate.getId());
                 provUUID = updatePredicate.getProvUUID();
-              //  provUUID = ResourceManager.updateResource(id, model, body, login);
             }
         } else {
              /* IF NO JSON-LD POSTED TRY TO CREATE REFERENCE FROM MODEL TO CLASS ID */
@@ -213,6 +211,7 @@ public class Predicate {
             } else {
                 GraphManager.insertExistingGraphReferenceToModel(id, model);
                 GraphManager.createExportGraphInRunnable(model);
+                logger.info("Created reference from "+model+" to "+id);
                 ConceptMapper.addConceptFromReferencedResource(model,id);
                 return JerseyResponseManager.ok();
             }
@@ -274,6 +273,7 @@ public class Predicate {
            
            String provUUID = newPredicate.getProvUUID();
            newPredicate.save();
+           logger.info("Created "+newPredicate.getId());
 
           if(ProvenanceManager.getProvMode()) {
               ProvenanceManager.createProvenanceGraphFromModel(newPredicate.getId(),newPredicate.asGraph(),login.getEmail(),newPredicate.getProvUUID());

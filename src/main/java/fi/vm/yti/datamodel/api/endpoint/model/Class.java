@@ -201,6 +201,7 @@ public class Class {
                 }
             } else {
                 updateClass.save();
+                logger.info("Updated "+updateClass.getId());
                 provUUID = updateClass.getProvUUID();
                // provUUID = ResourceManager.updateResource(id, model, body, login);
             }
@@ -213,6 +214,7 @@ public class Class {
             } else {
                 GraphManager.insertExistingGraphReferenceToModel(id, model);
                 GraphManager.createExportGraphInRunnable(model);
+                logger.info("Created reference from "+model+" to "+id);
                 ConceptMapper.addConceptFromReferencedResource(model,id);
                 return JerseyResponseManager.ok();
             }
@@ -281,6 +283,7 @@ public class Class {
         }
         else {
             newClass.save();
+            logger.info("Created "+newClass.getId());
 
             if (ProvenanceManager.getProvMode()) {
                 ProvenanceManager.createProvenanceGraphFromModel(newClass.getId(), newClass.asGraph(), login.getEmail(), newClass.getProvUUID());
@@ -343,7 +346,7 @@ public class Class {
            // ConceptMapper.removeUnusedConcepts(model);
             return resp;
         } else {
-        /* If removing referenced class */    
+        /* If removing referenced class */
              GraphManager.deleteGraphReferenceFromModel(idIRI,modelIRI);
              GraphManager.createExportGraphInRunnable(model);
         /* TODO: Remove unused concepts? */
