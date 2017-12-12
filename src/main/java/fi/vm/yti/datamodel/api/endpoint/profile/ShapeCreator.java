@@ -72,7 +72,7 @@ public class ShapeCreator {
                     return JerseyResponseManager.invalidIRI();
             }
 
-           Shape newShape = new Shape(classIRI,profileIRI,shapeIRI);
+           Shape newShape = new Shape(classIRI,shapeIRI,profileIRI);
 
            return JerseyJsonLDClient.constructResponseFromGraph(newShape.asGraph());
     }   

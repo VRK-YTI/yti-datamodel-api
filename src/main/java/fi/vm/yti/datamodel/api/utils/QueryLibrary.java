@@ -505,6 +505,7 @@ public class QueryLibrary {
                     + "?shapeIRI dcterms:modified ?modified . "
                     + "?shapeIRI dcterms:created ?creation . "
                     + "?shapeIRI sh:scopeClass ?classIRI . "
+                    + "?shapeIRI a rdfs:Class . "
                     + "?shapeIRI a sh:Shape . "
                     + "?shapeIRI rdfs:isDefinedBy ?model . "
                     + "?model rdfs:label ?externalModelLabel . "

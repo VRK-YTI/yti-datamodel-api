@@ -58,7 +58,7 @@ public class ClassCreator {
             try {
 
                     if(conceptID!=null) {
-                        logger.info("!null");
+                        logger.info("Using concept "+conceptID);
                         conceptIRI = IDManager.constructIRI(conceptID);
                     }
 

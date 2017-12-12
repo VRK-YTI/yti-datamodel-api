@@ -27,6 +27,8 @@ public class Shape extends AbstractShape {
 
     public Shape(IRI classIRI, IRI shapeIRI, IRI profileIRI) {
 
+        logger.info("Creating shape from "+classIRI.toString()+" to "+shapeIRI.toString());
+
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
 
@@ -42,6 +44,7 @@ public class Shape extends AbstractShape {
                     + "?shapeIRI dcterms:modified ?modified . "
                     + "?shapeIRI dcterms:created ?creation . "
                     + "?shapeIRI sh:scopeClass ?classIRI . "
+                    + "?shapeIRI a rdfs:Class . "
                     + "?shapeIRI a sh:Shape . "
                     + "?shapeIRI rdfs:isDefinedBy ?model . "
                     + "?shapeIRI rdfs:label ?label . "
@@ -64,7 +67,7 @@ public class Shape extends AbstractShape {
                     + "?classIRI a rdfs:Class . "
                     + "?classIRI rdfs:label ?label . "
                     + "OPTIONAL { ?classIRI rdfs:comment ?comment . } "
-                    + "{ "
+                    + "OPTIONAL {{ "
                     + "?classIRI dcterms:subject ?concept . "
                     + "?concept skos:prefLabel ?prefLabel . "
                     + "?concept skos:definition ?definition . "
@@ -74,18 +77,7 @@ public class Shape extends AbstractShape {
                     + "?concept skos:definition ?definition . "
                     + "?concept skos:inScheme ?collection . "
                     + "?collection dcterms:title ?title . "
-                    + "} UNION { "
-                    + "?classIRI dcterms:subject ?concept . "
-                    + "?concept skos:inScheme ?scheme . "
-                    + "?concept skos:prefLabel ?prefLabel . "
-                    + "?concept skos:definition ?definition . "
-                    + "?scheme dcterms:title ?title . "
-                    + "?scheme termed:id ?schemeId . "
-                    + "?scheme termed:graph ?termedGraph . "
-                    + "?concept termed:graph ?termedGraph . "
-                    + "?termedGraph termed:id ?termedGraphId . "
-                    + "}"
-
+                    + "}}"
                     + "OPTIONAL {"
                     + "?classIRI sh:property ?property .  "
                     /* Todo: Issue 472 */
@@ -96,12 +88,12 @@ public class Shape extends AbstractShape {
 
             pss.setLiteral("shapePropertyID", "-"+ UUID.randomUUID().toString());
 
+
         } else {
             /* Create Shape from external IMPORT */
             service = services.getImportsSparqlAddress();
             logger.info("Using ext query:");
             queryString = QueryLibrary.externalShapeQuery;
-            logger.info(queryString);
         }
 
         pss.setCommandText(queryString);
@@ -110,6 +102,8 @@ public class Shape extends AbstractShape {
         pss.setIri("modelService",services.getLocalhostCoreSparqlAddress());
         pss.setLiteral("draft", "Unstable");
         pss.setIri("shapeIRI",shapeIRI);
+
+        logger.info(pss.toString());
 
         this.graph = GraphManager.constructModelFromGraph(pss.toString(), service);
 

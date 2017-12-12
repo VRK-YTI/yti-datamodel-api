@@ -95,7 +95,6 @@ public class ServiceDescriptionManager {
         while (results.hasNext()) {
             QuerySolution soln = results.nextSolution();
             String orgId = soln.getResource("org").toString().split("urn:uuid:")[1];
-            logger.info("Model is part of "+orgId);
             orgUUIDs.add(UUID.fromString(orgId));
         }
 

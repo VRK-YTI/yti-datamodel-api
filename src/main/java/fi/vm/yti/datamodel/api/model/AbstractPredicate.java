@@ -14,6 +14,7 @@ import org.apache.jena.web.DatasetGraphAccessorHTTP;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.logging.Logger;
 
 /**
  * Created by malonen on 29.11.2017.
@@ -27,6 +28,8 @@ public class AbstractPredicate {
     protected String provUUID;
     protected IRI id;
     protected List<String> modelServiceCategories;
+    private static final Logger logger = Logger.getLogger(AbstractPredicate.class.getName());
+
 
     public AbstractPredicate() {}
 
@@ -91,6 +94,7 @@ public class AbstractPredicate {
         adapter.putModel(getId(), asGraph());
         GraphManager.insertNewGraphReferenceToModel(getId(), getModelId());
         GraphManager.insertNewGraphReferenceToExportGraph(getId(),getModelId());
+        adapter.add(getModelId()+"#ExportGraph", asGraph());
     }
 
     public Model asGraph(){

@@ -273,7 +273,7 @@ public class Predicate {
            
            String provUUID = newPredicate.getProvUUID();
            newPredicate.save();
-           logger.info("Created "+newPredicate.getId());
+          // logger.info("Created "+newPredicate.getId());
 
           if(ProvenanceManager.getProvMode()) {
               ProvenanceManager.createProvenanceGraphFromModel(newPredicate.getId(),newPredicate.asGraph(),login.getEmail(),newPredicate.getProvUUID());

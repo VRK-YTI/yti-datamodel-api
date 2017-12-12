@@ -5,6 +5,7 @@ package fi.vm.yti.datamodel.api.utils;
 
 import fi.vm.yti.datamodel.api.config.ApplicationProperties;
 import fi.vm.yti.datamodel.api.config.EndpointServices;
+import org.apache.jena.atlas.web.HttpException;
 import org.apache.jena.query.DatasetAccessor;
 import org.apache.jena.query.DatasetAccessorFactory;
 import org.apache.jena.query.ParameterizedSparqlString;
@@ -80,8 +81,7 @@ public class GraphManager {
      * @param graph
      */
     public static void createExportGraphInRunnable(String graph) {
-        //createExportGraphInRunnable(graph);
-        ThreadExecutor.pool.execute(new ExportGraphRunnable(graph));
+         ThreadExecutor.pool.execute(new ExportGraphRunnable(graph));
     }
    
     /**
@@ -120,7 +120,6 @@ public class GraphManager {
 
         DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(services.getCoreReadWriteAddress());
         DatasetAdapter adapter = new DatasetAdapter(accessor);
-        logger.info("Exporting graph "+graph);
         adapter.putModel(graph+"#ExportGraph", exportModel);
         
         lock.unlock();
@@ -177,7 +176,18 @@ public class GraphManager {
     public static Model getCoreGraph(IRI graph){
         DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(services.getCoreReadWriteAddress());
         DatasetAdapter adapter = new DatasetAdapter(accessor);
-        return adapter.getModel(graph.toString());
+
+        try {
+            return adapter.getModel(graph.toString());
+        } catch(HttpException ex) {
+            logger.warning(ex.toString());
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            return adapter.getModel(graph.toString());
+        }
     }
     
     /**

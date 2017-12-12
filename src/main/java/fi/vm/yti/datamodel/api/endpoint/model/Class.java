@@ -201,7 +201,7 @@ public class Class {
                 }
             } else {
                 updateClass.save();
-                logger.info("Updated "+updateClass.getId());
+               // logger.info("Updated "+updateClass.getId());
                 provUUID = updateClass.getProvUUID();
                // provUUID = ResourceManager.updateResource(id, model, body, login);
             }
@@ -250,7 +250,7 @@ public class Class {
   public Response putJson(
           @ApiParam(value = "New graph in application/ld+json", required = true) String body,
           @Context HttpServletRequest request) {
-      
+
     try {
 
         HttpSession session = request.getSession();

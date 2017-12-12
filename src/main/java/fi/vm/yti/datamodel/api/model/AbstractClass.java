@@ -30,7 +30,6 @@ public abstract class AbstractClass {
         protected List<String> modelServiceCategories;
         private static final Logger logger = Logger.getLogger(AbstractClass.class.getName());
 
-
     public AbstractClass() {}
 
         public AbstractClass(IRI graphIRI) {
@@ -67,7 +66,6 @@ public abstract class AbstractClass {
                 throw new IllegalArgumentException("Expected 1 class (isDefinedBy)");
             }
 
-            logger.info("TESTI:"+modelList.get(0).asResource().getURI());
             this.dataModel = new DataModel(LDHelper.toIRI(modelList.get(0).asResource().getURI()));
 
             List<Resource> classList = this.graph.listSubjectsWithProperty(RDF.type, ResourceFactory.createResource(LDHelper.curieToURI("rdfs:Class"))).toList();
@@ -94,6 +92,7 @@ public abstract class AbstractClass {
             adapter.putModel(getId(), asGraph());
             GraphManager.insertNewGraphReferenceToModel(getId(), getModelId());
             GraphManager.insertNewGraphReferenceToExportGraph(getId(),getModelId());
+            adapter.add(getModelId()+"#ExportGraph", asGraph());
         }
 
         public Model asGraph(){
