@@ -427,7 +427,7 @@ public class JerseyJsonLDClient {
       *              * @param schemeURI ID of the scheme
      * @return Response
      */
-    public static Response searchConceptFromTermedAPI(String query, String schemeURI) {
+    public static Response searchConceptFromTermedAPI(String query, String schemeURI, String conceptURI) {
         
         String url = ApplicationProperties.getDefaultTermAPI()+"node-trees";
 
@@ -438,12 +438,29 @@ public class JerseyJsonLDClient {
             client.register(feature);
 
             WebTarget target = client.target(url)
-                    .queryParam("select","properties.prefLabel,properties.definition")
-                    .queryParam("where", "references.prefLabelXl.properties.prefLabel:"+query)
-                    .queryParam("where", "graph.uri:"+schemeURI)
+                    .queryParam("select","references.prefLabelXl:2,properties.prefLabel,properties.definition")
+                    .queryParam("where", "typeId:Concept")
                     .queryParam("max", "-1");
+
+            if(conceptURI==null) {
+                target = target.queryParam("where", "references.prefLabelXl.properties.prefLabel:"+query);
+            } else {
+                if(IDManager.isValidUrl(conceptURI)) {
+                    target = target.queryParam("where","uri:"+conceptURI);
+            }
+
+            }
+
+            if(schemeURI!=null && IDManager.isValidUrl(schemeURI)) {
+                target = target.queryParam("where", "graph.uri:"+schemeURI);
+            }
             
             Response response = target.request("application/ld+json").get();
+
+            Model conceptModel = JerseyJsonLDClient.getJSONLDResponseAsJenaModel(response);
+            QueryExecution qexec = QueryExecutionFactory.create(QueryLibrary.skosXlToSkos,conceptModel);
+            Model simpleSkos = qexec.execConstruct();
+            simpleSkos = TermedTerminologyManager.cleanModelDefinitions(simpleSkos);
 
             logger.info("TERMED CALL: "+target.getUri().toString());
             
@@ -453,8 +470,8 @@ public class JerseyJsonLDClient {
             }
 
             ResponseBuilder rb = Response.status(response.getStatus()); 
-            rb.entity(response.readEntity(InputStream.class));
-
+          //  rb.entity(response.readEntity(InputStream.class));
+              rb.entity(ModelManager.writeModelToString(simpleSkos));
            return rb.build();
         } catch(Exception ex) {
           logger.log(Level.WARNING, "Expect the unexpected!", ex);

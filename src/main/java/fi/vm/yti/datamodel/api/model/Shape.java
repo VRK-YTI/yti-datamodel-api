@@ -103,8 +103,7 @@ public class Shape extends AbstractShape {
         pss.setLiteral("draft", "Unstable");
         pss.setIri("shapeIRI",shapeIRI);
 
-        logger.info(pss.toString());
-
+        //logger.info(pss.toString());
         this.graph = GraphManager.constructModelFromGraph(pss.toString(), service);
 
     }

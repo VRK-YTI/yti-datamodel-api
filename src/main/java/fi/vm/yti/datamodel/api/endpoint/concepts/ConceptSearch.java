@@ -33,7 +33,7 @@ public class ConceptSearch {
     
   @GET
   @Produces("application/ld+json")
-  @ApiOperation(value = "Get available concepts", notes = "Search from finto API & concept temp")
+  @ApiOperation(value = "Get available concepts", notes = "Search from termed API")
   @ApiResponses(value = {
       @ApiResponse(code = 200, message = "Concepts"),
       @ApiResponse(code = 406, message = "Term not defined"),
@@ -42,10 +42,10 @@ public class ConceptSearch {
   public Response concept(
           @ApiParam(value = "Term", required = true) 
           @QueryParam("term") String term,
-          @ApiParam(value = "schemeUUID") 
-          @QueryParam("schemeUUID") String schemeUUID) {
+          @ApiParam(value = "schemeURI")
+          @QueryParam("schemeURI") String schemeURI) {
           
-          return JerseyJsonLDClient.searchConceptFromTermedAPI(term, schemeUUID);
+          return JerseyJsonLDClient.searchConceptFromTermedAPI(term, schemeURI,null);
 
   }
   

@@ -52,15 +52,8 @@ public class Concept {
           @ApiParam(value = "schemeUUID") 
           @QueryParam("schemeUUID") String schemeUUID) {
 
-          ParameterizedSparqlString pss = new ParameterizedSparqlString();
-          pss.setNsPrefixes(LDHelper.PREFIX_MAP);
-          if(uri!=null && !uri.equals("undefined")) pss.setIri("concept",uri);
-          if(schemeUUID!=null && !schemeUUID.equals("undefined")) pss.setLiteral("schemeUUID",schemeUUID);
-          pss.setCommandText(QueryLibrary.conceptQuery);
-          logger.info(pss.toString());
+      return JerseyJsonLDClient.searchConceptFromTermedAPI(null, schemeUUID, uri);
 
-          return JerseyJsonLDClient.constructResponseFromGraph(TermedTerminologyManager.constructCleanedModelFromTermedAPI(uri, pss.toString()));
-      
   }
    
 }

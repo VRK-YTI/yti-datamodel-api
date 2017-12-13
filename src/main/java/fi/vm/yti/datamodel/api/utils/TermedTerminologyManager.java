@@ -77,21 +77,6 @@ public class TermedTerminologyManager {
         return objects;
     }
 
-    public static Model cleanedConceptModel(Model objects) {
-        Selector definitionSelector = new SimpleSelector(null, SKOS.definition, (String) null);
-
-        Iterator<Statement> defStatement = objects.listStatements(definitionSelector).toList().iterator();
-
-        while(defStatement.hasNext()) {
-            Statement defStat = defStatement.next();
-            Parser markdownParser = Parser.builder().build();
-            Node defNode = markdownParser.parse(defStat.getString());
-            defStat.changeObject(Jsoup.parse(HtmlRenderer.builder().build().render(defNode)).text());
-        }
-
-        return objects;
-    }
-
 
     public static Model constructCleanedModelFromTermedAPI(String conceptUri, String query) {
 
