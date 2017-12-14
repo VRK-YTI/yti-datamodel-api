@@ -46,10 +46,8 @@ public class GraphManager {
 
     static EndpointServices services = new EndpointServices();
     private static final Logger logger = Logger.getLogger(GraphManager.class.getName());
-    
-    /**
-     * TODO: Static lock - should be fixed
-     */
+
+    @Deprecated
     public static ReentrantLock lock = new ReentrantLock();
 
     /**
@@ -75,19 +73,12 @@ public class GraphManager {
             return false;
         }
     }
-    
-    /**
-     * Runs createExportGraphInRunnable in runnable
-     * @param graph
-     */
-    public static void createExportGraphInRunnable(String graph) {
-         ThreadExecutor.pool.execute(new ExportGraphRunnable(graph));
-    }
-   
+
     /**
      * Creates export graph by joining all the resources to one graph
      * @param graph model IRI that is used to create export graph
      */
+    @Deprecated
     public static void constructExportGraph(String graph) {
              lock.lock();
              String queryString = "CONSTRUCT { "
@@ -132,7 +123,7 @@ public class GraphManager {
         DatasetAdapter adapter = new DatasetAdapter(accessor);
         adapter.putModel("urn:yti:servicecategories",m);
     }
-    
+
     /**
      * Deleted export graph
      * @param graph IRI of the graph that is going to be deleted
@@ -141,7 +132,6 @@ public class GraphManager {
         DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(services.getCoreReadWriteAddress());
         DatasetAdapter adapter = new DatasetAdapter(accessor);  
         adapter.deleteModel(graph+"#ExportGraph");
-
     }
     
     /**
@@ -193,6 +183,7 @@ public class GraphManager {
     /**
      * Updates all export graphs
      */
+    @Deprecated
     public static void updateAllExportGraphs() {
         
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
@@ -862,7 +853,6 @@ public class GraphManager {
                 + "GRAPH ?exportGraph { "
                 + "?model a owl:Ontology . "
                 + "}}";
-                
 
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
@@ -931,6 +921,38 @@ public class GraphManager {
     }
 
     /**
+     * Removes Resource-graph reference from models HasPartGraph
+     * @param graph Resource IRI reference to be removed
+     * @param model Model IRI
+     */
+    public static void deleteGraphReferenceFromExportModel(IRI graph, IRI model) {
+
+        String query
+                = " DELETE { "
+                + "GRAPH ?exportGraph { ?model dcterms:hasPart ?graph } "
+                + "} "
+                + " WHERE { "
+                + "GRAPH ?model { ?model a ?type . } "
+                + "GRAPH ?hasPartGraph { ?model dcterms:hasPart ?graph } "
+                + "}";
+
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+        pss.setIri("graph", graph);
+        pss.setIri("model", model);
+        pss.setIri("exportGraph", model+"#ExportGraph");
+        pss.setIri("hasPartGraph", model+"#HasPartGraph");
+        pss.setCommandText(query);
+
+        UpdateRequest queryObj = pss.asUpdate();
+        UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, services.getCoreSparqlUpdateAddress());
+        qexec.execute();
+
+    }
+
+
+
+    /**
      * Copies graph from one Service to another Service
      * @param fromGraph Existing graph in original service as String
      * @param toGraph  New graph IRI as String
@@ -951,6 +973,7 @@ public class GraphManager {
         toAccessor.add(toGraph, graphModel);
         
     }
+
         
     /**
      * Copies graph to another graph in Core service
@@ -966,8 +989,8 @@ public class GraphManager {
         if(graphModel==null) {
             throw new NullPointerException();
         }
-        
-        fromAccessor.putModel(toGraph, graphModel);
+
+        fromAccessor.add(toGraph, graphModel);
     }
 
     /**

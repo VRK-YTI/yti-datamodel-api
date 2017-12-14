@@ -35,9 +35,8 @@ public class StartUpListener implements ServletContextListener {
         initDefaultNamespaces();
         initCodeServers();
         initServiceCategories();
-       // TermedTerminologyManager.initConceptsFromTermed();
+        TermedTerminologyManager.initConceptsFromTermed();
 
-        // createExportGraphs();
         runPeriodicUpdates();
 
     }
@@ -73,12 +72,6 @@ public class StartUpListener implements ServletContextListener {
         ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
         service.scheduleAtFixedRate(runUpdates, 0, 5, TimeUnit.MINUTES);
 
-    }
-    
-    private static void createExportGraphs() {
-        
-      GraphManager.updateAllExportGraphs();
-        
     }
 
     private static void initDefaultGraph() {

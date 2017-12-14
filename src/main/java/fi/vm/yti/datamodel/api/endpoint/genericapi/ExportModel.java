@@ -52,24 +52,6 @@ public class ExportModel {
             @ApiParam(value = "Languages to export") @QueryParam("lang") String lang,
             @ApiParam(value = "Content-type", required = true, allowableValues = "application/ld+json,text/turtle,application/rdf+xml,application/ld+json+context,application/schema+json,application/xml") @QueryParam("content-type") String ctype) {
 
-        
-        int wCount = 0;
-        
-        while(GraphManager.lock.isLocked()) {
-            wCount+=1;
-            try {
-                logger.info("Sleeping ...");
-                TimeUnit.SECONDS.sleep(1);
-            } catch (InterruptedException ex) {
-                Logger.getLogger(ExportModel.class.getName()).log(Level.SEVERE, null, ex);
-                return JerseyResponseManager.locked();
-            }
-            if(wCount>500) {
-                logger.warning("GraphManager seems to be locked too long ...");
-                return JerseyResponseManager.locked();
-            }
-        }
-                
         /* Check that URIs are valid */
         if(IDManager.isInvalid(graph)) {
             return JerseyResponseManager.invalidIRI();

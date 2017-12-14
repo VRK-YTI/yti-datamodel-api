@@ -65,17 +65,13 @@ public class ModelManager {
         
     }
 
-    public static boolean createNewModel(String id, Model graph, LoginSession login, String provUUID, List<UUID> orgList) {
+    @Deprecated
+    public static boolean createNewModel(String id, Model graph) {
 
         if (GraphManager.isExistingGraph(id)) {
             return false;
         } else {
             GraphManager.putToGraph(graph, id);
-            ServiceDescriptionManager.createGraphDescription(id, login.getEmail(), orgList);
-
-            if(ProvenanceManager.getProvMode()) {
-                ProvenanceManager.createProvenanceGraphFromModel(id, graph, login.getEmail(),provUUID);
-            }
         }
 
         return true;
@@ -113,6 +109,7 @@ public class ModelManager {
      * @param login User session
      * @return UUID of the model
      */
+    @Deprecated
     public static UUID createNewModel(String graph, List<UUID> orgList, String body, LoginSession login) {
         
         String service = services.getCoreReadWriteAddress();
@@ -149,6 +146,7 @@ public class ModelManager {
      * @param login Login session
      * @return UUID of the model
      */
+    @Deprecated
     public static UUID updateModel(String graph, String body, LoginSession login) {
         
         String service = services.getCoreReadWriteAddress();
@@ -167,7 +165,6 @@ public class ModelManager {
             ProvenanceManager.createProvenanceGraph(graph, body, login.getEmail(), "urn:uuid:"+provUUID);
         }
 
-        GraphManager.createExportGraphInRunnable(graph);
         
         logger.info("Updated :"+graph);
                 
@@ -179,7 +176,7 @@ public class ModelManager {
      * Updates model
      * @param graph Graph to be updated
      */
-
+    @Deprecated
     public static void updateModel(AbstractModel graph, LoginSession login) {
 
         String service = services.getCoreReadWriteAddress();
@@ -196,7 +193,6 @@ public class ModelManager {
             ProvenanceManager.createProvenanceGraphFromModel(graph.getId(), graph.asGraph(), login.getEmail(), provUUID);
         }
 
-        GraphManager.createExportGraphInRunnable(graph.getId());
 
         logger.info("Updated :"+graph.getId());
 
@@ -226,7 +222,6 @@ public class ModelManager {
             ProvenanceManager.createProvenanceGraphFromModel(graph, model, login.getEmail(), provUUID);
         }
 
-        GraphManager.createExportGraphInRunnable(graph);
         
         logger.info("Updated :"+graph);
                 

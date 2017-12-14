@@ -22,14 +22,7 @@ import fi.vm.yti.datamodel.api.config.LoginSession;
 import fi.vm.yti.datamodel.api.config.EndpointServices;
 import fi.vm.yti.datamodel.api.model.DataModel;
 import fi.vm.yti.datamodel.api.model.Role;
-import fi.vm.yti.datamodel.api.utils.GraphManager;
-import fi.vm.yti.datamodel.api.utils.IDManager;
-import fi.vm.yti.datamodel.api.utils.JerseyJsonLDClient;
-import fi.vm.yti.datamodel.api.utils.JerseyResponseManager;
-import fi.vm.yti.datamodel.api.utils.LDHelper;
-import fi.vm.yti.datamodel.api.utils.ModelManager;
-import fi.vm.yti.datamodel.api.utils.QueryLibrary;
-import fi.vm.yti.datamodel.api.utils.ServiceDescriptionManager;
+import fi.vm.yti.datamodel.api.utils.*;
 import org.apache.jena.query.DatasetAccessor;
 import org.apache.jena.query.DatasetAccessorFactory;
 import org.apache.jena.query.ParameterizedSparqlString;
@@ -284,7 +277,15 @@ public class Models {
           }
           else {
               logger.info("Storing new model: "+newVocabulary.getId());
-              ModelManager.createNewModel(newVocabulary.getId(), newVocabulary.asGraph(), login, provUUID, newVocabulary.getOrganizations());
+
+              newVocabulary.save();
+
+              ServiceDescriptionManager.createGraphDescription(newVocabulary.getId(), login.getEmail(), newVocabulary.getOrganizations());
+
+              if(ProvenanceManager.getProvMode()) {
+                  ProvenanceManager.createProvenanceGraphFromModel(newVocabulary.getId(), newVocabulary.asGraph(), login.getEmail(),provUUID);
+              }
+
               logger.info("Created new model: "+newVocabulary.getId());
               return JerseyResponseManager.successUuid(provUUID,newVocabulary.getId());
           }

@@ -3,12 +3,15 @@ package fi.vm.yti.datamodel.api.model;
 import fi.vm.yti.datamodel.api.config.EndpointServices;
 import fi.vm.yti.datamodel.api.utils.GraphManager;
 import fi.vm.yti.datamodel.api.utils.LDHelper;
+import fi.vm.yti.datamodel.api.utils.ModelManager;
 import fi.vm.yti.datamodel.api.utils.RHPOrganizationManager;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.rdf.model.*;
 import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDF;
+import org.apache.jena.web.DatasetAdapter;
+import org.apache.jena.web.DatasetGraphAccessorHTTP;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -110,6 +113,13 @@ public abstract class AbstractModel {
         modelResource.removeAll(DCTerms.identifier);
         modelResource.addProperty(DCTerms.identifier,ResourceFactory.createResource("urn:uuid:"+provUUID));
 
+    }
+
+    public void save() {
+        DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(services.getCoreReadWriteAddress());
+        DatasetAdapter adapter = new DatasetAdapter(accessor);
+        adapter.putModel(getId(), asGraph());
+        adapter.putModel(getId()+"#ExportGraph", asGraph());
     }
 
     public Model asGraph(){

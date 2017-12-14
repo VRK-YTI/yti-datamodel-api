@@ -15,10 +15,7 @@ import javax.ws.rs.core.Response;
 
 import fi.vm.yti.datamodel.api.config.LoginSession;
 import fi.vm.yti.datamodel.api.config.EndpointServices;
-import fi.vm.yti.datamodel.api.utils.GraphManager;
-import fi.vm.yti.datamodel.api.utils.IDManager;
-import fi.vm.yti.datamodel.api.utils.JerseyJsonLDClient;
-import fi.vm.yti.datamodel.api.utils.JerseyResponseManager;
+import fi.vm.yti.datamodel.api.utils.*;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -30,7 +27,10 @@ import javax.ws.rs.core.Response.StatusType;
 import org.apache.jena.atlas.web.ContentType;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
- 
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.web.DatasetAdapter;
+import org.apache.jena.web.DatasetGraphAccessorHTTP;
+
 /**
  * Root resource (exposed at "myresource" path)
  */
@@ -100,18 +100,21 @@ public class ModelPositions {
             return JerseyResponseManager.unauthorized();
            
             String service = services.getCoreReadWriteAddress();
-        
-            StatusType status = JerseyJsonLDClient.putGraphToTheService(model+"#PositionGraph", body, service);
 
-            if (status.getFamily() != Response.Status.Family.SUCCESSFUL) {
-               Logger.getLogger(ModelPositions.class.getName()).log(Level.WARNING, model+" coordinates were not saved! Status "+status.getStatusCode());
-               return JerseyResponseManager.notCreated(status.getStatusCode());
-            }
-                          
-            Logger.getLogger(ModelPositions.class.getName()).log(Level.INFO, model+" coordinates updated sucessfully!");
-          
-            GraphManager.createExportGraphInRunnable(model);
-            
+            //TODO: Check that this doesnt remove unnecessary fields such as "?S rdf:type rdfs:Class"
+            Model oldPositions = GraphManager.getCoreGraph(model+"#PositionGraph");
+            Model exportGraph = GraphManager.getCoreGraph(model+"#ExportGraph");
+            exportGraph.remove(oldPositions);
+            Model newPositions = ModelManager.createJenaModelFromJSONLDString(body);
+            exportGraph.add(newPositions);
+
+            if(newPositions.size()<1) return JerseyResponseManager.invalidParameter();
+
+            DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(services.getCoreReadWriteAddress());
+            DatasetAdapter adapter = new DatasetAdapter(accessor);
+            adapter.putModel(model+"#PositionGraph",newPositions);
+            adapter.putModel(model+"#ExportGraph",exportGraph);
+
             return JerseyResponseManager.okEmptyContent();
 
   }

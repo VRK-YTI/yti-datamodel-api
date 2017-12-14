@@ -94,7 +94,7 @@ public class ResourceManager {
         
     }
 
-
+    @Deprecated
     public static UUID updateResource(String id, String model, String body, LoginSession login) {
         
         UUID provUUID = UUID.randomUUID();
@@ -118,8 +118,7 @@ public class ResourceManager {
         if(ProvenanceManager.getProvMode()) {
             ProvenanceManager.createProvenanceGraph(id, body, login.getEmail(), "urn:uuid:"+provUUID.toString());
         }
-           
-        GraphManager.createExportGraphInRunnable(model);
+
         
         return provUUID;
         

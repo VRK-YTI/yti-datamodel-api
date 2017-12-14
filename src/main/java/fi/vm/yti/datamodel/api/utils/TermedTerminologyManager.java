@@ -111,13 +111,13 @@ public class TermedTerminologyManager {
      * @return Model
      */
     public static Model getSchemesAsModelFromTermedAPI() {
-        String url = ApplicationProperties.getDefaultTermAPI()+"ext";
+        String url = ApplicationProperties.getDefaultTermAPI()+"node-trees";
         try {
             Client client = JerseyJsonLDClient.IgnoreSSLClient(); //ClientBuilder.newClient();
             HttpAuthenticationFeature feature = TermedAuthentication.getTermedAuth();
             client.register(feature);
 
-            WebTarget target = client.target(url).queryParam("typeId", "TerminologicalVocabulary").queryParam("max", "-1");
+            WebTarget target = client.target(url).queryParam("select","*").queryParam("where", "typeId:TerminologicalVocabulary").queryParam("max", "-1");
 
             Response response = target.request("application/rdf+xml").get();
 

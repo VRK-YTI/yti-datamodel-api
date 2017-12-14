@@ -19,15 +19,10 @@ import java.util.logging.Logger;
 /**
  * Created by malonen on 29.11.2017.
  */
-public class AbstractPredicate {
+public class AbstractPredicate extends AbstractResource {
 
 
-    EndpointServices services = new EndpointServices();
-    protected Model graph;
-    protected DataModel dataModel;
     protected String provUUID;
-    protected IRI id;
-    protected List<String> modelServiceCategories;
     private static final Logger logger = Logger.getLogger(AbstractPredicate.class.getName());
 
 
@@ -88,21 +83,6 @@ public class AbstractPredicate {
 
     }
 
-    public void save() {
-        DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(services.getCoreReadWriteAddress());
-        DatasetAdapter adapter = new DatasetAdapter(accessor);
-        adapter.putModel(getId(), asGraph());
-        GraphManager.insertNewGraphReferenceToModel(getId(), getModelId());
-        GraphManager.insertNewGraphReferenceToExportGraph(getId(),getModelId());
-        adapter.add(getModelId()+"#ExportGraph", asGraph());
-    }
-
-    public Model asGraph(){
-        return this.graph;
-    }
-    public String getId() { return this.id.toString();}
-    public String getModelId() { return this.dataModel.getId(); }
-    public IRI getIRI() { return this.id; }
     public String getProvUUID() { return this.provUUID; }
     public List<UUID> getOrganizations() { return this.dataModel.getOrganizations(); }
 

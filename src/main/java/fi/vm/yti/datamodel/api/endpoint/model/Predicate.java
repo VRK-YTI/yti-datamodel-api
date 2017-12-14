@@ -199,7 +199,7 @@ public class Predicate {
                     logger.info("Changed id from:"+oldid+" to "+id);
                 }
             } else {
-                updatePredicate.save();
+                updatePredicate.update();
                 logger.info("Updated "+updatePredicate.getId());
                 provUUID = updatePredicate.getProvUUID();
             }
@@ -210,9 +210,10 @@ public class Predicate {
                 return JerseyResponseManager.usedIRI();
             } else {
                 GraphManager.insertExistingGraphReferenceToModel(id, model);
-                GraphManager.createExportGraphInRunnable(model);
-                logger.info("Created reference from "+model+" to "+id);
-                ConceptMapper.addConceptFromReferencedResource(model,id);
+                GraphManager.addCoreGraphToCoreGraph(id, model+"#ExportGraph");
+               // GraphManager.createExportGraphInRunnable(model);
+                //logger.info("Created reference from "+model+" to "+id);
+                //ConceptMapper.addConceptFromReferencedResource(model,id);
                 return JerseyResponseManager.ok();
             }
         }
@@ -330,16 +331,21 @@ public class Predicate {
         /* If Predicate is defined in the model */
         if(id.startsWith(model)) {
             /* Remove graph */
-                Response resp = JerseyJsonLDClient.deleteGraphFromService(id, services.getCoreReadWriteAddress());
-             /* TODO: Remove unused concepts?*/
-             //   ConceptMapper.removeUnusedConcepts(model);
-                return resp;
+               // Response resp = JerseyJsonLDClient.deleteGraphFromService(id, services.getCoreReadWriteAddress());
+            try {
+                ReusablePredicate deletePredicate = new ReusablePredicate(id);
+                deletePredicate.delete();
+            } catch(IllegalArgumentException ex) {
+                logger.warning(ex.toString());
+                return JerseyResponseManager.unexpected();
+            }
+                return JerseyResponseManager.ok();
         } else {
             /* If removing referenced predicate */   
              GraphManager.deleteGraphReferenceFromModel(idIRI,modelIRI);
 
-             GraphManager.createExportGraphInRunnable(model);
-            // ConceptMapper.removeUnusedConcepts(model);
+            GraphManager.deleteGraphReferenceFromExportModel(idIRI, modelIRI);
+             // TODO: Not removed from export model
              return JerseyResponseManager.ok();
            }
   }
