@@ -48,7 +48,7 @@ public class Search {
           @ApiParam(value = "Searchstring", required = true) @QueryParam("search") String search,
           @ApiParam(value = "Language") @QueryParam("lang") String lang) {      
 
-      if(graph == null || graph.equals("undefined")) {
+      if(graph == null || graph.equals("undefined") || graph.equals("default")) {
           return JerseyResponseManager.okModel(SearchManager.search(null, search, lang));
       } else {
           if(!IDManager.isValidUrl(graph)) {
