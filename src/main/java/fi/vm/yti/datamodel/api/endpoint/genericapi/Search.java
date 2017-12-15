@@ -14,9 +14,8 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 
-import fi.vm.yti.datamodel.api.utils.JerseyJsonLDClient;
+import fi.vm.yti.datamodel.api.utils.*;
 import fi.vm.yti.datamodel.api.config.EndpointServices;
-import fi.vm.yti.datamodel.api.utils.LDHelper;
 import org.apache.jena.query.ParameterizedSparqlString;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -37,7 +36,6 @@ public class Search {
     EndpointServices services = new EndpointServices();
             
   @GET
-  @Consumes("application/sparql-query")
   @Produces("application/ld+json")
   @ApiOperation(value = "Sparql query to given service", notes = "More notes about this method")
   @ApiResponses(value = {
@@ -50,50 +48,16 @@ public class Search {
           @ApiParam(value = "Searchstring", required = true) @QueryParam("search") String search,
           @ApiParam(value = "Language") @QueryParam("lang") String lang) {      
 
-      /* TODO: ADD TEXTDATASET ONCE NAMESPACE BUG IS RESOLVED */
-      // if(!search.endsWith("~")||!search.endsWith("*")) search = search+"*";
-      
-            String queryString = 
-                    "CONSTRUCT {"
-                  + "?resource rdf:type ?type ."
-                  + "?resource rdfs:label ?label ."
-                  + "?resource rdfs:comment ?comment ."
-                  + "?resource rdfs:isDefinedBy ?super . "
-                  + "?resource dcap:preferredXMLNamespaceName ?resnamespace . "
-                  + "?resource dcap:preferredXMLNamespacePrefix ?resprefix . "
-                  + "?super rdfs:label ?superLabel . "
-                  + "?super dcap:preferredXMLNamespaceName ?namespace . "
-                  + "?super dcap:preferredXMLNamespacePrefix ?prefix . "
-                  + "} WHERE { "
-                  + (graph==null||graph.equals("undefined")||graph.equals("default")?"":"GRAPH <"+graph+"#HasPartGraph> { <"+graph+"> dcterms:hasPart ?graph . } ")
-                  + "GRAPH ?graph {"
-                  + "?resource ?p ?literal . "
-                  + "FILTER contains(lcase(?literal),lcase(?search)) " 
-                  + "?resource rdf:type ?type . "
-                  + "OPTIONAL {"
-                  + "?resource dcap:preferredXMLNamespaceName ?resnamespace . "
-                  + "?resource dcap:preferredXMLNamespacePrefix ?resprefix . "
-                  + "}"  
-                  + "OPTIONAL {"
-                  + "?resource rdfs:isDefinedBy ?super . "
-                  + "GRAPH ?super { ?super rdfs:label ?superLabel . "
-                  + "?super dcap:preferredXMLNamespaceName ?namespace . "
-                  + "?super dcap:preferredXMLNamespacePrefix ?prefix . "
-                  + "}}"
-                  //+ "UNION"
-                 // + "{?resource sh:predicate ?predicate . ?super sh:property ?resource . ?super rdfs:label ?superLabel . BIND(sh:Constraint as ?type)}"
-                  + "?resource rdfs:label ?label . " 
-                  //+ "?resource text:query '"+search+"' . "
-                  + "OPTIONAL{?resource rdfs:comment ?comment .}"
-                  + (lang==null||lang.equals("undefined")?"":"FILTER langMatches(lang(?label),'"+lang+"')")
-                  + "}}"; 
+      if(graph == null || graph.equals("undefined")) {
+          return JerseyResponseManager.okModel(SearchManager.search(null, search, lang));
+      } else {
+          if(!IDManager.isValidUrl(graph)) {
+              return JerseyResponseManager.invalidParameter();
+          } else {
+              return JerseyResponseManager.okModel(SearchManager.search(graph, search, lang));
+          }
+      }
 
-            ParameterizedSparqlString pss = new ParameterizedSparqlString();
-            pss.setNsPrefixes(LDHelper.PREFIX_MAP);
-            pss.setLiteral("search", search);
-            pss.setCommandText(queryString);
-            
-            return JerseyJsonLDClient.constructGraphFromService(pss.toString(), services.getCoreReadAddress());
 
   }
   

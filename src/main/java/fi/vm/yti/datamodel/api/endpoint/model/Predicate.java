@@ -33,7 +33,6 @@ import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import java.util.Map;
-import java.util.UUID;
 import javax.ws.rs.DELETE;
 
 
@@ -193,7 +192,7 @@ public class Predicate {
                     logger.log(Level.WARNING, idIRI+" is existing graph!");
                     return JerseyResponseManager.usedIRI();
                 } else {
-                    updatePredicate.save();
+                    updatePredicate.create();
                     provUUID = updatePredicate.getProvUUID();
                     GraphManager.updatePredicateReferencesInModel(modelIRI, oldIdIRI, idIRI);
                     logger.info("Changed id from:"+oldid+" to "+id);
@@ -273,7 +272,7 @@ public class Predicate {
           }
            
            String provUUID = newPredicate.getProvUUID();
-           newPredicate.save();
+           newPredicate.create();
           // logger.info("Created "+newPredicate.getId());
 
           if(ProvenanceManager.getProvMode()) {

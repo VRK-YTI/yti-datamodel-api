@@ -2,10 +2,8 @@ package fi.vm.yti.datamodel.api.model;
 
 import fi.vm.yti.datamodel.api.config.EndpointServices;
 import fi.vm.yti.datamodel.api.utils.GraphManager;
-import fi.vm.yti.datamodel.api.utils.IDManager;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.web.DatasetAdapter;
 import org.apache.jena.web.DatasetGraphAccessorHTTP;
@@ -23,7 +21,7 @@ public class AbstractResource {
     protected IRI id;
     private static final Logger logger = Logger.getLogger(AbstractResource.class.getName());
 
-    public void save() {
+    public void create() {
         DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(services.getCoreReadWriteAddress());
         DatasetAdapter adapter = new DatasetAdapter(accessor);
         adapter.putModel(getId(), asGraph());
@@ -38,7 +36,6 @@ public class AbstractResource {
         DatasetAdapter adapter = new DatasetAdapter(accessor);
         adapter.putModel(getId(), asGraph());
         GraphManager.insertNewGraphReferenceToModel(getId(), getModelId());
-       // GraphManager.insertNewGraphReferenceToExportGraph(getId(),getModelId());
         Model oldModel = adapter.getModel(getId());
         Model exportModel = adapter.getModel(getModelId()+"#ExportGraph");
         exportModel.remove(oldModel);

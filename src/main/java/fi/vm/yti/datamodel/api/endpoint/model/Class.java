@@ -33,7 +33,6 @@ import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import java.util.Map;
-import java.util.UUID;
 import javax.ws.rs.DELETE;
  
 /**
@@ -193,7 +192,7 @@ public class Class {
                     logger.log(Level.WARNING, idIRI+" is existing graph!");
                     return JerseyResponseManager.usedIRI();
                 } else {
-                    updateClass.save();
+                    updateClass.create();
                     provUUID = updateClass.getProvUUID();
                    // provUUID = ResourceManager.updateResourceWithNewId(idIRI, oldIdIRI, modelIRI, body, login);
                     GraphManager.updateClassReferencesInModel(modelIRI, oldIdIRI, idIRI);
@@ -282,7 +281,7 @@ public class Class {
             return JerseyResponseManager.serverError();
         }
         else {
-            newClass.save();
+            newClass.create();
             logger.info("Created "+newClass.getId());
 
             if (ProvenanceManager.getProvMode()) {
