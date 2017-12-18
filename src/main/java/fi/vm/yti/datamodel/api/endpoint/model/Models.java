@@ -115,37 +115,20 @@ public class Models {
            
             return JerseyJsonLDClient.constructGraphFromService(pss.toString(), sparqlService);
              
-     } else if(group!=null && !group.equals("undefined")) {
-              logger.info("Service category: "+group);
-             pss.setNsPrefixes(LDHelper.PREFIX_MAP);
-            /* IF group parameter is available list of core vocabularies is created */
-             queryString = QueryLibrary.modelsByGroupQuery;
-             
-             pss.setLiteral("groupCode", group);
+     } else  {
 
-             logger.info(pss.toString());
-                     
-           } else {
-              logger.info("Listing all models");
-             pss.setNsPrefixes(LDHelper.PREFIX_MAP);
-             /* IF ID is null or default and no group available */
-             queryString = "CONSTRUCT { "
-                     + "?g a ?type . ?g rdfs:label ?label . "
-                     + "?g dcap:preferredXMLNamespaceName ?namespace . "
-                     + "?g dcap:preferredXMLNamespacePrefix ?prefix . } "
-                     + "WHERE { "
-                     + "GRAPH ?g { "
-                     + "?g a ?type . "
-                     + "?g rdfs:label ?label . "
-                     + "?g dcap:preferredXMLNamespaceName ?namespace . "
-                     + "?g dcap:preferredXMLNamespacePrefix ?prefix . }}"; 
+              pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+              queryString = QueryLibrary.modelsByGroupQuery;
+
+              if(group!=null && !group.equals("undefined")) {
+                  pss.setLiteral("groupCode", group);
+              }
+
            }
-           
-            
+
             pss.setCommandText(queryString);
             
             return JerseyJsonLDClient.constructGraphFromService(pss.toString(), services.getCoreSparqlAddress());
-
   }
    
     /**
