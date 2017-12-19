@@ -98,7 +98,7 @@ public class Replicator {
         if(session==null) return JerseyResponseManager.unauthorized();
         
         LoginSession login = new LoginSession(session);
-        
+
         if(!(login.isLoggedIn() && login.isSuperAdmin())) {
             return JerseyResponseManager.unauthorized();
         }
