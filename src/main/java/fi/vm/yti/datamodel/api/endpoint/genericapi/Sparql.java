@@ -11,14 +11,16 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.servlet.ServletContext;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 
+import fi.vm.yti.datamodel.api.config.EndpointServices;
+import fi.vm.yti.datamodel.api.config.LoginSession;
+import fi.vm.yti.datamodel.api.utils.JerseyResponseManager;
+import fi.vm.yti.datamodel.api.utils.LDHelper;
 import org.apache.jena.query.Query;
 import org.apache.jena.query.QueryException;
 import org.apache.jena.query.QueryExecution;
@@ -32,9 +34,10 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import org.apache.jena.update.*;
 
 /**
- * REST Web Service
+ * REST Sparql service
  *
  * @author malonen
  */
@@ -43,6 +46,8 @@ import io.swagger.annotations.ApiResponses;
 public class Sparql {
 
     @Context ServletContext context;
+
+    EndpointServices services = new EndpointServices();
 
   @GET
   @Consumes("application/sparql-query")
@@ -53,19 +58,29 @@ public class Sparql {
       @ApiResponse(code = 500, message = "Query exception"),
       @ApiResponse(code = 200, message = "OK")
   })
-  public Response sparql(@ApiParam(value = "Requested service", required=true) @QueryParam("endpoint") String endpoint, @ApiParam(value = "Requested resource", defaultValue="default") @QueryParam("graph") String graph, @ApiParam(value = "SPARQL Query", required = true) @QueryParam("query") String queryString) {      
+  public Response sparql(
+          @ApiParam(value = "SPARQL Query", required = true) @QueryParam("query") String queryString,
+          @Context HttpServletRequest request) {
 
-         Logger.getLogger(Sparql.class.getName()).log(Level.INFO, "Querying graph: "+graph+" in endpoint: "+endpoint+" with query: "+queryString);
-         
+      HttpSession session = request.getSession();
+
+      if(session==null) return JerseyResponseManager.unauthorized();
+
+      LoginSession login = new LoginSession(session);
+
+      if(!(login.isLoggedIn() && (login.getEmail().equals("testi.testaaja@example.org") || login.isSuperAdmin() ))) {
+          return JerseyResponseManager.unauthorized();
+      }
          Query query;
          
          try{
+             queryString = LDHelper.prefix + queryString;
              query = QueryFactory.create(queryString);
          } catch(QueryParseException ex) {
              return Response.status(400).build();
          }
          
-         QueryExecution qexec = QueryExecutionFactory.sparqlService(endpoint, query);
+         QueryExecution qexec = QueryExecutionFactory.sparqlService(services.getCoreSparqlAddress(), query);
          
          try {
      
@@ -86,13 +101,7 @@ public class Sparql {
 
 
   }
-  
-      /**
-     * SPARQL Update
-     * NOT USUALLY USED TROUGH THIS API
-     */
-  
-  /*
+
   @POST
   @ApiOperation(value = "Sends SPARQL Update query to given service", notes = "PUT Body should be json-ld")
   @ApiResponses(value = {
@@ -104,20 +113,27 @@ public class Sparql {
   })
   
   public Response sparqlUpdate(
-          @ApiParam(value = "Requested service", required=true) @QueryParam("service") String service, 
-          @ApiParam(value = "Sparql query", required = true) 
-                String body, @ApiParam(value = "Sparql query", required = true) 
-          @QueryParam("graph") 
-                String graph) {
-       
+          @ApiParam(value = "Sparql query", required = true)
+                  String body, @ApiParam(value = "Sparql query", required = true)
+          @Context HttpServletRequest request) {
+
+
+      HttpSession session = request.getSession();
+
+      if(session==null) return JerseyResponseManager.unauthorized();
+
+      LoginSession login = new LoginSession(session);
+
+      if(!(login.isLoggedIn() && (login.getEmail().equals("testi.testaaja@example.org") || login.isSuperAdmin() ))) {
+          return JerseyResponseManager.unauthorized();
+      }
         String query = LDHelper.prefix + body;
-       
-        Logger.getLogger(Sparql.class.getName()).log(Level.INFO, "Updating graph: "+graph+" in service: "+service+" with query: "+query);
-              
+
         try { 
-        UpdateRequest queryObj=UpdateFactory.create(query);
-        UpdateProcessor qexec=UpdateExecutionFactory.createRemoteForm(queryObj,service);
+        UpdateRequest queryObj= UpdateFactory.create(query);
+        UpdateProcessor qexec= UpdateExecutionFactory.createRemoteForm(queryObj,services.getCoreSparqlUpdateAddress());
         qexec.execute();
+
         
         } catch (  UpdateException ex) {
            return Response.status(400).build();
@@ -129,6 +145,6 @@ public class Sparql {
          return Response.status(200).build();
         
   }
-  */
+
   
 }

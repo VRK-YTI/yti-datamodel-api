@@ -116,19 +116,22 @@ public class Models {
             return JerseyJsonLDClient.constructGraphFromService(pss.toString(), sparqlService);
              
      } else  {
+              logger.info("Service category: "+group);
 
               pss.setNsPrefixes(LDHelper.PREFIX_MAP);
               queryString = QueryLibrary.modelsByGroupQuery;
 
-              if(group!=null && !group.equals("undefined")) {
+             if(group!=null && !group.equals("undefined")) {
                   pss.setLiteral("groupCode", group);
               }
 
            }
 
+
             pss.setCommandText(queryString);
             
             return JerseyJsonLDClient.constructGraphFromService(pss.toString(), services.getCoreSparqlAddress());
+
   }
    
     /**

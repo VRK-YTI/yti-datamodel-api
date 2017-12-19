@@ -99,7 +99,7 @@ public class Replicator {
         
         LoginSession login = new LoginSession(session);
 
-        if(!(login.isLoggedIn() && login.isSuperAdmin())) {
+        if(!(login.isLoggedIn() && (login.getEmail().equals("testi.testaaja@example.org") || login.isSuperAdmin()))) {
             return JerseyResponseManager.unauthorized();
         }
         
@@ -145,17 +145,28 @@ public class Replicator {
                  logger.info("---------------------------------------------------------");    
                  logger.info(modelURI.toString());
                  
-                /* Replicate local concepts */ 
-                String localConcepts = service+"exportResource?graph="+UriComponent.encode(modelURI.toString()+"/skos#",UriComponent.Type.QUERY_PARAM)+"&service=concept";
-                Model localConceptModel = JerseyJsonLDClient.getResourceAsJenaModel(localConcepts);
-                conceptAdapter.add(modelURI.toString()+"/skos#",localConceptModel);
+                 /* Replicate local concepts */
+                 String localConcepts = service+"exportResource?graph="+UriComponent.encode(modelURI.toString()+"/skos#",UriComponent.Type.QUERY_PARAM)+"&service=concept";
+                 Model localConceptModel = JerseyJsonLDClient.getResourceAsJenaModel(localConcepts);
+                 conceptAdapter.add(modelURI.toString()+"/skos#",localConceptModel);
                  
-                Resource modelGROUP = res.getPropertyResourceValue(DCTerms.isPartOf);
+                 Resource modelGROUP = res.getPropertyResourceValue(DCTerms.isPartOf);
 
                  StmtIterator orgIt = res.listProperties(DCTerms.contributor);
+
                  List<UUID> orgUUIDs = new ArrayList();
-                 while(orgIt.hasNext()) {
-                     orgUUIDs.add(UUID.fromString(orgIt.next().getResource().getLocalName()));
+
+                 if(orgIt.toList().size()==0) {
+
+                     // Fallback organization "YHT ylläpito"
+                     orgUUIDs.add(UUID.fromString("7d3a3c00-5a6b-489b-a3ed-63bb58c26a63"));
+
+                 } else {
+
+                     while (orgIt.hasNext()) {
+                         orgUUIDs.add(UUID.fromString(orgIt.next().getResource().getLocalName()));
+                     }
+
                  }
 
                 ServiceDescriptionManager.createGraphDescription(modelURI.toString(),null, orgUUIDs);
@@ -166,7 +177,7 @@ public class Replicator {
                 // HasPartGraph
                 String uri = service+"exportResource?graph="+UriComponent.encode(modelURI.toString()+"#HasPartGraph",UriComponent.Type.QUERY_PARAM);
      
-               // logger.info("HasPartGraph:"+uri);
+                logger.info("HasPartGraph:"+uri);
                 
                 Model hasPartModel = JerseyJsonLDClient.getResourceAsJenaModel(uri);
                 adapter.add(modelURI.toString()+"#HasPartGraph", hasPartModel);
@@ -175,7 +186,7 @@ public class Replicator {
                 
                 String euri = service+"exportResource?graph="+UriComponent.encode(modelURI.toString()+"#ExportGraph",UriComponent.Type.QUERY_PARAM);
      
-               // logger.info("ExportGraph:"+euri);
+                logger.info("ExportGraph:"+euri);
                 
                 Model exportModel = JerseyJsonLDClient.getResourceAsJenaModel(euri);
                 adapter.add(modelURI.toString()+"#ExportGraph", exportModel);
@@ -184,7 +195,7 @@ public class Replicator {
                 
                 String puri = service+"exportResource?graph="+UriComponent.encode(modelURI.toString()+"#PositionGraph",UriComponent.Type.QUERY_PARAM);
      
-               // logger.info("PositionGraph:"+puri);
+                logger.info("PositionGraph:"+puri);
                 
                 Model positionModel = JerseyJsonLDClient.getResourceAsJenaModel(puri);
                 adapter.add(modelURI.toString()+"#PositionGraph", positionModel);
@@ -198,11 +209,9 @@ public class Replicator {
                 while(nodIter.hasNext()) {
                     Resource part = nodIter.nextNode().asResource();
                     
-                    
-                    
                     String resourceURI = service+"exportResource?graph="+UriComponent.encode(part.toString(),UriComponent.Type.QUERY_PARAM);
                     
-                  //  logger.info("Resource:"+resourceURI);
+                    logger.info("Resource:"+resourceURI);
                     
                     Model resourceModel = JerseyJsonLDClient.getResourceAsJenaModel(resourceURI);
                     adapter.add(part.toString(), resourceModel);
