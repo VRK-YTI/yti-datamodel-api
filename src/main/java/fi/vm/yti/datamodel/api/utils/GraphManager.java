@@ -1036,6 +1036,7 @@ public class GraphManager {
      * @param query Construct SPARQL query
      * @return created Jena model
      */
+    @Deprecated
     public static Model constructModelFromConceptAndCore(String conceptID, String modelID, Query query) {
 
         Model conceptModel = TermedTerminologyManager.getConceptAsJenaModel(conceptID);

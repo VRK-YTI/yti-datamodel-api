@@ -529,7 +529,8 @@ public class JerseyJsonLDClient {
 
             WebTarget target = client.target(url)
                     .queryParam("select", "id,uri,properties.prefLabel")
-                    .queryParam("where","typeId:Concept AND "+uri)
+                    .queryParam("where","typeId:Concept")
+                    .queryParam("where","uri:"+uri)
                     .queryParam("max", "-1");
             
 

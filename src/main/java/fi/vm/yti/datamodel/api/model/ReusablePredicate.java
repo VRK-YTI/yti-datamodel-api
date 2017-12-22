@@ -3,6 +3,7 @@ package fi.vm.yti.datamodel.api.model;
 import fi.vm.yti.datamodel.api.utils.GraphManager;
 import fi.vm.yti.datamodel.api.utils.LDHelper;
 import fi.vm.yti.datamodel.api.utils.ModelManager;
+import fi.vm.yti.datamodel.api.utils.TermedTerminologyManager;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.query.ParameterizedSparqlString;
 import org.apache.jena.rdf.model.ResourceFactory;
@@ -77,7 +78,7 @@ public class ReusablePredicate extends AbstractPredicate {
         pss.setIri("predicateIRI",LDHelper.resourceIRI(modelIRI.toString(), predicateName));
         pss.setIri("modelService",services.getLocalhostCoreSparqlAddress());
 
-        this.graph = GraphManager.constructModelFromConceptAndCore(conceptIRI.toString(),modelIRI.toString(),pss.asQuery());
+        this.graph = TermedTerminologyManager.constructCleanedModelFromTermedAPIAndCore(conceptIRI.toString(),modelIRI.toString(),pss.asQuery());
 
     }
 

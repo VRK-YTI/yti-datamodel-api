@@ -84,6 +84,20 @@ public class TermedTerminologyManager {
         Model conceptModel = JerseyJsonLDClient.getJSONLDResponseAsJenaModel(jerseyResponse);
         QueryExecution qexec = QueryExecutionFactory.create(query,conceptModel);
         Model objects = qexec.execConstruct();
+        return cleanModelDefinitions(objects);
+
+    }
+
+
+    public static Model constructCleanedModelFromTermedAPIAndCore(String conceptUri, String modelUri, Query query) {
+
+        DatasetAccessor testAcc = DatasetAccessorFactory.createHTTP(services.getCoreReadAddress());
+        Response jerseyResponse = JerseyJsonLDClient.getConceptFromTermedAPI(conceptUri);
+        Model conceptModel = JerseyJsonLDClient.getJSONLDResponseAsJenaModel(jerseyResponse);
+        conceptModel.add(testAcc.getModel(modelUri));
+
+        QueryExecution qexec = QueryExecutionFactory.create(query,conceptModel);
+        Model objects = qexec.execConstruct();
 
         return cleanModelDefinitions(objects);
 
