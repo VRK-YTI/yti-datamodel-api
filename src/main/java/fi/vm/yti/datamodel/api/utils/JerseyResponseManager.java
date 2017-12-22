@@ -3,7 +3,10 @@
  */
 package fi.vm.yti.datamodel.api.utils;
 
+import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Response;
+
+import fi.vm.yti.datamodel.api.config.ApplicationProperties;
 import org.apache.jena.rdf.model.Model;
 
 import java.util.UUID;
@@ -44,6 +47,10 @@ public class JerseyResponseManager {
 
     public static Response successUuid(String uuid) {
         return Response.status(200).entity("{\"identifier\":\""+uuid+"\"}").build();
+    }
+
+    public static Response config() {
+        return Response.status(200).entity("{\"groups\":\""+ ApplicationProperties.getDefaultGroupManagementAPI()+"\", \"concepts\":\""+ApplicationProperties.getDefaultTermAPI()+"\"}").build();
     }
     
     public static Response langNotDefined() {
