@@ -53,7 +53,7 @@ public class QueryLibrary {
     final public static String constructServiceCategories = LDHelper.expandSparqlQuery(true,
             "CONSTRUCT {" +
                     "?concept skos:prefLabel ?label . " +
-                    "?concept rdf:type skos:Concept . " +
+                    "?concept rdf:type foaf:Group . " +
                     "?concept dcterms:identifier ?id . " +
                     "} WHERE {" +
                     "GRAPH <urn:yti:servicecategories> { " +
