@@ -29,10 +29,7 @@ class AuthenticationHandler {
     static void initializeUser(HttpSession session, ShibbolethAuthenticationDetails authenticationDetails) {
 
         if (authenticationDetails.isAuthenticated()) {
-            // No need to fetch user every time if session is already authenticated
-            if (!isAuthenticatedSession(session)) {
-                setUser(session, getAuthenticatedUser(authenticationDetails));
-            }
+            setUser(session, getAuthenticatedUser(authenticationDetails));
         } else if (isAuthenticatedSession(session)) {
             clearUser(session);
             session.invalidate();
