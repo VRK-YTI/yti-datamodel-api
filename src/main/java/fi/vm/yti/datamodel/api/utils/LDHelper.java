@@ -16,6 +16,7 @@ import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.jena.assembler.assemblers.DefaultModelAssembler;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIFactory;
 import org.apache.jena.query.ParameterizedSparqlString;
@@ -24,8 +25,7 @@ import java.text.Normalizer.Form;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.apache.commons.lang3.text.WordUtils;
-import org.apache.jena.rdf.model.Property;
-import org.apache.jena.rdf.model.ResourceFactory;
+import org.apache.jena.rdf.model.*;
 import org.glassfish.jersey.uri.UriComponent;
 
 /**
@@ -181,6 +181,17 @@ public class LDHelper {
             if(seIt.hasNext()) sb.append(sep);
         }
         return sb.toString();
+    }
+
+    public static RDFList addStringListToModel(Model model, String stringSpaces) {
+
+        RDFList newList = model.createList();
+        String[] stringList = stringSpaces.split(" ");
+        for(int i=0;i<stringList.length;i++) {
+            newList = newList.with(ResourceFactory.createPlainLiteral(stringList[i]));
+        }
+
+        return newList;
     }
 
 

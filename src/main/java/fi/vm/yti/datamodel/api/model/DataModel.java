@@ -7,6 +7,7 @@ import org.apache.jena.query.ParameterizedSparqlString;
 import org.apache.jena.query.QueryExecution;
 import org.apache.jena.query.QueryExecutionFactory;
 import org.apache.jena.rdf.model.*;
+import org.apache.jena.vocabulary.DCTerms;
 
 import java.util.List;
 import java.util.UUID;
@@ -48,20 +49,26 @@ public class DataModel extends AbstractModel {
                 + "?modelIRI owl:versionInfo ?draft . "
                 + "?modelIRI dcterms:created ?creation . "
                 + "?modelIRI dcterms:modified ?creation . "
-                + "?modelIRI dcterms:language "+allowedLang+" . "
+                //+ "?modelIRI dcterms:language "+allowedLang+" . "
                 + "?modelIRI dcap:preferredXMLNamespaceName ?namespace . "
                 + "?modelIRI dcap:preferredXMLNamespacePrefix ?prefix . "
                 + "?modelIRI dcterms:isPartOf ?group . "
-                + "?group at:op-code ?code . "
+                + "?group dcterms:identifier ?code . "
+                + "?group rdfs:label ?groupLabel . "
                 + "?modelIRI dcterms:contributor ?org . "
+                + "?org skos:prefLabel ?orgLabel . "
+                + "?org a foaf:Organization . "
                 + "} WHERE { "
                 + "BIND(now() as ?creation) "
                 + "GRAPH <urn:yti:servicecategories> { "
                 + "?group at:op-code ?code . "
+                + "?group skos:prefLabel ?groupLabel . "
+                + "FILTER(LANGMATCHES(LANG(?groupLabel), '"+lang+"'))"
                 + "VALUES ?code { "+LDHelper.concatStringList(serviceList, " ", "'")+"}"
                 + "}"
                 + "GRAPH <urn:yti:organizations> {"
                 + "?org a ?orgType . "
+                + "?org skos:prefLabel ?orgLabel . "
                 + "VALUES ?org { "+LDHelper.concatWithReplace(orgList," ", "<urn:uuid:@this>")+" }"
                 + "}"
                 + "}";
@@ -80,8 +87,11 @@ public class DataModel extends AbstractModel {
         pss.setLiteral("mlabel", ResourceFactory.createLangLiteral(label, lang));
         pss.setLiteral("defLang", lang);
 
+        logger.info(pss.toString());
         QueryExecution qexec = QueryExecutionFactory.sparqlService(services.getCoreSparqlAddress(), pss.toString());
         this.graph = qexec.execConstruct();
+        RDFList langRDFList = LDHelper.addStringListToModel(this.graph, allowedLang);
+        this.graph.add(ResourceFactory.createResource(namespace.toString()), DCTerms.language, langRDFList);
 
     }
 

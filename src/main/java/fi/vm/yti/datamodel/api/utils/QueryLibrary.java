@@ -52,7 +52,7 @@ public class QueryLibrary {
 
     final public static String constructServiceCategories = LDHelper.expandSparqlQuery(true,
             "CONSTRUCT {" +
-                    "?concept skos:prefLabel ?label . " +
+                    "?concept rdfs:label ?label . " +
                     "?concept rdf:type foaf:Group . " +
                     "?concept dcterms:identifier ?id . " +
                     "} WHERE {" +
@@ -74,10 +74,10 @@ public class QueryLibrary {
                      + "?graph dcterms:isPartOf ?group . "
                      + "?group a foaf:Group . "
                      + "?group rdfs:label ?groupLabel . "
-                     + "?group foaf:homepage ?homepage . "
+                     + "?group dcterms:identifier ?code . "
                      + "?graph dcterms:contributor ?org . "
                      + "?org skos:prefLabel ?orgLabel . "
-                     + "?org a foaf:Organization . "
+                     + "?org rdf:type foaf:Organization . "
                      + "} WHERE { "
                      + "GRAPH ?graph { "
                      + " ?s ?p ?o . "
@@ -95,6 +95,7 @@ public class QueryLibrary {
                      + " }"
                      + "}"
                      + "GRAPH <urn:yti:servicecategories> { "
+                     + "?group at:op-code ?code . "
                      + "?group skos:prefLabel ?groupLabel . "
                      + "}"
                      + "GRAPH <urn:csc:iow:sd> { "
@@ -102,7 +103,7 @@ public class QueryLibrary {
                      + " ?metaGraph sd:name ?graph . "
                      + " ?metaGraph dcterms:contributor ?org . "
                      + "} "
-                     + "GRAPH <urn:yti:organizations> {"
+                     + "GRAPH <urn:yti:organizations> { "
                      + "?org skos:prefLabel ?orgLabel . "
                      + "}"
                      + "}");

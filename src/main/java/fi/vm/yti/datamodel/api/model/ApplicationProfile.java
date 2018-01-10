@@ -6,7 +6,9 @@ import org.apache.jena.iri.IRI;
 import org.apache.jena.query.ParameterizedSparqlString;
 import org.apache.jena.query.QueryExecution;
 import org.apache.jena.query.QueryExecutionFactory;
+import org.apache.jena.rdf.model.RDFList;
 import org.apache.jena.rdf.model.ResourceFactory;
+import org.apache.jena.vocabulary.DCTerms;
 
 import java.util.List;
 import java.util.UUID;
@@ -48,58 +50,29 @@ public class ApplicationProfile extends AbstractModel {
                 + "?modelIRI owl:versionInfo ?draft . "
                 + "?modelIRI dcterms:created ?creation . "
                 + "?modelIRI dcterms:modified ?creation . "
-                + "?modelIRI dcterms:language "+allowedLang+" . "
+                //+ "?modelIRI dcterms:language "+allowedLang+" . "
                 + "?modelIRI dcap:preferredXMLNamespaceName ?namespace . "
                 + "?modelIRI dcap:preferredXMLNamespacePrefix ?prefix . "
                 + "?modelIRI dcterms:isPartOf ?group . "
-                + "?group at:op-code ?code . "
+                + "?group dcterms:identifier ?code . "
+                + "?group rdfs:label ?groupLabel . "
                 + "?modelIRI dcterms:contributor ?org . "
+                + "?org skos:prefLabel ?orgLabel . "
+                + "?org a foaf:Organization . "
                 + "} WHERE { "
                 + "BIND(now() as ?creation) "
                 + "GRAPH <urn:yti:servicecategories> { "
                 + "?group at:op-code ?code . "
+                + "?group skos:prefLabel ?groupLabel . "
+                + "FILTER(LANGMATCHES(LANG(?groupLabel), '"+lang+"'))"
                 + "VALUES ?code { "+LDHelper.concatStringList(serviceList, " ", "'")+"}"
                 + "}"
                 + "GRAPH <urn:yti:organizations> {"
                 + "?org a ?orgType . "
+                + "?org skos:prefLabel ?orgLabel . "
                 + "VALUES ?org { "+LDHelper.concatWithReplace(orgList," ", "<urn:uuid:@this>")+" }"
                 + "}"
                 + "}";
-
-        /*
-
-         String queryString = "CONSTRUCT  { "
-                + "?modelIRI a owl:Ontology . "
-                + "?modelIRI a dcap:DCAP . "
-                + "?modelIRI rdfs:label ?profileLabel . "
-                + "?modelIRI owl:versionInfo ?draft . "
-                + "?modelIRI dcterms:created ?creation . "
-                + "?modelIRI dcterms:modified ?creation . "
-                + "?modelIRI dcterms:language "+allowedLang+" . "
-                + "?modelIRI dcap:preferredXMLNamespaceName ?namespace . "
-                + "?modelIRI dcap:preferredXMLNamespacePrefix ?prefix . "
-                + "?modelIRI dcterms:isPartOf ?group . "
-                + "?group rdfs:label ?groupLabel . "
-                + "?group dcterms:references ?skosScheme . "
-                + "?skosScheme dcterms:title ?schemeTitle . "
-                + "?skosScheme termed:graph ?termedGraph . "
-                + "?termedGraph termed:id ?termedGraphId . "
-                + "?termedGraph termed:code ?termedGraphCode . "
-        + "} WHERE { "
-                + "BIND(now() as ?creation) "
-                + "GRAPH <urn:csc:groups> { "
-                + "?group a foaf:Group . "
-                + "?group dcterms:references ?skosScheme . "
-                + "?skosScheme dcterms:title ?schemeTitle . "
-                + "?skosScheme termed:graph ?termedGraph . "
-                + "?termedGraph termed:id ?termedGraphId . "
-                + "?termedGraph termed:code ?termedGraphCode . "
-                + "?group rdfs:label ?groupLabel . "
-                + "FILTER(lang(?groupLabel) = ?defLang)"
-                + "}"
-                + "}";
-
-         */
 
         pss.setCommandText(queryString);
 
@@ -117,6 +90,8 @@ public class ApplicationProfile extends AbstractModel {
 
         QueryExecution qexec = QueryExecutionFactory.sparqlService(services.getCoreSparqlAddress(), pss.toString());
         this.graph = qexec.execConstruct();
+        RDFList langRDFList = LDHelper.addStringListToModel(this.graph, allowedLang);
+        this.graph.add(ResourceFactory.createResource(namespace.toString()), DCTerms.language, langRDFList);
 
 
     }

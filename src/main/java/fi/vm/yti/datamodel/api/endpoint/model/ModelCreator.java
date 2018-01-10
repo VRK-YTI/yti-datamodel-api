@@ -63,10 +63,8 @@ public class ModelCreator {
                 return JerseyResponseManager.invalidParameter();
             }
 
-        try {
-                allowedLang = LDHelper.parseAllowedLangString(allowedLang);
-            } catch(InvalidParameterException ex) {
-                return JerseyResponseManager.invalidParameter();
+            if(allowedLang==null || allowedLang.equals("undefined") || allowedLang.length()==0) {
+                    allowedLang = "fi";
             }
 
             logger.info("prefix "+prefix);
