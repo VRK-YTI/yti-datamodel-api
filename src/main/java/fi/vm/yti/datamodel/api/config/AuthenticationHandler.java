@@ -121,6 +121,7 @@ class AuthenticationHandler {
         public String lastName;
         public boolean superuser;
         public boolean newlyCreated;
+        public String creationDateTime;
         public List<Organization> organization;
     }
 
