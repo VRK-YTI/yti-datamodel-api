@@ -148,6 +148,7 @@ public abstract class AbstractModel {
     public Model asGraph(){
         return this.graph;
     }
+    public Model asGraphCopy() { return ModelFactory.createDefaultModel().add(this.graph); }
     public String getId() { return this.id.toString();}
     public IRI getIRI() { return this.id; }
     public String getProvUUID() { return this.provUUID; }

@@ -5,6 +5,7 @@ import fi.vm.yti.datamodel.api.utils.GraphManager;
 import fi.vm.yti.datamodel.api.utils.ProvenanceManager;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.web.DatasetAdapter;
 import org.apache.jena.web.DatasetGraphAccessorHTTP;
@@ -27,7 +28,7 @@ public class AbstractResource {
         DatasetAdapter adapter = new DatasetAdapter(accessor);
         adapter.putModel(getId(), asGraph());
         GraphManager.insertNewGraphReferenceToModel(getId(), getModelId());
-        Model exportModel = asGraph();
+        Model exportModel = asGraphCopy();
         exportModel.add(exportModel.createResource(getModelId()), DCTerms.hasPart, exportModel.createResource(getId()));
         adapter.add(getModelId()+"#ExportGraph", exportModel);
     }
@@ -75,6 +76,7 @@ public class AbstractResource {
     public Model asGraph(){
         return this.graph;
     }
+    public Model asGraphCopy() { return ModelFactory.createDefaultModel().add(this.graph); }
     public String getId() { return this.id.toString();}
     public String getModelId() { return this.dataModel.getId(); }
     public IRI getModelIRI() { return this.dataModel.getIRI(); }
