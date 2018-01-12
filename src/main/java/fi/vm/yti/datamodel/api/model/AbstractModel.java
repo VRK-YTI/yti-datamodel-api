@@ -111,7 +111,7 @@ public abstract class AbstractModel {
 
         this.provUUID = "urn:uuid:"+UUID.randomUUID().toString();
         modelResource.removeAll(DCTerms.identifier);
-        modelResource.addProperty(DCTerms.identifier,ResourceFactory.createResource("urn:uuid:"+provUUID));
+        modelResource.addProperty(DCTerms.identifier,ResourceFactory.createResource(provUUID));
 
     }
 

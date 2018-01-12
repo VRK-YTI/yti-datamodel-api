@@ -79,7 +79,7 @@ public class AbstractPredicate extends AbstractResource {
 
         this.provUUID = "urn:uuid:"+UUID.randomUUID().toString();
         predicateResource.removeAll(DCTerms.identifier);
-        predicateResource.addProperty(DCTerms.identifier,ResourceFactory.createResource("urn:uuid:"+provUUID));
+        predicateResource.addProperty(DCTerms.identifier,ResourceFactory.createResource(provUUID));
 
     }
 

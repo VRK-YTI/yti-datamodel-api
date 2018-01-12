@@ -85,7 +85,7 @@ public abstract class AbstractShape {
 
         this.provUUID = "urn:uuid:"+UUID.randomUUID().toString();
         shapeResource.removeAll(DCTerms.identifier);
-        shapeResource.addProperty(DCTerms.identifier,ResourceFactory.createResource("urn:uuid:"+provUUID));
+        shapeResource.addProperty(DCTerms.identifier,ResourceFactory.createResource(provUUID));
 
     }
 

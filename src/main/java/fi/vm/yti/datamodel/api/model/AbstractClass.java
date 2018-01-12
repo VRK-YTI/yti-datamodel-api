@@ -77,7 +77,7 @@ public abstract class AbstractClass extends AbstractResource {
 
             this.provUUID = "urn:uuid:"+UUID.randomUUID().toString();
             classResource.removeAll(DCTerms.identifier);
-            classResource.addProperty(DCTerms.identifier,ResourceFactory.createResource("urn:uuid:"+provUUID));
+            classResource.addProperty(DCTerms.identifier,ResourceFactory.createResource(provUUID));
 
         }
 

@@ -5,10 +5,13 @@ package fi.vm.yti.datamodel.api.endpoint.concepts;
 
 import fi.vm.yti.datamodel.api.config.EndpointServices;
 import fi.vm.yti.datamodel.api.utils.JerseyJsonLDClient;
+import fi.vm.yti.datamodel.api.utils.JerseyResponseManager;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import org.apache.jena.rdf.model.Model;
+
 import javax.servlet.ServletContext;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.Path;
@@ -38,9 +41,10 @@ public class ConceptsSchemes {
   })
   public Response vocab() {
 
-      
-      return JerseyJsonLDClient.getSchemesFromTermedAPI();
-      
+      Model schemeModel = JerseyJsonLDClient.getJSONLDResponseAsJenaModel(JerseyJsonLDClient.getSchemesFromTermedAPI());
+      schemeModel.setNsPrefix("skos","http://www.w3.org/2004/02/skos/core#");
+
+      return JerseyResponseManager.okModel(schemeModel);
 
   }
   

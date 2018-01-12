@@ -43,7 +43,8 @@ public class ProvenanceManager {
       adapter.putModel(id, model);
         
     }
-    
+
+    @Deprecated
     public static void updateVersionIdToResource(String graph, String provUUID) {
         
             String query
@@ -129,22 +130,22 @@ public class ProvenanceManager {
         pss.setIri("graph", graph);
         pss.setIri("user", "mailto:"+user);
         pss.setIri("jsonld", provUUID);
-        pss.setLiteral("versionID", provUUID);
+       // pss.setLiteral("versionID", provUUID);
         pss.setCommandText(query);
 
         UpdateRequest queryObj = pss.asUpdate();
         UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, services.getProvSparqlUpdateAddress());
         qexec.execute();
 
+
+
     }
 
-    @Deprecated
     public static void createProvenanceGraph(String graph, String jsonld, String user, String provUUID) {
         //createProvenanceGraphInRunnable(graph,jsonld,user,provUUID);
         ThreadExecutor.pool.execute(new ProvenanceGraphRunnable(graph, jsonld, user, provUUID));
     }
 
-    @Deprecated
     public static void createProvenanceGraphInRunnable(String graph, String jsonld, String user, String provUUID) {
         
         logger.info("Creating prov graph "+graph+" "+provUUID.toString());
@@ -166,8 +167,6 @@ public class ProvenanceManager {
     }
     
     public static void createProvEntity(String graph, String user, String provUUID) {
-        
-        updateVersionIdToResource(graph, provUUID);
         
             String query
                 = "DELETE { "
@@ -207,7 +206,7 @@ public class ProvenanceManager {
         UpdateRequest queryObj = pss.asUpdate();
         UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, services.getProvSparqlUpdateAddress());
         qexec.execute();
-        
+
     }
     
     public static void renameID(String oldid, String newid) {

@@ -69,6 +69,7 @@ public class ResourceManager {
      * @param login Login session
      * @return UUID of the resource
      */
+    @Deprecated
     public static UUID updateResourceWithNewId(IRI idIRI, IRI oldIdIRI, IRI modelIRI, String body, LoginSession login) {
      
                     /* Remove old graph and add update references */
