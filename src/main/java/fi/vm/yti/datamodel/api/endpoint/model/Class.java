@@ -292,7 +292,7 @@ public class Class {
 
             if (ProvenanceManager.getProvMode()) {
                 ProvenanceManager.createProvenanceGraphFromModel(newClass.getId(), newClass.asGraph(), login.getEmail(), newClass.getProvUUID());
-                ProvenanceManager.createProvenanceActivity(newClass.getId(), login.getEmail(), newClass.getProvUUID());
+                ProvenanceManager.createProvenanceActivity(newClass.getId(), newClass.getProvUUID(),login.getEmail());
             }
 
             return JerseyResponseManager.successUuid(newClass.getProvUUID(), newClass.getId());

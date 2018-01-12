@@ -282,9 +282,18 @@ public class Predicate {
            
            String provUUID = newPredicate.getProvUUID();
            newPredicate.create();
+
+          if (ProvenanceManager.getProvMode()) {
+              ProvenanceManager.createProvenanceGraphFromModel(newPredicate.getId(), newPredicate.asGraph(), login.getEmail(), newPredicate.getProvUUID());
+              ProvenanceManager.createProvenanceActivity(newPredicate.getId(), newPredicate.getProvUUID(),login.getEmail());
+          }
           
-          if(provUUID!=null) return JerseyResponseManager.successUuid(provUUID,newPredicate.getId());
-          else return JerseyResponseManager.notCreated();
+          if(provUUID!=null) {
+              return JerseyResponseManager.successUuid(provUUID,newPredicate.getId());
+          }
+          else {
+              return JerseyResponseManager.notCreated();
+          }
 
       } catch(IllegalArgumentException ex) {
           logger.warning(ex.toString());
