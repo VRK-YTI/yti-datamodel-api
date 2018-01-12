@@ -173,11 +173,11 @@ public class Models {
           logger.info("Getting old vocabulary:"+newVocabulary.getId());
           DataModel oldVocabulary = new DataModel(newVocabulary.getIRI());
 
-          if(login.isUserInOrganization(oldVocabulary.getOrganizations())) {
+          if(!login.isUserInOrganization(oldVocabulary.getOrganizations())) {
               return JerseyResponseManager.unauthorized();
           }
 
-          if(login.isUserInOrganization(newVocabulary.getOrganizations())) {
+          if(!login.isUserInOrganization(newVocabulary.getOrganizations())) {
               return JerseyResponseManager.unauthorized();
           }
 
@@ -186,7 +186,13 @@ public class Models {
           if (provUUID == null) {
               return JerseyResponseManager.error();
           } else {
-              ModelManager.updateModel(newVocabulary, login);
+
+              newVocabulary.update();
+
+              if(ProvenanceManager.getProvMode()) {
+                  ProvenanceManager.createProvenanceGraphFromModel(newVocabulary.getId(), newVocabulary.asGraph(), login.getEmail(), newVocabulary.getProvUUID());
+              }
+
               return JerseyResponseManager.successUuid(provUUID);
           }
 
@@ -195,29 +201,6 @@ public class Models {
           return JerseyResponseManager.error();
       }
 
-      /*
-       if(graph.equals("default") || graph.equals("undefined")) {
-            return JerseyResponseManager.invalidIRI();
-       } 
-       
-       if(IDManager.isInvalid(graph)) {
-           return JerseyResponseManager.invalidIRI();
-       }
- 
-        HttpSession session = request.getSession();
-        
-        if(session==null) return JerseyResponseManager.unauthorized();
-        
-        LoginSession login = new LoginSession(session);
-        
-        if(!login.isLoggedIn() || !login.hasRightToEditModel(graph))
-            return JerseyResponseManager.unauthorized();
-        
-        UUID provUUID = ModelManager.updateModel(graph, body, login);
-        
-        if(provUUID==null) return JerseyResponseManager.error();
-        else return JerseyResponseManager.successUuid(provUUID);
-*/
   }
   
   @PUT
@@ -264,7 +247,7 @@ public class Models {
           else {
               logger.info("Storing new model: "+newVocabulary.getId());
 
-              newVocabulary.save();
+              newVocabulary.create();
 
               ServiceDescriptionManager.createGraphDescription(newVocabulary.getId(), login.getEmail(), newVocabulary.getOrganizations());
 

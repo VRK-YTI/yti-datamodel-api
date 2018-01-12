@@ -26,6 +26,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.apache.commons.lang3.text.WordUtils;
 import org.apache.jena.rdf.model.*;
+import org.apache.jena.vocabulary.SKOS;
 import org.glassfish.jersey.uri.UriComponent;
 
 /**
@@ -79,6 +80,21 @@ public class LDHelper {
         put("skosxl","http://www.w3.org/2008/05/skos-xl#");
     }});
 
+   public static Literal getDateTimeLiteral() {
+       Calendar cal = GregorianCalendar.getInstance();
+       return ResourceFactory.createTypedLiteral(cal);
+   }
+
+   public static void rewriteLiteral(Model model, Resource res, Property prop, Literal newLiteral) {
+       Selector literalSelector = new SimpleSelector(res, prop, (Literal) null);
+
+       Iterator<Statement> statements = model.listStatements(literalSelector).toList().iterator();
+
+       while(statements.hasNext()) {
+           Statement stat = statements.next();
+           stat.changeObject(newLiteral);
+       }
+   }
 
     public static Property curieToProperty(String curieString) {
         return ResourceFactory.createProperty(curieToURI(curieString));

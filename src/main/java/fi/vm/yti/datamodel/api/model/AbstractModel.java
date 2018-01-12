@@ -115,11 +115,34 @@ public abstract class AbstractModel {
 
     }
 
-    public void save() {
+    public void create() {
         DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(services.getCoreReadWriteAddress());
         DatasetAdapter adapter = new DatasetAdapter(accessor);
         adapter.putModel(getId(), asGraph());
         adapter.putModel(getId()+"#ExportGraph", asGraph());
+    }
+
+    public void update() {
+        modifyDatetime();
+        DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(services.getCoreReadWriteAddress());
+        DatasetAdapter adapter = new DatasetAdapter(accessor);
+        Model oldModel = adapter.getModel(getId());
+        adapter.putModel(getId(), asGraph());
+        Model exportModel = adapter.getModel(getId()+"#ExportGraph");
+        exportModel.remove(oldModel);
+        exportModel.add(asGraph());
+        adapter.putModel(getId()+"#ExportGraph", exportModel);
+    }
+
+    public void delete() {
+        DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(services.getCoreReadWriteAddress());
+        DatasetAdapter adapter = new DatasetAdapter(accessor);
+        adapter.deleteModel(getId());
+        adapter.deleteModel(getId()+"#ExportModel");
+    }
+
+    public void modifyDatetime() {
+        LDHelper.rewriteLiteral(this.graph, ResourceFactory.createResource(getId()), DCTerms.modified, LDHelper.getDateTimeLiteral());
     }
 
     public Model asGraph(){
