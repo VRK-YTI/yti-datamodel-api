@@ -75,9 +75,13 @@ public class RHPOrganizationManager {
                 JsonObject org = (JsonObject) orgIterator.next();
                 String uuid = org.getString("uuid");
                 JsonObject prefLabel = org.getJsonObject("prefLabel");
+                JsonObject description = org.getJsonObject("description");
                 String preflabel_fi = prefLabel.getString("fi");
                 String preflabel_en = prefLabel.getString("en");
                 String preflabel_sv = prefLabel.getString("sv");
+                String description_fi = description.getString("fi");
+                String description_en = description.getString("en");
+                String description_sv = description.getString("sv");
                 String url = org.getString("url");
 
                 Resource res = model.createResource("urn:uuid:"+uuid);
@@ -93,6 +97,15 @@ public class RHPOrganizationManager {
 
                 if(preflabel_sv!=null && preflabel_sv.length()>1)
                     res.addLiteral(SKOS.prefLabel, ResourceFactory.createLangLiteral(preflabel_sv,"sv"));
+
+                if(description_fi!=null && description_fi.length()>1)
+                    res.addLiteral(DCTerms.description, ResourceFactory.createLangLiteral(description_fi,"fi"));
+
+                if(description_en!=null && description_en.length()>1)
+                    res.addLiteral(DCTerms.description, ResourceFactory.createLangLiteral(description_en,"en"));
+
+                if(description_sv!=null && description_sv.length()>1)
+                    res.addLiteral(DCTerms.description, ResourceFactory.createLangLiteral(description_sv,"sv"));
 
                 if(url!=null && url.length()>1)
                     res.addLiteral(FOAF.homepage,url);

@@ -363,7 +363,7 @@ public class Class {
            /* If removing referenced class */
              GraphManager.deleteGraphReferenceFromModel(idIRI,modelIRI);
 
-           GraphManager.deleteGraphReferenceFromExportModel(idIRI, modelIRI);
+             GraphManager.deleteGraphReferenceFromExportModel(idIRI, modelIRI);
              // TODO: Not removed from export model
 
              return JerseyResponseManager.ok();
