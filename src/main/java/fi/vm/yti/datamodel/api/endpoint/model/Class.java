@@ -192,23 +192,29 @@ public class Class {
                     logger.log(Level.WARNING, idIRI+" is existing graph!");
                     return JerseyResponseManager.usedIRI();
                 } else {
-                    updateClass.create();
+                    updateClass.updateWithNewId(oldIdIRI);
                     provUUID = updateClass.getProvUUID();
-                   // provUUID = ResourceManager.updateResourceWithNewId(idIRI, oldIdIRI, modelIRI, body, login);
-                    GraphManager.updateClassReferencesInModel(modelIRI, oldIdIRI, idIRI);
-                    logger.info("Changed id from:"+oldid+" to "+id);
+                    logger.info("Changed class id from:"+oldid+" to "+id);
                 }
             } else {
                 updateClass.update();
-               // logger.info("Updated "+updateClass.getId());
                 provUUID = updateClass.getProvUUID();
-               // provUUID = ResourceManager.updateResource(id, model, body, login);
             }
+
+            if(ProvenanceManager.getProvMode()) {
+                if(oldIdIRI!=null) {
+                    ProvenanceManager.renameID(oldIdIRI.toString(), idIRI.toString());
+                }
+                ProvenanceManager.createProvenanceGraphFromModel(updateClass.getId(), updateClass.asGraph(), login.getEmail(), updateClass.getProvUUID());
+                ProvenanceManager.createProvEntity(updateClass.getId(), login.getEmail(), updateClass.getProvUUID());
+            }
+
+
         } else {
              /* IF NO JSON-LD POSTED TRY TO CREATE REFERENCE FROM MODEL TO CLASS ID */
    
             if(LDHelper.isResourceDefinedInNamespace(id, model)) {
-                // Selfreferences not allowed
+                // Self references not allowed
                 return JerseyResponseManager.usedIRI();
             } else {
                 GraphManager.insertExistingGraphReferenceToModel(id, model);
@@ -286,6 +292,7 @@ public class Class {
 
             if (ProvenanceManager.getProvMode()) {
                 ProvenanceManager.createProvenanceGraphFromModel(newClass.getId(), newClass.asGraph(), login.getEmail(), newClass.getProvUUID());
+                ProvenanceManager.createProvenanceActivity(newClass.getId(), login.getEmail(), newClass.getProvUUID());
             }
 
             return JerseyResponseManager.successUuid(newClass.getProvUUID(), newClass.getId());

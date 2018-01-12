@@ -44,8 +44,6 @@ public class ModelManager {
     }
 
 
-
-
     /**
      * Create jena model from json-ld string
      * @param modelString RDF as JSON-LD string
@@ -124,7 +122,7 @@ public class ModelManager {
                     
         /* If new model was created succesfully create prov activity */
         if(ProvenanceManager.getProvMode()) {
-            ProvenanceManager.createProvenanceActivity(graph, login.getEmail(), body, provUUID);
+         //   ProvenanceManager.createProvenanceActivity(graph, login.getEmail(), body, provUUID);
         }
 
         Logger.getLogger(Models.class.getName()).log(Level.INFO, graph+" updated sucessfully!");

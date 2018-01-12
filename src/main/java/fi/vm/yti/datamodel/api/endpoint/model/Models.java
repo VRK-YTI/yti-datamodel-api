@@ -116,7 +116,6 @@ public class Models {
             return JerseyJsonLDClient.constructGraphFromService(pss.toString(), sparqlService);
              
      } else  {
-              logger.info("Service category: "+group);
 
               pss.setNsPrefixes(LDHelper.PREFIX_MAP);
               queryString = QueryLibrary.modelsByGroupQuery;
@@ -191,6 +190,7 @@ public class Models {
 
               if(ProvenanceManager.getProvMode()) {
                   ProvenanceManager.createProvenanceGraphFromModel(newVocabulary.getId(), newVocabulary.asGraph(), login.getEmail(), newVocabulary.getProvUUID());
+                  ProvenanceManager.createProvEntity(newVocabulary.getId(), login.getEmail(), newVocabulary.getProvUUID());
               }
 
               return JerseyResponseManager.successUuid(provUUID);
@@ -252,8 +252,9 @@ public class Models {
               ServiceDescriptionManager.createGraphDescription(newVocabulary.getId(), login.getEmail(), newVocabulary.getOrganizations());
 
               if(ProvenanceManager.getProvMode()) {
-                  ProvenanceManager.createProvenanceGraphFromModel(newVocabulary.getId(), newVocabulary.asGraph(), login.getEmail(),provUUID);
-              }
+                  ProvenanceManager.createProvenanceGraphFromModel(newVocabulary.getId(), newVocabulary.asGraph(), login.getEmail(), provUUID);
+                  ProvenanceManager.createProvenanceActivity(newVocabulary.getId(), provUUID, login.getEmail());
+                }
 
               logger.info("Created new model: "+newVocabulary.getId());
               return JerseyResponseManager.successUuid(provUUID,newVocabulary.getId());

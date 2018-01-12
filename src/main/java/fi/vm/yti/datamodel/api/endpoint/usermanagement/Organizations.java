@@ -39,7 +39,7 @@ public class Organizations {
             @ApiResponse(code = 404, message = "Organization service not found") })
     @Produces("application/json")
     public Response getOrganizations() {
-        return JerseyJsonLDClient.getGraphResponseFromService("urn:yti:organizations",services.getCoreSparqlAddress());
+        return JerseyJsonLDClient.getGraphResponseFromService("urn:yti:organizations",services.getCoreReadAddress());
     }
 
 }

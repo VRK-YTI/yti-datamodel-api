@@ -192,16 +192,25 @@ public class Predicate {
                     logger.log(Level.WARNING, idIRI+" is existing graph!");
                     return JerseyResponseManager.usedIRI();
                 } else {
-                    updatePredicate.create();
+                    updatePredicate.updateWithNewId(oldIdIRI);
                     provUUID = updatePredicate.getProvUUID();
-                    GraphManager.updatePredicateReferencesInModel(modelIRI, oldIdIRI, idIRI);
-                    logger.info("Changed id from:"+oldid+" to "+id);
+                    logger.info("Changed predicate id from:"+oldid+" to "+id);
                 }
             } else {
                 updatePredicate.update();
                 logger.info("Updated "+updatePredicate.getId());
                 provUUID = updatePredicate.getProvUUID();
             }
+
+            if(ProvenanceManager.getProvMode()) {
+                if(oldIdIRI!=null) {
+                    ProvenanceManager.renameID(oldIdIRI.toString(), idIRI.toString());
+                }
+                ProvenanceManager.createProvenanceGraphFromModel(updatePredicate.getId(), updatePredicate.asGraph(), login.getEmail(), updatePredicate.getProvUUID());
+                ProvenanceManager.createProvEntity(updatePredicate.getId(), login.getEmail(), updatePredicate.getProvUUID());
+            }
+
+
         } else {
              /* IF NO JSON-LD POSTED TRY TO CREATE REFERENCE FROM MODEL TO CLASS ID */
             if(LDHelper.isResourceDefinedInNamespace(id, model)) {
@@ -273,11 +282,6 @@ public class Predicate {
            
            String provUUID = newPredicate.getProvUUID();
            newPredicate.create();
-          // logger.info("Created "+newPredicate.getId());
-
-          if(ProvenanceManager.getProvMode()) {
-              ProvenanceManager.createProvenanceGraphFromModel(newPredicate.getId(),newPredicate.asGraph(),login.getEmail(),newPredicate.getProvUUID());
-          }
           
           if(provUUID!=null) return JerseyResponseManager.successUuid(provUUID,newPredicate.getId());
           else return JerseyResponseManager.notCreated();

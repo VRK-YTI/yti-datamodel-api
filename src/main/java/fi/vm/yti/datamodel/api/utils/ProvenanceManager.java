@@ -100,15 +100,9 @@ public class ProvenanceManager {
        
     }
 
-    @Deprecated
-    public static void createProvenanceActivity(String graph, String user, String jsonld, UUID provUUID) {
-        
-        createVersionIdToResource(graph, provUUID);
-        
-        StatusType status = JerseyJsonLDClient.putGraphToTheService("urn:uuid:"+provUUID.toString(), jsonld, services.getProvReadWriteAddress());
-        
-        if (status.getFamily() == Response.Status.Family.SUCCESSFUL) {
-            
+
+    public static void createProvenanceActivity(String graph, String provUUID, String user) {
+
         String query
                 = "INSERT { "
                 + "GRAPH ?graph { "
@@ -134,28 +128,23 @@ public class ProvenanceManager {
         
         pss.setIri("graph", graph);
         pss.setIri("user", "mailto:"+user);
-        pss.setIri("jsonld", "urn:uuid:"+provUUID);
-        pss.setLiteral("versionID", "urn:uuid:"+provUUID);
+        pss.setIri("jsonld", provUUID);
+        pss.setLiteral("versionID", provUUID);
         pss.setCommandText(query);
 
         UpdateRequest queryObj = pss.asUpdate();
         UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, services.getProvSparqlUpdateAddress());
         qexec.execute();
-        
-        } else {
-            logger.info(status.getFamily().toString());
-            logger.info(status.toString());
-            logger.warning("Failed in creating PROV graph from "+graph);
-            /* TODO: Else failed entity? */
-        }
 
     }
-    
+
+    @Deprecated
     public static void createProvenanceGraph(String graph, String jsonld, String user, String provUUID) {
         //createProvenanceGraphInRunnable(graph,jsonld,user,provUUID);
         ThreadExecutor.pool.execute(new ProvenanceGraphRunnable(graph, jsonld, user, provUUID));
     }
-    
+
+    @Deprecated
     public static void createProvenanceGraphInRunnable(String graph, String jsonld, String user, String provUUID) {
         
         logger.info("Creating prov graph "+graph+" "+provUUID.toString());
@@ -172,11 +161,11 @@ public class ProvenanceManager {
     }
     
     public static void createProvenanceGraphFromModel(String graph, Model model, String user, String provUUID) {
-        putToProvenanceGraph(model,provUUID);
-        createProvEntity(graph, provUUID, user);
+        logger.info("Putting "+graph+" to provenance graph: "+provUUID);
+        putToProvenanceGraph(model, provUUID);
     }
     
-    public static void createProvEntity(String graph, String provUUID, String user) {
+    public static void createProvEntity(String graph, String user, String provUUID) {
         
         updateVersionIdToResource(graph, provUUID);
         
@@ -213,7 +202,8 @@ public class ProvenanceManager {
         pss.setIri("user", "mailto:"+user);
         pss.setIri("jsonld", provUUID);
         pss.setCommandText(query);
-        
+
+        logger.info(pss.toString());
         UpdateRequest queryObj = pss.asUpdate();
         UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, services.getProvSparqlUpdateAddress());
         qexec.execute();

@@ -2,6 +2,7 @@ package fi.vm.yti.datamodel.api.model;
 
 import fi.vm.yti.datamodel.api.config.EndpointServices;
 import fi.vm.yti.datamodel.api.utils.GraphManager;
+import fi.vm.yti.datamodel.api.utils.ProvenanceManager;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.vocabulary.DCTerms;
@@ -42,6 +43,22 @@ public class AbstractResource {
         exportModel.add(asGraph());
         exportModel.add(exportModel.createResource(getModelId()), DCTerms.hasPart, exportModel.createResource(getId()));
         adapter.putModel(getModelId()+"#ExportGraph", exportModel);
+     }
+
+     public void updateWithNewId(IRI oldIdIRI) {
+         DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(services.getCoreReadWriteAddress());
+         DatasetAdapter adapter = new DatasetAdapter(accessor);
+         adapter.putModel(getId(), asGraph());
+
+         Model oldModel = adapter.getModel(oldIdIRI.toString());
+         Model exportModel = adapter.getModel(getModelId()+"#ExportGraph");
+         exportModel.remove(oldModel);
+         exportModel.add(asGraph());
+
+         GraphManager.removeGraph(oldIdIRI);
+         GraphManager.renameID(oldIdIRI,getIRI());
+         GraphManager.updateReferencesInPositionGraph(getModelIRI(), oldIdIRI, getIRI());
+
      }
 
     public void delete() {

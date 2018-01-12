@@ -30,6 +30,7 @@ public class ResourceManager {
      * @param login Login session
      * @return UUID of the resource
      */
+    @Deprecated
     public static UUID putNewResource(String id, String model, String body, LoginSession login) {
         
             /* Create new graph */ 
@@ -44,7 +45,7 @@ public class ResourceManager {
             
            /* If new class was created succesfully create prov activity */
            if(ProvenanceManager.getProvMode()) {
-               ProvenanceManager.createProvenanceActivity(id, login.getEmail(), body, provUUID);
+             //  ProvenanceManager.createProvenanceActivity(id, login.getEmail(), body, provUUID);
            }
             
             GraphManager.insertNewGraphReferenceToModel(id, model);
