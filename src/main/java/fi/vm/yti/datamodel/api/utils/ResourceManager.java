@@ -60,71 +60,7 @@ public class ResourceManager {
             return provUUID;
     }
 
-    /**
-     * Renames resource id
-     * @param idIRI New id
-     * @param oldIdIRI Old id
-     * @param modelIRI Model id
-     * @param body Resource as json-ld string
-     * @param login Login session
-     * @return UUID of the resource
-     */
-    @Deprecated
-    public static UUID updateResourceWithNewId(IRI idIRI, IRI oldIdIRI, IRI modelIRI, String body, LoginSession login) {
-     
-                    /* Remove old graph and add update references */
-                    /* TODO: Not allowed if model is draft!?*/
-                    boolean success = JerseyJsonLDClient.graphIsUpdatedToTheService(idIRI.toString(), body, services.getCoreReadWriteAddress());
-                    
-                    if (!success) {
-                        logger.log(Level.WARNING, "Unexpected: ID not changed: "+idIRI.toString());
-                        return null;
-                    } 
-                    
-                    UUID provUUID = UUID.randomUUID();
-                   
-                    GraphManager.removeGraph(oldIdIRI);
-                    GraphManager.renameID(oldIdIRI,idIRI);
-                    GraphManager.updateReferencesInPositionGraph(modelIRI, oldIdIRI, idIRI);
-                    
-                    if(ProvenanceManager.getProvMode()) {
-                        ProvenanceManager.renameID(oldIdIRI.toString(),idIRI.toString());
-                        ProvenanceManager.createProvenanceGraph(idIRI.toString(), body, login.getEmail(), "urn:uuid:"+provUUID.toString());
-                    }
-                    
-                    return provUUID;
-        
-    }
 
-    @Deprecated
-    public static UUID updateResource(String id, String model, String body, LoginSession login) {
-        
-        UUID provUUID = UUID.randomUUID();
-        
-            
-        /* Overwrite existing graph */ 
-        boolean success = JerseyJsonLDClient.graphIsUpdatedToTheService(id, body, services.getCoreReadWriteAddress());
-            
-
-       if (!success) {
-           /* TODO: Create prov events from failed updates? */
-           logger.log(Level.WARNING, "Unexpected: Not updated: "+id);
-           return null;
-       } 
-       
-     //  ConceptMapper.addConceptFromReferencedResource(model,id);
-
-       GraphManager.updateModifyDates(id);
-            
-        /* If update is successfull create new prov entity */ 
-        if(ProvenanceManager.getProvMode()) {
-            ProvenanceManager.createProvenanceGraph(id, body, login.getEmail(), "urn:uuid:"+provUUID.toString());
-        }
-
-        
-        return provUUID;
-        
-    }
     
     
 }

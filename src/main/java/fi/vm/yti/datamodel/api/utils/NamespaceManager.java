@@ -304,13 +304,15 @@ public class NamespaceManager {
      */
     public static void renameNamespace(String modelID, String newModelID, LoginSession login) {
 
+
+
         Model newModel = GraphManager.getCoreGraph(modelID);
         Resource modelResource = newModel.getResource(modelID);
         ResourceUtils.renameResource(modelResource,newModelID);
-        ModelManager.updateModel(modelID, newModel , login);
+        // ModelManager.updateModel(modelID, newModel , login);
         GraphManager.removeGraph(modelID);
         
-        /* TODO: GET hasPartGraph and loop resources ... update with new id and update references */
+        /* TODO: NOT WORKING!!! GET hasPartGraph and loop resources ... update with new id and update references */
         
         ProvenanceManager.renameID(modelID, newModelID);
         ServiceDescriptionManager.renameServiceGraphName(modelID, newModelID);
