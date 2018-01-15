@@ -2,22 +2,16 @@ package fi.vm.yti.datamodel.api.config;
 
 import fi.vm.yti.datamodel.api.model.Role;
 import fi.vm.yti.datamodel.api.model.YtiUser;
-import org.apache.http.ssl.SSLContexts;
-import org.apache.http.ssl.TrustStrategy;
 
-import javax.net.ssl.SSLContext;
 import javax.servlet.http.HttpSession;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.security.KeyManagementException;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.cert.X509Certificate;
 import java.util.*;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import static fi.vm.yti.datamodel.api.utils.SSLContextFactory.naiveSSLContext;
 import static java.util.Objects.requireNonNull;
 
 class AuthenticationHandler {
@@ -99,19 +93,6 @@ class AuthenticationHandler {
     private static boolean isAuthenticatedSession(HttpSession session) {
         YtiUser user = getUser(session);
         return user != null && !user.isAnonymous();
-    }
-
-    private static SSLContext naiveSSLContext() {
-
-        TrustStrategy naivelyAcceptingTrustStrategy = (X509Certificate[] chain, String authType) -> true;
-
-        try {
-            return SSLContexts.custom()
-                    .loadTrustMaterial(null, naivelyAcceptingTrustStrategy)
-                    .build();
-        } catch (NoSuchAlgorithmException | KeyManagementException | KeyStoreException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     private static class User {

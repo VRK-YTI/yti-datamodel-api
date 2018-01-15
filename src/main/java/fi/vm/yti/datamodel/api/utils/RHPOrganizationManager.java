@@ -2,40 +2,31 @@ package fi.vm.yti.datamodel.api.utils;
 
 import fi.vm.yti.datamodel.api.config.ApplicationProperties;
 import fi.vm.yti.datamodel.api.config.EndpointServices;
-import java.io.InputStream;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.UUID;
-import java.util.logging.Logger;
-import javax.json.Json;
-import javax.json.JsonArray;
-import javax.json.JsonArrayBuilder;
-import javax.json.JsonObject;
-import javax.json.JsonReader;
-import javax.json.JsonValue;
-import javax.json.JsonValue.ValueType;
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.Response;
-
 import org.apache.jena.query.ParameterizedSparqlString;
 import org.apache.jena.query.Query;
 import org.apache.jena.query.QueryExecution;
 import org.apache.jena.query.QueryExecutionFactory;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
-import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.sparql.vocabulary.FOAF;
 import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.RDF;
-import org.apache.jena.vocabulary.RDFS;
 import org.apache.jena.vocabulary.SKOS;
-import org.apache.jena.web.DatasetAdapter;
-import org.apache.jena.web.DatasetGraphAccessorHTTP;
+
+import javax.json.*;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.Response;
+import java.io.InputStream;
+import java.util.Iterator;
+import java.util.List;
+import java.util.UUID;
+import java.util.logging.Logger;
+
+import static fi.vm.yti.datamodel.api.utils.SSLContextFactory.naiveSSLContext;
 
 /**
  *
@@ -47,7 +38,11 @@ public class RHPOrganizationManager {
     static final private Logger logger = Logger.getLogger(RHPOrganizationManager.class.getName());
 
     public static Response getOrganizations() {
-        Client client = ClientBuilder.newClient();
+
+        Client client = ClientBuilder.newBuilder()
+                .sslContext(naiveSSLContext())
+                .build();
+
         String service = ApplicationProperties.getDefaultGroupManagementAPI() + "organizations";
         WebTarget target = client.target(service);
         return target.request("application/json").get();
