@@ -50,7 +50,7 @@ public class JerseyResponseManager {
     }
 
     public static Response config() {
-        return Response.status(200).entity("{\"groups\":\""+ ApplicationProperties.getDefaultGroupManagementAPI()+"\", \"concepts\":\""+ApplicationProperties.getDefaultTermAPI()+"\"}").build();
+        return Response.status(200).entity("{\"groups\":\""+ ApplicationProperties.getPublicGroupManagementAPI()+"\", \"concepts\":\""+ApplicationProperties.getPublicTermAPI()+"\"}").build();
     }
     
     public static Response langNotDefined() {

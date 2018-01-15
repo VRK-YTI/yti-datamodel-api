@@ -72,4 +72,13 @@ public final class ApplicationProperties {
         return PropertyUtil.getProperty("application.defaultGroupManagementAPI");
     }
 
+    public final static String getPublicGroupManagementAPI() {
+        return PropertyUtil.getProperty("application.publicGroupManagementAPI");
+    }
+
+    public final static String getPublicTermAPI() {
+        return PropertyUtil.getProperty("application.publicTermedAPI");
+    }
+
+
 }
