@@ -491,7 +491,7 @@ public class JerseyJsonLDClient {
             client.register(feature);
 
             WebTarget target = client.target(url)
-                    .queryParam("select","uri,id,properties.prefLabel,properties.definition")
+                    .queryParam("select","uri,id,properties.prefLabel,properties.description")
                     .queryParam("where", "typeId:TerminologicalVocabulary")
                     .queryParam("max", "-1");
             Response response = target.request("application/ld+json").get();
