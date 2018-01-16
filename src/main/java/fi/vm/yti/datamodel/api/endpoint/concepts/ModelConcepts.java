@@ -68,20 +68,9 @@ public class ModelConcepts {
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
 
         String queryString = "CONSTRUCT { "
-                + "?skosCollection skos:member ?concept . "
-                + "?concept skos:inScheme ?scheme . "
                 + "?concept a skos:Concept . "
-                + "?concept termed:id ?conceptId . "
-                + "?concept termed:graph ?graph . "
-                + "?scheme dcterms:title ?schemeTitle . "
-                + "?scheme a skos:ConceptScheme . "
-                + "?scheme termed:id ?schemeId . "
-                + "?scheme termed:graph ?graph . "
-                + "?graph termed:id ?graphId . "
                 + "?concept skos:prefLabel ?label . "
                 + "?concept skos:definition ?definition . "
-                + "?concept prov:generatedAtTime ?time . "
-                + "?concept prov:wasAssociatedWith ?user . "
                 + "} WHERE {"
                 + "GRAPH ?modelParts { "
                 + "?model dcterms:hasPart ?resource . "
@@ -90,12 +79,6 @@ public class ModelConcepts {
                 + "?resource dcterms:subject ?concept ."
                 + "?concept skos:prefLabel ?label . "
                 + "?concept skos:definition ?definition . "
-                + "?concept skos:inScheme ?scheme . "
-                + "OPTIONAL { ?concept prov:generatedAtTime ?time . }"
-                + "OPTIONAL { ?concept prov:wasAssociatedWith ?user . }"
-                + "OPTIONAL { ?scheme dcterms:title ?schemeTitle . }"
-                + "OPTIONAL { ?concept termed:id ?conceptId . }"
-                + "OPTIONAL { ?scheme termed:id ?schemeId . ?scheme termed:graph ?graph . ?graph termed:id ?graphId . }"
                 + "}"
                 + "}";
         
@@ -106,69 +89,11 @@ public class ModelConcepts {
              pss.setIri("concept",id);
          }
 
-        
         pss.setCommandText(queryString);
 
         return JerseyJsonLDClient.constructGraphFromService(pss.toString(), services.getCoreSparqlAddress());
      
   }
  
-  @PUT
-  @ApiOperation(value = "PUT existing concept reference to model", notes = "Adds concept reference to model concetps")
-  @ApiResponses(value = {
-      @ApiResponse(code = 404, message = "No such resource"),
-      @ApiResponse(code = 400, message = "Invalid model supplied"),
-      @ApiResponse(code = 404, message = "Service not found"),
-      @ApiResponse(code = 500, message = "Internal server error")
-  })
-  public Response putConceptToModel(
-      @ApiParam(value = "Concept id", required = true)
-      @QueryParam("id") String id,
-      @ApiParam(value = "Model id", required = true)
-      @QueryParam("model") String model) {
-  
-      if(IDManager.isInvalid(id) || IDManager.isInvalid(model)) {
-          return JerseyResponseManager.invalidIRI();
-      }
-      
-      ConceptMapper.addConceptToLocalSKOSCollection(model,id);
-  
-      return JerseyResponseManager.okEmptyContent();
-  }
-  
-  @DELETE
-  @ApiOperation(value = "Delete concept reference from model", notes = "Delete concept reference from model")
-  @ApiResponses(value = {
-      @ApiResponse(code = 404, message = "No such resource"),
-      @ApiResponse(code = 400, message = "Cannot be removed"),
-      @ApiResponse(code = 404, message = "Service not found"),
-      @ApiResponse(code = 500, message = "Internal server error")
-  })
-  public Response deleteConceptFromModel(
-      @ApiParam(value = "Concept id", required = true)
-      @QueryParam("id") String id,
-      @ApiParam(value = "Model id", required = true)
-      @QueryParam("model") String model,
-      @Context HttpServletRequest request) {
-  
-        /* Check that URIs are valid */
-        if(IDManager.isInvalid(model) || IDManager.isInvalid(id)) {
-            return JerseyResponseManager.invalidIRI();
-        }
-        
-       HttpSession session = request.getSession();
 
-       if(session==null) return JerseyResponseManager.unauthorized();
-
-       LoginSession login = new LoginSession(session);
-
-       if(!login.isLoggedIn() || !login.hasRightToEditModel(model))
-          return JerseyResponseManager.unauthorized();
-      
-      if(ConceptMapper.deleteModelReference(model,id))
-         return JerseyResponseManager.okEmptyContent();
-      else
-         return JerseyResponseManager.depedencies();
-  }
-  
 }
