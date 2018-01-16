@@ -214,21 +214,21 @@ public class GraphManager {
     /**
      * Test if model status restricts removing of the model
      * @param graphIRI IRI of the graph
-     * @return Returns true if model status or resource status is "Draft" or "Recommendation".
+     * @return Returns true if model status or resource status is "DRAFT" or "VALID".
      */
     public static boolean modelStatusRestrictsRemoving(IRI graphIRI) {
 
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         String queryString = " ASK { {"
                 + "GRAPH ?graph { "
-                + "VALUES ?status { \"Draft\" \"Recommendation\" } "
+                + "VALUES ?status { \"DRAFT\" \"VALID\" } "
                 + "?graph owl:versionInfo ?status . }"
                 + "} UNION { "
                 + "GRAPH ?hasPartGraph { "
                 + "?graph dcterms:hasPart ?resource . }"
                 + "GRAPH ?resource { "
                 + "?resource rdfs:isDefinedBy ?graph . "
-                + "VALUES ?status { \"Draft\" \"Recommendation\" } "
+                + "VALUES ?status { \"DRAFT\" \"VALID\" } "
                 + "?resource owl:versionInfo ?status  . "
                 + "}"
                 + "}}";

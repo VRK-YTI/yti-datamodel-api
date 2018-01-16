@@ -70,7 +70,7 @@ public class ReusableClass extends AbstractClass {
         pss.setCommandText(queryString);
         pss.setIri("concept", conceptIRI);
         pss.setIri("model", modelIRI);
-        pss.setLiteral("draft", "Unstable");
+        pss.setLiteral("draft", "DRAFT");
         pss.setLiteral("classLabel", ResourceFactory.createLangLiteral(classLabel, lang));
         String resourceName = LDHelper.resourceName(classLabel);
         pss.setIri("classIRI",LDHelper.resourceIRI(modelIRI.toString(),resourceName));
@@ -102,7 +102,7 @@ public class ReusableClass extends AbstractClass {
 
         pss.setCommandText(queryString);
         pss.setIri("model", modelIRI);
-        pss.setLiteral("draft", "Unstable");
+        pss.setLiteral("draft", "DRAFT");
         pss.setLiteral("classLabel", ResourceFactory.createLangLiteral(classLabel, lang));
         String resourceName = LDHelper.resourceName(classLabel);
         pss.setIri("classIRI",LDHelper.resourceIRI(modelIRI.toString(),resourceName));

@@ -72,7 +72,7 @@ public class ReusablePredicate extends AbstractPredicate {
         pss.setIri("concept", conceptIRI);
         pss.setIri("model", modelIRI);
         pss.setIri("type", typeIRI);
-        pss.setLiteral("draft", "Unstable");
+        pss.setLiteral("draft", "DRAFT");
         pss.setLiteral("predicateLabel", ResourceFactory.createLangLiteral(predicateLabel, lang));
         String predicateName = LDHelper.propertyName(predicateLabel);
         pss.setIri("predicateIRI",LDHelper.resourceIRI(modelIRI.toString(), predicateName));
@@ -106,7 +106,7 @@ public class ReusablePredicate extends AbstractPredicate {
         pss.setCommandText(queryString);
         pss.setIri("model", modelIRI);
         pss.setIri("type", typeIRI);
-        pss.setLiteral("draft", "Unstable");
+        pss.setLiteral("draft", "DRAFT");
         pss.setLiteral("predicateLabel", ResourceFactory.createLangLiteral(predicateLabel, lang));
         String predicateName = LDHelper.propertyName(predicateLabel);
         pss.setIri("predicateIRI",LDHelper.resourceIRI(modelIRI.toString(), predicateName));

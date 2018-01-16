@@ -100,7 +100,7 @@ public class Shape extends AbstractShape {
         pss.setIri("classIRI", classIRI);
         pss.setIri("model", profileIRI);
         pss.setIri("modelService",services.getLocalhostCoreSparqlAddress());
-        pss.setLiteral("draft", "Unstable");
+        pss.setLiteral("draft", "DRAFT");
         pss.setIri("shapeIRI",shapeIRI);
 
         //logger.info(pss.toString());

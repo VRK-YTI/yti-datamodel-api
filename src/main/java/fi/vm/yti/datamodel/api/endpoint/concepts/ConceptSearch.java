@@ -44,7 +44,11 @@ public class ConceptSearch {
           @QueryParam("term") String term,
           @ApiParam(value = "schemeURI")
           @QueryParam("schemeURI") String schemeURI) {
-          
+
+          if(!term.endsWith("*"))  {
+              term+="*";
+      }
+
           return JerseyJsonLDClient.searchConceptFromTermedAPI(term, schemeURI,null);
 
   }

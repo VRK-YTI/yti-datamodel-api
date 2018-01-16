@@ -108,7 +108,7 @@ public class ConceptSuggestion {
                 concept.addProperty(SKOSXL.prefLabel,term);
             //    concept.addProperty(SKOS.inScheme,inScheme);
                 concept.addProperty(RDF.type, SKOS.Concept);
-                concept.addLiteral(statusProp, "Unstable");
+                concept.addLiteral(statusProp, "DRAFT");
                 Property idProp = model.createProperty(LDHelper.getNamespaceWithPrefix("termed")+"id");
                 concept.addProperty(idProp, conceptUUID.toString());
 

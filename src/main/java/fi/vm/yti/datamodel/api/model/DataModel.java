@@ -83,7 +83,7 @@ public class DataModel extends AbstractModel {
 
         pss.setLiteral("prefix", prefix);
         pss.setIri("modelIRI", namespace);
-        pss.setLiteral("draft", "Unstable");
+        pss.setLiteral("draft", "DRAFT");
         pss.setLiteral("mlabel", ResourceFactory.createLangLiteral(label, lang));
         pss.setLiteral("defLang", lang);
 

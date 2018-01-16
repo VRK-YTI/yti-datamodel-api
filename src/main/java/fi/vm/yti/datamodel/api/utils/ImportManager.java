@@ -80,7 +80,7 @@ public class ImportManager {
         pss.setIri("graph", graph);
         pss.setIri("hasPartGraph", graph+"#HasPartGraph");
         pss.setLiteral("date", timestamp);
-        pss.setLiteral("draft", "Unstable");
+        pss.setLiteral("draft", "DRAFT");
         pss.setCommandText(query);
 
         UpdateRequest queryObj = pss.asUpdate();
@@ -247,7 +247,7 @@ public class ImportManager {
 
         pss.setIri("graph", graph);
         pss.setIri("resource", resource);
-        pss.setLiteral("draft", "Unstable");
+        pss.setLiteral("draft", "DRAFT");
         pss.setNsPrefixes(map);
         pss.setNsPrefix("dcterms", "http://purl.org/dc/terms/");
         pss.setNsPrefix("sh", "http://www.w3.org/ns/shacl#");
