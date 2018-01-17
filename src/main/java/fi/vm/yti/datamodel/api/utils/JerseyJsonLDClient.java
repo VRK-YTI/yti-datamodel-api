@@ -451,7 +451,9 @@ public class JerseyJsonLDClient {
             } else {
                 if(IDManager.isValidUrl(conceptURI)) {
                     target = target.queryParam("where","uri:"+conceptURI);
-            }
+            } else {
+                    target = target.queryParam("where","id:"+conceptURI);
+                }
 
             }
 

@@ -64,7 +64,6 @@ public class ConceptSuggestion {
                 @ApiParam(value = "Label", required = true) @QueryParam("label") String label,
 		        @ApiParam(value = "Comment", required = true) @QueryParam("comment") String comment,
                 @ApiParam(value = "Initial language", required = true, allowableValues="fi,en") @QueryParam("lang") String lang,
-                @ApiParam(value = "Broader concept ID") @QueryParam("topConceptID") String topConceptID,
                 @Context HttpServletRequest request) {
 
                 HttpSession session = request.getSession();
@@ -80,13 +79,7 @@ public class ConceptSuggestion {
                         return JerseyResponseManager.invalidIRI();
                  }
                 }
-                
-                if(topConceptID!=null && !topConceptID.equals("undefined")) {
-                    if(IDManager.isInvalid(topConceptID)) {
-                        return JerseyResponseManager.invalidIRI();
-                 }
-                }
-                
+
                 UUID conceptUUID = UUID.randomUUID();
                 UUID termUUID = UUID.randomUUID();
 
@@ -107,13 +100,10 @@ public class ConceptSuggestion {
                 concept.addProperty(idProp, conceptUUID.toString());
                 
                 String modelString = ModelManager.writeModelToString(model);
-                System.out.println(modelString);
                 
                 JerseyJsonLDClient.saveConceptSuggestion(modelString,graphUUID);
 
-                return JerseyResponseManager.okModel(model); 
-                
-              //  return JerseyResponseManager.okUUID(conceptUUID);
+                return JerseyResponseManager.successUuid(conceptUUID);
 
         }
   

@@ -47,14 +47,14 @@ public class Concept {
       @ApiResponse(code = 500, message = "Internal server error")
   })
   public Response concept(
-          @ApiParam(value = "uri") 
-          @QueryParam("uri") String uri,
+          @ApiParam(value = "id")
+          @QueryParam("id") String id,
           @ApiParam(value = "namespace")
           @QueryParam("namespace") String namespace,
           @ApiParam(value = "graphId")
           @QueryParam("graphId") String graphId) {
 
-      return JerseyJsonLDClient.searchConceptFromTermedAPI(null, namespace, uri, graphId);
+      return JerseyJsonLDClient.searchConceptFromTermedAPI(null, namespace, id, graphId);
 
   }
    

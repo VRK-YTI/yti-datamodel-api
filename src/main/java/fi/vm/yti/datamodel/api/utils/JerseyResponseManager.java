@@ -28,7 +28,7 @@ public class JerseyResponseManager {
     public static Response ok(String content, String contentType) {
         return Response.ok().entity(content).type(contentType).build();
     }
-    
+
     public static Response okUUID(UUID uuid) {
         return Response.status(200).entity("{\"@id\":\"urn:uuid:"+uuid+"\"}").build();
     }
