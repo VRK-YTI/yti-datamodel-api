@@ -462,9 +462,13 @@ public class JerseyJsonLDClient {
             Response response = target.request("application/ld+json").get();
 
             Model conceptModel = JerseyJsonLDClient.getJSONLDResponseAsJenaModel(response);
+            conceptModel.add(TermedTerminologyManager.getSchemesAsModelFromTermedAPI());
+
             QueryExecution qexec = QueryExecutionFactory.create(QueryLibrary.skosXlToSkos,conceptModel);
+
             Model simpleSkos = qexec.execConstruct();
             simpleSkos = TermedTerminologyManager.cleanModelDefinitions(simpleSkos);
+            simpleSkos.setNsPrefixes(LDHelper.PREFIX_MAP);
 
             logger.info("TERMED CALL: "+target.getUri().toString());
             

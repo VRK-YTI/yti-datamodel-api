@@ -39,15 +39,20 @@ public class QueryLibrary {
                     "}" +
                     "");
 
-    final public static String skosXlToSkos = LDHelper.expandSparqlQuery(true,
+    final public static String skosXlToSkos = LDHelper.expandSparqlQuery(
             "CONSTRUCT {" +
                     "?concept skos:prefLabel ?label . " +
                     "?concept rdf:type skos:Concept . " +
                     "?concept skos:definition ?definition . " +
+                    "?concept skos:inScheme ?terminology . " +
+                    "?terminology dcterms:title ?title . " +
                     "} WHERE {" +
                     "?concept skosxl:prefLabel ?xlLabel . " +
                     "?concept skos:definition ?definition . " +
+                    "?concept <termed:property:graph> ?graphID . " +
                     "?xlLabel skosxl:literalForm ?label . " +
+                    "OPTIONAL {?terminology <termed:property:graph> ?graphID . " +
+                    "?terminology dcterms:title ?title . }" +
                     "}");
 
     final public static String constructServiceCategories = LDHelper.expandSparqlQuery(true,

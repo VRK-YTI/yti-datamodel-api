@@ -131,7 +131,10 @@ public class TermedTerminologyManager {
             HttpAuthenticationFeature feature = TermedAuthentication.getTermedAuth();
             client.register(feature);
 
-            WebTarget target = client.target(url).queryParam("select","*").queryParam("where", "typeId:TerminologicalVocabulary").queryParam("max", "-1");
+            WebTarget target = client.target(url)
+                    .queryParam("select","uri,id,properties.prefLabel,properties.description")
+                    .queryParam("where", "typeId:TerminologicalVocabulary")
+                    .queryParam("max", "-1");
 
             Response response = target.request("application/rdf+xml").get();
 
@@ -144,6 +147,13 @@ public class TermedTerminologyManager {
 
             Model schemeModel = ModelFactory.createDefaultModel();
             schemeModel.read(response.readEntity(InputStream.class), "urn:yti:terminology");
+
+            // FIXME: This is not the way to remove arbitrary prefixes!
+            schemeModel.removeNsPrefix("j.1");
+            schemeModel.removeNsPrefix("j.0");
+            schemeModel.removeNsPrefix("j.2");
+
+            schemeModel.setNsPrefixes(LDHelper.PREFIX_MAP);
 
             return schemeModel;
 

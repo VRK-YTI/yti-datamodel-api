@@ -61,7 +61,6 @@ public class ConceptSuggestion {
 	public Response newConceptSuggestion(
                 @ApiParam(value = "Model ID") @QueryParam("modelID") String modelID,
                 @ApiParam(value = "GRAPH UUID", required = true) @QueryParam("graphUUID") String graphUUID,
-                @ApiParam(value = "Scheme URI", required = true) @QueryParam("schemeID") String schemeID,
                 @ApiParam(value = "Label", required = true) @QueryParam("label") String label,
 		        @ApiParam(value = "Comment", required = true) @QueryParam("comment") String comment,
                 @ApiParam(value = "Initial language", required = true, allowableValues="fi,en") @QueryParam("lang") String lang,
@@ -75,10 +74,6 @@ public class ConceptSuggestion {
                 LoginSession login = new LoginSession(session);
 
                 if(!login.isLoggedIn()) return JerseyResponseManager.unauthorized();
-                
-                if(IDManager.isInvalid(schemeID)) {
-                    return JerseyResponseManager.invalidIRI();
-                }
                 
                 if(modelID!=null && !modelID.equals("undefined")) {
                     if(IDManager.isInvalid(modelID)) {
@@ -96,9 +91,9 @@ public class ConceptSuggestion {
                 UUID termUUID = UUID.randomUUID();
 
                 Model model = ModelFactory.createDefaultModel();
+
                 Property statusProp = model.createProperty("https://www.w3.org/2003/06/sw-vocab-status/ns#term_status");
                 Resource concept = model.createResource("urn:uuid:"+conceptUUID);
-            //    Resource inScheme = model.createResource(schemeID);
                 Resource term = model.createResource("urn:uuid:"+termUUID);
                 Literal prefLabel = ResourceFactory.createLangLiteral(label, lang);
                 Literal definition = ResourceFactory.createLangLiteral(comment, lang);
@@ -106,27 +101,10 @@ public class ConceptSuggestion {
                 term.addProperty(RDF.type,SKOSXL.Label);
                 concept.addLiteral(SKOS.definition, definition);
                 concept.addProperty(SKOSXL.prefLabel,term);
-            //    concept.addProperty(SKOS.inScheme,inScheme);
                 concept.addProperty(RDF.type, SKOS.Concept);
-                concept.addLiteral(statusProp, "DRAFT");
+                concept.addLiteral(statusProp, "SUGGESTION");
                 Property idProp = model.createProperty(LDHelper.getNamespaceWithPrefix("termed")+"id");
                 concept.addProperty(idProp, conceptUUID.toString());
-
-                /*
-                Model schemeModel = JerseyJsonLDClient.getSchemeAsModelFromTermedAPI(schemeID);
-
-                Property graphProp = schemeModel.createProperty(LDHelper.getNamespaceWithPrefix("termed")+"graph");
-               
-                NodeIterator nodeit = schemeModel.listObjectsOfProperty(graphProp);
-                
-                while(nodeit.hasNext()) {
-                    RDFNode node = nodeit.next();
-                    concept.addProperty(graphProp, node);
-                }
-
-                if(schemeModel!=null) {
-                    model.add(schemeModel);
-                }*/
                 
                 String modelString = ModelManager.writeModelToString(model);
                 System.out.println(modelString);

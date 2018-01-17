@@ -49,7 +49,7 @@ public class ConceptSearch {
 
           if(!term.endsWith("*"))  {
               term+="*";
-      }
+          }
 
           return JerseyJsonLDClient.searchConceptFromTermedAPI(term, namespace,null, graphId);
 
