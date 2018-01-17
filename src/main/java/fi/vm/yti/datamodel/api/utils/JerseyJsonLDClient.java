@@ -590,7 +590,7 @@ public class JerseyJsonLDClient {
             public X509Certificate[] getAcceptedIssuers() { return new X509Certificate[0]; }
 
         }}, new java.security.SecureRandom());
-        return ClientBuilder.newBuilder().sslContext(sslcontext).hostnameVerifier(null).build();
+        return ClientBuilder.newBuilder().sslContext(sslcontext).hostnameVerifier((s1, s2) -> true).build();
     }
     
     
