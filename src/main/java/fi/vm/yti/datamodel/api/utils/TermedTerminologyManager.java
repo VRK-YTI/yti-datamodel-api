@@ -71,7 +71,7 @@ public class TermedTerminologyManager {
             Statement defStat = defStatement.next();
             Parser markdownParser = Parser.builder().build();
             Node defNode = markdownParser.parse(defStat.getString());
-            defStat.changeObject(Jsoup.parse(HtmlRenderer.builder().build().render(defNode)).text());
+            defStat.changeObject(ResourceFactory.createLangLiteral(Jsoup.parse(HtmlRenderer.builder().build().render(defNode)).text(),defStat.getLiteral().getLanguage()));
         }
 
         return objects;
