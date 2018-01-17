@@ -646,9 +646,6 @@ public class GraphManager {
         
         qexec = UpdateExecutionFactory.createRemoteForm(queryObj, services.getTempConceptSparqlUpdateAddress());
         qexec.execute();
-        
-        qexec = UpdateExecutionFactory.createRemoteForm(queryObj, services.getUsersSparqlUpdateAddress());
-        qexec.execute();
             
     }
     

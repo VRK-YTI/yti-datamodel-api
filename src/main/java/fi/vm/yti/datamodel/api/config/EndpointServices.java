@@ -57,14 +57,6 @@ public String getCoreSparqlUpdateAddress() {
     return endpoint+"/core/update";
 }
 
-public String getUsersSparqlAddress() {
-    return endpoint+"/users/sparql";
-}
-
-public String getUsersSparqlUpdateAddress() {
-    return endpoint+"/users/update";
-}
-
 public String getConceptSchemeUri() {
      return scheme;
 }
