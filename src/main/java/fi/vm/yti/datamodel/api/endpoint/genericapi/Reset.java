@@ -7,7 +7,6 @@ package fi.vm.yti.datamodel.api.endpoint.genericapi;
 
 import fi.vm.yti.datamodel.api.config.ApplicationProperties;
 import fi.vm.yti.datamodel.api.utils.GraphManager;
-import fi.vm.yti.datamodel.api.utils.GroupManager;
 import fi.vm.yti.datamodel.api.utils.NamespaceManager;
 import fi.vm.yti.datamodel.api.utils.RHPOrganizationManager;
 import io.swagger.annotations.Api;

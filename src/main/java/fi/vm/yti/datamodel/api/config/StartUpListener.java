@@ -31,7 +31,6 @@ public class StartUpListener implements ServletContextListener {
         logger.log(Level.INFO, "System is starting ...");
 
         initDefaultGraph();
-        initDefaultGroups();
         initDefaultNamespaces();
         initCodeServers();
         initServiceCategories();
@@ -88,21 +87,6 @@ public class StartUpListener implements ServletContextListener {
               }
     }
 
-    private static void initDefaultGroups() {
-         if(GroupManager.compareDefaultGroups()) {
-                logger.log(Level.INFO,"Default groups are initialized!");
-         }
-         else {
-                logger.log(Level.WARNING,"Default groups are NOT initialized!");
-                
-                GroupManager.createDefaultGroups();
-                
-                if(GroupManager.compareDefaultGroups())
-                    logger.log(Level.INFO,"Created default groups!");
-                else
-                    logger.log(Level.WARNING,"Failed to create default groups!");
-              }
-    }
     
     private static void initDefaultNamespaces() {
         

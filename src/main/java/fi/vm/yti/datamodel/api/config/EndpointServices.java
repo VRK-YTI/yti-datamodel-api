@@ -57,14 +57,6 @@ public String getCoreSparqlUpdateAddress() {
     return endpoint+"/core/update";
 }
 
-public String getUsersReadAddress() {
-    return endpoint+"/users/get";
-}
-
-public String getUsersReadWriteAddress() {
-    return endpoint+"/users/data";
-}
-
 public String getUsersSparqlAddress() {
     return endpoint+"/users/sparql";
 }
@@ -88,7 +80,6 @@ public String getTempConceptReadWriteAddress() {
 public String getTempConceptReadSparqlAddress() {
     return endpoint+"/concept/sparql";
 }
-
 
 public String getTempConceptSparqlUpdateAddress() {
     return endpoint+"/concept/update";
