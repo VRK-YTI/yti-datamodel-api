@@ -44,28 +44,20 @@ public class ReusableClass extends AbstractClass {
                 + "?concept skos:prefLabel ?label . "
                 + "?concept skos:definition ?comment . "
                 + "?concept skos:inScheme ?scheme . "
+                + "?scheme a skos:ConceptScheme . "
                 + "?scheme dcterms:title ?title . "
-                + "?scheme termed:id ?schemeId . "
-                + "?scheme termed:graph ?termedGraph . "
-                + "?concept termed:graph ?termedGraph . "
-                + "?termedGraph termed:id ?termedGraphId . "
                 + "} WHERE { "
                 + "BIND(now() as ?creation) "
                 + "BIND(now() as ?modified) "
                 + "?model a ?modelType . "
                 + "?model rdfs:label ?modelLabel . "
-                + "OPTIONAL {"
                 + "?concept a skos:Concept . "
+                + "?concept skos:prefLabel ?label . "
                 + "?concept skos:inScheme ?scheme . "
                 + "?scheme dcterms:title ?title . "
-                + "?scheme a skos:ConceptScheme . "
-                + "{ ?concept skos:prefLabel ?label . }"
-                + "UNION { ?concept skosxl:prefLabel ?literalForm . ?literalForm skosxl:literalForm ?label . }"
-                + "?concept termed:graph ?termedGraph . "
-                + "?termedGraph termed:id ?termedGraphId . "
                 + "OPTIONAL {"
                 + "?concept skos:definition ?comment . } "
-                + "}}";
+                + "}";
 
         pss.setCommandText(queryString);
         pss.setIri("concept", conceptIRI);

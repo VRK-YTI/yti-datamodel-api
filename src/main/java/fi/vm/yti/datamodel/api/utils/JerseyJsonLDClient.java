@@ -242,8 +242,7 @@ public class JerseyJsonLDClient {
          
          try {
          RDFReader reader = model.getReader(Lang.JSONLD.getName());
-         /* TODO: Base uri input? */
-         reader.read(model, (InputStream)response.getEntity(), "http://example.org/");
+           reader.read(model, (InputStream)response.getEntity(), "urn:yti:resource");
          } catch(RiotException ex) {
              logger.info(ex.getMessage());
              return model;
@@ -420,6 +419,67 @@ public class JerseyJsonLDClient {
           return JerseyResponseManager.notAcceptable();
         }
     }
+
+    public static Model searchConceptFromTermedAPIAsModel(String query, String schemeURI, String conceptURI, String graphId) {
+
+        String url = ApplicationProperties.getDefaultTermAPI()+"node-trees";
+
+        try {
+
+            Client client = IgnoreSSLClient(); //ClientBuilder.newClient();
+            HttpAuthenticationFeature feature = TermedAuthentication.getTermedAuth();
+            client.register(feature);
+
+            WebTarget target = client.target(url)
+                    .queryParam("select", "references.prefLabelXl:2,properties.prefLabel,properties.definition")
+                    .queryParam("where", "typeId:Concept")
+                    .queryParam("max", "-1");
+
+            if (graphId != null) {
+                target = target.queryParam("where", "graphId:" + graphId);
+            }
+
+            if (conceptURI == null) {
+                target = target.queryParam("where", "references.prefLabelXl.properties.prefLabel:" + query);
+            } else {
+                if (IDManager.isValidUrl(conceptURI)) {
+                    target = target.queryParam("where", "uri:" + conceptURI);
+                } else {
+                    target = target.queryParam("where", "id:" + conceptURI);
+                }
+
+            }
+
+            if (schemeURI != null && IDManager.isValidUrl(schemeURI)) {
+                target = target.queryParam("where", "graph.uri:" + schemeURI);
+            }
+
+            Response response = target.request("application/ld+json").get();
+
+            Model conceptModel = JerseyJsonLDClient.getJSONLDResponseAsJenaModel(response);
+            conceptModel.add(TermedTerminologyManager.getSchemesAsModelFromTermedAPI());
+
+            QueryExecution qexec = QueryExecutionFactory.create(QueryLibrary.skosXlToSkos, conceptModel);
+
+            Model simpleSkos = qexec.execConstruct();
+            simpleSkos = TermedTerminologyManager.cleanModelDefinitions(simpleSkos);
+            simpleSkos.setNsPrefixes(LDHelper.PREFIX_MAP);
+
+            logger.info("TERMED CALL: " + target.getUri().toString());
+
+            if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
+                logger.log(Level.INFO, response.getStatus() + " from URL: " + url);
+                return null;
+            }
+
+            return simpleSkos;
+        } catch(Exception ex) {
+                 logger.warning(ex.getStackTrace().toString());
+                return null;
+            }
+
+        }
+
     
      /**
      * Returns concepts from Termed api
@@ -429,64 +489,17 @@ public class JerseyJsonLDClient {
      */
     public static Response searchConceptFromTermedAPI(String query, String schemeURI, String conceptURI, String graphId) {
         
-        String url = ApplicationProperties.getDefaultTermAPI()+"node-trees";
-
-        try {
+            Model simpleSkos = searchConceptFromTermedAPIAsModel(query, schemeURI, conceptURI, graphId);
             
-            Client client = IgnoreSSLClient(); //ClientBuilder.newClient();
-            HttpAuthenticationFeature feature = TermedAuthentication.getTermedAuth();
-            client.register(feature);
-
-            WebTarget target = client.target(url)
-                    .queryParam("select","references.prefLabelXl:2,properties.prefLabel,properties.definition")
-                    .queryParam("where", "typeId:Concept")
-                    .queryParam("max", "-1");
-
-            if(graphId!=null) {
-                target = target.queryParam("where", "graphId:"+graphId);
-            }
-
-            if(conceptURI==null) {
-                target = target.queryParam("where", "references.prefLabelXl.properties.prefLabel:"+query);
-            } else {
-                if(IDManager.isValidUrl(conceptURI)) {
-                    target = target.queryParam("where","uri:"+conceptURI);
-            } else {
-                    target = target.queryParam("where","id:"+conceptURI);
-                }
-
-            }
-
-            if(schemeURI!=null && IDManager.isValidUrl(schemeURI)) {
-                target = target.queryParam("where", "graph.uri:"+schemeURI);
-            }
-            
-            Response response = target.request("application/ld+json").get();
-
-            Model conceptModel = JerseyJsonLDClient.getJSONLDResponseAsJenaModel(response);
-            conceptModel.add(TermedTerminologyManager.getSchemesAsModelFromTermedAPI());
-
-            QueryExecution qexec = QueryExecutionFactory.create(QueryLibrary.skosXlToSkos,conceptModel);
-
-            Model simpleSkos = qexec.execConstruct();
-            simpleSkos = TermedTerminologyManager.cleanModelDefinitions(simpleSkos);
-            simpleSkos.setNsPrefixes(LDHelper.PREFIX_MAP);
-
-            logger.info("TERMED CALL: "+target.getUri().toString());
-            
-            if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-               logger.log(Level.INFO, response.getStatus()+" from URL: "+url);
+            if (simpleSkos == null) {
                return JerseyResponseManager.notFound();
             }
 
-            ResponseBuilder rb = Response.status(response.getStatus()); 
-          //  rb.entity(response.readEntity(InputStream.class));
+              ResponseBuilder rb = Response.status(Response.Status.ACCEPTED);
               rb.entity(ModelManager.writeModelToString(simpleSkos));
+
            return rb.build();
-        } catch(Exception ex) {
-          logger.log(Level.WARNING, "Expect the unexpected!", ex);
-          return JerseyResponseManager.notAcceptable();
-        }
+
     }
 
     /**

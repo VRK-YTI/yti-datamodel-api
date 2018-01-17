@@ -92,8 +92,9 @@ public class TermedTerminologyManager {
     public static Model constructCleanedModelFromTermedAPIAndCore(String conceptUri, String modelUri, Query query) {
 
         DatasetAccessor testAcc = DatasetAccessorFactory.createHTTP(services.getCoreReadAddress());
-        Response jerseyResponse = JerseyJsonLDClient.getConceptFromTermedAPI(conceptUri);
-        Model conceptModel = JerseyJsonLDClient.getJSONLDResponseAsJenaModel(jerseyResponse);
+
+        Model conceptModel = JerseyJsonLDClient.searchConceptFromTermedAPIAsModel(null, null, conceptUri, null);
+
         conceptModel.add(testAcc.getModel(modelUri));
 
         QueryExecution qexec = QueryExecutionFactory.create(query,conceptModel);
