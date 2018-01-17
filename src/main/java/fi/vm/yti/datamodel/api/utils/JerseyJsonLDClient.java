@@ -427,7 +427,7 @@ public class JerseyJsonLDClient {
       *              * @param schemeURI ID of the scheme
      * @return Response
      */
-    public static Response searchConceptFromTermedAPI(String query, String schemeURI, String conceptURI) {
+    public static Response searchConceptFromTermedAPI(String query, String schemeURI, String conceptURI, String graphId) {
         
         String url = ApplicationProperties.getDefaultTermAPI()+"node-trees";
 
@@ -441,6 +441,10 @@ public class JerseyJsonLDClient {
                     .queryParam("select","references.prefLabelXl:2,properties.prefLabel,properties.definition")
                     .queryParam("where", "typeId:Concept")
                     .queryParam("max", "-1");
+
+            if(graphId!=null) {
+                target = target.queryParam("where", "graphId:"+graphId);
+            }
 
             if(conceptURI==null) {
                 target = target.queryParam("where", "references.prefLabelXl.properties.prefLabel:"+query);
