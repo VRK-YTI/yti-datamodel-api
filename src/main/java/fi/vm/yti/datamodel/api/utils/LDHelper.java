@@ -16,7 +16,6 @@ import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.jena.assembler.assemblers.DefaultModelAssembler;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIFactory;
 import org.apache.jena.query.ParameterizedSparqlString;
@@ -26,7 +25,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.apache.commons.lang3.text.WordUtils;
 import org.apache.jena.rdf.model.*;
-import org.apache.jena.vocabulary.SKOS;
 import org.glassfish.jersey.uri.UriComponent;
 
 /**
@@ -366,7 +364,7 @@ public class LDHelper {
     }
     
     public static final InputStream getDefaultCodeServers() {
-           return LDHelper.class.getClassLoader().getResourceAsStream("defaultCodeServers.json");
+           return LDHelper.class.getClassLoader().getResourceAsStream("OPHCodeServers.json");
     }
       
     public static final InputStream getDefaultGroupsInputStream() {
