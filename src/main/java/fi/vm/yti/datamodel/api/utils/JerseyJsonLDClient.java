@@ -431,7 +431,7 @@ public class JerseyJsonLDClient {
             client.register(feature);
 
             WebTarget target = client.target(url)
-                    .queryParam("select", "references.prefLabelXl:2,properties.prefLabel,properties.definition")
+                    .queryParam("select", "uri,id,references.prefLabelXl:2,properties.prefLabel,properties.definition")
                     .queryParam("where", "typeId:Concept")
                     .queryParam("max", "-1");
 
@@ -464,6 +464,7 @@ public class JerseyJsonLDClient {
             Model simpleSkos = qexec.execConstruct();
             simpleSkos = TermedTerminologyManager.cleanModelDefinitions(simpleSkos);
             simpleSkos.setNsPrefixes(LDHelper.PREFIX_MAP);
+
 
             logger.info("TERMED CALL: " + target.getUri().toString());
 

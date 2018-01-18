@@ -101,19 +101,23 @@ public class ModelPositions {
            
             String service = services.getCoreReadWriteAddress();
 
-            //TODO: Check that this doesnt remove unnecessary fields such as "?S rdf:type rdfs:Class"
+            Model newPositions = ModelManager.createJenaModelFromJSONLDString(body);
+
+            /* UPDATING EXPORT GRAPH NOT NECESSARY?
             Model oldPositions = GraphManager.getCoreGraph(model+"#PositionGraph");
             Model exportGraph = GraphManager.getCoreGraph(model+"#ExportGraph");
             exportGraph.remove(oldPositions);
-            Model newPositions = ModelManager.createJenaModelFromJSONLDString(body);
             exportGraph.add(newPositions);
+            */
 
-            if(newPositions.size()<1) return JerseyResponseManager.invalidParameter();
+            if(newPositions.size()<1) {
+                return JerseyResponseManager.invalidParameter();
+            }
 
             DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(services.getCoreReadWriteAddress());
             DatasetAdapter adapter = new DatasetAdapter(accessor);
             adapter.putModel(model+"#PositionGraph",newPositions);
-            adapter.putModel(model+"#ExportGraph",exportGraph);
+            // adapter.putModel(model+"#ExportGraph",exportGraph);
 
             return JerseyResponseManager.okEmptyContent();
 
