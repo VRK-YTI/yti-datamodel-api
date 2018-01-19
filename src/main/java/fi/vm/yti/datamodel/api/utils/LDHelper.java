@@ -88,11 +88,30 @@ public class LDHelper {
 
        Iterator<Statement> statements = model.listStatements(literalSelector).toList().iterator();
 
-       while(statements.hasNext()) {
-           Statement stat = statements.next();
-           stat.changeObject(newLiteral);
+       if(!statements.hasNext()) {
+           model.add(res,prop,newLiteral);
+       } else {
+           while (statements.hasNext()) {
+               Statement stat = statements.next();
+               stat.changeObject(newLiteral);
+           }
        }
    }
+
+   public static void rewriteResourceReference(Model model, Resource res, Property prop, Resource newResource) {
+        Selector resourceSelector = new SimpleSelector(res, prop, (Resource) null);
+
+        Iterator<Statement> statements = model.listStatements(resourceSelector).toList().iterator();
+
+        if(!statements.hasNext()) {
+            model.add(res,prop,newResource);
+        } else {
+            while (statements.hasNext()) {
+                Statement stat = statements.next();
+                stat.changeObject(newResource);
+            }
+        }
+    }
 
     public static Property curieToProperty(String curieString) {
         return ResourceFactory.createProperty(curieToURI(curieString));

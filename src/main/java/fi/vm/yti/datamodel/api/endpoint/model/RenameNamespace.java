@@ -78,7 +78,7 @@ public class RenameNamespace {
             return JerseyResponseManager.invalidIRI();
         }
         
-       NamespaceManager.renameNamespace(modelID,newModelID, login);
+       NamespaceManager.renameNamespace(modelID,newModelID);
         
        return JerseyResponseManager.okEmptyContent();
 

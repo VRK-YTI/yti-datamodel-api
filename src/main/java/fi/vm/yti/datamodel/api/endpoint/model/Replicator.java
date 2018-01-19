@@ -20,12 +20,8 @@ import javax.ws.rs.core.Response;
 
 import fi.vm.yti.datamodel.api.config.EndpointServices;
 import fi.vm.yti.datamodel.api.config.LoginSession;
-import fi.vm.yti.datamodel.api.utils.GraphManager;
-import fi.vm.yti.datamodel.api.utils.IDManager;
-import fi.vm.yti.datamodel.api.utils.JerseyJsonLDClient;
-import fi.vm.yti.datamodel.api.utils.ServiceDescriptionManager;
+import fi.vm.yti.datamodel.api.utils.*;
 import org.apache.jena.rdf.model.*;
-import fi.vm.yti.datamodel.api.utils.JerseyResponseManager;
 import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.RDF;
 import io.swagger.annotations.Api;
@@ -52,6 +48,8 @@ public class Replicator {
     @Context ServletContext context;
     EndpointServices services = new EndpointServices();
     private static final Logger logger = Logger.getLogger(Replicator.class.getName());
+    private DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(services.getCoreReadWriteAddress());
+    private DatasetAdapter adapter = new DatasetAdapter(accessor);
    
     @GET
     @ApiOperation(value = "OK to replicate?")
@@ -83,9 +81,6 @@ public class Replicator {
                 @ApiParam(value = "Model ID") 
                 @QueryParam("model") 
                 String model,
-                @ApiParam(value = "Group ID") 
-                @QueryParam("group") 
-                String group,
                 @Context HttpServletRequest request) {
       
       
@@ -99,7 +94,7 @@ public class Replicator {
         
         LoginSession login = new LoginSession(session);
 
-        if(!(login.isLoggedIn() && (login.getEmail().equals("testi.testaaja@example.org") || login.isSuperAdmin()))) {
+        if(!(login.isLoggedIn() && (login.getEmail().equals("ytitestaaja@gmail.com") || login.isSuperAdmin()))) {
             return JerseyResponseManager.unauthorized();
         }
         
@@ -109,118 +104,133 @@ public class Replicator {
             logger.info("Replicating data from "+service);
         }
         
-        IRI modelIRI = null, groupIRI = null;
+        IRI modelIRI = null;
        
         try {
                 if(model!=null && !model.equals("undefined")) modelIRI = IDManager.constructIRI(model);
-                if(group!=null && !group.equals("undefined")) groupIRI = IDManager.constructIRI(group);
         } catch (IRIException e) {
                 logger.log(Level.WARNING, "Parameter is invalid IRI!");
                return JerseyResponseManager.invalidIRI();
         }
         
        String SD = "http://www.w3.org/ns/sparql-service-description#";
-         
-       if(modelIRI==null && groupIRI==null) {
+       Model modelList = JerseyJsonLDClient.getResourceAsJenaModel(service+"serviceDescription");
+
+      if(modelIRI!=null) {
+          Resource modelURI = ResourceFactory.createResource(model);
+          Resource res = modelList.listSubjectsWithProperty(ResourceFactory.createProperty(SD, "name"), modelURI).nextResource();
+          if(res==null) return JerseyResponseManager.invalidParameter();
+          importModel(modelURI, service, res);
+      } else {
                    
-           Model modelList = JerseyJsonLDClient.getResourceAsJenaModel(service+"serviceDescription");
            ResIterator iter = modelList.listResourcesWithProperty(RDF.type, ResourceFactory.createResource(SD+"NamedGraph"));
-           
-           DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(services.getCoreReadWriteAddress());
-           DatasetAdapter adapter = new DatasetAdapter(accessor);
-           
-           DatasetGraphAccessorHTTP conceptAccessor = new DatasetGraphAccessorHTTP(services.getTempConceptReadWriteAddress());
-           DatasetAdapter conceptAdapter = new DatasetAdapter(conceptAccessor);
-           
-           
+
            while (iter.hasNext()) {
+
                 Resource res = iter.nextResource();
                 Resource modelURI = res.getPropertyResourceValue(ResourceFactory.createProperty(SD, "name"));
- 
-                
-                if(GraphManager.isExistingGraph(modelURI.toString())) {
-                    logger.info("Exists! Skipping "+modelURI.toString());
-                } else {
-              
-                 logger.info("---------------------------------------------------------");    
-                 logger.info(modelURI.toString());
-                 
-                 /* Replicate local concepts */
+                importModel(modelURI, service, res);
+           
+       } 
+
+       }
+       
+
+       logger.info("Returning 200 !?!?");
+       return JerseyResponseManager.okEmptyContent();
+
+  }
+
+
+  public void importModel(Resource modelURI, String service, Resource res) {
+
+      if(GraphManager.isExistingGraph(modelURI.toString())) {
+          logger.info("Exists! Skipping "+modelURI.toString());
+      } else {
+
+          logger.info("---------------------------------------------------------");
+          logger.info(modelURI.toString());
+
+                 /* Forget legacy local concepts
                  String localConcepts = service+"exportResource?graph="+UriComponent.encode(modelURI.toString()+"/skos#",UriComponent.Type.QUERY_PARAM)+"&service=concept";
                  Model localConceptModel = JerseyJsonLDClient.getResourceAsJenaModel(localConcepts);
                  conceptAdapter.add(modelURI.toString()+"/skos#",localConceptModel);
-                 
                  Resource modelGROUP = res.getPropertyResourceValue(DCTerms.isPartOf);
+                 */
 
-                 StmtIterator orgIt = res.listProperties(DCTerms.contributor);
+          StmtIterator orgIt = res.listProperties(DCTerms.contributor);
 
-                 List<UUID> orgUUIDs = new ArrayList();
+          List<UUID> orgUUIDs = new ArrayList();
 
-                 if(orgIt.toList().size()==0) {
+          if(orgIt.toList().size()==0) {
 
-                     // Fallback organization "YHT ylläpito"
-                     orgUUIDs.add(UUID.fromString("7d3a3c00-5a6b-489b-a3ed-63bb58c26a63"));
+              // Fallback organization "YHT ylläpito"
+              orgUUIDs.add(UUID.fromString("7d3a3c00-5a6b-489b-a3ed-63bb58c26a63"));
 
-                 } else {
+          } else {
 
-                     while (orgIt.hasNext()) {
-                         orgUUIDs.add(UUID.fromString(orgIt.next().getResource().getLocalName()));
-                     }
+              while (orgIt.hasNext()) {
+                  orgUUIDs.add(UUID.fromString(orgIt.next().getResource().getLocalName()));
+              }
 
-                 }
+          }
 
-                ServiceDescriptionManager.createGraphDescription(modelURI.toString(),null, orgUUIDs);
-                
-                Model exportedModel = JerseyJsonLDClient.getResourceAsJenaModel(service+"exportResource?graph="+modelURI.toString());
-                adapter.add(modelURI.toString(), exportedModel);
-                
-                // HasPartGraph
-                String uri = service+"exportResource?graph="+UriComponent.encode(modelURI.toString()+"#HasPartGraph",UriComponent.Type.QUERY_PARAM);
-     
-                logger.info("HasPartGraph:"+uri);
-                
-                Model hasPartModel = JerseyJsonLDClient.getResourceAsJenaModel(uri);
-                adapter.add(modelURI.toString()+"#HasPartGraph", hasPartModel);
-                
-                // ExportGraph
-                
-                String euri = service+"exportResource?graph="+UriComponent.encode(modelURI.toString()+"#ExportGraph",UriComponent.Type.QUERY_PARAM);
-     
-                logger.info("ExportGraph:"+euri);
-                
-                Model exportModel = JerseyJsonLDClient.getResourceAsJenaModel(euri);
-                adapter.add(modelURI.toString()+"#ExportGraph", exportModel);
-                
-                // PositionGraph
-                
-                String puri = service+"exportResource?graph="+UriComponent.encode(modelURI.toString()+"#PositionGraph",UriComponent.Type.QUERY_PARAM);
-     
-                logger.info("PositionGraph:"+puri);
-                
-                Model positionModel = JerseyJsonLDClient.getResourceAsJenaModel(puri);
-                adapter.add(modelURI.toString()+"#PositionGraph", positionModel);
-                 
-                // Resources
-                
-                
-                NodeIterator nodIter = hasPartModel.listObjectsOfProperty(DCTerms.hasPart);
-                HashMap conceptMap = new HashMap<String, String>();
-                    
-                while(nodIter.hasNext()) {
-                    Resource part = nodIter.nextNode().asResource();
-                    
-                    String resourceURI = service+"exportResource?graph="+UriComponent.encode(part.toString(),UriComponent.Type.QUERY_PARAM);
-                    
-                    logger.info("Resource:"+resourceURI);
-                    
-                    Model resourceModel = JerseyJsonLDClient.getResourceAsJenaModel(resourceURI);
-                    adapter.add(part.toString(), resourceModel);
-                    
-   
+          ServiceDescriptionManager.createGraphDescription(modelURI.toString(), null, orgUUIDs);
+
+          Model exportedModel = JerseyJsonLDClient.getResourceAsJenaModel(service+"exportResource?graph="+modelURI.toString());
+          LDHelper.rewriteResourceReference(exportedModel, ResourceFactory.createResource(modelURI.toString()), DCTerms.isPartOf, ResourceFactory.createResource("http://publications.europa.eu/resource/authority/data-theme/GOVE"));
+
+
+          logger.info("Adding "+modelURI.toString()+" size:"+exportedModel.size());
+          adapter.add(modelURI.toString(), exportedModel);
+
+
+          // HasPartGraph
+          String uri = service+"exportResource?graph="+UriComponent.encode(modelURI.toString()+"#HasPartGraph",UriComponent.Type.QUERY_PARAM);
+
+          logger.info("HasPartGraph:"+uri);
+
+          Model hasPartModel = JerseyJsonLDClient.getResourceAsJenaModel(uri);
+          adapter.add(modelURI.toString()+"#HasPartGraph", hasPartModel);
+
+          // ExportGraph
+
+          String euri = service+"exportResource?graph="+UriComponent.encode(modelURI.toString()+"#ExportGraph",UriComponent.Type.QUERY_PARAM);
+
+          logger.info("ExportGraph:"+euri);
+
+          Model exportModel = JerseyJsonLDClient.getResourceAsJenaModel(euri);
+          adapter.add(modelURI.toString()+"#ExportGraph", exportModel);
+
+          // PositionGraph
+
+          String puri = service+"exportResource?graph="+UriComponent.encode(modelURI.toString()+"#PositionGraph",UriComponent.Type.QUERY_PARAM);
+
+          logger.info("PositionGraph:"+puri);
+
+          Model positionModel = JerseyJsonLDClient.getResourceAsJenaModel(puri);
+          adapter.add(modelURI.toString()+"#PositionGraph", positionModel);
+
+          // Resources
+
+
+          NodeIterator nodIter = hasPartModel.listObjectsOfProperty(DCTerms.hasPart);
+
+          while(nodIter.hasNext()) {
+              Resource part = nodIter.nextNode().asResource();
+
+              String resourceURI = service+"exportResource?graph="+UriComponent.encode(part.toString(),UriComponent.Type.QUERY_PARAM);
+
+              logger.info("Resource:"+resourceURI);
+
+              Model resourceModel = JerseyJsonLDClient.getResourceAsJenaModel(resourceURI);
+
+              adapter.add(part.toString(), resourceModel);
+
                     /*
                     NodeIterator subIter = resourceModel.listObjectsOfProperty(DCTerms.subject);
-                    
-                   
+
+
                          while(subIter.hasNext()) {
                              String coConcept = subIter.nextNode().asResource().toString();
 
@@ -234,19 +244,14 @@ public class Replicator {
                              }
 
                          } */
-                        
-                }
-                
-           }
-           
-       } 
-           
-       logger.info("---------------------------------------------------------");
-       }
-       
 
-       logger.info("Returning 200 !?!?");
-       return JerseyResponseManager.okEmptyContent();
+          }
+
+
+          logger.info("---------------------------------------------------------");
+
+      }
+
 
   }
   

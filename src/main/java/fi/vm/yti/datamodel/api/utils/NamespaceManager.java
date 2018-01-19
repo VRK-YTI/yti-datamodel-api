@@ -13,23 +13,21 @@ import org.apache.jena.query.QueryExecution;
 import org.apache.jena.query.QueryExecutionFactory;
 import org.apache.jena.query.QuerySolution;
 import org.apache.jena.query.ResultSet;
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.rdf.model.*;
+
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.logging.Logger;
 
 import org.apache.jena.iri.IRI;
-import org.apache.jena.rdf.model.Property;
-import org.apache.jena.rdf.model.RDFNode;
-import org.apache.jena.rdf.model.Resource;
-import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.util.ResourceUtils;
+import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
 import org.apache.jena.web.DatasetAdapter;
 import org.apache.jena.web.DatasetGraphAccessorHTTP;
+import org.glassfish.jersey.uri.UriComponent;
 
 /**
  *
@@ -296,57 +294,69 @@ public class NamespaceManager {
 
     }
 
+    public static Model renameObjectNamespace(Model model, String oldNamespace, String newNamespace) {
+        Selector definitionSelector = new SimpleSelector(null, null, (Resource) null);
+        Iterator<Statement> defStatement = model.listStatements(definitionSelector).toList().iterator();
+
+        while(defStatement.hasNext()) {
+            Statement stat = defStatement.next();
+            if(stat.getObject().isResource()) {
+                Resource res = stat.getObject().asResource();
+                String oldName = res.toString();
+                if (oldName.startsWith(oldNamespace)) {
+                    String newResName = oldName.replaceFirst(oldNamespace, newNamespace);
+                    stat.changeObject(ResourceFactory.createResource(newResName));
+                }
+            }
+        }
+        return model;
+    }
+
+
+    public static Model renameResourceName(Model resourceModel, String oldID, String newID) {
+            Resource modelResource = resourceModel.getResource(oldID);
+            ResourceUtils.renameResource(modelResource,newID);
+            return resourceModel;
+    }
+
     /**
      * Renames namespace of the model
      * @param modelID Old model id
      * @param newModelID New model id
-     * @param login Login session
      */
-    public static void renameNamespace(String modelID, String newModelID, LoginSession login) {
+    public static void renameNamespace(String modelID, String newModelID) {
 
-
+        logger.info("Changing "+modelID+" to "+newModelID);
 
         Model newModel = GraphManager.getCoreGraph(modelID);
         Resource modelResource = newModel.getResource(modelID);
         ResourceUtils.renameResource(modelResource,newModelID);
-        // ModelManager.updateModel(modelID, newModel , login);
+        GraphManager.putToGraph(newModel, modelID);
         GraphManager.removeGraph(modelID);
-        
-        /* TODO: NOT WORKING!!! GET hasPartGraph and loop resources ... update with new id and update references */
-        
+
         ProvenanceManager.renameID(modelID, newModelID);
         ServiceDescriptionManager.renameServiceGraphName(modelID, newModelID);
+
+        Model hasPartModel = GraphManager.getCoreGraph(modelID+"#HasPartGraph");
+
+        NodeIterator nodIter = hasPartModel.listObjectsOfProperty(DCTerms.hasPart);
+
+        while(nodIter.hasNext()) {
+            String resourceName = nodIter.nextNode().asResource().toString();
+            String newResourceName = resourceName.replaceFirst(modelID, newModelID);
+            logger.info("Changing "+resourceName+" to "+newResourceName);
+
+            Model resourceModel = GraphManager.getCoreGraph(resourceName);
+            Resource res = resourceModel.getResource(resourceName);
+            ResourceUtils.renameResource(res,newResourceName);
+
+            GraphManager.putToGraph(resourceModel,newResourceName);
+            GraphManager.removeGraph(resourceName);
+            ProvenanceManager.renameID(resourceName, newResourceName);
+
+           }
         
     }
-
-    @Deprecated
-    public static void renameHasPartResources(String graph, String newGraph) {
-        
-        /* Use Jena to change namespace? */
-        
-            String query = 
-                  "DELETE {"
-                +  "GRAPH ?hasPartGraph { "
-                +  "?graph dcterms:hasPart ?resource . }"
-                + "}"
-                + "INSERT { "
-                +  "GRAPH ?hasPartGraph { "
-                +  "?graph dcterms:hasPart ?newIRI . }"
-                + "} "
-                +"WHERE { "
-                + "GRAPH ?graph { "
-                + "?graph a owl:Ontology . "
-                + "} "
-                + "GRAPH ?hasPartGraph { "
-                + "?graph dcterms:hasPart ?resource . "
-                + "FILTER(STRSTARTS(STR(?resource),STR(?graph)))"
-                /* TODO : not working with / namespace ? */
-                + "BIND(STRAFTER(STR(?resource), '#') AS ?localName)"
-                + "BIND(IRI(CONCAT(STR(?newIRI),?localName)) as ?newIRI)}"
-                + "}";
-  
-    }
-
 
 
 }

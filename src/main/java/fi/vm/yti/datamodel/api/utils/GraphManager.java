@@ -78,9 +78,8 @@ public class GraphManager {
      * Creates export graph by joining all the resources to one graph
      * @param graph model IRI that is used to create export graph
      */
-    @Deprecated
     public static void constructExportGraph(String graph) {
-             lock.lock();
+
              String queryString = "CONSTRUCT { "
                 + "?model <http://purl.org/dc/terms/hasPart> ?resource . "    
                 + "?ms ?mp ?mo . "
@@ -112,9 +111,7 @@ public class GraphManager {
         DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(services.getCoreReadWriteAddress());
         DatasetAdapter adapter = new DatasetAdapter(accessor);
         adapter.putModel(graph+"#ExportGraph", exportModel);
-        
-        lock.unlock();
-          
+
     }
 
     public static void initServiceCategories() {
