@@ -82,11 +82,9 @@ public class Migrator {
 
         HttpSession session = request.getSession();
 
-        if(session==null) return JerseyResponseManager.unauthorized();
-
         LoginSession login = new LoginSession(session);
 
-        if(!(login.isLoggedIn() && (login.getEmail().equals("ytitestaaja@gmail.com") || login.isSuperAdmin()))) {
+        if(!login.isSuperAdmin()) {
             return JerseyResponseManager.unauthorized();
         }
 
