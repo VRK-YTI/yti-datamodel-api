@@ -64,7 +64,7 @@ public abstract class AbstractModel {
             logger.warning("Expected only 1 provenance ID, got "+provIdList.size());
             throw new IllegalArgumentException("Expected only 1 provenance ID, got "+provIdList.size());
         } else {
-            this.provUUID = provIdList.get(0).getResource().getURI();
+            this.provUUID = provIdList.get(0).getLiteral().toString();
         }
     }
 
@@ -111,7 +111,7 @@ public abstract class AbstractModel {
 
         this.provUUID = "urn:uuid:"+UUID.randomUUID().toString();
         modelResource.removeAll(DCTerms.identifier);
-        modelResource.addProperty(DCTerms.identifier,ResourceFactory.createResource(provUUID));
+        modelResource.addProperty(DCTerms.identifier,ResourceFactory.createPlainLiteral(provUUID));
 
     }
 

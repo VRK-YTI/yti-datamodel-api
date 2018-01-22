@@ -23,6 +23,7 @@ import javax.servlet.http.HttpSession;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
+import javax.xml.stream.events.Namespace;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -106,16 +107,20 @@ public class Migrator {
 
        String SD = "http://www.w3.org/ns/sparql-service-description#";
        Model modelList = JerseyJsonLDClient.getResourceAsJenaModel(service+"serviceDescription");
+       logger.info("Service description: "+service+"serviceDescription size:"+modelList.size());
 
       if(modelIRI!=null) {
           Resource modelURI = ResourceFactory.createResource(model);
-          Resource res = modelList.listSubjectsWithProperty(ResourceFactory.createProperty(SD, "name"), modelURI).nextResource();
-          if(res==null) return JerseyResponseManager.invalidParameter();
-          migrateModel(modelURI, service, res);
+          ResIterator rit = modelList.listSubjectsWithProperty(ResourceFactory.createProperty(SD, "name"), modelURI);
+          if(rit.hasNext()) {
+              Resource res = rit.nextResource();
+              migrateModel(modelURI, service, res);
+          } else {
+              return JerseyResponseManager.invalidParameter();
+          }
       } else {
            return JerseyResponseManager.invalidParameter();
        }
-
 
        logger.info("Returning 200 !?!?");
        return JerseyResponseManager.okEmptyContent();
@@ -125,12 +130,23 @@ public class Migrator {
 
   public void migrateModel(Resource modelURI, String service, Resource res) {
 
-      if(GraphManager.isExistingGraph(modelURI.toString())) {
+      String oldNamespace = modelURI.toString();
+      String oldNamespaceDomain = oldNamespace.substring(0,oldNamespace.lastIndexOf("/")+1);
+      logger.info("Old namespace domain: "+oldNamespaceDomain);
+
+      Model exportedModel = JerseyJsonLDClient.getResourceAsJenaModel(service+"exportResource?graph="+oldNamespace);
+      String prefix = exportedModel.listStatements(ResourceFactory.createResource(oldNamespace), LDHelper.curieToProperty("dcap:preferredXMLNamespacePrefix"), (Literal) null).nextStatement().getString();
+      logger.info("Model prefix: "+prefix);
+
+      String namespaceDomain = "http://uri.suomi.fi/datamodel/ns/";
+      String newNamespace = namespaceDomain+prefix;
+
+      if(GraphManager.isExistingGraph(newNamespace)) {
           logger.info("Exists! Skipping "+modelURI.toString());
       } else {
 
           logger.info("---------------------------------------------------------");
-          String oldNamespace = modelURI.toString();
+
 
           StmtIterator orgIt = res.listProperties(DCTerms.contributor);
 
@@ -149,15 +165,6 @@ public class Migrator {
 
           }
 
-
-          Model exportedModel = JerseyJsonLDClient.getResourceAsJenaModel(service+"exportResource?graph="+oldNamespace);
-
-          String prefix = exportedModel.listStatements(ResourceFactory.createResource(oldNamespace), LDHelper.curieToProperty("dcap:preferredXMLNamespacePrefix"), (Literal) null).nextStatement().getString();
-
-          logger.info("Model prefix: "+prefix);
-
-          String newNamespace = "http://uri.suomi.fi/datamodel/ns/"+prefix;
-
           LDHelper.rewriteLiteral(exportedModel, ResourceFactory.createResource(oldNamespace), LDHelper.curieToProperty("dcap:preferredXMLNamespaceName"), ResourceFactory.createPlainLiteral(newNamespace+"#"));
 
           String deleteGroup =
@@ -170,16 +177,16 @@ public class Migrator {
                           "    ?model dcterms:isPartOf ?group . " +
                           "    ?group ?p ?o . " +
                           "} INSERT { " +
-                          "    ?model dcterms:isPartOf <http://publications.europa.eu/resource/authority/data-theme/GOVE> "+
+                          "    ?model dcterms:isPartOf <http://publications.europa.eu/resource/authority/data-theme/GOVE> ."+
                           "} WHERE { " +
                           "    ?model a owl:Ontology . " +
                           "    ?model dcterms:isPartOf ?group . " +
                           "    ?group ?p ?o . " +
                           "}";
 
-
           UpdateAction.parseExecute(deleteGroup, exportedModel);
         //  LDHelper.rewriteResourceReference(exportedModel, ResourceFactory.createResource(modelURI.toString()), DCTerms.isPartOf, ResourceFactory.createResource("http://publications.europa.eu/resource/authority/data-theme/GOVE"));
+
 
           String deleteTerminology =
                           "PREFIX skos: <http://www.w3.org/2004/02/skos/core#>" +
@@ -200,30 +207,55 @@ public class Migrator {
 
           UpdateAction.parseExecute(deleteTerminology, exportedModel);
 
+
+
           String deleteRequired =
                   "PREFIX skos: <http://www.w3.org/2004/02/skos/core#>" +
                           "PREFIX dcterms: <http://purl.org/dc/terms/>" +
                           "PREFIX foaf: <http://xmlns.com/foaf/0.1/>" +
                           "PREFIX owl: <http://www.w3.org/2002/07/owl#>" +
                           "PREFIX termed: <http://termed.thl.fi/meta/>" +
+                          "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>" +
+                          "PREFIX dcap: <http://purl.org/ws-mmi-dc/terms/>" +
                           "DELETE {" +
                           "    ?model dcterms:requires ?collection . " +
                           "    ?collection ?p ?o . " +
                           "} WHERE { " +
                           "    ?model a owl:Ontology . " +
                           "    ?model dcterms:requires ?collection . " +
+                          "    FILTER NOT EXISTS { ?collection a rdfs:Resource . }" +
                           "    ?collection ?p ?o . " +
                           "}";
 
 
           UpdateAction.parseExecute(deleteRequired, exportedModel);
 
-          logger.info("Migrating "+oldNamespace+" size:"+exportedModel.size());
+          String updateStatus =
+                  "PREFIX skos: <http://www.w3.org/2004/02/skos/core#>" +
+                          "PREFIX dcterms: <http://purl.org/dc/terms/>" +
+                          "PREFIX foaf: <http://xmlns.com/foaf/0.1/>" +
+                          "PREFIX owl: <http://www.w3.org/2002/07/owl#>" +
+                          "PREFIX termed: <http://termed.thl.fi/meta/>" +
+                          "DELETE {" +
+                          "    ?resource owl:versionInfo ?any . " +
+                          "}"+
+                          "INSERT {" +
+                          "    ?resource owl:versionInfo 'DRAFT' . "+
+                          "} " +
+                          "WHERE { " +
+                          "    ?resource owl:versionInfo ?any . " +
+                          "}";
 
-          exportedModel = NamespaceManager.renameResourceName(exportedModel, oldNamespace, newNamespace);
+          UpdateAction.parseExecute(updateStatus, exportedModel);
 
 
-          adapter.add(newNamespace, exportedModel);
+          logger.info("Migrating "+oldNamespace+" size:"+exportedModel.size()+" to "+newNamespace);
+          exportedModel = NamespaceManager.renameNamespace(exportedModel, oldNamespaceDomain, namespaceDomain);
+
+          //exportedModel.write(System.out, "text/turtle");
+
+          adapter.putModel(newNamespace, exportedModel);
+
 
           ServiceDescriptionManager.createGraphDescription(newNamespace, null, orgUUIDs);
 
@@ -237,11 +269,12 @@ public class Migrator {
           // ExportGraph
 
           String euri = service+"exportResource?graph="+UriComponent.encode(oldNamespace+"#ExportGraph",UriComponent.Type.QUERY_PARAM);
-
           logger.info("ExportGraph:"+euri);
 
-          //Model exportModel = JerseyJsonLDClient.getResourceAsJenaModel(euri);
-          //adapter.add(newNamespace+"#ExportGraph", exportModel);
+          Model exportModel = JerseyJsonLDClient.getResourceAsJenaModel(euri);
+
+          exportModel = NamespaceManager.renameNamespace(exportModel, oldNamespaceDomain, namespaceDomain);
+          adapter.putModel(newNamespace+"#ExportGraph", exportModel);
 
           // PositionGraph
 
@@ -249,36 +282,64 @@ public class Migrator {
 
           logger.info("PositionGraph:"+puri);
 
-         // Model positionModel = JerseyJsonLDClient.getResourceAsJenaModel(puri);
-         // adapter.add(newNamespace+"#PositionGraph", positionModel);
+          Model positionModel = JerseyJsonLDClient.getResourceAsJenaModel(puri);
+
+          if(positionModel!=null && positionModel.size()>1) {
+              positionModel = NamespaceManager.renameNamespace(positionModel, oldNamespaceDomain, namespaceDomain);
+              adapter.putModel(newNamespace + "#PositionGraph", positionModel);
+          }
 
           // Resources
 
           NodeIterator nodIter = hasPartModel.listObjectsOfProperty(DCTerms.hasPart);
 
+
           while(nodIter.hasNext()) {
               Resource part = nodIter.nextNode().asResource();
               String oldName = part.toString();
-              String resourceURI = service+"exportResource?graph="+UriComponent.encode(oldName,UriComponent.Type.QUERY_PARAM);
 
-              Model resourceModel = JerseyJsonLDClient.getResourceAsJenaModel(resourceURI);
+              if (oldName.startsWith(oldNamespace)) {
 
-              String newName = part.toString().replaceFirst(oldNamespace, newNamespace);
+                  String resourceURI = service + "exportResource?graph=" + UriComponent.encode(oldName, UriComponent.Type.QUERY_PARAM);
 
-              resourceModel = NamespaceManager.renameObjectNamespace(resourceModel, oldNamespace, newNamespace);
-              resourceModel = NamespaceManager.renameResourceName(resourceModel, oldName, newName);
+                  Model resourceModel = JerseyJsonLDClient.getResourceAsJenaModel(resourceURI);
+                  String newName = oldName.replaceFirst(oldNamespace, newNamespace);
 
-              adapter.add(newName, resourceModel);
+                  resourceModel = NamespaceManager.renameNamespace(resourceModel, oldNamespaceDomain, namespaceDomain);
 
-              logger.info("Migrated resource:"+resourceURI);
+                  // resourceModel.write(System.out, "text/turtle");
+
+                  String deleteLocalSkos =
+                          "PREFIX skos: <http://www.w3.org/2004/02/skos/core#>" +
+                                  "PREFIX dcterms: <http://purl.org/dc/terms/>" +
+                                  "PREFIX foaf: <http://xmlns.com/foaf/0.1/>" +
+                                  "PREFIX owl: <http://www.w3.org/2002/07/owl#>" +
+                                  "PREFIX termed: <http://termed.thl.fi/meta/>" +
+                                  "INSERT {" +
+                                  "    ?collection dcterms:title 'Sisäinen käsitteistö'@fi . " +
+                                  "} WHERE { " +
+                                  "    ?resource skos:inScheme ?collection . " +
+                                  "    FILTER NOT EXISTS{?collection dcterms:title ?o . }" +
+                                  "}";
+
+                  UpdateAction.parseExecute(deleteLocalSkos, resourceModel);
+
+                  UpdateAction.parseExecute(updateStatus, resourceModel);
+
+                  adapter.putModel(newName, resourceModel);
+
+                  logger.info("Migrated resource " + oldName + " to " + newName);
+              } else {
+                  logger.warning("Reference to external resource " + oldName);
+              }
           }
 
           // Creating new HasPartGraph
-          hasPartModel = NamespaceManager.renameObjectNamespace(hasPartModel, oldNamespace, newNamespace);
-          hasPartModel = NamespaceManager.renameResourceName(hasPartModel, oldNamespace, newNamespace);
-          adapter.add(newNamespace+"#HasPartGraph", hasPartModel);
+          hasPartModel = NamespaceManager.renameNamespace(hasPartModel, oldNamespaceDomain, namespaceDomain);
+          hasPartModel.write(System.out,"text/turtle");
+          adapter.putModel(newNamespace+"#HasPartGraph", hasPartModel);
 
-          GraphManager.constructExportGraph(newNamespace);
+          // GraphManager.constructExportGraph(newNamespace);
 
 
           logger.info("---------------------------------------------------------");

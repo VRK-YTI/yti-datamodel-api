@@ -50,7 +50,7 @@ public class AbstractPredicate extends AbstractResource {
         if(provIdList == null || provIdList.size()==0 || provIdList.size()>1) {
             throw new IllegalArgumentException("Expected only 1 provenance ID, got "+provIdList.size());
         } else {
-            this.provUUID = provIdList.get(0).getResource().getURI();
+            this.provUUID = provIdList.get(0).getLiteral().toString();
         }
     }
 
@@ -79,7 +79,7 @@ public class AbstractPredicate extends AbstractResource {
 
         this.provUUID = "urn:uuid:"+UUID.randomUUID().toString();
         predicateResource.removeAll(DCTerms.identifier);
-        predicateResource.addProperty(DCTerms.identifier,ResourceFactory.createResource(provUUID));
+        predicateResource.addProperty(DCTerms.identifier,ResourceFactory.createPlainLiteral(provUUID));
 
     }
 

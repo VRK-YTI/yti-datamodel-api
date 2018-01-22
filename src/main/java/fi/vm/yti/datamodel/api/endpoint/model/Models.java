@@ -18,6 +18,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 
+import fi.vm.yti.datamodel.api.config.ApplicationProperties;
 import fi.vm.yti.datamodel.api.config.LoginSession;
 import fi.vm.yti.datamodel.api.config.EndpointServices;
 import fi.vm.yti.datamodel.api.model.DataModel;
@@ -101,6 +102,8 @@ public class Models {
             /* TODO: Create Namespace service? */
             DatasetAccessor accessor = DatasetAccessorFactory.createHTTP(graphService);
             Model model = accessor.getModel(id);
+
+            model.write(System.out, "text/turtle");
             
             if(model==null) {
                 return JerseyResponseManager.notFound();
@@ -305,7 +308,7 @@ public class Models {
        if(!login.isLoggedIn() || !login.hasRightToEditModel(id))
           return JerseyResponseManager.unauthorized();
        
-       if(GraphManager.modelStatusRestrictsRemoving(modelIRI)) {
+       if(!ApplicationProperties.getDebugMode() && GraphManager.modelStatusRestrictsRemoving(modelIRI)) {
           return JerseyResponseManager.cannotRemove();
        }
        

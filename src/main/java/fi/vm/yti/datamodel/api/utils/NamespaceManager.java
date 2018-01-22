@@ -312,18 +312,87 @@ public class NamespaceManager {
         return model;
     }
 
+    public static Model renameResourceNamespace(Model model, String oldNamespace, String newNamespace) {
+        Selector definitionSelector = new SimpleSelector(ResourceFactory.createResource(oldNamespace), null, (Resource) null);
+        Iterator<Statement> defStatement = model.listStatements(definitionSelector).toList().iterator();
 
-    public static Model renameResourceName(Model resourceModel, String oldID, String newID) {
-            Resource modelResource = resourceModel.getResource(oldID);
-            ResourceUtils.renameResource(modelResource,newID);
-            return resourceModel;
+        while(defStatement.hasNext()) {
+            Statement stat = defStatement.next();
+            Resource res = stat.getSubject();
+            String oldName = res.toString();
+            if (oldName.startsWith(oldNamespace)) {
+                String newResName = oldName.replaceFirst(oldNamespace, newNamespace);
+                stat.remove();
+                model.add(ResourceFactory.createResource(newResName), stat.getPredicate(), stat.getObject());
+            }
+        }
+        return model;
     }
+
+
+    public static Model renameNamespace(Model model, String oldNamespace, String newNamespace) {
+        // Goes trough all triples in model
+        Selector selector = new SimpleSelector();
+        Iterator<Statement> tripleIterator = model.listStatements(selector).toList().iterator();
+
+        Map<String,String> nsMap = model.getNsPrefixMap();
+
+        for (Map.Entry<String, String> entry : nsMap.entrySet()) {
+            String value = entry.getValue();
+            if(value.contains(oldNamespace)) {
+                entry.setValue(value.replaceFirst(oldNamespace, newNamespace));
+            }
+        }
+
+        model.setNsPrefixes(nsMap);
+
+        while(tripleIterator.hasNext()) {
+            Statement triple = tripleIterator.next();
+            Resource res = triple.getSubject();
+            String oldName = res.toString();
+            RDFNode objectNode = triple.getObject();
+            // If subject has old namespace
+            if (oldName.startsWith(oldNamespace)) {
+                String newResName = oldName.replaceFirst(oldNamespace, newNamespace);
+                if(objectNode.isResource() && !objectNode.isAnon()) {
+                    String oldObjectName = triple.getObject().asResource().toString();
+                    // If both subject and object has old namespace
+                    if (oldObjectName.startsWith(oldNamespace)) {
+                        String newObjectName = oldObjectName.replaceFirst(oldNamespace, newNamespace);
+                        model.add(ResourceFactory.createResource(newResName), triple.getPredicate(), ResourceFactory.createResource(newObjectName));
+                    } else {
+                        // Object is some other resource
+                        model.add(ResourceFactory.createResource(newResName), triple.getPredicate(), triple.getObject());
+                    }
+                } else {
+                    // Object is literal, change only resource name
+                    model.add(ResourceFactory.createResource(newResName), triple.getPredicate(), triple.getObject());
+                }
+                triple.remove();
+            } else {
+                // Subject is something else, check object
+                if(objectNode.isResource() && !objectNode.isAnon()) {
+                    String oldObjectName = objectNode.asResource().toString();
+                    // If only object has old namespace
+                    if (oldObjectName.startsWith(oldNamespace)) {
+                        String newObjectName = oldObjectName.replaceFirst(oldNamespace, newNamespace);
+                        triple.changeObject(ResourceFactory.createResource(newObjectName));
+                    }
+                }
+            }
+        }
+
+        return model;
+    }
+
+
 
     /**
      * Renames namespace of the model
      * @param modelID Old model id
      * @param newModelID New model id
      */
+    @Deprecated
     public static void renameNamespace(String modelID, String newModelID) {
 
         logger.info("Changing "+modelID+" to "+newModelID);
