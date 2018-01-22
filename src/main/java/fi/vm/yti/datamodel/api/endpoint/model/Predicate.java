@@ -147,13 +147,13 @@ public class Predicate {
       try {
       HttpSession session = request.getSession();
 
-      if(session==null) return JerseyResponseManager.unauthorized();
-
       LoginSession login = new LoginSession(session);
 
-      if(!login.isLoggedIn() || !login.hasRightToEditModel(model))
-          return JerseyResponseManager.unauthorized();
-
+      if(!login.isSuperAdmin()) {
+          if (!login.isLoggedIn() || !login.hasRightToEditModel(model)) {
+              return JerseyResponseManager.unauthorized();
+          }
+      }
                 
         IRI modelIRI,idIRI,oldIdIRI = null; 
         
@@ -180,9 +180,11 @@ public class Predicate {
 
             ReusablePredicate updatePredicate = new ReusablePredicate(body);
 
-            if(!login.isUserInOrganization(updatePredicate.getOrganizations())) {
-                logger.info("User is not in organization");
-                return JerseyResponseManager.unauthorized();
+            if(!login.isSuperAdmin()) {
+                if (!login.isUserInOrganization(updatePredicate.getOrganizations())) {
+                    logger.info("User is not in organization");
+                    return JerseyResponseManager.unauthorized();
+                }
             }
 
             /* Rename ID if oldIdIRI exists */
@@ -259,8 +261,6 @@ public class Predicate {
       try {
           HttpSession session = request.getSession();
 
-          if(session==null) return JerseyResponseManager.unauthorized();
-
           LoginSession login = new LoginSession(session);
 
           if(!login.isLoggedIn()) {
@@ -275,9 +275,11 @@ public class Predicate {
                return JerseyResponseManager.usedIRI();
             }
 
-          if(!login.isUserInOrganization(newPredicate.getOrganizations())) {
-              logger.info("User is not in organization");
-              return JerseyResponseManager.unauthorized();
+          if(!login.isSuperAdmin()) {
+              if (!login.isUserInOrganization(newPredicate.getOrganizations())) {
+                  logger.info("User is not in organization");
+                  return JerseyResponseManager.unauthorized();
+              }
           }
            
            String provUUID = newPredicate.getProvUUID();
@@ -337,8 +339,11 @@ public class Predicate {
 
        LoginSession login = new LoginSession(session);
 
-       if(!login.isLoggedIn() || !login.hasRightToEditModel(model))
-          return JerseyResponseManager.unauthorized();
+      if(!login.isSuperAdmin()) {
+          if (!login.isLoggedIn() || !login.hasRightToEditModel(model)) {
+              return JerseyResponseManager.unauthorized();
+          }
+      }
        
         /* If Predicate is defined in the model */
         if(id.startsWith(model)) {

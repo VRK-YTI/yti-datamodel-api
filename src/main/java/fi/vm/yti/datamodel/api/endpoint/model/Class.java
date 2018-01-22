@@ -148,12 +148,14 @@ public class Class {
       try {
       HttpSession session = request.getSession();
 
-      if(session==null) return JerseyResponseManager.unauthorized();
-
       LoginSession login = new LoginSession(session);
 
-      if(!login.isLoggedIn() || !login.hasRightToEditModel(model))
-          return JerseyResponseManager.unauthorized();
+      if(!login.isSuperAdmin()){
+          if(!login.isLoggedIn() || !login.hasRightToEditModel(model)) {
+              return JerseyResponseManager.unauthorized();
+          }
+      }
+
 
         IRI modelIRI,idIRI,oldIdIRI = null;
         
@@ -180,9 +182,11 @@ public class Class {
 
             ReusableClass updateClass = new ReusableClass(body);
 
-            if(!login.isUserInOrganization(updateClass.getOrganizations())) {
-                logger.info("User is not in organization");
-                return JerseyResponseManager.unauthorized();
+            if(!login.isSuperAdmin()) {
+                if (!login.isUserInOrganization(updateClass.getOrganizations())) {
+                    logger.info("User is not in organization");
+                    return JerseyResponseManager.unauthorized();
+                }
             }
 
             /* Rename ID if oldIdIRI exists */
@@ -260,8 +264,6 @@ public class Class {
 
         HttpSession session = request.getSession();
 
-        if(session==null) return JerseyResponseManager.unauthorized();
-
         LoginSession login = new LoginSession(session);
 
         if(!login.isLoggedIn()) {
@@ -276,9 +278,11 @@ public class Class {
                return JerseyResponseManager.usedIRI();
         }
 
-        if(!login.isUserInOrganization(newClass.getOrganizations())) {
-            logger.info("User is not in organization");
-            return JerseyResponseManager.unauthorized();
+        if(!login.isSuperAdmin()) {
+            if (!login.isUserInOrganization(newClass.getOrganizations())) {
+                logger.info("User is not in organization");
+                return JerseyResponseManager.unauthorized();
+            }
         }
 
         String provUUID = newClass.getProvUUID();
@@ -337,12 +341,13 @@ public class Class {
       
        HttpSession session = request.getSession();
 
-       if(session==null) return JerseyResponseManager.unauthorized();
-
        LoginSession login = new LoginSession(session);
 
-       if(!login.isLoggedIn() || !login.hasRightToEditModel(model))
-          return JerseyResponseManager.unauthorized();
+      if(!login.isSuperAdmin()) {
+          if (!login.isLoggedIn() || !login.hasRightToEditModel(model)) {
+              return JerseyResponseManager.unauthorized();
+          }
+      }
        
        /* If Class is defined in the model */
        if(id.startsWith(model)) {

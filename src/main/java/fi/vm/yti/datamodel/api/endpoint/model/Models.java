@@ -161,26 +161,30 @@ public class Models {
 
       HttpSession session = request.getSession();
 
-      if(session==null) return JerseyResponseManager.unauthorized();
-
       LoginSession login = new LoginSession(session);
 
-      if(!login.isLoggedIn())
+      if(!login.isLoggedIn()) {
           return JerseyResponseManager.unauthorized();
+      }
 
       try {
 
           DataModel newVocabulary = new DataModel(body);
 
-          logger.info("Getting old vocabulary:"+newVocabulary.getId());
+          logger.info("Getting old vocabulary:" + newVocabulary.getId());
           DataModel oldVocabulary = new DataModel(newVocabulary.getIRI());
 
-          if(!login.isUserInOrganization(oldVocabulary.getOrganizations())) {
-              return JerseyResponseManager.unauthorized();
-          }
-
-          if(!login.isUserInOrganization(newVocabulary.getOrganizations())) {
-              return JerseyResponseManager.unauthorized();
+          if (!login.isSuperAdmin()) {
+              if (!login.isUserInOrganization(oldVocabulary.getOrganizations())) {
+                  logger.info("User is not existing organisations");
+                  return JerseyResponseManager.unauthorized();
+              }
+              if (!login.isUserInOrganization(newVocabulary.getOrganizations())) {
+                  logger.info("User is not new models organisations");
+                  return JerseyResponseManager.unauthorized();
+              }
+         } else {
+              logger.info("Updating "+graph+" as superuser");
           }
 
           UUID provUUID = UUID.fromString(newVocabulary.getProvUUID().replaceFirst("urn:uuid:",""));
@@ -221,8 +225,6 @@ public class Models {
 
       HttpSession session = request.getSession();
 
-      if(session==null) return JerseyResponseManager.unauthorized();
-
       LoginSession login = new LoginSession(session);
 
       if(!login.isLoggedIn()) {
@@ -233,9 +235,13 @@ public class Models {
 
           DataModel newVocabulary = new DataModel(body);
 
-          if(!login.isUserInOrganization(newVocabulary.getOrganizations())) {
-              logger.info("User is not in organization");
-              return JerseyResponseManager.unauthorized();
+          if (!login.isSuperAdmin()) {
+              if(!login.isUserInOrganization(newVocabulary.getOrganizations())) {
+                  logger.info("User is not in organization");
+                  return JerseyResponseManager.unauthorized();
+              }
+          } else {
+              logger.info("Creating "+newVocabulary.getId()+" as superuser");
           }
 
           if(GraphManager.isExistingGraph(newVocabulary.getId())) {
@@ -300,13 +306,14 @@ public class Models {
        if(!GraphManager.isExistingGraph(modelIRI)) {
            return JerseyResponseManager.notFound();
        }
-       
-       if(session==null) return JerseyResponseManager.unauthorized();
 
        LoginSession login = new LoginSession(session);
 
-       if(!login.isLoggedIn() || !login.hasRightToEditModel(id))
-          return JerseyResponseManager.unauthorized();
+      if(!login.isSuperAdmin()) {
+          if (!login.isLoggedIn() || !login.hasRightToEditModel(id)) {
+              return JerseyResponseManager.unauthorized();
+          }
+      }
        
        if(!ApplicationProperties.getDebugMode() && GraphManager.modelStatusRestrictsRemoving(modelIRI)) {
           return JerseyResponseManager.cannotRemove();
