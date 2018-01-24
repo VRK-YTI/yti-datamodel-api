@@ -15,6 +15,9 @@ import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
 import org.apache.jena.query.*;
+import org.apache.jena.rdf.model.Property;
+import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.update.UpdateExecutionFactory;
 import org.apache.jena.update.UpdateProcessor;
 import org.apache.jena.update.UpdateRequest;
@@ -30,6 +33,8 @@ public class ServiceDescriptionManager {
     
     static EndpointServices services = new EndpointServices();
     static final private Logger logger = Logger.getLogger(ServiceDescriptionManager.class.getName());
+    public static final Property name = ResourceFactory.createProperty("http://www.w3.org/ns/sparql-service-description#", "name");
+    public static final Resource NamedGraph = ResourceFactory.createResource("http://www.w3.org/ns/sparql-service-description#NamedGraph");
 
     /**
      * Updates modified time to service description

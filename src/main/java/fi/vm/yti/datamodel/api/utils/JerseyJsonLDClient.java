@@ -11,6 +11,8 @@ import com.github.jsonldjava.core.JsonLdError;
 import com.github.jsonldjava.core.JsonLdOptions;
 import com.github.jsonldjava.core.JsonLdProcessor;
 import com.github.jsonldjava.utils.JsonUtils;
+import org.apache.jena.atlas.lib.Sink;
+import org.apache.jena.query.*;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.RDFReader;
@@ -35,15 +37,14 @@ import org.apache.jena.atlas.json.JSON;
 import org.apache.jena.atlas.json.JsonObject;
 import org.apache.jena.atlas.json.JsonValue;
 import org.apache.jena.atlas.web.ContentType;
-import org.apache.jena.query.DatasetAccessor;
-import org.apache.jena.query.DatasetAccessorFactory;
-import org.apache.jena.query.Query;
-import org.apache.jena.query.QueryExecution;
-import org.apache.jena.query.QueryExecutionFactory;
+import org.apache.jena.rdf.model.RDFReaderF;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.riot.RDFLanguages;
 import org.apache.jena.riot.RiotException;
+import org.apache.jena.riot.adapters.RDFReaderFactoryRIOT;
+import org.apache.jena.riot.lang.SinkQuadsToDataset;
+import org.apache.jena.sparql.core.Quad;
 import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
 import org.glassfish.jersey.uri.UriComponent;
 import org.glassfish.jersey.client.ClientProperties;
@@ -59,6 +60,7 @@ public class JerseyJsonLDClient {
     
     static final private Logger logger = Logger.getLogger(JerseyJsonLDClient.class.getName());
     static final private EndpointServices services = new EndpointServices();
+
 
     /**
      * Reads boolean from any url or returns false
@@ -251,7 +253,60 @@ public class JerseyJsonLDClient {
          return model;
         
     }
-    
+
+
+    /**
+     * Returns Jena model from the service
+     * @param service ID of the resource
+     * @return Model
+     */
+    public static Response getGraphsAsResponse(String service, String ctype) {
+
+        Client client = ClientBuilder.newClient();
+        WebTarget target = client.target(services.getEndpoint()+"/"+service+"/");
+        Response response = target.request(ctype).get();
+
+        logger.info(services.getEndpoint()+"/"+service+"/ response: "+ response.getStatus());
+
+        return response;
+
+    }
+
+    /**
+     * Returns Jena model from the service
+     * @param serviceURL ID of the resource
+     * @return Model
+     */
+    public static Response getExternalGraphsAsResponse(String serviceURL) {
+
+        Client client = ClientBuilder.newClient();
+        WebTarget target = client.target(serviceURL);
+        Response response = target.request("text/trig").get();
+
+        logger.info(serviceURL+"/ response: "+ response.getStatus());
+
+        return response;
+
+    }
+
+    /**
+     * Returns JENA model from TRIG Response
+     * @param serviceURL  Response object
+     * @return          Jena model parsed from Reponse entity or empty model
+     */
+    public static Dataset getExternalTRIGDataset(String serviceURL) {
+        Response response = getExternalGraphsAsResponse(serviceURL);
+        Dataset dataset = DatasetFactory.create();
+        try {
+            RDFDataMgr.read(dataset, response.readEntity(InputStream.class), Lang.TRIG);
+        } catch(Exception ex) {
+            logger.info(ex.getMessage());
+            return dataset;
+        }
+        return dataset;
+    }
+
+
     /**
      * Returns Jena model from the resource graph
      * @param resourceURI ID of the resource

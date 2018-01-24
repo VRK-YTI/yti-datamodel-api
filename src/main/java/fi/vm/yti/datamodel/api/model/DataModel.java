@@ -24,6 +24,7 @@ public class DataModel extends AbstractModel {
         super(graphId);
     }
 
+
     public DataModel(String jsonld) throws IllegalArgumentException {
         super(ModelManager.createJenaModelFromJSONLDString(jsonld));
     }

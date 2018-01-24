@@ -6,6 +6,8 @@ package fi.vm.yti.datamodel.api.utils;
 import fi.vm.yti.datamodel.api.config.ApplicationProperties;
 import fi.vm.yti.datamodel.api.config.EndpointServices;
 import org.apache.jena.query.ParameterizedSparqlString;
+import org.apache.jena.rdf.model.Property;
+import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.update.UpdateExecutionFactory;
 import org.apache.jena.update.UpdateProcessor;
 import org.apache.jena.update.UpdateRequest;
@@ -25,7 +27,9 @@ public class ProvenanceManager {
  
     static EndpointServices services = new EndpointServices();
     private static final Logger logger = Logger.getLogger(ProvenanceManager.class.getName());
-    
+    public static final Property generatedAtTime = ResourceFactory.createProperty("http://www.w3.org/ns/prov#", "generatedAtTime");
+
+
     public static boolean getProvMode() {
         return ApplicationProperties.getProvenanceMode();
     }

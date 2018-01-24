@@ -129,6 +129,12 @@ public abstract class AbstractModel {
         Model oldModel = adapter.getModel(getId());
         adapter.putModel(getId(), asGraph());
         Model exportModel = adapter.getModel(getId()+"#ExportGraph");
+
+        // OMG: Model.remove() doesnt remove RDFLists
+        Statement languageStatement = exportModel.getRequiredProperty(ResourceFactory.createResource(getId()), DCTerms.language);
+        RDFList languageList = languageStatement.getObject().as(RDFList.class);
+        languageList.removeList();
+
         exportModel.remove(oldModel);
         exportModel.add(asGraph());
         adapter.putModel(getId()+"#ExportGraph", exportModel);

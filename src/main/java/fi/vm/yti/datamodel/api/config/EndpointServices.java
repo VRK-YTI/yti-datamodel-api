@@ -20,6 +20,8 @@ public EndpointServices() {
     this.scheme = ApplicationProperties.getSchemeId();
 }
 
+public String getEndpoint() { return this.endpoint; }
+
 public String getCoreReadAddress() {
     return endpoint+"/core/get";
 }
