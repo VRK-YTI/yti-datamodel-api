@@ -3,6 +3,10 @@ package fi.vm.yti.datamodel.api.endpoint.genericapi;
 import fi.vm.yti.datamodel.api.config.EndpointServices;
 import fi.vm.yti.datamodel.api.utils.*;
 import io.swagger.annotations.*;
+import org.apache.jena.atlas.web.ContentType;
+import org.apache.jena.riot.Lang;
+import org.apache.jena.riot.LangBuilder;
+import org.apache.jena.riot.RDFLanguages;
 
 import javax.servlet.ServletContext;
 import javax.ws.rs.GET;
@@ -34,7 +38,13 @@ public class ExportGraphs {
     public Response json(
             @ApiParam(value = "Requested resource", required = true, allowableValues = "core,prov") @QueryParam("service") String service,
             @ApiParam(value = "Content-type", required = true, allowableValues = "application/ld+json,text/triq") @QueryParam("content-type") String ctype) {
-            
+
+            Lang clang = RDFLanguages.contentTypeToLang(ctype);
+
+            if(clang==null) {
+                return JerseyResponseManager.invalidParameter();
+            }
+
             ctype = ctype.replace(" ", "+");
 
             return JerseyJsonLDClient.getGraphsAsResponse(service, ctype);

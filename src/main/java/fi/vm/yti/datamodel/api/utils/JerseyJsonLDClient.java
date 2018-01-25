@@ -16,11 +16,8 @@ import org.apache.jena.query.*;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.RDFReader;
-import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+
+import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
@@ -30,6 +27,7 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.StatusType;
@@ -264,11 +262,25 @@ public class JerseyJsonLDClient {
 
         Client client = ClientBuilder.newClient();
         WebTarget target = client.target(services.getEndpoint()+"/"+service+"/");
-        Response response = target.request(ctype).get();
+        Response response = target.request().accept(ctype).get();
 
-        logger.info(services.getEndpoint()+"/"+service+"/ response: "+ response.getStatus());
+        logger.info(ctype+" from "+services.getEndpoint()+"/"+service+"/ response: "+ response.getStatus());
 
-        return response;
+        PushbackInputStream input = new PushbackInputStream(response.readEntity(InputStream.class));
+
+        try {
+            int test;
+            test = input.read();
+            if(test == -1) {
+                return Response.noContent().build();
+            } else {
+                input.unread(test);
+                return Response.ok(input).build();
+            }
+        } catch(IOException ex) {
+            return Response.noContent().build();
+        }
+
 
     }
 
@@ -281,9 +293,9 @@ public class JerseyJsonLDClient {
 
         Client client = ClientBuilder.newClient();
         WebTarget target = client.target(serviceURL);
-        Response response = target.request("text/trig").get();
+        Response response = target.request().accept("text/triq").get();
 
-        logger.info(serviceURL+"/ response: "+ response.getStatus());
+        logger.info(serviceURL+" response: "+ response.getStatus());
 
         return response;
 
@@ -316,11 +328,11 @@ public class JerseyJsonLDClient {
                 
          Client client = ClientBuilder.newClient();
          WebTarget target = client.target(resourceURI);
-         Response response = target.request("application/rdf+xml").get();
+         Response response = target.request().accept(Lang.N3.getName()).get();
          Model model = ModelFactory.createDefaultModel();
          
          try {
-            RDFReader reader = model.getReader(Lang.RDFXML.getName());
+            RDFReader reader = model.getReader(Lang.N3.getName());
             reader.read(model, response.readEntity(InputStream.class), resourceURI);
          } catch(RiotException ex) {
              return model;
