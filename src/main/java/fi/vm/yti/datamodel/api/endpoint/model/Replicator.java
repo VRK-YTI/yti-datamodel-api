@@ -359,7 +359,7 @@ public class Replicator {
 
       try (RDFConnection conn = RDFConnectionFactory.connect(services.getEndpoint()+"/core") ) {
           Txn.executeWrite(conn, ()-> {
-              Dataset externalDataset = JerseyJsonLDClient.getExternalTRIGDataset(externalService + "exportGraphs?service=core&content-type=text%2Ftriq");
+              Dataset externalDataset = JerseyJsonLDClient.getExternalTRIGDataset(externalService + "exportGraphs?service=core&content-type=application%2Ftrig");
               logger.info("Size of the CORE dataset: "+externalDataset.asDatasetGraph().size());
               conn.loadDataset(externalDataset);
           });
@@ -369,7 +369,7 @@ public class Replicator {
 
       try (RDFConnection conn = RDFConnectionFactory.connect(services.getEndpoint()+"/prov") ) {
           Txn.executeWrite(conn, ()-> {
-              Dataset externalDataset = JerseyJsonLDClient.getExternalTRIGDataset(externalService + "exportGraphs?service=prov&content-type=text%2Ftriq");
+              Dataset externalDataset = JerseyJsonLDClient.getExternalTRIGDataset(externalService + "exportGraphs?service=prov&content-type=application%2Ftrig");
               logger.info("Size of the PROV dataset: "+externalDataset.asDatasetGraph().size());
               conn.loadDataset(externalDataset);
           });

@@ -11,6 +11,7 @@ import org.apache.jena.riot.RDFLanguages;
 import javax.servlet.ServletContext;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
@@ -30,6 +31,7 @@ public class ExportGraphs {
     private static final Logger logger = Logger.getLogger(ExportGraphs.class.getName());
 
     @GET
+    @Produces({"application/ld+json","application/trig"})
     @ApiOperation(value = "Get graphs from service", notes = "Exports whole service")
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "OK"),
@@ -37,7 +39,7 @@ public class ExportGraphs {
     })
     public Response json(
             @ApiParam(value = "Requested resource", required = true, allowableValues = "core,prov") @QueryParam("service") String service,
-            @ApiParam(value = "Content-type", required = true, allowableValues = "application/ld+json,text/triq") @QueryParam("content-type") String ctype) {
+            @ApiParam(value = "Content-type", required = true, allowableValues = "application/ld+json,application/trig") @QueryParam("content-type") String ctype) {
 
             Lang clang = RDFLanguages.contentTypeToLang(ctype);
 

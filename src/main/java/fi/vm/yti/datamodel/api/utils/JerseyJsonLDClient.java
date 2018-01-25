@@ -272,12 +272,14 @@ public class JerseyJsonLDClient {
             int test;
             test = input.read();
             if(test == -1) {
+                logger.info(service+" is empty?");
                 return Response.noContent().build();
             } else {
                 input.unread(test);
-                return Response.ok(input).build();
+                return Response.ok(input).header("Content-type",ctype).build();
             }
         } catch(IOException ex) {
+            logger.info(ex.getStackTrace().toString());
             return Response.noContent().build();
         }
 
@@ -293,7 +295,7 @@ public class JerseyJsonLDClient {
 
         Client client = ClientBuilder.newClient();
         WebTarget target = client.target(serviceURL);
-        Response response = target.request().accept("text/triq").get();
+        Response response = target.request().accept("application/trig").get();
 
         logger.info(serviceURL+" response: "+ response.getStatus());
 
