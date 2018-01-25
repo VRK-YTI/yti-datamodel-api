@@ -134,6 +134,7 @@ public abstract class AbstractModel {
         Statement languageStatement = exportModel.getRequiredProperty(ResourceFactory.createResource(getId()), DCTerms.language);
         RDFList languageList = languageStatement.getObject().as(RDFList.class);
         languageList.removeList();
+        languageStatement.remove();
 
         exportModel.remove(oldModel);
         exportModel.add(asGraph());

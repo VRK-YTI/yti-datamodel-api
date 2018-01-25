@@ -3,12 +3,15 @@ package fi.vm.yti.datamodel.api.model;
 import fi.vm.yti.datamodel.api.config.EndpointServices;
 import fi.vm.yti.datamodel.api.utils.GraphManager;
 import fi.vm.yti.datamodel.api.utils.ProvenanceManager;
+import org.apache.jena.graph.Node_Blank;
 import org.apache.jena.iri.IRI;
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.rdf.model.*;
 import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.web.DatasetAdapter;
 import org.apache.jena.web.DatasetGraphAccessorHTTP;
+import org.topbraid.shacl.arq.SHACLARQFunction;
+import org.topbraid.shacl.vocabulary.SH;
+
 import java.util.logging.Logger;
 
 /**
@@ -40,6 +43,21 @@ public class AbstractResource {
         GraphManager.insertNewGraphReferenceToModel(getId(), getModelId());
         Model oldModel = adapter.getModel(getId());
         Model exportModel = adapter.getModel(getModelId()+"#ExportGraph");
+
+        StmtIterator listIterator = asGraph().listStatements();
+
+        // OMG: Iterate trough all RDFLists and remove old lists from exportModel
+        while(listIterator.hasNext()) {
+           Statement listStatement = listIterator.next();
+           if(!listStatement.getSubject().isAnon() && listStatement.getObject().isAnon()) {
+               Statement removeStatement = exportModel.getRequiredProperty(listStatement.getSubject(), listStatement.getPredicate());
+               RDFList languageList = removeStatement.getObject().as(RDFList.class);
+               languageList.removeList();
+               removeStatement.remove();
+
+           }
+        }
+
         exportModel.remove(oldModel);
         exportModel.add(asGraph());
         exportModel.add(exportModel.createResource(getModelId()), DCTerms.hasPart, exportModel.createResource(getId()));
