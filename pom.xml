@@ -19,6 +19,7 @@
         <project.debugAdress>http://localhost:9001</project.debugAdress>
         <project.defaultDomain>http://uri.suomi.fi/datamodel/</project.defaultDomain>
         <project.defaultScheme>http://dev.finto.fi/</project.defaultScheme>
+        <project.defaultNamespace>http://uri.suomi.fi/datamodel/ns/</project.defaultNamespace>
         <project.groupdomain>https://tt.eduuni.fi/sites/csc-iow#</project.groupdomain>
         <project.defaultTermedAPI>https://sanastot-dev.suomi.fi/termed-api/</project.defaultTermedAPI>
         <project.publicTermedAPI>https://sanastot-dev.suomi.fi</project.publicTermedAPI>

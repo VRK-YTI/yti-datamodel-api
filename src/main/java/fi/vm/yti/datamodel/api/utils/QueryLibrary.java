@@ -49,9 +49,9 @@ public class QueryLibrary {
                     "} WHERE {" +
                     "?concept skosxl:prefLabel ?xlLabel . " +
                     "?concept skos:definition ?definition . " +
-                    "?concept <termed:property:graph> ?graphID . " +
+                    "?concept termed:graph ?graphID . " +
                     "?xlLabel skosxl:literalForm ?label . " +
-                    "OPTIONAL {?terminology <termed:property:graph> ?graphID . " +
+                    "OPTIONAL {?terminology termed:graph ?graphID . " +
                     "?terminology dcterms:title ?title . }" +
                     "}");
 
@@ -83,10 +83,12 @@ public class QueryLibrary {
                      + "?graph dcterms:contributor ?org . "
                      + "?org skos:prefLabel ?orgLabel . "
                      + "?org rdf:type foaf:Organization . "
+                     + "?org dcterms:description ?orgDescription . "
                      + "} WHERE { "
                      + "GRAPH ?graph { "
                      + " ?s ?p ?o . "
                      + " ?graph dcterms:isPartOf ?group . "
+                     + " ?graph dcterms:contributor ?org . "
                      + "} "
                      + "OPTIONAL { "
                      + "GRAPH ?graph {"
@@ -103,13 +105,14 @@ public class QueryLibrary {
                      + "?group at:op-code ?code . "
                      + "?group skos:prefLabel ?groupLabel . "
                      + "}"
-                     + "GRAPH <urn:csc:iow:sd> { "
-                     + " ?metaGraph a sd:NamedGraph . "
-                     + " ?metaGraph sd:name ?graph . "
-                     + " ?metaGraph dcterms:contributor ?org . "
-                     + "} "
+                   //  + "GRAPH <urn:csc:iow:sd> { "
+                   //  + " ?metaGraph a sd:NamedGraph . "
+                   //  + " ?metaGraph sd:name ?graph . "
+                   //  + " ?metaGraph dcterms:contributor ?org . "
+                   //  + "} "
                      + "GRAPH <urn:yti:organizations> { "
                      + "?org skos:prefLabel ?orgLabel . "
+                     + "OPTIONAL { ?org dcterms:description ?orgDescription . }"
                      + "}"
                      + "}");
 
@@ -134,15 +137,15 @@ public class QueryLibrary {
                 + "?graphName dcterms:isPartOf ?group . "
                 + "?graphName a ?type . "
                 + "?graphName rdfs:label ?label . "
+                + "?graphName dcterms:contributor ?org . "
                 + "?graphName dcap:preferredXMLNamespaceName ?namespace . "
                 + "?graphName dcap:preferredXMLNamespacePrefix ?prefix .  "
                 + "}"
                 + "GRAPH <urn:csc:iow:sd> { "
                 + " ?metaGraph a sd:NamedGraph . "
                 + " ?metaGraph sd:name ?graphName . "
-                + " ?metaGraph dcterms:contributor ?org . "
                 + "} "
-                + "GRAPH <urn:yti:organizations> {"
+                + "GRAPH <urn:yti:organizations> { "
                 + "?org skos:prefLabel ?orgLabel . "
                 + "}"
                 + "}");

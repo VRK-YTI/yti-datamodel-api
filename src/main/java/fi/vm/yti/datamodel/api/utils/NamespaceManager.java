@@ -6,6 +6,7 @@ package fi.vm.yti.datamodel.api.utils;
 import fi.vm.yti.datamodel.api.config.EndpointServices;
 import fi.vm.yti.datamodel.api.config.LoginSession;
 
+import fi.vm.yti.datamodel.api.endpoint.model.PredicateCreator;
 import org.apache.jena.query.DatasetAccessor;
 import org.apache.jena.query.DatasetAccessorFactory;
 import org.apache.jena.query.ParameterizedSparqlString;
@@ -312,6 +313,23 @@ public class NamespaceManager {
         return model;
     }
 
+    public static Model renamePropertyNamespace(Model model, String oldNamespace, String newNamespace) {
+        SimpleSelector selector = new SimpleSelector();
+        Iterator<Statement> defStatement = model.listStatements(selector).toList().iterator();
+
+        while(defStatement.hasNext()) {
+            Statement stat = defStatement.next();
+                Property prop = stat.getPredicate();
+                String oldName = prop.getURI();
+                if (oldName.startsWith(oldNamespace)) {
+                    String newPropName = oldName.replaceFirst(oldNamespace, newNamespace);
+                    model.add(stat.getSubject(), ResourceFactory.createProperty(newPropName), stat.getObject());
+                    stat.remove();
+                }
+        }
+        return model;
+    }
+
     public static Model renameResourceNamespace(Model model, String oldNamespace, String newNamespace) {
         Selector definitionSelector = new SimpleSelector(ResourceFactory.createResource(oldNamespace), null, (Resource) null);
         Iterator<Statement> defStatement = model.listStatements(definitionSelector).toList().iterator();
@@ -331,7 +349,7 @@ public class NamespaceManager {
 
 
     public static Model renameNamespace(Model model, String oldNamespace, String newNamespace) {
-        // Goes trough all triples in model
+        // Goes trough all triples in model. Uses selector for concurrent access!
         Selector selector = new SimpleSelector();
         Iterator<Statement> tripleIterator = model.listStatements(selector).toList().iterator();
 

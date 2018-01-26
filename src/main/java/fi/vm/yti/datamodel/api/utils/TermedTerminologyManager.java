@@ -94,6 +94,8 @@ public class TermedTerminologyManager {
         DatasetAccessor testAcc = DatasetAccessorFactory.createHTTP(services.getCoreReadAddress());
 
         Model conceptModel = JerseyJsonLDClient.searchConceptFromTermedAPIAsModel(null, null, conceptUri, null);
+        conceptModel = NamespaceManager.renamePropertyNamespace(conceptModel, "termed:property:", "http://termed.thl.fi/meta/");
+
 
         conceptModel.add(testAcc.getModel(modelUri));
 
@@ -153,6 +155,8 @@ public class TermedTerminologyManager {
             schemeModel.removeNsPrefix("j.1");
             schemeModel.removeNsPrefix("j.0");
             schemeModel.removeNsPrefix("j.2");
+
+            schemeModel = NamespaceManager.renamePropertyNamespace(schemeModel, "termed:property:", "http://termed.thl.fi/meta/");
 
             schemeModel.setNsPrefixes(LDHelper.PREFIX_MAP);
 

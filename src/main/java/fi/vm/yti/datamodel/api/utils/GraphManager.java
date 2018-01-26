@@ -257,7 +257,7 @@ public class GraphManager {
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
         pss.setCommandText(queryString);
         pss.setLiteral("prefix", prefix);
-        pss.setIri("graph",ApplicationProperties.getDefaultDomain()+"ns/"+prefix);
+        pss.setIri("graph",ApplicationProperties.getDefaultNamespace()+prefix);
 
         Query query = pss.asQuery();
         QueryExecution qexec = QueryExecutionFactory.sparqlService(services.getCoreSparqlAddress(), query);

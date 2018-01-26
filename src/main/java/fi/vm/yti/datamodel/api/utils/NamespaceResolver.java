@@ -83,10 +83,10 @@ public class NamespaceResolver {
 			try { // IOException
 
 				connection = (HttpURLConnection) url.openConnection();				
-				// 5 seconds
-				connection.setConnectTimeout(8000);
-				// 5 minutes
-				connection.setReadTimeout(60000);
+				// 2,5 seconds
+				connection.setConnectTimeout(4000);
+				// 2,5 minutes
+				connection.setReadTimeout(30000);
 				connection.setInstanceFollowRedirects(true);
                                 //,text/rdf+n3,application/turtle,application/rdf+n3
 				//"application/rdf+xml,application/xml,text/html");

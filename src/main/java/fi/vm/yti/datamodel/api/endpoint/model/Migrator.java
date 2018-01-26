@@ -9,7 +9,11 @@ import fi.vm.yti.datamodel.api.utils.*;
 import io.swagger.annotations.*;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
+import org.apache.jena.query.Dataset;
 import org.apache.jena.rdf.model.*;
+import org.apache.jena.rdfconnection.RDFConnection;
+import org.apache.jena.rdfconnection.RDFConnectionFactory;
+import org.apache.jena.system.Txn;
 import org.apache.jena.update.UpdateAction;
 import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.RDF;
@@ -25,6 +29,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.xml.stream.events.Namespace;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 import java.util.logging.Level;
@@ -70,9 +75,10 @@ public class Migrator {
           @ApiParam(value = "IOW Service ID in form of http://domain/api/rest/ ", required = true)
                 @QueryParam("service")
                 String service,
-                @ApiParam(value = "Model ID")
-                @QueryParam("model")
-                String model,
+                @ApiParam(value = "Model URIs", required = true)
+                @QueryParam("modelURIs") List<String> modelURIList,
+                @ApiParam(value = "Overwrite", defaultValue = "false")
+                @QueryParam("overwrite") boolean overwrite,
                 @Context HttpServletRequest request) {
 
 
@@ -91,57 +97,68 @@ public class Migrator {
         Boolean replicate = JerseyJsonLDClient.readBooleanFromURL(service+"replicate");
 
         if(replicate!=null && replicate.booleanValue()) {
-            logger.info("Replicating data from "+service);
+            logger.info("Migrating data from "+service);
         }
 
-        IRI modelIRI = null;
+        Iterator<String> modelIterator = modelURIList.iterator();
 
-        try {
-                if(model!=null && !model.equals("undefined")) modelIRI = IDManager.constructIRI(model);
-        } catch (IRIException e) {
+        while(modelIterator.hasNext()) {
+
+            String model = modelIterator.next();
+            IRI modelIRI = null;
+
+            try {
+                if (model != null && !model.equals("undefined")) modelIRI = IDManager.constructIRI(model);
+            } catch (IRIException e) {
                 logger.log(Level.WARNING, "Parameter is invalid IRI!");
-               return JerseyResponseManager.invalidIRI();
+                return JerseyResponseManager.invalidIRI();
+            }
+
+            String SD = "http://www.w3.org/ns/sparql-service-description#";
+            Model modelList = JerseyJsonLDClient.getResourceAsJenaModel(service + "serviceDescription");
+            logger.info("Service description: " + service + "serviceDescription size:" + modelList.size());
+
+            if (modelIRI != null) {
+                Resource modelURI = ResourceFactory.createResource(model);
+                ResIterator rit = modelList.listSubjectsWithProperty(ResourceFactory.createProperty(SD, "name"), modelURI);
+                if (rit.hasNext()) {
+                    Resource res = rit.nextResource();
+                    migrateModel(modelURI, service, res, overwrite);
+                } else {
+                    return JerseyResponseManager.invalidParameter();
+                }
+            } else {
+                return JerseyResponseManager.invalidParameter();
+            }
         }
 
-       String SD = "http://www.w3.org/ns/sparql-service-description#";
-       Model modelList = JerseyJsonLDClient.getResourceAsJenaModel(service+"serviceDescription");
-       logger.info("Service description: "+service+"serviceDescription size:"+modelList.size());
-
-      if(modelIRI!=null) {
-          Resource modelURI = ResourceFactory.createResource(model);
-          ResIterator rit = modelList.listSubjectsWithProperty(ResourceFactory.createProperty(SD, "name"), modelURI);
-          if(rit.hasNext()) {
-              Resource res = rit.nextResource();
-              migrateModel(modelURI, service, res);
-          } else {
-              return JerseyResponseManager.invalidParameter();
-          }
-      } else {
-           return JerseyResponseManager.invalidParameter();
-       }
 
        logger.info("Returning 200 !?!?");
        return JerseyResponseManager.okEmptyContent();
 
   }
 
-
-  public void migrateModel(Resource modelURI, String service, Resource res) {
+  public void migrateModel(Resource modelURI, String service, Resource res, boolean overwrite) {
 
       String oldNamespace = modelURI.toString();
       String oldNamespaceDomain = oldNamespace.substring(0,oldNamespace.lastIndexOf("/")+1);
       logger.info("Old namespace domain: "+oldNamespaceDomain);
 
-      Model exportedModel = JerseyJsonLDClient.getResourceAsJenaModel(service+"exportResource?graph="+oldNamespace);
+      Model exportedModel = JerseyJsonLDClient.getResourceAsJenaModel(service+"exportResource?graph="+UriComponent.encode(oldNamespace, UriComponent.Type.QUERY_PARAM));
       String prefix = exportedModel.listStatements(ResourceFactory.createResource(oldNamespace), LDHelper.curieToProperty("dcap:preferredXMLNamespacePrefix"), (Literal) null).nextStatement().getString();
       logger.info("Model prefix: "+prefix);
 
       String namespaceDomain = "http://uri.suomi.fi/datamodel/ns/";
       String newNamespace = namespaceDomain+prefix;
 
-      if(GraphManager.isExistingGraph(newNamespace)) {
+      if(GraphManager.isExistingGraph(newNamespace) && !overwrite) {
           logger.info("Exists! Skipping "+modelURI.toString());
       } else {
+
+          if(GraphManager.isExistingGraph(newNamespace) && overwrite) {
+              ServiceDescriptionManager.deleteGraphDescription(newNamespace);
+              GraphManager.removeModel(LDHelper.toIRI(newNamespace));
+          }
 
           logger.info("---------------------------------------------------------");
 
@@ -175,7 +192,8 @@ public class Migrator {
                           "    ?model dcterms:isPartOf ?group . " +
                           "    ?group ?p ?o . " +
                           "} INSERT { " +
-                          "    ?model dcterms:isPartOf <http://publications.europa.eu/resource/authority/data-theme/GOVE> ."+
+                          "    ?model dcterms:contributor <urn:uuid:7d3a3c00-5a6b-489b-a3ed-63bb58c26a63> . " +
+                          "    ?model dcterms:isPartOf <http://publications.europa.eu/resource/authority/data-theme/GOVE> ." +
                           "} WHERE { " +
                           "    ?model a owl:Ontology . " +
                           "    ?model dcterms:isPartOf ?group . " +
@@ -184,7 +202,6 @@ public class Migrator {
 
           UpdateAction.parseExecute(deleteGroup, exportedModel);
         //  LDHelper.rewriteResourceReference(exportedModel, ResourceFactory.createResource(modelURI.toString()), DCTerms.isPartOf, ResourceFactory.createResource("http://publications.europa.eu/resource/authority/data-theme/GOVE"));
-
 
           String deleteTerminology =
                           "PREFIX skos: <http://www.w3.org/2004/02/skos/core#>" +
@@ -195,17 +212,25 @@ public class Migrator {
                           "DELETE {" +
                           "    ?model dcterms:references ?collection . " +
                           "    ?collection ?p ?o . " +
-                          "} WHERE { " +
+                          "} "+
+                          "INSERT { " +
+                      "?model dcterms:references <http://uri.suomi.fi/terminology/jhs/terminological-vocabulary-1> . " +
+                      "<http://uri.suomi.fi/terminology/jhs/terminological-vocabulary-1> a skos:ConceptScheme . " +
+                      "<http://uri.suomi.fi/terminology/jhs/terminological-vocabulary-1> dcterms:title 'JHSMETA'@fi . " +
+                       "<http://uri.suomi.fi/terminology/jhs/terminological-vocabulary-1> termed:graph  '0043fa54-18b2-4f31-80cf-32eeb0bbb297' . " +
+                       "<http://uri.suomi.fi/terminology/jhs/terminological-vocabulary-1> termed:id '61bec1e5-70b4-34fc-acfb-ab70428fb6f8' . " +
+                       "<http://uri.suomi.fi/terminology/jhs/terminological-vocabulary-1> termed:type   'TerminologicalVocabulary' . " +
+                       "<http://uri.suomi.fi/terminology/jhs/terminological-vocabulary-1> termed:uri 'http://uri.suomi.fi/terminology/jhs/terminological-vocabulary-1' . "+
+                       "}" +
+                                  "WHERE { " +
                           "    ?model a owl:Ontology . " +
                           "    ?model dcterms:references ?collection . " +
-                          "    ?collection dcterms:identifier ?any . " +
-                          "    ?collection ?p ?o . " +
+                          "    OPTIONAL {?collection dcterms:identifier ?any . " +
+                          "    ?collection ?p ?o .} " +
                           "}";
 
 
           UpdateAction.parseExecute(deleteTerminology, exportedModel);
-
-
 
           String deleteRequired =
                   "PREFIX skos: <http://www.w3.org/2004/02/skos/core#>" +
@@ -224,7 +249,6 @@ public class Migrator {
                           "    FILTER NOT EXISTS { ?collection a rdfs:Resource . }" +
                           "    ?collection ?p ?o . " +
                           "}";
-
 
           UpdateAction.parseExecute(deleteRequired, exportedModel);
 
@@ -246,13 +270,54 @@ public class Migrator {
 
           UpdateAction.parseExecute(updateStatus, exportedModel);
 
-
           logger.info("Migrating "+oldNamespace+" size:"+exportedModel.size()+" to "+newNamespace);
           exportedModel = NamespaceManager.renameNamespace(exportedModel, oldNamespaceDomain, namespaceDomain);
-
-          //exportedModel.write(System.out, "text/turtle");
-
           adapter.putModel(newNamespace, exportedModel);
+
+          // Model resource history
+          String modelHistoryURL = service+"history?id="+UriComponent.encode(oldNamespace, UriComponent.Type.QUERY_PARAM);
+          logger.info("Getting history activity:"+modelHistoryURL);
+
+          Model modelHistoryModel = JerseyJsonLDClient.getResourceAsJenaModel(modelHistoryURL);
+          modelHistoryModel = NamespaceManager.renameNamespace(modelHistoryModel, oldNamespaceDomain, namespaceDomain);
+
+          ProvenanceManager.putToProvenanceGraph(modelHistoryModel, newNamespace);
+
+          ResIterator modelProvIter = modelHistoryModel.listSubjectsWithProperty(ProvenanceManager.generatedAtTime);
+
+          while(modelProvIter.hasNext()) {
+              String provModelURI = modelProvIter.next().asResource().toString();
+              logger.info("Migrating "+oldNamespace+" history "+provModelURI);
+              Model provModelRes = JerseyJsonLDClient.getResourceAsJenaModel(service+"history?id="+UriComponent.encode(provModelURI, UriComponent.Type.QUERY_PARAM));
+
+              provModelRes = NamespaceManager.renameNamespace(provModelRes, oldNamespaceDomain, namespaceDomain);
+              LDHelper.rewriteLiteral(provModelRes, ResourceFactory.createResource(newNamespace), LDHelper.curieToProperty("dcap:preferredXMLNamespaceName"), ResourceFactory.createPlainLiteral(newNamespace+"#"));
+
+              // Dont insert org & group because prov graphs cannot be joined from model
+              deleteGroup =
+                      "PREFIX skos: <http://www.w3.org/2004/02/skos/core#>" +
+                              "PREFIX dcterms: <http://purl.org/dc/terms/>" +
+                              "PREFIX foaf: <http://xmlns.com/foaf/0.1/>" +
+                              "PREFIX owl: <http://www.w3.org/2002/07/owl#>" +
+                              "PREFIX termed: <http://termed.thl.fi/meta/>" +
+                              "DELETE {" +
+                              "    ?model dcterms:isPartOf ?group . " +
+                              "    ?group ?p ?o . " +
+                              "} WHERE { " +
+                              "    ?model a owl:Ontology . " +
+                              "    ?model dcterms:isPartOf ?group . " +
+                              "    ?group ?p ?o . " +
+                              "}";
+
+              UpdateAction.parseExecute(deleteGroup, provModelRes);
+              UpdateAction.parseExecute(deleteTerminology, provModelRes);
+              UpdateAction.parseExecute(deleteRequired, provModelRes);
+              UpdateAction.parseExecute(updateStatus, provModelRes);
+
+
+
+              ProvenanceManager.putToProvenanceGraph(provModelRes, provModelURI);
+          }
 
 
           ServiceDescriptionManager.createGraphDescription(newNamespace, null, orgUUIDs);
@@ -291,7 +356,6 @@ public class Migrator {
 
           NodeIterator nodIter = hasPartModel.listObjectsOfProperty(DCTerms.hasPart);
 
-
           while(nodIter.hasNext()) {
               Resource part = nodIter.nextNode().asResource();
               String oldName = part.toString();
@@ -304,8 +368,6 @@ public class Migrator {
                   String newName = oldName.replaceFirst(oldNamespace, newNamespace);
 
                   resourceModel = NamespaceManager.renameNamespace(resourceModel, oldNamespaceDomain, namespaceDomain);
-
-                  // resourceModel.write(System.out, "text/turtle");
 
                   String deleteLocalSkos =
                           "PREFIX skos: <http://www.w3.org/2004/02/skos/core#>" +
@@ -321,12 +383,34 @@ public class Migrator {
                                   "}";
 
                   UpdateAction.parseExecute(deleteLocalSkos, resourceModel);
-
                   UpdateAction.parseExecute(updateStatus, resourceModel);
 
                   adapter.putModel(newName, resourceModel);
 
                   logger.info("Migrated resource " + oldName + " to " + newName);
+
+                  String historyURL = service+"history?id="+UriComponent.encode(oldName, UriComponent.Type.QUERY_PARAM);
+                  logger.info("Getting history activity:"+historyURL);
+
+                  Model resourceHistoryModel = JerseyJsonLDClient.getResourceAsJenaModel(historyURL);
+
+                  resourceHistoryModel = NamespaceManager.renameNamespace(resourceHistoryModel, oldNamespaceDomain, namespaceDomain);
+
+                  ProvenanceManager.putToProvenanceGraph(resourceHistoryModel, newName);
+
+                  ResIterator resProvIter = resourceHistoryModel.listSubjectsWithProperty(ProvenanceManager.generatedAtTime);
+
+                  while(resProvIter.hasNext()) {
+                      String provResURI = resProvIter.next().asResource().toString();
+                      logger.info("Migrating "+oldName+" history "+provResURI);
+                      Model provRes = JerseyJsonLDClient.getResourceAsJenaModel(service+"history?id="+UriComponent.encode(provResURI, UriComponent.Type.QUERY_PARAM));
+                      provRes = NamespaceManager.renameNamespace(provRes, oldNamespaceDomain, namespaceDomain);
+                      UpdateAction.parseExecute(deleteLocalSkos, provRes);
+                      UpdateAction.parseExecute(updateStatus, provRes);
+                      ProvenanceManager.putToProvenanceGraph(provRes, provResURI);
+                  }
+
+
               } else {
                   logger.warning("Reference to external resource " + oldName);
               }

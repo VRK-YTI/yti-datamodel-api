@@ -103,7 +103,7 @@ public class Models {
             DatasetAccessor accessor = DatasetAccessorFactory.createHTTP(graphService);
             Model model = accessor.getModel(id);
 
-            model.write(System.out, "text/turtle");
+            //model.write(System.out, "text/turtle");
             
             if(model==null) {
                 return JerseyResponseManager.notFound();
@@ -114,7 +114,7 @@ public class Models {
             pss.setIri("graph", modelIRI);
             
             pss.setCommandText(queryString);
-            logger.info(pss.toString());
+            //logger.info(pss.toString());
            
             return JerseyJsonLDClient.constructGraphFromService(pss.toString(), sparqlService);
              

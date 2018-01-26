@@ -223,6 +223,7 @@ public class ServiceDescriptionManager {
         String query =
                 "WITH <urn:csc:iow:sd> "+
                 "DELETE { "+
+                " ?graphCollection sd:namedGraph ?graph . "+
                 " ?graph ?p ?o "+
                 "} WHERE {"+
                 " ?service a sd:Service . "+

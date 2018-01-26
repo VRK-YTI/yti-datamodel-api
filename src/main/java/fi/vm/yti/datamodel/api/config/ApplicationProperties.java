@@ -45,7 +45,7 @@ public final class ApplicationProperties {
     }
 
     public final static String getDefaultNamespace() {
-        return getDefaultDomain() + "ns/";
+        return PropertyUtil.getProperty("application.defaultNamespace");
     }
 
     public final static String getDefaultDomain() {

@@ -330,11 +330,13 @@ public class JerseyJsonLDClient {
                 
          Client client = ClientBuilder.newClient();
          WebTarget target = client.target(resourceURI);
-         Response response = target.request().accept(Lang.N3.getName()).get();
+
+         Response response = target.request().accept(Lang.JSONLD.getHeaderString()).get();
+
          Model model = ModelFactory.createDefaultModel();
          
          try {
-            RDFReader reader = model.getReader(Lang.N3.getName());
+            RDFReader reader = model.getReader(Lang.JSONLD.getHeaderString());
             reader.read(model, response.readEntity(InputStream.class), resourceURI);
          } catch(RiotException ex) {
              return model;
