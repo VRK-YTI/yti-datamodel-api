@@ -16,10 +16,13 @@ import org.apache.jena.query.QuerySolution;
 import org.apache.jena.query.ResultSet;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.rdfconnection.RDFConnectionRemote;
+import org.apache.jena.system.Txn;
 import org.apache.jena.update.UpdateException;
 import org.apache.jena.update.UpdateExecutionFactory;
 import org.apache.jena.update.UpdateProcessor;
 import org.apache.jena.update.UpdateRequest;
+
 import java.util.Date;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
@@ -35,7 +38,6 @@ import org.apache.jena.riot.RDFLanguages;
 import org.apache.jena.util.FileManager;
 import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDF;
-import org.apache.jena.web.DatasetAdapter;
 import org.apache.jena.web.DatasetGraphAccessorHTTP;
 
 /**
@@ -62,11 +64,9 @@ public class GraphManager {
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
 
         Query query = pss.asQuery();
-        logger.info("Querying: " + services.getCoreSparqlAddress());
-        QueryExecution qexec = QueryExecutionFactory.sparqlService(services.getCoreSparqlAddress(), query, "urn:csc:iow:sd");
 
         try {
-            boolean b = qexec.execAsk();
+            boolean b = JenaClient.askQuery(services.getCoreSparqlAddress(), query, "urn:csc:iow:sd");
             return b;
         } catch (Exception ex) {
             logger.log(Level.WARNING, "Default graph test failed", ex);
@@ -108,17 +108,13 @@ public class GraphManager {
         
         qexec.close();
 
-        DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(services.getCoreReadWriteAddress());
-        DatasetAdapter adapter = new DatasetAdapter(accessor);
-        adapter.putModel(graph+"#ExportGraph", exportModel);
+        JenaClient.putModelToCore(graph+"#ExportGraph", exportModel);
 
     }
 
     public static void initServiceCategories() {
         Model m = FileManager.get().loadModel("data-theme-skos.rdf");
-        DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(services.getCoreReadWriteAddress());
-        DatasetAdapter adapter = new DatasetAdapter(accessor);
-        adapter.putModel("urn:yti:servicecategories",m);
+        JenaClient.putModelToCore("urn:yti:servicecategories",m);
     }
 
     /**
@@ -126,9 +122,7 @@ public class GraphManager {
      * @param graph IRI of the graph that is going to be deleted
      */
     public static void deleteExportModel(String graph) {
-        DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(services.getCoreReadWriteAddress());
-        DatasetAdapter adapter = new DatasetAdapter(accessor);  
-        adapter.deleteModel(graph+"#ExportGraph");
+        JenaClient.deleteModelFromCore(graph+"#ExportGraph");
     }
     
     /**
@@ -136,12 +130,10 @@ public class GraphManager {
      * @param graph IRI of the graph to be created
      */
     public static void createNewOntologyGraph(String graph) {
-        DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(services.getCoreReadWriteAddress());
-        DatasetAdapter adapter = new DatasetAdapter(accessor);
         Model empty = ModelFactory.createDefaultModel();
         empty.setNsPrefixes(LDHelper.PREFIX_MAP);
         empty.add(ResourceFactory.createResource(graph), RDF.type, OWL.Ontology);
-        adapter.putModel(graph, empty);
+        JenaClient.putModelToCore(graph, empty);
     }
     
     /**
@@ -150,9 +142,7 @@ public class GraphManager {
      * @return Returns graph as Jena model
      */
     public static Model getCoreGraph(String graph){
-        DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(services.getCoreReadWriteAddress());
-        DatasetAdapter adapter = new DatasetAdapter(accessor);
-        return adapter.getModel(graph);
+        return JenaClient.getModelFromCore(graph);
     }
 
     /**
@@ -161,11 +151,9 @@ public class GraphManager {
      * @return Returns graph as Jena model
      */
     public static Model getCoreGraph(IRI graph){
-        DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(services.getCoreReadWriteAddress());
-        DatasetAdapter adapter = new DatasetAdapter(accessor);
 
         try {
-            return adapter.getModel(graph.toString());
+            return getCoreGraph(graph.toString());
         } catch(HttpException ex) {
             logger.warning(ex.toString());
             try {
@@ -173,39 +161,8 @@ public class GraphManager {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            return adapter.getModel(graph.toString());
+            return getCoreGraph(graph.toString());
         }
-    }
-    
-    /**
-     * Updates all export graphs
-     */
-    @Deprecated
-    public static void updateAllExportGraphs() {
-        
-        ParameterizedSparqlString pss = new ParameterizedSparqlString();
-        
-        String selectResources = "SELECT ?name WHERE { "
-                + "GRAPH <urn:csc:iow:sd> { "
-                + "?graph a sd:NamedGraph . "
-                + "?graph sd:name ?name . "
-                + "}}";
-        
-        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
-        pss.setCommandText(selectResources);
-
-        QueryExecution qexec = QueryExecutionFactory.sparqlService(services.getCoreSparqlAddress(), pss.asQuery());
-
-        ResultSet results = qexec.execSelect();
-
-        while (results.hasNext()) {
-            QuerySolution soln = results.nextSolution();
-            String graphName = soln.getResource("name").toString();
-            if(!isExistingGraph(graphName+"#ExportGraph")) {
-                constructExportGraph(graphName);
-            }
-        }
-
     }
     
     /**
@@ -491,10 +448,8 @@ public class GraphManager {
      * @param id
      */
     public static void namespaceBugFix(String id) {
-        DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(services.getCoreReadWriteAddress());
-        DatasetAdapter adapter = new DatasetAdapter(accessor);
         Model empty = ModelFactory.createDefaultModel();
-        adapter.putModel(id, empty);
+        JenaClient.putModelToCore(id, empty);
     }
 
     /**
@@ -645,15 +600,8 @@ public class GraphManager {
         qexec.execute();
             
     }
-    
-    
-    /**
-     * Renames IRI:s in HasPart-graph
-     * @param oldID Old id IRI
-     * @param newID New id IRI
-     */
-    public static void renameID(IRI oldID, IRI newID) {
 
+    public static UpdateRequest renameIDRequest(IRI oldID, IRI newID) {
         String query
                 = " DELETE { GRAPH ?hasPartGraph { ?graph dcterms:hasPart ?oldID }}"
                 + " INSERT { GRAPH ?hasPartGraph { ?graph dcterms:hasPart ?newID }}"
@@ -667,10 +615,18 @@ public class GraphManager {
 
         logger.log(Level.WARNING, "Renaming " + oldID + " to " + newID);
 
-        UpdateRequest queryObj = pss.asUpdate();
+        return pss.asUpdate();
+    }
+    
+    /**
+     * Renames IRI:s in HasPart-graph
+     * @param oldID Old id IRI
+     * @param newID New id IRI
+     */
+    public static void renameID(IRI oldID, IRI newID) {
+        UpdateRequest queryObj = renameIDRequest(oldID, newID);
         UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, services.getCoreSparqlUpdateAddress());
         qexec.execute();
-
     }
     
     /**
@@ -704,15 +660,8 @@ public class GraphManager {
         qexec.execute();
 
     }
-    
-    /**
-     * Updates IRI:s in Position-graph
-     * @param modelID Model IRI
-     * @param oldID Old resource IRI
-     * @param newID New resource IRI
-     */
-    public static void updateReferencesInPositionGraph(IRI modelID, IRI oldID, IRI newID) {
 
+    public static UpdateRequest updateReferencesInPositionGraphRequest(IRI modelID, IRI oldID, IRI newID) {
         String query
                 = " DELETE { GRAPH ?graph { ?oldID ?anyp ?anyo . }} "
                 + " INSERT { GRAPH ?graph { ?newID ?anyp ?anyo . }} "
@@ -729,7 +678,18 @@ public class GraphManager {
         logger.info(pss.toString());
         logger.log(Level.WARNING, "Updating references in "+modelID.toString()+"#PositionGraph");
 
-        UpdateRequest queryObj = pss.asUpdate();
+        return pss.asUpdate();
+    }
+    
+    /**
+     * Updates IRI:s in Position-graph
+     * @param modelID Model IRI
+     * @param oldID Old resource IRI
+     * @param newID New resource IRI
+     */
+    public static void updateReferencesInPositionGraph(IRI modelID, IRI oldID, IRI newID) {
+
+        UpdateRequest queryObj = updateReferencesInPositionGraphRequest(modelID, oldID, newID);
         UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, services.getCoreSparqlUpdateAddress());
         qexec.execute();
 
@@ -799,14 +759,8 @@ public class GraphManager {
 
     }
 
-    /**
-     * Inserts Resource reference to models HasPartGraph and model reference to Resource graph
-     * @param graph Resource graph IRI as String
-     * @param model Model graph IRI as String
-     */
-    public static void insertNewGraphReferenceToModel(String graph, String model) {
-
-        String timestamp = SafeDateFormat.fmt().format(new Date());
+    public static UpdateRequest insertNewGraphReferenceToModelRequest(String graph, String model ) {
+        Literal timestamp = LDHelper.getDateTimeLiteral();
 
         String query
                 = " INSERT { "
@@ -826,19 +780,23 @@ public class GraphManager {
         pss.setLiteral("date", timestamp);
         pss.setCommandText(query);
 
-        UpdateRequest queryObj = pss.asUpdate();
+        return pss.asUpdate();
+    }
+
+    /**
+     * Inserts Resource reference to models HasPartGraph and model reference to Resource graph
+     * @param graph Resource graph IRI as String
+     * @param model Model graph IRI as String
+     */
+    public static void insertNewGraphReferenceToModel(String graph, String model) {
+        UpdateRequest queryObj = insertNewGraphReferenceToModelRequest(graph, model);
         UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, services.getCoreSparqlUpdateAddress());
         qexec.execute();
 
     }
-    
-    /**
-     * Insert new graph reference to export graph. In some cases it makes more sense to do small changes than create the whole export graph again.
-     * @param graph Resource IRI as String
-     * @param model Model IRI as String
-     */
-    public static void insertNewGraphReferenceToExportGraph(String graph, String model) {
 
+
+    public static UpdateRequest insertNewGraphReferenceToExportGraphRequest(String graph, String model) {
         String query
                 = " INSERT { "
                 + "GRAPH ?exportGraph { "
@@ -854,20 +812,23 @@ public class GraphManager {
         pss.setIri("model", model);
         pss.setIri("exportGraph", model+"#ExportGraph");
         pss.setCommandText(query);
+        return pss.asUpdate();
+    }
 
-        UpdateRequest queryObj = pss.asUpdate();
+    /**
+     * Insert new graph reference to export graph. In some cases it makes more sense to do small changes than create the whole export graph again.
+     * @param graph Resource IRI as String
+     * @param model Model IRI as String
+     */
+    public static void insertNewGraphReferenceToExportGraph(String graph, String model) {
+
+        UpdateRequest queryObj = insertNewGraphReferenceToExportGraphRequest(graph, model);
         UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, services.getCoreSparqlUpdateAddress());
         qexec.execute();
 
     }
-    
-    /**
-     * Add existing Resource to the model as Resource reference. Inserts only the reference to models HasPartGraph.
-     * @param graph Resource IRI as String
-     * @param model Model IRI as String
-     */
-    public static void insertExistingGraphReferenceToModel(String graph, String model) {
 
+    public static UpdateRequest insertExistingGraphReferenceToModelRequest(String graph, String model) {
         String query
                 = " INSERT { GRAPH ?hasPartGraph { ?model dcterms:hasPart ?graph }} "
                 + " WHERE { GRAPH ?graph { ?graph a ?type . }}";
@@ -878,20 +839,25 @@ public class GraphManager {
         pss.setIri("model", model);
         pss.setIri("hasPartGraph", model+"#HasPartGraph");
         pss.setCommandText(query);
+        return pss.asUpdate();
+    }
 
-        UpdateRequest queryObj = pss.asUpdate();
+
+    /**
+     * Add existing Resource to the model as Resource reference. Inserts only the reference to models HasPartGraph.
+     * @param graph Resource IRI as String
+     * @param model Model IRI as String
+     */
+    public static void insertExistingGraphReferenceToModel(String graph, String model) {
+
+        UpdateRequest queryObj = insertExistingGraphReferenceToModelRequest(graph, model);
         UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, services.getCoreSparqlUpdateAddress());
         qexec.execute();
 
     }
 
-    /**
-     * Removes Resource-graph reference from models HasPartGraph
-     * @param graph Resource IRI reference to be removed
-     * @param model Model IRI
-     */
-    public static void deleteGraphReferenceFromModel(IRI graph, IRI model) {
 
+    public static UpdateRequest deleteGraphReferenceFromModelRequest(IRI graph, IRI model) {
         String query
                 = " DELETE { "
                 + "GRAPH ?hasPartGraph { ?model dcterms:hasPart ?graph } "
@@ -908,7 +874,17 @@ public class GraphManager {
         pss.setIri("hasPartGraph", model+"#HasPartGraph");
         pss.setCommandText(query);
 
-        UpdateRequest queryObj = pss.asUpdate();
+        return pss.asUpdate();
+    }
+
+    /**
+     * Removes Resource-graph reference from models HasPartGraph
+     * @param graph Resource IRI reference to be removed
+     * @param model Model IRI
+     */
+    public static void deleteGraphReferenceFromModel(IRI graph, IRI model) {
+
+        UpdateRequest queryObj = deleteGraphReferenceFromModelRequest(graph, model);
         UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, services.getCoreSparqlUpdateAddress());
         qexec.execute();
 
@@ -968,7 +944,16 @@ public class GraphManager {
         
     }
 
-        
+    public static void insertExistingResourceToModel(String id, String model) {
+        try(RDFConnectionRemote conn = services.getCoreConnection()) {
+            Txn.executeWrite(conn, ()-> {
+                conn.update(insertExistingGraphReferenceToModelRequest(id, model));
+                conn.update(insertNewGraphReferenceToExportGraphRequest(id, model));
+                conn.load(LDHelper.encode(model+"#ExportGraph"),conn.fetch(LDHelper.encode(id)));
+              });
+        }
+    }
+
     /**
      * Copies graph to another graph in Core service
      * @param fromGraph Graph IRI as string
@@ -993,11 +978,18 @@ public class GraphManager {
      * @param id IRI of the graph as String
      */
     public static void putToGraph(Model model, String id) {
-        
+        try(RDFConnectionRemote conn = services.getCoreConnection()) {
+            Txn.executeWrite(conn, ()->{
+                conn.put(LDHelper.encode(id), model);
+            });
+        } catch(Exception ex) {
+            logger.warning(ex.getMessage());
+        }
+       /*
       DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(services.getCoreReadWriteAddress());
       DatasetAdapter adapter = new DatasetAdapter(accessor);
       adapter.putModel(id, model);
-        
+        */
     }
     
     /**
@@ -1008,7 +1000,7 @@ public class GraphManager {
     public static String constructStringFromGraph(String query){
         QueryExecution qexec = QueryExecutionFactory.sparqlService(services.getCoreSparqlAddress(), query);
         Model results = qexec.execConstruct();
-        return ModelManager.writeModelToString(results);
+        return ModelManager.writeModelToJSONLDString(results);
     }
 
     /**
@@ -1017,19 +1009,34 @@ public class GraphManager {
      * @param service SPARQL service as string
      * @return Returns JSON-LD object
      */
-    public static Model constructModelFromGraph(String query, String service){
-        QueryExecution qexec = QueryExecutionFactory.sparqlService(service, query);
-        return qexec.execConstruct();
+    public static Model constructModelFromCoreGraph(String query){
+       try (RDFConnectionRemote conn = services.getCoreConnection()) {
+            return conn.queryConstruct(query);
+        } catch (Exception ex) {
+            logger.warning(ex.getMessage());
+            return null;
+        }
     }
 
 
-    /**
-     * Construct from combined model of Concept and Model
-     * @param conceptID ID of concept
-     * @param modelID ID of model
-     * @param query Construct SPARQL query
-     * @return created Jena model
-     */
+    public static Model constructModelFromService(String query, String service) {
+        try (RDFConnectionRemote conn = services.getServiceConnection(service)) {
+            return conn.queryConstruct(query);
+        } catch (Exception ex) {
+            logger.warning(ex.getMessage());
+            return null;
+        }
+
+    }
+
+
+        /**
+         * Construct from combined model of Concept and Model
+         * @param conceptID ID of concept
+         * @param modelID ID of model
+         * @param query Construct SPARQL query
+         * @return created Jena model
+         */
     @Deprecated
     public static Model constructModelFromConceptAndCore(String conceptID, String modelID, Query query) {
 

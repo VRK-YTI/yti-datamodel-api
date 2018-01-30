@@ -80,8 +80,8 @@ public class TermedTerminologyManager {
 
     public static Model constructCleanedModelFromTermedAPI(String conceptUri, String query) {
 
-        Response jerseyResponse = JerseyJsonLDClient.getConceptFromTermedAPI(conceptUri);
-        Model conceptModel = JerseyJsonLDClient.getJSONLDResponseAsJenaModel(jerseyResponse);
+        Response jerseyResponse = JerseyClient.getConceptFromTermedAPI(conceptUri);
+        Model conceptModel = JerseyClient.getJSONLDResponseAsJenaModel(jerseyResponse);
         QueryExecution qexec = QueryExecutionFactory.create(query,conceptModel);
         Model objects = qexec.execConstruct();
         return cleanModelDefinitions(objects);
@@ -93,7 +93,7 @@ public class TermedTerminologyManager {
 
         DatasetAccessor testAcc = DatasetAccessorFactory.createHTTP(services.getCoreReadAddress());
 
-        Model conceptModel = JerseyJsonLDClient.searchConceptFromTermedAPIAsModel(null, null, conceptUri, null);
+        Model conceptModel = JerseyClient.searchConceptFromTermedAPIAsModel(null, null, conceptUri, null);
         conceptModel = NamespaceManager.renamePropertyNamespace(conceptModel, "termed:property:", "http://termed.thl.fi/meta/");
 
 
@@ -130,7 +130,7 @@ public class TermedTerminologyManager {
     public static Model getSchemesAsModelFromTermedAPI() {
         String url = ApplicationProperties.getDefaultTermAPI()+"node-trees";
         try {
-            Client client = JerseyJsonLDClient.IgnoreSSLClient(); //ClientBuilder.newClient();
+            Client client = JerseyClient.IgnoreSSLClient(); //ClientBuilder.newClient();
             HttpAuthenticationFeature feature = TermedAuthentication.getTermedAuth();
             client.register(feature);
 
@@ -175,7 +175,7 @@ public class TermedTerminologyManager {
 
         try {
 
-            Client client = JerseyJsonLDClient.IgnoreSSLClient(); //ClientBuilder.newClient();
+            Client client = JerseyClient.IgnoreSSLClient(); //ClientBuilder.newClient();
             HttpAuthenticationFeature feature = TermedAuthentication.getTermedAuth();
             client.register(feature);
 

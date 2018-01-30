@@ -42,7 +42,7 @@ public class User {
     @Produces("application/json")
     public Response getUser(@Context HttpServletRequest request) {
 
-        logger.info("Getting user");
+        //logger.info("Getting user");
 
         HttpSession session = request.getSession();
         LoginSession login = new LoginSession(session);

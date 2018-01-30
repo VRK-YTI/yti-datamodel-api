@@ -11,11 +11,12 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
+
+import fi.vm.yti.datamodel.api.utils.JerseyClient;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
 import fi.vm.yti.datamodel.api.config.EndpointServices;
 import fi.vm.yti.datamodel.api.utils.IDManager;
-import fi.vm.yti.datamodel.api.utils.JerseyJsonLDClient;
 import fi.vm.yti.datamodel.api.utils.JerseyResponseManager;
 import fi.vm.yti.datamodel.api.utils.LDHelper;
 import org.apache.jena.query.ParameterizedSparqlString;
@@ -136,7 +137,7 @@ public class ExternalPredicate {
          
         pss.setCommandText(queryString);
 
-        return JerseyJsonLDClient.constructGraphFromService(pss.toString(), services.getImportsSparqlAddress());
+        return JerseyClient.constructGraphFromService(pss.toString(), services.getImportsSparqlAddress());
 
       } else {
           
@@ -244,7 +245,7 @@ public class ExternalPredicate {
             }
             
             
-            return JerseyJsonLDClient.constructGraphFromService(pss.toString(), sparqlService);         
+            return JerseyClient.constructGraphFromService(pss.toString(), sparqlService);
 
       }
          

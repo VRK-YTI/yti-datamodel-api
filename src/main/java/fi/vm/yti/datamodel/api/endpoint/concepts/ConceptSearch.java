@@ -4,7 +4,7 @@
 package fi.vm.yti.datamodel.api.endpoint.concepts;
 
 import fi.vm.yti.datamodel.api.config.EndpointServices;
-import fi.vm.yti.datamodel.api.utils.JerseyJsonLDClient;
+import fi.vm.yti.datamodel.api.utils.JerseyClient;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -51,7 +51,7 @@ public class ConceptSearch {
               term+="*";
           }
 
-          return JerseyJsonLDClient.searchConceptFromTermedAPI(term, namespace,null, graphId);
+          return JerseyClient.searchConceptFromTermedAPI(term, namespace,null, graphId);
 
   }
   

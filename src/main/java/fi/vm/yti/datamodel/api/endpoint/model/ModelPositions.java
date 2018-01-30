@@ -15,6 +15,7 @@ import javax.ws.rs.core.Response;
 
 import fi.vm.yti.datamodel.api.config.LoginSession;
 import fi.vm.yti.datamodel.api.config.EndpointServices;
+import fi.vm.yti.datamodel.api.model.DataModel;
 import fi.vm.yti.datamodel.api.utils.*;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -23,7 +24,7 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
-import javax.ws.rs.core.Response.StatusType;
+
 import org.apache.jena.atlas.web.ContentType;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
@@ -39,7 +40,7 @@ import org.apache.jena.web.DatasetGraphAccessorHTTP;
 public class ModelPositions {
   
     @Context ServletContext context;
-    EndpointServices services = new EndpointServices();
+    static EndpointServices services = new EndpointServices();
     private static final Logger logger = Logger.getLogger(ModelPositions.class.getName());
    
   @GET
@@ -54,7 +55,7 @@ public class ModelPositions {
           @ApiParam(value = "Graph id", defaultValue="default") 
           @QueryParam("model") String model) {
   
-      return JerseyJsonLDClient.getGraphResponseFromService(model+"#PositionGraph",services.getCoreReadAddress(), ContentType.create("application/ld+json"), false);
+      return JerseyClient.getGraphResponseFromService(model+"#PositionGraph", services.getCoreReadAddress(), "application/ld+json", false);
   
   }
    
@@ -81,10 +82,10 @@ public class ModelPositions {
             return JerseyResponseManager.invalidIRI();
         }
         
-       IRI graphIRI;
+       IRI modelIRI;
        
             try {
-                graphIRI = IDManager.constructIRI(model+"#PositionGraph");
+                modelIRI = IDManager.constructIRI(model);
             } catch (IRIException e) {
                 logger.log(Level.WARNING, "GRAPH ID is invalid IRI!");
                 return JerseyResponseManager.invalidIRI();
@@ -96,28 +97,23 @@ public class ModelPositions {
         
         LoginSession login = new LoginSession(session);
         
-        if(!login.isLoggedIn() || !login.hasRightToEditModel(model))
+        if(!login.isLoggedIn()) {
             return JerseyResponseManager.unauthorized();
-           
-            String service = services.getCoreReadWriteAddress();
+        }
+
+        DataModel checkModel = new DataModel(modelIRI);
+
+        if(!login.hasRightToEditModel(checkModel.getOrganizations())) {
+            return JerseyResponseManager.unauthorized();
+        }
 
             Model newPositions = ModelManager.createJenaModelFromJSONLDString(body);
-
-            /* UPDATING EXPORT GRAPH NOT NECESSARY?
-            Model oldPositions = GraphManager.getCoreGraph(model+"#PositionGraph");
-            Model exportGraph = GraphManager.getCoreGraph(model+"#ExportGraph");
-            exportGraph.remove(oldPositions);
-            exportGraph.add(newPositions);
-            */
 
             if(newPositions.size()<1) {
                 return JerseyResponseManager.invalidParameter();
             }
 
-            DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(services.getCoreReadWriteAddress());
-            DatasetAdapter adapter = new DatasetAdapter(accessor);
-            adapter.putModel(model+"#PositionGraph",newPositions);
-            // adapter.putModel(model+"#ExportGraph",exportGraph);
+            JenaClient.putModelToCore(model+"#PositionGraph",newPositions);
 
             return JerseyResponseManager.okEmptyContent();
 

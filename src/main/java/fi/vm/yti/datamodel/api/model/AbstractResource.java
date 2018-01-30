@@ -2,16 +2,11 @@ package fi.vm.yti.datamodel.api.model;
 
 import fi.vm.yti.datamodel.api.config.EndpointServices;
 import fi.vm.yti.datamodel.api.utils.GraphManager;
-import fi.vm.yti.datamodel.api.utils.ProvenanceManager;
-import org.apache.jena.graph.Node_Blank;
+import fi.vm.yti.datamodel.api.utils.JenaClient;
+import fi.vm.yti.datamodel.api.utils.ModelManager;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.rdf.model.*;
 import org.apache.jena.vocabulary.DCTerms;
-import org.apache.jena.web.DatasetAdapter;
-import org.apache.jena.web.DatasetGraphAccessorHTTP;
-import org.topbraid.shacl.arq.SHACLARQFunction;
-import org.topbraid.shacl.vocabulary.SH;
-
 import java.util.logging.Logger;
 
 /**
@@ -19,7 +14,6 @@ import java.util.logging.Logger;
  */
 public class AbstractResource {
 
-    EndpointServices services = new EndpointServices();
     protected Model graph;
     protected DataModel dataModel;
     protected String provUUID;
@@ -27,68 +21,46 @@ public class AbstractResource {
     private static final Logger logger = Logger.getLogger(AbstractResource.class.getName());
 
     public void create() {
-        DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(services.getCoreReadWriteAddress());
-        DatasetAdapter adapter = new DatasetAdapter(accessor);
-        adapter.putModel(getId(), asGraph());
+        JenaClient.putModelToCore(getId(), asGraph());
         GraphManager.insertNewGraphReferenceToModel(getId(), getModelId());
         Model exportModel = asGraphCopy();
         exportModel.add(exportModel.createResource(getModelId()), DCTerms.hasPart, exportModel.createResource(getId()));
-        adapter.add(getModelId()+"#ExportGraph", exportModel);
+        JenaClient.addModelToCore(getModelId()+"#ExportGraph", exportModel);
     }
 
     public void update() {
-        DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(services.getCoreReadWriteAddress());
-        DatasetAdapter adapter = new DatasetAdapter(accessor);
-        adapter.putModel(getId(), asGraph());
+        JenaClient.putModelToCore(getId(), asGraph());
         GraphManager.insertNewGraphReferenceToModel(getId(), getModelId());
-        Model oldModel = adapter.getModel(getId());
-        Model exportModel = adapter.getModel(getModelId()+"#ExportGraph");
-
-        StmtIterator listIterator = asGraph().listStatements();
-
-        // OMG: Iterate trough all RDFLists and remove old lists from exportModel
-        while(listIterator.hasNext()) {
-           Statement listStatement = listIterator.next();
-           if(!listStatement.getSubject().isAnon() && listStatement.getObject().isAnon()) {
-               Statement removeStatement = exportModel.getRequiredProperty(listStatement.getSubject(), listStatement.getPredicate());
-               RDFList languageList = removeStatement.getObject().as(RDFList.class);
-               languageList.removeList();
-               removeStatement.remove();
-
-           }
-        }
-
+        Model oldModel = JenaClient.getModelFromCore(getId());
+        Model exportModel = JenaClient.getModelFromCore(getModelId()+"#ExportGraph");
+        exportModel = ModelManager.removeListStatements(oldModel, exportModel);
         exportModel.remove(oldModel);
         exportModel.add(asGraph());
         exportModel.add(exportModel.createResource(getModelId()), DCTerms.hasPart, exportModel.createResource(getId()));
-        adapter.putModel(getModelId()+"#ExportGraph", exportModel);
-     }
+        JenaClient.putModelToCore(getModelId()+"#ExportGraph", exportModel);
+    }
 
-     public void updateWithNewId(IRI oldIdIRI) {
-         DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(services.getCoreReadWriteAddress());
-         DatasetAdapter adapter = new DatasetAdapter(accessor);
-         adapter.putModel(getId(), asGraph());
+    public void updateWithNewId(IRI oldIdIRI) {
+        JenaClient.putModelToCore(getId(), asGraph());
 
-         Model oldModel = adapter.getModel(oldIdIRI.toString());
-         Model exportModel = adapter.getModel(getModelId()+"#ExportGraph");
-         exportModel.remove(oldModel);
-         exportModel.add(asGraph());
+        Model oldModel = JenaClient.getModelFromCore(oldIdIRI.toString());
+        Model exportModel = JenaClient.getModelFromCore(getModelId()+"#ExportGraph");
+        exportModel.remove(oldModel);
+        exportModel.add(asGraph());
 
-         GraphManager.removeGraph(oldIdIRI);
-         GraphManager.renameID(oldIdIRI,getIRI());
-         GraphManager.updateReferencesInPositionGraph(getModelIRI(), oldIdIRI, getIRI());
-
-     }
+        GraphManager.removeGraph(oldIdIRI);
+        GraphManager.renameID(oldIdIRI,getIRI());
+        GraphManager.updateReferencesInPositionGraph(getModelIRI(), oldIdIRI, getIRI());
+    }
 
     public void delete() {
-        DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(services.getCoreReadWriteAddress());
-        DatasetAdapter adapter = new DatasetAdapter(accessor);
-        Model exportModel = adapter.getModel(getModelId()+"#ExportGraph");
+        Model exportModel = JenaClient.getModelFromCore(getModelId()+"#ExportGraph");
+        exportModel = ModelManager.removeListStatements(asGraph(), exportModel);
         exportModel.remove(asGraph());
         exportModel.remove(exportModel.createResource(getModelId()), DCTerms.hasPart, exportModel.createResource(getId()));
-        adapter.putModel(getModelId()+"#ExportGraph", exportModel);
+        JenaClient.putModelToCore(getModelId()+"#ExportGraph", exportModel);
         GraphManager.deleteGraphReferenceFromModel(getIRI(),getModelIRI());
-        adapter.deleteModel(getId());
+        JenaClient.deleteModelFromCore(getId());
     }
 
     public Model asGraph(){

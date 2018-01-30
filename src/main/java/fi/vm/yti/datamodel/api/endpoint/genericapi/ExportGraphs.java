@@ -3,9 +3,7 @@ package fi.vm.yti.datamodel.api.endpoint.genericapi;
 import fi.vm.yti.datamodel.api.config.EndpointServices;
 import fi.vm.yti.datamodel.api.utils.*;
 import io.swagger.annotations.*;
-import org.apache.jena.atlas.web.ContentType;
 import org.apache.jena.riot.Lang;
-import org.apache.jena.riot.LangBuilder;
 import org.apache.jena.riot.RDFLanguages;
 
 import javax.servlet.ServletContext;
@@ -31,7 +29,7 @@ public class ExportGraphs {
     private static final Logger logger = Logger.getLogger(ExportGraphs.class.getName());
 
     @GET
-    @Produces({"application/ld+json","application/trig"})
+    @Produces({"application/ld+json"})
     @ApiOperation(value = "Get graphs from service", notes = "Exports whole service")
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "OK"),
@@ -39,7 +37,7 @@ public class ExportGraphs {
     })
     public Response json(
             @ApiParam(value = "Requested resource", required = true, allowableValues = "core,prov") @QueryParam("service") String service,
-            @ApiParam(value = "Content-type", required = true, allowableValues = "application/ld+json,application/trig") @QueryParam("content-type") String ctype) {
+            @ApiParam(value = "Content-type", required = true, allowableValues = "application/ld+json") @QueryParam("content-type") String ctype) {
 
             Lang clang = RDFLanguages.contentTypeToLang(ctype);
 
@@ -49,7 +47,7 @@ public class ExportGraphs {
 
             ctype = ctype.replace(" ", "+");
 
-            return JerseyJsonLDClient.getGraphsAsResponse(service, ctype);
+            return JerseyClient.getGraphsAsResponse(service, ctype);
 
     }
 

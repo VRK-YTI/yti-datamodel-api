@@ -38,7 +38,7 @@ public class Shape extends AbstractShape {
         /* Create Shape from Class */
         if(GraphManager.isExistingServiceGraph(SplitIRI.namespace(classIRI.toString()))) {
 
-            service = services.getCoreSparqlAddress();
+            service = "core";
             queryString = "CONSTRUCT  { "
                     + "?shapeIRI owl:versionInfo ?draft . "
                     + "?shapeIRI dcterms:modified ?modified . "
@@ -91,7 +91,7 @@ public class Shape extends AbstractShape {
 
         } else {
             /* Create Shape from external IMPORT */
-            service = services.getImportsSparqlAddress();
+            service = "imports";
             logger.info("Using ext query:");
             queryString = QueryLibrary.externalShapeQuery;
         }
@@ -103,8 +103,7 @@ public class Shape extends AbstractShape {
         pss.setLiteral("draft", "DRAFT");
         pss.setIri("shapeIRI",shapeIRI);
 
-        //logger.info(pss.toString());
-        this.graph = GraphManager.constructModelFromGraph(pss.toString(), service);
+        this.graph = GraphManager.constructModelFromService(pss.toString(), service);
 
     }
 

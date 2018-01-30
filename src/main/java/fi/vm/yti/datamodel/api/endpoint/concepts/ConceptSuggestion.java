@@ -9,7 +9,7 @@ import fi.vm.yti.datamodel.api.config.EndpointServices;
 import fi.vm.yti.datamodel.api.config.LoginSession;
 import fi.vm.yti.datamodel.api.utils.IDManager;
 import fi.vm.yti.datamodel.api.utils.JerseyResponseManager;
-import fi.vm.yti.datamodel.api.utils.JerseyJsonLDClient;
+import fi.vm.yti.datamodel.api.utils.JerseyClient;
 import fi.vm.yti.datamodel.api.utils.LDHelper;
 import fi.vm.yti.datamodel.api.utils.ModelManager;
 import java.util.logging.Logger;
@@ -99,9 +99,9 @@ public class ConceptSuggestion {
                 Property idProp = model.createProperty(LDHelper.getNamespaceWithPrefix("termed")+"id");
                 concept.addProperty(idProp, conceptUUID.toString());
                 
-                String modelString = ModelManager.writeModelToString(model);
+                String modelString = ModelManager.writeModelToJSONLDString(model);
                 
-                JerseyJsonLDClient.saveConceptSuggestion(modelString,graphUUID);
+                JerseyClient.saveConceptSuggestion(modelString,graphUUID);
 
                 return JerseyResponseManager.successUuid(conceptUUID);
 

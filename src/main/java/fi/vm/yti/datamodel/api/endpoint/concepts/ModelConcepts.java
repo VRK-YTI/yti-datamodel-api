@@ -12,9 +12,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 
-import fi.vm.yti.datamodel.api.config.LoginSession;
-import fi.vm.yti.datamodel.api.utils.ConceptMapper;
-import fi.vm.yti.datamodel.api.utils.JerseyJsonLDClient;
+import fi.vm.yti.datamodel.api.utils.JerseyClient;
 import fi.vm.yti.datamodel.api.utils.JerseyResponseManager;
 import fi.vm.yti.datamodel.api.utils.LDHelper;
 import fi.vm.yti.datamodel.api.config.EndpointServices;
@@ -25,11 +23,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.PUT;
- 
+
 /**
  * Root resource (exposed at "class" path)
  */
@@ -91,7 +85,7 @@ public class ModelConcepts {
 
         pss.setCommandText(queryString);
 
-        return JerseyJsonLDClient.constructGraphFromService(pss.toString(), services.getCoreSparqlAddress());
+        return JerseyClient.constructGraphFromService(pss.toString(), services.getCoreSparqlAddress());
      
   }
  

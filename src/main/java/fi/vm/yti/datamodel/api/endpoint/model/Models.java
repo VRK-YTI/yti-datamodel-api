@@ -3,8 +3,6 @@
  */
 package fi.vm.yti.datamodel.api.endpoint.model;
 
-import java.util.Iterator;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -22,7 +20,6 @@ import fi.vm.yti.datamodel.api.config.ApplicationProperties;
 import fi.vm.yti.datamodel.api.config.LoginSession;
 import fi.vm.yti.datamodel.api.config.EndpointServices;
 import fi.vm.yti.datamodel.api.model.DataModel;
-import fi.vm.yti.datamodel.api.model.Role;
 import fi.vm.yti.datamodel.api.utils.*;
 import org.apache.jena.query.DatasetAccessor;
 import org.apache.jena.query.DatasetAccessorFactory;
@@ -39,7 +36,9 @@ import javax.servlet.http.HttpSession;
 import javax.ws.rs.DELETE;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
- 
+import org.apache.jena.rdfconnection.RDFConnectionRemote;
+import org.apache.jena.system.Txn;
+
 /**
  * Root resource (exposed at "myresource" path)
  */
@@ -92,7 +91,7 @@ public class Models {
                 }
 
                 if(id.startsWith("urn:")) {
-                   return JerseyJsonLDClient.getGraphResponseFromService(id, services.getProvReadWriteAddress());
+                   return JerseyClient.getGraphResponseFromService(id, services.getProvReadWriteAddress());
                 }
 
 
@@ -116,7 +115,7 @@ public class Models {
             pss.setCommandText(queryString);
             //logger.info(pss.toString());
            
-            return JerseyJsonLDClient.constructGraphFromService(pss.toString(), sparqlService);
+            return JerseyClient.constructGraphFromService(pss.toString(), sparqlService);
              
      } else  {
 
@@ -132,7 +131,7 @@ public class Models {
 
             pss.setCommandText(queryString);
             
-            return JerseyJsonLDClient.constructGraphFromService(pss.toString(), services.getCoreSparqlAddress());
+            return JerseyClient.constructGraphFromService(pss.toString(), services.getCoreSparqlAddress());
 
   }
    
@@ -196,8 +195,9 @@ public class Models {
               newVocabulary.update();
 
               if(ProvenanceManager.getProvMode()) {
-                  ProvenanceManager.createProvenanceGraphFromModel(newVocabulary.getId(), newVocabulary.asGraph(), login.getEmail(), newVocabulary.getProvUUID());
-                  ProvenanceManager.createProvEntity(newVocabulary.getId(), login.getEmail(), newVocabulary.getProvUUID());
+                 // ProvenanceManager.createProvenanceGraphFromModel(newVocabulary.getId(), newVocabulary.asGraph(), login.getEmail(), newVocabulary.getProvUUID());
+                 // ProvenanceManager.createProvEntity(newVocabulary.getId(), login.getEmail(), newVocabulary.getProvUUID());
+                  ProvenanceManager.createProvEntityBundle(newVocabulary.getId(), newVocabulary.asGraph(), login.getEmail(), newVocabulary.getProvUUID(), null);
               }
 
               return JerseyResponseManager.successUuid(provUUID);
@@ -260,10 +260,9 @@ public class Models {
 
               ServiceDescriptionManager.createGraphDescription(newVocabulary.getId(), login.getEmail(), newVocabulary.getOrganizations());
 
-              if(ProvenanceManager.getProvMode()) {
-                  ProvenanceManager.createProvenanceGraphFromModel(newVocabulary.getId(), newVocabulary.asGraph(), login.getEmail(), provUUID);
-                  ProvenanceManager.createProvenanceActivity(newVocabulary.getId(), provUUID, login.getEmail());
-                }
+              if (ProvenanceManager.getProvMode()) {
+                  ProvenanceManager.createProvenanceActivityFromModel(newVocabulary.getId(), newVocabulary.asGraph(), newVocabulary.getProvUUID(), login.getEmail());
+              }
 
               logger.info("Created new model: "+newVocabulary.getId());
               return JerseyResponseManager.successUuid(provUUID,newVocabulary.getId());
@@ -310,17 +309,23 @@ public class Models {
        LoginSession login = new LoginSession(session);
 
       if(!login.isSuperAdmin()) {
-          if (!login.isLoggedIn() || !login.hasRightToEditModel(id)) {
+          if (!login.isLoggedIn()) {
               return JerseyResponseManager.unauthorized();
           }
       }
-       
+
        if(!ApplicationProperties.getDebugMode() && GraphManager.modelStatusRestrictsRemoving(modelIRI)) {
           return JerseyResponseManager.cannotRemove();
        }
-       
-       ServiceDescriptionManager.deleteGraphDescription(id);  
-       GraphManager.removeModel(modelIRI);
+
+       DataModel deleteModel = new DataModel(modelIRI);
+
+      if(!login.hasRightToEditModel(deleteModel.getOrganizations())) {
+          return JerseyResponseManager.unauthorized();
+      }
+
+
+       deleteModel.delete();
        
        return JerseyResponseManager.ok();
     }

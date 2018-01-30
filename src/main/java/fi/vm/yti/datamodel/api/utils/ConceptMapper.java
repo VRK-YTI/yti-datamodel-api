@@ -7,7 +7,6 @@ import fi.vm.yti.datamodel.api.config.EndpointServices;
 import java.io.InputStream;
 import org.apache.jena.query.DatasetAccessor;
 import org.apache.jena.query.DatasetAccessorFactory;
-import org.apache.jena.query.ParameterizedSparqlString;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import java.util.logging.Logger;
@@ -16,9 +15,7 @@ import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
-import org.apache.jena.query.Query;
-import org.apache.jena.query.QueryExecution;
-import org.apache.jena.query.QueryExecutionFactory;
+
 import org.apache.jena.rdf.model.NodeIterator;
 import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.ResIterator;
@@ -77,7 +74,7 @@ public class ConceptMapper {
      public static void updateSchemesFromFinto() {
          
          Response resp = getFintoIDs();
-         Model model = JerseyJsonLDClient.getJSONLDResponseAsJenaModel(resp);
+         Model model = JerseyClient.getJSONLDResponseAsJenaModel(resp);
          Model schemeModel = ModelFactory.createDefaultModel();
          schemeModel.setNsPrefixes(LDHelper.PREFIX_MAP);
          

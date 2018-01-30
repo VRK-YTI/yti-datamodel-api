@@ -5,7 +5,6 @@ package fi.vm.yti.datamodel.api.endpoint.model;
 
 import java.util.logging.Logger;
 import javax.servlet.ServletContext;
-import javax.validation.constraints.Null;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -14,7 +13,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import fi.vm.yti.datamodel.api.model.ReusableClass;
 import fi.vm.yti.datamodel.api.utils.GraphManager;
-import fi.vm.yti.datamodel.api.utils.JerseyJsonLDClient;
+import fi.vm.yti.datamodel.api.utils.JerseyClient;
 import fi.vm.yti.datamodel.api.utils.JerseyResponseManager;
 import fi.vm.yti.datamodel.api.config.EndpointServices;
 import fi.vm.yti.datamodel.api.utils.IDManager;
@@ -87,7 +86,7 @@ public class ClassCreator {
                     newClass = new ReusableClass(modelIRI, classLabel, lang);
                 }
 
-                return JerseyJsonLDClient.constructResponseFromGraph(newClass.asGraph());
+                return JerseyClient.constructResponseFromGraph(newClass.asGraph());
             } catch(IllegalArgumentException ex) {
                 logger.info(ex.toString());
                 return JerseyResponseManager.error();

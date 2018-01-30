@@ -13,25 +13,18 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 
-import fi.vm.yti.datamodel.api.config.EndpointServices;
 import fi.vm.yti.datamodel.api.model.Shape;
-import fi.vm.yti.datamodel.api.utils.JerseyResponseManager;
-import fi.vm.yti.datamodel.api.utils.GraphManager;
-import fi.vm.yti.datamodel.api.utils.IDManager;
-import fi.vm.yti.datamodel.api.utils.JerseyJsonLDClient;
-import fi.vm.yti.datamodel.api.utils.LDHelper;
-import fi.vm.yti.datamodel.api.utils.QueryLibrary;
-import org.apache.jena.query.ParameterizedSparqlString;
+import fi.vm.yti.datamodel.api.utils.*;
+import fi.vm.yti.datamodel.api.utils.JerseyClient;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import java.util.UUID;
+
 import javax.servlet.http.HttpServletRequest;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
-import org.apache.jena.rdf.model.Model;
 import org.apache.jena.util.SplitIRI;
 
 /**
@@ -74,7 +67,7 @@ public class ShapeCreator {
 
            Shape newShape = new Shape(classIRI,shapeIRI,profileIRI);
 
-           return JerseyJsonLDClient.constructResponseFromGraph(newShape.asGraph());
+           return JerseyClient.constructResponseFromGraph(newShape.asGraph());
     }   
  
 }

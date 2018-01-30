@@ -13,11 +13,8 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 
 import fi.vm.yti.datamodel.api.config.EndpointServices;
-import fi.vm.yti.datamodel.api.utils.IDManager;
-import fi.vm.yti.datamodel.api.utils.JerseyResponseManager;
-import fi.vm.yti.datamodel.api.utils.JerseyJsonLDClient;
-import fi.vm.yti.datamodel.api.utils.LDHelper;
-import fi.vm.yti.datamodel.api.utils.NamespaceManager;
+import fi.vm.yti.datamodel.api.utils.*;
+import fi.vm.yti.datamodel.api.utils.JerseyClient;
 import org.apache.jena.query.ParameterizedSparqlString;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -191,7 +188,7 @@ public class Usage {
                 pss.setIri("concept", conceptIRI);
             } else return JerseyResponseManager.invalidParameter();
            
-            return JerseyJsonLDClient.constructGraphFromService(pss.toString(), services.getCoreSparqlAddress());
+            return JerseyClient.constructGraphFromService(pss.toString(), services.getCoreSparqlAddress());
     }   
  
 }

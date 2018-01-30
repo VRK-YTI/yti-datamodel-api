@@ -6,6 +6,10 @@
 package fi.vm.yti.datamodel.api.config;
 
 
+import org.apache.jena.rdfconnection.RDFConnection;
+import org.apache.jena.rdfconnection.RDFConnectionFactory;
+import org.apache.jena.rdfconnection.RDFConnectionRemote;
+
 /**
  *
  * @author malonen
@@ -19,6 +23,14 @@ public EndpointServices() {
     this.endpoint = ApplicationProperties.getEndpoint();
     this.scheme = ApplicationProperties.getSchemeId();
 }
+
+public RDFConnectionRemote getServiceConnection(String service) { return new RDFConnectionRemote(endpoint+"/"+service+"/"); }
+
+public RDFConnectionRemote getCoreConnection() { return new RDFConnectionRemote(endpoint+"/core/"); }
+
+public RDFConnectionRemote getProvConnection() { return new RDFConnectionRemote(endpoint+"/prov/"); }
+
+public RDFConnectionRemote getImportsConnection() { return new RDFConnectionRemote(endpoint+"/imports/"); }
 
 public String getEndpoint() { return this.endpoint; }
 

@@ -11,7 +11,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 
 import fi.vm.yti.datamodel.api.config.EndpointServices;
-import fi.vm.yti.datamodel.api.utils.JerseyJsonLDClient;
+import fi.vm.yti.datamodel.api.utils.JerseyClient;
 import fi.vm.yti.datamodel.api.utils.LDHelper;
 import fi.vm.yti.datamodel.api.utils.QueryLibrary;
 import org.apache.jena.query.ParameterizedSparqlString;
@@ -67,7 +67,7 @@ public class RequiredNamespaces {
            
             pss.setCommandText(queryString);
             
-            return JerseyJsonLDClient.constructGraphFromService(pss.toString(), services.getCoreSparqlAddress());
+            return JerseyClient.constructGraphFromService(pss.toString(), services.getCoreSparqlAddress());
 
   }
    

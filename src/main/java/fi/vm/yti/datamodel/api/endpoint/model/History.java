@@ -15,7 +15,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 
 import fi.vm.yti.datamodel.api.config.EndpointServices;
-import fi.vm.yti.datamodel.api.utils.JerseyJsonLDClient;
+import fi.vm.yti.datamodel.api.utils.JerseyClient;
 import fi.vm.yti.datamodel.api.utils.LDHelper;
 import fi.vm.yti.datamodel.api.utils.NamespaceManager;
 import org.apache.jena.query.ParameterizedSparqlString;
@@ -83,10 +83,11 @@ public class History {
             pss.setIri("activity", id);
         }
 
-        return JerseyJsonLDClient.constructGraphFromService(pss.toString(), services.getProvReadSparqlAddress());
+        return JerseyClient.constructGraphFromService(pss.toString(), services.getProvReadSparqlAddress());
       
       } else {
-        return JerseyJsonLDClient.getGraphResponseFromService(id, services.getProvReadWriteAddress());
+          logger.info("Gettin "+id+" from prov");
+        return JerseyClient.getGraphResponseFromService(id, services.getProvReadWriteAddress());
       }
       
     }

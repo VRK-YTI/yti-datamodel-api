@@ -1,17 +1,12 @@
 package fi.vm.yti.datamodel.api.model;
 
 import fi.vm.yti.datamodel.api.config.EndpointServices;
-import fi.vm.yti.datamodel.api.utils.GraphManager;
-import fi.vm.yti.datamodel.api.utils.LDHelper;
-import fi.vm.yti.datamodel.api.utils.ModelManager;
-import fi.vm.yti.datamodel.api.utils.RHPOrganizationManager;
+import fi.vm.yti.datamodel.api.utils.*;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.rdf.model.*;
 import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDF;
-import org.apache.jena.web.DatasetAdapter;
-import org.apache.jena.web.DatasetGraphAccessorHTTP;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -46,7 +41,7 @@ public abstract class AbstractModel {
         Resource modelResource = vocabList.get(0);
 
         if(!modelResource.hasProperty(RDF.type, OWL.Ontology)) {
-            logger.warning("Expected main resource type as owl:Ontology");
+            logger.warning("Expected "+getId()+" type as owl:Ontology");
             throw new IllegalArgumentException("Expected model resource");
         }
 
@@ -82,7 +77,7 @@ public abstract class AbstractModel {
         Resource modelResource = vocabList.get(0);
 
         if(!modelResource.hasProperty(RDF.type, OWL.Ontology)) {
-            logger.warning("Expected main resource type as owl:Ontology");
+            logger.warning("Expected "+getId()+" type as owl:Ontology");
             throw new IllegalArgumentException("Expected model resource");
         }
 
@@ -116,19 +111,16 @@ public abstract class AbstractModel {
     }
 
     public void create() {
-        DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(services.getCoreReadWriteAddress());
-        DatasetAdapter adapter = new DatasetAdapter(accessor);
-        adapter.putModel(getId(), asGraph());
-        adapter.putModel(getId()+"#ExportGraph", asGraph());
+        logger.info("Creating model "+getId());
+        JenaClient.putModelToCore(getId(), asGraph());
+        JenaClient.putModelToCore(getId()+"#ExportGraph", asGraph());
     }
 
     public void update() {
         modifyDatetime();
-        DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(services.getCoreReadWriteAddress());
-        DatasetAdapter adapter = new DatasetAdapter(accessor);
-        Model oldModel = adapter.getModel(getId());
-        adapter.putModel(getId(), asGraph());
-        Model exportModel = adapter.getModel(getId()+"#ExportGraph");
+        Model oldModel = JenaClient.getModelFromCore(getId());
+        JenaClient.putModelToCore(getId(), asGraph());
+        Model exportModel = JenaClient.getModelFromCore(getId()+"#ExportGraph");
 
         // OMG: Model.remove() doesnt remove RDFLists
         Statement languageStatement = exportModel.getRequiredProperty(ResourceFactory.createResource(getId()), DCTerms.language);
@@ -138,14 +130,13 @@ public abstract class AbstractModel {
 
         exportModel.remove(oldModel);
         exportModel.add(asGraph());
-        adapter.putModel(getId()+"#ExportGraph", exportModel);
+        JenaClient.putModelToCore(getId()+"#ExportGraph", exportModel);
     }
 
     public void delete() {
-        DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(services.getCoreReadWriteAddress());
-        DatasetAdapter adapter = new DatasetAdapter(accessor);
-        adapter.deleteModel(getId());
-        adapter.deleteModel(getId()+"#ExportModel");
+        ServiceDescriptionManager.deleteGraphDescription(getId());
+        JenaClient.deleteModelFromCore(getId());
+        JenaClient.deleteModelFromCore(getId()+"#ExportModel");
     }
 
     public void modifyDatetime() {

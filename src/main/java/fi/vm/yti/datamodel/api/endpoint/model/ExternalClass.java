@@ -13,13 +13,10 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 
 import fi.vm.yti.datamodel.api.config.EndpointServices;
+import fi.vm.yti.datamodel.api.utils.*;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
-import fi.vm.yti.datamodel.api.utils.IDManager;
-import fi.vm.yti.datamodel.api.utils.JerseyResponseManager;
-import fi.vm.yti.datamodel.api.utils.JerseyJsonLDClient;
-import fi.vm.yti.datamodel.api.utils.LDHelper;
-import fi.vm.yti.datamodel.api.utils.QueryLibrary;
+import fi.vm.yti.datamodel.api.utils.JerseyClient;
 import org.apache.jena.query.ParameterizedSparqlString;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -106,7 +103,7 @@ public class ExternalClass {
         pss.setCommandText(queryString);
 
         
-        return JerseyJsonLDClient.constructGraphFromService(pss.toString(), services.getImportsSparqlAddress());
+        return JerseyClient.constructGraphFromService(pss.toString(), services.getImportsSparqlAddress());
 
       } else {
           
@@ -141,7 +138,7 @@ public class ExternalClass {
             if(model!=null && !model.equals("undefined")) {
                   pss.setIri("library", model);
             }
-                        return JerseyJsonLDClient.constructGraphFromService(pss.toString(), sparqlService);         
+                        return JerseyClient.constructGraphFromService(pss.toString(), sparqlService);
 
       }
          

@@ -4,7 +4,7 @@
 package fi.vm.yti.datamodel.api.endpoint.codes;
 
 import fi.vm.yti.datamodel.api.config.EndpointServices;
-import fi.vm.yti.datamodel.api.utils.JerseyJsonLDClient;
+import fi.vm.yti.datamodel.api.utils.JerseyClient;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -73,7 +73,7 @@ public class CodeList {
         return JerseyFusekiClient.constructGraphFromService(pss.toString(), services.getSchemesSparqlAddress()); */
    
         /* Use graph protocol instead for now ... */
-        return JerseyJsonLDClient.getGraphResponseFromService(uri, services.getSchemesReadAddress());
+        return JerseyClient.getGraphResponseFromService(uri, services.getSchemesReadAddress());
 
           
   }

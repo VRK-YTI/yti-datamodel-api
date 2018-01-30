@@ -8,7 +8,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import fi.vm.yti.datamodel.api.config.EndpointServices;
-import fi.vm.yti.datamodel.api.utils.JerseyJsonLDClient;
+import fi.vm.yti.datamodel.api.utils.JerseyClient;
 import fi.vm.yti.datamodel.api.utils.JerseyResponseManager;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -40,7 +40,7 @@ public class ServiceDescription {
         if(header==null || header.equals(("undefined")))
             return JerseyResponseManager.invalidParameter();
         else
-            return JerseyJsonLDClient.getGraphResponseFromService("urn:csc:iow:sd", services.getCoreReadAddress(), ContentType.create(header), false);
+            return JerseyClient.getGraphResponseFromService("urn:csc:iow:sd", services.getCoreReadAddress(), header, false);
 }
   
 }

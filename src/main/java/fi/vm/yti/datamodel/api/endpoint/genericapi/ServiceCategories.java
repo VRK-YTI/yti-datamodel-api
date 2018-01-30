@@ -10,7 +10,6 @@ import fi.vm.yti.datamodel.api.model.ServiceCategory;
 import fi.vm.yti.datamodel.api.utils.*;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 
@@ -30,7 +29,7 @@ public class ServiceCategories {
     })
     public Response json(@HeaderParam("Accept") String header) {
         if(header!=null && header.equals("application/ld+json")) {
-            return JerseyJsonLDClient.constructGraphFromService(QueryLibrary.constructServiceCategories, services.getCoreSparqlAddress());
+            return JerseyClient.constructGraphFromService(QueryLibrary.constructServiceCategories, services.getCoreSparqlAddress());
         }
         else {
             return Response.status(200).entity(ServiceCategory.values()).build();

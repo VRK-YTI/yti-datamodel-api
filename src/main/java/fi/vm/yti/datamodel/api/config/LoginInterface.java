@@ -26,7 +26,7 @@ public interface LoginInterface {
     @Deprecated
     public boolean isAdminOfGroup(String group);
     
-    public boolean hasRightToEditModel(String resource);
+    public boolean hasRightToEditModel(List<UUID> organization);
 
     @Deprecated
     public boolean hasRightToEditGroup(String resource);

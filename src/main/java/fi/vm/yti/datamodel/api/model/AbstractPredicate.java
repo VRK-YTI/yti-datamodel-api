@@ -7,10 +7,7 @@ import fi.vm.yti.datamodel.api.utils.RHPOrganizationManager;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.rdf.model.*;
 import org.apache.jena.vocabulary.DCTerms;
-import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
-import org.apache.jena.web.DatasetAdapter;
-import org.apache.jena.web.DatasetGraphAccessorHTTP;
 
 import java.util.List;
 import java.util.UUID;
@@ -57,29 +54,28 @@ public class AbstractPredicate extends AbstractResource {
     public AbstractPredicate(Model graph){
         this.graph = graph;
 
-        List<RDFNode> modelList = this.graph.listObjectsOfProperty(RDFS.isDefinedBy).toList();
-        if(modelList==null || modelList.size()!=1) {
-            throw new IllegalArgumentException("Expected 1 class (isDefinedBy) got "+modelList.size());
+        try {
+            Statement isDefinedBy = asGraph().getRequiredProperty(null, RDFS.isDefinedBy);
+            Resource predicateResource = isDefinedBy.getSubject();
+
+            this.dataModel = new DataModel(LDHelper.toIRI(isDefinedBy.getResource().toString()));
+            this.id = LDHelper.toIRI(predicateResource.toString());
+            this.provUUID = "urn:uuid:"+UUID.randomUUID().toString();
+
+            predicateResource.removeAll(DCTerms.identifier);
+            predicateResource.addProperty(DCTerms.identifier,ResourceFactory.createPlainLiteral(provUUID));
+
+
+        } catch(Exception ex)  {
+            logger.warning(ex.getMessage());
+            throw new IllegalArgumentException("Expected 1 predicate (isDefinedBy)");
+
         }
 
-        this.dataModel = new DataModel(LDHelper.toIRI(modelList.get(0).asResource().getURI()));
-
-        List<Resource> predicateList = this.graph.listSubjectsWithProperty(RDFS.isDefinedBy).toList();
-        if(predicateList == null || predicateList.size()!=1) {
-            throw new IllegalArgumentException("Expected 1 predicate in graph!");
-        }
-
-        Resource predicateResource = predicateList.get(0);
-        // TODO: Validate that namespace is same as in predicate id
-        this.id = LDHelper.toIRI(predicateResource.getURI());
-
-        if(!this.id.toString().startsWith(getModelId())) {
+        if(!getId().startsWith(getModelId())) {
             throw new IllegalArgumentException("Predicate ID should start with model ID!");
         }
 
-        this.provUUID = "urn:uuid:"+UUID.randomUUID().toString();
-        predicateResource.removeAll(DCTerms.identifier);
-        predicateResource.addProperty(DCTerms.identifier,ResourceFactory.createPlainLiteral(provUUID));
 
     }
 

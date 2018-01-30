@@ -13,7 +13,7 @@ import javax.ws.rs.core.Response;
 
 import fi.vm.yti.datamodel.api.config.EndpointServices;
 import fi.vm.yti.datamodel.api.utils.IDManager;
-import fi.vm.yti.datamodel.api.utils.JerseyJsonLDClient;
+import fi.vm.yti.datamodel.api.utils.JerseyClient;
 import fi.vm.yti.datamodel.api.utils.JerseyResponseManager;
 import fi.vm.yti.datamodel.api.utils.LDHelper;
 import org.apache.jena.query.ParameterizedSparqlString;
@@ -85,7 +85,7 @@ public class CodeListCreator {
             
             pss.setCommandText(queryString);
 
-            return JerseyJsonLDClient.constructNotEmptyGraphFromService(pss.toString(), services.getTempConceptReadSparqlAddress());
+            return JerseyClient.constructNonEmptyGraphFromService(pss.toString(), services.getSchemesSparqlAddress());
 
         }
 }

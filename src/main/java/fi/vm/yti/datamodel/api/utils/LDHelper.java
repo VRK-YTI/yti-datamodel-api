@@ -37,6 +37,9 @@ public class LDHelper {
     private static final Logger logger = Logger.getLogger(LDHelper.class.getName());
     public static final String[] UNRESOLVABLE = {"xsd","iow","text","sh","afn","schema","dcap", "termed"};
 
+    public static String encode(String param) {
+        return UriComponent.encode(param,UriComponent.Type.QUERY_PARAM);
+    }
 
     public static IRI toIRI(String url) {
         return iriFactory.create(url);

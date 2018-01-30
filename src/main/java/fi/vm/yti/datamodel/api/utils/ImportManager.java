@@ -11,10 +11,13 @@ import org.apache.jena.query.QueryExecution;
 import org.apache.jena.query.QueryExecutionFactory;
 import org.apache.jena.query.QuerySolution;
 import org.apache.jena.query.ResultSet;
+import org.apache.jena.rdf.model.Literal;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.update.UpdateExecutionFactory;
 import org.apache.jena.update.UpdateProcessor;
 import org.apache.jena.update.UpdateRequest;
+
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Map;
 import java.util.logging.Logger;
@@ -35,7 +38,7 @@ public class ImportManager {
      */
     public static void createResourceGraphs(String graph, Map<String, String> map) {
 
-        String timestamp = SafeDateFormat.fmt().format(new Date());
+        Literal timestamp = LDHelper.getDateTimeLiteral();
 
         GraphManager.deleteResourceGraphs(graph);
 

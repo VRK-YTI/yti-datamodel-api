@@ -7,9 +7,9 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 
+import fi.vm.yti.datamodel.api.utils.JerseyClient;
 import fi.vm.yti.datamodel.api.utils.NamespaceResolver;
 import fi.vm.yti.datamodel.api.config.EndpointServices;
-import fi.vm.yti.datamodel.api.utils.JerseyJsonLDClient;
 import fi.vm.yti.datamodel.api.utils.JerseyResponseManager;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -40,7 +40,7 @@ public class ResolveNamespace {
   public Response getJson(@ApiParam(value = "Namespace", required = true) @QueryParam("namespace") String namespace)  {
 
         if(NamespaceResolver.resolveNamespace(namespace,null,false)) {
-             return JerseyJsonLDClient.getGraphResponseFromService(namespace,services.getImportsReadAddress());
+             return JerseyClient.getGraphResponseFromService(namespace,services.getImportsReadAddress());
         } else {
             return JerseyResponseManager.invalidIRI();
         }

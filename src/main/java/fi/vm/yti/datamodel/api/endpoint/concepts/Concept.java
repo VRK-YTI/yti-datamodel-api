@@ -3,17 +3,13 @@
  */
 package fi.vm.yti.datamodel.api.endpoint.concepts;
 
-import fi.vm.yti.datamodel.api.utils.JerseyJsonLDClient;
+import fi.vm.yti.datamodel.api.utils.JerseyClient;
 import fi.vm.yti.datamodel.api.config.EndpointServices;
-import fi.vm.yti.datamodel.api.utils.LDHelper;
-import fi.vm.yti.datamodel.api.utils.QueryLibrary;
-import fi.vm.yti.datamodel.api.utils.TermedTerminologyManager;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import org.apache.jena.query.ParameterizedSparqlString;
 
 import java.util.logging.Logger;
 import javax.servlet.ServletContext;
@@ -54,7 +50,7 @@ public class Concept {
           @ApiParam(value = "graphId")
           @QueryParam("graphId") String graphId) {
 
-      return JerseyJsonLDClient.searchConceptFromTermedAPI(null, namespace, id, graphId);
+      return JerseyClient.searchConceptFromTermedAPI(null, namespace, id, graphId);
 
   }
    

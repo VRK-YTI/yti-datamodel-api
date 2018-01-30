@@ -66,15 +66,8 @@ public class LoginSession implements LoginInterface {
     }
 
     @Override
-    public boolean hasRightToEditModel(String model) {
-
-        if (getUser().isSuperuser()) {
-            return true;
-        }
-
-        Collection<UUID> modelOrganizations = ServiceDescriptionManager.getModelOrganizations(model);
-
-        return getUser().isInAnyOrganization(modelOrganizations, asList(ADMIN, DATA_MODEL_EDITOR));
+    public boolean hasRightToEditModel(List<UUID> organizations) {
+        return isUserInOrganization(organizations);
     }
 
     @Deprecated

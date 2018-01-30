@@ -15,7 +15,7 @@ import javax.ws.rs.core.Response;
 import fi.vm.yti.datamodel.api.config.EndpointServices;
 import fi.vm.yti.datamodel.api.utils.GraphManager;
 import fi.vm.yti.datamodel.api.utils.IDManager;
-import fi.vm.yti.datamodel.api.utils.JerseyJsonLDClient;
+import fi.vm.yti.datamodel.api.utils.JerseyClient;
 import fi.vm.yti.datamodel.api.utils.LDHelper;
 import fi.vm.yti.datamodel.api.utils.JerseyResponseManager;
 import org.apache.jena.query.ParameterizedSparqlString;
@@ -166,7 +166,7 @@ public class ClassPropertyCreator {
        
       //logger.info(""+SplitIRI.localname(predicateID));
       
-      return JerseyJsonLDClient.constructNotEmptyGraphFromService(pss.toString(), service);
+      return JerseyClient.constructNonEmptyGraphFromService(pss.toString(), service);
 
   }
   

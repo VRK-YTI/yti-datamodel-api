@@ -2,16 +2,15 @@
  * Licensed under the European Union Public Licence (EUPL) V.1.1 
  */
 package fi.vm.yti.datamodel.api.utils;
-import fi.vm.yti.datamodel.api.endpoint.concepts.ConceptSearch;
+import fi.vm.yti.datamodel.api.config.EndpointServices;
 import fi.vm.yti.datamodel.api.endpoint.genericapi.ExportModel;
 import fi.vm.yti.datamodel.api.config.ApplicationProperties;
-import fi.vm.yti.datamodel.api.config.EndpointServices;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.jsonldjava.core.JsonLdError;
 import com.github.jsonldjava.core.JsonLdOptions;
 import com.github.jsonldjava.core.JsonLdProcessor;
 import com.github.jsonldjava.utils.JsonUtils;
-import org.apache.jena.atlas.lib.Sink;
+import jersey.repackaged.com.google.common.collect.ImmutableMap;
 import org.apache.jena.query.*;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
@@ -23,26 +22,16 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.net.ssl.SSLContext;
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.client.*;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.StatusType;
-import org.apache.jena.atlas.json.JSON;
-import org.apache.jena.atlas.json.JsonObject;
-import org.apache.jena.atlas.json.JsonValue;
+
 import org.apache.jena.atlas.web.ContentType;
-import org.apache.jena.rdf.model.RDFReaderF;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.riot.RDFLanguages;
 import org.apache.jena.riot.RiotException;
-import org.apache.jena.riot.adapters.RDFReaderFactoryRIOT;
-import org.apache.jena.riot.lang.SinkQuadsToDataset;
-import org.apache.jena.sparql.core.Quad;
 import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
 import org.glassfish.jersey.uri.UriComponent;
 import org.glassfish.jersey.client.ClientProperties;
@@ -54,11 +43,51 @@ import javax.net.ssl.X509TrustManager;
  * 
  * @author malonen
  */
-public class JerseyJsonLDClient {
+public class JerseyClient {
     
-    static final private Logger logger = Logger.getLogger(JerseyJsonLDClient.class.getName());
-    static final private EndpointServices services = new EndpointServices();
+    static final private Logger logger = Logger.getLogger(JerseyClient.class.getName());
+    static EndpointServices services = new EndpointServices();
 
+
+    public static Response getResponseFromURL(String url, String accept) {
+        Client client = ClientBuilder.newClient();
+        WebTarget target = client.target(url);
+        Invocation.Builder requestBuilder = target.request();
+        if(accept!=null) requestBuilder.accept(accept);
+        Response response = requestBuilder.get();
+        return response;
+    }
+
+    /**
+     * Returns Jersey response from Fuseki service
+     * @param id Id of the graph
+     * @param service Id of the service
+     * @param ctype Requested content-type
+     * @return Response
+     */
+    public static Response getResponseFromService(String id, String service, String ctype) {
+
+        Client client = ClientBuilder.newClient();
+        WebTarget target = client.target(service).queryParam("graph", id);
+        return target.request(ctype).get();
+
+    }
+
+    /* FIXME: Generic function for all responses?
+    public static Response getResponseFromURL(String url, String accept, Map<String, String> queryParams) {
+        Client client = ClientBuilder.newClient();
+        WebTarget target = client.target(url);
+        if(queryParams!=null) {
+            for(String key : queryParams.keySet()) {
+                target = target.queryParam(key, queryParams.get(key));
+            }
+        }
+        Invocation.Builder requestBuilder = target.request();
+        if(accept!=null) requestBuilder = requestBuilder.accept(accept);
+        Response response = requestBuilder.get();
+        return response;
+    }
+    */
 
     /**
      * Reads boolean from any url or returns false
@@ -67,11 +96,9 @@ public class JerseyJsonLDClient {
      */
     public static Boolean readBooleanFromURL(String url) {
         try {
-            
-            Client client = ClientBuilder.newClient();
-            WebTarget target = client.target(url);
-            Response response = target.request("application/json").get();
-            
+
+            Response response = getResponseFromURL(url, "application/json");
+
             if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
                 logger.info("Failed to read boolean from: "+url+" "+response.getStatus());
                 return Boolean.FALSE;
@@ -107,12 +134,11 @@ public class JerseyJsonLDClient {
                 return JerseyResponseManager.notFound();
             }
 
-            DatasetAccessor accessor = DatasetAccessorFactory.createHTTP(services.getCoreReadAddress());
-            Model model = accessor.getModel(graph);
+            Model model = JenaClient.getModelFromCore(graph);
 
             OutputStream out = new ByteArrayOutputStream();
             
-            Response response = JerseyJsonLDClient.getGraphResponseFromService(graph+"#ExportGraph", services.getCoreReadAddress(),ctype);
+            Response response = getResponseFromService(graph+"#ExportGraph", services.getCoreReadAddress(), ctype);
           
             if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
                 return JerseyResponseManager.unexpected();
@@ -190,25 +216,10 @@ public class JerseyJsonLDClient {
         
     }
 
-
-    public static Response getOrganizationsFromRHP() {
-
-        Response response = RHPOrganizationManager.getOrganizations();
-
-        if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-            return JerseyResponseManager.unexpected(response.getStatus());
-        }
-
-        ResponseBuilder rb = Response.status(response.getStatus());
-        rb.entity(response.readEntity(InputStream.class));
-
-        return rb.build();
-    }
-
     @Deprecated
     public static Response getSearchResultFromFinto(String vocid, String term, String lang) {
         
-          
+          /*
             Client client = ClientBuilder.newClient();
             String service = services.getConceptSearchAPI();
             WebTarget target = client.target(service).queryParam("lang", lang).queryParam("query", term);
@@ -227,7 +238,8 @@ public class JerseyJsonLDClient {
             rb.entity(response.readEntity(InputStream.class));
        
            return rb.build();
-        
+        */
+          return null;
     }
     
     
@@ -241,7 +253,7 @@ public class JerseyJsonLDClient {
          Model model = ModelFactory.createDefaultModel();
          
          try {
-         RDFReader reader = model.getReader(Lang.JSONLD.getName());
+           RDFReader reader = model.getReader(Lang.JSONLD.getName());
            reader.read(model, (InputStream)response.getEntity(), "urn:yti:resource");
          } catch(RiotException ex) {
              logger.info(ex.getMessage());
@@ -260,9 +272,7 @@ public class JerseyJsonLDClient {
      */
     public static Response getGraphsAsResponse(String service, String ctype) {
 
-        Client client = ClientBuilder.newClient();
-        WebTarget target = client.target(services.getEndpoint()+"/"+service+"/");
-        Response response = target.request().accept(ctype).get();
+        Response response = getResponseFromURL(services.getEndpoint()+"/"+service+"/", ctype);
 
         logger.info(ctype+" from "+services.getEndpoint()+"/"+service+"/ response: "+ response.getStatus());
 
@@ -279,7 +289,7 @@ public class JerseyJsonLDClient {
                 return Response.ok(input).header("Content-type",ctype).build();
             }
         } catch(IOException ex) {
-            logger.info(ex.getStackTrace().toString());
+            logger.info(ex.getMessage());
             return Response.noContent().build();
         }
 
@@ -293,9 +303,7 @@ public class JerseyJsonLDClient {
      */
     public static Response getExternalGraphsAsResponse(String serviceURL) {
 
-        Client client = ClientBuilder.newClient();
-        WebTarget target = client.target(serviceURL);
-        Response response = target.request().accept("application/trig").get();
+        Response response = getResponseFromURL(serviceURL, "application/ld+json");
 
         logger.info(serviceURL+" response: "+ response.getStatus());
 
@@ -304,15 +312,15 @@ public class JerseyJsonLDClient {
     }
 
     /**
-     * Returns JENA model from TRIG Response
+     * Returns JENA model from external JSONLD Response
      * @param serviceURL  Response object
      * @return          Jena model parsed from Reponse entity or empty model
      */
-    public static Dataset getExternalTRIGDataset(String serviceURL) {
+    public static Dataset getExternalJSONLDDatasets(String serviceURL) {
         Response response = getExternalGraphsAsResponse(serviceURL);
         Dataset dataset = DatasetFactory.create();
         try {
-            RDFDataMgr.read(dataset, response.readEntity(InputStream.class), Lang.TRIG);
+            RDFDataMgr.read(dataset, response.readEntity(InputStream.class), Lang.JSONLD);
         } catch(Exception ex) {
             logger.info(ex.getMessage());
             return dataset;
@@ -327,11 +335,8 @@ public class JerseyJsonLDClient {
      * @return Model
      */
     public static Model getResourceAsJenaModel(String resourceURI) {
-                
-         Client client = ClientBuilder.newClient();
-         WebTarget target = client.target(resourceURI);
 
-         Response response = target.request().accept(Lang.JSONLD.getHeaderString()).get();
+         Response response = getResponseFromURL(resourceURI, Lang.JSONLD.getHeaderString());
 
          Model model = ModelFactory.createDefaultModel();
          
@@ -345,63 +350,39 @@ public class JerseyJsonLDClient {
          return model;
         
     }
-    
+
     /**
-     * Returns Context from the graph
-     * @param id ID of the graph
-     * @param service ID of the service
-     * @return JSON-LD Context object
+     * Returns JSON-LD Jersey response from the Fuseki service
+     * @param id Id of the graph
+     * @param service Id of the service
+     * @return Response
      */
-    public static JsonValue getGraphContextFromService(String id, String service) {
-         
-         Client client = ClientBuilder.newClient();
-         WebTarget target = client.target(service).queryParam("graph", id);
-         Response response = target.request("application/ld+json").get();
-
-
-        JsonObject json = JSON.parse(response.readEntity(InputStream.class));
-        JsonValue jsonContext = json.get("@context");
-        
-        return jsonContext;
-        
-       
+    public static Response getGraphResponseFromService(String id, String service) {
+        return getGraphResponseFromService(id, service, null);
     }
-    
+
     /**
      * Returns Jersey response from the Fuseki service
      * @param id Id of the graph
      * @param service Id of the service
      * @return Response
      */
-    public static Response getGraphResponseFromService(String id, String service) {
-         
-         Client client = ClientBuilder.newClient();
-         WebTarget target = client.target(service).queryParam("graph", id);
-         Response response = target.request("application/ld+json").get();
-         
+    public static Response getGraphResponseFromService(String id, String service, String ctype) {
+
+        if(ctype==null) ctype = "application/ld+json";
+
+        Client client = ClientBuilder.newClient();
+        WebTarget target = client.target(service).queryParam("graph", id);
+        Response response = target.request(ctype).get();
+
         if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-           logger.log(Level.INFO, response.getStatus()+" from SERVICE "+service+" and GRAPH "+id);
-           return JerseyResponseManager.notFound();
+            logger.log(Level.INFO, response.getStatus()+" from SERVICE "+service+" and GRAPH "+id);
+            return JerseyResponseManager.notFound();
         } else {
-            ResponseBuilder rb = Response.status(response.getStatus()); 
+            ResponseBuilder rb = Response.status(response.getStatus());
             rb.entity(response.readEntity(InputStream.class));
             return rb.build();
         }
-    }
-    
-    /**
-     * Returns Jersey response from Fuseki service
-     * @param id Id of the graph
-     * @param service Id of the service
-     * @param ctype Requested content-type
-     * @return Response
-     */
-    public static Response getGraphResponseFromService(String id, String service, String ctype) {
-                   
-         Client client = ClientBuilder.newClient();
-         WebTarget target = client.target(service).queryParam("graph", id);
-         return target.request(ctype).get();
-         
     }
 
     /**
@@ -412,35 +393,35 @@ public class JerseyJsonLDClient {
      * @param raw boolean that states if Response is needed as raw text
      * @return Response
      */
-    public static Response getGraphResponseFromService(String id, String service, ContentType contentType, boolean raw) {
+    public static Response getGraphResponseFromService(String id, String service, String contentType, boolean raw) {
         try {
-            
-         Client client = ClientBuilder.newClient();
-         WebTarget target = client.target(service).queryParam("graph", id);
-         Response response = target.request(contentType.getContentType()).get();
 
-        if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-           logger.log(Level.INFO, response.getStatus()+" from SERVICE "+service+" and GRAPH "+id);
-           return JerseyResponseManager.notFound();
-        }
-        
-        ResponseBuilder rb = Response.status(response.getStatus()); 
-        rb.entity(response.readEntity(InputStream.class));
-        
-        if(!raw) {
-            try {
-                rb.type(contentType.getContentType());
-            } catch(IllegalArgumentException ex) {
-                 rb.type("text/plain;charset=utf-8");
+            Client client = ClientBuilder.newClient();
+            WebTarget target = client.target(service).queryParam("graph", id);
+            Response response = target.request(contentType).get();
+
+            if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
+                logger.log(Level.INFO, response.getStatus()+" from SERVICE "+service+" and GRAPH "+id);
+                return JerseyResponseManager.notFound();
             }
-        } else {
-            rb.type("text/plain;charset=utf-8");
-        }
 
-       return rb.build();
+            ResponseBuilder rb = Response.status(response.getStatus());
+            rb.entity(response.readEntity(InputStream.class));
+
+            if(!raw) {
+                try {
+                    rb.type(contentType);
+                } catch(IllegalArgumentException ex) {
+                    rb.type("text/plain;charset=utf-8");
+                }
+            } else {
+                rb.type("text/plain;charset=utf-8");
+            }
+
+            return rb.build();
         } catch(Exception ex) {
-          logger.log(Level.WARNING, "Expect the unexpected!", ex);
-          return JerseyResponseManager.unexpected();
+            logger.log(Level.WARNING, "Expect the unexpected!", ex);
+            return JerseyResponseManager.unexpected();
         }
     }
     
@@ -472,15 +453,6 @@ public class JerseyJsonLDClient {
                logger.log(Level.INFO, response.getStatus()+" from URL: "+url);
                return JerseyResponseManager.notFound();
             }
-            
-            /* TODO: FIXME: Remove sleep once termed responds faster
-                TODO: Check if fixed?
-            
-            try {
-                Thread.sleep(5000);
-            } catch (InterruptedException ex) {
-                Logger.getLogger(JerseyJsonLDClient.class.getName()).log(Level.SEVERE, null, ex);
-            } */
 
             ResponseBuilder rb = Response.status(response.getStatus()); 
             return rb.build();
@@ -527,7 +499,7 @@ public class JerseyJsonLDClient {
 
             Response response = target.request("application/ld+json").get();
 
-            Model conceptModel = JerseyJsonLDClient.getJSONLDResponseAsJenaModel(response);
+            Model conceptModel = JerseyClient.getJSONLDResponseAsJenaModel(response);
             conceptModel.add(TermedTerminologyManager.getSchemesAsModelFromTermedAPI());
 
             QueryExecution qexec = QueryExecutionFactory.create(QueryLibrary.skosXlToSkos, conceptModel);
@@ -546,7 +518,7 @@ public class JerseyJsonLDClient {
 
             return simpleSkos;
         } catch(Exception ex) {
-                 logger.warning(ex.getStackTrace().toString());
+                 logger.warning(ex.getMessage());
                 return null;
             }
 
@@ -568,7 +540,7 @@ public class JerseyJsonLDClient {
             }
 
               ResponseBuilder rb = Response.status(Response.Status.ACCEPTED);
-              rb.entity(ModelManager.writeModelToString(simpleSkos));
+              rb.entity(ModelManager.writeModelToJSONLDString(simpleSkos));
 
            return rb.build();
 
@@ -578,6 +550,7 @@ public class JerseyJsonLDClient {
      * Returns available schemes
      * @return Response
      */
+    @Deprecated
     public static Response getSchemesFromTermedAPI() {
         String url = ApplicationProperties.getDefaultTermAPI()+"node-trees";
         try {
@@ -592,7 +565,7 @@ public class JerseyJsonLDClient {
             Response response = target.request("application/ld+json").get();
 
             logger.info("TERMED CALL: "+target.getUri().toString());
-            
+
             if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
                logger.log(Level.INFO, response.getStatus()+" from URL: "+url);
                return JerseyResponseManager.notFound();
@@ -632,7 +605,7 @@ public class JerseyJsonLDClient {
             Response response = target.request("application/ld+json").property(ClientProperties.FOLLOW_REDIRECTS, Boolean.TRUE).get();
 
             logger.info("TERMED CALL: "+target.getUri().toString());
-            
+
             if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
                logger.log(Level.INFO, response.getStatus()+" from URL: "+url);
                logger.info("Location: "+response.getLocation().toString());
@@ -676,9 +649,10 @@ public class JerseyJsonLDClient {
     public static StatusType putGraphToTheService(String graph, String body, String service) {
         
          Client client = ClientBuilder.newClient();
-         WebTarget target = client.target(service).queryParam("graph", graph);
+         WebTarget target = client.target(service).queryParam("graph", UriComponent.encode(graph,UriComponent.Type.QUERY));
          Response response = target.request().put(Entity.entity(body, "application/ld+json"));
-         
+         client.close();
+
          return response.getStatusInfo();
          
     }
@@ -693,9 +667,10 @@ public class JerseyJsonLDClient {
      */
     public static boolean graphIsUpdatedToTheService(String graph, String body, String service) {
          Client client = ClientBuilder.newClient();
-         WebTarget target = client.target(service).queryParam("graph", graph);
+         WebTarget target = client.target(service).queryParam("graph", UriComponent.encode(graph,UriComponent.Type.QUERY));
          Response response = target.request().put(Entity.entity(body, "application/ld+json"));
-         
+         client.close();
+
         if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
                logger.log(Level.WARNING, "Unexpected: Model update failed: "+graph);
                return false;
@@ -713,9 +688,9 @@ public class JerseyJsonLDClient {
      */
     public static StatusType postGraphToTheService(String graph, String body, String service) {
          Client client = ClientBuilder.newClient();
-         WebTarget target = client.target(service).queryParam("graph", graph);
+         WebTarget target = client.target(service).queryParam("graph", UriComponent.encode(graph,UriComponent.Type.QUERY));
          Response response = target.request().post(Entity.entity(body, "application/ld+json"));
-         
+         client.close();
          return response.getStatusInfo();
     }
     
@@ -734,7 +709,7 @@ public class JerseyJsonLDClient {
                                           .queryParam("query", UriComponent.encode(query,UriComponent.Type.QUERY));
             
             Response response = target.request("application/ld+json").get();
-            
+
              if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
                return JerseyResponseManager.unexpected(response.getStatus());
             } else {
@@ -745,66 +720,34 @@ public class JerseyJsonLDClient {
           
     }
 
-    /**
-     * Construct from combined model of Concept and Model
-     * @param conceptID ID of concept
-     * @param modelID ID of model
-     * @param query Construct SPARQL query
-     * @return Responses
-     */
-    public static Response constructFromTermedAndCore(String conceptID, String modelID, Query query) {
-        
-            Model conceptModel = TermedTerminologyManager.getConceptAsJenaModel(conceptID);
-            
-            if(conceptModel==null) return JerseyResponseManager.notFound();
-            
-            DatasetAccessor testAcc = DatasetAccessorFactory.createHTTP(services.getCoreReadAddress());
-            conceptModel.add(testAcc.getModel(modelID));
-            
-            QueryExecution qexec = QueryExecutionFactory.create(query,conceptModel);
-            Model resultModel = qexec.execConstruct();
-            
-            qexec.close();
-            
-            return JerseyResponseManager.okModel(resultModel);
-        
+
+    public static Response constructNonEmptyGraphFromService(String query, String service) {
+
+        Model constructModel = JenaClient.constructFromService(query, service);
+
+        if(constructModel.size()<=0) {
+            return JerseyResponseManager.notFound();
+        }
+
+        ResponseBuilder rb = Response.ok();
+        rb.entity(ModelManager.writeModelToJSONLDString(constructModel));
+        return rb.build();
+
     }
-    
+
     
     public static Response constructGraphFromService(String query, String service) {
         
-            QueryExecution qexec = QueryExecutionFactory.sparqlService(service, query);
-            Model constructModel = qexec.execConstruct();
+            Model constructModel = JenaClient.constructFromService(query, service);
         
             if(constructModel.size()<=0) {
                 ResponseBuilder rb = Response.ok().type("application/ld+json");
-                rb.entity(ModelManager.writeModelToString(constructModel));
+                rb.entity(ModelManager.writeModelToJSONLDString(constructModel));
                 return rb.build();
             }
 
             ResponseBuilder rb = Response.ok();
-            rb.entity(ModelManager.writeModelToString(constructModel));
-            return rb.build();
-          
-    }
-
-    /**
-     * Constructs existing graph or returns NOT FOUND
-     * @param query Construct query
-     * @param service ID of the service
-     * @return Response
-     */
-    public static Response constructNotEmptyGraphFromService(String query, String service) {
-        
-            QueryExecution qexec = QueryExecutionFactory.sparqlService(service, query);
-            Model constructModel = qexec.execConstruct();
-        
-            if(constructModel.size()<=0) {
-                return JerseyResponseManager.notFound();
-            }
-
-            ResponseBuilder rb = Response.ok();
-            rb.entity(ModelManager.writeModelToString(constructModel));
+            rb.entity(ModelManager.writeModelToJSONLDString(constructModel));
             return rb.build();
           
     }
@@ -822,7 +765,7 @@ public class JerseyJsonLDClient {
         }
 
         ResponseBuilder rb = Response.ok();
-        rb.entity(ModelManager.writeModelToString(graph));
+        rb.entity(ModelManager.writeModelToJSONLDString(graph));
         return rb.build();
     }
 
@@ -839,7 +782,8 @@ public class JerseyJsonLDClient {
         Client client = ClientBuilder.newClient();
         WebTarget target = client.target(fromService).queryParam("query", UriComponent.encode(query,UriComponent.Type.QUERY));
         Response response = target.request("application/ld+json").get();
-        
+        client.close();
+
         if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
            return response.getStatusInfo();
         } else {
@@ -859,10 +803,11 @@ public class JerseyJsonLDClient {
         try {
 
             Client client = ClientBuilder.newClient();
-            WebTarget target = client.target(service)
-                                           .queryParam("graph", graph);
+            WebTarget target = client.target(service).queryParam("graph", UriComponent.encode(graph,UriComponent.Type.QUERY));
 
             Response response = target.request("application/ld+json").delete();
+
+            client.close();
 
              if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
                 logger.log(Level.WARNING, "Database connection error: "+graph+" was not deleted from "+service+"! Status "+response.getStatus());

@@ -8,7 +8,6 @@ import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.matchers.JsonPathMatchers;
 import fi.vm.yti.datamodel.api.model.ReusableClass;
 import fi.vm.yti.datamodel.api.model.ReusablePredicate;
-import fi.vm.yti.datamodel.api.utils.LDHelper;
 import fi.vm.yti.datamodel.api.utils.ModelManager;
 import org.apache.jena.rdf.model.Model;
 import org.glassfish.jersey.client.ClientProperties;
@@ -63,7 +62,7 @@ public class ModelTest  {
         if(newModel.size()<=0) {
             Assert.fail();
         } else {
-            Response newModelResponse = target.path("model").request().put(Entity.entity(ModelManager.writeModelToString(newModel),"application/ld+json"));
+            Response newModelResponse = target.path("model").request().put(Entity.entity(ModelManager.writeModelToJSONLDString(newModel),"application/ld+json"));
             Assert.assertEquals(200,newModelResponse.getStatus());
 
             String uuidString = newModelResponse.readEntity(String.class);
@@ -73,7 +72,7 @@ public class ModelTest  {
 
             testModelId = JsonPath.read(jsonObject, "$.@id");
 
-            Assert.assertEquals(403,target.path("model").request().put(Entity.entity(ModelManager.writeModelToString(newModel),"application/ld+json")).getStatus());
+            Assert.assertEquals(403,target.path("model").request().put(Entity.entity(ModelManager.writeModelToJSONLDString(newModel),"application/ld+json")).getStatus());
 
 
         }
@@ -93,7 +92,7 @@ public class ModelTest  {
                 .readEntity(String.class);
 
         Model classModel = ModelManager.createJenaModelFromJSONLDString(testClass);
-        String classString = ModelManager.writeModelToString(classModel);
+        String classString = ModelManager.writeModelToJSONLDString(classModel);
 
         Response newClassResponse = target.path("class").request().put(Entity.entity(classString,"application/ld+json"));
         Assert.assertEquals(200,newClassResponse.getStatus());
@@ -111,7 +110,7 @@ public class ModelTest  {
 
          ReusableClass updateClass = new ReusableClass(json.jsonString());
 
-         Response updateClassResponse = target.path("class").queryParam("id",updateClass.getId()).queryParam("model",updateClass.getModelId()).request().post(Entity.entity(ModelManager.writeModelToString(updateClass.asGraph()),"application/ld+json"));
+         Response updateClassResponse = target.path("class").queryParam("id",updateClass.getId()).queryParam("model",updateClass.getModelId()).request().post(Entity.entity(ModelManager.writeModelToJSONLDString(updateClass.asGraph()),"application/ld+json"));
 
          Assert.assertEquals(200,updateClassResponse.getStatus());
 
@@ -131,7 +130,7 @@ public class ModelTest  {
                 .readEntity(String.class);
 
         Model predicateModel = ModelManager.createJenaModelFromJSONLDString(testPredicate);
-        String predicateString = ModelManager.writeModelToString(predicateModel);
+        String predicateString = ModelManager.writeModelToJSONLDString(predicateModel);
 
         Response newPredicateResponse = target.path("predicate").request().put(Entity.entity(predicateString,"application/ld+json"));
         Assert.assertEquals(200,newPredicateResponse.getStatus());
@@ -150,7 +149,7 @@ public class ModelTest  {
         json.set(jsonPath,"Test 2 Edit" ).jsonString();
 
         ReusablePredicate updatePredicate = new ReusablePredicate(json.jsonString());
-        Response updatePredicateResponse = target.path("predicate").queryParam("id",updatePredicate.getId()).queryParam("model",updatePredicate.getModelId()).request().post(Entity.entity(ModelManager.writeModelToString(updatePredicate.asGraph()),"application/ld+json"));
+        Response updatePredicateResponse = target.path("predicate").queryParam("id",updatePredicate.getId()).queryParam("model",updatePredicate.getModelId()).request().post(Entity.entity(ModelManager.writeModelToJSONLDString(updatePredicate.asGraph()),"application/ld+json"));
 
         Assert.assertEquals(200,updatePredicateResponse.getStatus());
     }

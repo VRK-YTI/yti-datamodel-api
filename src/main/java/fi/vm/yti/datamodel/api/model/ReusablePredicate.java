@@ -69,7 +69,6 @@ public class ReusablePredicate extends AbstractPredicate {
         pss.setLiteral("predicateLabel", ResourceFactory.createLangLiteral(predicateLabel, lang));
         String predicateName = LDHelper.propertyName(predicateLabel);
         pss.setIri("predicateIRI",LDHelper.resourceIRI(modelIRI.toString(), predicateName));
-        pss.setIri("modelService",services.getLocalhostCoreSparqlAddress());
 
         this.graph = TermedTerminologyManager.constructCleanedModelFromTermedAPIAndCore(conceptIRI.toString(),modelIRI.toString(),pss.asQuery());
 
@@ -103,9 +102,8 @@ public class ReusablePredicate extends AbstractPredicate {
         pss.setLiteral("predicateLabel", ResourceFactory.createLangLiteral(predicateLabel, lang));
         String predicateName = LDHelper.propertyName(predicateLabel);
         pss.setIri("predicateIRI",LDHelper.resourceIRI(modelIRI.toString(), predicateName));
-        pss.setIri("modelService",services.getLocalhostCoreSparqlAddress());
 
-        this.graph = GraphManager.constructModelFromGraph(pss.toString(),services.getCoreSparqlAddress());
+        this.graph = GraphManager.constructModelFromCoreGraph(pss.toString());
 
     }
 

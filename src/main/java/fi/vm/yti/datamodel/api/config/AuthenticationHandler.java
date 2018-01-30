@@ -47,7 +47,7 @@ class AuthenticationHandler {
 
         String url = ApplicationProperties.getDefaultGroupManagementAPI() + "user";
 
-        logger.info("Fetching user from URL: " + url);
+        //logger.info("Fetching user from URL: " + url);
 
         Response response = ClientBuilder.newBuilder()
                 .sslContext(naiveSSLContext())
@@ -74,7 +74,7 @@ class AuthenticationHandler {
 
         YtiUser ytiUser = new YtiUser(user.email, user.firstName, user.lastName, user.superuser, user.newlyCreated, rolesInOrganizations);
 
-        logger.info("User fetched: " + ytiUser);
+        //logger.info("User fetched: " + ytiUser);
 
         return ytiUser;
     }

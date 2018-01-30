@@ -6,17 +6,13 @@ import javax.servlet.ServletContext;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 
-import fi.vm.yti.datamodel.api.utils.ContextWriter;
-import fi.vm.yti.datamodel.api.utils.JerseyJsonLDClient;
-import fi.vm.yti.datamodel.api.utils.JerseyResponseManager;
+import fi.vm.yti.datamodel.api.utils.*;
+import fi.vm.yti.datamodel.api.utils.JerseyClient;
 
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import fi.vm.yti.datamodel.api.config.EndpointServices;
-import fi.vm.yti.datamodel.api.utils.IDManager;
-import fi.vm.yti.datamodel.api.utils.JsonSchemaWriter;
-import fi.vm.yti.datamodel.api.utils.XMLSchemaWriter;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -106,7 +102,7 @@ public class ExportResource {
                 //return JerseyResponseManager.notFound();
             }
                         
-            return  JerseyJsonLDClient.getGraphResponseFromService(graph, service, contentType, raw);
+            return  JerseyClient.getGraphResponseFromService(graph, service, contentType.getContentType(), raw);
         } catch (Exception ex) {
             logger.log(Level.WARNING, "Expect the unexpected!", ex);
             return JerseyResponseManager.serverError();

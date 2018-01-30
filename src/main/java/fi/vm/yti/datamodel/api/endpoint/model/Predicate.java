@@ -5,6 +5,7 @@ package fi.vm.yti.datamodel.api.endpoint.model;
 
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -32,7 +33,10 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import java.util.Map;
+import org.apache.jena.rdfconnection.RDFConnectionRemote;
+import org.apache.jena.system.Txn;
+import org.glassfish.jersey.server.internal.JerseyRequestTimeoutHandler;
+
 import javax.ws.rs.DELETE;
 
 
@@ -76,7 +80,7 @@ public class Predicate {
 
         pss.setCommandText(queryString);
         
-        return JerseyJsonLDClient.constructGraphFromService(pss.toString(), services.getCoreSparqlAddress());
+        return JerseyClient.constructGraphFromService(pss.toString(), services.getCoreSparqlAddress());
 
       } else {
 
@@ -85,16 +89,14 @@ public class Predicate {
             }         
             
             if(id.startsWith("urn:")) {
-               return JerseyJsonLDClient.getGraphResponseFromService(id, services.getProvReadWriteAddress());
+               return JerseyClient.getGraphResponseFromService(id, services.getProvReadWriteAddress());
             }   
-           
-            String sparqlService = services.getCoreSparqlAddress();
-            String graphService = services.getCoreReadWriteAddress();       
 
             ParameterizedSparqlString pss = new ParameterizedSparqlString();
 
             /* Get Map of namespaces from id-graph */
-            Map<String, String> namespaceMap = NamespaceManager.getCoreNamespaceMap(id, graphService);
+
+            Map<String, String> namespaceMap = NamespaceManager.getCoreNamespaceMap(id);
 
             if(namespaceMap==null) {
                 logger.info("No model for "+id);
@@ -112,7 +114,7 @@ public class Predicate {
                   pss.setIri("library", model);
             }
 
-            return JerseyJsonLDClient.constructNotEmptyGraphFromService(pss.toString(), sparqlService);         
+            return JerseyClient.constructNonEmptyGraphFromService(pss.toString(), services.getCoreSparqlAddress());
 
       }
 
@@ -150,7 +152,7 @@ public class Predicate {
       LoginSession login = new LoginSession(session);
 
       if(!login.isSuperAdmin()) {
-          if (!login.isLoggedIn() || !login.hasRightToEditModel(model)) {
+          if (!login.isLoggedIn()) {
               return JerseyResponseManager.unauthorized();
           }
       }
@@ -181,7 +183,7 @@ public class Predicate {
             ReusablePredicate updatePredicate = new ReusablePredicate(body);
 
             if(!login.isSuperAdmin()) {
-                if (!login.isUserInOrganization(updatePredicate.getOrganizations())) {
+                if (!login.hasRightToEditModel(updatePredicate.getOrganizations())) {
                     logger.info("User is not in organization");
                     return JerseyResponseManager.unauthorized();
                 }
@@ -205,11 +207,7 @@ public class Predicate {
             }
 
             if(ProvenanceManager.getProvMode()) {
-                if(oldIdIRI!=null) {
-                    ProvenanceManager.renameID(oldIdIRI.toString(), idIRI.toString());
-                }
-                ProvenanceManager.createProvenanceGraphFromModel(updatePredicate.getId(), updatePredicate.asGraph(), login.getEmail(), updatePredicate.getProvUUID());
-                ProvenanceManager.createProvEntity(updatePredicate.getId(), login.getEmail(), updatePredicate.getProvUUID());
+                ProvenanceManager.createProvEntityBundle(updatePredicate.getId(), updatePredicate.asGraph(), login.getEmail(), updatePredicate.getProvUUID(), oldIdIRI);
             }
 
 
@@ -219,11 +217,7 @@ public class Predicate {
                 // Selfreferences not allowed
                 return JerseyResponseManager.usedIRI();
             } else {
-                GraphManager.insertExistingGraphReferenceToModel(id, model);
-                GraphManager.addCoreGraphToCoreGraph(id, model+"#ExportGraph");
-               // GraphManager.createExportGraphInRunnable(model);
-                //logger.info("Created reference from "+model+" to "+id);
-                //ConceptMapper.addConceptFromReferencedResource(model,id);
+                GraphManager.insertExistingResourceToModel(id, model);
                 return JerseyResponseManager.ok();
             }
         }
@@ -286,8 +280,7 @@ public class Predicate {
            newPredicate.create();
 
           if (ProvenanceManager.getProvMode()) {
-              ProvenanceManager.createProvenanceGraphFromModel(newPredicate.getId(), newPredicate.asGraph(), login.getEmail(), newPredicate.getProvUUID());
-              ProvenanceManager.createProvenanceActivity(newPredicate.getId(), newPredicate.getProvUUID(),login.getEmail());
+            ProvenanceManager.createProvenanceActivityFromModel(newPredicate.getId(), newPredicate.asGraph(), newPredicate.getProvUUID(), login.getEmail());
           }
           
           if(provUUID!=null) {
@@ -340,7 +333,7 @@ public class Predicate {
        LoginSession login = new LoginSession(session);
 
       if(!login.isSuperAdmin()) {
-          if (!login.isLoggedIn() || !login.hasRightToEditModel(model)) {
+          if (!login.isLoggedIn()) {
               return JerseyResponseManager.unauthorized();
           }
       }
@@ -348,10 +341,14 @@ public class Predicate {
         /* If Predicate is defined in the model */
         if(id.startsWith(model)) {
             /* Remove graph */
-               // Response resp = JerseyJsonLDClient.deleteGraphFromService(id, services.getCoreReadWriteAddress());
+               // Response resp = JerseyClient.deleteGraphFromService(id, services.getCoreReadWriteAddress());
             try {
-                ReusablePredicate deletePredicate = new ReusablePredicate(id);
-                deletePredicate.delete();
+                ReusablePredicate deletePredicate = new ReusablePredicate(idIRI);
+                if(login.hasRightToEditModel(deletePredicate.getOrganizations())) {
+                    deletePredicate.delete();
+                } else {
+                    return JerseyResponseManager.unauthorized();
+                }
             } catch(IllegalArgumentException ex) {
                 logger.warning(ex.toString());
                 return JerseyResponseManager.unexpected();

@@ -15,7 +15,7 @@ import fi.vm.yti.datamodel.api.config.EndpointServices;
 import fi.vm.yti.datamodel.api.utils.JerseyResponseManager;
 import fi.vm.yti.datamodel.api.utils.GraphManager;
 import fi.vm.yti.datamodel.api.utils.IDManager;
-import fi.vm.yti.datamodel.api.utils.JerseyJsonLDClient;
+import fi.vm.yti.datamodel.api.utils.JerseyClient;
 import fi.vm.yti.datamodel.api.utils.LDHelper;
 import fi.vm.yti.datamodel.api.utils.NamespaceResolver;
 import org.apache.jena.query.ParameterizedSparqlString;
@@ -88,7 +88,7 @@ public class ModeRequirementlCreator {
             pss.setLiteral("prefix", prefix);
             if(!isLocalNamespace) pss.setLiteral("resolved", isResolvedNamespace);
 
-            return JerseyJsonLDClient.constructNotEmptyGraphFromService(pss.toString(), services.getTempConceptReadSparqlAddress());
+            return JerseyClient.constructNonEmptyGraphFromService(pss.toString(), services.getTempConceptReadSparqlAddress());
 
         }
 }

@@ -9,12 +9,9 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 
-import fi.vm.yti.datamodel.api.utils.JerseyJsonLDClient;
-import fi.vm.yti.datamodel.api.utils.JerseyResponseManager;
-import fi.vm.yti.datamodel.api.utils.LDHelper;
-import fi.vm.yti.datamodel.api.utils.OPHCodeServer;
+import fi.vm.yti.datamodel.api.utils.*;
+import fi.vm.yti.datamodel.api.utils.JerseyClient;
 import fi.vm.yti.datamodel.api.config.EndpointServices;
-import fi.vm.yti.datamodel.api.utils.IDManager;
 import org.apache.jena.query.ParameterizedSparqlString;
 import org.apache.jena.rdf.model.ResourceFactory;
 import io.swagger.annotations.Api;
@@ -83,7 +80,7 @@ public class CodeServerCreator {
             
             pss.setCommandText(queryString);
 
-            return JerseyJsonLDClient.constructGraphFromService(pss.toString(), services.getTempConceptReadSparqlAddress());
+            return JerseyClient.constructGraphFromService(pss.toString(), services.getTempConceptReadSparqlAddress());
 
         }
 }

@@ -62,7 +62,7 @@ public class SearchManager {
 
         logger.info(pss.toString());
 
-        return GraphManager.constructModelFromGraph(pss.toString(), services.getCoreSparqlAddress());
+        return GraphManager.constructModelFromCoreGraph(pss.toString());
 
     }
 

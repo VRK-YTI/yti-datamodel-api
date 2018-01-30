@@ -10,14 +10,10 @@ import io.swagger.annotations.*;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
 import org.apache.jena.query.Dataset;
+import org.apache.jena.query.DatasetFactory;
 import org.apache.jena.rdf.model.*;
-import org.apache.jena.rdfconnection.RDFConnection;
-import org.apache.jena.rdfconnection.RDFConnectionFactory;
-import org.apache.jena.system.Txn;
 import org.apache.jena.update.UpdateAction;
 import org.apache.jena.vocabulary.DCTerms;
-import org.apache.jena.vocabulary.RDF;
-import org.apache.jena.web.DatasetAdapter;
 import org.apache.jena.web.DatasetGraphAccessorHTTP;
 import org.glassfish.jersey.uri.UriComponent;
 
@@ -27,7 +23,6 @@ import javax.servlet.http.HttpSession;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
-import javax.xml.stream.events.Namespace;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -45,8 +40,6 @@ public class Migrator {
     @Context ServletContext context;
     EndpointServices services = new EndpointServices();
     private static final Logger logger = Logger.getLogger(Migrator.class.getName());
-    private DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(services.getCoreReadWriteAddress());
-    private DatasetAdapter adapter = new DatasetAdapter(accessor);
 
     @GET
     @ApiOperation(value = "OK to migrate")
@@ -94,7 +87,7 @@ public class Migrator {
             return JerseyResponseManager.unauthorized();
         }
 
-        Boolean replicate = JerseyJsonLDClient.readBooleanFromURL(service+"replicate");
+        Boolean replicate = JerseyClient.readBooleanFromURL(service+"replicate");
 
         if(replicate!=null && replicate.booleanValue()) {
             logger.info("Migrating data from "+service);
@@ -115,7 +108,7 @@ public class Migrator {
             }
 
             String SD = "http://www.w3.org/ns/sparql-service-description#";
-            Model modelList = JerseyJsonLDClient.getResourceAsJenaModel(service + "serviceDescription");
+            Model modelList = JerseyClient.getResourceAsJenaModel(service + "serviceDescription");
             logger.info("Service description: " + service + "serviceDescription size:" + modelList.size());
 
             if (modelIRI != null) {
@@ -144,7 +137,7 @@ public class Migrator {
       String oldNamespaceDomain = oldNamespace.substring(0,oldNamespace.lastIndexOf("/")+1);
       logger.info("Old namespace domain: "+oldNamespaceDomain);
 
-      Model exportedModel = JerseyJsonLDClient.getResourceAsJenaModel(service+"exportResource?graph="+UriComponent.encode(oldNamespace, UriComponent.Type.QUERY_PARAM));
+      Model exportedModel = JerseyClient.getResourceAsJenaModel(service+"exportResource?graph="+UriComponent.encode(oldNamespace, UriComponent.Type.QUERY_PARAM));
       String prefix = exportedModel.listStatements(ResourceFactory.createResource(oldNamespace), LDHelper.curieToProperty("dcap:preferredXMLNamespacePrefix"), (Literal) null).nextStatement().getString();
       logger.info("Model prefix: "+prefix);
 
@@ -272,13 +265,14 @@ public class Migrator {
 
           logger.info("Migrating "+oldNamespace+" size:"+exportedModel.size()+" to "+newNamespace);
           exportedModel = NamespaceManager.renameNamespace(exportedModel, oldNamespaceDomain, namespaceDomain);
-          adapter.putModel(newNamespace, exportedModel);
+
+          JenaClient.putModelToCore(newNamespace, exportedModel);
 
           // Model resource history
           String modelHistoryURL = service+"history?id="+UriComponent.encode(oldNamespace, UriComponent.Type.QUERY_PARAM);
-          logger.info("Getting history activity:"+modelHistoryURL);
+          //logger.info("Getting history activity:"+modelHistoryURL);
 
-          Model modelHistoryModel = JerseyJsonLDClient.getResourceAsJenaModel(modelHistoryURL);
+          Model modelHistoryModel = JerseyClient.getResourceAsJenaModel(modelHistoryURL);
           modelHistoryModel = NamespaceManager.renameNamespace(modelHistoryModel, oldNamespaceDomain, namespaceDomain);
 
           ProvenanceManager.putToProvenanceGraph(modelHistoryModel, newNamespace);
@@ -287,22 +281,30 @@ public class Migrator {
 
           while(modelProvIter.hasNext()) {
               String provModelURI = modelProvIter.next().asResource().toString();
-              logger.info("Migrating "+oldNamespace+" history "+provModelURI);
-              Model provModelRes = JerseyJsonLDClient.getResourceAsJenaModel(service+"history?id="+UriComponent.encode(provModelURI, UriComponent.Type.QUERY_PARAM));
+             // logger.info("Migrating "+oldNamespace+" history "+provModelURI);
+              Model provModelRes = JerseyClient.getResourceAsJenaModel(service+"history?id="+UriComponent.encode(provModelURI, UriComponent.Type.QUERY_PARAM));
 
               provModelRes = NamespaceManager.renameNamespace(provModelRes, oldNamespaceDomain, namespaceDomain);
               LDHelper.rewriteLiteral(provModelRes, ResourceFactory.createResource(newNamespace), LDHelper.curieToProperty("dcap:preferredXMLNamespaceName"), ResourceFactory.createPlainLiteral(newNamespace+"#"));
 
-              // Dont insert org & group because prov graphs cannot be joined from model
               deleteGroup =
                       "PREFIX skos: <http://www.w3.org/2004/02/skos/core#>" +
                               "PREFIX dcterms: <http://purl.org/dc/terms/>" +
                               "PREFIX foaf: <http://xmlns.com/foaf/0.1/>" +
                               "PREFIX owl: <http://www.w3.org/2002/07/owl#>" +
                               "PREFIX termed: <http://termed.thl.fi/meta/>" +
+                              "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>" +
                               "DELETE {" +
                               "    ?model dcterms:isPartOf ?group . " +
                               "    ?group ?p ?o . " +
+                              "} INSERT { " +
+                              "    ?model dcterms:contributor <urn:uuid:7d3a3c00-5a6b-489b-a3ed-63bb58c26a63> . " +
+                              "    <urn:uuid:7d3a3c00-5a6b-489b-a3ed-63bb58c26a63> a foaf:Organization . " +
+                              "    <urn:uuid:7d3a3c00-5a6b-489b-a3ed-63bb58c26a63> skos:prefLabel 'Migrated organization'@en . " +
+                              "    ?model dcterms:isPartOf <http://publications.europa.eu/resource/authority/data-theme/GOVE> ." +
+                              "    <http://publications.europa.eu/resource/authority/data-theme/GOVE> a foaf:Group . " +
+                              "    <http://publications.europa.eu/resource/authority/data-theme/GOVE> dcterms:identifier 'GOVE' . " +
+                              "    <http://publications.europa.eu/resource/authority/data-theme/GOVE> rdfs:label 'Migrated group'@en." +
                               "} WHERE { " +
                               "    ?model a owl:Ontology . " +
                               "    ?model dcterms:isPartOf ?group . " +
@@ -314,9 +316,7 @@ public class Migrator {
               UpdateAction.parseExecute(deleteRequired, provModelRes);
               UpdateAction.parseExecute(updateStatus, provModelRes);
 
-
-
-              ProvenanceManager.putToProvenanceGraph(provModelRes, provModelURI);
+               ProvenanceManager.putToProvenanceGraph(provModelRes, provModelURI);
           }
 
 
@@ -327,17 +327,18 @@ public class Migrator {
 
           logger.info("Getting HasPartGraph: "+uri);
 
-          Model hasPartModel = JerseyJsonLDClient.getResourceAsJenaModel(uri);
+          Model hasPartModel = JerseyClient.getResourceAsJenaModel(uri);
 
           // ExportGraph
 
           String euri = service+"exportResource?graph="+UriComponent.encode(oldNamespace+"#ExportGraph",UriComponent.Type.QUERY_PARAM);
           logger.info("ExportGraph:"+euri);
 
-          Model exportModel = JerseyJsonLDClient.getResourceAsJenaModel(euri);
+          Model exportModel = JerseyClient.getResourceAsJenaModel(euri);
 
           exportModel = NamespaceManager.renameNamespace(exportModel, oldNamespaceDomain, namespaceDomain);
-          adapter.putModel(newNamespace+"#ExportGraph", exportModel);
+
+          JenaClient.putModelToCore(newNamespace+"#ExportGraph", exportModel);
 
           // PositionGraph
 
@@ -345,11 +346,11 @@ public class Migrator {
 
           logger.info("PositionGraph:"+puri);
 
-          Model positionModel = JerseyJsonLDClient.getResourceAsJenaModel(puri);
+          Model positionModel = JerseyClient.getResourceAsJenaModel(puri);
 
           if(positionModel!=null && positionModel.size()>1) {
               positionModel = NamespaceManager.renameNamespace(positionModel, oldNamespaceDomain, namespaceDomain);
-              adapter.putModel(newNamespace + "#PositionGraph", positionModel);
+              JenaClient.putModelToCore(newNamespace + "#PositionGraph", positionModel);
           }
 
           // Resources
@@ -364,7 +365,7 @@ public class Migrator {
 
                   String resourceURI = service + "exportResource?graph=" + UriComponent.encode(oldName, UriComponent.Type.QUERY_PARAM);
 
-                  Model resourceModel = JerseyJsonLDClient.getResourceAsJenaModel(resourceURI);
+                  Model resourceModel = JerseyClient.getResourceAsJenaModel(resourceURI);
                   String newName = oldName.replaceFirst(oldNamespace, newNamespace);
 
                   resourceModel = NamespaceManager.renameNamespace(resourceModel, oldNamespaceDomain, namespaceDomain);
@@ -385,14 +386,16 @@ public class Migrator {
                   UpdateAction.parseExecute(deleteLocalSkos, resourceModel);
                   UpdateAction.parseExecute(updateStatus, resourceModel);
 
-                  adapter.putModel(newName, resourceModel);
+                  JenaClient.putModelToCore(newName, resourceModel);
+                  //coreDataset.addNamedModel(newName, resourceModel);
 
                   logger.info("Migrated resource " + oldName + " to " + newName);
 
                   String historyURL = service+"history?id="+UriComponent.encode(oldName, UriComponent.Type.QUERY_PARAM);
-                  logger.info("Getting history activity:"+historyURL);
+                  //logger.info("Getting history activity:"+historyURL);
 
-                  Model resourceHistoryModel = JerseyJsonLDClient.getResourceAsJenaModel(historyURL);
+                  Dataset provResourceDataset = DatasetFactory.create();
+                  Model resourceHistoryModel = JerseyClient.getResourceAsJenaModel(historyURL);
 
                   resourceHistoryModel = NamespaceManager.renameNamespace(resourceHistoryModel, oldNamespaceDomain, namespaceDomain);
 
@@ -402,8 +405,8 @@ public class Migrator {
 
                   while(resProvIter.hasNext()) {
                       String provResURI = resProvIter.next().asResource().toString();
-                      logger.info("Migrating "+oldName+" history "+provResURI);
-                      Model provRes = JerseyJsonLDClient.getResourceAsJenaModel(service+"history?id="+UriComponent.encode(provResURI, UriComponent.Type.QUERY_PARAM));
+                      //logger.info("Migrating "+oldName+" history "+provResURI);
+                      Model provRes = JerseyClient.getResourceAsJenaModel(service+"history?id="+UriComponent.encode(provResURI, UriComponent.Type.QUERY_PARAM));
                       provRes = NamespaceManager.renameNamespace(provRes, oldNamespaceDomain, namespaceDomain);
                       UpdateAction.parseExecute(deleteLocalSkos, provRes);
                       UpdateAction.parseExecute(updateStatus, provRes);
@@ -418,11 +421,10 @@ public class Migrator {
 
           // Creating new HasPartGraph
           hasPartModel = NamespaceManager.renameNamespace(hasPartModel, oldNamespaceDomain, namespaceDomain);
-          hasPartModel.write(System.out,"text/turtle");
-          adapter.putModel(newNamespace+"#HasPartGraph", hasPartModel);
+          JenaClient.putModelToCore(newNamespace+"#HasPartGraph", hasPartModel);
 
-          // GraphManager.constructExportGraph(newNamespace);
 
+         // GraphManager.constructExportGraph(newNamespace);
 
           logger.info("---------------------------------------------------------");
 

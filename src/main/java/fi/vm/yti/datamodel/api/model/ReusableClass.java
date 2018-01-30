@@ -99,7 +99,7 @@ public class ReusableClass extends AbstractClass {
         String resourceName = LDHelper.resourceName(classLabel);
         pss.setIri("classIRI",LDHelper.resourceIRI(modelIRI.toString(),resourceName));
 
-        this.graph = GraphManager.constructModelFromGraph(pss.toString(),services.getCoreSparqlAddress());
+        this.graph = GraphManager.constructModelFromCoreGraph(pss.toString());
 
     }
 

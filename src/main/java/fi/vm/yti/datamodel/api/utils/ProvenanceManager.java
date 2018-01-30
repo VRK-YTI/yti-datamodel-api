@@ -5,9 +5,13 @@ package fi.vm.yti.datamodel.api.utils;
 
 import fi.vm.yti.datamodel.api.config.ApplicationProperties;
 import fi.vm.yti.datamodel.api.config.EndpointServices;
+import org.apache.jena.iri.IRI;
 import org.apache.jena.query.ParameterizedSparqlString;
 import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.ResourceFactory;
+import org.apache.jena.rdfconnection.RDFConnection;
+import org.apache.jena.rdfconnection.RDFConnectionRemote;
+import org.apache.jena.system.Txn;
 import org.apache.jena.update.UpdateExecutionFactory;
 import org.apache.jena.update.UpdateProcessor;
 import org.apache.jena.update.UpdateRequest;
@@ -40,16 +44,30 @@ public class ProvenanceManager {
      * @param id IRI of the graph as String
      */
     public static void putToProvenanceGraph(Model model, String id) {
-        
-      DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(services.getProvReadWriteAddress());
-      DatasetAdapter adapter = new DatasetAdapter(accessor);
-      
-      adapter.putModel(id, model);
-        
+      JenaClient.putModelToProv(id, model);
     }
 
-    public static void createProvenanceActivity(String graph, String provUUID, String user) {
+    /**
+     * Creates Provenance activity for the given resource
+     * @param id ID of the resource
+     * @param model Model containing the resource
+     * @param provUUID Provenance UUID for the resource
+     * @param email Email of the committing user
+     */
+    public static void createProvenanceActivityFromModel(String id, Model model, String provUUID, String email) {
+       putToProvenanceGraph(model, provUUID);
+       createProvenanceActivity(id, provUUID, email);
+    }
 
+    /**
+     * Returns query for creating the PROV Activity
+     * @param graph ID of the resource
+     * @param provUUID Provenance id of the resource
+     * @param user Email of the committing user
+     * @return UpdateRequest of the activity
+     */
+
+    public static UpdateRequest createProvenanceActivityRequest(String graph, String provUUID, String user) {
         String query
                 = "INSERT { "
                 + "GRAPH ?graph { "
@@ -72,31 +90,23 @@ public class ProvenanceManager {
 
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
-        
+
         pss.setIri("graph", graph);
         pss.setIri("user", "mailto:"+user);
         pss.setIri("jsonld", provUUID);
-       // pss.setLiteral("versionID", provUUID);
         pss.setCommandText(query);
-
-        UpdateRequest queryObj = pss.asUpdate();
-        UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, services.getProvSparqlUpdateAddress());
-        qexec.execute();
-
-
-
+        return pss.asUpdate();
     }
 
-    public static void createProvenanceGraphFromModel(String graph, Model model, String user, String provUUID) {
-        logger.info("Putting "+graph+" to provenance graph: "+provUUID);
-        putToProvenanceGraph(model, provUUID);
+    public static void createProvenanceActivity(String graph, String provUUID, String user) {
+        UpdateRequest queryObj = createProvenanceActivityRequest(graph, provUUID, user);
+        JenaClient.updateToService(queryObj, services.getProvSparqlUpdateAddress());
     }
-    
-    public static void createProvEntity(String graph, String user, String provUUID) {
-        
-            String query
+
+    public static UpdateRequest createProvEntityRequest(String graph, String user, String provUUID) {
+        String query
                 = "DELETE { "
-                + "GRAPH ?graph {"  
+                + "GRAPH ?graph {"
                 + "?graph prov:used ?oldEntity . "
                 + "}"
                 + "}"
@@ -107,7 +117,7 @@ public class ProvenanceManager {
                 + "?jsonld a prov:Entity . "
                 + "?jsonld prov:wasAttributedTo ?user . "
                 + "?jsonld prov:generatedAtTime ?creation . "
-                + "?jsonld prov:wasRevisionOf ?oldEntity . " 
+                + "?jsonld prov:wasRevisionOf ?oldEntity . "
                 + "}"
                 + "GRAPH ?jsonld {"
                 + "?graph a prov:Entity ."
@@ -116,39 +126,61 @@ public class ProvenanceManager {
                 + "WHERE { "
                 + "GRAPH ?graph { "
                 + "?graph prov:used ?oldEntity . "
-                + "}"    
+                + "}"
                 + "BIND(now() as ?creation)"
                 + "}";
 
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
-        
+
         pss.setIri("graph", graph);
         pss.setIri("user", "mailto:"+user);
         pss.setIri("jsonld", provUUID);
         pss.setCommandText(query);
-
-        logger.info(pss.toString());
-        UpdateRequest queryObj = pss.asUpdate();
-        UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, services.getProvSparqlUpdateAddress());
-        qexec.execute();
-
+        return pss.asUpdate();
     }
-    
-    public static void renameID(String oldid, String newid) {
-         
-            String query
+
+    public static void createProvEntity(String graph, String provUUID, String user) {
+        UpdateRequest queryObj = createProvEntityRequest(graph, user, provUUID);
+        JenaClient.updateToService(queryObj, services.getProvSparqlUpdateAddress());
+    }
+
+    /**
+     * Creates PROV Entities and renames ID:s if changed
+     * @param graph Graph of the resource
+     * @param model Model containing the resource
+     * @param user Email of the committing user
+     * @param provUUID Provenance UUID for the resource
+     * @param oldIdIRI Optional: Old IRI for the resource
+     */
+    public static void createProvEntityBundle(String graph, Model model, String user, String provUUID, IRI oldIdIRI) {
+      putToProvenanceGraph(model, provUUID);
+      createProvEntity(graph, provUUID, user);
+        if(oldIdIRI!=null) {
+            ProvenanceManager.renameID(oldIdIRI.toString(), graph);
+        }
+    }
+
+    /**
+     * Query that renames ID:s in provenance service
+     * @param oldid Old id
+     * @param newid New id
+     * @return
+     */
+    public static UpdateRequest renameIDRequest(String oldid, String newid) {
+
+        String query
                 = "INSERT { "
                 + "GRAPH ?newid { "
                 + "?newid prov:generated ?jsonld . "
                 + "?newid prov:startedAtTime ?creation . "
                 + "?newid prov:used ?any . "
                 + "?newid a prov:Activity . "
-                + "?newid prov:wasAttributedTo ?user . "                
+                + "?newid prov:wasAttributedTo ?user . "
                 + "?jsonld a prov:Entity . "
                 + "?jsonld prov:wasAttributedTo ?user . "
                 + "?jsonld prov:generatedAtTime ?creation . "
-                + "?jsonld prov:wasRevisionOf ?oldEntity . " 
+                + "?jsonld prov:wasRevisionOf ?oldEntity . "
                 + "}}"
                 + "WHERE { "
                 + "GRAPH ?oldid { "
@@ -166,74 +198,18 @@ public class ProvenanceManager {
 
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
-        
+
         pss.setIri("oldid", oldid);
         pss.setIri("newid", newid);
         pss.setCommandText(query);
 
-        UpdateRequest queryObj = pss.asUpdate();
-        UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, services.getProvSparqlUpdateAddress());
-        qexec.execute();
-        
-        
-        DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(services.getProvReadWriteAddress());
-        DatasetAdapter adapter = new DatasetAdapter(accessor);
-        adapter.deleteModel(oldid);
-        
-    }
-    
+        return pss.asUpdate();
 
-        public static void createNewVersionModel(String model, String user, UUID provModelUUID) {
-        
-            
-            String query
-                = "INSERT {"
-                + "GRAPH ?provModelUUID { "
-                + "?model a prov:Entity . " 
-                + "?model dcterms:hasPart ?provResourceUUID . "
-                + "?model schema:version ?versionNumber . "
-                + "}"
-                + "GRAPH ?model { "
-                + "?model dcterms:hasVersion ?provModelUUID . "
-                + "?provModelUUID prov:wasDerivedFrom ?modelEntity . "
-                + "?provModelUUID a prov:Entity . "
-                + "?provModelUUID prov:wasAttributedTo ?user . "
-                + "?provModelUUID prov:generatedAtTime ?creation . "
-                + "}}"
-                + "WHERE { "
-                + "{SELECT (COUNT(?version)+1 AS ?versionNumber) { GRAPH ?model { ?model dcterms:hasVersion ?version . } } } "
-                + "GRAPH ?model { "
-                + "?model a prov:Activity . "
-                + "?model prov:used ?modelEntity . "
-                + "?modelEntity a prov:Entity . "
-                + "}"
-                + "GRAPH ?modelPartGraph { "
-                + "?model dcterms:hasPart ?resource . }"
-                + "GRAPH ?resource { "
-                + "?resource a prov:Activity . "
-                + "?resource prov:used ?provResourceUUID . "
-                + "?provResourceUUID a prov:Entity . "
-                + "}"
-                + "GRAPH ?provResourceUUID { "
-                + "?resource rdfs:isDefinedBy ?anyModel . "
-                + "}" 
-                + "BIND(now() as ?creation)"
-                + "}";
-            
-        ParameterizedSparqlString pss = new ParameterizedSparqlString();
-        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
-        pss.setIri("model", model);
-        pss.setIri("user", "mailto:"+user);
-        pss.setIri("provModelUUID", "urn:uuid:"+provModelUUID);
-        pss.setCommandText(query);
-        
-        UpdateRequest queryObj = pss.asUpdate();
-        UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, services.getProvSparqlUpdateAddress());
-        qexec.execute();
-        
-        // NamespaceManager.copyNamespacesFromGraphToGraph(model,"urn:uuid:"+provModelUUID,services.getCoreReadAddress(),services.getProvReadWriteAddress());
-        
-        
+    }
+
+    public static void renameID(String oldid, String newid) {
+        UpdateRequest queryObj = renameIDRequest(oldid, newid);
+        JenaClient.updateToService(queryObj, services.getProvSparqlUpdateAddress());
     }
     
         

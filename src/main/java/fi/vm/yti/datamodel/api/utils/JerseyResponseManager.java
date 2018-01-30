@@ -3,7 +3,6 @@
  */
 package fi.vm.yti.datamodel.api.utils;
 
-import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Response;
 
 import fi.vm.yti.datamodel.api.config.ApplicationProperties;
@@ -22,7 +21,7 @@ public class JerseyResponseManager {
     }
     
     public static Response okModel(Model model) {
-        return Response.status(200).entity(ModelManager.writeModelToString(model)).build();
+        return Response.status(200).entity(ModelManager.writeModelToJSONLDString(model)).build();
     }
     
     public static Response ok(String content, String contentType) {

@@ -34,8 +34,8 @@ import static fi.vm.yti.datamodel.api.utils.SSLContextFactory.naiveSSLContext;
  */
 public class RHPOrganizationManager {
 
-    private static EndpointServices services = new EndpointServices();
     static final private Logger logger = Logger.getLogger(RHPOrganizationManager.class.getName());
+    static EndpointServices services = new EndpointServices();
 
     public static Response getOrganizations() {
 
@@ -45,7 +45,9 @@ public class RHPOrganizationManager {
 
         String service = ApplicationProperties.getDefaultGroupManagementAPI() + "organizations";
         WebTarget target = client.target(service);
-        return target.request("application/json").get();
+        Response resp = target.request("application/json").get();
+
+        return resp;
     }
 
     public static Model getOrganizationModelFromRHP() {
@@ -167,7 +169,6 @@ public class RHPOrganizationManager {
         pss.setCommandText(queryString);
         Query query = pss.asQuery();
 
-        //logger.info(pss.toString());
         QueryExecution qexec = QueryExecutionFactory.sparqlService(services.getCoreSparqlAddress(), query);
 
         try {

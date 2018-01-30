@@ -3,7 +3,6 @@
  */
 package fi.vm.yti.datamodel.api.endpoint.model;
 
-import java.security.InvalidParameterException;
 import java.util.List;
 import java.util.UUID;
 import java.util.logging.Logger;
@@ -104,7 +103,7 @@ public class ModelCreator {
 
             try {
                 DataModel newModel = new DataModel(prefix, namespaceIRI, label, lang, allowedLang, serviceList, orgList);
-                return JerseyJsonLDClient.constructResponseFromGraph(newModel.asGraph());
+                return JerseyClient.constructResponseFromGraph(newModel.asGraph());
             } catch(IllegalArgumentException ex) {
                 return JerseyResponseManager.invalidParameter();
             }

@@ -15,8 +15,7 @@ import fi.vm.yti.datamodel.api.config.EndpointServices;
 import fi.vm.yti.datamodel.api.model.ReusablePredicate;
 import fi.vm.yti.datamodel.api.utils.IDManager;
 import fi.vm.yti.datamodel.api.utils.JerseyResponseManager;
-import fi.vm.yti.datamodel.api.utils.JerseyJsonLDClient;
-import fi.vm.yti.datamodel.api.utils.LDHelper;
+import fi.vm.yti.datamodel.api.utils.JerseyClient;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -76,7 +75,7 @@ public class PredicateCreator {
                 newPredicate = new ReusablePredicate(modelIRI, predicateLabel, lang, typeIRI);
             }
 
-            return JerseyJsonLDClient.constructResponseFromGraph(newPredicate.asGraph());
+            return JerseyClient.constructResponseFromGraph(newPredicate.asGraph());
         } catch(IllegalArgumentException ex) {
             logger.info(ex.toString());
             return JerseyResponseManager.error();

@@ -4,14 +4,12 @@
 package fi.vm.yti.datamodel.api.endpoint.concepts;
 
 import fi.vm.yti.datamodel.api.config.EndpointServices;
-import fi.vm.yti.datamodel.api.utils.JerseyJsonLDClient;
 import fi.vm.yti.datamodel.api.utils.JerseyResponseManager;
 import fi.vm.yti.datamodel.api.utils.TermedTerminologyManager;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import org.apache.jena.rdf.model.Model;
 
 import javax.servlet.ServletContext;
 import javax.ws.rs.core.Context;

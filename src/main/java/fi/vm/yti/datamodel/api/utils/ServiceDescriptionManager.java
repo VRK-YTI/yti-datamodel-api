@@ -10,11 +10,13 @@ import fi.vm.yti.datamodel.api.config.EndpointServices;
 import java.util.*;
 
 import org.apache.jena.datatypes.xsd.XSDDatatype;
+import org.apache.jena.datatypes.xsd.XSDDateTime;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
 import org.apache.jena.query.*;
+import org.apache.jena.rdf.model.Literal;
 import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.ResourceFactory;
@@ -42,8 +44,8 @@ public class ServiceDescriptionManager {
      */
     public static void updateGraphDescription(String graph) {
         
-        String timestamp = SafeDateFormat.fmt().format(new Date());
-        
+        Literal timestamp = LDHelper.getDateTimeLiteral();
+
         String query =
                 "WITH <urn:csc:iow:sd>"+
                 "DELETE { "+
@@ -63,7 +65,7 @@ public class ServiceDescriptionManager {
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
 
         pss.setIri("graphName", graph);
-        pss.setLiteral("timestamp", timestamp,XSDDatatype.XSDdateTime);
+        pss.setLiteral("timestamp", timestamp);
         pss.setCommandText(query);
 
         UpdateRequest queryObj = pss.asUpdate();
@@ -166,7 +168,7 @@ public class ServiceDescriptionManager {
      */
     public static void createGraphDescription(String graph, String userMail, List<UUID> orgs) throws IRIException {
         
-        String timestamp = SafeDateFormat.fmt().format(new Date());
+        Literal timestamp = LDHelper.getDateTimeLiteral();
 
         if(orgs==null || orgs.isEmpty()) {
             logger.warning("Cannot create graph description without organizations");
@@ -202,7 +204,7 @@ public class ServiceDescriptionManager {
 
         pss.setIri("graphName", graph);
         if(userMail!=null) pss.setIri("creator", "mailto:"+userMail);
-        pss.setLiteral("timestamp", timestamp,XSDDatatype.XSDdateTime);
+        pss.setLiteral("timestamp", timestamp);
         pss.setCommandText(query);
 
         logger.log(Level.FINE, pss.toString());

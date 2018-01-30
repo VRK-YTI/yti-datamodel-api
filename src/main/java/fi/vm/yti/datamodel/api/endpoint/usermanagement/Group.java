@@ -4,7 +4,7 @@
 package fi.vm.yti.datamodel.api.endpoint.usermanagement;
 
 import fi.vm.yti.datamodel.api.config.EndpointServices;
-import fi.vm.yti.datamodel.api.utils.JerseyJsonLDClient;
+import fi.vm.yti.datamodel.api.utils.JerseyClient;
 
 import java.util.logging.Logger;
 import javax.servlet.ServletContext;
@@ -39,7 +39,7 @@ public class Group {
 			@ApiResponse(code = 404, message = "Service not found") })
 	@Produces("application/ld+json")
 	public Response getGroup() {
-		return JerseyJsonLDClient.getGraphResponseFromService("urn:csc:groups",services.getCoreReadAddress());
+		return JerseyClient.getGraphResponseFromService("urn:csc:groups",services.getCoreReadAddress());
 	}
 
 }

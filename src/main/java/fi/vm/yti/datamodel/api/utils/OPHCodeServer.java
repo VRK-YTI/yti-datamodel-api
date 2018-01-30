@@ -180,7 +180,7 @@ public class OPHCodeServer {
             }
         
             } catch(Exception ex) {
-                logger.warning(ex.getStackTrace().toString());
+                logger.warning(ex.getMessage());
                 logger.info("Not connected to the code server");
                 return false;
             } 

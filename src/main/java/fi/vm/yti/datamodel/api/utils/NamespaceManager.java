@@ -4,9 +4,6 @@
 package fi.vm.yti.datamodel.api.utils;
 
 import fi.vm.yti.datamodel.api.config.EndpointServices;
-import fi.vm.yti.datamodel.api.config.LoginSession;
-
-import fi.vm.yti.datamodel.api.endpoint.model.PredicateCreator;
 import org.apache.jena.query.DatasetAccessor;
 import org.apache.jena.query.DatasetAccessorFactory;
 import org.apache.jena.query.ParameterizedSparqlString;
@@ -22,13 +19,8 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import org.apache.jena.iri.IRI;
-import org.apache.jena.util.ResourceUtils;
-import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
-import org.apache.jena.web.DatasetAdapter;
-import org.apache.jena.web.DatasetGraphAccessorHTTP;
-import org.glassfish.jersey.uri.UriComponent;
 
 /**
  *
@@ -78,11 +70,7 @@ public class NamespaceManager {
      * Tries to resolve default namespaces and saves to the fixed namespace graph
      */
     public static void resolveDefaultNamespaceToTheCore() {
-        
-        DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(services.getCoreReadWriteAddress());
-	    DatasetAdapter adapter = new DatasetAdapter(accessor);
-	    adapter.add("urn:csc:iow:namespaces", getDefaultNamespaceModelAndResolve());
-        
+	    JenaClient.putModelToCore("urn:csc:iow:namespaces", getDefaultNamespaceModelAndResolve());
     }
 
     /**
@@ -119,11 +107,7 @@ public class NamespaceManager {
      * Adds default namespaces to the fixed namespace graph
      */
     public static void addDefaultNamespacesToCore() {
-        
-        DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(services.getCoreReadWriteAddress());
-	    DatasetAdapter adapter = new DatasetAdapter(accessor);
-	    adapter.putModel("urn:csc:iow:namespaces", getDefaultNamespaceModel());
-        
+        JenaClient.putModelToCore("urn:csc:iow:namespaces", getDefaultNamespaceModel());
     }
 
     /**
@@ -132,11 +116,7 @@ public class NamespaceManager {
      * @return boolean
      */
     public static boolean isSchemaInStore(String namespace) {
-        
-        DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(services.getImportsReadAddress());
-        DatasetAdapter adapter = new DatasetAdapter(accessor);
-        return adapter.containsModel(namespace);
-        
+        return JenaClient.containsSchemaModel(namespace);
     }
 
     /**
@@ -145,29 +125,23 @@ public class NamespaceManager {
      * @param model schema as jena model
      */
     public static void putSchemaToStore(String namespace, Model model) {
-        
-      	DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(services.getImportsReadWriteAddress());
-	    DatasetAdapter adapter = new DatasetAdapter(accessor);
-	    adapter.putModel(namespace, model);
-    
+        JenaClient.putToImports(namespace, model);
     }
 
     /**
      * Returns namespaces from the graph
      * @param graph Graph of the model
-     * @param service Used service
      * @return Returns prefix-map
      */
-    public static Map<String, String> getCoreNamespaceMap(String graph, String service) {
-        
-        DatasetAccessor accessor = DatasetAccessorFactory.createHTTP(service);
-        Model classModel = accessor.getModel(graph);
+    public static Map<String, String> getCoreNamespaceMap(String graph) {
+
+        Model model = JenaClient.getModelFromCore(graph);
             
-            if(classModel==null) {
+            if(model==null) {
                 return null;
             }
             
-            return classModel.getNsPrefixMap();
+            return model.getNsPrefixMap();
        
     }
 
@@ -295,6 +269,13 @@ public class NamespaceManager {
 
     }
 
+    /**
+     * Renames Object namespace with replaceFirst.
+     * @param model Model that needs Object nodes to be renamespaced. Uses replaceFirst to overwrite namespaces.
+     * @param oldNamespace Old namespace
+     * @param newNamespace New namespace
+     * @return
+     */
     public static Model renameObjectNamespace(Model model, String oldNamespace, String newNamespace) {
         Selector definitionSelector = new SimpleSelector(null, null, (Resource) null);
         Iterator<Statement> defStatement = model.listStatements(definitionSelector).toList().iterator();
@@ -313,6 +294,13 @@ public class NamespaceManager {
         return model;
     }
 
+    /**
+     * Renames Property namespaces with replaceFirst.
+     * @param model Model that needs Property namespaces to be renamed
+     * @param oldNamespace Old Property namespace
+     * @param newNamespace New Property namespace
+     * @return
+     */
     public static Model renamePropertyNamespace(Model model, String oldNamespace, String newNamespace) {
         SimpleSelector selector = new SimpleSelector();
         Iterator<Statement> defStatement = model.listStatements(selector).toList().iterator();
@@ -330,6 +318,13 @@ public class NamespaceManager {
         return model;
     }
 
+    /**
+     * Renames Resource namespaces with replaceFirst.
+     * @param model Model that needs Resource namespace to be renamed
+     * @param oldNamespace Old Resource namespace
+     * @param newNamespace Old Resource namespace
+     * @return
+     */
     public static Model renameResourceNamespace(Model model, String oldNamespace, String newNamespace) {
         Selector definitionSelector = new SimpleSelector(ResourceFactory.createResource(oldNamespace), null, (Resource) null);
         Iterator<Statement> defStatement = model.listStatements(definitionSelector).toList().iterator();
@@ -348,6 +343,13 @@ public class NamespaceManager {
     }
 
 
+    /**
+     * Renames namespaces in NsPrefixMap and loops trough each triple. Renames Subject and Objet namespaces with replaceFirst.
+     * @param model Model that needs namespaces to be renamed
+     * @param oldNamespace Old namespace
+     * @param newNamespace New namespace
+     * @return
+     */
     public static Model renameNamespace(Model model, String oldNamespace, String newNamespace) {
         // Goes trough all triples in model. Uses selector for concurrent access!
         Selector selector = new SimpleSelector();
@@ -401,48 +403,6 @@ public class NamespaceManager {
         }
 
         return model;
-    }
-
-
-
-    /**
-     * Renames namespace of the model
-     * @param modelID Old model id
-     * @param newModelID New model id
-     */
-    @Deprecated
-    public static void renameNamespace(String modelID, String newModelID) {
-
-        logger.info("Changing "+modelID+" to "+newModelID);
-
-        Model newModel = GraphManager.getCoreGraph(modelID);
-        Resource modelResource = newModel.getResource(modelID);
-        ResourceUtils.renameResource(modelResource,newModelID);
-        GraphManager.putToGraph(newModel, modelID);
-        GraphManager.removeGraph(modelID);
-
-        ProvenanceManager.renameID(modelID, newModelID);
-        ServiceDescriptionManager.renameServiceGraphName(modelID, newModelID);
-
-        Model hasPartModel = GraphManager.getCoreGraph(modelID+"#HasPartGraph");
-
-        NodeIterator nodIter = hasPartModel.listObjectsOfProperty(DCTerms.hasPart);
-
-        while(nodIter.hasNext()) {
-            String resourceName = nodIter.nextNode().asResource().toString();
-            String newResourceName = resourceName.replaceFirst(modelID, newModelID);
-            logger.info("Changing "+resourceName+" to "+newResourceName);
-
-            Model resourceModel = GraphManager.getCoreGraph(resourceName);
-            Resource res = resourceModel.getResource(resourceName);
-            ResourceUtils.renameResource(res,newResourceName);
-
-            GraphManager.putToGraph(resourceModel,newResourceName);
-            GraphManager.removeGraph(resourceName);
-            ProvenanceManager.renameID(resourceName, newResourceName);
-
-           }
-        
     }
 
 

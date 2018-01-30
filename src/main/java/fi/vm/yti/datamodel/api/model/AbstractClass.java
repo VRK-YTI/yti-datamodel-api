@@ -56,28 +56,28 @@ public abstract class AbstractClass extends AbstractResource {
         public AbstractClass(Model graph){
             this.graph = graph;
 
-            List<RDFNode> modelList = this.graph.listObjectsOfProperty(RDFS.isDefinedBy).toList();
-            if(modelList==null || modelList.size()!=1) {
+            try {
+                Statement isDefinedBy = asGraph().getRequiredProperty(null, RDFS.isDefinedBy);
+                Resource classResource = isDefinedBy.getResource();
+                if(classResource.hasProperty(RDF.type, RDFS.Class)) {
+                    throw new IllegalArgumentException("Expected rdfs:Class type");
+                }
+                this.dataModel = new DataModel(LDHelper.toIRI(classResource.toString()));
+                this.id = LDHelper.toIRI(isDefinedBy.getSubject().toString());
+
+                if(!this.id.toString().startsWith(getModelId())) {
+                    throw new IllegalArgumentException("Class ID should start with model ID!");
+                }
+
+                this.provUUID = "urn:uuid:"+UUID.randomUUID().toString();
+                classResource.removeAll(DCTerms.identifier);
+                classResource.addProperty(DCTerms.identifier,ResourceFactory.createPlainLiteral(provUUID));
+
+            } catch(Exception ex)  {
+                logger.warning(ex.getMessage());
                 throw new IllegalArgumentException("Expected 1 class (isDefinedBy)");
+
             }
-
-            this.dataModel = new DataModel(LDHelper.toIRI(modelList.get(0).asResource().getURI()));
-
-            List<Resource> classList = this.graph.listSubjectsWithProperty(RDF.type, ResourceFactory.createResource(LDHelper.curieToURI("rdfs:Class"))).toList();
-            if(classList == null || classList.size()!=1) {
-                throw new IllegalArgumentException("Expected 1 class in graph!");
-            }
-
-            Resource classResource = classList.get(0);
-            this.id = LDHelper.toIRI(classResource.getURI());
-
-            if(!this.id.toString().startsWith(getModelId())) {
-                throw new IllegalArgumentException("Class ID should start with model ID!");
-            }
-
-            this.provUUID = "urn:uuid:"+UUID.randomUUID().toString();
-            classResource.removeAll(DCTerms.identifier);
-            classResource.addProperty(DCTerms.identifier,ResourceFactory.createPlainLiteral(provUUID));
 
         }
 

@@ -5,6 +5,7 @@ package fi.vm.yti.datamodel.api.endpoint.model;
 
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -32,7 +33,9 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import java.util.Map;
+import org.apache.jena.rdfconnection.RDFConnectionRemote;
+import org.apache.jena.system.Txn;
+
 import javax.ws.rs.DELETE;
  
 /**
@@ -76,7 +79,7 @@ public class Class {
 
         pss.setCommandText(queryString);
 
-        return JerseyJsonLDClient.constructGraphFromService(pss.toString(), services.getCoreSparqlAddress());
+        return JerseyClient.constructGraphFromService(pss.toString(), services.getCoreSparqlAddress());
 
       } else {
           
@@ -86,16 +89,14 @@ public class Class {
             }  
             
             if(id.startsWith("urn:")) {
-               return JerseyJsonLDClient.getGraphResponseFromService(id, services.getProvReadWriteAddress());
-            }   
-           
-            String sparqlService = services.getCoreSparqlAddress();
-            String graphService = services.getCoreReadWriteAddress();
+               return JerseyClient.getGraphResponseFromService(id, services.getProvReadWriteAddress());
+            }
 
             ParameterizedSparqlString pss = new ParameterizedSparqlString();
 
             /* Get Map of namespaces from id-graph */
-            Map<String, String> namespaceMap = NamespaceManager.getCoreNamespaceMap(id, graphService);
+
+            Map<String, String> namespaceMap = NamespaceManager.getCoreNamespaceMap(id);
 
             if(namespaceMap==null) {
                 return JerseyResponseManager.notFound();
@@ -113,7 +114,7 @@ public class Class {
                   pss.setIri("library", model);
             }
 
-            return JerseyJsonLDClient.constructNotEmptyGraphFromService(pss.toString(), sparqlService);         
+            return JerseyClient.constructNonEmptyGraphFromService(pss.toString(), services.getCoreSparqlAddress());
 
       }
          
@@ -151,7 +152,7 @@ public class Class {
       LoginSession login = new LoginSession(session);
 
       if(!login.isSuperAdmin()){
-          if(!login.isLoggedIn() || !login.hasRightToEditModel(model)) {
+          if(!login.isLoggedIn()) {
               return JerseyResponseManager.unauthorized();
           }
       }
@@ -183,7 +184,7 @@ public class Class {
             ReusableClass updateClass = new ReusableClass(body);
 
             if(!login.isSuperAdmin()) {
-                if (!login.isUserInOrganization(updateClass.getOrganizations())) {
+                if (!login.hasRightToEditModel(updateClass.getOrganizations())) {
                     logger.info("User is not in organization");
                     return JerseyResponseManager.unauthorized();
                 }
@@ -206,11 +207,7 @@ public class Class {
             }
 
             if(ProvenanceManager.getProvMode()) {
-                if(oldIdIRI!=null) {
-                    ProvenanceManager.renameID(oldIdIRI.toString(), idIRI.toString());
-                }
-                ProvenanceManager.createProvenanceGraphFromModel(updateClass.getId(), updateClass.asGraph(), login.getEmail(), updateClass.getProvUUID());
-                ProvenanceManager.createProvEntity(updateClass.getId(), login.getEmail(), updateClass.getProvUUID());
+                ProvenanceManager.createProvEntityBundle(updateClass.getId(), updateClass.asGraph(), login.getEmail(), updateClass.getProvUUID(), oldIdIRI);
             }
 
 
@@ -221,9 +218,10 @@ public class Class {
                 // Self references not allowed
                 return JerseyResponseManager.usedIRI();
             } else {
-                GraphManager.insertExistingGraphReferenceToModel(id, model);
-                GraphManager.insertNewGraphReferenceToExportGraph(id, model);
-                GraphManager.addCoreGraphToCoreGraph(id, model+"#ExportGraph");
+                GraphManager.insertExistingResourceToModel(id, model);
+               // GraphManager.insertExistingGraphReferenceToModel(id, model);
+               // GraphManager.insertNewGraphReferenceToExportGraph(id, model);
+               // GraphManager.addCoreGraphToCoreGraph(id, model+"#ExportGraph");
                 logger.info("Created reference from "+model+" to "+id);
                 return JerseyResponseManager.ok();
             }
@@ -295,8 +293,7 @@ public class Class {
             logger.info("Created "+newClass.getId());
 
             if (ProvenanceManager.getProvMode()) {
-                ProvenanceManager.createProvenanceGraphFromModel(newClass.getId(), newClass.asGraph(), login.getEmail(), newClass.getProvUUID());
-                ProvenanceManager.createProvenanceActivity(newClass.getId(), newClass.getProvUUID(),login.getEmail());
+                ProvenanceManager.createProvenanceActivityFromModel(newClass.getId(), newClass.asGraph(), newClass.getProvUUID(), login.getEmail());
             }
 
             return JerseyResponseManager.successUuid(newClass.getProvUUID(), newClass.getId());
@@ -344,7 +341,7 @@ public class Class {
        LoginSession login = new LoginSession(session);
 
       if(!login.isSuperAdmin()) {
-          if (!login.isLoggedIn() || !login.hasRightToEditModel(model)) {
+          if (!login.isLoggedIn()) {
               return JerseyResponseManager.unauthorized();
           }
       }
@@ -354,23 +351,22 @@ public class Class {
            /* Remove graph */
 
            try {
-               ReusableClass deleteClass = new ReusableClass(id);
-               deleteClass.delete();
+               ReusableClass deleteClass = new ReusableClass(idIRI);
+               if(login.hasRightToEditModel(deleteClass.getOrganizations())) {
+                   deleteClass.delete();
+               } else {
+                   return JerseyResponseManager.unauthorized();
+               }
            } catch(IllegalArgumentException ex) {
                logger.warning(ex.toString());
                return JerseyResponseManager.unexpected();
            }
-            // Response resp = JerseyJsonLDClient.deleteGraphFromService(id, services.getCoreReadWriteAddress());
-            // GraphManager.createExportGraphInRunnable(model);
-            // ConceptMapper.removeUnusedConcepts(model);
+
             return JerseyResponseManager.ok();
         } else {
            /* If removing referenced class */
              GraphManager.deleteGraphReferenceFromModel(idIRI,modelIRI);
-
              GraphManager.deleteGraphReferenceFromExportModel(idIRI, modelIRI);
-             // TODO: Not removed from export model
-
              return JerseyResponseManager.ok();
        }
   }

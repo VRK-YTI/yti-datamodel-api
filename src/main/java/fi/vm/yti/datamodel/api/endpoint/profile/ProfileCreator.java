@@ -3,10 +3,8 @@
  */
 package fi.vm.yti.datamodel.api.endpoint.profile;
 
-import java.security.InvalidParameterException;
 import java.util.List;
 import java.util.UUID;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.servlet.ServletContext;
 import javax.ws.rs.GET;
@@ -21,8 +19,6 @@ import fi.vm.yti.datamodel.api.model.ServiceCategory;
 import fi.vm.yti.datamodel.api.utils.*;
 import fi.vm.yti.datamodel.api.config.ApplicationProperties;
 import fi.vm.yti.datamodel.api.config.EndpointServices;
-import org.apache.jena.query.ParameterizedSparqlString;
-import org.apache.jena.rdf.model.ResourceFactory;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -106,7 +102,7 @@ public class ProfileCreator {
 
             ApplicationProfile newModel = new ApplicationProfile(prefix, namespaceIRI, label, lang, allowedLang, serviceList, orgList);
 
-            return JerseyJsonLDClient.constructResponseFromGraph(newModel.asGraph());
+            return JerseyClient.constructResponseFromGraph(newModel.asGraph());
     }   
  
 }

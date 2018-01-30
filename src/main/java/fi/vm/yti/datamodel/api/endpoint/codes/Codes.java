@@ -4,7 +4,7 @@
 package fi.vm.yti.datamodel.api.endpoint.codes;
 
 import fi.vm.yti.datamodel.api.config.EndpointServices;
-import fi.vm.yti.datamodel.api.utils.JerseyJsonLDClient;
+import fi.vm.yti.datamodel.api.utils.JerseyClient;
 import fi.vm.yti.datamodel.api.utils.JerseyResponseManager;
 import fi.vm.yti.datamodel.api.utils.OPHCodeServer;
 import io.swagger.annotations.Api;
@@ -55,7 +55,7 @@ public class Codes {
                if(!codeStatus) return JerseyResponseManager.notAcceptable();
           } 
       
-           return JerseyJsonLDClient.getGraphResponseFromService(uri, services.getSchemesReadAddress());
+           return JerseyClient.getGraphResponseFromService(uri, services.getSchemesReadAddress());
 
   }
   
