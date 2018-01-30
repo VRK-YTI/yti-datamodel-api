@@ -28,29 +28,7 @@ public abstract class AbstractClass extends AbstractResource {
         public AbstractClass() {}
 
         public AbstractClass(IRI graphIRI) {
-            this.graph = GraphManager.getCoreGraph(graphIRI);
-
-            List<Resource> modelList = this.graph.listResourcesWithProperty(RDFS.isDefinedBy).toList();
-            if(modelList==null || modelList.size()!=1) {
-                throw new IllegalArgumentException("Expected 1 model (isDefinedBy)");
-            }
-
-            this.dataModel = new DataModel(modelList.get(0).getURI());
-
-            List<Resource> classList = this.graph.listSubjectsWithProperty(RDF.type, ResourceFactory.createResource(LDHelper.curieToURI("rdfs:Class"))).toList();
-            if(classList == null || classList.size()!=1) {
-                throw new IllegalArgumentException("Expected 1 class in graph!");
-            }
-
-            Resource classResource = classList.get(0);
-            this.id = LDHelper.toIRI(classResource.getURI());
-
-            List<Statement> provIdList = classResource.listProperties(DCTerms.identifier).toList();
-            if(provIdList == null || provIdList.size()==0 || provIdList.size()>1) {
-                throw new IllegalArgumentException("Expected only 1 provenance ID, got "+provIdList.size());
-            } else {
-                this.provUUID = provIdList.get(0).getLiteral().toString();
-            }
+          super(graphIRI);
         }
 
         public AbstractClass(Model graph){
@@ -58,12 +36,15 @@ public abstract class AbstractClass extends AbstractResource {
 
             try {
                 Statement isDefinedBy = asGraph().getRequiredProperty(null, RDFS.isDefinedBy);
-                Resource classResource = isDefinedBy.getResource();
-                if(classResource.hasProperty(RDF.type, RDFS.Class)) {
+                Resource classResource = isDefinedBy.getSubject().asResource();
+                Resource modelResource = isDefinedBy.getObject().asResource();
+
+                if(!classResource.hasProperty(RDF.type, RDFS.Class)) {
                     throw new IllegalArgumentException("Expected rdfs:Class type");
                 }
-                this.dataModel = new DataModel(LDHelper.toIRI(classResource.toString()));
-                this.id = LDHelper.toIRI(isDefinedBy.getSubject().toString());
+
+                this.dataModel = new DataModel(LDHelper.toIRI(modelResource.toString()));
+                this.id = LDHelper.toIRI(classResource.toString());
 
                 if(!this.id.toString().startsWith(getModelId())) {
                     throw new IllegalArgumentException("Class ID should start with model ID!");
@@ -76,7 +57,6 @@ public abstract class AbstractClass extends AbstractResource {
             } catch(Exception ex)  {
                 logger.warning(ex.getMessage());
                 throw new IllegalArgumentException("Expected 1 class (isDefinedBy)");
-
             }
 
         }

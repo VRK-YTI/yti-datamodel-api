@@ -18,7 +18,7 @@ import java.util.UUID;
 /**
  * Created by malonen on 21.11.2017.
  */
-public abstract class AbstractShape {
+public abstract class AbstractShape extends AbstractResource {
 
     EndpointServices services = new EndpointServices();
     protected Model graph;
@@ -31,35 +31,7 @@ public abstract class AbstractShape {
     public AbstractShape() {}
 
     public AbstractShape(IRI graphIRI) {
-        this.graph = GraphManager.getCoreGraph(graphIRI);
-
-        List<Resource> modelList = this.graph.listResourcesWithProperty(RDFS.isDefinedBy).toList();
-        if(modelList==null || modelList.size()!=1) {
-            throw new IllegalArgumentException("Expected 1 model (isDefinedBy)");
-        }
-
-        List<Resource> scopeList = this.graph.listResourcesWithProperty(LDHelper.curieToProperty("sh:scopeClass")).toList();
-        if(scopeList==null || scopeList.size()!=1) {
-            throw new IllegalArgumentException("Expected 1 Reusable Class (scopeClass)");
-        }
-
-        this.dataModel = new DataModel(modelList.get(0).getURI());
-        this.modelOrganizations = dataModel.getOrganizations();
-
-        List<Resource> shapeList = this.graph.listSubjectsWithProperty(RDF.type, ResourceFactory.createResource(LDHelper.curieToURI("sh:Shape"))).toList();
-        if(shapeList == null || shapeList.size()!=1) {
-            throw new IllegalArgumentException("Expected 1 shape in graph!");
-        }
-
-        Resource shapeResource = shapeList.get(0);
-        this.id = LDHelper.toIRI(shapeResource.getURI());
-
-        List<Statement> provIdList = shapeResource.listProperties(DCTerms.identifier).toList();
-        if(provIdList == null || provIdList.size()==0 || provIdList.size()>1) {
-            throw new IllegalArgumentException("Expected only 1 provenance ID, got "+provIdList.size());
-        } else {
-            this.provUUID = provIdList.get(0).getResource().getURI();
-        }
+        super(graphIRI);
     }
 
     public AbstractShape(Model graph){
@@ -73,6 +45,11 @@ public abstract class AbstractShape {
 
         this.dataModel = new DataModel(modelList.get(0).getURI());
         this.modelOrganizations = dataModel.getOrganizations();
+
+        List<Resource> scopeList = this.graph.listResourcesWithProperty(LDHelper.curieToProperty("sh:scopeClass")).toList();
+        if(scopeList==null || scopeList.size()!=1) {
+            throw new IllegalArgumentException("Expected 1 Reusable Class (scopeClass)");
+        }
 
         List<Resource> classList = this.graph.listSubjectsWithProperty(RDF.type, ResourceFactory.createResource(LDHelper.curieToURI("sh:Shape"))).toList();
         if(classList == null || classList.size()!=1) {

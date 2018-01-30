@@ -343,6 +343,7 @@ public class Predicate {
             /* Remove graph */
                // Response resp = JerseyClient.deleteGraphFromService(id, services.getCoreReadWriteAddress());
             try {
+                logger.info("Removeing "+idIRI.toString());
                 ReusablePredicate deletePredicate = new ReusablePredicate(idIRI);
                 if(login.hasRightToEditModel(deletePredicate.getOrganizations())) {
                     deletePredicate.delete();

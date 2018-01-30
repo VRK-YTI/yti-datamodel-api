@@ -3,10 +3,14 @@ package fi.vm.yti.datamodel.api.model;
 import fi.vm.yti.datamodel.api.config.EndpointServices;
 import fi.vm.yti.datamodel.api.utils.GraphManager;
 import fi.vm.yti.datamodel.api.utils.JenaClient;
+import fi.vm.yti.datamodel.api.utils.LDHelper;
 import fi.vm.yti.datamodel.api.utils.ModelManager;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.rdf.model.*;
 import org.apache.jena.vocabulary.DCTerms;
+import org.apache.jena.vocabulary.RDF;
+import org.apache.jena.vocabulary.RDFS;
+
 import java.util.logging.Logger;
 
 /**
@@ -19,6 +23,49 @@ public class AbstractResource {
     protected String provUUID;
     protected IRI id;
     private static final Logger logger = Logger.getLogger(AbstractResource.class.getName());
+
+    public AbstractResource() {}
+
+    public AbstractResource(IRI graphIRI) {
+
+        this.graph = GraphManager.getCoreGraph(graphIRI);
+
+        try {
+
+            Statement isDefinedBy = asGraph().getRequiredProperty(null, RDFS.isDefinedBy);
+            Resource abstractResource = isDefinedBy.getSubject().asResource();
+            Resource modelResource = isDefinedBy.getObject().asResource();
+
+            logger.info(isDefinedBy.getSubject().toString()+" "+isDefinedBy.getObject().asResource().toString());
+            logger.info(abstractResource.toString());
+
+            this.dataModel = new DataModel(LDHelper.toIRI(modelResource.toString()));
+            this.id = LDHelper.toIRI(abstractResource.toString());
+
+            if(!this.id.toString().startsWith(getModelId())) {
+                throw new IllegalArgumentException("Resource ID should start with model ID!");
+            }
+
+            StmtIterator props = abstractResource.listProperties();
+            while(props.hasNext()) {
+                logger.info(props.next().getPredicate().getURI());
+            }
+
+            try {
+                this.provUUID = abstractResource.getRequiredProperty(DCTerms.identifier).getLiteral().toString();
+            } catch(Exception ex) {
+                ex.printStackTrace();
+                logger.warning(ex.getMessage());
+                throw new IllegalArgumentException("Expected 1 provenance ID");
+            }
+
+        } catch(Exception ex)  {
+            ex.printStackTrace();
+            logger.warning(ex.getMessage());
+            throw new IllegalArgumentException("Expected 1 resource defined by model");
+        }
+
+    }
 
     public void create() {
         JenaClient.putModelToCore(getId(), asGraph());
