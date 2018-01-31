@@ -502,14 +502,14 @@ public class JerseyClient {
             Model conceptModel = JerseyClient.getJSONLDResponseAsJenaModel(response);
             conceptModel.add(TermedTerminologyManager.getSchemesAsModelFromTermedAPI());
 
+            conceptModel = NamespaceManager.renamePropertyNamespace(conceptModel, "termed:property:", "http://termed.thl.fi/meta/");
+
             QueryExecution qexec = QueryExecutionFactory.create(QueryLibrary.skosXlToSkos, conceptModel);
 
             Model simpleSkos = qexec.execConstruct();
+
             simpleSkos = TermedTerminologyManager.cleanModelDefinitions(simpleSkos);
             simpleSkos.setNsPrefixes(LDHelper.PREFIX_MAP);
-
-
-            logger.info("TERMED CALL: " + target.getUri().toString());
 
             if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
                 logger.log(Level.INFO, response.getStatus() + " from URL: " + url);
@@ -534,7 +534,7 @@ public class JerseyClient {
     public static Response searchConceptFromTermedAPI(String query, String schemeURI, String conceptURI, String graphId) {
         
             Model simpleSkos = searchConceptFromTermedAPIAsModel(query, schemeURI, conceptURI, graphId);
-            
+
             if (simpleSkos == null) {
                return JerseyResponseManager.notFound();
             }
