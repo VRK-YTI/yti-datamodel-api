@@ -1,5 +1,5 @@
 {
-    "$schema": "http://iow.csc.fi/api/draft05jsonld.json",
+    "$schema": "http://tietomallit.suomi.fi/api/draft05jsonld.json",
     "description": "Core schema meta-schema (v5 proposals) + JSON-LD types",
     "definitions": {
         "schemaArray": {

@@ -1,5 +1,5 @@
 {
-    "$schema": "http://iow.csc.fi/api/draft04jsonld.json",
+    "$schema": "http://tietomallit.suomi.fi/api/draft04jsonld.json",
     "description": "Modified JSON Schema draft v4 that includes JSON-LD @id and @type",
     "definitions": {
         "schemaArray": {
