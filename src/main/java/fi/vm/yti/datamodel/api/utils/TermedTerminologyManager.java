@@ -91,11 +91,10 @@ public class TermedTerminologyManager {
 
     public static Model constructCleanedModelFromTermedAPIAndCore(String conceptUri, String modelUri, Query query) {
 
+        logger.info("Constructing resource with concept: "+conceptUri);
         DatasetAccessor testAcc = DatasetAccessorFactory.createHTTP(services.getCoreReadAddress());
 
         Model conceptModel = JerseyClient.searchConceptFromTermedAPIAsModel(null, null, conceptUri, null);
-        conceptModel = NamespaceManager.renamePropertyNamespace(conceptModel, "termed:property:", "http://termed.thl.fi/meta/");
-
 
         conceptModel.add(testAcc.getModel(modelUri));
 

@@ -33,9 +33,6 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import org.apache.jena.rdfconnection.RDFConnectionRemote;
-import org.apache.jena.system.Txn;
-import org.glassfish.jersey.server.internal.JerseyRequestTimeoutHandler;
 
 import javax.ws.rs.DELETE;
 
@@ -284,7 +281,7 @@ public class Predicate {
           }
           
           if(provUUID!=null) {
-              return JerseyResponseManager.successUuid(provUUID,newPredicate.getId());
+              return JerseyResponseManager.successUrnUuid(provUUID,newPredicate.getId());
           }
           else {
               return JerseyResponseManager.notCreated();

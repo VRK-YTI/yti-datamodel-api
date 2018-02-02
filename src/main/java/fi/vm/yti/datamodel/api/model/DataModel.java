@@ -94,7 +94,6 @@ public class DataModel extends AbstractModel {
         pss.setLiteral("mlabel", ResourceFactory.createLangLiteral(label, lang));
         pss.setLiteral("defLang", lang);
 
-        logger.info(pss.toString());
         QueryExecution qexec = QueryExecutionFactory.sparqlService(services.getCoreSparqlAddress(), pss.toString());
         this.graph = qexec.execConstruct();
         RDFList langRDFList = LDHelper.addStringListToModel(this.graph, allowedLang);

@@ -28,19 +28,19 @@ public class JerseyResponseManager {
         return Response.ok().entity(content).type(contentType).build();
     }
 
-    public static Response okUUID(UUID uuid) {
+    public static Response okUrnUUID(UUID uuid) {
         return Response.status(200).entity("{\"@id\":\"urn:uuid:"+uuid+"\"}").build();
     }
 
-    public static Response okUUID(String uuid) {
+    public static Response okUrnUUID(String uuid) {
         return Response.status(200).entity("{\"@id\":\""+uuid+"\"}").build();
     }
     
-    public static Response successUuid(UUID uuid) {
+    public static Response successUrnUuid(UUID uuid) {
         return Response.status(200).entity("{\"identifier\":\"urn:uuid:"+uuid+"\"}").build();
     }
 
-    public static Response successUuid(String uuid, String id) {
+    public static Response successUrnUuid(String uuid, String id) {
         return Response.status(200).entity("{\"@id\":\"" + id + "\", \"identifier\":\"urn:uuid:"+uuid+"\"}").build();
     }
 

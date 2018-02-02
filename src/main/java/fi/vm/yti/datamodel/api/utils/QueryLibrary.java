@@ -45,11 +45,14 @@ public class QueryLibrary {
                     "?concept rdf:type skos:Concept . " +
                     "?concept skos:definition ?definition . " +
                     "?concept skos:inScheme ?terminology . " +
+                    "?concept termed:graph ?graphID . " +
+                    "?concept termed:id ?conceptID . " +
                     "?terminology dcterms:title ?title . " +
                     "} WHERE {" +
                     "?concept skosxl:prefLabel ?xlLabel . " +
                     "?concept skos:definition ?definition . " +
                     "?concept termed:graph ?graphID . " +
+                    "?concept termed:id ?conceptID . "+
                     "?xlLabel skosxl:literalForm ?label . " +
                     "OPTIONAL {?terminology termed:graph ?graphID . " +
                     "?terminology dcterms:title ?title . }" +

@@ -85,7 +85,7 @@ public class ConceptSuggestion {
 
                 Model model = ModelFactory.createDefaultModel();
 
-                Property statusProp = model.createProperty("https://www.w3.org/2003/06/sw-vocab-status/ns#term_status");
+                Property statusProp = model.createProperty("http://www.w3.org/2003/06/sw-vocab-status/ns#term_status");
                 Resource concept = model.createResource("urn:uuid:"+conceptUUID);
                 Resource term = model.createResource("urn:uuid:"+termUUID);
                 Literal prefLabel = ResourceFactory.createLangLiteral(label, lang);
@@ -103,7 +103,7 @@ public class ConceptSuggestion {
                 
                 JerseyClient.saveConceptSuggestion(modelString,graphUUID);
 
-                return JerseyResponseManager.successUuid(conceptUUID);
+                return JerseyResponseManager.successUrnUuid(conceptUUID);
 
         }
   

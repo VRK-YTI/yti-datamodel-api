@@ -33,8 +33,6 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import org.apache.jena.rdfconnection.RDFConnectionRemote;
-import org.apache.jena.system.Txn;
 
 import javax.ws.rs.DELETE;
  
@@ -296,7 +294,7 @@ public class Class {
                 ProvenanceManager.createProvenanceActivityFromModel(newClass.getId(), newClass.asGraph(), newClass.getProvUUID(), login.getEmail());
             }
 
-            return JerseyResponseManager.successUuid(newClass.getProvUUID(), newClass.getId());
+            return JerseyResponseManager.successUrnUuid(newClass.getProvUUID(), newClass.getId());
         }
 
       } catch(IllegalArgumentException ex) {

@@ -41,6 +41,8 @@ public class ReusableClass extends AbstractClass {
                 + "?classIRI rdfs:comment ?comment . "
                 + "?classIRI dcterms:subject ?concept . "
                 + "?concept a skos:Concept . "
+                + "?concept termed:id ?conceptId . "
+                + "?concept termed:graph ?graphId . "
                 + "?concept skos:prefLabel ?label . "
                 + "?concept skos:definition ?comment . "
                 + "?concept skos:inScheme ?scheme . "
@@ -52,6 +54,8 @@ public class ReusableClass extends AbstractClass {
                 + "?model a ?modelType . "
                 + "?model rdfs:label ?modelLabel . "
                 + "?concept a skos:Concept . "
+                + "?concept termed:id ?conceptId . "
+                + "?concept termed:graph ?graphId . "
                 + "?concept skos:prefLabel ?label . "
                 + "?concept skos:inScheme ?scheme . "
                 + "?scheme dcterms:title ?title . "
@@ -60,12 +64,19 @@ public class ReusableClass extends AbstractClass {
                 + "}";
 
         pss.setCommandText(queryString);
-        pss.setIri("concept", conceptIRI);
+
+        if(conceptIRI.toString().startsWith("urn:uuid:"))
+             pss.setLiteral("conceptId", conceptIRI.toString().replaceFirst("urn:uuid:",""));
+        else
+            pss.setIri("concept", conceptIRI);
+
         pss.setIri("model", modelIRI);
         pss.setLiteral("draft", "DRAFT");
         pss.setLiteral("classLabel", ResourceFactory.createLangLiteral(classLabel, lang));
         String resourceName = LDHelper.resourceName(classLabel);
         pss.setIri("classIRI",LDHelper.resourceIRI(modelIRI.toString(),resourceName));
+
+        logger.info(pss.toString());
 
         this.graph = TermedTerminologyManager.constructCleanedModelFromTermedAPIAndCore(conceptIRI.toString(),modelIRI.toString(),pss.asQuery());
 

@@ -42,6 +42,8 @@ public class ReusablePredicate extends AbstractPredicate {
                 + "?predicateIRI rdfs:comment ?comment . "
                 + "?predicateIRI dcterms:subject ?concept . "
                 + "?concept a skos:Concept . "
+                + "?concept termed:id ?conceptId . "
+                + "?concept termed:graph ?graphId . "
                 + "?concept skos:prefLabel ?label . "
                 + "?concept skos:definition ?comment . "
                 + "?concept skos:inScheme ?scheme . "
@@ -54,6 +56,8 @@ public class ReusablePredicate extends AbstractPredicate {
                 + "?model a ?modelType . "
                 + "?model rdfs:label ?modelLabel . "
                 + "?concept a skos:Concept . "
+                + "?concept termed:id ?conceptId . "
+                + "?concept termed:graph ?graphId . "
                 + "?concept skos:prefLabel ?label . "
                 + "?concept skos:inScheme ?scheme . "
                 + "?scheme dcterms:title ?title . "
@@ -62,7 +66,12 @@ public class ReusablePredicate extends AbstractPredicate {
                 + "}";
 
         pss.setCommandText(queryString);
-        pss.setIri("concept", conceptIRI);
+
+        if(conceptIRI.toString().startsWith("urn:uuid:"))
+            pss.setLiteral("conceptId", conceptIRI.toString().replaceFirst("urn:uuid:",""));
+        else
+            pss.setIri("concept", conceptIRI);
+
         pss.setIri("model", modelIRI);
         pss.setIri("type", typeIRI);
         pss.setLiteral("draft", "DRAFT");

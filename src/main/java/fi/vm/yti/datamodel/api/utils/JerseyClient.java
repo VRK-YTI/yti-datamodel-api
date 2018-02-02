@@ -434,9 +434,10 @@ public class JerseyClient {
      */
     public static Response saveConceptSuggestion(String body, String scheme) {
 
-        if(scheme.startsWith("urn:uuid:"))
+        if(scheme.startsWith("urn:uuid:")) {
             scheme = scheme.substring(scheme.indexOf("urn:uuid:"));
-        
+        }
+
         String url = ApplicationProperties.getDefaultTermAPI()+"graphs/"+scheme+"/nodes";
         
         try {
@@ -444,7 +445,7 @@ public class JerseyClient {
             HttpAuthenticationFeature feature = TermedAuthentication.getTermedAuth();
             client.register(feature);
 
-            WebTarget target = client.target(url).queryParam("stream", true).queryParam("batch",true);
+            WebTarget target = client.target(url).queryParam("stream", true).queryParam("batch",true).queryParam("sync", true);
             Response response = target.request().post(Entity.entity(body, "application/ld+json"));
 
             logger.info("TERMED CALL: "+target.getUri().toString());
@@ -483,8 +484,11 @@ public class JerseyClient {
             }
 
             if (conceptURI == null) {
-                target = target.queryParam("where", "references.prefLabelXl.properties.prefLabel:" + query);
+                target = target.queryParam("where", "references.prefLabelXl.properties.prefLabel:" + LDHelper.encode(query));
             } else {
+
+                if(conceptURI.startsWith("urn:uuid:")) conceptURI = conceptURI.replaceFirst("urn:uuid:","");
+
                 if (IDManager.isValidUrl(conceptURI)) {
                     target = target.queryParam("where", "uri:" + conceptURI);
                 } else {
@@ -500,6 +504,9 @@ public class JerseyClient {
             Response response = target.request("application/ld+json").get();
 
             Model conceptModel = JerseyClient.getJSONLDResponseAsJenaModel(response);
+
+            conceptModel.write(System.out, "text/turtle");
+
             conceptModel.add(TermedTerminologyManager.getSchemesAsModelFromTermedAPI());
 
             conceptModel = NamespaceManager.renamePropertyNamespace(conceptModel, "termed:property:", "http://termed.thl.fi/meta/");

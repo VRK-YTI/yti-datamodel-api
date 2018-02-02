@@ -36,8 +36,6 @@ import javax.servlet.http.HttpSession;
 import javax.ws.rs.DELETE;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
-import org.apache.jena.rdfconnection.RDFConnectionRemote;
-import org.apache.jena.system.Txn;
 
 /**
  * Root resource (exposed at "myresource" path)
@@ -200,7 +198,7 @@ public class Models {
                   ProvenanceManager.createProvEntityBundle(newVocabulary.getId(), newVocabulary.asGraph(), login.getEmail(), newVocabulary.getProvUUID(), null);
               }
 
-              return JerseyResponseManager.successUuid(provUUID);
+              return JerseyResponseManager.successUrnUuid(provUUID);
           }
 
       } catch(IllegalArgumentException ex) {
@@ -265,7 +263,7 @@ public class Models {
               }
 
               logger.info("Created new model: "+newVocabulary.getId());
-              return JerseyResponseManager.successUuid(provUUID,newVocabulary.getId());
+              return JerseyResponseManager.successUrnUuid(provUUID,newVocabulary.getId());
           }
 
       } catch(IllegalArgumentException ex) {
