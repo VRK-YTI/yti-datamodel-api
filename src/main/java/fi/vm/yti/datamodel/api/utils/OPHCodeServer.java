@@ -60,7 +60,7 @@ public class OPHCodeServer {
     
             Model model = ModelFactory.createDefaultModel();
             model.setNsPrefix("dcterms", "http://purl.org/dc/terms/");
-            model.setNsPrefix("iow", "http://iow.csc.fi/ns/iow#");
+            model.setNsPrefix("iow", "http://uri.suomi.fi/datamodel/ns/iow#");
             
             Response.ResponseBuilder rb;
            
@@ -106,7 +106,7 @@ public class OPHCodeServer {
                             Property description = ResourceFactory.createProperty("http://purl.org/dc/terms/", "description"); 
                             group.addLiteral(description, ResourceFactory.createLangLiteral(comment,lang));
                         }
-                        group.addProperty(RDF.type, ResourceFactory.createResource("http://iow.csc.fi/ns/iow#FCodeGroup"));
+                        group.addProperty(RDF.type, ResourceFactory.createResource("http://uri.suomi.fi/datamodel/ns/iow#FCodeGroup"));
                         Property name = ResourceFactory.createProperty("http://purl.org/dc/terms/", "title"); 
                         group.addLiteral(name, ResourceFactory.createLangLiteral(label,lang));
                         
@@ -121,7 +121,7 @@ public class OPHCodeServer {
                     JsonObject codes = (JsonObject) codeListIterator.next();
                     // codes.getString("resourceUri")
                     Resource valueScheme = model.createResource(uri+codes.getString("koodistoUri")+"/koodi");
-                    valueScheme.addProperty(RDF.type, ResourceFactory.createResource("http://iow.csc.fi/ns/iow#FCodeScheme"));
+                    valueScheme.addProperty(RDF.type, ResourceFactory.createResource("http://uri.suomi.fi/datamodel/ns/iow#FCodeScheme"));
                     
                     Property isPartOf = ResourceFactory.createProperty("http://purl.org/dc/terms/", "isPartOf");    
                     //group.addProperty(hasPart, valueScheme);
@@ -228,7 +228,7 @@ public class OPHCodeServer {
         
         Model model = ModelFactory.createDefaultModel();
         model.setNsPrefix("dcterms", "http://purl.org/dc/terms/");
-        model.setNsPrefix("iow", "http://iow.csc.fi/ns/iow#");
+        model.setNsPrefix("iow", "http://uri.suomi.fi/datamodel/ns/iow#");
             
             Response.ResponseBuilder rb;
 
@@ -250,7 +250,7 @@ public class OPHCodeServer {
                     
                     JsonObject codeObj = (JsonObject) codeIterator.next();
                     Resource codeRes = model.createResource(codeObj.getString("resourceUri"));
-                    codeRes.addProperty(RDF.type, ResourceFactory.createResource("http://iow.csc.fi/ns/iow#FCode"));
+                    codeRes.addProperty(RDF.type, ResourceFactory.createResource("http://uri.suomi.fi/datamodel/ns/iow#FCode"));
                     Property id = ResourceFactory.createProperty("http://purl.org/dc/terms/", "identifier"); 
 
                     codeRes.addLiteral(id, ResourceFactory.createPlainLiteral(codeObj.getString("koodiArvo")));

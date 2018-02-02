@@ -68,7 +68,7 @@ public class LDHelper {
         put("sd","http://www.w3.org/ns/sparql-service-description#");
         put("text","http://jena.apache.org/text#");
         put("sh","http://www.w3.org/ns/shacl#");
-        put("iow","http://iow.csc.fi/ns/iow#");
+        put("iow","http://uri.suomi.fi/datamodel/ns/iow#");
         put("skos","http://www.w3.org/2004/02/skos/core#");
         put("prov","http://www.w3.org/ns/prov#");
         put("dcap","http://purl.org/ws-mmi-dc/terms/");
@@ -170,7 +170,7 @@ public class LDHelper {
                             "PREFIX skos: <http://www.w3.org/2004/02/skos/core#> "+
                             "PREFIX skosxl: <http://www.w3.org/2008/05/skos-xl#> "+
                             "PREFIX prov: <http://www.w3.org/ns/prov#> " +
-                            "PREFIX iow: <http://iow.csc.fi/ns/iow#>" +
+                            "PREFIX iow: <http://uri.suomi.fi/datamodel/ns/iow#>" +
                             "PREFIX dcap: <http://purl.org/ws-mmi-dc/terms/> " +
                             "PREFIX afn: <http://jena.hpl.hp.com/ARQ/function#>"+
                             "PREFIX schema: <http://schema.org/>"+

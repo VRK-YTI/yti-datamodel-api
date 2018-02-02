@@ -54,7 +54,7 @@ public class RHPOrganizationManager {
 
         Model model = ModelFactory.createDefaultModel();
         model.setNsPrefix("dcterms", "http://purl.org/dc/terms/");
-        model.setNsPrefix("iow", "http://iow.csc.fi/ns/iow#");
+        model.setNsPrefix("iow", "http://uri.suomi.fi/datamodel/ns/iow#");
         model.setNsPrefix("skos","http://www.w3.org/2004/02/skos/core#");
         model.setNsPrefix("foaf","http://xmlns.com/foaf/0.1/");
 
