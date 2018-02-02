@@ -88,7 +88,7 @@ public class ConceptSuggestion {
                 Property statusProp = model.createProperty("http://www.w3.org/2003/06/sw-vocab-status/ns#term_status");
                 Resource concept = model.createResource("urn:uuid:"+conceptUUID);
                 Resource term = model.createResource("urn:uuid:"+termUUID);
-                Literal prefLabel = ResourceFactory.createLangLiteral(label, lang);
+                Literal prefLabel = ResourceFactory.createLangLiteral(label.toLowerCase(), lang);
                 Literal definition = ResourceFactory.createLangLiteral(comment, lang);
                 term.addLiteral(SKOSXL.literalForm, prefLabel);
                 term.addProperty(RDF.type,SKOSXL.Label);
