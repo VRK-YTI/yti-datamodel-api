@@ -95,7 +95,7 @@ public class ConceptSuggestion {
                 concept.addLiteral(SKOS.definition, definition);
                 concept.addProperty(SKOSXL.prefLabel,term);
                 concept.addProperty(RDF.type, SKOS.Concept);
-                concept.addLiteral(statusProp, "SUGGESTION");
+                concept.addLiteral(statusProp, "SUGGESTED");
                 Property idProp = model.createProperty(LDHelper.getNamespaceWithPrefix("termed")+"id");
                 concept.addProperty(idProp, conceptUUID.toString());
                 
