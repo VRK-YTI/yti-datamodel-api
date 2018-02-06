@@ -424,7 +424,48 @@ public class JerseyClient {
             return JerseyResponseManager.unexpected();
         }
     }
-    
+
+
+    /**
+     * Returns Jersey response from Fuseki service
+     * @param id Id of the graph
+     * @param service Id of the service
+     * @param contentType Requested content-type
+     * @param raw boolean that states if Response is needed as raw text
+     * @return Response
+     */
+    public static Response getNonEmptyGraphResponseFromService(String id, String service, String contentType, boolean raw) {
+        try {
+
+            Client client = ClientBuilder.newClient();
+            WebTarget target = client.target(service).queryParam("graph", id);
+            Response response = target.request(contentType).get();
+
+            if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
+                logger.log(Level.INFO, response.getStatus()+" from SERVICE "+service+" and GRAPH "+id);
+                return JerseyResponseManager.okNoContent();
+            }
+
+            ResponseBuilder rb = Response.status(response.getStatus());
+            rb.entity(response.readEntity(InputStream.class));
+
+            if(!raw) {
+                try {
+                    rb.type(contentType);
+                } catch(IllegalArgumentException ex) {
+                    rb.type("text/plain;charset=utf-8");
+                }
+            } else {
+                rb.type("text/plain;charset=utf-8");
+            }
+
+            return rb.build();
+        } catch(Exception ex) {
+            logger.log(Level.WARNING, "Expect the unexpected!", ex);
+            return JerseyResponseManager.unexpected();
+        }
+    }
+
     
      /**
      * Saves new concept suggestion to termed
@@ -504,8 +545,6 @@ public class JerseyClient {
             Response response = target.request("application/ld+json").get();
 
             Model conceptModel = JerseyClient.getJSONLDResponseAsJenaModel(response);
-
-            conceptModel.write(System.out, "text/turtle");
 
             conceptModel.add(TermedTerminologyManager.getSchemesAsModelFromTermedAPI());
 

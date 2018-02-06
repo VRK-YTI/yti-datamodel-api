@@ -32,7 +32,7 @@ public class AbstractResource {
 
         try {
 
-            Statement isDefinedBy = asGraph().getRequiredProperty(null, RDFS.isDefinedBy);
+            Statement isDefinedBy = asGraph().getRequiredProperty(ResourceFactory.createResource(getId()), RDFS.isDefinedBy);
             Resource abstractResource = isDefinedBy.getSubject().asResource();
             Resource modelResource = isDefinedBy.getObject().asResource();
 
@@ -61,7 +61,6 @@ public class AbstractResource {
 
         } catch(Exception ex)  {
             ex.printStackTrace();
-            logger.warning(ex.getMessage());
             throw new IllegalArgumentException("Expected 1 resource defined by model");
         }
 
@@ -76,24 +75,23 @@ public class AbstractResource {
     }
 
     public void update() {
-        JenaClient.putModelToCore(getId(), asGraph());
-        GraphManager.insertNewGraphReferenceToModel(getId(), getModelId());
         Model oldModel = JenaClient.getModelFromCore(getId());
         Model exportModel = JenaClient.getModelFromCore(getModelId()+"#ExportGraph");
-        exportModel = ModelManager.removeListStatements(oldModel, exportModel);
-        exportModel.remove(oldModel);
+        exportModel = ModelManager.removeResourceStatements(oldModel, exportModel);
         exportModel.add(asGraph());
-        exportModel.add(exportModel.createResource(getModelId()), DCTerms.hasPart, exportModel.createResource(getId()));
         JenaClient.putModelToCore(getModelId()+"#ExportGraph", exportModel);
+        JenaClient.putModelToCore(getId(), asGraph());
     }
 
     public void updateWithNewId(IRI oldIdIRI) {
-        JenaClient.putModelToCore(getId(), asGraph());
-
         Model oldModel = JenaClient.getModelFromCore(oldIdIRI.toString());
         Model exportModel = JenaClient.getModelFromCore(getModelId()+"#ExportGraph");
-        exportModel.remove(oldModel);
+
+        exportModel = ModelManager.removeResourceStatements(oldModel, exportModel);
         exportModel.add(asGraph());
+        JenaClient.putModelToCore(getModelId()+"#ExportGraph", exportModel);
+
+        JenaClient.putModelToCore(getId(), asGraph());
 
         GraphManager.removeGraph(oldIdIRI);
         GraphManager.renameID(oldIdIRI,getIRI());
@@ -102,8 +100,7 @@ public class AbstractResource {
 
     public void delete() {
         Model exportModel = JenaClient.getModelFromCore(getModelId()+"#ExportGraph");
-        exportModel = ModelManager.removeListStatements(asGraph(), exportModel);
-        exportModel.remove(asGraph());
+        exportModel = ModelManager.removeResourceStatements(asGraph(), exportModel);
         exportModel.remove(exportModel.createResource(getModelId()), DCTerms.hasPart, exportModel.createResource(getId()));
         JenaClient.putModelToCore(getModelId()+"#ExportGraph", exportModel);
         GraphManager.deleteGraphReferenceFromModel(getIRI(),getModelIRI());

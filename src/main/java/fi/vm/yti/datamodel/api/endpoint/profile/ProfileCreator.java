@@ -3,6 +3,8 @@
  */
 package fi.vm.yti.datamodel.api.endpoint.profile;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 import java.util.logging.Logger;
@@ -51,12 +53,20 @@ public class ProfileCreator {
             @ApiParam(value = "Model prefix", required = true) @QueryParam("prefix") String prefix,
             @ApiParam(value = "Model label", required = true) @QueryParam("label") String label,
             @ApiParam(value = "Organization UUIDs", required = true)
-            @QueryParam("orgList") List<UUID> orgList,
+            @QueryParam("orgList") String orgString,
             @ApiParam(value = "Service URIs", required = true)
-            @QueryParam("serviceList") List<String> serviceList,
+            @QueryParam("serviceList") String servicesString,
             @ApiParam(value = "Label language", required = true, allowableValues="fi,en") @QueryParam("lang") String lang,
             @ApiParam(value = "Allowed languages as space list: 'en sv pl'. Default 'fi en'") @QueryParam("langList") String allowedLang) {
 
+            List<String> serviceList = Arrays.asList(servicesString.split(" "));
+
+            String[] orgs = orgString.split(" ");
+            List<UUID> orgList = new ArrayList<>();
+
+            for(int i = 0; i<orgs.length; i++) {
+                orgList.add(UUID.fromString(orgs[i]));
+            }
 
             if(!ServiceCategory.containsAll(serviceList)) {
                 return JerseyResponseManager.invalidParameter();

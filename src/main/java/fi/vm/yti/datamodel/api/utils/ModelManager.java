@@ -63,6 +63,33 @@ public class ModelManager {
 
     }
 
+    public static Model removeResourceStatements(Model resource, Model model) {
+
+        StmtIterator listIterator = resource.listStatements();
+
+        while(listIterator.hasNext()) {
+            Statement listStatement = listIterator.next();
+            Resource subject = listStatement.getSubject();
+            RDFNode object = listStatement.getObject();
+            if(subject.isURIResource() && object.isAnon()) {
+                Statement removeStatement = model.getRequiredProperty(subject, listStatement.getPredicate());
+                if(!removeStatement.getObject().isAnon()) {
+                    logger.warning("This should'nt happen!");
+                    logger.warning("Bad data "+subject.toString()+"->"+listStatement.getPredicate());
+                } else {
+                    RDFList languageList = removeStatement.getObject().as(RDFList.class);
+                    languageList.removeList();
+                    removeStatement.remove();
+                }
+            } else if(subject.isURIResource()){
+                model.remove(listStatement);
+            }
+        }
+
+        return model;
+
+    }
+
 
     /**
      * Create jena model from json-ld string

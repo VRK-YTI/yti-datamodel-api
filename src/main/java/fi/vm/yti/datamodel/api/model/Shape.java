@@ -44,7 +44,6 @@ public class Shape extends AbstractShape {
                     + "?shapeIRI dcterms:modified ?modified . "
                     + "?shapeIRI dcterms:created ?creation . "
                     + "?shapeIRI sh:scopeClass ?classIRI . "
-                    + "?shapeIRI a rdfs:Class . "
                     + "?shapeIRI a sh:Shape . "
                     + "?shapeIRI rdfs:isDefinedBy ?model . "
                     + "?shapeIRI rdfs:label ?label . "

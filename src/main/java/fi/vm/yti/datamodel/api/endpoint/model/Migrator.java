@@ -87,7 +87,7 @@ public class Migrator {
             return JerseyResponseManager.unauthorized();
         }
 
-        Boolean replicate = JerseyClient.readBooleanFromURL(service+"replicate");
+        Boolean replicate = JerseyClient.readBooleanFromURL(service+"migrate");
 
         if(replicate!=null && replicate.booleanValue()) {
             logger.info("Migrating data from "+service);
@@ -209,7 +209,7 @@ public class Migrator {
                           "INSERT { " +
                       "?model dcterms:references <http://uri.suomi.fi/terminology/jhs/terminological-vocabulary-1> . " +
                       "<http://uri.suomi.fi/terminology/jhs/terminological-vocabulary-1> a skos:ConceptScheme . " +
-                      "<http://uri.suomi.fi/terminology/jhs/terminological-vocabulary-1> dcterms:title 'JHSMETA'@fi . " +
+                      "<http://uri.suomi.fi/terminology/jhs/terminological-vocabulary-1> dcterms:title 'Julkishallinnon yhteinen sanasto'@fi . " +
                        "<http://uri.suomi.fi/terminology/jhs/terminological-vocabulary-1> termed:graph  '0043fa54-18b2-4f31-80cf-32eeb0bbb297' . " +
                        "<http://uri.suomi.fi/terminology/jhs/terminological-vocabulary-1> termed:id '61bec1e5-70b4-34fc-acfb-ab70428fb6f8' . " +
                        "<http://uri.suomi.fi/terminology/jhs/terminological-vocabulary-1> termed:type   'TerminologicalVocabulary' . " +
@@ -368,6 +368,7 @@ public class Migrator {
                   Model resourceModel = JerseyClient.getResourceAsJenaModel(resourceURI);
                   String newName = oldName.replaceFirst(oldNamespace, newNamespace);
 
+                  resourceModel = NamespaceManager.renamePropertyNamespace(resourceModel, oldNamespaceDomain, namespaceDomain);
                   resourceModel = NamespaceManager.renameNamespace(resourceModel, oldNamespaceDomain, namespaceDomain);
 
                   String deleteLocalSkos =
@@ -397,6 +398,7 @@ public class Migrator {
                   Dataset provResourceDataset = DatasetFactory.create();
                   Model resourceHistoryModel = JerseyClient.getResourceAsJenaModel(historyURL);
 
+                  resourceHistoryModel = NamespaceManager.renamePropertyNamespace(resourceHistoryModel, oldNamespaceDomain, namespaceDomain);
                   resourceHistoryModel = NamespaceManager.renameNamespace(resourceHistoryModel, oldNamespaceDomain, namespaceDomain);
 
                   ProvenanceManager.putToProvenanceGraph(resourceHistoryModel, newName);

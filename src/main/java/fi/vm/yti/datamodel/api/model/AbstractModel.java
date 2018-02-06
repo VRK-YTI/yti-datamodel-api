@@ -113,13 +113,19 @@ public abstract class AbstractModel {
     public void create() {
         logger.info("Creating model "+getId());
         JenaClient.putModelToCore(getId(), asGraph());
+
+        /* TODO: Test with RDFConnection
+        Model nsModel = ModelFactory.createDefaultModel();
+        nsModel.setNsPrefixes(asGraph().getNsPrefixMap());
+        JenaClient.putModelToCore(getId()+"#NamespaceGraph", nsModel);
+        */
+
         JenaClient.putModelToCore(getId()+"#ExportGraph", asGraph());
     }
 
     public void update() {
         modifyDatetime();
         Model oldModel = JenaClient.getModelFromCore(getId());
-        JenaClient.putModelToCore(getId(), asGraph());
         Model exportModel = JenaClient.getModelFromCore(getId()+"#ExportGraph");
 
         // OMG: Model.remove() doesnt remove RDFLists
@@ -128,15 +134,22 @@ public abstract class AbstractModel {
         languageList.removeList();
         languageStatement.remove();
 
+        /* TODO: Test with RDFConnection
+        Model nsModel = ModelFactory.createDefaultModel();
+        nsModel.setNsPrefixes(asGraph().getNsPrefixMap());
+        JenaClient.putModelToCore(getId()+"#NamespaceGraph", nsModel);*/
+
         exportModel.remove(oldModel);
         exportModel.add(asGraph());
         JenaClient.putModelToCore(getId()+"#ExportGraph", exportModel);
+        JenaClient.putModelToCore(getId(), asGraph());
     }
 
     public void delete() {
         ServiceDescriptionManager.deleteGraphDescription(getId());
         JenaClient.deleteModelFromCore(getId());
         JenaClient.deleteModelFromCore(getId()+"#ExportModel");
+      //  JenaClient.deleteModelFromCore(getId()+"#NamespaceGraph");
     }
 
     public void modifyDatetime() {

@@ -55,7 +55,7 @@ public class ModelPositions {
           @ApiParam(value = "Graph id", defaultValue="default") 
           @QueryParam("model") String model) {
   
-      return JerseyClient.getGraphResponseFromService(model+"#PositionGraph", services.getCoreReadAddress(), "application/ld+json", false);
+      return JerseyClient.getNonEmptyGraphResponseFromService(model+"#PositionGraph", services.getCoreReadAddress(), "application/ld+json", false);
   
   }
    

@@ -21,10 +21,12 @@ import fi.vm.yti.datamodel.api.config.EndpointServices;
 import fi.vm.yti.datamodel.api.config.LoginSession;
 import fi.vm.yti.datamodel.api.utils.*;
 import org.apache.jena.query.Dataset;
+import org.apache.jena.query.DatasetFactory;
 import org.apache.jena.rdf.model.*;
 import org.apache.jena.rdfconnection.RDFConnection;
 import org.apache.jena.rdfconnection.RDFConnectionFactory;
 import org.apache.jena.system.Txn;
+import org.apache.jena.update.UpdateAction;
 import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.RDF;
 import io.swagger.annotations.Api;
@@ -95,15 +97,62 @@ public class Replicator {
 
         if(replicate!=null && replicate.booleanValue()) {
             logger.info("Replicating data from "+service);
+
+            logger.warning("Warning! Deleting graphs!");
+            GraphManager.deleteGraphs();
+
+            // <urn:csc:iow:namespaces>
+            String namespaces = service+"exportResource?graph="+LDHelper.encode("urn:csc:iow:namespaces");
+            Model namespaceModel = JerseyClient.getResourceAsJenaModel(namespaces);
+            logger.info("Copying namespaces: "+namespaceModel.size());
+            JenaClient.putModelToCore("urn:csc:iow:namespaces", namespaceModel);
+
+            // <urn:yti:servicecategories>
+
+            String serviceCategories = service+"exportResource?graph="+LDHelper.encode("urn:yti:servicecategories");
+            Model serviceModel = JerseyClient.getResourceAsJenaModel(serviceCategories);
+            logger.info("Copying service categories: "+serviceModel.size());
+            JenaClient.putModelToCore("urn:yti:servicecategories", serviceModel);
+
+            // <urn:yti:organizations>
+
+            String organizations = service+"exportResource?graph="+LDHelper.encode("urn:yti:organizations");
+            Model orgModel = JerseyClient.getResourceAsJenaModel(organizations);
+            logger.info("Copying organizations: "+orgModel.size());
+            JenaClient.putModelToCore("urn:yti:organizations", orgModel);
+
         }
 
       try {
 
-          Model modelList = JerseyClient.getResourceAsJenaModel(service + "serviceDescription");
-          logger.info("Service description size: " + modelList.size());
+          // Copy service description & Models
 
-          replicateServices(service, login);
+          String SD = "http://www.w3.org/ns/sparql-service-description#";
+          Model SDModel = JerseyClient.getResourceAsJenaModel(service + "serviceDescription");
 
+          if(SDModel!=null && SDModel.size()>0) {
+
+              // <urn:csc:iow:sd>
+              logger.info("Copying service description: "+SDModel.size());
+              JenaClient.putModelToCore("urn:csc:iow:sd", SDModel);
+
+              NodeIterator rit = SDModel.listObjectsOfProperty(ResourceFactory.createProperty(SD, "name"));
+              if (rit.hasNext()) {
+
+                  while(rit.hasNext()) {
+                      Resource res = rit.next().asResource();
+                      logger.info("SD graph name: " + res.toString());
+                      replicateServices(service, res.toString());
+                  }
+
+              } else { return JerseyResponseManager.error(); }
+
+
+
+
+          } else {
+              return JerseyResponseManager.error();
+          }
           return JerseyResponseManager.okEmptyContent();
 
       } catch(Exception ex) {
@@ -113,7 +162,95 @@ public class Replicator {
 
   }
 
-  public void replicateServices(String externalService, LoginSession login) {
+    public void replicateServices(String service, String model) {
+
+        Model exportedModel = JerseyClient.getResourceAsJenaModel(service+"exportResource?graph="+UriComponent.encode(model, UriComponent.Type.QUERY_PARAM));
+        String prefix = exportedModel.listStatements(ResourceFactory.createResource(model), LDHelper.curieToProperty("dcap:preferredXMLNamespacePrefix"), (Literal) null).nextStatement().getString();
+
+        logger.info("Model: "+model+ " Model prefix: "+prefix);
+        logger.info("---------------------------------------------------------");
+
+        // Store model
+        JenaClient.putModelToCore(model, exportedModel);
+
+        // Model resource history
+        String modelHistoryURL = service+"history?id="+UriComponent.encode(model, UriComponent.Type.QUERY_PARAM);
+        Model modelHistoryModel = JerseyClient.getResourceAsJenaModel(modelHistoryURL);
+        ProvenanceManager.putToProvenanceGraph(modelHistoryModel, model);
+        ResIterator modelProvIter = modelHistoryModel.listSubjectsWithProperty(ProvenanceManager.generatedAtTime);
+
+        while(modelProvIter.hasNext()) {
+            String provModelURI = modelProvIter.next().asResource().toString();
+            Model provModelRes = JerseyClient.getResourceAsJenaModel(service+"history?id="+UriComponent.encode(provModelURI, UriComponent.Type.QUERY_PARAM));
+            ProvenanceManager.putToProvenanceGraph(provModelRes, provModelURI);
+        }
+
+        // HasPartGraph
+        String uri = service+"exportResource?graph="+UriComponent.encode(model+"#HasPartGraph",UriComponent.Type.QUERY_PARAM);
+        logger.info("Getting HasPartGraph: "+uri);
+        Model hasPartModel = JerseyClient.getResourceAsJenaModel(uri);
+
+        // Creating new HasPartGraph
+        JenaClient.putModelToCore(model+"#HasPartGraph", hasPartModel);
+
+
+        // ExportGraph
+        String euri = service+"exportResource?graph="+UriComponent.encode(model+"#ExportGraph",UriComponent.Type.QUERY_PARAM);
+        logger.info("ExportGraph:"+euri);
+        Model exportModel = JerseyClient.getResourceAsJenaModel(euri);
+        JenaClient.putModelToCore(model+"#ExportGraph", exportModel);
+
+        // PositionGraph
+        String puri = service+"exportResource?graph="+UriComponent.encode(model+"#PositionGraph",UriComponent.Type.QUERY_PARAM);
+
+        logger.info("PositionGraph:"+puri);
+
+        Model positionModel = JerseyClient.getResourceAsJenaModel(puri);
+
+        if(positionModel!=null && positionModel.size()>1) {
+            JenaClient.putModelToCore(model + "#PositionGraph", positionModel);
+        }
+
+        // Resources
+
+        NodeIterator nodIter = hasPartModel.listObjectsOfProperty(DCTerms.hasPart);
+
+        while(nodIter.hasNext()) {
+            Resource part = nodIter.nextNode().asResource();
+            String resourceName = part.toString();
+
+            if(resourceName.startsWith(model)) {
+                String resourceURI = service + "exportResource?graph=" + UriComponent.encode(resourceName, UriComponent.Type.QUERY_PARAM);
+                Model resourceModel = JerseyClient.getResourceAsJenaModel(resourceURI);
+                JenaClient.putModelToCore(resourceName, resourceModel);
+
+                logger.info("Replicated resource: "+resourceName);
+
+                String historyURL = service+"history?id="+UriComponent.encode(resourceName, UriComponent.Type.QUERY_PARAM);
+                Dataset provResourceDataset = DatasetFactory.create();
+                Model resourceHistoryModel = JerseyClient.getResourceAsJenaModel(historyURL);
+                ProvenanceManager.putToProvenanceGraph(resourceHistoryModel, resourceName);
+
+                ResIterator resProvIter = resourceHistoryModel.listSubjectsWithProperty(ProvenanceManager.generatedAtTime);
+
+                while(resProvIter.hasNext()) {
+                    String provResURI = resProvIter.next().asResource().toString();
+                    Model provRes = JerseyClient.getResourceAsJenaModel(service+"history?id="+UriComponent.encode(provResURI, UriComponent.Type.QUERY_PARAM));
+                    ProvenanceManager.putToProvenanceGraph(provRes, provResURI);
+                }
+
+            } else {
+                    logger.warning("Reference to external resource " + resourceName);
+            }
+            }
+
+            logger.info("---------------------------------------------------------");
+
+        }
+
+        //FIXME: Using RDFCOnnection would be preferred if namespaces would preserve in TRIG or JSON-LD Format.
+        @Deprecated
+        public void replicateServices(String externalService, LoginSession login) {
 
       GraphManager.deleteGraphs();
 
@@ -121,7 +258,7 @@ public class Replicator {
           Txn.executeWrite(conn, ()-> {
               Dataset externalDataset = JerseyClient.getExternalJSONLDDatasets(externalService + "exportGraphs?service=core&content-type=application%2Fld%2Bjson");
               logger.info("Size of the CORE dataset: "+externalDataset.asDatasetGraph().size());
-              conn.loadDataset(externalDataset);
+              conn.putDataset(externalDataset);
           });
       } catch(Exception ex) {
           logger.warning(ex.getMessage());
@@ -131,7 +268,7 @@ public class Replicator {
           Txn.executeWrite(conn, ()-> {
               Dataset externalDataset = JerseyClient.getExternalJSONLDDatasets(externalService + "exportGraphs?service=prov&content-type=application%2Fld%2Bjson");
               logger.info("Size of the PROV dataset: "+externalDataset.asDatasetGraph().size());
-              conn.loadDataset(externalDataset);
+              conn.putDataset(externalDataset);
           });
       } catch(Exception ex) {
           logger.warning(ex.getMessage());

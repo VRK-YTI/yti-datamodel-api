@@ -12,6 +12,7 @@ import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
 import org.apache.jena.web.DatasetAdapter;
 import org.apache.jena.web.DatasetGraphAccessorHTTP;
+import org.topbraid.shacl.vocabulary.SH;
 
 import java.util.List;
 import java.util.UUID;
@@ -35,13 +36,33 @@ public abstract class AbstractClass extends AbstractResource {
             this.graph = graph;
 
             try {
-                Statement isDefinedBy = asGraph().getRequiredProperty(null, RDFS.isDefinedBy);
-                Resource classResource = isDefinedBy.getSubject().asResource();
-                Resource modelResource = isDefinedBy.getObject().asResource();
 
-                if(!classResource.hasProperty(RDF.type, RDFS.Class)) {
-                    throw new IllegalArgumentException("Expected rdfs:Class type");
+                ResIterator subjects = asGraph().listSubjectsWithProperty(RDF.type);
+
+                if(!subjects.hasNext()) {
+                    throw new IllegalArgumentException("Expected at least 1 typed resource");
                 }
+
+                Resource classResource = null;
+
+                while(subjects.hasNext()) {
+                    Resource res = subjects.next();
+                    if(res.hasProperty(RDF.type, RDFS.Class) || res.hasProperty(RDF.type, SH.Shape)) {
+                        if(classResource!=null) {
+                            throw new IllegalArgumentException("Multiple class resources");
+                        } else {
+                            classResource = res;
+                        }
+                    }
+                }
+
+                if(classResource==null) {
+                    throw new IllegalArgumentException("Expected rdfs:Class or sh:Shape");
+                }
+
+                // TODO: Check that doesnt contain multiple class resources
+                Statement isDefinedBy = classResource.getRequiredProperty(RDFS.isDefinedBy);
+                Resource modelResource = isDefinedBy.getObject().asResource();
 
                 this.dataModel = new DataModel(LDHelper.toIRI(modelResource.toString()));
                 this.id = LDHelper.toIRI(classResource.toString());
@@ -55,7 +76,7 @@ public abstract class AbstractClass extends AbstractResource {
                 classResource.addProperty(DCTerms.identifier,ResourceFactory.createPlainLiteral(provUUID));
 
             } catch(Exception ex)  {
-                logger.warning(ex.getMessage());
+                ex.printStackTrace();
                 throw new IllegalArgumentException("Expected 1 class (isDefinedBy)");
             }
 

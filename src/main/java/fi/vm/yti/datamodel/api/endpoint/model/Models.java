@@ -322,7 +322,6 @@ public class Models {
           return JerseyResponseManager.unauthorized();
       }
 
-
        deleteModel.delete();
        
        return JerseyResponseManager.ok();

@@ -12,6 +12,7 @@ import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
 import org.apache.jena.web.DatasetAdapter;
 import org.apache.jena.web.DatasetGraphAccessorHTTP;
+import org.topbraid.shacl.vocabulary.SH;
 
 import java.util.List;
 import java.util.UUID;
@@ -37,13 +38,32 @@ public class AbstractPredicate extends AbstractResource {
         this.graph = graph;
 
         try {
-            Statement isDefinedBy = asGraph().getRequiredProperty(null, RDFS.isDefinedBy);
-            Resource predicateResource = isDefinedBy.getSubject().asResource();
-            Resource modelResource = isDefinedBy.getObject().asResource();
 
-            if(!(predicateResource.hasProperty(RDF.type, OWL.ObjectProperty) || predicateResource.hasProperty(RDF.type, OWL.DatatypeProperty))) {
-                throw new IllegalArgumentException("Expected Property type");
-            }
+                ResIterator subjects = asGraph().listSubjectsWithProperty(RDF.type);
+
+                if(!subjects.hasNext()) {
+                    throw new IllegalArgumentException("Expected at least 1 typed resource");
+                }
+
+                Resource predicateResource = null;
+
+                while(subjects.hasNext()) {
+                    Resource res = subjects.next();
+                    if(res.hasProperty(RDF.type, OWL.ObjectProperty) || res.hasProperty(RDF.type, OWL.DatatypeProperty)) {
+                        if(predicateResource!=null) {
+                            throw new IllegalArgumentException("Multiple class resources");
+                        } else {
+                            predicateResource = res;
+                        }
+                    }
+                }
+
+                if(predicateResource==null) {
+                    throw new IllegalArgumentException("Expected rdfs:Class or sh:Shape");
+                }
+
+            Statement isDefinedBy = predicateResource.getRequiredProperty(RDFS.isDefinedBy);
+            Resource modelResource = isDefinedBy.getObject().asResource();
 
             this.dataModel = new DataModel(LDHelper.toIRI(modelResource.toString()));
             this.id = LDHelper.toIRI(predicateResource.toString());
