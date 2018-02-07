@@ -30,6 +30,7 @@ public abstract class AbstractModel {
 
     public AbstractModel(IRI graphIRI) {
         this.graph = GraphManager.getCoreGraph(graphIRI);
+        this.id = graphIRI;
 
         List<Resource> vocabList = this.graph.listSubjectsWithProperty(OWL.versionInfo).toList();
 
@@ -44,8 +45,6 @@ public abstract class AbstractModel {
             logger.warning("Expected "+getId()+" type as owl:Ontology");
             throw new IllegalArgumentException("Expected model resource");
         }
-
-        this.id = LDHelper.toIRI(modelResource.getURI());
 
         NodeIterator orgList = this.graph.listObjectsOfProperty(DCTerms.contributor);
         this.modelOrganizations = new ArrayList<>();

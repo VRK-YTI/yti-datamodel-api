@@ -11,6 +11,7 @@ import com.github.jsonldjava.core.JsonLdOptions;
 import com.github.jsonldjava.core.JsonLdProcessor;
 import com.github.jsonldjava.utils.JsonUtils;
 import jersey.repackaged.com.google.common.collect.ImmutableMap;
+import org.apache.jena.atlas.json.JsonObject;
 import org.apache.jena.query.*;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
@@ -28,10 +29,10 @@ import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.StatusType;
 
 import org.apache.jena.atlas.web.ContentType;
-import org.apache.jena.riot.Lang;
-import org.apache.jena.riot.RDFDataMgr;
-import org.apache.jena.riot.RDFLanguages;
-import org.apache.jena.riot.RiotException;
+import org.apache.jena.riot.*;
+import org.apache.jena.riot.system.PrefixMapFactory;
+import org.apache.jena.shared.PrefixMapping;
+import org.apache.jena.sparql.util.Context;
 import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
 import org.glassfish.jersey.uri.UriComponent;
 import org.glassfish.jersey.client.ClientProperties;
@@ -51,6 +52,8 @@ public class JerseyClient {
 
     public static Response getResponseFromURL(String url, String accept) {
         Client client = ClientBuilder.newClient();
+        client.property(ClientProperties.CONNECT_TIMEOUT, 180000);
+        client.property(ClientProperties.READ_TIMEOUT, 180000);
         WebTarget target = client.target(url);
         Invocation.Builder requestBuilder = target.request();
         if(accept!=null) requestBuilder.accept(accept);
@@ -128,33 +131,57 @@ public class JerseyClient {
             ContentType contentType = ContentType.create(ctype);
             
             Lang rdfLang = RDFLanguages.contentTypeToLang(contentType);
-            
             if(rdfLang==null) {
                 logger.info("Unknown RDF type: "+ctype);
                 return JerseyResponseManager.notFound();
             }
 
-            Model model = JenaClient.getModelFromCore(graph);
+            RDFFormat format = RDFWriterRegistry.defaultSerialization(rdfLang);
 
+            Model model = JenaClient.getModelFromCore(graph+"#ExportGraph");
+
+            /*
             OutputStream out = new ByteArrayOutputStream();
             
-            Response response = getResponseFromService(graph+"#ExportGraph", services.getCoreReadAddress(), ctype);
-          
+             Response response = getResponseFromService(graph+"#ExportGraph", services.getCoreReadAddress(), ctype);
+
             if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
                 return JerseyResponseManager.unexpected();
+            }*/
+
+            ResponseBuilder rb;
+
+            if(model!=null && model.size()>0) {
+                rb = Response.ok();
+            } else {
+                rb = Response.noContent();
             }
 
-            /* TODO: Remove builders */
-            ResponseBuilder rb;
-            RDFDataMgr.write(out, model, rdfLang);
+            // RDFDataMgr.write(out, model, rdfLang);
 
             if (rdfLang.equals(Lang.JSONLD)) {
 
+                /* TODO: Use this instead? Prefixes not working!?
+                JsonLDWriteContext ctx = new JsonLDWriteContext();
+                JsonLdOptions opts = new JsonLdOptions();
+                ctx.setOptions(opts);
+                ObjectMapper mapper = new ObjectMapper();
+               // ctx.setJsonLDContext(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(model.getNsPrefixMap()));
+
+                JsonObject frame = new JsonObject();
+                frame.put("@type","http://www.w3.org/2002/07/owl#Ontology")
+                frame.put("@id", graph);
+
+                ctx.setFrame(frame.toString());
+
+                rb.entity(ModelManager.writeModelToJSONLDString(model, ctx));
+*/
+
                 Map<String, Object> jsonModel = null;
                 try {
-                    jsonModel = (Map<String, Object>) JsonUtils.fromString(out.toString());
+                    jsonModel = (Map<String, Object>) JsonUtils.fromString(ModelManager.writeModelToJSONLDString(model));
                 } catch (IOException ex) {
-                    Logger.getLogger(ExportModel.class.getName()).log(Level.SEVERE, null, ex);
+                    ex.printStackTrace();
                     return JerseyResponseManager.unexpected();
                 }
 
@@ -162,43 +189,40 @@ public class JerseyClient {
                 //Map<String,Object> frame = (HashMap<String,Object>) LDHelper.getExportContext();
 
                 Map<String, Object> context = (Map<String, Object>) jsonModel.get("@context");
-
                 context.putAll(LDHelper.CONTEXT_MAP);
 
                 frame.put("@context", context);
+                //frame.put("@id", graph);
                 frame.put("@type", "owl:Ontology");
 
                 Object data;
 
                 try {                 
-                    data = JsonUtils.fromInputStream(response.readEntity(InputStream.class));
-                    
-                    rb = Response.status(response.getStatus());
+                  //  data = JsonUtils.fromInputStream(response.readEntity(InputStream.class));
 
                     try {
                         JsonLdOptions options = new JsonLdOptions();
-                        Object framed = JsonLdProcessor.frame(data, frame, options);
+                        Object framed = JsonLdProcessor.frame(jsonModel, frame, options);
                         
                         ObjectMapper mapper = new ObjectMapper();
  
                         rb.entity(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(framed));
                         
                     } catch (NullPointerException ex) {
-                        logger.log(Level.WARNING, null, "DEFAULT GRAPH IS NULL!");
-                        return rb.entity(JsonUtils.toString(data)).build();
+                        ex.printStackTrace();
+                        return JerseyResponseManager.serverError();
                     } catch (JsonLdError ex) {
-                        logger.log(Level.SEVERE, null, ex);
+                        ex.printStackTrace();
                         return JerseyResponseManager.serverError();
                     }
 
                 } catch (IOException ex) {
-                    logger.log(Level.SEVERE, null, ex);
+                    ex.printStackTrace();
                     return JerseyResponseManager.serverError();
                 }
 
             } else {
-                 rb = Response.status(response.getStatus());
-                 rb.entity(response.readEntity(InputStream.class));
+                 rb.entity(ModelManager.writeModelToString(model, format));
             }
 
             if(!raw) {
@@ -213,7 +237,7 @@ public class JerseyClient {
             logger.log(Level.WARNING, "Expect the unexpected!", ex);
             return JerseyResponseManager.serverError();
         }
-        
+
     }
 
     @Deprecated
@@ -372,6 +396,8 @@ public class JerseyClient {
         if(ctype==null) ctype = "application/ld+json";
 
         Client client = ClientBuilder.newClient();
+        client.property(ClientProperties.CONNECT_TIMEOUT, 180000);
+        client.property(ClientProperties.READ_TIMEOUT, 180000);
         WebTarget target = client.target(service).queryParam("graph", id);
         Response response = target.request(ctype).get();
 
@@ -397,6 +423,8 @@ public class JerseyClient {
         try {
 
             Client client = ClientBuilder.newClient();
+            client.property(ClientProperties.CONNECT_TIMEOUT, 180000);
+            client.property(ClientProperties.READ_TIMEOUT, 180000);
             WebTarget target = client.target(service).queryParam("graph", id);
             Response response = target.request(contentType).get();
 
@@ -438,6 +466,8 @@ public class JerseyClient {
         try {
 
             Client client = ClientBuilder.newClient();
+            client.property(ClientProperties.CONNECT_TIMEOUT, 180000);
+            client.property(ClientProperties.READ_TIMEOUT, 180000);
             WebTarget target = client.target(service).queryParam("graph", id);
             Response response = target.request(contentType).get();
 
@@ -483,6 +513,8 @@ public class JerseyClient {
         
         try {
             Client client = IgnoreSSLClient(); // ClientBuilder.newClient();
+            client.property(ClientProperties.CONNECT_TIMEOUT, 180000);
+            client.property(ClientProperties.READ_TIMEOUT, 180000);
             HttpAuthenticationFeature feature = TermedAuthentication.getTermedAuth();
             client.register(feature);
 
@@ -601,6 +633,8 @@ public class JerseyClient {
         String url = ApplicationProperties.getDefaultTermAPI()+"node-trees";
         try {
             Client client = IgnoreSSLClient(); // ClientBuilder.newClient();
+            client.property(ClientProperties.CONNECT_TIMEOUT, 180000);
+            client.property(ClientProperties.READ_TIMEOUT, 180000);
             HttpAuthenticationFeature feature = TermedAuthentication.getTermedAuth();
             client.register(feature);
 

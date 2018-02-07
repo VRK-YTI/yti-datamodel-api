@@ -29,6 +29,7 @@ public class AbstractResource {
     public AbstractResource(IRI graphIRI) {
 
         this.graph = GraphManager.getCoreGraph(graphIRI);
+        this.id = graphIRI;
 
         try {
 
@@ -40,7 +41,6 @@ public class AbstractResource {
             logger.info(abstractResource.toString());
 
             this.dataModel = new DataModel(LDHelper.toIRI(modelResource.toString()));
-            this.id = LDHelper.toIRI(abstractResource.toString());
 
             if(!this.id.toString().startsWith(getModelId())) {
                 throw new IllegalArgumentException("Resource ID should start with model ID!");
@@ -77,8 +77,10 @@ public class AbstractResource {
     public void update() {
         Model oldModel = JenaClient.getModelFromCore(getId());
         Model exportModel = JenaClient.getModelFromCore(getModelId()+"#ExportGraph");
+
         exportModel = ModelManager.removeResourceStatements(oldModel, exportModel);
         exportModel.add(asGraph());
+
         JenaClient.putModelToCore(getModelId()+"#ExportGraph", exportModel);
         JenaClient.putModelToCore(getId(), asGraph());
     }

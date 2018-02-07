@@ -50,7 +50,9 @@ public class ExportModel {
         if(IDManager.isInvalid(graph)) {
             return JerseyResponseManager.invalidIRI();
         }
-            
+
+            if(ctype==null) ctype = "text/turtle";
+
             ctype = ctype.replace(" ", "+");
             
             if(ctype.equals("application/ld+json+context")) {

@@ -7,10 +7,9 @@ import fi.vm.yti.datamodel.api.config.LoginSession;
 import fi.vm.yti.datamodel.api.endpoint.model.Models;
 import fi.vm.yti.datamodel.api.config.EndpointServices;
 
-import java.io.ByteArrayInputStream;
-import java.io.StringWriter;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 
+import org.apache.jena.query.DatasetFactory;
 import org.apache.jena.rdf.model.*;
 
 import java.util.List;
@@ -21,6 +20,16 @@ import java.util.logging.Logger;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.riot.RDFFormat;
+import org.apache.jena.riot.WriterDatasetRIOT;
+import org.apache.jena.riot.system.PrefixMap;
+import org.apache.jena.riot.system.PrefixMapFactory;
+import org.apache.jena.riot.system.RiotLib;
+import org.apache.jena.riot.writer.JsonLDWriter;
+import org.apache.jena.shared.PropertyNotFoundException;
+import org.apache.jena.sparql.core.DatasetGraph;
+import org.apache.jena.sparql.util.Context;
+import org.apache.jena.vocabulary.OWL;
+import org.apache.jena.vocabulary.RDF;
 
 /**
  *
@@ -40,6 +49,25 @@ public class ModelManager {
         StringWriter writer = new StringWriter();
         RDFDataMgr.write(writer, model, RDFFormat.JSONLD);
         return writer.toString();
+    }
+
+    public static String writeModelToString(Model model, RDFFormat format) {
+        StringWriter writer = new StringWriter();
+        RDFDataMgr.write(writer, model, format);
+        return writer.toString();
+    }
+
+    public static String writeModelToJSONLDString(Model m, Context jenaContext) {
+        try(ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            WriterDatasetRIOT w = RDFDataMgr.createDatasetWriter(RDFFormat.JSONLD_FRAME_PRETTY);
+            DatasetGraph g = DatasetFactory.create(m).asDatasetGraph();
+            PrefixMap pm = RiotLib.prefixMap(g);
+            //PrefixMap pm = PrefixMapFactory.create(m.getNsPrefixMap());
+            String base = null;
+            w.write(out, g, pm, base, jenaContext) ;
+            out.flush();
+            return out.toString("UTF-8");
+        } catch (IOException e) { throw new RuntimeException(e); }
     }
 
 
@@ -72,16 +100,21 @@ public class ModelManager {
             Resource subject = listStatement.getSubject();
             RDFNode object = listStatement.getObject();
             if(subject.isURIResource() && object.isAnon()) {
-                Statement removeStatement = model.getRequiredProperty(subject, listStatement.getPredicate());
-                if(!removeStatement.getObject().isAnon()) {
+                try {
+                    Statement removeStatement = model.getRequiredProperty(subject, listStatement.getPredicate());
+                    if (!removeStatement.getObject().isAnon()) {
+                        logger.warning("This should'nt happen!");
+                        logger.warning("Bad data " + subject.toString() + "->" + listStatement.getPredicate());
+                    } else {
+                        RDFList languageList = removeStatement.getObject().as(RDFList.class);
+                        languageList.removeList();
+                        removeStatement.remove();
+                    }
+                } catch(PropertyNotFoundException ex) {
                     logger.warning("This should'nt happen!");
-                    logger.warning("Bad data "+subject.toString()+"->"+listStatement.getPredicate());
-                } else {
-                    RDFList languageList = removeStatement.getObject().as(RDFList.class);
-                    languageList.removeList();
-                    removeStatement.remove();
+                    ex.printStackTrace();
                 }
-            } else if(subject.isURIResource()){
+            } else if(subject.isURIResource() && !subject.hasProperty(RDF.type, OWL.Ontology)){
                 model.remove(listStatement);
             }
         }
