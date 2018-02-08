@@ -59,7 +59,10 @@ public String getSchemesSparqlAddress() {
 }
 
 public String getLocalhostCoreSparqlAddress() {
-    return endpoint+"/core/sparql";
+    if(!ApplicationProperties.getEndpoint().startsWith("http://localhost"))
+        return "localhost:3030/core/sparql";
+    else
+        return "http://localhost:3030/core/sparql";
 }
 
 public String getCoreSparqlUpdateAddress() {
