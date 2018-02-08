@@ -113,7 +113,7 @@ public class GraphManager {
     }
 
     public static void initServiceCategories() {
-        Model m = FileManager.get().loadModel("data-theme-skos.rdf");
+        Model m = FileManager.get().loadModel("ptvl-skos.rdf");
         JenaClient.putModelToCore("urn:yti:servicecategories",m);
     }
 
@@ -1006,7 +1006,6 @@ public class GraphManager {
     /**
      * Constructs JSON-LD from graph
      * @param query SPARQL query as string
-     * @param service SPARQL service as string
      * @return Returns JSON-LD object
      */
     public static Model constructModelFromCoreGraph(String query){

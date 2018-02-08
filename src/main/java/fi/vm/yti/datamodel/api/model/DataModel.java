@@ -68,7 +68,7 @@ public class DataModel extends AbstractModel {
                 + "} WHERE { "
                 + "BIND(now() as ?creation) "
                 + "GRAPH <urn:yti:servicecategories> { "
-                + "?group at:op-code ?code . "
+                + "?group skos:notation ?code . "
                 + "?group skos:prefLabel ?groupLabel . "
                 + "FILTER(LANGMATCHES(LANG(?groupLabel), '"+lang+"'))"
                 + "VALUES ?code { "+LDHelper.concatStringList(serviceList, " ", "'")+"}"

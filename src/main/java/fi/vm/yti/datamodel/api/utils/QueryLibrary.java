@@ -63,12 +63,14 @@ public class QueryLibrary {
                     "?concept rdfs:label ?label . " +
                     "?concept rdf:type foaf:Group . " +
                     "?concept dcterms:identifier ?id . " +
+                    "?concept dcterms:description ?note . " +
                     "} WHERE {" +
                     "GRAPH <urn:yti:servicecategories> { " +
                     "?concept skos:prefLabel ?label . " +
-                    "?concept dc:identifier ?id . " +
-                    "FILTER langMatches(lang(?label),?lang)" +
-                    "VALUES ?lang { 'fi' 'sv' 'en'}" +
+                    "?concept skos:notation ?id . " +
+                    "?concept skos:note ?note . "+
+                   // "FILTER langMatches(lang(?label),?lang)" +
+                   // "VALUES ?lang { 'fi' 'sv' 'en'}" +
                     "}}");
     
     final public static String modelQuery = LDHelper.expandSparqlQuery(true,
@@ -105,7 +107,7 @@ public class QueryLibrary {
                      + " }"
                      + "}"
                      + "GRAPH <urn:yti:servicecategories> { "
-                     + "?group at:op-code ?code . "
+                     + "?group skos:notation ?code . "
                      + "?group skos:prefLabel ?groupLabel . "
                      + "}"
                    //  + "GRAPH <urn:csc:iow:sd> { "
@@ -133,7 +135,7 @@ public class QueryLibrary {
                 + "?org a foaf:Organization . "
                 + "} WHERE { "
                 + "GRAPH <urn:yti:servicecategories> { "
-                + "?group at:op-code ?groupCode . "
+                + "?group skos:notation ?groupCode . "
                 + "?group skos:prefLabel ?groupLabel . "
                 + "}"
                 + "GRAPH ?graphName { "

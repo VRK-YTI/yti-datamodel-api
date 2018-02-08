@@ -146,9 +146,7 @@ public abstract class AbstractModel {
 
     public void delete() {
         ServiceDescriptionManager.deleteGraphDescription(getId());
-        JenaClient.deleteModelFromCore(getId());
-        JenaClient.deleteModelFromCore(getId()+"#ExportModel");
-      //  JenaClient.deleteModelFromCore(getId()+"#NamespaceGraph");
+        GraphManager.removeModel(getIRI());
     }
 
     public void modifyDatetime() {

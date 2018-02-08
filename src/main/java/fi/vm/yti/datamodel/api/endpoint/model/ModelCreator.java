@@ -59,6 +59,8 @@ public class ModelCreator {
             @ApiParam(value = "Label language", required = true, allowableValues="fi,en") @QueryParam("lang") String lang,
             @ApiParam(value = "Allowed languages as space list: 'en sv pl'. Default 'fi en'") @QueryParam("langList") String allowedLang) {
 
+            logger.info(servicesString);
+
              List<String> serviceList = Arrays.asList(servicesString.split(" "));
 
              String[] orgs = orgString.split(" ");
@@ -69,6 +71,7 @@ public class ModelCreator {
              }
 
             if(!ServiceCategory.containsAll(serviceList)) {
+                 logger.info("no services");
                 return JerseyResponseManager.invalidParameter();
             }
 
@@ -84,6 +87,7 @@ public class ModelCreator {
             }
 
             if(!RHPOrganizationManager.isExistingOrganization(orgList)) {
+                logger.info("no org");
                 return JerseyResponseManager.invalidParameter();
             }
 

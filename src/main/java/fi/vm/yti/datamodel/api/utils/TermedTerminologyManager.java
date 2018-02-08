@@ -101,6 +101,7 @@ public class TermedTerminologyManager {
         QueryExecution qexec = QueryExecutionFactory.create(query,conceptModel);
         Model objects = qexec.execConstruct();
 
+
         return cleanModelDefinitions(objects);
 
     }
