@@ -64,11 +64,15 @@ public class QueryLibrary {
                     "?concept rdf:type foaf:Group . " +
                     "?concept dcterms:identifier ?id . " +
                     "?concept dcterms:description ?note . " +
+                    "?concept sh:order ?order . "+
+                    "?concept dcterms:hasPart ?subConcept . "+
                     "} WHERE {" +
                     "GRAPH <urn:yti:servicecategories> { " +
                     "?concept skos:prefLabel ?label . " +
                     "?concept skos:notation ?id . " +
                     "?concept skos:note ?note . "+
+                    "?concept sh:order ?order . "+
+                    "OPTIONAL { ?concept skos:narrower ?subConcept . }"+
                    // "FILTER langMatches(lang(?label),?lang)" +
                    // "VALUES ?lang { 'fi' 'sv' 'en'}" +
                     "}}");
