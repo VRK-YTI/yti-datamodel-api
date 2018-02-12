@@ -10,8 +10,6 @@ import com.github.jsonldjava.core.JsonLdError;
 import com.github.jsonldjava.core.JsonLdOptions;
 import com.github.jsonldjava.core.JsonLdProcessor;
 import com.github.jsonldjava.utils.JsonUtils;
-import jersey.repackaged.com.google.common.collect.ImmutableMap;
-import org.apache.jena.atlas.json.JsonObject;
 import org.apache.jena.query.*;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
@@ -157,6 +155,7 @@ public class JerseyClient {
                 rb = Response.noContent();
             }
 
+            // OutputStream out = new ByteArrayOutputStream();
             // RDFDataMgr.write(out, model, rdfLang);
 
             if (rdfLang.equals(Lang.JSONLD)) {
