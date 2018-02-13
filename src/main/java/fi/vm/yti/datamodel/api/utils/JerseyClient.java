@@ -826,7 +826,9 @@ public class JerseyClient {
             }
 
             ResponseBuilder rb = Response.ok();
-            rb.entity(ModelManager.writeModelToJSONLDString(constructModel));
+            String responseString = ModelManager.writeModelToJSONLDString(constructModel);
+            logger.info(responseString);
+            rb.entity(responseString);
             return rb.build();
           
     }

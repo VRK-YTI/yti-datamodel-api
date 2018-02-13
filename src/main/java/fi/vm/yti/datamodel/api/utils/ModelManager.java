@@ -3,6 +3,7 @@
  */
 package fi.vm.yti.datamodel.api.utils;
 
+import com.github.jsonldjava.core.JsonLdError;
 import fi.vm.yti.datamodel.api.config.LoginSession;
 import fi.vm.yti.datamodel.api.endpoint.model.Models;
 import fi.vm.yti.datamodel.api.config.EndpointServices;
@@ -47,7 +48,7 @@ public class ModelManager {
      */
     public static String writeModelToJSONLDString(Model model) {
         StringWriter writer = new StringWriter();
-        RDFDataMgr.write(writer, model, RDFFormat.JSONLD_FLATTEN_PRETTY);
+        RDFDataMgr.write(writer, model, RDFFormat.JSONLD);
         return writer.toString();
     }
 
@@ -55,6 +56,20 @@ public class ModelManager {
         StringWriter writer = new StringWriter();
         RDFDataMgr.write(writer, model, format);
         return writer.toString();
+    }
+
+    public static Object toJsonLdObject(Model m) {
+              DatasetGraph g = DatasetFactory.create(m).asDatasetGraph();
+              PrefixMap pm = RiotLib.prefixMap(g);
+        try {
+            return JsonLDWriter.toJsonLDJavaAPI((RDFFormat.JSONLDVariant) RDFFormat.JSONLD_FLATTEN_PRETTY.getVariant(), g, pm, null, g.getContext());
+        } catch(IOException ex) {
+            ex.printStackTrace();
+            return null;
+        } catch(JsonLdError ex) {
+            ex.printStackTrace();
+            return null;
+        }
     }
 
     public static String writeModelToJSONLDString(Model m, Context jenaContext) {
