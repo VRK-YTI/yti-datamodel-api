@@ -66,6 +66,7 @@ public class Class {
           
         /* If no id is provided create a list of classes */
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        // TODO: Create namespacemap from all models
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
         
         String queryString = QueryLibrary.listClassesQuery;

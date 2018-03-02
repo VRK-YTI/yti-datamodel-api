@@ -186,7 +186,7 @@ public class Migrator {
                           "    ?group ?p ?o . " +
                           "} INSERT { " +
                           "    ?model dcterms:contributor <urn:uuid:7d3a3c00-5a6b-489b-a3ed-63bb58c26a63> . " +
-                          "    ?model dcterms:isPartOf <http://publications.europa.eu/resource/authority/data-theme/GOVE> ." +
+                          "    ?model dcterms:isPartOf <http://urn.fi/URN:NBN:fi:au:ptvl:v1095> ." +
                           "} WHERE { " +
                           "    ?model a owl:Ontology . " +
                           "    ?model dcterms:isPartOf ?group . " +
@@ -301,10 +301,10 @@ public class Migrator {
                               "    ?model dcterms:contributor <urn:uuid:7d3a3c00-5a6b-489b-a3ed-63bb58c26a63> . " +
                               "    <urn:uuid:7d3a3c00-5a6b-489b-a3ed-63bb58c26a63> a foaf:Organization . " +
                               "    <urn:uuid:7d3a3c00-5a6b-489b-a3ed-63bb58c26a63> skos:prefLabel 'Migrated organization'@en . " +
-                              "    ?model dcterms:isPartOf <http://publications.europa.eu/resource/authority/data-theme/GOVE> ." +
-                              "    <http://publications.europa.eu/resource/authority/data-theme/GOVE> a foaf:Group . " +
-                              "    <http://publications.europa.eu/resource/authority/data-theme/GOVE> dcterms:identifier 'GOVE' . " +
-                              "    <http://publications.europa.eu/resource/authority/data-theme/GOVE> rdfs:label 'Migrated group'@en." +
+                              "    ?model dcterms:isPartOf <http://urn.fi/URN:NBN:fi:au:ptvl:v1095> ." +
+                              "    <http://urn.fi/URN:NBN:fi:au:ptvl:v1095> a foaf:Group . " +
+                              "    <http://urn.fi/URN:NBN:fi:au:ptvl:v1095> dcterms:identifier 'P9' . " +
+                              "    <http://urn.fi/URN:NBN:fi:au:ptvl:v1095> rdfs:label 'Migrated group'@en." +
                               "} WHERE { " +
                               "    ?model a owl:Ontology . " +
                               "    ?model dcterms:isPartOf ?group . " +

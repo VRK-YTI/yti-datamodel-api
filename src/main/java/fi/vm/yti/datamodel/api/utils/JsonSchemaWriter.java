@@ -529,11 +529,15 @@ public class JsonSchemaWriter {
                         + "BIND(afn:localname(?predicate) as ?predicateName)"
                         + "}"
                         + "}"
-                        + "ORDER BY ?resource ?property ?index";
+                        + "ORDER BY ?resource ?index ?property";
 
 
         pss.setIri("modelPartGraph", modelID+"#HasPartGraph");
-        if(lang!=null) pss.setLiteral("lang",lang);
+
+        if(lang!=null) {
+            pss.setLiteral("lang",lang);
+        }
+
         pss.setCommandText(selectResources);
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
 
@@ -542,7 +546,9 @@ public class JsonSchemaWriter {
         ResultSet results = qexec.execSelect();
         ResultSetPeekable pResults = ResultSetFactory.makePeekable(results);
 
-        if(!pResults.hasNext()) return null;
+        if(!pResults.hasNext()) {
+            return null;
+        }
 
         JsonObjectBuilder definitions = Json.createObjectBuilder();
         JsonObjectBuilder properties = Json.createObjectBuilder();
@@ -565,14 +571,19 @@ public class JsonSchemaWriter {
         while (pResults.hasNext()) {
             QuerySolution soln = pResults.nextSolution();
 
-            if(!soln.contains("className")) return null;
-
+            if(!soln.contains("className")) {
+                return null;
+            }
 
             /* First run per predicate */
 
             if(pIndex==1) {
 
+                logger.info("First run");
+
                 className = soln.getLiteral("className").getString();
+
+                logger.info("Class:"+className);
 
                 predicateID = soln.getResource("predicate").toString();
 
@@ -582,6 +593,7 @@ public class JsonSchemaWriter {
 
                 if(soln.contains("id")) {
                     predicateName = soln.getLiteral("id").getString();
+                    logger.info("Predicatename: "+predicateName);
                 }
 
                 String title = soln.getLiteral("title").getString();
@@ -596,7 +608,6 @@ public class JsonSchemaWriter {
                         requiredPredicates.add(predicateName);
                     }
                 }
-
 
                 if(soln.contains("description")) {
                     String description = soln.getLiteral("description").getString();
@@ -630,11 +641,6 @@ public class JsonSchemaWriter {
 
                     String jsonDatatype = DATATYPE_MAP.get(datatype);
 
-
-                    if(soln.contains("min") && soln.getLiteral("min").getInt()>0) {
-                        predicate.add("minItems",soln.getLiteral("min").getInt());
-                    }
-
                     if(soln.contains("maxLength"))  {
                         predicate.add("maxLength",soln.getLiteral("maxLength").getInt());
                     }
@@ -649,7 +655,7 @@ public class JsonSchemaWriter {
 
                     if(soln.contains("max") && soln.getLiteral("max").getInt()<=1) {
 
-                        predicate.add("maxItems",1);
+                       // predicate.add("maxItems",1);
 
                         if(jsonDatatype!=null) {
                             if(jsonDatatype.equals("langString")) {
@@ -665,6 +671,11 @@ public class JsonSchemaWriter {
                         if(soln.contains("max") && soln.getLiteral("max").getInt()>1) {
                             predicate.add("maxItems",soln.getLiteral("max").getInt());
                         }
+
+                        if(soln.contains("min") && soln.getLiteral("min").getInt()>0) {
+                            predicate.add("minItems",soln.getLiteral("min").getInt());
+                        }
+
 
                         predicate.add("type", "array");
 
@@ -697,7 +708,9 @@ public class JsonSchemaWriter {
 
 
                         if(!soln.contains("max") || soln.getLiteral("max").getInt()>1) {
-                            if(soln.contains("min")) predicate.add("minItems",soln.getLiteral("min").getInt());
+                            if(soln.contains("min")) {
+                                predicate.add("minItems",soln.getLiteral("min").getInt());
+                            }
                             if(soln.contains("max")) {
                                 predicate.add("maxItems",soln.getLiteral("max").getInt());
 
@@ -721,8 +734,7 @@ public class JsonSchemaWriter {
                 exampleSet.add(example);
             }
 
-
-            if(pResults.hasNext() && predicateID.equals(pResults.peek().getResource("predicate").toString())) {
+            if(pResults.hasNext() && predicateID.equals(pResults.peek().getResource("predicate").toString()) && className.equals(pResults.peek().getLiteral("className").getString())) {
 
                 pIndex+=1;
 
@@ -739,18 +751,8 @@ public class JsonSchemaWriter {
                         exampleList.add(ex);
                     }
 
-                    JsonObjectBuilder chanceObject = Json.createObjectBuilder();
-                    JsonArrayBuilder picksetArray = Json.createArrayBuilder();
+                    predicate.add("example", exampleList.build());
 
-                    /* Add examples to chance pickset or pickone list */
-
-                    if(arrayType) {
-                        chanceObject.add("pickset",  picksetArray.add(exampleList.build()).build());
-                        typeObject.add("chance", chanceObject.build());
-                    } else {
-                        chanceObject.add("pickone",  picksetArray.add(exampleList.build()).build());
-                        predicate.add("chance", chanceObject.build());
-                    }
                 }
 
                 if(arrayType) {
@@ -1083,11 +1085,6 @@ public class JsonSchemaWriter {
                     String jsonDatatype = DATATYPE_MAP.get(datatype);
 
 
-
-                    if(soln.contains("min") && soln.getLiteral("min").getInt()>0) {
-                        propertyBuilder.add("minItems",soln.getLiteral("min").getInt());
-                    }
-
                     if(soln.contains("maxLength"))  {
                         propertyBuilder.add("maxLength",soln.getLiteral("maxLength").getInt());
                     }
@@ -1102,7 +1099,7 @@ public class JsonSchemaWriter {
 
                     if(soln.contains("max") && soln.getLiteral("max").getInt()<=1) {
 
-                        propertyBuilder.add("maxItems",1);
+                        // propertyBuilder.add("maxItems",1);
 
                         if(jsonDatatype!=null) {
                             if(jsonDatatype.equals("langString")) {
@@ -1117,6 +1114,10 @@ public class JsonSchemaWriter {
 
                         if(soln.contains("max") && soln.getLiteral("max").getInt()>1) {
                             propertyBuilder.add("maxItems",soln.getLiteral("max").getInt());
+                        }
+
+                        if(soln.contains("min") && soln.getLiteral("min").getInt()>0) {
+                            propertyBuilder.add("minItems",soln.getLiteral("min").getInt());
                         }
 
                         propertyBuilder.add("type", "array");
@@ -1151,7 +1152,9 @@ public class JsonSchemaWriter {
 
 
                         if(!soln.contains("max") || soln.getLiteral("max").getInt()>1) {
-                            if(soln.contains("min")) propertyBuilder.add("minItems",soln.getLiteral("min").getInt());
+                            if(soln.contains("min")) {
+                                propertyBuilder.add("minItems",soln.getLiteral("min").getInt());
+                            }
                             if(soln.contains("max")) {
                                 propertyBuilder.add("maxItems",soln.getLiteral("max").getInt());
                                 logger.info(""+soln.getLiteral("max").getInt());

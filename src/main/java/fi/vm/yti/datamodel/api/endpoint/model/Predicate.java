@@ -66,6 +66,7 @@ public class Predicate {
       if(id==null || id.equals("undefined") || id.equals("default")) {
 
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        // TODO: Create namespacemap from models
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
 
         String queryString = QueryLibrary.listPredicatesQuery;

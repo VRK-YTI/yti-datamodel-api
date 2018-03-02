@@ -3,6 +3,8 @@
  */
 package fi.vm.yti.datamodel.api.utils;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.jsonldjava.core.JsonLdError;
 import fi.vm.yti.datamodel.api.config.LoginSession;
 import fi.vm.yti.datamodel.api.endpoint.model.Models;
@@ -18,10 +20,7 @@ import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.jena.riot.Lang;
-import org.apache.jena.riot.RDFDataMgr;
-import org.apache.jena.riot.RDFFormat;
-import org.apache.jena.riot.WriterDatasetRIOT;
+import org.apache.jena.riot.*;
 import org.apache.jena.riot.system.PrefixMap;
 import org.apache.jena.riot.system.PrefixMapFactory;
 import org.apache.jena.riot.system.RiotLib;
@@ -58,17 +57,18 @@ public class ModelManager {
         return writer.toString();
     }
 
-    public static Object toJsonLdObject(Model m) {
-              DatasetGraph g = DatasetFactory.create(m).asDatasetGraph();
-              PrefixMap pm = RiotLib.prefixMap(g);
+    public static JsonNode toJsonNode(Model m) {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        DatasetGraph g = DatasetFactory.create(m).asDatasetGraph();
+        WriterDatasetRIOT w = RDFDataMgr.createDatasetWriter(RDFFormat.JSONLD_FLATTEN_FLAT);
+        w.write(baos, g, RiotLib.prefixMap(g), null, g.getContext());
+        ObjectMapper objectMapper = new ObjectMapper();
         try {
-            return JsonLDWriter.toJsonLDJavaAPI((RDFFormat.JSONLDVariant) RDFFormat.JSONLD_FLATTEN_PRETTY.getVariant(), g, pm, null, g.getContext());
+           JsonNode jsonNode = objectMapper.readTree(baos.toByteArray());
+           return jsonNode;
         } catch(IOException ex) {
-            ex.printStackTrace();
-            return null;
-        } catch(JsonLdError ex) {
-            ex.printStackTrace();
-            return null;
+           ex.printStackTrace();
+           return null;
         }
     }
 
