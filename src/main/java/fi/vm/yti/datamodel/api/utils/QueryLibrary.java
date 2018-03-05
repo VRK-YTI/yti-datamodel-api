@@ -71,8 +71,9 @@ public class QueryLibrary {
                     "?concept skos:prefLabel ?label . " +
                     "?concept skos:notation ?id . " +
                     "?concept skos:note ?note . "+
+                    "FILTER NOT EXISTS { ?concept skos:broader ?topConcept . }"+
                     "?concept sh:order ?order . "+
-                    "OPTIONAL { ?concept skos:narrower ?subConcept . }"+
+                   //  "OPTIONAL { ?concept skos:narrower ?subConcept . }"+
                    // "FILTER langMatches(lang(?label),?lang)" +
                    // "VALUES ?lang { 'fi' 'sv' 'en'}" +
                     "}}");
