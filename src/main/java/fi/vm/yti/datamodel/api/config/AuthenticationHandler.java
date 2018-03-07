@@ -97,12 +97,14 @@ class AuthenticationHandler {
 
     private static class User {
 
+        public UUID id;
         public String email;
         public String firstName;
         public String lastName;
         public boolean superuser;
         public boolean newlyCreated;
         public String creationDateTime;
+        public String removalDateTime;
         public List<Organization> organization;
     }
 
