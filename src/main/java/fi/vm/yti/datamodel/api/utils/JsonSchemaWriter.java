@@ -13,6 +13,7 @@ import org.apache.jena.query.ResultSet;
 import org.apache.jena.query.ResultSetFactory;
 import org.apache.jena.sparql.resultset.ResultSetPeekable;
 import java.io.StringWriter;
+import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
 import java.util.Collections;
 import java.util.Date;
@@ -601,7 +602,7 @@ public class JsonSchemaWriter {
                 // JsonObjectBuilder predicate = Json.createObjectBuilder();
 
                 predicate.add("title", title);
-
+                
                 if(soln.contains("min")) {
                     int min = soln.getLiteral("min").getInt();
                     if(min>0) {
@@ -774,6 +775,7 @@ public class JsonSchemaWriter {
                 predicate = Json.createObjectBuilder();
                 JsonObjectBuilder classDefinition = Json.createObjectBuilder();
                 classDefinition.add("title",soln.getLiteral("classTitle").getString());
+                classDefinition.add("type", "object");
                 if(soln.contains("scopeClass")) {
                     classDefinition.add("@id",soln.getResource("scopeClass").toString());
                 } else {
@@ -1039,11 +1041,11 @@ public class JsonSchemaWriter {
             }
 
             JsonObjectBuilder propertyBuilder = Json.createObjectBuilder();
-
+            
             /* Build multilingual objects */
-
+            
             propertyTitleObject.add(lang, title);
-
+            
             if(propertyDescription!=null)
                 propertyDescriptionObject.add(lang, propertyDescription);
 
@@ -1184,6 +1186,7 @@ public class JsonSchemaWriter {
             if(!pResults.hasNext() || !className.equals(pResults.peek().getLiteral("className").toString())) {
                 JsonObjectBuilder classDefinition = Json.createObjectBuilder();
                 classDefinition.add("title",classTitleObject.build());
+                classDefinition.add("type", "object");
                 JsonObject classDescriptionJSON = classDescriptionObject.build();
                 if(!classDescriptionJSON.isEmpty()) {
                     classDefinition.add("description",classDescriptionJSON);
