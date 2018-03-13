@@ -3,40 +3,57 @@
  */
 package fi.vm.yti.datamodel.api.endpoint.profile;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.servlet.ServletContext;
+import fi.vm.yti.datamodel.api.service.EndpointServices;
+import fi.vm.yti.datamodel.api.model.Shape;
+import fi.vm.yti.datamodel.api.service.*;
+import io.swagger.annotations.*;
+import org.apache.jena.iri.IRI;
+import org.apache.jena.iri.IRIException;
+import org.apache.jena.util.SplitIRI;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-import fi.vm.yti.datamodel.api.model.Shape;
-import fi.vm.yti.datamodel.api.utils.*;
-import fi.vm.yti.datamodel.api.utils.JerseyClient;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
-
-import javax.servlet.http.HttpServletRequest;
-import org.apache.jena.iri.IRI;
-import org.apache.jena.iri.IRIException;
-import org.apache.jena.util.SplitIRI;
-
-/**
- * Root resource (exposed at "classCreator" path)
- */
+@Component
 @Path("shapeCreator")
 @Api(tags = {"Profile"}, description = "Construct new Shape template")
 public class ShapeCreator {
 
-    @Context ServletContext context;
     private static final Logger logger = Logger.getLogger(ShapeCreator.class.getName());
-    
+
+    private final IDManager idManager;
+    private final JerseyResponseManager jerseyResponseManager;
+    private final JerseyClient jerseyClient;
+    private final GraphManager graphManager;
+    private final JenaClient jenaClient;
+    private final ModelManager modelManager;
+    private final EndpointServices endpointServices;
+
+    @Autowired
+    ShapeCreator(IDManager idManager,
+                 JerseyResponseManager jerseyResponseManager,
+                 JerseyClient jerseyClient,
+                 GraphManager graphManager,
+                 JenaClient jenaClient,
+                 ModelManager modelManager,
+                 EndpointServices endpointServices) {
+
+        this.idManager = idManager;
+        this.jerseyResponseManager = jerseyResponseManager;
+        this.jerseyClient = jerseyClient;
+        this.graphManager = graphManager;
+        this.jenaClient = jenaClient;
+        this.modelManager = modelManager;
+        this.endpointServices = endpointServices;
+    }
+
     @GET
     @Produces("application/ld+json")
     @ApiOperation(value = "Create new class", notes = "Create new")
@@ -47,27 +64,25 @@ public class ShapeCreator {
     public Response newClass(
             @ApiParam(value = "Profile ID", required = true) @QueryParam("profileID") String profileID,
             @ApiParam(value = "Class ID", required = true) @QueryParam("classID") String classID,
-            @ApiParam(value = "Language", required = true, allowableValues="fi,en") @QueryParam("lang") String lang,
-            @Context HttpServletRequest request) {
+            @ApiParam(value = "Language", required = true, allowableValues="fi,en") @QueryParam("lang") String lang) {
 
             IRI classIRI,profileIRI,shapeIRI;
             try {
-                    classIRI = IDManager.constructIRI(classID);
-                    profileIRI = IDManager.constructIRI(profileID);
+                    classIRI = idManager.constructIRI(classID);
+                    profileIRI = idManager.constructIRI(profileID);
                     if(profileID.endsWith("/") || profileID.endsWith("#")) {
-                       shapeIRI = IDManager.constructIRI(profileIRI+SplitIRI.localname(classID)); 
+                       shapeIRI = idManager.constructIRI(profileIRI+SplitIRI.localname(classID));
                     } else {
-                        shapeIRI = IDManager.constructIRI(profileIRI+"#"+SplitIRI.localname(classID));
+                        shapeIRI = idManager.constructIRI(profileIRI+"#"+SplitIRI.localname(classID));
                     }
                     
             } catch (IRIException e) {
                     logger.log(Level.WARNING, "ID is invalid IRI!");
-                    return JerseyResponseManager.invalidIRI();
+                    return jerseyResponseManager.invalidIRI();
             }
 
-           Shape newShape = new Shape(classIRI,shapeIRI,profileIRI);
+           Shape newShape = new Shape(classIRI,shapeIRI,profileIRI, graphManager, jenaClient, modelManager, endpointServices);
 
-           return JerseyClient.constructResponseFromGraph(newShape.asGraph());
-    }   
- 
+           return jerseyClient.constructResponseFromGraph(newShape.asGraph());
+    }
 }

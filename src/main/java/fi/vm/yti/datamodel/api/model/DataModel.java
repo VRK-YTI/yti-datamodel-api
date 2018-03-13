@@ -1,7 +1,8 @@
 package fi.vm.yti.datamodel.api.model;
 
+import fi.vm.yti.datamodel.api.service.EndpointServices;
+import fi.vm.yti.datamodel.api.service.*;
 import fi.vm.yti.datamodel.api.utils.LDHelper;
-import fi.vm.yti.datamodel.api.utils.ModelManager;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.query.ParameterizedSparqlString;
 import org.apache.jena.query.QueryExecution;
@@ -11,25 +12,37 @@ import org.apache.jena.vocabulary.DCTerms;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.logging.Logger;
 
-/**
- * Created by malonen on 14.11.2017.
- */
 public class DataModel extends AbstractModel {
 
-    private static final Logger logger = Logger.getLogger(DataModel.class.getName());
-
-    public DataModel(IRI graphId) throws IllegalArgumentException {
-        super(graphId);
+    public DataModel(IRI graphId,
+                     GraphManager graphManager,
+                     ServiceDescriptionManager serviceDescriptionManager,
+                     JenaClient jenaClient) throws IllegalArgumentException {
+        super(graphId, graphManager, serviceDescriptionManager, jenaClient);
     }
 
-
-    public DataModel(String jsonld) throws IllegalArgumentException {
-        super(ModelManager.createJenaModelFromJSONLDString(jsonld));
+    public DataModel(String jsonld,
+                     GraphManager graphManager,
+                     RHPOrganizationManager rhpOrganizationManager,
+                     ServiceDescriptionManager serviceDescriptionManager,
+                     JenaClient jenaClient,
+                     ModelManager modelManager) throws IllegalArgumentException {
+        super(modelManager.createJenaModelFromJSONLDString(jsonld), graphManager, rhpOrganizationManager, serviceDescriptionManager, jenaClient);
     }
 
-    public DataModel(String prefix, IRI namespace, String label, String lang, String allowedLang, List<String> serviceList, List<UUID> orgList) {
+    public DataModel(String prefix,
+                     IRI namespace,
+                     String label,
+                     String lang,
+                     String allowedLang,
+                     List<String> serviceList,
+                     List<UUID> orgList,
+                     GraphManager graphManager,
+                     ServiceDescriptionManager serviceDescriptionManager,
+                     JenaClient jenaClient,
+                     EndpointServices endpointServices) {
+        super(graphManager, serviceDescriptionManager, jenaClient);
 
         this.modelOrganizations = orgList;
 
@@ -94,13 +107,10 @@ public class DataModel extends AbstractModel {
         pss.setLiteral("mlabel", ResourceFactory.createLangLiteral(label, lang));
         pss.setLiteral("defLang", lang);
 
-        QueryExecution qexec = QueryExecutionFactory.sparqlService(services.getCoreSparqlAddress(), pss.toString());
+        QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), pss.toString());
         this.graph = qexec.execConstruct();
         RDFList langRDFList = LDHelper.addStringListToModel(this.graph, allowedLang);
         this.graph.add(ResourceFactory.createResource(namespace.toString()), DCTerms.language, langRDFList);
 
     }
-
-
-
 }

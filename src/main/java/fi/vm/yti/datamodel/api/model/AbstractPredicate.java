@@ -1,40 +1,48 @@
 package fi.vm.yti.datamodel.api.model;
 
-import fi.vm.yti.datamodel.api.config.EndpointServices;
-import fi.vm.yti.datamodel.api.utils.GraphManager;
+import fi.vm.yti.datamodel.api.service.GraphManager;
+import fi.vm.yti.datamodel.api.service.JenaClient;
+import fi.vm.yti.datamodel.api.service.ModelManager;
+import fi.vm.yti.datamodel.api.service.ServiceDescriptionManager;
 import fi.vm.yti.datamodel.api.utils.LDHelper;
-import fi.vm.yti.datamodel.api.utils.RHPOrganizationManager;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.rdf.model.*;
 import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
-import org.apache.jena.web.DatasetAdapter;
-import org.apache.jena.web.DatasetGraphAccessorHTTP;
-import org.topbraid.shacl.vocabulary.SH;
 
 import java.util.List;
 import java.util.UUID;
 import java.util.logging.Logger;
 
-/**
- * Created by malonen on 29.11.2017.
- */
 public class AbstractPredicate extends AbstractResource {
-
 
     protected String provUUID;
     private static final Logger logger = Logger.getLogger(AbstractPredicate.class.getName());
 
 
-    public AbstractPredicate() {}
-
-    public AbstractPredicate(IRI graphIRI) {
-       super(graphIRI);
+    public AbstractPredicate(GraphManager graphManager,
+                             JenaClient jenaClient,
+                             ModelManager modelManager) {
+        super(graphManager, jenaClient, modelManager);
     }
 
-    public AbstractPredicate(Model graph){
+    public AbstractPredicate(IRI graphIRI,
+                             GraphManager graphManager,
+                             ServiceDescriptionManager serviceDescriptionManager,
+                             JenaClient jenaClient,
+                             ModelManager modelManager) {
+       super(graphIRI, graphManager, serviceDescriptionManager, jenaClient, modelManager);
+    }
+
+    public AbstractPredicate(Model graph,
+                             GraphManager graphManager,
+                             ServiceDescriptionManager serviceDescriptionManager,
+                             JenaClient jenaClient,
+                             ModelManager modelManager) {
+        super(graphManager, jenaClient, modelManager);
+
         this.graph = graph;
 
         try {
@@ -65,7 +73,7 @@ public class AbstractPredicate extends AbstractResource {
             Statement isDefinedBy = predicateResource.getRequiredProperty(RDFS.isDefinedBy);
             Resource modelResource = isDefinedBy.getObject().asResource();
 
-            this.dataModel = new DataModel(LDHelper.toIRI(modelResource.toString()));
+            this.dataModel = new DataModel(LDHelper.toIRI(modelResource.toString()), graphManager, serviceDescriptionManager, jenaClient);
             this.id = LDHelper.toIRI(predicateResource.toString());
             this.provUUID = "urn:uuid:"+UUID.randomUUID().toString();
 

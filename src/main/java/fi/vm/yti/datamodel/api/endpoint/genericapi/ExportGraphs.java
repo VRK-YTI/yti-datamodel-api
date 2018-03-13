@@ -1,32 +1,33 @@
 package fi.vm.yti.datamodel.api.endpoint.genericapi;
 
-import fi.vm.yti.datamodel.api.config.EndpointServices;
-import fi.vm.yti.datamodel.api.utils.*;
+import fi.vm.yti.datamodel.api.service.JerseyClient;
+import fi.vm.yti.datamodel.api.service.JerseyResponseManager;
 import io.swagger.annotations.*;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFLanguages;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
-import javax.servlet.ServletContext;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
-import java.util.logging.Logger;
 
-/**
- * Root resource (exposed at "myresource" path)
- */
+@Component
 @Path("exportGraphs")
 @Api(tags = {"Admin"}, description = "Export graphs")
 public class ExportGraphs {
 
-    @Context
-    ServletContext context;
-    EndpointServices services = new EndpointServices();
+    private final JerseyClient jerseyClient;
+    private final JerseyResponseManager jerseyResponseManager;
 
-    private static final Logger logger = Logger.getLogger(ExportGraphs.class.getName());
+    @Autowired
+    ExportGraphs(JerseyClient jerseyClient,
+                 JerseyResponseManager jerseyResponseManager) {
+        this.jerseyClient = jerseyClient;
+        this.jerseyResponseManager = jerseyResponseManager;
+    }
 
     @GET
     @Produces({"application/ld+json"})
@@ -39,16 +40,14 @@ public class ExportGraphs {
             @ApiParam(value = "Requested resource", required = true, allowableValues = "core,prov") @QueryParam("service") String service,
             @ApiParam(value = "Content-type", required = true, allowableValues = "application/ld+json") @QueryParam("content-type") String ctype) {
 
-            Lang clang = RDFLanguages.contentTypeToLang(ctype);
+        Lang clang = RDFLanguages.contentTypeToLang(ctype);
 
-            if(clang==null) {
-                return JerseyResponseManager.invalidParameter();
-            }
+        if(clang==null) {
+            return jerseyResponseManager.invalidParameter();
+        }
 
-            ctype = ctype.replace(" ", "+");
+        ctype = ctype.replace(" ", "+");
 
-            return JerseyClient.getGraphsAsResponse(service, ctype);
-
+        return jerseyClient.getGraphsAsResponse(service, ctype);
     }
-
 }

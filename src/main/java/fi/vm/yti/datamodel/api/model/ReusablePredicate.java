@@ -1,32 +1,42 @@
 package fi.vm.yti.datamodel.api.model;
 
-import fi.vm.yti.datamodel.api.utils.GraphManager;
+import fi.vm.yti.datamodel.api.service.*;
 import fi.vm.yti.datamodel.api.utils.LDHelper;
-import fi.vm.yti.datamodel.api.utils.ModelManager;
-import fi.vm.yti.datamodel.api.utils.TermedTerminologyManager;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.query.ParameterizedSparqlString;
 import org.apache.jena.rdf.model.ResourceFactory;
-import java.util.logging.Logger;
 
-
-/**
- * Created by malonen on 29.11.2017.
- */
 
 public class ReusablePredicate extends AbstractPredicate {
 
-    private static final Logger logger = Logger.getLogger(ReusablePredicate.class.getName());
-
-    public ReusablePredicate(IRI predicateId) throws IllegalArgumentException {
-        super(predicateId);
+    public ReusablePredicate(IRI predicateId,
+                             GraphManager graphManager,
+                             ServiceDescriptionManager serviceDescriptionManager,
+                             JenaClient jenaClient,
+                             ModelManager modelManager) throws IllegalArgumentException {
+        super(predicateId, graphManager, serviceDescriptionManager, jenaClient, modelManager);
     }
 
-    public ReusablePredicate(String jsonld) throws IllegalArgumentException {
-        super(ModelManager.createJenaModelFromJSONLDString(jsonld));
+    public ReusablePredicate(String jsonld,
+                             GraphManager graphManager,
+                             ServiceDescriptionManager serviceDescriptionManager,
+                             JenaClient jenaClient,
+                             ModelManager modelManager) throws IllegalArgumentException {
+        super(modelManager.createJenaModelFromJSONLDString(jsonld), graphManager, serviceDescriptionManager, jenaClient, modelManager);
     }
 
-    public ReusablePredicate(IRI conceptIRI, IRI modelIRI, String predicateLabel, String lang, IRI typeIRI) {
+    public ReusablePredicate(IRI conceptIRI,
+                             IRI modelIRI,
+                             String predicateLabel,
+                             String lang,
+                             IRI typeIRI,
+                             GraphManager graphManager,
+                             JenaClient jenaClient,
+                             ModelManager modelManager,
+                             TermedTerminologyManager termedTerminologyManager) {
+
+        super(graphManager, jenaClient, modelManager);
+
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
 
@@ -79,11 +89,20 @@ public class ReusablePredicate extends AbstractPredicate {
         String predicateName = LDHelper.propertyName(predicateLabel);
         pss.setIri("predicateIRI",LDHelper.resourceIRI(modelIRI.toString(), predicateName));
 
-        this.graph = TermedTerminologyManager.constructCleanedModelFromTermedAPIAndCore(conceptIRI.toString(),modelIRI.toString(),pss.asQuery());
+        this.graph = termedTerminologyManager.constructCleanedModelFromTermedAPIAndCore(conceptIRI.toString(),modelIRI.toString(),pss.asQuery());
 
     }
 
-    public ReusablePredicate(IRI modelIRI, String predicateLabel, String lang, IRI typeIRI) {
+    public ReusablePredicate(IRI modelIRI,
+                             String predicateLabel,
+                             String lang,
+                             IRI typeIRI,
+                             GraphManager graphManager,
+                             JenaClient jenaClient,
+                             ModelManager modelManager) {
+
+        super(graphManager, jenaClient, modelManager);
+
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
 
@@ -112,7 +131,7 @@ public class ReusablePredicate extends AbstractPredicate {
         String predicateName = LDHelper.propertyName(predicateLabel);
         pss.setIri("predicateIRI",LDHelper.resourceIRI(modelIRI.toString(), predicateName));
 
-        this.graph = GraphManager.constructModelFromCoreGraph(pss.toString());
+        this.graph = graphManager.constructModelFromCoreGraph(pss.toString());
 
     }
 

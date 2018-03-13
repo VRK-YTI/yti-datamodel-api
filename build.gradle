@@ -1,0 +1,82 @@
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:1.5.1.RELEASE")
+        classpath(group: "org.jfrog.buildinfo", name: "build-info-extractor-gradle", version: "3.2.0")
+    }
+}
+
+apply plugin: "java"
+apply plugin: "idea"
+apply plugin: "org.springframework.boot"
+apply plugin: "com.jfrog.artifactory"
+
+artifactoryPublish.skip = true
+
+configurations.all {
+    resolutionStrategy.cacheDynamicVersionsFor 0, "seconds"
+    resolutionStrategy.cacheChangingModulesFor 0, "seconds"
+}
+
+repositories {
+    mavenLocal()
+    jcenter()
+}
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+dependencies {
+
+    compile "org.springframework.boot:spring-boot-starter-web"
+    compile "org.springframework.boot:spring-boot-starter-jersey"
+    compile "org.springframework.boot:spring-boot-starter-actuator"
+    compile "org.springframework.boot:spring-boot-starter-tomcat"
+
+    compile "org.springframework.security:spring-security-core"
+    compile "org.springframework.security:spring-security-config"
+    compile "org.springframework.security:spring-security-web"
+    compile "fi.vm.yti:yti-spring-security:0.1-SNAPSHOT"
+
+    compile "org.springframework.boot:spring-boot-configuration-processor"
+
+    compile "com.google.code.findbugs:jsr305:3.0.2"
+    compile "org.jetbrains:annotations:15.0"
+
+    compile "org.elasticsearch.client:elasticsearch-rest-high-level-client:6.1.3"
+    compile "com.atlassian.commonmark:commonmark:0.10.0"
+    compile "org.jsoup:jsoup:1.11.1"
+    compile "com.jayway.jsonpath:json-path:2.4.0"
+    compile "io.swagger:swagger-jersey2-jaxrs:1.5.18"
+
+    compile "org.topbraid:shacl:1.0.1"
+    compile "org.apache.jena:jena-core:3.6.0"
+    compile "org.apache.jena:jena-arq:3.6.0"
+    compile "org.apache.jena:jena-rdfconnection:3.6.0"
+    compile "org.glassfish:javax.json:1.0.4"
+    compile "org.glassfish.jersey.media:jersey-media-sse:2.25.1"
+    compile "com.github.jsonld-java:jsonld-java:0.11.1"
+    compile "org.jboss.forge.roaster:roaster-api:2.19.4.Final"
+    compile "org.jboss.forge.roaster:roaster-jdt:2.19.4.Final"
+
+    testCompile "org.springframework.boot:spring-boot-starter-test"
+    testCompile "com.jayway.jsonpath:json-path-assert:2.4.0"
+}
+
+compileJava.dependsOn(processResources)
+
+springBoot {
+    executable = true
+    backupSource = false
+}
+
+bootRun {
+    systemProperties System.properties
+    jvmArgs = ["-Dspring.output.ansi.enabled=ALWAYS"]
+}
+
+bootRepackage {
+    mainClass = "fi.vm.yti.datamodel.api.Application"
+}

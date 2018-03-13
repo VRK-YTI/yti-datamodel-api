@@ -1,6 +1,7 @@
 package fi.vm.yti.datamodel.api.model;
 
-import fi.vm.yti.datamodel.api.config.EndpointServices;
+import fi.vm.yti.datamodel.api.service.EndpointServices;
+import fi.vm.yti.datamodel.api.service.*;
 import fi.vm.yti.datamodel.api.utils.*;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.query.ParameterizedSparqlString;
@@ -9,23 +10,35 @@ import org.apache.jena.util.SplitIRI;
 import java.util.UUID;
 import java.util.logging.Logger;
 
-/**
- * Created by malonen on 22.11.2017.
- */
 public class Shape extends AbstractShape {
 
     private static final Logger logger = Logger.getLogger(Shape.class.getName());
-    private EndpointServices services = new EndpointServices();
 
-    public Shape(IRI shapeId) {
-        super(shapeId);
+    public Shape(IRI shapeId,
+                 GraphManager graphManager,
+                 ServiceDescriptionManager serviceDescriptionManager,
+                 JenaClient jenaClient,
+                 ModelManager modelManager) {
+        super(shapeId, graphManager, serviceDescriptionManager, jenaClient, modelManager);
     }
 
-    public Shape(String jsonld) {
-        super(ModelManager.createJenaModelFromJSONLDString(jsonld));
+    public Shape(String jsonld,
+                 GraphManager graphManager,
+                 JenaClient jenaClient,
+                 ModelManager modelManager,
+                 RHPOrganizationManager rhpOrganizationManager,
+                 ServiceDescriptionManager serviceDescriptionManager) {
+        super(modelManager.createJenaModelFromJSONLDString(jsonld), graphManager, jenaClient, modelManager, rhpOrganizationManager, serviceDescriptionManager);
     }
 
-    public Shape(IRI classIRI, IRI shapeIRI, IRI profileIRI) {
+    public Shape(IRI classIRI,
+                 IRI shapeIRI,
+                 IRI profileIRI,
+                 GraphManager graphManager,
+                 JenaClient jenaClient,
+                 ModelManager modelManager,
+                 EndpointServices endpointServices) {
+        super(graphManager, jenaClient, modelManager);
 
         logger.info("Creating shape from "+classIRI.toString()+" to "+shapeIRI.toString());
 
@@ -36,7 +49,7 @@ public class Shape extends AbstractShape {
         String service;
 
         /* Create Shape from Class */
-        if(GraphManager.isExistingServiceGraph(SplitIRI.namespace(classIRI.toString()))) {
+        if(graphManager.isExistingServiceGraph(SplitIRI.namespace(classIRI.toString()))) {
 
             service = "core";
             queryString = "CONSTRUCT  { "
@@ -98,11 +111,11 @@ public class Shape extends AbstractShape {
         pss.setCommandText(queryString);
         pss.setIri("classIRI", classIRI);
         pss.setIri("model", profileIRI);
-        pss.setIri("modelService",services.getLocalhostCoreSparqlAddress());
+        pss.setIri("modelService", endpointServices.getLocalhostCoreSparqlAddress());
         pss.setLiteral("draft", "DRAFT");
         pss.setIri("shapeIRI",shapeIRI);
 
-        this.graph = GraphManager.constructModelFromService(pss.toString(), service);
+        this.graph = graphManager.constructModelFromService(pss.toString(), service);
 
     }
 

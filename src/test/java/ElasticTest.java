@@ -1,24 +1,33 @@
-import fi.vm.yti.datamodel.api.utils.ElasticJsonLD;
+import fi.vm.yti.datamodel.api.service.ElasticJsonLD;
 import org.apache.http.HttpHost;
 import org.apache.jena.util.FileManager;
 import org.apache.jena.vocabulary.SKOS;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
-import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
-import org.elasticsearch.common.xcontent.XContentType;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.junit4.SpringRunner;
+
 import java.io.IOException;
 import java.util.logging.Logger;
 
-/**
- * Created by malonen on 10.2.2018.
- */
+@RunWith(SpringRunner.class)
+@ContextConfiguration(classes = TestConfiguration.class)
+@ActiveProfiles("test")
+@TestPropertySource("classpath:application-test.properties")
 public class ElasticTest {
 
     private static final Logger logger = Logger.getLogger(ElasticTest.class.getName());
+
+    @Autowired
+    private ElasticJsonLD elasticJsonLD;
 
 
     //TODO: Test framed json-ld objects in elastic
@@ -39,11 +48,11 @@ public class ElasticTest {
                 .source(XContentType.JSON, "field","bar"));
         */
 
-      BulkRequest request = ElasticJsonLD.createBulkIndexRequestFromModel("ptvltest",FileManager.get().loadModel("ptvl-skos.rdf"), SKOS.Concept);
+      BulkRequest request = elasticJsonLD.createBulkIndexRequestFromModel("ptvltest",FileManager.get().loadModel("ptvl-skos.rdf"), SKOS.Concept);
 
         try{
             BulkResponse bulkResponse = client.bulk(request);
-            logger.info("Status: "+bulkResponse.status());
+            logger.info("Status: "+bulkResponse);
             client.close();
         }
         catch(IOException ex) {

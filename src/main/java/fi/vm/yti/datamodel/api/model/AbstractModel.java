@@ -1,6 +1,9 @@
 package fi.vm.yti.datamodel.api.model;
 
-import fi.vm.yti.datamodel.api.config.EndpointServices;
+import fi.vm.yti.datamodel.api.service.GraphManager;
+import fi.vm.yti.datamodel.api.service.JenaClient;
+import fi.vm.yti.datamodel.api.service.RHPOrganizationManager;
+import fi.vm.yti.datamodel.api.service.ServiceDescriptionManager;
 import fi.vm.yti.datamodel.api.utils.*;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.rdf.model.*;
@@ -13,23 +16,38 @@ import java.util.List;
 import java.util.UUID;
 import java.util.logging.Logger;
 
-/**
- * Created by malonen on 17.11.2017.
- */
 public abstract class AbstractModel {
-    EndpointServices services = new EndpointServices();
+
     protected Model graph;
     protected String provUUID;
     protected IRI id;
     protected List<UUID> modelOrganizations;
-    protected List<String> modelServiceCategories;
 
     private static final Logger logger = Logger.getLogger(AbstractModel.class.getName());
 
-    public AbstractModel() {}
+    private final GraphManager graphManager;
+    private final ServiceDescriptionManager serviceDescriptionManager;
+    private final JenaClient jenaClient;
 
-    public AbstractModel(IRI graphIRI) {
-        this.graph = GraphManager.getCoreGraph(graphIRI);
+    public AbstractModel(GraphManager graphManager,
+                         ServiceDescriptionManager serviceDescriptionManager,
+                         JenaClient jenaClient) {
+
+        this.graphManager = graphManager;
+        this.serviceDescriptionManager = serviceDescriptionManager;
+        this.jenaClient = jenaClient;
+    }
+
+    public AbstractModel(IRI graphIRI,
+                         GraphManager graphManager,
+                         ServiceDescriptionManager serviceDescriptionManager,
+                         JenaClient jenaClient) {
+
+        this.graphManager = graphManager;
+        this.serviceDescriptionManager = serviceDescriptionManager;
+        this.jenaClient = jenaClient;
+
+        this.graph = graphManager.getCoreGraph(graphIRI);
         this.id = graphIRI;
 
         List<Resource> vocabList = this.graph.listSubjectsWithProperty(OWL.versionInfo).toList();
@@ -62,8 +80,17 @@ public abstract class AbstractModel {
         }
     }
 
-    public AbstractModel(Model graph){
-        Model orgModel = RHPOrganizationManager.getOrganizationModel();
+    public AbstractModel(Model graph,
+                         GraphManager graphManager,
+                         RHPOrganizationManager rhpOrganizationManager,
+                         ServiceDescriptionManager serviceDescriptionManager,
+                         JenaClient jenaClient) {
+
+        this.graphManager = graphManager;
+        this.serviceDescriptionManager = serviceDescriptionManager;
+        this.jenaClient = jenaClient;
+
+        Model orgModel = rhpOrganizationManager.getOrganizationModel();
         this.graph = graph;
 
         List<Resource> vocabList = this.graph.listSubjectsWithProperty(OWL.versionInfo).toList();
@@ -111,7 +138,7 @@ public abstract class AbstractModel {
 
     public void create() {
         logger.info("Creating model "+getId());
-        JenaClient.putModelToCore(getId(), asGraph());
+        jenaClient.putModelToCore(getId(), asGraph());
 
         /* TODO: Test with RDFConnection
         Model nsModel = ModelFactory.createDefaultModel();
@@ -119,13 +146,13 @@ public abstract class AbstractModel {
         JenaClient.putModelToCore(getId()+"#NamespaceGraph", nsModel);
         */
 
-        JenaClient.putModelToCore(getId()+"#ExportGraph", asGraph());
+        jenaClient.putModelToCore(getId()+"#ExportGraph", asGraph());
     }
 
     public void update() {
         modifyDatetime();
-        Model oldModel = JenaClient.getModelFromCore(getId());
-        Model exportModel = JenaClient.getModelFromCore(getId()+"#ExportGraph");
+        Model oldModel = jenaClient.getModelFromCore(getId());
+        Model exportModel = jenaClient.getModelFromCore(getId()+"#ExportGraph");
 
         // OMG: Model.remove() doesnt remove RDFLists
         Statement languageStatement = exportModel.getRequiredProperty(ResourceFactory.createResource(getId()), DCTerms.language);
@@ -140,13 +167,13 @@ public abstract class AbstractModel {
 
         exportModel.remove(oldModel);
         exportModel.add(asGraph());
-        JenaClient.putModelToCore(getId()+"#ExportGraph", exportModel);
-        JenaClient.putModelToCore(getId(), asGraph());
+        jenaClient.putModelToCore(getId()+"#ExportGraph", exportModel);
+        jenaClient.putModelToCore(getId(), asGraph());
     }
 
     public void delete() {
-        ServiceDescriptionManager.deleteGraphDescription(getId());
-        GraphManager.removeModel(getIRI());
+        serviceDescriptionManager.deleteGraphDescription(getId());
+        graphManager.removeModel(getIRI());
     }
 
     public void modifyDatetime() {

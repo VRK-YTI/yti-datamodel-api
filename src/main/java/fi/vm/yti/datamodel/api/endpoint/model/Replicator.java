@@ -1,214 +1,212 @@
 /*
- * Licensed under the European Union Public Licence (EUPL) V.1.1 
+ * Licensed under the European Union Public Licence (EUPL) V.1.1
  */
 package fi.vm.yti.datamodel.api.endpoint.model;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-import java.util.logging.Logger;
-
-import javax.servlet.ServletContext;
-import javax.ws.rs.GET;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.Response;
-
-import fi.vm.yti.datamodel.api.config.EndpointServices;
-import fi.vm.yti.datamodel.api.config.LoginSession;
+import fi.vm.yti.datamodel.api.service.EndpointServices;
+import fi.vm.yti.datamodel.api.security.AuthorizationManager;
+import fi.vm.yti.datamodel.api.service.*;
 import fi.vm.yti.datamodel.api.utils.*;
+import io.swagger.annotations.*;
 import org.apache.jena.query.Dataset;
 import org.apache.jena.query.DatasetFactory;
 import org.apache.jena.rdf.model.*;
 import org.apache.jena.rdfconnection.RDFConnection;
 import org.apache.jena.rdfconnection.RDFConnectionFactory;
 import org.apache.jena.system.Txn;
-import org.apache.jena.update.UpdateAction;
 import org.apache.jena.vocabulary.DCTerms;
-import org.apache.jena.vocabulary.RDF;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
-
 import org.glassfish.jersey.uri.UriComponent;
- 
-/**
- * Root resource (exposed at "myresource" path)
- */
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import javax.ws.rs.*;
+import javax.ws.rs.core.Response;
+import java.util.logging.Logger;
+
+@Component
 @Path("replicate")
 @Api(tags = {"Admin"}, description = "Returns information about replicable models")
 public class Replicator {
-  
-    @Context ServletContext context;
-    EndpointServices services = new EndpointServices();
+
     private static final Logger logger = Logger.getLogger(Replicator.class.getName());
+
+    private final AuthorizationManager authorizationManager;
+    private final JerseyResponseManager jerseyResponseManager;
+    private final JerseyClient jerseyClient;
+    private final JenaClient jenaClient;
+    private final GraphManager graphManager;
+    private final EndpointServices endpointServices;
+    private final ProvenanceManager provenanceManager;
+
+    @Autowired
+    Replicator(AuthorizationManager authorizationManager,
+               JerseyResponseManager jerseyResponseManager,
+               JerseyClient jerseyClient,
+               JenaClient jenaClient,
+               GraphManager graphManager,
+               EndpointServices endpointServices,
+               ProvenanceManager provenanceManager) {
+        this.authorizationManager = authorizationManager;
+        this.jerseyResponseManager = jerseyResponseManager;
+        this.jerseyClient = jerseyClient;
+        this.jenaClient = jenaClient;
+        this.graphManager = graphManager;
+        this.endpointServices = endpointServices;
+        this.provenanceManager = provenanceManager;
+    }
 
     @GET
     @ApiOperation(value = "OK to replicate?")
     @Produces("application/json")
-    public boolean getStatus(@Context HttpServletRequest request) {
-      /* Add proper logic */  
-      return true;
+    public boolean getStatus() {
+        /* Add proper logic */
+        return true;
     }
-   
+
     /**
      * Replaces Graph in given service
      * @returns empty Response
      */
-  @PUT
-  @ApiOperation(value = "Updates graph in service and writes service description to default", notes = "PUT Body should be json-ld")
-  @ApiResponses(value = {
-      @ApiResponse(code = 204, message = "Graph is saved"),
-      @ApiResponse(code = 400, message = "Invalid graph supplied"),
-      @ApiResponse(code = 401, message = "Unauthorized"),
-      @ApiResponse(code = 405, message = "Update not allowed"),
-      @ApiResponse(code = 403, message = "Illegal graph parameter"),
-      @ApiResponse(code = 404, message = "Service not found"),
-      @ApiResponse(code = 500, message = "Bad data?") 
-  })
-  public Response postJson(
-          @ApiParam(value = "IOW Service ID in form of http://domain/api/rest/ ", required = true) 
-                @QueryParam("service") 
-                String service,
-                @Context HttpServletRequest request) {
-      
-      
-       if(service==null || service.equals("undefined")) {
-            return JerseyResponseManager.invalidIRI();
-       } 
-       
-        HttpSession session = request.getSession();
+    @PUT
+    @ApiOperation(value = "Updates graph in service and writes service description to default", notes = "PUT Body should be json-ld")
+    @ApiResponses(value = {
+            @ApiResponse(code = 204, message = "Graph is saved"),
+            @ApiResponse(code = 400, message = "Invalid graph supplied"),
+            @ApiResponse(code = 401, message = "Unauthorized"),
+            @ApiResponse(code = 405, message = "Update not allowed"),
+            @ApiResponse(code = 403, message = "Illegal graph parameter"),
+            @ApiResponse(code = 404, message = "Service not found"),
+            @ApiResponse(code = 500, message = "Bad data?")
+    })
+    public Response postJson(
+            @ApiParam(value = "IOW Service ID in form of http://domain/api/rest/ ", required = true)
+            @QueryParam("service") String service) {
 
-        LoginSession login = new LoginSession(session);
 
-        if(!login.isSuperAdmin()) {
-            return JerseyResponseManager.unauthorized();
+        if(service==null || service.equals("undefined")) {
+            return jerseyResponseManager.invalidIRI();
         }
-        
-        Boolean replicate = JerseyClient.readBooleanFromURL(service+"replicate");
+
+        if(!authorizationManager.canReplicate()) {
+            return jerseyResponseManager.unauthorized();
+        }
+
+        Boolean replicate = jerseyClient.readBooleanFromURL(service+"replicate");
 
         if(replicate!=null && replicate.booleanValue()) {
             logger.info("Replicating data from "+service);
 
             logger.warning("Warning! Deleting graphs!");
-            GraphManager.deleteGraphs();
+            graphManager.deleteGraphs();
 
             // <urn:csc:iow:namespaces>
             String namespaces = service+"exportResource?graph="+LDHelper.encode("urn:csc:iow:namespaces");
-            Model namespaceModel = JerseyClient.getResourceAsJenaModel(namespaces);
+            Model namespaceModel = jerseyClient.getResourceAsJenaModel(namespaces);
             logger.info("Copying namespaces: "+namespaceModel.size());
-            JenaClient.putModelToCore("urn:csc:iow:namespaces", namespaceModel);
+            jenaClient.putModelToCore("urn:csc:iow:namespaces", namespaceModel);
 
             // <urn:yti:servicecategories>
 
             String serviceCategories = service+"exportResource?graph="+LDHelper.encode("urn:yti:servicecategories");
-            Model serviceModel = JerseyClient.getResourceAsJenaModel(serviceCategories);
+            Model serviceModel = jerseyClient.getResourceAsJenaModel(serviceCategories);
             logger.info("Copying service categories: "+serviceModel.size());
-            JenaClient.putModelToCore("urn:yti:servicecategories", serviceModel);
+            jenaClient.putModelToCore("urn:yti:servicecategories", serviceModel);
 
             // <urn:yti:organizations>
 
             String organizations = service+"exportResource?graph="+LDHelper.encode("urn:yti:organizations");
-            Model orgModel = JerseyClient.getResourceAsJenaModel(organizations);
+            Model orgModel = jerseyClient.getResourceAsJenaModel(organizations);
             logger.info("Copying organizations: "+orgModel.size());
-            JenaClient.putModelToCore("urn:yti:organizations", orgModel);
+            jenaClient.putModelToCore("urn:yti:organizations", orgModel);
 
         }
 
-      try {
+        try {
 
-          // Copy service description & Models
+            // Copy service description & Models
 
-          String SD = "http://www.w3.org/ns/sparql-service-description#";
-          Model SDModel = JerseyClient.getResourceAsJenaModel(service + "serviceDescription");
+            String SD = "http://www.w3.org/ns/sparql-service-description#";
+            Model SDModel = jerseyClient.getResourceAsJenaModel(service + "serviceDescription");
 
-          if(SDModel!=null && SDModel.size()>0) {
+            if(SDModel!=null && SDModel.size()>0) {
 
-              // <urn:csc:iow:sd>
-              logger.info("Copying service description: "+SDModel.size());
-              JenaClient.putModelToCore("urn:csc:iow:sd", SDModel);
+                // <urn:csc:iow:sd>
+                logger.info("Copying service description: "+SDModel.size());
+                jenaClient.putModelToCore("urn:csc:iow:sd", SDModel);
 
-              NodeIterator rit = SDModel.listObjectsOfProperty(ResourceFactory.createProperty(SD, "name"));
-              if (rit.hasNext()) {
+                NodeIterator rit = SDModel.listObjectsOfProperty(ResourceFactory.createProperty(SD, "name"));
+                if (rit.hasNext()) {
 
-                  while(rit.hasNext()) {
-                      Resource res = rit.next().asResource();
-                      logger.info("SD graph name: " + res.toString());
-                      replicateServices(service, res.toString());
-                  }
+                    while(rit.hasNext()) {
+                        Resource res = rit.next().asResource();
+                        logger.info("SD graph name: " + res.toString());
+                        replicateServices(service, res.toString());
+                    }
 
-              } else { return JerseyResponseManager.error(); }
-
-
+                } else { return jerseyResponseManager.error(); }
 
 
-          } else {
-              return JerseyResponseManager.error();
-          }
-          return JerseyResponseManager.okEmptyContent();
 
-      } catch(Exception ex) {
+
+            } else {
+                return jerseyResponseManager.error();
+            }
+            return jerseyResponseManager.okEmptyContent();
+
+        } catch(Exception ex) {
             logger.warning(ex.getMessage());
-            return JerseyResponseManager.error();
-      }
+            return jerseyResponseManager.error();
+        }
 
-  }
+    }
 
     public void replicateServices(String service, String model) {
 
-        Model exportedModel = JerseyClient.getResourceAsJenaModel(service+"exportResource?graph="+UriComponent.encode(model, UriComponent.Type.QUERY_PARAM));
+        Model exportedModel = jerseyClient.getResourceAsJenaModel(service+"exportResource?graph="+UriComponent.encode(model, UriComponent.Type.QUERY_PARAM));
         String prefix = exportedModel.listStatements(ResourceFactory.createResource(model), LDHelper.curieToProperty("dcap:preferredXMLNamespacePrefix"), (Literal) null).nextStatement().getString();
 
         logger.info("Model: "+model+ " Model prefix: "+prefix);
         logger.info("---------------------------------------------------------");
 
         // Store model
-        JenaClient.putModelToCore(model, exportedModel);
+        jenaClient.putModelToCore(model, exportedModel);
 
         // Model resource history
         String modelHistoryURL = service+"history?id="+UriComponent.encode(model, UriComponent.Type.QUERY_PARAM);
-        Model modelHistoryModel = JerseyClient.getResourceAsJenaModel(modelHistoryURL);
-        ProvenanceManager.putToProvenanceGraph(modelHistoryModel, model);
+        Model modelHistoryModel = jerseyClient.getResourceAsJenaModel(modelHistoryURL);
+        provenanceManager.putToProvenanceGraph(modelHistoryModel, model);
         ResIterator modelProvIter = modelHistoryModel.listSubjectsWithProperty(ProvenanceManager.generatedAtTime);
 
         while(modelProvIter.hasNext()) {
             String provModelURI = modelProvIter.next().asResource().toString();
-            Model provModelRes = JerseyClient.getResourceAsJenaModel(service+"history?id="+UriComponent.encode(provModelURI, UriComponent.Type.QUERY_PARAM));
-            ProvenanceManager.putToProvenanceGraph(provModelRes, provModelURI);
+            Model provModelRes = jerseyClient.getResourceAsJenaModel(service+"history?id="+UriComponent.encode(provModelURI, UriComponent.Type.QUERY_PARAM));
+            provenanceManager.putToProvenanceGraph(provModelRes, provModelURI);
         }
 
         // HasPartGraph
         String uri = service+"exportResource?graph="+UriComponent.encode(model+"#HasPartGraph",UriComponent.Type.QUERY_PARAM);
         logger.info("Getting HasPartGraph: "+uri);
-        Model hasPartModel = JerseyClient.getResourceAsJenaModel(uri);
+        Model hasPartModel = jerseyClient.getResourceAsJenaModel(uri);
 
         // Creating new HasPartGraph
-        JenaClient.putModelToCore(model+"#HasPartGraph", hasPartModel);
+        jenaClient.putModelToCore(model+"#HasPartGraph", hasPartModel);
 
 
         // ExportGraph
         String euri = service+"exportResource?graph="+UriComponent.encode(model+"#ExportGraph",UriComponent.Type.QUERY_PARAM);
         logger.info("ExportGraph:"+euri);
-        Model exportModel = JerseyClient.getResourceAsJenaModel(euri);
-        JenaClient.putModelToCore(model+"#ExportGraph", exportModel);
+        Model exportModel = jerseyClient.getResourceAsJenaModel(euri);
+        jenaClient.putModelToCore(model+"#ExportGraph", exportModel);
 
         // PositionGraph
         String puri = service+"exportResource?graph="+UriComponent.encode(model+"#PositionGraph",UriComponent.Type.QUERY_PARAM);
 
         logger.info("PositionGraph:"+puri);
 
-        Model positionModel = JerseyClient.getResourceAsJenaModel(puri);
+        Model positionModel = jerseyClient.getResourceAsJenaModel(puri);
 
         if(positionModel!=null && positionModel.size()>1) {
-            JenaClient.putModelToCore(model + "#PositionGraph", positionModel);
+            jenaClient.putModelToCore(model + "#PositionGraph", positionModel);
         }
 
         // Resources
@@ -221,60 +219,58 @@ public class Replicator {
 
             if(resourceName.startsWith(model)) {
                 String resourceURI = service + "exportResource?graph=" + UriComponent.encode(resourceName, UriComponent.Type.QUERY_PARAM);
-                Model resourceModel = JerseyClient.getResourceAsJenaModel(resourceURI);
-                JenaClient.putModelToCore(resourceName, resourceModel);
+                Model resourceModel = jerseyClient.getResourceAsJenaModel(resourceURI);
+                jenaClient.putModelToCore(resourceName, resourceModel);
 
                 logger.info("Replicated resource: "+resourceName);
 
                 String historyURL = service+"history?id="+UriComponent.encode(resourceName, UriComponent.Type.QUERY_PARAM);
                 Dataset provResourceDataset = DatasetFactory.create();
-                Model resourceHistoryModel = JerseyClient.getResourceAsJenaModel(historyURL);
-                ProvenanceManager.putToProvenanceGraph(resourceHistoryModel, resourceName);
+                Model resourceHistoryModel = jerseyClient.getResourceAsJenaModel(historyURL);
+                provenanceManager.putToProvenanceGraph(resourceHistoryModel, resourceName);
 
                 ResIterator resProvIter = resourceHistoryModel.listSubjectsWithProperty(ProvenanceManager.generatedAtTime);
 
                 while(resProvIter.hasNext()) {
                     String provResURI = resProvIter.next().asResource().toString();
-                    Model provRes = JerseyClient.getResourceAsJenaModel(service+"history?id="+UriComponent.encode(provResURI, UriComponent.Type.QUERY_PARAM));
-                    ProvenanceManager.putToProvenanceGraph(provRes, provResURI);
+                    Model provRes = jerseyClient.getResourceAsJenaModel(service+"history?id="+UriComponent.encode(provResURI, UriComponent.Type.QUERY_PARAM));
+                    provenanceManager.putToProvenanceGraph(provRes, provResURI);
                 }
 
             } else {
-                    logger.warning("Reference to external resource " + resourceName);
+                logger.warning("Reference to external resource " + resourceName);
             }
-            }
-
-            logger.info("---------------------------------------------------------");
-
         }
 
-        //FIXME: Using RDFCOnnection would be preferred if namespaces would preserve in TRIG or JSON-LD Format.
-        @Deprecated
-        public void replicateServices(String externalService, LoginSession login) {
+        logger.info("---------------------------------------------------------");
 
-      GraphManager.deleteGraphs();
+    }
 
-      try (RDFConnection conn = RDFConnectionFactory.connect(services.getEndpoint()+"/core") ) {
-          Txn.executeWrite(conn, ()-> {
-              Dataset externalDataset = JerseyClient.getExternalJSONLDDatasets(externalService + "exportGraphs?service=core&content-type=application%2Fld%2Bjson");
-              logger.info("Size of the CORE dataset: "+externalDataset.asDatasetGraph().size());
-              conn.putDataset(externalDataset);
-          });
-      } catch(Exception ex) {
-          logger.warning(ex.getMessage());
-      }
+    //FIXME: Using RDFCOnnection would be preferred if namespaces would preserve in TRIG or JSON-LD Format.
+    @Deprecated
+    public void replicateServices(String externalService) {
 
-      try (RDFConnection conn = RDFConnectionFactory.connect(services.getEndpoint()+"/prov") ) {
-          Txn.executeWrite(conn, ()-> {
-              Dataset externalDataset = JerseyClient.getExternalJSONLDDatasets(externalService + "exportGraphs?service=prov&content-type=application%2Fld%2Bjson");
-              logger.info("Size of the PROV dataset: "+externalDataset.asDatasetGraph().size());
-              conn.putDataset(externalDataset);
-          });
-      } catch(Exception ex) {
-          logger.warning(ex.getMessage());
-      }
+        graphManager.deleteGraphs();
 
-  }
+        try (RDFConnection conn = RDFConnectionFactory.connect(endpointServices.getEndpoint()+"/core") ) {
+            Txn.executeWrite(conn, ()-> {
+                Dataset externalDataset = jerseyClient.getExternalJSONLDDatasets(externalService + "exportGraphs?service=core&content-type=application%2Fld%2Bjson");
+                logger.info("Size of the CORE dataset: "+externalDataset.asDatasetGraph().size());
+                conn.putDataset(externalDataset);
+            });
+        } catch(Exception ex) {
+            logger.warning(ex.getMessage());
+        }
 
-  
+        try (RDFConnection conn = RDFConnectionFactory.connect(endpointServices.getEndpoint()+"/prov") ) {
+            Txn.executeWrite(conn, ()-> {
+                Dataset externalDataset = jerseyClient.getExternalJSONLDDatasets(externalService + "exportGraphs?service=prov&content-type=application%2Fld%2Bjson");
+                logger.info("Size of the PROV dataset: "+externalDataset.asDatasetGraph().size());
+                conn.putDataset(externalDataset);
+            });
+        } catch(Exception ex) {
+            logger.warning(ex.getMessage());
+        }
+
+    }
 }
