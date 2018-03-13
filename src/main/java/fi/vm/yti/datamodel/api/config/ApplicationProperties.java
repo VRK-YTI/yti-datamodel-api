@@ -1,84 +1,99 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
+
 package fi.vm.yti.datamodel.api.config;
 
-import fi.vm.yti.datamodel.api.utils.PropertyUtil;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 
-/**
- * @author malonen
- */
+@ConfigurationProperties
 public final class ApplicationProperties {
 
-    public final static String getSchemeId() {
-        return PropertyUtil.getProperty("application.defaultScheme");
+    private String defaultScheme;
+    private String endpoint;
+    private String defaultNamespace;
+    private boolean provenance;
+    private String defaultTermedAPI;
+    private String defaultTermedAPIUser;
+    private String defaultTermedAPIUserSecret;
+    private String defaultGroupManagementAPI;
+    private String publicGroupManagementAPI;
+    private String publicTermedAPI;
+
+    public String getDefaultScheme() {
+        return defaultScheme;
     }
 
-    public final static String getEndpoint() {
-        return PropertyUtil.getProperty("application.endpoint");
+    public void setDefaultScheme(String defaultScheme) {
+        this.defaultScheme = defaultScheme;
     }
 
-    public final static boolean getDebugMode() {
-        return Boolean.parseBoolean(PropertyUtil.getProperty("application.debug"));
+    public String getEndpoint() {
+        return endpoint;
     }
 
-    public final static String getDebugUserFirstname() {
-        return PropertyUtil.getProperty("application.debugUserFirstname");
+    public void setEndpoint(String endpoint) {
+        this.endpoint = endpoint;
     }
 
-    public final static String getDebugUserLastname() {
-        return PropertyUtil.getProperty("application.debugUserLastname");
+    public String getDefaultNamespace() {
+        return defaultNamespace;
     }
 
-    public final static String getDebugUserEmail() {
-        return PropertyUtil.getProperty("application.debugUserEmail");
+    public void setDefaultNamespace(String defaultNamespace) {
+        this.defaultNamespace = defaultNamespace;
     }
 
-    public final static String getDebugUserSuper() {
-        return PropertyUtil.getProperty("application.debugUserSuper");
+    public boolean isProvenance() {
+        return provenance;
     }
 
-    public final static String getDebugAdress() {
-        return PropertyUtil.getProperty("application.debugAdress");
+    public void setProvenance(boolean provenance) {
+        this.provenance = provenance;
     }
 
-    public final static String getDefaultNamespace() {
-        return PropertyUtil.getProperty("application.defaultNamespace");
+    public String getDefaultTermedAPI() {
+        return defaultTermedAPI;
     }
 
-    public final static String getDefaultDomain() {
-        return PropertyUtil.getProperty("application.defaultDomain");
+    public void setDefaultTermedAPI(String defaultTermedAPI) {
+        this.defaultTermedAPI = defaultTermedAPI;
     }
 
-    public final static boolean getProvenanceMode() {
-        return Boolean.parseBoolean(PropertyUtil.getProperty("application.provenance"));
+    public String getDefaultTermedAPIUser() {
+        return defaultTermedAPIUser;
     }
 
-    public final static String getDefaultTermAPI() {
-        return PropertyUtil.getProperty("application.defaultTermedAPI");
+    public void setDefaultTermedAPIUser(String defaultTermedAPIUser) {
+        this.defaultTermedAPIUser = defaultTermedAPIUser;
     }
 
-    public final static String getDefaultTermAPIUser() {
-        return PropertyUtil.getProperty("application.defaultTermedAPIUser");
+    public String getDefaultTermedAPIUserSecret() {
+        return defaultTermedAPIUserSecret;
     }
 
-    public final static String getDefaultTermAPIUserSecret() {
-        return PropertyUtil.getProperty("application.defaultTermedAPIUserSecret");
+    public void setDefaultTermedAPIUserSecret(String defaultTermedAPIUserSecret) {
+        this.defaultTermedAPIUserSecret = defaultTermedAPIUserSecret;
     }
 
-    public final static String getDefaultGroupManagementAPI() {
-        return PropertyUtil.getProperty("application.defaultGroupManagementAPI");
+    public String getDefaultGroupManagementAPI() {
+        return defaultGroupManagementAPI;
     }
 
-    public final static String getPublicGroupManagementAPI() {
-        return PropertyUtil.getProperty("application.publicGroupManagementAPI");
+    public void setDefaultGroupManagementAPI(String defaultGroupManagementAPI) {
+        this.defaultGroupManagementAPI = defaultGroupManagementAPI;
     }
 
-    public final static String getPublicTermAPI() {
-        return PropertyUtil.getProperty("application.publicTermedAPI");
+    public String getPublicGroupManagementAPI() {
+        return publicGroupManagementAPI;
     }
 
+    public void setPublicGroupManagementAPI(String publicGroupManagementAPI) {
+        this.publicGroupManagementAPI = publicGroupManagementAPI;
+    }
 
+    public String getPublicTermedAPI() {
+        return publicTermedAPI;
+    }
+
+    public void setPublicTermedAPI(String publicTermedAPI) {
+        this.publicTermedAPI = publicTermedAPI;
+    }
 }

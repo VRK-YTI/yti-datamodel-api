@@ -1,150 +1,111 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package fi.vm.yti.datamodel.api.endpoint.genericapi;
 
+import fi.vm.yti.datamodel.api.service.EndpointServices;
+import fi.vm.yti.datamodel.api.security.AuthorizationManager;
+import fi.vm.yti.datamodel.api.service.JerseyResponseManager;
+import fi.vm.yti.datamodel.api.utils.LDHelper;
+import io.swagger.annotations.*;
+import org.apache.jena.query.*;
+import org.apache.jena.update.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import javax.ws.rs.*;
+import javax.ws.rs.core.Response;
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
-import javax.ws.rs.*;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.Response;
-
-import fi.vm.yti.datamodel.api.config.EndpointServices;
-import fi.vm.yti.datamodel.api.config.LoginSession;
-import fi.vm.yti.datamodel.api.utils.JerseyResponseManager;
-import fi.vm.yti.datamodel.api.utils.LDHelper;
-import org.apache.jena.query.Query;
-import org.apache.jena.query.QueryException;
-import org.apache.jena.query.QueryExecution;
-import org.apache.jena.query.QueryExecutionFactory;
-import org.apache.jena.query.QueryFactory;
-import org.apache.jena.query.QueryParseException;
-import org.apache.jena.query.ResultSet;
-import org.apache.jena.query.ResultSetFormatter;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
-import org.apache.jena.update.*;
-
-/**
- * REST Sparql service
- *
- * @author malonen
- */
+@Component
 @Path("sparql")
 @Api(tags = {"Admin"}, description = "Edit resources")
 public class Sparql {
 
-    @Context ServletContext context;
+    private final AuthorizationManager authorizationManager;
+    private final EndpointServices endpointServices;
+    private final JerseyResponseManager jerseyResponseManager;
 
-    EndpointServices services = new EndpointServices();
+    @Autowired
+    Sparql(AuthorizationManager authorizationManager,
+           EndpointServices endpointServices,
+           JerseyResponseManager jerseyResponseManager) {
+        this.authorizationManager = authorizationManager;
+        this.endpointServices = endpointServices;
+        this.jerseyResponseManager = jerseyResponseManager;
+    }
 
-  @GET
-  @Consumes("application/sparql-query")
-  @Produces("application/sparql-results+json")
-  @ApiOperation(value = "Sparql query to given service", notes = "More notes about this method")
-  @ApiResponses(value = {
-      @ApiResponse(code = 400, message = "Query parse error"),
-      @ApiResponse(code = 500, message = "Query exception"),
-      @ApiResponse(code = 200, message = "OK")
-  })
-  public Response sparql(
-          @ApiParam(value = "SPARQL Query", required = true) @QueryParam("query") String queryString,
-          @Context HttpServletRequest request) {
+    @GET
+    @Consumes("application/sparql-query")
+    @Produces("application/sparql-results+json")
+    @ApiOperation(value = "Sparql query to given service", notes = "More notes about this method")
+    @ApiResponses(value = {
+            @ApiResponse(code = 400, message = "Query parse error"),
+            @ApiResponse(code = 500, message = "Query exception"),
+            @ApiResponse(code = 200, message = "OK")
+    })
+    public Response sparql(
+            @ApiParam(value = "SPARQL Query", required = true) @QueryParam("query") String queryString) {
 
-      HttpSession session = request.getSession();
+        if (!authorizationManager.hasRightToRunSparqlQuery()) {
+            return jerseyResponseManager.unauthorized();
+        }
 
-      if(session==null) return JerseyResponseManager.unauthorized();
+        Query query;
 
-      LoginSession login = new LoginSession(session);
+        try{
+            queryString = LDHelper.prefix + queryString;
+            query = QueryFactory.create(queryString);
+        } catch(QueryParseException ex) {
+            return Response.status(400).build();
+        }
 
-      if(!(login.isLoggedIn() && (login.getEmail().equals("testi.testaaja@example.org") || login.isSuperAdmin() ))) {
-          return JerseyResponseManager.unauthorized();
-      }
-         Query query;
-         
-         try{
-             queryString = LDHelper.prefix + queryString;
-             query = QueryFactory.create(queryString);
-         } catch(QueryParseException ex) {
-             return Response.status(400).build();
-         }
-         
-         QueryExecution qexec = QueryExecutionFactory.sparqlService(services.getCoreSparqlAddress(), query);
-         
-         try {
-     
-         OutputStream outs = new ByteArrayOutputStream();
-         ResultSet results = qexec.execSelect();
-         ResultSetFormatter.outputAsJSON(outs,results);
-         
-         return  Response
-            .ok(outs.toString(), "application/sparql-results+json")
-            .build();
-                 
-         } catch(QueryException ex) {
+        QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), query);
+
+        try {
+
+            OutputStream outs = new ByteArrayOutputStream();
+            ResultSet results = qexec.execSelect();
+            ResultSetFormatter.outputAsJSON(outs,results);
+
+            return  Response
+                    .ok(outs.toString(), "application/sparql-results+json")
+                    .build();
+
+        } catch(QueryException ex) {
             return Response.status(500).build();
-         } finally {
+        } finally {
             qexec.close();
-         }
-         
+        }
+    }
+
+    @POST
+    @ApiOperation(value = "Sends SPARQL Update query to given service", notes = "PUT Body should be json-ld")
+    @ApiResponses(value = {
+            @ApiResponse(code = 204, message = "Graph is saved"),
+            @ApiResponse(code = 400, message = "Invalid graph supplied"),
+            @ApiResponse(code = 403, message = "Illegal graph parameter"),
+            @ApiResponse(code = 404, message = "Service not found"),
+            @ApiResponse(code = 500, message = "Bad data?")
+    })
+
+    public Response sparqlUpdate(@ApiParam(value = "Sparql query", required = true) String body) {
 
 
-  }
+        if(!authorizationManager.hasRightToRunSparqlQuery()) {
+            return jerseyResponseManager.unauthorized();
+        }
 
-  @POST
-  @ApiOperation(value = "Sends SPARQL Update query to given service", notes = "PUT Body should be json-ld")
-  @ApiResponses(value = {
-      @ApiResponse(code = 204, message = "Graph is saved"),
-      @ApiResponse(code = 400, message = "Invalid graph supplied"),
-      @ApiResponse(code = 403, message = "Illegal graph parameter"),
-      @ApiResponse(code = 404, message = "Service not found"),
-      @ApiResponse(code = 500, message = "Bad data?") 
-  })
-  
-  public Response sparqlUpdate(
-          @ApiParam(value = "Sparql query", required = true)
-                  String body, @ApiParam(value = "Sparql query", required = true)
-          @Context HttpServletRequest request) {
-
-
-      HttpSession session = request.getSession();
-
-      if(session==null) return JerseyResponseManager.unauthorized();
-
-      LoginSession login = new LoginSession(session);
-
-      if(!(login.isLoggedIn() && (login.getEmail().equals("testi.testaaja@example.org") || login.isSuperAdmin() ))) {
-          return JerseyResponseManager.unauthorized();
-      }
         String query = LDHelper.prefix + body;
 
-        try { 
-        UpdateRequest queryObj= UpdateFactory.create(query);
-        UpdateProcessor qexec= UpdateExecutionFactory.createRemoteForm(queryObj,services.getCoreSparqlUpdateAddress());
-        qexec.execute();
+        try {
+            UpdateRequest queryObj= UpdateFactory.create(query);
+            UpdateProcessor qexec= UpdateExecutionFactory.createRemoteForm(queryObj, endpointServices.getCoreSparqlUpdateAddress());
+            qexec.execute();
 
-        
-        } catch (  UpdateException ex) {
-           return Response.status(400).build();
-           }
-          catch (  QueryParseException ex) {
+
+        } catch (UpdateException | QueryParseException ex) {
             return Response.status(400).build();
-           }
-   
-         return Response.status(200).build();
-        
-  }
+        }
 
-  
+        return Response.status(200).build();
+    }
 }

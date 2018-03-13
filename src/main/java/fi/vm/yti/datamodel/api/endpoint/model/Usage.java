@@ -3,39 +3,51 @@
  */
 package fi.vm.yti.datamodel.api.endpoint.model;
 
-import java.util.logging.Logger;
-import javax.servlet.ServletContext;
+import fi.vm.yti.datamodel.api.service.EndpointServices;
+import fi.vm.yti.datamodel.api.service.IDManager;
+import fi.vm.yti.datamodel.api.service.JerseyClient;
+import fi.vm.yti.datamodel.api.service.JerseyResponseManager;
+import fi.vm.yti.datamodel.api.service.NamespaceManager;
+import fi.vm.yti.datamodel.api.utils.LDHelper;
+import io.swagger.annotations.*;
+import org.apache.jena.iri.IRI;
+import org.apache.jena.iri.IRIException;
+import org.apache.jena.query.ParameterizedSparqlString;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
-
-import fi.vm.yti.datamodel.api.config.EndpointServices;
-import fi.vm.yti.datamodel.api.utils.*;
-import fi.vm.yti.datamodel.api.utils.JerseyClient;
-import org.apache.jena.query.ParameterizedSparqlString;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
 import java.util.Map;
-import org.apache.jena.iri.IRI;
-import org.apache.jena.iri.IRIException;
 
-/**
- * Root resource (exposed at "usage" path)
- */
+@Component
 @Path("usage")
 @Api(tags = {"Resource"}, description = "Returns all known references to the given resource. Resource ID and Model ID are alternative parameters")
 public class Usage {
 
-    @Context ServletContext context;
-    EndpointServices services = new EndpointServices();
-    private static final Logger logger = Logger.getLogger(Usage.class.getName());
-    
+    private final IDManager idManager;
+    private final JerseyResponseManager jerseyResponseManager;
+    private final NamespaceManager namespaceManager;
+    private final EndpointServices endpointServices;
+    private final JerseyClient jerseyClient;
+
+    @Autowired
+    Usage(IDManager idManager,
+          JerseyResponseManager jerseyResponseManager,
+          NamespaceManager namespaceManager,
+          EndpointServices endpointServices,
+          JerseyClient jerseyClient) {
+
+        this.idManager = idManager;
+        this.jerseyResponseManager = jerseyResponseManager;
+        this.namespaceManager = namespaceManager;
+        this.endpointServices = endpointServices;
+        this.jerseyClient = jerseyClient;
+    }
+
     @GET
     @Produces("application/ld+json")
     @ApiOperation(value = "Create new class", notes = "Create new")
@@ -53,19 +65,19 @@ public class Usage {
             IRI conceptIRI = null;
             
             try {
-                    if(id!=null && !id.equals("undefined")) resourceIRI = IDManager.constructIRI(id);
-                    if(model!=null && !model.equals("undefined")) modelIRI = IDManager.constructIRI(model);
-                    if(concept!=null && !concept.equals("undefined")) conceptIRI = IDManager.constructIRI(concept);
+                    if(id!=null && !id.equals("undefined")) resourceIRI = idManager.constructIRI(id);
+                    if(model!=null && !model.equals("undefined")) modelIRI = idManager.constructIRI(model);
+                    if(concept!=null && !concept.equals("undefined")) conceptIRI = idManager.constructIRI(concept);
             } 
             catch (NullPointerException e) {
-                    return JerseyResponseManager.invalidParameter();
+                    return jerseyResponseManager.invalidParameter();
             }
             catch (IRIException e) {
-                    return JerseyResponseManager.invalidIRI();
+                    return jerseyResponseManager.invalidIRI();
             }
 
             ParameterizedSparqlString pss = new ParameterizedSparqlString();
-            Map<String,String> namespaces = NamespaceManager.getCoreNamespaceMap();
+            Map<String,String> namespaces = namespaceManager.getCoreNamespaceMap();
             namespaces.putAll(LDHelper.PREFIX_MAP);
             pss.setNsPrefixes(namespaces);
             
@@ -186,9 +198,8 @@ public class Usage {
             } else if(conceptIRI!=null) {
                 pss.setCommandText(conceptQueryString);
                 pss.setIri("concept", conceptIRI);
-            } else return JerseyResponseManager.invalidParameter();
+            } else return jerseyResponseManager.invalidParameter();
            
-            return JerseyClient.constructGraphFromService(pss.toString(), services.getCoreSparqlAddress());
-    }   
- 
+            return jerseyClient.constructGraphFromService(pss.toString(), endpointServices.getCoreSparqlAddress());
+    }
 }

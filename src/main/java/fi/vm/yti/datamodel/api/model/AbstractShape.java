@@ -1,13 +1,11 @@
 package fi.vm.yti.datamodel.api.model;
 
-import fi.vm.yti.datamodel.api.config.EndpointServices;
-import fi.vm.yti.datamodel.api.utils.GraphManager;
+import fi.vm.yti.datamodel.api.service.*;
 import fi.vm.yti.datamodel.api.utils.LDHelper;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.ResourceFactory;
-import org.apache.jena.rdf.model.Statement;
 import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
@@ -20,7 +18,6 @@ import java.util.UUID;
  */
 public abstract class AbstractShape extends AbstractResource {
 
-    EndpointServices services = new EndpointServices();
     protected Model graph;
     protected DataModel dataModel;
     protected String provUUID;
@@ -28,13 +25,27 @@ public abstract class AbstractShape extends AbstractResource {
     protected List<UUID> modelOrganizations;
     protected List<String> modelServiceCategories;
 
-    public AbstractShape() {}
-
-    public AbstractShape(IRI graphIRI) {
-        super(graphIRI);
+    public AbstractShape(GraphManager graphManager,
+                         JenaClient jenaClient,
+                         ModelManager modelManager) {
+        super(graphManager, jenaClient, modelManager);
     }
 
-    public AbstractShape(Model graph){
+    public AbstractShape(IRI graphIRI,
+                         GraphManager graphManager,
+                         ServiceDescriptionManager serviceDescriptionManager,
+                         JenaClient jenaClient,
+                         ModelManager modelManager) {
+        super(graphIRI, graphManager, serviceDescriptionManager, jenaClient, modelManager);
+    }
+
+    public AbstractShape(Model graph,
+                         GraphManager graphManager,
+                         JenaClient jenaClient,
+                         ModelManager modelManager,
+                         RHPOrganizationManager rhpOrganizationManager,
+                         ServiceDescriptionManager serviceDescriptionManager) {
+        super(graphManager, jenaClient, modelManager);
 
         this.graph = graph;
 
@@ -43,7 +54,7 @@ public abstract class AbstractShape extends AbstractResource {
             throw new IllegalArgumentException("Expected 1 model (isDefinedBy)");
         }
 
-        this.dataModel = new DataModel(modelList.get(0).getURI());
+        this.dataModel = new DataModel(modelList.get(0).getURI(), graphManager, rhpOrganizationManager, serviceDescriptionManager, jenaClient, modelManager);
         this.modelOrganizations = dataModel.getOrganizations();
 
         List<Resource> scopeList = this.graph.listResourcesWithProperty(LDHelper.curieToProperty("sh:scopeClass")).toList();

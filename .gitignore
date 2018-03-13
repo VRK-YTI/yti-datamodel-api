@@ -1,7 +1,11 @@
 .idea
 *.iml
+.gradle
 /target/
 .settings
 .classpath
 .project
 *.log
+/src/main/resources/config/application-local.properties
+out
+build

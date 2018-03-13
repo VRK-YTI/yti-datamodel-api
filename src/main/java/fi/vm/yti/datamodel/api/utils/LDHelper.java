@@ -1,31 +1,30 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package fi.vm.yti.datamodel.api.utils;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.jsonldjava.utils.JsonUtils;
-import java.io.IOException;
-import java.io.InputStream;
-import java.security.InvalidParameterException;
-import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.text.WordUtils;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIFactory;
 import org.apache.jena.query.ParameterizedSparqlString;
+import org.apache.jena.rdf.model.*;
+import org.apache.jena.riot.Lang;
+import org.apache.jena.riot.RiotException;
+import org.glassfish.jersey.uri.UriComponent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.ws.rs.core.Response;
+import java.io.IOException;
+import java.io.InputStream;
+import java.security.InvalidParameterException;
 import java.text.Normalizer;
 import java.text.Normalizer.Form;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.apache.commons.lang3.text.WordUtils;
-import org.apache.jena.rdf.model.*;
-import org.glassfish.jersey.uri.UriComponent;
 
 /**
  *
@@ -33,8 +32,9 @@ import org.glassfish.jersey.uri.UriComponent;
  */
 public class LDHelper {
 
+    private static final Logger logger = LoggerFactory.getLogger(LDHelper.class);
+
     private static final IRIFactory iriFactory = IRIFactory.iriImplementation() ;
-    private static final Logger logger = Logger.getLogger(LDHelper.class.getName());
     public static final String[] UNRESOLVABLE = {"xsd","iow","text","sh","afn","schema","dcap", "termed"};
 
     public static String encode(String param) {
@@ -392,48 +392,48 @@ public class LDHelper {
     public static final InputStream getDefaultGroupsInputStream() {
            return LDHelper.class.getClassLoader().getResourceAsStream("defaultGroups.json");
     }
-    
+
     public static Object getUserContext() {
        try {
            return JsonUtils.fromInputStream(LDHelper.class.getClassLoader().getResourceAsStream("userContext.json"));
        } catch (IOException ex) {
-           Logger.getLogger(LDHelper.class.getName()).log(Level.SEVERE, null, ex);
+           logger.error("Cannot load export", ex);
            return null;
        }
     }
-    
+
     public static Object getDescriptionContext() {
        try {
            return JsonUtils.fromInputStream(LDHelper.class.getClassLoader().getResourceAsStream("descriptionContext.json"));
        } catch (IOException ex) {
-           Logger.getLogger(LDHelper.class.getName()).log(Level.SEVERE, null, ex);
+           logger.error("Cannot load description context", ex);
            return null;
        }
     }
-    
+
     public static Object getGroupContext() {
        try {
            return JsonUtils.fromInputStream(LDHelper.class.getClassLoader().getResourceAsStream("groupContext.json"));
        } catch (IOException ex) {
-           Logger.getLogger(LDHelper.class.getName()).log(Level.SEVERE, null, ex);
+           logger.error("Cannot load group context", ex);
            return null;
        }
     }
-    
+
     public static Object getExportContext() {
        try {
            return JsonUtils.fromInputStream(LDHelper.class.getClassLoader().getResourceAsStream("export.json"));
        } catch (IOException ex) {
-           Logger.getLogger(LDHelper.class.getName()).log(Level.SEVERE, null, ex);
+           logger.error("Cannot load export", ex);
            return null;
        }
     }
-    
+
     public static Object getOPHContext() {
        try {
            return JsonUtils.fromInputStream(LDHelper.class.getClassLoader().getResourceAsStream("oph.json"));
        } catch (IOException ex) {
-           Logger.getLogger(LDHelper.class.getName()).log(Level.SEVERE, null, ex);
+           logger.error("Cannot load context", ex);
            return null;
        }
     }
@@ -480,7 +480,24 @@ public class LDHelper {
      }
     
      return query;
- }    
-        
-    
+ }
+
+    /**
+     * Returns JENA model from JSONLD Response
+     * @param response  Response object
+     * @return          Jena model parsed from Reponse entity or empty model
+     */
+    public static Model getJSONLDResponseAsJenaModel(Response response) {
+        Model model = ModelFactory.createDefaultModel();
+
+        try {
+            RDFReader reader = model.getReader(Lang.JSONLD.getName());
+            reader.read(model, (InputStream)response.getEntity(), "urn:yti:resource");
+        } catch(RiotException ex) {
+            logger.info(ex.getMessage());
+            return model;
+        }
+
+        return model;
+    }
 }

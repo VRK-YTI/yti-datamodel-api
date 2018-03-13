@@ -1,59 +1,51 @@
 /*
- * Licensed under the European Union Public Licence (EUPL) V.1.1 
+ * Licensed under the European Union Public Licence (EUPL) V.1.1
  */
 package fi.vm.yti.datamodel.api.endpoint.concepts;
 
-import fi.vm.yti.datamodel.api.config.EndpointServices;
-import fi.vm.yti.datamodel.api.utils.JerseyClient;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
-import javax.servlet.ServletContext;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.Path;
+import fi.vm.yti.datamodel.api.service.TermedTerminologyManager;
+import io.swagger.annotations.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
 import javax.ws.rs.GET;
+import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 
-/**
- * REST Web Service
- *
- * @author malonen
- */
+@Component
 @Path("conceptSearch")
 @Api(tags = {"Concept"}, description = "Concepts search from termed")
 public class ConceptSearch {
 
-    @Context ServletContext context;
-    EndpointServices services = new EndpointServices();
-   
-    
-  @GET
-  @Produces("application/ld+json")
-  @ApiOperation(value = "Get available concepts", notes = "Search from termed API")
-  @ApiResponses(value = {
-      @ApiResponse(code = 200, message = "Concepts"),
-      @ApiResponse(code = 406, message = "Term not defined"),
-      @ApiResponse(code = 500, message = "Internal server error")
-  })
-  public Response concept(
-          @ApiParam(value = "Term", required = true) 
-          @QueryParam("term") String term,
-          @ApiParam(value = "namespace")
-          @QueryParam("namespace") String namespace,
-          @ApiParam(value = "graphId")
-          @QueryParam("graphId") String graphId) {
+    private final TermedTerminologyManager termedTerminologyManager;
 
-          if(!term.endsWith("*"))  {
-              term+="*";
-          }
+    @Autowired
+    ConceptSearch(TermedTerminologyManager termedTerminologyManager) {
+        this.termedTerminologyManager = termedTerminologyManager;
+    }
 
-          return JerseyClient.searchConceptFromTermedAPI(term, namespace,null, graphId);
+    @GET
+    @Produces("application/ld+json")
+    @ApiOperation(value = "Get available concepts", notes = "Search from termed API")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "Concepts"),
+            @ApiResponse(code = 406, message = "Term not defined"),
+            @ApiResponse(code = 500, message = "Internal server error")
+    })
+    public Response concept(
+            @ApiParam(value = "Term", required = true)
+            @QueryParam("term") String term,
+            @ApiParam(value = "namespace")
+            @QueryParam("namespace") String namespace,
+            @ApiParam(value = "graphId")
+            @QueryParam("graphId") String graphId) {
 
-  }
-  
-  
+        if(!term.endsWith("*"))  {
+            term+="*";
+        }
+
+        return termedTerminologyManager.searchConceptFromTermedAPI(term, namespace,null, graphId);
+    }
 }
