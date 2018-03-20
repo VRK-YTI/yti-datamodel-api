@@ -2,6 +2,7 @@ package fi.vm.yti.datamodel.api;
 
 import fi.vm.yti.datamodel.api.service.EndpointServices;
 import fi.vm.yti.datamodel.api.model.OPHCodeServer;
+import fi.vm.yti.datamodel.api.service.FrameManager;
 import fi.vm.yti.datamodel.api.service.GraphManager;
 import fi.vm.yti.datamodel.api.service.NamespaceManager;
 import fi.vm.yti.datamodel.api.service.RHPOrganizationManager;
@@ -25,19 +26,22 @@ public class StartUpListener  {
     private final GraphManager graphManager;
     private final NamespaceManager namespaceManager;
     private final EndpointServices endpointServices;
+    private final FrameManager frameManager;
 
     @Autowired
     StartUpListener(TermedTerminologyManager termedTerminologyManager,
                     RHPOrganizationManager rhpOrganizationManager,
                     GraphManager graphManager,
                     NamespaceManager namespaceManager,
-                    EndpointServices endpointServices) {
+                    EndpointServices endpointServices,
+                    FrameManager frameManager) {
 
         this.termedTerminologyManager = termedTerminologyManager;
         this.rhpOrganizationManager = rhpOrganizationManager;
         this.graphManager = graphManager;
         this.namespaceManager = namespaceManager;
         this.endpointServices = endpointServices;
+        this.frameManager = frameManager;
     }
 
     @PostConstruct
@@ -52,6 +56,7 @@ public class StartUpListener  {
         initServiceCategories();
         termedTerminologyManager.initConceptsFromTermed();
         initRHPOrganizations();
+        initFramingCache();
     }
 
     @PreDestroy
@@ -92,5 +97,9 @@ public class StartUpListener  {
 
     private void initDefaultNamespaces() {
         namespaceManager.resolveDefaultNamespaceToTheCore();
+    }
+    
+    private void initFramingCache() {
+        frameManager.initCache();
     }
 }

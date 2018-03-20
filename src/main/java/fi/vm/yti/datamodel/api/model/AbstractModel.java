@@ -27,7 +27,7 @@ public abstract class AbstractModel {
 
     private final GraphManager graphManager;
     private final ServiceDescriptionManager serviceDescriptionManager;
-    private final JenaClient jenaClient;
+    private final JenaClient jenaClient;  
 
     public AbstractModel(GraphManager graphManager,
                          ServiceDescriptionManager serviceDescriptionManager,
@@ -35,7 +35,7 @@ public abstract class AbstractModel {
 
         this.graphManager = graphManager;
         this.serviceDescriptionManager = serviceDescriptionManager;
-        this.jenaClient = jenaClient;
+        this.jenaClient = jenaClient;        
     }
 
     public AbstractModel(IRI graphIRI,
@@ -46,7 +46,7 @@ public abstract class AbstractModel {
         this.graphManager = graphManager;
         this.serviceDescriptionManager = serviceDescriptionManager;
         this.jenaClient = jenaClient;
-
+        
         this.graph = graphManager.getCoreGraph(graphIRI);
         this.id = graphIRI;
 
@@ -89,7 +89,7 @@ public abstract class AbstractModel {
         this.graphManager = graphManager;
         this.serviceDescriptionManager = serviceDescriptionManager;
         this.jenaClient = jenaClient;
-
+        
         Model orgModel = rhpOrganizationManager.getOrganizationModel();
         this.graph = graph;
 

@@ -16,6 +16,9 @@ public final class ApplicationProperties {
     private String defaultGroupManagementAPI;
     private String publicGroupManagementAPI;
     private String publicTermedAPI;
+    private String elasticHost;
+    private String elasticPort;
+    private String elasticCluster;
 
     public String getDefaultScheme() {
         return defaultScheme;
@@ -96,4 +99,30 @@ public final class ApplicationProperties {
     public void setPublicTermedAPI(String publicTermedAPI) {
         this.publicTermedAPI = publicTermedAPI;
     }
+
+    public String getElasticHost() {
+        return elasticHost;
+    }
+
+    public void setElasticHost(String elasticHost) {
+        this.elasticHost = elasticHost;
+    }
+
+    public String getElasticPort() {
+        return elasticPort;
+    }
+
+    public void setElasticPort(String elasticPort) {
+        this.elasticPort = elasticPort;
+    }
+
+    public String getElasticCluster() {
+        return elasticCluster;
+    }
+
+    public void setElasticCluster(String elasticCluster) {
+        this.elasticCluster = elasticCluster;
+    }
+    
+    
 }
