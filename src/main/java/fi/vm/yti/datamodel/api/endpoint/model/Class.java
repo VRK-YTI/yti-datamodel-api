@@ -203,12 +203,12 @@ public class Class {
                         logger.log(Level.WARNING, idIRI+" is existing graph!");
                         return jerseyResponseManager.usedIRI();
                     } else {
-                        updateClass.updateWithNewId(oldIdIRI);
+                        graphManager.updateResourceWithNewId(oldIdIRI,updateClass);
                         provUUID = updateClass.getProvUUID();
                         logger.info("Changed class id from:"+oldid+" to "+id);
                     }
                 } else {
-                    updateClass.update();
+                    graphManager.updateResource(updateClass);
                     provUUID = updateClass.getProvUUID();
                 }
 
@@ -288,7 +288,8 @@ public class Class {
                 return jerseyResponseManager.serverError();
             }
             else {
-                newClass.create();
+                // newClass.create();
+                graphManager.createResource(newClass);
                 logger.info("Created "+newClass.getId());
 
                 if (provenanceManager.getProvMode()) {
@@ -346,7 +347,7 @@ public class Class {
                     return jerseyResponseManager.unauthorized();
                 }
 
-                deleteClass.delete();
+               graphManager.deleteResource(deleteClass);
 
             } catch(IllegalArgumentException ex) {
                 logger.warning(ex.toString());

@@ -1,5 +1,6 @@
 package fi.vm.yti.datamodel.api;
 
+import fi.vm.yti.datamodel.api.model.SuomiCodeServer;
 import fi.vm.yti.datamodel.api.service.EndpointServices;
 import fi.vm.yti.datamodel.api.model.OPHCodeServer;
 import fi.vm.yti.datamodel.api.service.FrameManager;
@@ -52,7 +53,7 @@ public class StartUpListener  {
 
         initDefaultGraph();
         initDefaultNamespaces();
-        initCodeServers();
+        //initCodeServers();
         initServiceCategories();
         termedTerminologyManager.initConceptsFromTermed();
         initRHPOrganizations();
@@ -76,9 +77,14 @@ public class StartUpListener  {
     }
 
     private void initCodeServers() {
+        // TODO: Codelists are now updated with each CodeList API query
+/*
+        OPHCodeServer codeServer = new OPHCodeServer("https://virkailija.opintopolku.fi/koodisto-service/rest/json/", endpointServices);
+        codeServer.updateCodelistsFromServer();
 
-        OPHCodeServer codeServer = new OPHCodeServer("https://virkailija.opintopolku.fi/koodisto-service/rest/json/", true, endpointServices);
-        if(!codeServer.status) logger.warning("Code server was not initialized!");
+        SuomiCodeServer codeServer2 = new SuomiCodeServer("https://koodistot.suomi.fi","https://koodistot-dev.suomi.fi/codelist-api/api/v1/", endpointServices);
+        codeServer2.updateCodelistsFromServer();
+*/
     }
 
     private void initDefaultGraph() {

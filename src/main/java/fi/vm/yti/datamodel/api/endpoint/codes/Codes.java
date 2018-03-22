@@ -3,6 +3,7 @@
  */
 package fi.vm.yti.datamodel.api.endpoint.codes;
 
+import fi.vm.yti.datamodel.api.model.SuomiCodeServer;
 import fi.vm.yti.datamodel.api.service.EndpointServices;
 import fi.vm.yti.datamodel.api.service.JerseyClient;
 import fi.vm.yti.datamodel.api.service.JerseyResponseManager;
@@ -42,15 +43,19 @@ public class Codes {
             @ApiResponse(code = 406, message = "code not defined"),
             @ApiResponse(code = 500, message = "Internal server error")
     })
-    public Response concept(
+    public Response code(
             @ApiParam(value = "uri", required = true)
             @QueryParam("uri") String uri) {
 
-        OPHCodeServer codeServer = new OPHCodeServer(uri, false, endpointServices);
-
-        if(!codeServer.status) {
-            boolean codeStatus = codeServer.updateCodes(uri);
-            if(!codeStatus) return jerseyResponseManager.notAcceptable();
+        if(uri.startsWith("http://uri.suomi.fi")) {
+            SuomiCodeServer codeServer = new SuomiCodeServer("https://koodistot.suomi.fi","https://koodistot-dev.suomi.fi/codelist-api/api/v1/", endpointServices);
+            // TODO: Update codes from suomi.fi codeservice? Related to YTI-148.
+            // codeServer.updateCodes(uri);
+        } else {
+            OPHCodeServer codeServer = new OPHCodeServer("https://virkailija.opintopolku.fi/koodisto-service/rest/json/", endpointServices);
+            if(!codeServer.containsCodeList(uri)) {
+                codeServer.updateCodes(uri);
+            }
         }
 
         return jerseyClient.getGraphResponseFromService(uri, endpointServices.getSchemesReadAddress());
@@ -69,13 +74,15 @@ public class Codes {
 
         ResponseBuilder rb;
 
-        OPHCodeServer codeServer = new OPHCodeServer(endpointServices);
+        if(uri.startsWith("http://uri.suomi.fi")) {
+            SuomiCodeServer codeServer = new SuomiCodeServer("https://koodistot.suomi.fi","https://koodistot-dev.suomi.fi/codelist-api/api/v1/", endpointServices);
+            // TODO: Update codes from suomi.fi codeservice on fly? Related to YTI-148.
+            // codeServer.updateCodes(uri);
+        } else {
+            OPHCodeServer codeServer = new OPHCodeServer("https://virkailija.opintopolku.fi/koodisto-service/rest/json/", endpointServices);
+            codeServer.updateCodes(uri);
+        }
 
-        boolean status = codeServer.updateCodes(uri);
-
-        rb = Response.status(Status.OK);
-
-        if(status) return rb.entity("{}").build();
-        else return jerseyResponseManager.notAcceptable();
+        return jerseyResponseManager.ok();
     }
 }

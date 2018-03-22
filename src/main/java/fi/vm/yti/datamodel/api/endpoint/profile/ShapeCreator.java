@@ -81,7 +81,7 @@ public class ShapeCreator {
                     return jerseyResponseManager.invalidIRI();
             }
 
-           Shape newShape = new Shape(classIRI,shapeIRI,profileIRI, graphManager, jenaClient, modelManager, endpointServices);
+           Shape newShape = new Shape(classIRI,shapeIRI,profileIRI, graphManager, endpointServices);
 
            return jerseyClient.constructResponseFromGraph(newShape.asGraph());
     }

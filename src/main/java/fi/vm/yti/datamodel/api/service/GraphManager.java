@@ -4,6 +4,8 @@
 package fi.vm.yti.datamodel.api.service;
 
 import fi.vm.yti.datamodel.api.config.ApplicationProperties;
+import fi.vm.yti.datamodel.api.model.AbstractModel;
+import fi.vm.yti.datamodel.api.model.AbstractResource;
 import fi.vm.yti.datamodel.api.utils.LDHelper;
 import org.apache.jena.atlas.web.HttpException;
 import org.apache.jena.query.DatasetAccessor;
@@ -14,8 +16,7 @@ import org.apache.jena.query.QueryExecution;
 import org.apache.jena.query.QueryExecutionFactory;
 import org.apache.jena.query.QuerySolution;
 import org.apache.jena.query.ResultSet;
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.rdf.model.*;
 import org.apache.jena.rdfconnection.RDFConnectionRemote;
 import org.apache.jena.system.Txn;
 import org.apache.jena.update.UpdateException;
@@ -29,12 +30,10 @@ import java.util.logging.Logger;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.datatypes.xsd.XSDDateTime;
 import org.apache.jena.iri.IRI;
-import org.apache.jena.rdf.model.Literal;
-import org.apache.jena.rdf.model.Resource;
-import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.riot.RDFLanguages;
 import org.apache.jena.util.FileManager;
+import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDF;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,18 +49,21 @@ public class GraphManager {
     private final TermedTerminologyManager termedTerminologyManager;
     private final ModelManager modelManager;
     private final ApplicationProperties properties;
+    private final ServiceDescriptionManager serviceDescriptionManager;
 
     @Autowired
     GraphManager(EndpointServices endpointServices,
                  JenaClient jenaClient,
                  TermedTerminologyManager termedTerminologyManager,
                  ModelManager modelManager,
+                 ServiceDescriptionManager serviceDescriptionManager,
                  ApplicationProperties properties) {
 
         this.endpointServices = endpointServices;
         this.jenaClient = jenaClient;
         this.termedTerminologyManager = termedTerminologyManager;
         this.modelManager = modelManager;
+        this.serviceDescriptionManager = serviceDescriptionManager;
         this.properties = properties;
     }
 
@@ -1104,6 +1106,76 @@ public class GraphManager {
         
     }
 
+    public void createResource(AbstractResource resource) {
+        jenaClient.putModelToCore(resource.getId(), resource.asGraph());
+        insertNewGraphReferenceToModel(resource.getId(), resource.getModelId());
+        Model exportModel = resource.asGraphCopy();
+        exportModel.add(exportModel.createResource(resource.getModelId()), DCTerms.hasPart, exportModel.createResource(resource.getId()));
+        jenaClient.addModelToCore(resource.getModelId()+"#ExportGraph", exportModel);
+    }
 
-    
+    public void updateResource(AbstractResource resource) {
+        Model oldModel = jenaClient.getModelFromCore(resource.getId());
+        Model exportModel = jenaClient.getModelFromCore(resource.getModelId()+"#ExportGraph");
+
+        exportModel = modelManager.removeResourceStatements(oldModel, exportModel);
+        exportModel.add(resource.asGraph());
+
+        jenaClient.putModelToCore(resource.getModelId()+"#ExportGraph", exportModel);
+        jenaClient.putModelToCore(resource.getId(), resource.asGraph());
+    }
+
+    public void updateResourceWithNewId(IRI oldIdIRI, AbstractResource resource) {
+        Model oldModel = jenaClient.getModelFromCore(oldIdIRI.toString());
+        Model exportModel = jenaClient.getModelFromCore(resource.getModelId()+"#ExportGraph");
+
+        exportModel = modelManager.removeResourceStatements(oldModel, exportModel);
+        exportModel.add(resource.asGraph());
+        jenaClient.putModelToCore(resource.getModelId()+"#ExportGraph", exportModel);
+
+        jenaClient.putModelToCore(resource.getId(), resource.asGraph());
+
+        removeGraph(oldIdIRI);
+        renameID(oldIdIRI,resource.getIRI());
+        updateReferencesInPositionGraph(resource.getModelIRI(), oldIdIRI, resource.getIRI());
+    }
+
+    public void deleteResource(AbstractResource resource) {
+        Model exportModel = jenaClient.getModelFromCore(resource.getModelId()+"#ExportGraph");
+        exportModel = modelManager.removeResourceStatements(resource.asGraph(), exportModel);
+        exportModel.remove(exportModel.createResource(resource.getModelId()), DCTerms.hasPart, exportModel.createResource(resource.getId()));
+        jenaClient.putModelToCore(resource.getModelId()+"#ExportGraph", exportModel);
+        deleteGraphReferenceFromModel(resource.getIRI(),resource.getModelIRI());
+        jenaClient.deleteModelFromCore(resource.getId());
+    }
+
+    public void createModel(AbstractModel amodel) {
+        logger.info("Creating model "+amodel.getId());
+        jenaClient.putModelToCore(amodel.getId(), amodel.asGraph());
+        jenaClient.putModelToCore(amodel.getId()+"#ExportGraph", amodel.asGraph());
+    }
+
+    public void updateModel(AbstractModel amodel) {
+        LDHelper.rewriteLiteral(amodel.asGraph(), ResourceFactory.createResource(amodel.getId()), DCTerms.modified, LDHelper.getDateTimeLiteral());
+        Model oldModel = jenaClient.getModelFromCore(amodel.getId());
+        Model exportModel = jenaClient.getModelFromCore(amodel.getId()+"#ExportGraph");
+
+        // OMG: Model.remove() doesnt remove RDFLists
+        Statement languageStatement = exportModel.getRequiredProperty(ResourceFactory.createResource(amodel.getId()), DCTerms.language);
+        RDFList languageList = languageStatement.getObject().as(RDFList.class);
+        languageList.removeList();
+        languageStatement.remove();
+
+        exportModel.remove(oldModel);
+        exportModel.add(amodel.asGraph());
+        jenaClient.putModelToCore(amodel.getId()+"#ExportGraph", exportModel);
+        jenaClient.putModelToCore(amodel.getId(), amodel.asGraph());
+    }
+
+    public void deleteModel(AbstractModel amodel) {
+        serviceDescriptionManager.deleteGraphDescription(amodel.getId());
+        removeModel(amodel.getIRI());
+    }
+
+
 }

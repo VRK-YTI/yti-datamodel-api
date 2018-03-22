@@ -105,7 +105,7 @@ public class ModelPositions {
             return jerseyResponseManager.invalidIRI();
         }
 
-        DataModel checkModel = new DataModel(modelIRI, graphManager, serviceDescriptionManager, jenaClient);
+        DataModel checkModel = new DataModel(modelIRI, graphManager);
 
         if (!authorizationManager.hasRightToEdit(checkModel)) {
             return jerseyResponseManager.unauthorized();

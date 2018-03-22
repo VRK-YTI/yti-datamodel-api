@@ -95,7 +95,7 @@ public class ClassCreator {
             if (conceptIRI != null) {
                 newClass = new ReusableClass(conceptIRI, modelIRI, classLabel, lang, graphManager, jenaClient, modelManager, termedTerminologyManager);
             } else {
-                newClass = new ReusableClass(modelIRI, classLabel, lang, graphManager, jenaClient, modelManager);
+                newClass = new ReusableClass(modelIRI, classLabel, lang, graphManager);
             }
 
             return jerseyClient.constructResponseFromGraph(newClass.asGraph());

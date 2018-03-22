@@ -33,26 +33,29 @@ public class OPHCodeServer {
     static final private Logger logger = Logger.getLogger(OPHCodeServer.class.getName());
 
     private final EndpointServices endpointServices;
-    public final boolean status;
+    private DatasetGraphAccessorHTTP accessor;
+    private DatasetAdapter adapter;
+    private String uri;
+    private Property description = ResourceFactory.createProperty("http://purl.org/dc/terms/", "description");
+    private Property name = ResourceFactory.createProperty("http://purl.org/dc/terms/", "title");
+    private Property isPartOf = ResourceFactory.createProperty("http://purl.org/dc/terms/", "isPartOf");
+    private Property id = ResourceFactory.createProperty("http://purl.org/dc/terms/", "identifier");
+    private Property creator = ResourceFactory.createProperty("http://purl.org/dc/terms/", "creator");
 
-    public OPHCodeServer(EndpointServices endpointServices) {
+
+
+    public OPHCodeServer(String uri, EndpointServices endpointServices) {
+        this.accessor = new DatasetGraphAccessorHTTP(endpointServices.getSchemesReadWriteAddress());
+        this.adapter = new DatasetAdapter(accessor);
         this.endpointServices = endpointServices;
-        this.status = false;
+        this.uri = uri;
     }
 
-    public OPHCodeServer(String uri, boolean force, EndpointServices endpointServices) {
-        this.endpointServices = endpointServices;
-        DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(endpointServices.getSchemesReadWriteAddress());
-        DatasetAdapter adapter = new DatasetAdapter(accessor);
-
-        if(force)
-            this.status = copyCodelistsFromServer(uri);
-        else
-            this.status = adapter.containsModel(uri);
-
+    public boolean containsCodeList(String uri) {
+        return adapter.containsModel(uri);
     }
 
-    private boolean copyCodelistsFromServer(String uri) {
+    public boolean updateCodelistsFromServer() {
 
         try {
 
@@ -63,7 +66,7 @@ public class OPHCodeServer {
             Response.ResponseBuilder rb;
 
             Client client = ClientBuilder.newClient();
-            logger.info(uri);
+            logger.info("Updating OPH codeLists: " + uri);
             WebTarget target = client.target(uri).queryParam("format","application/json");
             Response response = target.request("application/json").get();
 
@@ -101,11 +104,9 @@ public class OPHCodeServer {
                         JsonValue kuvausValue = groupName.get("kuvaus");
                         if(kuvausValue!=null && kuvausValue.getValueType()==ValueType.STRING) {
                             String comment = groupName.getString("kuvaus");
-                            Property description = ResourceFactory.createProperty("http://purl.org/dc/terms/", "description");
                             group.addLiteral(description, ResourceFactory.createLangLiteral(comment,lang));
                         }
                         group.addProperty(RDF.type, ResourceFactory.createResource("http://uri.suomi.fi/datamodel/ns/iow#FCodeGroup"));
-                        Property name = ResourceFactory.createProperty("http://purl.org/dc/terms/", "title");
                         group.addLiteral(name, ResourceFactory.createLangLiteral(label,lang));
 
                     }
@@ -118,17 +119,16 @@ public class OPHCodeServer {
 
                         JsonObject codes = (JsonObject) codeListIterator.next();
                         // codes.getString("resourceUri")
-                        Resource valueScheme = model.createResource(uri+codes.getString("koodistoUri")+"/koodi");
+                        String koodistoUri = codes.getString("koodistoUri");
+                        String schemeUri = uri+koodistoUri+"/koodi";
+                        Resource valueScheme = model.createResource(schemeUri);
                         valueScheme.addProperty(RDF.type, ResourceFactory.createResource("http://uri.suomi.fi/datamodel/ns/iow#FCodeScheme"));
 
-                        Property isPartOf = ResourceFactory.createProperty("http://purl.org/dc/terms/", "isPartOf");
                         //group.addProperty(hasPart, valueScheme);
                         valueScheme.addProperty(isPartOf, group);
 
-                        Property id = ResourceFactory.createProperty("http://purl.org/dc/terms/", "identifier");
-                        Property creator = ResourceFactory.createProperty("http://purl.org/dc/terms/", "creator");
 
-                        valueScheme.addLiteral(id, ResourceFactory.createPlainLiteral(codes.getString("koodistoUri")));
+                        valueScheme.addLiteral(id, ResourceFactory.createPlainLiteral(koodistoUri));
                         JsonValue owner = codes.get("omistaja");
 
                         if(owner.getValueType()==ValueType.STRING)
@@ -149,22 +149,21 @@ public class OPHCodeServer {
                             JsonValue kuvausValue = codeName.get("kuvaus");
                             if(kuvausValue!=null && kuvausValue.getValueType()==ValueType.STRING) {
                                 String comment = codeName.getString("kuvaus");
-                                Property description = ResourceFactory.createProperty("http://purl.org/dc/terms/", "description");
                                 valueScheme.addLiteral(description, ResourceFactory.createLangLiteral(comment,lang));
                             }
 
-                            Property name = ResourceFactory.createProperty("http://purl.org/dc/terms/", "title");
-
                             valueScheme.addLiteral(name, ResourceFactory.createLangLiteral(label,lang));
-
 
                         }
 
+                     // Copying all codelists takes too much time. Better to do this on the fly?
+                     /*   if(!adapter.containsModel(schemeUri)) {
+                            updateCodes(schemeUri);
+                        }*/
 
                     }
 
                 }
-
 
                 DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(endpointServices.getSchemesReadWriteAddress());
                 DatasetAdapter adapter = new DatasetAdapter(accessor);
@@ -236,7 +235,7 @@ public class OPHCodeServer {
 
         if (response.getStatusInfo().getFamily() == Response.Status.Family.SUCCESSFUL) {
 
-            logger.info("STATUS OK");
+            logger.info("Copying "+uri);
 
             JsonReader jsonReader = Json.createReader(response.readEntity(InputStream.class));
             JsonArray codeListArray = jsonReader.readArray();
@@ -249,7 +248,6 @@ public class OPHCodeServer {
                 JsonObject codeObj = (JsonObject) codeIterator.next();
                 Resource codeRes = model.createResource(codeObj.getString("resourceUri"));
                 codeRes.addProperty(RDF.type, ResourceFactory.createResource("http://uri.suomi.fi/datamodel/ns/iow#FCode"));
-                Property id = ResourceFactory.createProperty("http://purl.org/dc/terms/", "identifier");
 
                 codeRes.addLiteral(id, ResourceFactory.createPlainLiteral(codeObj.getString("koodiArvo")));
 
@@ -265,13 +263,11 @@ public class OPHCodeServer {
                     String lang = codeName.getString("kieli").toLowerCase();
                     String label = codeName.getString("nimi");
 
-                    Property name = ResourceFactory.createProperty("http://purl.org/dc/terms/", "title");
                     codeRes.addLiteral(name, ResourceFactory.createLangLiteral(label, lang));
 
                     JsonValue kuvausValue = codeName.get("kuvaus");
                     if(kuvausValue!=null && kuvausValue.getValueType()==ValueType.STRING) {
                         String comment = codeName.getString("kuvaus");
-                        Property description = ResourceFactory.createProperty("http://purl.org/dc/terms/", "description");
                         codeRes.addLiteral(description, ResourceFactory.createLangLiteral(comment,lang));
                     }
 

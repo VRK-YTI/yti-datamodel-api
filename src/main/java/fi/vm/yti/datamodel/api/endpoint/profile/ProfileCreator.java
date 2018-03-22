@@ -133,7 +133,7 @@ public class ProfileCreator {
             return jerseyResponseManager.invalidParameter();
         }
 
-        ApplicationProfile newModel = new ApplicationProfile(prefix, namespaceIRI, label, lang, allowedLang, serviceList, orgList, graphManager, serviceDescriptionManager, jenaClient, endpointServices);
+        ApplicationProfile newModel = new ApplicationProfile(prefix, namespaceIRI, label, lang, allowedLang, serviceList, orgList, graphManager, endpointServices);
 
         return jerseyClient.constructResponseFromGraph(newModel.asGraph());
     }

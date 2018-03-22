@@ -45,6 +45,16 @@ public class LDHelper {
         return iriFactory.create(url);
     }
 
+    public static boolean isInvalidIRI(String url) {
+        IRI testIRI = toIRI(url);
+        if(testIRI.hasViolation(false)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+
     /**
      * Used in startup to load external schemas. Returns false if matches any of UNRESOLVABLE array
      * @param item

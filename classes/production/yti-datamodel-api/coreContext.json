@@ -1,0 +1,64 @@
+{   "@context": {
+    "imports": {
+      "@id": "http://www.w3.org/2002/07/owl#imports",
+      "@type": "@id"
+    },
+  "label": {
+    "@id": "http://www.w3.org/2000/01/rdf-schema#label",
+    "@container": "@language"
+  },
+    "range": {
+      "@id": "http://www.w3.org/2000/01/rdf-schema#range",
+      "@type": "@id"
+    },
+  "comment": {
+    "@id":"http://www.w3.org/2000/01/rdf-schema#comment",
+    "@container": "@language"
+  },
+    "property": {
+      "@id": "http://www.w3.org/ns/shacl#property",
+      "@type": "@id"
+    },
+    "subClassOf": {
+      "@id": "http://www.w3.org/2000/01/rdf-schema#subClassOf",
+      "@type": "@id"
+    },
+    "versionInfo": "http://www.w3.org/2002/07/owl#versionInfo",
+    "predicate": {
+      "@id": "http://www.w3.org/ns/shacl#predicate",
+      "@type": "@id"
+    },
+    "valueShape": {
+      "@id": "http://www.w3.org/ns/shacl#valueShape",
+      "@type": "@id"
+    },
+    "datatype": {
+      "@id": "http://www.w3.org/ns/shacl#datatype",
+      "@type": "@id"
+    },
+    "nodeKind": {
+      "@id": "http://www.w3.org/ns/shacl#nodeKind",
+      "@type": "@id"
+    },
+    "dc": "http://purl.org/dc/elements/1.1/",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "owl": "http://www.w3.org/2002/07/owl#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "sh": "http://www.w3.org/ns/shacl#",
+    "skos": "http://www.w3.org/2004/02/skos/core#",
+    "dcterms": "http://purl.org/dc/terms/"
+  },
+"@type":"rdfs:Class",
+ "label":{"@container": "@language"},
+    "property":{
+        "predicate":{
+          "@embed":false
+            },
+      "valueShape":{
+        "@omitDefault":true,
+        "@default":[],
+        "@embed":false
+      }
+    }
+}

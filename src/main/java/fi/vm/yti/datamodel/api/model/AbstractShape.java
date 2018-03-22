@@ -25,27 +25,18 @@ public abstract class AbstractShape extends AbstractResource {
     protected List<UUID> modelOrganizations;
     protected List<String> modelServiceCategories;
 
-    public AbstractShape(GraphManager graphManager,
-                         JenaClient jenaClient,
-                         ModelManager modelManager) {
-        super(graphManager, jenaClient, modelManager);
+    public AbstractShape(GraphManager graphManager) {
+        super(graphManager);
     }
 
     public AbstractShape(IRI graphIRI,
-                         GraphManager graphManager,
-                         ServiceDescriptionManager serviceDescriptionManager,
-                         JenaClient jenaClient,
-                         ModelManager modelManager) {
-        super(graphIRI, graphManager, serviceDescriptionManager, jenaClient, modelManager);
+                         GraphManager graphManager) {
+        super(graphIRI, graphManager);
     }
 
     public AbstractShape(Model graph,
-                         GraphManager graphManager,
-                         JenaClient jenaClient,
-                         ModelManager modelManager,
-                         RHPOrganizationManager rhpOrganizationManager,
-                         ServiceDescriptionManager serviceDescriptionManager) {
-        super(graphManager, jenaClient, modelManager);
+                         GraphManager graphManager) {
+        super(graphManager);
 
         this.graph = graph;
 
@@ -54,7 +45,7 @@ public abstract class AbstractShape extends AbstractResource {
             throw new IllegalArgumentException("Expected 1 model (isDefinedBy)");
         }
 
-        this.dataModel = new DataModel(modelList.get(0).getURI(), graphManager, rhpOrganizationManager, serviceDescriptionManager, jenaClient, modelManager);
+        this.dataModel = new DataModel(LDHelper.toIRI(modelList.get(0).getURI()), graphManager);
         this.modelOrganizations = dataModel.getOrganizations();
 
         List<Resource> scopeList = this.graph.listResourcesWithProperty(LDHelper.curieToProperty("sh:scopeClass")).toList();

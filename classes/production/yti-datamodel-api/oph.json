@@ -1,0 +1,11 @@
+{   "@context": {
+       "ex":"http://example.org",
+       "koodistos":{"@id":"ex:koodistot"},
+       "koodistoUri":{"@id":"ex:uri"},
+       "metadata":{"@id":"ex:test"},
+       "latestKoodistoVersio":{"@id":"ex:version"},
+       "omistaja":{"@id":"ex:omis"},
+       "nimi":{"@id":"ex:name"},
+       "@language":"kieli"
+    }
+}

@@ -25,7 +25,7 @@ public class AbstractPredicate extends AbstractResource {
     public AbstractPredicate(GraphManager graphManager,
                              JenaClient jenaClient,
                              ModelManager modelManager) {
-        super(graphManager, jenaClient, modelManager);
+        super(graphManager);
     }
 
     public AbstractPredicate(IRI graphIRI,
@@ -33,7 +33,7 @@ public class AbstractPredicate extends AbstractResource {
                              ServiceDescriptionManager serviceDescriptionManager,
                              JenaClient jenaClient,
                              ModelManager modelManager) {
-       super(graphIRI, graphManager, serviceDescriptionManager, jenaClient, modelManager);
+       super(graphIRI, graphManager);
     }
 
     public AbstractPredicate(Model graph,
@@ -41,7 +41,7 @@ public class AbstractPredicate extends AbstractResource {
                              ServiceDescriptionManager serviceDescriptionManager,
                              JenaClient jenaClient,
                              ModelManager modelManager) {
-        super(graphManager, jenaClient, modelManager);
+        super(graphManager);
 
         this.graph = graph;
 
@@ -73,7 +73,7 @@ public class AbstractPredicate extends AbstractResource {
             Statement isDefinedBy = predicateResource.getRequiredProperty(RDFS.isDefinedBy);
             Resource modelResource = isDefinedBy.getObject().asResource();
 
-            this.dataModel = new DataModel(LDHelper.toIRI(modelResource.toString()), graphManager, serviceDescriptionManager, jenaClient);
+            this.dataModel = new DataModel(LDHelper.toIRI(modelResource.toString()), graphManager);
             this.id = LDHelper.toIRI(predicateResource.toString());
             this.provUUID = "urn:uuid:"+UUID.randomUUID().toString();
 

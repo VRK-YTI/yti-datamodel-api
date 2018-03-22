@@ -18,7 +18,7 @@ import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
 
 @Component
-@Path("api/rest/codeServer")
+@Path("codeServer")
 @Api(tags = {"Codes"}, description = "Available code servers")
 public class CodeServer {
 

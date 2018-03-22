@@ -17,19 +17,15 @@ import java.util.UUID;
 public class ApplicationProfile extends AbstractModel {
 
     public ApplicationProfile(IRI profileId,
-                              GraphManager graphManager,
-                              ServiceDescriptionManager serviceDescriptionManager,
-                              JenaClient jenaClient) {
-        super(profileId, graphManager, serviceDescriptionManager, jenaClient);
+                              GraphManager graphManager) {
+        super(profileId, graphManager);
     }
 
     public ApplicationProfile(String jsonld,
                               ModelManager modelManager,
                               GraphManager graphManager,
-                              RHPOrganizationManager rhpOrganizationManager,
-                              ServiceDescriptionManager serviceDescriptionManager,
-                              JenaClient jenaClient) {
-        super(modelManager.createJenaModelFromJSONLDString(jsonld), graphManager, rhpOrganizationManager, serviceDescriptionManager, jenaClient);
+                              RHPOrganizationManager rhpOrganizationManager) {
+        super(modelManager.createJenaModelFromJSONLDString(jsonld), graphManager, rhpOrganizationManager);
     }
 
     public ApplicationProfile(String prefix,
@@ -40,11 +36,9 @@ public class ApplicationProfile extends AbstractModel {
                               List<String> serviceList,
                               List<UUID> orgList,
                               GraphManager graphManager,
-                              ServiceDescriptionManager serviceDescriptionManager,
-                              JenaClient jenaClient,
                               EndpointServices endpointServices) {
 
-        super(graphManager, serviceDescriptionManager, jenaClient);
+        super(graphManager);
 
         this.modelOrganizations = orgList;
 

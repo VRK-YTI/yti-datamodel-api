@@ -26,27 +26,15 @@ public abstract class AbstractModel {
     private static final Logger logger = Logger.getLogger(AbstractModel.class.getName());
 
     private final GraphManager graphManager;
-    private final ServiceDescriptionManager serviceDescriptionManager;
-    private final JenaClient jenaClient;  
 
-    public AbstractModel(GraphManager graphManager,
-                         ServiceDescriptionManager serviceDescriptionManager,
-                         JenaClient jenaClient) {
-
+    public AbstractModel(GraphManager graphManager) {
         this.graphManager = graphManager;
-        this.serviceDescriptionManager = serviceDescriptionManager;
-        this.jenaClient = jenaClient;        
     }
 
     public AbstractModel(IRI graphIRI,
-                         GraphManager graphManager,
-                         ServiceDescriptionManager serviceDescriptionManager,
-                         JenaClient jenaClient) {
+                         GraphManager graphManager) {
 
         this.graphManager = graphManager;
-        this.serviceDescriptionManager = serviceDescriptionManager;
-        this.jenaClient = jenaClient;
-        
         this.graph = graphManager.getCoreGraph(graphIRI);
         this.id = graphIRI;
 
@@ -82,14 +70,9 @@ public abstract class AbstractModel {
 
     public AbstractModel(Model graph,
                          GraphManager graphManager,
-                         RHPOrganizationManager rhpOrganizationManager,
-                         ServiceDescriptionManager serviceDescriptionManager,
-                         JenaClient jenaClient) {
+                         RHPOrganizationManager rhpOrganizationManager) {
 
         this.graphManager = graphManager;
-        this.serviceDescriptionManager = serviceDescriptionManager;
-        this.jenaClient = jenaClient;
-        
         Model orgModel = rhpOrganizationManager.getOrganizationModel();
         this.graph = graph;
 
@@ -136,49 +119,6 @@ public abstract class AbstractModel {
 
     }
 
-    public void create() {
-        logger.info("Creating model "+getId());
-        jenaClient.putModelToCore(getId(), asGraph());
-
-        /* TODO: Test with RDFConnection
-        Model nsModel = ModelFactory.createDefaultModel();
-        nsModel.setNsPrefixes(asGraph().getNsPrefixMap());
-        JenaClient.putModelToCore(getId()+"#NamespaceGraph", nsModel);
-        */
-
-        jenaClient.putModelToCore(getId()+"#ExportGraph", asGraph());
-    }
-
-    public void update() {
-        modifyDatetime();
-        Model oldModel = jenaClient.getModelFromCore(getId());
-        Model exportModel = jenaClient.getModelFromCore(getId()+"#ExportGraph");
-
-        // OMG: Model.remove() doesnt remove RDFLists
-        Statement languageStatement = exportModel.getRequiredProperty(ResourceFactory.createResource(getId()), DCTerms.language);
-        RDFList languageList = languageStatement.getObject().as(RDFList.class);
-        languageList.removeList();
-        languageStatement.remove();
-
-        /* TODO: Test with RDFConnection
-        Model nsModel = ModelFactory.createDefaultModel();
-        nsModel.setNsPrefixes(asGraph().getNsPrefixMap());
-        JenaClient.putModelToCore(getId()+"#NamespaceGraph", nsModel);*/
-
-        exportModel.remove(oldModel);
-        exportModel.add(asGraph());
-        jenaClient.putModelToCore(getId()+"#ExportGraph", exportModel);
-        jenaClient.putModelToCore(getId(), asGraph());
-    }
-
-    public void delete() {
-        serviceDescriptionManager.deleteGraphDescription(getId());
-        graphManager.removeModel(getIRI());
-    }
-
-    public void modifyDatetime() {
-        LDHelper.rewriteLiteral(this.graph, ResourceFactory.createResource(getId()), DCTerms.modified, LDHelper.getDateTimeLiteral());
-    }
 
     public Model asGraph(){
         return this.graph;

@@ -3,6 +3,8 @@
  */
 package fi.vm.yti.datamodel.api.endpoint.codes;
 
+import fi.vm.yti.datamodel.api.model.OPHCodeServer;
+import fi.vm.yti.datamodel.api.model.SuomiCodeServer;
 import fi.vm.yti.datamodel.api.service.EndpointServices;
 import fi.vm.yti.datamodel.api.service.JerseyClient;
 import io.swagger.annotations.*;
@@ -26,7 +28,6 @@ public class CodeList {
     @Autowired
     CodeList(JerseyClient jerseyClient,
              EndpointServices endpointServices) {
-
         this.jerseyClient = jerseyClient;
         this.endpointServices = endpointServices;
     }
@@ -41,35 +42,15 @@ public class CodeList {
     })
     public Response codeList(
             @ApiParam(value = "Codeserver uri", required = true) @QueryParam("uri") String uri) {
-   /*
-        ParameterizedSparqlString pss = new ParameterizedSparqlString();
-        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
-        
-        String queryString = "CONSTRUCT { "
-                + "?codeGroup dcterms:hasPart ?codeList . "
-                + "?codeGroup dcterms:title ?groupTitle . "
-                + "?codeGroup a ?groupType . "
-                + "?codeList dcterms:identifier ?id . "
-                + "?codeList dcterms:title ?title . "
-                + "?codeList dcterms:creator ?creator . "
-                + "?codeList a ?codeType . "
-                + "} WHERE { "
-                + "GRAPH ?codeServer {"
-                + "?codeGroup dcterms:hasPart ?codeList . "
-                + "?codeGroup dcterms:title ?groupTitle . "
-                + "?codeGroup a ?groupType . "
-                + "?codeList dcterms:identifier ?id . "
-                + "?codeList dcterms:title ?title . "
-                + "OPTIONAL {?codeList dcterms:creator ?creator . }"
-                + "?codeList a ?codeType . "
-                + "}}"; 
-        
-        pss.setIri("codeServer", uri);
-        pss.setCommandText(queryString);
 
-        return JerseyFusekiClient.constructGraphFromService(pss.toString(), services.getSchemesSparqlAddress()); */
+        if(uri.startsWith("https://koodistot.suomi.fi")) {
+            SuomiCodeServer suomiCodeServer = new SuomiCodeServer("https://koodistot.suomi.fi","https://koodistot-dev.suomi.fi/codelist-api/api/v1/", endpointServices);
+            suomiCodeServer.updateCodelistsFromServer();
+        } else {
+            OPHCodeServer codeServer = new OPHCodeServer("https://virkailija.opintopolku.fi/koodisto-service/rest/json/", endpointServices);
+            codeServer.updateCodelistsFromServer();
+        }
 
-        /* Use graph protocol instead for now ... */
         return jerseyClient.getGraphResponseFromService(uri, endpointServices.getSchemesReadAddress());
     }
 }

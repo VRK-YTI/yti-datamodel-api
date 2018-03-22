@@ -205,12 +205,12 @@ public class Predicate {
                         logger.log(Level.WARNING, idIRI+" is existing graph!");
                         return jerseyResponseManager.usedIRI();
                     } else {
-                        updatePredicate.updateWithNewId(oldIdIRI);
+                        graphManager.updateResourceWithNewId(oldIdIRI,updatePredicate);
                         provUUID = updatePredicate.getProvUUID();
                         logger.info("Changed predicate id from:"+oldid+" to "+id);
                     }
                 } else {
-                    updatePredicate.update();
+                    graphManager.updateResource(updatePredicate);
                     logger.info("Updated "+updatePredicate.getId());
                     provUUID = updatePredicate.getProvUUID();
                 }
@@ -281,7 +281,7 @@ public class Predicate {
             }
 
             String provUUID = newPredicate.getProvUUID();
-            newPredicate.create();
+            graphManager.createResource(newPredicate);
 
             if (provenanceManager.getProvMode()) {
                 provenanceManager.createProvenanceActivityFromModel(newPredicate.getId(), newPredicate.asGraph(), newPredicate.getProvUUID(), user.getEmail());
@@ -341,7 +341,7 @@ public class Predicate {
                     return jerseyResponseManager.unauthorized();
                 }
 
-                deletePredicate.delete();
+                graphManager.deleteResource(deletePredicate);
 
             } catch(IllegalArgumentException ex) {
                 logger.warning(ex.toString());

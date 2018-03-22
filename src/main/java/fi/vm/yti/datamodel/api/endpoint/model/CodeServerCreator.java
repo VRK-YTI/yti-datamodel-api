@@ -60,12 +60,6 @@ public class CodeServerCreator {
 
         if(uri!=null && !uri.equals("undefined")) {
 
-            OPHCodeServer codeServer = new OPHCodeServer(uri, true, endpointServices);
-
-            if(codeServer==null || !codeServer.status) {
-                return jerseyResponseManager.invalidParameter();
-            }
-
             if(idManager.isInvalid(uri)) {
                 return jerseyResponseManager.invalidIRI();
             }

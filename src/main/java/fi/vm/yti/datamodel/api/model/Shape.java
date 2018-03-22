@@ -15,30 +15,22 @@ public class Shape extends AbstractShape {
     private static final Logger logger = Logger.getLogger(Shape.class.getName());
 
     public Shape(IRI shapeId,
-                 GraphManager graphManager,
-                 ServiceDescriptionManager serviceDescriptionManager,
-                 JenaClient jenaClient,
-                 ModelManager modelManager) {
-        super(shapeId, graphManager, serviceDescriptionManager, jenaClient, modelManager);
+                 GraphManager graphManager) {
+        super(shapeId, graphManager);
     }
 
     public Shape(String jsonld,
                  GraphManager graphManager,
-                 JenaClient jenaClient,
-                 ModelManager modelManager,
-                 RHPOrganizationManager rhpOrganizationManager,
-                 ServiceDescriptionManager serviceDescriptionManager) {
-        super(modelManager.createJenaModelFromJSONLDString(jsonld), graphManager, jenaClient, modelManager, rhpOrganizationManager, serviceDescriptionManager);
+                 ModelManager modelManager) {
+        super(modelManager.createJenaModelFromJSONLDString(jsonld), graphManager);
     }
 
     public Shape(IRI classIRI,
                  IRI shapeIRI,
                  IRI profileIRI,
                  GraphManager graphManager,
-                 JenaClient jenaClient,
-                 ModelManager modelManager,
                  EndpointServices endpointServices) {
-        super(graphManager, jenaClient, modelManager);
+        super(graphManager);
 
         logger.info("Creating shape from "+classIRI.toString()+" to "+shapeIRI.toString());
 

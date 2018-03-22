@@ -25,7 +25,7 @@ public class ReusableClass extends AbstractClass {
                          ServiceDescriptionManager serviceDescriptionManager,
                          JenaClient jenaClient,
                          ModelManager modelManager) throws IllegalArgumentException {
-        super(modelManager.createJenaModelFromJSONLDString(jsonld), graphManager, serviceDescriptionManager, jenaClient, modelManager);
+        super(modelManager.createJenaModelFromJSONLDString(jsonld), graphManager);
     }
 
     public ReusableClass(IRI conceptIRI,
@@ -37,7 +37,7 @@ public class ReusableClass extends AbstractClass {
                          ModelManager modelManager,
                          TermedTerminologyManager termedTerminologyManager) {
 
-        super(graphManager, jenaClient, modelManager);
+        super(graphManager);
 
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
@@ -98,11 +98,9 @@ public class ReusableClass extends AbstractClass {
     public ReusableClass(IRI modelIRI,
                          String classLabel,
                          String lang,
-                         GraphManager graphManager,
-                         JenaClient jenaClient,
-                         ModelManager modelManager) {
+                         GraphManager graphManager) {
 
-        super(graphManager, jenaClient, modelManager);
+        super(graphManager);
 
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);

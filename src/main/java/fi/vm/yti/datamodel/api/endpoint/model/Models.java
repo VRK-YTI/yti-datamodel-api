@@ -185,10 +185,10 @@ public class Models {
         try {
 
             YtiUser user = userProvider.getUser();
-            DataModel newVocabulary = new DataModel(body, graphManager, rhpOrganizationManager, serviceDescriptionManager, jenaClient, modelManager);
+            DataModel newVocabulary = new DataModel(body, graphManager, rhpOrganizationManager, modelManager);
 
             logger.info("Getting old vocabulary:" + newVocabulary.getId());
-            DataModel oldVocabulary = new DataModel(newVocabulary.getIRI(), graphManager, serviceDescriptionManager, jenaClient);
+            DataModel oldVocabulary = new DataModel(newVocabulary.getIRI(), graphManager);
 
             if (!authorizationManager.hasRightToEdit(newVocabulary) || !authorizationManager.hasRightToEdit(oldVocabulary)) {
                 logger.info("User is not authorized");
@@ -201,7 +201,7 @@ public class Models {
                 return jerseyResponseManager.error();
             } else {
 
-                newVocabulary.update();
+                graphManager.updateModel(newVocabulary);
 
                 if(provenanceManager.getProvMode()) {
                     // ProvenanceManager.createProvenanceGraphFromModel(newVocabulary.getId(), newVocabulary.asGraph(), login.getEmail(), newVocabulary.getProvUUID());
@@ -233,7 +233,7 @@ public class Models {
 
         try {
 
-            DataModel newVocabulary = new DataModel(body, graphManager, rhpOrganizationManager, serviceDescriptionManager, jenaClient, modelManager);
+            DataModel newVocabulary = new DataModel(body, graphManager, rhpOrganizationManager, modelManager);
             YtiUser user = userProvider.getUser();
 
             if (!authorizationManager.hasRightToEdit(newVocabulary)) {
@@ -253,7 +253,7 @@ public class Models {
             else {
                 logger.info("Storing new model: "+newVocabulary.getId());
 
-                newVocabulary.create();
+                graphManager.createModel(newVocabulary);
 
                 serviceDescriptionManager.createGraphDescription(newVocabulary.getId(), user.getEmail(), newVocabulary.getOrganizations());
 
@@ -304,13 +304,13 @@ public class Models {
             return jerseyResponseManager.cannotRemove();
         }
 
-        DataModel deleteModel = new DataModel(modelIRI, graphManager, serviceDescriptionManager, jenaClient);
+        DataModel deleteModel = new DataModel(modelIRI, graphManager);
 
         if (!authorizationManager.hasRightToEdit(deleteModel)) {
             return jerseyResponseManager.unauthorized();
         }
 
-        deleteModel.delete();
+        graphManager.deleteModel(deleteModel);
 
         return jerseyResponseManager.ok();
     }

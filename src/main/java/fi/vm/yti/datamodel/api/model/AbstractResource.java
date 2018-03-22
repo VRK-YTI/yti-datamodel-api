@@ -21,27 +21,16 @@ public class AbstractResource {
     private static final Logger logger = Logger.getLogger(AbstractResource.class.getName());
 
     private final GraphManager graphManager;
-    private final JenaClient jenaClient;
-    private final ModelManager modelManager;
 
-    public AbstractResource(GraphManager graphManager,
-                            JenaClient jenaClient,
-                            ModelManager modelManager) {
+    public AbstractResource(GraphManager graphManager) {
 
         this.graphManager = graphManager;
-        this.jenaClient = jenaClient;
-        this.modelManager = modelManager;
     }
 
     public AbstractResource(IRI graphIRI,
-                            GraphManager graphManager,
-                            ServiceDescriptionManager serviceDescriptionManager,
-                            JenaClient jenaClient,
-                            ModelManager modelManager) {
+                            GraphManager graphManager) {
 
         this.graphManager = graphManager;
-        this.jenaClient = jenaClient;
-        this.modelManager = modelManager;
 
         this.graph = graphManager.getCoreGraph(graphIRI);
         this.id = graphIRI;
@@ -55,7 +44,7 @@ public class AbstractResource {
             logger.info(isDefinedBy.getSubject().toString()+" "+isDefinedBy.getObject().asResource().toString());
             logger.info(abstractResource.toString());
 
-            this.dataModel = new DataModel(LDHelper.toIRI(modelResource.toString()), graphManager, serviceDescriptionManager, jenaClient);
+            this.dataModel = new DataModel(LDHelper.toIRI(modelResource.toString()), graphManager);
 
             if(!this.id.toString().startsWith(getModelId())) {
                 throw new IllegalArgumentException("Resource ID should start with model ID!");
@@ -79,49 +68,6 @@ public class AbstractResource {
             throw new IllegalArgumentException("Expected 1 resource defined by model");
         }
 
-    }
-
-    public void create() {
-        jenaClient.putModelToCore(getId(), asGraph());
-        graphManager.insertNewGraphReferenceToModel(getId(), getModelId());
-        Model exportModel = asGraphCopy();
-        exportModel.add(exportModel.createResource(getModelId()), DCTerms.hasPart, exportModel.createResource(getId()));
-        jenaClient.addModelToCore(getModelId()+"#ExportGraph", exportModel);
-    }
-
-    public void update() {
-        Model oldModel = jenaClient.getModelFromCore(getId());
-        Model exportModel = jenaClient.getModelFromCore(getModelId()+"#ExportGraph");
-
-        exportModel = modelManager.removeResourceStatements(oldModel, exportModel);
-        exportModel.add(asGraph());
-
-        jenaClient.putModelToCore(getModelId()+"#ExportGraph", exportModel);
-        jenaClient.putModelToCore(getId(), asGraph());
-    }
-
-    public void updateWithNewId(IRI oldIdIRI) {
-        Model oldModel = jenaClient.getModelFromCore(oldIdIRI.toString());
-        Model exportModel = jenaClient.getModelFromCore(getModelId()+"#ExportGraph");
-
-        exportModel = modelManager.removeResourceStatements(oldModel, exportModel);
-        exportModel.add(asGraph());
-        jenaClient.putModelToCore(getModelId()+"#ExportGraph", exportModel);
-
-        jenaClient.putModelToCore(getId(), asGraph());
-
-        graphManager.removeGraph(oldIdIRI);
-        graphManager.renameID(oldIdIRI,getIRI());
-        graphManager.updateReferencesInPositionGraph(getModelIRI(), oldIdIRI, getIRI());
-    }
-
-    public void delete() {
-        Model exportModel = jenaClient.getModelFromCore(getModelId()+"#ExportGraph");
-        exportModel = modelManager.removeResourceStatements(asGraph(), exportModel);
-        exportModel.remove(exportModel.createResource(getModelId()), DCTerms.hasPart, exportModel.createResource(getId()));
-        jenaClient.putModelToCore(getModelId()+"#ExportGraph", exportModel);
-        graphManager.deleteGraphReferenceFromModel(getIRI(),getModelIRI());
-        jenaClient.deleteModelFromCore(getId());
     }
 
     public Model asGraph(){

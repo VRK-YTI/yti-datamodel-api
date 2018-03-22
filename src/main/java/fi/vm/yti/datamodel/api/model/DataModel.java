@@ -16,19 +16,15 @@ import java.util.UUID;
 public class DataModel extends AbstractModel {
 
     public DataModel(IRI graphId,
-                     GraphManager graphManager,
-                     ServiceDescriptionManager serviceDescriptionManager,
-                     JenaClient jenaClient) throws IllegalArgumentException {
-        super(graphId, graphManager, serviceDescriptionManager, jenaClient);
+                     GraphManager graphManager) throws IllegalArgumentException {
+        super(graphId, graphManager);
     }
 
     public DataModel(String jsonld,
                      GraphManager graphManager,
                      RHPOrganizationManager rhpOrganizationManager,
-                     ServiceDescriptionManager serviceDescriptionManager,
-                     JenaClient jenaClient,
                      ModelManager modelManager) throws IllegalArgumentException {
-        super(modelManager.createJenaModelFromJSONLDString(jsonld), graphManager, rhpOrganizationManager, serviceDescriptionManager, jenaClient);
+        super(modelManager.createJenaModelFromJSONLDString(jsonld), graphManager, rhpOrganizationManager);
     }
 
     public DataModel(String prefix,
@@ -39,10 +35,8 @@ public class DataModel extends AbstractModel {
                      List<String> serviceList,
                      List<UUID> orgList,
                      GraphManager graphManager,
-                     ServiceDescriptionManager serviceDescriptionManager,
-                     JenaClient jenaClient,
                      EndpointServices endpointServices) {
-        super(graphManager, serviceDescriptionManager, jenaClient);
+        super(graphManager);
 
         this.modelOrganizations = orgList;
 

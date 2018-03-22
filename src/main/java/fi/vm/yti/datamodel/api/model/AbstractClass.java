@@ -19,10 +19,8 @@ public abstract class AbstractClass extends AbstractResource {
 
     protected String provUUID;
 
-    public AbstractClass(GraphManager graphManager,
-                         JenaClient jenaClient,
-                         ModelManager modelManager) {
-        super(graphManager, jenaClient, modelManager);
+    public AbstractClass(GraphManager graphManager) {
+        super(graphManager);
     }
 
     public AbstractClass(IRI graphIRI,
@@ -30,15 +28,12 @@ public abstract class AbstractClass extends AbstractResource {
                          ServiceDescriptionManager serviceDescriptionManager,
                          JenaClient jenaClient,
                          ModelManager modelManager) {
-        super(graphIRI, graphManager, serviceDescriptionManager, jenaClient, modelManager);
+        super(graphIRI, graphManager);
     }
 
     public AbstractClass(Model graph,
-                         GraphManager graphManager,
-                         ServiceDescriptionManager serviceDescriptionManager,
-                         JenaClient jenaClient,
-                         ModelManager modelManager) {
-        super(graphManager, jenaClient, modelManager);
+                         GraphManager graphManager) {
+        super(graphManager);
 
         this.graph = graph;
 
@@ -71,7 +66,7 @@ public abstract class AbstractClass extends AbstractResource {
             Statement isDefinedBy = classResource.getRequiredProperty(RDFS.isDefinedBy);
             Resource modelResource = isDefinedBy.getObject().asResource();
 
-            this.dataModel = new DataModel(LDHelper.toIRI(modelResource.toString()), graphManager, serviceDescriptionManager, jenaClient);
+            this.dataModel = new DataModel(LDHelper.toIRI(modelResource.toString()), graphManager);
             this.id = LDHelper.toIRI(classResource.toString());
 
             if(!this.id.toString().startsWith(getModelId())) {

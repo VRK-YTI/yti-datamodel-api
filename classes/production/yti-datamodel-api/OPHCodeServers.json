@@ -1,0 +1,45 @@
+{
+"@context": {
+    "identifier": {
+      "@id": "http://purl.org/dc/terms/identifier",
+      "@type": "@id"
+    },
+    "description": {
+      "@id": "http://purl.org/dc/terms/description",
+       "@container": "@language"
+    },
+    "title": {
+      "@id": "http://purl.org/dc/terms/title",
+       "@container": "@language"
+    },
+    "dcap": "http://purl.org/ws-mmi-dc/terms/",
+    "schema": "http://schema.org/",
+    "void": "http://rdfs.org/ns/void#",
+    "adms": "http://www.w3.org/ns/adms#",
+    "owl": "http://www.w3.org/2002/07/owl#",
+    "dcam": "http://purl.org/dc/dcam/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "afn": "http://jena.hpl.hp.com/ARQ/function#",
+    "skos": "http://www.w3.org/2004/02/skos/core#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "sd": "http://www.w3.org/ns/sparql-service-description#",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "sh": "http://www.w3.org/ns/shacl#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "text": "http://jena.apache.org/text#",
+    "prov": "http://www.w3.org/ns/prov#",
+    "foaf": "http://xmlns.com/foaf/0.1/",
+    "dc": "http://purl.org/dc/elements/1.1/",
+    "ts": "http://www.w3.org/2003/06/sw-vocab-status/ns#"
+  },
+"@graph":[
+{
+  "@id": "https://virkailija.opintopolku.fi/koodisto-service/rest/json/",
+  "description": {"fi":"Opintohallinnon koodistopalvelu joka sisältää opintopolun ja viranomaistiedonkeruun koodistoja"
+  },
+  "identifier": "urn:uuid:25e23b99-7b67-493b-af08-8d86dc068b08",
+  "title": {"fi":"OPH koodistopalvelu"
+  }
+}
+]
+}

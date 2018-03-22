@@ -141,7 +141,7 @@ public class ModelCreator {
         }
 
         try {
-            DataModel newModel = new DataModel(prefix, namespaceIRI, label, lang, allowedLang, serviceList, orgList, graphManager, serviceDescriptionManager, jenaClient, endpointServices);
+            DataModel newModel = new DataModel(prefix, namespaceIRI, label, lang, allowedLang, serviceList, orgList, graphManager, endpointServices);
             return jerseyClient.constructResponseFromGraph(newModel.asGraph());
         } catch (IllegalArgumentException ex) {
             return jerseyResponseManager.invalidParameter();
