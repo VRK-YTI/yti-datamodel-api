@@ -56,7 +56,7 @@ public class StartUpListener  {
         initServiceCategories();
         termedTerminologyManager.initConceptsFromTermed();
         initRHPOrganizations();
-        initFramingCache();
+        //initFramingCache();
     }
 
     @PreDestroy
