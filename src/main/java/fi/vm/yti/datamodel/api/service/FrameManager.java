@@ -1,7 +1,5 @@
 package fi.vm.yti.datamodel.api.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.jsonldjava.core.JsonLdOptions;
 import fi.vm.yti.datamodel.api.utils.Frames;
 import fi.vm.yti.datamodel.api.utils.LDHelper;
@@ -12,13 +10,10 @@ import org.apache.jena.riot.system.RiotLib;
 import org.springframework.stereotype.Service;
 
 import java.io.StringWriter;
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
 import java.util.LinkedHashMap;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.inject.Singleton;
-import org.elasticsearch.action.index.IndexRequest;
+import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.client.Client;
 
 @Singleton
@@ -44,10 +39,12 @@ public final class FrameManager {
     public void cacheClassVisualizationFrame(String id, Model model) {
         String encId = LDHelper.encode(id);
         String framed = modelToFramedString(model, Frames.classVisualizationFrame);
-        this.client.prepareIndex(ELASTIC_INDEX_MODEL, "doc", encId).setSource(framed).execute().actionGet();
+        IndexRequestBuilder rb = this.client.prepareIndex(ELASTIC_INDEX_MODEL, "doc", encId);
+        rb.setSource(framed);
+        rb.execute().actionGet();        
     }
     
-    private String modelToFramedString(Model model, LinkedHashMap<String, Object> frame) {
+    protected String modelToFramedString(Model model, LinkedHashMap<String, Object> frame) {
 
         PrefixMap pm = RiotLib.prefixMap(model.getGraph());
         StringWriter stringWriter = new StringWriter();
