@@ -8,6 +8,10 @@ buildscript {
     }
 }
 
+plugins {
+    id "org.sonarqube" version "2.6.2"
+}
+
 apply plugin: "java"
 apply plugin: "idea"
 apply plugin: "org.springframework.boot"
@@ -83,4 +87,11 @@ bootRun {
 
 bootRepackage {
     mainClass = "fi.vm.yti.datamodel.api.Application"
+}
+
+sonarqube {
+    properties {
+        property "sonar.projectKey", "yti-datamodel-api"
+        property "sonar.projectName", "yti-datamodel-api"
+    }
 }
