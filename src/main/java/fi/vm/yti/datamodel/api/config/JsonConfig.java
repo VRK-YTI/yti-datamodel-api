@@ -9,6 +9,8 @@ import javax.json.stream.JsonGenerator;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 @Configuration
 public class JsonConfig {
 
@@ -17,5 +19,10 @@ public class JsonConfig {
         Map<String, Object> config = new HashMap<>();
         config.put(JsonGenerator.PRETTY_PRINTING, true);
         return Json.createWriterFactory(config);
+    }
+
+    @Bean
+    ObjectMapper objectMapper() {
+        return new ObjectMapper();
     }
 }
