@@ -17,6 +17,7 @@ import java.security.cert.X509Certificate;
 @Configuration
 @ActiveProfiles("test")
 @ComponentScan(basePackages = {
+        "fi.vm.yti.datamodel.api.config",
         "fi.vm.yti.datamodel.api.service",
         "fi.vm.yti.datamodel.api.security"
 })
