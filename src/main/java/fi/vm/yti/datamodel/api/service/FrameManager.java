@@ -7,6 +7,7 @@ import org.apache.jena.rdf.model.Model;
 import org.apache.jena.riot.*;
 import org.apache.jena.riot.system.PrefixMap;
 import org.apache.jena.riot.system.RiotLib;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.StringWriter;
@@ -26,7 +27,8 @@ public final class FrameManager {
     
     public static final String ELASTIC_INDEX_MODEL = "dm_vis_models";
     public static final String ELASTIC_INDEX_RESOURCE = "dm_resources";
-    
+
+    @Autowired
     public FrameManager(final Client client) {
         this.client = client;
     }
