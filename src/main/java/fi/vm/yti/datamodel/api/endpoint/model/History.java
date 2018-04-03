@@ -19,14 +19,14 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 import java.util.Map;
-import java.util.logging.Logger;
+import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 
 @Component
 @Path("history")
 @Api(tags = {"History"}, description = "Get list of revisions of the resource from change history")
 public class History {
 
-    private static final Logger logger = Logger.getLogger(History.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(History.class.getName());
 
     private final NamespaceManager namespaceManager;
     private final EndpointServices endpointServices;
@@ -56,7 +56,7 @@ public class History {
             @ApiParam(value = "Peek", defaultValue="false")
             @QueryParam("peek") boolean peek) {
 
-        if(id==null || id.equals("undefined") || id.equals("default") || (peek && id!=null) ) {
+        if(id==null || id.equals("undefined") || id.equals("default") || peek) {
 
             ParameterizedSparqlString pss = new ParameterizedSparqlString();
 
@@ -81,7 +81,7 @@ public class History {
 
             pss.setCommandText(queryString);
 
-            if(peek) {
+            if(id!=null && peek) {
                 pss.setIri("activity", id);
             }
 

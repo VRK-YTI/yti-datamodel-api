@@ -8,7 +8,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.util.logging.Logger;
+import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 
 import static org.junit.Assert.fail;
 
@@ -21,7 +21,7 @@ public class EndpointConnectionTest {
     @Autowired
     private ApplicationProperties applicationProperties;
 
-    private static final Logger logger = Logger.getLogger(EndpointConnectionTest.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(EndpointConnectionTest.class.getName());
 
     // TODO add test methods here.
     // The methods must be annotated with annotation @Test. For example:

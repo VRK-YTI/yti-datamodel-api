@@ -32,12 +32,12 @@ import java.io.PushbackInputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 
 @Service
 public class JerseyClient {
 
-    static final private Logger logger = Logger.getLogger(JerseyClient.class.getName());
+    static final private Logger logger = LoggerFactory.getLogger(JerseyClient.class.getName());
 
     private final JenaClient jenaClient;
     private final EndpointServices endpointServices;
@@ -245,7 +245,7 @@ public class JerseyClient {
             return rb.build();
 
         } catch (Exception ex) {
-            logger.log(Level.WARNING, "Expect the unexpected!", ex);
+            logger.warn( "Expect the unexpected!", ex);
             return jerseyResponseManager.serverError();
         }
 
@@ -265,7 +265,7 @@ public class JerseyClient {
             Response response = target.request("application/ld+json").get();
             
             if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-               Logger.getLogger(ConceptSearch.class.getName()).log(Level.INFO, response.getStatus()+" from CONCEPT SERVICE");
+               LoggerFactory.getLogger(ConceptSearch.class.getName()).log(Level.INFO, response.getStatus()+" from CONCEPT SERVICE");
                return JerseyResponseManager.unexpected(response.getStatus());
             }
             
@@ -391,7 +391,7 @@ public class JerseyClient {
         Response response = target.request(ctype).get();
 
         if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-            logger.log(Level.INFO, response.getStatus()+" from SERVICE "+service+" and GRAPH "+id);
+            logger.info( response.getStatus()+" from SERVICE "+service+" and GRAPH "+id);
             return jerseyResponseManager.notFound();
         } else {
             ResponseBuilder rb = Response.status(response.getStatus());
@@ -418,7 +418,7 @@ public class JerseyClient {
             Response response = target.request(contentType).get();
 
             if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-                logger.log(Level.INFO, response.getStatus()+" from SERVICE "+service+" and GRAPH "+id);
+                logger.info( response.getStatus()+" from SERVICE "+service+" and GRAPH "+id);
                 return jerseyResponseManager.notFound();
             }
 
@@ -437,7 +437,7 @@ public class JerseyClient {
 
             return rb.build();
         } catch(Exception ex) {
-            logger.log(Level.WARNING, "Expect the unexpected!", ex);
+            logger.warn( "Expect the unexpected!", ex);
             return jerseyResponseManager.unexpected();
         }
     }
@@ -461,7 +461,7 @@ public class JerseyClient {
             Response response = target.request(contentType).get();
 
             if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-                logger.log(Level.INFO, response.getStatus()+" from SERVICE "+service+" and GRAPH "+id);
+                logger.info( response.getStatus()+" from SERVICE "+service+" and GRAPH "+id);
                 return jerseyResponseManager.okNoContent();
             }
 
@@ -480,7 +480,7 @@ public class JerseyClient {
 
             return rb.build();
         } catch(Exception ex) {
-            logger.log(Level.WARNING, "Expect the unexpected!", ex);
+            logger.warn( "Expect the unexpected!", ex);
             return jerseyResponseManager.unexpected();
         }
     }
@@ -509,7 +509,7 @@ public class JerseyClient {
             logger.info("TERMED CALL: "+target.getUri().toString());
 
             if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-                logger.log(Level.INFO, response.getStatus()+" from URL: "+url);
+                logger.info( response.getStatus()+" from URL: "+url);
                 return jerseyResponseManager.notFound();
             }
 
@@ -517,7 +517,7 @@ public class JerseyClient {
             return rb.build();
 
         } catch(Exception ex) {
-            logger.log(Level.WARNING, "Expect the unexpected!", ex);
+            logger.warn( "Expect the unexpected!", ex);
             return jerseyResponseManager.notAcceptable();
         }
     }
@@ -543,7 +543,7 @@ public class JerseyClient {
             logger.info("TERMED CALL: "+target.getUri().toString());
 
             if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-                logger.log(Level.INFO, response.getStatus()+" from URL: "+url);
+                logger.info( response.getStatus()+" from URL: "+url);
                 return jerseyResponseManager.notFound();
             }
 
@@ -552,7 +552,7 @@ public class JerseyClient {
 
             return rb.build();
         } catch(Exception ex) {
-            logger.log(Level.WARNING, "Expect the unexpected!", ex);
+            logger.warn( "Expect the unexpected!", ex);
             return jerseyResponseManager.notAcceptable();
         }
     }
@@ -590,7 +590,7 @@ public class JerseyClient {
         client.close();
 
         if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-            logger.log(Level.WARNING, "Unexpected: Model update failed: "+graph);
+            logger.warn( "Unexpected: Model update failed: "+graph);
             return false;
         } else return true;
 
@@ -728,14 +728,14 @@ public class JerseyClient {
             client.close();
 
             if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-                logger.log(Level.WARNING, "Database connection error: "+graph+" was not deleted from "+service+"! Status "+response.getStatus());
+                logger.warn( "Database connection error: "+graph+" was not deleted from "+service+"! Status "+response.getStatus());
                 return jerseyResponseManager.unexpected();
             }
 
             return jerseyResponseManager.okNoContent();
 
         } catch(Exception ex) {
-            logger.log(Level.WARNING, "Expect the unexpected!", ex);
+            logger.warn( "Expect the unexpected!", ex);
             return jerseyResponseManager.unexpected();
         }
     }

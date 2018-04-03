@@ -16,14 +16,14 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
-import java.util.logging.Logger;
+import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 
 @Component
 @Path("predicateCreator")
 @Api(tags = {"Predicate"}, description = "Creates new RDF properties that can be based on SKOS concepts")
 public class PredicateCreator {
 
-    private static final Logger logger = Logger.getLogger(PredicateCreator.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(PredicateCreator.class.getName());
 
     private final IDManager idManager;
     private final JerseyResponseManager jerseyResponseManager;

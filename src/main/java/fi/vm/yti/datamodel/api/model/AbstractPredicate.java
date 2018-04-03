@@ -14,12 +14,12 @@ import org.apache.jena.vocabulary.RDFS;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.logging.Logger;
+import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 
 public class AbstractPredicate extends AbstractResource {
 
     protected String provUUID;
-    private static final Logger logger = Logger.getLogger(AbstractPredicate.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(AbstractPredicate.class.getName());
 
 
     public AbstractPredicate(GraphManager graphManager,
@@ -81,7 +81,7 @@ public class AbstractPredicate extends AbstractResource {
             predicateResource.addProperty(DCTerms.identifier,ResourceFactory.createPlainLiteral(provUUID));
 
         } catch(Exception ex)  {
-            logger.warning(ex.getMessage());
+            logger.warn(ex.getMessage());
             throw new IllegalArgumentException("Expected 1 predicate (isDefinedBy)");
 
         }

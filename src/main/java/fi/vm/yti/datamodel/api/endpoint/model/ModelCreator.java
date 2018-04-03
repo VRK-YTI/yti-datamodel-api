@@ -24,14 +24,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
-import java.util.logging.Logger;
+import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 
 @Component
 @Path("modelCreator")
 @Api(tags = {"Model"}, description = "Construct new model template")
 public class ModelCreator {
 
-    private static final Logger logger = Logger.getLogger(ModelCreator.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(ModelCreator.class.getName());
 
     private final JerseyResponseManager jerseyResponseManager;
     private final GraphManager graphManager;
@@ -134,7 +134,7 @@ public class ModelCreator {
                 namespaceIRI = idManager.constructIRI(namespace);
             }
         } catch (IRIException e) {
-            logger.warning("INVALID: "+namespace);
+            logger.warn("INVALID: "+namespace);
             return jerseyResponseManager.invalidIRI();
         } catch (NullPointerException e) {
             return jerseyResponseManager.invalidParameter();

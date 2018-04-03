@@ -21,14 +21,13 @@ import org.apache.jena.vocabulary.RDF;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 
 
 @Service
 public class ModelManager {
 
-    private static final Logger logger = Logger.getLogger(ModelManager.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(ModelManager.class.getName());
 
     /**
      * Writes jena model to string
@@ -68,8 +67,7 @@ public class ModelManager {
             DatasetGraph g = DatasetFactory.create(m).asDatasetGraph();
             PrefixMap pm = RiotLib.prefixMap(g);
             //PrefixMap pm = PrefixMapFactory.create(m.getNsPrefixMap());
-            String base = null;
-            w.write(out, g, pm, base, jenaContext) ;
+            w.write(out, g, pm, null, jenaContext) ;
             out.flush();
             return out.toString("UTF-8");
         } catch (IOException e) { throw new RuntimeException(e); }
@@ -108,15 +106,15 @@ public class ModelManager {
                 try {
                     Statement removeStatement = model.getRequiredProperty(subject, listStatement.getPredicate());
                     if (!removeStatement.getObject().isAnon()) {
-                        logger.warning("This should'nt happen!");
-                        logger.warning("Bad data " + subject.toString() + "->" + listStatement.getPredicate());
+                        logger.warn("This should'nt happen!");
+                        logger.warn("Bad data " + subject.toString() + "->" + listStatement.getPredicate());
                     } else {
                         RDFList languageList = removeStatement.getObject().as(RDFList.class);
                         languageList.removeList();
                         removeStatement.remove();
                     }
                 } catch(PropertyNotFoundException ex) {
-                    logger.warning("This should'nt happen!");
+                    logger.warn("This should'nt happen!");
                     ex.printStackTrace();
                 }
             } else if(subject.isURIResource() && !subject.hasProperty(RDF.type, OWL.Ontology)){
@@ -140,7 +138,7 @@ public class ModelManager {
         try {
             RDFDataMgr.read(model, new ByteArrayInputStream(modelString.getBytes("UTF-8")), Lang.JSONLD) ;
         } catch (UnsupportedEncodingException ex) {
-            Logger.getLogger(ModelManager.class.getName()).log(Level.SEVERE, null, ex);
+            logger.error("Unsupported encoding", ex);
             throw new IllegalArgumentException("Could not parse the model");
         }
 

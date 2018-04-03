@@ -16,7 +16,8 @@ import org.springframework.test.context.junit4.SpringRunner;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 //TODO: Add categories? https://github.com/junit-team/junit4/wiki/Categories
 
@@ -30,7 +31,7 @@ public class ModelTest  {
 
     // TODO: Fix tests
 
-    private static final Logger logger = Logger.getLogger(ModelTest.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(ModelTest.class.getName());
     private static Client testClient = ClientBuilder.newClient().property(ClientProperties.FOLLOW_REDIRECTS,Boolean.TRUE);
     private static WebTarget target = testClient.target("http://localhost:8084/api/rest/");
     private static String testModelId;

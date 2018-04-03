@@ -8,11 +8,11 @@ import org.apache.jena.query.ParameterizedSparqlString;
 import org.apache.jena.util.SplitIRI;
 
 import java.util.UUID;
-import java.util.logging.Logger;
+import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 
 public class Shape extends AbstractShape {
 
-    private static final Logger logger = Logger.getLogger(Shape.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(Shape.class.getName());
 
     public Shape(IRI shapeId,
                  GraphManager graphManager) {

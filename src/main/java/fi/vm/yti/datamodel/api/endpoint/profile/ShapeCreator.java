@@ -18,15 +18,15 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Component
 @Path("shapeCreator")
 @Api(tags = {"Profile"}, description = "Construct new Shape template")
 public class ShapeCreator {
 
-    private static final Logger logger = Logger.getLogger(ShapeCreator.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(ShapeCreator.class.getName());
 
     private final IDManager idManager;
     private final JerseyResponseManager jerseyResponseManager;
@@ -77,7 +77,7 @@ public class ShapeCreator {
                     }
                     
             } catch (IRIException e) {
-                    logger.log(Level.WARNING, "ID is invalid IRI!");
+                    logger.warn( "ID is invalid IRI!");
                     return jerseyResponseManager.invalidIRI();
             }
 

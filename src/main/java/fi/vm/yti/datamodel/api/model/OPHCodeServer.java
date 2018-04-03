@@ -7,7 +7,7 @@ import fi.vm.yti.datamodel.api.service.EndpointServices;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.logging.Logger;
+import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonArrayBuilder;
@@ -30,7 +30,7 @@ import org.apache.jena.web.DatasetGraphAccessorHTTP;
 
 public class OPHCodeServer {
 
-    static final private Logger logger = Logger.getLogger(OPHCodeServer.class.getName());
+    static final private Logger logger = LoggerFactory.getLogger(OPHCodeServer.class.getName());
 
     private final EndpointServices endpointServices;
     private DatasetGraphAccessorHTTP accessor;
@@ -177,7 +177,7 @@ public class OPHCodeServer {
             }
 
         } catch(Exception ex) {
-            logger.warning(ex.getMessage());
+            logger.warn(ex.getMessage());
             logger.info("Not connected to the code server");
             return false;
         }

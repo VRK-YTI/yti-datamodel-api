@@ -6,12 +6,12 @@ import org.apache.jena.rdf.model.Model;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.logging.Logger;
+import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 
 @Service
 public class SearchManager {
 
-    static final private Logger logger = Logger.getLogger(SearchManager.class.getName());
+    static final private Logger logger = LoggerFactory.getLogger(SearchManager.class.getName());
 
     private final GraphManager graphManager;
 

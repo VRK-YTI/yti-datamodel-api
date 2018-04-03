@@ -2,7 +2,7 @@
  * Licensed under the European Union Public Licence (EUPL) V.1.1
  */
 package fi.vm.yti.datamodel.api.endpoint.genericapi;
-import java.util.logging.Logger;
+import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 import javax.inject.Singleton;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -18,13 +18,14 @@ import org.glassfish.jersey.media.sse.SseBroadcaster;
 import org.glassfish.jersey.media.sse.SseFeature;
 import org.springframework.stereotype.Component;
 
+@Deprecated
 @Component
 @Singleton
 @Path("events")
 @Api(tags = {"Deprecated"}, description = "Event API not working?")
 public class Events {
 
-    private static final Logger logger = Logger.getLogger(Events.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(Events.class.getName());
 
     private final SseBroadcaster broadcaster = new SseBroadcaster();
 
@@ -39,7 +40,6 @@ public class Events {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     public void post(String message) {
-        logger.info(() -> "posted: " + message);
 
         OutboundEvent event = new OutboundEvent.Builder().name("message")
                 .data(String.class, message)

@@ -23,14 +23,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
-import java.util.logging.Logger;
+import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 
 @Component
 @Path("profileCreator")
 @Api(tags = {"Profile"}, description = "Construct new profile template")
 public class ProfileCreator {
 
-    private static final Logger logger = Logger.getLogger(ProfileCreator.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(ProfileCreator.class.getName());
 
     private final String defaultNamespace;
     private final JerseyResponseManager jerseyResponseManager;
@@ -127,7 +127,7 @@ public class ProfileCreator {
                 namespaceIRI = idManager.constructIRI(namespace);
             }
         } catch (IRIException e) {
-            logger.warning("INVALID: "+namespace);
+            logger.warn("INVALID: "+namespace);
             return jerseyResponseManager.invalidIRI();
         } catch (NullPointerException e) {
             return jerseyResponseManager.invalidParameter();

@@ -61,7 +61,6 @@ public class Sparql {
         QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), query);
 
         try {
-
             OutputStream outs = new ByteArrayOutputStream();
             ResultSet results = qexec.execSelect();
             ResultSetFormatter.outputAsJSON(outs,results);

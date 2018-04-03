@@ -16,12 +16,12 @@ import org.springframework.stereotype.Service;
 
 import java.util.*;
 import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 
 @Service
 public class ServiceDescriptionManager {
 
-    static final private Logger logger = Logger.getLogger(ServiceDescriptionManager.class.getName());
+    static final private Logger logger = LoggerFactory.getLogger(ServiceDescriptionManager.class.getName());
 
     public static final Property name = ResourceFactory.createProperty("http://www.w3.org/ns/sparql-service-description#", "name");
     public static final Resource NamedGraph = ResourceFactory.createResource("http://www.w3.org/ns/sparql-service-description#NamedGraph");
@@ -115,7 +115,7 @@ public class ServiceDescriptionManager {
         
         String groups = "";
         
-        if(groupList!=null && !groupList.isEmpty()) {
+        if(!groupList.isEmpty()) {
             groups = "VALUES ?groups { ";
 
             while(groupIterator.hasNext()) {
@@ -147,7 +147,7 @@ public class ServiceDescriptionManager {
               return b;
               
            } catch(Exception ex) {
-               logger.log(Level.WARNING, "Failed in checking the endpoint status: "+endpoint);
+               logger.warn( "Failed in checking the endpoint status: "+endpoint);
                return false; 
            }
         
@@ -164,7 +164,7 @@ public class ServiceDescriptionManager {
         Literal timestamp = LDHelper.getDateTimeLiteral();
 
         if(orgs==null || orgs.isEmpty()) {
-            logger.warning("Cannot create graph description without organizations");
+            logger.warn("Cannot create graph description without organizations");
             throw new NullPointerException();
         }
 
@@ -199,8 +199,6 @@ public class ServiceDescriptionManager {
         if(userMail!=null) pss.setIri("creator", "mailto:"+userMail);
         pss.setLiteral("timestamp", timestamp);
         pss.setCommandText(query);
-
-        logger.log(Level.FINE, pss.toString());
         
         UpdateRequest queryObj = pss.asUpdate();
         UpdateProcessor qexec=UpdateExecutionFactory.createRemoteForm(queryObj,endpointServices.getCoreSparqlUpdateAddress());
@@ -234,7 +232,7 @@ public class ServiceDescriptionManager {
         pss.setIri("graphName", graph);
         pss.setCommandText(query);
 
-         Logger.getLogger(ServiceDescriptionManager.class.getName()).log(Level.FINE,"Removing "+graph);
+        logger.info("Removing "+graph);
         
         UpdateRequest queryObj = pss.asUpdate();
         UpdateProcessor qexec=UpdateExecutionFactory.createRemoteForm(queryObj,endpointServices.getCoreSparqlUpdateAddress());

@@ -21,14 +21,14 @@ import org.springframework.stereotype.Component;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
-import java.util.logging.Logger;
+import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 
 @Component
 @Path("replicate")
 @Api(tags = {"Admin"}, description = "Returns information about replicable models")
 public class Replicator {
 
-    private static final Logger logger = Logger.getLogger(Replicator.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(Replicator.class.getName());
 
     private final AuthorizationManager authorizationManager;
     private final JerseyResponseManager jerseyResponseManager;
@@ -96,7 +96,7 @@ public class Replicator {
         if(replicate!=null && replicate.booleanValue()) {
             logger.info("Replicating data from "+service);
 
-            logger.warning("Warning! Deleting graphs!");
+            logger.warn("Warning! Deleting graphs!");
             graphManager.deleteGraphs();
 
             // <urn:csc:iow:namespaces>
@@ -154,7 +154,7 @@ public class Replicator {
             return jerseyResponseManager.okEmptyContent();
 
         } catch(Exception ex) {
-            logger.warning(ex.getMessage());
+            logger.warn(ex.getMessage());
             return jerseyResponseManager.error();
         }
 
@@ -238,7 +238,7 @@ public class Replicator {
                 }
 
             } else {
-                logger.warning("Reference to external resource " + resourceName);
+                logger.warn("Reference to external resource " + resourceName);
             }
         }
 
@@ -259,7 +259,7 @@ public class Replicator {
                 conn.putDataset(externalDataset);
             });
         } catch(Exception ex) {
-            logger.warning(ex.getMessage());
+            logger.warn(ex.getMessage());
         }
 
         try (RDFConnection conn = RDFConnectionFactory.connect(endpointServices.getEndpoint()+"/prov") ) {
@@ -269,7 +269,7 @@ public class Replicator {
                 conn.putDataset(externalDataset);
             });
         } catch(Exception ex) {
-            logger.warning(ex.getMessage());
+            logger.warn(ex.getMessage());
         }
 
     }

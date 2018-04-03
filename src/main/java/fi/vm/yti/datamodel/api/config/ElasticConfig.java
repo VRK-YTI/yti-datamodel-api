@@ -5,6 +5,7 @@
  */
 package fi.vm.yti.datamodel.api.config;
 
+import fi.vm.yti.datamodel.api.config.ApplicationProperties;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import org.elasticsearch.client.Client;

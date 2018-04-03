@@ -11,7 +11,7 @@ import org.apache.jena.query.DatasetAccessor;
 import org.apache.jena.query.DatasetAccessorFactory;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
-import java.util.logging.Logger;
+import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
@@ -38,7 +38,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class ConceptMapper {
 
-    private final Logger logger = Logger.getLogger(ConceptMapper.class.getName());
+    private final Logger logger = LoggerFactory.getLogger(ConceptMapper.class.getName());
     
     private final EndpointServices endpointServices;
     private final ApplicationProperties properties;
@@ -70,7 +70,7 @@ public class ConceptMapper {
 
 
         if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-            logger.warning("Could not find the vocabulary");
+            logger.warn("Could not find the vocabulary");
         }
 
         Model model = ModelFactory.createDefaultModel();
@@ -145,7 +145,7 @@ public class ConceptMapper {
                 ClientResponse response = builder.get(ClientResponse.class);
 
                 if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-                    logger.warning("Could not find the concept");
+                    logger.warn("Could not find the concept");
                 }
 
                 Model model = ModelFactory.createDefaultModel(); 

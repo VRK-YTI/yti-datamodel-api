@@ -9,12 +9,12 @@ import org.apache.jena.update.UpdateRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.logging.Logger;
+import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 
 @Service
 public final class JenaClient {
 
-    static final private Logger logger = Logger.getLogger(JenaClient.class.getName());
+    static final private Logger logger = LoggerFactory.getLogger(JenaClient.class.getName());
 
     private final EndpointServices endpointServices;
     private final DatasetAccessor coreService;
@@ -32,7 +32,7 @@ public final class JenaClient {
                 conn.update(ProvenanceManager.createProvenanceActivityRequest(id, provUUID, email));
             });
         } catch(Exception ex) {
-            logger.warning(ex.getMessage());
+            logger.warn(ex.getMessage());
         }*/
 
    @Autowired
@@ -103,7 +103,7 @@ public final class JenaClient {
          try(RDFConnectionRemote conn = endpointServices.getCoreConnection()){
             return conn.fetch(graph);
         } catch(Exception ex) {
-            logger.warning(ex.getMessage());
+            logger.warn(ex.getMessage());
             return null;
         }
     }

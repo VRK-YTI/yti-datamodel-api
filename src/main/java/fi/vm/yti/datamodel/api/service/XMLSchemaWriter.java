@@ -18,15 +18,16 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Logger;
 import org.apache.jena.util.SplitIRI;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.w3c.dom.Element;
 
 @Service
 public class XMLSchemaWriter {
 
-    private static final Logger logger = Logger.getLogger(XMLSchemaWriter.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(XMLSchemaWriter.class.getName());
     
     private  static final Map<String, String> DATATYPE_MAP =
     Collections.unmodifiableMap(new HashMap<String, String>() {{
@@ -435,7 +436,7 @@ public class XMLSchemaWriter {
             String predicateName = soln.getLiteral("predicateName").getString();
             
             if(previousPredicateID!=null && property.equals(previousPredicateID)) {
-                logger.warning("Problems with duplicate values in "+className + " "+predicateName);
+                logger.warn("Problems with duplicate values in "+className + " "+predicateName);
             } else {
                 
               previousPredicateID = property;

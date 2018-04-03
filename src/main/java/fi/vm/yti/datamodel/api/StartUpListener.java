@@ -1,8 +1,5 @@
 package fi.vm.yti.datamodel.api;
-
-import fi.vm.yti.datamodel.api.model.SuomiCodeServer;
 import fi.vm.yti.datamodel.api.service.EndpointServices;
-import fi.vm.yti.datamodel.api.model.OPHCodeServer;
 import fi.vm.yti.datamodel.api.service.FrameManager;
 import fi.vm.yti.datamodel.api.service.GraphManager;
 import fi.vm.yti.datamodel.api.service.NamespaceManager;
@@ -14,13 +11,12 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 
 @Component
 public class StartUpListener  {
 
-    private static final Logger logger = Logger.getLogger(StartUpListener.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(StartUpListener.class.getName());
 
     private final TermedTerminologyManager termedTerminologyManager;
     private final RHPOrganizationManager rhpOrganizationManager;
@@ -49,7 +45,7 @@ public class StartUpListener  {
     public void contextInitialized() {
 
         System.out.println("System is starting ...");
-        logger.log(Level.INFO, "System is starting ...");
+        logger.info( "System is starting ...");
 
         initDefaultGraph();
         initDefaultNamespaces();
@@ -63,7 +59,7 @@ public class StartUpListener  {
     @PreDestroy
     public void contextDestroyed() {
         System.out.println("System is closing ...");
-        logger.log(Level.INFO, "System is closing ...");
+        logger.info( "System is closing ...");
     }
 
     @Scheduled(cron = "0 */5 * * * *")
@@ -89,15 +85,15 @@ public class StartUpListener  {
 
     private void initDefaultGraph() {
         if (graphManager.testDefaultGraph()) {
-            logger.log(Level.INFO,"Default graph is initialized!");
+            logger.info("Default graph is initialized!");
         }
         else {
-            logger.log(Level.WARNING,"Default graph is NOT initialized!");
+            logger.warn("Default graph is NOT initialized!");
             graphManager.createDefaultGraph();
             if (graphManager.testDefaultGraph())
-                logger.log(Level.INFO,"Created NEW DEFAULT graph!");
+                logger.info("Created NEW DEFAULT graph!");
             else
-                logger.log(Level.WARNING,"Failed to create default graph!");
+                logger.warn("Failed to create default graph!");
         }
     }
 

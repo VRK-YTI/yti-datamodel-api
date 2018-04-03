@@ -25,14 +25,14 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
 import java.util.UUID;
 import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 
 @Component
 @Path("model")
 @Api(tags = {"Model"}, description = "Operations about models")
 public class Models {
 
-    private static final Logger logger = Logger.getLogger(Models.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(Models.class.getName());
 
     private final AuthorizationManager authorizationManager;
     private final AuthenticatedUserProvider userProvider;
@@ -99,7 +99,7 @@ public class Models {
             logger.info("Resolving prefix: "+prefix);
             id = graphManager.getServiceGraphNameWithPrefix(prefix);
             if(id==null) {
-                logger.log(Level.WARNING, "Invalid prefix: "+prefix);
+                logger.warn( "Invalid prefix: "+prefix);
                 return jerseyResponseManager.invalidIRI();
             }
         }
@@ -111,7 +111,7 @@ public class Models {
             try {
                 modelIRI = idManager.constructIRI(id);
             } catch (IRIException e) {
-                logger.log(Level.WARNING, "ID is invalid IRI!");
+                logger.warn( "ID is invalid IRI!");
                 return jerseyResponseManager.invalidIRI();
             }
 
@@ -197,9 +197,6 @@ public class Models {
 
             UUID provUUID = UUID.fromString(newVocabulary.getProvUUID().replaceFirst("urn:uuid:",""));
 
-            if (provUUID == null) {
-                return jerseyResponseManager.error();
-            } else {
 
                 graphManager.updateModel(newVocabulary);
 
@@ -210,10 +207,9 @@ public class Models {
                 }
 
                 return jerseyResponseManager.successUrnUuid(provUUID);
-            }
 
         } catch(IllegalArgumentException ex) {
-            logger.warning(ex.toString());
+            logger.warn(ex.toString());
             return jerseyResponseManager.error();
         }
 
@@ -266,7 +262,7 @@ public class Models {
             }
 
         } catch(IllegalArgumentException ex) {
-            logger.warning(ex.toString());
+            logger.warn(ex.toString());
             return jerseyResponseManager.error();
         }
 

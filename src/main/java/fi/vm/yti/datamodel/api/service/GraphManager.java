@@ -26,7 +26,7 @@ import org.apache.jena.update.UpdateRequest;
 
 import java.util.Date;
 import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.datatypes.xsd.XSDDateTime;
 import org.apache.jena.iri.IRI;
@@ -42,7 +42,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class GraphManager {
 
-    private static final Logger logger = Logger.getLogger(GraphManager.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(GraphManager.class.getName());
 
     private final EndpointServices endpointServices;
     private final JenaClient jenaClient;
@@ -84,7 +84,7 @@ public class GraphManager {
             boolean b = jenaClient.askQuery(endpointServices.getCoreSparqlAddress(), query, "urn:csc:iow:sd");
             return b;
         } catch (Exception ex) {
-            logger.log(Level.WARNING, "Default graph test failed", ex);
+            logger.warn( "Default graph test failed", ex);
             return false;
         }
     }
@@ -170,7 +170,7 @@ public class GraphManager {
         try {
             return getCoreGraph(graph.toString());
         } catch(HttpException ex) {
-            logger.warning(ex.toString());
+            logger.warn(ex.toString());
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
@@ -454,7 +454,7 @@ public class GraphManager {
         try {
             qexec.execute();
         } catch (UpdateException ex) {
-            logger.log(Level.WARNING, ex.toString());
+            logger.warn( ex.toString());
         }
     }
     
@@ -479,7 +479,7 @@ public class GraphManager {
         pss.setCommandText(query);
         pss.setIri("graph", id);
 
-        logger.log(Level.WARNING, "Removing graph " + id);
+        logger.warn( "Removing graph " + id);
 
         UpdateRequest queryObj = pss.asUpdate();
         UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, endpointServices.getCoreSparqlUpdateAddress());
@@ -487,7 +487,7 @@ public class GraphManager {
         try {
             qexec.execute();
         } catch (UpdateException ex) {
-            logger.log(Level.WARNING, ex.toString());
+            logger.warn( ex.toString());
         }
     }
 
@@ -503,7 +503,7 @@ public class GraphManager {
         pss.setCommandText(query);
         pss.setIri("graph", id);
 
-        logger.log(Level.WARNING, "Removing graph " + id);
+        logger.warn( "Removing graph " + id);
 
         UpdateRequest queryObj = pss.asUpdate();
         UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, endpointServices.getCoreSparqlUpdateAddress());
@@ -511,7 +511,7 @@ public class GraphManager {
         try {
             qexec.execute();
         } catch (UpdateException ex) {
-            logger.log(Level.WARNING, ex.toString());
+            logger.warn( ex.toString());
         }
     }
     
@@ -601,7 +601,7 @@ public class GraphManager {
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         pss.setCommandText(query);
 
-        logger.log(Level.WARNING, pss.toString() + " DROPPING ALL FROM CORE/PROV/SKOS SERVICES");
+        logger.warn( pss.toString() + " DROPPING ALL FROM CORE/PROV/SKOS SERVICES");
 
         UpdateRequest queryObj = pss.asUpdate();
         
@@ -628,7 +628,7 @@ public class GraphManager {
         pss.setIri("newID", newID);
         pss.setCommandText(query);
 
-        logger.log(Level.WARNING, "Renaming " + oldID + " to " + newID);
+        logger.warn( "Renaming " + oldID + " to " + newID);
 
         return pss.asUpdate();
     }
@@ -668,7 +668,7 @@ public class GraphManager {
         pss.setCommandText(query);
 
         logger.info(pss.toString());
-        logger.log(Level.WARNING, "Updating references in "+modelID.toString());
+        logger.warn( "Updating references in "+modelID.toString());
 
         UpdateRequest queryObj = pss.asUpdate();
         UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, endpointServices.getCoreSparqlUpdateAddress());
@@ -691,7 +691,7 @@ public class GraphManager {
         pss.setCommandText(query);
 
         logger.info(pss.toString());
-        logger.log(Level.WARNING, "Updating references in "+modelID.toString()+"#PositionGraph");
+        logger.warn( "Updating references in "+modelID.toString()+"#PositionGraph");
 
         return pss.asUpdate();
     }
@@ -734,7 +734,7 @@ public class GraphManager {
         pss.setCommandText(query);
 
         logger.info(pss.toString());
-        logger.log(Level.WARNING, "Updating references in "+modelID.toString());
+        logger.warn( "Updating references in "+modelID.toString());
 
         UpdateRequest queryObj = pss.asUpdate();
         UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, endpointServices.getCoreSparqlUpdateAddress());
@@ -766,7 +766,7 @@ public class GraphManager {
         pss.setCommandText(query);
 
         logger.info(pss.toString());
-        logger.log(Level.WARNING, "Updating references in "+modelID.toString());
+        logger.warn( "Updating references in "+modelID.toString());
 
         UpdateRequest queryObj = pss.asUpdate();
         UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, endpointServices.getCoreSparqlUpdateAddress());
@@ -998,7 +998,7 @@ public class GraphManager {
                 conn.put(LDHelper.encode(id), model);
             });
         } catch(Exception ex) {
-            logger.warning(ex.getMessage());
+            logger.warn(ex.getMessage());
         }
        /*
       DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(services.getCoreReadWriteAddress());
@@ -1027,7 +1027,7 @@ public class GraphManager {
        try (RDFConnectionRemote conn = endpointServices.getCoreConnection()) {
             return conn.queryConstruct(query);
         } catch (Exception ex) {
-            logger.warning(ex.getMessage());
+            logger.warn(ex.getMessage());
             return null;
         }
     }
@@ -1037,7 +1037,7 @@ public class GraphManager {
         try (RDFConnectionRemote conn = endpointServices.getServiceConnection(service)) {
             return conn.queryConstruct(query);
         } catch (Exception ex) {
-            logger.warning(ex.getMessage());
+            logger.warn(ex.getMessage());
             return null;
         }
 

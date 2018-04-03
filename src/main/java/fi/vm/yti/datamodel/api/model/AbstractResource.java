@@ -10,7 +10,7 @@ import org.apache.jena.rdf.model.*;
 import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.RDFS;
 
-import java.util.logging.Logger;
+import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 
 public class AbstractResource {
 
@@ -18,7 +18,7 @@ public class AbstractResource {
     protected DataModel dataModel;
     protected String provUUID;
     protected IRI id;
-    private static final Logger logger = Logger.getLogger(AbstractResource.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(AbstractResource.class.getName());
 
     private final GraphManager graphManager;
 
@@ -59,7 +59,7 @@ public class AbstractResource {
                 this.provUUID = abstractResource.getRequiredProperty(DCTerms.identifier).getLiteral().toString();
             } catch(Exception ex) {
                 ex.printStackTrace();
-                logger.warning(ex.getMessage());
+                logger.warn(ex.getMessage());
                 throw new IllegalArgumentException("Expected 1 provenance ID");
             }
 

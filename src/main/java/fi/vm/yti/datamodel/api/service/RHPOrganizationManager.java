@@ -22,12 +22,12 @@ import java.io.InputStream;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
-import java.util.logging.Logger;
+import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 
 @Service
 public class RHPOrganizationManager {
 
-    static final private Logger logger = Logger.getLogger(RHPOrganizationManager.class.getName());
+    static final private Logger logger = LoggerFactory.getLogger(RHPOrganizationManager.class.getName());
 
     private final ClientFactory clientFactory;
     private final EndpointServices endpointServices;

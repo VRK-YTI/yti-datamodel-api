@@ -21,7 +21,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
 import java.util.Map;
 import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
@@ -30,7 +30,7 @@ import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 @Api(tags = {"Predicate"}, description = "Operations about reusable properties")
 public class Predicate {
 
-    private static final Logger logger = Logger.getLogger(Predicate.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(Predicate.class.getName());
     private final AuthorizationManager authorizationManager;
     private final AuthenticatedUserProvider userProvider;
     private final EndpointServices endpointServices;
@@ -202,7 +202,7 @@ public class Predicate {
                 if(oldIdIRI!=null) {
                     /* Prevent overwriting existing resources */
                     if(graphManager.isExistingGraph(idIRI)) {
-                        logger.log(Level.WARNING, idIRI+" is existing graph!");
+                        logger.warn( idIRI+" is existing graph!");
                         return jerseyResponseManager.usedIRI();
                     } else {
                         graphManager.updateResourceWithNewId(oldIdIRI,updatePredicate);
@@ -242,10 +242,10 @@ public class Predicate {
             else return jerseyResponseManager.notCreated();
 
         } catch(IllegalArgumentException ex) {
-            logger.warning(ex.toString());
+            logger.warn(ex.toString());
             return jerseyResponseManager.invalidParameter();
         } catch(Exception ex) {
-            Logger.getLogger(Class.class.getName()).log(Level.WARNING, "Expect the unexpected!", ex);
+            logger.warn( "Expect the unexpected!", ex);
             return jerseyResponseManager.unexpected();
         }
     }
@@ -272,7 +272,7 @@ public class Predicate {
 
             /* Prevent overwriting existing predicate */
             if(graphManager.isExistingGraph(newPredicate.getId())) {
-                logger.log(Level.WARNING, newPredicate.getId()+" is existing predicate!");
+                logger.warn( newPredicate.getId()+" is existing predicate!");
                 return jerseyResponseManager.usedIRI();
             }
 
@@ -295,10 +295,10 @@ public class Predicate {
             }
 
         } catch(IllegalArgumentException ex) {
-            logger.warning(ex.toString());
+            logger.warn(ex.toString());
             return jerseyResponseManager.invalidParameter();
         } catch(Exception ex) {
-            Logger.getLogger(Class.class.getName()).log(Level.WARNING, "Expect the unexpected!", ex);
+            logger.warn( "Expect the unexpected!", ex);
             return jerseyResponseManager.unexpected();
         }
     }
@@ -344,7 +344,7 @@ public class Predicate {
                 graphManager.deleteResource(deletePredicate);
 
             } catch(IllegalArgumentException ex) {
-                logger.warning(ex.toString());
+                logger.warn(ex.toString());
                 return jerseyResponseManager.unexpected();
             }
             return jerseyResponseManager.ok();

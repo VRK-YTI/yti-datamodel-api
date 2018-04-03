@@ -161,7 +161,7 @@ public class LDHelper {
        }
     }
     
-    public final static String getNamespaceWithPrefix(String prefix) {
+    public static String getNamespaceWithPrefix(String prefix) {
         return PREFIX_MAP.get(prefix);
     }
     
@@ -387,19 +387,19 @@ public class LDHelper {
     }
     
     
-    public static final InputStream getDefaultGraphInputStream() {
+    public static InputStream getDefaultGraphInputStream() {
            return LDHelper.class.getClassLoader().getResourceAsStream("defaultGraph.json");
     }
     
-    public static final InputStream getDefaultSchemes() {
+    public static InputStream getDefaultSchemes() {
            return LDHelper.class.getClassLoader().getResourceAsStream("defaultSchemes.json");
     }
     
-    public static final InputStream getDefaultCodeServers() {
+    public static InputStream getDefaultCodeServers() {
            return LDHelper.class.getClassLoader().getResourceAsStream("OPHCodeServers.json");
     }
       
-    public static final InputStream getDefaultGroupsInputStream() {
+    public static InputStream getDefaultGroupsInputStream() {
            return LDHelper.class.getClassLoader().getResourceAsStream("defaultGroups.json");
     }
 

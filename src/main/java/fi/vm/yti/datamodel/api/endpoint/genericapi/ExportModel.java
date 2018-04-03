@@ -9,14 +9,14 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
-import java.util.logging.Logger;
+import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 
 @Component
 @Path("exportModel")
 @Api(tags = {"Model"}, description = "Export models")
 public class ExportModel {
 
-    private static final Logger logger = Logger.getLogger(ExportModel.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(ExportModel.class.getName());
 
     private final IDManager idManager;
     private final JerseyResponseManager jerseyResponseManager;

@@ -17,14 +17,14 @@ import org.springframework.stereotype.Component;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
 import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 
 @Component
 @Path("modelPositions")
 @Api(tags = {"Model"}, description = "Operations about coordinates")
 public class ModelPositions {
 
-    private static final Logger logger = Logger.getLogger(ModelPositions.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(ModelPositions.class.getName());
 
     private final AuthorizationManager authorizationManager;
     private final JerseyClient jerseyClient;
@@ -101,7 +101,7 @@ public class ModelPositions {
         try {
             modelIRI = idManager.constructIRI(model);
         } catch (IRIException e) {
-            logger.log(Level.WARNING, "GRAPH ID is invalid IRI!");
+            logger.warn( "GRAPH ID is invalid IRI!");
             return jerseyResponseManager.invalidIRI();
         }
 

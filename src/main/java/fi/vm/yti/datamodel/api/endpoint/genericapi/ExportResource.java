@@ -15,14 +15,15 @@ import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Component
 @Path("exportResource")
 @Api(tags = {"Resource"}, description = "Export Classes, Predicates, Shapes etc.")
 public class ExportResource {
 
-    private static final Logger logger = Logger.getLogger(ExportResource.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(ExportResource.class.getName());
 
     private final EndpointServices endpointServices;
     private final IDManager idManager;
@@ -117,7 +118,7 @@ public class ExportResource {
 
             return jerseyClient.getGraphResponseFromService(graph, service, contentType.getContentType(), raw);
         } catch (Exception ex) {
-            logger.log(Level.WARNING, "Expect the unexpected!", ex);
+            logger.warn( "Expect the unexpected!", ex);
             return jerseyResponseManager.serverError();
         }
 

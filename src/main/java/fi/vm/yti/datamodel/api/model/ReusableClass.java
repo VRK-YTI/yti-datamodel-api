@@ -6,11 +6,11 @@ import org.apache.jena.iri.IRI;
 import org.apache.jena.query.ParameterizedSparqlString;
 import org.apache.jena.rdf.model.ResourceFactory;
 
-import java.util.logging.Logger;
+import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 
 public class ReusableClass extends AbstractClass {
 
-    private static final Logger logger = Logger.getLogger(ReusableClass.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(ReusableClass.class.getName());
 
     public ReusableClass(IRI classId,
                          GraphManager graphManager,

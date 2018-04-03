@@ -22,11 +22,11 @@ import javax.ws.rs.core.Response;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.logging.Logger;
+import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 
 public class SuomiCodeServer {
 
-    static final private Logger logger = Logger.getLogger(SuomiCodeServer.class.getName());
+    static final private Logger logger = LoggerFactory.getLogger(SuomiCodeServer.class.getName());
 
     static private Property name = ResourceFactory.createProperty("http://purl.org/dc/terms/", "title");
     static private Property description = ResourceFactory.createProperty("http://purl.org/dc/terms/", "description");
@@ -90,7 +90,7 @@ public class SuomiCodeServer {
 
                 // FIXME: This should not happen!
                 if(LDHelper.isInvalidIRI(groupID)) {
-                    logger.warning("Invalid IRI: "+groupID);
+                    logger.warn("Invalid IRI: "+groupID);
                     return;
                 }
 
@@ -124,7 +124,7 @@ public class SuomiCodeServer {
 
                         // FIXME: This should not happen!
                         if(LDHelper.isInvalidIRI(codeListUri)) {
-                            logger.warning("Invalid IRI: "+codeListUri);
+                            logger.warn("Invalid IRI: "+codeListUri);
                             return;
                         }
 
@@ -196,7 +196,7 @@ public class SuomiCodeServer {
 
                 // FIXME: This should not happen!
                 if(LDHelper.isInvalidIRI(codeURI)) {
-                    logger.warning("Invalid IRI: "+codeURI);
+                    logger.warn("Invalid IRI: "+codeURI);
                     return;
                 }
 

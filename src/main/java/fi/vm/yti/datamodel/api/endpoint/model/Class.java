@@ -15,6 +15,7 @@ import io.swagger.annotations.*;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
 import org.apache.jena.query.ParameterizedSparqlString;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -22,7 +23,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
 import java.util.Map;
 import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
@@ -31,7 +32,7 @@ import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 @Api(tags = {"Class"}, description = "Class operations")
 public class Class {
 
-    private static final Logger logger = Logger.getLogger(Class.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(Class.class.getName());
 
     private final AuthorizationManager authorizationManager;
     private final AuthenticatedUserProvider userProvider;
@@ -200,7 +201,7 @@ public class Class {
                 if(oldIdIRI!=null) {
                     /* Prevent overwriting existing resources */
                     if(graphManager.isExistingGraph(idIRI)) {
-                        logger.log(Level.WARNING, idIRI+" is existing graph!");
+                        logger.warn( idIRI+" is existing graph!");
                         return jerseyResponseManager.usedIRI();
                     } else {
                         graphManager.updateResourceWithNewId(oldIdIRI,updateClass);
@@ -245,10 +246,10 @@ public class Class {
             }
 
         } catch(IllegalArgumentException ex) {
-            logger.warning(ex.toString());
+            logger.warn(ex.toString());
             return jerseyResponseManager.invalidParameter();
         } catch(Exception ex) {
-            Logger.getLogger(Class.class.getName()).log(Level.WARNING, "Expect the unexpected!", ex);
+            logger.warn( "Expect the unexpected!", ex);
             return jerseyResponseManager.unexpected();
         }
     }
@@ -278,7 +279,7 @@ public class Class {
 
             /* Prevent overwriting existing classes */
             if(graphManager.isExistingGraph(newClass.getId())) {
-                logger.log(Level.WARNING, newClass.getId()+" is existing class!");
+                logger.warn( newClass.getId()+" is existing class!");
                 return jerseyResponseManager.usedIRI();
             }
 
@@ -300,10 +301,10 @@ public class Class {
             }
 
         } catch(IllegalArgumentException ex) {
-            logger.warning(ex.toString());
+            logger.warn(ex.toString());
             return jerseyResponseManager.invalidParameter();
         } catch(Exception ex) {
-            Logger.getLogger(Class.class.getName()).log(Level.WARNING, "Expect the unexpected!", ex);
+            logger.warn( "Expect the unexpected!", ex);
             return jerseyResponseManager.unexpected();
         }
     }
@@ -350,7 +351,7 @@ public class Class {
                graphManager.deleteResource(deleteClass);
 
             } catch(IllegalArgumentException ex) {
-                logger.warning(ex.toString());
+                logger.warn(ex.toString());
                 return jerseyResponseManager.unexpected();
             }
 

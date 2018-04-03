@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.StringWriter;
 import java.util.LinkedHashMap;
-import java.util.logging.Logger;
+import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 import javax.inject.Singleton;
 import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.client.Client;
@@ -22,7 +22,7 @@ import org.elasticsearch.client.Client;
 public final class FrameManager {
 
     private final Client client;
-    private static final Logger logger = Logger.getLogger(FrameManager.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(FrameManager.class.getName());
     
     
     public static final String ELASTIC_INDEX_MODEL = "dm_vis_models";

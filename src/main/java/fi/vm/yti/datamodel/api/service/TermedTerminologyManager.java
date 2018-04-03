@@ -16,22 +16,23 @@ import org.commonmark.parser.Parser;
 import org.commonmark.renderer.html.HtmlRenderer;
 import org.glassfish.jersey.client.ClientProperties;
 import org.jsoup.Jsoup;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.validation.constraints.NotNull;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import java.io.InputStream;
 import java.util.Iterator;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 @Service
 public final class TermedTerminologyManager {
 
-    private static final Logger logger = Logger.getLogger(TermedTerminologyManager.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(TermedTerminologyManager.class.getName());
 
     private final static Property termedId = ResourceFactory.createProperty("http://termed.thl.fi/meta/id");
     private final static Resource termedGraph = ResourceFactory.createResource("http://termed.thl.fi/meta/Graph");
@@ -64,6 +65,7 @@ public final class TermedTerminologyManager {
 
     public void initConceptsFromTermed() {
         Model schemeModel = getSchemesAsModelFromTermedAPI();
+        assert schemeModel != null;
         putToConceptGraph(schemeModel,"urn:yti:terminology");
         Iterator<Resource> schemeList = schemeModel.listResourcesWithProperty(RDF.type, termedGraph);
         while(schemeList.hasNext()) {
@@ -137,7 +139,7 @@ public final class TermedTerminologyManager {
             logger.info("TERMED CALL: "+target.getUri().toString());
 
             if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-                logger.log(Level.INFO, response.getStatus()+" from URL: "+url);
+                logger.info( response.getStatus()+" from URL: "+url);
                 logger.info("Location: "+response.getLocation().toString());
                 return jerseyResponseManager.notFound();
             }
@@ -147,7 +149,7 @@ public final class TermedTerminologyManager {
 
             return rb.build();
         } catch(Exception ex) {
-            logger.log(Level.WARNING, "Expect the unexpected!", ex);
+            logger.warn("Expect the unexpected!", ex);
             return jerseyResponseManager.notAcceptable();
         }
     }
@@ -159,6 +161,7 @@ public final class TermedTerminologyManager {
 
         Model conceptModel = searchConceptFromTermedAPIAsModel(null, null, conceptUri, null);
 
+        assert conceptModel != null;
         conceptModel.add(testAcc.getModel(modelUri));
 
         QueryExecution qexec = QueryExecutionFactory.create(query,conceptModel);
@@ -218,13 +221,13 @@ public final class TermedTerminologyManager {
             simpleSkos.setNsPrefixes(LDHelper.PREFIX_MAP);
 
             if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-                logger.log(Level.INFO, response.getStatus() + " from URL: " + url);
+                logger.info( response.getStatus() + " from URL: " + url);
                 return null;
             }
 
             return simpleSkos;
         } catch(Exception ex) {
-            logger.warning(ex.getMessage());
+            logger.warn(ex.getMessage());
             return null;
         }
 
@@ -262,7 +265,7 @@ public final class TermedTerminologyManager {
         DatasetAdapter adapter = new DatasetAdapter(accessor);
         try { adapter.putModel(id, model); }
         catch(NullPointerException ex) {
-            logger.warning("Failed to update "+id);
+            logger.warn("Failed to update "+id);
         }
 
     }
@@ -286,7 +289,7 @@ public final class TermedTerminologyManager {
             logger.info("TERMED CALL: "+target.getUri().toString());
 
             if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-                logger.log(Level.INFO, response.getStatus()+" from URL: "+url);
+                logger.info( response.getStatus()+" from URL: "+url);
                 return null;
             }
 
@@ -305,7 +308,7 @@ public final class TermedTerminologyManager {
             return schemeModel;
 
         } catch(Exception ex) {
-            logger.log(Level.WARNING, "Expect the unexpected!", ex);
+            logger.warn("Expect the unexpected!", ex);
             return null;
         }
     }
@@ -342,7 +345,7 @@ public final class TermedTerminologyManager {
             return model;
 
         } catch(Exception ex) {
-            logger.log(Level.WARNING, "Expect the unexpected!", ex);
+            logger. warn("Expect the unexpected!", ex);
             return null;
         }
     }

@@ -21,14 +21,14 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
-import java.util.logging.Logger;
+import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 
 @Component
 @Path("externalClass")
 @Api(tags = {"Class"}, description = "External class operations")
 public class ExternalClass {
 
-    private static final Logger logger = Logger.getLogger(ExternalClass.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(ExternalClass.class.getName());
     private final JerseyResponseManager jerseyResponseManager;
     private final IDManager idManager;
     private final EndpointServices endpointServices;
@@ -146,7 +146,7 @@ public class ExternalClass {
             pss.setIri("classIRI", idIRI);
 
 
-            if(model!=null && !model.equals("undefined")) {
+            if(!model.equals("undefined")) {
                 pss.setIri("library", model);
             }
             return jerseyClient.constructGraphFromService(pss.toString(), sparqlService);

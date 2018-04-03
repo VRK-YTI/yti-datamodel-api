@@ -16,14 +16,14 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
-import java.util.logging.Logger;
+import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 
 @Component
 @Path("classCreator")
 @Api(tags = {"Class"}, description = "Construct new Class template")
 public class ClassCreator {
 
-    private static final Logger logger = Logger.getLogger(ClassCreator.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(ClassCreator.class.getName());
     private final IDManager idManager;
     private final GraphManager graphManager;
     private final JerseyResponseManager jerseyResponseManager;
@@ -73,7 +73,7 @@ public class ClassCreator {
                 conceptIRI = idManager.constructIRI(conceptID);
             } else {
                 if(conceptID!=null) {
-                    logger.warning("Concept is not URI: "+conceptID);
+                    logger.warn("Concept is not URI: "+conceptID);
                 }
             }
 

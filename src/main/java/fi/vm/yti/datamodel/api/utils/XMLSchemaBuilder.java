@@ -4,8 +4,6 @@
 package fi.vm.yti.datamodel.api.utils;
 
 import java.io.StringWriter;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -17,6 +15,8 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -33,6 +33,7 @@ TODO: Add Literal Type. Add xml:lang parameter.
 
 public class XMLSchemaBuilder {
 
+Logger logger = LoggerFactory.getLogger(XMLSchemaBuilder.class);
 DocumentBuilderFactory domFactory;
 DocumentBuilder domBuilder;
 Document document;
@@ -52,7 +53,7 @@ public XMLSchemaBuilder() {
         schema.setAttribute("xmlns:sawsdl","http://www.w3.org/ns/sawsdl");
         this.document.appendChild(schema);
     } catch (ParserConfigurationException ex) {
-        Logger.getLogger(XMLSchemaBuilder.class.getName()).log(Level.SEVERE, null, ex);
+        logger.error("Parser error", ex);
     }
 }
 
@@ -146,9 +147,9 @@ public String toString() {
         transformer.transform(source, result);
         return sw.toString();
     } catch (TransformerConfigurationException ex) {
-        Logger.getLogger(XMLSchemaBuilder.class.getName()).log(Level.SEVERE, null, ex);
+        logger.warn("Config error", ex);
     } catch (TransformerException ex) {
-        Logger.getLogger(XMLSchemaBuilder.class.getName()).log(Level.SEVERE, null, ex);
+        logger.warn("Transform error", ex);
     }
     return null;
 }

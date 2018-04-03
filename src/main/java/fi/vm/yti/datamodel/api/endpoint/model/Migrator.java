@@ -25,14 +25,14 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 
 @Component
 @Path("migrate")
 @Api(tags = {"Admin"}, description = "Migrates datamodels from iow.csc.fi")
 public class Migrator {
 
-    private static final Logger logger = Logger.getLogger(Migrator.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(Migrator.class.getName());
 
     private final AuthorizationManager authorizationManager;
     private final JerseyResponseManager jerseyResponseManager;
@@ -123,7 +123,7 @@ public class Migrator {
             try {
                 if (model != null && !model.equals("undefined")) modelIRI = idManager.constructIRI(model);
             } catch (IRIException e) {
-                logger.log(Level.WARNING, "Parameter is invalid IRI!");
+                logger.warn( "Parameter is invalid IRI!");
                 return jerseyResponseManager.invalidIRI();
             }
 
@@ -437,7 +437,7 @@ public class Migrator {
 
 
                 } else {
-                    logger.warning("Reference to external resource " + oldName);
+                    logger.warn("Reference to external resource " + oldName);
                 }
             }
 

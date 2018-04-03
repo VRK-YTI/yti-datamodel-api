@@ -14,7 +14,7 @@ import org.apache.jena.vocabulary.RDF;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.logging.Logger;
+import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 
 public abstract class AbstractModel {
 
@@ -23,7 +23,7 @@ public abstract class AbstractModel {
     protected IRI id;
     protected List<UUID> modelOrganizations;
 
-    private static final Logger logger = Logger.getLogger(AbstractModel.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(AbstractModel.class.getName());
 
     private final GraphManager graphManager;
 
@@ -41,14 +41,14 @@ public abstract class AbstractModel {
         List<Resource> vocabList = this.graph.listSubjectsWithProperty(OWL.versionInfo).toList();
 
         if(!(vocabList.size()==1)) {
-            logger.warning("Expected 1 versioned resource, got "+vocabList.size());
+            logger.warn("Expected 1 versioned resource, got "+vocabList.size());
             throw new IllegalArgumentException("Expected 1 versioned resource");
         }
 
         Resource modelResource = vocabList.get(0);
 
         if(!modelResource.hasProperty(RDF.type, OWL.Ontology)) {
-            logger.warning("Expected "+getId()+" type as owl:Ontology");
+            logger.warn("Expected "+getId()+" type as owl:Ontology");
             throw new IllegalArgumentException("Expected model resource");
         }
 
@@ -60,8 +60,11 @@ public abstract class AbstractModel {
         }
 
         List<Statement> provIdList = modelResource.listProperties(DCTerms.identifier).toList();
-        if(provIdList == null || provIdList.size()==0 || provIdList.size()>1) {
-            logger.warning("Expected only 1 provenance ID, got "+provIdList.size());
+        if(provIdList== null) {
+            logger.warn("Expected only 1 provenance ID, got null");
+            throw new IllegalArgumentException("Expected only 1 provenance ID, got null");
+        } else if(provIdList.size()==0 || provIdList.size()>1) {
+            logger.warn("Expected only 1 provenance ID, got "+provIdList.size());
             throw new IllegalArgumentException("Expected only 1 provenance ID, got "+provIdList.size());
         } else {
             this.provUUID = provIdList.get(0).getLiteral().toString();
@@ -79,14 +82,14 @@ public abstract class AbstractModel {
         List<Resource> vocabList = this.graph.listSubjectsWithProperty(OWL.versionInfo).toList();
 
         if(!(vocabList.size()==1)) {
-            logger.warning("Expected 1 versioned resource, got "+vocabList.size());
+            logger.warn("Expected 1 versioned resource, got "+vocabList.size());
             throw new IllegalArgumentException("Expected 1 versioned resource");
         }
 
         Resource modelResource = vocabList.get(0);
 
         if(!modelResource.hasProperty(RDF.type, OWL.Ontology)) {
-            logger.warning("Expected "+getId()+" type as owl:Ontology");
+            logger.warn("Expected "+getId()+" type as owl:Ontology");
             throw new IllegalArgumentException("Expected model resource");
         }
 
@@ -98,14 +101,14 @@ public abstract class AbstractModel {
         this.modelOrganizations = new ArrayList<>();
 
         if(!orgList.hasNext()) {
-            logger.warning("Expected at least 1 organization");
+            logger.warn("Expected at least 1 organization");
             throw new IllegalArgumentException("Expected at least 1 organization");
         }
 
         while(orgList.hasNext()) {
             RDFNode orgRes = orgList.next();
             if(!orgModel.containsResource(orgRes)) {
-                logger.warning("Organization does not exists!");
+                logger.warn("Organization does not exists!");
                 throw new IllegalArgumentException("Organization does not exist!");
             }
             String orgId = orgRes.asResource().getURI().replaceFirst("urn:uuid:","");
