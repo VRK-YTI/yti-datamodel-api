@@ -80,14 +80,16 @@ public final class TermedTerminologyManager {
     }
 
     public Model constructFromTempConceptService(String query ){
-            QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getTempConceptReadSparqlAddress(), query);
-            return qexec.execConstruct();
+            try(QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getTempConceptReadSparqlAddress(), query)) {
+                return qexec.execConstruct();
+            }
     }
 
     public Model constructCleanedModelFromTempConceptService(String query) {
-            QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getTempConceptReadSparqlAddress(), query);
-            Model objects = qexec.execConstruct();
-            return cleanModelDefinitions(objects);
+            try(QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getTempConceptReadSparqlAddress(), query)) {
+                Model objects = qexec.execConstruct();
+                return cleanModelDefinitions(objects);
+            }
     }
 
     public Model cleanModelDefinitions(Model objects) {
@@ -110,9 +112,10 @@ public final class TermedTerminologyManager {
 
         Response jerseyResponse = getConceptFromTermedAPI(conceptUri);
         Model conceptModel = LDHelper.getJSONLDResponseAsJenaModel(jerseyResponse);
-        QueryExecution qexec = QueryExecutionFactory.create(query,conceptModel);
-        Model objects = qexec.execConstruct();
-        return cleanModelDefinitions(objects);
+        try(QueryExecution qexec = QueryExecutionFactory.create(query,conceptModel)) {
+            Model objects = qexec.execConstruct();
+            return cleanModelDefinitions(objects);
+        }
     }
 
     /**
@@ -164,10 +167,10 @@ public final class TermedTerminologyManager {
         assert conceptModel != null;
         conceptModel.add(testAcc.getModel(modelUri));
 
-        QueryExecution qexec = QueryExecutionFactory.create(query,conceptModel);
-        Model objects = qexec.execConstruct();
-
-        return cleanModelDefinitions(objects);
+        try(QueryExecution qexec = QueryExecutionFactory.create(query,conceptModel)) {
+            Model objects = qexec.execConstruct();
+            return cleanModelDefinitions(objects);
+        }
     }
 
     public Model searchConceptFromTermedAPIAsModel(String query, String schemeURI, String conceptURI, String graphId) {
@@ -213,19 +216,20 @@ public final class TermedTerminologyManager {
 
             conceptModel = namespaceManager.renamePropertyNamespace(conceptModel, "termed:property:", "http://termed.thl.fi/meta/");
 
-            QueryExecution qexec = QueryExecutionFactory.create(QueryLibrary.skosXlToSkos, conceptModel);
+            try(QueryExecution qexec = QueryExecutionFactory.create(QueryLibrary.skosXlToSkos, conceptModel)) {
 
-            Model simpleSkos = qexec.execConstruct();
+                Model simpleSkos = qexec.execConstruct();
 
-            simpleSkos = cleanModelDefinitions(simpleSkos);
-            simpleSkos.setNsPrefixes(LDHelper.PREFIX_MAP);
+                simpleSkos = cleanModelDefinitions(simpleSkos);
+                simpleSkos.setNsPrefixes(LDHelper.PREFIX_MAP);
 
-            if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-                logger.info( response.getStatus() + " from URL: " + url);
-                return null;
+                if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
+                    logger.info(response.getStatus() + " from URL: " + url);
+                    return null;
+                }
+
+                return simpleSkos;
             }
-
-            return simpleSkos;
         } catch(Exception ex) {
             logger.warn(ex.getMessage());
             return null;
@@ -383,9 +387,7 @@ public final class TermedTerminologyManager {
         pss.setIri("model",model);
 
         Query query = pss.asQuery();
-        QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), query);
-
-        try {
+        try(QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), query)) {
             boolean b = qexec.execAsk();
             return b;
         } catch (Exception ex) {
@@ -403,9 +405,8 @@ public final class TermedTerminologyManager {
         pss.setIri("concept", concept);
 
         Query query = pss.asQuery();
-        QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), query);
+        try(QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), query)) {
 
-        try {
             boolean b = qexec.execAsk();
             return b;
         } catch (Exception ex) {

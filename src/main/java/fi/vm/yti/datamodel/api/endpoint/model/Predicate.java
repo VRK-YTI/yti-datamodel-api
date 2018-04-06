@@ -14,6 +14,8 @@ import io.swagger.annotations.*;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
 import org.apache.jena.query.ParameterizedSparqlString;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.riot.RiotException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -192,7 +194,14 @@ public class Predicate {
             if(isNotEmpty(body)) {
 
                 YtiUser user = userProvider.getUser();
-                ReusablePredicate updatePredicate = new ReusablePredicate(body, graphManager, serviceDescriptionManager, jenaClient, modelManager);
+
+                Model parsedModel = modelManager.createJenaModelFromJSONLDString(body);
+
+                if(parsedModel.size()==0) {
+                    return jerseyResponseManager.notAcceptable();
+                }
+
+                ReusablePredicate updatePredicate = new ReusablePredicate(parsedModel, graphManager);
 
                 if (!authorizationManager.hasRightToEdit(updatePredicate)) {
                     return jerseyResponseManager.unauthorized();
@@ -244,7 +253,10 @@ public class Predicate {
         } catch(IllegalArgumentException ex) {
             logger.warn(ex.toString());
             return jerseyResponseManager.invalidParameter();
-        } catch(Exception ex) {
+        } catch(RiotException ex) {
+            logger.warn(ex.toString());
+            return jerseyResponseManager.notAcceptable();
+        }  catch(Exception ex) {
             logger.warn( "Expect the unexpected!", ex);
             return jerseyResponseManager.unexpected();
         }
@@ -267,7 +279,14 @@ public class Predicate {
 
         try {
 
-            ReusablePredicate newPredicate = new ReusablePredicate(body, graphManager, serviceDescriptionManager, jenaClient, modelManager);
+
+            Model parsedModel = modelManager.createJenaModelFromJSONLDString(body);
+
+            if(parsedModel.size()==0) {
+                return jerseyResponseManager.notAcceptable();
+            }
+
+            ReusablePredicate newPredicate = new ReusablePredicate(parsedModel, graphManager);
             YtiUser user = userProvider.getUser();
 
             /* Prevent overwriting existing predicate */
@@ -297,7 +316,10 @@ public class Predicate {
         } catch(IllegalArgumentException ex) {
             logger.warn(ex.toString());
             return jerseyResponseManager.invalidParameter();
-        } catch(Exception ex) {
+        } catch(RiotException ex) {
+            logger.warn(ex.toString());
+            return jerseyResponseManager.notAcceptable();
+        }  catch(Exception ex) {
             logger.warn( "Expect the unexpected!", ex);
             return jerseyResponseManager.unexpected();
         }
@@ -334,8 +356,8 @@ public class Predicate {
             /* Remove graph */
             // Response resp = JerseyClient.deleteGraphFromService(id, services.getCoreReadWriteAddress());
             try {
-                logger.info("Removeing "+idIRI.toString());
-                ReusablePredicate deletePredicate = new ReusablePredicate(idIRI, graphManager, serviceDescriptionManager, jenaClient, modelManager);
+                logger.info("Removing "+idIRI.toString());
+                ReusablePredicate deletePredicate = new ReusablePredicate(idIRI, graphManager);
 
                 if (!authorizationManager.hasRightToEdit(deletePredicate)) {
                     return jerseyResponseManager.unauthorized();

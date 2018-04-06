@@ -23,7 +23,6 @@ public class AbstractResource {
     private final GraphManager graphManager;
 
     public AbstractResource(GraphManager graphManager) {
-
         this.graphManager = graphManager;
     }
 

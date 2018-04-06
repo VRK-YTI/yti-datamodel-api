@@ -4,25 +4,20 @@ import fi.vm.yti.datamodel.api.service.*;
 import fi.vm.yti.datamodel.api.utils.LDHelper;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.query.ParameterizedSparqlString;
+import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ResourceFactory;
 
 
 public class ReusablePredicate extends AbstractPredicate {
 
     public ReusablePredicate(IRI predicateId,
-                             GraphManager graphManager,
-                             ServiceDescriptionManager serviceDescriptionManager,
-                             JenaClient jenaClient,
-                             ModelManager modelManager) throws IllegalArgumentException {
-        super(predicateId, graphManager, serviceDescriptionManager, jenaClient, modelManager);
+                             GraphManager graphManager) throws IllegalArgumentException {
+        super(predicateId, graphManager);
     }
 
-    public ReusablePredicate(String jsonld,
-                             GraphManager graphManager,
-                             ServiceDescriptionManager serviceDescriptionManager,
-                             JenaClient jenaClient,
-                             ModelManager modelManager) throws IllegalArgumentException {
-        super(modelManager.createJenaModelFromJSONLDString(jsonld), graphManager, serviceDescriptionManager, jenaClient, modelManager);
+    public ReusablePredicate(Model model,
+                             GraphManager graphManager) throws IllegalArgumentException {
+        super(model, graphManager);
     }
 
     public ReusablePredicate(IRI conceptIRI,
@@ -31,11 +26,9 @@ public class ReusablePredicate extends AbstractPredicate {
                              String lang,
                              IRI typeIRI,
                              GraphManager graphManager,
-                             JenaClient jenaClient,
-                             ModelManager modelManager,
                              TermedTerminologyManager termedTerminologyManager) {
 
-        super(graphManager, jenaClient, modelManager);
+        super(graphManager);
 
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
@@ -97,11 +90,9 @@ public class ReusablePredicate extends AbstractPredicate {
                              String predicateLabel,
                              String lang,
                              IRI typeIRI,
-                             GraphManager graphManager,
-                             JenaClient jenaClient,
-                             ModelManager modelManager) {
+                             GraphManager graphManager) {
 
-        super(graphManager, jenaClient, modelManager);
+        super(graphManager);
 
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);

@@ -24,10 +24,7 @@ public abstract class AbstractClass extends AbstractResource {
     }
 
     public AbstractClass(IRI graphIRI,
-                         GraphManager graphManager,
-                         ServiceDescriptionManager serviceDescriptionManager,
-                         JenaClient jenaClient,
-                         ModelManager modelManager) {
+                         GraphManager graphManager) {
         super(graphIRI, graphManager);
     }
 

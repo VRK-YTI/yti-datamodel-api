@@ -5,16 +5,16 @@ package fi.vm.yti.datamodel.api.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.jena.graph.Graph;
 import org.apache.jena.query.DatasetFactory;
 import org.apache.jena.rdf.model.*;
-import org.apache.jena.riot.Lang;
-import org.apache.jena.riot.RDFDataMgr;
-import org.apache.jena.riot.RDFFormat;
-import org.apache.jena.riot.WriterDatasetRIOT;
+import org.apache.jena.riot.*;
+import org.apache.jena.riot.system.ErrorHandlerFactory;
 import org.apache.jena.riot.system.PrefixMap;
 import org.apache.jena.riot.system.RiotLib;
 import org.apache.jena.shared.PropertyNotFoundException;
 import org.apache.jena.sparql.core.DatasetGraph;
+import org.apache.jena.sparql.graph.GraphFactory;
 import org.apache.jena.sparql.util.Context;
 import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDF;
@@ -133,16 +133,30 @@ public class ModelManager {
      * @return Model
      */
     public Model createJenaModelFromJSONLDString(String modelString) throws IllegalArgumentException {
-        Model model = ModelFactory.createDefaultModel();
-        
-        try {
-            RDFDataMgr.read(model, new ByteArrayInputStream(modelString.getBytes("UTF-8")), Lang.JSONLD) ;
+        Graph graph = GraphFactory.createDefaultGraph();
+
+        try (InputStream in = new ByteArrayInputStream(modelString.getBytes("UTF-8"))) {
+            RDFParser.create()
+                    .source(in)
+                    .lang(Lang.JSONLD)
+                    .errorHandler(ErrorHandlerFactory.errorHandlerStrict)
+                    .parse(graph);
         } catch (UnsupportedEncodingException ex) {
             logger.error("Unsupported encoding", ex);
             throw new IllegalArgumentException("Could not parse the model");
+        } catch(IOException ex) {
+            logger.error("IO Exp JSON-LD", ex);
+            throw new IllegalArgumentException("Could not parse the model");
+        } catch(Exception ex) {
+            logger.error("Unexpected exception", ex);
+            throw new IllegalArgumentException("Could not parse the model");
         }
 
-        return model;
-        
+        if(graph.size()>0) {
+            return ModelFactory.createModelForGraph(graph);
+        } else {
+            throw new IllegalArgumentException("Could not parse the model");
+        }
+
     }
 }

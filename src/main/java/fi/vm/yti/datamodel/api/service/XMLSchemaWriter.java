@@ -106,113 +106,111 @@ public class XMLSchemaWriter {
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
         
         pss.setCommandText(selectClass);
-        
-        QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), pss.asQuery());
 
-        ResultSet results = qexec.execSelect();
-
-        if(!results.hasNext()) return null;
-        
         boolean classMetadata = false;
-        
-        while (results.hasNext()) {
-            
-            QuerySolution soln = results.nextSolution();
-            
-            Element cdocumentation = xml.newDocumentation(complexType);
-            
-            String title = soln.getLiteral("label").getString();    
-            
-            xml.appendElementValue(cdocumentation, "dcterms:title", title);
-            
-            if(soln.contains("description")) {
-                String description = soln.getLiteral("description").getString();
-                 xml.appendElementValue(cdocumentation, "dcterms:description", description);      
+
+        try(QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), pss.asQuery())) {
+            ResultSet results = qexec.execSelect();
+
+            if (!results.hasNext()) return null;
+
+            while (results.hasNext()) {
+
+                QuerySolution soln = results.nextSolution();
+
+                Element cdocumentation = xml.newDocumentation(complexType);
+
+                String title = soln.getLiteral("label").getString();
+
+                xml.appendElementValue(cdocumentation, "dcterms:title", title);
+
+                if (soln.contains("description")) {
+                    String description = soln.getLiteral("description").getString();
+                    xml.appendElementValue(cdocumentation, "dcterms:description", description);
+                }
+
+                String sType = soln.getResource("type").getLocalName();
+
+                if (sType.equals("Class") || sType.equals("Shape")) {
+                    classMetadata = true;
+                }
+
             }
-            
-            String sType = soln.getResource("type").getLocalName();
-            
-            if(sType.equals("Class") || sType.equals("Shape")) {
-                classMetadata = true;
-            }
-            
         }
 
-       
+
         if(classMetadata) {
-        
-            
-        String selectResources = 
-                "SELECT ?predicate ?id ?predicateName ?label ?description ?datatype ?shapeRef ?shapeRefName ?min ?max ?minLength ?maxLength ?pattern "
-                + "WHERE { "
-                + "GRAPH ?resourceID {"
-                + "?resourceID sh:property ?property . "
-                + "?property sh:predicate ?predicate . "
-                + "OPTIONAL { ?property dcterms:identifier ?id . }"
-                + "?property rdfs:label ?label . "
-                + "FILTER (langMatches(lang(?label),?lang))"
-                + "OPTIONAL { ?property rdfs:comment ?description . "
-                + "FILTER (langMatches(lang(?description),?lang))"
-                + "}"
-                + "OPTIONAL { ?property sh:datatype ?datatype . }"
-                + "OPTIONAL { ?property sh:valueShape ?shapeRef . BIND(afn:localname(?shapeRef) as ?shapeRefName) }"
-                + "OPTIONAL { ?property sh:minCount ?min . }"
-                + "OPTIONAL { ?property sh:maxCount ?max . }"
-                + "OPTIONAL { ?property sh:pattern ?pattern . }"
-                + "OPTIONAL { ?property sh:minLength ?minLength . }"
-                + "OPTIONAL { ?property sh:maxLength ?maxLength . }"
-                + "BIND(afn:localname(?predicate) as ?predicateName)"
-                + "}"
-                + "}";
-        
-        
-        pss.setCommandText(selectResources);
-        if(lang!=null) pss.setLiteral("lang",lang);
 
-        qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), pss.asQuery());
+            String selectResources =
+                    "SELECT ?predicate ?id ?predicateName ?label ?description ?datatype ?shapeRef ?shapeRefName ?min ?max ?minLength ?maxLength ?pattern "
+                            + "WHERE { "
+                            + "GRAPH ?resourceID {"
+                            + "?resourceID sh:property ?property . "
+                            + "?property sh:predicate ?predicate . "
+                            + "OPTIONAL { ?property dcterms:identifier ?id . }"
+                            + "?property rdfs:label ?label . "
+                            + "FILTER (langMatches(lang(?label),?lang))"
+                            + "OPTIONAL { ?property rdfs:comment ?description . "
+                            + "FILTER (langMatches(lang(?description),?lang))"
+                            + "}"
+                            + "OPTIONAL { ?property sh:datatype ?datatype . }"
+                            + "OPTIONAL { ?property sh:valueShape ?shapeRef . BIND(afn:localname(?shapeRef) as ?shapeRefName) }"
+                            + "OPTIONAL { ?property sh:minCount ?min . }"
+                            + "OPTIONAL { ?property sh:maxCount ?max . }"
+                            + "OPTIONAL { ?property sh:pattern ?pattern . }"
+                            + "OPTIONAL { ?property sh:minLength ?minLength . }"
+                            + "OPTIONAL { ?property sh:maxLength ?maxLength . }"
+                            + "BIND(afn:localname(?predicate) as ?predicateName)"
+                            + "}"
+                            + "}";
 
-        results = qexec.execSelect();
-        
-        
-        if(!results.hasNext()) return null;
-        
-        Element seq = xml.newSequence(complexType);
-        
-        while (results.hasNext()) {
-            
-            QuerySolution soln = results.nextSolution();
-            String predicateName = soln.getLiteral("predicateName").getString();
-            
-            
-            if(soln.contains("id")) {
-                predicateName = soln.getLiteral("id").getString();
-            }
-            
-            String predicate = soln.getResource("predicate").getURI();
-            
-            String title = soln.getLiteral("label").getString();
-            
-            Element newElement = xml.newSimpleElement(seq, predicateName, predicate);
-            Element documentation = xml.newDocumentation(newElement);
-            
-            xml.appendElementValue(documentation, "dcterms:title", title);
-            
-            if(soln.contains("min") && soln.getLiteral("min").getInt()>0) {
-                int min = soln.getLiteral("min").getInt();
-                    newElement.setAttribute("minOccurs", ""+min);
-            } else {
-                newElement.setAttribute("minOccurs", "0");
-            }
-            
-            if(soln.contains("description")) {
-                String description = soln.getLiteral("description").getString();
-                xml.appendElementValue(documentation, "dcterms:description", description);
-            }
-            
-            if(soln.contains("datatype")) {
-                String datatype = soln.getResource("datatype").toString();
-                newElement.setAttribute("type", DATATYPE_MAP.get(datatype));
-            }
+
+            pss.setCommandText(selectResources);
+            if (lang != null) pss.setLiteral("lang", lang);
+
+            try (QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), pss.asQuery())) {
+
+                ResultSet results = qexec.execSelect();
+
+                if (!results.hasNext()) return null;
+
+                Element seq = xml.newSequence(complexType);
+
+                while (results.hasNext()) {
+
+                    QuerySolution soln = results.nextSolution();
+                    String predicateName = soln.getLiteral("predicateName").getString();
+
+
+                    if (soln.contains("id")) {
+                        predicateName = soln.getLiteral("id").getString();
+                    }
+
+                    String predicate = soln.getResource("predicate").getURI();
+
+                    String title = soln.getLiteral("label").getString();
+
+                    Element newElement = xml.newSimpleElement(seq, predicateName, predicate);
+                    Element documentation = xml.newDocumentation(newElement);
+
+                    xml.appendElementValue(documentation, "dcterms:title", title);
+
+                    if (soln.contains("min") && soln.getLiteral("min").getInt() > 0) {
+                        int min = soln.getLiteral("min").getInt();
+                        newElement.setAttribute("minOccurs", "" + min);
+                    } else {
+                        newElement.setAttribute("minOccurs", "0");
+                    }
+
+                    if (soln.contains("description")) {
+                        String description = soln.getLiteral("description").getString();
+                        xml.appendElementValue(documentation, "dcterms:description", description);
+                    }
+
+                    if (soln.contains("datatype")) {
+                        String datatype = soln.getResource("datatype").toString();
+                        newElement.setAttribute("type", DATATYPE_MAP.get(datatype));
+                    }
             
             /* 
             http://examples.oreilly.com/9780596002527/creating-simple-types.html
@@ -238,42 +236,44 @@ public class XMLSchemaWriter {
   </xs:element>
             
             */
-            
-            if(soln.contains("max") && soln.getLiteral("max").getInt()>0) {
-                int max = soln.getLiteral("max").getInt();
-                newElement.setAttribute("maxOccurs", ""+max);
-            } else {
-                newElement.setAttribute("maxOccurs", "unbounded");
-            }
+
+                    if (soln.contains("max") && soln.getLiteral("max").getInt() > 0) {
+                        int max = soln.getLiteral("max").getInt();
+                        newElement.setAttribute("maxOccurs", "" + max);
+                    } else {
+                        newElement.setAttribute("maxOccurs", "unbounded");
+                    }
 
             /* If shape contains pattern or other type of restriction */
-            
-            if(soln.contains("pattern") || soln.contains("maxLength") || soln.contains("minLength"))  {
-                    Element simpleType = xml.newSimpleType(predicateName+"Type");
-                    
-                    
-                    if(soln.contains("pattern")) {
-                        Element restriction = xml.newStringRestriction(simpleType);
-                         xml.appendElementValueAttribute(restriction, "xs:maxInclusive", soln.getLiteral("pattern").toString());
-                    } else {
-                        Element restriction = xml.newIntRestriction(simpleType);
-                           if(soln.contains("maxLength")) {
-                              xml.appendElementValueAttribute(restriction, "xs:maxInclusive", ""+soln.getLiteral("maxLength").getInt());
-                           }
-                           if(soln.contains("minLength"))  {
-                              xml.appendElementValueAttribute(restriction, "xs:minInclusive", ""+soln.getLiteral("minLength").getInt());
-                           }
+
+                    if (soln.contains("pattern") || soln.contains("maxLength") || soln.contains("minLength")) {
+                        Element simpleType = xml.newSimpleType(predicateName + "Type");
+
+
+                        if (soln.contains("pattern")) {
+                            Element restriction = xml.newStringRestriction(simpleType);
+                            xml.appendElementValueAttribute(restriction, "xs:maxInclusive", soln.getLiteral("pattern").toString());
+                        } else {
+                            Element restriction = xml.newIntRestriction(simpleType);
+                            if (soln.contains("maxLength")) {
+                                xml.appendElementValueAttribute(restriction, "xs:maxInclusive", "" + soln.getLiteral("maxLength").getInt());
+                            }
+                            if (soln.contains("minLength")) {
+                                xml.appendElementValueAttribute(restriction, "xs:minInclusive", "" + soln.getLiteral("minLength").getInt());
+                            }
+                        }
+                        newElement.setAttribute("type", predicateName + "Type");
                     }
-                    newElement.setAttribute("type", predicateName+"Type");
+
+                    if (soln.contains("shapeRefName")) {
+                        String shapeRef = soln.getLiteral("shapeRefName").toString();
+                        newElement.setAttribute("type", shapeRef + "Type");
+                    }
+
                 }
-                 
-                if(soln.contains("shapeRefName")) {
-                    String shapeRef = soln.getLiteral("shapeRefName").toString();
-                    newElement.setAttribute("type", shapeRef+"Type");
-                }
-                
-        }     
-        
+
+            }
+
         }
       
         return xml.toString();
@@ -305,42 +305,43 @@ public class XMLSchemaWriter {
         if(lang!=null) pss.setLiteral("lang",lang);
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
         
-        pss.setCommandText(selectClass);       
-        
-        QueryExecution qexec =  QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), pss.toString());
+        pss.setCommandText(selectClass);
 
-        ResultSet results = qexec.execSelect();
-
-        if(!results.hasNext()) {
-            logger.info("No model found:"+modelID);
-            return null;
-        }
-        
         Element documentation = xml.newDocumentation(xml.getRoot());
-        
-        while (results.hasNext()) {
-            
-            QuerySolution soln = results.nextSolution();
-            String title = soln.getLiteral("label").getString();
-            
-            if(soln.contains("description")) {
-                String description = soln.getLiteral("description").getString();
-                xml.appendElementValue(documentation, "dcterms:description", description);
+
+        try(QueryExecution qexec =  QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), pss.toString())) {
+
+            ResultSet results = qexec.execSelect();
+
+            if (!results.hasNext()) {
+                logger.info("No model found:" + modelID);
+                return null;
             }
-           
-             xml.appendElementValue(documentation, "dcterms:title", title);
-            
-             Date modified = graphManager.lastModified(modelID);
-             SimpleDateFormat format = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz");
-             
-                if(modified!=null) {
+
+            while (results.hasNext()) {
+
+                QuerySolution soln = results.nextSolution();
+                String title = soln.getLiteral("label").getString();
+
+                if (soln.contains("description")) {
+                    String description = soln.getLiteral("description").getString();
+                    xml.appendElementValue(documentation, "dcterms:description", description);
+                }
+
+                xml.appendElementValue(documentation, "dcterms:title", title);
+
+                Date modified = graphManager.lastModified(modelID);
+                SimpleDateFormat format = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz");
+
+                if (modified != null) {
                     String dateModified = format.format(modified);
                     xml.appendElementValue(documentation, "dcterms:modified", dateModified);
                 }
-            
-            
+
+
+            }
+
         }
-        
         /* Get classes from library */
         pss = new ParameterizedSparqlString();
         
@@ -387,120 +388,121 @@ public class XMLSchemaWriter {
         pss.setCommandText(selectResources);
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
         
-        qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), pss.asQuery());
-        results = qexec.execSelect();
-        ResultSetPeekable pResults = ResultSetFactory.makePeekable(results);
-        
-        if(!pResults.hasNext()) { 
-            logger.info("No classes in model:"+modelID);
-            return null;
-        }
-        
-        boolean firstRun = true;
-        Element complexType = null;
-        Element seq = null;
-        String previousPredicateID = null;
-        
-        while (pResults.hasNext()) {
-            QuerySolution soln = pResults.nextSolution();
-            
-            if(!soln.contains("className")) return null;
-            
-            String classID = soln.getResource("resource").getURI();
-            String className = soln.getLiteral("className").getString();    
-            
-            if(firstRun) {
-                
-                 if(soln.contains("scopeClass")) { 
-                    complexType = xml.newComplexType(className+"Type",soln.getResource("scopeClass").toString());
-                    } else {      
-                    complexType = xml.newComplexType(className+"Type",soln.getResource("resource").toString());
+        try(QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), pss.asQuery())) {
+
+            ResultSet results = qexec.execSelect();
+            ResultSetPeekable pResults = ResultSetFactory.makePeekable(results);
+
+            if (!pResults.hasNext()) {
+                logger.info("No classes in model:" + modelID);
+                return null;
+            }
+
+            boolean firstRun = true;
+            Element complexType = null;
+            Element seq = null;
+            String previousPredicateID = null;
+
+            while (pResults.hasNext()) {
+                QuerySolution soln = pResults.nextSolution();
+
+                if (!soln.contains("className")) return null;
+
+                String classID = soln.getResource("resource").getURI();
+                String className = soln.getLiteral("className").getString();
+
+                if (firstRun) {
+
+                    if (soln.contains("scopeClass")) {
+                        complexType = xml.newComplexType(className + "Type", soln.getResource("scopeClass").toString());
+                    } else {
+                        complexType = xml.newComplexType(className + "Type", soln.getResource("resource").toString());
                     }
-                
-                Element classDoc = xml.newDocumentation(complexType);
-                xml.appendElementValue(classDoc, "dcterms:title", soln.getLiteral("classTitle").getString());
 
-                seq = xml.newSequence(complexType);
-                
-                if(soln.contains("description")) {
-                    String description = soln.getLiteral("description").getString();
-                    xml.appendElementValue(classDoc, "dcterms:description", description);
+                    Element classDoc = xml.newDocumentation(complexType);
+                    xml.appendElementValue(classDoc, "dcterms:title", soln.getLiteral("classTitle").getString());
+
+                    seq = xml.newSequence(complexType);
+
+                    if (soln.contains("description")) {
+                        String description = soln.getLiteral("description").getString();
+                        xml.appendElementValue(classDoc, "dcterms:description", description);
+                    }
+
+                    firstRun = false;
                 }
-                
-                firstRun = false;
-            }
-            
-            
-            String predicate = soln.getResource("predicate").getURI();
-            String property = soln.getResource("property").getURI();
-            String predicateName = soln.getLiteral("predicateName").getString();
-            
-            if(previousPredicateID!=null && property.equals(previousPredicateID)) {
-                logger.warn("Problems with duplicate values in "+className + " "+predicateName);
-            } else {
-                
-              previousPredicateID = property;
-            
-            if(soln.contains("id")) {
-                predicateName = soln.getLiteral("id").getString();
-            }
-            
-            String title = soln.getLiteral("title").getString();
 
-            Element newElement = xml.newSimpleElement(seq, predicateName, predicate);
-            documentation = xml.newDocumentation(newElement);
-            
-            xml.appendElementValue(documentation, "dcterms:title", title);
-            
-            if(soln.contains("min")  && soln.getLiteral("min").getInt()>0) {
-                int min = soln.getLiteral("min").getInt();
-                newElement.setAttribute("minOccurs", ""+min);
-            } else {
-                newElement.setAttribute("minOccurs", "0");
-            }
-            
-            if(soln.contains("description")) {
-                String description = soln.getLiteral("description").getString();
-                xml.appendElementValue(documentation, "dcterms:description", description);
-            }
-            
-            if(soln.contains("datatype")) {
-                String datatype = soln.getResource("datatype").toString();
-                newElement.setAttribute("type", DATATYPE_MAP.get(datatype));
-            }
-          
-            if(soln.contains("max") && soln.getLiteral("max").getInt()>0) {
-                int max = soln.getLiteral("max").getInt();
-                newElement.setAttribute("maxOccurs", ""+max);
-            } else {
-                newElement.setAttribute("maxOccurs", "unbounded");
-            }
+
+                String predicate = soln.getResource("predicate").getURI();
+                String property = soln.getResource("property").getURI();
+                String predicateName = soln.getLiteral("predicateName").getString();
+
+                if (previousPredicateID != null && property.equals(previousPredicateID)) {
+                    logger.warn("Problems with duplicate values in " + className + " " + predicateName);
+                } else {
+
+                    previousPredicateID = property;
+
+                    if (soln.contains("id")) {
+                        predicateName = soln.getLiteral("id").getString();
+                    }
+
+                    String title = soln.getLiteral("title").getString();
+
+                    Element newElement = xml.newSimpleElement(seq, predicateName, predicate);
+                    documentation = xml.newDocumentation(newElement);
+
+                    xml.appendElementValue(documentation, "dcterms:title", title);
+
+                    if (soln.contains("min") && soln.getLiteral("min").getInt() > 0) {
+                        int min = soln.getLiteral("min").getInt();
+                        newElement.setAttribute("minOccurs", "" + min);
+                    } else {
+                        newElement.setAttribute("minOccurs", "0");
+                    }
+
+                    if (soln.contains("description")) {
+                        String description = soln.getLiteral("description").getString();
+                        xml.appendElementValue(documentation, "dcterms:description", description);
+                    }
+
+                    if (soln.contains("datatype")) {
+                        String datatype = soln.getResource("datatype").toString();
+                        newElement.setAttribute("type", DATATYPE_MAP.get(datatype));
+                    }
+
+                    if (soln.contains("max") && soln.getLiteral("max").getInt() > 0) {
+                        int max = soln.getLiteral("max").getInt();
+                        newElement.setAttribute("maxOccurs", "" + max);
+                    } else {
+                        newElement.setAttribute("maxOccurs", "unbounded");
+                    }
 
             /* If shape contains pattern or other type of restriction */
-            
-            if(soln.contains("pattern") || soln.contains("maxLength") || soln.contains("minLength"))  {
-                    Element simpleType = xml.newSimpleType(predicateName+"Type");
-                    
-                    
-                    if(soln.contains("pattern")) {
-                        Element restriction = xml.newStringRestriction(simpleType);
-                         xml.appendElementValueAttribute(restriction, "xs:maxInclusive", soln.getLiteral("pattern").toString());
-                    } else {
-                        Element restriction = xml.newIntRestriction(simpleType);
-                           if(soln.contains("maxLength")) {
-                              xml.appendElementValueAttribute(restriction, "xs:maxInclusive", ""+soln.getLiteral("maxLength").getInt());
-                           }
-                           if(soln.contains("minLength"))  {
-                              xml.appendElementValueAttribute(restriction, "xs:minInclusive", ""+soln.getLiteral("minLength").getInt());
-                           }
+
+                    if (soln.contains("pattern") || soln.contains("maxLength") || soln.contains("minLength")) {
+                        Element simpleType = xml.newSimpleType(predicateName + "Type");
+
+
+                        if (soln.contains("pattern")) {
+                            Element restriction = xml.newStringRestriction(simpleType);
+                            xml.appendElementValueAttribute(restriction, "xs:maxInclusive", soln.getLiteral("pattern").toString());
+                        } else {
+                            Element restriction = xml.newIntRestriction(simpleType);
+                            if (soln.contains("maxLength")) {
+                                xml.appendElementValueAttribute(restriction, "xs:maxInclusive", "" + soln.getLiteral("maxLength").getInt());
+                            }
+                            if (soln.contains("minLength")) {
+                                xml.appendElementValueAttribute(restriction, "xs:minInclusive", "" + soln.getLiteral("minLength").getInt());
+                            }
+                        }
+                        newElement.setAttribute("type", predicateName + "Type");
                     }
-                    newElement.setAttribute("type", predicateName+"Type");
-                }
-                 
-                if(soln.contains("shapeRefName")) {
-                    String shapeRef = soln.getLiteral("shapeRefName").toString();
-                    newElement.setAttribute("type", shapeRef+"Type");
-                }
+
+                    if (soln.contains("shapeRefName")) {
+                        String shapeRef = soln.getLiteral("shapeRefName").toString();
+                        newElement.setAttribute("type", shapeRef + "Type");
+                    }
          
          /*   
             if(soln.contains("valueList")) {
@@ -515,13 +517,14 @@ public class XMLSchemaWriter {
                  }
              }
            */
-         }
+                }
  
-                /* Check if next result is about the same class */ 
-                if(!pResults.hasNext() || !className.equals(pResults.peek().getLiteral("className").getString())) {
-                    firstRun=true;
-                } 
-            
+                /* Check if next result is about the same class */
+                if (!pResults.hasNext() || !className.equals(pResults.peek().getLiteral("className").getString())) {
+                    firstRun = true;
+                }
+
+            }
         }
         
         return xml.toString();

@@ -75,32 +75,32 @@ public class ContextWriter {
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
         pss.setCommandText(selectResources);
         
-        QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), pss.asQuery());
+        try(QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), pss.asQuery())) {
 
-        ResultSet results = qexec.execSelect();
+            ResultSet results = qexec.execSelect();
 
-        if(!results.hasNext()) return null;
-        
-        while (results.hasNext()) {
-            QuerySolution soln = results.nextSolution();
-            String predicateID = soln.getResource("resource").toString();
-            String predicateName = soln.getLiteral("resourceName").toString();
-            
-            JsonObjectBuilder predicate = Json.createObjectBuilder();
-            predicate.add("@id",predicateID);
-            
-            if(soln.contains("datatype")) {
-                predicate.add("@type",soln.getResource("datatype").toString());
-            } else {
+            if (!results.hasNext()) return null;
+
+            while (results.hasNext()) {
+                QuerySolution soln = results.nextSolution();
+                String predicateID = soln.getResource("resource").toString();
+                String predicateName = soln.getLiteral("resourceName").toString();
+
+                JsonObjectBuilder predicate = Json.createObjectBuilder();
+                predicate.add("@id", predicateID);
+
+                if (soln.contains("datatype")) {
+                    predicate.add("@type", soln.getResource("datatype").toString());
+                } else {
                /* FIXME: Too bold? */
-               predicate.add("@type","@id"); 
+                    predicate.add("@type", "@id");
+                }
+
+                context.add(predicateName, predicate.build());
             }
-                        
-            context.add(predicateName,predicate.build());
+
+            return createDefaultContext(context);
         }
-        
-        return createDefaultContext(context);
-        
     }
 
     /**

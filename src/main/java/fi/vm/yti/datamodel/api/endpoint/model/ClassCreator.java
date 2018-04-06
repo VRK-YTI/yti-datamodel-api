@@ -93,7 +93,7 @@ public class ClassCreator {
             ReusableClass newClass;
 
             if (conceptIRI != null) {
-                newClass = new ReusableClass(conceptIRI, modelIRI, classLabel, lang, graphManager, jenaClient, modelManager, termedTerminologyManager);
+                newClass = new ReusableClass(conceptIRI, modelIRI, classLabel, lang, graphManager, termedTerminologyManager);
             } else {
                 newClass = new ReusableClass(modelIRI, classLabel, lang, graphManager);
             }

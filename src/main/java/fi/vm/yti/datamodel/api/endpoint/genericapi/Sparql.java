@@ -58,9 +58,8 @@ public class Sparql {
             return Response.status(400).build();
         }
 
-        QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), query);
+        try(QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), query)) {
 
-        try {
             OutputStream outs = new ByteArrayOutputStream();
             ResultSet results = qexec.execSelect();
             ResultSetFormatter.outputAsJSON(outs,results);
@@ -71,8 +70,6 @@ public class Sparql {
 
         } catch(QueryException ex) {
             return Response.status(500).build();
-        } finally {
-            qexec.close();
         }
     }
 

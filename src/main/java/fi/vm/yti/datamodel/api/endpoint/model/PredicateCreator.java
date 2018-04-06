@@ -86,9 +86,9 @@ public class PredicateCreator {
             ReusablePredicate newPredicate;
 
             if (conceptIRI != null) {
-                newPredicate = new ReusablePredicate(conceptIRI, modelIRI, predicateLabel, lang, typeIRI, graphManager, jenaClient, modelManager, termedTerminologyManager);
+                newPredicate = new ReusablePredicate(conceptIRI, modelIRI, predicateLabel, lang, typeIRI, graphManager, termedTerminologyManager);
             } else {
-                newPredicate = new ReusablePredicate(modelIRI, predicateLabel, lang, typeIRI, graphManager, jenaClient, modelManager);
+                newPredicate = new ReusablePredicate(modelIRI, predicateLabel, lang, typeIRI, graphManager);
             }
 
             return jerseyClient.constructResponseFromGraph(newPredicate.asGraph());

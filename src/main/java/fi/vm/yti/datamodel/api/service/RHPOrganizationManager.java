@@ -171,9 +171,7 @@ public class RHPOrganizationManager {
         pss.setCommandText(queryString);
         Query query = pss.asQuery();
 
-        QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), query);
-
-        try {
+        try(QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), query)) {
             boolean b = qexec.execAsk();
             logger.info("EXISTS "+sparqlOrgList+":"+b);
             return b;

@@ -20,11 +20,10 @@ public class DataModel extends AbstractModel {
         super(graphId, graphManager);
     }
 
-    public DataModel(String jsonld,
+    public DataModel(Model model,
                      GraphManager graphManager,
-                     RHPOrganizationManager rhpOrganizationManager,
-                     ModelManager modelManager) throws IllegalArgumentException {
-        super(modelManager.createJenaModelFromJSONLDString(jsonld), graphManager, rhpOrganizationManager);
+                     RHPOrganizationManager rhpOrganizationManager) throws IllegalArgumentException {
+        super(model, graphManager, rhpOrganizationManager);
     }
 
     public DataModel(String prefix,
@@ -101,8 +100,9 @@ public class DataModel extends AbstractModel {
         pss.setLiteral("mlabel", ResourceFactory.createLangLiteral(label, lang));
         pss.setLiteral("defLang", lang);
 
-        QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), pss.toString());
-        this.graph = qexec.execConstruct();
+        try(QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), pss.toString())) {
+            this.graph = qexec.execConstruct();
+        }
         RDFList langRDFList = LDHelper.addStringListToModel(this.graph, allowedLang);
         this.graph.add(ResourceFactory.createResource(namespace.toString()), DCTerms.language, langRDFList);
 

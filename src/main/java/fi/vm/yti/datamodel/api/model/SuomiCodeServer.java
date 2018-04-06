@@ -103,7 +103,7 @@ public class SuomiCodeServer {
 
                 group.addProperty(RDF.type, ResourceFactory.createResource("http://uri.suomi.fi/datamodel/ns/iow#FCodeGroup"));
 
-                WebTarget schemeTarget = client.target(groupUrl + "codeschemes/").queryParam("format", "application/json");
+                WebTarget schemeTarget = client.target(groupUrl + "/codeschemes/").queryParam("format", "application/json").queryParam("status", "VALID");
                 Response schemeResponse = schemeTarget.request("application/json").get();
 
                 if (schemeResponse.getStatusInfo().getFamily() == Response.Status.Family.SUCCESSFUL) {
@@ -138,11 +138,14 @@ public class SuomiCodeServer {
                         addLangLiteral(valueScheme, codeList.getJsonObject("description"), description);
                         addLangLiteral(valueScheme, codeList.getJsonObject("prefLabel"), name);
 
-                        if(!adapter.containsModel(codeListUri)) {
-                            updateCodes(codeListUrl+"codes/", codeListUri);
-                        }
+                        // TODO: Should codelists be updated. Based on modified date?
+                       if(!adapter.containsModel(codeListUri)) {
+                            updateCodes(codeListUrl+"/codes/", codeListUri);
+                       }
 
                     }
+                } else {
+                    logger.info("Failed to update codelists from"+schemeTarget.getUri().toString());
                 }
 
                adapter.putModel(uri, model);
@@ -170,6 +173,8 @@ public class SuomiCodeServer {
 
     public void updateCodes(String url, String uri) {
 
+        logger.info("Updating "+uri+" from "+url);
+
         Model model = ModelFactory.createDefaultModel();
         model.setNsPrefix("dcterms", "http://purl.org/dc/terms/");
         model.setNsPrefix("iow", "http://uri.suomi.fi/datamodel/ns/iow#");
@@ -177,10 +182,12 @@ public class SuomiCodeServer {
         Response.ResponseBuilder rb;
 
         Client client = ClientBuilder.newClient();
-        WebTarget target = client.target(url).queryParam("format","application/json");
+        WebTarget target = client.target(url).queryParam("format","application/json").queryParam("status","VALID");
         Response response = target.request("application/json").get();
 
         if (response.getStatusInfo().getFamily() == Response.Status.Family.SUCCESSFUL) {
+
+            logger.info("Updated "+target.getUri().toString());
 
             JsonReader jsonReader = Json.createReader(response.readEntity(InputStream.class));
             JsonObject codeListResponse = jsonReader.readObject();

@@ -90,13 +90,15 @@ public final class JenaClient {
     }
 
     public Model constructFromService(String query, String service) {
-        QueryExecution qexec = QueryExecutionFactory.sparqlService(service, query);
-        return qexec.execConstruct();
+        try(QueryExecution qexec = QueryExecutionFactory.sparqlService(service, query)) {
+            return qexec.execConstruct();
+        }
     }
 
     public boolean askQuery(String service, Query query, String graph) {
-        QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), query, "urn:csc:iow:sd");
-        return qexec.execAsk();
+        try(QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), query)) {
+            return qexec.execAsk();
+        }
     }
 
     public Model fetchModelFromCore(String graph) {

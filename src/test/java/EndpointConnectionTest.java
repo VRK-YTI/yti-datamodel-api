@@ -36,9 +36,7 @@ public class EndpointConnectionTest {
         logger.info("Testing "+endpoint);
 
         Query query = QueryFactory.create(queryString);
-        QueryExecution qexec = QueryExecutionFactory.sparqlService(endpoint, query);
-        try
-        {
+        try(QueryExecution qexec = QueryExecutionFactory.sparqlService(endpoint, query)) {
             ResultSet results = qexec.execSelect();
             while(results.hasNext()) {
                 QuerySolution soln = results.nextSolution();
@@ -46,9 +44,6 @@ public class EndpointConnectionTest {
             }
         } catch(Exception ex) {
             fail("FAILED TO SEND: "+queryString+" to EDNPOINT: "+endpoint);
-        }
-        finally{
-            qexec.close();
         }
     }
 }

@@ -7,6 +7,7 @@ import org.apache.jena.iri.IRI;
 import org.apache.jena.query.ParameterizedSparqlString;
 import org.apache.jena.query.QueryExecution;
 import org.apache.jena.query.QueryExecutionFactory;
+import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.RDFList;
 import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.vocabulary.DCTerms;
@@ -21,11 +22,10 @@ public class ApplicationProfile extends AbstractModel {
         super(profileId, graphManager);
     }
 
-    public ApplicationProfile(String jsonld,
-                              ModelManager modelManager,
+    public ApplicationProfile(Model model,
                               GraphManager graphManager,
                               RHPOrganizationManager rhpOrganizationManager) {
-        super(modelManager.createJenaModelFromJSONLDString(jsonld), graphManager, rhpOrganizationManager);
+        super(model, graphManager, rhpOrganizationManager);
     }
 
     public ApplicationProfile(String prefix,
@@ -104,8 +104,10 @@ public class ApplicationProfile extends AbstractModel {
         pss.setLiteral("mlabel", ResourceFactory.createLangLiteral(label, lang));
         pss.setLiteral("defLang", lang);
 
-        QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), pss.toString());
-        this.graph = qexec.execConstruct();
+        try(QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), pss.toString())) {
+            this.graph = qexec.execConstruct();
+        }
+
         RDFList langRDFList = LDHelper.addStringListToModel(this.graph, allowedLang);
         this.graph.add(ResourceFactory.createResource(namespace.toString()), DCTerms.language, langRDFList);
 

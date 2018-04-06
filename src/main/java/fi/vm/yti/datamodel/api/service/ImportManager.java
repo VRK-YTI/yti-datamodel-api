@@ -145,18 +145,18 @@ public class ImportManager {
         pss.setNsPrefix("rdfs", "http://www.w3.org/2000/01/rdf-schema#");
         pss.setCommandText(selectResources);
 
-        QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), pss.asQuery());
+        try(QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), pss.asQuery())) {
 
-        ResultSet results = qexec.execSelect();
+            ResultSet results = qexec.execSelect();
 
-        while (results.hasNext()) {
-            QuerySolution soln = results.nextSolution();
-            constructGraphs(model, soln.getResource("resource").toString(), map);
-            addIndexNumberToProperties(soln.getResource("resource").toString());
+            while (results.hasNext()) {
+                QuerySolution soln = results.nextSolution();
+                constructGraphs(model, soln.getResource("resource").toString(), map);
+                addIndexNumberToProperties(soln.getResource("resource").toString());
+            }
+
+            removeDuplicatesFromModel(model);
         }
-
-        removeDuplicatesFromModel(model);
-
     }
 
     private void addIndexNumberToProperties(String resource) {
@@ -169,13 +169,14 @@ public class ImportManager {
         pss.setIri("resource", resource);
         pss.setCommandText(selectResources);
 
-        QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), pss.asQuery());
+        try(QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), pss.asQuery())) {
 
-        ResultSet results = qexec.execSelect();
-        int id = 1;
-        while (results.hasNext()) {
-            QuerySolution soln = results.nextSolution();
-            addIndexToProperty(resource, soln.getResource("property").toString(), id++);
+            ResultSet results = qexec.execSelect();
+            int id = 1;
+            while (results.hasNext()) {
+                QuerySolution soln = results.nextSolution();
+                addIndexToProperty(resource, soln.getResource("property").toString(), id++);
+            }
         }
     }
 
@@ -260,12 +261,13 @@ public class ImportManager {
 
         pss.setCommandText(query);
 
-        QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), pss.asQuery());
+        try(QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), pss.asQuery())) {
 
-        Model results = qexec.execConstruct();
+            Model results = qexec.execConstruct();
 
-        DatasetAccessor accessor = DatasetAccessorFactory.createHTTP(endpointServices.getCoreReadWriteAddress());
-        accessor.add(resource, results);
+            DatasetAccessor accessor = DatasetAccessorFactory.createHTTP(endpointServices.getCoreReadWriteAddress());
+            accessor.add(resource, results);
+        }
 
     }
 

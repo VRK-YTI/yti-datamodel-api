@@ -22,25 +22,17 @@ public class AbstractPredicate extends AbstractResource {
     private static final Logger logger = LoggerFactory.getLogger(AbstractPredicate.class.getName());
 
 
-    public AbstractPredicate(GraphManager graphManager,
-                             JenaClient jenaClient,
-                             ModelManager modelManager) {
+    public AbstractPredicate(GraphManager graphManager) {
         super(graphManager);
     }
 
     public AbstractPredicate(IRI graphIRI,
-                             GraphManager graphManager,
-                             ServiceDescriptionManager serviceDescriptionManager,
-                             JenaClient jenaClient,
-                             ModelManager modelManager) {
+                             GraphManager graphManager) {
        super(graphIRI, graphManager);
     }
 
     public AbstractPredicate(Model graph,
-                             GraphManager graphManager,
-                             ServiceDescriptionManager serviceDescriptionManager,
-                             JenaClient jenaClient,
-                             ModelManager modelManager) {
+                             GraphManager graphManager) {
         super(graphManager);
 
         this.graph = graph;

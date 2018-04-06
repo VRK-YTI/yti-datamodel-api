@@ -117,14 +117,10 @@ public class GraphManager {
         pss.setIri("modelHasPartGraph", graph+"#HasPartGraph");
 
         Query query = pss.asQuery();
-        QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), query);
-
-        Model exportModel = qexec.execConstruct();
-        
-        qexec.close();
-
-        jenaClient.putModelToCore(graph+"#ExportGraph", exportModel);
-
+        try(QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), query)) {
+            Model exportModel = qexec.execConstruct();
+            jenaClient.putModelToCore(graph+"#ExportGraph", exportModel);
+        }
     }
 
     public void initServiceCategories() {
@@ -207,9 +203,7 @@ public class GraphManager {
         pss.setIri("graph", graphIRI);
 
         Query query = pss.asQuery();
-        QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), query);
-
-        try {
+        try(QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), query)) {
             boolean b = qexec.execAsk();
             return b;
         } catch (Exception ex) {
@@ -232,9 +226,8 @@ public class GraphManager {
         pss.setIri("graph",properties.getDefaultNamespace()+prefix);
 
         Query query = pss.asQuery();
-        QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), query);
 
-        try {
+        try(QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), query)) {
             boolean b = qexec.execAsk();
             return b;
         } catch (Exception ex) {
@@ -256,9 +249,7 @@ public class GraphManager {
         pss.setIri("graph", graphIRI);
 
         Query query = pss.asQuery();
-        QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), query);
-
-        try {
+        try(QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), query)) {
             boolean b = qexec.execAsk();
             return b;
         } catch (Exception ex) {
@@ -279,9 +270,7 @@ public class GraphManager {
         pss.setIri("graph", graphIRI);
 
         Query query = pss.asQuery();
-        QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), query);
-
-        try {
+        try(QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), query)) {
             boolean b = qexec.execAsk();
             return b;
         } catch (Exception ex) {
@@ -313,9 +302,7 @@ public class GraphManager {
         pss.setIri("graphName", graphIRI);
 
         Query query = pss.asQuery();
-        QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), query);
-
-        try {
+        try(QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), query)) {
             boolean b = qexec.execAsk();
             return b;
         } catch (Exception ex) {
@@ -338,9 +325,7 @@ public class GraphManager {
         pss.setIri("prefix", prefix);
 
         Query query = pss.asQuery();
-        QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), query);
-
-        try {
+        try(QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), query)) {
             boolean b = qexec.execAsk();
             return b;
         } catch (Exception ex) {
@@ -367,22 +352,22 @@ public class GraphManager {
         pss.setCommandText(selectResources);
         pss.setLiteral("prefix",prefix);
 
-        QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), pss.asQuery());
+        try(QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), pss.asQuery())) {
 
-        ResultSet results = qexec.execSelect();
+            ResultSet results = qexec.execSelect();
 
-        String graphUri = null;
-        
-        while (results.hasNext()) {
-            QuerySolution soln = results.nextSolution();
-            if(soln.contains("graph")) {
-                Resource resType = soln.getResource("graph");
-                graphUri = resType.getURI();
+            String graphUri = null;
+
+            while (results.hasNext()) {
+                QuerySolution soln = results.nextSolution();
+                if (soln.contains("graph")) {
+                    Resource resType = soln.getResource("graph");
+                    graphUri = resType.getURI();
+                }
             }
+
+            return graphUri;
         }
-
-        return graphUri;
-
     }
 
     /**
@@ -414,21 +399,21 @@ public class GraphManager {
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
         pss.setCommandText(selectResources);
 
-        QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), pss.asQuery());
+        try(QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), pss.asQuery())) {
 
-        ResultSet results = qexec.execSelect();
-        String newQuery = "DROP SILENT GRAPH <" + model + ">; ";
-               newQuery += "DROP SILENT GRAPH <" + model + "#HasPartGraph>; ";
-               newQuery += "DROP SILENT GRAPH <" + model + "#ExportGraph>; ";
-               newQuery += "DROP SILENT GRAPH <" +model + "#PositionGraph>; ";
+            ResultSet results = qexec.execSelect();
+            String newQuery = "DROP SILENT GRAPH <" + model + ">; ";
+            newQuery += "DROP SILENT GRAPH <" + model + "#HasPartGraph>; ";
+            newQuery += "DROP SILENT GRAPH <" + model + "#ExportGraph>; ";
+            newQuery += "DROP SILENT GRAPH <" + model + "#PositionGraph>; ";
 
-        while (results.hasNext()) {
-            QuerySolution soln = results.nextSolution();
-            newQuery += "DROP SILENT GRAPH <" + soln.getResource("graph").toString() + ">; ";
+            while (results.hasNext()) {
+                QuerySolution soln = results.nextSolution();
+                newQuery += "DROP SILENT GRAPH <" + soln.getResource("graph").toString() + ">; ";
+            }
+
+            return newQuery;
         }
-
-        return newQuery;
-
     }
 
     /**
@@ -1013,9 +998,10 @@ public class GraphManager {
      * @return Returns JSON-LD object
      */
     public String constructStringFromGraph(String query) {
-        QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), query);
-        Model results = qexec.execConstruct();
-        return modelManager.writeModelToJSONLDString(results);
+        try(QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), query)) {
+            Model results = qexec.execConstruct();
+            return modelManager.writeModelToJSONLDString(results);
+        }
     }
 
     /**
@@ -1059,12 +1045,10 @@ public class GraphManager {
         DatasetAccessor testAcc = DatasetAccessorFactory.createHTTP(endpointServices.getCoreReadAddress());
         conceptModel.add(testAcc.getModel(modelID));
 
-        QueryExecution qexec = QueryExecutionFactory.create(query,conceptModel);
-        Model resultModel = qexec.execConstruct();
-
-        qexec.close();
-
-        return resultModel;
+        try(QueryExecution qexec = QueryExecutionFactory.create(query,conceptModel)) {
+            Model resultModel = qexec.execConstruct();
+            return resultModel;
+        }
     }
 
 
@@ -1088,22 +1072,22 @@ public class GraphManager {
         pss.setIri("graph",graphName);
         pss.setIri("exportGraph",graphName+"#ExportGraph");
 
-        QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), pss.asQuery());
+        try(QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), pss.asQuery())) {
 
-        ResultSet results = qexec.execSelect();
+            ResultSet results = qexec.execSelect();
 
-        Date modified = null;
-        
-        while (results.hasNext()) {
-            QuerySolution soln = results.nextSolution();
-            if(soln.contains("date")) {
-                Literal liteDate = soln.getLiteral("date");
-                modified = ((XSDDateTime)XSDDatatype.XSDdateTime.parse(liteDate.getString())).asCalendar().getTime();
+            Date modified = null;
+
+            while (results.hasNext()) {
+                QuerySolution soln = results.nextSolution();
+                if (soln.contains("date")) {
+                    Literal liteDate = soln.getLiteral("date");
+                    modified = ((XSDDateTime) XSDDatatype.XSDdateTime.parse(liteDate.getString())).asCalendar().getTime();
                 }
             }
-        
-        return modified;
-        
+
+            return modified;
+        }
     }
 
     public void createResource(AbstractResource resource) {

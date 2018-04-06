@@ -15,6 +15,8 @@ import io.swagger.annotations.*;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
 import org.apache.jena.query.ParameterizedSparqlString;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.riot.RiotException;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -190,7 +192,13 @@ public class Class {
 
             if(isNotEmpty(body)) {
 
-                ReusableClass updateClass = new ReusableClass(body, graphManager, serviceDescriptionManager, jenaClient, modelManager);
+                Model parsedModel = modelManager.createJenaModelFromJSONLDString(body);
+
+                if(parsedModel.size()==0) {
+                    return jerseyResponseManager.notAcceptable();
+                }
+
+                ReusableClass updateClass = new ReusableClass(parsedModel, graphManager);
                 YtiUser user = userProvider.getUser();
 
                 if(!authorizationManager.hasRightToEdit(updateClass)) {
@@ -248,6 +256,9 @@ public class Class {
         } catch(IllegalArgumentException ex) {
             logger.warn(ex.toString());
             return jerseyResponseManager.invalidParameter();
+        } catch(RiotException ex) {
+            logger.warn(ex.toString());
+            return jerseyResponseManager.notAcceptable();
         } catch(Exception ex) {
             logger.warn( "Expect the unexpected!", ex);
             return jerseyResponseManager.unexpected();
@@ -270,7 +281,13 @@ public class Class {
 
         try {
 
-            ReusableClass newClass = new ReusableClass(body, graphManager, serviceDescriptionManager, jenaClient, modelManager);
+            Model parsedModel = modelManager.createJenaModelFromJSONLDString(body);
+
+            if(parsedModel.size()==0) {
+                return jerseyResponseManager.notAcceptable();
+            }
+
+            ReusableClass newClass = new ReusableClass(parsedModel, graphManager);
             YtiUser user = userProvider.getUser();
 
             if (!authorizationManager.hasRightToEdit(newClass)) {
@@ -342,7 +359,7 @@ public class Class {
             /* Remove graph */
 
             try {
-                ReusableClass deleteClass = new ReusableClass(idIRI, graphManager, serviceDescriptionManager, jenaClient, modelManager);
+                ReusableClass deleteClass = new ReusableClass(idIRI, graphManager);
 
                 if (!authorizationManager.hasRightToEdit(deleteClass)) {
                     return jerseyResponseManager.unauthorized();

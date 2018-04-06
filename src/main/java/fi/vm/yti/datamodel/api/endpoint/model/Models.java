@@ -18,6 +18,7 @@ import org.apache.jena.query.DatasetAccessor;
 import org.apache.jena.query.DatasetAccessorFactory;
 import org.apache.jena.query.ParameterizedSparqlString;
 import org.apache.jena.rdf.model.Model;
+import org.apache.jena.riot.RiotException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -185,7 +186,14 @@ public class Models {
         try {
 
             YtiUser user = userProvider.getUser();
-            DataModel newVocabulary = new DataModel(body, graphManager, rhpOrganizationManager, modelManager);
+
+            Model parsedModel = modelManager.createJenaModelFromJSONLDString(body);
+
+            if(parsedModel.size()==0) {
+                return jerseyResponseManager.notAcceptable();
+            }
+
+            DataModel newVocabulary = new DataModel(parsedModel, graphManager, rhpOrganizationManager);
 
             logger.info("Getting old vocabulary:" + newVocabulary.getId());
             DataModel oldVocabulary = new DataModel(newVocabulary.getIRI(), graphManager);
@@ -211,6 +219,9 @@ public class Models {
         } catch(IllegalArgumentException ex) {
             logger.warn(ex.toString());
             return jerseyResponseManager.error();
+        } catch(RiotException ex) {
+            logger.warn(ex.toString());
+            return jerseyResponseManager.notAcceptable();
         }
 
     }
@@ -229,7 +240,13 @@ public class Models {
 
         try {
 
-            DataModel newVocabulary = new DataModel(body, graphManager, rhpOrganizationManager, modelManager);
+            Model parsedModel = modelManager.createJenaModelFromJSONLDString(body);
+
+            if(parsedModel.size()==0) {
+                return jerseyResponseManager.notAcceptable();
+            }
+
+            DataModel newVocabulary = new DataModel(parsedModel, graphManager, rhpOrganizationManager);
             YtiUser user = userProvider.getUser();
 
             if (!authorizationManager.hasRightToEdit(newVocabulary)) {
@@ -264,6 +281,9 @@ public class Models {
         } catch(IllegalArgumentException ex) {
             logger.warn(ex.toString());
             return jerseyResponseManager.error();
+        } catch(RiotException ex) {
+            logger.warn(ex.toString());
+            return jerseyResponseManager.notAcceptable();
         }
 
     }

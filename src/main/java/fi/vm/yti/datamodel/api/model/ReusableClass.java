@@ -4,6 +4,7 @@ import fi.vm.yti.datamodel.api.service.*;
 import fi.vm.yti.datamodel.api.utils.LDHelper;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.query.ParameterizedSparqlString;
+import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ResourceFactory;
 
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
@@ -13,19 +14,13 @@ public class ReusableClass extends AbstractClass {
     private static final Logger logger = LoggerFactory.getLogger(ReusableClass.class.getName());
 
     public ReusableClass(IRI classId,
-                         GraphManager graphManager,
-                         ServiceDescriptionManager serviceDescriptionManager,
-                         JenaClient jenaClient,
-                         ModelManager modelManager) throws IllegalArgumentException {
-        super(classId, graphManager, serviceDescriptionManager, jenaClient, modelManager);
+                         GraphManager graphManager) throws IllegalArgumentException {
+        super(classId, graphManager);
     }
 
-    public ReusableClass(String jsonld,
-                         GraphManager graphManager,
-                         ServiceDescriptionManager serviceDescriptionManager,
-                         JenaClient jenaClient,
-                         ModelManager modelManager) throws IllegalArgumentException {
-        super(modelManager.createJenaModelFromJSONLDString(jsonld), graphManager);
+    public ReusableClass(Model model,
+                         GraphManager graphManager) throws IllegalArgumentException {
+        super(model, graphManager);
     }
 
     public ReusableClass(IRI conceptIRI,
@@ -33,8 +28,6 @@ public class ReusableClass extends AbstractClass {
                          String classLabel,
                          String lang,
                          GraphManager graphManager,
-                         JenaClient jenaClient,
-                         ModelManager modelManager,
                          TermedTerminologyManager termedTerminologyManager) {
 
         super(graphManager);

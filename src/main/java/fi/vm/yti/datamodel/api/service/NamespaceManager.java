@@ -207,14 +207,16 @@ public final class NamespaceManager {
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
         pss.setCommandText(selectResources);
 
-        QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), pss.asQuery());
-
-        ResultSet results = qexec.execSelect();
         Map namespaceMap = new HashMap<String, String>();
 
-        while (results.hasNext()) {
-            QuerySolution soln = results.nextSolution();
-            namespaceMap.put(soln.getLiteral("prefix").toString(), soln.getLiteral("namespace").toString());
+        try(QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), pss.asQuery())) {
+
+            ResultSet results = qexec.execSelect();
+
+            while (results.hasNext()) {
+                QuerySolution soln = results.nextSolution();
+                namespaceMap.put(soln.getLiteral("prefix").toString(), soln.getLiteral("namespace").toString());
+            }
         }
 
         return namespaceMap;
@@ -264,20 +266,22 @@ public final class NamespaceManager {
         pss.setCommandText(selectResources);
         pss.setIri("predicate", predicate);
 
-        QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getImportsSparqlAddress(), pss.asQuery());
-
-        ResultSet results = qexec.execSelect();
-
         String type = null;
 
-        while (results.hasNext()) {
-            QuerySolution soln = results.nextSolution();
-            if(soln.contains("type")) {
-                Resource resType = soln.getResource("type");
-                type = resType.getURI();
-            }
-        }
+        try(QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getImportsSparqlAddress(), pss.asQuery())) {
 
+            ResultSet results = qexec.execSelect();
+
+
+            while (results.hasNext()) {
+                QuerySolution soln = results.nextSolution();
+                if (soln.contains("type")) {
+                    Resource resType = soln.getResource("type");
+                    type = resType.getURI();
+                }
+            }
+
+        }
         return type;
 
     }

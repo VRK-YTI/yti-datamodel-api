@@ -87,19 +87,19 @@ public class ServiceDescriptionManager {
         pss.setIri("graphName",model);
         pss.setCommandText(getOrgs);
 
-        QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), pss.asQuery());
+        try(QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), pss.asQuery())) {
 
-        ResultSet results = qexec.execSelect();
-        HashSet<UUID> orgUUIDs = new HashSet<>();
+            ResultSet results = qexec.execSelect();
+            HashSet<UUID> orgUUIDs = new HashSet<>();
 
-        while (results.hasNext()) {
-            QuerySolution soln = results.nextSolution();
-            String orgId = soln.getResource("org").toString().split("urn:uuid:")[1];
-            orgUUIDs.add(UUID.fromString(orgId));
+            while (results.hasNext()) {
+                QuerySolution soln = results.nextSolution();
+                String orgId = soln.getResource("org").toString().split("urn:uuid:")[1];
+                orgUUIDs.add(UUID.fromString(orgId));
+            }
+
+            return orgUUIDs;
         }
-
-        return orgUUIDs;
-
     }
 
     /**
@@ -138,10 +138,7 @@ public class ServiceDescriptionManager {
         
          
          Query query = pss.asQuery();
-         QueryExecution qexec = QueryExecutionFactory.sparqlService(endpoint, query);
-        
-         try
-          {
+         try(QueryExecution qexec = QueryExecutionFactory.sparqlService(endpoint, query)) {
               boolean b = qexec.execAsk();
               
               return b;
