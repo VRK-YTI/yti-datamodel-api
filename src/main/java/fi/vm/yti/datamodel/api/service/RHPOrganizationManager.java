@@ -40,8 +40,6 @@ public class RHPOrganizationManager {
                            ApplicationProperties properties,
                            GraphManager graphManager) {
         this.clientFactory = clientFactory;
-
-
         this.endpointServices = endpointServices;
         this.properties = properties;
         this.graphManager = graphManager;

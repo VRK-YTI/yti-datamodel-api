@@ -122,7 +122,8 @@ public final class JenaClient {
     public ResultSet selectQuery(String service, Query query) {
        logger.debug("Select from "+service);
         try(QueryExecution qexec = QueryExecutionFactory.sparqlService(service, query)) {
-            return qexec.execSelect();
+            // ResultSet needs to be copied in order to use it after the connection is closed
+            return ResultSetFactory.copyResults(qexec.execSelect()) ;
         }
     }
 
