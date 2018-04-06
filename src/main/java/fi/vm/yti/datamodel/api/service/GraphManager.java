@@ -117,10 +117,10 @@ public class GraphManager {
         pss.setIri("modelHasPartGraph", graph+"#HasPartGraph");
 
         Query query = pss.asQuery();
-        try(QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), query)) {
-            Model exportModel = qexec.execConstruct();
-            jenaClient.putModelToCore(graph+"#ExportGraph", exportModel);
-        }
+
+        Model exportModel = jenaClient.constructFromService(query.toString(), endpointServices.getCoreSparqlAddress());
+        jenaClient.putModelToCore(graph+"#ExportGraph", exportModel);
+
     }
 
     public void initServiceCategories() {
@@ -203,8 +203,8 @@ public class GraphManager {
         pss.setIri("graph", graphIRI);
 
         Query query = pss.asQuery();
-        try(QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), query)) {
-            boolean b = qexec.execAsk();
+        try {
+            boolean b = jenaClient.askQuery(endpointServices.getCoreSparqlAddress(), query);
             return b;
         } catch (Exception ex) {
             return false;
@@ -227,8 +227,8 @@ public class GraphManager {
 
         Query query = pss.asQuery();
 
-        try(QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), query)) {
-            boolean b = qexec.execAsk();
+        try {
+            boolean b = jenaClient.askQuery(endpointServices.getCoreSparqlAddress(), query);
             return b;
         } catch (Exception ex) {
             return false;
@@ -249,8 +249,8 @@ public class GraphManager {
         pss.setIri("graph", graphIRI);
 
         Query query = pss.asQuery();
-        try(QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), query)) {
-            boolean b = qexec.execAsk();
+        try {
+            boolean b = jenaClient.askQuery(endpointServices.getCoreSparqlAddress(), query);
             return b;
         } catch (Exception ex) {
             return false;
@@ -270,8 +270,8 @@ public class GraphManager {
         pss.setIri("graph", graphIRI);
 
         Query query = pss.asQuery();
-        try(QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), query)) {
-            boolean b = qexec.execAsk();
+        try {
+            boolean b = jenaClient.askQuery(endpointServices.getCoreSparqlAddress(), query);
             return b;
         } catch (Exception ex) {
             return false;
@@ -302,8 +302,8 @@ public class GraphManager {
         pss.setIri("graphName", graphIRI);
 
         Query query = pss.asQuery();
-        try(QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), query)) {
-            boolean b = qexec.execAsk();
+        try {
+            boolean b = jenaClient.askQuery(endpointServices.getCoreSparqlAddress(), query);
             return b;
         } catch (Exception ex) {
             return false;
@@ -325,8 +325,8 @@ public class GraphManager {
         pss.setIri("prefix", prefix);
 
         Query query = pss.asQuery();
-        try(QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), query)) {
-            boolean b = qexec.execAsk();
+        try {
+            boolean b = jenaClient.askQuery(endpointServices.getCoreSparqlAddress(), query);
             return b;
         } catch (Exception ex) {
             return false;
@@ -352,9 +352,8 @@ public class GraphManager {
         pss.setCommandText(selectResources);
         pss.setLiteral("prefix",prefix);
 
-        try(QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), pss.asQuery())) {
 
-            ResultSet results = qexec.execSelect();
+            ResultSet results = jenaClient.selectQuery(endpointServices.getCoreSparqlAddress(), pss.asQuery());
 
             String graphUri = null;
 
@@ -367,7 +366,7 @@ public class GraphManager {
             }
 
             return graphUri;
-        }
+
     }
 
     /**
@@ -399,9 +398,7 @@ public class GraphManager {
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
         pss.setCommandText(selectResources);
 
-        try(QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), pss.asQuery())) {
-
-            ResultSet results = qexec.execSelect();
+            ResultSet results = jenaClient.selectQuery(endpointServices.getCoreSparqlAddress(), pss.asQuery());
             String newQuery = "DROP SILENT GRAPH <" + model + ">; ";
             newQuery += "DROP SILENT GRAPH <" + model + "#HasPartGraph>; ";
             newQuery += "DROP SILENT GRAPH <" + model + "#ExportGraph>; ";
@@ -413,7 +410,6 @@ public class GraphManager {
             }
 
             return newQuery;
-        }
     }
 
     /**
@@ -978,6 +974,7 @@ public class GraphManager {
      * @param id IRI of the graph as String
      */
     public void putToGraph(Model model, String id) {
+        logger.debug("Putting to "+id);
         try(RDFConnectionRemote conn = endpointServices.getCoreConnection()) {
             Txn.executeWrite(conn, ()->{
                 conn.put(LDHelper.encode(id), model);
@@ -998,10 +995,8 @@ public class GraphManager {
      * @return Returns JSON-LD object
      */
     public String constructStringFromGraph(String query) {
-        try(QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), query)) {
-            Model results = qexec.execConstruct();
+            Model results = jenaClient.constructFromService(query, endpointServices.getCoreSparqlAddress());
             return modelManager.writeModelToJSONLDString(results);
-        }
     }
 
     /**
@@ -1072,9 +1067,7 @@ public class GraphManager {
         pss.setIri("graph",graphName);
         pss.setIri("exportGraph",graphName+"#ExportGraph");
 
-        try(QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), pss.asQuery())) {
-
-            ResultSet results = qexec.execSelect();
+            ResultSet results = jenaClient.selectQuery(endpointServices.getCoreSparqlAddress(), pss.asQuery());
 
             Date modified = null;
 
@@ -1087,7 +1080,6 @@ public class GraphManager {
             }
 
             return modified;
-        }
     }
 
     public void createResource(AbstractResource resource) {

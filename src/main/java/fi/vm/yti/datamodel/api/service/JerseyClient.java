@@ -61,6 +61,7 @@ public class JerseyClient {
     }
 
     public Response getResponseFromURL(String url, String accept) {
+        logger.debug("Getting "+accept+" response from "+url);
         Client client = ClientBuilder.newClient();
         client.property(ClientProperties.CONNECT_TIMEOUT, 180000);
         client.property(ClientProperties.READ_TIMEOUT, 180000);
@@ -79,9 +80,9 @@ public class JerseyClient {
      * @return Response
      */
     public Response getResponseFromService(String id, String service, String ctype) {
-
         Client client = ClientBuilder.newClient();
         WebTarget target = client.target(service).queryParam("graph", id);
+        logger.debug("Getting response from "+target.getUri().toString());
         return target.request(ctype).get();
 
     }
@@ -357,6 +358,10 @@ public class JerseyClient {
             RDFReader reader = model.getReader(Lang.JSONLD.getHeaderString());
             reader.read(model, response.readEntity(InputStream.class), resourceURI);
         } catch(RiotException ex) {
+            logger.warn("Error parsing JSON-LD",ex);
+            return model;
+        } catch(Exception ex) {
+            logger.warn("Unexpected error",ex);
             return model;
         }
 

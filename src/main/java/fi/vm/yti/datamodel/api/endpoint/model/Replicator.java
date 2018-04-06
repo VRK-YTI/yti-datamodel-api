@@ -102,7 +102,7 @@ public class Replicator {
             // <urn:csc:iow:namespaces>
             String namespaces = service+"exportResource?graph="+LDHelper.encode("urn:csc:iow:namespaces");
             Model namespaceModel = jerseyClient.getResourceAsJenaModel(namespaces);
-            logger.info("Copying namespaces: "+namespaceModel.size());
+            logger.info("Copying namespaces. Model size: "+namespaceModel.size());
             jenaClient.putModelToCore("urn:csc:iow:namespaces", namespaceModel);
 
             // <urn:yti:servicecategories>
@@ -201,11 +201,9 @@ public class Replicator {
         // PositionGraph
         String puri = service+"exportResource?graph="+UriComponent.encode(model+"#PositionGraph",UriComponent.Type.QUERY_PARAM);
 
-        logger.info("PositionGraph:"+puri);
-
         Model positionModel = jerseyClient.getResourceAsJenaModel(puri);
 
-        if(positionModel!=null && positionModel.size()>1) {
+        if(positionModel.size()>1) {
             jenaClient.putModelToCore(model + "#PositionGraph", positionModel);
         }
 
@@ -218,11 +216,10 @@ public class Replicator {
             String resourceName = part.toString();
 
             if(resourceName.startsWith(model)) {
+                logger.info("Replicating resource: "+resourceName);
                 String resourceURI = service + "exportResource?graph=" + UriComponent.encode(resourceName, UriComponent.Type.QUERY_PARAM);
                 Model resourceModel = jerseyClient.getResourceAsJenaModel(resourceURI);
                 jenaClient.putModelToCore(resourceName, resourceModel);
-
-                logger.info("Replicated resource: "+resourceName);
 
                 String historyURL = service+"history?id="+UriComponent.encode(resourceName, UriComponent.Type.QUERY_PARAM);
                 Dataset provResourceDataset = DatasetFactory.create();

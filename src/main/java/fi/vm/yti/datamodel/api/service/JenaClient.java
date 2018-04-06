@@ -45,15 +45,18 @@ public final class JenaClient {
 
 
     public void putToImports(String graph, Model model) {
-        importService.putModel(graph, model);
+       logger.debug("Storing import to "+graph);
+       importService.putModel(graph, model);
     }
 
     public Model getModelFromCore(String graph) {
-        return coreService.getModel(graph);
+       logger.debug("Getting model from "+graph);
+       return coreService.getModel(graph);
     }
 
     public Model getModelFromProv(String graph) {
-        return provService.getModel(graph);
+       logger.debug("Getting model from prov "+graph);
+       return provService.getModel(graph);
     }
 
     public boolean containsCoreModel(String graph) {
@@ -65,41 +68,65 @@ public final class JenaClient {
     }
 
     public  void deleteModelFromCore(String graph) {
-        coreService.deleteModel(graph);
+       logger.debug("Deleting model from "+graph);
+       coreService.deleteModel(graph);
     }
 
     public void putModelToCore(String graph, Model model) {
+       logger.debug("Putting model to "+graph);
         coreService.putModel(graph, model);
     }
 
     public void addModelToCore(String graph, Model model) {
-        coreService.add(graph, model);
+       logger.debug("Adding model to "+graph);
+       coreService.add(graph, model);
     }
 
     public void putModelToProv(String graph, Model model) {
-        provService.putModel(graph, model);
+       logger.debug("Putting to prov "+graph);
+       provService.putModel(graph, model);
     }
 
     public void addModelToProv(String graph, Model model) {
-        provService.add(graph, model);
+       logger.debug("Adding to prov "+graph);
+       provService.add(graph, model);
     }
 
     public void updateToService(UpdateRequest req, String service) {
+       logger.debug("Sending UpdateRequest to "+service);
         UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(req, service);
         qexec.execute();
     }
 
     public Model constructFromService(String query, String service) {
+       logger.debug("Constructing from "+service);
         try(QueryExecution qexec = QueryExecutionFactory.sparqlService(service, query)) {
             return qexec.execConstruct();
         }
     }
 
     public boolean askQuery(String service, Query query, String graph) {
-        try(QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), query)) {
+       logger.debug("Asking from "+service+" in graph "+graph);
+        try(QueryExecution qexec = QueryExecutionFactory.sparqlService(service, query, graph)) {
             return qexec.execAsk();
         }
     }
+
+    public boolean askQuery(String service, Query query) {
+        logger.debug("Asking from "+service);
+        try(QueryExecution qexec = QueryExecutionFactory.sparqlService(service, query)) {
+            return qexec.execAsk();
+        }
+    }
+
+    public ResultSet selectQuery(String service, Query query) {
+       logger.debug("Select from "+service);
+        try(QueryExecution qexec = QueryExecutionFactory.sparqlService(service, query)) {
+            return qexec.execSelect();
+        }
+    }
+
+    // TODO: Refactor update queries here
 
     public Model fetchModelFromCore(String graph) {
          try(RDFConnectionRemote conn = endpointServices.getCoreConnection()){
