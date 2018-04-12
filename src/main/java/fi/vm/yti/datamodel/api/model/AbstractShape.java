@@ -18,12 +18,7 @@ import java.util.UUID;
  */
 public abstract class AbstractShape extends AbstractResource {
 
-    protected Model graph;
-    protected DataModel dataModel;
-    protected String provUUID;
-    protected IRI id;
-    protected List<UUID> modelOrganizations;
-    protected List<String> modelServiceCategories;
+    private String provUUID;
 
     public AbstractShape(GraphManager graphManager) {
         super(graphManager);
@@ -46,7 +41,6 @@ public abstract class AbstractShape extends AbstractResource {
         }
 
         this.dataModel = new DataModel(LDHelper.toIRI(modelList.get(0).getURI()), graphManager);
-        this.modelOrganizations = dataModel.getOrganizations();
 
         List<Resource> scopeList = this.graph.listResourcesWithProperty(LDHelper.curieToProperty("sh:scopeClass")).toList();
         if(scopeList==null || scopeList.size()!=1) {
@@ -74,7 +68,8 @@ public abstract class AbstractShape extends AbstractResource {
     public String getId() { return this.id.toString();}
     public IRI getIRI() { return this.id; }
     public String getProvUUID() { return this.provUUID; }
-    public List<UUID> getOrganizations() { return this.modelOrganizations; }
+    public List<UUID> getOrganizations() { return this.dataModel.getOrganizations(); }
+
 
 
 }

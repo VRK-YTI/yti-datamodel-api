@@ -1,9 +1,6 @@
 package fi.vm.yti.datamodel.api.model;
 
 import fi.vm.yti.datamodel.api.service.GraphManager;
-import fi.vm.yti.datamodel.api.service.JenaClient;
-import fi.vm.yti.datamodel.api.service.ModelManager;
-import fi.vm.yti.datamodel.api.service.ServiceDescriptionManager;
 import fi.vm.yti.datamodel.api.utils.LDHelper;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.rdf.model.*;
@@ -57,13 +54,13 @@ public class AbstractResource {
             try {
                 this.provUUID = abstractResource.getRequiredProperty(DCTerms.identifier).getLiteral().toString();
             } catch(Exception ex) {
-                ex.printStackTrace();
+                logger.warn(ex.getMessage(),ex);
                 logger.warn(ex.getMessage());
                 throw new IllegalArgumentException("Expected 1 provenance ID");
             }
 
         } catch(Exception ex)  {
-            ex.printStackTrace();
+            logger.warn(ex.getMessage(),ex);
             throw new IllegalArgumentException("Expected 1 resource defined by model");
         }
 

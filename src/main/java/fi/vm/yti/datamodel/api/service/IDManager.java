@@ -15,7 +15,7 @@ public class IDManager {
 
     /**
      * Returns true if url is absolute
-     * @param URL as string
+     * @param url as string
      * @return boolean
      */
     public boolean isValidUrl(String url) {
@@ -24,12 +24,7 @@ public class IDManager {
         
         try {
 	    IRI testIRI = iriFactory.construct(url);
-            if(testIRI.isAbsolute()) {
-                return true;
-            }
-            else {
-                return false;
-            }
+            return testIRI.isAbsolute();
 	} catch (IRIException e) {
             return false;
         }

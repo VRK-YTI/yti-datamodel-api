@@ -31,7 +31,7 @@ import java.io.InputStream;
 import java.io.PushbackInputStream;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Level;
+
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 
 @Service
@@ -119,7 +119,7 @@ public class JerseyClient {
             }
 
             DataInputStream dis = new DataInputStream(response.readEntity(InputStream.class));
-            return new Boolean(dis.readBoolean());
+            return dis.readBoolean();
 
         } catch(Exception ex) {
             logger.info("Failed in reading boolean from URL ... returning false");
@@ -193,7 +193,7 @@ public class JerseyClient {
                 try {
                     jsonModel = (Map<String, Object>) JsonUtils.fromString(modelManager.writeModelToJSONLDString(model));
                 } catch (IOException ex) {
-                    ex.printStackTrace();
+                    logger.warn(ex.getMessage(),ex);
                     return jerseyResponseManager.unexpected();
                 }
 
@@ -221,15 +221,15 @@ public class JerseyClient {
                         rb.entity(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(framed));
 
                     } catch (NullPointerException ex) {
-                        ex.printStackTrace();
+                        logger.warn(ex.getMessage(),ex);
                         return jerseyResponseManager.serverError();
                     } catch (JsonLdError ex) {
-                        ex.printStackTrace();
+                        logger.warn(ex.getMessage(),ex);
                         return jerseyResponseManager.serverError();
                     }
 
                 } catch (IOException ex) {
-                    ex.printStackTrace();
+                    logger.warn(ex.getMessage(),ex);
                     return jerseyResponseManager.serverError();
                 }
 

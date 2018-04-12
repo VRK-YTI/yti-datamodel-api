@@ -3,7 +3,6 @@
  */
 package fi.vm.yti.datamodel.api.endpoint.model;
 
-import fi.vm.yti.datamodel.api.service.EndpointServices;
 import fi.vm.yti.datamodel.api.model.DataModel;
 import fi.vm.yti.datamodel.api.security.AuthorizationManager;
 import fi.vm.yti.datamodel.api.service.*;
@@ -16,7 +15,7 @@ import org.springframework.stereotype.Component;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
-import java.util.logging.Level;
+
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 
 @Component
@@ -34,7 +33,6 @@ public class ModelPositions {
     private final ModelManager modelManager;
     private final IDManager idManager;
     private final GraphManager graphManager;
-    private final ServiceDescriptionManager serviceDescriptionManager;
 
     @Autowired
     ModelPositions(AuthorizationManager authorizationManager,
@@ -44,8 +42,7 @@ public class ModelPositions {
                    JenaClient jenaClient,
                    ModelManager modelManager,
                    IDManager idManager,
-                   GraphManager graphManager,
-                   ServiceDescriptionManager serviceDescriptionManager) {
+                   GraphManager graphManager) {
 
         this.authorizationManager = authorizationManager;
         this.jerseyClient = jerseyClient;
@@ -55,7 +52,6 @@ public class ModelPositions {
         this.modelManager = modelManager;
         this.idManager = idManager;
         this.graphManager = graphManager;
-        this.serviceDescriptionManager = serviceDescriptionManager;
     }
 
     @GET

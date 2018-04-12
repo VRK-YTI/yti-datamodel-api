@@ -151,7 +151,7 @@ public String toString() {
     } catch (TransformerException ex) {
         logger.warn("Transform error", ex);
     }
-    return null;
+    return "<xs:schema></xs:schema>";
 }
 
     

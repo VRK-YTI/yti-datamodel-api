@@ -3,7 +3,6 @@
  */
 package fi.vm.yti.datamodel.api.endpoint.model;
 
-import fi.vm.yti.datamodel.api.service.EndpointServices;
 import fi.vm.yti.datamodel.api.model.ReusablePredicate;
 import fi.vm.yti.datamodel.api.security.AuthorizationManager;
 import fi.vm.yti.datamodel.api.service.*;
@@ -22,7 +21,7 @@ import org.springframework.stereotype.Component;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
 import java.util.Map;
-import java.util.logging.Level;
+
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
@@ -42,8 +41,6 @@ public class Predicate {
     private final IDManager idManager;
     private final GraphManager graphManager;
     private final ProvenanceManager provenanceManager;
-    private final ServiceDescriptionManager serviceDescriptionManager;
-    private final JenaClient jenaClient;
     private final ModelManager modelManager;
 
     @Autowired
@@ -56,8 +53,6 @@ public class Predicate {
               IDManager idManager,
               GraphManager graphManager,
               ProvenanceManager provenanceManager,
-              ServiceDescriptionManager serviceDescriptionManager,
-              JenaClient jenaClient,
               ModelManager modelManager) {
 
         this.authorizationManager = authorizationManager;
@@ -69,8 +64,6 @@ public class Predicate {
         this.idManager = idManager;
         this.graphManager = graphManager;
         this.provenanceManager = provenanceManager;
-        this.serviceDescriptionManager = serviceDescriptionManager;
-        this.jenaClient = jenaClient;
         this.modelManager = modelManager;
     }
 

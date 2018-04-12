@@ -1,15 +1,14 @@
 package fi.vm.yti.datamodel.api.model;
 
 import fi.vm.yti.datamodel.api.service.GraphManager;
-import fi.vm.yti.datamodel.api.service.JenaClient;
-import fi.vm.yti.datamodel.api.service.ModelManager;
-import fi.vm.yti.datamodel.api.service.ServiceDescriptionManager;
 import fi.vm.yti.datamodel.api.utils.LDHelper;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.rdf.model.*;
 import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.topbraid.shacl.vocabulary.SH;
 
 import java.util.List;
@@ -17,7 +16,8 @@ import java.util.UUID;
 
 public abstract class AbstractClass extends AbstractResource {
 
-    protected String provUUID;
+    private String provUUID;
+    Logger logger = LoggerFactory.getLogger(AbstractClass.class);
 
     public AbstractClass(GraphManager graphManager) {
         super(graphManager);
@@ -75,7 +75,7 @@ public abstract class AbstractClass extends AbstractResource {
             classResource.addProperty(DCTerms.identifier,ResourceFactory.createPlainLiteral(provUUID));
 
         } catch(Exception ex)  {
-            ex.printStackTrace();
+            logger.warn("Error: ",ex);
             throw new IllegalArgumentException("Expected 1 class (isDefinedBy)");
         }
 

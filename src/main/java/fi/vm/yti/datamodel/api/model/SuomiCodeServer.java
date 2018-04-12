@@ -5,22 +5,17 @@ package fi.vm.yti.datamodel.api.model;
 
 import fi.vm.yti.datamodel.api.service.EndpointServices;
 import fi.vm.yti.datamodel.api.utils.LDHelper;
-import org.apache.jena.iri.IRI;
-import org.apache.jena.iri.IRIFactory;
 import org.apache.jena.rdf.model.*;
-import org.apache.jena.riot.system.IRIResolver;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.web.DatasetAdapter;
 import org.apache.jena.web.DatasetGraphAccessorHTTP;
 
 import javax.json.*;
-import javax.json.JsonValue.ValueType;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
 import java.io.InputStream;
-import java.util.HashMap;
 import java.util.Iterator;
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 

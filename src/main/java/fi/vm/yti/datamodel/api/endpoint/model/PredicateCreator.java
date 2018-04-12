@@ -29,8 +29,6 @@ public class PredicateCreator {
     private final JerseyResponseManager jerseyResponseManager;
     private final JerseyClient jerseyClient;
     private final GraphManager graphManager;
-    private final JenaClient jenaClient;
-    private final ModelManager modelManager;
     private final TermedTerminologyManager termedTerminologyManager;
 
     @Autowired
@@ -38,15 +36,11 @@ public class PredicateCreator {
                      JerseyResponseManager jerseyResponseManager,
                      JerseyClient jerseyClient,
                      GraphManager graphManager,
-                     JenaClient jenaClient,
-                     ModelManager modelManager,
                      TermedTerminologyManager termedTerminologyManager) {
         this.idManager = idManager;
         this.jerseyResponseManager = jerseyResponseManager;
         this.jerseyClient = jerseyClient;
         this.graphManager = graphManager;
-        this.jenaClient = jenaClient;
-        this.modelManager = modelManager;
         this.termedTerminologyManager = termedTerminologyManager;
     }
 

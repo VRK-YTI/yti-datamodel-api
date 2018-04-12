@@ -1,9 +1,6 @@
 package fi.vm.yti.datamodel.api.model;
 
 import fi.vm.yti.datamodel.api.service.GraphManager;
-import fi.vm.yti.datamodel.api.service.JenaClient;
-import fi.vm.yti.datamodel.api.service.ModelManager;
-import fi.vm.yti.datamodel.api.service.ServiceDescriptionManager;
 import fi.vm.yti.datamodel.api.utils.LDHelper;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.rdf.model.*;
@@ -18,7 +15,7 @@ import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 
 public class AbstractPredicate extends AbstractResource {
 
-    protected String provUUID;
+    private String provUUID;
     private static final Logger logger = LoggerFactory.getLogger(AbstractPredicate.class.getName());
 
 

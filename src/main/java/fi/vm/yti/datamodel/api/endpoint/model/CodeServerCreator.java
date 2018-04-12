@@ -7,7 +7,6 @@ import fi.vm.yti.datamodel.api.service.EndpointServices;
 import fi.vm.yti.datamodel.api.service.IDManager;
 import fi.vm.yti.datamodel.api.service.JerseyClient;
 import fi.vm.yti.datamodel.api.service.JerseyResponseManager;
-import fi.vm.yti.datamodel.api.model.OPHCodeServer;
 import fi.vm.yti.datamodel.api.utils.LDHelper;
 import io.swagger.annotations.*;
 import org.apache.jena.query.ParameterizedSparqlString;

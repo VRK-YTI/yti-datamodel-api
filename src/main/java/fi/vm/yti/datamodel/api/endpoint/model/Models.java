@@ -3,7 +3,6 @@
  */
 package fi.vm.yti.datamodel.api.endpoint.model;
 
-import fi.vm.yti.datamodel.api.service.EndpointServices;
 import fi.vm.yti.datamodel.api.model.DataModel;
 import fi.vm.yti.datamodel.api.security.AuthorizationManager;
 import fi.vm.yti.datamodel.api.service.*;
@@ -25,7 +24,7 @@ import org.springframework.stereotype.Component;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
 import java.util.UUID;
-import java.util.logging.Level;
+
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 
 @Component
@@ -43,7 +42,6 @@ public class Models {
     private final IDManager idManager;
     private final JerseyClient jerseyClient;
     private final ServiceDescriptionManager serviceDescriptionManager;
-    private final JenaClient jenaClient;
     private final ProvenanceManager provenanceManager;
     private final RHPOrganizationManager rhpOrganizationManager;
     private final ModelManager modelManager;
@@ -57,7 +55,6 @@ public class Models {
            IDManager idManager,
            JerseyClient jerseyClient,
            ServiceDescriptionManager serviceDescriptionManager,
-           JenaClient jenaClient,
            ProvenanceManager provenanceManager,
            RHPOrganizationManager rhpOrganizationManager,
            ModelManager modelManager) {
@@ -70,7 +67,6 @@ public class Models {
         this.idManager = idManager;
         this.jerseyClient = jerseyClient;
         this.serviceDescriptionManager = serviceDescriptionManager;
-        this.jenaClient = jenaClient;
         this.provenanceManager = provenanceManager;
         this.rhpOrganizationManager = rhpOrganizationManager;
         this.modelManager = modelManager;

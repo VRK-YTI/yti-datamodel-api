@@ -4,7 +4,6 @@
 package fi.vm.yti.datamodel.api.endpoint.profile;
 
 import fi.vm.yti.datamodel.api.config.ApplicationProperties;
-import fi.vm.yti.datamodel.api.service.EndpointServices;
 import fi.vm.yti.datamodel.api.model.ApplicationProfile;
 import fi.vm.yti.datamodel.api.model.ServiceCategory;
 import fi.vm.yti.datamodel.api.service.*;
@@ -38,8 +37,6 @@ public class ProfileCreator {
     private final RHPOrganizationManager rhpOrganizationManager;
     private final IDManager idManager;
     private final JerseyClient jerseyClient;
-    private final ServiceDescriptionManager serviceDescriptionManager;
-    private final JenaClient jenaClient;
     private final EndpointServices endpointServices;
 
     ProfileCreator(ApplicationProperties properties,
@@ -48,8 +45,6 @@ public class ProfileCreator {
                    RHPOrganizationManager rhpOrganizationManager,
                    IDManager idManager,
                    JerseyClient jerseyClient,
-                   ServiceDescriptionManager serviceDescriptionManager,
-                   JenaClient jenaClient,
                    EndpointServices endpointServices) {
 
         this.defaultNamespace = properties.getDefaultNamespace();
@@ -58,8 +53,6 @@ public class ProfileCreator {
         this.rhpOrganizationManager = rhpOrganizationManager;
         this.idManager = idManager;
         this.jerseyClient = jerseyClient;
-        this.serviceDescriptionManager = serviceDescriptionManager;
-        this.jenaClient = jenaClient;
         this.endpointServices = endpointServices;
     }
 

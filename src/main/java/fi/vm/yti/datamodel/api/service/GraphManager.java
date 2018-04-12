@@ -25,7 +25,7 @@ import org.apache.jena.update.UpdateProcessor;
 import org.apache.jena.update.UpdateRequest;
 
 import java.util.Date;
-import java.util.logging.Level;
+
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.datatypes.xsd.XSDDateTime;
@@ -170,7 +170,8 @@ public class GraphManager {
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                logger.warn("Thread error",e);
+                Thread.currentThread().interrupt();
             }
             return getCoreGraph(graph.toString());
         }

@@ -1,6 +1,5 @@
 package fi.vm.yti.datamodel.api.model;
 
-import fi.vm.yti.datamodel.api.service.EndpointServices;
 import fi.vm.yti.datamodel.api.service.*;
 import fi.vm.yti.datamodel.api.utils.LDHelper;
 import org.apache.jena.iri.IRI;

@@ -1,6 +1,5 @@
 package fi.vm.yti.datamodel.api.endpoint.genericapi;
 
-import fi.vm.yti.datamodel.api.service.EndpointServices;
 import fi.vm.yti.datamodel.api.service.*;
 import io.swagger.annotations.*;
 import org.apache.jena.atlas.web.ContentType;
@@ -14,7 +13,7 @@ import javax.ws.rs.HeaderParam;
 import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
-import java.util.logging.Level;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

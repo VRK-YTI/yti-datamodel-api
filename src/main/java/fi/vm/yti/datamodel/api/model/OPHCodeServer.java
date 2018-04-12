@@ -33,7 +33,6 @@ public class OPHCodeServer {
     static final private Logger logger = LoggerFactory.getLogger(OPHCodeServer.class.getName());
 
     private final EndpointServices endpointServices;
-    private DatasetGraphAccessorHTTP accessor;
     private DatasetAdapter adapter;
     private String uri;
     private Property description = ResourceFactory.createProperty("http://purl.org/dc/terms/", "description");
@@ -45,7 +44,7 @@ public class OPHCodeServer {
 
 
     public OPHCodeServer(String uri, EndpointServices endpointServices) {
-        this.accessor = new DatasetGraphAccessorHTTP(endpointServices.getSchemesReadWriteAddress());
+        DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(endpointServices.getSchemesReadWriteAddress());
         this.adapter = new DatasetAdapter(accessor);
         this.endpointServices = endpointServices;
         this.uri = uri;
@@ -308,7 +307,7 @@ public class OPHCodeServer {
         Iterator<String> it = jsonMap.keySet().iterator();
         while(it.hasNext()) {
             String key = it.next();
-            arrBuild.add((JsonValue)jsonMap.get(key));
+            arrBuild.add(jsonMap.get(key));
         }
 
         return arrBuild.build();

@@ -5,6 +5,7 @@
  */
 package fi.vm.yti.datamodel.api.service;
 
+import fi.vm.yti.datamodel.api.StartUpListener;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.elasticsearch.action.ActionFuture;
@@ -16,6 +17,8 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import org.mockito.ArgumentCaptor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import static org.mockito.Mockito.*;
@@ -27,20 +30,23 @@ import static org.hamcrest.Matchers.*;
  * @author jkesanie
  */
 public class FrameManagerTest  {
-    
+
+
+    private static final Logger logger = LoggerFactory.getLogger(FrameManagerTest.class.getName());
+
     public FrameManagerTest() {
     }
 
     @Test
     public void testGetCachedClassVisualizationFrame() {
-        System.out.println("cacheClassVisualizationFrame");                
+        logger.info("cacheClassVisualizationFrame");
         String id = "http://ex.com/id:2";
         Resource dataFile = new ClassPathResource("test-model.ttl");
         
         try {
             Model model = ModelFactory.createDefaultModel();
             model.read(dataFile.getFile().getAbsolutePath());
-            System.out.println(dataFile.getFile().getAbsolutePath());
+            logger.debug(dataFile.getFile().getAbsolutePath());
             Client client = mock(Client.class);                        
             IndexRequestBuilder irb = mock(IndexRequestBuilder.class);
             when(client.prepareIndex(any(), any(), any())).thenReturn(irb);
@@ -57,7 +63,7 @@ public class FrameManagerTest  {
             
             String frameJson = sourceCaptor.getValue();
             
-            System.out.println(frameJson);
+            logger.debug(frameJson);
             assertThat(frameJson, isJson());   
             
             assertThat(frameJson, hasJsonPath("$['@graph'][0]['@id']", equalTo("testaa:Test")));
@@ -67,7 +73,7 @@ public class FrameManagerTest  {
             
    
         }catch(Exception ex) {
-            ex.printStackTrace();
+            logger.warn("Error: ",ex);
             fail("Exception was thrown:" + ex.getMessage());
         }
         

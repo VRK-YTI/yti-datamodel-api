@@ -4,7 +4,6 @@
 package fi.vm.yti.datamodel.api.endpoint.model;
 
 import fi.vm.yti.datamodel.api.config.ApplicationProperties;
-import fi.vm.yti.datamodel.api.service.EndpointServices;
 import fi.vm.yti.datamodel.api.model.DataModel;
 import fi.vm.yti.datamodel.api.model.ServiceCategory;
 import fi.vm.yti.datamodel.api.service.*;
@@ -38,8 +37,6 @@ public class ModelCreator {
     private final RHPOrganizationManager rhpOrganizationManager;
     private final JerseyClient jerseyClient;
     private final IDManager idManager;
-    private final ServiceDescriptionManager serviceDescriptionManager;
-    private final JenaClient jenaClient;
     private final EndpointServices endpointServices;
     private final ApplicationProperties applicationProperties;
 
@@ -49,8 +46,6 @@ public class ModelCreator {
                  RHPOrganizationManager rhpOrganizationManager,
                  JerseyClient jerseyClient,
                  IDManager idManager,
-                 ServiceDescriptionManager serviceDescriptionManager,
-                 JenaClient jenaClient,
                  EndpointServices endpointServices,
                  ApplicationProperties applicationProperties) {
 
@@ -59,8 +54,6 @@ public class ModelCreator {
         this.rhpOrganizationManager = rhpOrganizationManager;
         this.jerseyClient = jerseyClient;
         this.idManager = idManager;
-        this.serviceDescriptionManager = serviceDescriptionManager;
-        this.jenaClient = jenaClient;
         this.endpointServices = endpointServices;
         this.applicationProperties = applicationProperties;
     }

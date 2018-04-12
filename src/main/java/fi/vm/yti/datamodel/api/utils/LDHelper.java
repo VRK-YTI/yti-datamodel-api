@@ -16,6 +16,7 @@ import org.glassfish.jersey.uri.UriComponent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nonnull;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.io.InputStream;
@@ -47,11 +48,7 @@ public class LDHelper {
 
     public static boolean isInvalidIRI(String url) {
         IRI testIRI = toIRI(url);
-        if(testIRI.hasViolation(false)) {
-            return true;
-        } else {
-            return false;
-        }
+        return testIRI.hasViolation(false);
     }
 
 
@@ -156,7 +153,7 @@ public class LDHelper {
            mapper.configure(JsonParser.Feature.ALLOW_SINGLE_QUOTES, true);
            return mapper.readValue(json, new TypeReference<HashMap<String,Object>>() {});
        } catch (IOException ex) {
-           System.out.println(ex.toString());
+           logger.warn(ex.getMessage(), ex);
            return null;
        }
     }
@@ -368,7 +365,6 @@ public class LDHelper {
      * @param name resource name
      * @return stripped resource name
      */
-    
     public static String removeInvalidCharacters(String name) {
         name = removeAccents(name);
         name = name.replaceAll("[^a-zA-Z0-9_-]", "");
@@ -380,9 +376,8 @@ public class LDHelper {
      * @param text input text
      * @return stripped text
      */
-   public static String removeAccents(String text) {
-    return text == null ? null :
-        Normalizer.normalize(text, Form.NFD)
+   public static String removeAccents(@Nonnull String text) {
+    return Normalizer.normalize(text, Form.NFD)
             .replaceAll("\\p{InCombiningDiacriticalMarks}+", "");
     }
     

@@ -56,7 +56,7 @@ public class ModelManager {
            JsonNode jsonNode = objectMapper.readTree(baos.toByteArray());
            return jsonNode;
         } catch(IOException ex) {
-           ex.printStackTrace();
+           logger.warn(ex.getMessage(),ex);
            return null;
         }
     }
@@ -115,7 +115,7 @@ public class ModelManager {
                     }
                 } catch(PropertyNotFoundException ex) {
                     logger.warn("This should'nt happen!");
-                    ex.printStackTrace();
+                    logger.warn(ex.getMessage(),ex);
                 }
             } else if(subject.isURIResource() && !subject.hasProperty(RDF.type, OWL.Ontology)){
                 model.remove(listStatement);

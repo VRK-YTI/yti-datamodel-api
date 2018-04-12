@@ -45,7 +45,6 @@ public class XMLSchemaWriter {
         put("http://www.w3.org/2001/XMLSchema#gMonth", "xs:gMont");
         put("http://www.w3.org/2001/XMLSchema#gDay", "xs:gDay");
         put("http://www.w3.org/2001/XMLSchema#string", "xs:string");
-        put("http://www.w3.org/2001/XMLSchema#anyUri", "xs:anyUri");
         put("http://www.w3.org/1999/02/22-rdf-syntax-ns#langString", "xs:string");
         put("http://www.w3.org/2000/01/rdf-schema#Literal", "xs:string");
         put("http://www.w3.org/2001/XMLSchema#anyUri", "xs:anyUri");

@@ -15,7 +15,7 @@ import org.apache.jena.update.UpdateRequest;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
-import java.util.logging.Level;
+
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 
 @Service

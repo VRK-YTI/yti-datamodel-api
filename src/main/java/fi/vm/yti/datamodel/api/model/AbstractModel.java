@@ -1,9 +1,7 @@
 package fi.vm.yti.datamodel.api.model;
 
 import fi.vm.yti.datamodel.api.service.GraphManager;
-import fi.vm.yti.datamodel.api.service.JenaClient;
 import fi.vm.yti.datamodel.api.service.RHPOrganizationManager;
-import fi.vm.yti.datamodel.api.service.ServiceDescriptionManager;
 import fi.vm.yti.datamodel.api.utils.*;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.rdf.model.*;

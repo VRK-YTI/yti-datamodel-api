@@ -22,7 +22,6 @@ public class StartUpListener  {
     private final RHPOrganizationManager rhpOrganizationManager;
     private final GraphManager graphManager;
     private final NamespaceManager namespaceManager;
-    private final EndpointServices endpointServices;
     private final FrameManager frameManager;
 
     @Autowired
@@ -30,21 +29,18 @@ public class StartUpListener  {
                     RHPOrganizationManager rhpOrganizationManager,
                     GraphManager graphManager,
                     NamespaceManager namespaceManager,
-                    EndpointServices endpointServices,
                     FrameManager frameManager) {
 
         this.termedTerminologyManager = termedTerminologyManager;
         this.rhpOrganizationManager = rhpOrganizationManager;
         this.graphManager = graphManager;
         this.namespaceManager = namespaceManager;
-        this.endpointServices = endpointServices;
         this.frameManager = frameManager;
     }
 
     @PostConstruct
     public void contextInitialized() {
 
-        System.out.println("System is starting ...");
         logger.info( "System is starting ...");
 
         initDefaultGraph();
@@ -58,7 +54,6 @@ public class StartUpListener  {
 
     @PreDestroy
     public void contextDestroyed() {
-        System.out.println("System is closing ...");
         logger.info( "System is closing ...");
     }
 

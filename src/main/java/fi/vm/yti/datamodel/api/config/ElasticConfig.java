@@ -37,9 +37,10 @@ public class ElasticConfig {
     protected Client elasticSearchClient() throws UnknownHostException {
         Settings settings = Settings.builder()
             .put("cluster.name", config.getElasticCluster()).build();
-        TransportClient client = new PreBuiltTransportClient(settings)
-            .addTransportAddress(new TransportAddress(InetAddress.getByName(config.getElasticHost()), Integer.parseInt(config.getElasticPort())));
-        return client;
+        try (TransportClient client = new PreBuiltTransportClient(settings)
+                .addTransportAddress(new TransportAddress(InetAddress.getByName(config.getElasticHost()), Integer.parseInt(config.getElasticPort())))) {
+            return client;
+        }
     } 
     
 }

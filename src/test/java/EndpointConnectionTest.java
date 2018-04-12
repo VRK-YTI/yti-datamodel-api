@@ -40,7 +40,6 @@ public class EndpointConnectionTest {
             ResultSet results = qexec.execSelect();
             while(results.hasNext()) {
                 QuerySolution soln = results.nextSolution();
-                System.out.println(soln);
             }
         } catch(Exception ex) {
             fail("FAILED TO SEND: "+queryString+" to EDNPOINT: "+endpoint);

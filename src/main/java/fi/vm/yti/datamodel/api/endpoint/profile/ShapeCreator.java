@@ -3,7 +3,6 @@
  */
 package fi.vm.yti.datamodel.api.endpoint.profile;
 
-import fi.vm.yti.datamodel.api.service.EndpointServices;
 import fi.vm.yti.datamodel.api.model.Shape;
 import fi.vm.yti.datamodel.api.service.*;
 import io.swagger.annotations.*;
@@ -32,8 +31,6 @@ public class ShapeCreator {
     private final JerseyResponseManager jerseyResponseManager;
     private final JerseyClient jerseyClient;
     private final GraphManager graphManager;
-    private final JenaClient jenaClient;
-    private final ModelManager modelManager;
     private final EndpointServices endpointServices;
 
     @Autowired
@@ -41,16 +38,12 @@ public class ShapeCreator {
                  JerseyResponseManager jerseyResponseManager,
                  JerseyClient jerseyClient,
                  GraphManager graphManager,
-                 JenaClient jenaClient,
-                 ModelManager modelManager,
                  EndpointServices endpointServices) {
 
         this.idManager = idManager;
         this.jerseyResponseManager = jerseyResponseManager;
         this.jerseyClient = jerseyClient;
         this.graphManager = graphManager;
-        this.jenaClient = jenaClient;
-        this.modelManager = modelManager;
         this.endpointServices = endpointServices;
     }
 

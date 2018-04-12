@@ -555,11 +555,11 @@ public final class NamespaceManager {
                         return false;
                     } catch (SocketTimeoutException e) {
                         logger.info("Timeout from "+namespace);
-                        e.printStackTrace();
+                        logger.warn(e.getMessage(),e);
                         return false;
                     } catch (RuntimeIOException e) {
                         logger.info("Could not parse "+namespace);
-                        e.printStackTrace();
+                        logger.warn(e.getMessage(),e);
                         return false;
                     }
 
@@ -590,7 +590,7 @@ public final class NamespaceManager {
 
         } catch(Exception ex) {
             logger.warn("Error in loading the "+namespace);
-            ex.printStackTrace();
+            logger.warn(ex.getMessage(),ex);
             return false;
         }
     }
