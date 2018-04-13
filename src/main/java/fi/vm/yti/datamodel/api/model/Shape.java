@@ -29,7 +29,6 @@ public class Shape extends AbstractShape {
                  IRI profileIRI,
                  GraphManager graphManager,
                  EndpointServices endpointServices) {
-        super(graphManager);
 
         logger.info("Creating shape from "+classIRI.toString()+" to "+shapeIRI.toString());
 

@@ -16,23 +16,65 @@ import java.util.UUID;
 
 public abstract class AbstractClass extends AbstractResource {
 
-    private String provUUID;
-    Logger logger = LoggerFactory.getLogger(AbstractClass.class);
 
-    public AbstractClass(GraphManager graphManager) {
-        super(graphManager);
-    }
+    protected String provUUID;
+    protected GraphManager graphManager;
+    private static final Logger logger = LoggerFactory.getLogger(AbstractClass.class.getName());
+
+    public AbstractClass() {}
 
     public AbstractClass(IRI graphIRI,
                          GraphManager graphManager) {
-        super(graphIRI, graphManager);
+
+        this.graphManager = graphManager;
+
+        this.graph = graphManager.getCoreGraph(graphIRI);
+        this.id = graphIRI;
+
+        try {
+
+            Statement isDefinedBy = asGraph().getRequiredProperty(ResourceFactory.createResource(getId()), RDFS.isDefinedBy);
+            Resource abstractResource = isDefinedBy.getSubject().asResource();
+            Resource modelResource = isDefinedBy.getObject().asResource();
+
+            if(asGraph().contains(ResourceFactory.createResource(getId()), RDF.type, RDFS.Class)) {
+                throw new IllegalArgumentException("Expected rdfs:Class type");
+            }
+
+            logger.info(isDefinedBy.getSubject().toString()+" "+isDefinedBy.getObject().asResource().toString());
+            logger.info(abstractResource.toString());
+
+            this.dataModel = new DataModel(LDHelper.toIRI(modelResource.toString()), graphManager);
+
+            if(!this.id.toString().startsWith(getModelId())) {
+                throw new IllegalArgumentException("Resource ID should start with model ID!");
+            }
+
+            StmtIterator props = abstractResource.listProperties();
+            while(props.hasNext()) {
+                logger.info(props.next().getPredicate().getURI());
+            }
+
+            try {
+                this.provUUID = abstractResource.getRequiredProperty(DCTerms.identifier).getLiteral().toString();
+            } catch(Exception ex) {
+                logger.warn(ex.getMessage(),ex);
+                logger.warn(ex.getMessage());
+                throw new IllegalArgumentException("Expected 1 provenance ID");
+            }
+
+        } catch(Exception ex)  {
+            logger.warn(ex.getMessage(),ex);
+            throw new IllegalArgumentException("Expected 1 resource defined by model");
+        }
+
     }
 
     public AbstractClass(Model graph,
                          GraphManager graphManager) {
-        super(graphManager);
 
         this.graph = graph;
+        this.graphManager = graphManager;
 
         try {
 
@@ -83,5 +125,13 @@ public abstract class AbstractClass extends AbstractResource {
 
     public String getProvUUID() { return this.provUUID; }
     public List<UUID> getOrganizations() { return this.dataModel.getOrganizations(); }
+    public Model asGraph(){
+        return this.graph;
+    }
+    public Model asGraphCopy() { return ModelFactory.createDefaultModel().add(this.graph); }
+    public String getId() { return this.id.toString();}
+    public String getModelId() { return this.dataModel.getId(); }
+    public IRI getModelIRI() { return this.dataModel.getIRI(); }
+    public IRI getIRI() { return this.id; }
 
 }

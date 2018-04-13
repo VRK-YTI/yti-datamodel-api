@@ -234,7 +234,7 @@ public class Replicator {
                 }
 
             } else {
-                logger.warn("Reference to external resource " + resourceName);
+                logger.info("Reference to external resource " + resourceName);
             }
         }
 

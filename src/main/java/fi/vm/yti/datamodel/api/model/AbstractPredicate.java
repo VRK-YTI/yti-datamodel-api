@@ -13,24 +13,58 @@ import java.util.List;
 import java.util.UUID;
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 
-public class AbstractPredicate extends AbstractResource {
+public abstract class AbstractPredicate extends AbstractResource {
 
-    private String provUUID;
+    protected String provUUID;
+    protected GraphManager graphManager;
     private static final Logger logger = LoggerFactory.getLogger(AbstractPredicate.class.getName());
 
-
-    public AbstractPredicate(GraphManager graphManager) {
-        super(graphManager);
-    }
+    public AbstractPredicate() {}
 
     public AbstractPredicate(IRI graphIRI,
                              GraphManager graphManager) {
-       super(graphIRI, graphManager);
+
+        this.graphManager = graphManager;
+        this.graph = graphManager.getCoreGraph(graphIRI);
+        this.id = graphIRI;
+
+        try {
+
+            Statement isDefinedBy = asGraph().getRequiredProperty(ResourceFactory.createResource(getId()), RDFS.isDefinedBy);
+            Resource abstractResource = isDefinedBy.getSubject().asResource();
+            Resource modelResource = isDefinedBy.getObject().asResource();
+
+            logger.info(isDefinedBy.getSubject().toString()+" "+isDefinedBy.getObject().asResource().toString());
+            logger.info(abstractResource.toString());
+
+            this.dataModel = new DataModel(LDHelper.toIRI(modelResource.toString()), graphManager);
+
+            if(!this.id.toString().startsWith(getModelId())) {
+                throw new IllegalArgumentException("Resource ID should start with model ID!");
+            }
+
+            StmtIterator props = abstractResource.listProperties();
+            while(props.hasNext()) {
+                logger.info(props.next().getPredicate().getURI());
+            }
+
+            try {
+                this.provUUID = abstractResource.getRequiredProperty(DCTerms.identifier).getLiteral().toString();
+            } catch(Exception ex) {
+                logger.warn(ex.getMessage(),ex);
+                logger.warn(ex.getMessage());
+                throw new IllegalArgumentException("Expected 1 provenance ID");
+            }
+
+        } catch(Exception ex)  {
+            logger.warn(ex.getMessage(),ex);
+            throw new IllegalArgumentException("Expected 1 resource defined by model");
+        }
+
     }
 
     public AbstractPredicate(Model graph,
                              GraphManager graphManager) {
-        super(graphManager);
 
         this.graph = graph;
 
@@ -56,7 +90,7 @@ public class AbstractPredicate extends AbstractResource {
                 }
 
                 if(predicateResource==null) {
-                    throw new IllegalArgumentException("Expected rdfs:Class or sh:Shape");
+                    throw new IllegalArgumentException("Expected 1 ObjectProperty or DatatypeProperty");
                 }
 
             Statement isDefinedBy = predicateResource.getRequiredProperty(RDFS.isDefinedBy);
@@ -84,5 +118,12 @@ public class AbstractPredicate extends AbstractResource {
 
     public String getProvUUID() { return this.provUUID; }
     public List<UUID> getOrganizations() { return this.dataModel.getOrganizations(); }
-
+    public Model asGraph(){
+        return this.graph;
+    }
+    public Model asGraphCopy() { return ModelFactory.createDefaultModel().add(this.graph); }
+    public String getId() { return this.id.toString();}
+    public String getModelId() { return this.dataModel.getId(); }
+    public IRI getModelIRI() { return this.dataModel.getIRI(); }
+    public IRI getIRI() { return this.id; }
 }

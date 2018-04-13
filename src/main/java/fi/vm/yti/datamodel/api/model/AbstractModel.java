@@ -14,11 +14,9 @@ import java.util.List;
 import java.util.UUID;
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 
-public abstract class AbstractModel {
+public abstract class AbstractModel extends AbstractResource {
 
-    protected Model graph;
     protected String provUUID;
-    protected IRI id;
     protected List<UUID> modelOrganizations;
 
     private static final Logger logger = LoggerFactory.getLogger(AbstractModel.class.getName());

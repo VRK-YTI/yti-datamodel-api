@@ -30,8 +30,6 @@ public class ReusableClass extends AbstractClass {
                          GraphManager graphManager,
                          TermedTerminologyManager termedTerminologyManager) {
 
-        super(graphManager);
-
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
 
@@ -82,8 +80,6 @@ public class ReusableClass extends AbstractClass {
         String resourceName = LDHelper.resourceName(classLabel);
         pss.setIri("classIRI",LDHelper.resourceIRI(modelIRI.toString(),resourceName));
 
-        logger.info(pss.toString());
-
         this.graph = termedTerminologyManager.constructCleanedModelFromTermedAPIAndCore(conceptIRI.toString(),modelIRI.toString(),pss.asQuery());
 
     }
@@ -92,8 +88,6 @@ public class ReusableClass extends AbstractClass {
                          String classLabel,
                          String lang,
                          GraphManager graphManager) {
-
-        super(graphManager);
 
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);

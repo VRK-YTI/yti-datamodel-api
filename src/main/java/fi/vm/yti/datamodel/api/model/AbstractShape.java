@@ -3,12 +3,13 @@ package fi.vm.yti.datamodel.api.model;
 import fi.vm.yti.datamodel.api.service.*;
 import fi.vm.yti.datamodel.api.utils.LDHelper;
 import org.apache.jena.iri.IRI;
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.Resource;
-import org.apache.jena.rdf.model.ResourceFactory;
+import org.apache.jena.rdf.model.*;
 import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.topbraid.shacl.vocabulary.SH;
 
 import java.util.List;
 import java.util.UUID;
@@ -18,21 +19,63 @@ import java.util.UUID;
  */
 public abstract class AbstractShape extends AbstractResource {
 
-    private String provUUID;
+    protected String provUUID;
+    protected GraphManager graphManager;
+    private static final Logger logger = LoggerFactory.getLogger(AbstractShape.class.getName());
 
-    public AbstractShape(GraphManager graphManager) {
-        super(graphManager);
-    }
+    public AbstractShape() {}
 
     public AbstractShape(IRI graphIRI,
                          GraphManager graphManager) {
-        super(graphIRI, graphManager);
+
+        this.graphManager = graphManager;
+        this.graph = graphManager.getCoreGraph(graphIRI);
+        this.id = graphIRI;
+
+        try {
+
+            Statement isDefinedBy = asGraph().getRequiredProperty(ResourceFactory.createResource(getId()), RDFS.isDefinedBy);
+
+            if(asGraph().contains(ResourceFactory.createResource(getId()), RDF.type, SH.Shape)) {
+                throw new IllegalArgumentException("Expected sh:Shape type");
+            }
+
+            Resource abstractResource = isDefinedBy.getSubject().asResource();
+            Resource modelResource = isDefinedBy.getObject().asResource();
+
+            logger.info(isDefinedBy.getSubject().toString()+" "+isDefinedBy.getObject().asResource().toString());
+            logger.info(abstractResource.toString());
+
+            this.dataModel = new DataModel(LDHelper.toIRI(modelResource.toString()), graphManager);
+
+            if(!this.id.toString().startsWith(getModelId())) {
+                throw new IllegalArgumentException("Resource ID should start with model ID!");
+            }
+
+            StmtIterator props = abstractResource.listProperties();
+            while(props.hasNext()) {
+                logger.info(props.next().getPredicate().getURI());
+            }
+
+            try {
+                this.provUUID = abstractResource.getRequiredProperty(DCTerms.identifier).getLiteral().toString();
+            } catch(Exception ex) {
+                logger.warn(ex.getMessage(),ex);
+                logger.warn(ex.getMessage());
+                throw new IllegalArgumentException("Expected 1 provenance ID");
+            }
+
+        } catch(Exception ex)  {
+            logger.warn(ex.getMessage(),ex);
+            throw new IllegalArgumentException("Expected 1 resource defined by model");
+        }
+
     }
 
     public AbstractShape(Model graph,
                          GraphManager graphManager) {
-        super(graphManager);
 
+        this.graphManager = graphManager;
         this.graph = graph;
 
         List<Resource> modelList = this.graph.listResourcesWithProperty(RDFS.isDefinedBy).toList();
@@ -62,11 +105,6 @@ public abstract class AbstractShape extends AbstractResource {
 
     }
 
-    public Model asGraph(){
-        return this.graph;
-    }
-    public String getId() { return this.id.toString();}
-    public IRI getIRI() { return this.id; }
     public String getProvUUID() { return this.provUUID; }
     public List<UUID> getOrganizations() { return this.dataModel.getOrganizations(); }
 

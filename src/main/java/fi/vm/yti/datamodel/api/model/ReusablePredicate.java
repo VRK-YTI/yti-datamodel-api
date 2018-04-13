@@ -28,8 +28,6 @@ public class ReusablePredicate extends AbstractPredicate {
                              GraphManager graphManager,
                              TermedTerminologyManager termedTerminologyManager) {
 
-        super(graphManager);
-
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
 
@@ -91,8 +89,6 @@ public class ReusablePredicate extends AbstractPredicate {
                              String lang,
                              IRI typeIRI,
                              GraphManager graphManager) {
-
-        super(graphManager);
 
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
