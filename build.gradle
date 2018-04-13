@@ -36,7 +36,7 @@ targetCompatibility = 1.8
 
 dependencyManagement {
     imports {
-        mavenBom "org.springframework.cloud:spring-cloud-dependencies:Brixton.RELEASE"
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:Dalston.SR5"
     }
 }
 
@@ -54,6 +54,7 @@ dependencies {
 
     compileOnly "org.springframework.boot:spring-boot-configuration-processor"
 
+    compile "org.springframework.cloud:spring-cloud-starter-config"
     compile "org.springframework.cloud:spring-cloud-starter-sleuth"
 
     compile "ch.qos.logback:logback-core"
