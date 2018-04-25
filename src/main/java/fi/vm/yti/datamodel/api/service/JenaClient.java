@@ -11,6 +11,8 @@ import org.springframework.stereotype.Service;
 
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 
+import java.io.ByteArrayOutputStream;
+
 @Service
 public final class JenaClient {
 
@@ -124,6 +126,16 @@ public final class JenaClient {
         try(QueryExecution qexec = QueryExecutionFactory.sparqlService(service, query)) {
             // ResultSet needs to be copied in order to use it after the connection is closed
             return ResultSetFactory.copyResults(qexec.execSelect()) ;
+        }
+    }
+
+    public String selectCSV(String service, Query query) {
+       logger.debug("Select csv from "+service);
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        try(QueryExecution qexec = QueryExecutionFactory.sparqlService(service, query)) {
+            // ResultSet needs to be copied in order to use it after the connection is closed
+            ResultSetFormatter.outputAsCSV(stream,qexec.execSelect());
+            return new String(stream.toByteArray());
         }
     }
 

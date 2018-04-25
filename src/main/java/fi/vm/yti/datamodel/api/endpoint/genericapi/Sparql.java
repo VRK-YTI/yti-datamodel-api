@@ -43,7 +43,8 @@ public class Sparql {
             @ApiResponse(code = 200, message = "OK")
     })
     public Response sparql(
-            @ApiParam(value = "SPARQL Query", required = true) @QueryParam("query") String queryString) {
+            @ApiParam(value = "SPARQL Query", required = true) @QueryParam("query") String queryString,
+            @ApiParam(value = "Accept", required = true, allowableValues="application/sparql-results+json,text/csv") @QueryParam("accept") String accept) {
 
         if (!authorizationManager.hasRightToRunSparqlQuery()) {
             return jerseyResponseManager.unauthorized();
@@ -62,10 +63,16 @@ public class Sparql {
 
             OutputStream outs = new ByteArrayOutputStream();
             ResultSet results = qexec.execSelect();
-            ResultSetFormatter.outputAsJSON(outs,results);
+
+            if(accept.equals("text/csv")) {
+                ResultSetFormatter.outputAsCSV(outs, results);
+            }
+            else {
+                ResultSetFormatter.outputAsJSON(outs,results);
+            }
 
             return  Response
-                    .ok(outs.toString(), "application/sparql-results+json")
+                    .ok(outs.toString(), accept)
                     .build();
 
         } catch(QueryException ex) {

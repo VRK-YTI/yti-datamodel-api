@@ -17,6 +17,20 @@ public class QueryLibrary {
                 + " ?every ?darn ?thing . }"
                 + "}";
 
+
+    final public static String listClassInRows =
+            "SELECT DISTINCT ?mlabel ?label ?plabel WHERE {" +
+                    " ?s a sh:Shape . " +
+                    "?s rdfs:isDefinedBy ?model . " +
+                    "?model rdfs:label ?mlabel . " +
+                    "?s rdfs:label ?label . " +
+                    "?s sh:property ?prop . " +
+                    "?prop rdfs:label ?plabel . " +
+                    "?prop sh:predicate ?p . " +
+                    "FILTER(lang(?mlabel)=?lang) " +
+                    "FILTER(lang(?label)=?lang) " +
+                    "FILTER(lang(?plabel)=?lang)}";
+
     final public static String conceptQuery = LDHelper.expandSparqlQuery(true,
             "CONSTRUCT {" +
                     "?concept skos:prefLabel ?label . " +
