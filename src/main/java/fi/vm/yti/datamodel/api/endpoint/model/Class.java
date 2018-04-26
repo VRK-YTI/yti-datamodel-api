@@ -214,7 +214,7 @@ public class Class {
                 }
 
                 if(provenanceManager.getProvMode()) {
-                    provenanceManager.createProvEntityBundle(updateClass.getId(), updateClass.asGraph(), user.getEmail(), updateClass.getProvUUID(), oldIdIRI);
+                    provenanceManager.createProvEntityBundle(updateClass.getId(), updateClass.asGraph(), user.getId(), updateClass.getProvUUID(), oldIdIRI);
                 }
 
 
@@ -303,7 +303,7 @@ public class Class {
                 logger.info("Created "+newClass.getId());
 
                 if (provenanceManager.getProvMode()) {
-                    provenanceManager.createProvenanceActivityFromModel(newClass.getId(), newClass.asGraph(), newClass.getProvUUID(), user.getEmail());
+                    provenanceManager.createProvenanceActivityFromModel(newClass.getId(), newClass.asGraph(), newClass.getProvUUID(), user.getId());
                 }
 
                 return jerseyResponseManager.successUrnUuid(newClass.getProvUUID(), newClass.getId());

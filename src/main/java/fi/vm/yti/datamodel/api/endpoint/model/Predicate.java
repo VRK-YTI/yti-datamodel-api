@@ -218,7 +218,7 @@ public class Predicate {
                 }
 
                 if(provenanceManager.getProvMode()) {
-                    provenanceManager.createProvEntityBundle(updatePredicate.getId(), updatePredicate.asGraph(), user.getEmail(), updatePredicate.getProvUUID(), oldIdIRI);
+                    provenanceManager.createProvEntityBundle(updatePredicate.getId(), updatePredicate.asGraph(), user.getId(), updatePredicate.getProvUUID(), oldIdIRI);
                 }
 
 
@@ -296,7 +296,7 @@ public class Predicate {
             graphManager.createResource(newPredicate);
 
             if (provenanceManager.getProvMode()) {
-                provenanceManager.createProvenanceActivityFromModel(newPredicate.getId(), newPredicate.asGraph(), newPredicate.getProvUUID(), user.getEmail());
+                provenanceManager.createProvenanceActivityFromModel(newPredicate.getId(), newPredicate.asGraph(), newPredicate.getProvUUID(), user.getId());
             }
 
             if(provUUID!=null) {

@@ -14,6 +14,8 @@ import org.apache.jena.update.UpdateRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.UUID;
+
 @Service
 public class ProvenanceManager {
 
@@ -50,22 +52,22 @@ public class ProvenanceManager {
      * @param id ID of the resource
      * @param model Model containing the resource
      * @param provUUID Provenance UUID for the resource
-     * @param email Email of the committing user
+     * @param user UUID of the committing user
      */
-    public void createProvenanceActivityFromModel(String id, Model model, String provUUID, String email) {
+    public void createProvenanceActivityFromModel(String id, Model model, String provUUID, UUID user) {
        putToProvenanceGraph(model, provUUID);
-       createProvenanceActivity(id, provUUID, email);
+       createProvenanceActivity(id, provUUID, user);
     }
 
     /**
      * Returns query for creating the PROV Activity
      * @param graph ID of the resource
      * @param provUUID Provenance id of the resource
-     * @param user Email of the committing user
+     * @param user UUID of the committing user
      * @return UpdateRequest of the activity
      */
 
-    public UpdateRequest createProvenanceActivityRequest(String graph, String provUUID, String user) {
+    public UpdateRequest createProvenanceActivityRequest(String graph, String provUUID, UUID user) {
         String query
                 = "INSERT { "
                 + "GRAPH ?graph { "
@@ -90,18 +92,18 @@ public class ProvenanceManager {
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
 
         pss.setIri("graph", graph);
-        pss.setIri("user", "mailto:"+user);
+        pss.setIri("user", "urn:uuid:"+user.toString());
         pss.setIri("jsonld", provUUID);
         pss.setCommandText(query);
         return pss.asUpdate();
     }
 
-    public void createProvenanceActivity(String graph, String provUUID, String user) {
+    public void createProvenanceActivity(String graph, String provUUID, UUID user) {
         UpdateRequest queryObj = createProvenanceActivityRequest(graph, provUUID, user);
         jenaClient.updateToService(queryObj, endpointServices.getProvSparqlUpdateAddress());
     }
 
-    public UpdateRequest createProvEntityRequest(String graph, String user, String provUUID) {
+    public UpdateRequest createProvEntityRequest(String graph, UUID user, String provUUID) {
         String query
                 = "DELETE { "
                 + "GRAPH ?graph {"
@@ -132,13 +134,13 @@ public class ProvenanceManager {
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
 
         pss.setIri("graph", graph);
-        pss.setIri("user", "mailto:"+user);
+        pss.setIri("user", "urn:uuid:"+user.toString());
         pss.setIri("jsonld", provUUID);
         pss.setCommandText(query);
         return pss.asUpdate();
     }
 
-    public void createProvEntity(String graph, String provUUID, String user) {
+    public void createProvEntity(String graph, String provUUID, UUID user) {
         UpdateRequest queryObj = createProvEntityRequest(graph, user, provUUID);
         jenaClient.updateToService(queryObj, endpointServices.getProvSparqlUpdateAddress());
     }
@@ -147,11 +149,11 @@ public class ProvenanceManager {
      * Creates PROV Entities and renames ID:s if changed
      * @param graph Graph of the resource
      * @param model Model containing the resource
-     * @param user Email of the committing user
+     * @param user UUID of the committing user
      * @param provUUID Provenance UUID for the resource
      * @param oldIdIRI Optional: Old IRI for the resource
      */
-    public void createProvEntityBundle(String graph, Model model, String user, String provUUID, IRI oldIdIRI) {
+    public void createProvEntityBundle(String graph, Model model, UUID user, String provUUID, IRI oldIdIRI) {
       putToProvenanceGraph(model, provUUID);
       createProvEntity(graph, provUUID, user);
         if(oldIdIRI!=null) {

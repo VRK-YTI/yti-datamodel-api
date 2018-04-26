@@ -207,7 +207,7 @@ public class Models {
                 if(provenanceManager.getProvMode()) {
                     // ProvenanceManager.createProvenanceGraphFromModel(newVocabulary.getId(), newVocabulary.asGraph(), login.getEmail(), newVocabulary.getProvUUID());
                     // ProvenanceManager.createProvEntity(newVocabulary.getId(), login.getEmail(), newVocabulary.getProvUUID());
-                    provenanceManager.createProvEntityBundle(newVocabulary.getId(), newVocabulary.asGraph(), user.getEmail(), newVocabulary.getProvUUID(), null);
+                    provenanceManager.createProvEntityBundle(newVocabulary.getId(), newVocabulary.asGraph(), user.getId(), newVocabulary.getProvUUID(), null);
                 }
 
                 return jerseyResponseManager.successUrnUuid(provUUID);
@@ -264,10 +264,10 @@ public class Models {
 
                 graphManager.createModel(newVocabulary);
 
-                serviceDescriptionManager.createGraphDescription(newVocabulary.getId(), user.getEmail(), newVocabulary.getOrganizations());
+                serviceDescriptionManager.createGraphDescription(newVocabulary.getId(), user.getId(), newVocabulary.getOrganizations());
 
                 if (provenanceManager.getProvMode()) {
-                    provenanceManager.createProvenanceActivityFromModel(newVocabulary.getId(), newVocabulary.asGraph(), newVocabulary.getProvUUID(), user.getEmail());
+                    provenanceManager.createProvenanceActivityFromModel(newVocabulary.getId(), newVocabulary.asGraph(), newVocabulary.getProvUUID(), user.getId());
                 }
 
                 logger.info("Created new model: "+newVocabulary.getId());

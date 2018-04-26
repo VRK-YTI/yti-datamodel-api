@@ -154,9 +154,9 @@ public class ServiceDescriptionManager {
      * Creates graph description for the new model
      * @param graph ID of the graph
      * @param orgs UUIDs of the organizations
-     * @param userMail User email
+     * @param userUUID User UUID
      */
-    public void createGraphDescription(String graph, String userMail, List<UUID> orgs) throws IRIException {
+    public void createGraphDescription(String graph, UUID userUUID, List<UUID> orgs) throws IRIException {
         
         Literal timestamp = LDHelper.getDateTimeLiteral();
 
@@ -193,7 +193,7 @@ public class ServiceDescriptionManager {
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
 
         pss.setIri("graphName", graph);
-        if(userMail!=null) pss.setIri("creator", "mailto:"+userMail);
+        if(userUUID!=null) pss.setIri("creator", "urn:uuid:"+userUUID.toString());
         pss.setLiteral("timestamp", timestamp);
         pss.setCommandText(query);
         
