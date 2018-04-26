@@ -32,6 +32,11 @@ public class JerseyConfig extends ResourceConfig {
             resp.getHeaders().add("Cache-Control", "no-cache, no-store, must-revalidate");
             resp.getHeaders().add("Pragma", "no-cache");
             resp.getHeaders().add("Expires", "0");
+
+            resp.getHeaders().add("Access-Control-Allow-Origin", "*");
+            resp.getHeaders().add("Access-Control-Allow-Headers", "content-type");
+            resp.getHeaders().add("Access-Control-Allow-Methods", "GET");
+
         });
 
         BeanConfig beanConfig = new BeanConfig();
