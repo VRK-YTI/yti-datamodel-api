@@ -5,7 +5,6 @@
  */
 package fi.vm.yti.datamodel.api.config;
 
-import fi.vm.yti.datamodel.api.config.ApplicationProperties;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import org.elasticsearch.client.Client;
@@ -35,12 +34,9 @@ public class ElasticConfig {
     @Bean
     @SuppressWarnings("resource")
     protected Client elasticSearchClient() throws UnknownHostException {
-        Settings settings = Settings.builder()
-            .put("cluster.name", config.getElasticCluster()).build();
-        try (TransportClient client = new PreBuiltTransportClient(settings)
-                .addTransportAddress(new TransportAddress(InetAddress.getByName(config.getElasticHost()), Integer.parseInt(config.getElasticPort())))) {
-            return client;
-        }
+        final TransportAddress address = new TransportAddress(InetAddress.getByName(config.getElasticHost()), Integer.parseInt(config.getElasticPort()));
+        final Settings settings = Settings.builder().put("cluster.name", config.getElasticCluster()).put("client.transport.ignore_cluster_name", false).put("client.transport.sniff", false).build();
+        return new PreBuiltTransportClient(settings).addTransportAddress(address);
     } 
     
 }

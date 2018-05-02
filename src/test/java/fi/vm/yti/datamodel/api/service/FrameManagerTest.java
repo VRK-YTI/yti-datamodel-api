@@ -52,10 +52,10 @@ public class FrameManagerTest  {
             when(client.prepareIndex(any(), any(), any())).thenReturn(irb);
             when(irb.execute()).thenReturn(mock(ActionFuture.class));
             
-            FrameManager instance = new FrameManager(client);
+            FrameManager instance = new FrameManager(client, null);
             
             
-            instance.cacheClassVisualizationFrame(id, model);
+            instance.cacheClassVisualizationFrame(id, "");
             
             verify(client).prepareIndex(FrameManager.ELASTIC_INDEX_MODEL, "doc", "http%3A%2F%2Fex.com%2Fid%3A2");
             ArgumentCaptor<String> sourceCaptor = ArgumentCaptor.forClass(String.class);
