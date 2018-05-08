@@ -15,13 +15,17 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.TimerTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import javax.inject.Singleton;
 import javax.ws.rs.NotFoundException;
+import org.elasticsearch.action.admin.cluster.node.info.NodesInfoRequest;
 import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.transport.NoNodeAvailableException;
+import org.elasticsearch.client.transport.TransportClient;
+import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.NamedXContentRegistry;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
@@ -40,6 +44,7 @@ public final class FrameManager {
     
     public static final String ELASTIC_INDEX_MODEL = "dm_vis_models";
     public static final String ELASTIC_INDEX_RESOURCE = "dm_resources";
+    public static final int ES_TIMEOUT = 120;
 
     @Autowired
     public FrameManager(
@@ -117,7 +122,22 @@ public final class FrameManager {
         return stringWriter.toString();
     }
 
+    private void waitForESNodes() {
+        logger.info("Waiting for ES (timeout " + ES_TIMEOUT + "s)");
+        try {
+            for(int i = 0; i < ES_TIMEOUT; i++) {
+                if(((TransportClient)esClient).connectedNodes().size() > 0) {                    
+                    logger.info("ES online");
+                    return;
+                }                
+                Thread.sleep(1000);                
+            }
+        }catch(Exception ex) {}
+        throw new RuntimeException("Could not find required ES instance");
+    }
+    
     public void initCache() {
+        waitForESNodes();
         boolean exists = esClient.admin().indices().prepareExists(ELASTIC_INDEX_MODEL).execute().actionGet().isExists();
         if (!exists) {
             esClient.admin().indices().prepareCreate(ELASTIC_INDEX_MODEL).execute().actionGet();
