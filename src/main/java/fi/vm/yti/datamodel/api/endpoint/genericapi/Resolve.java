@@ -75,6 +75,11 @@ public class Resolve {
 
         final String graphName = graphManager.getServiceGraphNameWithPrefix(graphPrefix);
 
+        if(graphName==null) {
+            logger.info("Graph not found: "+graphName);
+            return Response.status(404).build();
+        }
+
         if(ifModifiedSince!=null) {
             try {
                 SimpleDateFormat format = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz");
@@ -111,10 +116,10 @@ public class Resolve {
             Lang rdfLang = RDFLanguages.contentTypeToLang(acceptHeader);
 
             if(acceptHeader.contains("application/schema+json") || acceptHeader.contains("application/xml")) {
-                final URI schemaWithLangURI = URI.create(uriInfo.getBaseUri().toString()+"/exportModel?graph="+graphName+"&content-type="+accept+(language==null?"":"&lang="+language));
+                final URI schemaWithLangURI = URI.create(uriInfo.getBaseUri().toString()+"exportModel?graph="+graphName+"&content-type="+accept+(language==null?"":"&lang="+language));
                 return Response.seeOther(schemaWithLangURI).build();
             } else if(rdfLang!=null) {
-                final URI rdfUrl = URI.create(uriInfo.getBaseUri().toString()+"/exportModel?graph="+graphName+"&content-type="+rdfLang.getHeaderString());
+                final URI rdfUrl = URI.create(uriInfo.getBaseUri().toString()+"exportModel?graph="+graphName+"&content-type="+rdfLang.getHeaderString());
                 logger.debug("Resolving to RDF: "+rdfUrl);
                 return Response.seeOther(rdfUrl).build();
             }
