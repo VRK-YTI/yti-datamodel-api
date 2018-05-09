@@ -116,7 +116,7 @@ public class Resolve {
             Lang rdfLang = RDFLanguages.contentTypeToLang(acceptHeader);
 
             if(acceptHeader.contains("application/schema+json") || acceptHeader.contains("application/xml")) {
-                final URI schemaWithLangURI = URI.create(uriInfo.getBaseUri().toString()+"exportModel?graph="+graphName+"&content-type="+accept+(language==null?"":"&lang="+language));
+                final URI schemaWithLangURI = URI.create(uriInfo.getBaseUri().toString()+"exportModel?graph="+graphName+"&content-type="+acceptHeader+(language==null?"":"&lang="+language));
                 return Response.seeOther(schemaWithLangURI).build();
             } else if(rdfLang!=null) {
                 final URI rdfUrl = URI.create(uriInfo.getBaseUri().toString()+"exportModel?graph="+graphName+"&content-type="+rdfLang.getHeaderString());
