@@ -11,14 +11,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.apache.http.client.utils.DateUtils;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import java.net.URI;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -71,7 +70,7 @@ public class Resolve {
 
         final List<String> acceptHeaders = Arrays.asList(accept.replaceAll("\\s+","").split(","));
 
-        logger.debug("Resolving: "+graphPrefix);
+        logger.debug("Resolving: "+uri);
 
         final String graphName = graphManager.getServiceGraphNameWithPrefix(graphPrefix);
 
@@ -81,20 +80,18 @@ public class Resolve {
         }
 
         if(ifModifiedSince!=null) {
-            try {
-                SimpleDateFormat format = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz");
-                Date modifiedSince = format.parse(ifModifiedSince);
+                logger.debug("If-Modified-Since: "+ifModifiedSince);
+                Date modifiedSince = DateUtils.parseDate(ifModifiedSince);
+                if(modifiedSince==null) {
+                    logger.warn("Could not parse If-Modified-Since");
+                    return jerseyResponseManager.invalidParameter();
+                }
                 Date modified = graphManager.lastModified(graphName);
                 if(modified!=null) {
-                    String dateModified = format.format(modified);
                     if(modifiedSince.after(modified)) {
-                        return Response.notModified("Last-Modified: "+dateModified).build();
+                        return Response.notModified().header("Last-Modified",DateUtils.formatDate(modified)).build();
                     }
                 }
-            } catch (ParseException ex) {
-                logger.warn("Could not parse If-Modified-Since");
-                return jerseyResponseManager.invalidParameter();
-            }
         }
 
         Locale locale = Locale.forLanguageTag(acceptLang);
