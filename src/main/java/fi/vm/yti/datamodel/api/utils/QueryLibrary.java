@@ -20,10 +20,10 @@ public class QueryLibrary {
 
     final public static String listClassInRows =
             "SELECT DISTINCT ?mlabel ?label ?plabel WHERE {" +
-                    " ?s a sh:Shape . " +
+                    " ?s a sh:NodeShape . " +
                     "?s rdfs:isDefinedBy ?model . " +
                     "?model rdfs:label ?mlabel . " +
-                    "?s rdfs:label ?label . " +
+                    "?s sh:name ?label . " +
                     "?s sh:property ?prop . " +
                     "?prop rdfs:label ?plabel . " +
                     "?prop sh:predicate ?p . " +
@@ -192,7 +192,7 @@ public class QueryLibrary {
                     + "?class rdfs:label ?label . "
                     + "OPTIONAL { ?class rdfs:comment ?description . } "
                     + "?class a ?type . "
-                    + "VALUES ?type { rdfs:Class sh:Shape } "
+                    + "VALUES ?type { rdfs:Class sh:NodeShape } "
                     + "?class rdfs:isDefinedBy ?source .  } "
                     + "GRAPH ?source { "
                     + "?source a ?sourceType . "
@@ -209,8 +209,8 @@ public class QueryLibrary {
                      + "} WHERE { "
                         + "{"
                         + "GRAPH ?graph {"
-                        + "?graph a sh:Shape ."
-                        + "?graph sh:scopeClass ?refGraph ."
+                        + "?graph a sh:NodeShape ."
+                        + "?graph sh:targetClass ?refGraph ."
                         + "?s ?p ?o . "
                         + "?graph rdfs:isDefinedBy ?library . "
                         + "} "
@@ -220,7 +220,7 @@ public class QueryLibrary {
                      + "} UNION {"
                         + "GRAPH ?graph { "
                         + "?graph a rdfs:Class . "
-                        + "FILTER NOT EXISTS { ?graph sh:scopeClass ?any . }"
+                        + "FILTER NOT EXISTS { ?graph sh:targetClass ?any . }"
                         + "?s ?p ?o . "
                         + "?graph rdfs:isDefinedBy ?library . "
                         + "}"
@@ -309,18 +309,18 @@ public class QueryLibrary {
                     + "GRAPH ?externalModel {"
                     + "?classIRI a ?type . "
                     + "FILTER(STRSTARTS(STR(?classIRI), STR(?externalModel)))"
-                    + "VALUES ?type { rdfs:Class owl:Class sh:Shape } "
+                    + "VALUES ?type { rdfs:Class owl:Class sh:NodeShape } "
                     /* Get class label */
-                     + "{?classIRI rdfs:label ?labelStr . FILTER(LANG(?labelStr) = '') BIND(STRLANG(?labelStr,'en') as ?label) }"
+                     + "{?classIRI rdfs:label|sh:name ?labelStr . FILTER(LANG(?labelStr) = '') BIND(STRLANG(?labelStr,'en') as ?label) }"
                      + "UNION"
-                     + "{ ?classIRI rdfs:label ?label . FILTER(LANG(?label)!='') }"
+                     + "{ ?classIRI rdfs:label|sh:name ?label . FILTER(LANG(?label)!='') }"
                      /* Get class comment */
                     + "{ ?classIRI ?commentPred ?commentStr . "
-                     + "VALUES ?commentPred { rdfs:comment skos:definition dcterms:description dc:description prov:definition }"
+                     + "VALUES ?commentPred { rdfs:comment skos:definition dcterms:description dc:description prov:definition sh:description }"
                      + "FILTER(LANG(?commentStr) = '') BIND(STRLANG(STR(?commentStr),'en') as ?comment) }"
                      + "UNION"
                      + "{ ?classIRI ?commentPred ?comment . "
-                     + "VALUES ?commentPred { rdfs:comment skos:definition dcterms:description dc:description prov:definition }"
+                     + "VALUES ?commentPred { rdfs:comment skos:definition dcterms:description dc:description prov:definition sh:description }"
                      + " FILTER(LANG(?comment)!='') }"
                     
                     + "OPTIONAL { "
@@ -409,18 +409,18 @@ public class QueryLibrary {
                     + "GRAPH ?externalModel {"
                     + "?classIRI a ?type . "
                     + "FILTER(STRSTARTS(STR(?classIRI), STR(?externalModel)))"
-                    + "VALUES ?type { rdfs:Class owl:Class sh:Shape } "
+                    + "VALUES ?type { rdfs:Class owl:Class sh:NodeShape } "
                     /* Get class label */
-                     + "{?classIRI rdfs:label ?labelStr . FILTER(LANG(?labelStr) = '') BIND(STRLANG(?labelStr,'en') as ?label) }"
+                     + "{?classIRI rdfs:label|sh:name ?labelStr . FILTER(LANG(?labelStr) = '') BIND(STRLANG(?labelStr,'en') as ?label) }"
                      + "UNION"
-                     + "{ ?classIRI rdfs:label ?label . FILTER(LANG(?label)!='') }"
+                     + "{ ?classIRI rdfs:label|sh:name ?label . FILTER(LANG(?label)!='') }"
                      /* Get class comment */
                     + "{ ?classIRI ?commentPred ?commentStr . "
-                     + "VALUES ?commentPred { rdfs:comment skos:definition dcterms:description dc:description prov:definition }"
+                     + "VALUES ?commentPred { rdfs:comment skos:definition dcterms:description dc:description prov:definition sh:description }"
                      + "FILTER(LANG(?commentStr) = '') BIND(STRLANG(STR(?commentStr),'en') as ?comment) }"
                      + "UNION"
                      + "{ ?classIRI ?commentPred ?comment . "
-                     + "VALUES ?commentPred { rdfs:comment skos:definition dcterms:description dc:description prov:definition }"
+                     + "VALUES ?commentPred { rdfs:comment skos:definition dcterms:description dc:description prov:definition sh:description }"
                      + " FILTER(LANG(?comment)!='') }"
                     
                     + "OPTIONAL { "
@@ -495,13 +495,13 @@ public class QueryLibrary {
                     + "?shapeIRI owl:versionInfo ?draft . "
                     + "?shapeIRI dcterms:modified ?modified . "
                     + "?shapeIRI dcterms:created ?creation . "
-                    + "?shapeIRI sh:scopeClass ?classIRI . "
+                    + "?shapeIRI sh:targetClass ?classIRI . "
                     + "?shapeIRI a rdfs:Class . "
-                    + "?shapeIRI a sh:Shape . "
+                    + "?shapeIRI a sh:NodeShape . "
                     + "?shapeIRI rdfs:isDefinedBy ?model . "
                     + "?model rdfs:label ?externalModelLabel . "
-                    + "?shapeIRI rdfs:label ?label . "
-                    + "?shapeIRI rdfs:comment ?comment . "
+                    + "?shapeIRI sh:name ?label . "
+                    + "?shapeIRI sh:description ?comment . "
                     + "?shapeIRI sh:property ?property . "
                     + "?property dcterms:type ?propertyType . "    
                     + "?property sh:predicate ?predicate . "
@@ -522,16 +522,16 @@ public class QueryLibrary {
                     + "GRAPH ?externalModel { "
                     + "OPTIONAL {"
                     /* Labels */
-                     + "{?classIRI rdfs:label ?labelStr . FILTER(LANG(?labelStr) = '') BIND(STRLANG(?labelStr,'en') as ?label) }"
+                     + "{?classIRI rdfs:label|sh:name ?labelStr . FILTER(LANG(?labelStr) = '') BIND(STRLANG(?labelStr,'en') as ?label) }"
                      + "UNION"
-                     + "{ ?classIRI rdfs:label ?label . FILTER(LANG(?label)!='') }"
+                     + "{ ?classIRI rdfs:label|sh:name ?label . FILTER(LANG(?label)!='') }"
                     /* Comments */
                      + "{ ?classIRI ?commentPred ?commentStr . "
-                     + "VALUES ?commentPred { rdfs:comment skos:definition dcterms:description dc:description prov:definition }"
+                     + "VALUES ?commentPred { rdfs:comment skos:definition dcterms:description dc:description prov:definition sh:description }"
                      + "FILTER(LANG(?commentStr) = '') BIND(STRLANG(STR(?commentStr),'en') as ?comment) }"
                      + "UNION"
                      + "{ ?classIRI ?commentPred ?comment . "
-                     + "VALUES ?commentPred { rdfs:comment skos:definition dcterms:description dc:description prov:definition }"
+                     + "VALUES ?commentPred { rdfs:comment skos:definition dcterms:description dc:description prov:definition sh:description }"
                      + " FILTER(LANG(?comment)!='') }"
                      + "}"
                             

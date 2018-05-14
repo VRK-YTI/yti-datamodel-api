@@ -36,8 +36,8 @@ public abstract class AbstractShape extends AbstractResource {
 
             Statement isDefinedBy = asGraph().getRequiredProperty(ResourceFactory.createResource(getId()), RDFS.isDefinedBy);
 
-            if(asGraph().contains(ResourceFactory.createResource(getId()), RDF.type, SH.Shape)) {
-                throw new IllegalArgumentException("Expected sh:Shape type");
+            if(asGraph().contains(ResourceFactory.createResource(getId()), RDF.type, SH.NodeShape)) {
+                throw new IllegalArgumentException("Expected sh:NodeShape type");
             }
 
             Resource abstractResource = isDefinedBy.getSubject().asResource();
@@ -85,12 +85,12 @@ public abstract class AbstractShape extends AbstractResource {
 
         this.dataModel = new DataModel(LDHelper.toIRI(modelList.get(0).getURI()), graphManager);
 
-        List<Resource> scopeList = this.graph.listResourcesWithProperty(LDHelper.curieToProperty("sh:scopeClass")).toList();
+        List<Resource> scopeList = this.graph.listResourcesWithProperty(SH.targetClass).toList();
         if(scopeList==null || scopeList.size()!=1) {
-            throw new IllegalArgumentException("Expected 1 Reusable Class (scopeClass)");
+            throw new IllegalArgumentException("Expected 1 Reusable Class (targetClass)");
         }
 
-        List<Resource> classList = this.graph.listSubjectsWithProperty(RDF.type, ResourceFactory.createResource(LDHelper.curieToURI("sh:Shape"))).toList();
+        List<Resource> classList = this.graph.listSubjectsWithProperty(RDF.type, SH.NodeShape).toList();
         if(classList == null || classList.size()!=1) {
             throw new IllegalArgumentException("Expected 1 class in graph!");
         }

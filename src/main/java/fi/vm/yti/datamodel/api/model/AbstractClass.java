@@ -88,7 +88,7 @@ public abstract class AbstractClass extends AbstractResource {
 
             while(subjects.hasNext()) {
                 Resource res = subjects.next();
-                if(res.hasProperty(RDF.type, RDFS.Class) || res.hasProperty(RDF.type, SH.Shape)) {
+                if(res.hasProperty(RDF.type, RDFS.Class) || res.hasProperty(RDF.type, SH.NodeShape)) {
                     if(classResource!=null) {
                         throw new IllegalArgumentException("Multiple class resources");
                     } else {
@@ -98,7 +98,7 @@ public abstract class AbstractClass extends AbstractResource {
             }
 
             if(classResource==null) {
-                throw new IllegalArgumentException("Expected rdfs:Class or sh:Shape");
+                throw new IllegalArgumentException("Expected rdfs:Class or sh:NodeShape");
             }
 
             // TODO: Check that doesnt contain multiple class resources

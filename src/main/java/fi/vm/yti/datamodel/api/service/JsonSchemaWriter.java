@@ -493,7 +493,7 @@ public class JsonSchemaWriter {
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
 
         String selectResources =
-                "SELECT ?resource ?scopeClass ?className ?classTitle ?classDescription ?property ?valueList ?schemeList ?predicate ?id ?title ?description ?predicateName ?datatype ?shapeRef ?shapeRefName ?min ?max ?minLength ?maxLength ?pattern ?idBoolean ?example "
+                "SELECT ?resource ?targetClass ?className ?classTitle ?classDescription ?property ?valueList ?schemeList ?predicate ?id ?title ?description ?predicateName ?datatype ?shapeRef ?shapeRefName ?min ?max ?minLength ?maxLength ?pattern ?idBoolean ?example "
                         + "WHERE { "
                         + "GRAPH ?modelPartGraph {"
                         + "?model dcterms:hasPart ?resource . "
@@ -501,7 +501,7 @@ public class JsonSchemaWriter {
                         + "GRAPH ?resource {"
                         + "?resource rdfs:label ?classTitle . "
                         + "FILTER (langMatches(lang(?classTitle),?lang))"
-                        + "OPTIONAL { ?resource sh:scopeClass ?scopeClass . }"
+                        + "OPTIONAL { ?resource sh:targetClass ?targetClass . }"
                         + "OPTIONAL { ?resource rdfs:comment ?classDescription . "
                         + "FILTER (langMatches(lang(?classDescription),?lang))"
                         + "}"

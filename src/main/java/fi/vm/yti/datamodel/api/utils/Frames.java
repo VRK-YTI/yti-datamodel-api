@@ -507,7 +507,7 @@ public class Frames {
                 put("@type", new ArrayList<Object>() {
                     {
                         add("rdfs:Class");
-                        add("sh:Shape");
+                        add("sh:NodeShape");
                     }
                 });
 
