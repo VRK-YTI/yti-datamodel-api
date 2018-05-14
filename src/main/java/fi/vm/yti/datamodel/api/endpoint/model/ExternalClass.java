@@ -98,7 +98,6 @@ public class ExternalClass {
                     + "{ ?class ?labelPred ?label . "
                     + "VALUES ?commentPred { rdfs:label sh:name dc:title dcterms:title }"
                     + " FILTER(LANG(?comment)!='') }"
-                    + "} "
                     /* GET COMMENT */
                     + "{ ?class ?commentPred ?commentStr . "
                     + "VALUES ?commentPred { rdfs:comment skos:definition dcterms:description dc:description prov:definition sh:description }"
