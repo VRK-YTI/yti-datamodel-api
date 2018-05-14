@@ -145,15 +145,15 @@ public class JsonSchemaWriter {
                             + "WHERE { "
                             + "GRAPH ?resourceID {"
                             + "?resourceID sh:property ?property . "
-                            + "?property sh:predicate ?predicate . "
+                            + "?property sh:path ?predicate . "
                             + "OPTIONAL { ?property dcterms:identifier ?id . }"
-                            + "?property rdfs:label ?label . "
+                            + "?property sh:name ?label . "
                             + "FILTER (langMatches(lang(?label),?lang))"
-                            + "OPTIONAL { ?property rdfs:comment ?description . "
+                            + "OPTIONAL { ?property sh:description ?description . "
                             + "FILTER (langMatches(lang(?description),?lang))"
                             + "}"
                             + "OPTIONAL { ?property sh:datatype ?datatype . }"
-                            + "OPTIONAL { ?property sh:valueShape ?shapeRef . }"
+                            + "OPTIONAL { ?property sh:node ?shapeRef . }"
                             + "OPTIONAL { ?property sh:minCount ?min . }"
                             + "OPTIONAL { ?property sh:maxCount ?max . }"
                             + "OPTIONAL { ?property sh:pattern ?pattern . }"
@@ -506,17 +506,17 @@ public class JsonSchemaWriter {
                         + "FILTER (langMatches(lang(?classDescription),?lang))"
                         + "}"
                         + "?resource sh:property ?property . "
-                        + "?property sh:index ?index . "
-                        + "?property sh:predicate ?predicate . "
+                        + "?property sh:order ?index . "
+                        + "?property sh:path ?predicate . "
                         + "OPTIONAL { ?property dcterms:identifier ?id . }"
-                        + "?property rdfs:label ?title . "
+                        + "?property sh:name ?title . "
                         + "FILTER (langMatches(lang(?title),?lang))"
                         + "BIND(afn:localname(?resource) as ?className)"
-                        + "OPTIONAL { ?property rdfs:comment ?description . "
+                        + "OPTIONAL { ?property sh:description ?description . "
                         + "FILTER (langMatches(lang(?description),?lang))"
                         + "}"
                         + "OPTIONAL { ?property sh:datatype ?datatype . }"
-                        + "OPTIONAL { ?property sh:valueShape ?shapeRef . BIND(afn:localname(?shapeRef) as ?shapeRefName) }"
+                        + "OPTIONAL { ?property sh:node ?shapeRef . BIND(afn:localname(?shapeRef) as ?shapeRefName) }"
                         + "OPTIONAL { ?property sh:maxCount ?max . }"
                         + "OPTIONAL { ?property sh:minCount ?min . }"
                         + "OPTIONAL { ?property sh:pattern ?pattern . }"
@@ -775,8 +775,8 @@ public class JsonSchemaWriter {
                     JsonObjectBuilder classDefinition = Json.createObjectBuilder();
                     classDefinition.add("title", soln.getLiteral("classTitle").getString());
                     classDefinition.add("type", "object");
-                    if (soln.contains("scopeClass")) {
-                        classDefinition.add("@id", soln.getResource("scopeClass").toString());
+                    if (soln.contains("targetClass")) {
+                        classDefinition.add("@id", soln.getResource("targetClass").toString());
                     } else {
                         classDefinition.add("@id", soln.getResource("resource").toString());
                     }
@@ -976,15 +976,15 @@ public class JsonSchemaWriter {
                         + "FILTER(?lang=lang(?classDescription))"
                         + "}"
                         + "?resource sh:property ?property . "
-                        + "?property sh:predicate ?predicate . "
-                        + "?property rdfs:label ?propertyLabel . "
+                        + "?property sh:path ?predicate . "
+                        + "?property sh:name ?propertyLabel . "
                         + "FILTER(?lang=lang(?propertyLabel))"
                         + "BIND(afn:localname(?resource) as ?className)"
-                        + "OPTIONAL { ?property rdfs:comment ?propertyDescription . "
+                        + "OPTIONAL { ?property sh:description ?propertyDescription . "
                         + "FILTER(?lang=lang(?propertyDescription))"
                         + "}"
                         + "OPTIONAL { ?property sh:datatype ?datatype . }"
-                        + "OPTIONAL { ?property sh:valueShape ?shapeRef . BIND(afn:localname(?shapeRef) as ?shapeRefName) }"
+                        + "OPTIONAL { ?property sh:node ?shapeRef . BIND(afn:localname(?shapeRef) as ?shapeRefName) }"
                         + "OPTIONAL { ?property sh:minCount ?min . }"
                         + "OPTIONAL { ?property sh:maxCount ?max . }"
                         + "OPTIONAL { ?property iow:isResourceIdentifier ?idBoolean . }"

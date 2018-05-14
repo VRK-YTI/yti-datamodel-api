@@ -25,8 +25,8 @@ public class QueryLibrary {
                     "?model rdfs:label ?mlabel . " +
                     "?s sh:name ?label . " +
                     "?s sh:property ?prop . " +
-                    "?prop rdfs:label ?plabel . " +
-                    "?prop sh:predicate ?p . " +
+                    "?prop sh:name ?plabel . " +
+                    "?prop sh:path ?p . " +
                     "FILTER(lang(?mlabel)=?lang) " +
                     "FILTER(lang(?label)=?lang) " +
                     "FILTER(lang(?plabel)=?lang)}";
@@ -296,10 +296,10 @@ public class QueryLibrary {
                     + "?classIRI sh:property ?property . "
                     + "?property sh:datatype ?datatype . "
                     + "?property dcterms:type ?propertyType . "
-                    + "?property sh:valueShape ?valueClass . "
-                    + "?property sh:predicate ?predicate . "
-                    + "?property rdfs:label ?propertyLabel . "
-                    + "?property rdfs:comment ?propertyComment . "
+                    + "?property sh:node ?valueClass . "
+                    + "?property sh:path ?predicate . "
+                    + "?property sh:name ?propertyLabel . "
+                    + "?property sh:description ?propertyComment . "
                      + "} WHERE { "
                      + "SERVICE ?modelService { "
                      + "GRAPH ?library { "
@@ -396,10 +396,10 @@ public class QueryLibrary {
                     + "?classIRI sh:property ?property . "
                     + "?property sh:datatype ?datatype . "
                     + "?property dcterms:type ?propertyType . "
-                    + "?property sh:valueShape ?valueClass . "
-                    + "?property sh:predicate ?predicate . "
-                    + "?property rdfs:label ?propertyLabel . "
-                    + "?property rdfs:comment ?propertyComment . "
+                    + "?property sh:node ?valueClass . "
+                    + "?property sh:path ?predicate . "
+                    + "?property sh:name ?propertyLabel . "
+                    + "?property sh:description ?propertyComment . "
                      + "} WHERE { "
                      + "SERVICE ?modelService { "
                      + "GRAPH ?library { "
@@ -504,11 +504,11 @@ public class QueryLibrary {
                     + "?shapeIRI sh:description ?comment . "
                     + "?shapeIRI sh:property ?property . "
                     + "?property dcterms:type ?propertyType . "    
-                    + "?property sh:predicate ?predicate . "
-                    + "?property rdfs:comment ?propertyComment .  "
-                    + "?property rdfs:label ?propertyLabel .  "
+                    + "?property sh:path ?predicate . "
+                    + "?property sh:name ?propertyComment .  "
+                    + "?property sh:description ?propertyLabel .  "
                     /* TODO: Fix pointing to AP classes? */
-                    + "?property sh:valueShape ?valueClass . "
+                    + "?property sh:node ?valueClass . "
                     + "?property sh:class ?valueClass . "
                     + "?property sh:datatype ?datatype . "
                     + "} WHERE { "

@@ -394,9 +394,9 @@ public class Frames {
                     }
                 });
                 put("property", property);
-                put("scopeClass", new LinkedHashMap<String, Object>() {
+                put("targetClass", new LinkedHashMap<String, Object>() {
                     {
-                        put("@id", "http://www.w3.org/ns/shacl#scopeClass");
+                        put("@id", "http://www.w3.org/ns/shacl#targetClass");
                         put("@type", "@id");
                     }
                 });
@@ -556,7 +556,7 @@ public class Frames {
                         put("@embed", false);
                     }
                 });               
-                put("scopeClass", new LinkedHashMap<String, Object>() {
+                put("targetClass", new LinkedHashMap<String, Object>() {
                     {
                         put("@embed", false);
                     }

@@ -145,15 +145,15 @@ public class XMLSchemaWriter {
                             + "WHERE { "
                             + "GRAPH ?resourceID {"
                             + "?resourceID sh:property ?property . "
-                            + "?property sh:predicate ?predicate . "
+                            + "?property sh:path ?predicate . "
                             + "OPTIONAL { ?property dcterms:identifier ?id . }"
-                            + "?property rdfs:label ?label . "
+                            + "?property sh:name ?label . "
                             + "FILTER (langMatches(lang(?label),?lang))"
-                            + "OPTIONAL { ?property rdfs:comment ?description . "
+                            + "OPTIONAL { ?property sh:description ?description . "
                             + "FILTER (langMatches(lang(?description),?lang))"
                             + "}"
                             + "OPTIONAL { ?property sh:datatype ?datatype . }"
-                            + "OPTIONAL { ?property sh:valueShape ?shapeRef . BIND(afn:localname(?shapeRef) as ?shapeRefName) }"
+                            + "OPTIONAL { ?property sh:node ?shapeRef . BIND(afn:localname(?shapeRef) as ?shapeRefName) }"
                             + "OPTIONAL { ?property sh:minCount ?min . }"
                             + "OPTIONAL { ?property sh:maxCount ?max . }"
                             + "OPTIONAL { ?property sh:pattern ?pattern . }"
@@ -358,17 +358,17 @@ public class XMLSchemaWriter {
                 + "FILTER (langMatches(lang(?classDescription),?lang))"
                 + "}"
                 + "?resource sh:property ?property . "
-                + "?property sh:index ?index . "
-                + "?property sh:predicate ?predicate . "
+                + "?property sh:order ?index . "
+                + "?property sh:path ?predicate . "
                 + "OPTIONAL { ?property dcterms:identifier ?id . }"
-                + "?property rdfs:label ?title . "
+                + "?property sh:name ?title . "
                 + "FILTER (langMatches(lang(?title),?lang))"
                 + "BIND(afn:localname(?resource) as ?className)"
-                + "OPTIONAL { ?property rdfs:comment ?description . "
+                + "OPTIONAL { ?property sh:description ?description . "
                 + "FILTER (langMatches(lang(?description),?lang))"
                 + "}"
                 + "OPTIONAL { ?property sh:datatype ?datatype . }"
-                + "OPTIONAL { ?property sh:valueShape ?shapeRef . BIND(afn:localname(?shapeRef) as ?shapeRefName) }"
+                + "OPTIONAL { ?property sh:node ?shapeRef . BIND(afn:localname(?shapeRef) as ?shapeRefName) }"
                 + "OPTIONAL { ?property sh:maxCount ?max . }"
                 + "OPTIONAL { ?property sh:minCount ?min . }"
                 + "OPTIONAL { ?property sh:pattern ?pattern . }"
@@ -412,8 +412,8 @@ public class XMLSchemaWriter {
 
                 if (firstRun) {
 
-                    if (soln.contains("scopeClass")) {
-                        complexType = xml.newComplexType(className + "Type", soln.getResource("scopeClass").toString());
+                    if (soln.contains("targetClass")) {
+                        complexType = xml.newComplexType(className + "Type", soln.getResource("targetClass").toString());
                     } else {
                         complexType = xml.newComplexType(className + "Type", soln.getResource("resource").toString());
                     }
