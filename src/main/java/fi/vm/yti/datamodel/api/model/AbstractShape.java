@@ -36,8 +36,8 @@ public abstract class AbstractShape extends AbstractResource {
 
             Statement isDefinedBy = asGraph().getRequiredProperty(ResourceFactory.createResource(getId()), RDFS.isDefinedBy);
 
-            if(asGraph().contains(ResourceFactory.createResource(getId()), RDF.type, SH.NodeShape)) {
-                throw new IllegalArgumentException("Expected sh:NodeShape type");
+            if(!asGraph().contains(ResourceFactory.createResource(getId()), RDF.type, SH.Shape)) {
+                throw new IllegalArgumentException("Expected sh:Shape type");
             }
 
             Resource abstractResource = isDefinedBy.getSubject().asResource();

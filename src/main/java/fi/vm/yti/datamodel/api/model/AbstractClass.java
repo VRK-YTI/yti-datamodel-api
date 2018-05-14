@@ -37,7 +37,7 @@ public abstract class AbstractClass extends AbstractResource {
             Resource abstractResource = isDefinedBy.getSubject().asResource();
             Resource modelResource = isDefinedBy.getObject().asResource();
 
-            if(asGraph().contains(ResourceFactory.createResource(getId()), RDF.type, RDFS.Class)) {
+            if(!asGraph().contains(ResourceFactory.createResource(getId()), RDF.type, RDFS.Class)) {
                 throw new IllegalArgumentException("Expected rdfs:Class type");
             }
 
