@@ -54,10 +54,10 @@ public class SearchManager {
                         + "?super dcap:preferredXMLNamespacePrefix ?prefix . "
                         + "}}"
                         //+ "UNION"
-                        // + "{?resource sh:predicate ?predicate . ?super sh:property ?resource . ?super rdfs:label ?superLabel . BIND(sh:Constraint as ?type)}"
-                        + "?resource rdfs:label ?label . "
+                        // + "{?resource sh:path ?predicate . ?super sh:property ?resource . ?super rdfs:label ?superLabel . BIND(sh:Constraint as ?type)}"
+                        + "?resource rdfs:label|sh:name ?label . "
                         //+ "?resource text:query '"+search+"' . "
-                        + "OPTIONAL{?resource rdfs:comment ?comment .}"
+                        + "OPTIONAL{?resource rdfs:comment|sh:description ?comment .}"
                         + (lang==null||lang.equals("undefined")?"":"FILTER langMatches(lang(?label),'"+lang+"')")
                         + "}}";
 
