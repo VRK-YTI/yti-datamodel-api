@@ -16,7 +16,7 @@ public class Frames {
     public static final LinkedHashMap<String, Object> inScheme;
     public static final LinkedHashMap<String, Object> subject;
     public static final LinkedHashMap<String, Object> comment;
-    public static final LinkedHashMap<String, Object> description;
+    public static final LinkedHashMap<String, Object> description;    
     public static final LinkedHashMap<String, Object> predicate;
     public static final LinkedHashMap<String, Object> property;
     public static final LinkedHashMap<String, Object> coreContext;
@@ -74,7 +74,7 @@ public class Frames {
               put("@type", "@id");                
             }
           
-        };         
+        };                  
         
         property = new LinkedHashMap<String, Object>() {
             {
@@ -87,7 +87,7 @@ public class Frames {
 
         coreContext = new LinkedHashMap<String, Object>() {
             {     
-                put("comment", comment);
+                put("comment", comment);                               
                 put("created", new LinkedHashMap<String, Object>() {
                     {
                         put("@id", "http://purl.org/dc/terms/created");
@@ -131,9 +131,9 @@ public class Frames {
                         put("@type", "@id");                
                     }
                 });                
-                put("label", new LinkedHashMap<String, Object>() {
+                put("name", new LinkedHashMap<String, Object>() {
                     {
-                        put("@id", "http://www.w3.org/2000/01/rdf-schema#label");
+                        put("@id", "http://www.w3.org/ns/shacl#name");
                         put("@container", "@language");                
                     }
                 });                
@@ -274,6 +274,12 @@ public class Frames {
       
         propertyContext = new LinkedHashMap<String, Object>() {
             {
+                put("description", new LinkedHashMap<String, Object>() {
+                    {
+                        put("@id", "http://www.w3.org/ns/shacl#description");
+                        put("@container", "@language"); 
+                    }
+                }); 
                 put("index", new LinkedHashMap<String, Object>() {
                     {
                         put("@id", "http://www.w3.org/ns/shacl#index");
@@ -513,12 +519,12 @@ public class Frames {
 
                 put("property", new LinkedHashMap<String, Object>() {
                     {
-                        put("predicate", new LinkedHashMap<String, Object>() {
+                        put("path", new LinkedHashMap<String, Object>() {
                             {
                                 put("@embed", false);
                             }
                         });
-                        put("valueShape", new LinkedHashMap<String, Object>() {
+                        put("node", new LinkedHashMap<String, Object>() {
                             {
                                 put("@omitDefault", false);
                                 put("@default", new ArrayList());
