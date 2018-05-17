@@ -38,7 +38,7 @@ public class QueryLibrary {
                     "?concept skos:definition ?definition . " +
                     "?concept skos:inScheme ?scheme . " +
                     "?scheme a skos:ConceptScheme . " +
-                    "?scheme dcterms:title ?title . " +
+                    "?scheme skos:prefLabel ?title . " +
                     "?concept termed:graph ?graph . " +
                     "?graph termed:id ?schemeUUID . }" +
                     "WHERE {" +
@@ -48,7 +48,7 @@ public class QueryLibrary {
                     "?concept termed:graph ?graph . " +
                     "?graph termed:id ?schemeUUID . " +
                     "?scheme termed:graph ?graph . " +
-                    "?scheme dcterms:title ?title . " +
+                    "?scheme skos:prefLabel ?title . " +
                     "?scheme a skos:ConceptScheme . " +
                     "}" +
                     "");
@@ -61,7 +61,7 @@ public class QueryLibrary {
                     "?concept skos:inScheme ?terminology . " +
                     "?concept termed:graph ?graphID . " +
                     "?concept termed:id ?conceptID . " +
-                    "?terminology dcterms:title ?title . " +
+                    "?terminology skos:prefLabel ?title . " +
                     "} WHERE {" +
                     "?concept skosxl:prefLabel ?xlLabel . " +
                     "?concept skos:definition ?definition . " +
@@ -69,7 +69,7 @@ public class QueryLibrary {
                     "?concept termed:id ?conceptID . "+
                     "?xlLabel skosxl:literalForm ?label . " +
                     "OPTIONAL {?terminology termed:graph ?graphID . " +
-                    "?terminology dcterms:title ?title . }" +
+                    "?terminology skos:prefLabel ?title . }" +
                     "}");
 
     final public static String constructServiceCategories = LDHelper.expandSparqlQuery(true,
