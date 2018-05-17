@@ -27,7 +27,7 @@ public class Frames {
     public static final LinkedHashMap<String, Object> referenceDataContext;
     public static final LinkedHashMap<String, Object> predicateContext;
     public static final LinkedHashMap<String, Object> propertyContext;
-    public static final LinkedHashMap<String, Object> namespaceContext;    
+    public static final LinkedHashMap<String, Object> namespaceContext;
     public static final LinkedHashMap<String, Object> classContext;
     public static final LinkedHashMap<String, Object> modelContext;
     
@@ -424,19 +424,19 @@ public class Frames {
                         put("@type", "@id");
                     }
                 });
-                put("or", new LinkedHashMap<String, Object>() {
+                put("orCond", new LinkedHashMap<String, Object>() {
                     {
                         put("@id", "http://www.w3.org/ns/shacl#or");
                         put("@container", "@list");
                     }
                 });
-                put("and", new LinkedHashMap<String, Object>() {
+                put("andCond", new LinkedHashMap<String, Object>() {
                     {
                         put("@id", "http://www.w3.org/ns/shacl#and");
                         put("@container", "@list");
                     }
                 });               
-                put("not", new LinkedHashMap<String, Object>() {
+                put("notCond", new LinkedHashMap<String, Object>() {
                     {
                         put("@id", "http://www.w3.org/ns/shacl#not");
                         put("@container", "@list");
@@ -445,7 +445,7 @@ public class Frames {
                 put("subject", subject);
             }
         };
-        
+
         namespaceContext = new LinkedHashMap<String, Object>() {
             {
                 putAll(coreContext);
