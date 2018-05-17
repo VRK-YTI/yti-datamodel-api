@@ -44,6 +44,7 @@ public class Sparql {
     })
     public Response sparql(
             @ApiParam(value = "SPARQL Query", required = true) @QueryParam("query") String queryString,
+            @ApiParam(value = "SPARQL Service", defaultValue = "core", allowableValues = "core,prov,imports,scheme,concept") @QueryParam("service") String service,
             @ApiParam(value = "Accept", required = true, allowableValues="application/sparql-results+json,text/csv") @QueryParam("accept") String accept) {
 
         if (!authorizationManager.hasRightToRunSparqlQuery()) {
@@ -59,7 +60,7 @@ public class Sparql {
             return Response.status(400).build();
         }
 
-        try(QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), query)) {
+        try(QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getSparqlAddress(service), query)) {
 
             OutputStream outs = new ByteArrayOutputStream();
             ResultSet results = qexec.execSelect();
@@ -90,7 +91,9 @@ public class Sparql {
             @ApiResponse(code = 500, message = "Bad data?")
     })
 
-    public Response sparqlUpdate(@ApiParam(value = "Sparql query", required = true) String body) {
+    public Response sparqlUpdate(
+            @ApiParam(value = "Sparql query", required = true) String body,
+    @ApiParam(value = "SPARQL Service", defaultValue = "core", allowableValues = "core,prov,imports,scheme,concept") @QueryParam("service") String service) {
 
 
         if(!authorizationManager.hasRightToRunSparqlQuery()) {
@@ -101,10 +104,8 @@ public class Sparql {
 
         try {
             UpdateRequest queryObj= UpdateFactory.create(query);
-            UpdateProcessor qexec= UpdateExecutionFactory.createRemoteForm(queryObj, endpointServices.getCoreSparqlUpdateAddress());
+            UpdateProcessor qexec= UpdateExecutionFactory.createRemoteForm(queryObj, endpointServices.getSparqlUpdateAddress(service));
             qexec.execute();
-
-
         } catch (UpdateException | QueryParseException ex) {
             return Response.status(400).build();
         }

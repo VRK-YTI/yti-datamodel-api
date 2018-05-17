@@ -58,17 +58,17 @@ public class ImportManager {
                 + " ?resource dcterms:subject ?subject . "
                 + " ?subject ?sp ?so . "
                 + " ?resource sh:property ?propertyID . "
-                + " ?propertyID sh:predicate ?predicate . }}"
+                + " ?propertyID sh:path ?predicate . }}"
                 + "WHERE { "
                 + " GRAPH ?graph { "
-                + " VALUES ?type { rdfs:Class sh:Shape owl:DatatypeProperty owl:ObjectProperty } "
+                + " VALUES ?type { rdfs:Class sh:NodeShape owl:DatatypeProperty owl:ObjectProperty } "
                 + " ?resource a ?type . "
                 + " OPTIONAL { "
                 + "  ?resource dcterms:subject ?subject . "
                 + "  ?subject ?sp ?so . "
                 + " } OPTIONAL { "
                 + "  ?resource sh:property ?property . "
-                + "  ?property sh:predicate ?predicate . "
+                + "  ?property sh:path ?predicate . "
                 + "  BIND(UUID() AS ?propertyID) } "
                 + "}}";
 
@@ -113,7 +113,7 @@ public class ImportManager {
                 + " WHERE { "
                 + "GRAPH ?graph { "
                 + "?graph owl:imports ?import .  "
-                + "OPTIONAL { VALUES ?type { rdfs:Class sh:Shape owl:DatatypeProperty owl:ObjectProperty } "
+                + "OPTIONAL { VALUES ?type { rdfs:Class sh:NodeShape owl:DatatypeProperty owl:ObjectProperty } "
                 + "?resource a ?type . "
                 + "?resource ?p ?o . "
                 + "OPTIONAL { ?resource sh:property ?property . ?property ?pp ?oo . } } "
@@ -162,7 +162,7 @@ public class ImportManager {
     private void addIndexNumberToProperties(String resource) {
 
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
-        String selectResources = "SELECT ?property WHERE { GRAPH ?resource { ?resource rdfs:isDefinedBy ?model . ?resource sh:property ?property . ?property sh:predicate ?predicate . }} ORDER BY ?predicate ";
+        String selectResources = "SELECT ?property WHERE { GRAPH ?resource { ?resource rdfs:isDefinedBy ?model . ?resource sh:property ?property . ?property sh:path ?predicate . }} ORDER BY ?predicate ";
 
         pss.setNsPrefix("sh", "http://www.w3.org/ns/shacl#");
         pss.setNsPrefix("rdfs", "http://www.w3.org/2000/01/rdf-schema#");
@@ -186,7 +186,7 @@ public class ImportManager {
                 = " INSERT { "
                 + "GRAPH ?resource { "
                 + "?resource sh:property ?property . "
-                + "?property sh:index ?index . }}"
+                + "?property sh:order ?index . }}"
                 + "WHERE { "
                 + " GRAPH ?resource { "
                 + "?resource sh:property ?property . "
@@ -227,13 +227,13 @@ public class ImportManager {
                 + "} "
                 + " WHERE { "
                 + "GRAPH ?graph { "
-                + "VALUES ?type { rdfs:Class sh:Shape owl:DatatypeProperty owl:ObjectProperty } . "
+                + "VALUES ?type { rdfs:Class sh:NodeShape owl:DatatypeProperty owl:ObjectProperty } . "
                 + "?resource a ?type . "
                 + "?resource ?p ?o . "
                 + "FILTER(!isBlank(?o)) "
                 + "OPTIONAL { "
                 + " ?resource sh:property ?property . "
-                + " ?property sh:predicate ?predicate . "
+                + " ?property sh:path ?predicate . "
                 + " ?property ?pp ?oo . }"
                 + "OPTIONAL { "
                 + " ?resource sh:constraint ?constraint . "
@@ -246,7 +246,7 @@ public class ImportManager {
                 + "GRAPH ?resource { "
                 + " OPTIONAL { "
                 + "  ?resource sh:property ?uuid . "
-                + "  ?uuid sh:predicate ?predicate ."
+                + "  ?uuid sh:path ?predicate ."
                 + "}} "
                 + "}";
 

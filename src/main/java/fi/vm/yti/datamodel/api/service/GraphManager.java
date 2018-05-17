@@ -635,11 +635,11 @@ public class GraphManager {
     public void updateClassReferencesInModel(IRI modelID, IRI oldID, IRI newID) {
 
         String query
-                = " DELETE { GRAPH ?graph { ?any sh:valueShape ?oldID }} "
-                + " INSERT { GRAPH ?graph { ?any sh:valueShape ?newID }} "
+                = " DELETE { GRAPH ?graph { ?any sh:node ?oldID }} "
+                + " INSERT { GRAPH ?graph { ?any sh:node ?newID }} "
                 + " WHERE { "
                 + "GRAPH ?hasPartGraph { ?model dcterms:hasPart ?graph . } "
-                + "GRAPH ?graph { ?graph rdfs:isDefinedBy ?model . ?any sh:valueShape ?oldID}}";
+                + "GRAPH ?graph { ?graph rdfs:isDefinedBy ?model . ?any sh:node ?oldID}}";
 
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
@@ -733,11 +733,11 @@ public class GraphManager {
     public void updatePredicateReferencesInModel(IRI modelID, IRI oldID, IRI newID) {
 
         String query
-                = " DELETE { GRAPH ?graph { ?any sh:predicate ?oldID }} "
-                + " INSERT { GRAPH ?graph { ?any sh:predicate ?newID }} "
+                = " DELETE { GRAPH ?graph { ?any sh:path ?oldID }} "
+                + " INSERT { GRAPH ?graph { ?any sh:path ?newID }} "
                 + " WHERE { "
                 + "GRAPH ?hasPartGraph { ?model dcterms:hasPart ?graph . } "
-                + "GRAPH ?graph { ?graph rdfs:isDefinedBy ?model . ?any sh:predicate ?oldID}}";
+                + "GRAPH ?graph { ?graph rdfs:isDefinedBy ?model . ?any sh:path ?oldID}}";
 
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);

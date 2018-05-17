@@ -59,7 +59,7 @@ public class ExportModel {
             return jerseyResponseManager.invalidIRI();
         }
 
-        if(ctype==null) ctype = "text/turtle";
+        if(ctype==null) ctype = "application/ld+json";
 
         ctype = ctype.replace(" ", "+");
 

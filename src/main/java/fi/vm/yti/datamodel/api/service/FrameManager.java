@@ -102,13 +102,17 @@ public final class FrameManager {
         if(model == null) {
             throw new NotFoundException("Could not get model with id " + graph);
         }
-        
+        return graphToFramedString(model, frame);
+    }
+
+    protected String graphToFramedString(Model model, LinkedHashMap<String, Object> frame) {
         PrefixMap pm = RiotLib.prefixMap(model.getGraph());
         StringWriter stringWriter = new StringWriter();
 
         ((LinkedHashMap<String, Object>) frame.get("@context")).putAll(pm.getMappingCopyStr());
 
         JsonLdOptions opts = new JsonLdOptions();
+        opts.setProcessingMode(opts.JSON_LD_1_1);
         opts.useNamespaces = true;
         opts.setCompactArrays(true);
 

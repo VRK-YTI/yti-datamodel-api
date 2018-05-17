@@ -229,7 +229,7 @@ public class Migrator {
                             "INSERT { " +
                             "?model dcterms:references <http://uri.suomi.fi/terminology/jhs/terminological-vocabulary-1> . " +
                             "<http://uri.suomi.fi/terminology/jhs/terminological-vocabulary-1> a skos:ConceptScheme . " +
-                            "<http://uri.suomi.fi/terminology/jhs/terminological-vocabulary-1> dcterms:title 'Julkishallinnon yhteinen sanasto'@fi . " +
+                            "<http://uri.suomi.fi/terminology/jhs/terminological-vocabulary-1> skos:prefLabel 'Julkishallinnon yhteinen sanasto'@fi . " +
                             "<http://uri.suomi.fi/terminology/jhs/terminological-vocabulary-1> termed:graph  '0043fa54-18b2-4f31-80cf-32eeb0bbb297' . " +
                             "<http://uri.suomi.fi/terminology/jhs/terminological-vocabulary-1> termed:id '61bec1e5-70b4-34fc-acfb-ab70428fb6f8' . " +
                             "<http://uri.suomi.fi/terminology/jhs/terminological-vocabulary-1> termed:type   'TerminologicalVocabulary' . " +
@@ -398,10 +398,10 @@ public class Migrator {
                                     "PREFIX owl: <http://www.w3.org/2002/07/owl#>" +
                                     "PREFIX termed: <http://termed.thl.fi/meta/>" +
                                     "INSERT {" +
-                                    "    ?collection dcterms:title 'Sisäinen käsitteistö'@fi . " +
+                                    "    ?collection skos:prefLabel 'Sisäinen käsitteistö'@fi . " +
                                     "} WHERE { " +
                                     "    ?resource skos:inScheme ?collection . " +
-                                    "    FILTER NOT EXISTS{?collection dcterms:title ?o . }" +
+                                    "    FILTER NOT EXISTS{?collection skos:prefLabel ?o . }" +
                                     "}";
 
                     UpdateAction.parseExecute(deleteLocalSkos, resourceModel);

@@ -50,9 +50,9 @@ public class ContextWriter {
                 "SELECT ?resource ?resourceName ?datatype "
                 + "WHERE { "
                 + "{GRAPH ?resourceID { "
-                + "?resourceID a sh:Shape . "
-                + "?resourceID sh:scopeClass ?scopeClass . "
-                + "BIND(?scopeClass as ?resource)"
+                + "?resourceID a sh:NodeShape . "
+                + "?resourceID sh:targetClass ?targetClass . "
+                + "BIND(?targetClass as ?resource)"
                 + "BIND(afn:localname(?resourceID) as ?resourceName)"
                 + "OPTIONAL { ?resourceID a owl:DatatypeProperty . ?resourceID rdfs:range ?datatype . }"
                 + "}} UNION "
@@ -65,7 +65,7 @@ public class ContextWriter {
                 + "GRAPH ?resourceID {"
                 + "?resourceID sh:property ?property . "
                 + "OPTIONAL { ?property sh:datatype ?datatype . }"
-                + "?property sh:predicate ?predicate . "
+                + "?property sh:path ?predicate . "
                 + "BIND(?predicate as ?resource)"
                 + "BIND(afn:localname(?predicate) as ?resourceName)"
                 + "}}"
@@ -114,20 +114,20 @@ public class ContextWriter {
 
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         String selectResources = 
-                "SELECT ?resource ?type ?resourceName ?datatype ?scopeClass "
+                "SELECT ?resource ?type ?resourceName ?datatype ?targetClass "
                 + "WHERE { {"
                 + "GRAPH ?modelPartGraph {"
                 + "?model dcterms:hasPart ?resource . "
                 + "}"
                 + "GRAPH ?resource {"
                 + "?resource a ?type . "
-                + "OPTIONAL { ?resource sh:scopeClass ?scopeClass }"
+                + "OPTIONAL { ?resource sh:targetClass ?targetClass }"
                 + "BIND(afn:localname(?resource) as ?resourceName)"
                 + "}"
                 + "OPTIONAL {"
                 + "GRAPH ?class {"
                 + "?class sh:property ?property . "
-                + "?property sh:predicate ?resource . "
+                + "?property sh:path ?resource . "
                 + "?property sh:datatype ?datatype . "                
                 + "}"
                 + "} } UNION {"
@@ -136,7 +136,7 @@ public class ContextWriter {
                 + "}"
                 + "GRAPH ?shapes {"
                 + "?shapes sh:property ?property . "
-                + "?property sh:predicate ?resource . "
+                + "?property sh:path ?resource . "
                 + "?property dcterms:type ?type . "
                 + "BIND(afn:localname(?resource) as ?resourceName)"
                 + "OPTIONAL { ?property sh:datatype ?datatype . }"
@@ -159,8 +159,8 @@ public class ContextWriter {
             String predicateID = soln.getResource("resource").toString();
             String predicateName = soln.getLiteral("resourceName").toString();
             
-            if(soln.contains("scopeClass")) {
-                predicateID = soln.getResource("scopeClass").toString();
+            if(soln.contains("targetClass")) {
+                predicateID = soln.getResource("targetClass").toString();
             }
             
             JsonObjectBuilder predicate = Json.createObjectBuilder();

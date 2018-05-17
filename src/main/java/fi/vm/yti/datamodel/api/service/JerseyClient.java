@@ -9,6 +9,7 @@ import com.github.jsonldjava.core.JsonLdOptions;
 import com.github.jsonldjava.core.JsonLdProcessor;
 import com.github.jsonldjava.utils.JsonUtils;
 import fi.vm.yti.datamodel.api.config.ApplicationProperties;
+import fi.vm.yti.datamodel.api.utils.Frames;
 import fi.vm.yti.datamodel.api.utils.LDHelper;
 import org.apache.jena.atlas.web.ContentType;
 import org.apache.jena.query.Dataset;
@@ -45,19 +46,22 @@ public class JerseyClient {
     private final JerseyResponseManager jerseyResponseManager;
     private final ModelManager modelManager;
     private final ClientFactory clientFactory;
+    private final FrameManager frameManager;
 
     JerseyClient(JenaClient jenaClient,
                  EndpointServices endpointServices,
                  ApplicationProperties properties,
                  JerseyResponseManager jerseyResponseManager,
                  ModelManager modelManager,
-                 ClientFactory clientFactory) {
+                 ClientFactory clientFactory,
+                 FrameManager frameManager) {
         this.jenaClient = jenaClient;
         this.endpointServices = endpointServices;
         this.properties = properties;
         this.jerseyResponseManager = jerseyResponseManager;
         this.modelManager = modelManager;
         this.clientFactory = clientFactory;
+        this.frameManager = frameManager;
     }
 
     public Response getResponseFromURL(String url, String accept) {
@@ -171,71 +175,12 @@ public class JerseyClient {
             // OutputStream out = new ByteArrayOutputStream();
             // RDFDataMgr.write(out, model, rdfLang);
 
-            if (rdfLang.equals(Lang.JSONLD)) {
-
-                /* TODO: Use this instead? Prefixes not working!?
-                JsonLDWriteContext ctx = new JsonLDWriteContext();
-                JsonLdOptions opts = new JsonLdOptions();
-                ctx.setOptions(opts);
-                ObjectMapper mapper = new ObjectMapper();
-               // ctx.setJsonLDContext(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(model.getNsPrefixMap()));
-
-                JsonObject frame = new JsonObject();
-                frame.put("@type","http://www.w3.org/2002/07/owl#Ontology")
-                frame.put("@id", graph);
-
-                ctx.setFrame(frame.toString());
-
-                rb.entity(ModelManager.writeModelToJSONLDString(model, ctx));
-*/
-
-                Map<String, Object> jsonModel = null;
-                try {
-                    jsonModel = (Map<String, Object>) JsonUtils.fromString(modelManager.writeModelToJSONLDString(model));
-                } catch (IOException ex) {
-                    logger.warn(ex.getMessage(),ex);
-                    return jerseyResponseManager.unexpected();
-                }
-
-                Map<String, Object> frame = new HashMap<String, Object>();
-                //Map<String,Object> frame = (HashMap<String,Object>) LDHelper.getExportContext();
-
-                Map<String, Object> context = (Map<String, Object>) jsonModel.get("@context");
-                context.putAll(LDHelper.CONTEXT_MAP);
-
-                frame.put("@context", context);
-                //frame.put("@id", graph);
-                frame.put("@type", "owl:Ontology");
-
-                Object data;
-
-                try {
-                    //  data = JsonUtils.fromInputStream(response.readEntity(InputStream.class));
-
-                    try {
-                        JsonLdOptions options = new JsonLdOptions();
-                        Object framed = JsonLdProcessor.frame(jsonModel, frame, options);
-
-                        ObjectMapper mapper = new ObjectMapper();
-
-                        rb.entity(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(framed));
-
-                    } catch (NullPointerException ex) {
-                        logger.warn(ex.getMessage(),ex);
-                        return jerseyResponseManager.serverError();
-                    } catch (JsonLdError ex) {
-                        logger.warn(ex.getMessage(),ex);
-                        return jerseyResponseManager.serverError();
-                    }
-
-                } catch (IOException ex) {
-                    logger.warn(ex.getMessage(),ex);
-                    return jerseyResponseManager.serverError();
-                }
-
-            } else {
+            // TODO: ClassExportFrame ?
+       //     if (rdfLang.equals(Lang.JSONLD)) {
+        //        rb.entity(frameManager.graphToFramedString(model, Frames.classVisualizationFrame));
+         //   } else {
                 rb.entity(modelManager.writeModelToString(model, format));
-            }
+         //   }
 
             if(!raw) {
                 rb.type(contentType.getContentType());

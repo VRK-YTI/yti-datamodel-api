@@ -39,6 +39,10 @@ public final class EndpointServices {
         return endpoint+"/core/sparql";
     }
 
+    public String getSparqlAddress(String service) {
+        return endpoint+"/"+service+"/sparql";
+    }
+
     public String getSchemesReadAddress() {
         return endpoint+"/scheme/get";
     }
@@ -57,6 +61,10 @@ public final class EndpointServices {
 
     public String getCoreSparqlUpdateAddress() {
         return endpoint+"/core/update";
+    }
+
+    public String getSparqlUpdateAddress(String service) {
+        return endpoint+"/"+service+"/update";
     }
 
     public String getTempConceptReadWriteAddress() {
