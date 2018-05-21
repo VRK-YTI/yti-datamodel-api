@@ -58,6 +58,8 @@ public class Resolve {
     public Response resolveUri(@HeaderParam("Accept") String accept,
                                 @HeaderParam("Accept-Language") String acceptLang,
                                 @HeaderParam("If-Modified-Since") String ifModifiedSince,
+                                @ApiParam(value = "Raw / PlainText boolean", defaultValue = "false") @QueryParam("raw") boolean raw,
+                                @ApiParam(value = "Content-type as format") @QueryParam("format") String format,
                                 @ApiParam(value = "Resource URI.", required = true) @QueryParam("uri") final String uri) {
         final URI resolveUri = parseUriFromString(uri);
         ensureSuomiFiUriHost(resolveUri.getHost());
@@ -99,6 +101,10 @@ public class Resolve {
 
         final URI htmlRedirectUrl = URI.create(uriInfo.getBaseUri().toString().replace("/api/rest/","/model/") + graphPrefix + (uriFragment!=null?"/"+uriFragment:""));
 
+        if(format != null && format.length()>5) {
+            accept=format;
+        }
+
         if(accept.contains("text/html")) {
             logger.debug("Redirecting to "+htmlRedirectUrl.toString());
             return Response.seeOther(htmlRedirectUrl).build();
@@ -113,10 +119,10 @@ public class Resolve {
             Lang rdfLang = RDFLanguages.contentTypeToLang(acceptHeader);
 
             if(acceptHeader.contains("application/schema+json") || acceptHeader.contains("application/xml")) {
-                final URI schemaWithLangURI = URI.create(uriInfo.getBaseUri().toString()+"exportModel?graph="+graphName+"&content-type="+acceptHeader+(language==null?"":"&lang="+language));
+                final URI schemaWithLangURI = URI.create(uriInfo.getBaseUri().toString()+"exportModel?graph="+graphName+"&content-type="+acceptHeader+(language==null?"":"&lang="+language)+"&raw="+raw);
                 return Response.seeOther(schemaWithLangURI).build();
             } else if(rdfLang!=null) {
-                final URI rdfUrl = URI.create(uriInfo.getBaseUri().toString()+"exportModel?graph="+graphName+"&content-type="+rdfLang.getHeaderString());
+                final URI rdfUrl = URI.create(uriInfo.getBaseUri().toString()+"exportModel?graph="+graphName+"&content-type="+rdfLang.getHeaderString()+"&raw="+raw);
                 logger.debug("Resolving to RDF: "+rdfUrl);
                 return Response.seeOther(rdfUrl).build();
             }
