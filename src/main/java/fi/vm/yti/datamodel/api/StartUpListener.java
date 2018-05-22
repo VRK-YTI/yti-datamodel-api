@@ -1,10 +1,10 @@
 package fi.vm.yti.datamodel.api;
-import fi.vm.yti.datamodel.api.service.EndpointServices;
 import fi.vm.yti.datamodel.api.service.FrameManager;
 import fi.vm.yti.datamodel.api.service.GraphManager;
 import fi.vm.yti.datamodel.api.service.NamespaceManager;
 import fi.vm.yti.datamodel.api.service.RHPOrganizationManager;
 import fi.vm.yti.datamodel.api.service.TermedTerminologyManager;
+import fi.vm.yti.migration.MigrationInitializer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -29,7 +29,8 @@ public class StartUpListener  {
                     RHPOrganizationManager rhpOrganizationManager,
                     GraphManager graphManager,
                     NamespaceManager namespaceManager,
-                    FrameManager frameManager) {
+                    FrameManager frameManager,
+                    MigrationInitializer migrationInitializer /* XXX: dependency to enforce init order */) {
 
         this.termedTerminologyManager = termedTerminologyManager;
         this.rhpOrganizationManager = rhpOrganizationManager;
@@ -43,7 +44,6 @@ public class StartUpListener  {
 
         logger.info( "System is starting ...");
 
-        initDefaultGraph();
         initDefaultNamespaces();
         //initCodeServers();
         initServiceCategories();
@@ -76,20 +76,6 @@ public class StartUpListener  {
         SuomiCodeServer codeServer2 = new SuomiCodeServer("https://koodistot.suomi.fi","https://koodistot-dev.suomi.fi/codelist-api/api/v1/", endpointServices);
         codeServer2.updateCodelistsFromServer();
 */
-    }
-
-    private void initDefaultGraph() {
-        if (graphManager.testDefaultGraph()) {
-            logger.info("Default graph is initialized!");
-        }
-        else {
-            logger.warn("Default graph is NOT initialized!");
-            graphManager.createDefaultGraph();
-            if (graphManager.testDefaultGraph())
-                logger.info("Created NEW DEFAULT graph!");
-            else
-                logger.warn("Failed to create default graph!");
-        }
     }
 
     private void initDefaultNamespaces() {
