@@ -96,7 +96,7 @@ public class ExternalClass {
                     + "FILTER(LANG(?labelStr) = '') BIND(STRLANG(STR(?labelStr),'en') as ?label) }"
                     + "UNION"
                     + "{ ?class ?labelPred ?label . "
-                    + "VALUES ?commentPred { rdfs:label sh:name dc:title dcterms:title }"
+                    + "VALUES ?labelPred { rdfs:label sh:name dc:title dcterms:title }"
                     + " FILTER(LANG(?comment)!='') }"
                     /* GET COMMENT */
                     + "{ ?class ?commentPred ?commentStr . "
