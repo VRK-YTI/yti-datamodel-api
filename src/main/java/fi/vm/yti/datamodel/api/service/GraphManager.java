@@ -68,6 +68,13 @@ public class GraphManager {
         this.properties = properties;
     }
 
+    /**
+     * Returns true if version graph exists
+     * @return boolean
+     */
+    public boolean isVersionGraphInitialized() {
+        return jenaClient.isInCore(versionGraphURI);
+    }
 
     /**
      * Set version number for the used metamodel

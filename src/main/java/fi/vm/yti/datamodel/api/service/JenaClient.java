@@ -74,6 +74,10 @@ public final class JenaClient {
        coreService.deleteModel(graph);
     }
 
+    public boolean isInCore(String graph) {
+      return coreService.containsModel(graph);
+    }
+
     public void putModelToCore(String graph, Model model) {
        logger.debug("Putting model to "+graph);
         coreService.putModel(graph, model);
