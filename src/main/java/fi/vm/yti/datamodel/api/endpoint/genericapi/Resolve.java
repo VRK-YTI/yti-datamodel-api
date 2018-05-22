@@ -70,8 +70,6 @@ public class Resolve {
         final String uriFragment = resolveUri.getFragment();
         final String graphPrefix = uriPath.substring(API_PATH_DATAMODEL.length());
 
-        final List<String> acceptHeaders = Arrays.asList(accept.replaceAll("\\s+","").split(","));
-
         logger.debug("Resolving: "+uri);
 
         final String graphName = graphManager.getServiceGraphNameWithPrefix(graphPrefix);
@@ -109,6 +107,8 @@ public class Resolve {
             logger.debug("Redirecting to "+htmlRedirectUrl.toString());
             return Response.seeOther(htmlRedirectUrl).build();
         }
+
+        final List<String> acceptHeaders = Arrays.asList(accept.replaceAll("\\s+","").split(","));
 
         for(String acceptHeader : acceptHeaders) {
 
