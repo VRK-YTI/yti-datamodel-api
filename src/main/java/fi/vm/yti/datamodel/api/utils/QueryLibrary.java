@@ -311,9 +311,11 @@ public class QueryLibrary {
                     + "FILTER(STRSTARTS(STR(?classIRI), STR(?externalModel)))"
                     + "VALUES ?type { rdfs:Class owl:Class sh:NodeShape } "
                     /* Get class label */
-                     + "{?classIRI rdfs:label|sh:name ?labelStr . FILTER(LANG(?labelStr) = '') BIND(STRLANG(?labelStr,'en') as ?label) }"
+                     + "{?classIRI ?labelProp ?labelStr . FILTER(LANG(?labelStr) = '') BIND(STRLANG(?labelStr,'en') as ?label) "
+                     + "VALUES ?labelProp { rdfs:label sh:name } }"
                      + "UNION"
-                     + "{ ?classIRI rdfs:label|sh:name ?label . FILTER(LANG(?label)!='') }"
+                     + "{ ?classIRI ?labelProp ?label . FILTER(LANG(?label)!='') "
+                     + "VALUES ?labelProp { rdfs:label sh:name } }"
                      /* Get class comment */
                     + "{ ?classIRI ?commentPred ?commentStr . "
                      + "VALUES ?commentPred { rdfs:comment skos:definition dcterms:description dc:description prov:definition sh:description }"
@@ -411,11 +413,13 @@ public class QueryLibrary {
                     + "FILTER(STRSTARTS(STR(?classIRI), STR(?externalModel)))"
                     + "VALUES ?type { rdfs:Class owl:Class sh:NodeShape } "
                     /* Get class label */
-                     + "{?classIRI rdfs:label|sh:name ?labelStr . FILTER(LANG(?labelStr) = '') BIND(STRLANG(?labelStr,'en') as ?label) }"
+                     + "{?classIRI ?labelProp ?labelStr . FILTER(LANG(?labelStr) = '') BIND(STRLANG(?labelStr,'en') as ?label) "
+                     + "VALUES ?labelProp { rdfs:label sh:name } }"
                      + "UNION"
-                     + "{ ?classIRI rdfs:label|sh:name ?label . FILTER(LANG(?label)!='') }"
+                     + "{ ?classIRI ?labelProp ?label . FILTER(LANG(?label)!='') "
+                     + "VALUES ?labelProp { rdfs:label sh:name } }"
                      /* Get class comment */
-                    + "{ ?classIRI ?commentPred ?commentStr . "
+                     + "{ ?classIRI ?commentPred ?commentStr . "
                      + "VALUES ?commentPred { rdfs:comment skos:definition dcterms:description dc:description prov:definition sh:description }"
                      + "FILTER(LANG(?commentStr) = '') BIND(STRLANG(STR(?commentStr),'en') as ?comment) }"
                      + "UNION"
@@ -522,10 +526,12 @@ public class QueryLibrary {
                     + "GRAPH ?externalModel { "
                     + "OPTIONAL {"
                     /* Labels */
-                     + "{?classIRI rdfs:label|sh:name ?labelStr . FILTER(LANG(?labelStr) = '') BIND(STRLANG(?labelStr,'en') as ?label) }"
+                     + "{?classIRI ?labelProp ?labelStr . FILTER(LANG(?labelStr) = '') BIND(STRLANG(?labelStr,'en') as ?label) "
+                     + "VALUES ?labelProp { rdfs:label sh:name } }"
                      + "UNION"
-                     + "{ ?classIRI rdfs:label|sh:name ?label . FILTER(LANG(?label)!='') }"
-                    /* Comments */
+                     + "{ ?classIRI ?labelProp ?label . FILTER(LANG(?label)!='') "
+                     + "VALUES ?labelProp { rdfs:label sh:name } }"
+                     /* Comments */
                      + "{ ?classIRI ?commentPred ?commentStr . "
                      + "VALUES ?commentPred { rdfs:comment skos:definition dcterms:description dc:description prov:definition sh:description }"
                      + "FILTER(LANG(?commentStr) = '') BIND(STRLANG(STR(?commentStr),'en') as ?comment) }"

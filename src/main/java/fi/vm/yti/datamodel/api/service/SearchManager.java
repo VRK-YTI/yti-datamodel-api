@@ -55,9 +55,11 @@ public class SearchManager {
                         + "}}"
                         //+ "UNION"
                         // + "{?resource sh:path ?predicate . ?super sh:property ?resource . ?super rdfs:label ?superLabel . BIND(sh:Constraint as ?type)}"
-                        + "?resource rdfs:label|sh:name ?label . "
+                        + "?resource ?labelProp ?label . "
+                        + "VALUES ?labelProp { rdfs:label sh:name } "
                         //+ "?resource text:query '"+search+"' . "
-                        + "OPTIONAL{?resource rdfs:comment|sh:description ?comment .}"
+                        + "OPTIONAL{?resource ?commentProp ?comment . "
+                        + "VALUES ?commentProp { rdfs:comment sh:description }}"
                         + (lang==null||lang.equals("undefined")?"":"FILTER langMatches(lang(?label),'"+lang+"')")
                         + "}}";
 
