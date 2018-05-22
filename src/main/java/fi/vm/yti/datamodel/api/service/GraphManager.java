@@ -50,6 +50,7 @@ public class GraphManager {
     private final ModelManager modelManager;
     private final ApplicationProperties properties;
     private final ServiceDescriptionManager serviceDescriptionManager;
+    private final String versionGraphURI = "urn:yti:metamodel:version";
 
     @Autowired
     GraphManager(EndpointServices endpointServices,
@@ -66,6 +67,24 @@ public class GraphManager {
         this.serviceDescriptionManager = serviceDescriptionManager;
         this.properties = properties;
     }
+
+
+    /**
+     * Set version number for the used metamodel
+     */
+    public void setVersionNumber(int version) {
+       Model versionModel = ModelFactory.createDefaultModel().addLiteral(ResourceFactory.createResource(versionGraphURI),LDHelper.curieToProperty("iow:version"), version);
+       versionModel.setNsPrefix("iow","http://uri.suomi.fi/datamodel/ns/iow#");
+       jenaClient.putModelToCore(versionGraphURI, versionModel);
+    }
+
+    /**
+     * Get version number for the used metamodel
+     * @return version number as int
+     */
+    public int getVersionNumber() {
+        return jenaClient.getModelFromCore(versionGraphURI).getRequiredProperty(ResourceFactory.createResource(versionGraphURI),LDHelper.curieToProperty("iow:version")).getLiteral().getInt();
+   }
 
     /**
      * Returns true if there are some services defined

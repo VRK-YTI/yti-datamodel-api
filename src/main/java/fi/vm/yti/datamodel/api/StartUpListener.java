@@ -46,8 +46,8 @@ public class StartUpListener  {
 
         initDefaultNamespaces();
         //initCodeServers();
-        initServiceCategories();
-        termedTerminologyManager.initConceptsFromTermed();
+        //initServiceCategories();
+        //termedTerminologyManager.initConceptsFromTermed();
         initRHPOrganizations();
         //initFramingCache();
     }

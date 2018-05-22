@@ -24,18 +24,16 @@ public class FusekiSchemaVersionAccessor implements SchemaVersionAccessor {
 
     @Override
     public void initialize() {
-        // TODO proper implementation
         setSchemaVersion(0);
     }
 
     @Override
     public int getSchemaVersion() {
-        // TODO proper implementation
-        return 1;
+        return graphManager.getVersionNumber();
     }
 
     @Override
     public void setSchemaVersion(int version) {
-        // TODO proper implementation
+        graphManager.setVersionNumber(version);
     }
 }

@@ -19,6 +19,7 @@ public class V1_Initial implements MigrationTask {
     public void migrate() {
 
         graphManager.createDefaultGraph();
+        graphManager.initServiceCategories();
 
         if (!graphManager.testDefaultGraph()) {
             throw new RuntimeException("Failed to create default graph");
