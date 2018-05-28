@@ -97,7 +97,7 @@ public class ExternalClass {
                     + "UNION"
                     + "{ ?class ?labelPred ?label . "
                     + "VALUES ?labelPred { rdfs:label sh:name dc:title dcterms:title }"
-                    + " FILTER(LANG(?comment)!='') }"
+                    + " FILTER(LANG(?label)!='') }"
                     /* GET COMMENT */
                     + "{ ?class ?commentPred ?commentStr . "
                     + "VALUES ?commentPred { rdfs:comment skos:definition dcterms:description dc:description prov:definition sh:description }"
@@ -148,6 +148,7 @@ public class ExternalClass {
             pss.setIri("modelService", endpointServices.getLocalhostCoreSparqlAddress());
             pss.setCommandText(queryString);
             pss.setIri("classIRI", idIRI);
+            pss.setLiteral("draft","VALID");
 
 
             if(!model.equals("undefined")) {

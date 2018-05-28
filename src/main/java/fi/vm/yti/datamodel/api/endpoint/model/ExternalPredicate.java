@@ -76,6 +76,7 @@ public class ExternalPredicate {
                     + "?externalModel rdfs:label ?externalModelLabel . "
                     + "?predicate rdfs:isDefinedBy ?externalModel . "
                     + "?predicate rdfs:label ?label . "
+                    + "?predicate owl:versionInfo ?draft . "
                     + "?predicate a ?type . "
                     + "?predicate dcterms:modified ?modified . "
                     + "?predicate rdfs:isDefinedBy ?source . "
@@ -133,13 +134,28 @@ public class ExternalPredicate {
                     + "BIND(rdf:Property as ?type)"
                     + "} "
                     + "FILTER(STRSTARTS(STR(?predicate), STR(?externalModel)))"
-                    + "OPTIONAL { ?predicate rdfs:label ?labelStr . FILTER(LANG(?labelStr) = '') BIND(STRLANG(?labelStr,'en') as ?label) }"
-                    + "OPTIONAL { ?predicate rdfs:label ?label . FILTER(LANG(?label)!='') }"
+                    /* GET LABEL */
+                    + "{ ?predicate ?labelPred ?labelStr . "
+                    + "VALUES ?labelPred { rdfs:label sh:name dc:title dcterms:title }"
+                    + "FILTER(LANG(?labelStr) = '') BIND(STRLANG(STR(?labelStr),'en') as ?label) }"
+                    + "UNION"
+                    + "{ ?predicate ?labelPred ?label . "
+                    + "VALUES ?labelPred { rdfs:label sh:name dc:title dcterms:title }"
+                    + " FILTER(LANG(?label)!='') }"
+                    /* GET COMMENT */
+                    + "{ ?predicate ?commentPred ?commentStr . "
+                    + "VALUES ?commentPred { rdfs:comment skos:definition dcterms:description dc:description prov:definition sh:description }"
+                    + "FILTER(LANG(?commentStr) = '') BIND(STRLANG(STR(?commentStr),'en') as ?comment) }"
+                    + "UNION"
+                    + "{ ?predicate ?commentPred ?comment . "
+                    + "VALUES ?commentPred { rdfs:comment skos:definition dcterms:description dc:description prov:definition sh:description }"
+                    + " FILTER(LANG(?comment)!='') }"
                     + "} "
                     + "}";
 
             pss.setIri("library", model);
             pss.setIri("modelService", endpointServices.getLocalhostCoreSparqlAddress());
+            pss.setLiteral("draft","VALID");
 
             pss.setCommandText(queryString);
 
