@@ -129,7 +129,7 @@ public class ModelManager {
                         // If object is list
                         RDFList languageList = removeStatement.getObject().as(RDFList.class);
                         languageList.removeList();
-                        statementsToRemove.add(removeStatement);
+                        removeStatement.remove();
                     } else {
                         // If object is Anon such as sh:constraint
                         StmtIterator anonIterator = removeStatement.getObject().asResource().listProperties();
@@ -148,8 +148,7 @@ public class ModelManager {
 
                         }
 
-                        // remove statement later
-                        statementsToRemove.add(removeStatement);
+                        removeStatement.remove();
 
                     }
                 } catch(PropertyNotFoundException ex) {
@@ -164,11 +163,7 @@ public class ModelManager {
 
 
         // Remove statements and lists after loop to avoid concurrent modification exception
-
-        for(Iterator<Statement> i = statementsToRemove.iterator();i.hasNext();) {
-            Statement removeStat = i.next();
-            removeStat.remove();
-        }
+        model.remove(statementsToRemove);
 
         for(Iterator<RDFList> i = listsToRemove.iterator();i.hasNext();) {
             RDFList removeList = i.next();
