@@ -25,6 +25,8 @@ import org.apache.jena.update.UpdateProcessor;
 import org.apache.jena.update.UpdateRequest;
 
 import java.util.Date;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
@@ -51,6 +53,7 @@ public class GraphManager {
     private final ApplicationProperties properties;
     private final ServiceDescriptionManager serviceDescriptionManager;
     private final String versionGraphURI = "urn:yti:metamodel:version";
+    private final ExecutorService executor = Executors.newFixedThreadPool(1);
 
     @Autowired
     GraphManager(EndpointServices endpointServices,
@@ -1115,33 +1118,29 @@ public class GraphManager {
         Model exportModel = resource.asGraphCopy();
         exportModel.add(exportModel.createResource(resource.getModelId()), DCTerms.hasPart, exportModel.createResource(resource.getId()));
         LDHelper.rewriteLiteral(exportModel, ResourceFactory.createResource(resource.getModelId()), DCTerms.modified, LDHelper.getDateTimeLiteral());
-
         jenaClient.addModelToCore(resource.getModelId()+"#ExportGraph", exportModel);
     }
 
     public void updateResource(AbstractResource resource) {
-        Model oldModel = jenaClient.getModelFromCore(resource.getId());
-        Model exportModel = jenaClient.getModelFromCore(resource.getModelId()+"#ExportGraph");
 
-        exportModel = modelManager.removeResourceStatements(oldModel, exportModel);
-        exportModel.add(resource.asGraph());
-        LDHelper.rewriteLiteral(exportModel, ResourceFactory.createResource(resource.getModelId()), DCTerms.modified, LDHelper.getDateTimeLiteral());
+        final Model oldModel = jenaClient.getModelFromCore(resource.getId());
+        final Model newModel = resource.asGraph();
 
-        jenaClient.putModelToCore(resource.getModelId()+"#ExportGraph", exportModel);
-        jenaClient.putModelToCore(resource.getId(), resource.asGraph());
+        executor.submit(() -> {
+            Model exportModel = jenaClient.getModelFromCore(resource.getModelId()+"#ExportGraph");
+            exportModel = modelManager.removeResourceStatements(oldModel, exportModel);
+            exportModel.add(newModel);
+            LDHelper.rewriteLiteral(exportModel, ResourceFactory.createResource(resource.getModelId()), DCTerms.modified, LDHelper.getDateTimeLiteral());
+            jenaClient.putModelToCore(resource.getModelId()+"#ExportGraph", exportModel);
+        });
+
+        jenaClient.putModelToCore(resource.getId(), newModel);
+
     }
 
     public void updateResourceWithNewId(IRI oldIdIRI, AbstractResource resource) {
-        Model oldModel = jenaClient.getModelFromCore(oldIdIRI.toString());
-        Model exportModel = jenaClient.getModelFromCore(resource.getModelId()+"#ExportGraph");
 
-        exportModel = modelManager.removeResourceStatements(oldModel, exportModel);
-        exportModel.add(resource.asGraph());
-        LDHelper.rewriteLiteral(exportModel, ResourceFactory.createResource(resource.getModelId()), DCTerms.modified, LDHelper.getDateTimeLiteral());
-
-        jenaClient.putModelToCore(resource.getModelId()+"#ExportGraph", exportModel);
-
-        jenaClient.putModelToCore(resource.getId(), resource.asGraph());
+        updateResource(resource);
 
         removeGraph(oldIdIRI);
         renameID(oldIdIRI,resource.getIRI());
@@ -1149,12 +1148,18 @@ public class GraphManager {
     }
 
     public void deleteResource(AbstractResource resource) {
-        Model exportModel = jenaClient.getModelFromCore(resource.getModelId()+"#ExportGraph");
-        exportModel = modelManager.removeResourceStatements(resource.asGraph(), exportModel);
-        exportModel.remove(exportModel.createResource(resource.getModelId()), DCTerms.hasPart, exportModel.createResource(resource.getId()));
-        LDHelper.rewriteLiteral(exportModel, ResourceFactory.createResource(resource.getModelId()), DCTerms.modified, LDHelper.getDateTimeLiteral());
-        jenaClient.putModelToCore(resource.getModelId()+"#ExportGraph", exportModel);
-        deleteGraphReferenceFromModel(resource.getIRI(),resource.getModelIRI());
+
+        final Model deleteModel = resource.asGraph();
+
+        executor.submit(() -> {
+                    Model exportModel = jenaClient.getModelFromCore(resource.getModelId() + "#ExportGraph");
+                    exportModel = modelManager.removeResourceStatements(deleteModel, exportModel);
+                    exportModel.remove(exportModel.createResource(resource.getModelId()), DCTerms.hasPart, exportModel.createResource(resource.getId()));
+                    LDHelper.rewriteLiteral(exportModel, ResourceFactory.createResource(resource.getModelId()), DCTerms.modified, LDHelper.getDateTimeLiteral());
+                    jenaClient.putModelToCore(resource.getModelId() + "#ExportGraph", exportModel);
+                    deleteGraphReferenceFromModel(resource.getIRI(), resource.getModelIRI());
+                });
+
         jenaClient.deleteModelFromCore(resource.getId());
     }
 

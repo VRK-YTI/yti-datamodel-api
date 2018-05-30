@@ -59,7 +59,7 @@ public class StartUpListener  {
 
     @Scheduled(cron = "0 */5 * * * *")
     void initRHPOrganizations() {
-        logger.info("Updating organizations");
+        logger.debug("Updating organizations");
         rhpOrganizationManager.initOrganizationsFromRHP();
     }
 

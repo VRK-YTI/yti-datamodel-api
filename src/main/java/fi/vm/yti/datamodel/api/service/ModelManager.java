@@ -140,7 +140,6 @@ public class ModelManager {
                             Property anonListPredicate = anonStatement.getPredicate();
                             if(anonSubObject.isAnon() && anonSubObject.canAs(RDFList.class)) {
                                 // If Anon object has list such as sh:and
-                                logger.debug("Adding list to remove "+anonListPredicate.getLocalName());
                                 listsToRemove.add(anonSubObject.as(RDFList.class));
                             }
                             // remove statement later
