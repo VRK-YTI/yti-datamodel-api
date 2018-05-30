@@ -92,9 +92,11 @@ public class XMLSchemaWriter {
                 + "WHERE { "
                 + "GRAPH ?resourceID { "
                 + "?resourceID a ?type . "
-                + "?resourceID rdfs:label ?label . "
+                + "?resourceID ?resourceLabel ?label . "
+                + "VALUES ?resourceLabel { rdfs:label sh:name }"
                 + "FILTER (langMatches(lang(?label),?lang))"
-                + "OPTIONAL { ?resourceID rdfs:comment ?description . "
+                + "OPTIONAL { ?resourceID ?resourceComment ?description . "
+                + "VALUES ?resourceComment { rdfs:comment sh:description }"
                 + "FILTER (langMatches(lang(?description),?lang))"
                 + "}"
                 + "} "
@@ -111,7 +113,10 @@ public class XMLSchemaWriter {
         try(QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), pss.asQuery())) {
             ResultSet results = qexec.execSelect();
 
-            if (!results.hasNext()) return null;
+            if (!results.hasNext()) {
+                logger.debug("Resource results is null");
+                return null;
+            }
 
             while (results.hasNext()) {
 
@@ -351,10 +356,10 @@ public class XMLSchemaWriter {
                 + "?model dcterms:hasPart ?resource . "
                 + "}"
                 + "GRAPH ?resource {"
-                + "?resource rdfs:label ?classTitle . "
+                + "?resource sh:name ?classTitle . "
                 + "FILTER (langMatches(lang(?classTitle),?lang))"
                 + "OPTIONAL { ?resource sh:targetClass ?targetClass . }"
-                + "OPTIONAL { ?resource rdfs:comment ?classDescription . "
+                + "OPTIONAL { ?resource sh:description ?classDescription . "
                 + "FILTER (langMatches(lang(?classDescription),?lang))"
                 + "}"
                 + "?resource sh:property ?property . "

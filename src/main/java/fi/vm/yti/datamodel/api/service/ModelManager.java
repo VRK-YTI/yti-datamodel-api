@@ -21,6 +21,10 @@ import org.apache.jena.vocabulary.RDF;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 
 
@@ -94,38 +98,86 @@ public class ModelManager {
 
     }
 
+    /**
+     *  Removes all triples (one level of anonymous nodes) from MODEL that are in RESOURCE except those resources that are type owl:Ontology
+     * @param resource Resource to be removed from the model
+     * @param model Model where resource is removed from
+     * @return Returns model where other model is removed
+     */
     public Model removeResourceStatements(Model resource, Model model) {
 
         StmtIterator listIterator = resource.listStatements();
+
+        List<Statement> statementsToRemove = new ArrayList<Statement>();
+        List<RDFList> listsToRemove = new ArrayList<RDFList>();
 
         while(listIterator.hasNext()) {
             Statement listStatement = listIterator.next();
             Resource subject = listStatement.getSubject();
             RDFNode object = listStatement.getObject();
+            Property listPredicate = listStatement.getPredicate();
+
+            // If object is anonymous REMOVE object triples and all containing lists
+            // MISSES second level anon nodes (Currently not an issue?)
             if(subject.isURIResource() && object.isAnon()) {
                 try {
-                    Statement removeStatement = model.getRequiredProperty(subject, listStatement.getPredicate());
+                    Statement removeStatement = model.getRequiredProperty(subject, listPredicate);
                     if (!removeStatement.getObject().isAnon()) {
                         logger.warn("This should'nt happen!");
-                        logger.warn("Bad data " + subject.toString() + "->" + listStatement.getPredicate());
-                    } else {
+                        logger.warn("Bad data " + subject.toString() + "->" + listPredicate);
+                    } else if(removeStatement.getObject().canAs(RDFList.class)) {
+                        // If object is list
                         RDFList languageList = removeStatement.getObject().as(RDFList.class);
                         languageList.removeList();
-                        removeStatement.remove();
+                        statementsToRemove.add(removeStatement);
+                    } else {
+                        // If object is Anon such as sh:constraint
+                        StmtIterator anonIterator = removeStatement.getObject().asResource().listProperties();
+                        while(anonIterator.hasNext()) {
+                            Statement anonStatement = anonIterator.next();
+                            Resource anonSubject = anonStatement.getSubject();
+                            RDFNode anonSubObject = anonStatement.getObject();
+                            Property anonListPredicate = anonStatement.getPredicate();
+                            if(anonSubObject.isAnon() && anonSubObject.canAs(RDFList.class)) {
+                                // If Anon object has list such as sh:and
+                                logger.debug("Adding list to remove "+anonListPredicate.getLocalName());
+                                listsToRemove.add(anonSubObject.as(RDFList.class));
+                            }
+                            // remove statement later
+                            statementsToRemove.add(anonStatement);
+
+                        }
+
+                        // remove statement later
+                        statementsToRemove.add(removeStatement);
+
                     }
                 } catch(PropertyNotFoundException ex) {
                     logger.warn("This should'nt happen!");
                     logger.warn(ex.getMessage(),ex);
                 }
+            // Remove ALL triples that are part of resource node such as Class or Property. Keep Ontology triples.
             } else if(subject.isURIResource() && !subject.hasProperty(RDF.type, OWL.Ontology)){
                 model.remove(listStatement);
             }
         }
 
+
+        // Remove statements and lists after loop to avoid concurrent modification exception
+
+        for(Iterator<Statement> i = statementsToRemove.iterator();i.hasNext();) {
+            Statement removeStat = i.next();
+            removeStat.remove();
+        }
+
+        for(Iterator<RDFList> i = listsToRemove.iterator();i.hasNext();) {
+            RDFList removeList = i.next();
+            removeList.removeList();
+        }
+
         return model;
 
     }
-
 
     /**
      * Create jena model from json-ld string

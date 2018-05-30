@@ -147,9 +147,11 @@ public class JsonSchemaWriter {
                             + "?resourceID sh:property ?property . "
                             + "?property sh:path ?predicate . "
                             + "OPTIONAL { ?property iow:localName ?id . }"
-                            + "?property sh:name ?label . "
+                            + "?property ?nameProperty ?label . "
+                            + "VALUES ?nameProperty { sh:name rdfs:label }"
                             + "FILTER (langMatches(lang(?label),?lang))"
-                            + "OPTIONAL { ?property sh:description ?description . "
+                            + "OPTIONAL { ?property ?commentProperty ?description . "
+                            + "VALUES ?commentProperty { sh:description rdfs:comment }"
                             + "FILTER (langMatches(lang(?description),?lang))"
                             + "}"
                             + "OPTIONAL { ?property sh:datatype ?datatype . }"
@@ -499,10 +501,10 @@ public class JsonSchemaWriter {
                         + "?model dcterms:hasPart ?resource . "
                         + "}"
                         + "GRAPH ?resource {"
-                        + "?resource rdfs:label ?classTitle . "
+                        + "?resource sh:name ?classTitle . "
                         + "FILTER (langMatches(lang(?classTitle),?lang))"
                         + "OPTIONAL { ?resource sh:targetClass ?targetClass . }"
-                        + "OPTIONAL { ?resource rdfs:comment ?classDescription . "
+                        + "OPTIONAL { ?resource sh:description ?classDescription . "
                         + "FILTER (langMatches(lang(?classDescription),?lang))"
                         + "}"
                         + "?resource sh:property ?property . "
@@ -814,8 +816,6 @@ public class JsonSchemaWriter {
 
     public String newModelSchema(String modelID, String lang) {
 
-        logger.info("Building JSON Schema from "+modelID);
-
         JsonObjectBuilder schema = Json.createObjectBuilder();
 
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
@@ -838,18 +838,22 @@ public class JsonSchemaWriter {
 
         pss.setCommandText(selectClass);
 
-        logger.info(""+endpointServices.getCoreSparqlAddress());
-
         try(QueryExecution qexec =  QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), pss.toString())) {
 
             ResultSet results = qexec.execSelect();
 
-            if (!results.hasNext()) return null;
+            if (!results.hasNext()) {
+                logger.debug("No results from model: "+modelID);
+                return null;
+            }
 
             while (results.hasNext()) {
 
                 QuerySolution soln = results.nextSolution();
                 String title = soln.getLiteral("label").getString();
+
+                logger.info("Building JSON Schema from "+title);
+
                 if (soln.contains("description")) {
                     String description = soln.getLiteral("description").getString();
                     schema.add("description", description);
@@ -882,6 +886,8 @@ public class JsonSchemaWriter {
                 JsonObjectBuilder modelProperties = Json.createObjectBuilder();
                 modelProperties.add("$ref", "#/definitions/" + SplitIRI.localname(modelRoot));
                 return createModelSchemaWithRoot(schema, modelProperties, definitions);
+            } else {
+                logger.debug("Model root is null");
             }
 
             return createDefaultModelSchema(schema, definitions);
@@ -970,9 +976,9 @@ public class JsonSchemaWriter {
                         + "?model dcterms:hasPart ?resource . "
                         + "}"
                         + "GRAPH ?resource {"
-                        + "?resource rdfs:label ?classTitle . "
+                        + "?resource sh:name ?classTitle . "
                         + "BIND(lang(?classTitle) as ?lang)"
-                        + "OPTIONAL { ?resource rdfs:comment ?classDescription . "
+                        + "OPTIONAL { ?resource sh:description ?classDescription . "
                         + "FILTER(?lang=lang(?classDescription))"
                         + "}"
                         + "?resource sh:property ?property . "
@@ -1227,7 +1233,10 @@ public class JsonSchemaWriter {
 
     private String createDefaultModelSchema(JsonObjectBuilder schema, JsonObjectBuilder definitions) {
 
-        if(definitions==null) return null;
+        if(definitions==null) {
+            logger.debug("Definitions object is null");
+            return null;
+        }
 
         schema.add("$schema", "http://json-schema.org/draft-04/schema#");
 
@@ -1240,7 +1249,10 @@ public class JsonSchemaWriter {
 
     private String createModelSchemaWithRoot(JsonObjectBuilder schema, JsonObjectBuilder properties, JsonObjectBuilder definitions) {
 
-        if(definitions==null) return null;
+        if(definitions==null) {
+            logger.debug("Definitions object is null");
+            return null;
+        }
 
         schema.add("$schema", "http://json-schema.org/draft-04/schema#");
 
