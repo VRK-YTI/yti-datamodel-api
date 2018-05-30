@@ -882,7 +882,7 @@ public class GraphManager {
     }
 
 
-    public UpdateRequest deleteGraphReferenceFromModelRequest(IRI graph, IRI model) {
+    public UpdateRequest deleteGraphReferenceFromModelRequest(String graph, String model) {
         String query
                 = " DELETE { "
                 + "GRAPH ?hasPartGraph { ?model dcterms:hasPart ?graph } "
@@ -902,17 +902,8 @@ public class GraphManager {
         return pss.asUpdate();
     }
 
-    /**
-     * Removes Resource-graph reference from models HasPartGraph
-     * @param graph Resource IRI reference to be removed
-     * @param model Model IRI
-     */
     public void deleteGraphReferenceFromModel(IRI graph, IRI model) {
-
-        UpdateRequest queryObj = deleteGraphReferenceFromModelRequest(graph, model);
-        UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, endpointServices.getCoreSparqlUpdateAddress());
-        qexec.execute();
-
+        deleteGraphReferenceFromModel(graph.toString(), model.toString());
     }
 
     /**
@@ -920,7 +911,25 @@ public class GraphManager {
      * @param graph Resource IRI reference to be removed
      * @param model Model IRI
      */
+    public void deleteGraphReferenceFromModel(String graph, String model) {
+
+        UpdateRequest queryObj = deleteGraphReferenceFromModelRequest(graph, model);
+        UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, endpointServices.getCoreSparqlUpdateAddress());
+        qexec.execute();
+
+    }
+
+
     public void deleteGraphReferenceFromExportModel(IRI graph, IRI model) {
+        deleteGraphReferenceFromExportModel(graph.toString(), model.toString());
+    }
+
+    /**
+     * Removes Resource-graph reference from models HasPartGraph
+     * @param graph Resource IRI reference to be removed
+     * @param model Model IRI
+     */
+    public void deleteGraphReferenceFromExportModel(String graph, String model) {
 
         String query
                 = " DELETE { "
@@ -1120,44 +1129,40 @@ public class GraphManager {
         jenaClient.addModelToCore(resource.getModelId()+"#ExportGraph", exportModel);
     }
 
-    public void updateResourceWithModels(String modelId, String resourceId, Model oldModel, Model newModel) {
-        executor.submit(() -> {
-            Model exportModel = jenaClient.getModelFromCore(modelId+"#ExportGraph");
-            exportModel = modelManager.removeResourceStatements(oldModel, exportModel);
-            exportModel.add(newModel);
-            LDHelper.rewriteLiteral(exportModel, ResourceFactory.createResource(modelId), DCTerms.modified, LDHelper.getDateTimeLiteral());
-            jenaClient.putModelToCore(modelId+"#ExportGraph", exportModel);
-        });
+    public void updateResource(String modelId, String resourceId, Model oldModel, Model newModel) {
+        Model exportModel = jenaClient.getModelFromCore(modelId+"#ExportGraph");
+        exportModel = modelManager.removeResourceStatements(oldModel, exportModel);
+        exportModel.add(newModel);
+        LDHelper.rewriteLiteral(exportModel, ResourceFactory.createResource(modelId), DCTerms.modified, LDHelper.getDateTimeLiteral());
+        jenaClient.putModelToCore(modelId+"#ExportGraph", exportModel);
         jenaClient.putModelToCore(resourceId, newModel);
     }
 
     public void updateResource(AbstractResource resource) {
         final Model oldModel = jenaClient.getModelFromCore(resource.getId());
         final Model newModel = resource.asGraph();
-        updateResourceWithModels(resource.getModelId(), resource.getId(), oldModel, newModel);
+        updateResource(resource.getModelId(), resource.getId(), oldModel, newModel);
     }
 
     public void updateResourceWithNewId(IRI oldIdIRI, AbstractResource resource) {
-        updateResourceWithModels(resource.getModelId(), resource.getId(), jenaClient.getModelFromCore(oldIdIRI.toString()), resource.asGraph());
+        updateResource(resource.getModelId(), resource.getId(), jenaClient.getModelFromCore(oldIdIRI.toString()), resource.asGraph());
         removeGraph(oldIdIRI);
         renameID(oldIdIRI,resource.getIRI());
         updateReferencesInPositionGraph(resource.getModelIRI(), oldIdIRI, resource.getIRI());
     }
 
     public void deleteResource(AbstractResource resource) {
+        deleteResource(resource.getId(), resource.getModelId(), resource.asGraph());
+    }
 
-        final Model deleteModel = resource.asGraph();
-
-        executor.submit(() -> {
-                    Model exportModel = jenaClient.getModelFromCore(resource.getModelId() + "#ExportGraph");
-                    exportModel = modelManager.removeResourceStatements(deleteModel, exportModel);
-                    exportModel.remove(exportModel.createResource(resource.getModelId()), DCTerms.hasPart, exportModel.createResource(resource.getId()));
-                    LDHelper.rewriteLiteral(exportModel, ResourceFactory.createResource(resource.getModelId()), DCTerms.modified, LDHelper.getDateTimeLiteral());
-                    jenaClient.putModelToCore(resource.getModelId() + "#ExportGraph", exportModel);
-                    deleteGraphReferenceFromModel(resource.getIRI(), resource.getModelIRI());
-                });
-
-        jenaClient.deleteModelFromCore(resource.getId());
+    public void deleteResource(String resourceId, String modelId, Model resourceModel) {
+        Model exportModel = jenaClient.getModelFromCore(modelId + "#ExportGraph");
+        exportModel = modelManager.removeResourceStatements(resourceModel, exportModel);
+        exportModel.remove(exportModel.createResource(modelId), DCTerms.hasPart, exportModel.createResource(resourceId));
+        LDHelper.rewriteLiteral(exportModel, ResourceFactory.createResource(modelId), DCTerms.modified, LDHelper.getDateTimeLiteral());
+        jenaClient.putModelToCore(modelId + "#ExportGraph", exportModel);
+        deleteGraphReferenceFromModel(resourceId, modelId);
+        jenaClient.deleteModelFromCore(resourceId);
     }
 
     public void createModel(AbstractModel amodel) {
