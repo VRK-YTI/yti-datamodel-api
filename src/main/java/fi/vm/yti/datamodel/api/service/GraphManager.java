@@ -701,7 +701,6 @@ public class GraphManager {
         pss.setIri("graph", modelID+"#PositionGraph");
         pss.setCommandText(query);
 
-        logger.info(pss.toString());
         logger.warn( "Updating references in "+modelID.toString()+"#PositionGraph");
 
         return pss.asUpdate();
@@ -1121,27 +1120,25 @@ public class GraphManager {
         jenaClient.addModelToCore(resource.getModelId()+"#ExportGraph", exportModel);
     }
 
-    public void updateResource(AbstractResource resource) {
-
-        final Model oldModel = jenaClient.getModelFromCore(resource.getId());
-        final Model newModel = resource.asGraph();
-
+    public void updateResourceWithModels(String modelId, String resourceId, Model oldModel, Model newModel) {
         executor.submit(() -> {
-            Model exportModel = jenaClient.getModelFromCore(resource.getModelId()+"#ExportGraph");
+            Model exportModel = jenaClient.getModelFromCore(modelId+"#ExportGraph");
             exportModel = modelManager.removeResourceStatements(oldModel, exportModel);
             exportModel.add(newModel);
-            LDHelper.rewriteLiteral(exportModel, ResourceFactory.createResource(resource.getModelId()), DCTerms.modified, LDHelper.getDateTimeLiteral());
-            jenaClient.putModelToCore(resource.getModelId()+"#ExportGraph", exportModel);
+            LDHelper.rewriteLiteral(exportModel, ResourceFactory.createResource(modelId), DCTerms.modified, LDHelper.getDateTimeLiteral());
+            jenaClient.putModelToCore(modelId+"#ExportGraph", exportModel);
         });
+        jenaClient.putModelToCore(resourceId, newModel);
+    }
 
-        jenaClient.putModelToCore(resource.getId(), newModel);
-
+    public void updateResource(AbstractResource resource) {
+        final Model oldModel = jenaClient.getModelFromCore(resource.getId());
+        final Model newModel = resource.asGraph();
+        updateResourceWithModels(resource.getModelId(), resource.getId(), oldModel, newModel);
     }
 
     public void updateResourceWithNewId(IRI oldIdIRI, AbstractResource resource) {
-
-        updateResource(resource);
-
+        updateResourceWithModels(resource.getModelId(), resource.getId(), jenaClient.getModelFromCore(oldIdIRI.toString()), resource.asGraph());
         removeGraph(oldIdIRI);
         renameID(oldIdIRI,resource.getIRI());
         updateReferencesInPositionGraph(resource.getModelIRI(), oldIdIRI, resource.getIRI());
