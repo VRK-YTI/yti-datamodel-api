@@ -19,10 +19,7 @@ import org.apache.jena.query.ResultSet;
 import org.apache.jena.rdf.model.*;
 import org.apache.jena.rdfconnection.RDFConnectionRemote;
 import org.apache.jena.system.Txn;
-import org.apache.jena.update.UpdateException;
-import org.apache.jena.update.UpdateExecutionFactory;
-import org.apache.jena.update.UpdateProcessor;
-import org.apache.jena.update.UpdateRequest;
+import org.apache.jena.update.*;
 
 import java.util.Date;
 import java.util.concurrent.ExecutorService;
@@ -272,19 +269,7 @@ public class GraphManager {
      * @return Returns true if Graph with the given IRI
      */
     public boolean isExistingGraph(IRI graphIRI) {
-
-        ParameterizedSparqlString pss = new ParameterizedSparqlString();
-        String queryString = " ASK { GRAPH ?graph { ?s ?p ?o }}";
-        pss.setCommandText(queryString);
-        pss.setIri("graph", graphIRI);
-
-        Query query = pss.asQuery();
-        try {
-            boolean b = jenaClient.askQuery(endpointServices.getCoreSparqlAddress(), query);
-            return b;
-        } catch (Exception ex) {
-            return false;
-        }
+       return isExistingGraph(graphIRI.toString());
     }
     
         /**
@@ -501,31 +486,6 @@ public class GraphManager {
             logger.warn( ex.toString());
         }
     }
-
-    /**
-     * Tries to remove single graph
-     * @param id String IRI of the graph to be removed
-     */
-    public void removeGraph(String id) {
-
-        String query = "DROP GRAPH ?graph ;";
-
-        ParameterizedSparqlString pss = new ParameterizedSparqlString();
-        pss.setCommandText(query);
-        pss.setIri("graph", id);
-
-        logger.warn( "Removing graph " + id);
-
-        UpdateRequest queryObj = pss.asUpdate();
-        UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, endpointServices.getCoreSparqlUpdateAddress());
-
-        try {
-            qexec.execute();
-        } catch (UpdateException ex) {
-            logger.warn( ex.toString());
-        }
-    }
-    
     
     /**
      * Tries to Delete contents of the resource graphs linked to the model graph

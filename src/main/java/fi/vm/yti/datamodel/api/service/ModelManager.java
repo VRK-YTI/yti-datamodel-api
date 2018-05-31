@@ -5,8 +5,10 @@ package fi.vm.yti.datamodel.api.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import fi.vm.yti.datamodel.api.utils.LDHelper;
 import org.apache.jena.graph.Graph;
 import org.apache.jena.query.DatasetFactory;
+import org.apache.jena.query.ParameterizedSparqlString;
 import org.apache.jena.rdf.model.*;
 import org.apache.jena.riot.*;
 import org.apache.jena.riot.system.ErrorHandlerFactory;
@@ -16,6 +18,8 @@ import org.apache.jena.shared.PropertyNotFoundException;
 import org.apache.jena.sparql.core.DatasetGraph;
 import org.apache.jena.sparql.graph.GraphFactory;
 import org.apache.jena.sparql.util.Context;
+import org.apache.jena.update.UpdateAction;
+import org.apache.jena.update.UpdateRequest;
 import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDF;
 import org.springframework.stereotype.Service;
@@ -97,6 +101,31 @@ public class ModelManager {
         return model;
 
     }
+
+    // TODO: Not working / or in use yet.
+    /**
+     * Changes property UUIDs in model
+     * @param model Shape model to be used in UUID rename
+     * returns Model with changed UUIDs
+     */
+    public Model updatePropertyUUIDs(Model model) {
+
+        String query =
+                "DELETE { GRAPH ?shape { ?shape sh:property ?prop . ?prop ?p ?o .  } } "
+                        + "INSERT { GRAPH ?shape { ?shape sh:property ?newProp . ?newProp ?p ?o . } } "
+                        + "WHERE { GRAPH ?shape { ?shape sh:property ?prop . BIND(UUID() AS ?newProp) ?prop ?p ?o . }";
+
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+
+        pss.setCommandText(query);
+        UpdateRequest queryObj = pss.asUpdate();
+        UpdateAction.execute(queryObj,model);
+
+        return model;
+
+    }
+
 
     /**
      *  Removes all triples (one level of anonymous nodes) from MODEL that are in RESOURCE except those resources that are type owl:Ontology

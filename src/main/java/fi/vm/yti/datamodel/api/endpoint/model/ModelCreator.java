@@ -77,8 +77,6 @@ public class ModelCreator {
             @ApiParam(value = "Label language", required = true, allowableValues="fi,en") @QueryParam("lang") String lang,
             @ApiParam(value = "Allowed languages as space list: 'en sv pl'. Default 'fi en'") @QueryParam("langList") String allowedLang) {
 
-        logger.info(servicesString);
-
         List<String> serviceList = Arrays.asList(servicesString.split(" "));
 
         String[] orgs = orgString.split(" ");
@@ -97,7 +95,6 @@ public class ModelCreator {
             allowedLang = "fi";
         }
 
-        logger.info("prefix "+prefix);
         prefix = LDHelper.modelName(prefix);
 
         if(graphManager.isExistingPrefix(prefix)) {

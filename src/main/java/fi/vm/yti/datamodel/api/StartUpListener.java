@@ -45,9 +45,6 @@ public class StartUpListener  {
         logger.info( "System is starting ...");
 
         initDefaultNamespaces();
-        //initCodeServers();
-        //initServiceCategories();
-        //termedTerminologyManager.initConceptsFromTermed();
         initRHPOrganizations();
         //initFramingCache();
     }
@@ -59,23 +56,11 @@ public class StartUpListener  {
 
     @Scheduled(cron = "0 */5 * * * *")
     void initRHPOrganizations() {
-        logger.debug("Updating organizations");
         rhpOrganizationManager.initOrganizationsFromRHP();
     }
 
     private void initServiceCategories() {
         graphManager.initServiceCategories();
-    }
-
-    private void initCodeServers() {
-        // TODO: Codelists are now updated with each CodeList API query
-/*
-        OPHCodeServer codeServer = new OPHCodeServer("https://virkailija.opintopolku.fi/koodisto-service/rest/json/", endpointServices);
-        codeServer.updateCodelistsFromServer();
-
-        SuomiCodeServer codeServer2 = new SuomiCodeServer("https://koodistot.suomi.fi","https://koodistot-dev.suomi.fi/codelist-api/api/v1/", endpointServices);
-        codeServer2.updateCodelistsFromServer();
-*/
     }
 
     private void initDefaultNamespaces() {
