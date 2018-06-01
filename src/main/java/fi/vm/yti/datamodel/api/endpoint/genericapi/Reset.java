@@ -5,6 +5,7 @@ import fi.vm.yti.datamodel.api.service.GraphManager;
 import fi.vm.yti.datamodel.api.service.JerseyResponseManager;
 import fi.vm.yti.datamodel.api.service.NamespaceManager;
 import fi.vm.yti.datamodel.api.service.RHPOrganizationManager;
+import fi.vm.yti.migration.Migration;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
@@ -25,18 +26,21 @@ public class Reset {
     private final NamespaceManager namespaceManager;
     private final AuthorizationManager authorizationManager;
     private final JerseyResponseManager jerseyResponseManager;
+    private final Migration migrationManager;
 
     Reset(GraphManager graphManager,
           RHPOrganizationManager rhpOrganizationManager,
           NamespaceManager namespaceManager,
           AuthorizationManager authorizationManager,
-          JerseyResponseManager jerseyResponseManager) {
+          JerseyResponseManager jerseyResponseManager,
+          Migration migrationManager) {
 
         this.graphManager = graphManager;
         this.rhpOrganizationManager = rhpOrganizationManager;
         this.namespaceManager = namespaceManager;
         this.authorizationManager = authorizationManager;
         this.jerseyResponseManager = jerseyResponseManager;
+        this.migrationManager = migrationManager;
     }
 
     @GET
@@ -51,9 +55,8 @@ public class Reset {
         }
 
         graphManager.deleteGraphs();
-        graphManager.createDefaultGraph();
+        migrationManager.migrate();
         rhpOrganizationManager.initOrganizationsFromRHP();
-        graphManager.initServiceCategories();
         namespaceManager.addDefaultNamespacesToCore();
 
         return Response.ok().build();
