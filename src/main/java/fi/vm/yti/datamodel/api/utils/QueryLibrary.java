@@ -171,6 +171,10 @@ public class QueryLibrary {
                 + "}}"
                 + "}");
 
+    // TODO: ADD Optional label binding to Organization label query
+    //+ "BIND(IF(BOUND(?orgLabel2), ?orgLabel2, ?orgLabel1) as ?orgLabel)
+    // + "IF(BOUND(?orgLabel2), BIND(?)"
+
     
         final public static String listClassesQuery = LDHelper.expandSparqlQuery(
                     "CONSTRUCT { "

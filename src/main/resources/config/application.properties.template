@@ -1,5 +1,6 @@
 server.port=8084
 
+dev=true
 spring.application.name=yti-datamodel-api
 endpoint=http://localhost:3030
 defaultNamespace=http://uri.suomi.fi/datamodel/ns/
@@ -7,6 +8,7 @@ provenance=true
 defaultScheme=http://dev.finto.fi/
 defaultTermedAPI=https://sanastot-dev.suomi.fi/termed-api/
 defaultGroupManagementAPI=https://rhp-dev.suomi.fi/public-api/
+defaultSuomiCodeServerAPI=https://koodistot-dev.suomi.fi/codelist-api/api/v1/
 publicTermedAPI=https://sanastot-dev.suomi.fi/termed-api/
 publicGroupManagementAPI=https://rhp-dev.suomi.fi
 defaultTermedAPIUser=admin
@@ -17,7 +19,7 @@ groupmanagement.public.url=https://rhp-dev.suomi.fi
 
 elasticHost=127.0.0.1
 elasticPort=9300
-elasticCluster=yti-codelist-elasticsearch
+elasticCluster=elasticsearch
 
 migration.enabled=true
 migration.packageLocation=fi.vm.yti.datamodel.api.migration.task

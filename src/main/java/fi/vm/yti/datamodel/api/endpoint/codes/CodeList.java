@@ -3,11 +3,13 @@
  */
 package fi.vm.yti.datamodel.api.endpoint.codes;
 
+import fi.vm.yti.datamodel.api.config.ApplicationProperties;
 import fi.vm.yti.datamodel.api.model.OPHCodeServer;
 import fi.vm.yti.datamodel.api.model.SuomiCodeServer;
 import fi.vm.yti.datamodel.api.service.EndpointServices;
 import fi.vm.yti.datamodel.api.service.JerseyClient;
 import io.swagger.annotations.*;
+import org.glassfish.jersey.jaxb.internal.XmlJaxbElementProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -24,12 +26,15 @@ public class CodeList {
 
     private final JerseyClient jerseyClient;
     private final EndpointServices endpointServices;
+    private final ApplicationProperties applicationProperties;
 
     @Autowired
     CodeList(JerseyClient jerseyClient,
-             EndpointServices endpointServices) {
+             EndpointServices endpointServices,
+             ApplicationProperties applicationProperties) {
         this.jerseyClient = jerseyClient;
         this.endpointServices = endpointServices;
+        this.applicationProperties = applicationProperties;
     }
 
     @GET
@@ -44,7 +49,7 @@ public class CodeList {
             @ApiParam(value = "Codeserver uri", required = true) @QueryParam("uri") String uri) {
 
         if(uri.startsWith("https://koodistot.suomi.fi")) {
-            SuomiCodeServer suomiCodeServer = new SuomiCodeServer("https://koodistot.suomi.fi","https://koodistot-dev.suomi.fi/codelist-api/api/v1/", endpointServices);
+            SuomiCodeServer suomiCodeServer = new SuomiCodeServer("https://koodistot.suomi.fi", applicationProperties.getDefaultSuomiCodeServerAPI(), endpointServices);
             suomiCodeServer.updateCodelistsFromServer();
         } else {
             OPHCodeServer codeServer = new OPHCodeServer("https://virkailija.opintopolku.fi/koodisto-service/rest/json/", endpointServices);

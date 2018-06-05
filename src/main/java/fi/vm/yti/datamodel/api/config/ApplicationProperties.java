@@ -19,6 +19,8 @@ public final class ApplicationProperties {
     private String elasticHost;
     private String elasticPort;
     private String elasticCluster;
+    private String defaultSuomiCodeServerAPI;
+    private boolean devMode;
 
     public String getDefaultScheme() {
         return defaultScheme;
@@ -123,6 +125,13 @@ public final class ApplicationProperties {
     public void setElasticCluster(String elasticCluster) {
         this.elasticCluster = elasticCluster;
     }
-    
-    
+
+    public String getDefaultSuomiCodeServerAPI() { return this.defaultSuomiCodeServerAPI; }
+
+    public void setDefaultSuomiCodeServerAPI(String defaultSuomiCodeServerAPI) { this.defaultSuomiCodeServerAPI = defaultSuomiCodeServerAPI; }
+
+    public boolean getDevMode() { return this.devMode; }
+
+    public void setDevMode(boolean devMode) { this.devMode = devMode; }
+
 }

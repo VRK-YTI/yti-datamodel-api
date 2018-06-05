@@ -55,7 +55,7 @@ public class JerseyResponseManager {
     }
 
     public Response config() {
-        return Response.status(200).entity("{\"groups\":\""+ properties.getPublicGroupManagementAPI()+"\", \"concepts\":\""+properties.getPublicTermedAPI()+"\"}").build();
+        return Response.status(200).entity("{\"groups\":\""+ properties.getPublicGroupManagementAPI()+"\", \"concepts\":\""+properties.getPublicTermedAPI()+"\", \"codes\":\""+properties.getDefaultSuomiCodeServerAPI()+"\", \"dev\":"+properties.getDevMode()+"}").build();
     }
     
     public Response langNotDefined() {
