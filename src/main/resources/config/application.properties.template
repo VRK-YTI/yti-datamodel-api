@@ -1,6 +1,6 @@
 server.port=8084
 
-dev=true
+devMode=true
 spring.application.name=yti-datamodel-api
 endpoint=http://localhost:3030
 defaultNamespace=http://uri.suomi.fi/datamodel/ns/
