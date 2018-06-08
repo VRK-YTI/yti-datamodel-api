@@ -212,10 +212,13 @@ public class SuomiCodeServer {
 
                 }
 
-           // model.write(System.out, "text/turtle") ;
+                if(model.size()<1) {
+                 logger.warn("Codes graph from "+uri+" is empty! No valid codes?");
+                }
 
             adapter.putModel(uri, model);
             logger.info("Saved: "+uri);
+
 
         } else {
             logger.info(""+response.getStatus());

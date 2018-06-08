@@ -172,7 +172,9 @@ public class GraphManager {
         empty.add(ResourceFactory.createResource(graph), RDF.type, OWL.Ontology);
         jenaClient.putModelToCore(graph, empty);
     }
-    
+
+    public Model getSchemeGraph(String graph) { return jenaClient.getModelFromSchemes(graph);}
+
     /**
      * Returns graph from core service
      * @param graph String IRI of the graph

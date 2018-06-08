@@ -59,14 +59,13 @@ public class CodeServerCreator {
 
         if(uri!=null && !uri.equals("undefined")) {
 
-            if(idManager.isInvalid(uri)) {
+            if((!uri.startsWith("http://uri.suomi.fi") || !uri.startsWith("https://virkailija.opintopolku.fi")) || idManager.isInvalid(uri)) {
                 return jerseyResponseManager.invalidIRI();
             }
 
         } else {
             return jerseyResponseManager.invalidParameter();
         }
-
 
         String queryString;
         ParameterizedSparqlString pss = new ParameterizedSparqlString();

@@ -22,6 +22,7 @@ public final class JenaClient {
     private final DatasetAccessor coreService;
     private final DatasetAccessor importService;
     private final DatasetAccessor provService;
+    private final DatasetAccessor schemeService;
 
     // TODO: Or adapters?
    // static final DatasetAdapter coreService = new DatasetAdapter(new DatasetGraphAccessorHTTP(services.getCoreReadWriteAddress()));
@@ -43,8 +44,13 @@ public final class JenaClient {
         this.coreService = DatasetAccessorFactory.createHTTP(endpointServices.getCoreReadWriteAddress());
         this.importService = DatasetAccessorFactory.createHTTP(endpointServices.getImportsReadWriteAddress());
         this.provService = DatasetAccessorFactory.createHTTP(endpointServices.getProvReadWriteAddress());
+        this.schemeService = DatasetAccessorFactory.createHTTP(endpointServices.getSchemesReadWriteAddress());
     }
 
+    public Model getModelFromSchemes(String graph) {
+        logger.debug("Getting model from "+graph);
+        return schemeService.getModel(graph);
+    }
 
     public void putToImports(String graph, Model model) {
        logger.debug("Storing import to "+graph);

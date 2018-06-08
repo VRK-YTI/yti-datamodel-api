@@ -8,6 +8,7 @@ import fi.vm.yti.datamodel.api.model.OPHCodeServer;
 import fi.vm.yti.datamodel.api.model.SuomiCodeServer;
 import fi.vm.yti.datamodel.api.service.EndpointServices;
 import fi.vm.yti.datamodel.api.service.JerseyClient;
+import fi.vm.yti.datamodel.api.service.JerseyResponseManager;
 import io.swagger.annotations.*;
 import org.glassfish.jersey.jaxb.internal.XmlJaxbElementProvider;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,14 +28,17 @@ public class CodeList {
     private final JerseyClient jerseyClient;
     private final EndpointServices endpointServices;
     private final ApplicationProperties applicationProperties;
+    private final JerseyResponseManager jerseyResponseManager;
 
     @Autowired
     CodeList(JerseyClient jerseyClient,
              EndpointServices endpointServices,
-             ApplicationProperties applicationProperties) {
+             ApplicationProperties applicationProperties,
+             JerseyResponseManager jerseyResponseManager) {
         this.jerseyClient = jerseyClient;
         this.endpointServices = endpointServices;
         this.applicationProperties = applicationProperties;
+        this.jerseyResponseManager = jerseyResponseManager;
     }
 
     @GET
@@ -51,9 +55,11 @@ public class CodeList {
         if(uri.startsWith("https://koodistot.suomi.fi")) {
             SuomiCodeServer suomiCodeServer = new SuomiCodeServer("https://koodistot.suomi.fi", applicationProperties.getDefaultSuomiCodeServerAPI(), endpointServices);
             suomiCodeServer.updateCodelistsFromServer();
-        } else {
+        } else if(uri.startsWith("https://virkailija.opintopolku.fi")){
             OPHCodeServer codeServer = new OPHCodeServer("https://virkailija.opintopolku.fi/koodisto-service/rest/json/", endpointServices);
             codeServer.updateCodelistsFromServer();
+        } else {
+            return jerseyResponseManager.invalidParameter();
         }
 
         return jerseyClient.getGraphResponseFromService(uri, endpointServices.getSchemesReadAddress());

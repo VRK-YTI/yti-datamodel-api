@@ -3,12 +3,13 @@
  */
 package fi.vm.yti.datamodel.api.endpoint.codes;
 
+import fi.vm.yti.datamodel.api.config.ApplicationProperties;
 import fi.vm.yti.datamodel.api.model.SuomiCodeServer;
-import fi.vm.yti.datamodel.api.service.EndpointServices;
-import fi.vm.yti.datamodel.api.service.JerseyClient;
-import fi.vm.yti.datamodel.api.service.JerseyResponseManager;
+import fi.vm.yti.datamodel.api.service.*;
 import fi.vm.yti.datamodel.api.model.OPHCodeServer;
 import io.swagger.annotations.*;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.ModelFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -24,14 +25,23 @@ public class Codes {
     private final JerseyClient jerseyClient;
     private final EndpointServices endpointServices;
     private final JerseyResponseManager jerseyResponseManager;
+    private final ApplicationProperties applicationProperties;
+    private final GraphManager graphManager;
+    private final ModelManager modelManager;
 
     @Autowired
     Codes(JerseyClient jerseyClient,
           EndpointServices endpointServices,
-          JerseyResponseManager jerseyResponseManager) {
+          JerseyResponseManager jerseyResponseManager,
+          ApplicationProperties applicationProperties,
+          GraphManager graphManager,
+          ModelManager modelManager) {
         this.jerseyClient = jerseyClient;
         this.endpointServices = endpointServices;
         this.jerseyResponseManager = jerseyResponseManager;
+        this.applicationProperties = applicationProperties;
+        this.graphManager = graphManager;
+        this.modelManager = modelManager;
     }
 
     @GET
@@ -47,17 +57,25 @@ public class Codes {
             @QueryParam("uri") String uri) {
 
         if(uri.startsWith("http://uri.suomi.fi")) {
-            SuomiCodeServer codeServer = new SuomiCodeServer("https://koodistot.suomi.fi","https://koodistot-dev.suomi.fi/codelist-api/api/v1/", endpointServices);
-            // TODO: Update codes from suomi.fi codeservice? Related to YTI-148.
-            // codeServer.updateCodes(uri);
-        } else {
+            SuomiCodeServer codeServer = new SuomiCodeServer("https://koodistot.suomi.fi", applicationProperties.getDefaultSuomiCodeServerAPI(), endpointServices);
+        } else if(uri.startsWith("https://virkailija.opintopolku.fi")) {
             OPHCodeServer codeServer = new OPHCodeServer("https://virkailija.opintopolku.fi/koodisto-service/rest/json/", endpointServices);
             if(!codeServer.containsCodeList(uri)) {
                 codeServer.updateCodes(uri);
             }
+        } else {
+            return jerseyResponseManager.invalidParameter();
         }
 
-        return jerseyClient.getGraphResponseFromService(uri, endpointServices.getSchemesReadAddress());
+        Model codeModel = graphManager.getSchemeGraph(uri);
+
+        // If codeValues are empty for example are codes are DRAFT but scheme is VALID
+        if(codeModel==null) {
+            codeModel = ModelFactory.createDefaultModel();
+        }
+
+        return jerseyResponseManager.okModel(codeModel);
+
     }
 
     @PUT
@@ -74,12 +92,12 @@ public class Codes {
         ResponseBuilder rb;
 
         if(uri.startsWith("http://uri.suomi.fi")) {
-            SuomiCodeServer codeServer = new SuomiCodeServer("https://koodistot.suomi.fi","https://koodistot-dev.suomi.fi/codelist-api/api/v1/", endpointServices);
-            // TODO: Update codes from suomi.fi codeservice on fly? Related to YTI-148.
-            // codeServer.updateCodes(uri);
-        } else {
+            SuomiCodeServer codeServer = new SuomiCodeServer("https://koodistot.suomi.fi", applicationProperties.getDefaultSuomiCodeServerAPI(), endpointServices);
+        } else if(uri.startsWith("https://virkailija.opintopolku.fi")){
             OPHCodeServer codeServer = new OPHCodeServer("https://virkailija.opintopolku.fi/koodisto-service/rest/json/", endpointServices);
             codeServer.updateCodes(uri);
+        } else {
+            return jerseyResponseManager.invalidParameter();
         }
 
         return jerseyResponseManager.ok();
