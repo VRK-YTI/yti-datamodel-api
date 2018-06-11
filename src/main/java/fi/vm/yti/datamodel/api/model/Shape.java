@@ -5,6 +5,7 @@ import fi.vm.yti.datamodel.api.utils.*;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.query.ParameterizedSparqlString;
 import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.rdf.model.Statement;
 import org.apache.jena.rdf.model.StmtIterator;
 import org.apache.jena.util.ResourceUtils;
@@ -73,7 +74,7 @@ public class Shape extends AbstractShape {
             shape.removeAll(RDF.type);
             shape.addProperty(RDF.type, SH.NodeShape);
             shape.addLiteral(OWL.versionInfo, "DRAFT");
-            shape.addProperty(SH.targetClass, classIRI.toString());
+            shape.addProperty(SH.targetClass, ResourceFactory.createResource(classIRI.toString()));
 
             Resource modelResource = shape.getPropertyResourceValue(RDFS.isDefinedBy);
             modelResource.removeProperties();
