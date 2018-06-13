@@ -46,7 +46,7 @@ public class StartUpListener  {
 
         initDefaultNamespaces();
         initRHPOrganizations();
-        //initFramingCache();
+        initFramingCache();
     }
 
     @PreDestroy
