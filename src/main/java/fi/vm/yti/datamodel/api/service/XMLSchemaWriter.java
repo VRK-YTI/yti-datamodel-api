@@ -216,7 +216,16 @@ public class XMLSchemaWriter {
                         newElement.setAttribute("type", DATATYPE_MAP.get(datatype));
                     }
             
-            /* 
+            /*
+
+            <xs:complexType name="langStringType">
+            <xs:simpleContent>
+                <xs:extension base="xs:string">
+                    <xs:attribute ref="xml:lang" use="optional"/>
+                </xs:extension>
+            </xs:simpleContent>
+            </xs:complexType>
+
             http://examples.oreilly.com/9780596002527/creating-simple-types.html
             <xs:attribute name="lang" type="xs:language"/> OR
             

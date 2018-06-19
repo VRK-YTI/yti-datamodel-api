@@ -113,8 +113,8 @@ public class QueryLibrary {
                      + " ?s ?p ?o . "
                      + " ?graph dcterms:isPartOf ?group . "
                      + " ?graph dcterms:contributor ?org . "
-                     + "OPTIONAL { ?org skos:prefLabel ?orgLabel . }"
-                     + "OPTIONAL { ?org dcterms:description ?orgDescription . }"
+                     + "OPTIONAL { ?org skos:prefLabel ?orgLabel1 . }"
+                     + "OPTIONAL { ?org dcterms:description ?orgDescription1 . }"
                      + "} "
                      + "OPTIONAL { "
                      + "GRAPH ?graph {"
@@ -131,9 +131,13 @@ public class QueryLibrary {
                      + "?group skos:notation ?code . "
                      + "?group skos:prefLabel ?groupLabel . "
                      + "}"
+                     // TODO : Not working because ?s ?p ?o gets also the old label and description
                      //+ "GRAPH <urn:yti:organizations> { "
-                     //+ "OPTIONAL { ?org skos:prefLabel ?orgLabel . }"
+                     //+ "OPTIONAL { ?org skos:prefLabel ?orgLabel2 . }"
+                     //+ "OPTIONAL { ?org dcterms:description ?orgDescription2 . }"
                      //+ "}"
+                     //+ "BIND(IF(BOUND(?orgLabel2), ?orgLabel2, ?orgLabel1) as ?orgLabel)"
+                     //+ "BIND(IF(BOUND(?orgDescription2), ?orgDescription2, ?orgDescription1) as ?orgDescription)"
                      + "}");
 
     final public static String modelsByGroupQuery = LDHelper.expandSparqlQuery(true,
@@ -158,7 +162,7 @@ public class QueryLibrary {
                 + "?graphName a ?type . "
                 + "?graphName rdfs:label ?label . "
                 + "?graphName dcterms:contributor ?org . "
-                + "OPTIONAL { ?org skos:prefLabel ?orgLabel . }"
+                + "OPTIONAL { ?org skos:prefLabel ?orgLabel1 . }"
                 + "?graphName dcap:preferredXMLNamespaceName ?namespace . "
                 + "?graphName dcap:preferredXMLNamespacePrefix ?prefix .  "
                 + "}"
@@ -167,15 +171,11 @@ public class QueryLibrary {
                 + " ?metaGraph sd:name ?graphName . "
                 + "} "
                 + "OPTIONAL { GRAPH <urn:yti:organizations> { "
-                + "?org skos:prefLabel ?orgLabel . "
+                + "?org skos:prefLabel ?orgLabel2 . "
                 + "}}"
+                + "BIND(IF(BOUND(?orgLabel2), ?orgLabel2, ?orgLabel1) as ?orgLabel)"
                 + "}");
 
-    // TODO: ADD Optional label binding to Organization label query
-    //+ "BIND(IF(BOUND(?orgLabel2), ?orgLabel2, ?orgLabel1) as ?orgLabel)
-    // + "IF(BOUND(?orgLabel2), BIND(?)"
-
-    
         final public static String listClassesQuery = LDHelper.expandSparqlQuery(
                     "CONSTRUCT { "
                     + "?class sh:name ?label . "
