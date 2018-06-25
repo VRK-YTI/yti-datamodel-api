@@ -12,14 +12,22 @@ import org.springframework.stereotype.Service;
 
 import java.io.StringWriter;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.TimerTask;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import javax.inject.Singleton;
 import javax.ws.rs.NotFoundException;
+import org.apache.jena.iri.IRI;
+import org.apache.jena.riot.system.PrefixMapFactory;
 import org.elasticsearch.action.admin.cluster.node.info.NodesInfoRequest;
 import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.client.Client;
@@ -104,28 +112,46 @@ public final class FrameManager {
         }
         return graphToFramedString(model, frame);
     }
-
-    protected String graphToFramedString(Model model, LinkedHashMap<String, Object> frame) {
-        PrefixMap pm = RiotLib.prefixMap(model.getGraph());
-        StringWriter stringWriter = new StringWriter();
-
-        ((LinkedHashMap<String, Object>) frame.get("@context")).putAll(pm.getMappingCopyStr());
-
-        JsonLdOptions opts = new JsonLdOptions();
-        opts.setProcessingMode(opts.JSON_LD_1_1);
-        opts.useNamespaces = true;
-        opts.setCompactArrays(true);
-
-        JsonLDWriteContext ctx = new JsonLDWriteContext();
-        ctx.setFrame(frame);
-        ctx.setOptions(opts);
-
-        WriterGraphRIOT gw = RDFDataMgr.createGraphWriter(RDFFormat.JSONLD_FRAME_PRETTY);
-        gw.write(stringWriter, model.getGraph(), pm, null, ctx);
-
-        return stringWriter.toString();
+    
+    protected String graphToFramedString(Model model, LinkedHashMap<String, Object> frame) throws Exception {
+        
+        String framed;
+        try (StringWriter stringWriter = new StringWriter()) {
+            PrefixMap pm = RiotLib.prefixMap(model.getGraph());
+            
+            pm = cleanUpPrefixes(pm);
+            pm.putAll(LDHelper.PREFIX_MAP);
+            
+            ((LinkedHashMap<String, Object>) frame.get("@context")).putAll(pm.getMappingCopyStr());
+            JsonLdOptions opts = new JsonLdOptions();
+            opts.setProcessingMode(opts.JSON_LD_1_1);
+            opts.useNamespaces = true;
+            opts.setCompactArrays(true);
+            JsonLDWriteContext ctx = new JsonLDWriteContext();
+            ctx.setFrame(frame);
+            ctx.setOptions(opts);
+            WriterGraphRIOT gw = RDFDataMgr.createGraphWriter(RDFFormat.JSONLD_FRAME_PRETTY);
+            gw.write(stringWriter, model.getGraph(), pm, null, ctx);
+            framed = stringWriter.toString();
+        }
+        return framed;
     }
 
+    private PrefixMap cleanUpPrefixes(PrefixMap map) {
+        final Pattern pattern = Pattern.compile("j\\.\\d+");
+        List<String> toBeDeleted = new ArrayList<String>();
+        map.forEach((String t, IRI u) -> {
+            Matcher matcher = pattern.matcher(t);
+            if(matcher.lookingAt()) {
+                toBeDeleted.add(t);
+            }
+        });
+        toBeDeleted.forEach((String t) -> {
+            map.delete(t);
+        });
+        return map;
+    }
+    
     private void waitForESNodes() {
         logger.info("Waiting for ES (timeout " + ES_TIMEOUT + "s)");
         try {
