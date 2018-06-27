@@ -7,6 +7,11 @@ import fi.vm.yti.datamodel.api.service.FrameManager;
 import fi.vm.yti.datamodel.api.service.GraphManager;
 import fi.vm.yti.datamodel.api.service.IDManager;
 import fi.vm.yti.datamodel.api.service.JerseyResponseManager;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 import java.util.Date;
 import javax.ws.rs.GET;
 import javax.ws.rs.NotFoundException;
@@ -27,6 +32,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 @Path("framedGraphs")
+@Api(tags = {"Framed graphs cache"}, description = "Operations for working with framing cache")
 public class FramedGraphs {
     
     private final IDManager idManager;
@@ -46,9 +52,15 @@ public class FramedGraphs {
         this.graphManager = graphManager;
     }
     
-    @GET
+    @GET    
     @Produces("application/json")
+    @ApiOperation(value = "Get and cache framed model for visualization", notes = "More notes about this method")
+    @ApiResponses(value = {
+            @ApiResponse(code = 400, message = "Invalid model URI supplied"),            
+            @ApiResponse(code = 500, message = "Internal server error")
+    })    
     public Response json(
+        @ApiParam(value = "Graph id")
         @QueryParam("graph") String graph) {
         
         /* Check that URI is valid */
@@ -61,11 +73,11 @@ public class FramedGraphs {
             
             return Response.ok(frame, "application/json").build();
         }catch(NotFoundException fex) {
-            return Response.status(Response.Status.NOT_FOUND).build();
+            return Response.status(Response.Status.BAD_REQUEST).build();
         }catch(Exception ex) {
             logger.error(ex.getMessage(),ex);
             return Response.serverError().entity(ex.getMessage()).build();
         }
         
-    }
+    }   
 }
