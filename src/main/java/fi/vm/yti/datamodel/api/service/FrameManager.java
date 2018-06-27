@@ -17,9 +17,6 @@ import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.TimerTask;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.slf4j.Logger;
@@ -27,13 +24,10 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Singleton;
 import javax.ws.rs.NotFoundException;
 import org.apache.jena.iri.IRI;
-import org.apache.jena.riot.system.PrefixMapFactory;
-import org.elasticsearch.action.admin.cluster.node.info.NodesInfoRequest;
 import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.transport.NoNodeAvailableException;
 import org.elasticsearch.client.transport.TransportClient;
-import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.NamedXContentRegistry;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
@@ -69,15 +63,13 @@ public final class FrameManager {
         try {
             Map<String, Object> map = this.esClient.prepareGet(ELASTIC_INDEX_MODEL, "doc", encId).execute().actionGet().getSourceAsMap();
             if(map == null || lastModified.after(format.parse(map.get("modified").toString()))) {
-                logger.debug("Creating/refreshing visualization frame cache for graph " + id);
+                logger.debug("Creating/refreshing visualization frame cache for graph " + id);                
                 frameStr = graphToFramedString(id, Frames.classVisualizationFrame);
                 cacheClassVisualizationFrame(id, frameStr); 
             }
             else {
                 logger.debug("Visualization frame cache hit");
-                XContentBuilder b = XContentFactory.jsonBuilder();
-                b.value(map.get("graph"));
-                frameStr = b.string();
+                frameStr = map.get("graph").toString();
             }
 
         } catch (NoNodeAvailableException ex) {
@@ -86,7 +78,7 @@ public final class FrameManager {
         }
         return frameStr;
     }
-
+    
     public void cacheClassVisualizationFrame(String id, String framed) {
         String encId = LDHelper.encode(id);
         IndexRequestBuilder rb = this.esClient.prepareIndex(ELASTIC_INDEX_MODEL, "doc", encId);        
@@ -94,7 +86,7 @@ public final class FrameManager {
             try(XContentParser parser  = XContentFactory.xContent(XContentType.JSON).createParser(NamedXContentRegistry.EMPTY, framed)) {
                 builder.startObject();
                 builder.field("modified", format.format(new Date()));
-                builder.field("graph", parser.map());
+                builder.field("graph", framed);
                 builder.endObject();        
                 builder.close();        
                 rb.setSource(builder);
@@ -127,6 +119,7 @@ public final class FrameManager {
             opts.setProcessingMode(opts.JSON_LD_1_1);
             opts.useNamespaces = true;
             opts.setCompactArrays(true);
+            opts.setUseNativeTypes(Boolean.TRUE);
             JsonLDWriteContext ctx = new JsonLDWriteContext();
             ctx.setFrame(frame);
             ctx.setOptions(opts);
