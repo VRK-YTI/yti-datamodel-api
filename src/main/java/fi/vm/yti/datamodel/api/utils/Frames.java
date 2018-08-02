@@ -387,9 +387,9 @@ public class Frames {
                         put("@type", "@id");
                     }
                 }); 
-                put("language", new LinkedHashMap<String, Object>() {
+                put("languageIn", new LinkedHashMap<String, Object>() {
                     {
-                        put("@id", "http://purl.org/dc/terms/language"); 
+                        put("@id", "http://www.w3.org/ns/shacl#languageIn");
                         put("@container", "@list");
                     }
                 });                  
