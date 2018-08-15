@@ -7,6 +7,7 @@ import fi.vm.yti.datamodel.api.service.EndpointServices;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Iterator;
+
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 import javax.json.Json;
 import javax.json.JsonArray;
@@ -40,7 +41,13 @@ public class OPHCodeServer {
     private Property isPartOf = ResourceFactory.createProperty("http://purl.org/dc/terms/", "isPartOf");
     private Property id = ResourceFactory.createProperty("http://purl.org/dc/terms/", "identifier");
     private Property creator = ResourceFactory.createProperty("http://purl.org/dc/terms/", "creator");
+    static private Property statusProperty = ResourceFactory.createProperty("http://uri.suomi.fi/datamodel/ns/iow#", "status");
 
+    private HashMap<String, String> statusMap = new HashMap<String, String>() {{
+        put("LUONNOS","DRAFT");
+        put("HYVAKSYTTY", "VALID");
+        put("PASSIIVINEN", "DEPRECATED");
+    }};
 
 
     public OPHCodeServer(String uri, EndpointServices endpointServices) {
@@ -117,6 +124,7 @@ public class OPHCodeServer {
                     while(codeListIterator.hasNext()) {
 
                         JsonObject codes = (JsonObject) codeListIterator.next();
+
                         // codes.getString("resourceUri")
                         String koodistoUri = codes.getString("koodistoUri");
                         String schemeUri = uri+koodistoUri+"/koodi";
@@ -133,7 +141,23 @@ public class OPHCodeServer {
                         if(owner.getValueType()==ValueType.STRING)
                             valueScheme.addLiteral(creator, ResourceFactory.createPlainLiteral(codes.getString("omistaja")));
 
-                        JsonArray locArr = codes.getJsonObject("latestKoodistoVersio").getJsonArray("metadata");
+                        JsonObject latestKoodisto = codes.getJsonObject("latestKoodistoVersio");
+
+                        JsonValue status = latestKoodisto.get("tila");
+
+                        if(status.getValueType()==ValueType.STRING) {
+                            String statusText = status.toString().replaceAll("\"", "");
+                            if(statusMap.containsKey(statusText)) {
+                                valueScheme.addLiteral(statusProperty, ResourceFactory.createPlainLiteral(statusMap.get(statusText)));
+                            } else {
+                                logger.warn("Could not find status from the codelist: "+koodistoUri);
+                                valueScheme.addLiteral(statusProperty, ResourceFactory.createPlainLiteral("INCOMPLETE"));
+                            }
+                        } else {
+                            logger.warn("Bad data from codelist api");
+                        }
+
+                        JsonArray locArr = latestKoodisto.getJsonArray("metadata");
 
                         locArr = clean(locArr);
 
@@ -163,6 +187,8 @@ public class OPHCodeServer {
                     }
 
                 }
+
+                //model.write(System.out);
 
                 DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(endpointServices.getSchemesReadWriteAddress());
                 DatasetAdapter adapter = new DatasetAdapter(accessor);
@@ -249,6 +275,12 @@ public class OPHCodeServer {
                 codeRes.addProperty(RDF.type, ResourceFactory.createResource("http://uri.suomi.fi/datamodel/ns/iow#FCode"));
 
                 codeRes.addLiteral(id, ResourceFactory.createPlainLiteral(codeObj.getString("koodiArvo")));
+
+                String codeStatus = codeObj.getString("tila");
+
+                if(statusMap.containsKey(codeStatus)) {
+                    codeRes.addLiteral(statusProperty, ResourceFactory.createPlainLiteral(statusMap.get(codeStatus)));
+                }
 
                 JsonArray locArr = codeObj.getJsonArray("metadata");
 

@@ -7,9 +7,12 @@ import fi.vm.yti.datamodel.api.config.ApplicationProperties;
 import fi.vm.yti.datamodel.api.model.OPHCodeServer;
 import fi.vm.yti.datamodel.api.model.SuomiCodeServer;
 import fi.vm.yti.datamodel.api.service.EndpointServices;
+import fi.vm.yti.datamodel.api.service.GraphManager;
 import fi.vm.yti.datamodel.api.service.JerseyClient;
 import fi.vm.yti.datamodel.api.service.JerseyResponseManager;
 import io.swagger.annotations.*;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.ModelFactory;
 import org.glassfish.jersey.jaxb.internal.XmlJaxbElementProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -29,16 +32,19 @@ public class CodeList {
     private final EndpointServices endpointServices;
     private final ApplicationProperties applicationProperties;
     private final JerseyResponseManager jerseyResponseManager;
+    private final GraphManager graphManager;
 
     @Autowired
     CodeList(JerseyClient jerseyClient,
              EndpointServices endpointServices,
              ApplicationProperties applicationProperties,
+             GraphManager graphManager,
              JerseyResponseManager jerseyResponseManager) {
         this.jerseyClient = jerseyClient;
         this.endpointServices = endpointServices;
         this.applicationProperties = applicationProperties;
         this.jerseyResponseManager = jerseyResponseManager;
+        this.graphManager = graphManager;
     }
 
     @GET
@@ -62,6 +68,12 @@ public class CodeList {
             return jerseyResponseManager.invalidParameter();
         }
 
-        return jerseyClient.getGraphResponseFromService(uri, endpointServices.getSchemesReadAddress());
+        Model codeListModel = graphManager.getSchemeGraph(uri);
+
+        if(codeListModel==null) {
+            codeListModel = ModelFactory.createDefaultModel();
+        }
+
+        return jerseyResponseManager.okModel(codeListModel);
     }
 }

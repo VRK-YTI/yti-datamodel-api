@@ -28,6 +28,7 @@ public class SuomiCodeServer {
     static private Property isPartOf = ResourceFactory.createProperty("http://purl.org/dc/terms/", "isPartOf");
     static private Property id = ResourceFactory.createProperty("http://purl.org/dc/terms/", "identifier");
     static private Property creator = ResourceFactory.createProperty("http://purl.org/dc/terms/", "creator");
+    static private Property status = ResourceFactory.createProperty("http://uri.suomi.fi/datamodel/ns/iow#", "status");
 
     private final EndpointServices endpointServices;
     private String uri;
@@ -64,7 +65,7 @@ public class SuomiCodeServer {
         Response.ResponseBuilder rb;
         Client client = ClientBuilder.newClient();
 
-        logger.info("Updating suomi.fi codeLists: " + url);
+        logger.debug("Updating suomi.fi codeLists: " + url);
 
         WebTarget target = client.target(url + "coderegistries/").queryParam("format", "application/json");
         Response response = target.request("application/json").get();
@@ -98,7 +99,7 @@ public class SuomiCodeServer {
 
                 group.addProperty(RDF.type, ResourceFactory.createResource("http://uri.suomi.fi/datamodel/ns/iow#FCodeGroup"));
 
-                WebTarget schemeTarget = client.target(groupUrl + "/codeschemes/").queryParam("format", "application/json").queryParam("status", "VALID");
+                WebTarget schemeTarget = client.target(groupUrl + "/codeschemes/").queryParam("format", "application/json");
                 Response schemeResponse = schemeTarget.request("application/json").get();
 
                 if (schemeResponse.getStatusInfo().getFamily() == Response.Status.Family.SUCCESSFUL) {
@@ -133,7 +134,9 @@ public class SuomiCodeServer {
                         addLangLiteral(valueScheme, codeList.getJsonObject("description"), description);
                         addLangLiteral(valueScheme, codeList.getJsonObject("prefLabel"), name);
 
-                        // TODO: Should codelists be updated. Based on modified date?
+                        valueScheme.addLiteral(status, codeList.getString("status"));
+
+                        // TODO: Check date?
                        if(!adapter.containsModel(codeListUri)) {
                             updateCodes(codeListUrl+"/codes/", codeListUri);
                        }
@@ -145,7 +148,7 @@ public class SuomiCodeServer {
 
                adapter.putModel(uri, model);
 
-               // model.write(System.out, "text/turtle");
+              // model.write(System.out, "text/turtle");
 
             }
 
@@ -177,7 +180,7 @@ public class SuomiCodeServer {
         Response.ResponseBuilder rb;
 
         Client client = ClientBuilder.newClient();
-        WebTarget target = client.target(url).queryParam("format","application/json").queryParam("status","VALID");
+        WebTarget target = client.target(url).queryParam("format","application/json");
         Response response = target.request("application/json").get();
 
         if (response.getStatusInfo().getFamily() == Response.Status.Family.SUCCESSFUL) {
@@ -209,6 +212,8 @@ public class SuomiCodeServer {
 
                 addLangLiteral(codeRes, codeObj.getJsonObject("prefLabel"), name);
                 addLangLiteral(codeRes, codeObj.getJsonObject("description"), description);
+
+                codeRes.addLiteral(status, codeObj.getString("status"));
 
                 }
 
