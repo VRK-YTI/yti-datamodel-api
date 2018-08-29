@@ -55,7 +55,13 @@ public class JerseyResponseManager {
     }
 
     public Response config() {
-        return Response.status(200).entity("{\"groups\":\""+ properties.getPublicGroupManagementAPI()+"\", \"concepts\":\""+properties.getPublicTermedAPI()+"\", \"codes\":\""+properties.getDefaultSuomiCodeServerAPI()+"\", \"dev\":"+properties.getDevMode()+"}").build();
+        return Response.status(200).entity("{  \"groups\":\""+ properties.getPublicGroupManagementAPI()+ "\"," +
+                                              "\"groupsFrontend\":\""+ properties.getPublicGroupManagementFrontend()+"\"," +
+                                              "\"concepts\":\""+properties.getPublicTermedAPI()+"\", " +
+                                              "\"conceptsFrontend\":\""+properties.getPublicTerminologyFrontend()+"\", " +
+                                              "\"codes\":\""+properties.getDefaultSuomiCodeServerAPI()+"\", " +
+                                              "\"codesFrontend\":\""+properties.getPublicSuomiCodeServerFrontend()+"\", " +
+                                              "\"dev\":"+properties.getDevMode()+"}").build();
     }
     
     public Response langNotDefined() {

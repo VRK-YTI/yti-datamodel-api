@@ -6,10 +6,7 @@ package fi.vm.yti.datamodel.api.endpoint.codes;
 import fi.vm.yti.datamodel.api.config.ApplicationProperties;
 import fi.vm.yti.datamodel.api.model.OPHCodeServer;
 import fi.vm.yti.datamodel.api.model.SuomiCodeServer;
-import fi.vm.yti.datamodel.api.service.EndpointServices;
-import fi.vm.yti.datamodel.api.service.GraphManager;
-import fi.vm.yti.datamodel.api.service.JerseyClient;
-import fi.vm.yti.datamodel.api.service.JerseyResponseManager;
+import fi.vm.yti.datamodel.api.service.*;
 import io.swagger.annotations.*;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
@@ -32,19 +29,19 @@ public class CodeList {
     private final EndpointServices endpointServices;
     private final ApplicationProperties applicationProperties;
     private final JerseyResponseManager jerseyResponseManager;
-    private final GraphManager graphManager;
+    private final CodeSchemeManager codeSchemeManager;
 
     @Autowired
     CodeList(JerseyClient jerseyClient,
              EndpointServices endpointServices,
              ApplicationProperties applicationProperties,
-             GraphManager graphManager,
+             CodeSchemeManager codeSchemeManager,
              JerseyResponseManager jerseyResponseManager) {
         this.jerseyClient = jerseyClient;
         this.endpointServices = endpointServices;
         this.applicationProperties = applicationProperties;
         this.jerseyResponseManager = jerseyResponseManager;
-        this.graphManager = graphManager;
+        this.codeSchemeManager = codeSchemeManager;
     }
 
     @GET
@@ -59,7 +56,7 @@ public class CodeList {
             @ApiParam(value = "Codeserver uri", required = true) @QueryParam("uri") String uri) {
 
         if(uri.startsWith("https://koodistot.suomi.fi")) {
-            SuomiCodeServer suomiCodeServer = new SuomiCodeServer("https://koodistot.suomi.fi", applicationProperties.getDefaultSuomiCodeServerAPI(), endpointServices);
+            SuomiCodeServer suomiCodeServer = new SuomiCodeServer("https://koodistot.suomi.fi", applicationProperties.getDefaultSuomiCodeServerAPI(), endpointServices, codeSchemeManager);
             suomiCodeServer.updateCodelistsFromServer();
         } else if(uri.startsWith("https://virkailija.opintopolku.fi")){
             OPHCodeServer codeServer = new OPHCodeServer("https://virkailija.opintopolku.fi/koodisto-service/rest/json/", endpointServices);
@@ -68,7 +65,7 @@ public class CodeList {
             return jerseyResponseManager.invalidParameter();
         }
 
-        Model codeListModel = graphManager.getSchemeGraph(uri);
+        Model codeListModel = codeSchemeManager.getSchemeGraph(uri);
 
         if(codeListModel==null) {
             codeListModel = ModelFactory.createDefaultModel();

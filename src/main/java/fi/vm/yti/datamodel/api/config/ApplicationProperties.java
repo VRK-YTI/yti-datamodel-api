@@ -16,6 +16,9 @@ public final class ApplicationProperties {
     private String defaultGroupManagementAPI;
     private String publicGroupManagementAPI;
     private String publicTermedAPI;
+    private String publicTerminologyFrontend;
+    private String publicSuomiCodeServerFrontend;
+    private String publicGroupManagementFrontend;
     private String elasticHost;
     private String elasticPort;
     private String elasticCluster;
@@ -93,6 +96,31 @@ public final class ApplicationProperties {
     public void setPublicGroupManagementAPI(String publicGroupManagementAPI) {
         this.publicGroupManagementAPI = publicGroupManagementAPI;
     }
+
+    public String getPublicGroupManagementFrontend() {
+        return publicGroupManagementFrontend;
+    }
+
+    public void setPublicGroupManagementFrontend(String publicGroupManagementFrontend) {
+        this.publicGroupManagementFrontend = publicGroupManagementFrontend;
+    }
+
+    public String getPublicSuomiCodeServerFrontend() {
+        return publicSuomiCodeServerFrontend;
+    }
+
+    public void setPublicSuomiCodeServerFrontend(String publicSuomiCodeServerFrontend) {
+        this.publicSuomiCodeServerFrontend = publicSuomiCodeServerFrontend;
+    }
+
+    public String getPublicTerminologyFrontend() {
+        return publicTerminologyFrontend;
+    }
+
+    public void setPublicTerminologyFrontend(String publicTerminologyFrontend) {
+        this.publicTerminologyFrontend = publicTerminologyFrontend;
+    }
+
 
     public String getPublicTermedAPI() {
         return publicTermedAPI;

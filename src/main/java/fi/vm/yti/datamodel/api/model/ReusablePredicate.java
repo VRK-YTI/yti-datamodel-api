@@ -4,11 +4,24 @@ import fi.vm.yti.datamodel.api.service.*;
 import fi.vm.yti.datamodel.api.utils.LDHelper;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.query.ParameterizedSparqlString;
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.ResourceFactory;
+import org.apache.jena.rdf.model.*;
+import org.apache.jena.util.ResourceUtils;
+import org.apache.jena.vocabulary.DCTerms;
+import org.apache.jena.vocabulary.OWL;
+import org.apache.jena.vocabulary.RDF;
+import org.apache.jena.vocabulary.RDFS;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.topbraid.shacl.vocabulary.SH;
+
+import java.util.Iterator;
+import java.util.List;
+import java.util.UUID;
 
 
 public class ReusablePredicate extends AbstractPredicate {
+
+    private static final Logger logger = LoggerFactory.getLogger(ReusablePredicate.class.getName());
 
     public ReusablePredicate(IRI predicateId,
                              GraphManager graphManager) throws IllegalArgumentException {
@@ -81,6 +94,44 @@ public class ReusablePredicate extends AbstractPredicate {
         pss.setIri("predicateIRI",LDHelper.resourceIRI(modelIRI.toString(), predicateName));
 
         this.graph = termedTerminologyManager.constructCleanedModelFromTermedAPIAndCore(conceptIRI.toString(),modelIRI.toString(),pss.asQuery());
+
+    }
+
+    /**
+     * Creates superpredicate from exiting predicate
+     * @param oldPredicateIRI IRI of the existing class
+     * @param newModelIRI Model to create the superclass
+     * @param graphManager Graphservice
+     */
+    public ReusablePredicate(IRI oldPredicateIRI, IRI newModelIRI, GraphManager graphManager) {
+
+        this.graph = graphManager.getCoreGraph(oldPredicateIRI);
+        
+        if(this.graph.size()<1) {
+            throw new IllegalArgumentException("No existing predicate found");
+        }
+
+        if(!this.graph.contains(ResourceFactory.createResource(oldPredicateIRI.toString()), RDF.type, OWL.DatatypeProperty) || !this.graph.contains(ResourceFactory.createResource(oldPredicateIRI.toString()), RDF.type, OWL.ObjectProperty)) {
+            throw new IllegalArgumentException("Expected predicate type");
+        }
+
+        Resource superPredicate = this.graph.getResource(oldPredicateIRI.toString());
+        String superPredicateIRI = newModelIRI+"#"+superPredicate.getLocalName();
+        logger.debug("Creating new superPredicate: "+superPredicateIRI);
+        ResourceUtils.renameResource(superPredicate, superPredicateIRI);
+
+        superPredicate = this.graph.getResource(superPredicateIRI);
+        superPredicate.removeAll(OWL.versionInfo);
+        superPredicate.addLiteral(OWL.versionInfo, "DRAFT");
+
+        Resource modelResource = superPredicate.getPropertyResourceValue(RDFS.isDefinedBy);
+        modelResource.removeProperties();
+
+        superPredicate.addProperty(RDFS.isDefinedBy, newModelIRI.toString());
+
+        LDHelper.rewriteLiteral(this.graph, superPredicate, DCTerms.created, LDHelper.getDateTimeLiteral());
+        LDHelper.rewriteLiteral(this.graph, superPredicate, DCTerms.modified, LDHelper.getDateTimeLiteral());
+        superPredicate.removeAll(DCTerms.identifier);
 
     }
 

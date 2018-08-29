@@ -72,6 +72,7 @@ public class Shape extends AbstractShape {
 
             shape = this.graph.getResource(shapeIRI.toString());
             shape.removeAll(RDF.type);
+            shape.removeAll(OWL.versionInfo);
             shape.addProperty(RDF.type, SH.NodeShape);
             shape.addLiteral(OWL.versionInfo, "DRAFT");
             shape.addProperty(SH.targetClass, ResourceFactory.createResource(classIRI.toString()));

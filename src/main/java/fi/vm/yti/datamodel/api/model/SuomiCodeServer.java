@@ -3,8 +3,12 @@
  */
 package fi.vm.yti.datamodel.api.model;
 
+import fi.vm.yti.datamodel.api.service.CodeSchemeManager;
 import fi.vm.yti.datamodel.api.service.EndpointServices;
 import fi.vm.yti.datamodel.api.utils.LDHelper;
+import org.apache.jena.datatypes.RDFDatatype;
+import org.apache.jena.datatypes.xsd.XSDDatatype;
+import org.apache.jena.datatypes.xsd.XSDDateTime;
 import org.apache.jena.rdf.model.*;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.web.DatasetAdapter;
@@ -15,7 +19,14 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
+import javax.xml.bind.DatatypeConverter;
 import java.io.InputStream;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.Date;
 import java.util.Iterator;
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 
@@ -25,6 +36,7 @@ public class SuomiCodeServer {
 
     static private Property name = ResourceFactory.createProperty("http://purl.org/dc/terms/", "title");
     static private Property description = ResourceFactory.createProperty("http://purl.org/dc/terms/", "description");
+    static private Property modified = ResourceFactory.createProperty("http://purl.org/dc/terms/", "modified");
     static private Property isPartOf = ResourceFactory.createProperty("http://purl.org/dc/terms/", "isPartOf");
     static private Property id = ResourceFactory.createProperty("http://purl.org/dc/terms/", "identifier");
     static private Property creator = ResourceFactory.createProperty("http://purl.org/dc/terms/", "creator");
@@ -35,20 +47,23 @@ public class SuomiCodeServer {
     private String url;
     private DatasetGraphAccessorHTTP accessor;
     private DatasetAdapter adapter;
+    private CodeSchemeManager codeSchemeManager;
 
 
-    public SuomiCodeServer(EndpointServices endpointServices) {
+    public SuomiCodeServer(EndpointServices endpointServices, CodeSchemeManager codeSchemeManager) {
         this.accessor = new DatasetGraphAccessorHTTP(endpointServices.getSchemesReadWriteAddress());
         this.adapter = new DatasetAdapter(accessor);
         this.endpointServices = endpointServices;
+        this.codeSchemeManager = codeSchemeManager;
     }
 
-    public SuomiCodeServer(String uri, String url, EndpointServices endpointServices) {
+    public SuomiCodeServer(String uri, String url, EndpointServices endpointServices, CodeSchemeManager codeSchemeManager) {
         this.accessor = new DatasetGraphAccessorHTTP(endpointServices.getSchemesReadWriteAddress());
         this.adapter = new DatasetAdapter(accessor);
         this.endpointServices = endpointServices;
         this.uri = uri;
         this.url = url;
+        this.codeSchemeManager = codeSchemeManager;
     }
 
     public boolean containsCodeList(String uri) {
@@ -135,22 +150,54 @@ public class SuomiCodeServer {
                         addLangLiteral(valueScheme, codeList.getJsonObject("prefLabel"), name);
 
                         valueScheme.addLiteral(status, codeList.getString("status"));
+                        JsonValue modifiedObject = codeList.get("modified");
 
-                        // TODO: Check date?
-                       if(!adapter.containsModel(codeListUri)) {
-                            updateCodes(codeListUrl+"/codes/", codeListUri);
+                        if(modifiedObject!=null) {
+                            valueScheme.addLiteral(modified, ResourceFactory.createTypedLiteral(codeList.getString("modified"),XSDDatatype.XSDdateTime));
+                        } else {
+                            logger.debug("Modified date null: "+codeListUrl);
+                        }
+
+                        // WTF: Zulu time
+                        SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+                        DateTimeFormatter dfmt = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+
+                       if(adapter.containsModel(codeListUri)) {
+                           if(modifiedObject!=null) {
+
+                                   String dateString = codeList.getString("modified");
+                                   LocalDateTime codeSchemeModified = LocalDateTime.parse(dateString, dfmt);
+                                   LocalDateTime lastModified = codeSchemeManager.lastModified(codeListUri).toInstant()
+                                           .atZone(ZoneId.of("GMT"))
+                                           .toLocalDateTime();
+
+                                   //Date codeSchemeModified = fmt.parse(dateString);
+                                   //Date lastModified = codeSchemeManager.lastModified(codeListUri);
+
+                                   if(lastModified==null || lastModified!=null && codeSchemeModified.isAfter(lastModified)) {
+                                       updateCodes(codeListUrl+"/codes/", codeListUri);
+                                   } else {
+                                       logger.debug("Not updated: "+lastModified.toString()+" vs. "+codeSchemeModified.toString());
+                                   }
+
+                           } else {
+                               logger.debug("Modified date is null in codeList API!");
+                               updateCodes(codeListUrl+"/codes/", codeListUri);
+                           }
+                       } else {
+                           updateCodes(codeListUrl+"/codes/", codeListUri);
                        }
 
                     }
                 } else {
-                    logger.info("Failed to update codelists from"+schemeTarget.getUri().toString());
+                    logger.info("Failed to update codelists from "+schemeTarget.getUri().toString());
                 }
 
-               adapter.putModel(uri, model);
-
-              // model.write(System.out, "text/turtle");
-
             }
+
+            adapter.putModel(uri, model);
+            logger.info("Putting schemes to "+uri);
+            //model.write(System.out, "text/turtle");
 
         }
 
@@ -171,7 +218,7 @@ public class SuomiCodeServer {
 
     public void updateCodes(String url, String uri) {
 
-        logger.info("Updating "+uri+" from "+url);
+        //logger.debug("Updating "+uri+" from "+url);
 
         Model model = ModelFactory.createDefaultModel();
         model.setNsPrefix("dcterms", "http://purl.org/dc/terms/");
@@ -185,7 +232,7 @@ public class SuomiCodeServer {
 
         if (response.getStatusInfo().getFamily() == Response.Status.Family.SUCCESSFUL) {
 
-            logger.info("Updated "+target.getUri().toString());
+            // logger.info("Updated "+target.getUri().toString());
 
             JsonReader jsonReader = Json.createReader(response.readEntity(InputStream.class));
             JsonObject codeListResponse = jsonReader.readObject();
@@ -222,7 +269,9 @@ public class SuomiCodeServer {
                 }
 
             adapter.putModel(uri, model);
-            logger.info("Saved: "+uri);
+
+             //model.write(System.out, "text/turtle");
+            logger.info("Saved codes: "+uri);
 
 
         } else {

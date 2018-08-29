@@ -80,6 +80,11 @@ public final class JenaClient {
        coreService.deleteModel(graph);
     }
 
+    public  void deleteModelFromScheme(String graph) {
+        logger.debug("Deleting codelist from "+graph);
+        schemeService.deleteModel(graph);
+    }
+
     public boolean isInCore(String graph) {
       return coreService.containsModel(graph);
     }

@@ -26,22 +26,19 @@ public class Codes {
     private final EndpointServices endpointServices;
     private final JerseyResponseManager jerseyResponseManager;
     private final ApplicationProperties applicationProperties;
-    private final GraphManager graphManager;
-    private final ModelManager modelManager;
+    private final CodeSchemeManager codeSchemeManager;
 
     @Autowired
     Codes(JerseyClient jerseyClient,
           EndpointServices endpointServices,
           JerseyResponseManager jerseyResponseManager,
           ApplicationProperties applicationProperties,
-          GraphManager graphManager,
-          ModelManager modelManager) {
+          CodeSchemeManager codeSchemeManager) {
         this.jerseyClient = jerseyClient;
         this.endpointServices = endpointServices;
         this.jerseyResponseManager = jerseyResponseManager;
         this.applicationProperties = applicationProperties;
-        this.graphManager = graphManager;
-        this.modelManager = modelManager;
+        this.codeSchemeManager = codeSchemeManager;
     }
 
     @GET
@@ -57,7 +54,7 @@ public class Codes {
             @QueryParam("uri") String uri) {
 
         if(uri.startsWith("http://uri.suomi.fi")) {
-            SuomiCodeServer codeServer = new SuomiCodeServer("https://koodistot.suomi.fi", applicationProperties.getDefaultSuomiCodeServerAPI(), endpointServices);
+            SuomiCodeServer codeServer = new SuomiCodeServer("https://koodistot.suomi.fi", applicationProperties.getDefaultSuomiCodeServerAPI(), endpointServices, codeSchemeManager);
         } else if(uri.startsWith("https://virkailija.opintopolku.fi")) {
             OPHCodeServer codeServer = new OPHCodeServer("https://virkailija.opintopolku.fi/koodisto-service/rest/json/", endpointServices);
             if(!codeServer.containsCodeList(uri)) {
@@ -67,7 +64,7 @@ public class Codes {
             return jerseyResponseManager.invalidParameter();
         }
 
-        Model codeModel = graphManager.getSchemeGraph(uri);
+        Model codeModel = codeSchemeManager.getSchemeGraph(uri);
 
         // If codeValues are empty for example are codes are DRAFT but scheme is VALID
         if(codeModel==null) {
@@ -92,7 +89,7 @@ public class Codes {
         ResponseBuilder rb;
 
         if(uri.startsWith("http://uri.suomi.fi")) {
-            SuomiCodeServer codeServer = new SuomiCodeServer("https://koodistot.suomi.fi", applicationProperties.getDefaultSuomiCodeServerAPI(), endpointServices);
+            SuomiCodeServer codeServer = new SuomiCodeServer("https://koodistot.suomi.fi", applicationProperties.getDefaultSuomiCodeServerAPI(), endpointServices, codeSchemeManager);
         } else if(uri.startsWith("https://virkailija.opintopolku.fi")){
             OPHCodeServer codeServer = new OPHCodeServer("https://virkailija.opintopolku.fi/koodisto-service/rest/json/", endpointServices);
             codeServer.updateCodes(uri);

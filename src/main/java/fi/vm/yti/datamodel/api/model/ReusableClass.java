@@ -4,10 +4,19 @@ import fi.vm.yti.datamodel.api.service.*;
 import fi.vm.yti.datamodel.api.utils.LDHelper;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.query.ParameterizedSparqlString;
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.ResourceFactory;
+import org.apache.jena.rdf.model.*;
 
+import org.apache.jena.util.ResourceUtils;
+import org.apache.jena.vocabulary.DCTerms;
+import org.apache.jena.vocabulary.OWL;
+import org.apache.jena.vocabulary.RDF;
+import org.apache.jena.vocabulary.RDFS;
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
+import org.topbraid.shacl.vocabulary.SH;
+
+import java.util.Iterator;
+import java.util.List;
+import java.util.UUID;
 
 public class ReusableClass extends AbstractClass {
 
@@ -82,6 +91,52 @@ public class ReusableClass extends AbstractClass {
 
         this.graph = termedTerminologyManager.constructCleanedModelFromTermedAPIAndCore(conceptIRI.toString(),modelIRI.toString(),pss.asQuery());
 
+    }
+
+    /**
+     * Creates superclass from exiting class
+     * @param oldClassIRI IRI of the existing class
+     * @param newModelIRI Model to create the superclass
+     * @param graphManager Graphservice
+     */
+    public ReusableClass(IRI oldClassIRI, IRI newModelIRI, GraphManager graphManager) {
+
+        this.graph = graphManager.getCoreGraph(oldClassIRI);
+
+        if(this.graph.size()<1) {
+            throw new IllegalArgumentException("No existing class found");
+        }
+
+        if(!this.graph.contains(ResourceFactory.createResource(oldClassIRI.toString()), RDF.type, RDFS.Class)) {
+            throw new IllegalArgumentException("Expected rdfs:Class type");
+        }
+
+        Resource superClass = this.graph.getResource(oldClassIRI.toString());
+        String superClassIRI = newModelIRI+"#"+superClass.getLocalName();
+        logger.debug("Creating new superclass: "+superClassIRI);
+        ResourceUtils.renameResource(superClass, superClassIRI);
+
+        superClass = this.graph.getResource(superClassIRI);
+        superClass.removeAll(OWL.versionInfo);
+        superClass.addLiteral(OWL.versionInfo, "DRAFT");
+
+        Resource modelResource = superClass.getPropertyResourceValue(RDFS.isDefinedBy);
+        modelResource.removeProperties();
+
+        superClass.addProperty(RDFS.isDefinedBy, newModelIRI.toString());
+
+        LDHelper.rewriteLiteral(this.graph, superClass, DCTerms.created, LDHelper.getDateTimeLiteral());
+        LDHelper.rewriteLiteral(this.graph, superClass, DCTerms.modified, LDHelper.getDateTimeLiteral());
+        superClass.removeAll(DCTerms.identifier);
+
+        // Rename property UUIDs
+        StmtIterator nodes = superClass.listProperties(SH.property);
+        List<Statement> propertyShapeList =  nodes.toList();
+
+        for(Iterator<Statement> i = propertyShapeList.iterator(); i.hasNext();) {
+            Resource propertyShape = i.next().getObject().asResource();
+            ResourceUtils.renameResource(propertyShape, "urn:uuid:" + UUID.randomUUID().toString());
+        }
     }
 
     public ReusableClass(IRI modelIRI,
