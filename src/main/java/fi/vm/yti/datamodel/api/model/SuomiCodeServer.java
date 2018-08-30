@@ -167,17 +167,21 @@ public class SuomiCodeServer {
 
                                    String dateString = codeList.getString("modified");
                                    LocalDateTime codeSchemeModified = LocalDateTime.parse(dateString, dfmt);
-                                   LocalDateTime lastModified = codeSchemeManager.lastModified(codeListUri).toInstant()
-                                           .atZone(ZoneId.of("GMT"))
-                                           .toLocalDateTime();
+                                   Date lastModifiedDateTime = codeSchemeManager.lastModified(codeListUri);
 
-                                   //Date codeSchemeModified = fmt.parse(dateString);
-                                   //Date lastModified = codeSchemeManager.lastModified(codeListUri);
-
-                                   if(lastModified==null || lastModified!=null && codeSchemeModified.isAfter(lastModified)) {
+                                   if(lastModifiedDateTime==null) {
                                        updateCodes(codeListUrl+"/codes/", codeListUri);
                                    } else {
-                                       logger.debug("Not updated: "+lastModified.toString()+" vs. "+codeSchemeModified.toString());
+
+                                       LocalDateTime lastModifiedLocalDateTime = lastModifiedDateTime.toInstant()
+                                               .atZone(ZoneId.of("GMT"))
+                                               .toLocalDateTime();
+
+                                       if(codeSchemeModified.isAfter(lastModifiedLocalDateTime)) {
+                                           updateCodes(codeListUrl+"/codes/", codeListUri);
+                                       } else {
+                                           logger.debug("Not updated: " + lastModifiedLocalDateTime.toString() + " vs. " + codeSchemeModified.toString());
+                                       }
                                    }
 
                            } else {
