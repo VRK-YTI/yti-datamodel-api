@@ -88,7 +88,15 @@ public class Models {
             @ApiParam(value = "prefix")
             @QueryParam("prefix") String prefix) {
 
-        String queryString = QueryLibrary.modelQuery;
+        YtiUser user = userProvider.getUser();
+
+        String queryString = "";
+
+        if(user.isAnonymous()) {
+            queryString = QueryLibrary.modelQuery;
+        } else {
+            queryString = QueryLibrary.fullModelQuery;
+        }
 
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
 
@@ -142,7 +150,12 @@ public class Models {
         } else  {
 
             pss.setNsPrefixes(LDHelper.PREFIX_MAP);
-            queryString = QueryLibrary.modelsByGroupQuery;
+
+            if(user.isAnonymous()) {
+                queryString = QueryLibrary.modelsByGroupQuery;
+            } else {
+                queryString = QueryLibrary.fullModelsByGroupQuery;
+            }
 
             if(group!=null && !group.equals("undefined")) {
                 pss.setLiteral("groupCode", group);
