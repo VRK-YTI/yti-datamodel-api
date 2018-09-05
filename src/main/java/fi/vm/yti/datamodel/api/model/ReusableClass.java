@@ -99,7 +99,7 @@ public class ReusableClass extends AbstractClass {
      * @param newModelIRI Model to create the superclass
      * @param graphManager Graphservice
      */
-    public ReusableClass(IRI oldClassIRI, IRI newModelIRI, GraphManager graphManager) {
+    public ReusableClass(IRI oldClassIRI, IRI newModelIRI, Property classRelation, GraphManager graphManager) {
 
         this.graph = graphManager.getCoreGraph(oldClassIRI);
 
@@ -122,6 +122,8 @@ public class ReusableClass extends AbstractClass {
 
         Resource modelResource = superClass.getPropertyResourceValue(RDFS.isDefinedBy);
         modelResource.removeProperties();
+        superClass.removeAll(RDFS.isDefinedBy);
+        superClass.addProperty(classRelation, oldClassIRI.toString());
 
         superClass.addProperty(RDFS.isDefinedBy, newModelIRI.toString());
 

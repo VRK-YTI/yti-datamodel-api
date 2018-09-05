@@ -103,7 +103,7 @@ public class ReusablePredicate extends AbstractPredicate {
      * @param newModelIRI Model to create the superclass
      * @param graphManager Graphservice
      */
-    public ReusablePredicate(IRI oldPredicateIRI, IRI newModelIRI, GraphManager graphManager) {
+    public ReusablePredicate(IRI oldPredicateIRI, IRI newModelIRI, Property relatedProperty, GraphManager graphManager) {
 
         this.graph = graphManager.getCoreGraph(oldPredicateIRI);
         
@@ -111,7 +111,7 @@ public class ReusablePredicate extends AbstractPredicate {
             throw new IllegalArgumentException("No existing predicate found");
         }
 
-        if(!this.graph.contains(ResourceFactory.createResource(oldPredicateIRI.toString()), RDF.type, OWL.DatatypeProperty) || !this.graph.contains(ResourceFactory.createResource(oldPredicateIRI.toString()), RDF.type, OWL.ObjectProperty)) {
+        if(!(this.graph.contains(ResourceFactory.createResource(oldPredicateIRI.toString()), RDF.type, OWL.DatatypeProperty) || this.graph.contains(ResourceFactory.createResource(oldPredicateIRI.toString()), RDF.type, OWL.ObjectProperty))) {
             throw new IllegalArgumentException("Expected predicate type");
         }
 
@@ -122,12 +122,17 @@ public class ReusablePredicate extends AbstractPredicate {
 
         superPredicate = this.graph.getResource(superPredicateIRI);
         superPredicate.removeAll(OWL.versionInfo);
+        superPredicate.removeAll(RDFS.range);
+        superPredicate.removeAll(RDFS.domain);
         superPredicate.addLiteral(OWL.versionInfo, "DRAFT");
 
-        Resource modelResource = superPredicate.getPropertyResourceValue(RDFS.isDefinedBy);
-        modelResource.removeProperties();
+        Resource oldModel = superPredicate.getPropertyResourceValue(RDFS.isDefinedBy);
+        oldModel.removeProperties();
+        superPredicate.removeAll(RDFS.isDefinedBy);
 
         superPredicate.addProperty(RDFS.isDefinedBy, newModelIRI.toString());
+
+        superPredicate.addProperty(relatedProperty, superPredicateIRI);
 
         LDHelper.rewriteLiteral(this.graph, superPredicate, DCTerms.created, LDHelper.getDateTimeLiteral());
         LDHelper.rewriteLiteral(this.graph, superPredicate, DCTerms.modified, LDHelper.getDateTimeLiteral());

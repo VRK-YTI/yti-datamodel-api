@@ -3,8 +3,9 @@
  */
 package fi.vm.yti.datamodel.api.endpoint.model;
 
-import fi.vm.yti.datamodel.api.model.ReusableClass;
+import fi.vm.yti.datamodel.api.model.ReusablePredicate;
 import fi.vm.yti.datamodel.api.service.*;
+import fi.vm.yti.datamodel.api.utils.LDHelper;
 import io.swagger.annotations.*;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
@@ -20,27 +21,25 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 
 @Component
-@Path("superClassCreator")
-@Api(tags = {"Class"}, description = "Construct new SuperClass template")
-public class SuperClassCreator {
+@Path("relatedPredicateCreator")
+@Api(tags = {"Predicate"}, description = "Construct new related property from existing property")
+public class RelatedPredicateCreator {
 
-    private static final Logger logger = LoggerFactory.getLogger(SuperClassCreator.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(RelatedPredicateCreator.class.getName());
     private final IDManager idManager;
     private final GraphManager graphManager;
     private final JerseyResponseManager jerseyResponseManager;
     private final JerseyClient jerseyClient;
     private final JenaClient jenaClient;
     private final ModelManager modelManager;
-    private final TermedTerminologyManager termedTerminologyManager;
 
     @Autowired
-    SuperClassCreator(IDManager idManager,
-                      GraphManager graphManager,
-                      JerseyResponseManager jerseyResponseManager,
-                      JerseyClient jerseyClient,
-                      JenaClient jenaClient,
-                      ModelManager modelManager,
-                      TermedTerminologyManager termedTerminologyManager) {
+    RelatedPredicateCreator(IDManager idManager,
+                            GraphManager graphManager,
+                            JerseyResponseManager jerseyResponseManager,
+                            JerseyClient jerseyClient,
+                            JenaClient jenaClient,
+                            ModelManager modelManager) {
 
         this.idManager = idManager;
         this.graphManager = graphManager;
@@ -48,24 +47,24 @@ public class SuperClassCreator {
         this.jerseyClient = jerseyClient;
         this.jenaClient = jenaClient;
         this.modelManager = modelManager;
-        this.termedTerminologyManager = termedTerminologyManager;
     }
 
     @GET
     @Produces("application/ld+json")
-    @ApiOperation(value = "Create new class", notes = "Create new")
-    @ApiResponses(value = { @ApiResponse(code = 200, message = "New class is created"),
+    @ApiOperation(value = "Create new super predicate", notes = "Create new super predicate")
+    @ApiResponses(value = { @ApiResponse(code = 200, message = "New super predicate is created"),
             @ApiResponse(code = 400, message = "Invalid ID supplied"),
             @ApiResponse(code = 403, message = "Invalid IRI in parameter"),
             @ApiResponse(code = 404, message = "Service not found") })
     public Response newClass(
             @ApiParam(value = "Model ID", required = true) @QueryParam("modelID") String modelID,
-            @ApiParam(value = "Old class id", required = true) @QueryParam("oldClass") String oldClass) {
+            @ApiParam(value = "Old predicate id", required = true) @QueryParam("oldPredicate") String oldPredicate,
+            @ApiParam(value = "Relation type", required = true, allowableValues="rdfs:subPropertyOf,iow:superPropertyOf,prov:wasDerivedFrom") @QueryParam("relationType") String relationType) {
 
-        IRI modelIRI, oldClassIRI;
-
+        IRI modelIRI, oldPredicateIRI;
+        
         try {
-            oldClassIRI = idManager.constructIRI(oldClass);
+            oldPredicateIRI = idManager.constructIRI(oldPredicate);
             modelIRI = idManager.constructIRI(modelID);
         } catch (IRIException e) {
             return jerseyResponseManager.invalidIRI();
@@ -74,14 +73,15 @@ public class SuperClassCreator {
         }
 
         if(!graphManager.isExistingGraph(modelIRI)) {
+            logger.debug("Graph not found!");
             return jerseyResponseManager.notFound();
         }
 
         try {
 
-            ReusableClass newClass = new ReusableClass(oldClassIRI, modelIRI , graphManager);
+            ReusablePredicate newPredicate = new ReusablePredicate(oldPredicateIRI, modelIRI, LDHelper.curieToProperty(relationType), graphManager);
 
-            return jerseyClient.constructResponseFromGraph(newClass.asGraph());
+            return jerseyClient.constructResponseFromGraph(newPredicate.asGraph());
         } catch(IllegalArgumentException ex) {
             logger.info(ex.toString());
             return jerseyResponseManager.error();

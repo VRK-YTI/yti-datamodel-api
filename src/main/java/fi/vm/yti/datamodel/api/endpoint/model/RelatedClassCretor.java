@@ -4,8 +4,8 @@
 package fi.vm.yti.datamodel.api.endpoint.model;
 
 import fi.vm.yti.datamodel.api.model.ReusableClass;
-import fi.vm.yti.datamodel.api.model.ReusablePredicate;
 import fi.vm.yti.datamodel.api.service.*;
+import fi.vm.yti.datamodel.api.utils.LDHelper;
 import io.swagger.annotations.*;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
@@ -21,25 +21,27 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 
 @Component
-@Path("superPredicateCreator")
-@Api(tags = {"Predicate"}, description = "Construct new SuperPredicate template")
-public class SuperPredicateCreator {
+@Path("relatedClassCreator")
+@Api(tags = {"Class"}, description = "Construct new related class from existing class")
+public class RelatedClassCretor {
 
-    private static final Logger logger = LoggerFactory.getLogger(SuperPredicateCreator.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(RelatedClassCretor.class.getName());
     private final IDManager idManager;
     private final GraphManager graphManager;
     private final JerseyResponseManager jerseyResponseManager;
     private final JerseyClient jerseyClient;
     private final JenaClient jenaClient;
     private final ModelManager modelManager;
+    private final TermedTerminologyManager termedTerminologyManager;
 
     @Autowired
-    SuperPredicateCreator(IDManager idManager,
-                          GraphManager graphManager,
-                          JerseyResponseManager jerseyResponseManager,
-                          JerseyClient jerseyClient,
-                          JenaClient jenaClient,
-                          ModelManager modelManager) {
+    RelatedClassCretor(IDManager idManager,
+                       GraphManager graphManager,
+                       JerseyResponseManager jerseyResponseManager,
+                       JerseyClient jerseyClient,
+                       JenaClient jenaClient,
+                       ModelManager modelManager,
+                       TermedTerminologyManager termedTerminologyManager) {
 
         this.idManager = idManager;
         this.graphManager = graphManager;
@@ -47,6 +49,7 @@ public class SuperPredicateCreator {
         this.jerseyClient = jerseyClient;
         this.jenaClient = jenaClient;
         this.modelManager = modelManager;
+        this.termedTerminologyManager = termedTerminologyManager;
     }
 
     @GET
@@ -58,12 +61,13 @@ public class SuperPredicateCreator {
             @ApiResponse(code = 404, message = "Service not found") })
     public Response newClass(
             @ApiParam(value = "Model ID", required = true) @QueryParam("modelID") String modelID,
-            @ApiParam(value = "Old predicate id", required = true) @QueryParam("oldPredicate") String oldPredicate) {
+            @ApiParam(value = "Old class id", required = true) @QueryParam("oldClass") String oldClass,
+            @ApiParam(value = "Relation type", required = true, allowableValues="rdfs:subClassOf, iow:superClassOf, prov:wasDerivedFrom") @QueryParam("relationType") String relationType) {
 
-        IRI modelIRI, oldPredicateIRI;
-        
+        IRI modelIRI, oldClassIRI;
+
         try {
-            oldPredicateIRI = idManager.constructIRI(oldPredicate);
+            oldClassIRI = idManager.constructIRI(oldClass);
             modelIRI = idManager.constructIRI(modelID);
         } catch (IRIException e) {
             return jerseyResponseManager.invalidIRI();
@@ -77,9 +81,9 @@ public class SuperPredicateCreator {
 
         try {
 
-            ReusablePredicate newPredicate = new ReusablePredicate(oldPredicateIRI, modelIRI , graphManager);
+            ReusableClass newClass = new ReusableClass(oldClassIRI, modelIRI, LDHelper.curieToProperty(relationType), graphManager);
 
-            return jerseyClient.constructResponseFromGraph(newPredicate.asGraph());
+            return jerseyClient.constructResponseFromGraph(newClass.asGraph());
         } catch(IllegalArgumentException ex) {
             logger.info(ex.toString());
             return jerseyResponseManager.error();
