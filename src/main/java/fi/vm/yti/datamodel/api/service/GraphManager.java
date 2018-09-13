@@ -1003,23 +1003,18 @@ public class GraphManager {
      * @return Returns JSON-LD object
      */
     public Model constructModelFromCoreGraph(String query){
-       try (RDFConnectionRemote conn = endpointServices.getCoreConnection()) {
+        return jenaClient.constructFromService(query, endpointServices.getCoreSparqlAddress());
+      /* try (RDFConnectionRemote conn = endpointServices.getCoreConnection()) {
             return conn.queryConstruct(query);
         } catch (Exception ex) {
             logger.warn(ex.getMessage());
             return null;
-        }
+        } */
     }
 
 
     public Model constructModelFromService(String query, String service) {
-        try (RDFConnectionRemote conn = endpointServices.getServiceConnection(service)) {
-            return conn.queryConstruct(query);
-        } catch (Exception ex) {
-            logger.warn(ex.getMessage());
-            return null;
-        }
-
+        return jenaClient.constructFromService(query, service);
     }
 
 
