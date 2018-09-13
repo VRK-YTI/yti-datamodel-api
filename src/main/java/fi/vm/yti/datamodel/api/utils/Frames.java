@@ -373,7 +373,8 @@ public class Frames {
                 put("path", path);
                 put("classIn", new LinkedHashMap<String, Object>() {
                     {
-                        put("@id", "http://www.w3.org/ns/shacl#classIn");                        
+                        put("@id", "http://www.w3.org/ns/shacl#classIn");
+                        put("@type", "@id");
                     }
                 });                
                 put("memberOf", new LinkedHashMap<String, Object>() {
