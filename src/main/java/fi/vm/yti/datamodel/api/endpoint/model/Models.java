@@ -9,6 +9,7 @@ import fi.vm.yti.datamodel.api.service.*;
 import fi.vm.yti.datamodel.api.utils.LDHelper;
 import fi.vm.yti.datamodel.api.utils.QueryLibrary;
 import fi.vm.yti.security.AuthenticatedUserProvider;
+import fi.vm.yti.security.Role;
 import fi.vm.yti.security.YtiUser;
 import io.swagger.annotations.*;
 import org.apache.jena.iri.IRI;
@@ -16,13 +17,19 @@ import org.apache.jena.iri.IRIException;
 import org.apache.jena.query.DatasetAccessor;
 import org.apache.jena.query.DatasetAccessorFactory;
 import org.apache.jena.query.ParameterizedSparqlString;
-import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.*;
 import org.apache.jena.riot.RiotException;
+import org.apache.jena.vocabulary.DCTerms;
+import org.apache.jena.vocabulary.OWL;
+import org.apache.jena.vocabulary.RDF;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
@@ -45,6 +52,7 @@ public class Models {
     private final ProvenanceManager provenanceManager;
     private final RHPOrganizationManager rhpOrganizationManager;
     private final ModelManager modelManager;
+    private final Property status = OWL.versionInfo;
 
     @Autowired
     Models(AuthorizationManager authorizationManager,
@@ -90,13 +98,7 @@ public class Models {
 
         YtiUser user = userProvider.getUser();
 
-        String queryString = "";
-
-        if(user.isAnonymous()) {
-            queryString = QueryLibrary.modelQuery;
-        } else {
-            queryString = QueryLibrary.fullModelQuery;
-        }
+        String queryString = QueryLibrary.fullModelQuery;
 
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
 
@@ -124,7 +126,6 @@ public class Models {
                 return jerseyClient.getGraphResponseFromService(id, endpointServices.getProvReadWriteAddress());
             }
 
-
             String sparqlService = endpointServices.getCoreSparqlAddress();
             String graphService = endpointServices.getCoreReadWriteAddress();
 
@@ -151,11 +152,7 @@ public class Models {
 
             pss.setNsPrefixes(LDHelper.PREFIX_MAP);
 
-            if(user.isAnonymous()) {
-                queryString = QueryLibrary.modelsByGroupQuery;
-            } else {
-                queryString = QueryLibrary.fullModelsByGroupQuery;
-            }
+            queryString = QueryLibrary.fullModelsByGroupQuery;
 
             if(group!=null && !group.equals("undefined")) {
                 pss.setLiteral("groupCode", group);
@@ -163,10 +160,27 @@ public class Models {
 
         }
 
-
         pss.setCommandText(queryString);
 
-        return jerseyClient.constructGraphFromService(pss.toString(), endpointServices.getCoreSparqlAddress());
+        Model modelList = graphManager.constructModelFromCoreGraph(pss.toString());
+
+        ResIterator rem = modelList.listSubjectsWithProperty(status, "INCOMPLETE");
+
+            while(rem.hasNext()) {
+                Resource modelResource = rem.nextResource();
+                if(user.isAnonymous()) {
+                    modelList = modelList.remove(modelResource.listProperties());
+                    // Seems to be faster than: modelList.removeAll(modelResource, null, (RDFNode) null);
+                } else {
+                    Set<UUID> orgUUIDs = user.getOrganizations(Role.ADMIN, Role.DATA_MODEL_EDITOR);
+                    if(!orgUUIDs.contains(UUID.fromString(modelResource.getRequiredProperty(DCTerms.contributor).getResource().getURI().replace("urn:uuid:","")))) {
+                        modelList = modelList.remove(modelResource.listProperties());
+                    }
+                }
+            }
+
+        return jerseyResponseManager.okModel(modelList);
+        //return jerseyClient.constructGraphFromService(pss.toString(), endpointServices.getCoreSparqlAddress());
 
     }
 
