@@ -110,7 +110,7 @@ public class SuomiCodeServer {
                 Resource group = model.createResource(groupID);
 
                 addLangLiteral(group, codeRegistry.getJsonObject("prefLabel"), name);
-                addLangLiteral(group, codeRegistry.getJsonObject("definition"), description);
+                addLangLiteral(group, codeRegistry.getJsonObject("description"), description);
 
                 group.addProperty(RDF.type, ResourceFactory.createResource("http://uri.suomi.fi/datamodel/ns/iow#FCodeGroup"));
 
@@ -208,17 +208,14 @@ public class SuomiCodeServer {
     }
 
     public static void addLangLiteral(Resource res, JsonObject obj, Property prop) {
-
-        Iterator<String> langObjIterator = obj.keySet().iterator();
+            Iterator<String> langObjIterator = obj.keySet().iterator();
 
             while (langObjIterator.hasNext()) {
                 String lang = langObjIterator.next();
                 String value = obj.getString(lang);
                 res.addLiteral(prop, ResourceFactory.createLangLiteral(value, lang));
             }
-
     }
-
 
     public void updateCodes(String url, String uri) {
 
