@@ -109,8 +109,16 @@ public class SuomiCodeServer {
 
                 Resource group = model.createResource(groupID);
 
-                addLangLiteral(group, codeRegistry.getJsonObject("prefLabel"), name);
-                addLangLiteral(group, codeRegistry.getJsonObject("description"), description);
+                JsonObject registryName = codeRegistry.getJsonObject("prefLabel");
+                JsonObject registryDescription = codeRegistry.getJsonObject("prefLabel");
+
+                if(registryName!=null) {
+                    addLangLiteral(group, registryName, name);
+                }
+
+                if(registryDescription!=null) {
+                    addLangLiteral(group, registryDescription, description);
+                }
 
                 group.addProperty(RDF.type, ResourceFactory.createResource("http://uri.suomi.fi/datamodel/ns/iow#FCodeGroup"));
 
@@ -146,8 +154,16 @@ public class SuomiCodeServer {
 
                         valueScheme.addLiteral(id, ResourceFactory.createPlainLiteral(codeListUri));
 
-                        addLangLiteral(valueScheme, codeList.getJsonObject("description"), description);
-                        addLangLiteral(valueScheme, codeList.getJsonObject("prefLabel"), name);
+                        JsonObject codeListDescription = codeList.getJsonObject("description");
+                        JsonObject codeListName = codeList.getJsonObject("prefLabel");
+
+                        if(codeListDescription!=null) {
+                            addLangLiteral(valueScheme, codeListDescription, description);
+                        }
+
+                        if(codeListName!=null) {
+                            addLangLiteral(valueScheme, codeListName, name);
+                        }
 
                         valueScheme.addLiteral(status, codeList.getString("status"));
                         JsonValue modifiedObject = codeList.get("modified");
@@ -258,8 +274,16 @@ public class SuomiCodeServer {
                 codeRes.addProperty(RDF.type, ResourceFactory.createResource("http://uri.suomi.fi/datamodel/ns/iow#FCode"));
                 codeRes.addLiteral(id, ResourceFactory.createPlainLiteral(codeObj.getString("codeValue")));
 
-                addLangLiteral(codeRes, codeObj.getJsonObject("prefLabel"), name);
-                addLangLiteral(codeRes, codeObj.getJsonObject("description"), description);
+                JsonObject codeName = codeObj.getJsonObject("prefLabel");
+                JsonObject descriptionName = codeObj.getJsonObject("description");
+
+                if(codeName!=null) {
+                    addLangLiteral(codeRes, codeName, name);
+                }
+
+                if(descriptionName!=null) {
+                    addLangLiteral(codeRes, descriptionName, description);
+                }
 
                 codeRes.addLiteral(status, codeObj.getString("status"));
 
