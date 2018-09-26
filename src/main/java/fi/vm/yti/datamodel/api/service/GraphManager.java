@@ -38,6 +38,8 @@ import org.apache.jena.vocabulary.RDF;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import org.apache.jena.shared.PropertyNotFoundException;
+
 @Service
 public class GraphManager {
 
@@ -1133,10 +1135,19 @@ public class GraphManager {
         Model exportModel = jenaClient.getModelFromCore(amodel.getId()+"#ExportGraph");
 
         // OMG: Model.remove() doesnt remove RDFLists
-        Statement languageStatement = exportModel.getRequiredProperty(ResourceFactory.createResource(amodel.getId()), DCTerms.language);
-        RDFList languageList = languageStatement.getObject().as(RDFList.class);
-        languageList.removeList();
-        languageStatement.remove();
+        try {
+            Statement languageStatement = exportModel.getRequiredProperty(ResourceFactory.createResource(amodel.getId()), DCTerms.language);
+            RDFList languageList = languageStatement.getObject().as(RDFList.class);
+            languageList.removeList();
+            languageStatement.remove();
+
+            Statement relatedStatement = exportModel.getRequiredProperty(ResourceFactory.createResource(amodel.getId()), DCTerms.relation);
+            RDFList relatedLinkList = relatedStatement.getObject().as(RDFList.class);
+            relatedLinkList.asJavaList().forEach((node)->{node.asResource().removeProperties();});
+            relatedLinkList.removeList();
+            relatedStatement.remove();
+
+        } catch(PropertyNotFoundException ex) { /* Do nothing */ }
 
         exportModel.remove(oldModel);
         exportModel.add(amodel.asGraph());

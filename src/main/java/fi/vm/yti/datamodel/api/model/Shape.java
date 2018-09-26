@@ -61,7 +61,7 @@ public class Shape extends AbstractShape {
             pss.setIri("modelService", endpointServices.getLocalhostCoreSparqlAddress());
             pss.setLiteral("draft", "DRAFT");
             pss.setIri("shapeIRI",shapeIRI);
-            this.graph = graphManager.constructModelFromService(pss.toString(), service);
+            this.graph = graphManager.constructModelFromService(pss.toString(), endpointServices.getImportsSparqlAddress());
 
         } else {
 
