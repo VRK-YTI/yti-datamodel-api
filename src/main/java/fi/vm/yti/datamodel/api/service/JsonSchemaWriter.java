@@ -74,6 +74,8 @@ public class JsonSchemaWriter {
     private static final Map<String, String> FORMAT_MAP =
             Collections.unmodifiableMap(new HashMap<String, String>() {{
                 put("http://www.w3.org/2001/XMLSchema#dateTime", "date-time");
+                put("http://www.w3.org/2001/XMLSchema#date", "date");
+                put("http://www.w3.org/2001/XMLSchema#time", "time");
                 put("http://www.w3.org/2001/XMLSchema#anyURI", "uri");
             }});
 

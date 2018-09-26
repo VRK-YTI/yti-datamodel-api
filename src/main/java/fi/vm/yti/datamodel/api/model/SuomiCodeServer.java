@@ -49,7 +49,6 @@ public class SuomiCodeServer {
     private DatasetAdapter adapter;
     private CodeSchemeManager codeSchemeManager;
 
-
     public SuomiCodeServer(EndpointServices endpointServices, CodeSchemeManager codeSchemeManager) {
         this.accessor = new DatasetGraphAccessorHTTP(endpointServices.getSchemesReadWriteAddress());
         this.adapter = new DatasetAdapter(accessor);
