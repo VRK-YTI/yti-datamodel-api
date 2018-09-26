@@ -7,6 +7,7 @@ import org.apache.jena.rdf.model.Model;
 import org.apache.jena.riot.*;
 import org.apache.jena.riot.system.PrefixMap;
 import org.apache.jena.riot.system.RiotLib;
+import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -56,6 +57,16 @@ public final class FrameManager {
         this.jenaClient = jenaClient;
     }
 
+    public void cleanCachedFrames() {
+        boolean exists = esClient.admin().indices().prepareExists(ELASTIC_INDEX_MODEL).execute().actionGet().isExists();
+        if (exists) {
+            logger.info("Cleaning elastic index");
+            esClient.admin().indices().prepareDelete(ELASTIC_INDEX_MODEL).execute().actionGet();
+            initCache();
+        } else {
+            logger.info("No index found for cleaning!");
+        }
+    }
 
     public String getCachedClassVisualizationFrame(String id, Date lastModified) throws Exception {
         String encId = LDHelper.encode(id);
