@@ -7,6 +7,7 @@ import org.apache.jena.rdf.model.Model;
 import org.apache.jena.riot.*;
 import org.apache.jena.riot.system.PrefixMap;
 import org.apache.jena.riot.system.RiotLib;
+import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -58,7 +59,7 @@ public final class FrameManager {
     }
 
     public void cleanCachedFrames() {
-        boolean exists = esClient.admin().indices().prepareExists(ELASTIC_INDEX_MODEL).execute().actionGet().isExists();
+        boolean exists = indexExists(ELASTIC_INDEX_MODEL);
         if (exists) {
             logger.info("Cleaning elastic index");
             esClient.admin().indices().prepareDelete(ELASTIC_INDEX_MODEL).execute().actionGet();
@@ -160,23 +161,32 @@ public final class FrameManager {
         logger.info("Waiting for ES (timeout " + ES_TIMEOUT + "s)");
         try {
             for(int i = 0; i < ES_TIMEOUT; i++) {
-                if(((TransportClient)esClient).connectedNodes().size() > 0) {                    
+                if(((TransportClient)esClient).connectedNodes().size() > 0) {
                     logger.info("ES online");
-                    return;
-                }                
-                Thread.sleep(1000);                
+                    try{
+                        indexExists(ELASTIC_INDEX_MODEL);
+                        return;
+                    } catch(NoNodeAvailableException ex) {
+                        logger.info("No nodes available?");
+                    }
+                }
+                Thread.sleep(1000);
             }
-        }catch(Exception ex) {}
+        } catch(Exception ex) {}
         throw new RuntimeException("Could not find required ES instance");
     }
-    
+
+    private boolean indexExists(String index) throws NoNodeAvailableException {
+        return esClient.admin().indices().prepareExists(index).execute().actionGet().isExists();
+    }
+
     public void initCache() {
         waitForESNodes();
-        boolean exists = esClient.admin().indices().prepareExists(ELASTIC_INDEX_MODEL).execute().actionGet().isExists();
+        boolean exists = indexExists(ELASTIC_INDEX_MODEL);
         if (!exists) {
             esClient.admin().indices().prepareCreate(ELASTIC_INDEX_MODEL).execute().actionGet();
         }
-        exists = esClient.admin().indices().prepareExists(ELASTIC_INDEX_RESOURCE).execute().actionGet().isExists();
+        exists = indexExists(ELASTIC_INDEX_RESOURCE);
         if (!exists) {
             esClient.admin().indices().prepareCreate(ELASTIC_INDEX_RESOURCE).execute().actionGet();
         }

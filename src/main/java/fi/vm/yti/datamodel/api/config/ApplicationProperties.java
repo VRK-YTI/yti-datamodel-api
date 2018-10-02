@@ -120,8 +120,6 @@ public final class ApplicationProperties {
     public void setPublicTerminologyFrontend(String publicTerminologyFrontend) {
         this.publicTerminologyFrontend = publicTerminologyFrontend;
     }
-
-
     public String getPublicTermedAPI() {
         return publicTermedAPI;
     }
