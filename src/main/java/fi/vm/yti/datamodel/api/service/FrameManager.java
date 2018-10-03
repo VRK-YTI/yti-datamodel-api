@@ -48,7 +48,7 @@ public final class FrameManager {
     
     public static final String ELASTIC_INDEX_MODEL = "dm_vis_models";
     public static final String ELASTIC_INDEX_RESOURCE = "dm_resources";
-    public static final int ES_TIMEOUT = 120;
+    public static final int ES_TIMEOUT = 300;
 
     @Autowired
     public FrameManager(

@@ -164,9 +164,10 @@ public class ModelTest  {
     }
 
 
+    @Ignore
     @AfterClass
     public static void deleteModel() {
-        target.path("model").queryParam("id",testModelId).request().delete().getStatus();
+     //   target.path("model").queryParam("id",testModelId).request().delete().getStatus();
     }
 
 
