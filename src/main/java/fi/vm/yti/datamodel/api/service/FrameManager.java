@@ -9,6 +9,7 @@ import org.apache.jena.riot.system.PrefixMap;
 import org.apache.jena.riot.system.RiotLib;
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
+import org.elasticsearch.transport.NodeDisconnectedException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -168,6 +169,8 @@ public final class FrameManager {
                         return;
                     } catch(NoNodeAvailableException ex) {
                         logger.info("No nodes available?");
+                    } catch (NodeDisconnectedException ex) {
+                        logger.info("Node Disconnected?");
                     }
                 }
                 Thread.sleep(1000);
