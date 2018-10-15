@@ -61,7 +61,8 @@ public class JerseyResponseManager {
                                               "\"conceptsFrontend\":\""+properties.getPublicTerminologyFrontend()+"\", " +
                                               "\"codes\":\""+properties.getDefaultSuomiCodeServerAPI()+"\", " +
                                               "\"codesFrontend\":\""+properties.getPublicSuomiCodeServerFrontend()+"\", " +
-                                              "\"dev\":"+properties.getDevMode()+"}").build();
+                                              "\"dev\":"+properties.getDevMode()+", " +
+                                              "\"env\":\""+properties.getEnv()+"\"}").build();
     }
     
     public Response langNotDefined() {

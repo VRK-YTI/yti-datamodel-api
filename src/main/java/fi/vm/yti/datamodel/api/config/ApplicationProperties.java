@@ -24,6 +24,7 @@ public final class ApplicationProperties {
     private String elasticCluster;
     private String defaultSuomiCodeServerAPI;
     private boolean devMode;
+    private String env;
 
     public String getDefaultScheme() {
         return defaultScheme;
@@ -159,5 +160,9 @@ public final class ApplicationProperties {
     public boolean getDevMode() { return this.devMode; }
 
     public void setDevMode(boolean devMode) { this.devMode = devMode; }
+
+    public String getEnv() { return this.env; }
+
+    public void setEnv(String env) { this.env = env; }
 
 }
