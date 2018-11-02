@@ -164,20 +164,22 @@ public class Models {
 
         Model modelList = graphManager.constructModelFromCoreGraph(pss.toString());
 
-        ResIterator rem = modelList.listSubjectsWithProperty(status, "INCOMPLETE");
+        if(!user.isSuperuser()) {
+            ResIterator rem = modelList.listSubjectsWithProperty(status, "INCOMPLETE");
 
-            while(rem.hasNext()) {
+            while (rem.hasNext()) {
                 Resource modelResource = rem.nextResource();
-                if(user.isAnonymous()) {
+                if (user.isAnonymous()) {
                     modelList = modelList.remove(modelResource.listProperties());
                     // Seems to be faster than: modelList.removeAll(modelResource, null, (RDFNode) null);
                 } else {
                     Set<UUID> orgUUIDs = user.getOrganizations(Role.ADMIN, Role.DATA_MODEL_EDITOR);
-                    if(!orgUUIDs.contains(UUID.fromString(modelResource.getRequiredProperty(DCTerms.contributor).getResource().getURI().replace("urn:uuid:","")))) {
+                    if (!orgUUIDs.contains(UUID.fromString(modelResource.getRequiredProperty(DCTerms.contributor).getResource().getURI().replace("urn:uuid:", "")))) {
                         modelList = modelList.remove(modelResource.listProperties());
                     }
                 }
             }
+        }
 
         return jerseyResponseManager.okModel(modelList);
         //return jerseyClient.constructGraphFromService(pss.toString(), endpointServices.getCoreSparqlAddress());
@@ -203,8 +205,7 @@ public class Models {
             @ApiParam(value = "Updated model in application/ld+json", required = true)
                     String body,
             @ApiParam(value = "Model ID")
-            @QueryParam("id")
-                    String graph) {
+            @QueryParam("id") String graph) {
 
         try {
 
@@ -218,6 +219,10 @@ public class Models {
 
             DataModel newVocabulary = new DataModel(parsedModel, graphManager, rhpOrganizationManager);
 
+            if(!newVocabulary.getIRI().toString().equals(graph)) {
+                return jerseyResponseManager.invalidIRI();
+            }
+
             logger.info("Getting old vocabulary:" + newVocabulary.getId());
             DataModel oldVocabulary = new DataModel(newVocabulary.getIRI(), graphManager);
 
@@ -227,7 +232,6 @@ public class Models {
             }
 
             UUID provUUID = UUID.fromString(newVocabulary.getProvUUID().replaceFirst("urn:uuid:",""));
-
 
                 graphManager.updateModel(newVocabulary);
 

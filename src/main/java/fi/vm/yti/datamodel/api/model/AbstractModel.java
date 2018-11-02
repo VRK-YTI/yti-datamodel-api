@@ -32,6 +32,15 @@ public abstract class AbstractModel extends AbstractResource {
 
         this.graphManager = graphManager;
         this.graph = graphManager.getCoreGraph(graphIRI);
+
+        if(this.graph==null) {
+            throw new IllegalArgumentException("GRAPH not found");
+        }
+
+        if(this.graph.size()<1) {
+            throw new IllegalArgumentException("GRAPH is empty");
+        }
+
         this.id = graphIRI;
 
         List<Resource> vocabList = this.graph.listSubjectsWithProperty(OWL.versionInfo).toList();

@@ -50,12 +50,12 @@ public class Usage {
 
     @GET
     @Produces("application/ld+json")
-    @ApiOperation(value = "Create new class", notes = "Create new")
-    @ApiResponses(value = { @ApiResponse(code = 200, message = "New class is created"),
+    @ApiOperation(value = "Get related resources with resource, model or concept uri", notes = "Resolve resource usage")
+    @ApiResponses(value = { @ApiResponse(code = 200, message = "Usage message returned"),
                     @ApiResponse(code = 400, message = "Invalid ID supplied"),
                     @ApiResponse(code = 403, message = "Invalid IRI in parameter"),
                     @ApiResponse(code = 404, message = "Service not found") })
-    public Response newClass(
+    public Response Usage(
             @ApiParam(value = "Resource ID") @QueryParam("id") String id,
             @ApiParam(value = "Model ID") @QueryParam("model") String model,
             @ApiParam(value = "Concept ID") @QueryParam("concept") String concept) {
@@ -96,7 +96,8 @@ public class Usage {
                     + "GRAPH ?resource { "
                     + "?resource dcterms:subject ?concept . "
                     + "?resource a ?type . "
-                    + "?resource rdfs:label ?label . "
+                    + "?resource ?usageNamePredicate ?label . "
+                    + "VALUES ?usageNamePredicate { rdfs:label sh:name }"
                     + "OPTIONAL { ?resource rdfs:comment ?comment . }"
                     + "OPTIONAL {?resource rdfs:isDefinedBy ?resourceModel . }"
                     + "GRAPH ?resourceModel {"

@@ -25,19 +25,16 @@ import javax.ws.rs.core.Response;
 @Api(tags = {"Codes"}, description = "Get list of codes from code sercer")
 public class CodeList {
 
-    private final JerseyClient jerseyClient;
     private final EndpointServices endpointServices;
     private final ApplicationProperties applicationProperties;
     private final JerseyResponseManager jerseyResponseManager;
     private final CodeSchemeManager codeSchemeManager;
 
     @Autowired
-    CodeList(JerseyClient jerseyClient,
-             EndpointServices endpointServices,
+    CodeList(EndpointServices endpointServices,
              ApplicationProperties applicationProperties,
              CodeSchemeManager codeSchemeManager,
              JerseyResponseManager jerseyResponseManager) {
-        this.jerseyClient = jerseyClient;
         this.endpointServices = endpointServices;
         this.applicationProperties = applicationProperties;
         this.jerseyResponseManager = jerseyResponseManager;

@@ -3,6 +3,8 @@ package fi.vm.yti.datamodel.api.service;
 import com.github.jsonldjava.core.JsonLdOptions;
 import fi.vm.yti.datamodel.api.utils.Frames;
 import fi.vm.yti.datamodel.api.utils.LDHelper;
+import org.apache.jena.query.ParameterizedSparqlString;
+import org.apache.jena.query.Query;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.riot.*;
 import org.apache.jena.riot.system.PrefixMap;
@@ -43,7 +45,6 @@ public final class FrameManager {
 
     private final Client esClient;
     private final JenaClient jenaClient;
-
     private static final Logger logger = LoggerFactory.getLogger(FrameManager.class.getName());
     private final SimpleDateFormat format = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz");
     
@@ -70,21 +71,29 @@ public final class FrameManager {
         }
     }
 
+    private void updateCachedGraph(String id) throws Exception {
+        String frameStr = graphToFramedString(id, Frames.classVisualizationFrame);
+        cacheClassVisualizationFrame(id, frameStr);
+    }
+
     public String getCachedClassVisualizationFrame(String id, Date lastModified) throws Exception {
+        logger.info("Getting framed json-ld from cache: "+id);
         String encId = LDHelper.encode(id);
         String frameStr = null;
         try {
             Map<String, Object> map = this.esClient.prepareGet(ELASTIC_INDEX_MODEL, "doc", encId).execute().actionGet().getSourceAsMap();
-            if(map == null || lastModified.after(format.parse(map.get("modified").toString()))) {
-                logger.debug("Creating/refreshing visualization frame cache for graph " + id);                
-                frameStr = graphToFramedString(id, Frames.classVisualizationFrame);
-                cacheClassVisualizationFrame(id, frameStr); 
+            if(map == null) {
+                logger.debug("Creating visualization frame cache for graph " + id);
+                updateCachedGraph(id);
             }
             else {
+                Object lastModifiedDate = map.get("modified");
+                if(lastModifiedDate!=null && lastModified.after(format.parse(lastModifiedDate.toString()))) {
+                    updateCachedGraph(id);
+                }
                 logger.debug("Visualization frame cache hit");
                 frameStr = map.get("graph").toString();
             }
-
         } catch (NoNodeAvailableException ex) {
             logger.error("Datamodel Elastic is not available. Model frame caching is not available."); 
             frameStr = graphToFramedString(id, Frames.classVisualizationFrame);            
@@ -110,8 +119,42 @@ public final class FrameManager {
         }
     }
 
+    /**
+     * Creates export graph by joining all the resources to one graph
+     * @param graph model IRI that is used to create export graph
+     */
+    public Model constructExportGraph(String graph) {
+
+        String queryString = "CONSTRUCT { "
+                + "?model <http://purl.org/dc/terms/hasPart> ?resource . "
+                + "?ms ?mp ?mo . "
+                + "?rs ?rp ?ro . "
+                + " } WHERE {"
+                + " GRAPH ?model {"
+                + "?ms ?mp ?mo . "
+                + "} OPTIONAL {"
+                + "GRAPH ?modelHasPartGraph { "
+                + " ?model <http://purl.org/dc/terms/hasPart> ?resource . "
+                + " } GRAPH ?resource { "
+                + "?rs ?rp ?ro . "
+                + "}"
+                + "}}";
+
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        pss.setCommandText(queryString);
+        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+        pss.setIri("model", graph);
+        pss.setIri("modelHasPartGraph", graph+"#HasPartGraph");
+
+        Query query = pss.asQuery();
+
+        Model exportModel = jenaClient.constructFromService(query.toString(), jenaClient.getEndpointServices().getCoreSparqlAddress());
+        return exportModel;
+    }
+
     protected String graphToFramedString(String graph, LinkedHashMap<String, Object> frame) throws Exception {
         Model model = jenaClient.getModelFromCore(graph + "#ExportGraph");
+        // Model model = constructExportGraph(graph);
         if(model == null) {
             throw new NotFoundException("Could not get model with id " + graph);
         }

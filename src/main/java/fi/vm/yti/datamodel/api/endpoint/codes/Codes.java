@@ -22,19 +22,16 @@ import javax.ws.rs.core.Response.ResponseBuilder;
 @Api(tags = {"Codes"}, description = "Get codevalues with ID")
 public class Codes {
 
-    private final JerseyClient jerseyClient;
     private final EndpointServices endpointServices;
     private final JerseyResponseManager jerseyResponseManager;
     private final ApplicationProperties applicationProperties;
     private final CodeSchemeManager codeSchemeManager;
 
     @Autowired
-    Codes(JerseyClient jerseyClient,
-          EndpointServices endpointServices,
+    Codes(EndpointServices endpointServices,
           JerseyResponseManager jerseyResponseManager,
           ApplicationProperties applicationProperties,
           CodeSchemeManager codeSchemeManager) {
-        this.jerseyClient = jerseyClient;
         this.endpointServices = endpointServices;
         this.jerseyResponseManager = jerseyResponseManager;
         this.applicationProperties = applicationProperties;

@@ -8,6 +8,7 @@ import org.apache.jena.query.QueryExecution;
 import org.apache.jena.query.QueryExecutionFactory;
 import org.apache.jena.rdf.model.*;
 import org.apache.jena.vocabulary.DCTerms;
+import org.topbraid.shacl.vocabulary.SH;
 
 import java.util.List;
 import java.util.UUID;
@@ -105,5 +106,9 @@ public class DataModel extends AbstractModel {
         RDFList langRDFList = LDHelper.addStringListToModel(this.graph, allowedLang);
         this.graph.add(ResourceFactory.createResource(namespace.toString()), DCTerms.language, langRDFList);
 
+    }
+
+    public String getPrefix() {
+        return this.asGraph().getRequiredProperty(ResourceFactory.createResource(this.getId()),LDHelper.curieToProperty("dcap:preferredXMLNamespacePrefix")).getString();
     }
 }

@@ -58,7 +58,7 @@ public final class JenaClient {
     }
 
     public Model getModelFromCore(String graph) {
-       logger.debug("Getting model from "+graph);
+       logger.debug("Getting model from core "+graph);
        return coreService.getModel(graph);
     }
 
@@ -163,5 +163,9 @@ public final class JenaClient {
             logger.warn(ex.getMessage());
             return null;
         }
+    }
+    
+    public EndpointServices getEndpointServices() {
+       return this.endpointServices;
     }
 }

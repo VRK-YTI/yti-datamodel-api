@@ -204,9 +204,14 @@ public class Class {
                         logger.warn( idIRI+" is existing graph!");
                         return jerseyResponseManager.usedIRI();
                     } else {
-                        graphManager.updateResourceWithNewId(oldIdIRI,updateClass);
-                        provUUID = updateClass.getProvUUID();
-                        logger.info("Changed class id from:"+oldid+" to "+id);
+                        if(graphManager.modelStatusRestrictsRemoving(oldIdIRI)) {
+                            logger.warn( idIRI+" is existing graph!");
+                            return jerseyResponseManager.depedencies();
+                        } else {
+                            graphManager.updateResourceWithNewId(oldIdIRI, updateClass);
+                            provUUID = updateClass.getProvUUID();
+                            logger.info("Changed class id from:" + oldid + " to " + id);
+                        }
                     }
                 } else {
                     graphManager.updateResource(updateClass);

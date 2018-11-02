@@ -36,10 +36,18 @@ public class AuthorizationManager {
         return hasRightToAnyOrganization(model.getOrganizations());
     }
 
-    private boolean hasRightToAnyOrganization(Collection<UUID> organizations) {
+    public boolean hasRightToCreateNewVersion(AbstractModel model) {
+        return isAdminOfAnyOrganization(model.getOrganizations());
+    }
 
+    private boolean hasRightToAnyOrganization(Collection<UUID> organizations) {
         YtiUser user = getUser();
         return user.isSuperuser() || user.isInAnyRole(EnumSet.of(ADMIN, DATA_MODEL_EDITOR), organizations);
+    }
+
+    private boolean isAdminOfAnyOrganization(Collection<UUID> organizations) {
+        YtiUser user = getUser();
+        return user.isSuperuser() || user.isInAnyRole(EnumSet.of(ADMIN), organizations);
     }
 
     private YtiUser getUser() {

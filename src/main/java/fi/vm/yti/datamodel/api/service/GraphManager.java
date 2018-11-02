@@ -8,14 +8,7 @@ import fi.vm.yti.datamodel.api.model.AbstractModel;
 import fi.vm.yti.datamodel.api.model.AbstractResource;
 import fi.vm.yti.datamodel.api.utils.LDHelper;
 import org.apache.jena.atlas.web.HttpException;
-import org.apache.jena.query.DatasetAccessor;
-import org.apache.jena.query.DatasetAccessorFactory;
-import org.apache.jena.query.ParameterizedSparqlString;
-import org.apache.jena.query.Query;
-import org.apache.jena.query.QueryExecution;
-import org.apache.jena.query.QueryExecutionFactory;
-import org.apache.jena.query.QuerySolution;
-import org.apache.jena.query.ResultSet;
+import org.apache.jena.query.*;
 import org.apache.jena.rdf.model.*;
 import org.apache.jena.rdfconnection.RDFConnectionRemote;
 import org.apache.jena.system.Txn;
@@ -25,6 +18,9 @@ import java.util.Date;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import org.apache.jena.util.ResourceUtils;
+import org.apache.jena.web.DatasetAdapter;
+import org.apache.jena.web.DatasetGraphAccessorHTTP;
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.datatypes.xsd.XSDDateTime;
@@ -118,40 +114,6 @@ public class GraphManager {
             logger.warn( "Default graph test failed", ex);
             return false;
         }
-    }
-
-    /**
-     * Creates export graph by joining all the resources to one graph
-     * @param graph model IRI that is used to create export graph
-     */
-    public void constructExportGraph(String graph) {
-
-             String queryString = "CONSTRUCT { "
-                + "?model <http://purl.org/dc/terms/hasPart> ?resource . "    
-                + "?ms ?mp ?mo . "
-                + "?rs ?rp ?ro . "
-                + " } WHERE {"
-                + " GRAPH ?model {"
-                + "?ms ?mp ?mo . "
-                + "} OPTIONAL {"
-                + "GRAPH ?modelHasPartGraph { "
-                + " ?model <http://purl.org/dc/terms/hasPart> ?resource . "
-                + " } GRAPH ?resource { "
-                + "?rs ?rp ?ro . "
-                + "}"
-                + "}}"; 
-          
-        ParameterizedSparqlString pss = new ParameterizedSparqlString();
-        pss.setCommandText(queryString);
-        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
-        pss.setIri("model", graph);
-        pss.setIri("modelHasPartGraph", graph+"#HasPartGraph");
-
-        Query query = pss.asQuery();
-
-        Model exportModel = jenaClient.constructFromService(query.toString(), endpointServices.getCoreSparqlAddress());
-        jenaClient.putModelToCore(graph+"#ExportGraph", exportModel);
-
     }
 
     public void initServiceCategories() {
@@ -633,9 +595,7 @@ public class GraphManager {
         pss.setIri("newID", newID);
         pss.setIri("graph", modelID+"#PositionGraph");
         pss.setCommandText(query);
-
         logger.warn( "Updating references in "+modelID.toString()+"#PositionGraph");
-
         return pss.asUpdate();
     }
     
@@ -684,6 +644,26 @@ public class GraphManager {
 
     }
 
+    public void createNewHasPartGraphVersion(IRI oldID, IRI newID) {
+
+        String query =
+                  " INSERT { GRAPH ?newHasPartGraph { ?newID dcterms:hasPart ?graph .  }} "
+                + " WHERE { "
+                + "GRAPH ?hasPartGraph { ?oldID dcterms:hasPart ?graph . } }";
+
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+        pss.setIri("oldID", oldID);
+        pss.setIri("newID", newID);
+        pss.setIri("hasPartGraph", oldID.toString()+"#HasPartGraph");
+        pss.setIri("newHasPartGraph", newID.toString()+"#HasPartGraph");
+        pss.setCommandText(query);
+
+        UpdateRequest queryObj = pss.asUpdate();
+        UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, endpointServices.getCoreSparqlUpdateAddress());
+        qexec.execute();
+    }
+
     /**
      * Renames Resource IRI references in export graph
      * @param modelID Model IRI
@@ -695,8 +675,7 @@ public class GraphManager {
         String query
                 = " DELETE { GRAPH ?anyGraph { ?any ?predicate ?oldID }} "
                 + " INSERT { GRAPH ?anyGraph { ?any ?predicate ?newID }} "
-                + " WHERE { "
-                + "GRAPH ?anyGraph { ?any ?predicate ?oldID . }}";
+                + " WHERE { GRAPH ?anyGraph { ?any ?predicate ?oldID . }}";
 
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
@@ -711,6 +690,254 @@ public class GraphManager {
         qexec.execute();
 
     }
+
+    public void updateStatusAndProvInModel(IRI oldID, IRI newID) {
+        UpdateRequest queryObj = updateStatusAndProvInModelRequest(oldID, newID);
+        UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, endpointServices.getCoreSparqlUpdateAddress());
+        qexec.execute();
+    }
+
+    public static UpdateRequest updateStatusAndProvInModelRequest(IRI oldID, IRI newID) {
+        String query  =  "DELETE { GRAPH ?oldID { ?oldID owl:versionInfo ?status . } GRAPH ?newID { ?newID owl:versionInfo ?status . } }"
+                + "INSERT { GRAPH ?newID { ?newID owl:versionInfo 'DRAFT' . ?newID prov:wasRevisionOf ?oldID . } "
+                + "GRAPH ?oldID { ?oldID owl:versionInfo 'SUPERSEDED' . ?oldID prov:hadRevision ?newID . } }"
+                + " WHERE { GRAPH ?oldID { ?oldID owl:versionInfo ?status . } GRAPH ?newID { ?newID owl:versionInfo ?status . } }";
+
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+        pss.setIri("oldID", oldID);
+        pss.setIri("newID", newID);
+        pss.setCommandText(query);
+
+        logger.info( "Rewriting Resources in "+newID+ " to "+newID);
+
+        return pss.asUpdate();
+    }
+
+    public void renameObjectIRIinModel(IRI oldID, IRI newID) {
+        UpdateRequest queryObj = updateObjectIRIInGraph(oldID, newID);
+        UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, endpointServices.getCoreSparqlUpdateAddress());
+        qexec.execute();
+    }
+
+    public static UpdateRequest updateObjectIRIInGraph(IRI oldIRI, IRI newIRI) {
+        String query =
+                "DELETE { GRAPH ?newGraph { ?s ?p ?o1 . } } "+
+                        "INSERT { GRAPH ?newGraph { ?s ?p ?o2 . } } "+
+                        "WHERE { GRAPH ?newGraph { ?s ?p ?o1 .  "+
+                        "FILTER (strstarts(str(?o1), str(?oldIRI)) && isIRI(?o1)) "+
+                        "BIND (IRI(replace(str(?o1), str(?oldIRI), str(?newIRI)))  AS ?o2) } " +
+                        "}";
+
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+        pss.setIri("oldIRI", oldIRI);
+        pss.setIri("newIRI", newIRI);
+        pss.setIri("newGraph", newIRI);
+        pss.setCommandText(query);
+        logger.info( "Rewriting version objects from "+oldIRI+" to "+newIRI);
+        return pss.asUpdate();
+    }
+
+    public void changeNamespaceInObjects(IRI oldID, IRI newID) {
+        UpdateRequest queryObj = updateNamespaceInObject(oldID, newID);
+        UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, endpointServices.getCoreSparqlUpdateAddress());
+        qexec.execute();
+    }
+
+    public static UpdateRequest updateNamespaceInObject(IRI oldIRI, IRI newIRI) {
+        String query =
+                "DELETE { GRAPH ?newGraph { ?s ?p ?o1 . } } "+
+                "INSERT { GRAPH ?newGraph { ?s ?p ?o2 . } } "+
+                "WHERE { GRAPH ?newGraph { ?s ?p ?o1 .  "+
+                "FILTER (strstarts(str(?o1), str(?oldIRI)) && isIRI(?o1)) "+
+                "BIND (IRI(replace(str(?o1), str(?oldIRI), str(?newIRI)))  AS ?o2) } " +
+                "FILTER(strstarts(str(?newGraph),str(?newGraphIRI))) "+
+                "}";
+
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+        pss.setIri("oldIRI", oldIRI);
+        pss.setIri("newIRI", newIRI);
+        pss.setIri("newGraphIRI", newIRI+"#");
+        pss.setCommandText(query);
+        logger.info( "Rewriting resource objects in version graphs from "+oldIRI+ " to "+newIRI);
+        return pss.asUpdate();
+    }
+
+    public void changeNamespaceInResources(IRI oldID, IRI newID) {
+        UpdateRequest queryObj = renameResourcesInNewGraphsQuery(oldID, newID);
+        UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, endpointServices.getCoreSparqlUpdateAddress());
+        qexec.execute();
+    }
+
+    public static UpdateRequest renameResourcesInNewGraphsQuery(IRI oldIRI, IRI newIRI) {
+        String query =
+                "DELETE { GRAPH ?newGraph { ?s1 ?p ?o . } }"+
+                        "INSERT { GRAPH ?newGraph { ?s2 ?p ?o . } }"+
+                        "WHERE { GRAPH ?newGraph { ?s1 ?p ?o . " +
+                        "FILTER (strstarts(str(?s1), str(?oldIRI))) "+
+                        "BIND (IRI(replace(str(?s1), str(?oldIRI), str(?newIRI))) AS ?s2) }"+
+                        "FILTER(strstarts(str(?newGraph),str(?newIRI))) "+
+                        "}";
+
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+        pss.setIri("oldIRI", oldIRI+"#");
+        pss.setIri("newIRI", newIRI+"#");
+        pss.setCommandText(query);
+        logger.info( "Rewriting "+oldIRI+ " to "+newIRI);
+        return pss.asUpdate();
+    }
+
+    public void changeStatusInNewGraphs(IRI oldID, IRI newID) {
+        UpdateRequest queryObj = changeStatusInNewGraphsQuery(oldID, newID);
+        UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, endpointServices.getCoreSparqlUpdateAddress());
+        qexec.execute();
+    }
+
+    public static UpdateRequest changeStatusInNewGraphsQuery(IRI oldIRI, IRI newIRI) {
+        String query =
+                "DELETE { GRAPH ?s2 { ?s2 owl:versionInfo ?status . } GRAPH ?s1 { ?s1 owl:versionInfo ?status . } }"+
+                        "INSERT { GRAPH ?s2 { ?s2 owl:versionInfo 'DRAFT' . ?s2 prov:wasRevisionOf ?s1 . } "+
+                        "GRAPH ?s1 { ?s1 owl:versionInfo 'SUPERSEDED' . ?s1 prov:hadRevision ?s2 . } }"+
+                        "WHERE { " +
+                        "GRAPH ?s1 { ?s1 owl:versionInfo ?status . }"+
+                        "FILTER (strstarts(str(?s1), str(?oldIRI))) "+
+                        "BIND (IRI(replace(str(?s1), str(?oldIRI), str(?newIRI))) AS ?s2) "+
+                        "GRAPH ?s2 { ?s2 owl:versionInfo ?status . }  "+
+                        "}";
+
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+        pss.setIri("oldIRI", oldIRI+"#");
+        pss.setIri("newIRI", newIRI+"#");
+        pss.setCommandText(query);
+        logger.info( "Rewriting "+oldIRI+ " to "+newIRI);
+        return pss.asUpdate();
+    }
+
+    /**
+     * Copies graph
+     */
+    public void copyGraph(String from, String to) {
+        String query = "COPY SILENT ?from TO ?to ";
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        pss.setIri("from", from);
+        pss.setIri("to", to);
+        pss.setCommandText(query);
+        UpdateRequest queryObj = pss.asUpdate();
+        UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, endpointServices.getCoreSparqlUpdateAddress());
+        qexec.execute();
+    }
+
+
+    /**
+        NOT WORKING WITH FUSEKI 2.3.0
+     **/
+    public UpdateRequest getCreateVersionGraphsRequest(IRI model, IRI newModel) {
+
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        String selectResources = "SELECT ?graph WHERE { GRAPH ?hasPartGraph { ?model dcterms:hasPart ?graph . } GRAPH ?graph { ?graph rdfs:isDefinedBy ?model . }}";
+
+        pss.setIri("model", model);
+        pss.setIri("hasPartGraph",model+"#HasPartGraph");
+        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+        pss.setCommandText(selectResources);
+
+        ResultSet results = jenaClient.selectQuery(endpointServices.getCoreSparqlAddress(), pss.asQuery());
+
+        String query = "COPY SILENT <" + model.toString() + "> TO <" + newModel.toString() +"> ; ";
+
+        while (results.hasNext()) {
+            QuerySolution soln = results.nextSolution();
+            String oldGraph = soln.getResource("graph").toString();
+            String newGraph = oldGraph.replace(model.toString()+"#", newModel.toString()+"#");
+            query += "COPY SILENT <" + oldGraph + "> TO <" + newGraph +">; ";
+        }
+
+        ParameterizedSparqlString copyPss = new ParameterizedSparqlString();
+        copyPss.setCommandText(query);
+        logger.info( "Copying graphs starting with "+model.toString()+ " to "+newModel.toString());
+        return copyPss.asUpdate();
+    }
+
+    public void createVersionGraphsWithJenaAdapter(String newPrefix, IRI model, IRI newModel) {
+
+        DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(endpointServices.getCoreReadWriteAddress());
+        DatasetAdapter adapter = new DatasetAdapter(accessor);
+
+        Model oldModelGraph = adapter.getModel(model.toString());
+        ResourceUtils.renameResource(oldModelGraph.getResource(model.toString()),newModel.toString());
+        oldModelGraph.setNsPrefix(newPrefix, newModel.toString()+"#");
+        adapter.putModel(newModel.toString(),oldModelGraph);
+
+        Model oldHasPartGraph = adapter.getModel(model.toString()+"#HasPartGraph");
+        ResourceUtils.renameResource(oldHasPartGraph.getResource(model.toString()),newModel.toString());
+
+        Model oldPositionGraph = adapter.getModel(model.toString()+"#PositionGraph");
+        ResIterator positionResources = oldPositionGraph.listSubjects();
+        while(positionResources.hasNext()) {
+            Resource posRes = positionResources.next();
+            if(!posRes.isAnon()) {
+                String posResId = posRes.getURI();
+                if (posResId.startsWith(model.toString() + "#")) {
+                    String newPosId = posResId.replace(model.toString() + "#", newModel.toString() + "#");
+                    ResourceUtils.renameResource(posRes, newPosId);
+                }
+            }
+        }
+        adapter.putModel(newModel.toString()+"#PositionGraph",oldPositionGraph);
+
+        NodeIterator hasPartObjects = oldHasPartGraph.listObjectsOfProperty(DCTerms.hasPart);
+
+        while (hasPartObjects.hasNext()) {
+            Resource hasPartResource = hasPartObjects.next().asResource();
+            String oldGraph = hasPartResource.getURI();
+            if(oldGraph.startsWith(model.toString()+"#")) {
+                String newGraph = oldGraph.replace(model.toString() + "#", newModel.toString() + "#");
+                logger.info("Creating version from " + oldGraph + " to " + newGraph);
+                Model oldResourceGraph = adapter.getModel(oldGraph);
+                if(oldResourceGraph!=null) { // FIXME: References to removed resources?!?
+                    Resource oldResource = oldResourceGraph.getResource(oldGraph);
+                    ResourceUtils.renameResource(oldResource, newGraph);
+                    oldResourceGraph.setNsPrefix(newPrefix, newModel.toString() + "#");
+                    adapter.putModel(newGraph, oldResourceGraph);
+                    ResourceUtils.renameResource(hasPartResource, newGraph);
+                }
+            }
+        }
+
+        adapter.putModel(newModel.toString()+"#HasPartGraph", oldHasPartGraph);
+
+    }
+
+    public void newModelVersion(String newPrefix, IRI oldID, IRI newID) {
+        createVersionGraphsWithJenaAdapter(newPrefix, oldID,newID);
+    }
+
+    public void changePrefixAndNamespaceFromModelCopy(IRI newID, String newPrefix) {
+        UpdateRequest queryObj = changePrefixAndNamespaceFromModelCopyQuery(newID, newPrefix);
+        UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, endpointServices.getCoreSparqlUpdateAddress());
+        qexec.execute();
+    }
+
+    public static UpdateRequest changePrefixAndNamespaceFromModelCopyQuery(IRI newIRI, String newPrefix) {
+        String query =
+                        "DELETE { GRAPH ?newIRI { ?newIRI owl:versionInfo ?status . ?newIRI dcap:preferredXMLNamespaceName ?oldNamespace .  ?newIRI dcap:preferredXMLNamespacePrefix ?oldPrefix . } }"+
+                        "INSERT { GRAPH ?newIRI { ?newIRI owl:versionInfo 'DRAFT' . ?newIRI dcap:preferredXMLNamespaceName ?newNamespace .  ?newIRI dcap:preferredXMLNamespacePrefix ?newPrefix . } }"+
+                        "WHERE { GRAPH ?newIRI { ?newIRI owl:versionInfo ?status . ?newIRI dcap:preferredXMLNamespaceName ?oldNamespace .  ?newIRI dcap:preferredXMLNamespacePrefix ?oldPrefix . } }";
+
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+        pss.setIri("newIRI", newIRI);
+        pss.setLiteral( "newNamespace", newIRI.toString()+"#");
+        pss.setLiteral( "newPrefix", newPrefix);
+        pss.setCommandText(query);
+        logger.info("Rewriting namespace and prefix for "+newPrefix);
+        return pss.asUpdate();
+    }
+
 
     public UpdateRequest insertNewGraphReferenceToModelRequest(String graph, String model ) {
         Literal timestamp = LDHelper.getDateTimeLiteral();
@@ -795,20 +1022,32 @@ public class GraphManager {
         return pss.asUpdate();
     }
 
-
     /**
      * Add existing Resource to the model as Resource reference. Inserts only the reference to models HasPartGraph.
      * @param graph Resource IRI as String
      * @param model Model IRI as String
      */
     public void insertExistingGraphReferenceToModel(String graph, String model) {
-
         UpdateRequest queryObj = insertExistingGraphReferenceToModelRequest(graph, model);
         UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, endpointServices.getCoreSparqlUpdateAddress());
         qexec.execute();
-
     }
 
+    public void deleteGraphReferenceFromModel(IRI graph, IRI model) {
+        deleteGraphReferenceFromModel(graph.toString(), model.toString());
+    }
+
+    /**
+     * Removes Resource-graph reference from models HasPartGraph
+     * @param graph Resource IRI reference to be removed
+     * @param model Model IRI
+     */
+
+    public void deleteGraphReferenceFromModel(String graph, String model) {
+        UpdateRequest queryObj = deleteGraphReferenceFromModelRequest(graph, model);
+        UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, endpointServices.getCoreSparqlUpdateAddress());
+        qexec.execute();
+    }
 
     public UpdateRequest deleteGraphReferenceFromModelRequest(String graph, String model) {
         String query
@@ -829,24 +1068,6 @@ public class GraphManager {
 
         return pss.asUpdate();
     }
-
-    public void deleteGraphReferenceFromModel(IRI graph, IRI model) {
-        deleteGraphReferenceFromModel(graph.toString(), model.toString());
-    }
-
-    /**
-     * Removes Resource-graph reference from models HasPartGraph
-     * @param graph Resource IRI reference to be removed
-     * @param model Model IRI
-     */
-    public void deleteGraphReferenceFromModel(String graph, String model) {
-
-        UpdateRequest queryObj = deleteGraphReferenceFromModelRequest(graph, model);
-        UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, endpointServices.getCoreSparqlUpdateAddress());
-        qexec.execute();
-
-    }
-
 
     public void deleteGraphReferenceFromExportModel(IRI graph, IRI model) {
         deleteGraphReferenceFromExportModel(graph.toString(), model.toString());
@@ -1026,7 +1247,7 @@ public class GraphManager {
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
         pss.setCommandText(selectResources);
         pss.setIri("graph",graphName);
-        pss.setIri("exportGraph",graphName+"#ExportGraph");
+        pss.setIri("exportGraph",graphName);
 
             ResultSet results = jenaClient.selectQuery(endpointServices.getCoreSparqlAddress(), pss.asQuery());
 
@@ -1070,8 +1291,8 @@ public class GraphManager {
     public void updateResourceWithNewId(IRI oldIdIRI, AbstractResource resource) {
         updateResource(resource.getModelId(), resource.getId(), jenaClient.getModelFromCore(oldIdIRI.toString()), resource.asGraph());
         removeGraph(oldIdIRI);
-        renameID(oldIdIRI,resource.getIRI());
-        updateResourceReferencesInModel(resource.getModelIRI(), oldIdIRI, resource.getIRI());
+        //renameID(oldIdIRI,resource.getIRI());
+        //updateResourceReferencesInModel(resource.getModelIRI(), oldIdIRI, resource.getIRI());
         updateResourceReferencesInAllGraphs(resource.getModelIRI(), oldIdIRI, resource.getIRI());
         updateReferencesInPositionGraph(resource.getModelIRI(), oldIdIRI, resource.getIRI());
         frameManager.cleanCachedFrames();

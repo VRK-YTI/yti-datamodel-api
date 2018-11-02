@@ -46,22 +46,19 @@ public class JerseyClient {
     private final JerseyResponseManager jerseyResponseManager;
     private final ModelManager modelManager;
     private final ClientFactory clientFactory;
-    private final FrameManager frameManager;
 
     JerseyClient(JenaClient jenaClient,
                  EndpointServices endpointServices,
                  ApplicationProperties properties,
                  JerseyResponseManager jerseyResponseManager,
                  ModelManager modelManager,
-                 ClientFactory clientFactory,
-                 FrameManager frameManager) {
+                 ClientFactory clientFactory) {
         this.jenaClient = jenaClient;
         this.endpointServices = endpointServices;
         this.properties = properties;
         this.jerseyResponseManager = jerseyResponseManager;
         this.modelManager = modelManager;
         this.clientFactory = clientFactory;
-        this.frameManager = frameManager;
     }
 
     public Response getResponseFromURL(String url, String accept) {
