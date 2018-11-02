@@ -1247,7 +1247,8 @@ public class GraphManager {
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
         pss.setCommandText(selectResources);
         pss.setIri("graph",graphName);
-        pss.setIri("exportGraph",graphName);
+        // TODO: Remove #ExportGraph when creating it dynamically
+        pss.setIri("exportGraph",graphName+"#ExportGraph");
 
             ResultSet results = jenaClient.selectQuery(endpointServices.getCoreSparqlAddress(), pss.asQuery());
 
