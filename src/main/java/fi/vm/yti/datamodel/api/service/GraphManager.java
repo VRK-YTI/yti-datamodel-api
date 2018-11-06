@@ -692,15 +692,15 @@ public class GraphManager {
     }
 
     public void updateStatusAndProvInModel(IRI oldID, IRI newID) {
-        UpdateRequest queryObj = updateStatusAndProvInModelRequest(oldID, newID);
+        UpdateRequest queryObj = updateStatusAndRevisionInModelRequest(oldID, newID);
         UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, endpointServices.getCoreSparqlUpdateAddress());
         qexec.execute();
     }
 
-    public static UpdateRequest updateStatusAndProvInModelRequest(IRI oldID, IRI newID) {
-        String query  =  "DELETE { GRAPH ?oldID { ?oldID owl:versionInfo ?status . } GRAPH ?newID { ?newID owl:versionInfo ?status . } }"
+    public static UpdateRequest updateStatusAndRevisionInModelRequest(IRI oldID, IRI newID) {
+        String query  =  "DELETE { GRAPH ?newID { ?newID owl:versionInfo ?status . } }"
                 + "INSERT { GRAPH ?newID { ?newID owl:versionInfo 'DRAFT' . ?newID prov:wasRevisionOf ?oldID . } "
-                + "GRAPH ?oldID { ?oldID owl:versionInfo 'SUPERSEDED' . ?oldID prov:hadRevision ?newID . } }"
+                + "GRAPH ?oldID { ?oldID prov:hadRevision ?newID . } }"
                 + " WHERE { GRAPH ?oldID { ?oldID owl:versionInfo ?status . } GRAPH ?newID { ?newID owl:versionInfo ?status . } }";
 
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
@@ -708,8 +708,29 @@ public class GraphManager {
         pss.setIri("oldID", oldID);
         pss.setIri("newID", newID);
         pss.setCommandText(query);
+        logger.info( "Writing status and revision");
 
-        logger.info( "Rewriting Resources in "+newID+ " to "+newID);
+        return pss.asUpdate();
+    }
+
+    public void updateStatusAndDerivationInModel(IRI oldID, IRI newID) {
+        UpdateRequest queryObj = updateStatusAndDerivationInModelRequest(oldID, newID);
+        UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, endpointServices.getCoreSparqlUpdateAddress());
+        qexec.execute();
+    }
+
+    public static UpdateRequest updateStatusAndDerivationInModelRequest(IRI oldID, IRI newID) {
+        String query  =  "DELETE { GRAPH ?newID { ?newID owl:versionInfo ?status . } }"
+                + "INSERT { GRAPH ?newID { ?newID owl:versionInfo 'DRAFT' . ?newID prov:wasDerivedFrom ?oldID . } "
+                + "GRAPH ?oldID { ?oldID prov:hadDerivation ?newID . } }"
+                + " WHERE { GRAPH ?oldID { ?oldID owl:versionInfo ?status . } GRAPH ?newID { ?newID owl:versionInfo ?status . } }";
+
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+        pss.setIri("oldID", oldID);
+        pss.setIri("newID", newID);
+        pss.setCommandText(query);
+        logger.info("Writing status and derivation");
 
         return pss.asUpdate();
     }

@@ -230,7 +230,7 @@ public class QueryLibrary {
 
     final public static String fullModelsByGroupQuery = LDHelper.expandSparqlQuery(true,
             "CONSTRUCT { "
-                    + "?graph owl:versionInfo ?versionInfo . "
+                    + "?graphName owl:versionInfo ?versionInfo . "
                     + "?graphName rdfs:label ?label . "
                     + "?graphName rdfs:comment ?comment . "
                     + "?graphName a ?type . "
@@ -252,7 +252,7 @@ public class QueryLibrary {
                     + "?group skos:prefLabel ?groupLabel . "
                     + "}"
                     + "GRAPH ?graphName { "
-                    + " ?graph owl:versionInfo ?versionInfo . "
+                    + "?graphName owl:versionInfo ?versionInfo . "
                     + "?graphName dcterms:isPartOf ?group . "
                     + "?graphName a ?type . "
                     + "?graphName rdfs:label ?label . "
@@ -271,6 +271,7 @@ public class QueryLibrary {
     final public static String listClassesQuery = LDHelper.expandSparqlQuery(
                     "CONSTRUCT { "
                     + "?class sh:name ?label . "
+                    + "?class owl:versionInfo ?versionInfo . "
                     + "?class sh:description ?description . "
                     + "?class a ?type . "
                     + "?class dcterms:modified ?modified . "
@@ -283,6 +284,7 @@ public class QueryLibrary {
                     + "GRAPH ?class { "
                     + "?class dcterms:modified ?modified . "
                     + "?class sh:name ?label . "
+                    + "?class owl:versionInfo ?versionInfo . "
                     + "OPTIONAL { ?class sh:description ?description . } "
                     + "?class a ?type . "
                     + "VALUES ?type { rdfs:Class sh:NodeShape } "
@@ -328,6 +330,7 @@ public class QueryLibrary {
      final public static String listPredicatesQuery = LDHelper.expandSparqlQuery(
              "CONSTRUCT { "
                 + "?property rdfs:label ?label . "
+                + "?property owl:versionInfo ?versionInfo . "
                 + "?property rdfs:comment ?description . "
                 + "?property a ?type . "
                 + "?property rdfs:isDefinedBy ?source . "
@@ -338,6 +341,7 @@ public class QueryLibrary {
                 + "GRAPH ?hasPartGraph { "
                 + "?library dcterms:hasPart ?property . } "
                 + "GRAPH ?property { ?property rdfs:label ?label . "
+                    + "?property owl:versionInfo ?versionInfo . "
                     + "OPTIONAL { ?property rdfs:comment ?description . } "
                     + "VALUES ?type { owl:ObjectProperty owl:DatatypeProperty } "
                     + "?property a ?type . "
