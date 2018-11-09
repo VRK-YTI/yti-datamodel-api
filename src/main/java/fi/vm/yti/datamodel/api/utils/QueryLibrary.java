@@ -8,7 +8,55 @@ package fi.vm.yti.datamodel.api.utils;
  * @author malonen
  */
 public class QueryLibrary {
-    
+
+
+    final public static String listContainersByPreflabelQuery =
+            "SELECT ?uri ?prefLabel ?description ?status ?modified WHERE {"+
+                    "GRAPH ?uri { ?uri a owl:Ontology . " +
+                    "?uri rdfs:label ?prefLabel . " +
+                    "OPTIONAL { ?uri rdfs:label ?prefLabelLang . FILTER( lang(?prefLabelLang) = ?language ) }"+
+                    "?uri owl:versionInfo ?status . " +
+                    "VALUES ?status {?statusList}"+
+                    "OPTIONAL{?uri rdfs:comment ?description . }"+
+                    "?uri dcterms:modified ?modified . "+
+                    "}} ORDER BY (!bound(?prefLabelLang)) ?prefLabelLang";
+
+    final public static String listContainersByModifiedQuery =
+            "SELECT ?uri ?prefLabel ?description ?status ?modified WHERE {"+
+                    "GRAPH ?uri { ?uri a owl:Ontology . " +
+                    "?uri rdfs:label ?prefLabel . " +
+                    "?uri owl:versionInfo ?status . " +
+                    "VALUES ?status {?statusList}"+
+                    "OPTIONAL{?uri rdfs:comment ?description . }"+
+                    "?uri dcterms:modified ?modified . "+
+                    "}} ORDER BY DESC(?modified)";
+
+    final public static String listResourcesByPreflabelQuery =
+            "SELECT ?uri ?prefLabel ?description ?status ?modified WHERE {"+
+                    "GRAPH ?uri { ?uri a ?classType . " +
+                    "VALUES ?classType { rdfs:Class sh:Shape sh:NodeShape } "+
+                    "?uri rdfs:isDefinedBy ?model . "+
+                    "?uri sh:name ?prefLabel . " +
+                    "OPTIONAL { ?uri rdfs:label ?prefLabelLang . FILTER( lang(?prefLabelLang) = ?language ) }"+
+                    "?uri owl:versionInfo ?status . " +
+                    "VALUES ?status {?statusList}"+
+                    "OPTIONAL{?uri sh:description ?description . }"+
+                    "?uri dcterms:modified ?modified . "+
+                    "}} ORDER BY (!bound(?prefLabelLang)) ?prefLabelLang";
+
+    final public static String listResourcesByModifiedQuery =
+            "SELECT ?uri ?prefLabel ?description ?status ?modified WHERE {"+
+                    "GRAPH ?uri { ?uri a ?classType . " +
+                    "VALUES ?classType { rdfs:Class sh:Shape sh:NodeShape } "+
+                    "?uri rdfs:isDefinedBy ?model . "+
+                    "?uri sh:name ?prefLabel . " +
+                    "?uri owl:versionInfo ?status . " +
+                    "VALUES ?status {?statusList}"+
+                    "OPTIONAL{?uri sh:description ?description . }"+
+                    "?uri dcterms:modified ?modified . "+
+                    "}} ORDER BY DESC(?modified)";
+
+
         final public static String provModelQuery = 
                 "CONSTRUCT {"
                 + "?every ?darn ?thing . }"
@@ -16,7 +64,6 @@ public class QueryLibrary {
                 + "GRAPH ?graph {"
                 + " ?every ?darn ?thing . }"
                 + "}";
-
 
     final public static String listClassInRows =
             "SELECT DISTINCT ?mlabel ?label ?plabel WHERE {" +
@@ -409,7 +456,7 @@ public class QueryLibrary {
                     + "?classIRI a ?type . "
                     + "FILTER(STRSTARTS(STR(?classIRI), STR(?externalModel)))"
                     + "VALUES ?type { rdfs:Class owl:Class sh:NodeShape } "
-                    /* Get class label */
+                     /* Get class label */
                      + "{?classIRI ?labelProp ?labelStr . FILTER(LANG(?labelStr) = '') BIND(STRLANG(?labelStr,'en') as ?label) "
                      + "VALUES ?labelProp { rdfs:label sh:name } }"
                      + "UNION"
@@ -426,7 +473,8 @@ public class QueryLibrary {
                     
                     + "OPTIONAL { "
                     + "?classIRI rdfs:subClassOf* ?superclass . "
-                    + "?predicate rdfs:domain ?superclass . "
+                    + "?predicate ?domainProperty ?superclass . "
+                    + "VALUES ?domainProperty { rdfs:domain schema:domainIncludes }"
                     + "BIND(UUID() AS ?property)"
                     + "{"
                     + "?predicate a owl:DatatypeProperty . "
@@ -444,10 +492,10 @@ public class QueryLibrary {
                     + "BIND(owl:DatatypeProperty as ?propertyType) "
                     + "} UNION {"
                     /* TODO: Add all XSD types? */
-                    + "VALUES ?literalValue { rdfs:Literal xsd:String }"
-                    /* IF Predicate Type is rdf:Property and range is rdfs:Literal = DatatypeProperty */
+                    + "VALUES ?literalValue { rdfs:Literal xsd:String xsd:string xsd:boolean xsd:decimal xsd:float xsd:double xsd:dateTime xsd:time xsd:date xsd:gYearMonth xsd:gYear xsd:gMonthDay xsd:gDay xsd:gMonth xsd:hexBinary xsd:base64Binary xsd:normalizedString xsd:integer xsd:nonPositiveInteger xsd:negativeInteger xsd:long xsd:int xsd:short xsd:byte xsd:nonNegativeInteger xsd:unsignedLong xsd:unsignedInt xsd:unsignedShort xsd:unsignedByte xsd:positiveInteger }"
+                     /* IF Predicate Type is rdf:Property and range is rdfs:Literal = DatatypeProperty */
                     + "?predicate a rdf:Property . "
-                    + "?predicate rdfs:range ?literalValue ."
+                    + "?predicate ?rangeType ?literalValue ."
                     + "BIND(owl:DatatypeProperty as ?propertyType) "
                     + "FILTER NOT EXISTS { ?predicate a ?multiType . VALUES ?multiType { owl:DatatypeProperty owl:ObjectProperty } }"
                      + "} UNION {"
@@ -466,8 +514,8 @@ public class QueryLibrary {
                     + "VALUES ?rangeClassType { skos:Concept owl:Thing }"
                     + "BIND(owl:ObjectProperty as ?propertyType) "
                     + "}"
-                    
-                    + "OPTIONAL { ?predicate a owl:DatatypeProperty . ?predicate rdfs:range ?datatype . FILTER (!isBlank(?datatype))  } "
+
+                    + "OPTIONAL { ?predicate a owl:DatatypeProperty . VALUES ?rangeType { rdfs:range schema:rangeIncludes } ?predicate ?rangeType ?datatype . FILTER (!isBlank(?datatype))  } "
                     + "OPTIONAL { ?predicate a owl:ObjectProperty . ?predicate rdfs:range ?valueClass . FILTER (!isBlank(?valueClass)) } "
 
                     /* Predicate label - if lang unknown create english tag */
@@ -665,8 +713,9 @@ public class QueryLibrary {
                             
                     + "OPTIONAL { "
                     + "?classIRI rdfs:subClassOf* ?superclass . "
-                    + "?predicate rdfs:domain ?superclass .  "
-                    + "BIND(UUID() AS ?property)"   
+                    + "?predicate ?domainProperty ?superclass . "
+                    + "VALUES ?domainProperty { rdfs:domain schema:domainIncludes }"
+                    + "BIND(UUID() AS ?property)"
                             
                     /* Types of properties */        
                     + "{"
@@ -683,8 +732,10 @@ public class QueryLibrary {
                     + "FILTER NOT EXISTS { ?predicate a owl:DatatypeProperty }"
                     + "BIND(owl:DatatypeProperty as ?propertyType) "
                     + "} UNION {"
+                    + "VALUES ?literalValue { rdfs:Literal xsd:String xsd:string xsd:boolean xsd:decimal xsd:float xsd:double xsd:dateTime xsd:time xsd:date xsd:gYearMonth xsd:gYear xsd:gMonthDay xsd:gDay xsd:gMonth xsd:hexBinary xsd:base64Binary xsd:normalizedString xsd:integer xsd:nonPositiveInteger xsd:negativeInteger xsd:long xsd:int xsd:short xsd:byte xsd:nonNegativeInteger xsd:unsignedLong xsd:unsignedInt xsd:unsignedShort xsd:unsignedByte xsd:positiveInteger }"
                     + "?predicate a rdf:Property . "
-                    + "?predicate rdfs:range rdfs:Literal ."
+                    + "?predicate ?rangeType ?literalValue ."
+                    + "BIND(?literalValue as ?datatype) "
                     + "BIND(owl:DatatypeProperty as ?propertyType) "
                     + "FILTER NOT EXISTS { ?predicate a ?multiType . VALUES ?multiType { owl:DatatypeProperty owl:ObjectProperty } }"
                      + "} UNION {"
@@ -702,7 +753,7 @@ public class QueryLibrary {
                     + "BIND(owl:ObjectProperty as ?propertyType) "
                     + "}"
 
-                    + "OPTIONAL { ?predicate a owl:DatatypeProperty . ?predicate rdfs:range ?datatype . FILTER (!isBlank(?datatype))  } "
+                    + "OPTIONAL { ?predicate a owl:DatatypeProperty . VALUES ?rangeType { rdfs:range schema:rangeIncludes } ?predicate ?rangeType ?datatype . FILTER (!isBlank(?datatype))  } "
                     + "OPTIONAL { ?predicate a owl:ObjectProperty . ?predicate rdfs:range ?valueClass . FILTER (!isBlank(?valueClass)) } "
 
                     /* GET PROPERTY LABEL */

@@ -12,8 +12,7 @@ import fi.vm.yti.datamodel.api.config.ApplicationProperties;
 import fi.vm.yti.datamodel.api.utils.Frames;
 import fi.vm.yti.datamodel.api.utils.LDHelper;
 import org.apache.jena.atlas.web.ContentType;
-import org.apache.jena.query.Dataset;
-import org.apache.jena.query.DatasetFactory;
+import org.apache.jena.query.*;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.RDFReader;
@@ -600,6 +599,43 @@ public class JerseyClient {
 
     }
 
+    public void setNamespacesToModel(Model namespaceModel) {
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        String selectResources = "SELECT DISTINCT ?ns ?prefix WHERE {"
+                + "GRAPH ?g { "
+                + "?g a owl:Ontology . "
+                + "?g dcap:preferredXMLNamespaceName ?ns . "
+                + "?g dcap:preferredXMLNamespacePrefix ?prefix . }}";
+
+        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+        pss.setCommandText(selectResources);
+
+        ResultSet results = jenaClient.selectQuery(endpointServices.getCoreSparqlAddress(), pss.asQuery());
+
+        while (results.hasNext()) {
+            QuerySolution soln = results.nextSolution();
+            String namespace = soln.getLiteral("ns").getString();
+            String prefix = soln.getLiteral("prefix").getString();
+            namespaceModel.setNsPrefix(prefix,namespace);
+        }
+    }
+
+    public Response constructGraphFromServiceWithNamespaces(String query, String service)  {
+
+        Model constructModel = jenaClient.constructFromService(query, service);
+        setNamespacesToModel(constructModel);
+
+        if(constructModel.size()<=0) {
+            ResponseBuilder rb = Response.ok().type("application/ld+json");
+            rb.entity(modelManager.writeModelToJSONLDString(constructModel));
+            return rb.build();
+        }
+
+        ResponseBuilder rb = Response.ok();
+        String responseString = modelManager.writeModelToJSONLDString(constructModel);
+        rb.entity(responseString);
+        return rb.build();
+    }
 
     public Response constructGraphFromService(String query, String service) {
 

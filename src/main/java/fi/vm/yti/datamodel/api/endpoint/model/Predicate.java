@@ -96,7 +96,7 @@ public class Predicate {
 
             pss.setCommandText(queryString);
 
-            return jerseyClient.constructGraphFromService(pss.toString(), endpointServices.getCoreSparqlAddress());
+            return jerseyClient.constructGraphFromServiceWithNamespaces(pss.toString(), endpointServices.getCoreSparqlAddress());
 
         } else {
 

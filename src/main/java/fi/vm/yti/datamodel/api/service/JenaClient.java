@@ -1,8 +1,12 @@
 package fi.vm.yti.datamodel.api.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.jena.query.*;
+import org.apache.jena.rdf.model.Literal;
 import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdfconnection.RDFConnectionRemote;
+import org.apache.jena.sparql.resultset.ResultSetPeekable;
 import org.apache.jena.update.UpdateExecutionFactory;
 import org.apache.jena.update.UpdateProcessor;
 import org.apache.jena.update.UpdateRequest;
@@ -11,7 +15,10 @@ import org.springframework.stereotype.Service;
 
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 
+import javax.json.*;
+import javax.json.stream.JsonParser;
 import java.io.ByteArrayOutputStream;
+import java.util.*;
 
 @Service
 public final class JenaClient {
@@ -141,6 +148,71 @@ public final class JenaClient {
         try(QueryExecution qexec = QueryExecutionFactory.sparqlService(service, query)) {
             // ResultSet needs to be copied in order to use it after the connection is closed
             return ResultSetFactory.copyResults(qexec.execSelect()) ;
+        }
+    }
+
+    /**
+     * Returns JSON object from given sparql query. First param of the sparql query is considered to be the URI.
+     * Reads only localized literals to JSON object. Other duplicate literal values are not stored to result JSON.
+     * @param service URI for the sparql service
+     * @param query Sparql query
+     * @return JSON string
+     */
+
+    public String selectJson(String service, Query query) {
+        logger.debug("Select json "+service);
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        try(QueryExecution qexec = QueryExecutionFactory.sparqlService(service, query)) {
+            ResultSetPeekable results = ResultSetFactory.makePeekable(qexec.execSelect());
+            List<String> resultVars = results.getResultVars();
+            String idVar = resultVars.get(0);
+            List<Map> hashArray = new ArrayList<>();
+            Map objectMap = new HashMap<String, Object>();
+
+            while(results.hasNext()) {
+                QuerySolution soln = results.next();
+                Iterator<String> currentVars = soln.varNames();
+                String currentId = soln.get(idVar).toString();
+                while (currentVars.hasNext()) {
+                    String currentVar = currentVars.next();
+                    RDFNode node = soln.get(currentVar);
+                    if (node.isLiteral()) {
+                        Literal lit = node.asLiteral();
+                        if(lit.getString().length()>0) {
+                            String litLang = lit.getLanguage();
+                            if (litLang != null && litLang.length() > 0) {
+                                Map literalMap;
+                                if(objectMap.containsKey(currentVar)) {
+                                    literalMap = (Map)objectMap.get(currentVar);
+                                } else {
+                                    literalMap = new HashMap<String, String>();
+                                }
+                                literalMap.put(litLang, lit.getString());
+                                objectMap.put(currentVar, literalMap);
+                            } else {
+                                objectMap.put(currentVar, lit.getString());
+                            }
+                        }
+                    } else {
+                        objectMap.put(currentVar, node.toString());
+                    }
+                }
+
+                if(results.hasNext() && !results.peek().get(idVar).toString().equals(currentId)) {
+                    hashArray.add(objectMap);
+                    objectMap = new HashMap<String,Object>();
+                }
+
+            }
+
+            ObjectMapper mapper = new ObjectMapper();
+            try {
+                return mapper.writeValueAsString(hashArray);
+            } catch(Exception ex) {
+                ex.printStackTrace();
+                return null;
+            }
+
         }
     }
 
