@@ -222,11 +222,15 @@ public final class JenaClient {
                         objectMap.put(currentVar, node.toString());
                     }
                 }
-                if(results.hasNext() && !results.peek().get(idVar).toString().equals(currentId)) {
+                if(!results.hasNext()){
+                    // Add hash to array
+                    hashArray.add(objectMap);
+                } else if(!results.peek().get(idVar).toString().equals(currentId)) {
                     // TODO: Peekable results could be changed to check from single hash index
+                    // If following row is using different id create new hash
                     hashArray.add(objectMap);
                     objectMap = new HashMap<String,Object>();
-                }
+                } // Else continue adding to same hash
             }
 
             ObjectMapper mapper = new ObjectMapper();
