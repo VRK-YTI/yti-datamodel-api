@@ -472,13 +472,13 @@ public final class NamespaceManager {
 
                     connection = (HttpURLConnection) url.openConnection();
                     // 2,5 seconds
-                    connection.setConnectTimeout(4000);
+                    connection.setConnectTimeout(8000);
                     // 2,5 minutes
                     connection.setReadTimeout(30000);
                     connection.setInstanceFollowRedirects(true);
                     //,text/rdf+n3,application/turtle,application/rdf+n3
                     //"application/rdf+xml,application/xml,text/html");
-                    connection.setRequestProperty("Accept","application/rdf+xml,application/turtle;q=0.8,application/x-turtle;q=0.8,text/turtle;q=0.8,text/rdf+n3;q=0.5,application/n3;q=0.5,text/n3;q=0.5");
+                    connection.setRequestProperty("Accept","application/rdf+xml;q=1,application/turtle;q=0.8,application/x-turtle;q=0.8,text/turtle;q=0.8,text/rdf+n3;q=0.5,application/n3;q=0.5,text/n3;q=0.5");
 
                     try { // SocketTimeOut
 
@@ -489,8 +489,19 @@ public final class NamespaceManager {
                         try {
                             stream = connection.getInputStream();
                         }  catch (IOException e) {
-                            logger.warn("Couldnt read from "+namespace);
-                            return false;
+                            try {
+                                // Try fallback to rdf/xml or turtle without q factor
+                                connection = (HttpURLConnection) url.openConnection();
+                                connection.setConnectTimeout(8000);
+                                connection.setReadTimeout(30000);
+                                connection.setInstanceFollowRedirects(true);
+                                connection.setRequestProperty("Accept","application/rdf+xml,application/turtle,text/turtle");
+                                stream = connection.getInputStream();
+                            }catch(IOException ex) {
+                                ex.printStackTrace();
+                                logger.warn("Couldnt read from " + namespace);
+                                return false;
+                            }
                         }
 
                         logger.info("Opened connection");
