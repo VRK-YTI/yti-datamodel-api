@@ -165,10 +165,11 @@ public final class JenaClient {
         try(QueryExecution qexec = QueryExecutionFactory.sparqlService(service, query)) {
             ResultSetPeekable results = ResultSetFactory.makePeekable(qexec.execSelect());
             List<String> resultVars = results.getResultVars();
+            // Warning! This method supposes that first query var is uri-id.
             String idVar = resultVars.get(0);
             List<Map> hashArray = new ArrayList<>();
+            // Object map for current node
             Map objectMap = new HashMap<String, Object>();
-
             while(results.hasNext()) {
                 QuerySolution soln = results.next();
                 Iterator<String> currentVars = soln.varNames();
@@ -183,26 +184,49 @@ public final class JenaClient {
                             if (litLang != null && litLang.length() > 0) {
                                 Map literalMap;
                                 if(objectMap.containsKey(currentVar)) {
-                                    literalMap = (Map)objectMap.get(currentVar);
+                                    Object currentObj = objectMap.get(currentVar);
+                                    if(currentObj instanceof String) {
+                                        literalMap = new HashMap<String, String>();
+                                        literalMap.put("und",currentObj);
+                                    } else {
+                                        literalMap = (Map)currentObj;
+                                    }
                                 } else {
                                     literalMap = new HashMap<String, String>();
                                 }
                                 literalMap.put(litLang, lit.getString());
                                 objectMap.put(currentVar, literalMap);
                             } else {
-                                objectMap.put(currentVar, lit.getString());
+                                if(objectMap.containsKey(currentVar)) {
+                                    Object currentObj = objectMap.get(currentVar);
+                                    if(currentObj instanceof String) {
+                                        if(!currentObj.equals(lit.getString())) {
+                                            List<String> newArray = new ArrayList<>();
+                                            newArray.add((String) currentObj);
+                                            objectMap.put(currentVar, newArray);
+                                        }
+                                    } else if(currentObj instanceof ArrayList) {
+                                        //TODO: This part of code is untested. No arrays for now.
+                                        if(!((ArrayList)currentObj).contains(lit.getString())) {
+                                            ((ArrayList)currentObj).add(lit.getString());
+                                        }
+                                    } else if(currentObj instanceof Map) {
+                                        ((Map)(currentObj)).put("und",lit.getString());
+                                    }
+                                } else {
+                                    objectMap.put(currentVar, lit.getString());
+                                }
                             }
                         }
                     } else {
                         objectMap.put(currentVar, node.toString());
                     }
                 }
-
                 if(results.hasNext() && !results.peek().get(idVar).toString().equals(currentId)) {
+                    // TODO: Peekable results could be changed to check from single hash index
                     hashArray.add(objectMap);
                     objectMap = new HashMap<String,Object>();
                 }
-
             }
 
             ObjectMapper mapper = new ObjectMapper();
