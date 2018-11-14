@@ -1,23 +1,27 @@
 package fi.vm.yti.datamodel.api.endpoint.concepts;
 
+import fi.vm.yti.datamodel.api.endpoint.model.Class;
 import fi.vm.yti.datamodel.api.security.AuthorizationManager;
-import fi.vm.yti.datamodel.api.service.IDManager;
-import fi.vm.yti.datamodel.api.service.JerseyClient;
-import fi.vm.yti.datamodel.api.service.JerseyResponseManager;
-import fi.vm.yti.datamodel.api.service.ModelManager;
+import fi.vm.yti.datamodel.api.service.*;
 import fi.vm.yti.datamodel.api.utils.*;
+import fi.vm.yti.security.AuthenticatedUserProvider;
 import io.swagger.annotations.*;
 import org.apache.jena.rdf.model.*;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.SKOS;
 import org.apache.jena.vocabulary.SKOSXL;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import javax.json.JsonObject;
+import javax.json.JsonWriter;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
+import java.io.StringWriter;
 import java.util.UUID;
 
 @Component
@@ -26,20 +30,28 @@ import java.util.UUID;
 public class ConceptSuggestion {
 
     private final AuthorizationManager authorizationManager;
+    private final AuthenticatedUserProvider userProvider;
     private final JerseyResponseManager jerseyResponseManager;
     private final ModelManager modelManager;
     private final IDManager idManager;
     private final JerseyClient jerseyClient;
+    private final TermedTerminologyManager terminologyManager;
+
+    private static final Logger logger = LoggerFactory.getLogger(ConceptSuggestion.class.getName());
 
     @Autowired
     ConceptSuggestion(AuthorizationManager authorizationManager,
+                      AuthenticatedUserProvider userProvider,
                       JerseyResponseManager jerseyResponseManager,
+                      TermedTerminologyManager terminologyManager,
                       ModelManager modelManager,
                       IDManager idManager,
                       JerseyClient jerseyClient) {
 
         this.authorizationManager = authorizationManager;
+        this.userProvider = userProvider;
         this.jerseyResponseManager = jerseyResponseManager;
+        this.terminologyManager = terminologyManager;
         this.modelManager = modelManager;
         this.idManager = idManager;
         this.jerseyClient = jerseyClient;
@@ -69,6 +81,8 @@ public class ConceptSuggestion {
             }
         }
 
+        logger.info("Creating concept suggestion: "+label);
+
         UUID conceptUUID = UUID.randomUUID();
         UUID termUUID = UUID.randomUUID();
 
@@ -90,9 +104,16 @@ public class ConceptSuggestion {
 
         String modelString = modelManager.writeModelToJSONLDString(model);
 
+        //String jsonString = terminologyManager.createConceptSuggestionJson(lang, label, comment, graphUUID, userProvider.getUser().getId().toString());
+        //System.out.println(jsonString);
+        //jerseyClient.saveConceptSuggestionUsingTerminologyAPI(jsonString,graphUUID);
+
         jerseyClient.saveConceptSuggestion(modelString,graphUUID);
 
         return jerseyResponseManager.successUrnUuid(conceptUUID);
 
     }
+
+
+
 }

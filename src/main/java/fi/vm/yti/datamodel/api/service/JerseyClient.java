@@ -87,7 +87,7 @@ public class JerseyClient {
 
     }
 
-    /* FIXME: Generic function for all responses?
+    /* FIXME: Remove?
     public static Response getResponseFromURL(String url, String accept, Map<String, String> queryParams) {
         Client client = ClientBuilder.newClient();
         WebTarget target = client.target(url);
@@ -192,33 +192,6 @@ public class JerseyClient {
         }
 
     }
-
-    @Deprecated
-    public Response getSearchResultFromFinto(String vocid, String term, String lang) {
-        
-          /*
-            Client client = ClientBuilder.newClient();
-            String service = services.getConceptSearchAPI();
-            WebTarget target = client.target(service).queryParam("lang", lang).queryParam("query", term);
-                       
-            if(vocid!=null && !vocid.equals("undefined")) 
-               target = target.queryParam("vocab", vocid);
-            
-            Response response = target.request("application/ld+json").get();
-            
-            if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-               LoggerFactory.getLogger(ConceptSearch.class.getName()).log(Level.INFO, response.getStatus()+" from CONCEPT SERVICE");
-               return JerseyResponseManager.unexpected(response.getStatus());
-            }
-            
-            ResponseBuilder rb = Response.status(response.getStatus()); 
-            rb.entity(response.readEntity(InputStream.class));
-       
-           return rb.build();
-        */
-        return null;
-    }
-
 
     /**
      * Returns Jena model from the service
@@ -431,6 +404,25 @@ public class JerseyClient {
         }
     }
 
+    public Response saveConceptSuggestionUsingTerminologyAPI(String body, String graph) {
+
+        String url = properties.getDefaultTerminologyAPI()+"integration/vocabulary/"+graph+"/conceptSuggestion";
+
+        System.out.println(url);
+
+        Client client = ClientBuilder.newClient();
+        WebTarget target = client.target(url);
+        Response response = target.request().post(Entity.entity(body, "application/json"));
+
+        if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
+            logger.info( response.getStatus()+" from URL: "+url);
+            return jerseyResponseManager.notFound();
+        }
+
+        ResponseBuilder rb = Response.status(response.getStatus());
+
+        return rb.build();
+    }
 
     /**
      * Saves new concept suggestion to termed
@@ -722,4 +714,7 @@ public class JerseyClient {
             return jerseyResponseManager.unexpected();
         }
     }
+
+
+
 }

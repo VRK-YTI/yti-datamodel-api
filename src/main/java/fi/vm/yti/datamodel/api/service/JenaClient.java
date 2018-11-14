@@ -5,6 +5,7 @@ import org.apache.jena.query.*;
 import org.apache.jena.rdf.model.Literal;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.RDFNode;
+import org.apache.jena.rdfconnection.RDFConnection;
 import org.apache.jena.rdfconnection.RDFConnectionRemote;
 import org.apache.jena.sparql.resultset.ResultSetPeekable;
 import org.apache.jena.update.UpdateExecutionFactory;
@@ -257,7 +258,7 @@ public final class JenaClient {
     // TODO: Refactor update queries here
 
     public Model fetchModelFromCore(String graph) {
-         try(RDFConnectionRemote conn = endpointServices.getCoreConnection()){
+         try(RDFConnection conn = endpointServices.getCoreConnection()){
             return conn.fetch(graph);
         } catch(Exception ex) {
             logger.warn(ex.getMessage());

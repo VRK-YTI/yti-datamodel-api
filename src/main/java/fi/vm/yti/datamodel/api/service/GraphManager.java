@@ -10,6 +10,7 @@ import fi.vm.yti.datamodel.api.utils.LDHelper;
 import org.apache.jena.atlas.web.HttpException;
 import org.apache.jena.query.*;
 import org.apache.jena.rdf.model.*;
+import org.apache.jena.rdfconnection.RDFConnection;
 import org.apache.jena.rdfconnection.RDFConnectionRemote;
 import org.apache.jena.system.Txn;
 import org.apache.jena.update.*;
@@ -1149,7 +1150,7 @@ public class GraphManager {
     }
 
     public void insertExistingResourceToModel(String id, String model) {
-        try(RDFConnectionRemote conn = endpointServices.getCoreConnection()) {
+        try(RDFConnection conn = endpointServices.getCoreConnection()) {
             Txn.executeWrite(conn, ()-> {
                 conn.update(insertExistingGraphReferenceToModelRequest(id, model));
                 conn.update(insertNewGraphReferenceToExportGraphRequest(id, model));
@@ -1183,7 +1184,7 @@ public class GraphManager {
      */
     public void putToGraph(Model model, String id) {
         logger.debug("Putting to "+id);
-        try(RDFConnectionRemote conn = endpointServices.getCoreConnection()) {
+        try(RDFConnection conn = endpointServices.getCoreConnection()) {
             Txn.executeWrite(conn, ()->{
                 conn.put(LDHelper.encode(id), model);
             });

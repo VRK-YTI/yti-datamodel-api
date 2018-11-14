@@ -9,6 +9,7 @@ defaultScheme=http://dev.finto.fi/
 defaultTermedAPI=https://sanastot-dev.suomi.fi/termed-api/
 defaultGroupManagementAPI=https://rhp-dev.suomi.fi/public-api/
 defaultSuomiCodeServerAPI=https://koodistot-dev.suomi.fi/codelist-api/api/v1/
+defaultTerminologyAPI=https://sanastot-dev.suomi.fi/
 publicTermedAPI=https://sanastot-dev.suomi.fi/termed-api/
 publicGroupManagementAPI=https://rhp-dev.suomi.fi
 defaultTermedAPIUser=admin

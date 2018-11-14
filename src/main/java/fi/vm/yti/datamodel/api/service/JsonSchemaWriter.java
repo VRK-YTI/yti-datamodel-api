@@ -333,13 +333,11 @@ public class JsonSchemaWriter {
     }
 
     public String jsonObjectToPrettyString(JsonObject object) {
-
         StringWriter stringWriter = new StringWriter();
         JsonWriter writer = jsonWriterFactory.createWriter(stringWriter);
         writer.writeObject(object);
         writer.close();
         return stringWriter.getBuffer().toString();
-
     }
 
     public boolean hasModelRoot(String graphIRI) {

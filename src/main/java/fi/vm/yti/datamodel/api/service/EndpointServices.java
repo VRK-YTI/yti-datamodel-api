@@ -1,6 +1,7 @@
 package fi.vm.yti.datamodel.api.service;
 
 import fi.vm.yti.datamodel.api.config.ApplicationProperties;
+import org.apache.jena.rdfconnection.RDFConnection;
 import org.apache.jena.rdfconnection.RDFConnectionRemote;
 import org.springframework.stereotype.Service;
 
@@ -15,12 +16,8 @@ public final class EndpointServices {
         this.scheme = properties.getDefaultScheme();
     }
 
-    public RDFConnectionRemote getServiceConnection(String service) {
-        return new RDFConnectionRemote(endpoint+"/"+service+"/");
-    }
-
-    public RDFConnectionRemote getCoreConnection() {
-        return new RDFConnectionRemote(endpoint+"/core/");
+    public RDFConnection getCoreConnection() {
+        return RDFConnectionRemote.create().destination(endpoint+"/core/").build();
     }
 
     public String getEndpoint() {

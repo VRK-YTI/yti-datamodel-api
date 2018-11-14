@@ -14,6 +14,7 @@ public final class ApplicationProperties {
     private String defaultTermedAPIUser;
     private String defaultTermedAPIUserSecret;
     private String defaultGroupManagementAPI;
+    private String defaultTerminologyAPI;
     private String publicGroupManagementAPI;
     private String publicTermedAPI;
     private String publicTerminologyFrontend;
@@ -90,6 +91,11 @@ public final class ApplicationProperties {
         this.defaultGroupManagementAPI = defaultGroupManagementAPI;
     }
 
+    public String getDefaultTerminologyAPI() { return defaultTerminologyAPI; }
+
+    public void setDefaultTerminologyAPI(String defaultTerminologyAPI) {
+        this.defaultTerminologyAPI = defaultTerminologyAPI;
+    }
     public String getPublicGroupManagementAPI() {
         return publicGroupManagementAPI;
     }

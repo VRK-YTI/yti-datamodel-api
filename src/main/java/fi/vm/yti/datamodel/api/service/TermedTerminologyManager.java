@@ -21,11 +21,13 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.json.*;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import java.io.InputStream;
+import java.io.StringWriter;
 import java.util.Iterator;
 
 @Service
@@ -60,6 +62,25 @@ public final class TermedTerminologyManager {
         this.idManager = idManager;
         this.modelManager = modelManager;
         this.jerseyResponseManager = jerseyResponseManager;
+    }
+
+    public String createConceptSuggestionJson(String lang, String prefLabel, String definition, String graph, String user) {
+
+        JsonObjectBuilder objBuilder = Json.createObjectBuilder();
+
+        objBuilder.add("creator", user);
+        objBuilder.add("prefLabel", Json.createObjectBuilder().add("lang",lang).add("value",prefLabel).build());
+        objBuilder.add("definition", Json.createObjectBuilder().add("lang",lang).add("value",definition).build());
+
+        return jsonObjectToPrettyString(objBuilder.build());
+    }
+
+    public String jsonObjectToPrettyString(JsonObject object) {
+        StringWriter stringWriter = new StringWriter();
+        JsonWriter writer = Json.createWriter(stringWriter);
+        writer.writeObject(object);
+        writer.close();
+        return stringWriter.getBuffer().toString();
     }
 
     public void initConceptsFromTermed() {
