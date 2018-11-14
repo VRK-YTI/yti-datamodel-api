@@ -1,5 +1,7 @@
 package fi.vm.yti.datamodel.api.endpoint.concepts;
 
+import com.jayway.jsonpath.DocumentContext;
+import com.jayway.jsonpath.JsonPath;
 import fi.vm.yti.datamodel.api.endpoint.model.Class;
 import fi.vm.yti.datamodel.api.security.AuthorizationManager;
 import fi.vm.yti.datamodel.api.service.*;
@@ -83,34 +85,13 @@ public class ConceptSuggestion {
 
         logger.info("Creating concept suggestion: "+label);
 
-        UUID conceptUUID = UUID.randomUUID();
-        UUID termUUID = UUID.randomUUID();
+        // TODO: Clean & refactor terminology manager
+        String jsonString = terminologyManager.createConceptSuggestionJson(lang, label, comment, graphUUID, userProvider.getUser().getId().toString());
+        Response conceptResp = jerseyClient.saveConceptSuggestionUsingTerminologyAPI(jsonString,graphUUID);
+        String respString = conceptResp.readEntity(String.class);
+        String newConceptUUID = JsonPath.parse(respString).read("$.identifier");
 
-        Model model = ModelFactory.createDefaultModel();
-
-        Property statusProp = model.createProperty("http://www.w3.org/2003/06/sw-vocab-status/ns#term_status");
-        Resource concept = model.createResource("urn:uuid:"+conceptUUID);
-        Resource term = model.createResource("urn:uuid:"+termUUID);
-        Literal prefLabel = ResourceFactory.createLangLiteral(label.toLowerCase(), lang);
-        Literal definition = ResourceFactory.createLangLiteral(comment, lang);
-        term.addLiteral(SKOSXL.literalForm, prefLabel);
-        term.addProperty(RDF.type,SKOSXL.Label);
-        concept.addLiteral(SKOS.definition, definition);
-        concept.addProperty(SKOSXL.prefLabel,term);
-        concept.addProperty(RDF.type, SKOS.Concept);
-        concept.addLiteral(statusProp, "SUGGESTED");
-        Property idProp = model.createProperty(LDHelper.getNamespaceWithPrefix("termed")+"id");
-        concept.addProperty(idProp, conceptUUID.toString());
-
-        String modelString = modelManager.writeModelToJSONLDString(model);
-
-        //String jsonString = terminologyManager.createConceptSuggestionJson(lang, label, comment, graphUUID, userProvider.getUser().getId().toString());
-        //System.out.println(jsonString);
-        //jerseyClient.saveConceptSuggestionUsingTerminologyAPI(jsonString,graphUUID);
-
-        jerseyClient.saveConceptSuggestion(modelString,graphUUID);
-
-        return jerseyResponseManager.successUrnUuid(conceptUUID);
+        return jerseyResponseManager.successUrnUuid(UUID.fromString(newConceptUUID));
 
     }
 

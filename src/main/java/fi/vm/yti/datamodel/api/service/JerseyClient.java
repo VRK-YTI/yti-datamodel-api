@@ -419,9 +419,7 @@ public class JerseyClient {
             return jerseyResponseManager.notFound();
         }
 
-        ResponseBuilder rb = Response.status(response.getStatus());
-
-        return rb.build();
+        return response;
     }
 
     /**
