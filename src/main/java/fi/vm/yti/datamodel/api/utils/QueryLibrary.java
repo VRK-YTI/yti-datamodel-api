@@ -387,6 +387,8 @@ public class QueryLibrary {
                 + "?property rdfs:isDefinedBy ?source . "
                 + "?source rdfs:label ?sourceLabel . "
                 + "?source a ?sourceType . "
+                + "?source dcterms:isPartOf ?group . "
+                + "?group a foaf:Group . ?group dcterms:identifier ?groupId . ?group rdfs:label ?groupLabel . "
                 + "?property dcterms:modified ?date . } "
                 + "WHERE { "
                 + "GRAPH ?hasPartGraph { "
@@ -399,7 +401,10 @@ public class QueryLibrary {
                     + "?property rdfs:isDefinedBy ?source . "
                     + "OPTIONAL {?property dcterms:modified ?date . } "
                 + "} "
-                + "GRAPH ?source { ?source a ?sourceType . ?source rdfs:label ?sourceLabel . }}"
+                + "GRAPH ?source { ?source a ?sourceType . "
+                + "?source dcterms:isPartOf ?group . "
+                + "?group a foaf:Group . ?group dcterms:identifier ?groupId . ?group rdfs:label ?groupLabel . "
+                + "?source rdfs:label ?sourceLabel .  }}"
      );
      
       final public static String predicateQuery = LDHelper.expandSparqlQuery(
