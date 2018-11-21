@@ -326,7 +326,9 @@ public class QueryLibrary {
                     + "?source rdfs:label ?sourceLabel . "
                     + "?source a ?sourceType . "
                     + "?source dcterms:isPartOf ?group . "
-                    + "?group a foaf:Group . ?group dcterms:identifier ?groupId . ?group rdfs:label ?groupLabel . "
+                    + "?group a foaf:Group . "
+                    + "?group dcterms:identifier ?groupId . "
+                    + "?group rdfs:label ?groupLabel . "
                     + "} WHERE { "
                     + "GRAPH ?hasPartGraph { "
                     + "?library dcterms:hasPart ?class . } "
@@ -342,7 +344,8 @@ public class QueryLibrary {
                     + "?source a ?sourceType . "
                     + "?source rdfs:label ?sourceLabel . "
                     + "?source dcterms:isPartOf ?group . "
-                    + "?group a foaf:Group . ?group dcterms:identifier ?groupId . ?group rdfs:label ?groupLabel . "
+                    + "?group dcterms:identifier ?groupId . "
+                    + "?group rdfs:label ?groupLabel . "
                     + "}}"      
         );
     
@@ -388,7 +391,9 @@ public class QueryLibrary {
                 + "?source rdfs:label ?sourceLabel . "
                 + "?source a ?sourceType . "
                 + "?source dcterms:isPartOf ?group . "
-                + "?group a foaf:Group . ?group dcterms:identifier ?groupId . ?group rdfs:label ?groupLabel . "
+                + "?group a foaf:Group . "
+                + "?group dcterms:identifier ?groupId . "
+                + "?group rdfs:label ?groupLabel . "
                 + "?property dcterms:modified ?date . } "
                 + "WHERE { "
                 + "GRAPH ?hasPartGraph { "
@@ -403,7 +408,8 @@ public class QueryLibrary {
                 + "} "
                 + "GRAPH ?source { ?source a ?sourceType . "
                 + "?source dcterms:isPartOf ?group . "
-                + "?group a foaf:Group . ?group dcterms:identifier ?groupId . ?group rdfs:label ?groupLabel . "
+                + "?group dcterms:identifier ?groupId . "
+                + "?group rdfs:label ?groupLabel . "
                 + "?source rdfs:label ?sourceLabel .  }}"
      );
      
