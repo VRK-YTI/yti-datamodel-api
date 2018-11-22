@@ -447,8 +447,13 @@ public class QueryLibrary {
         
         final public static String externalClassQuery = LDHelper.expandSparqlQuery(
                     "CONSTRUCT { "
-                    + "?externalModel rdfs:label ?externalModelLabel . "
                     + "?classIRI rdfs:isDefinedBy ?externalModel . "
+                    + "?externalModel rdfs:label ?externalModelLabel . "
+                    + "?externalModel a dcterms:Standard . "
+                    + "?externalModel dcterms:isPartOf <urn:uuid:8de527a7-3f1c-4903-9077-0e519a4ec86b> . "
+                    + "<urn:uuid:8de527a7-3f1c-4903-9077-0e519a4ec86b> a foaf:Group . "
+                    + "<urn:uuid:8de527a7-3f1c-4903-9077-0e519a4ec86b> rdfs:label 'Kansainvälinen suositus'@fi . "
+                    + "<urn:uuid:8de527a7-3f1c-4903-9077-0e519a4ec86b> rdfs:label 'International recommendation'@en . "
                     + "?classIRI a rdfs:Class . "
                     + "?classIRI owl:versionInfo ?draft . "
                     + "?classIRI sh:name ?label . "

@@ -58,7 +58,7 @@ public class ExternalClass {
     public Response json(
             @ApiParam(value = "Class id")
             @QueryParam("id") String id,
-            @ApiParam(value = "Model id")
+            @ApiParam(value = "Model id", required = true)
             @QueryParam("model") String model) {
 
         IRI idIRI;
@@ -75,8 +75,13 @@ public class ExternalClass {
             pss.setNsPrefixes(LDHelper.PREFIX_MAP);
 
             String queryString = "CONSTRUCT { "
-                    + "?externalModel rdfs:label ?externalModelLabel . "
                     + "?class rdfs:isDefinedBy ?externalModel . "
+                    + "?externalModel rdfs:label ?externalModelLabel . "
+                    + "?externalModel a dcterms:Standard . "
+                    + "?externalModel dcterms:isPartOf <urn:uuid:8de527a7-3f1c-4903-9077-0e519a4ec86b> . "
+                    + "<urn:uuid:8de527a7-3f1c-4903-9077-0e519a4ec86b> a foaf:Group . "
+                    + "<urn:uuid:8de527a7-3f1c-4903-9077-0e519a4ec86b> rdfs:label 'Kansainvälinen suositus'@fi . "
+                    + "<urn:uuid:8de527a7-3f1c-4903-9077-0e519a4ec86b> rdfs:label 'International recommendation'@en . "
                     + "?class sh:name ?label . "
                     + "?class sh:description ?comment . "
                     + "?class a rdfs:Class . "
