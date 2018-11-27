@@ -9,8 +9,6 @@ import org.apache.jena.rdf.model.Model;
 import org.apache.jena.riot.*;
 import org.apache.jena.riot.system.PrefixMap;
 import org.apache.jena.riot.system.RiotLib;
-import org.elasticsearch.ElasticsearchException;
-import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.transport.NodeDisconnectedException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -71,9 +69,10 @@ public final class FrameManager {
         }
     }
 
-    private void updateCachedGraph(String id) throws Exception {
+    private String updateCachedGraph(String id) throws Exception {
         String frameStr = graphToFramedString(id, Frames.classVisualizationFrame);
         cacheClassVisualizationFrame(id, frameStr);
+        return frameStr;
     }
 
     public String getCachedClassVisualizationFrame(String id, Date lastModified) throws Exception {
@@ -84,15 +83,17 @@ public final class FrameManager {
             Map<String, Object> map = this.esClient.prepareGet(ELASTIC_INDEX_MODEL, "doc", encId).execute().actionGet().getSourceAsMap();
             if(map == null) {
                 logger.debug("Creating visualization frame cache for graph " + id);
-                updateCachedGraph(id);
+                frameStr = updateCachedGraph(id);
             }
             else {
                 Object lastModifiedDate = map.get("modified");
                 if(lastModifiedDate!=null && lastModified.after(format.parse(lastModifiedDate.toString()))) {
-                    updateCachedGraph(id);
+                    logger.debug("Updating visualization frame!");
+                    frameStr = updateCachedGraph(id);
+                } else {
+                    logger.debug("Visualization frame cache hit");
+                    frameStr = map.get("graph").toString();
                 }
-                logger.debug("Visualization frame cache hit");
-                frameStr = map.get("graph").toString();
             }
         } catch (NoNodeAvailableException ex) {
             logger.error("Datamodel Elastic is not available. Model frame caching is not available."); 
