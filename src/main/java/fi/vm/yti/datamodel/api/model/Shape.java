@@ -67,6 +67,11 @@ public class Shape extends AbstractShape {
 
             // Shape from internal class
             this.graph = graphManager.getCoreGraph(classIRI);
+
+            if(this.graph == null || this.graph.size()<1) {
+                throw new IllegalArgumentException();
+            }
+
             Resource shape = this.graph.getResource(classIRI.toString());
             ResourceUtils.renameResource(shape, shapeIRI.toString());
 

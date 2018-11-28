@@ -74,8 +74,12 @@ public class ShapeCreator {
                     return jerseyResponseManager.invalidIRI();
             }
 
-           Shape newShape = new Shape(classIRI,shapeIRI,profileIRI, graphManager, endpointServices);
+            try {
+                Shape newShape = new Shape(classIRI, shapeIRI, profileIRI, graphManager, endpointServices);
+                return jerseyClient.constructResponseFromGraph(newShape.asGraph());
+            } catch(IllegalArgumentException e) {
+                return jerseyResponseManager.invalidParameter();
+            }
 
-           return jerseyClient.constructResponseFromGraph(newShape.asGraph());
     }
 }

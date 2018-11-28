@@ -30,23 +30,17 @@ public class RelatedPredicateCreator {
     private final GraphManager graphManager;
     private final JerseyResponseManager jerseyResponseManager;
     private final JerseyClient jerseyClient;
-    private final JenaClient jenaClient;
-    private final ModelManager modelManager;
 
     @Autowired
     RelatedPredicateCreator(IDManager idManager,
                             GraphManager graphManager,
                             JerseyResponseManager jerseyResponseManager,
-                            JerseyClient jerseyClient,
-                            JenaClient jenaClient,
-                            ModelManager modelManager) {
+                            JerseyClient jerseyClient) {
 
         this.idManager = idManager;
         this.graphManager = graphManager;
         this.jerseyResponseManager = jerseyResponseManager;
         this.jerseyClient = jerseyClient;
-        this.jenaClient = jenaClient;
-        this.modelManager = modelManager;
     }
 
     @GET

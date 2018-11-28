@@ -30,26 +30,17 @@ public class RelatedClassCretor {
     private final GraphManager graphManager;
     private final JerseyResponseManager jerseyResponseManager;
     private final JerseyClient jerseyClient;
-    private final JenaClient jenaClient;
-    private final ModelManager modelManager;
-    private final TermedTerminologyManager termedTerminologyManager;
 
     @Autowired
     RelatedClassCretor(IDManager idManager,
                        GraphManager graphManager,
                        JerseyResponseManager jerseyResponseManager,
-                       JerseyClient jerseyClient,
-                       JenaClient jenaClient,
-                       ModelManager modelManager,
-                       TermedTerminologyManager termedTerminologyManager) {
+                       JerseyClient jerseyClient) {
 
         this.idManager = idManager;
         this.graphManager = graphManager;
         this.jerseyResponseManager = jerseyResponseManager;
         this.jerseyClient = jerseyClient;
-        this.jenaClient = jenaClient;
-        this.modelManager = modelManager;
-        this.termedTerminologyManager = termedTerminologyManager;
     }
 
     @GET
