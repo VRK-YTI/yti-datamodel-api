@@ -149,10 +149,11 @@ public class ReusableClass extends AbstractClass {
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
 
         String queryString = "CONSTRUCT  { "
+                + "?model a ?type . "
                 + "?model rdfs:label ?modelLabel . "
                 + "?model a ?modelType . "
                 + "} WHERE { GRAPH ?model {"
-                + "?model a owl:Ontology . "
+                + "?model a ?type . "
                 + "?model rdfs:label ?modelLabel . "
                 + "}}";
 
