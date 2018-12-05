@@ -128,11 +128,10 @@ public final class FrameManager {
 
         String queryString = "CONSTRUCT { "
                 + "?model <http://purl.org/dc/terms/hasPart> ?resource . "
-                + "?ms ?mp ?mo . "
                 + "?rs ?rp ?ro . "
                 + " } WHERE {"
                 + " GRAPH ?model {"
-                + "?ms ?mp ?mo . "
+                + "?model a owl:Ontology . "
                 + "} OPTIONAL {"
                 + "GRAPH ?modelHasPartGraph { "
                 + " ?model <http://purl.org/dc/terms/hasPart> ?resource . "
@@ -148,8 +147,9 @@ public final class FrameManager {
         pss.setIri("modelHasPartGraph", graph+"#HasPartGraph");
 
         Query query = pss.asQuery();
-
-        Model exportModel = jenaClient.constructFromService(query.toString(), jenaClient.getEndpointServices().getCoreSparqlAddress());
+        Model exportModel = jenaClient.getModelFromCore(graph);
+        Model exportModelConstruct = jenaClient.constructFromService(query.toString(), jenaClient.getEndpointServices().getCoreSparqlAddress());
+        exportModel.add(exportModelConstruct);
         return exportModel;
     }
 

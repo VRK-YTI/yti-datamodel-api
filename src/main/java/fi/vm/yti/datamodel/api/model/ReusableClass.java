@@ -111,34 +111,56 @@ public class ReusableClass extends AbstractClass {
             throw new IllegalArgumentException("Expected rdfs:Class type");
         }
 
-        Resource superClass = this.graph.getResource(oldClassIRI.toString());
-        String superClassIRI = newModelIRI+"#"+superClass.getLocalName();
+        Resource relatedClass = this.graph.getResource(oldClassIRI.toString());
+        String superClassIRI = newModelIRI+"#"+relatedClass.getLocalName();
+
         logger.debug("Creating new superclass: "+superClassIRI);
-        ResourceUtils.renameResource(superClass, superClassIRI);
+        ResourceUtils.renameResource(relatedClass, superClassIRI);
 
-        superClass = this.graph.getResource(superClassIRI);
-        superClass.removeAll(OWL.versionInfo);
-        superClass.addLiteral(OWL.versionInfo, "DRAFT");
+        relatedClass = this.graph.getResource(superClassIRI);
+        relatedClass.removeAll(OWL.versionInfo);
+        relatedClass.addLiteral(OWL.versionInfo, "DRAFT");
 
-        Resource modelResource = superClass.getPropertyResourceValue(RDFS.isDefinedBy);
+        Resource modelResource = relatedClass.getPropertyResourceValue(RDFS.isDefinedBy);
         modelResource.removeProperties();
-        superClass.removeAll(RDFS.isDefinedBy);
-        superClass.addProperty(classRelation, oldClassIRI.toString());
+        relatedClass.removeAll(RDFS.isDefinedBy);
+        relatedClass.addProperty(classRelation, oldClassIRI.toString());
+        relatedClass.addProperty(RDFS.isDefinedBy, newModelIRI.toString());
 
-        superClass.addProperty(RDFS.isDefinedBy, newModelIRI.toString());
+        LDHelper.rewriteLiteral(this.graph, relatedClass, DCTerms.created, LDHelper.getDateTimeLiteral());
+        LDHelper.rewriteLiteral(this.graph, relatedClass, DCTerms.modified, LDHelper.getDateTimeLiteral());
+        relatedClass.removeAll(DCTerms.identifier);
 
-        LDHelper.rewriteLiteral(this.graph, superClass, DCTerms.created, LDHelper.getDateTimeLiteral());
-        LDHelper.rewriteLiteral(this.graph, superClass, DCTerms.modified, LDHelper.getDateTimeLiteral());
-        superClass.removeAll(DCTerms.identifier);
+        this.graph.add(createNewModelInfo(newModelIRI, graphManager));
 
         // Rename property UUIDs
-        StmtIterator nodes = superClass.listProperties(SH.property);
+        StmtIterator nodes = relatedClass.listProperties(SH.property);
         List<Statement> propertyShapeList =  nodes.toList();
 
         for(Iterator<Statement> i = propertyShapeList.iterator(); i.hasNext();) {
             Resource propertyShape = i.next().getObject().asResource();
             ResourceUtils.renameResource(propertyShape, "urn:uuid:" + UUID.randomUUID().toString());
         }
+    }
+
+    private Model createNewModelInfo(IRI modelIRI, GraphManager graphManager) {
+
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+
+        String queryString = "CONSTRUCT  { "
+                + "?model rdfs:label ?modelLabel . "
+                + "?model a ?modelType . "
+                + "} WHERE { GRAPH ?model {"
+                + "?model a owl:Ontology . "
+                + "?model rdfs:label ?modelLabel . "
+                + "}}";
+
+        pss.setCommandText(queryString);
+        pss.setIri("model", modelIRI);
+
+        return graphManager.constructModelFromCoreGraph(pss.toString());
+
     }
 
     public ReusableClass(IRI modelIRI,

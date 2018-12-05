@@ -123,23 +123,29 @@ public class ModelVersion {
                     // TODO: Move this to graph manager
 
                     logger.info("Creating new version from "+id+" to "+newId);
+                    Model dataModel = oldVocabulary.asGraph();
+
+                    graphManager.newModelVersion(dataModel, newPrefix, modelIRI, newModelIRI);
+
                     serviceDescriptionManager.createGraphDescription(newId, user.getId(), oldVocabulary.getOrganizations());
 
-                    graphManager.newModelVersion(newPrefix, modelIRI, newModelIRI);
-                    graphManager.updateStatusAndProvInModel(modelIRI, newModelIRI);
-                    graphManager.renameObjectIRIinModel(modelIRI, newModelIRI);
-                    graphManager.changePrefixAndNamespaceFromModelCopy(newModelIRI, newPrefix);
 
                     logger.info("Created new model");
 
-                    graphManager.changeNamespaceInObjects(modelIRI,newModelIRI);
-                    graphManager.changeStatusInNewGraphs(modelIRI,newModelIRI);
+                    // graphManager.updateStatusAndProvInModel(modelIRI, newModelIRI);
+                  //  graphManager.renameObjectIRIinModel(modelIRI, newModelIRI);
+                  //  graphManager.changePrefixAndNamespaceFromModelCopy(newModelIRI, newPrefix);
 
-                    logger.info("Modified new version graphs");
+                  //
 
-                    Model newExportGraph = frameManager.constructExportGraph(newModelIRI.toString());
-                    newExportGraph.add(oldVocabulary.asGraph());
-                    graphManager.putToGraph(newExportGraph, newModelIRI.toString()+"#ExportGraph");
+                   // graphManager.changeNamespaceInObjects(modelIRI,newModelIRI);
+                  //  graphManager.changeStatusInNewGraphs(modelIRI,newModelIRI);
+
+                   // logger.info("Modified new version graphs");
+
+                    // TODO: Remove export graph
+                    dataModel.add(frameManager.constructExportGraph(newModelIRI.toString()));
+                    graphManager.putToGraph(dataModel, newModelIRI.toString()+"#ExportGraph");
 
                     logger.info("Created export graph");
 

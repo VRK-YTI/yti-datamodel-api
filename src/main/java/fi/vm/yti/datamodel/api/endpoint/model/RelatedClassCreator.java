@@ -23,19 +23,19 @@ import javax.ws.rs.core.Response;
 @Component
 @Path("relatedClassCreator")
 @Api(tags = {"Class"}, description = "Construct new related class from existing class")
-public class RelatedClassCretor {
+public class RelatedClassCreator {
 
-    private static final Logger logger = LoggerFactory.getLogger(RelatedClassCretor.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(RelatedClassCreator.class.getName());
     private final IDManager idManager;
     private final GraphManager graphManager;
     private final JerseyResponseManager jerseyResponseManager;
     private final JerseyClient jerseyClient;
 
     @Autowired
-    RelatedClassCretor(IDManager idManager,
-                       GraphManager graphManager,
-                       JerseyResponseManager jerseyResponseManager,
-                       JerseyClient jerseyClient) {
+    RelatedClassCreator(IDManager idManager,
+                        GraphManager graphManager,
+                        JerseyResponseManager jerseyResponseManager,
+                        JerseyClient jerseyClient) {
 
         this.idManager = idManager;
         this.graphManager = graphManager;
