@@ -131,7 +131,7 @@ public class ReusableClass extends AbstractClass {
         LDHelper.rewriteLiteral(this.graph, relatedClass, DCTerms.modified, LDHelper.getDateTimeLiteral());
         relatedClass.removeAll(DCTerms.identifier);
 
-        this.graph.add(createNewModelInfo(newModelIRI, graphManager));
+        this.graph.add(graphManager.getModelInfo(newModelIRI));
 
         // Rename property UUIDs
         StmtIterator nodes = relatedClass.listProperties(SH.property);
@@ -141,27 +141,6 @@ public class ReusableClass extends AbstractClass {
             Resource propertyShape = i.next().getObject().asResource();
             ResourceUtils.renameResource(propertyShape, "urn:uuid:" + UUID.randomUUID().toString());
         }
-    }
-
-    private Model createNewModelInfo(IRI modelIRI, GraphManager graphManager) {
-
-        ParameterizedSparqlString pss = new ParameterizedSparqlString();
-        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
-
-        String queryString = "CONSTRUCT  { "
-                + "?model a ?type . "
-                + "?model rdfs:label ?modelLabel . "
-                + "?model a ?modelType . "
-                + "} WHERE { GRAPH ?model {"
-                + "?model a ?type . "
-                + "?model rdfs:label ?modelLabel . "
-                + "}}";
-
-        pss.setCommandText(queryString);
-        pss.setIri("model", modelIRI);
-
-        return graphManager.constructModelFromCoreGraph(pss.toString());
-
     }
 
     public ReusableClass(IRI modelIRI,
@@ -185,9 +164,10 @@ public class ReusableClass extends AbstractClass {
                 + "} WHERE { "
                 + "BIND(now() as ?creation) "
                 + "BIND(now() as ?modified) "
+                + "GRAPH ?model {"
                 + "?model a ?modelType . "
                 + "?model rdfs:label ?modelLabel . "
-                + "}";
+                + "}}";
 
         pss.setCommandText(queryString);
         pss.setIri("model", modelIRI);

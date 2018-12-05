@@ -115,28 +115,30 @@ public class ReusablePredicate extends AbstractPredicate {
             throw new IllegalArgumentException("Expected predicate type");
         }
 
-        Resource superPredicate = this.graph.getResource(oldPredicateIRI.toString());
-        String superPredicateIRI = newModelIRI+"#"+superPredicate.getLocalName();
+        Resource relatedPredicate = this.graph.getResource(oldPredicateIRI.toString());
+        String superPredicateIRI = newModelIRI+"#"+relatedPredicate.getLocalName();
         logger.debug("Creating new superPredicate: "+superPredicateIRI);
-        ResourceUtils.renameResource(superPredicate, superPredicateIRI);
+        ResourceUtils.renameResource(relatedPredicate, superPredicateIRI);
 
-        superPredicate = this.graph.getResource(superPredicateIRI);
-        superPredicate.removeAll(OWL.versionInfo);
-        superPredicate.removeAll(RDFS.range);
-        superPredicate.removeAll(RDFS.domain);
-        superPredicate.addLiteral(OWL.versionInfo, "DRAFT");
+        relatedPredicate = this.graph.getResource(superPredicateIRI);
+        relatedPredicate.removeAll(OWL.versionInfo);
+        relatedPredicate.removeAll(RDFS.range);
+        relatedPredicate.removeAll(RDFS.domain);
+        relatedPredicate.addLiteral(OWL.versionInfo, "DRAFT");
 
-        Resource oldModel = superPredicate.getPropertyResourceValue(RDFS.isDefinedBy);
+        Resource oldModel = relatedPredicate.getPropertyResourceValue(RDFS.isDefinedBy);
         oldModel.removeProperties();
-        superPredicate.removeAll(RDFS.isDefinedBy);
+        relatedPredicate.removeAll(RDFS.isDefinedBy);
 
-        superPredicate.addProperty(RDFS.isDefinedBy, newModelIRI.toString());
+        relatedPredicate.addProperty(RDFS.isDefinedBy, newModelIRI.toString());
 
-        superPredicate.addProperty(relatedProperty, superPredicateIRI);
+        relatedPredicate.addProperty(relatedProperty, superPredicateIRI);
 
-        LDHelper.rewriteLiteral(this.graph, superPredicate, DCTerms.created, LDHelper.getDateTimeLiteral());
-        LDHelper.rewriteLiteral(this.graph, superPredicate, DCTerms.modified, LDHelper.getDateTimeLiteral());
-        superPredicate.removeAll(DCTerms.identifier);
+        LDHelper.rewriteLiteral(this.graph, relatedPredicate, DCTerms.created, LDHelper.getDateTimeLiteral());
+        LDHelper.rewriteLiteral(this.graph, relatedPredicate, DCTerms.modified, LDHelper.getDateTimeLiteral());
+        relatedPredicate.removeAll(DCTerms.identifier);
+
+        this.graph.add(graphManager.getModelInfo(newModelIRI));
 
     }
 
@@ -159,9 +161,9 @@ public class ReusablePredicate extends AbstractPredicate {
                 + "?model a ?modelType . "
                 + "?predicateIRI rdfs:label ?predicateLabel . "
                 + "} "
-                + "WHERE { "
+                + "WHERE { GRAPH ?model {"
                 + "?model a ?modelType . "
-                + "?model rdfs:label ?modelLabel . "
+                + "?model rdfs:label ?modelLabel . } "
                 + "BIND(now() as ?creation) "
                 + "BIND(now() as ?modified) "
                 + "}";

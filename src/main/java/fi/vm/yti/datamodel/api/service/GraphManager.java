@@ -1277,6 +1277,28 @@ public class GraphManager {
     }
 
 
+    public Model getModelInfo(IRI modelIRI) {
+
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+
+        String queryString = "CONSTRUCT  { "
+                + "?model a ?type . "
+                + "?model rdfs:label ?modelLabel . "
+                + "?model a ?modelType . "
+                + "} WHERE { GRAPH ?model {"
+                + "?model a ?type . "
+                + "?model rdfs:label ?modelLabel . "
+                + "}}";
+
+        pss.setCommandText(queryString);
+        pss.setIri("model", modelIRI);
+
+        return constructModelFromCoreGraph(pss.toString());
+
+    }
+
+
     /**
      * Returns date when the model was last modified from the Export graph
      * @param graphName Graph IRI as string
