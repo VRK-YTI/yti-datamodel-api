@@ -255,7 +255,7 @@ public final class JenaClient {
         }
     }
 
-    // TODO: Refactor update queries here
+    // FIXME: Not in use. RDFConnection does not work as espected.
 
     public Model fetchModelFromCore(String graph) {
          try(RDFConnection conn = endpointServices.getCoreConnection()){

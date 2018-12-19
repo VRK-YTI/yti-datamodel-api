@@ -1174,13 +1174,18 @@ public class GraphManager {
     }
 
     public void insertExistingResourceToModel(String id, String model) {
+        insertExistingGraphReferenceToModel(id,model);
+        insertNewGraphReferenceToExportGraph(id, model);
+        addCoreGraphToCoreGraph(id,model+"#ExportGraph");
+        // FIXME: Refactored this earlier from RDFConnectionRemote to RDFConnection. Not working returns 500!?!?
+        /*
         try(RDFConnection conn = endpointServices.getCoreConnection()) {
             Txn.executeWrite(conn, ()-> {
                 conn.update(insertExistingGraphReferenceToModelRequest(id, model));
                 conn.update(insertNewGraphReferenceToExportGraphRequest(id, model));
                 conn.load(LDHelper.encode(model+"#ExportGraph"),conn.fetch(LDHelper.encode(id)));
               });
-        }
+        }*/
     }
 
     /**
