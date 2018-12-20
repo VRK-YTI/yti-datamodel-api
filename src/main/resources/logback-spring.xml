@@ -48,7 +48,7 @@
         <appender-ref ref="ROLLING"/>
     </root>
 </springProfile>
-<springProfile name="local">
+<springProfile name="local,docker">
     <include resource="org/springframework/boot/logging/logback/base.xml"/>
     <logger name="org.apache" level="WARN"/>
     <logger name="org.springframework" level="INFO"/>
