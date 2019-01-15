@@ -88,7 +88,15 @@ public class ConceptSuggestion {
         // TODO: Clean & refactor terminology manager
         String jsonString = terminologyManager.createConceptSuggestionJson(lang, label, comment, graphUUID, userProvider.getUser().getId().toString());
         Response conceptResp = jerseyClient.saveConceptSuggestionUsingTerminologyAPI(jsonString,graphUUID);
+
+        if (conceptResp.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
+            return jerseyResponseManager.invalidParameter();
+        }
+
         String respString = conceptResp.readEntity(String.class);
+
+        logger.info(respString);
+
         String newConceptUUID = JsonPath.parse(respString).read("$.identifier");
 
         return jerseyResponseManager.successUrnUuid(UUID.fromString(newConceptUUID));

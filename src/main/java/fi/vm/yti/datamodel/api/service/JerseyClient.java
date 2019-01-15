@@ -408,15 +408,12 @@ public class JerseyClient {
 
         String url = properties.getDefaultTerminologyAPI()+"integration/vocabulary/"+graph+"/conceptSuggestion";
 
-        System.out.println(url);
-
         Client client = ClientBuilder.newClient();
         WebTarget target = client.target(url);
         Response response = target.request().post(Entity.entity(body, "application/json"));
 
         if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-            logger.info( response.getStatus()+" from URL: "+url);
-            return jerseyResponseManager.notFound();
+            logger.info(response.getStatus()+" from URL: "+url);
         }
 
         return response;
