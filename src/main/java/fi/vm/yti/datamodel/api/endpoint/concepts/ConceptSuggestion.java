@@ -90,11 +90,13 @@ public class ConceptSuggestion {
         Response conceptResp = jerseyClient.saveConceptSuggestionUsingTerminologyAPI(jsonString,graphUUID);
 
         if (conceptResp.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-            return jerseyResponseManager.invalidParameter();
+            logger.info("Concept suggestion could not be saved! Invalid parameter or missing terminology?");
+            return jerseyResponseManager.error();
         }
 
         String respString = conceptResp.readEntity(String.class);
 
+        logger.info("Concept suggestion saved: ");
         logger.info(respString);
 
         String newConceptUUID = JsonPath.parse(respString).read("$.identifier");
