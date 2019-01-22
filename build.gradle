@@ -120,11 +120,12 @@ sonarqube {
         property "sonar.projectKey", "yti-datamodel-api"
         property "sonar.projectName", "yti-datamodel-api"
         property("sonar.dependencyCheck.reportPath", "$buildDir/reports/dependency-check-report.xml")
+        property("sonar.dependencyCheck.htmlReportPath", "$buildDir/reports/dependency-check-report.html")
     }
 }
 
 dependencyCheck {
-    format = 'XML'
+    format = 'ALL'
     autoUpdate = false
     analyzers {
         centralEnabled = false
