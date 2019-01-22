@@ -10,6 +10,7 @@ buildscript {
 
 plugins {
     id "org.sonarqube" version "2.6.2"
+    id "org.owasp.dependencycheck" version "4.0.2"
 }
 
 apply plugin: "java"
@@ -118,5 +119,17 @@ sonarqube {
     properties {
         property "sonar.projectKey", "yti-datamodel-api"
         property "sonar.projectName", "yti-datamodel-api"
+        property("sonar.dependencyCheck.reportPath", "$buildDir/reports/dependency-check-report.xml")
+    }
+}
+
+dependencyCheck {
+    format = 'XML'
+    autoUpdate = false
+    analyzers {
+        centralEnabled = false
+    }
+    data {
+        directory = System.getenv('OWASP_DATA_DIR')
     }
 }
