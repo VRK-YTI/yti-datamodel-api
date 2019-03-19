@@ -74,14 +74,13 @@ public class RHPOrganizationManager {
                 String uuid = org.getString("uuid");
                 JsonObject prefLabel = org.getJsonObject("prefLabel");
                 JsonObject description = org.getJsonObject("description");
-                String preflabel_fi = prefLabel.getString("fi");
-                String preflabel_en = prefLabel.getString("en");
-                String preflabel_sv = prefLabel.getString("sv");
-                String description_fi = description.getString("fi");
-                String description_en = description.getString("en");
-                String description_sv = description.getString("sv");
-                String url = org.getString("url");
-
+                String preflabel_fi = prefLabel.containsKey("prefLabel_fi") ? prefLabel.getString("fi") : null ;
+                String preflabel_en = prefLabel.containsKey("prefLabel_en") ? prefLabel.getString("en") : null ;
+                String preflabel_sv = prefLabel.containsKey("prefLabel_sv") ? prefLabel.getString("sv") : null ;
+                String description_fi = description.containsKey("description_fi") ? description.getString("fi") : null;
+                String description_en = description.containsKey("description_en") ? description.getString("en") : null;
+                String description_sv = description.containsKey("description_sv") ? description.getString("sv") : null;
+                String url = org.containsKey("url") ? org.getString("url") : null;
                 Resource res = model.createResource("urn:uuid:"+uuid);
 
                 res.addProperty(RDF.type,FOAF.Organization);
