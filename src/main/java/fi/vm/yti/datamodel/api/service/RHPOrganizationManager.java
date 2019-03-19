@@ -74,17 +74,16 @@ public class RHPOrganizationManager {
                 String uuid = org.getString("uuid");
                 JsonObject prefLabel = org.getJsonObject("prefLabel");
                 JsonObject description = org.getJsonObject("description");
-                String preflabel_fi = prefLabel.containsKey("prefLabel_fi") ? prefLabel.getString("fi") : null ;
-                String preflabel_en = prefLabel.containsKey("prefLabel_en") ? prefLabel.getString("en") : null ;
-                String preflabel_sv = prefLabel.containsKey("prefLabel_sv") ? prefLabel.getString("sv") : null ;
-                String description_fi = description.containsKey("description_fi") ? description.getString("fi") : null;
-                String description_en = description.containsKey("description_en") ? description.getString("en") : null;
-                String description_sv = description.containsKey("description_sv") ? description.getString("sv") : null;
+                String preflabel_fi = prefLabel.containsKey("fi") ? prefLabel.getString("fi") : null ;
+                String preflabel_en = prefLabel.containsKey("en") ? prefLabel.getString("en") : null ;
+                String preflabel_sv = prefLabel.containsKey("sv") ? prefLabel.getString("sv") : null ;
+                String description_fi = description.containsKey("fi") ? description.getString("fi") : null;
+                String description_en = description.containsKey("en") ? description.getString("en") : null;
+                String description_sv = description.containsKey("sv") ? description.getString("sv") : null;
                 String url = org.containsKey("url") ? org.getString("url") : null;
-                Resource res = model.createResource("urn:uuid:"+uuid);
 
+                Resource res = model.createResource("urn:uuid:"+uuid);
                 res.addProperty(RDF.type,FOAF.Organization);
-               // res.addProperty(DCTerms.identifier, uuid);
 
                 if(preflabel_fi!=null && preflabel_fi.length()>1)
                     res.addLiteral(SKOS.prefLabel, ResourceFactory.createLangLiteral(preflabel_fi,"fi"));
