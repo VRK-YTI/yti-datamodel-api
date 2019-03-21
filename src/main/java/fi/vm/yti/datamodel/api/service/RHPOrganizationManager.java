@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import javax.json.*;
 import javax.ws.rs.core.Response;
 import java.io.InputStream;
+import java.io.StringWriter;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
@@ -74,13 +75,14 @@ public class RHPOrganizationManager {
                 String uuid = org.getString("uuid");
                 JsonObject prefLabel = org.getJsonObject("prefLabel");
                 JsonObject description = org.getJsonObject("description");
-                String preflabel_fi = prefLabel.containsKey("fi") ? prefLabel.getString("fi") : null ;
-                String preflabel_en = prefLabel.containsKey("en") ? prefLabel.getString("en") : null ;
-                String preflabel_sv = prefLabel.containsKey("sv") ? prefLabel.getString("sv") : null ;
-                String description_fi = description.containsKey("fi") ? description.getString("fi") : null;
-                String description_en = description.containsKey("en") ? description.getString("en") : null;
-                String description_sv = description.containsKey("sv") ? description.getString("sv") : null;
-                String url = org.containsKey("url") ? org.getString("url") : null;
+
+                String preflabel_fi = prefLabel.containsKey("fi") && prefLabel.get("fi").getValueType()!=JsonValue.ValueType.NULL ? prefLabel.getString("fi") : null ;
+                String preflabel_en = prefLabel.containsKey("en") && prefLabel.get("en").getValueType()!=JsonValue.ValueType.NULL  ? prefLabel.getString("en") : null ;
+                String preflabel_sv = prefLabel.containsKey("sv") && prefLabel.get("sv").getValueType()!=JsonValue.ValueType.NULL  ? prefLabel.getString("sv") : null ;
+                String description_fi = description.containsKey("fi") && description.get("fi").getValueType()!=JsonValue.ValueType.NULL  ? description.getString("fi") : null;
+                String description_en = description.containsKey("en") && description.get("en").getValueType()!=JsonValue.ValueType.NULL ? description.getString("en") : null;
+                String description_sv = description.containsKey("sv") && description.get("sv").getValueType()!=JsonValue.ValueType.NULL ? description.getString("sv") : null;
+                String url = org.containsKey("url") && org.get("url").getValueType()!=JsonValue.ValueType.NULL ? org.getString("url") : null;
 
                 Resource res = model.createResource("urn:uuid:"+uuid);
                 res.addProperty(RDF.type,FOAF.Organization);
@@ -142,7 +144,10 @@ public class RHPOrganizationManager {
 
             }
 
-        } else return null;
+        } else {
+            logger.debug("Error getting organizations from RHP: "+response.getStatus());
+            return null;
+        }
 
         return model;
     }
@@ -151,6 +156,8 @@ public class RHPOrganizationManager {
         Model graph = getOrganizationModelFromRHP();
         if(graph!=null) {
             graphManager.putToGraph(graph, "urn:yti:organizations");
+        } else {
+            logger.debug("No organizations initialized in group management!");
         }
     }
 

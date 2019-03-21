@@ -9,6 +9,9 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import org.apache.jena.rdf.model.Model;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -22,6 +25,7 @@ import javax.ws.rs.core.Response;
 @Api(tags = {"Organizations"}, description = "Get organizations")
 public class Organizations {
 
+    private static final Logger logger = LoggerFactory.getLogger(Organizations.class.getName());
     private final JerseyResponseManager jerseyResponseManager;
     private final GraphManager graphManager;
 
@@ -40,7 +44,12 @@ public class Organizations {
             @ApiResponse(code = 404, message = "Organization service not found") })
     @Produces("application/json")
     public Response getOrganizations() {
-        return jerseyResponseManager.okModel(graphManager.getCoreGraph("urn:yti:organizations"));
+        Model orgModel = graphManager.getCoreGraph("urn:yti:organizations");
+        if(orgModel!=null && orgModel.size()>1) {
+            return jerseyResponseManager.okModel(orgModel);
+        } else {
+            return jerseyResponseManager.okEmptyContent();
+        }
     }
 
 }
