@@ -78,10 +78,6 @@ public class ExternalClass {
                     + "?class rdfs:isDefinedBy ?externalModel . "
                     + "?externalModel rdfs:label ?externalModelLabel . "
                     + "?externalModel a dcterms:Standard . "
-                  //  + "?externalModel dcterms:isPartOf <urn:uuid:8de527a7-3f1c-4903-9077-0e519a4ec86b> . "
-                  //  + "<urn:uuid:8de527a7-3f1c-4903-9077-0e519a4ec86b> a foaf:Group . "
-                  //  + "<urn:uuid:8de527a7-3f1c-4903-9077-0e519a4ec86b> rdfs:label 'Kansainvälinen suositus'@fi . "
-                  //  + "<urn:uuid:8de527a7-3f1c-4903-9077-0e519a4ec86b> rdfs:label 'International recommendation'@en . "
                     + "?class sh:name ?label . "
                     + "?class sh:description ?comment . "
                     + "?class a rdfs:Class . "
@@ -142,14 +138,9 @@ public class ExternalClass {
 
             /* TODO: FIX dublin core etc. rdf:Property properties */
 
-            logger.info("Using ext query:");
-
             String queryString = QueryLibrary.externalClassQuery;
 
-
-            logger.info(queryString);
-
-            pss.setIri("library", model);
+            pss.setIri("model", model);
             pss.setIri("modelService", endpointServices.getLocalhostCoreSparqlAddress());
             pss.setCommandText(queryString);
             pss.setIri("classIRI", idIRI);
