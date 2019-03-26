@@ -48,7 +48,7 @@ public class RHPOrganizationManager {
 
     public Response getOrganizations() {
 
-        String service = properties.getDefaultGroupManagementAPI() + "organizations";
+        String service = properties.getDefaultGroupManagementAPI() + "organizations?onlyValid=true";
         return clientFactory.create().target(service).request("application/json").get();
     }
 
