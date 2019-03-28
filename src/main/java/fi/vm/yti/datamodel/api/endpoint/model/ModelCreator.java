@@ -97,7 +97,7 @@ public class ModelCreator {
 
         prefix = LDHelper.modelName(prefix);
 
-        if(graphManager.isExistingPrefix(prefix)) {
+        if(LDHelper.isReservedWord(prefix) || graphManager.isExistingPrefix(prefix)) {
             return jerseyResponseManager.usedIRI();
         }
 
