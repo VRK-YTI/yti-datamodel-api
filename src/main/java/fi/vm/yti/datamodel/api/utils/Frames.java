@@ -487,7 +487,17 @@ public class Frames {
                         put("@id", "http://www.w3.org/ns/shacl#not");
                         put("@container", "@list");
                     }
-                });               
+                });
+                put("minProperties", new LinkedHashMap<String, Object>() {
+                    {
+                        put("@id", "http://uri.suomi.fi/datamodel/ns/iow#minProperties");
+                    }
+                });
+                put("maxProperties", new LinkedHashMap<String, Object>() {
+                    {
+                        put("@id", "http://uri.suomi.fi/datamodel/ns/iow#maxProperties");
+                    }
+                });
                 put("subject", subject);
             }
         };

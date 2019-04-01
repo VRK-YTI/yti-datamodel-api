@@ -82,6 +82,25 @@ public class ModelManager {
     }
 
 
+    public void removeLanguages(Model model, List<String> langList) {
+        StmtIterator listIterator = model.listStatements();
+        List<Statement> removeStatements = new ArrayList<>();
+        if(langList==null || langList.isEmpty()) return;
+        while (listIterator.hasNext()) {
+            Statement langStatement = listIterator.next();
+            if (langStatement.getObject().isLiteral()) {
+                Literal lit = langStatement.getLiteral();
+                String litLang = lit.getLanguage();
+                if (litLang != null && !litLang.isEmpty()) {
+                    if (!langList.contains(litLang)) {
+                        removeStatements.add(langStatement);
+                    }
+                }
+            }
+        }
+        model.remove(removeStatements);
+    }
+
     public Model removeListStatements(Model resource, Model model) {
 
         StmtIterator listIterator = resource.listStatements();

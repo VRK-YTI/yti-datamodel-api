@@ -573,7 +573,7 @@ public class QueryLibrary {
                     + "?shapeIRI sh:targetClass ?classIRI . "
                     + "?shapeIRI rdfs:isDefinedBy ?model . "
                     + "?model rdfs:label ?externalModelLabel . "
-                    + "?shapeIRI a rdfs:Class . "
+                    //+ "?shapeIRI a rdfs:Class . "
                     + "?shapeIRI a sh:NodeShape . "
                     + "?shapeIRI owl:versionInfo ?draft . "
                     + "?shapeIRI sh:name ?label . "

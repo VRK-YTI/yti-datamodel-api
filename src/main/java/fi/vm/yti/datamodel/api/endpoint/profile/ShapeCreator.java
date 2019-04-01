@@ -68,7 +68,7 @@ public class ShapeCreator {
                     } else {
                         shapeIRI = idManager.constructIRI(profileIRI+"#"+SplitIRI.localname(classID));
                     }
-                    
+
             } catch (IRIException e) {
                     logger.warn( "ID is invalid IRI!");
                     return jerseyResponseManager.invalidIRI();
