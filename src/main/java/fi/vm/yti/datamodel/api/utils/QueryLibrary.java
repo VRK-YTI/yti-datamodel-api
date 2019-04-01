@@ -459,14 +459,15 @@ public class QueryLibrary {
                     //+ "FILTER(STRSTARTS(STR(?classIRI), STR(?externalModel)))"
 
                     + "?classIRI a ?type . "
+                    + "FILTER(!isBlank(?classIRI)) "
                     + "VALUES ?type { rdfs:Class owl:Class } "
 
                     /* Get class label */
-                    + "{?classIRI ?labelProp ?labelStr . FILTER(LANG(?labelStr) = '') BIND(STRLANG(?labelStr,'en') as ?label) "
+                    + "OPTIONAL{{?classIRI ?labelProp ?labelStr . FILTER(LANG(?labelStr) = '') BIND(STRLANG(?labelStr,'en') as ?label) "
                     + "VALUES ?labelProp { rdfs:label sh:name dc:title dcterms:title } }"
                     + "UNION"
                     + "{ ?classIRI ?labelProp ?label . FILTER(LANG(?label)!='') "
-                    + "VALUES ?labelProp { rdfs:label sh:name dc:title dcterms:title } }"
+                    + "VALUES ?labelProp { rdfs:label sh:name dc:title dcterms:title } }}"
 
                     /* Get class comment */
                     + "OPTIONAL {{ ?classIRI ?commentPred ?commentStr . "

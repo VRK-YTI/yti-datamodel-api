@@ -90,9 +90,10 @@ public class ExternalClass {
                     + "}}"
                     + "GRAPH ?externalModel { "
                     + "?class a ?type . "
+                    + "FILTER(!isBlank(?class)) "
                     + "VALUES ?type { rdfs:Class owl:Class sh:NodeShape sh:Shape } "
                     /* GET LABEL */
-                    + "{ ?class ?labelPred ?labelStr . "
+                    + "OPTIONAL{{ ?class ?labelPred ?labelStr . "
                     + "VALUES ?labelPred { rdfs:label sh:name dc:title dcterms:title }"                    
                     + "FILTER(LANG(?labelStr) = '') BIND(STRLANG(STR(?labelStr),'en') as ?label) }"
                     + "UNION"
@@ -107,8 +108,7 @@ public class ExternalClass {
                     + "{ ?class ?commentPred ?comment . "
                     + "VALUES ?commentPred { rdfs:comment skos:definition dcterms:description dc:description prov:definition sh:description }"
                     + " FILTER(LANG(?comment)!='') }"
-                    + "} "
-
+                    + "}}"
                     + "}";
 
 
