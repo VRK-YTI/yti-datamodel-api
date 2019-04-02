@@ -94,8 +94,9 @@ public class Resolve {
                 }
         }
 
-        Locale locale = Locale.forLanguageTag(acceptLang);
-        String language = locale.getDefault().toString().substring(0,2).toLowerCase();
+
+        Locale locale = acceptLang==null ? null : Locale.forLanguageTag(acceptLang);
+        String language = locale==null ? null : locale.getDefault().toString().substring(0,2).toLowerCase();
 
         final URI htmlRedirectUrl = URI.create(uriInfo.getBaseUri().toString().replace("/api/rest/","/model/") + graphPrefix + (uriFragment!=null?"/"+uriFragment:""));
 
