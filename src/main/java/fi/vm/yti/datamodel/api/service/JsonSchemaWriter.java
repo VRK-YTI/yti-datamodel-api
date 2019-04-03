@@ -87,13 +87,15 @@ public class JsonSchemaWriter {
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
 
         String selectClass =
-                "SELECT ?type ?label ?description "
+                "SELECT ?type ?label ?description ?minProperties ?maxProperties "
                         + "WHERE { "
                         + "GRAPH ?resourceID { "
                         + "?resourceID a ?type . "
-                        + "?resourceID rdfs:label ?label . "
+                        + "?resourceID sh:name ?label . "
+                        + "OPTIONAL { ?resourceId iow:minProperties ?minProperties . }"
+                        + "OPTIONAL { ?resourceId iow:maxProperties ?maxProperties . }"
                         + "FILTER (langMatches(lang(?label),?lang))"
-                        + "OPTIONAL { ?resourceID rdfs:comment ?description . "
+                        + "OPTIONAL { ?resourceID sh:description ?description . "
                         + "FILTER (langMatches(lang(?description),?lang))"
                         + "}"
                         + "} "
@@ -117,9 +119,18 @@ public class JsonSchemaWriter {
 
                 QuerySolution soln = results.nextSolution();
                 String title = soln.getLiteral("label").getString();
+
                 if (soln.contains("description")) {
                     String description = soln.getLiteral("description").getString();
                     schema.add("description", description);
+                }
+
+                if(soln.contains("minProperties")) {
+                    schema.add("minProperties",soln.getLiteral("minProperties").getInt());
+                }
+
+                if(soln.contains("maxProperties")) {
+                    schema.add("maxProperties",soln.getLiteral("maxProperties").getInt());
                 }
 
                 schema.add("id", classID + ".jschema");
@@ -143,7 +154,7 @@ public class JsonSchemaWriter {
         if(classMetadata) {
 
             String selectResources =
-                    "SELECT ?predicate ?id ?property ?valueList ?schemeList ?predicateName ?label ?datatype ?shapeRef ?min ?max ?minLength ?maxLenght ?pattern ?idBoolean "
+                    "SELECT ?predicate ?id ?property ?valueList ?schemeList ?predicateName ?label ?datatype ?shapeRef ?min ?max ?minLength ?maxLength ?pattern ?idBoolean "
                             + "WHERE { "
                             + "GRAPH ?resourceID {"
                             + "?resourceID sh:property ?property . "
@@ -161,7 +172,7 @@ public class JsonSchemaWriter {
                             + "OPTIONAL { ?property sh:minCount ?min . }"
                             + "OPTIONAL { ?property sh:maxCount ?max . }"
                             + "OPTIONAL { ?property sh:pattern ?pattern . }"
-                            + "OPTIONAL { ?property sh:minLenght ?minLength . }"
+                            + "OPTIONAL { ?property sh:minLength ?minLength . }"
                             + "OPTIONAL { ?property sh:maxLength ?maxLength . }"
                             + "OPTIONAL { ?property sh:in ?valueList . } "
                             + "OPTIONAL { ?property dcam:memberOf ?schemeList . } "
@@ -495,7 +506,7 @@ public class JsonSchemaWriter {
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
 
         String selectResources =
-                "SELECT ?resource ?targetClass ?className ?classTitle ?classDescription ?property ?valueList ?schemeList ?predicate ?id ?title ?description ?predicateName ?datatype ?shapeRef ?shapeRefName ?min ?max ?minLength ?maxLength ?pattern ?idBoolean ?example "
+                "SELECT ?resource ?targetClass ?className ?classTitle ?classDescription ?minProperties ?maxProperties ?property ?valueList ?schemeList ?predicate ?id ?title ?description ?predicateName ?datatype ?shapeRef ?shapeRefName ?min ?max ?minLength ?maxLength ?pattern ?idBoolean ?example "
                         + "WHERE { "
                         + "GRAPH ?modelPartGraph {"
                         + "?model dcterms:hasPart ?resource . "
@@ -503,6 +514,8 @@ public class JsonSchemaWriter {
                         + "GRAPH ?resource {"
                         + "?resource sh:name ?classTitle . "
                         + "FILTER (langMatches(lang(?classTitle),?lang))"
+                        + "OPTIONAL { ?resource iow:minProperties ?minProperties . }"
+                        + "OPTIONAL { ?resource iow:maxProperties ?maxProperties . }"
                         + "OPTIONAL { ?resource sh:targetClass ?targetClass . }"
                         + "OPTIONAL { ?resource sh:description ?classDescription . "
                         + "FILTER (langMatches(lang(?classDescription),?lang))"
@@ -522,7 +535,7 @@ public class JsonSchemaWriter {
                         + "OPTIONAL { ?property sh:maxCount ?max . }"
                         + "OPTIONAL { ?property sh:minCount ?min . }"
                         + "OPTIONAL { ?property sh:pattern ?pattern . }"
-                        + "OPTIONAL { ?property sh:minLenght ?minLength . }"
+                        + "OPTIONAL { ?property sh:minLength ?minLength . }"
                         + "OPTIONAL { ?property sh:maxLength ?maxLength . }"
                         + "OPTIONAL { ?property skos:example ?example . }"
                         + "OPTIONAL { ?property sh:in ?valueList . } "
@@ -785,6 +798,13 @@ public class JsonSchemaWriter {
                     if (soln.contains("classDescription")) {
                         classDefinition.add("description", soln.getLiteral("classDescription").getString());
                     }
+                    if(soln.contains("minProperties")) {
+                        classDefinition.add("minProperties",soln.getLiteral("minProperties").getInt());
+                    }
+
+                    if(soln.contains("maxProperties")) {
+                        classDefinition.add("maxProperties",soln.getLiteral("maxProperties").getInt());
+                    }
                     classDefinition.add("properties", properties.build());
 
                     JsonArrayBuilder required = Json.createArrayBuilder();
@@ -970,7 +990,7 @@ public class JsonSchemaWriter {
         }
 
         String selectResources =
-                "SELECT ?resource ?property ?lang ?className ?classTitle ?classDescription ?predicate ?predicateName ?datatype ?shapeRef ?shapeRefName ?min ?max ?propertyLabel ?propertyDescription ?idBoolean "
+                "SELECT ?resource ?property ?lang ?className ?classTitle ?classDescription ?predicate ?predicateName ?datatype ?shapeRef ?pattern ?shapeRefName ?minLength ?maxLength ?min ?max ?propertyLabel ?propertyDescription ?idBoolean "
                         + "WHERE { "
                         + "GRAPH ?modelPartGraph {"
                         + "?model dcterms:hasPart ?resource . "
@@ -993,6 +1013,9 @@ public class JsonSchemaWriter {
                         + "OPTIONAL { ?property sh:node ?shapeRef . BIND(afn:localname(?shapeRef) as ?shapeRefName) }"
                         + "OPTIONAL { ?property sh:minCount ?min . }"
                         + "OPTIONAL { ?property sh:maxCount ?max . }"
+                        + "OPTIONAL { ?property sh:pattern ?pattern . }"
+                        + "OPTIONAL { ?property sh:minLenght ?minLength . }"
+                        + "OPTIONAL { ?property sh:maxLength ?maxLength . }"
                         + "OPTIONAL { ?property iow:isResourceIdentifier ?idBoolean . }"
                         + "BIND(afn:localname(?predicate) as ?predicateName)"
                         + "}"
