@@ -3,6 +3,8 @@ package fi.vm.yti.datamodel.api.utils;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.jsonldjava.core.JsonLdOptions;
+import com.github.jsonldjava.core.JsonLdProcessor;
 import com.github.jsonldjava.utils.JsonUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.text.WordUtils;
@@ -17,7 +19,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
+import javax.json.Json;
+import javax.json.JsonObject;
 import javax.ws.rs.core.Response;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.InvalidParameterException;
@@ -477,7 +482,7 @@ public class LDHelper {
     }
     
     public static InputStream getDefaultCodeServers() {
-           return LDHelper.class.getClassLoader().getResourceAsStream("OPHCodeServers.json");
+           return LDHelper.class.getClassLoader().getResourceAsStream("defaultCodeServers.json");
     }
       
     public static InputStream getDefaultGroupsInputStream() {
@@ -591,4 +596,22 @@ public class LDHelper {
 
         return model;
     }
+
+    public static Model getJSONArrayResponseAsJenaModel(Response response, Map<String,Object> contextObject) {
+        Model model = ModelFactory.createDefaultModel();
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            List<Object> jsonList = mapper.readValue((InputStream)response.getEntity(),new TypeReference<List<Object>>(){});
+            Map<String,Object> rootObject = new HashMap<>();
+            rootObject.put("@context",contextObject);
+            rootObject.put("@graph",jsonList);
+            String jsonLdString = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(rootObject);
+            InputStream targetStream = new ByteArrayInputStream(jsonLdString.getBytes());
+            model = model.read(targetStream,"", "JSON-LD");
+        } catch(IOException ex) {
+            logger.info(ex.getMessage());
+        }
+        return model;
+    }
+
 }

@@ -7,6 +7,7 @@ import org.apache.jena.query.*;
 import org.apache.jena.rdf.model.*;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RiotException;
+import org.apache.jena.update.UpdateAction;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.SKOS;
 import org.apache.jena.web.DatasetAdapter;
@@ -15,6 +16,7 @@ import org.commonmark.node.Node;
 import org.commonmark.parser.Parser;
 import org.commonmark.renderer.html.HtmlRenderer;
 import org.glassfish.jersey.client.ClientProperties;
+import org.glassfish.jersey.uri.UriComponent;
 import org.jsoup.Jsoup;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,12 +25,15 @@ import org.springframework.stereotype.Service;
 
 import javax.json.*;
 import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import java.io.InputStream;
 import java.io.StringWriter;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 @Service
 public final class TermedTerminologyManager {
@@ -159,7 +164,7 @@ public final class TermedTerminologyManager {
 
             Response response = target.request("application/ld+json").property(ClientProperties.FOLLOW_REDIRECTS, Boolean.TRUE).get();
 
-            logger.info("TERMED CALL: "+target.getUri().toString());
+            logger.info("TERMED CONCEPT URI: "+target.getUri().toString());
 
             if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
                 logger.info( response.getStatus()+" from URL: "+url);
@@ -228,6 +233,8 @@ public final class TermedTerminologyManager {
                 target = target.queryParam("where", "graph.uri:" + schemeURI);
             }
 
+            logger.info("TERMED CONCEPT SEARCH: "+target.getUri().toString());
+
             Response response = target.request("application/ld+json").get();
 
             Model conceptModel = LDHelper.getJSONLDResponseAsJenaModel(response);
@@ -257,6 +264,89 @@ public final class TermedTerminologyManager {
 
     }
 
+    static private final Map<String,Object> conceptContext = new LinkedHashMap<String, Object>() {
+        {
+            put("id", new LinkedHashMap<String, Object>() {
+                {
+                    put("@id", "http://purl.org/dc/terms/identifier");
+                }
+            });
+            put("prefLabel", new LinkedHashMap<String, Object>() {
+                {
+                    put("@id", "http://www.w3.org/2004/02/skos/core#prefLabel");
+                    put("@container", "@language");
+                }
+            });
+            put("definition", new LinkedHashMap<String, Object>() {
+                {
+                    put("@id", "http://www.w3.org/2004/02/skos/core#definition");
+                    put("@container", "@language");
+                }
+            });
+            put("vocabularyPrefLabel", new LinkedHashMap<String, Object>() {
+                {
+                    put("@id", "http://purl.org/dc/terms/title");
+                    put("@container", "@language");
+                }
+            });
+            put("vocabularyId", new LinkedHashMap<String, Object>() {
+                {
+                    put("@id", "http://termed.thl.fi/meta/graph");
+                }
+            });
+            put("uri", "@id");
+            put("status", new LinkedHashMap<String, Object>() {
+                {
+                    put("@id", "http://www.w3.org/2002/07/owl#versionInfo");
+                }
+            });
+            put("vocabularyUri", new LinkedHashMap<String, Object>() {
+                {
+                    put("@id", "http://www.w3.org/2004/02/skos/core#inScheme");
+                    put("@type", "@id");
+                }
+            });
+        }
+    };
+
+    public Response searchConceptFromTerminologyAPI(String query, String graphId) {
+
+        if(graphId==null || graphId!=null && graphId.isEmpty()) {
+            graphId="0";
+        }
+
+        String url = properties.getDefaultTerminologyAPI()+"terminology/publicapi/searchconcept/searchterm/"+LDHelper.encode(query)+"/vocabulary/"+graphId;
+
+        Client client = ClientBuilder.newClient();
+        WebTarget target = client.target(url);
+        Response response = target.request("application/json").get();
+        client.close();
+
+        if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
+            logger.warn("Failed to connect "+response.getStatus()+": "+url);
+            return jerseyResponseManager.serverError();
+        }
+
+        Model model = LDHelper.getJSONArrayResponseAsJenaModel(response,conceptContext);
+        model.setNsPrefixes(LDHelper.PREFIX_MAP);
+
+        /* Lift vocabulary node to separate resource */
+        String qry = LDHelper.prefix+" DELETE { ?concept dcterms:title ?title . }" +
+                "INSERT { ?vocabulary skos:prefLabel ?title . " +
+                "?vocabulary a skos:ConceptScheme . " +
+                "?concept a skos:Concept . }" +
+                "WHERE { ?concept dcterms:title ?title ." +
+                " ?concept skos:inScheme ?vocabulary . }";
+
+        UpdateAction.parseExecute(qry,model);
+
+        String modelString = modelManager.writeModelToJSONLDString(model);
+
+        ResponseBuilder rb = Response.status(Response.Status.OK);
+        return rb.entity(modelString).build();
+
+    }
+
 
     /**
      * Returns concepts from Termed api
@@ -272,7 +362,7 @@ public final class TermedTerminologyManager {
             return jerseyResponseManager.notFound();
         }
 
-        ResponseBuilder rb = Response.status(Response.Status.ACCEPTED);
+        ResponseBuilder rb = Response.status(Response.Status.OK);
         rb.entity(modelManager.writeModelToJSONLDString(simpleSkos));
 
         return rb.build();
@@ -310,7 +400,7 @@ public final class TermedTerminologyManager {
 
             Response response = target.request("application/rdf+xml").get();
 
-            logger.info("TERMED CALL: "+target.getUri().toString());
+            logger.info("TERMED SCHEMES: "+target.getUri().toString());
 
             if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
                 logger.info( response.getStatus()+" from URL: "+url);

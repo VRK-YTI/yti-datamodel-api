@@ -59,7 +59,7 @@ public class CodeServerCreator {
 
         if(uri!=null && !uri.equals("undefined")) {
 
-            if((!uri.startsWith("http://uri.suomi.fi") || !uri.startsWith("https://virkailija.opintopolku.fi")) || idManager.isInvalid(uri)) {
+            if((!uri.startsWith("https://koodistot.suomi.fi") || !uri.startsWith("https://virkailija.opintopolku.fi")) && !idManager.isInvalid(uri)) {
                 return jerseyResponseManager.invalidIRI();
             }
 

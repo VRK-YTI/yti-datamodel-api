@@ -42,10 +42,11 @@ public class ConceptSearch {
             @ApiParam(value = "graphId")
             @QueryParam("graphId") String graphId) {
 
-        if(!term.endsWith("*"))  {
+      if(!term.endsWith("*"))  {
             term+="*";
         }
 
-        return termedTerminologyManager.searchConceptFromTermedAPI(term, namespace,null, graphId);
+        return termedTerminologyManager.searchConceptFromTerminologyAPI(term,graphId);
+        
     }
 }
