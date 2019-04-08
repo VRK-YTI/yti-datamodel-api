@@ -111,7 +111,7 @@ public class QueryLibrary {
                     "?terminology skos:prefLabel ?title . " +
                     "} WHERE {" +
                     "?concept skosxl:prefLabel ?xlLabel . " +
-                    "?concept skos:definition ?definition . " +
+                    "OPTIONAL { ?concept skos:definition ?definition . }" +
                     "?concept termed:graph ?graphID . " +
                     "?concept termed:id ?conceptID . "+
                     "?xlLabel skosxl:literalForm ?label . " +

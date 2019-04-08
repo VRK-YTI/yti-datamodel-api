@@ -254,7 +254,7 @@ public final class TermedTerminologyManager {
                     logger.info(response.getStatus() + " from URL: " + url);
                     return null;
                 }
-
+                
                 return simpleSkos;
             }
         } catch(Exception ex) {
