@@ -141,14 +141,15 @@ public class Usage {
                     + "?usage a ?usageType . "
                     + "?usage ?usageNamePredicate ?usageLabel . "
                     + "VALUES ?usageNamePredicate { rdfs:label sh:name }"
-                    + "OPTIONAL {?usage rdfs:isDefinedBy ?usageModel . }}"
-                    + "FILTER(?usage!=?resource && ?subject!=?resource)"
+                    + "}"
+                    + "OPTIONAL {?usage rdfs:isDefinedBy ?usageModel . "
                     + "GRAPH ?usageModel {"
                     + "?usageModel a ?usageModelType . "
                     + "?usageModel rdfs:label ?usageModelLabel . "
                     + "?usageModel dcap:preferredXMLNamespaceName ?usageNamespace . "
                     + "?usageModel dcap:preferredXMLNamespacePrefix ?usagePrefix . "
-                    + "}"
+                    + "}}"
+                    + "FILTER(?usage!=?resource && ?subject!=?resource && ?usage!=?usageModel)"
                     + "}";
             
                 String modelQueryString = "CONSTRUCT  { "
