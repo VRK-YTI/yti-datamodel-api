@@ -154,11 +154,12 @@ public class JsonSchemaWriter {
         if(classMetadata) {
 
             String selectResources =
-                    "SELECT ?predicate ?id ?property ?valueList ?schemeList ?predicateName ?label ?datatype ?shapeRef ?min ?max ?minLength ?maxLength ?pattern ?idBoolean "
+                    "SELECT ?predicate ?id ?property ?propertyDeactivated ?valueList ?schemeList ?predicateName ?label ?datatype ?shapeRef ?min ?max ?minLength ?maxLength ?pattern ?idBoolean "
                             + "WHERE { "
                             + "GRAPH ?resourceID {"
                             + "?resourceID sh:property ?property . "
                             + "?property sh:path ?predicate . "
+                            + "OPTIONAL { ?property sh:deactivated ?propertyDeactivated . }"
                             + "OPTIONAL { ?property iow:localName ?id . }"
                             + "?property ?nameProperty ?label . "
                             + "VALUES ?nameProperty { sh:name rdfs:label }"
@@ -328,7 +329,9 @@ public class JsonSchemaWriter {
                         }
                     }
 
-                    properties.add(predicateName, predicate.build());
+                    if(!soln.contains("propertyDeactivated") || (soln.contains("propertyDeactivated") && !soln.getLiteral("propertyDeactivated").getBoolean())) {
+                        properties.add(predicateName, predicate.build());
+                    }
                 }
             }
 
@@ -506,7 +509,7 @@ public class JsonSchemaWriter {
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
 
         String selectResources =
-                "SELECT ?resource ?targetClass ?className ?classTitle ?classDescription ?minProperties ?maxProperties ?property ?valueList ?schemeList ?predicate ?id ?title ?description ?predicateName ?datatype ?shapeRef ?shapeRefName ?min ?max ?minLength ?maxLength ?pattern ?idBoolean ?example "
+                "SELECT ?resource ?targetClass ?className ?classTitle ?classDeactivated ?classDescription ?minProperties ?maxProperties ?property ?propertyDeactivated ?valueList ?schemeList ?predicate ?id ?title ?description ?predicateName ?datatype ?shapeRef ?shapeRefName ?min ?max ?minLength ?maxLength ?pattern ?idBoolean ?example "
                         + "WHERE { "
                         + "GRAPH ?modelPartGraph {"
                         + "?model dcterms:hasPart ?resource . "
@@ -514,6 +517,7 @@ public class JsonSchemaWriter {
                         + "GRAPH ?resource {"
                         + "?resource sh:name ?classTitle . "
                         + "FILTER (langMatches(lang(?classTitle),?lang))"
+                        + "OPTIONAL { ?resource sh:deactivated ?classDeactivated . }"
                         + "OPTIONAL { ?resource iow:minProperties ?minProperties . }"
                         + "OPTIONAL { ?resource iow:maxProperties ?maxProperties . }"
                         + "OPTIONAL { ?resource sh:targetClass ?targetClass . }"
@@ -530,6 +534,7 @@ public class JsonSchemaWriter {
                         + "OPTIONAL { ?property sh:description ?description . "
                         + "FILTER (langMatches(lang(?description),?lang))"
                         + "}"
+                        + "OPTIONAL { ?property sh:deactivated ?propertyDeactivated . }"
                         + "OPTIONAL { ?property sh:datatype ?datatype . }"
                         + "OPTIONAL { ?property sh:node ?shapeRef . BIND(afn:localname(?shapeRef) as ?shapeRefName) }"
                         + "OPTIONAL { ?property sh:maxCount ?max . }"
@@ -589,244 +594,244 @@ public class JsonSchemaWriter {
                 if (!soln.contains("className")) {
                     return null;
                 }
-
-            /* First run per predicate */
-
-                if (pIndex == 1) {
-
-                    logger.info("First run");
-
+                 
+                if(!soln.contains("classDeactivated") || (soln.contains("classDeactivated") && !soln.getLiteral("classDeactivated").getBoolean())) {    
+     
                     className = soln.getLiteral("className").getString();
 
-                    logger.info("Class:" + className);
+                    if(!soln.contains("propertyDeactivated") || (soln.contains("propertyDeactivated") && !soln.getLiteral("propertyDeactivated").getBoolean())) {    
+                    
+                        /* First run per predicate */
 
-                    predicateID = soln.getResource("predicate").toString();
+                        if (pIndex == 1) {
 
-                    predicate.add("@id", predicateID);
+                            predicateID = soln.getResource("predicate").toString();
 
-                    predicateName = soln.getLiteral("predicateName").getString();
+                            predicate.add("@id", predicateID);
 
-                    if (soln.contains("id")) {
-                        predicateName = soln.getLiteral("id").getString();
-                        logger.info("Predicatename: " + predicateName);
-                    }
+                            predicateName = soln.getLiteral("predicateName").getString();
 
-                    String title = soln.getLiteral("title").getString();
+                            if (soln.contains("id")) {
+                                predicateName = soln.getLiteral("id").getString();
+                                logger.info("Predicatename: " + predicateName);
+                            }
 
-                    // JsonObjectBuilder predicate = Json.createObjectBuilder();
+                            String title = soln.getLiteral("title").getString();
 
-                    predicate.add("title", title);
+                            // JsonObjectBuilder predicate = Json.createObjectBuilder();
 
-                    if (soln.contains("min")) {
-                        int min = soln.getLiteral("min").getInt();
-                        if (min > 0) {
-                            requiredPredicates.add(predicateName);
-                        }
-                    }
+                            predicate.add("title", title);
 
-                    if (soln.contains("description")) {
-                        String description = soln.getLiteral("description").getString();
-                        predicate.add("description", description);
-                    }
+                            if (soln.contains("min")) {
+                                int min = soln.getLiteral("min").getInt();
+                                if (min > 0) {
+                                    requiredPredicates.add(predicateName);
+                                }
+                            }
 
-                    if (soln.contains("valueList")) {
-                        JsonArray valueList = getValueList(soln.getResource("resource").toString(), soln.getResource("property").toString());
-                        if (valueList != null) {
-                            predicate.add("enum", valueList);
-                        }
-                    } else if (soln.contains("schemeList")) {
-                        JsonArray schemeList = getSchemeValueList(soln.getResource("schemeList").toString());
-                        if (schemeList != null) {
-                            predicate.add("enum", schemeList);
-                        }
-                    }
+                            if (soln.contains("description")) {
+                                String description = soln.getLiteral("description").getString();
+                                predicate.add("description", description);
+                            }
 
-                    if (soln.contains("datatype")) {
+                            if (soln.contains("valueList")) {
+                                JsonArray valueList = getValueList(soln.getResource("resource").toString(), soln.getResource("property").toString());
+                                if (valueList != null) {
+                                    predicate.add("enum", valueList);
+                                }
+                            } else if (soln.contains("schemeList")) {
+                                JsonArray schemeList = getSchemeValueList(soln.getResource("schemeList").toString());
+                                if (schemeList != null) {
+                                    predicate.add("enum", schemeList);
+                                }
+                            }
 
-                        String datatype = soln.getResource("datatype").toString();
+                            if (soln.contains("datatype")) {
 
-                        if (soln.contains("idBoolean")) {
-                            Boolean isId = soln.getLiteral("idBoolean").getBoolean();
-                            if (isId) {
-                                predicate.add("@type", "@id");
-                            } else predicate.add("@type", datatype);
-                        } else {
-                            predicate.add("@type", datatype);
-                        }
+                                String datatype = soln.getResource("datatype").toString();
 
-                        String jsonDatatype = DATATYPE_MAP.get(datatype);
-
-                        if (soln.contains("maxLength")) {
-                            predicate.add("maxLength", soln.getLiteral("maxLength").getInt());
-                        }
-
-                        if (soln.contains("minLength")) {
-                            predicate.add("minLength", soln.getLiteral("minLength").getInt());
-                        }
-
-                        if (soln.contains("pattern")) {
-                            predicate.add("pattern", soln.getLiteral("pattern").getString());
-                        }
-
-                        if (soln.contains("max") && soln.getLiteral("max").getInt() <= 1) {
-
-                            // predicate.add("maxItems",1);
-
-                            if (jsonDatatype != null) {
-                                if (jsonDatatype.equals("langString")) {
-                                    predicate.add("type", "object");
-                                    predicate.add("$ref", "#/definitions/langString");
+                                if (soln.contains("idBoolean")) {
+                                    Boolean isId = soln.getLiteral("idBoolean").getBoolean();
+                                    if (isId) {
+                                        predicate.add("@type", "@id");
+                                    } else predicate.add("@type", datatype);
                                 } else {
-                                    predicate.add("type", jsonDatatype);
+                                    predicate.add("@type", datatype);
                                 }
-                            }
 
-                        } else {
+                                String jsonDatatype = DATATYPE_MAP.get(datatype);
 
-                            if (soln.contains("max") && soln.getLiteral("max").getInt() > 1) {
-                                predicate.add("maxItems", soln.getLiteral("max").getInt());
-                            }
+                                if (soln.contains("maxLength")) {
+                                    predicate.add("maxLength", soln.getLiteral("maxLength").getInt());
+                                }
 
-                            if (soln.contains("min") && soln.getLiteral("min").getInt() > 0) {
-                                predicate.add("minItems", soln.getLiteral("min").getInt());
-                            }
+                                if (soln.contains("minLength")) {
+                                    predicate.add("minLength", soln.getLiteral("minLength").getInt());
+                                }
 
+                                if (soln.contains("pattern")) {
+                                    predicate.add("pattern", soln.getLiteral("pattern").getString());
+                                }
 
-                            predicate.add("type", "array");
+                                if (soln.contains("max") && soln.getLiteral("max").getInt() <= 1) {
 
-                            arrayType = true;
+                                    // predicate.add("maxItems",1);
 
-                            if (jsonDatatype != null) {
+                                    if (jsonDatatype != null) {
+                                        if (jsonDatatype.equals("langString")) {
+                                            predicate.add("type", "object");
+                                            predicate.add("$ref", "#/definitions/langString");
+                                        } else {
+                                            predicate.add("type", jsonDatatype);
+                                        }
+                                    }
 
-                                if (jsonDatatype.equals("langString")) {
-                                    typeObject.add("type", "object");
-                                    typeObject.add("$ref", "#/definitions/langString");
                                 } else {
-                                    typeObject.add("type", jsonDatatype);
-                                }
 
-                            }
+                                    if (soln.contains("max") && soln.getLiteral("max").getInt() > 1) {
+                                        predicate.add("maxItems", soln.getLiteral("max").getInt());
+                                    }
 
-                        }
-
-
-                        if (FORMAT_MAP.containsKey(datatype)) {
-                            predicate.add("format", FORMAT_MAP.get(datatype));
-                        }
-
-                    } else {
-                        if (soln.contains("shapeRefName")) {
-
-                            predicate.add("@type", "@id");
-
-                            String shapeRefName = soln.getLiteral("shapeRefName").getString();
+                                    if (soln.contains("min") && soln.getLiteral("min").getInt() > 0) {
+                                        predicate.add("minItems", soln.getLiteral("min").getInt());
+                                    }
 
 
-                            if (!soln.contains("max") || soln.getLiteral("max").getInt() > 1) {
-                                if (soln.contains("min")) {
-                                    predicate.add("minItems", soln.getLiteral("min").getInt());
-                                }
-                                if (soln.contains("max")) {
-                                    predicate.add("maxItems", soln.getLiteral("max").getInt());
+                                    predicate.add("type", "array");
+
+                                    arrayType = true;
+
+                                    if (jsonDatatype != null) {
+
+                                        if (jsonDatatype.equals("langString")) {
+                                            typeObject.add("type", "object");
+                                            typeObject.add("$ref", "#/definitions/langString");
+                                        } else {
+                                            typeObject.add("type", jsonDatatype);
+                                        }
+
+                                    }
 
                                 }
-                                predicate.add("type", "array");
 
-                                predicate.add("items", Json.createObjectBuilder().add("type", "object").add("$ref", "#/definitions/" + shapeRefName).build());
+
+                                if (FORMAT_MAP.containsKey(datatype)) {
+                                    predicate.add("format", FORMAT_MAP.get(datatype));
+                                }
+
                             } else {
-                                predicate.add("type", "object");
-                                predicate.add("$ref", "#/definitions/" + shapeRefName);
+                                if (soln.contains("shapeRefName")) {
+
+                                    predicate.add("@type", "@id");
+
+                                    String shapeRefName = soln.getLiteral("shapeRefName").getString();
+
+
+                                    if (!soln.contains("max") || soln.getLiteral("max").getInt() > 1) {
+                                        if (soln.contains("min")) {
+                                            predicate.add("minItems", soln.getLiteral("min").getInt());
+                                        }
+                                        if (soln.contains("max")) {
+                                            predicate.add("maxItems", soln.getLiteral("max").getInt());
+
+                                        }
+                                        predicate.add("type", "array");
+
+                                        predicate.add("items", Json.createObjectBuilder().add("type", "object").add("$ref", "#/definitions/" + shapeRefName).build());
+                                    } else {
+                                        predicate.add("type", "object");
+                                        predicate.add("$ref", "#/definitions/" + shapeRefName);
+                                    }
+                                }
                             }
+
+                        }
+
+                        /* Every run per predicate*/
+
+                        if (soln.contains("example")) {
+                            String example = soln.getLiteral("example").getString();
+                            exampleSet.add(example);
+                        }
+                        if (pResults.hasNext() && predicateID.equals(pResults.peek().getResource("predicate").toString()) && className.equals(pResults.peek().getLiteral("className").getString())) {
+
+                            pIndex += 1;
+
+                        } else {
+
+                        /* Last run per class */
+
+                            if (!exampleSet.isEmpty()) {
+
+                                Iterator<String> i = exampleSet.iterator();
+
+                                while (i.hasNext()) {
+                                    String ex = i.next();
+                                    exampleList.add(ex);
+                                }
+
+                                predicate.add("example", exampleList.build());
+
+                            }
+
+                            if (arrayType) {
+                                predicate.add("items", typeObject.build());
+                            }
+                        
+                            properties.add(predicateName, predicate.build());
+                            
+                            predicate = Json.createObjectBuilder();
+                            typeObject = Json.createObjectBuilder();
+                            arrayType = false;
+                            pIndex = 1;
+                            exampleSet = new HashSet<String>();
+                            exampleList = Json.createArrayBuilder();
                         }
                     }
 
-                }
-
-            /* Every run per predicate*/
-
-                if (soln.contains("example")) {
-                    String example = soln.getLiteral("example").getString();
-                    exampleSet.add(example);
-                }
-
-                if (pResults.hasNext() && predicateID.equals(pResults.peek().getResource("predicate").toString()) && className.equals(pResults.peek().getLiteral("className").getString())) {
-
-                    pIndex += 1;
-
-                } else {
-
-                /* Last run per class */
-
-                    if (!exampleSet.isEmpty()) {
-
-                        Iterator<String> i = exampleSet.iterator();
-
-                        while (i.hasNext()) {
-                            String ex = i.next();
-                            exampleList.add(ex);
+                    /* If not build props and requires */
+                    if (!pResults.hasNext() || !className.equals(pResults.peek().getLiteral("className").getString())) {
+                        predicate = Json.createObjectBuilder();
+                        JsonObjectBuilder classDefinition = Json.createObjectBuilder();
+                        classDefinition.add("title", soln.getLiteral("classTitle").getString());
+                        classDefinition.add("type", "object");
+                        if (soln.contains("targetClass")) {
+                            classDefinition.add("@id", soln.getResource("targetClass").toString());
+                        } else {
+                            classDefinition.add("@id", soln.getResource("resource").toString());
+                        }
+                        if (soln.contains("classDescription")) {
+                            classDefinition.add("description", soln.getLiteral("classDescription").getString());
+                        }
+                        if(soln.contains("minProperties")) {
+                            classDefinition.add("minProperties",soln.getLiteral("minProperties").getInt());
                         }
 
-                        predicate.add("example", exampleList.build());
+                        if(soln.contains("maxProperties")) {
+                            classDefinition.add("maxProperties",soln.getLiteral("maxProperties").getInt());
+                        }
+                        classDefinition.add("properties", properties.build());
 
+                        JsonArrayBuilder required = Json.createArrayBuilder();
+
+                        Iterator<String> ri = requiredPredicates.iterator();
+
+                        while (ri.hasNext()) {
+                            String ex = ri.next();
+                            required.add(ex);
+                        }
+
+                        JsonArray reqArray = required.build();
+
+                        if (!reqArray.isEmpty()) {
+                            classDefinition.add("required", reqArray);
+                        }
+
+                        definitions.add(className, classDefinition.build());
+                        properties = Json.createObjectBuilder();
+                        requiredPredicates = new HashSet<String>();
                     }
-
-                    if (arrayType) {
-                        predicate.add("items", typeObject.build());
-                    }
-
-                    properties.add(predicateName, predicate.build());
-                    predicate = Json.createObjectBuilder();
-                    typeObject = Json.createObjectBuilder();
-                    arrayType = false;
-                    pIndex = 1;
-                    exampleSet = new HashSet<String>();
-                    exampleList = Json.createArrayBuilder();
                 }
-
-
-                /* If not build props and requires */
-                if (!pResults.hasNext() || !className.equals(pResults.peek().getLiteral("className").getString())) {
-                    predicate = Json.createObjectBuilder();
-                    JsonObjectBuilder classDefinition = Json.createObjectBuilder();
-                    classDefinition.add("title", soln.getLiteral("classTitle").getString());
-                    classDefinition.add("type", "object");
-                    if (soln.contains("targetClass")) {
-                        classDefinition.add("@id", soln.getResource("targetClass").toString());
-                    } else {
-                        classDefinition.add("@id", soln.getResource("resource").toString());
-                    }
-                    if (soln.contains("classDescription")) {
-                        classDefinition.add("description", soln.getLiteral("classDescription").getString());
-                    }
-                    if(soln.contains("minProperties")) {
-                        classDefinition.add("minProperties",soln.getLiteral("minProperties").getInt());
-                    }
-
-                    if(soln.contains("maxProperties")) {
-                        classDefinition.add("maxProperties",soln.getLiteral("maxProperties").getInt());
-                    }
-                    classDefinition.add("properties", properties.build());
-
-                    JsonArrayBuilder required = Json.createArrayBuilder();
-
-                    Iterator<String> ri = requiredPredicates.iterator();
-
-                    while (ri.hasNext()) {
-                        String ex = ri.next();
-                        required.add(ex);
-                    }
-
-                    JsonArray reqArray = required.build();
-
-                    if (!reqArray.isEmpty()) {
-                        classDefinition.add("required", reqArray);
-                    }
-
-                    definitions.add(className, classDefinition.build());
-                    properties = Json.createObjectBuilder();
-                    requiredPredicates = new HashSet<String>();
-                }
-
             }
 
             return definitions;
@@ -990,7 +995,7 @@ public class JsonSchemaWriter {
         }
 
         String selectResources =
-                "SELECT ?resource ?property ?lang ?className ?classTitle ?classDescription ?predicate ?predicateName ?datatype ?shapeRef ?pattern ?shapeRefName ?minLength ?maxLength ?min ?max ?propertyLabel ?propertyDescription ?idBoolean "
+                "SELECT ?resource ?property ?propertyDeactivated ?lang ?className ?classTitle ?classDeactivated ?classDescription ?predicate ?predicateName ?datatype ?shapeRef ?pattern ?shapeRefName ?minLength ?maxLength ?min ?max ?propertyLabel ?propertyDescription ?idBoolean "
                         + "WHERE { "
                         + "GRAPH ?modelPartGraph {"
                         + "?model dcterms:hasPart ?resource . "
@@ -998,6 +1003,7 @@ public class JsonSchemaWriter {
                         + "GRAPH ?resource {"
                         + "?resource sh:name ?classTitle . "
                         + "BIND(lang(?classTitle) as ?lang)"
+                        + "OPTIONAL { ?resource sh:deactivated ?classDeactivated . }"
                         + "OPTIONAL { ?resource sh:description ?classDescription . "
                         + "FILTER(?lang=lang(?classDescription))"
                         + "}"
@@ -1010,6 +1016,7 @@ public class JsonSchemaWriter {
                         + "FILTER(?lang=lang(?propertyDescription))"
                         + "}"
                         + "OPTIONAL { ?property sh:datatype ?datatype . }"
+                        + "OPTIONAL { ?property sh:deactivated ?propertyDeactivated . }"
                         + "OPTIONAL { ?property sh:node ?shapeRef . BIND(afn:localname(?shapeRef) as ?shapeRefName) }"
                         + "OPTIONAL { ?property sh:minCount ?min . }"
                         + "OPTIONAL { ?property sh:maxCount ?max . }"
@@ -1019,7 +1026,7 @@ public class JsonSchemaWriter {
                         + "OPTIONAL { ?property iow:isResourceIdentifier ?idBoolean . }"
                         + "BIND(afn:localname(?predicate) as ?predicateName)"
                         + "}"
-                        + "} GROUP BY ?resource ?property ?lang ?className ?classTitle ?classDescription ?predicate ?predicateName ?datatype ?shapeRef ?shapeRefName ?min ?max ?propertyLabel ?propertyDescription ?idBoolean "
+                        + "} GROUP BY ?resource ?property ?propertyDeactivated ?lang ?className ?classTitle ?classDeactivated ?classDescription ?predicate ?predicateName ?datatype ?shapeRef ?shapeRefName ?min ?max ?minLength ?maxLength ?propertyLabel ?propertyDescription ?idBoolean ?pattern "
                         + "ORDER BY ?resource ?property ?lang";
 
         pss.setIri("modelPartGraph", modelID+"#HasPartGraph");
@@ -1053,186 +1060,191 @@ public class JsonSchemaWriter {
 
                 if (!soln.contains("className")) return null;
 
-                propertyID = soln.getResource("property").toString();
-                String lang = soln.getLiteral("lang").getString();
-                String className = soln.getLiteral("className").getString();
-                String predicateName = soln.getLiteral("predicateName").getString();
-                String title = soln.getLiteral("propertyLabel").getString();
-                String classTitle = soln.getLiteral("classTitle").getString();
+                if(!soln.contains("classDeactivated") || (soln.contains("classDeactivated") && !soln.getLiteral("classDeactivated").getBoolean())) {   
 
-                String propertyDescription = null;
-                String classDescription = null;
+                    String className = soln.getLiteral("className").getString();
 
-                if (soln.contains("propertyDescription")) {
-                    propertyDescription = soln.getLiteral("propertyDescription").getString();
-                }
+                    if(!soln.contains("propertyDeactivated") || (soln.contains("propertyDeactivated") && !soln.getLiteral("propertyDeactivated").getBoolean())) {   
 
-                if (soln.contains("classDescription")) {
-                    classDescription = soln.getLiteral("classDescription").getString();
-                }
+                        propertyID = soln.getResource("property").toString();
+                        String lang = soln.getLiteral("lang").getString();
+                        String predicateName = soln.getLiteral("predicateName").getString();
+                        String title = soln.getLiteral("propertyLabel").getString();
+                        String classTitle = soln.getLiteral("classTitle").getString();
 
-                JsonObjectBuilder propertyBuilder = Json.createObjectBuilder();
-            
-            /* Build multilingual objects */
+                        String propertyDescription = null;
+                        String classDescription = null;
 
-                propertyTitleObject.add(lang, title);
-
-                if (propertyDescription != null)
-                    propertyDescriptionObject.add(lang, propertyDescription);
-
-                classTitleObject.add(lang, classTitle);
-
-                if (classDescription != null)
-                    classDescriptionObject.add(lang, classDescription);
-
-            /* If property is iterated the last time build the rest */
-                if (pResults.hasNext() && !propertyID.equals(pResults.peek().getResource("property").toString())) {
-
-                    propertyBuilder.add("title", propertyTitleObject.build());
-
-                    JsonObject propertyDescriptionJSON = propertyDescriptionObject.build();
-                    if (!propertyDescriptionJSON.isEmpty()) {
-                        propertyBuilder.add("description", propertyDescriptionJSON);
-                    }
-
-                    if (soln.contains("min")) {
-                        int min = soln.getLiteral("min").getInt();
-                        if (min > 0) {
-                            required.add(predicateName);
-                        }
-                    }
-
-                    if (soln.contains("datatype")) {
-
-                        String datatype = soln.getResource("datatype").toString();
-
-                        if (soln.contains("idBoolean")) {
-                            Boolean isId = soln.getLiteral("idBoolean").getBoolean();
-                            if (isId) {
-                                propertyBuilder.add("@type", "@id");
-                            } else propertyBuilder.add("@type", datatype);
-                        } else {
-                            propertyBuilder.add("@type", datatype);
+                        if (soln.contains("propertyDescription")) {
+                            propertyDescription = soln.getLiteral("propertyDescription").getString();
                         }
 
-                        String jsonDatatype = DATATYPE_MAP.get(datatype);
-
-
-                        if (soln.contains("maxLength")) {
-                            propertyBuilder.add("maxLength", soln.getLiteral("maxLength").getInt());
+                        if (soln.contains("classDescription")) {
+                            classDescription = soln.getLiteral("classDescription").getString();
                         }
 
-                        if (soln.contains("minLength")) {
-                            propertyBuilder.add("minLength", soln.getLiteral("minLength").getInt());
-                        }
+                        JsonObjectBuilder propertyBuilder = Json.createObjectBuilder();
+                    
+                        /* Build multilingual objects */
 
-                        if (soln.contains("pattern")) {
-                            propertyBuilder.add("pattern", soln.getLiteral("pattern").getString());
-                        }
+                        propertyTitleObject.add(lang, title);
 
-                        if (soln.contains("max") && soln.getLiteral("max").getInt() <= 1) {
+                        if (propertyDescription != null)
+                            propertyDescriptionObject.add(lang, propertyDescription);
 
-                            // propertyBuilder.add("maxItems",1);
+                        classTitleObject.add(lang, classTitle);
 
-                            if (jsonDatatype != null) {
-                                if (jsonDatatype.equals("langString")) {
-                                    propertyBuilder.add("type", "object");
-                                    propertyBuilder.add("$ref", "#/definitions/langString");
-                                } else
-                                    propertyBuilder.add("type", jsonDatatype);
+                        if (classDescription != null)
+                            classDescriptionObject.add(lang, classDescription);
+
+                        /* If property is iterated the last time build the rest */
+                        if (pResults.hasNext() && !propertyID.equals(pResults.peek().getResource("property").toString()) || !pResults.hasNext()) {
+
+                            propertyBuilder.add("title", propertyTitleObject.build());
+
+                            JsonObject propertyDescriptionJSON = propertyDescriptionObject.build();
+                            if (!propertyDescriptionJSON.isEmpty()) {
+                                propertyBuilder.add("description", propertyDescriptionJSON);
                             }
 
-                        } else {
-
-                            if (soln.contains("max") && soln.getLiteral("max").getInt() > 1) {
-                                propertyBuilder.add("maxItems", soln.getLiteral("max").getInt());
+                            if (soln.contains("min")) {
+                                int min = soln.getLiteral("min").getInt();
+                                if (min > 0) {
+                                    required.add(predicateName);
+                                }
                             }
 
-                            if (soln.contains("min") && soln.getLiteral("min").getInt() > 0) {
-                                propertyBuilder.add("minItems", soln.getLiteral("min").getInt());
-                            }
+                            if (soln.contains("datatype")) {
 
-                            propertyBuilder.add("type", "array");
+                                String datatype = soln.getResource("datatype").toString();
 
-                            if (jsonDatatype != null) {
-
-                                JsonObjectBuilder typeObject = Json.createObjectBuilder();
-
-                                if (jsonDatatype.equals("langString")) {
-                                    typeObject.add("type", "object");
-                                    typeObject.add("$ref", "#/definitions/langString");
+                                if (soln.contains("idBoolean")) {
+                                    Boolean isId = soln.getLiteral("idBoolean").getBoolean();
+                                    if (isId) {
+                                        propertyBuilder.add("@type", "@id");
+                                    } else propertyBuilder.add("@type", datatype);
                                 } else {
-                                    typeObject.add("type", jsonDatatype);
+                                    propertyBuilder.add("@type", datatype);
                                 }
 
-                                propertyBuilder.add("items", typeObject.build());
-                            }
-
-                        }
+                                String jsonDatatype = DATATYPE_MAP.get(datatype);
 
 
-                        if (FORMAT_MAP.containsKey(datatype)) {
-                            propertyBuilder.add("format", FORMAT_MAP.get(datatype));
-                        }
-
-                    } else {
-                        if (soln.contains("shapeRefName")) {
-
-                            propertyBuilder.add("@type", "@id");
-
-                            String shapeRefName = soln.getLiteral("shapeRefName").getString();
-
-
-                            if (!soln.contains("max") || soln.getLiteral("max").getInt() > 1) {
-                                if (soln.contains("min")) {
-                                    propertyBuilder.add("minItems", soln.getLiteral("min").getInt());
+                                if (soln.contains("maxLength")) {
+                                    propertyBuilder.add("maxLength", soln.getLiteral("maxLength").getInt());
                                 }
-                                if (soln.contains("max")) {
-                                    propertyBuilder.add("maxItems", soln.getLiteral("max").getInt());
-                                    logger.info("" + soln.getLiteral("max").getInt());
+
+                                if (soln.contains("minLength")) {
+                                    propertyBuilder.add("minLength", soln.getLiteral("minLength").getInt());
                                 }
-                                propertyBuilder.add("type", "array");
-                                propertyBuilder.add("items", Json.createObjectBuilder().add("type", "object").add("$ref", "#/definitions/" + shapeRefName).build());
+
+                                if (soln.contains("pattern")) {
+                                    propertyBuilder.add("pattern", soln.getLiteral("pattern").getString());
+                                }
+
+                                if (soln.contains("max") && soln.getLiteral("max").getInt() <= 1) {
+
+                                    // propertyBuilder.add("maxItems",1);
+
+                                    if (jsonDatatype != null) {
+                                        if (jsonDatatype.equals("langString")) {
+                                            propertyBuilder.add("type", "object");
+                                            propertyBuilder.add("$ref", "#/definitions/langString");
+                                        } else
+                                            propertyBuilder.add("type", jsonDatatype);
+                                    }
+
+                                } else {
+
+                                    if (soln.contains("max") && soln.getLiteral("max").getInt() > 1) {
+                                        propertyBuilder.add("maxItems", soln.getLiteral("max").getInt());
+                                    }
+
+                                    if (soln.contains("min") && soln.getLiteral("min").getInt() > 0) {
+                                        propertyBuilder.add("minItems", soln.getLiteral("min").getInt());
+                                    }
+
+                                    propertyBuilder.add("type", "array");
+
+                                    if (jsonDatatype != null) {
+
+                                        JsonObjectBuilder typeObject = Json.createObjectBuilder();
+
+                                        if (jsonDatatype.equals("langString")) {
+                                            typeObject.add("type", "object");
+                                            typeObject.add("$ref", "#/definitions/langString");
+                                        } else {
+                                            typeObject.add("type", jsonDatatype);
+                                        }
+
+                                        propertyBuilder.add("items", typeObject.build());
+                                    }
+
+                                }
+
+
+                                if (FORMAT_MAP.containsKey(datatype)) {
+                                    propertyBuilder.add("format", FORMAT_MAP.get(datatype));
+                                }
+
                             } else {
-                                propertyBuilder.add("type", "object");
-                                propertyBuilder.add("$ref", "#/definitions/" + shapeRefName);
+                                if (soln.contains("shapeRefName")) {
+
+                                    propertyBuilder.add("@type", "@id");
+
+                                    String shapeRefName = soln.getLiteral("shapeRefName").getString();
+
+
+                                    if (!soln.contains("max") || soln.getLiteral("max").getInt() > 1) {
+                                        if (soln.contains("min")) {
+                                            propertyBuilder.add("minItems", soln.getLiteral("min").getInt());
+                                        }
+                                        if (soln.contains("max")) {
+                                            propertyBuilder.add("maxItems", soln.getLiteral("max").getInt());
+                                            logger.info("" + soln.getLiteral("max").getInt());
+                                        }
+                                        propertyBuilder.add("type", "array");
+                                        propertyBuilder.add("items", Json.createObjectBuilder().add("type", "object").add("$ref", "#/definitions/" + shapeRefName).build());
+                                    } else {
+                                        propertyBuilder.add("type", "object");
+                                        propertyBuilder.add("$ref", "#/definitions/" + shapeRefName);
+                                    }
+                                }
                             }
+
+                            properties.add(predicateName, propertyBuilder.build());
+
+                            propertyTitleObject = Json.createObjectBuilder();
+                            propertyDescriptionObject = Json.createObjectBuilder();
+                            propertyBuilder = Json.createObjectBuilder();
+
+
                         }
                     }
 
-                    properties.add(predicateName, propertyBuilder.build());
+                /* IF the class is iterated last time */
 
-                    propertyTitleObject = Json.createObjectBuilder();
-                    propertyDescriptionObject = Json.createObjectBuilder();
-                    propertyBuilder = Json.createObjectBuilder();
+                    /* If not build props and requires */
+                    if (!pResults.hasNext() || !className.equals(pResults.peek().getLiteral("className").toString())) {
+                        JsonObjectBuilder classDefinition = Json.createObjectBuilder();
+                        classDefinition.add("title", classTitleObject.build());
+                        classDefinition.add("type", "object");
+                        JsonObject classDescriptionJSON = classDescriptionObject.build();
+                        if (!classDescriptionJSON.isEmpty()) {
+                            classDefinition.add("description", classDescriptionJSON);
+                        }
+                        classDefinition.add("properties", properties.build());
+                        classDefinition.add("required", required.build());
+                        definitions.add(className, classDefinition.build());
+                        properties = Json.createObjectBuilder();
+                        required = Json.createArrayBuilder();
+
+                        classTitleObject = Json.createObjectBuilder();
+                        classDescriptionObject = Json.createObjectBuilder();
 
 
-                }
-
-
-            /* IF the class is iterated last time */
-
-                /* If not build props and requires */
-                if (!pResults.hasNext() || !className.equals(pResults.peek().getLiteral("className").toString())) {
-                    JsonObjectBuilder classDefinition = Json.createObjectBuilder();
-                    classDefinition.add("title", classTitleObject.build());
-                    classDefinition.add("type", "object");
-                    JsonObject classDescriptionJSON = classDescriptionObject.build();
-                    if (!classDescriptionJSON.isEmpty()) {
-                        classDefinition.add("description", classDescriptionJSON);
                     }
-                    classDefinition.add("properties", properties.build());
-                    classDefinition.add("required", required.build());
-                    definitions.add(className, classDefinition.build());
-                    properties = Json.createObjectBuilder();
-                    required = Json.createArrayBuilder();
-
-                    classTitleObject = Json.createObjectBuilder();
-                    classDescriptionObject = Json.createObjectBuilder();
-
-
                 }
-
 
             }
 
