@@ -524,13 +524,14 @@ public class JsonSchemaWriter {
                         + "OPTIONAL { ?resource sh:description ?classDescription . "
                         + "FILTER (langMatches(lang(?classDescription),?lang))"
                         + "}"
+                        + "BIND(afn:localname(?resource) as ?className)"
+                        + "OPTIONAL {"
                         + "?resource sh:property ?property . "
                         + "?property sh:order ?index . "
                         + "?property sh:path ?predicate . "
                         + "OPTIONAL { ?property iow:localName ?id . }"
                         + "?property sh:name ?title . "
                         + "FILTER (langMatches(lang(?title),?lang))"
-                        + "BIND(afn:localname(?resource) as ?className)"
                         + "OPTIONAL { ?property sh:description ?description . "
                         + "FILTER (langMatches(lang(?description),?lang))"
                         + "}"
@@ -547,6 +548,7 @@ public class JsonSchemaWriter {
                         + "OPTIONAL { ?property dcam:memberOf ?schemeList . } "
                         + "OPTIONAL { ?property iow:isResourceIdentifier ?idBoolean . }"
                         + "BIND(afn:localname(?predicate) as ?predicateName)"
+                        + "}"
                         + "}"
                         + "}"
                         + "ORDER BY ?resource ?index ?property";
@@ -599,11 +601,13 @@ public class JsonSchemaWriter {
      
                     className = soln.getLiteral("className").getString();
 
-                    if(!soln.contains("propertyDeactivated") || (soln.contains("propertyDeactivated") && !soln.getLiteral("propertyDeactivated").getBoolean())) {    
+                    if(soln.contains("property") && (!soln.contains("propertyDeactivated") || (soln.contains("propertyDeactivated") && !soln.getLiteral("propertyDeactivated").getBoolean()))) {    
                     
                         /* First run per predicate */
 
                         if (pIndex == 1) {
+
+                            logger.info(soln.getResource("property").toString());
 
                             predicateID = soln.getResource("predicate").toString();
 
@@ -753,7 +757,7 @@ public class JsonSchemaWriter {
                             String example = soln.getLiteral("example").getString();
                             exampleSet.add(example);
                         }
-                        if (pResults.hasNext() && predicateID.equals(pResults.peek().getResource("predicate").toString()) && className.equals(pResults.peek().getLiteral("className").getString())) {
+                        if (pResults.hasNext() && className.equals(pResults.peek().getLiteral("className").getString())) {
 
                             pIndex += 1;
 
@@ -1007,11 +1011,12 @@ public class JsonSchemaWriter {
                         + "OPTIONAL { ?resource sh:description ?classDescription . "
                         + "FILTER(?lang=lang(?classDescription))"
                         + "}"
+                        + "BIND(afn:localname(?resource) as ?className)"
+                        + "OPTIONAL { "
                         + "?resource sh:property ?property . "
                         + "?property sh:path ?predicate . "
                         + "?property sh:name ?propertyLabel . "
                         + "FILTER(?lang=lang(?propertyLabel))"
-                        + "BIND(afn:localname(?resource) as ?className)"
                         + "OPTIONAL { ?property sh:description ?propertyDescription . "
                         + "FILTER(?lang=lang(?propertyDescription))"
                         + "}"
@@ -1025,6 +1030,7 @@ public class JsonSchemaWriter {
                         + "OPTIONAL { ?property sh:maxLength ?maxLength . }"
                         + "OPTIONAL { ?property iow:isResourceIdentifier ?idBoolean . }"
                         + "BIND(afn:localname(?predicate) as ?predicateName)"
+                        + "}"
                         + "}"
                         + "} GROUP BY ?resource ?property ?propertyDeactivated ?lang ?className ?classTitle ?classDeactivated ?classDescription ?predicate ?predicateName ?datatype ?shapeRef ?shapeRefName ?min ?max ?minLength ?maxLength ?propertyLabel ?propertyDescription ?idBoolean ?pattern "
                         + "ORDER BY ?resource ?property ?lang";

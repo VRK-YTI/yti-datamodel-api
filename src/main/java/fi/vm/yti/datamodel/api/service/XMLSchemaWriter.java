@@ -150,6 +150,7 @@ public class XMLSchemaWriter {
                             + "WHERE { "
                             + "GRAPH ?resourceID {"
                             + "?resourceID sh:property ?property . "
+                            + "?property sh:order ?index . "
                             + "?property sh:path ?predicate . "
                             + "OPTIONAL { ?property iow:localName ?id . }"
                             + "?property sh:name ?label . "
@@ -166,7 +167,8 @@ public class XMLSchemaWriter {
                             + "OPTIONAL { ?property sh:maxLength ?maxLength . }"
                             + "BIND(afn:localname(?predicate) as ?predicateName)"
                             + "}"
-                            + "}";
+                            + "}"
+                            + "ORDER BY ?resourceID ?index";
 
 
             pss.setCommandText(selectResources);
@@ -372,13 +374,14 @@ public class XMLSchemaWriter {
                 + "OPTIONAL { ?resource sh:description ?classDescription . "
                 + "FILTER (langMatches(lang(?classDescription),?lang))"
                 + "}"
+                + "BIND(afn:localname(?resource) as ?className)"
+                + "OPTIONAL{"
                 + "?resource sh:property ?property . "
                 + "?property sh:order ?index . "
                 + "?property sh:path ?predicate . "
                 + "OPTIONAL { ?property iow:localName ?id . }"
                 + "?property sh:name ?title . "
                 + "FILTER (langMatches(lang(?title),?lang))"
-                + "BIND(afn:localname(?resource) as ?className)"
                 + "OPTIONAL { ?property sh:description ?description . "
                 + "FILTER (langMatches(lang(?description),?lang))"
                 + "}"
@@ -393,6 +396,7 @@ public class XMLSchemaWriter {
                 + "OPTIONAL { ?property sh:in ?valueList . } "
                 + "OPTIONAL { ?property dcam:memberOf ?schemeList . } "
                 + "BIND(afn:localname(?predicate) as ?predicateName)"
+                + "}"
                 + "}"
                 + "}"
                 + "ORDER BY ?resource ?index";
@@ -449,7 +453,7 @@ public class XMLSchemaWriter {
                         firstRun = false;
                     }
 
-                    if(!soln.contains("propertyDeactivated") || (soln.contains("propertyDeactivated") && !soln.getLiteral("propertyDeactivated").getBoolean())) {   
+                    if(soln.contains("property") && (!soln.contains("propertyDeactivated") || (soln.contains("propertyDeactivated") && !soln.getLiteral("propertyDeactivated").getBoolean()))) {   
 
                         String predicate = soln.getResource("predicate").getURI();
                         String property = soln.getResource("property").getURI();
