@@ -359,7 +359,7 @@ public class XMLSchemaWriter {
         pss = new ParameterizedSparqlString();
         
         String selectResources = 
-                "SELECT ?resource ?targetClass ?className ?classTitle ?classDescription ?property ?valueList ?schemeList ?predicate ?id ?title ?description ?predicateName ?datatype ?shapeRef ?shapeRefName ?min ?max ?minLength ?maxLength ?pattern "
+                "SELECT ?resource ?targetClass ?className ?classTitle ?classDescription ?classDeactivated ?property ?propertyDeactivated ?valueList ?schemeList ?predicate ?id ?title ?description ?predicateName ?datatype ?shapeRef ?shapeRefName ?min ?max ?minLength ?maxLength ?pattern "
                 + "WHERE { "
                 + "GRAPH ?modelPartGraph {"
                 + "?model dcterms:hasPart ?resource . "
@@ -367,6 +367,7 @@ public class XMLSchemaWriter {
                 + "GRAPH ?resource {"
                 + "?resource sh:name ?classTitle . "
                 + "FILTER (langMatches(lang(?classTitle),?lang))"
+                + "OPTIONAL { ?resource sh:deactivated ?classDeactivated . }"
                 + "OPTIONAL { ?resource sh:targetClass ?targetClass . }"
                 + "OPTIONAL { ?resource sh:description ?classDescription . "
                 + "FILTER (langMatches(lang(?classDescription),?lang))"
@@ -381,6 +382,7 @@ public class XMLSchemaWriter {
                 + "OPTIONAL { ?property sh:description ?description . "
                 + "FILTER (langMatches(lang(?description),?lang))"
                 + "}"
+                + "OPTIONAL { ?property sh:deactivated ?propertyDeactivated . }"
                 + "OPTIONAL { ?property sh:datatype ?datatype . }"
                 + "OPTIONAL { ?property sh:node ?shapeRef . BIND(afn:localname(?shapeRef) as ?shapeRefName) }"
                 + "OPTIONAL { ?property sh:maxCount ?max . }"
@@ -421,120 +423,126 @@ public class XMLSchemaWriter {
 
                 if (!soln.contains("className")) return null;
 
-                String classID = soln.getResource("resource").getURI();
-                String className = soln.getLiteral("className").getString();
+                if(!soln.contains("classDeactivated") || (soln.contains("classDeactivated") && !soln.getLiteral("classDeactivated").getBoolean())) { 
 
-                if (firstRun) {
+                    String classID = soln.getResource("resource").getURI();
+                    String className = soln.getLiteral("className").getString();
 
-                    if (soln.contains("targetClass")) {
-                        complexType = xml.newComplexType(className + "Type", soln.getResource("targetClass").toString());
-                    } else {
-                        complexType = xml.newComplexType(className + "Type", soln.getResource("resource").toString());
-                    }
+                    if (firstRun) {
 
-                    Element classDoc = xml.newDocumentation(complexType);
-                    xml.appendElementValue(classDoc, "dcterms:title", soln.getLiteral("classTitle").getString());
-
-                    seq = xml.newSequence(complexType);
-
-                    if (soln.contains("description")) {
-                        String description = soln.getLiteral("description").getString();
-                        xml.appendElementValue(classDoc, "dcterms:description", description);
-                    }
-
-                    firstRun = false;
-                }
-
-
-                String predicate = soln.getResource("predicate").getURI();
-                String property = soln.getResource("property").getURI();
-                String predicateName = soln.getLiteral("predicateName").getString();
-
-                if (previousPredicateID != null && property.equals(previousPredicateID)) {
-                    logger.warn("Problems with duplicate values in " + className + " " + predicateName);
-                } else {
-
-                    previousPredicateID = property;
-
-                    if (soln.contains("id")) {
-                        predicateName = soln.getLiteral("id").getString();
-                    }
-
-                    String title = soln.getLiteral("title").getString();
-
-                    Element newElement = xml.newSimpleElement(seq, predicateName, predicate);
-                    documentation = xml.newDocumentation(newElement);
-
-                    xml.appendElementValue(documentation, "dcterms:title", title);
-
-                    if (soln.contains("min") && soln.getLiteral("min").getInt() > 0) {
-                        int min = soln.getLiteral("min").getInt();
-                        newElement.setAttribute("minOccurs", "" + min);
-                    } else {
-                        newElement.setAttribute("minOccurs", "0");
-                    }
-
-                    if (soln.contains("description")) {
-                        String description = soln.getLiteral("description").getString();
-                        xml.appendElementValue(documentation, "dcterms:description", description);
-                    }
-
-                    if (soln.contains("datatype")) {
-                        String datatype = soln.getResource("datatype").toString();
-                        newElement.setAttribute("type", DATATYPE_MAP.get(datatype));
-                    }
-
-                    if (soln.contains("max") && soln.getLiteral("max").getInt() > 0) {
-                        int max = soln.getLiteral("max").getInt();
-                        newElement.setAttribute("maxOccurs", "" + max);
-                    } else {
-                        newElement.setAttribute("maxOccurs", "unbounded");
-                    }
-
-            /* If shape contains pattern or other type of restriction */
-
-                    if (soln.contains("pattern") || soln.contains("maxLength") || soln.contains("minLength")) {
-                        Element simpleType = xml.newSimpleType(predicateName + "Type");
-
-
-                        if (soln.contains("pattern")) {
-                            Element restriction = xml.newStringRestriction(simpleType);
-                            xml.appendElementValueAttribute(restriction, "xs:maxInclusive", soln.getLiteral("pattern").toString());
+                        if (soln.contains("targetClass")) {
+                            complexType = xml.newComplexType(className + "Type", soln.getResource("targetClass").toString());
                         } else {
-                            Element restriction = xml.newIntRestriction(simpleType);
-                            if (soln.contains("maxLength")) {
-                                xml.appendElementValueAttribute(restriction, "xs:maxInclusive", "" + soln.getLiteral("maxLength").getInt());
+                            complexType = xml.newComplexType(className + "Type", soln.getResource("resource").toString());
+                        }
+
+                        Element classDoc = xml.newDocumentation(complexType);
+                        xml.appendElementValue(classDoc, "dcterms:title", soln.getLiteral("classTitle").getString());
+
+                        seq = xml.newSequence(complexType);
+
+                        if (soln.contains("description")) {
+                            String description = soln.getLiteral("description").getString();
+                            xml.appendElementValue(classDoc, "dcterms:description", description);
+                        }
+
+                        firstRun = false;
+                    }
+
+                    if(!soln.contains("propertyDeactivated") || (soln.contains("propertyDeactivated") && !soln.getLiteral("propertyDeactivated").getBoolean())) {   
+
+                        String predicate = soln.getResource("predicate").getURI();
+                        String property = soln.getResource("property").getURI();
+                        String predicateName = soln.getLiteral("predicateName").getString();
+
+                        if (previousPredicateID != null && property.equals(previousPredicateID)) {
+                            logger.warn("Problems with duplicate values in " + className + " " + predicateName);
+                        } else {
+
+                            previousPredicateID = property;
+
+                            if (soln.contains("id")) {
+                                predicateName = soln.getLiteral("id").getString();
                             }
-                            if (soln.contains("minLength")) {
-                                xml.appendElementValueAttribute(restriction, "xs:minInclusive", "" + soln.getLiteral("minLength").getInt());
+
+                            String title = soln.getLiteral("title").getString();
+
+                            Element newElement = xml.newSimpleElement(seq, predicateName, predicate);
+                            documentation = xml.newDocumentation(newElement);
+
+                            xml.appendElementValue(documentation, "dcterms:title", title);
+
+                            if (soln.contains("min") && soln.getLiteral("min").getInt() > 0) {
+                                int min = soln.getLiteral("min").getInt();
+                                newElement.setAttribute("minOccurs", "" + min);
+                            } else {
+                                newElement.setAttribute("minOccurs", "0");
+                            }
+
+                            if (soln.contains("description")) {
+                                String description = soln.getLiteral("description").getString();
+                                xml.appendElementValue(documentation, "dcterms:description", description);
+                            }
+
+                            if (soln.contains("datatype")) {
+                                String datatype = soln.getResource("datatype").toString();
+                                newElement.setAttribute("type", DATATYPE_MAP.get(datatype));
+                            }
+
+                            if (soln.contains("max") && soln.getLiteral("max").getInt() > 0) {
+                                int max = soln.getLiteral("max").getInt();
+                                newElement.setAttribute("maxOccurs", "" + max);
+                            } else {
+                                newElement.setAttribute("maxOccurs", "unbounded");
+                            }
+
+                            /* If shape contains pattern or other type of restriction */
+
+                            if (soln.contains("pattern") || soln.contains("maxLength") || soln.contains("minLength")) {
+                                Element simpleType = xml.newSimpleType(predicateName + "Type");
+
+
+                                if (soln.contains("pattern")) {
+                                    Element restriction = xml.newStringRestriction(simpleType);
+                                    xml.appendElementValueAttribute(restriction, "xs:maxInclusive", soln.getLiteral("pattern").toString());
+                                } else {
+                                    Element restriction = xml.newIntRestriction(simpleType);
+                                    if (soln.contains("maxLength")) {
+                                        xml.appendElementValueAttribute(restriction, "xs:maxInclusive", "" + soln.getLiteral("maxLength").getInt());
+                                    }
+                                    if (soln.contains("minLength")) {
+                                        xml.appendElementValueAttribute(restriction, "xs:minInclusive", "" + soln.getLiteral("minLength").getInt());
+                                    }
+                                }
+                                newElement.setAttribute("type", predicateName + "Type");
+                            }
+
+                            if (soln.contains("shapeRefName")) {
+                                String shapeRef = soln.getLiteral("shapeRefName").toString();
+                                newElement.setAttribute("type", shapeRef + "Type");
                             }
                         }
-                        newElement.setAttribute("type", predicateName + "Type");
+            
+                        /*   
+                            if(soln.contains("valueList")) {
+                                JsonArray valueList = getValueList(soln.getResource("resource").toString(),soln.getResource("property").toString());
+                                if(valueList!=null) {
+                                    predicate.add("enum",valueList);    
+                                }
+                            } else if(soln.contains("schemeList")) {
+                                JsonArray schemeList = getSchemeValueList(soln.getResource("schemeList").toString());
+                                if(schemeList!=null) {
+                                    predicate.add("enum",schemeList);
+                                }
+                            }
+                        */
+                    }
+    
+                    /* Check if next result is about the same class */
+                    if (!pResults.hasNext() || !className.equals(pResults.peek().getLiteral("className").getString())) {
+                        firstRun = true;
                     }
 
-                    if (soln.contains("shapeRefName")) {
-                        String shapeRef = soln.getLiteral("shapeRefName").toString();
-                        newElement.setAttribute("type", shapeRef + "Type");
-                    }
-         
-         /*   
-            if(soln.contains("valueList")) {
-                JsonArray valueList = getValueList(soln.getResource("resource").toString(),soln.getResource("property").toString());
-                if(valueList!=null) {
-                    predicate.add("enum",valueList);    
-                }
-             } else if(soln.contains("schemeList")) {
-                 JsonArray schemeList = getSchemeValueList(soln.getResource("schemeList").toString());
-                 if(schemeList!=null) {
-                    predicate.add("enum",schemeList);
-                 }
-             }
-           */
-                }
- 
-                /* Check if next result is about the same class */
-                if (!pResults.hasNext() || !className.equals(pResults.peek().getLiteral("className").getString())) {
-                    firstRun = true;
                 }
 
             }
