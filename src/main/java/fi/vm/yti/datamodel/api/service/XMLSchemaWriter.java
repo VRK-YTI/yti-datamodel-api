@@ -135,7 +135,7 @@ public class XMLSchemaWriter {
 
                 String sType = soln.getResource("type").getLocalName();
 
-                if (sType.equals("Class") || sType.equals("Shape")) {
+                if (sType.equals("Class") || sType.equals("Shape") || sType.equals("NodeShape")) {
                     classMetadata = true;
                 }
 

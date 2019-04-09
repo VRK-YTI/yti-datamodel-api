@@ -140,7 +140,7 @@ public class JsonSchemaWriter {
 
                 String sType = soln.getResource("type").getLocalName();
 
-                if (sType.equals("Class") || sType.equals("Shape")) {
+                if (sType.equals("Class") || sType.equals("Shape") || sType.equals("NodeShape")) {
                     classMetadata = true;
                 }
 
@@ -757,7 +757,7 @@ public class JsonSchemaWriter {
                             String example = soln.getLiteral("example").getString();
                             exampleSet.add(example);
                         }
-                        if (pResults.hasNext() && className.equals(pResults.peek().getLiteral("className").getString())) {
+                        if (pResults.hasNext() && (predicateID!=null && predicateID.equals(pResults.peek().getResource("predicate").toString())) && className.equals(pResults.peek().getLiteral("className").getString())) {
 
                             pIndex += 1;
 
