@@ -1231,7 +1231,7 @@ public class JsonSchemaWriter {
                         }
                         classDefinition.add("properties", properties.build());
                         JsonArray reqArray = required.build();
-                        if(!reqArray.isEmpty()) classDefinition.add("required", required.build());
+                        if(!reqArray.isEmpty()) classDefinition.add("required", reqArray);
                         definitions.add(className, classDefinition.build());
                         properties = Json.createObjectBuilder();
                         required = Json.createArrayBuilder();
