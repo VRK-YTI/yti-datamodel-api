@@ -91,10 +91,10 @@ public class JsonSchemaWriter {
                         + "WHERE { "
                         + "GRAPH ?resourceID { "
                         + "?resourceID a ?type . "
-                        + "?resourceID sh:name ?label . "
+                        + "OPTIONAL { ?resourceID sh:name ?label . "
+                        + "FILTER (langMatches(lang(?label),?lang)) }"
                         + "OPTIONAL { ?resourceId iow:minProperties ?minProperties . }"
                         + "OPTIONAL { ?resourceId iow:maxProperties ?maxProperties . }"
-                        + "FILTER (langMatches(lang(?label),?lang))"
                         + "OPTIONAL { ?resourceID sh:description ?description . "
                         + "FILTER (langMatches(lang(?description),?lang))"
                         + "}"
@@ -118,8 +118,7 @@ public class JsonSchemaWriter {
             while (results.hasNext()) {
 
                 QuerySolution soln = results.nextSolution();
-                String title = soln.getLiteral("label").getString();
-
+                
                 if (soln.contains("description")) {
                     String description = soln.getLiteral("description").getString();
                     schema.add("description", description);
@@ -134,7 +133,11 @@ public class JsonSchemaWriter {
                 }
 
                 schema.add("id", classID + ".jschema");
-                schema.add("title", title);
+
+                if(soln.contains("label")) {
+                    String title = soln.getLiteral("label").getString();
+                    schema.add("title", title);
+                }
 
                 schema.add("@id", classID);
 
@@ -160,9 +163,9 @@ public class JsonSchemaWriter {
                             + "?property sh:path ?predicate . "
                             + "OPTIONAL { ?property sh:deactivated ?propertyDeactivated . }"
                             + "OPTIONAL { ?property iow:localName ?id . }"
-                            + "?property ?nameProperty ?label . "
+                            + "OPTIONAL { ?property ?nameProperty ?label . "
                             + "VALUES ?nameProperty { sh:name rdfs:label }"
-                            + "FILTER (langMatches(lang(?label),?lang))"
+                            + "FILTER (langMatches(lang(?label),?lang)) }"
                             + "OPTIONAL { ?property ?commentProperty ?description . "
                             + "VALUES ?commentProperty { sh:description rdfs:comment }"
                             + "FILTER (langMatches(lang(?description),?lang))"
@@ -201,11 +204,12 @@ public class JsonSchemaWriter {
                         predicateName = soln.getLiteral("id").getString();
                     }
 
-                    String title = soln.getLiteral("label").getString();
-
                     JsonObjectBuilder predicate = Json.createObjectBuilder();
 
-                    predicate.add("title", title);
+                    if (soln.contains("label")) {
+                        String title = soln.getLiteral("label").getString();
+                        predicate.add("title", title);
+                    }
 
                     if (soln.contains("min")) {
                         int min = soln.getLiteral("min").getInt();
@@ -508,8 +512,10 @@ public class JsonSchemaWriter {
                         + "?model dcterms:hasPart ?resource . "
                         + "}"
                         + "GRAPH ?resource {"
-                        + "?resource sh:name ?classTitle . "
-                        + "FILTER (langMatches(lang(?classTitle),?lang))"
+                        + "?resource a ?resourceType . "
+                        + "VALUES ?resourceType { rdfs:Class sh:Shape sh:NodeShape }"
+                        + "OPTIONAL { ?resource sh:name ?classTitle . "
+                        + "FILTER (langMatches(lang(?classTitle),?lang)) }"
                         + "OPTIONAL { ?resource sh:deactivated ?classDeactivated . }"
                         + "OPTIONAL { ?resource iow:minProperties ?minProperties . }"
                         + "OPTIONAL { ?resource iow:maxProperties ?maxProperties . }"
@@ -523,8 +529,8 @@ public class JsonSchemaWriter {
                         + "?property sh:order ?index . "
                         + "?property sh:path ?predicate . "
                         + "OPTIONAL { ?property iow:localName ?id . }"
-                        + "?property sh:name ?title . "
-                        + "FILTER (langMatches(lang(?title),?lang))"
+                        + "OPTIONAL {?property sh:name ?title . "
+                        + "FILTER (langMatches(lang(?title),?lang))}"
                         + "OPTIONAL { ?property sh:description ?description . "
                         + "FILTER (langMatches(lang(?description),?lang))"
                         + "}"
@@ -610,11 +616,10 @@ public class JsonSchemaWriter {
                                 predicateName = soln.getLiteral("id").getString();
                             }
 
-                            String title = soln.getLiteral("title").getString();
-
-                            // JsonObjectBuilder predicate = Json.createObjectBuilder();
-
-                            predicate.add("title", title);
+                            if(soln.contains("title")) {
+                                String title = soln.getLiteral("title").getString();
+                                predicate.add("title", title);
+                            }
 
                             if (soln.contains("min")) {
                                 int min = soln.getLiteral("min").getInt();
@@ -788,7 +793,10 @@ public class JsonSchemaWriter {
                     if (!pResults.hasNext() || !className.equals(pResults.peek().getLiteral("className").getString())) {
                         predicate = Json.createObjectBuilder();
                         JsonObjectBuilder classDefinition = Json.createObjectBuilder();
-                        classDefinition.add("title", soln.getLiteral("classTitle").getString());
+
+                        if(soln.contains("classTitle")) {
+                            classDefinition.add("title", soln.getLiteral("classTitle").getString());
+                        }
                         classDefinition.add("type", "object");
                         if (soln.contains("targetClass")) {
                             classDefinition.add("@id", soln.getResource("targetClass").toString());
@@ -805,7 +813,9 @@ public class JsonSchemaWriter {
                         if(soln.contains("maxProperties")) {
                             classDefinition.add("maxProperties",soln.getLiteral("maxProperties").getInt());
                         }
-                        classDefinition.add("properties", properties.build());
+
+                        JsonObject classProps = properties.build();
+                        if(!classProps.isEmpty()) classDefinition.add("properties", classProps);
 
                         JsonArrayBuilder required = Json.createArrayBuilder();
 
@@ -1229,7 +1239,8 @@ public class JsonSchemaWriter {
                         if (!classDescriptionJSON.isEmpty()) {
                             classDefinition.add("description", classDescriptionJSON);
                         }
-                        classDefinition.add("properties", properties.build());
+                        JsonObject classProps = properties.build();
+                        if(!classProps.isEmpty()) classDefinition.add("properties", classProps);
                         JsonArray reqArray = required.build();
                         if(!reqArray.isEmpty()) classDefinition.add("required", reqArray);
                         definitions.add(className, classDefinition.build());
@@ -1318,9 +1329,9 @@ public class JsonSchemaWriter {
         schema.add("$schema", "http://json-schema.org/draft-04/schema#");
 
         schema.add("type","object");
-        schema.add("properties", properties.build());
+        JsonObject classProps = properties.build();
+        if(!classProps.isEmpty()) schema.add("properties", classProps);
         JsonArray reqArray = required.build();
-
         if(!reqArray.isEmpty()) {
             schema.add("required",reqArray);
         }
