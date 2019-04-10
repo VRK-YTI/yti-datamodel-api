@@ -150,7 +150,6 @@ public class JsonSchemaWriter {
 
         JsonObjectBuilder properties = Json.createObjectBuilder();
 
-
         if(classMetadata) {
 
             String selectResources =
@@ -278,8 +277,6 @@ public class JsonSchemaWriter {
 
                             predicate.add("type", "array");
 
-                            logger.info(jsonDatatype);
-
                             if (jsonDatatype != null) {
 
                                 JsonObjectBuilder typeObject = Json.createObjectBuilder();
@@ -389,8 +386,6 @@ public class JsonSchemaWriter {
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
         pss.setCommandText(selectList);
 
-        //logger.info(""+pss);
-
         try(QueryExecution qexec =  QueryExecutionFactory.sparqlService(endpointServices.getSchemesSparqlAddress(), pss.toString())) {
 
             ResultSet results = qexec.execSelect();
@@ -427,8 +422,6 @@ public class JsonSchemaWriter {
         pss.setIri("property", propertyID);
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
         pss.setCommandText(selectList);
-
-        //  logger.info(""+pss);
 
         try(QueryExecution qexec =  QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), pss.toString())) {
 
@@ -607,8 +600,6 @@ public class JsonSchemaWriter {
 
                         if (pIndex == 1) {
 
-                            logger.info(soln.getResource("property").toString());
-
                             predicateID = soln.getResource("predicate").toString();
 
                             predicate.add("@id", predicateID);
@@ -617,7 +608,6 @@ public class JsonSchemaWriter {
 
                             if (soln.contains("id")) {
                                 predicateName = soln.getLiteral("id").getString();
-                                logger.info("Predicatename: " + predicateName);
                             }
 
                             String title = soln.getLiteral("title").getString();
@@ -757,7 +747,8 @@ public class JsonSchemaWriter {
                             String example = soln.getLiteral("example").getString();
                             exampleSet.add(example);
                         }
-                        if (pResults.hasNext() && (predicateID!=null && predicateID.equals(pResults.peek().getResource("predicate").toString())) && className.equals(pResults.peek().getLiteral("className").getString())) {
+
+                        if (pResults.hasNext() && className.equals(pResults.peek().getLiteral("className").getString()) && (pResults.peek().contains("predicate") && predicateID.equals(pResults.peek().getResource("predicate").toString()))) {
 
                             pIndex += 1;
 
@@ -915,9 +906,7 @@ public class JsonSchemaWriter {
                 JsonObjectBuilder modelProperties = Json.createObjectBuilder();
                 modelProperties.add("$ref", "#/definitions/" + SplitIRI.localname(modelRoot));
                 return createModelSchemaWithRoot(schema, modelProperties, definitions);
-            } else {
-                logger.debug("Model root is null");
-            }
+            } 
 
             return createDefaultModelSchema(schema, definitions);
         }
@@ -981,6 +970,9 @@ public class JsonSchemaWriter {
                 QuerySolution soln = results.nextSolution();
                 String lang = soln.getLiteral("lang").getString();
                 String title = soln.getLiteral("title").getString();
+
+                logger.info("Building JSON Schema from "+title);
+
                 titleObject.add(lang, title);
                 if (soln.contains("description")) {
                     if (descriptionObject == null) descriptionObject = Json.createObjectBuilder();
@@ -1070,7 +1062,7 @@ public class JsonSchemaWriter {
 
                     String className = soln.getLiteral("className").getString();
 
-                    if(!soln.contains("propertyDeactivated") || (soln.contains("propertyDeactivated") && !soln.getLiteral("propertyDeactivated").getBoolean())) {   
+                    if(soln.contains("property") && (!soln.contains("propertyDeactivated") || (soln.contains("propertyDeactivated") && !soln.getLiteral("propertyDeactivated").getBoolean()))) {   
 
                         propertyID = soln.getResource("property").toString();
                         String lang = soln.getLiteral("lang").getString();
@@ -1104,7 +1096,7 @@ public class JsonSchemaWriter {
                             classDescriptionObject.add(lang, classDescription);
 
                         /* If property is iterated the last time build the rest */
-                        if (pResults.hasNext() && !propertyID.equals(pResults.peek().getResource("property").toString()) || !pResults.hasNext()) {
+                        if (pResults.hasNext() && pResults.peek().contains("property")  && !propertyID.equals(pResults.peek().getResource("property").toString()) || !pResults.hasNext()) {
 
                             propertyBuilder.add("title", propertyTitleObject.build());
 
@@ -1207,7 +1199,6 @@ public class JsonSchemaWriter {
                                         }
                                         if (soln.contains("max")) {
                                             propertyBuilder.add("maxItems", soln.getLiteral("max").getInt());
-                                            logger.info("" + soln.getLiteral("max").getInt());
                                         }
                                         propertyBuilder.add("type", "array");
                                         propertyBuilder.add("items", Json.createObjectBuilder().add("type", "object").add("$ref", "#/definitions/" + shapeRefName).build());
@@ -1224,7 +1215,6 @@ public class JsonSchemaWriter {
                             propertyDescriptionObject = Json.createObjectBuilder();
                             propertyBuilder = Json.createObjectBuilder();
 
-
                         }
                     }
 
@@ -1240,7 +1230,8 @@ public class JsonSchemaWriter {
                             classDefinition.add("description", classDescriptionJSON);
                         }
                         classDefinition.add("properties", properties.build());
-                        classDefinition.add("required", required.build());
+                        JsonArray reqArray = required.build();
+                        if(!reqArray.isEmpty()) classDefinition.add("required", required.build());
                         definitions.add(className, classDefinition.build());
                         properties = Json.createObjectBuilder();
                         required = Json.createArrayBuilder();
