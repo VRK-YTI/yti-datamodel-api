@@ -167,8 +167,8 @@ public class XMLSchemaWriter {
                             + "OPTIONAL { ?property sh:maxLength ?maxLength . }"
                             + "BIND(afn:localname(?predicate) as ?predicateName)"
                             + "}"
-                            + "}"
-                            + "ORDER BY ?resourceID ?index";
+                            + "} ORDER BY ?index ";
+                           
 
 
             pss.setCommandText(selectResources);
@@ -178,116 +178,116 @@ public class XMLSchemaWriter {
 
                 ResultSet results = qexec.execSelect();
 
-                if (!results.hasNext()) return null;
+                if (results.hasNext()) {
 
-                Element seq = xml.newSequence(complexType);
+                    Element seq = xml.newSequence(complexType);
 
-                while (results.hasNext()) {
+                    while (results.hasNext()) {
 
-                    QuerySolution soln = results.nextSolution();
-                    String predicateName = soln.getLiteral("predicateName").getString();
-
-
-                    if (soln.contains("id")) {
-                        predicateName = soln.getLiteral("id").getString();
-                    }
-
-                    String predicate = soln.getResource("predicate").getURI();
-
-                    String title = soln.getLiteral("label").getString();
-
-                    Element newElement = xml.newSimpleElement(seq, predicateName, predicate);
-                    Element documentation = xml.newDocumentation(newElement);
-
-                    xml.appendElementValue(documentation, "dcterms:title", title);
-
-                    if (soln.contains("min") && soln.getLiteral("min").getInt() > 0) {
-                        int min = soln.getLiteral("min").getInt();
-                        newElement.setAttribute("minOccurs", "" + min);
-                    } else {
-                        newElement.setAttribute("minOccurs", "0");
-                    }
-
-                    if (soln.contains("description")) {
-                        String description = soln.getLiteral("description").getString();
-                        xml.appendElementValue(documentation, "dcterms:description", description);
-                    }
-
-                    if (soln.contains("datatype")) {
-                        String datatype = soln.getResource("datatype").toString();
-                        newElement.setAttribute("type", DATATYPE_MAP.get(datatype));
-                    }
-            
-            /*
-
-            <xs:complexType name="langStringType">
-            <xs:simpleContent>
-                <xs:extension base="xs:string">
-                    <xs:attribute ref="xml:lang" use="optional"/>
-                </xs:extension>
-            </xs:simpleContent>
-            </xs:complexType>
-
-            http://examples.oreilly.com/9780596002527/creating-simple-types.html
-            <xs:attribute name="lang" type="xs:language"/> OR
-            
-              <xs:simpleType name="supportedLanguages">
-    <xs:restriction base="xs:language">
-      <xs:enumeration value="en"/>
-      <xs:enumeration value="es"/>
-    </xs:restriction>
-  </xs:simpleType>
-            
-              <xs:attribute name="lang" type="supportedLanguages"/>
-            
-  <xs:element name="title">
-    <xs:complexType>
-      <xs:simpleContent>
-        <xs:extension base="string255">
-          <xs:attribute ref="lang"/>
-        </xs:extension>
-      </xs:simpleContent>
-    </xs:complexType>
-  </xs:element>
-            
-            */
-
-                    if (soln.contains("max") && soln.getLiteral("max").getInt() > 0) {
-                        int max = soln.getLiteral("max").getInt();
-                        newElement.setAttribute("maxOccurs", "" + max);
-                    } else {
-                        newElement.setAttribute("maxOccurs", "unbounded");
-                    }
-
-            /* If shape contains pattern or other type of restriction */
-
-                    if (soln.contains("pattern") || soln.contains("maxLength") || soln.contains("minLength")) {
-                        Element simpleType = xml.newSimpleType(predicateName + "Type");
+                        QuerySolution soln = results.nextSolution();
+                        String predicateName = soln.getLiteral("predicateName").getString();
 
 
-                        if (soln.contains("pattern")) {
-                            Element restriction = xml.newStringRestriction(simpleType);
-                            xml.appendElementValueAttribute(restriction, "xs:maxInclusive", soln.getLiteral("pattern").toString());
-                        } else {
-                            Element restriction = xml.newIntRestriction(simpleType);
-                            if (soln.contains("maxLength")) {
-                                xml.appendElementValueAttribute(restriction, "xs:maxInclusive", "" + soln.getLiteral("maxLength").getInt());
-                            }
-                            if (soln.contains("minLength")) {
-                                xml.appendElementValueAttribute(restriction, "xs:minInclusive", "" + soln.getLiteral("minLength").getInt());
-                            }
+                        if (soln.contains("id")) {
+                            predicateName = soln.getLiteral("id").getString();
                         }
-                        newElement.setAttribute("type", predicateName + "Type");
-                    }
 
-                    if (soln.contains("shapeRefName")) {
-                        String shapeRef = soln.getLiteral("shapeRefName").toString();
-                        newElement.setAttribute("type", shapeRef + "Type");
-                    }
+                        String predicate = soln.getResource("predicate").getURI();
 
+                        String title = soln.getLiteral("label").getString();
+
+                        Element newElement = xml.newSimpleElement(seq, predicateName, predicate);
+                        Element documentation = xml.newDocumentation(newElement);
+
+                        xml.appendElementValue(documentation, "dcterms:title", title);
+
+                        if (soln.contains("min") && soln.getLiteral("min").getInt() > 0) {
+                            int min = soln.getLiteral("min").getInt();
+                            newElement.setAttribute("minOccurs", "" + min);
+                        } else {
+                            newElement.setAttribute("minOccurs", "0");
+                        }
+
+                        if (soln.contains("description")) {
+                            String description = soln.getLiteral("description").getString();
+                            xml.appendElementValue(documentation, "dcterms:description", description);
+                        }
+
+                        if (soln.contains("datatype")) {
+                            String datatype = soln.getResource("datatype").toString();
+                            newElement.setAttribute("type", DATATYPE_MAP.get(datatype));
+                        }
+                
+                /*
+
+                <xs:complexType name="langStringType">
+                <xs:simpleContent>
+                    <xs:extension base="xs:string">
+                        <xs:attribute ref="xml:lang" use="optional"/>
+                    </xs:extension>
+                </xs:simpleContent>
+                </xs:complexType>
+
+                http://examples.oreilly.com/9780596002527/creating-simple-types.html
+                <xs:attribute name="lang" type="xs:language"/> OR
+                
+                <xs:simpleType name="supportedLanguages">
+        <xs:restriction base="xs:language">
+        <xs:enumeration value="en"/>
+        <xs:enumeration value="es"/>
+        </xs:restriction>
+    </xs:simpleType>
+                
+                <xs:attribute name="lang" type="supportedLanguages"/>
+                
+    <xs:element name="title">
+        <xs:complexType>
+        <xs:simpleContent>
+            <xs:extension base="string255">
+            <xs:attribute ref="lang"/>
+            </xs:extension>
+        </xs:simpleContent>
+        </xs:complexType>
+    </xs:element>
+                
+                */
+
+                        if (soln.contains("max") && soln.getLiteral("max").getInt() > 0) {
+                            int max = soln.getLiteral("max").getInt();
+                            newElement.setAttribute("maxOccurs", "" + max);
+                        } else {
+                            newElement.setAttribute("maxOccurs", "unbounded");
+                        }
+
+                /* If shape contains pattern or other type of restriction */
+
+                        if (soln.contains("pattern") || soln.contains("maxLength") || soln.contains("minLength")) {
+                            Element simpleType = xml.newSimpleType(predicateName + "Type");
+
+
+                            if (soln.contains("pattern")) {
+                                Element restriction = xml.newStringRestriction(simpleType);
+                                xml.appendElementValueAttribute(restriction, "xs:maxInclusive", soln.getLiteral("pattern").toString());
+                            } else {
+                                Element restriction = xml.newIntRestriction(simpleType);
+                                if (soln.contains("maxLength")) {
+                                    xml.appendElementValueAttribute(restriction, "xs:maxInclusive", "" + soln.getLiteral("maxLength").getInt());
+                                }
+                                if (soln.contains("minLength")) {
+                                    xml.appendElementValueAttribute(restriction, "xs:minInclusive", "" + soln.getLiteral("minLength").getInt());
+                                }
+                            }
+                            newElement.setAttribute("type", predicateName + "Type");
+                        }
+
+                        if (soln.contains("shapeRefName")) {
+                            String shapeRef = soln.getLiteral("shapeRefName").toString();
+                            newElement.setAttribute("type", shapeRef + "Type");
+                        }
+
+                    }
                 }
-
-            }
+            } 
 
         }
       
