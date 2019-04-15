@@ -1264,46 +1264,44 @@ public class JsonSchemaWriter {
 
     private String createV5ModelSchema(JsonObjectBuilder schema, JsonObjectBuilder definitions) {
 
-        if(definitions==null) return null;
-
         schema.add("$schema", "http://tietomallit.suomi.fi/api/draft05jsonld.json");
 
         schema.add("type","object");
-        definitions.add("langString", getLangStringObject());
-        schema.add("definitions", definitions.build());
+
+        if(definitions!=null) {
+            definitions.add("langString", getLangStringObject());
+            schema.add("definitions", definitions.build());
+        }
+        
         return jsonObjectToPrettyString(schema.build());
     }
 
 
     private String createDefaultModelSchema(JsonObjectBuilder schema, JsonObjectBuilder definitions) {
 
-        if(definitions==null) {
-            logger.debug("Definitions object is null");
-            return null;
-        }
-
         schema.add("$schema", "http://json-schema.org/draft-04/schema#");
 
         schema.add("type","object");
-        definitions.add("langString", getLangStringObject());
-        schema.add("definitions", definitions.build());
+
+        if(definitions!=null) {
+            definitions.add("langString", getLangStringObject());
+            schema.add("definitions", definitions.build());
+        }
 
         return jsonObjectToPrettyString(schema.build());
     }
 
     private String createModelSchemaWithRoot(JsonObjectBuilder schema, JsonObjectBuilder properties, JsonObjectBuilder definitions) {
 
-        if(definitions==null) {
-            logger.debug("Definitions object is null");
-            return null;
-        }
-
         schema.add("$schema", "http://json-schema.org/draft-04/schema#");
 
         schema.add("type","object");
         schema.add("allOf", Json.createArrayBuilder().add(properties.build()).build());
-        definitions.add("langString", getLangStringObject());
-        schema.add("definitions", definitions.build());
+
+        if(definitions!=null) {
+            definitions.add("langString", getLangStringObject());
+            schema.add("definitions", definitions.build());
+        }
 
         return jsonObjectToPrettyString(schema.build());
     }
