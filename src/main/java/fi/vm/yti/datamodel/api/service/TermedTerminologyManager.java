@@ -315,10 +315,13 @@ public final class TermedTerminologyManager {
             graphId="0";
         }
 
-        String url = properties.getDefaultTerminologyAPI()+"terminology/publicapi/searchconcept/searchterm/"+LDHelper.encode(query)+"/vocabulary/"+graphId;
+        String url = properties.getDefaultTerminologyAPI()+"terminology/publicapi/searchconcept";
 
         Client client = ClientBuilder.newClient();
-        WebTarget target = client.target(url);
+        WebTarget target = client.target(url)
+                                .queryParam("searchTerm",LDHelper.encode(query))
+                                .queryParam("vocabularyId",graphId);
+
         Response response = target.request("application/json").get();
         client.close();
 
