@@ -177,6 +177,7 @@ public class LDHelper {
         put("termed","http://termed.thl.fi/meta/");
         put("at","http://publications.europa.eu/ontology/authority/");
         put("skosxl","http://www.w3.org/2008/05/skos-xl#");
+        put("httpv","http://www.w3.org/2011/http#");
     }});
 
    public static Literal getDateTimeLiteral() {
@@ -275,7 +276,8 @@ public class LDHelper {
                             "PREFIX ts: <http://www.w3.org/2003/06/sw-vocab-status/ns#>"+
                             "PREFIX dcam: <http://purl.org/dc/dcam/>"+
                             "PREFIX termed: <http://termed.thl.fi/meta/>"+
-                            "PREFIX at: <http://publications.europa.eu/ontology/authority/>";
+                            "PREFIX at: <http://publications.europa.eu/ontology/authority/>"+
+                            "PREFIX httpv: <http://www.w3.org/2011/http#>";
     
    
     ParameterizedSparqlString pss = new ParameterizedSparqlString();
