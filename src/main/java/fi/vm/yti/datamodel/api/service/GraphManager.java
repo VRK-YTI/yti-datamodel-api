@@ -1402,19 +1402,22 @@ public class GraphManager {
         Model exportModel = jenaClient.getModelFromCore(amodel.getId()+"#ExportGraph");
 
         // OMG: Model.remove() doesnt remove RDFLists
-        try {
-            Statement languageStatement = exportModel.getRequiredProperty(ResourceFactory.createResource(amodel.getId()), DCTerms.language);
+        Resource modelResource = ResourceFactory.createResource(amodel.getId());
+        if(exportModel.contains(modelResource, DCTerms.language)) {
+            Statement languageStatement = exportModel.getProperty(modelResource, DCTerms.language);
             RDFList languageList = languageStatement.getObject().as(RDFList.class);
             languageList.removeList();
             languageStatement.remove();
-
-            Statement relatedStatement = exportModel.getRequiredProperty(ResourceFactory.createResource(amodel.getId()), DCTerms.relation);
-            RDFList relatedLinkList = relatedStatement.getObject().as(RDFList.class);
-            relatedLinkList.asJavaList().forEach((node)->{node.asResource().removeProperties();});
-            relatedLinkList.removeList();
-            relatedStatement.remove();
-
-        } catch(PropertyNotFoundException ex) { /* Do nothing */ }
+        } 
+        
+        // FIXME: This can be changed to if after data is updated in production
+        while(exportModel.contains(modelResource, DCTerms.relation)) {
+        	Statement relatedStatement = exportModel.getProperty(modelResource, DCTerms.relation);
+        	RDFList relatedLinkList = relatedStatement.getObject().as(RDFList.class);
+        	relatedLinkList.asJavaList().forEach((node)->{node.asResource().removeProperties();});
+        	relatedLinkList.removeList();
+        	relatedStatement.remove();
+        }
 
         exportModel.remove(oldModel);
         exportModel.add(amodel.asGraph());
