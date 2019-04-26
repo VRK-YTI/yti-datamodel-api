@@ -13,6 +13,7 @@ import org.elasticsearch.transport.NodeDisconnectedException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.io.StringWriter;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -27,10 +28,18 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Singleton;
 import javax.ws.rs.NotFoundException;
 import org.apache.jena.iri.IRI;
-import org.elasticsearch.action.index.IndexRequestBuilder;
-import org.elasticsearch.client.Client;
-import org.elasticsearch.client.transport.NoNodeAvailableException;
-import org.elasticsearch.client.transport.TransportClient;
+import org.elasticsearch.ElasticsearchException;
+import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
+import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
+import org.elasticsearch.action.admin.indices.get.GetIndexRequest;
+import org.elasticsearch.action.delete.DeleteRequest;
+import org.elasticsearch.action.delete.DeleteResponse;
+import org.elasticsearch.action.get.GetRequest;
+import org.elasticsearch.action.index.IndexRequest;
+import org.elasticsearch.action.index.IndexResponse;
+import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.common.xcontent.DeprecationHandler;
 import org.elasticsearch.common.xcontent.NamedXContentRegistry;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
@@ -41,8 +50,9 @@ import org.elasticsearch.common.xcontent.XContentType;
 @Service
 public final class FrameManager {
 
-    private final Client esClient;
+    private final RestHighLevelClient esClient;
     private final JenaClient jenaClient;
+    
     private static final Logger logger = LoggerFactory.getLogger(FrameManager.class.getName());
     private final SimpleDateFormat format = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz");
     
@@ -52,17 +62,18 @@ public final class FrameManager {
 
     @Autowired
     public FrameManager(
-            final Client esClient,
+            final RestHighLevelClient esClient,
             final JenaClient jenaClient) {
         this.esClient = esClient;
         this.jenaClient = jenaClient;
     }
 
-    public void cleanCachedFrames() {
+    public void cleanCachedFrames() throws IOException {
         boolean exists = indexExists(ELASTIC_INDEX_MODEL);
         if (exists) {
             logger.info("Cleaning elastic index");
-            esClient.admin().indices().prepareDelete(ELASTIC_INDEX_MODEL).execute().actionGet();
+            this.esClient.indices().delete(new DeleteIndexRequest(ELASTIC_INDEX_MODEL), RequestOptions.DEFAULT);
+            //esClient.admin().indices().prepareDelete(ELASTIC_INDEX_MODEL).execute().actionGet();
             initCache();
         } else {
             logger.info("No index found for cleaning!");
@@ -80,22 +91,22 @@ public final class FrameManager {
         String encId = LDHelper.encode(id);
         String frameStr = null;
         try {
-            Map<String, Object> map = this.esClient.prepareGet(ELASTIC_INDEX_MODEL, "doc", encId).execute().actionGet().getSourceAsMap();
+        	Map<String, Object> map = esClient.get(new GetRequest(ELASTIC_INDEX_MODEL,"doc",encId), RequestOptions.DEFAULT).getSourceAsMap();
             if(map == null) {
                 logger.debug("Creating visualization frame cache for graph " + id);
                 frameStr = updateCachedGraph(id);
             }
             else {
                 Object lastModifiedDate = map.get("modified");
-                if(lastModifiedDate!=null && lastModified.after(format.parse(lastModifiedDate.toString()))) {
-                    logger.debug("Updating visualization frame!");
+                if(lastModified!=null && lastModifiedDate!=null && lastModified.after(format.parse(lastModifiedDate.toString()))) {
+                    logger.debug("Updating visualization frame: "+id);
                     frameStr = updateCachedGraph(id);
                 } else {
-                    logger.debug("Visualization frame cache hit");
+                    logger.debug("Visualization frame cache hit: "+id);
                     frameStr = map.get("graph").toString();
                 }
             }
-        } catch (NoNodeAvailableException ex) {
+        } catch (ElasticsearchException ex) {
             logger.error("Datamodel Elastic is not available. Model frame caching is not available."); 
             frameStr = graphToFramedString(id, Frames.classVisualizationFrame);            
         }
@@ -104,18 +115,21 @@ public final class FrameManager {
     
     public void cacheClassVisualizationFrame(String id, String framed) {
         String encId = LDHelper.encode(id);
-        IndexRequestBuilder rb = this.esClient.prepareIndex(ELASTIC_INDEX_MODEL, "doc", encId);        
+            
         try(XContentBuilder builder = XContentFactory.jsonBuilder()) {
-            try(XContentParser parser  = XContentFactory.xContent(XContentType.JSON).createParser(NamedXContentRegistry.EMPTY, framed)) {
+            try(XContentParser parser  = XContentFactory.xContent(XContentType.JSON).createParser(NamedXContentRegistry.EMPTY,DeprecationHandler.THROW_UNSUPPORTED_OPERATION,framed)) {
                 builder.startObject();
                 builder.field("modified", format.format(new Date()));
                 builder.field("graph", framed);
                 builder.endObject();        
-                builder.close();        
-                rb.setSource(builder);
-                rb.execute().actionGet();                
+                IndexRequest updateReq = new IndexRequest(ELASTIC_INDEX_MODEL,"doc",encId);
+                updateReq.source(builder);
+                IndexResponse resp = esClient.index(updateReq, RequestOptions.DEFAULT);
+                logger.info("Index update response: "+resp.status().getStatus());
+                builder.close();             
             }            
         }catch(Exception ex) {
+        	ex.printStackTrace(System.out);
             logger.error("Could not cache visualization frame for id " + id, ex);
         }
     }
@@ -206,13 +220,11 @@ public final class FrameManager {
         logger.info("Waiting for ES (timeout " + ES_TIMEOUT + "s)");
         try {
             for(int i = 0; i < ES_TIMEOUT; i++) {
-                if(((TransportClient)esClient).connectedNodes().size() > 0) {
+                if(esClient.ping(RequestOptions.DEFAULT)) {
                     logger.info("ES online");
                     try{
                         indexExists(ELASTIC_INDEX_MODEL);
                         return;
-                    } catch(NoNodeAvailableException ex) {
-                        logger.info("No nodes available?");
                     } catch (NodeDisconnectedException ex) {
                         logger.info("Node Disconnected?");
                     }
@@ -223,20 +235,28 @@ public final class FrameManager {
         throw new RuntimeException("Could not find required ES instance");
     }
 
-    private boolean indexExists(String index) throws NoNodeAvailableException {
-        return esClient.admin().indices().prepareExists(index).execute().actionGet().isExists();
+    private boolean indexExists(String index) throws IOException {
+    	return esClient.indices().exists(new GetIndexRequest().indices(index), RequestOptions.DEFAULT);
     }
 
-    public void initCache() {
+    public void initCache() throws IOException {
         waitForESNodes();
         boolean exists = indexExists(ELASTIC_INDEX_MODEL);
         if (!exists) {
-            esClient.admin().indices().prepareCreate(ELASTIC_INDEX_MODEL).execute().actionGet();
+        	esClient.indices().create(new CreateIndexRequest(ELASTIC_INDEX_MODEL), RequestOptions.DEFAULT);
         }
         exists = indexExists(ELASTIC_INDEX_RESOURCE);
         if (!exists) {
-            esClient.admin().indices().prepareCreate(ELASTIC_INDEX_RESOURCE).execute().actionGet();
+        	esClient.indices().create(new CreateIndexRequest(ELASTIC_INDEX_RESOURCE), RequestOptions.DEFAULT);
         }
+    }
+    
+    public DeleteResponse removeCachedModel(String id) throws IOException {
+    	return esClient.delete(new DeleteRequest(ELASTIC_INDEX_MODEL,"doc",LDHelper.encode(id)), RequestOptions.DEFAULT);
+    }
+    
+    public DeleteResponse removeCachedResource(String id) throws IOException {
+    	return esClient.delete(new DeleteRequest(ELASTIC_INDEX_RESOURCE,"doc",LDHelper.encode(id)), RequestOptions.DEFAULT);
     }
 
 }

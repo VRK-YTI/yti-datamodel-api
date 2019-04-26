@@ -28,7 +28,7 @@ import org.slf4j.LoggerFactory;
 @TestPropertySource("classpath:application-test.properties")
 public class ModelTest  {
 
-
+    
     // TODO: Fix tests
 
     private static final Logger logger = LoggerFactory.getLogger(ModelTest.class.getName());

@@ -9,6 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
+
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
@@ -68,6 +70,11 @@ public class StartUpListener  {
     }
     
     private void initFramingCache() {
-        frameManager.initCache();
+        try {
+			frameManager.initCache();
+		} catch (IOException e) {
+			logger.warn("ES init failed!");
+			logger.warn(e.getMessage());
+		}
     }
 }
