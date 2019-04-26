@@ -35,7 +35,7 @@ public class ElasticConfig {
     @SuppressWarnings("resource")
     protected RestHighLevelClient elasticSearchClient() throws UnknownHostException {
 	RestHighLevelClient client = new RestHighLevelClient(RestClient.builder(
-    			new HttpHost(config.getElasticHost(), Integer.parseInt(config.getElasticHttpPort()),"http")
+    			new HttpHost(config.getElasticHost(), Integer.parseInt(config.getElasticHttpPort()),config.getElasticHttpScheme())
     		));
     	return client;
     }
