@@ -23,6 +23,7 @@ public final class ApplicationProperties {
     private String elasticHost;
     private String elasticPort;
     private String elasticHttpPort;
+    private String elasticHttpScheme;
     private String elasticCluster;
     private String defaultSuomiCodeServerAPI;
     private boolean devMode;
@@ -158,6 +159,14 @@ public final class ApplicationProperties {
 
     public void setElasticHttpPort(String elasticHttpPort) {
         this.elasticHttpPort = elasticHttpPort;
+    }
+    
+    public String getElasticHttpScheme() {
+        return elasticHttpScheme;
+    }
+
+    public void setElasticHttpScheme(String elasticHttpScheme) {
+        this.elasticHttpScheme = elasticHttpScheme;
     }
 
     public String getElasticCluster() {
