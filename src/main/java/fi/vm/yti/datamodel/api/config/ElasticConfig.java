@@ -7,17 +7,18 @@ package fi.vm.yti.datamodel.api.config;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import org.apache.http.HttpHost;
 import org.elasticsearch.client.Client;
+import org.elasticsearch.client.RestClient;
 import org.elasticsearch.common.settings.Settings;
-import org.elasticsearch.common.transport.TransportAddress;
-import org.elasticsearch.transport.client.PreBuiltTransportClient;
+import org.elasticsearch.client.RestHighLevelClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
  *
- * @author jkesanie
+ * @author amiika
  */
 
 @Configuration
@@ -32,10 +33,11 @@ public class ElasticConfig {
     
     @Bean
     @SuppressWarnings("resource")
-    protected Client elasticSearchClient() throws UnknownHostException {
-        final TransportAddress address = new TransportAddress(InetAddress.getByName(config.getElasticHost()), Integer.parseInt(config.getElasticPort()));
-        final Settings settings = Settings.builder().put("cluster.name", config.getElasticCluster()).put("client.transport.ignore_cluster_name", false).put("client.transport.sniff", false).build();
-        return new PreBuiltTransportClient(settings).addTransportAddress(address);
+    protected RestHighLevelClient elasticSearchClient() throws UnknownHostException {
+	RestHighLevelClient client = new RestHighLevelClient(RestClient.builder(
+    			new HttpHost(config.getElasticHost(), Integer.parseInt(config.getElasticHttpPort()),"http")
+    		));
+    	return client;
     }
     
 }

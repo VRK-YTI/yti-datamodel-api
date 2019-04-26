@@ -15,6 +15,7 @@ import org.apache.jena.rdfconnection.RDFConnectionRemote;
 import org.apache.jena.system.Txn;
 import org.apache.jena.update.*;
 
+import java.io.IOException;
 import java.util.Date;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -1367,11 +1368,14 @@ public class GraphManager {
     public void updateResourceWithNewId(IRI oldIdIRI, AbstractResource resource) {
         updateResource(resource.getModelId(), resource.getId(), jenaClient.getModelFromCore(oldIdIRI.toString()), resource.asGraph());
         removeGraph(oldIdIRI);
-        //renameID(oldIdIRI,resource.getIRI());
-        //updateResourceReferencesInModel(resource.getModelIRI(), oldIdIRI, resource.getIRI());
         updateResourceReferencesInAllGraphs(resource.getModelIRI(), oldIdIRI, resource.getIRI());
         updateReferencesInPositionGraph(resource.getModelIRI(), oldIdIRI, resource.getIRI());
-        frameManager.cleanCachedFrames();
+        try {
+			frameManager.cleanCachedFrames();
+		} catch (IOException e) {
+			logger.warn("Could not clean cached frames");
+			logger.warn(e.getMessage());
+		}
     }
 
     public void deleteResource(AbstractResource resource) {
@@ -1386,7 +1390,6 @@ public class GraphManager {
         jenaClient.putModelToCore(modelId + "#ExportGraph", exportModel);
         deleteGraphReferenceFromModel(resourceId, modelId);
         jenaClient.deleteModelFromCore(resourceId);
-
     }
 
     public void createModel(AbstractModel amodel) {
