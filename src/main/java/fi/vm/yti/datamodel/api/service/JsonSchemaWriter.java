@@ -507,7 +507,7 @@ public class JsonSchemaWriter {
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
 
         String selectResources =
-                "SELECT ?resource ?targetClass ?className ?classTitle ?classDeactivated ?classDescription ?minProperties ?maxProperties ?property ?propertyDeactivated ?valueList ?schemeList ?predicate ?id ?title ?description ?predicateName ?datatype ?shapeRef ?shapeRefName ?min ?max ?minLength ?maxLength ?pattern ?idBoolean ?example "
+                "SELECT ?resource ?targetClass ?className ?localClassName ?classTitle ?classDeactivated ?classDescription ?minProperties ?maxProperties ?property ?propertyDeactivated ?valueList ?schemeList ?predicate ?id ?title ?description ?predicateName ?datatype ?shapeRef ?shapeRefName ?min ?max ?minLength ?maxLength ?pattern ?idBoolean ?example "
                         + "WHERE { "
                         + "GRAPH ?modelPartGraph {"
                         + "?model dcterms:hasPart ?resource . "
@@ -515,6 +515,7 @@ public class JsonSchemaWriter {
                         + "GRAPH ?resource {"
                         + "?resource a ?resourceType . "
                         + "VALUES ?resourceType { rdfs:Class sh:Shape sh:NodeShape }"
+                        + "OPTIONAL { ?resource iow:localName ?localClassName . } "
                         + "OPTIONAL { ?resource sh:name ?classTitle . "
                         + "FILTER (langMatches(lang(?classTitle),?lang)) }"
                         + "OPTIONAL { ?resource sh:deactivated ?classDeactivated . }"
@@ -596,6 +597,8 @@ public class JsonSchemaWriter {
                 if (!soln.contains("className")) {
                     return null;
                 }
+                
+               	String localClassName = soln.contains("localClassName") ? soln.getLiteral("localClassName").getString() : null;
                  
                 if(!soln.contains("classDeactivated") || (soln.contains("classDeactivated") && !soln.getLiteral("classDeactivated").getBoolean())) {    
      
@@ -833,7 +836,8 @@ public class JsonSchemaWriter {
                             classDefinition.add("required", reqArray);
                         }
 
-                        definitions.add(className, classDefinition.build());
+                        definitions.add(localClassName!=null && localClassName.length()>0 ? LDHelper.removeInvalidCharacters(localClassName) : className, classDefinition.build());
+                        
                         properties = Json.createObjectBuilder();
                         requiredPredicates = new HashSet<String>();
                     }
@@ -1002,7 +1006,7 @@ public class JsonSchemaWriter {
         }
 
         String selectResources =
-                "SELECT ?resource ?property ?propertyDeactivated ?lang ?className ?classTitle ?classDeactivated ?classDescription ?predicate ?predicateName ?datatype ?shapeRef ?pattern ?shapeRefName ?minLength ?maxLength ?min ?max ?propertyLabel ?propertyDescription ?idBoolean "
+                "SELECT ?resource ?property ?propertyDeactivated ?lang ?className ?localClassName ?classTitle ?classDeactivated ?classDescription ?predicate ?predicateName ?datatype ?shapeRef ?pattern ?shapeRefName ?minLength ?maxLength ?min ?max ?propertyLabel ?propertyDescription ?idBoolean "
                         + "WHERE { "
                         + "GRAPH ?modelPartGraph {"
                         + "?model dcterms:hasPart ?resource . "
@@ -1011,6 +1015,7 @@ public class JsonSchemaWriter {
                         + "?resource sh:name ?classTitle . "
                         + "BIND(lang(?classTitle) as ?lang)"
                         + "OPTIONAL { ?resource sh:deactivated ?classDeactivated . }"
+                        + "OPTIONAL { ?resource iow:localName ?localClassName . } "
                         + "OPTIONAL { ?resource sh:description ?classDescription . "
                         + "FILTER(?lang=lang(?classDescription))"
                         + "}"
@@ -1072,7 +1077,8 @@ public class JsonSchemaWriter {
                 if(!soln.contains("classDeactivated") || (soln.contains("classDeactivated") && !soln.getLiteral("classDeactivated").getBoolean())) {   
 
                     String className = soln.getLiteral("className").getString();
-
+                    String localClassName = soln.contains("localClassName") ? soln.getLiteral("localClassName").getString() : null;
+                    
                     if(soln.contains("property") && (!soln.contains("propertyDeactivated") || (soln.contains("propertyDeactivated") && !soln.getLiteral("propertyDeactivated").getBoolean()))) {   
 
                         propertyID = soln.getResource("property").toString();
@@ -1244,7 +1250,7 @@ public class JsonSchemaWriter {
                         if(!classProps.isEmpty()) classDefinition.add("properties", classProps);
                         JsonArray reqArray = required.build();
                         if(!reqArray.isEmpty()) classDefinition.add("required", reqArray);
-                        definitions.add(className, classDefinition.build());
+                        definitions.add(localClassName!=null && localClassName.length()>0 ? LDHelper.removeInvalidCharacters(localClassName) : className, classDefinition.build());
                         properties = Json.createObjectBuilder();
                         required = Json.createArrayBuilder();
 
