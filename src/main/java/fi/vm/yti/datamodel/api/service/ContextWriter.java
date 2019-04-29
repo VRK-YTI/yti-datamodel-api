@@ -47,23 +47,26 @@ public class ContextWriter {
 
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         String selectResources = 
-                "SELECT ?resource ?resourceName ?datatype "
+                "SELECT ?resource ?localResourceName ?resourceName ?datatype "
                 + "WHERE { "
                 + "{GRAPH ?resourceID { "
                 + "?resourceID a sh:NodeShape . "
                 + "?resourceID sh:targetClass ?targetClass . "
                 + "BIND(?targetClass as ?resource)"
                 + "BIND(afn:localname(?resourceID) as ?resourceName)"
+                + "OPTIONAL { ?resourceID iow:localName ?localResourceName . } "
                 + "OPTIONAL { ?resourceID a owl:DatatypeProperty . ?resourceID rdfs:range ?datatype . }"
                 + "}} UNION "
                 + "{GRAPH ?resourceID { "
                 + "?resourceID a rdfs:Class . "
                 + "BIND(?resourceID as ?resource)"
                 + "BIND(afn:localname(?resourceID) as ?resourceName)"
+                + "OPTIONAL { ?resourceID iow:localName ?localResourceName . } "
                 + "OPTIONAL { ?resourceID a owl:DatatypeProperty . ?resourceID rdfs:range ?datatype . }"
                 + "}} UNION{ "
                 + "GRAPH ?resourceID {"
                 + "?resourceID sh:property ?property . "
+                + "OPTIONAL { ?property iow:localName ?localResourceName . } "
                 + "OPTIONAL { ?property sh:datatype ?datatype . }"
                 + "?property sh:path ?predicate . "
                 + "BIND(?predicate as ?resource)"
@@ -85,7 +88,8 @@ public class ContextWriter {
                 QuerySolution soln = results.nextSolution();
                 String predicateID = soln.getResource("resource").toString();
                 String predicateName = soln.getLiteral("resourceName").toString();
-
+                String localResourceName = soln.contains("localResourceName") ? soln.getLiteral("localResourceName").getString() : null;
+                
                 JsonObjectBuilder predicate = Json.createObjectBuilder();
                 predicate.add("@id", predicateID);
 
@@ -94,9 +98,9 @@ public class ContextWriter {
                 } else {
                /* FIXME: Too bold? */
                     predicate.add("@type", "@id");
-                }
+                } 
 
-                context.add(predicateName, predicate.build());
+                context.add(localResourceName != null && localResourceName.length()>0 ? localResourceName : predicateName, predicate.build());
             }
 
             return createDefaultContext(context);
@@ -114,7 +118,7 @@ public class ContextWriter {
 
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         String selectResources = 
-                "SELECT ?resource ?type ?resourceName ?datatype ?targetClass "
+                "SELECT ?resource ?resourceName ?localResourceName ?datatype ?targetClass "
                 + "WHERE { {"
                 + "GRAPH ?modelPartGraph {"
                 + "?model dcterms:hasPart ?resource . "
@@ -123,6 +127,7 @@ public class ContextWriter {
                 + "?resource a ?type . "
                 + "OPTIONAL { ?resource sh:targetClass ?targetClass }"
                 + "BIND(afn:localname(?resource) as ?resourceName)"
+                + "OPTIONAL { ?resource iow:localName ?localResourceName . } "
                 + "}"
                 + "OPTIONAL {"
                 + "GRAPH ?class {"
@@ -137,8 +142,8 @@ public class ContextWriter {
                 + "GRAPH ?shapes {"
                 + "?shapes sh:property ?property . "
                 + "?property sh:path ?resource . "
-                + "?property dcterms:type ?type . "
                 + "BIND(afn:localname(?resource) as ?resourceName)"
+                + "OPTIONAL { ?property iow:localName ?localResourceName . } "
                 + "OPTIONAL { ?property sh:datatype ?datatype . }"
                 + "}"
                 + "} }";
@@ -158,6 +163,7 @@ public class ContextWriter {
             QuerySolution soln = results.nextSolution();
             String predicateID = soln.getResource("resource").toString();
             String predicateName = soln.getLiteral("resourceName").toString();
+            String localResourceName = soln.contains("localResourceName") ? soln.getLiteral("localResourceName").getString() : null;
             
             if(soln.contains("targetClass")) {
                 predicateID = soln.getResource("targetClass").toString();
@@ -173,8 +179,7 @@ public class ContextWriter {
                /* FIXME: Too bold? */
                predicate.add("@type","@id"); 
             }
-                        
-            context.add(predicateName,predicate.build());
+            context.add(localResourceName != null && localResourceName.length()>0 ? localResourceName : predicateName, predicate.build());
         }
         
         return createDefaultContext(context);

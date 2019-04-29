@@ -81,20 +81,21 @@ public class XMLSchemaWriter {
         XMLSchemaBuilder xml = new XMLSchemaBuilder();
        
         String className = SplitIRI.localname(classID);
-        
-        Element complexType = xml.newComplexType(className+"Type",classID);
-        
+        String localClassName = null;
+        String classDescription = null;
+        String classTitle = null;
         
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         
         String selectClass = 
-                "SELECT ?type ?label ?description "
+                "SELECT ?localClassName ?type ?label ?description "
                 + "WHERE { "
                 + "GRAPH ?resourceID { "
                 + "?resourceID a ?type . "
                 + "?resourceID ?resourceLabel ?label . "
                 + "VALUES ?resourceLabel { rdfs:label sh:name }"
                 + "FILTER (langMatches(lang(?label),?lang))"
+                + "OPTIONAL { ?resourceID iow:localName ?localClassName . } "
                 + "OPTIONAL { ?resourceID ?resourceComment ?description . "
                 + "VALUES ?resourceComment { rdfs:comment sh:description }"
                 + "FILTER (langMatches(lang(?description),?lang))"
@@ -109,7 +110,7 @@ public class XMLSchemaWriter {
         pss.setCommandText(selectClass);
 
         boolean classMetadata = false;
-
+ 
         try(QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), pss.asQuery())) {
             ResultSet results = qexec.execSelect();
 
@@ -117,20 +118,19 @@ public class XMLSchemaWriter {
                 logger.debug("Resource results is null");
                 return null;
             }
-
+       
             while (results.hasNext()) {
 
                 QuerySolution soln = results.nextSolution();
 
-                Element cdocumentation = xml.newDocumentation(complexType);
-
-                String title = soln.getLiteral("label").getString();
-
-                xml.appendElementValue(cdocumentation, "dcterms:title", title);
+                classTitle = soln.getLiteral("label").getString();
 
                 if (soln.contains("description")) {
-                    String description = soln.getLiteral("description").getString();
-                    xml.appendElementValue(cdocumentation, "dcterms:description", description);
+                    classDescription = soln.getLiteral("description").getString();
+                }
+                
+                if (soln.contains("localClassName")) {
+                	localClassName = soln.getLiteral("localClassName").getString();
                 }
 
                 String sType = soln.getResource("type").getLocalName();
@@ -142,6 +142,12 @@ public class XMLSchemaWriter {
             }
         }
 
+        Element complexType = xml.newComplexType((localClassName!=null && localClassName.length()>0 ? LDHelper.removeInvalidCharacters(localClassName) : className)+"Type",classID);
+        Element cdocumentation = xml.newDocumentation(complexType);
+        xml.appendElementValue(cdocumentation, "dcterms:title", classTitle);
+        if(classDescription!=null) {
+        	xml.appendElementValue(cdocumentation, "dcterms:description", classDescription);
+        }
 
         if(classMetadata) {
 
@@ -361,7 +367,7 @@ public class XMLSchemaWriter {
         pss = new ParameterizedSparqlString();
         
         String selectResources = 
-                "SELECT ?resource ?targetClass ?className ?classTitle ?classDescription ?classDeactivated ?property ?propertyDeactivated ?valueList ?schemeList ?predicate ?id ?title ?description ?predicateName ?datatype ?shapeRef ?shapeRefName ?min ?max ?minLength ?maxLength ?pattern "
+                "SELECT ?resource ?targetClass ?className ?localClassName ?classTitle ?classDescription ?classDeactivated ?property ?propertyDeactivated ?valueList ?schemeList ?predicate ?id ?title ?description ?predicateName ?datatype ?shapeRef ?shapeRefName ?min ?max ?minLength ?maxLength ?pattern "
                 + "WHERE { "
                 + "GRAPH ?modelPartGraph {"
                 + "?model dcterms:hasPart ?resource . "
@@ -370,6 +376,7 @@ public class XMLSchemaWriter {
                 + "?resource sh:name ?classTitle . "
                 + "FILTER (langMatches(lang(?classTitle),?lang))"
                 + "OPTIONAL { ?resource sh:deactivated ?classDeactivated . }"
+                + "OPTIONAL { ?resource iow:localName ?localClassName . } "
                 + "OPTIONAL { ?resource sh:targetClass ?targetClass . }"
                 + "OPTIONAL { ?resource sh:description ?classDescription . "
                 + "FILTER (langMatches(lang(?classDescription),?lang))"
@@ -428,13 +435,14 @@ public class XMLSchemaWriter {
 
                         String classID = soln.getResource("resource").getURI();
                         String className = soln.getLiteral("className").getString();
+                        String localClassName = soln.contains("localClassName") ? soln.getLiteral("localClassName").getString() : null;
 
                         if (firstRun) {
 
                             if (soln.contains("targetClass")) {
-                                complexType = xml.newComplexType(className + "Type", soln.getResource("targetClass").toString());
+                                complexType = xml.newComplexType((localClassName!=null && localClassName.length()>0 ? LDHelper.removeInvalidCharacters(localClassName) : className) + "Type", soln.getResource("targetClass").toString());
                             } else {
-                                complexType = xml.newComplexType(className + "Type", soln.getResource("resource").toString());
+                                complexType = xml.newComplexType((localClassName!=null && localClassName.length()>0 ? LDHelper.removeInvalidCharacters(localClassName) : className) + "Type", soln.getResource("resource").toString());
                             }
 
                             Element classDoc = xml.newDocumentation(complexType);
