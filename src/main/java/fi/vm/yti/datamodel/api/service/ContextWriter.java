@@ -5,7 +5,9 @@ package fi.vm.yti.datamodel.api.service;
 
 import fi.vm.yti.datamodel.api.utils.LDHelper;
 import org.apache.jena.query.*;
+import org.apache.jena.vocabulary.RDFS;
 import org.springframework.stereotype.Service;
+import org.topbraid.shacl.vocabulary.SH;
 
 import javax.json.Json;
 import javax.json.JsonObjectBuilder;
@@ -47,20 +49,13 @@ public class ContextWriter {
 
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         String selectResources = 
-                "SELECT ?resource ?localResourceName ?resourceName ?datatype "
+                "SELECT ?resource ?type ?localResourceName ?resourceName ?datatype ?targetClass "
                 + "WHERE { "
                 + "{GRAPH ?resourceID { "
-                + "?resourceID a sh:NodeShape . "
-                + "?resourceID sh:targetClass ?targetClass . "
-                + "BIND(?targetClass as ?resource)"
-                + "BIND(afn:localname(?resourceID) as ?resourceName)"
-                + "OPTIONAL { ?resourceID iow:localName ?localResourceName . } "
-                + "OPTIONAL { ?resourceID a owl:DatatypeProperty . ?resourceID rdfs:range ?datatype . }"
-                + "}} UNION "
-                + "{GRAPH ?resourceID { "
-                + "?resourceID a rdfs:Class . "
+                + "?resourceID a ?type . "
                 + "BIND(?resourceID as ?resource)"
                 + "BIND(afn:localname(?resourceID) as ?resourceName)"
+                + "OPTIONAL { ?resourceID sh:targetClass ?targetClass . }"
                 + "OPTIONAL { ?resourceID iow:localName ?localResourceName . } "
                 + "OPTIONAL { ?resourceID a owl:DatatypeProperty . ?resourceID rdfs:range ?datatype . }"
                 + "}} UNION{ "
@@ -86,23 +81,26 @@ public class ContextWriter {
 
             while (results.hasNext()) {
                 QuerySolution soln = results.nextSolution();
-                String predicateID = soln.getResource("resource").toString();
-                String predicateName = soln.getLiteral("resourceName").toString();
-                String localResourceName = soln.contains("localResourceName") ? soln.getLiteral("localResourceName").getString() : null;
+                String resourceURI = soln.contains("targetClass") ? soln.getResource("targetClass").toString() : soln.getResource("resource").toString();
+                String resourceName = soln.getLiteral("resourceName").toString();
+                String localResourceName = soln.contains("localResourceName") ? LDHelper.removeInvalidCharacters(soln.getLiteral("localResourceName").getString()) : null;
                 
-                JsonObjectBuilder predicate = Json.createObjectBuilder();
-                predicate.add("@id", predicateID);
+                JsonObjectBuilder resourceObject = Json.createObjectBuilder();
 
-                if (soln.contains("datatype")) {
-                    predicate.add("@type", soln.getResource("datatype").toString());
+                String type = soln.contains("type") ? soln.getResource("type").getURI() : null;
+                
+                if(type!=null && (type.equals(RDFS.Class.getURI()) || type.equals(SH.NodeShape.getURI()))) {
+                	context.add(localResourceName != null && localResourceName.length()>0 ? localResourceName : resourceName, resourceURI);
                 } else {
-               /* FIXME: Too bold? */
-                    predicate.add("@type", "@id");
-                } 
-
-                context.add(localResourceName != null && localResourceName.length()>0 ? localResourceName : predicateName, predicate.build());
+    	            resourceObject.add("@id",resourceURI);
+    	            if(soln.contains("datatype")) {
+    	                resourceObject.add("@type",soln.getResource("datatype").toString());
+    	            } else {
+    	               resourceObject.add("@type","@id"); 
+    	            }
+    	            context.add(localResourceName != null && localResourceName.length()>0 ? localResourceName : resourceName, resourceObject.build());
+                }      
             }
-
             return createDefaultContext(context);
         }
     }
@@ -118,7 +116,7 @@ public class ContextWriter {
 
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         String selectResources = 
-                "SELECT ?resource ?resourceName ?localResourceName ?datatype ?targetClass "
+                "SELECT ?resource ?type ?resourceName ?localResourceName ?datatype ?targetClass "
                 + "WHERE { {"
                 + "GRAPH ?modelPartGraph {"
                 + "?model dcterms:hasPart ?resource . "
@@ -161,25 +159,30 @@ public class ContextWriter {
         
         while (results.hasNext()) {
             QuerySolution soln = results.nextSolution();
-            String predicateID = soln.getResource("resource").toString();
-            String predicateName = soln.getLiteral("resourceName").toString();
-            String localResourceName = soln.contains("localResourceName") ? soln.getLiteral("localResourceName").getString() : null;
+            String resourceURI = soln.getResource("resource").toString();
+            String resourceName = soln.getLiteral("resourceName").toString();
+            String localResourceName = soln.contains("localResourceName") ? LDHelper.removeInvalidCharacters(soln.getLiteral("localResourceName").getString()) : null;
             
             if(soln.contains("targetClass")) {
-                predicateID = soln.getResource("targetClass").toString();
+                resourceURI = soln.getResource("targetClass").toString();
             }
             
-            JsonObjectBuilder predicate = Json.createObjectBuilder();
+            JsonObjectBuilder resourceObject = Json.createObjectBuilder();
             
-            predicate.add("@id",predicateID);
+            String type = soln.contains("type") ? soln.getResource("type").getURI() : null;
             
-            if(soln.contains("datatype")) {
-                predicate.add("@type",soln.getResource("datatype").toString());
+            if(type!=null && (type.equals(RDFS.Class.getURI()) || type.equals(SH.NodeShape.getURI()))) {
+            	context.add(localResourceName != null && localResourceName.length()>0 ? localResourceName : resourceName, resourceURI);
             } else {
-               /* FIXME: Too bold? */
-               predicate.add("@type","@id"); 
+	            resourceObject.add("@id",resourceURI);
+	            
+	            if(soln.contains("datatype")) {
+	                resourceObject.add("@type",soln.getResource("datatype").toString());
+	            } else {
+	               resourceObject.add("@type","@id"); 
+	            }
+	            context.add(localResourceName != null && localResourceName.length()>0 ? localResourceName : resourceName, resourceObject.build());
             }
-            context.add(localResourceName != null && localResourceName.length()>0 ? localResourceName : predicateName, predicate.build());
         }
         
         return createDefaultContext(context);
