@@ -11,8 +11,9 @@ import java.util.LinkedHashMap;
  * @author jkesanie
  */
 public class Frames {
-  
 
+
+    public static final LinkedHashMap<String, Object> jsonLdKeys;
     public static final LinkedHashMap<String, Object> inScheme;
     public static final LinkedHashMap<String, Object> subject;
     public static final LinkedHashMap<String, Object> comment;
@@ -33,12 +34,18 @@ public class Frames {
     public static final LinkedHashMap<String, Object> classContext;
     public static final LinkedHashMap<String, Object> modelContext;
     public static final LinkedHashMap<String, Object> modelPositionContext;
-    
-    public static final LinkedHashMap<String, Object> modelFrame = null;
-    public static final LinkedHashMap<String, Object> classFrame = null;
+    public static final LinkedHashMap<String, Object> conceptFrame;
     public static final LinkedHashMap<String, Object> classVisualizationFrame;    
     
     static {
+
+        jsonLdKeys = new LinkedHashMap<String, Object>() {
+            {
+                put("id", "@id");
+                put("type", "@type");
+            }
+        };
+
         inScheme = new LinkedHashMap<String, Object>() {
             {
               put("@id", "http://www.w3.org/2004/02/skos/core#inScheme");
@@ -591,8 +598,14 @@ public class Frames {
                     }
                 });            
             }            
-        };        
-        
+        };
+
+        conceptFrame = new LinkedHashMap<String, Object>() {
+            {
+                put("@context", conceptContext);
+            }
+        };
+
         classVisualizationFrame = new LinkedHashMap<String, Object>() {
             {
                 put("@context", classContext);                
@@ -662,4 +675,6 @@ public class Frames {
         };        
  
     }
+
+
 }

@@ -84,7 +84,6 @@ dependencies {
     compile "org.jsoup:jsoup:1.11.1"
     compile "com.jayway.jsonpath:json-path:2.4.0"
     compile "io.swagger:swagger-jersey2-jaxrs:1.5.18"
-
     compile "org.topbraid:shacl:1.0.1"
     compile "org.apache.jena:jena-core:3.9.0"
     compile "org.apache.jena:jena-arq:3.9.0"

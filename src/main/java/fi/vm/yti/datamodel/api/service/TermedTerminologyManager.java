@@ -1,6 +1,7 @@
 package fi.vm.yti.datamodel.api.service;
 
 import fi.vm.yti.datamodel.api.config.ApplicationProperties;
+import fi.vm.yti.datamodel.api.utils.Frames;
 import fi.vm.yti.datamodel.api.utils.LDHelper;
 import fi.vm.yti.datamodel.api.utils.QueryLibrary;
 import org.apache.jena.query.*;
@@ -50,6 +51,7 @@ public final class TermedTerminologyManager {
     private final NamespaceManager namespaceManager;
     private final IDManager idManager;
     private final ModelManager modelManager;
+    private final FrameManager frameManager;
     private final JerseyResponseManager jerseyResponseManager;
 
     @Autowired
@@ -59,7 +61,8 @@ public final class TermedTerminologyManager {
                              NamespaceManager namespaceManager,
                              IDManager idManager,
                              ModelManager modelManager,
-                             JerseyResponseManager jerseyResponseManager) {
+                             JerseyResponseManager jerseyResponseManager,
+                             FrameManager frameManager) {
         this.endpointServices = endpointServices;
         this.properties = properties;
         this.clientFactory = clientFactory;
@@ -67,6 +70,7 @@ public final class TermedTerminologyManager {
         this.idManager = idManager;
         this.modelManager = modelManager;
         this.jerseyResponseManager = jerseyResponseManager;
+        this.frameManager = frameManager;
     }
 
     public String createConceptSuggestionJson(String lang, String prefLabel, String definition, String graph, String user) {
@@ -367,6 +371,23 @@ public final class TermedTerminologyManager {
 
         ResponseBuilder rb = Response.status(Response.Status.OK);
         rb.entity(modelManager.writeModelToJSONLDString(simpleSkos));
+
+        return rb.build();
+    }
+
+    public Response searchConceptFromTermedAPIPlainJson(String query, String schemeURI, String conceptURI, String graphId) {
+        Model simpleSkos = searchConceptFromTermedAPIAsModel(query, schemeURI, conceptURI, graphId);
+
+        if (simpleSkos == null) {
+            return jerseyResponseManager.notFound();
+        }
+
+        ResponseBuilder rb = Response.status(Response.Status.OK);
+        try {
+            rb.entity(frameManager.graphToPlainJsonString(simpleSkos, Frames.conceptFrame));
+        } catch(Exception ex) {
+            ex.printStackTrace();
+            return jerseyResponseManager.serverError(); }
 
         return rb.build();
     }
