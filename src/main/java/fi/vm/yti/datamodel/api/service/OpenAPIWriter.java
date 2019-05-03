@@ -601,6 +601,7 @@ public class OpenAPIWriter {
 
         JsonObjectBuilder schema = Json.createObjectBuilder();
         JsonObjectBuilder infoObject = Json.createObjectBuilder();
+        JsonObjectBuilder externalDocs = Json.createObjectBuilder();
 
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
 
@@ -652,6 +653,8 @@ public class OpenAPIWriter {
 
                 infoObject.add("title", title);
 
+                infoObject.add("version","0.01");
+
                 /*
                 Date modified = graphManager.lastModified(modelID);
                 SimpleDateFormat format = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz");
@@ -663,7 +666,11 @@ public class OpenAPIWriter {
 
             }
 
+            externalDocs.add("url",modelID);
+            externalDocs.add("description",lang.equals("fi") ? "Rajapinnan tietomalli" : "Datamodel for the API");
+
             schema.add("info",infoObject.build());
+            schema.add("externalDocs",externalDocs.build());
             
             Map<String,Object> defs = getClassDefinitions(modelID, lang);
 
