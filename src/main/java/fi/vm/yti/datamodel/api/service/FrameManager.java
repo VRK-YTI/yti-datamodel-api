@@ -1,18 +1,24 @@
 package fi.vm.yti.datamodel.api.service;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.jsonldjava.core.JsonLdOptions;
 import fi.vm.yti.datamodel.api.utils.Frames;
 import fi.vm.yti.datamodel.api.utils.LDHelper;
+import org.apache.jena.graph.Graph;
+import org.apache.jena.query.DatasetFactory;
 import org.apache.jena.query.ParameterizedSparqlString;
 import org.apache.jena.query.Query;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.riot.*;
 import org.apache.jena.riot.system.PrefixMap;
 import org.apache.jena.riot.system.RiotLib;
+import org.apache.jena.sparql.core.DatasetGraph;
 import org.elasticsearch.transport.NodeDisconnectedException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.text.SimpleDateFormat;
@@ -199,6 +205,29 @@ public final class FrameManager {
             framed = stringWriter.toString();
         }
         return framed;
+    }
+
+    protected String graphToPlainJsonString(Model model, LinkedHashMap<String, Object> frame) throws IOException {
+
+            WriterGraphRIOT gw = RDFDataMgr.createGraphWriter(RDFFormat.JSONLD_FRAME_PRETTY);
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            Graph modelGraph = model.getGraph();
+            PrefixMap pm = RiotLib.prefixMap(modelGraph);
+            pm = cleanUpPrefixes(pm);
+            pm.putAll(LDHelper.PREFIX_MAP);
+            ((LinkedHashMap<String, Object>) frame.get("@context")).putAll(pm.getMappingCopyStr());
+            JsonLdOptions opts = new JsonLdOptions();
+            opts.setProcessingMode(opts.JSON_LD_1_1);
+            opts.useNamespaces = true;
+            opts.setCompactArrays(true);
+            opts.setUseNativeTypes(Boolean.TRUE);
+            JsonLDWriteContext ctx = new JsonLDWriteContext();
+            ctx.setFrame(frame);
+            ctx.setOptions(opts);
+            gw.write(baos, model.getGraph(), pm, null, ctx);
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode jsonNode = objectMapper.readTree(baos.toByteArray());
+            return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(jsonNode.get("@graph"));
     }
 
     private PrefixMap cleanUpPrefixes(PrefixMap map) {
