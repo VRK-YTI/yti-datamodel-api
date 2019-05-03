@@ -19,6 +19,10 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import org.json.JSONArray;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import javax.json.Json;
@@ -32,6 +36,9 @@ import javax.json.JsonWriterFactory;
 import org.apache.jena.query.Query;
 import org.apache.jena.util.SplitIRI;
 import org.springframework.stereotype.Service;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.util.UriComponents;
+import org.springframework.web.util.UriComponentsBuilder;
 
 @Service
 public class OpenAPIWriter {
@@ -232,6 +239,7 @@ public class OpenAPIWriter {
             }
 
             JsonObjectBuilder paths = Json.createObjectBuilder();
+            JsonArrayBuilder tags = Json.createArrayBuilder();
             JsonObjectBuilder definitions = Json.createObjectBuilder();
             JsonObjectBuilder properties = Json.createObjectBuilder();
 
@@ -259,6 +267,7 @@ public class OpenAPIWriter {
                 if(!soln.contains("classDeactivated") || (soln.contains("classDeactivated") && !soln.getLiteral("classDeactivated").getBoolean())) {    
      
                     className = soln.getLiteral("className").getString();
+                    String classId = soln.getResource("resource").getURI();
 
                     if(soln.contains("property") && (!soln.contains("propertyDeactivated") || (soln.contains("propertyDeactivated") && !soln.getLiteral("propertyDeactivated").getBoolean()))) {    
                     
@@ -294,7 +303,7 @@ public class OpenAPIWriter {
                             }
 
                             if (soln.contains("valueList")) {
-                                JsonArray valueList = getValueList(soln.getResource("resource").toString(), soln.getResource("property").toString());
+                                JsonArray valueList = getValueList(classId, soln.getResource("property").toString());
                                 if (valueList != null) {
                                     predicate.add("enum", valueList);
                                 }
@@ -486,26 +495,56 @@ public class OpenAPIWriter {
                         }
 
                         if(soln.contains("path")) {
-                            String pathString = soln.getLiteral("path").getString();
-                            JsonObjectBuilder pathObject = Json.createObjectBuilder();
                             JsonArrayBuilder paramList = Json.createArrayBuilder();
-
-                            classProps.keySet().forEach((p)->{
-                                if(pathString.contains("{"+p+"}")) {
-                                    logger.info(p+" in path: :"+pathString);
-                                    JsonObjectBuilder paramObject = Json.createObjectBuilder();
-                                    JsonObjectBuilder schemaObject = Json.createObjectBuilder();
-                                    schemaObject.add("type","string");
-                                    paramObject.add("name",p);
-                                    paramObject.add("in","path");
-                                    paramObject.add("required",true);
-                                    paramObject.add("schema",schemaObject);
-                                   // paramObject.putAll(classProps.get(p));
-                                    paramList.add(paramObject);
-                                }
+                            String pathString = soln.getLiteral("path").getString();
+                            if(!pathString.startsWith("/")) pathString = "/"+pathString;
+                            JsonObjectBuilder pathObject = Json.createObjectBuilder();
+                            UriComponents bld = UriComponentsBuilder.fromUriString(pathString).build();
+                            MultiValueMap<String, String> queryParameters = bld.getQueryParams();
+                            pathString = bld.getPath();
+                            queryParameters.forEach((k,v)-> {
+                                JsonObjectBuilder paramObject = Json.createObjectBuilder();
+                                JsonObjectBuilder schemaObject = Json.createObjectBuilder();
+                                schemaObject.add("type","string");
+                                if(!v.isEmpty() && v.get(0)!=null) schemaObject.add("example", v.get(0));
+                                paramObject.add("name",k);
+                                paramObject.add("in","query");
+                                paramObject.add("schema",schemaObject);
+                                paramList.add(paramObject);
                             });
 
+                            JsonObjectBuilder tagObject = Json.createObjectBuilder();
+                            JsonObjectBuilder tagDocs = Json.createObjectBuilder();
+                            tagObject.add("name",className);
+                            tagDocs.add("url",classId);
+                            tagDocs.add("description","Documentation");
+                            tagObject.add("externalDocs",tagDocs.build());
+                            tags.add(tagObject.build());
+                            Matcher m = Pattern.compile("\\{(.*?)\\}").matcher(pathString);
+                            while(m.find()) {
+                                JsonObjectBuilder paramObject = Json.createObjectBuilder();
+                                JsonObjectBuilder schemaObject = Json.createObjectBuilder();
+                                schemaObject.add("type","string");
+                                paramObject.add("name",m.group(1));
+                                paramObject.add("in","path");
+                                paramObject.add("required",true);
+                                paramObject.add("schema",schemaObject);
+                                paramList.add(paramObject);
+                            }
+
+                            JsonArray parameters = paramList.build();
+                            JsonObject invalidParameterObject = null;
+                            if(!parameters.isEmpty()) {
+                                pathObject.add("parameters", parameters);
+                                JsonObjectBuilder invalidparam = Json.createObjectBuilder();
+                                invalidparam.add("description", "Invalid parameter");
+                                invalidParameterObject = invalidparam.build();
+                            }
+
+
+
                             JsonObjectBuilder getObject = Json.createObjectBuilder();
+                            getObject.add("tags", Json.createArrayBuilder().add(className).build());
                             JsonObjectBuilder responsesObject = Json.createObjectBuilder();
                             JsonObjectBuilder successObject = Json.createObjectBuilder();
                             JsonObjectBuilder contentTypeObject = Json.createObjectBuilder(); 
@@ -521,12 +560,10 @@ public class OpenAPIWriter {
                             successObject.add("content",contentObject.build());
                             successObject.add("description","Successfull operation");
                             responsesObject.add("200",successObject.build());
-                            getObject.add("responses",responsesObject.build());
-                            getObject.add("parameters",paramList.build());
-
-                            if (soln.contains("classDescription")) {
-                                getObject.add("description",soln.getLiteral("classDescription").getString());
-                            }
+                            if(invalidParameterObject!=null) responsesObject.add("400",invalidParameterObject);
+                            JsonObject successResponse = responsesObject.build();
+                            getObject.add("responses",successResponse);
+                            getObject.add("summary","Get "+className);
 
                             pathObject.add("get",getObject.build());
 
@@ -536,6 +573,7 @@ public class OpenAPIWriter {
                             JsonObjectBuilder requestSchemaObject = Json.createObjectBuilder();
 
                             JsonObjectBuilder postObject = Json.createObjectBuilder();
+                            postObject.add("tags", Json.createArrayBuilder().add(className).build());
                             JsonObjectBuilder postResponsesObject = Json.createObjectBuilder();
                             JsonObjectBuilder postSuccessObject = Json.createObjectBuilder();
                             JsonObjectBuilder postContentTypeObject = Json.createObjectBuilder(); 
@@ -550,16 +588,21 @@ public class OpenAPIWriter {
                             postSuccessObject.add("content",postContentObject.build());
                             postSuccessObject.add("description","Successfull operation");
                             postResponsesObject.add("200",postSuccessObject.build());
+                            if(invalidParameterObject!=null) postResponsesObject.add("400",invalidParameterObject);
                             
                             postObject.add("requestBody",requestBodyObject.build());
                             postObject.add("responses",postResponsesObject.build());
-                            postObject.add("parameters",paramList.build());
+                            postObject.add("summary","Update "+className);
 
-                            if (soln.contains("classDescription")) {
-                                postObject.add("description",soln.getLiteral("classDescription").getString());
-                            }
+                            JsonObjectBuilder deleteObject = Json.createObjectBuilder();
+                            deleteObject.add("summary","Delete "+className);
+                            deleteObject.add("tags", Json.createArrayBuilder().add(className).build());
+                            deleteObject.add("responses",successResponse);
 
                             pathObject.add("post",postObject.build());
+                            pathObject.add("delete",deleteObject.build());
+
+
 
                             paths.add(pathString,pathObject.build());
                         }
@@ -590,6 +633,7 @@ public class OpenAPIWriter {
                 {
                     put("definitions",definitions);
                     put("paths",paths);
+                    put("tags",tags);
                 }
             };
 
@@ -597,11 +641,20 @@ public class OpenAPIWriter {
         }
     }
 
+
+
     public String newOpenApiStub(String modelID, String lang) {
 
         JsonObjectBuilder schema = Json.createObjectBuilder();
         JsonObjectBuilder infoObject = Json.createObjectBuilder();
         JsonObjectBuilder externalDocs = Json.createObjectBuilder();
+        JsonArrayBuilder serverArray = Json.createArrayBuilder();
+        JsonObjectBuilder serverObject = Json.createObjectBuilder();
+
+        serverObject.add("url","https://api.example.com/v1");
+        serverObject.add("description","Example server description");
+        serverArray.add(serverObject.build());
+
 
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
 
@@ -671,8 +724,13 @@ public class OpenAPIWriter {
 
             schema.add("info",infoObject.build());
             schema.add("externalDocs",externalDocs.build());
-            
+            schema.add("servers",serverArray.build());
+
             Map<String,Object> defs = getClassDefinitions(modelID, lang);
+
+            if(defs.containsKey("tags")) {
+                schema.add("tags", ((JsonArrayBuilder) defs.get("tags")).build());
+            }
 
             return createDefaultOpenAPI(schema, (JsonObjectBuilder)defs.get("definitions"), (JsonObjectBuilder)defs.get("paths"));
         } 

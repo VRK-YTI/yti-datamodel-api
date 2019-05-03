@@ -5,12 +5,8 @@
  */
 package fi.vm.yti.datamodel.api.config;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import org.apache.http.HttpHost;
-import org.elasticsearch.client.Client;
 import org.elasticsearch.client.RestClient;
-import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -33,7 +29,7 @@ public class ElasticConfig {
     
     @Bean
     @SuppressWarnings("resource")
-    protected RestHighLevelClient elasticSearchClient() throws UnknownHostException {
+    protected RestHighLevelClient elasticSearchClient() {
 	RestHighLevelClient client = new RestHighLevelClient(RestClient.builder(
     			new HttpHost(config.getElasticHost(), Integer.parseInt(config.getElasticHttpPort()),config.getElasticHttpScheme())
     		));

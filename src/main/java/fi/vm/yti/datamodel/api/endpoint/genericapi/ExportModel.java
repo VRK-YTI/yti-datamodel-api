@@ -75,7 +75,7 @@ public class ExportModel {
             } else {
                 return jerseyResponseManager.notFound();
             }
-        } else if(ctype.equals("application/vnd.oai.openapi+json")) {
+        } else if(ctype.equals("application/vnd+oai+openapi+json")) {
             String apiStub = openAPIWriter.newOpenApiStub(graph,lang);
             if(apiStub!=null) {
                 return jerseyResponseManager.ok(apiStub,raw?"text/plain;charset=utf-8":"application/json");
