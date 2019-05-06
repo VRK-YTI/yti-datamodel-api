@@ -432,11 +432,6 @@ public class LDHelper {
      * @return boolean
      */
     public static boolean isResourceDefinedInNamespace(String resource, String namespace) {
-        
-        if(!namespace.endsWith("/")) {
-            namespace = namespace+"#";
-        }
-      
         return guessNamespaceFromResourceURI(resource).equals(namespace);
     }
 
@@ -447,7 +442,7 @@ public class LDHelper {
      */
     public static String guessNamespaceFromResourceURI(String resource) {
         if(resource.contains("#")) {
-            return resource.substring(0,resource.lastIndexOf("#")+1);
+            return resource.substring(0,resource.lastIndexOf("#"));
         } else {
             return resource.substring(0,resource.lastIndexOf("/")+1);
         }

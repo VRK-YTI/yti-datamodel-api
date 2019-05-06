@@ -31,6 +31,7 @@ public class ExportResource {
     private final JsonSchemaWriter jsonSchemaWriter;
     private final XMLSchemaWriter xmlSchemaWriter;
     private final JerseyClient jerseyClient;
+    private final OpenAPIWriter openAPIWriter;
 
     @Autowired
     ExportResource(EndpointServices endpointServices,
@@ -39,6 +40,7 @@ public class ExportResource {
                    ContextWriter contextWriter,
                    JsonSchemaWriter jsonSchemaWriter,
                    XMLSchemaWriter xmlSchemaWriter,
+                   OpenAPIWriter openAPIWriter,
                    JerseyClient jerseyClient) {
         this.endpointServices = endpointServices;
         this.idManager = idManager;
@@ -46,6 +48,7 @@ public class ExportResource {
         this.contextWriter = contextWriter;
         this.jsonSchemaWriter = jsonSchemaWriter;
         this.xmlSchemaWriter = xmlSchemaWriter;
+        this.openAPIWriter = openAPIWriter;
         this.jerseyClient = jerseyClient;
     }
 
@@ -87,7 +90,12 @@ public class ExportResource {
             } else {
                 return jerseyResponseManager.notFound();
             }
-        } else if(ctype.equals("application/schema+json")) {
+        } else if(ctype.equals("application/vnd+oai+openapi+json")) {
+        String apiStub = openAPIWriter.newOpenApiStubFromClass(graph,lang);
+        if(apiStub!=null) {
+            return jerseyResponseManager.ok(apiStub,raw?"text/plain;charset=utf-8":"application/json");
+        }
+    }else if(ctype.equals("application/schema+json")) {
             String schema = jsonSchemaWriter.newResourceSchema(graph,lang);
             if(schema!=null) {
                 return jerseyResponseManager.ok(schema,raw?"text/plain;charset=utf-8":"application/schema+json");
