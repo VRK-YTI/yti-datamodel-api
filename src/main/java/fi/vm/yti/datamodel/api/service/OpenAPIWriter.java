@@ -471,6 +471,12 @@ public class OpenAPIWriter {
                             classDefinition.add("title", soln.getLiteral("classTitle").getString());
                         }
                         classDefinition.add("type", "object");
+
+                        JsonObjectBuilder uriDocs = Json.createObjectBuilder();
+                        uriDocs.add("url",classId);
+                        uriDocs.add("description","Class identifier");
+                        classDefinition.add("externalDocs",uriDocs.build());
+
                         /*
                         if (soln.contains("targetClass")) {
                             classDefinition.add("@id", soln.getResource("targetClass").toString());
@@ -499,6 +505,8 @@ public class OpenAPIWriter {
                             String pathString = soln.getLiteral("path").getString();
                             if(!pathString.startsWith("/")) pathString = "/"+pathString;
                             JsonObjectBuilder pathObject = Json.createObjectBuilder();
+
+                            // Parse query parameters from path string
                             UriComponents bld = UriComponentsBuilder.fromUriString(pathString).build();
                             MultiValueMap<String, String> queryParameters = bld.getQueryParams();
                             pathString = bld.getPath();
@@ -513,13 +521,21 @@ public class OpenAPIWriter {
                                 paramList.add(paramObject);
                             });
 
+
                             JsonObjectBuilder tagObject = Json.createObjectBuilder();
-                            JsonObjectBuilder tagDocs = Json.createObjectBuilder();
                             tagObject.add("name",className);
+
+                             /*
+                            // TAG description object if needed?
+                            JsonObjectBuilder tagDocs = Json.createObjectBuilder();
                             tagDocs.add("url",classId);
                             tagDocs.add("description","Documentation");
                             tagObject.add("externalDocs",tagDocs.build());
+                            */
+
                             tags.add(tagObject.build());
+
+                            // Parse path parameters from path string
                             Matcher m = Pattern.compile("\\{(.*?)\\}").matcher(pathString);
                             while(m.find()) {
                                 JsonObjectBuilder paramObject = Json.createObjectBuilder();
@@ -532,6 +548,7 @@ public class OpenAPIWriter {
                                 paramList.add(paramObject);
                             }
 
+
                             JsonArray parameters = paramList.build();
                             JsonObject invalidParameterObject = null;
                             if(!parameters.isEmpty()) {
@@ -542,7 +559,7 @@ public class OpenAPIWriter {
                             }
 
 
-
+                            /* GET API */
                             JsonObjectBuilder getObject = Json.createObjectBuilder();
                             getObject.add("tags", Json.createArrayBuilder().add(className).build());
                             JsonObjectBuilder responsesObject = Json.createObjectBuilder();
@@ -550,11 +567,7 @@ public class OpenAPIWriter {
                             JsonObjectBuilder contentTypeObject = Json.createObjectBuilder(); 
                             JsonObjectBuilder contentObject = Json.createObjectBuilder();
                             JsonObjectBuilder schemaObject = Json.createObjectBuilder();
-                            JsonObjectBuilder itemsObject = Json.createObjectBuilder();
-                                                    
-                            itemsObject.add("$ref","#/components/schemas/"+className);
-                            schemaObject.add("items",itemsObject.build());
-                            schemaObject.add("type","array");
+                            schemaObject.add("$ref","#/components/schemas/"+className);
                             contentTypeObject.add("schema",schemaObject.build());
                             contentObject.add("application/json",contentTypeObject.build());
                             successObject.add("content",contentObject.build());
@@ -567,43 +580,82 @@ public class OpenAPIWriter {
 
                             pathObject.add("get",getObject.build());
 
+                            /* POST API */
                             JsonObjectBuilder requestBodyObject = Json.createObjectBuilder();
                             JsonObjectBuilder requestContentObject = Json.createObjectBuilder();
                             JsonObjectBuilder requestContentTypeObject = Json.createObjectBuilder();
                             JsonObjectBuilder requestSchemaObject = Json.createObjectBuilder();
+                            requestSchemaObject.add("$ref", "#/components/schemas/" + className);
 
                             JsonObjectBuilder postObject = Json.createObjectBuilder();
                             postObject.add("tags", Json.createArrayBuilder().add(className).build());
                             JsonObjectBuilder postResponsesObject = Json.createObjectBuilder();
                             JsonObjectBuilder postSuccessObject = Json.createObjectBuilder();
-                            JsonObjectBuilder postContentTypeObject = Json.createObjectBuilder(); 
+                            JsonObjectBuilder postContentTypeObject = Json.createObjectBuilder();
                             JsonObjectBuilder postContentObject = Json.createObjectBuilder();
-                                                 
-                            requestSchemaObject.add("$ref","#/components/schemas/"+className);
-                            requestContentTypeObject.add("schema",requestSchemaObject.build());
-                            requestContentObject.add("application/json",requestContentTypeObject.build());
-                            requestBodyObject.add("content",requestContentObject.build());
 
-                            postContentObject.add("application/json",Json.createObjectBuilder().build());
-                            postSuccessObject.add("content",postContentObject.build());
-                            postSuccessObject.add("description","Successfull operation");
-                            postResponsesObject.add("200",postSuccessObject.build());
-                            if(invalidParameterObject!=null) postResponsesObject.add("400",invalidParameterObject);
-                            
-                            postObject.add("requestBody",requestBodyObject.build());
-                            postObject.add("responses",postResponsesObject.build());
-                            postObject.add("summary","Update "+className);
+                            requestSchemaObject.add("$ref", "#/components/schemas/" + className);
+                            requestContentTypeObject.add("schema", requestSchemaObject.build());
+                            requestContentObject.add("application/json", requestContentTypeObject.build());
+                            requestBodyObject.add("content", requestContentObject.build());
 
+                            postContentObject.add("application/json", Json.createObjectBuilder().build());
+                            postSuccessObject.add("content", postContentObject.build());
+                            postSuccessObject.add("description", "Successfull operation");
+                            postResponsesObject.add("200", postSuccessObject.build());
+                            if (invalidParameterObject != null)
+                                postResponsesObject.add("400", invalidParameterObject);
+
+                            postObject.add("requestBody", requestBodyObject.build());
+                            postObject.add("responses", postResponsesObject.build());
+                            postObject.add("summary", "Post " + className);
+                            postObject.add("description", "POST is used to create new "+className+"-resource without a URI identifier or updating resource using URI in path or query parameter. In practice you often dont have to implement both POST and PUT methods. Use PUT if you need idempotent behaviour and to clearly separate creation of the resource with the known URI.");
+
+                            pathObject.add("post", postObject.build());
+
+                            /* PUT API. If path parameters used */
+
+                            JsonObjectBuilder putRequestBodyObject = Json.createObjectBuilder();
+                            JsonObjectBuilder putRequestContentObject = Json.createObjectBuilder();
+                            JsonObjectBuilder putRequestContentTypeObject = Json.createObjectBuilder();
+                            JsonObjectBuilder putRequestSchemaObject = Json.createObjectBuilder();
+
+                            JsonObjectBuilder putObject = Json.createObjectBuilder();
+                            putObject.add("tags", Json.createArrayBuilder().add(className).build());
+                            JsonObjectBuilder putResponsesObject = Json.createObjectBuilder();
+                            JsonObjectBuilder putSuccessObject = Json.createObjectBuilder();
+                            JsonObjectBuilder putContentTypeObject = Json.createObjectBuilder();
+                            JsonObjectBuilder putContentObject = Json.createObjectBuilder();
+
+                            putRequestSchemaObject.add("$ref", "#/components/schemas/" + className);
+                            putRequestContentTypeObject.add("schema", putRequestSchemaObject.build());
+                            putRequestContentObject.add("application/json", putRequestContentTypeObject.build());
+                            putRequestBodyObject.add("content", putRequestContentObject.build());
+
+                            putContentObject.add("application/json", Json.createObjectBuilder().build());
+                            putSuccessObject.add("content", putContentObject.build());
+                            putSuccessObject.add("description", "Successfull operation");
+                            putResponsesObject.add("200", putSuccessObject.build());
+                            if (invalidParameterObject != null)
+                                putResponsesObject.add("400", invalidParameterObject);
+
+                            putObject.add("requestBody", putRequestBodyObject.build());
+                            putObject.add("responses", putResponsesObject.build());
+                            putObject.add("summary", "Put " + className);
+                            putObject.add("description", "PUT is used when you create or update "+className+"-resource using URI in path or query parameter. PUT is defined to be idempotent, which means that if you PUT an object twice, second request is silently ignored and 200 (OK) is automatically returned.");
+
+                            pathObject.add("put", putObject.build());
+
+
+                            /* DELETE API */
                             JsonObjectBuilder deleteObject = Json.createObjectBuilder();
                             deleteObject.add("summary","Delete "+className);
                             deleteObject.add("tags", Json.createArrayBuilder().add(className).build());
                             deleteObject.add("responses",successResponse);
 
-                            pathObject.add("post",postObject.build());
                             pathObject.add("delete",deleteObject.build());
 
-
-
+                            /* ADD ALL APIs to PATH*/
                             paths.add(pathString,pathObject.build());
                         }
 
@@ -694,7 +746,7 @@ public class OpenAPIWriter {
 
                 if (soln.contains("description")) {
                     String description = soln.getLiteral("description").getString();
-                    infoObject.add("description", description);
+                    infoObject.add("description", (lang.equals("fi") ? "Automaattisesti generoitu Open API rajapintakuvaus. Huom! Rajapintakuvauksen voi tuottaa useammalla eri kielellä. Tietomallin kuvaus kielellä fi: " : "Automatically generated Open API specification. Notice that this specification can be generated in multiple languages! Datamodel description in "+lang+": ")+description);
                 }
                 
                 /*
@@ -722,14 +774,16 @@ public class OpenAPIWriter {
             externalDocs.add("url",modelID);
             externalDocs.add("description",lang.equals("fi") ? "Rajapinnan tietomalli" : "Datamodel for the API");
 
+            schema.add("openapi","3.0.0");
             schema.add("info",infoObject.build());
             schema.add("externalDocs",externalDocs.build());
             schema.add("servers",serverArray.build());
 
             Map<String,Object> defs = getClassDefinitions(modelID, lang);
 
-            if(defs.containsKey("tags")) {
-                schema.add("tags", ((JsonArrayBuilder) defs.get("tags")).build());
+            JsonArray tagArr = ((JsonArrayBuilder) defs.get("tags")).build();
+            if(!tagArr.isEmpty()) {
+                schema.add("tags", tagArr);
             }
 
             return createDefaultOpenAPI(schema, (JsonObjectBuilder)defs.get("definitions"), (JsonObjectBuilder)defs.get("paths"));
@@ -755,10 +809,18 @@ public class OpenAPIWriter {
         }
 
         JsonObjectBuilder components = Json.createObjectBuilder();
-        components.add("schemas",definitions);
-        root.add("openapi","3.0.0");
-        root.add("paths",paths.build());
-        root.add("components",components.build());
+        JsonObject defObject = definitions.build();
+
+        if(!defObject.isEmpty()) {
+            components.add("schemas", defObject);
+
+            JsonObject pathObject = paths.build();
+            if (!pathObject.isEmpty()) {
+                root.add("paths", pathObject);
+            }
+
+            root.add("components", components.build());
+        }
 
         return jsonObjectToPrettyString(root.build());
     }
