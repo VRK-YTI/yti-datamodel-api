@@ -167,12 +167,12 @@ public class OpenAPIWriter {
         return builder.build();
     }
 
-    public Map<String,Object> getClassDefinitions(String modelID, String lang) {
+    public Map<String,Object> getClassDefinitions(String modelID, String lang, String resourceID) {
 
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
 
         String selectResources =
-                "SELECT ?resource ?targetClass ?className ?path ?classTitle ?classDeactivated ?classDescription ?minProperties ?maxProperties ?property ?propertyDeactivated ?valueList ?schemeList ?predicate ?id ?title ?description ?predicateName ?datatype ?shapeRef ?shapeRefName ?min ?max ?minLength ?maxLength ?pattern ?idBoolean ?example "
+                "SELECT "+(resourceID!=null?"":"?resource")+" ?targetClass ?className ?path ?classTitle ?classDeactivated ?classDescription ?minProperties ?maxProperties ?property ?propertyDeactivated ?valueList ?schemeList ?predicate ?id ?title ?description ?predicateName ?datatype ?shapeRef ?shapeRefName ?min ?max ?minLength ?maxLength ?pattern ?idBoolean ?example "
                         + "WHERE { "
                         + "GRAPH ?modelPartGraph {"
                         + "?model dcterms:hasPart ?resource . "
@@ -217,10 +217,14 @@ public class OpenAPIWriter {
                         + "}"
                         + "}"
                         + "}"
-                        + "ORDER BY ?resource ?index ?property";
+                        + "ORDER BY "+(resourceID!=null ? "" : "?resource")+" ?index ?property";
 
 
         pss.setIri("modelPartGraph", modelID+"#HasPartGraph");
+
+        if(resourceID!=null && !LDHelper.isInvalidIRI(resourceID)) {
+            pss.setIri("resource",resourceID);
+        }
 
         if(lang!=null) {
             pss.setLiteral("lang",lang);
@@ -267,7 +271,7 @@ public class OpenAPIWriter {
                 if(!soln.contains("classDeactivated") || (soln.contains("classDeactivated") && !soln.getLiteral("classDeactivated").getBoolean())) {    
      
                     className = soln.getLiteral("className").getString();
-                    String classId = soln.getResource("resource").getURI();
+                    String classId = resourceID!=null ? resourceID : soln.getResource("resource").getURI();
 
                     if(soln.contains("property") && (!soln.contains("propertyDeactivated") || (soln.contains("propertyDeactivated") && !soln.getLiteral("propertyDeactivated").getBoolean()))) {    
                     
@@ -779,7 +783,7 @@ public class OpenAPIWriter {
             schema.add("externalDocs",externalDocs.build());
             schema.add("servers",serverArray.build());
 
-            Map<String,Object> defs = getClassDefinitions(modelID, lang);
+            Map<String,Object> defs = getClassDefinitions(modelID, lang,null);
 
             JsonArray tagArr = ((JsonArrayBuilder) defs.get("tags")).build();
             if(!tagArr.isEmpty()) {
@@ -788,6 +792,43 @@ public class OpenAPIWriter {
 
             return createDefaultOpenAPI(schema, (JsonObjectBuilder)defs.get("definitions"), (JsonObjectBuilder)defs.get("paths"));
         } 
+    }
+
+    public String newOpenApiStubFromClass(String classID, String lang) {
+
+        JsonObjectBuilder schema = Json.createObjectBuilder();
+        JsonObjectBuilder infoObject = Json.createObjectBuilder();
+        JsonObjectBuilder externalDocs = Json.createObjectBuilder();
+        JsonArrayBuilder serverArray = Json.createArrayBuilder();
+        JsonObjectBuilder serverObject = Json.createObjectBuilder();
+
+        serverObject.add("url","https://api.example.com/v1");
+        serverObject.add("description","Example server description");
+        serverArray.add(serverObject.build());
+
+        String className = SplitIRI.localname(classID);
+        infoObject.add("title", className);
+        infoObject.add("description", "Automatically generated Open API skeleton from "+className+" in "+lang+". Notice that this spec can be exported in different languages. Full spec including all classes can be exported under datamodel export.");
+        infoObject.add("version","0.01");
+
+        externalDocs.add("url",classID);
+        externalDocs.add("description",lang.equals("fi") ? "Rajapinnan tietomalli" : "Datamodel for the API");
+
+            schema.add("openapi","3.0.0");
+            schema.add("info",infoObject.build());
+            schema.add("externalDocs",externalDocs.build());
+            schema.add("servers",serverArray.build());
+
+            Map<String,Object> defs = getClassDefinitions(LDHelper.guessNamespaceFromResourceURI(classID), lang, classID);
+
+            if(defs!=null) {
+                JsonArray tagArr = ((JsonArrayBuilder) defs.get("tags")).build();
+                if (!tagArr.isEmpty()) {
+                    schema.add("tags", tagArr);
+                }
+            }
+
+            return createDefaultOpenAPI(schema, defs!=null ? (JsonObjectBuilder)defs.get("definitions") : null, defs!=null ? (JsonObjectBuilder)defs.get("paths") : null);
     }
 
     public JsonObject getLangStringObject() {
@@ -806,20 +847,20 @@ public class OpenAPIWriter {
 
         if(definitions!=null) {
             definitions.add("langString", getLangStringObject());
-        }
 
-        JsonObjectBuilder components = Json.createObjectBuilder();
-        JsonObject defObject = definitions.build();
+            JsonObjectBuilder components = Json.createObjectBuilder();
+            JsonObject defObject = definitions.build();
 
-        if(!defObject.isEmpty()) {
-            components.add("schemas", defObject);
+            if (!defObject.isEmpty()) {
+                components.add("schemas", defObject);
 
-            JsonObject pathObject = paths.build();
-            if (!pathObject.isEmpty()) {
-                root.add("paths", pathObject);
+                JsonObject pathObject = paths.build();
+                if (!pathObject.isEmpty()) {
+                    root.add("paths", pathObject);
+                }
+
+                root.add("components", components.build());
             }
-
-            root.add("components", components.build());
         }
 
         return jsonObjectToPrettyString(root.build());
