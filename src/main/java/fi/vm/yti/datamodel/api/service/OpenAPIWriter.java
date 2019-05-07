@@ -250,6 +250,7 @@ public class OpenAPIWriter {
             JsonObjectBuilder predicate = Json.createObjectBuilder();
 
             HashSet<String> exampleSet = new HashSet<String>();
+            HashSet<String> pathSet = new HashSet<String>();
             HashSet<String> requiredPredicates = new HashSet<String>();
 
             JsonArrayBuilder exampleList = Json.createArrayBuilder();
@@ -429,6 +430,11 @@ public class OpenAPIWriter {
                             exampleSet.add(example);
                         }
 
+                        if (soln.contains("path")) {
+                            String path = soln.getLiteral("path").getString();
+                            pathSet.add(path);
+                        }
+
                         if (pResults.hasNext() && className.equals(pResults.peek().getLiteral("className").getString()) && (pResults.peek().contains("predicate") && predicateID.equals(pResults.peek().getResource("predicate").toString()))) {
 
                             pIndex += 1;
@@ -504,164 +510,168 @@ public class OpenAPIWriter {
                             classDefinition.add("properties", classProps);
                         }
 
-                        if(soln.contains("path")) {
-                            JsonArrayBuilder paramList = Json.createArrayBuilder();
-                            String pathString = soln.getLiteral("path").getString();
-                            if(!pathString.startsWith("/")) pathString = "/"+pathString;
-                            JsonObjectBuilder pathObject = Json.createObjectBuilder();
-
-                            // Parse query parameters from path string
-                            UriComponents bld = UriComponentsBuilder.fromUriString(pathString).build();
-                            MultiValueMap<String, String> queryParameters = bld.getQueryParams();
-                            pathString = bld.getPath();
-                            queryParameters.forEach((k,v)-> {
-                                JsonObjectBuilder paramObject = Json.createObjectBuilder();
-                                JsonObjectBuilder schemaObject = Json.createObjectBuilder();
-                                schemaObject.add("type","string");
-                                if(!v.isEmpty() && v.get(0)!=null) schemaObject.add("example", v.get(0));
-                                paramObject.add("name",k);
-                                paramObject.add("in","query");
-                                paramObject.add("schema",schemaObject);
-                                paramList.add(paramObject);
-                            });
-
+                        if(!pathSet.isEmpty()) {
 
                             JsonObjectBuilder tagObject = Json.createObjectBuilder();
-                            tagObject.add("name",className);
+                            tagObject.add("name", className);
 
-                             /*
-                            // TAG description object if needed?
-                            JsonObjectBuilder tagDocs = Json.createObjectBuilder();
-                            tagDocs.add("url",classId);
-                            tagDocs.add("description","Documentation");
-                            tagObject.add("externalDocs",tagDocs.build());
-                            */
+                                 /*
+                                // TAG description object if needed?
+                                JsonObjectBuilder tagDocs = Json.createObjectBuilder();
+                                tagDocs.add("url",classId);
+                                tagDocs.add("description","Documentation");
+                                tagObject.add("externalDocs",tagDocs.build());
+                                */
 
                             tags.add(tagObject.build());
 
-                            // Parse path parameters from path string
-                            Matcher m = Pattern.compile("\\{(.*?)\\}").matcher(pathString);
-                            while(m.find()) {
-                                JsonObjectBuilder paramObject = Json.createObjectBuilder();
+                            Iterator<String> i = pathSet.iterator();
+
+                            while(i.hasNext()) {
+
+                                JsonArrayBuilder paramList = Json.createArrayBuilder();
+                                String pathString = i.next();
+                                if (!pathString.startsWith("/")) pathString = "/" + pathString;
+                                JsonObjectBuilder pathObject = Json.createObjectBuilder();
+
+                                // Parse query parameters from path string
+                                UriComponents bld = UriComponentsBuilder.fromUriString(pathString).build();
+                                MultiValueMap<String, String> queryParameters = bld.getQueryParams();
+                                pathString = bld.getPath();
+                                queryParameters.forEach((k, v) -> {
+                                    JsonObjectBuilder paramObject = Json.createObjectBuilder();
+                                    JsonObjectBuilder schemaObject = Json.createObjectBuilder();
+                                    schemaObject.add("type", "string");
+                                    if (!v.isEmpty() && v.get(0) != null) schemaObject.add("example", v.get(0));
+                                    paramObject.add("name", k);
+                                    paramObject.add("in", "query");
+                                    paramObject.add("schema", schemaObject);
+                                    paramList.add(paramObject);
+                                });
+
+                                // Parse path parameters from path string
+                                Matcher m = Pattern.compile("\\{(.*?)\\}").matcher(pathString);
+                                while (m.find()) {
+                                    JsonObjectBuilder paramObject = Json.createObjectBuilder();
+                                    JsonObjectBuilder schemaObject = Json.createObjectBuilder();
+                                    schemaObject.add("type", "string");
+                                    paramObject.add("name", m.group(1));
+                                    paramObject.add("in", "path");
+                                    paramObject.add("required", true);
+                                    paramObject.add("schema", schemaObject);
+                                    paramList.add(paramObject);
+                                }
+
+                                JsonArray parameters = paramList.build();
+                                JsonObject invalidParameterObject = null;
+                                if (!parameters.isEmpty()) {
+                                    pathObject.add("parameters", parameters);
+                                    JsonObjectBuilder invalidparam = Json.createObjectBuilder();
+                                    invalidparam.add("description", "Invalid parameter");
+                                    invalidParameterObject = invalidparam.build();
+                                }
+
+                                /* GET API */
+                                JsonObjectBuilder getObject = Json.createObjectBuilder();
+                                getObject.add("tags", Json.createArrayBuilder().add(className).build());
+                                JsonObjectBuilder responsesObject = Json.createObjectBuilder();
+                                JsonObjectBuilder successObject = Json.createObjectBuilder();
+                                JsonObjectBuilder contentTypeObject = Json.createObjectBuilder();
+                                JsonObjectBuilder contentObject = Json.createObjectBuilder();
                                 JsonObjectBuilder schemaObject = Json.createObjectBuilder();
-                                schemaObject.add("type","string");
-                                paramObject.add("name",m.group(1));
-                                paramObject.add("in","path");
-                                paramObject.add("required",true);
-                                paramObject.add("schema",schemaObject);
-                                paramList.add(paramObject);
+                                schemaObject.add("$ref", "#/components/schemas/" + className);
+                                contentTypeObject.add("schema", schemaObject.build());
+                                contentObject.add("application/json", contentTypeObject.build());
+                                successObject.add("content", contentObject.build());
+                                successObject.add("description", "Successfull operation");
+                                responsesObject.add("200", successObject.build());
+                                if (invalidParameterObject != null) responsesObject.add("400", invalidParameterObject);
+                                JsonObject successResponse = responsesObject.build();
+                                getObject.add("responses", successResponse);
+                                getObject.add("summary", "Get " + className);
+
+                                pathObject.add("get", getObject.build());
+
+                                /* POST API */
+                                JsonObjectBuilder requestBodyObject = Json.createObjectBuilder();
+                                JsonObjectBuilder requestContentObject = Json.createObjectBuilder();
+                                JsonObjectBuilder requestContentTypeObject = Json.createObjectBuilder();
+                                JsonObjectBuilder requestSchemaObject = Json.createObjectBuilder();
+                                requestSchemaObject.add("$ref", "#/components/schemas/" + className);
+
+                                JsonObjectBuilder postObject = Json.createObjectBuilder();
+                                postObject.add("tags", Json.createArrayBuilder().add(className).build());
+                                JsonObjectBuilder postResponsesObject = Json.createObjectBuilder();
+                                JsonObjectBuilder postSuccessObject = Json.createObjectBuilder();
+                                JsonObjectBuilder postContentTypeObject = Json.createObjectBuilder();
+                                JsonObjectBuilder postContentObject = Json.createObjectBuilder();
+
+                                requestSchemaObject.add("$ref", "#/components/schemas/" + className);
+                                requestContentTypeObject.add("schema", requestSchemaObject.build());
+                                requestContentObject.add("application/json", requestContentTypeObject.build());
+                                requestBodyObject.add("content", requestContentObject.build());
+
+                                postContentObject.add("application/json", Json.createObjectBuilder().build());
+                                postSuccessObject.add("content", postContentObject.build());
+                                postSuccessObject.add("description", "Successfull operation");
+                                postResponsesObject.add("200", postSuccessObject.build());
+                                if (invalidParameterObject != null)
+                                    postResponsesObject.add("400", invalidParameterObject);
+
+                                postObject.add("requestBody", requestBodyObject.build());
+                                postObject.add("responses", postResponsesObject.build());
+                                postObject.add("summary", "Post " + className);
+                                postObject.add("description", "POST is used to create new " + className + "-resource without a URI identifier or updating resource using URI in path or query parameter. In practice you often dont have to implement both POST and PUT methods. Use PUT if you need idempotent behaviour and to clearly separate creation of the resource with the known URI.");
+
+                                pathObject.add("post", postObject.build());
+
+                                /* PUT API. If path parameters used */
+                                JsonObjectBuilder putRequestBodyObject = Json.createObjectBuilder();
+                                JsonObjectBuilder putRequestContentObject = Json.createObjectBuilder();
+                                JsonObjectBuilder putRequestContentTypeObject = Json.createObjectBuilder();
+                                JsonObjectBuilder putRequestSchemaObject = Json.createObjectBuilder();
+
+                                JsonObjectBuilder putObject = Json.createObjectBuilder();
+                                putObject.add("tags", Json.createArrayBuilder().add(className).build());
+                                JsonObjectBuilder putResponsesObject = Json.createObjectBuilder();
+                                JsonObjectBuilder putSuccessObject = Json.createObjectBuilder();
+                                JsonObjectBuilder putContentTypeObject = Json.createObjectBuilder();
+                                JsonObjectBuilder putContentObject = Json.createObjectBuilder();
+
+                                putRequestSchemaObject.add("$ref", "#/components/schemas/" + className);
+                                putRequestContentTypeObject.add("schema", putRequestSchemaObject.build());
+                                putRequestContentObject.add("application/json", putRequestContentTypeObject.build());
+                                putRequestBodyObject.add("content", putRequestContentObject.build());
+
+                                putContentObject.add("application/json", Json.createObjectBuilder().build());
+                                putSuccessObject.add("content", putContentObject.build());
+                                putSuccessObject.add("description", "Successfull operation");
+                                putResponsesObject.add("200", putSuccessObject.build());
+                                if (invalidParameterObject != null)
+                                    putResponsesObject.add("400", invalidParameterObject);
+
+                                putObject.add("requestBody", putRequestBodyObject.build());
+                                putObject.add("responses", putResponsesObject.build());
+                                putObject.add("summary", "Put " + className);
+                                putObject.add("description", "PUT is used when you create or update " + className + "-resource using URI in path or query parameter. PUT is defined to be idempotent, which means that if you PUT an object twice, second request is silently ignored and 200 (OK) is automatically returned.");
+
+                                pathObject.add("put", putObject.build());
+
+                                /* DELETE API */
+                                JsonObjectBuilder deleteObject = Json.createObjectBuilder();
+                                deleteObject.add("summary", "Delete " + className);
+                                deleteObject.add("tags", Json.createArrayBuilder().add(className).build());
+                                deleteObject.add("responses", successResponse);
+
+                                pathObject.add("delete", deleteObject.build());
+
+                                /* ADD ALL APIs to PATH */
+                                paths.add(pathString, pathObject.build());
+
                             }
-
-
-                            JsonArray parameters = paramList.build();
-                            JsonObject invalidParameterObject = null;
-                            if(!parameters.isEmpty()) {
-                                pathObject.add("parameters", parameters);
-                                JsonObjectBuilder invalidparam = Json.createObjectBuilder();
-                                invalidparam.add("description", "Invalid parameter");
-                                invalidParameterObject = invalidparam.build();
-                            }
-
-
-                            /* GET API */
-                            JsonObjectBuilder getObject = Json.createObjectBuilder();
-                            getObject.add("tags", Json.createArrayBuilder().add(className).build());
-                            JsonObjectBuilder responsesObject = Json.createObjectBuilder();
-                            JsonObjectBuilder successObject = Json.createObjectBuilder();
-                            JsonObjectBuilder contentTypeObject = Json.createObjectBuilder(); 
-                            JsonObjectBuilder contentObject = Json.createObjectBuilder();
-                            JsonObjectBuilder schemaObject = Json.createObjectBuilder();
-                            schemaObject.add("$ref","#/components/schemas/"+className);
-                            contentTypeObject.add("schema",schemaObject.build());
-                            contentObject.add("application/json",contentTypeObject.build());
-                            successObject.add("content",contentObject.build());
-                            successObject.add("description","Successfull operation");
-                            responsesObject.add("200",successObject.build());
-                            if(invalidParameterObject!=null) responsesObject.add("400",invalidParameterObject);
-                            JsonObject successResponse = responsesObject.build();
-                            getObject.add("responses",successResponse);
-                            getObject.add("summary","Get "+className);
-
-                            pathObject.add("get",getObject.build());
-
-                            /* POST API */
-                            JsonObjectBuilder requestBodyObject = Json.createObjectBuilder();
-                            JsonObjectBuilder requestContentObject = Json.createObjectBuilder();
-                            JsonObjectBuilder requestContentTypeObject = Json.createObjectBuilder();
-                            JsonObjectBuilder requestSchemaObject = Json.createObjectBuilder();
-                            requestSchemaObject.add("$ref", "#/components/schemas/" + className);
-
-                            JsonObjectBuilder postObject = Json.createObjectBuilder();
-                            postObject.add("tags", Json.createArrayBuilder().add(className).build());
-                            JsonObjectBuilder postResponsesObject = Json.createObjectBuilder();
-                            JsonObjectBuilder postSuccessObject = Json.createObjectBuilder();
-                            JsonObjectBuilder postContentTypeObject = Json.createObjectBuilder();
-                            JsonObjectBuilder postContentObject = Json.createObjectBuilder();
-
-                            requestSchemaObject.add("$ref", "#/components/schemas/" + className);
-                            requestContentTypeObject.add("schema", requestSchemaObject.build());
-                            requestContentObject.add("application/json", requestContentTypeObject.build());
-                            requestBodyObject.add("content", requestContentObject.build());
-
-                            postContentObject.add("application/json", Json.createObjectBuilder().build());
-                            postSuccessObject.add("content", postContentObject.build());
-                            postSuccessObject.add("description", "Successfull operation");
-                            postResponsesObject.add("200", postSuccessObject.build());
-                            if (invalidParameterObject != null)
-                                postResponsesObject.add("400", invalidParameterObject);
-
-                            postObject.add("requestBody", requestBodyObject.build());
-                            postObject.add("responses", postResponsesObject.build());
-                            postObject.add("summary", "Post " + className);
-                            postObject.add("description", "POST is used to create new "+className+"-resource without a URI identifier or updating resource using URI in path or query parameter. In practice you often dont have to implement both POST and PUT methods. Use PUT if you need idempotent behaviour and to clearly separate creation of the resource with the known URI.");
-
-                            pathObject.add("post", postObject.build());
-
-                            /* PUT API. If path parameters used */
-
-                            JsonObjectBuilder putRequestBodyObject = Json.createObjectBuilder();
-                            JsonObjectBuilder putRequestContentObject = Json.createObjectBuilder();
-                            JsonObjectBuilder putRequestContentTypeObject = Json.createObjectBuilder();
-                            JsonObjectBuilder putRequestSchemaObject = Json.createObjectBuilder();
-
-                            JsonObjectBuilder putObject = Json.createObjectBuilder();
-                            putObject.add("tags", Json.createArrayBuilder().add(className).build());
-                            JsonObjectBuilder putResponsesObject = Json.createObjectBuilder();
-                            JsonObjectBuilder putSuccessObject = Json.createObjectBuilder();
-                            JsonObjectBuilder putContentTypeObject = Json.createObjectBuilder();
-                            JsonObjectBuilder putContentObject = Json.createObjectBuilder();
-
-                            putRequestSchemaObject.add("$ref", "#/components/schemas/" + className);
-                            putRequestContentTypeObject.add("schema", putRequestSchemaObject.build());
-                            putRequestContentObject.add("application/json", putRequestContentTypeObject.build());
-                            putRequestBodyObject.add("content", putRequestContentObject.build());
-
-                            putContentObject.add("application/json", Json.createObjectBuilder().build());
-                            putSuccessObject.add("content", putContentObject.build());
-                            putSuccessObject.add("description", "Successfull operation");
-                            putResponsesObject.add("200", putSuccessObject.build());
-                            if (invalidParameterObject != null)
-                                putResponsesObject.add("400", invalidParameterObject);
-
-                            putObject.add("requestBody", putRequestBodyObject.build());
-                            putObject.add("responses", putResponsesObject.build());
-                            putObject.add("summary", "Put " + className);
-                            putObject.add("description", "PUT is used when you create or update "+className+"-resource using URI in path or query parameter. PUT is defined to be idempotent, which means that if you PUT an object twice, second request is silently ignored and 200 (OK) is automatically returned.");
-
-                            pathObject.add("put", putObject.build());
-
-
-                            /* DELETE API */
-                            JsonObjectBuilder deleteObject = Json.createObjectBuilder();
-                            deleteObject.add("summary","Delete "+className);
-                            deleteObject.add("tags", Json.createArrayBuilder().add(className).build());
-                            deleteObject.add("responses",successResponse);
-
-                            pathObject.add("delete",deleteObject.build());
-
-                            /* ADD ALL APIs to PATH*/
-                            paths.add(pathString,pathObject.build());
                         }
+
+                        pathSet = new HashSet<String>();
 
                         JsonArrayBuilder required = Json.createArrayBuilder();
 
@@ -746,7 +756,7 @@ public class OpenAPIWriter {
                 QuerySolution soln = results.nextSolution();
                 String title = soln.getLiteral("label").getString();
 
-                logger.info("Building JSON Schema from "+title);
+                logger.info("Building Open API spesification from "+title);
 
                 if (soln.contains("description")) {
                     String description = soln.getLiteral("description").getString();
