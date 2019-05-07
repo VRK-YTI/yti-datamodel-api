@@ -23,6 +23,7 @@ public class ExportModel {
     private final JerseyClient jerseyClient;
     private final ContextWriter contextWriter;
     private final JsonSchemaWriter jsonSchemaWriter;
+    private final OpenAPIWriter openAPIWriter;
     private final XMLSchemaWriter xmlSchemaWriter;
 
     @Autowired
@@ -31,12 +32,14 @@ public class ExportModel {
                 JerseyClient jerseyClient,
                 ContextWriter contextWriter,
                 JsonSchemaWriter jsonSchemaWriter,
+                OpenAPIWriter openAPIWriter,
                 XMLSchemaWriter xmlSchemaWriter) {
         this.idManager = idManager;
         this.jerseyResponseManager = jerseyResponseManager;
         this.jerseyClient = jerseyClient;
         this.contextWriter = contextWriter;
         this.jsonSchemaWriter = jsonSchemaWriter;
+        this.openAPIWriter = openAPIWriter;
         this.xmlSchemaWriter = xmlSchemaWriter;
     }
 
@@ -52,7 +55,7 @@ public class ExportModel {
             @ApiParam(value = "Requested resource", defaultValue = "default") @QueryParam("graph") String graph,
             @ApiParam(value = "Raw / PlainText boolean", defaultValue = "false") @QueryParam("raw") boolean raw,
             @ApiParam(value = "Languages to export") @QueryParam("lang") String lang,
-            @ApiParam(value = "Content-type", required = true, allowableValues = "application/ld+json,text/turtle,application/rdf+xml,application/ld+json+context,application/schema+json,application/xml") @QueryParam("content-type") String ctype) {
+            @ApiParam(value = "Content-type", required = true, allowableValues = "application/ld+json,text/turtle,application/rdf+xml,application/ld+json+context,application/schema+json,application/xml,application/vnd.oai.openapi+json") @QueryParam("content-type") String ctype) {
 
         /* Check that URIs are valid */
         if(idManager.isInvalid(graph)) {
@@ -63,12 +66,19 @@ public class ExportModel {
 
         ctype = ctype.replace(" ", "+");
 
+        logger.info("Exporting format: "+ctype);
+
         if(ctype.equals("application/ld+json+context")) {
             String context = contextWriter.newModelContext(graph);
             if(context!=null) {
                 return jerseyResponseManager.ok(context,raw?"text/plain;charset=utf-8":"application/json");
             } else {
                 return jerseyResponseManager.notFound();
+            }
+        } else if(ctype.equals("application/vnd+oai+openapi+json")) {
+            String apiStub = openAPIWriter.newOpenApiStub(graph,lang);
+            if(apiStub!=null) {
+                return jerseyResponseManager.ok(apiStub,raw?"text/plain;charset=utf-8":"application/json");
             }
         } else if(ctype.equals("application/schema+json")) {
             String schema = null;
