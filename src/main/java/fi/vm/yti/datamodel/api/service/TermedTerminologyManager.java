@@ -17,7 +17,6 @@ import org.commonmark.node.Node;
 import org.commonmark.parser.Parser;
 import org.commonmark.renderer.html.HtmlRenderer;
 import org.glassfish.jersey.client.ClientProperties;
-import org.glassfish.jersey.uri.UriComponent;
 import org.jsoup.Jsoup;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,7 +50,6 @@ public final class TermedTerminologyManager {
     private final NamespaceManager namespaceManager;
     private final IDManager idManager;
     private final ModelManager modelManager;
-    private final FrameManager frameManager;
     private final JerseyResponseManager jerseyResponseManager;
 
     @Autowired
@@ -61,8 +59,7 @@ public final class TermedTerminologyManager {
                              NamespaceManager namespaceManager,
                              IDManager idManager,
                              ModelManager modelManager,
-                             JerseyResponseManager jerseyResponseManager,
-                             FrameManager frameManager) {
+                             JerseyResponseManager jerseyResponseManager) {
         this.endpointServices = endpointServices;
         this.properties = properties;
         this.clientFactory = clientFactory;
@@ -70,7 +67,6 @@ public final class TermedTerminologyManager {
         this.idManager = idManager;
         this.modelManager = modelManager;
         this.jerseyResponseManager = jerseyResponseManager;
-        this.frameManager = frameManager;
     }
 
     public String createConceptSuggestionJson(String lang, String prefLabel, String definition, String graph, String user) {
@@ -384,7 +380,7 @@ public final class TermedTerminologyManager {
 
         ResponseBuilder rb = Response.status(Response.Status.OK);
         try {
-            rb.entity(frameManager.graphToPlainJsonString(simpleSkos, Frames.conceptFrame));
+            rb.entity(modelManager.toPlainJsonString(simpleSkos, Frames.conceptFrame));
         } catch(Exception ex) {
             ex.printStackTrace();
             return jerseyResponseManager.serverError(); }

@@ -3,7 +3,7 @@
  */
 package fi.vm.yti.datamodel.api.endpoint.genericapi;
 
-import fi.vm.yti.datamodel.api.service.FrameManager;
+import fi.vm.yti.datamodel.api.index.FrameManager;
 import fi.vm.yti.datamodel.api.service.GraphManager;
 import fi.vm.yti.datamodel.api.service.IDManager;
 import fi.vm.yti.datamodel.api.service.JerseyResponseManager;

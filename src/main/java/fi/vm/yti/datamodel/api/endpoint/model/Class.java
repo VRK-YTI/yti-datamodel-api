@@ -3,14 +3,19 @@
  */
 package fi.vm.yti.datamodel.api.endpoint.model;
 
+import fi.vm.yti.datamodel.api.index.ElasticConnector;
+import fi.vm.yti.datamodel.api.index.SearchIndexManager;
+import fi.vm.yti.datamodel.api.index.model.IndexClass;
 import fi.vm.yti.datamodel.api.model.ReusableClass;
 import fi.vm.yti.datamodel.api.security.AuthorizationManager;
 import fi.vm.yti.datamodel.api.service.*;
+import fi.vm.yti.datamodel.api.utils.Frames;
 import fi.vm.yti.datamodel.api.utils.LDHelper;
 import fi.vm.yti.datamodel.api.utils.QueryLibrary;
 import fi.vm.yti.security.AuthenticatedUserProvider;
 import fi.vm.yti.security.YtiUser;
 import io.swagger.annotations.*;
+
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
 import org.apache.jena.query.ParameterizedSparqlString;
@@ -21,15 +26,20 @@ import org.springframework.stereotype.Component;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
+
+import java.io.IOException;
 import java.util.Map;
 
-import org.slf4j.Logger;import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
 @Component
 @Path("class")
-@Api(tags = {"Class"}, description = "Class operations")
+@Api(tags = { "Class" }, description = "Class operations")
 public class Class {
 
     private static final Logger logger = LoggerFactory.getLogger(Class.class.getName());
@@ -44,6 +54,8 @@ public class Class {
     private final GraphManager graphManager;
     private final ProvenanceManager provenanceManager;
     private final ModelManager modelManager;
+    private final SearchIndexManager searchIndexManager;
+    private final ObjectMapper objectMapper;
 
     @Autowired
     Class(AuthorizationManager authorizationManager,
@@ -55,7 +67,9 @@ public class Class {
           IDManager idManager,
           GraphManager graphManager,
           ProvenanceManager provenanceManager,
-          ModelManager modelManager) {
+          ModelManager modelManager,
+          SearchIndexManager searchIndexManager,
+          ObjectMapper objectMapper) {
 
         this.authorizationManager = authorizationManager;
         this.userProvider = userProvider;
@@ -67,24 +81,26 @@ public class Class {
         this.graphManager = graphManager;
         this.provenanceManager = provenanceManager;
         this.modelManager = modelManager;
+        this.searchIndexManager = searchIndexManager;
+        this.objectMapper = objectMapper;
     }
 
     @GET
     @Produces("application/ld+json")
     @ApiOperation(value = "Get class from model", notes = "Get class in JSON-LD")
     @ApiResponses(value = {
-            @ApiResponse(code = 404, message = "No such resource"),
-            @ApiResponse(code = 400, message = "Invalid model supplied"),
-            @ApiResponse(code = 404, message = "Service not found"),
-            @ApiResponse(code = 500, message = "Internal server error")
+        @ApiResponse(code = 404, message = "No such resource"),
+        @ApiResponse(code = 400, message = "Invalid model supplied"),
+        @ApiResponse(code = 404, message = "Service not found"),
+        @ApiResponse(code = 500, message = "Internal server error")
     })
     public Response json(
-            @ApiParam(value = "Class id")
-            @QueryParam("id") String id,
-            @ApiParam(value = "Model id")
-            @QueryParam("model") String model) {
+        @ApiParam(value = "Class id")
+        @QueryParam("id") String id,
+        @ApiParam(value = "Model id")
+        @QueryParam("model") String model) {
 
-        if(id==null || id.equals("undefined") || id.equals("default")) {
+        if (id == null || id.equals("undefined") || id.equals("default")) {
 
             /* If no id is provided create a list of classes */
             ParameterizedSparqlString pss = new ParameterizedSparqlString();
@@ -93,9 +109,9 @@ public class Class {
 
             String queryString = QueryLibrary.listClassesQuery;
 
-            if(model!=null && !model.equals("undefined")) {
+            if (model != null && !model.equals("undefined")) {
                 pss.setIri("library", model);
-                pss.setIri("hasPartGraph",model+"#HasPartGraph");
+                pss.setIri("hasPartGraph", model + "#HasPartGraph");
             }
 
             pss.setCommandText(queryString);
@@ -104,12 +120,11 @@ public class Class {
 
         } else {
 
-
-            if(!idManager.isValidUrl(id)) {
+            if (!idManager.isValidUrl(id)) {
                 return jerseyResponseManager.invalidIRI();
             }
 
-            if(id.startsWith("urn:")) {
+            if (id.startsWith("urn:")) {
                 return jerseyClient.getGraphResponseFromService(id, endpointServices.getProvReadWriteAddress());
             }
 
@@ -119,7 +134,7 @@ public class Class {
 
             Map<String, String> namespaceMap = namespaceManager.getCoreNamespaceMap(id);
 
-            if(namespaceMap==null) {
+            if (namespaceMap == null) {
                 return jerseyResponseManager.notFound();
             }
 
@@ -130,8 +145,7 @@ public class Class {
 
             pss.setIri("graph", id);
 
-
-            if(model!=null && !model.equals("undefined")) {
+            if (model != null && !model.equals("undefined")) {
                 pss.setIri("library", model);
             }
 
@@ -142,75 +156,75 @@ public class Class {
     @POST
     @ApiOperation(value = "Update class in certain model OR add reference from existing class to another model AND/OR change Class ID", notes = "PUT Body should be json-ld")
     @ApiResponses(value = {
-            @ApiResponse(code = 201, message = "Graph is created"),
-            @ApiResponse(code = 204, message = "Graph is saved"),
-            @ApiResponse(code = 401, message = "Unauthorized"),
-            @ApiResponse(code = 405, message = "Update not allowed"),
-            @ApiResponse(code = 403, message = "Illegal graph parameter"),
-            @ApiResponse(code = 400, message = "Invalid graph supplied"),
-            @ApiResponse(code = 500, message = "Bad data?")
+        @ApiResponse(code = 201, message = "Graph is created"),
+        @ApiResponse(code = 204, message = "Graph is saved"),
+        @ApiResponse(code = 401, message = "Unauthorized"),
+        @ApiResponse(code = 405, message = "Update not allowed"),
+        @ApiResponse(code = 403, message = "Illegal graph parameter"),
+        @ApiResponse(code = 400, message = "Invalid graph supplied"),
+        @ApiResponse(code = 500, message = "Bad data?")
     })
     public Response postJson(
-            @ApiParam(value = "New graph in application/ld+json", required = false) String body,
-            @ApiParam(value = "Class ID", required = true)
-            @QueryParam("id") String id,
-            @ApiParam(value = "OLD Class ID")
-            @QueryParam("oldid") String oldid,
-            @ApiParam(value = "Model ID", required = true)
-            @QueryParam("model") String model) {
+        @ApiParam(value = "New graph in application/ld+json", required = false) String body,
+        @ApiParam(value = "Class ID", required = true)
+        @QueryParam("id") String id,
+        @ApiParam(value = "OLD Class ID")
+        @QueryParam("oldid") String oldid,
+        @ApiParam(value = "Model ID", required = true)
+        @QueryParam("model") String model) {
 
         try {
 
-            IRI modelIRI,idIRI,oldIdIRI = null;
+            IRI modelIRI, idIRI, oldIdIRI = null;
 
             /* Check that URIs are valid */
             try {
                 modelIRI = idManager.constructIRI(model);
                 idIRI = idManager.constructIRI(id);
                 /* If newid exists */
-                if(oldid!=null && !oldid.equals("undefined")) {
-                    if(oldid.equals(id)) {
+                if (oldid != null && !oldid.equals("undefined")) {
+                    if (oldid.equals(id)) {
                         /* id and newid cant be the same */
                         return jerseyResponseManager.usedIRI();
                     }
                     oldIdIRI = idManager.constructIRI(oldid);
                 }
-            }
-            catch (IRIException e) {
+            } catch (IRIException e) {
                 return jerseyResponseManager.invalidIRI();
             }
 
             String provUUID = null;
 
-            if(isNotEmpty(body)) {
+            if (isNotEmpty(body)) {
 
                 Model parsedModel = modelManager.createJenaModelFromJSONLDString(body);
 
-                if(parsedModel.size()==0) {
+                if (parsedModel.size() == 0) {
                     return jerseyResponseManager.notAcceptable();
                 }
 
                 ReusableClass updateClass = new ReusableClass(parsedModel, graphManager);
                 YtiUser user = userProvider.getUser();
 
-                if(!authorizationManager.hasRightToEdit(updateClass)) {
+                if (!authorizationManager.hasRightToEdit(updateClass)) {
                     return jerseyResponseManager.unauthorized();
                 }
 
                 /* Rename ID if oldIdIRI exists */
-                if(oldIdIRI!=null) {
+                if (oldIdIRI != null) {
                     /* Prevent overwriting existing resources */
-                    if(graphManager.isExistingGraph(idIRI)) {
-                        logger.warn( idIRI+" is existing graph!");
+                    if (graphManager.isExistingGraph(idIRI)) {
+                        logger.warn(idIRI + " is existing graph!");
                         return jerseyResponseManager.usedIRI();
                     } else {
-                        if(graphManager.modelStatusRestrictsRemoving(oldIdIRI)) {
-                            logger.warn( idIRI+" is existing graph!");
+                        if (graphManager.modelStatusRestrictsRemoving(oldIdIRI)) {
+                            logger.warn(idIRI + " is existing graph!");
                             return jerseyResponseManager.depedencies();
                         } else {
                             graphManager.updateResourceWithNewId(oldIdIRI, updateClass);
                             provUUID = updateClass.getProvUUID();
                             logger.info("Changed class id from:" + oldid + " to " + id);
+                            searchIndexManager.removeClass(oldid);
                         }
                     }
                 } else {
@@ -218,10 +232,11 @@ public class Class {
                     provUUID = updateClass.getProvUUID();
                 }
 
-                if(provenanceManager.getProvMode()) {
+                searchIndexManager.indexClass(updateClass);
+
+                if (provenanceManager.getProvMode()) {
                     provenanceManager.createProvEntityBundle(updateClass.getId(), updateClass.asGraph(), user.getId(), updateClass.getProvUUID(), oldIdIRI);
                 }
-
 
             } else {
                 /* IF NO JSON-LD POSTED TRY TO CREATE REFERENCE FROM MODEL TO CLASS ID */
@@ -230,57 +245,50 @@ public class Class {
                     return jerseyResponseManager.unauthorized();
                 }
 
-                if(LDHelper.isResourceDefinedInNamespace(id, model)) {
+                if (LDHelper.isResourceDefinedInNamespace(id, model)) {
                     // Self references not allowed
                     return jerseyResponseManager.usedIRI();
                 } else {
                     graphManager.insertExistingResourceToModel(id, model);
-                    // GraphManager.insertExistingGraphReferenceToModel(id, model);
-                    // GraphManager.insertNewGraphReferenceToExportGraph(id, model);
-                    // GraphManager.addCoreGraphToCoreGraph(id, model+"#ExportGraph");
-                    logger.info("Created reference from "+model+" to "+id);
+                    logger.info("Created reference from " + model + " to " + id);
                     return jerseyResponseManager.ok();
                 }
             }
 
-            if(provUUID!=null) {
+            if (provUUID != null) {
                 return jerseyResponseManager.successUuid(provUUID);
-            }
-            else {
+            } else {
                 return jerseyResponseManager.notCreated();
             }
 
-        } catch(IllegalArgumentException ex) {
+        } catch (IllegalArgumentException ex) {
             logger.warn(ex.toString());
             return jerseyResponseManager.invalidParameter();
-        } catch(RiotException ex) {
+        } catch (RiotException ex) {
             logger.warn(ex.toString());
             return jerseyResponseManager.notAcceptable();
-        } catch(Exception ex) {
-            logger.warn( "Expect the unexpected!", ex);
-            return jerseyResponseManager.unexpected();
         }
     }
 
     @PUT
     @ApiOperation(value = "Create new class to certain model", notes = "PUT Body should be json-ld")
     @ApiResponses(value = {
-            @ApiResponse(code = 201, message = "Graph is created"),
-            @ApiResponse(code = 204, message = "Graph is saved"),
-            @ApiResponse(code = 401, message = "Unauthorized"),
-            @ApiResponse(code = 405, message = "Update not allowed"),
-            @ApiResponse(code = 403, message = "Illegal graph parameter"),
-            @ApiResponse(code = 400, message = "Invalid graph supplied"),
-            @ApiResponse(code = 500, message = "Bad data?")
+        @ApiResponse(code = 201, message = "Graph is created"),
+        @ApiResponse(code = 204, message = "Graph is saved"),
+        @ApiResponse(code = 401, message = "Unauthorized"),
+        @ApiResponse(code = 405, message = "Update not allowed"),
+        @ApiResponse(code = 403, message = "Illegal graph parameter"),
+        @ApiResponse(code = 400, message = "Invalid graph supplied"),
+        @ApiResponse(code = 500, message = "Bad data?")
     })
     public Response putJson(
-            @ApiParam(value = "New graph in application/ld+json", required = true) String body) {
+        @ApiParam(value = "New graph in application/ld+json", required = true) String body) {
 
         try {
 
             Model parsedModel = modelManager.createJenaModelFromJSONLDString(body);
 
-            if(parsedModel.size()==0) {
+            if (parsedModel.size() == 0) {
                 return jerseyResponseManager.notAcceptable();
             }
 
@@ -292,8 +300,8 @@ public class Class {
             }
 
             /* Prevent overwriting existing classes */
-            if(graphManager.isExistingGraph(newClass.getId())) {
-                logger.warn( newClass.getId()+" is existing class!");
+            if (graphManager.isExistingGraph(newClass.getId())) {
+                logger.warn(newClass.getId() + " is existing class!");
                 return jerseyResponseManager.usedIRI();
             }
 
@@ -301,11 +309,11 @@ public class Class {
 
             if (provUUID == null) {
                 return jerseyResponseManager.serverError();
-            }
-            else {
-                // newClass.create();
+            } else {
                 graphManager.createResource(newClass);
-                logger.info("Created "+newClass.getId());
+                logger.info("Created " + newClass.getId());
+
+                searchIndexManager.indexClass(newClass);
 
                 if (provenanceManager.getProvMode()) {
                     provenanceManager.createProvenanceActivityFromModel(newClass.getId(), newClass.asGraph(), newClass.getProvUUID(), user.getId());
@@ -314,45 +322,40 @@ public class Class {
                 return jerseyResponseManager.successUrnUuid(newClass.getProvUUID(), newClass.getId());
             }
 
-        } catch(IllegalArgumentException ex) {
+        } catch (IllegalArgumentException ex) {
             logger.warn(ex.toString());
             return jerseyResponseManager.invalidParameter();
-        } catch(Exception ex) {
-            logger.warn( "Expect the unexpected!", ex);
-            return jerseyResponseManager.unexpected();
         }
     }
 
     @DELETE
     @ApiOperation(value = "Delete graph from service and service description", notes = "Delete graph")
     @ApiResponses(value = {
-            @ApiResponse(code = 204, message = "Graph is deleted"),
-            @ApiResponse(code = 403, message = "Illegal graph parameter"),
-            @ApiResponse(code = 404, message = "No such graph"),
-            @ApiResponse(code = 401, message = "Unauthorized")
+        @ApiResponse(code = 204, message = "Graph is deleted"),
+        @ApiResponse(code = 403, message = "Illegal graph parameter"),
+        @ApiResponse(code = 404, message = "No such graph"),
+        @ApiResponse(code = 401, message = "Unauthorized")
     })
     public Response deleteClass(
-            @ApiParam(value = "Model ID", required = true)
-            @QueryParam("model") String model,
-            @ApiParam(value = "Class ID", required = true)
-            @QueryParam("id") String id) {
+        @ApiParam(value = "Model ID", required = true)
+        @QueryParam("model") String model,
+        @ApiParam(value = "Class ID", required = true)
+        @QueryParam("id") String id) {
 
         /* Check that URIs are valid */
-        IRI modelIRI,idIRI;
+        IRI modelIRI, idIRI;
         try {
             modelIRI = idManager.constructIRI(model);
             idIRI = idManager.constructIRI(id);
-        }
-        catch(NullPointerException e) {
+        } catch (NullPointerException e) {
             return jerseyResponseManager.invalidIRI();
-        }
-        catch (IRIException e) {
+        } catch (IRIException e) {
             return jerseyResponseManager.invalidIRI();
         }
 
 
         /* If Class is defined in the model */
-        if(id.startsWith(model)) {
+        if (id.startsWith(model)) {
             /* Remove graph */
 
             try {
@@ -362,9 +365,10 @@ public class Class {
                     return jerseyResponseManager.unauthorized();
                 }
 
-               graphManager.deleteResource(deleteClass);
+                graphManager.deleteResource(deleteClass);
+                searchIndexManager.removeClass(id);
 
-            } catch(IllegalArgumentException ex) {
+            } catch (IllegalArgumentException ex) {
                 logger.warn(ex.toString());
                 return jerseyResponseManager.unexpected();
             }
@@ -377,7 +381,7 @@ public class Class {
             }
 
             /* If removing referenced class */
-            graphManager.deleteGraphReferenceFromModel(idIRI,modelIRI);
+            graphManager.deleteGraphReferenceFromModel(idIRI, modelIRI);
             graphManager.deleteGraphReferenceFromExportModel(idIRI, modelIRI);
             return jerseyResponseManager.ok();
         }

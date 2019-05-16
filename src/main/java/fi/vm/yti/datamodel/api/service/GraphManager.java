@@ -4,16 +4,16 @@
 package fi.vm.yti.datamodel.api.service;
 
 import fi.vm.yti.datamodel.api.config.ApplicationProperties;
+import fi.vm.yti.datamodel.api.index.ElasticConnector;
+import fi.vm.yti.datamodel.api.index.FrameManager;
 import fi.vm.yti.datamodel.api.model.AbstractModel;
 import fi.vm.yti.datamodel.api.model.AbstractResource;
+import fi.vm.yti.datamodel.api.utils.Frames;
 import fi.vm.yti.datamodel.api.utils.LDHelper;
 
 import org.apache.jena.atlas.web.HttpException;
 import org.apache.jena.query.*;
 import org.apache.jena.rdf.model.*;
-import org.apache.jena.rdfconnection.RDFConnection;
-import org.apache.jena.rdfconnection.RDFConnectionRemote;
-import org.apache.jena.system.Txn;
 import org.apache.jena.update.*;
 
 import java.io.IOException;
@@ -38,7 +38,7 @@ import org.apache.jena.vocabulary.RDF;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import org.apache.jena.shared.PropertyNotFoundException;
+import com.fasterxml.jackson.databind.JsonNode;
 
 @Service
 public class GraphManager {
@@ -54,6 +54,7 @@ public class GraphManager {
     private final String versionGraphURI = "urn:yti:metamodel:version";
     private final ExecutorService executor = Executors.newFixedThreadPool(1);
     private final FrameManager frameManager;
+    private final ElasticConnector elasticConnector;
 
     @Autowired
     GraphManager(EndpointServices endpointServices,
@@ -62,7 +63,8 @@ public class GraphManager {
                  ModelManager modelManager,
                  ServiceDescriptionManager serviceDescriptionManager,
                  ApplicationProperties properties,
-                 FrameManager frameManager) {
+                 FrameManager frameManager,
+                 ElasticConnector elasticConnector) {
 
         this.endpointServices = endpointServices;
         this.jenaClient = jenaClient;
@@ -71,6 +73,7 @@ public class GraphManager {
         this.serviceDescriptionManager = serviceDescriptionManager;
         this.properties = properties;
         this.frameManager = frameManager;
+        this.elasticConnector = elasticConnector;
     }
 
     /**
@@ -1512,7 +1515,7 @@ public class GraphManager {
             relatedStatement.remove();
         }
 
-        exportModel.getNsPrefixMap().forEach((key,value)->{
+        exportModel.getNsPrefixMap().forEach((key, value) -> {
             exportModel.removeNsPrefix(key);
         });
 

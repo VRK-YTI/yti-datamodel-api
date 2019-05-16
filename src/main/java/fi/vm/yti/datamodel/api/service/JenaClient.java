@@ -1,6 +1,7 @@
 package fi.vm.yti.datamodel.api.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import org.apache.jena.query.*;
 import org.apache.jena.rdf.model.Literal;
 import org.apache.jena.rdf.model.Model;
@@ -14,10 +15,12 @@ import org.apache.jena.update.UpdateRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import org.slf4j.Logger;import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.json.*;
 import javax.json.stream.JsonParser;
+
 import java.io.ByteArrayOutputStream;
 import java.util.*;
 
@@ -33,10 +36,10 @@ public final class JenaClient {
     private final DatasetAccessor schemeService;
 
     // TODO: Or adapters?
-   // static final DatasetAdapter coreService = new DatasetAdapter(new DatasetGraphAccessorHTTP(services.getCoreReadWriteAddress()));
-   // static final DatasetAdapter importService = new DatasetAdapter(new DatasetGraphAccessorHTTP(services.getImportsReadWriteAddress()));
+    // static final DatasetAdapter coreService = new DatasetAdapter(new DatasetGraphAccessorHTTP(services.getCoreReadWriteAddress()));
+    // static final DatasetAdapter importService = new DatasetAdapter(new DatasetGraphAccessorHTTP(services.getImportsReadWriteAddress()));
 
-   // TODO: Issues with RDFConnection: No id encoding and namespaces disappear!
+    // TODO: Issues with RDFConnection: No id encoding and namespaces disappear!
    /* try(RDFConnectionRemote conn = services.getProvConnection()) {
             Txn.executeWrite(conn, ()-> {
                 conn.put(provUUID,model);
@@ -46,7 +49,7 @@ public final class JenaClient {
             logger.warn(ex.getMessage());
         }*/
 
-   @Autowired
+    @Autowired
     JenaClient(EndpointServices endpointServices) {
         this.endpointServices = endpointServices;
         this.coreService = DatasetAccessorFactory.createHTTP(endpointServices.getCoreReadWriteAddress());
@@ -56,23 +59,24 @@ public final class JenaClient {
     }
 
     public Model getModelFromSchemes(String graph) {
-        logger.debug("Getting model from "+graph);
+        logger.debug("Getting model from " + graph);
         return schemeService.getModel(graph);
     }
 
-    public void putToImports(String graph, Model model) {
-       logger.debug("Storing import to "+graph);
-       importService.putModel(graph, model);
+    public void putToImports(String graph,
+                             Model model) {
+        logger.debug("Storing import to " + graph);
+        importService.putModel(graph, model);
     }
 
     public Model getModelFromCore(String graph) {
-       logger.debug("Getting model from core "+graph);
-       return coreService.getModel(graph);
+        logger.debug("Getting model from core " + graph);
+        return coreService.getModel(graph);
     }
 
     public Model getModelFromProv(String graph) {
-       logger.debug("Getting model from prov "+graph);
-       return provService.getModel(graph);
+        logger.debug("Getting model from prov " + graph);
+        return provService.getModel(graph);
     }
 
     public boolean containsCoreModel(String graph) {
@@ -83,87 +87,106 @@ public final class JenaClient {
         return importService.containsModel(graph);
     }
 
-    public  void deleteModelFromCore(String graph) {
-       logger.debug("Deleting model from "+graph);
-       coreService.deleteModel(graph);
+    public void deleteModelFromCore(String graph) {
+        logger.debug("Deleting model from " + graph);
+        coreService.deleteModel(graph);
     }
 
-    public  void deleteModelFromScheme(String graph) {
-        logger.debug("Deleting codelist from "+graph);
+    public void deleteModelFromScheme(String graph) {
+        logger.debug("Deleting codelist from " + graph);
         schemeService.deleteModel(graph);
     }
 
     public boolean isInCore(String graph) {
-      return coreService.containsModel(graph);
+        return coreService.containsModel(graph);
     }
 
-    public void putModelToCore(String graph, Model model) {
-       logger.debug("Putting model to "+graph);
+    public void putModelToCore(String graph,
+                               Model model) {
+        logger.debug("Putting model to " + graph);
         coreService.putModel(graph, model);
     }
 
-    public void addModelToCore(String graph, Model model) {
-       logger.debug("Adding model to "+graph);
-       coreService.add(graph, model);
+    public void addModelToCore(String graph,
+                               Model model) {
+        logger.debug("Adding model to " + graph);
+        coreService.add(graph, model);
     }
 
-    public void putModelToProv(String graph, Model model) {
-       logger.debug("Putting to prov "+graph);
-       provService.putModel(graph, model);
+    public void putModelToProv(String graph,
+                               Model model) {
+        logger.debug("Putting to prov " + graph);
+        provService.putModel(graph, model);
     }
 
-    public void addModelToProv(String graph, Model model) {
-       logger.debug("Adding to prov "+graph);
-       provService.add(graph, model);
+    public void addModelToProv(String graph,
+                               Model model) {
+        logger.debug("Adding to prov " + graph);
+        provService.add(graph, model);
     }
 
-    public void updateToService(UpdateRequest req, String service) {
-       logger.debug("Sending UpdateRequest to "+service);
+    public void updateToService(UpdateRequest req,
+                                String service) {
+        logger.debug("Sending UpdateRequest to " + service);
         UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(req, service);
         qexec.execute();
     }
 
-    public Model constructFromService(String query, String service) {
-       logger.debug("Constructing from "+service);
-        try(QueryExecution qexec = QueryExecutionFactory.sparqlService(service, query)) {
+    public Model constructFromService(String query,
+                                      String service) {
+        logger.debug("Constructing from " + service);
+        try (QueryExecution qexec = QueryExecutionFactory.sparqlService(service, query)) {
             return qexec.execConstruct();
         }
     }
 
-    public boolean askQuery(String service, Query query, String graph) {
-       logger.debug("Asking from "+service+" in graph "+graph);
-        try(QueryExecution qexec = QueryExecutionFactory.sparqlService(service, query, graph)) {
+    public Model constructFromCore(String query) {
+        logger.debug("Constructing from " + endpointServices.getCoreSparqlAddress());
+        try (QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), query)) {
+            return qexec.execConstruct();
+        }
+    }
+
+    public boolean askQuery(String service,
+                            Query query,
+                            String graph) {
+        logger.debug("Asking from " + service + " in graph " + graph);
+        try (QueryExecution qexec = QueryExecutionFactory.sparqlService(service, query, graph)) {
             return qexec.execAsk();
         }
     }
 
-    public boolean askQuery(String service, Query query) {
-        logger.debug("Asking from "+service);
-        try(QueryExecution qexec = QueryExecutionFactory.sparqlService(service, query)) {
+    public boolean askQuery(String service,
+                            Query query) {
+        logger.debug("Asking from " + service);
+        try (QueryExecution qexec = QueryExecutionFactory.sparqlService(service, query)) {
             return qexec.execAsk();
         }
     }
 
-    public ResultSet selectQuery(String service, Query query) {
-       logger.debug("Select from "+service);
-        try(QueryExecution qexec = QueryExecutionFactory.sparqlService(service, query)) {
+    public ResultSet selectQuery(String service,
+                                 Query query) {
+        logger.debug("Select from " + service);
+        try (QueryExecution qexec = QueryExecutionFactory.sparqlService(service, query)) {
             // ResultSet needs to be copied in order to use it after the connection is closed
-            return ResultSetFactory.copyResults(qexec.execSelect()) ;
+            return ResultSetFactory.copyResults(qexec.execSelect());
         }
     }
 
     /**
      * Returns JSON object from given sparql query. First param of the sparql query is considered to be the URI.
      * Reads only localized literals to JSON object. Other duplicate literal values are not stored to result JSON.
+     *
      * @param service URI for the sparql service
-     * @param query Sparql query
+     * @param query   Sparql query
      * @return JSON string
      */
 
-    public String selectJson(String service, Query query) {
-        logger.debug("Select json "+service);
+    public String selectJson(String service,
+                             Query query) {
+        logger.debug("Select json " + service);
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
-        try(QueryExecution qexec = QueryExecutionFactory.sparqlService(service, query)) {
+        try (QueryExecution qexec = QueryExecutionFactory.sparqlService(service, query)) {
             ResultSetPeekable results = ResultSetFactory.makePeekable(qexec.execSelect());
             List<String> resultVars = results.getResultVars();
             // Warning! This method supposes that first query var is uri-id.
@@ -171,7 +194,7 @@ public final class JenaClient {
             List<Map> hashArray = new ArrayList<>();
             // Object map for current node
             Map objectMap = new HashMap<String, Object>();
-            while(results.hasNext()) {
+            while (results.hasNext()) {
                 QuerySolution soln = results.next();
                 Iterator<String> currentVars = soln.varNames();
                 String currentId = soln.get(idVar).toString();
@@ -180,17 +203,18 @@ public final class JenaClient {
                     RDFNode node = soln.get(currentVar);
                     if (node.isLiteral()) {
                         Literal lit = node.asLiteral();
-                        if(lit.getString().length()>0) {
+                        if (lit.getString().length() > 0) {
                             String litLang = lit.getLanguage();
                             if (litLang != null && litLang.length() > 0) {
                                 Map literalMap;
-                                if(objectMap.containsKey(currentVar)) {
+                                if (objectMap.containsKey(currentVar)) {
                                     Object currentObj = objectMap.get(currentVar);
-                                    if(currentObj instanceof String) {
+                                    // If some Literal was earlier stored as plain string add lang to "und"
+                                    if (currentObj instanceof String) {
                                         literalMap = new HashMap<String, String>();
-                                        literalMap.put("und",currentObj);
+                                        literalMap.put("und", currentObj);
                                     } else {
-                                        literalMap = (Map)currentObj;
+                                        literalMap = (Map) currentObj;
                                     }
                                 } else {
                                     literalMap = new HashMap<String, String>();
@@ -198,21 +222,21 @@ public final class JenaClient {
                                 literalMap.put(litLang, lit.getString());
                                 objectMap.put(currentVar, literalMap);
                             } else {
-                                if(objectMap.containsKey(currentVar)) {
+                                if (objectMap.containsKey(currentVar)) {
                                     Object currentObj = objectMap.get(currentVar);
-                                    if(currentObj instanceof String) {
-                                        if(!currentObj.equals(lit.getString())) {
+                                    if (currentObj instanceof String) {
+                                        if (!currentObj.equals(lit.getString())) {
                                             List<String> newArray = new ArrayList<>();
                                             newArray.add((String) currentObj);
                                             objectMap.put(currentVar, newArray);
                                         }
-                                    } else if(currentObj instanceof ArrayList) {
+                                    } else if (currentObj instanceof ArrayList) {
                                         //TODO: This part of code is untested. No arrays for now.
-                                        if(!((ArrayList)currentObj).contains(lit.getString())) {
-                                            ((ArrayList)currentObj).add(lit.getString());
+                                        if (!((ArrayList) currentObj).contains(lit.getString())) {
+                                            ((ArrayList) currentObj).add(lit.getString());
                                         }
-                                    } else if(currentObj instanceof Map) {
-                                        ((Map)(currentObj)).put("und",lit.getString());
+                                    } else if (currentObj instanceof Map) {
+                                        ((Map) (currentObj)).put("und", lit.getString());
                                     }
                                 } else {
                                     objectMap.put(currentVar, lit.getString());
@@ -223,21 +247,21 @@ public final class JenaClient {
                         objectMap.put(currentVar, node.toString());
                     }
                 }
-                if(!results.hasNext()){
+                if (!results.hasNext()) {
                     // Add hash to array
                     hashArray.add(objectMap);
-                } else if(!results.peek().get(idVar).toString().equals(currentId)) {
+                } else if (!results.peek().get(idVar).toString().equals(currentId)) {
                     // TODO: Peekable results could be changed to check from single hash index
                     // If following row is using different id create new hash
                     hashArray.add(objectMap);
-                    objectMap = new HashMap<String,Object>();
+                    objectMap = new HashMap<String, Object>();
                 } // Else continue adding to same hash
             }
 
             ObjectMapper mapper = new ObjectMapper();
             try {
                 return mapper.writeValueAsString(hashArray);
-            } catch(Exception ex) {
+            } catch (Exception ex) {
                 ex.printStackTrace();
                 return null;
             }
@@ -245,12 +269,13 @@ public final class JenaClient {
         }
     }
 
-    public String selectCSV(String service, Query query) {
-       logger.debug("Select csv from "+service);
+    public String selectCSV(String service,
+                            Query query) {
+        logger.debug("Select csv from " + service);
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
-        try(QueryExecution qexec = QueryExecutionFactory.sparqlService(service, query)) {
+        try (QueryExecution qexec = QueryExecutionFactory.sparqlService(service, query)) {
             // ResultSet needs to be copied in order to use it after the connection is closed
-            ResultSetFormatter.outputAsCSV(stream,qexec.execSelect());
+            ResultSetFormatter.outputAsCSV(stream, qexec.execSelect());
             return new String(stream.toByteArray());
         }
     }
@@ -258,15 +283,15 @@ public final class JenaClient {
     // FIXME: Not in use. RDFConnection does not work as espected.
 
     public Model fetchModelFromCore(String graph) {
-         try(RDFConnection conn = endpointServices.getCoreConnection()){
+        try (RDFConnection conn = endpointServices.getCoreConnection()) {
             return conn.fetch(graph);
-        } catch(Exception ex) {
+        } catch (Exception ex) {
             logger.warn(ex.getMessage());
             return null;
         }
     }
-    
+
     public EndpointServices getEndpointServices() {
-       return this.endpointServices;
+        return this.endpointServices;
     }
 }

@@ -219,9 +219,30 @@ public class LDHelper {
         return ResourceFactory.createProperty(curieToURI(curieString));
     }
 
+    public static Resource curieToResource(String curieString) {
+        return ResourceFactory.createResource(curieToURI(curieString));
+    }
+
     public static String curieToURI(String curie) {
         String[] splitted = curie.split(":");
         return PREFIX_MAP.get(splitted[0])+splitted[1];
+    }
+
+    public static Map<String,String> RDFNodeListToMap(List<RDFNode> nodes) {
+       Map<String,String> map = new HashMap<>();
+       nodes.forEach(node->{
+           Literal lit = node.asLiteral();
+           map.put(lit.getLanguage(),lit.getString());
+       });
+       return map;
+    }
+
+    public static List<String> RDFNodeListToStringList(List<RDFNode> nodes, Property pred) {
+       List<String> arrList = new ArrayList();
+        nodes.forEach(node->{
+            arrList.add(node.asResource().getRequiredProperty(pred).getLiteral().getString());
+        });
+        return arrList;
     }
 
     public static final Map<String, Object> CONTEXT_MAP =
