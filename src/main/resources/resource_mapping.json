@@ -6,7 +6,8 @@
           "label": {
             "path_match": "label.*",
             "mapping": {
-              "type": "text"
+              "type": "text",
+              "fielddata": true
             }
           }
         },

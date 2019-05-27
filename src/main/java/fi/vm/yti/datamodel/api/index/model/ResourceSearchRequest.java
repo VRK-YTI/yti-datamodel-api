@@ -8,7 +8,11 @@ public class ResourceSearchRequest {
 
     private String isDefinedBy;
 
-    private String prefLang;
+    private String sortLang;
+
+    private String sortField;
+
+    private String sortOrder;
 
     private Integer pageSize;
 
@@ -19,13 +23,17 @@ public class ResourceSearchRequest {
     public ResourceSearchRequest(final String query,
                                  final String type,
                                  final String isDefinedBy,
-                                 final String prefLang,
+                                 final String sortLang,
+                                 final String sortField,
+                                 final String sortOrder,
                                  final Integer pageSize,
                                  final Integer pageFrom) {
         this.query = query;
         this.type = type;
         this.isDefinedBy = isDefinedBy;
-        this.prefLang = prefLang;
+        this.sortLang = sortLang;
+        this.sortField = sortField;
+        this.sortOrder = sortOrder;
         this.pageSize = pageSize;
         this.pageFrom = pageFrom;
     }
@@ -54,12 +62,28 @@ public class ResourceSearchRequest {
         this.isDefinedBy = isDefinedBy;
     }
 
-    public String getPrefLang() {
-        return prefLang;
+    public String getSortLang() {
+        return sortLang;
     }
 
-    public void setPrefLang(final String prefLang) {
-        this.prefLang = prefLang;
+    public void setSortLang(final String sortLang) {
+        this.sortLang = sortLang;
+    }
+
+    public String getSortField() {
+        return sortField;
+    }
+
+    public void setSortField(final String sortField) {
+        this.sortField = sortField;
+    }
+
+    public String getSortOrder() {
+        return sortOrder;
+    }
+
+    public void setSortOrder(final String sortOrder) {
+        this.sortOrder = sortOrder;
     }
 
     public Integer getPageSize() {
@@ -84,7 +108,9 @@ public class ResourceSearchRequest {
             "query='" + query + '\'' +
             ", type='" + type + '\'' +
             ", isDefinedBy='" + isDefinedBy + '\'' +
-            ", prefLang='" + prefLang + '\'' +
+            ", sortLang='" + sortLang + '\'' +
+            ", sortField='" + sortField + '\'' +
+            ", sortOrder='" + sortOrder + '\'' +
             ", pageSize=" + pageSize +
             ", pageFrom=" + pageFrom +
             '}';

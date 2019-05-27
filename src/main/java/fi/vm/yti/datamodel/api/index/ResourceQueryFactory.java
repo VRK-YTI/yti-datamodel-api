@@ -1,31 +1,24 @@
 package fi.vm.yti.datamodel.api.index;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.regex.Pattern;
 
 import javax.inject.Singleton;
 
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.common.text.Text;
 import org.elasticsearch.index.query.BoolQueryBuilder;
-import org.elasticsearch.index.query.MatchQueryBuilder;
 import org.elasticsearch.index.query.MultiMatchQueryBuilder;
 import org.elasticsearch.index.query.Operator;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.index.query.TermsQueryBuilder;
-import org.elasticsearch.index.query.TypeQueryBuilder;
-import org.elasticsearch.index.search.MatchQuery;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
+import org.elasticsearch.search.sort.FieldSortBuilder;
+import org.elasticsearch.search.sort.SortOrder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,7 +35,7 @@ import fi.vm.yti.datamodel.api.index.model.ResourceSearchResponse;
 public class ResourceQueryFactory {
 
     private static final Logger logger = LoggerFactory.getLogger(ResourceQueryFactory.class);
-    private static final Pattern prefLangPattern = Pattern.compile("[a-zA-Z-]+");
+    private static final Pattern sortLangPattern = Pattern.compile("[a-zA-Z-]+");
     private ObjectMapper objectMapper;
 
     @Autowired
@@ -53,15 +46,19 @@ public class ResourceQueryFactory {
     }
 
     public SearchRequest createQuery(ResourceSearchRequest request) {
-        return createQuery(request.getQuery(), request.getType(), request.getIsDefinedBy(), request.getPrefLang(), request.getPageSize(), request.getPageFrom());
+        return createQuery(request.getQuery(), request.getType(), request.getIsDefinedBy(), request.getSortLang(), request.getSortField(), request.getSortOrder(), request.getPageSize(), request.getPageFrom());
     }
 
     private SearchRequest createQuery(String query,
                                       String type,
                                       String modelId,
-                                      String prefLang,
+                                      String sortLang,
+                                      String sortField,
+                                      String sortOrder,
                                       Integer pageSize,
                                       Integer pageFrom) {
+
+        //TODO: Validate sortOrder: asc||desc ... and sortField: modified || label || comment || isDefinedBy etc?
 
         SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
 
@@ -84,10 +81,15 @@ public class ResourceQueryFactory {
         MultiMatchQueryBuilder labelQuery = null;
 
         if (!query.isEmpty()) {
-            labelQuery = QueryBuilders.multiMatchQuery(query).field("label.*").type(MatchQuery.Type.PHRASE_PREFIX);
+            labelQuery = QueryBuilders.multiMatchQuery(query,"label.*")
+                .type(MultiMatchQueryBuilder.Type.PHRASE_PREFIX);
 
-            if (prefLang != null && prefLangPattern.matcher(prefLang).matches()) {
-                labelQuery.field("label." + prefLang, 10);
+            if (sortLang != null && sortLangPattern.matcher(sortLang).matches()) {
+                labelQuery = labelQuery.field("label." + sortLang, 10);
+            }
+
+            if (sortLang != null && sortLangPattern.matcher(sortLang).matches()) {
+                labelQuery.field("label." + sortLang, 10);
             }
 
             sourceBuilder.highlighter(new HighlightBuilder().preTags("<b>").postTags("</b>").field("label.*"));
@@ -98,6 +100,13 @@ public class ResourceQueryFactory {
             sourceBuilder.query(boolQuery);
         } else {
             sourceBuilder.query(QueryBuilders.matchAllQuery());
+        }
+
+        if(sortField!=null && !sortField.isEmpty() && sortLang!=null && !sortLang.isEmpty()) {
+            if(sortOrder==null || sortOrder!=null && sortOrder.equals("undefined") || sortOrder!=null && sortOrder.isEmpty()) sortOrder = "desc";
+            FieldSortBuilder fieldSort = new FieldSortBuilder(sortField+(sortField.equals("label")||sortField.equals("comment") ? "."+sortLang : "")).order(SortOrder.fromString(sortOrder));
+            fieldSort.missing("_last");
+            sourceBuilder.sort(fieldSort);
         }
 
         SearchRequest sr = new SearchRequest("dm_resources")

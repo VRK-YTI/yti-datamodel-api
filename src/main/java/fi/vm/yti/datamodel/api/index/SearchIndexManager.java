@@ -181,9 +181,9 @@ public class SearchIndexManager {
         try {
             request.source(mapping, XContentType.JSON);
             CreateIndexResponse createIndexResponse = esClient.indices().create(request,RequestOptions.DEFAULT);
-            logger.debug("Mapping updated: "+createIndexResponse.isAcknowledged());
+            logger.debug("Index created: "+createIndexResponse.isAcknowledged());
         } catch(IOException ex) {
-            logger.warn("Mapping update failed!");
+            logger.warn("Index creation failed!");
             logger.warn(ex.toString());
             ex.printStackTrace();
         }
