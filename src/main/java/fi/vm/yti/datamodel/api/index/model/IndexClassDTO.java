@@ -2,9 +2,9 @@ package fi.vm.yti.datamodel.api.index.model;
 
 import java.util.Map;
 
-import fi.vm.yti.datamodel.api.model.AbstractPredicate;
+import fi.vm.yti.datamodel.api.model.AbstractClass;
 
-public class IndexPredicate {
+public class IndexClassDTO extends IndexResourceDTO {
 
     private String id;
     private String isDefinedBy;
@@ -14,15 +14,16 @@ public class IndexPredicate {
     private Map<String, String> label;
     private Map<String, String> comment;
 
-    public IndexPredicate() {}
+    public IndexClassDTO() {
+    }
 
-    public IndexPredicate(final String id,
-                          final String isDefinedBy,
-                          final String status,
-                          final String modified,
-                          final String type,
-                          final Map<String, String> label,
-                          final Map<String, String> comment) {
+    public IndexClassDTO(final String id,
+                         final String isDefinedBy,
+                         final String status,
+                         final String modified,
+                         final String type,
+                         final Map<String, String> label,
+                         final Map<String, String> comment) {
         this.id = id;
         this.isDefinedBy = isDefinedBy;
         this.status = status;
@@ -32,14 +33,14 @@ public class IndexPredicate {
         this.comment = comment;
     }
 
-    public IndexPredicate(AbstractPredicate predicate) {
-        this.id = predicate.getId();
-        this.isDefinedBy = predicate.getModelId();
-        this.status = predicate.getStatus();
-        this.modified = predicate.getModified();
-        this.type = predicate.getType();
-        this.label = predicate.getLabel();
-        this.comment = predicate.getComment();
+    public IndexClassDTO(AbstractClass classResource) {
+        this.id = classResource.getId();
+        this.isDefinedBy = classResource.getModelId();
+        this.status = classResource.getStatus();
+        this.modified = classResource.getModified();
+        this.type = classResource.getType();
+        this.label = classResource.getLabel();
+        this.comment = classResource.getComment();
     }
 
     public String getId() {
@@ -100,7 +101,7 @@ public class IndexPredicate {
 
     @Override
     public String toString() {
-        return "Predicate{" +
+        return "IndexClassDTO{" +
             "id='" + id + '\'' +
             ", isDefinedBy='" + isDefinedBy + '\'' +
             ", status='" + status + '\'' +
@@ -111,5 +112,3 @@ public class IndexPredicate {
             '}';
     }
 }
-
-

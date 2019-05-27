@@ -22,6 +22,8 @@ public class Frames {
     public static final LinkedHashMap<String, Object> modified;
     public static final LinkedHashMap<String, Object> contributor;
     public static final LinkedHashMap<String, Object> isPartOf;
+    public static final LinkedHashMap<String, Object> contributorID;
+    public static final LinkedHashMap<String, Object> isPartOfID;
     public static final LinkedHashMap<String, Object> comment;
     public static final LinkedHashMap<String, Object> range;
     public static final LinkedHashMap<String, Object> prefLabel;
@@ -163,6 +165,18 @@ public class Frames {
                 put("@id", "http://purl.org/dc/terms/contributor");
                 put("@type", "@id");
                 put("@container","@set");
+            }
+        };
+
+        isPartOfID = new LinkedHashMap<String, Object>() {
+            {
+                put("@id", "http://purl.org/dc/terms/isPartOf");
+            }
+        };
+
+        contributorID = new LinkedHashMap<String, Object>() {
+            {
+                put("@id", "http://purl.org/dc/terms/contributor");
             }
         };
 
@@ -673,8 +687,8 @@ public class Frames {
                 put("label",label);
                 put("comment",comment);
                 put("modified",modified);
-                put("contributor",contributor);
-                put("isPartOf",isPartOf);
+                put("contributor",contributorID);
+                put("isPartOf",isPartOfID);
                 put("useContext",useContext);
                 put("status",versionInfo);
                 put("prefix",preferredXMLNamespacePrefix);
@@ -685,16 +699,8 @@ public class Frames {
         esModelFrame = new LinkedHashMap<String, Object>() {
             {
                 put("@context", esModelContext);
-                put("contributor", new LinkedHashMap<String, Object>() {
-                    {
-                        put("@embed", true);
-                    }
-                });
-                put("isPartOf", new LinkedHashMap<String, Object>() {
-                    {
-                        put("@embed", true);
-                    }
-                });
+                put("contributor", new LinkedHashMap<String, Object>());
+                put("isPartOf", new LinkedHashMap<String, Object>());
             }
         };
 

@@ -4,7 +4,7 @@ import java.util.Map;
 
 import fi.vm.yti.datamodel.api.model.AbstractClass;
 
-public class IndexClass {
+public class IndexResourceDTO {
 
     private String id;
     private String isDefinedBy;
@@ -13,27 +13,30 @@ public class IndexClass {
     private String type;
     private Map<String, String> label;
     private Map<String, String> comment;
+    private String range;
 
-    public IndexClass() {
+    public IndexResourceDTO() {
     }
 
-    public IndexClass(final String id,
-                      final String isDefinedBy,
-                      final String status,
-                      final String modified,
-                      final String type,
-                      final Map<String, String> label,
-                      final Map<String, String> comment) {
+    public IndexResourceDTO(final String id,
+                            final String isDefinedBy,
+                            final String status,
+                            final String modified,
+                            final String type,
+                            final String range,
+                            final Map<String, String> label,
+                            final Map<String, String> comment) {
         this.id = id;
         this.isDefinedBy = isDefinedBy;
         this.status = status;
         this.modified = modified;
         this.type = type;
+        this.range = range;
         this.label = label;
         this.comment = comment;
     }
 
-    public IndexClass(AbstractClass classResource) {
+    public IndexResourceDTO(AbstractClass classResource) {
         this.id = classResource.getId();
         this.isDefinedBy = classResource.getModelId();
         this.status = classResource.getStatus();
@@ -83,6 +86,14 @@ public class IndexClass {
         this.type = type;
     }
 
+    public String getRange() {
+        return range;
+    }
+
+    public void setRange(final String range) {
+        this.range = range;
+    }
+
     public Map<String, String> getLabel() {
         return label;
     }
@@ -101,7 +112,7 @@ public class IndexClass {
 
     @Override
     public String toString() {
-        return "Class{" +
+        return "IndexResourceDTO{" +
             "id='" + id + '\'' +
             ", isDefinedBy='" + isDefinedBy + '\'' +
             ", status='" + status + '\'' +
@@ -109,6 +120,7 @@ public class IndexClass {
             ", type='" + type + '\'' +
             ", label=" + label +
             ", comment=" + comment +
+            ", range='" + range + '\'' +
             '}';
     }
 }

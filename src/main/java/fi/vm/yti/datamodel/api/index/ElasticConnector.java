@@ -39,9 +39,10 @@ public class ElasticConnector {
 
     public static final String ELASTIC_INDEX_VIS_MODEL = "dm_vis_models";
     public static final String ELASTIC_INDEX_CLASS = "dm_classes";
+    public static final String ELASTIC_INDEX_RESOURCE = "dm_resources";
     public static final String ELASTIC_INDEX_PREDICATE = "dm_predicates";
     public static final String ELASTIC_INDEX_MODEL = "dm_models";
-    public static final String[] indexes = new String[]{ ELASTIC_INDEX_VIS_MODEL, ELASTIC_INDEX_CLASS, ELASTIC_INDEX_PREDICATE, ELASTIC_INDEX_MODEL };
+    public static final String[] indexes = new String[]{ ELASTIC_INDEX_VIS_MODEL, ELASTIC_INDEX_MODEL, ELASTIC_INDEX_RESOURCE };
 
     public static final int ES_TIMEOUT = 300;
 

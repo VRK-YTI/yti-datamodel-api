@@ -1,15 +1,26 @@
 package fi.vm.yti.datamodel.api.index;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.inject.Singleton;
 
 import org.apache.jena.rdf.model.Model;
+import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
+import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
+import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest;
 import org.elasticsearch.action.bulk.BulkRequest;
+import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.index.IndexRequest;
+import org.elasticsearch.action.search.SearchRequest;
+import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.support.master.AcknowledgedResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.common.xcontent.XContentType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,9 +29,14 @@ import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import fi.vm.yti.datamodel.api.index.model.IndexClass;
-import fi.vm.yti.datamodel.api.index.model.IndexModel;
-import fi.vm.yti.datamodel.api.index.model.IndexPredicate;
+import fi.vm.yti.datamodel.api.index.model.DeepSearchHitListDTO;
+import fi.vm.yti.datamodel.api.index.model.IndexClassDTO;
+import fi.vm.yti.datamodel.api.index.model.IndexModelDTO;
+import fi.vm.yti.datamodel.api.index.model.IndexPredicateDTO;
+import fi.vm.yti.datamodel.api.index.model.ModelSearchRequest;
+import fi.vm.yti.datamodel.api.index.model.ModelSearchResponse;
+import fi.vm.yti.datamodel.api.index.model.ResourceSearchRequest;
+import fi.vm.yti.datamodel.api.index.model.ResourceSearchResponse;
 import fi.vm.yti.datamodel.api.model.AbstractClass;
 import fi.vm.yti.datamodel.api.model.AbstractPredicate;
 import fi.vm.yti.datamodel.api.model.DataModel;
@@ -38,6 +54,9 @@ public class SearchIndexManager {
     private final JenaClient jenaClient;
     private final ObjectMapper objectMapper;
     private final ModelManager modelManager;
+    private final ModelQueryFactory modelQueryFactory;
+    private final DeepResourceQueryFactory deepResourceQueryFactory;
+    private final ResourceQueryFactory resourceQueryFactory;
 
     private static final Logger logger = LoggerFactory.getLogger(SearchIndexManager.class.getName());
 
@@ -45,12 +64,30 @@ public class SearchIndexManager {
     public SearchIndexManager(final ElasticConnector esManager,
                               final JenaClient jenaClient,
                               final ObjectMapper objectMapper,
-                              final ModelManager modelManager) {
+                              final ModelManager modelManager,
+                              final ModelQueryFactory modelQueryFactory,
+                              final DeepResourceQueryFactory deepClassQueryFactory,
+                              final ResourceQueryFactory resourceQueryFactory) {
         this.esManager = esManager;
         this.esClient = esManager.getEsClient();
         this.jenaClient = jenaClient;
         this.objectMapper = objectMapper;
         this.modelManager = modelManager;
+        this.modelQueryFactory = modelQueryFactory;
+        this.deepResourceQueryFactory = deepClassQueryFactory;
+        this.resourceQueryFactory = resourceQueryFactory;
+    }
+
+    public String getResourceMappings() throws IOException {
+        InputStream is = SearchIndexManager.class.getClassLoader().getResourceAsStream("resource_mapping.json");
+        Object obj = objectMapper.readTree(is);
+        return objectMapper.writeValueAsString(obj);
+    }
+
+    public String getModelMappings() throws IOException {
+        InputStream is = SearchIndexManager.class.getClassLoader().getResourceAsStream("model_mapping.json");
+        Object obj = objectMapper.readTree(is);
+        return objectMapper.writeValueAsString(obj);
     }
 
     public void bulkInsert(String indexName,
@@ -62,7 +99,8 @@ public class SearchIndexManager {
                 source(objectMapper.convertValue(resource, Map.class));
             bulkRequest.add(indexRequest);
         });
-        esClient.bulk(bulkRequest, RequestOptions.DEFAULT);
+        BulkResponse bresp = esClient.bulk(bulkRequest, RequestOptions.DEFAULT);
+        logger.debug("Bulk insert status: "+bresp.status().getStatus());
     }
 
     public void initModelIndex() throws IOException {
@@ -76,10 +114,11 @@ public class SearchIndexManager {
             "?model iow:useContext ?useContext . " +
             "?model dcap:preferredXMLNamespaceName ?namespace . " +
             "?model dcap:preferredXMLNamespacePrefix ?prefix .  " +
-            "?model dcterms:contributor ?org . " +
-            "?model dcterms:isPartOf ?group . " +
+            "?model dcterms:contributor ?orgID . " +
+            "?model dcterms:isPartOf ?groupID . " +
             "} WHERE { " +
             "GRAPH ?model { " +
+            "?model a owl:Ontology . " +
             "?model rdfs:label ?prefLabel . " +
             "OPTIONAL {?model rdfs:comment ?comment . FILTER(lang(?comment)!='') }" +
             "OPTIONAL { ?model iow:useContext ?useContext . }" +
@@ -88,8 +127,8 @@ public class SearchIndexManager {
             "?model dcap:preferredXMLNamespacePrefix ?prefix .  " +
             "?model a ?modelType . VALUES ?modelType { dcap:MetadataVocabulary dcap:DCAP }" +
             "?model dcterms:modified ?modified . " +
-            "?model dcterms:contributor ?org . " +
-            "?model dcterms:isPartOf ?group . }}";
+            "?model dcterms:contributor ?org . BIND(strafter(str(?org), 'urn:uuid:') AS ?orgID) " +
+            "?model dcterms:isPartOf ?group . ?group dcterms:identifier ?groupID . }}";
 
         Model model = jenaClient.constructFromCore(qry);
         if (model.size() < 1) {
@@ -120,7 +159,8 @@ public class SearchIndexManager {
             "?class a ?type . " +
             "?class dcterms:modified ?modified . " +
             "?class rdfs:isDefinedBy ?model . }" +
-            "GRAPH ?model {?model a owl:Ontology  . ?model rdfs:label ?label . ?model a ?modelType . VALUES ?modelType { dcap:MetadataVocabulary dcap:DCAP }}}";
+            "GRAPH ?model {?model a owl:Ontology  . ?model rdfs:label ?label . " +
+            "?model a ?modelType . VALUES ?modelType { dcap:MetadataVocabulary dcap:DCAP }}}";
         Model model = jenaClient.constructFromCore(qry);
         if (model.size() < 1) {
             logger.warn("Could not find any classes to index!");
@@ -131,7 +171,38 @@ public class SearchIndexManager {
             logger.warn("Could not parse JSON");
             return;
         }
-        bulkInsert(esManager.ELASTIC_INDEX_CLASS, nodes);
+        bulkInsert(esManager.ELASTIC_INDEX_RESOURCE, nodes);
+
+    }
+
+
+    public void createIndex(String index, String mapping) {
+        CreateIndexRequest request = new CreateIndexRequest(index);
+        try {
+            request.source(mapping, XContentType.JSON);
+            CreateIndexResponse createIndexResponse = esClient.indices().create(request,RequestOptions.DEFAULT);
+            logger.debug("Mapping updated: "+createIndexResponse.isAcknowledged());
+        } catch(IOException ex) {
+            logger.warn("Mapping update failed!");
+            logger.warn(ex.toString());
+            ex.printStackTrace();
+        }
+
+    }
+
+    public void updateMapping(String index, Object mapping) {
+        PutMappingRequest request = new PutMappingRequest(index);
+        request.type("doc");
+        try {
+            request.source(mapping);
+            AcknowledgedResponse putMappingResponse = esClient.indices().putMapping(request, RequestOptions.DEFAULT);
+            logger.debug("Mapping updated: "+putMappingResponse.isAcknowledged());
+        } catch(IOException ex) {
+            logger.warn("Mapping update failed!");
+            logger.warn(ex.toString());
+            ex.printStackTrace();
+        }
+
     }
 
     public void initPredicateIndex() throws IOException {
@@ -151,7 +222,8 @@ public class SearchIndexManager {
             "?predicate dcterms:modified ?modified . " +
             "OPTIONAL { ?predicate rdfs:comment ?definition . FILTER(lang(?definition)!='')}" +
             "?class rdfs:isDefinedBy ?model . }" +
-            "GRAPH ?model {?model a owl:Ontology  . ?model rdfs:label ?label . ?model a ?modelType . VALUES ?modelType { dcap:MetadataVocabulary dcap:DCAP }}}";
+            "GRAPH ?model {?model a owl:Ontology  . ?model rdfs:label ?label . " +
+            "?model a ?modelType . VALUES ?modelType { dcap:MetadataVocabulary dcap:DCAP }}}";
         Model model = jenaClient.constructFromCore(qry);
         if (model.size() < 1) {
             logger.warn("Could not find any associations to index!");
@@ -162,8 +234,7 @@ public class SearchIndexManager {
             logger.warn("Could not parse JSON");
             return;
         }
-        logger.debug("Using BULK API: " + esManager.ELASTIC_INDEX_PREDICATE);
-        bulkInsert(esManager.ELASTIC_INDEX_PREDICATE, nodes);
+        bulkInsert(esManager.ELASTIC_INDEX_RESOURCE, nodes);
     }
 
     public void initSearchIndexes() throws IOException {
@@ -174,11 +245,14 @@ public class SearchIndexManager {
 
     public void reindex() {
         try {
-            esManager.cleanIndex(esManager.ELASTIC_INDEX_PREDICATE);
-            esManager.cleanIndex(esManager.ELASTIC_INDEX_CLASS);
+            esManager.cleanIndex(esManager.ELASTIC_INDEX_RESOURCE);
             esManager.cleanIndex(esManager.ELASTIC_INDEX_MODEL);
+            logger.info("Cleaned indexes");
+            createIndex(esManager.ELASTIC_INDEX_RESOURCE, getResourceMappings());
+            createIndex(esManager.ELASTIC_INDEX_MODEL, getModelMappings());
             initSearchIndexes();
         } catch(IOException ex) {
+            logger.warn("Reindex failed!");
             logger.warn(ex.toString());
         }
     }
@@ -189,13 +263,9 @@ public class SearchIndexManager {
     }
 
     public void indexClass(AbstractClass classResource) {
-        IndexClass indexClass = new IndexClass(classResource);
-        try {
-            logger.debug(modelManager.mapObjectToString(indexClass));
-        } catch (IOException ex) {
-            logger.warn(ex.toString());
-        }
-        esManager.addToIndex(ElasticConnector.ELASTIC_INDEX_CLASS, LDHelper.encode(indexClass.getId()), indexClass);
+        IndexClassDTO indexClass = new IndexClassDTO(classResource);
+        logger.debug("Indexing: "+indexClass.getId());
+        esManager.addToIndex(ElasticConnector.ELASTIC_INDEX_RESOURCE, LDHelper.encode(indexClass.getId()), indexClass);
     }
 
     public void removeClass(String id) {
@@ -208,13 +278,9 @@ public class SearchIndexManager {
     }
 
     public void indexPredicate(AbstractPredicate predicateResource) {
-        IndexPredicate indexPredicate = new IndexPredicate(predicateResource);
-        try {
-            logger.debug(modelManager.mapObjectToString(indexPredicate));
-        } catch (IOException ex) {
-            logger.warn(ex.toString());
-        }
-        esManager.addToIndex(ElasticConnector.ELASTIC_INDEX_PREDICATE, LDHelper.encode(indexPredicate.getId()), indexPredicate);
+        IndexPredicateDTO indexPredicate = new IndexPredicateDTO(predicateResource);
+        logger.info("Indexing: "+indexPredicate.getId());
+        esManager.addToIndex(ElasticConnector.ELASTIC_INDEX_RESOURCE, LDHelper.encode(indexPredicate.getId()), indexPredicate);
     }
 
     public void removePredicate(String id) {
@@ -226,18 +292,58 @@ public class SearchIndexManager {
     }
 
     public void indexModel(DataModel model) {
-        IndexModel indexModel = new IndexModel(model);
-        try {
-            logger.debug(modelManager.mapObjectToString(indexModel));
-        } catch (IOException ex) {
-            logger.warn(ex.toString());
-        }
+        IndexModelDTO indexModel = new IndexModelDTO(model);
+        logger.info("Indexing: "+indexModel.getId());
         esManager.addToIndex(ElasticConnector.ELASTIC_INDEX_MODEL, LDHelper.encode(indexModel.getId()), indexModel);
     }
 
     public void indexModel(String id,
                            Object obj) {
         esManager.addToIndex(esManager.ELASTIC_INDEX_MODEL, id, obj);
+    }
+
+    public ModelSearchResponse searchModels(ModelSearchRequest request) {
+        request.setQuery(request.getQuery() != null ? request.getQuery().trim() : "");
+
+        Map<String, List<DeepSearchHitListDTO<?>>> deepSearchHits = null;
+
+        if (request.isSearchResources() && !request.getQuery().isEmpty()) {
+            try {
+                SearchRequest query = deepResourceQueryFactory.createQuery(request.getQuery(), request.getPrefLang());
+                SearchResponse response = esClient.search(query, RequestOptions.DEFAULT);
+                deepSearchHits = deepResourceQueryFactory.parseResponse(response);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        try {
+            SearchRequest finalQuery;
+            if (deepSearchHits != null && !deepSearchHits.isEmpty()) {
+                Set<String> additionalModelIds = deepSearchHits.keySet();
+                logger.debug("Deep model search resulted in " + additionalModelIds.size() + " model matches");
+                finalQuery = modelQueryFactory.createQuery(request, additionalModelIds);
+            } else {
+                finalQuery = modelQueryFactory.createQuery(request);
+            }
+            SearchResponse response = esClient.search(finalQuery, RequestOptions.DEFAULT);
+            return modelQueryFactory.parseResponse(response, request, deepSearchHits);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+    }
+
+    public ResourceSearchResponse searchResources(ResourceSearchRequest request) {
+        request.setQuery(request.getQuery() != null ? request.getQuery().trim() : "");
+        try {
+            SearchRequest finalQuery;
+            finalQuery = resourceQueryFactory.createQuery(request);
+            SearchResponse response = esClient.search(finalQuery, RequestOptions.DEFAULT);
+            return resourceQueryFactory.parseResponse(response, request);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
 }

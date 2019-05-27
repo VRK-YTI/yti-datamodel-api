@@ -25,6 +25,10 @@ public class JerseyResponseManager {
     public Response ok() {
         return Response.status(200).build();    
     }
+
+    public Response ok(Object obj) {
+        return Response.status(200).entity(obj).build();
+    }
     
     public Response okModel(Model model) {
         return Response.status(200).entity(modelManager.writeModelToJSONLDString(model)).build();

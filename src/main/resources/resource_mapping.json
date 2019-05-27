@@ -1,0 +1,44 @@
+{
+  "mappings": {
+    "doc": {
+      "dynamic_templates": [
+        {
+          "label": {
+            "path_match": "label.*",
+            "mapping": {
+              "type": "text"
+            }
+          }
+        },
+        {
+          "comment": {
+            "path_match": "comment.*",
+            "mapping": {
+              "type": "text"
+            }
+          }
+        }
+      ],
+      "properties": {
+        "id": {
+          "type": "keyword"
+        },
+        "isDefinedBy": {
+          "type": "keyword"
+        },
+        "status": {
+          "type": "keyword"
+        },
+        "modified": {
+          "type": "date"
+        },
+        "type": {
+          "type": "keyword"
+        },
+        "range": {
+          "type": "keyword"
+        }
+      }
+    }
+  }
+}

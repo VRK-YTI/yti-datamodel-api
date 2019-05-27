@@ -111,4 +111,8 @@ public class DataModel extends AbstractModel {
     public String getPrefix() {
         return this.asGraph().getRequiredProperty(ResourceFactory.createResource(this.getId()),LDHelper.curieToProperty("dcap:preferredXMLNamespacePrefix")).getString();
     }
+
+    public String getNamespace() {
+        return this.asGraph().getRequiredProperty(ResourceFactory.createResource(this.getId()),LDHelper.curieToProperty("dcap:preferredXMLNamespaceName")).getString();
+    }
 }

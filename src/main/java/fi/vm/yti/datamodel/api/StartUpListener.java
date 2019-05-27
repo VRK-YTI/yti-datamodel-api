@@ -76,7 +76,7 @@ public class StartUpListener  {
     private void initFramingCache() {
         try {
 			elasticConnector.initCache();
-            indexManager.initSearchIndexes();
+            indexManager.reindex();
 		} catch (IOException e) {
 			logger.warn("ES init failed!");
 			logger.warn(e.getMessage());
