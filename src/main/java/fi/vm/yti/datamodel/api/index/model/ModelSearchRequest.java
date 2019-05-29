@@ -1,15 +1,12 @@
 package fi.vm.yti.datamodel.api.index.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonInclude;
-
 public class ModelSearchRequest {
 
     private String query;
 
     private boolean searchResources;
 
-    private String prefLang;
+    private String sortLang;
 
     private Integer pageSize;
 
@@ -19,12 +16,12 @@ public class ModelSearchRequest {
 
     public ModelSearchRequest(final String query,
                               final boolean searchResources,
-                              final String prefLang,
+                              final String sortLang,
                               final Integer pageSize,
                               final Integer pageFrom) {
         this.query = query;
         this.searchResources = searchResources;
-        this.prefLang = prefLang;
+        this.sortLang = sortLang;
         this.pageSize = pageSize;
         this.pageFrom = pageFrom;
     }
@@ -45,12 +42,12 @@ public class ModelSearchRequest {
         this.searchResources = searchResources;
     }
 
-    public String getPrefLang() {
-        return prefLang;
+    public String getSortLang() {
+        return sortLang;
     }
 
-    public void setPrefLang(final String prefLang) {
-        this.prefLang = prefLang;
+    public void setSortLang(final String sortLang) {
+        this.sortLang = sortLang;
     }
 
     public Integer getPageSize() {
@@ -74,7 +71,7 @@ public class ModelSearchRequest {
         return "ModelSearchRequest{" +
             "query='" + query + '\'' +
             ", searchResources=" + searchResources +
-            ", prefLang='" + prefLang + '\'' +
+            ", sortLang='" + sortLang + '\'' +
             ", pageSize=" + pageSize +
             ", pageFrom=" + pageFrom +
             '}';

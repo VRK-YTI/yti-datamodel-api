@@ -12,6 +12,7 @@ import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.index.query.MultiMatchQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.query.QueryStringQueryBuilder;
 import org.elasticsearch.index.query.TermsQueryBuilder;
 import org.elasticsearch.index.search.MatchQuery;
 import org.elasticsearch.search.SearchHit;
@@ -66,11 +67,10 @@ public class ModelQueryFactory {
         if (pageSize != null)
             sourceBuilder.size(pageSize);
 
-        MultiMatchQueryBuilder labelQuery = null;
+        QueryStringQueryBuilder labelQuery = null;
 
         if (!query.isEmpty()) {
-            labelQuery = QueryBuilders.multiMatchQuery(query).field("label.*").type(MatchQuery.Type.PHRASE_PREFIX);
-            sourceBuilder.highlighter(new HighlightBuilder().preTags("<b>").postTags("</b>").field("label.*"));
+            labelQuery = QueryBuilders.queryStringQuery(query+" OR "+query+"* OR *"+query).field("label.*");
         }
 
         TermsQueryBuilder idQuery = null;
@@ -95,6 +95,8 @@ public class ModelQueryFactory {
         } else {
             sourceBuilder.query(QueryBuilders.matchAllQuery());
         }
+
+        logger.debug(sourceBuilder.toString());
 
         SearchRequest sr = new SearchRequest("dm_models")
             .source(sourceBuilder);

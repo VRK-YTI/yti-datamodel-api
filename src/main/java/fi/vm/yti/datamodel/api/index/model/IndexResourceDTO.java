@@ -94,12 +94,24 @@ public class IndexResourceDTO {
         this.range = range;
     }
 
+    public void highlightLabels(String highlightText) {
+        if(highlightText!=null && highlightText.length()>0) {
+            this.label.forEach((lang, label) -> {
+                this.label.put(lang, label.replaceAll("(?i)(?<text>" + highlightText + ")", "<b>${text}</b>"));
+            });
+        }
+    }
+
     public Map<String, String> getLabel() {
         return label;
     }
 
     public void setLabel(final Map<String, String> label) {
         this.label = label;
+    }
+
+    public void putLabel(String lang, String label) {
+        this.label.put(lang,label);
     }
 
     public Map<String, String> getComment() {

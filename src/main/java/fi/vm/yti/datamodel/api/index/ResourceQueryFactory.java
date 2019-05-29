@@ -13,6 +13,7 @@ import org.elasticsearch.index.query.MultiMatchQueryBuilder;
 import org.elasticsearch.index.query.Operator;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.query.QueryStringQueryBuilder;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
@@ -58,7 +59,9 @@ public class ResourceQueryFactory {
                                       Integer pageSize,
                                       Integer pageFrom) {
 
-        //TODO: Validate sortOrder: asc||desc ... and sortField: modified || label || comment || isDefinedBy etc?
+        if(sortField!=null && !sortField.matches("modified|label|comment|isDefinedBy")) {
+            throw new IllegalArgumentException("Allowed fields: modified, label, comment, isDefinedBy");
+        }
 
         SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
 
@@ -78,32 +81,26 @@ public class ResourceQueryFactory {
             mustList.add(QueryBuilders.matchQuery("isDefinedBy", modelId).operator(Operator.AND));
         }
 
-        MultiMatchQueryBuilder labelQuery = null;
+        QueryStringQueryBuilder labelQuery = null;
 
         if (!query.isEmpty()) {
-            labelQuery = QueryBuilders.multiMatchQuery(query,"label.*")
-                .type(MultiMatchQueryBuilder.Type.PHRASE_PREFIX);
+            labelQuery = QueryBuilders.queryStringQuery(query+" OR "+query+"* OR *"+query).field("label.*");
 
             if (sortLang != null && sortLangPattern.matcher(sortLang).matches()) {
                 labelQuery = labelQuery.field("label." + sortLang, 10);
             }
 
-            if (sortLang != null && sortLangPattern.matcher(sortLang).matches()) {
-                labelQuery.field("label." + sortLang, 10);
-            }
-
-            sourceBuilder.highlighter(new HighlightBuilder().preTags("<b>").postTags("</b>").field("label.*"));
-            mustList.add(labelQuery.operator(Operator.AND));
+            mustList.add(labelQuery);
         }
 
-        if ((query!=null && !query.isEmpty()) || type!=null || modelId!=null) {
+        if (!query.isEmpty() || type!=null || modelId!=null) {
             sourceBuilder.query(boolQuery);
         } else {
             sourceBuilder.query(QueryBuilders.matchAllQuery());
         }
 
         if(sortField!=null && !sortField.isEmpty() && sortLang!=null && !sortLang.isEmpty()) {
-            if(sortOrder==null || sortOrder!=null && sortOrder.equals("undefined") || sortOrder!=null && sortOrder.isEmpty()) sortOrder = "desc";
+            sortOrder = (sortOrder==null ? "desc" : (sortOrder.matches("asc|desc") ? sortOrder : "desc"));
             FieldSortBuilder fieldSort = new FieldSortBuilder(sortField+(sortField.equals("label")||sortField.equals("comment") ? "."+sortLang : "")).order(SortOrder.fromString(sortOrder));
             fieldSort.missing("_last");
             sourceBuilder.sort(fieldSort);
@@ -111,6 +108,8 @@ public class ResourceQueryFactory {
 
         SearchRequest sr = new SearchRequest("dm_resources")
             .source(sourceBuilder);
+
+        logger.debug(sr.source().toString());
 
         return sr;
 
@@ -129,6 +128,7 @@ public class ResourceQueryFactory {
 
             for (SearchHit hit : hits) {
                 IndexResourceDTO res = objectMapper.readValue(hit.getSourceAsString(), IndexResourceDTO.class);
+                res.highlightLabels(request.getQuery());
                 resources.add(res);
             }
 
