@@ -38,9 +38,7 @@ public class ElasticConnector {
     private final ObjectMapper objectMapper;
 
     public static final String ELASTIC_INDEX_VIS_MODEL = "dm_vis_models";
-    public static final String ELASTIC_INDEX_CLASS = "dm_classes";
     public static final String ELASTIC_INDEX_RESOURCE = "dm_resources";
-    public static final String ELASTIC_INDEX_PREDICATE = "dm_predicates";
     public static final String ELASTIC_INDEX_MODEL = "dm_models";
     public static final String[] indexes = new String[]{ ELASTIC_INDEX_VIS_MODEL, ELASTIC_INDEX_MODEL, ELASTIC_INDEX_RESOURCE };
 

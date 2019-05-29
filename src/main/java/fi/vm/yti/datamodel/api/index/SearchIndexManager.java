@@ -259,7 +259,7 @@ public class SearchIndexManager {
 
     public void indexClass(String id,
                            Object obj) {
-        esManager.addToIndex(esManager.ELASTIC_INDEX_CLASS, id, obj);
+        esManager.addToIndex(esManager.ELASTIC_INDEX_RESOURCE, id, obj);
     }
 
     public void indexClass(AbstractClass classResource) {
@@ -269,12 +269,12 @@ public class SearchIndexManager {
     }
 
     public void removeClass(String id) {
-        esManager.removeFromIndex(LDHelper.encode(id), esManager.ELASTIC_INDEX_CLASS);
+        esManager.removeFromIndex(LDHelper.encode(id), esManager.ELASTIC_INDEX_RESOURCE);
     }
 
     public void indexPredicate(String id,
                                Object obj) {
-        esManager.addToIndex(esManager.ELASTIC_INDEX_PREDICATE, id, obj);
+        esManager.addToIndex(esManager.ELASTIC_INDEX_RESOURCE, id, obj);
     }
 
     public void indexPredicate(AbstractPredicate predicateResource) {
@@ -284,7 +284,7 @@ public class SearchIndexManager {
     }
 
     public void removePredicate(String id) {
-        esManager.removeFromIndex(LDHelper.encode(id), esManager.ELASTIC_INDEX_PREDICATE);
+        esManager.removeFromIndex(LDHelper.encode(id), esManager.ELASTIC_INDEX_RESOURCE);
     }
 
     public void removeModel(String id) {
