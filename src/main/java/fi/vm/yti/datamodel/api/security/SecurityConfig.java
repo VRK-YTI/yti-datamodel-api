@@ -3,6 +3,7 @@ package fi.vm.yti.datamodel.api.security;
 import fi.vm.yti.security.config.FakeUserLogin;
 import fi.vm.yti.security.config.FakeUserLoginProvider;
 import fi.vm.yti.security.config.SecurityBaseConfig;
+
 import org.jetbrains.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;

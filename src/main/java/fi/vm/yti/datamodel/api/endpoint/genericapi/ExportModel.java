@@ -2,6 +2,7 @@ package fi.vm.yti.datamodel.api.endpoint.genericapi;
 
 import fi.vm.yti.datamodel.api.service.*;
 import io.swagger.annotations.*;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -9,11 +10,13 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
-import org.slf4j.Logger;import org.slf4j.LoggerFactory;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Component
 @Path("exportModel")
-@Api(tags = {"Model"}, description = "Export models")
+@Api(tags = { "Model" }, description = "Export models")
 public class ExportModel {
 
     private static final Logger logger = LoggerFactory.getLogger(ExportModel.class.getName());
@@ -46,59 +49,59 @@ public class ExportModel {
     @GET
     @ApiOperation(value = "Get model from service", notes = "More notes about this method")
     @ApiResponses(value = {
-            @ApiResponse(code = 400, message = "Invalid model supplied"),
-            @ApiResponse(code = 403, message = "Invalid model id"),
-            @ApiResponse(code = 404, message = "Service not found"),
-            @ApiResponse(code = 500, message = "Internal server error")
+        @ApiResponse(code = 400, message = "Invalid model supplied"),
+        @ApiResponse(code = 403, message = "Invalid model id"),
+        @ApiResponse(code = 404, message = "Service not found"),
+        @ApiResponse(code = 500, message = "Internal server error")
     })
     public Response json(
-            @ApiParam(value = "Requested resource", defaultValue = "default") @QueryParam("graph") String graph,
-            @ApiParam(value = "Raw / PlainText boolean", defaultValue = "false") @QueryParam("raw") boolean raw,
-            @ApiParam(value = "Languages to export") @QueryParam("lang") String lang,
-            @ApiParam(value = "Content-type", required = true, allowableValues = "application/ld+json,text/turtle,application/rdf+xml,application/ld+json+context,application/schema+json,application/xml,application/vnd.oai.openapi+json") @QueryParam("content-type") String ctype) {
+        @ApiParam(value = "Requested resource", defaultValue = "default") @QueryParam("graph") String graph,
+        @ApiParam(value = "Raw / PlainText boolean", defaultValue = "false") @QueryParam("raw") boolean raw,
+        @ApiParam(value = "Languages to export") @QueryParam("lang") String lang,
+        @ApiParam(value = "Content-type", required = true, allowableValues = "application/ld+json,text/turtle,application/rdf+xml,application/ld+json+context,application/schema+json,application/xml,application/vnd.oai.openapi+json") @QueryParam("content-type") String ctype) {
 
         /* Check that URIs are valid */
-        if(idManager.isInvalid(graph)) {
+        if (idManager.isInvalid(graph)) {
             return jerseyResponseManager.invalidIRI();
         }
 
-        if(ctype==null) ctype = "application/ld+json";
+        if (ctype == null) ctype = "application/ld+json";
 
         ctype = ctype.replace(" ", "+");
 
-        logger.info("Exporting format: "+ctype);
+        logger.info("Exporting format: " + ctype);
 
-        if(ctype.equals("application/ld+json+context")) {
+        if (ctype.equals("application/ld+json+context")) {
             String context = contextWriter.newModelContext(graph);
-            if(context!=null) {
-                return jerseyResponseManager.ok(context,raw?"text/plain;charset=utf-8":"application/json");
+            if (context != null) {
+                return jerseyResponseManager.ok(context, raw ? "text/plain;charset=utf-8" : "application/json");
             } else {
                 return jerseyResponseManager.notFound();
             }
-        } else if(ctype.equals("application/vnd+oai+openapi+json")) {
-            String apiStub = openAPIWriter.newOpenApiStub(graph,lang);
-            if(apiStub!=null) {
-                return jerseyResponseManager.ok(apiStub,raw?"text/plain;charset=utf-8":"application/json");
+        } else if (ctype.equals("application/vnd+oai+openapi+json")) {
+            String apiStub = openAPIWriter.newOpenApiStub(graph, lang);
+            if (apiStub != null) {
+                return jerseyResponseManager.ok(apiStub, raw ? "text/plain;charset=utf-8" : "application/json");
             }
-        } else if(ctype.equals("application/schema+json")) {
+        } else if (ctype.equals("application/schema+json")) {
             String schema = null;
-            if(lang!=null && !lang.equals("undefined") && !lang.equals("null")) {
-                logger.info("Exporting schema in "+lang);
-                schema = jsonSchemaWriter.newModelSchema(graph,lang);
+            if (lang != null && !lang.equals("undefined") && !lang.equals("null")) {
+                logger.info("Exporting schema in " + lang);
+                schema = jsonSchemaWriter.newModelSchema(graph, lang);
             } else {
                 schema = jsonSchemaWriter.newMultilingualModelSchema(graph);
             }
-            if(schema!=null) {
-                return jerseyResponseManager.ok(schema,raw?"text/plain;charset=utf-8":"application/schema+json");
+            if (schema != null) {
+                return jerseyResponseManager.ok(schema, raw ? "text/plain;charset=utf-8" : "application/schema+json");
             } else {
                 return jerseyResponseManager.langNotDefined();
             }
-        } else if(ctype.equals("application/xml")) {
+        } else if (ctype.equals("application/xml")) {
 
             String schema = xmlSchemaWriter.newModelSchema(graph, lang);
 
-            if(schema!=null) {
-                return jerseyResponseManager.ok(schema,raw?"text/plain;charset=utf-8":"application/xml");
+            if (schema != null) {
+                return jerseyResponseManager.ok(schema, raw ? "text/plain;charset=utf-8" : "application/xml");
             } else {
                 return jerseyResponseManager.langNotDefined();
             }

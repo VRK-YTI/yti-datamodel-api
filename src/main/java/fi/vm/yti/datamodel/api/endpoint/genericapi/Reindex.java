@@ -23,7 +23,7 @@ import io.swagger.annotations.ApiResponses;
 
 @Component
 @Path("reindex")
-@Api(tags = {"Admin"})
+@Api(tags = { "Admin" })
 public class Reindex {
 
     private final SearchIndexManager searchIndexManager;
@@ -46,7 +46,7 @@ public class Reindex {
     @Produces("application/json")
     @ApiOperation(value = "Starts ES reindexing", notes = "Authentication required")
     @ApiResponses(value = {
-            @ApiResponse(code = 200, message = "OK")
+        @ApiResponse(code = 200, message = "OK")
     })
     public Response json() {
         if (!authorizationManager.hasRightToDropDatabase()) {

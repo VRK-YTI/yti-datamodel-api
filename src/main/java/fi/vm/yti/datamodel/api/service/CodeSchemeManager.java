@@ -1,10 +1,11 @@
 /*
- * Licensed under the European Union Public Licence (EUPL) V.1.1 
+ * Licensed under the European Union Public Licence (EUPL) V.1.1
  */
 package fi.vm.yti.datamodel.api.service;
 
 import fi.vm.yti.datamodel.api.config.ApplicationProperties;
 import fi.vm.yti.datamodel.api.utils.LDHelper;
+
 import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.datatypes.xsd.XSDDateTime;
 import org.apache.jena.query.*;
@@ -38,41 +39,44 @@ public class CodeSchemeManager {
         jenaClient.deleteModelFromScheme(graph);
     }
 
-    public Model getSchemeGraph(String graph) { return jenaClient.getModelFromSchemes(graph);}
+    public Model getSchemeGraph(String graph) {
+        return jenaClient.getModelFromSchemes(graph);
+    }
 
     /**
      * Returns date when the model was last modified from the Export graph
+     *
      * @param graphName Graph IRI as string
      * @return Returns date
      */
     public Date lastModified(String scheme) {
-    
-     ParameterizedSparqlString pss = new ParameterizedSparqlString();
+
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
         String selectResources =
-                "SELECT ?date WHERE { "
-                + "GRAPH ?graph { "+
+            "SELECT ?date WHERE { "
+                + "GRAPH ?graph { " +
                 " ?codeScheme a iow:FCodeScheme . "
-                + "?codeScheme dcterms:modified ?date . "+
+                + "?codeScheme dcterms:modified ?date . " +
                 "}}";
 
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
         pss.setCommandText(selectResources);
         pss.setIri("codeScheme", scheme);
 
-            ResultSet results = jenaClient.selectQuery(endpointServices.getSchemesSparqlAddress(), pss.asQuery());
+        ResultSet results = jenaClient.selectQuery(endpointServices.getSchemesSparqlAddress(), pss.asQuery());
 
-            Date modified = null;
+        Date modified = null;
 
-            while (results.hasNext()) {
-                QuerySolution soln = results.nextSolution();
-                if (soln.contains("date")) {
+        while (results.hasNext()) {
+            QuerySolution soln = results.nextSolution();
+            if (soln.contains("date")) {
 
-                    Literal liteDate = soln.getLiteral("date");
-                    modified = ((XSDDateTime) XSDDatatype.XSDdateTime.parse(liteDate.getString())).asCalendar().getTime();
-                }
+                Literal liteDate = soln.getLiteral("date");
+                modified = ((XSDDateTime) XSDDatatype.XSDdateTime.parse(liteDate.getString())).asCalendar().getTime();
             }
+        }
 
-            return modified;
+        return modified;
     }
 
 }

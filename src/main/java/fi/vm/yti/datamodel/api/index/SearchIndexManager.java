@@ -100,7 +100,7 @@ public class SearchIndexManager {
             bulkRequest.add(indexRequest);
         });
         BulkResponse bresp = esClient.bulk(bulkRequest, RequestOptions.DEFAULT);
-        logger.debug("Bulk insert status: "+bresp.status().getStatus());
+        logger.debug("Bulk insert status: " + bresp.status().getStatus());
     }
 
     public void initModelIndex() throws IOException {
@@ -175,14 +175,14 @@ public class SearchIndexManager {
 
     }
 
-
-    public void createIndex(String index, String mapping) {
+    public void createIndex(String index,
+                            String mapping) {
         CreateIndexRequest request = new CreateIndexRequest(index);
         try {
             request.source(mapping, XContentType.JSON);
-            CreateIndexResponse createIndexResponse = esClient.indices().create(request,RequestOptions.DEFAULT);
-            logger.debug("Index created: "+createIndexResponse.isAcknowledged());
-        } catch(IOException ex) {
+            CreateIndexResponse createIndexResponse = esClient.indices().create(request, RequestOptions.DEFAULT);
+            logger.debug("Index created: " + createIndexResponse.isAcknowledged());
+        } catch (IOException ex) {
             logger.warn("Index creation failed!");
             logger.warn(ex.toString());
             ex.printStackTrace();
@@ -190,14 +190,15 @@ public class SearchIndexManager {
 
     }
 
-    public void updateMapping(String index, Object mapping) {
+    public void updateMapping(String index,
+                              Object mapping) {
         PutMappingRequest request = new PutMappingRequest(index);
         request.type("doc");
         try {
             request.source(mapping);
             AcknowledgedResponse putMappingResponse = esClient.indices().putMapping(request, RequestOptions.DEFAULT);
-            logger.debug("Mapping updated: "+putMappingResponse.isAcknowledged());
-        } catch(IOException ex) {
+            logger.debug("Mapping updated: " + putMappingResponse.isAcknowledged());
+        } catch (IOException ex) {
             logger.warn("Mapping update failed!");
             logger.warn(ex.toString());
             ex.printStackTrace();
@@ -251,7 +252,7 @@ public class SearchIndexManager {
             createIndex(esManager.ELASTIC_INDEX_RESOURCE, getResourceMappings());
             createIndex(esManager.ELASTIC_INDEX_MODEL, getModelMappings());
             initSearchIndexes();
-        } catch(IOException ex) {
+        } catch (IOException ex) {
             logger.warn("Reindex failed!");
             logger.warn(ex.toString());
         }
@@ -264,7 +265,7 @@ public class SearchIndexManager {
 
     public void indexClass(AbstractClass classResource) {
         IndexClassDTO indexClass = new IndexClassDTO(classResource);
-        logger.debug("Indexing: "+indexClass.getId());
+        logger.debug("Indexing: " + indexClass.getId());
         esManager.addToIndex(ElasticConnector.ELASTIC_INDEX_RESOURCE, LDHelper.encode(indexClass.getId()), indexClass);
     }
 
@@ -279,7 +280,7 @@ public class SearchIndexManager {
 
     public void indexPredicate(AbstractPredicate predicateResource) {
         IndexPredicateDTO indexPredicate = new IndexPredicateDTO(predicateResource);
-        logger.info("Indexing: "+indexPredicate.getId());
+        logger.info("Indexing: " + indexPredicate.getId());
         esManager.addToIndex(ElasticConnector.ELASTIC_INDEX_RESOURCE, LDHelper.encode(indexPredicate.getId()), indexPredicate);
     }
 
@@ -293,7 +294,7 @@ public class SearchIndexManager {
 
     public void indexModel(DataModel model) {
         IndexModelDTO indexModel = new IndexModelDTO(model);
-        logger.info("Indexing: "+indexModel.getId());
+        logger.info("Indexing: " + indexModel.getId());
         esManager.addToIndex(ElasticConnector.ELASTIC_INDEX_MODEL, LDHelper.encode(indexModel.getId()), indexModel);
     }
 
@@ -311,7 +312,7 @@ public class SearchIndexManager {
             try {
                 SearchRequest query = deepResourceQueryFactory.createQuery(request.getQuery(), request.getSortLang());
                 SearchResponse response = esClient.search(query, RequestOptions.DEFAULT);
-                deepSearchHits = deepResourceQueryFactory.parseResponse(response,request);
+                deepSearchHits = deepResourceQueryFactory.parseResponse(response, request);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }

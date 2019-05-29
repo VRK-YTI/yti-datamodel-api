@@ -5,6 +5,7 @@ package fi.vm.yti.datamodel.api.endpoint.concepts;
 
 import fi.vm.yti.datamodel.api.service.TermedTerminologyManager;
 import io.swagger.annotations.*;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -16,7 +17,7 @@ import javax.ws.rs.core.Response;
 
 @Component
 @Path("conceptSearch")
-@Api(tags = {"Concept"}, description = "Concepts search from termed")
+@Api(tags = { "Concept" }, description = "Concepts search from termed")
 public class ConceptSearch {
 
     private final TermedTerminologyManager termedTerminologyManager;
@@ -30,23 +31,23 @@ public class ConceptSearch {
     @Produces("application/ld+json")
     @ApiOperation(value = "Get available concepts", notes = "Search from termed API")
     @ApiResponses(value = {
-            @ApiResponse(code = 200, message = "Concepts"),
-            @ApiResponse(code = 406, message = "Term not defined"),
-            @ApiResponse(code = 500, message = "Internal server error")
+        @ApiResponse(code = 200, message = "Concepts"),
+        @ApiResponse(code = 406, message = "Term not defined"),
+        @ApiResponse(code = 500, message = "Internal server error")
     })
     public Response concept(
-            @ApiParam(value = "Term", required = true)
-            @QueryParam("term") String term,
-            @ApiParam(value = "namespace")
-            @QueryParam("namespace") String namespace,
-            @ApiParam(value = "graphId")
-            @QueryParam("graphId") String graphId) {
+        @ApiParam(value = "Term", required = true)
+        @QueryParam("term") String term,
+        @ApiParam(value = "namespace")
+        @QueryParam("namespace") String namespace,
+        @ApiParam(value = "graphId")
+        @QueryParam("graphId") String graphId) {
 
-      if(!term.endsWith("*"))  {
-            term+="*";
+        if (!term.endsWith("*")) {
+            term += "*";
         }
 
-        return termedTerminologyManager.searchConceptFromTerminologyAPI(term,graphId);
-        
+        return termedTerminologyManager.searchConceptFromTerminologyAPI(term, graphId);
+
     }
 }

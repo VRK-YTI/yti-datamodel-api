@@ -4,13 +4,14 @@ import fi.vm.yti.datamodel.api.service.RHPUsersManager;
 import fi.vm.yti.security.AuthenticatedUserProvider;
 import fi.vm.yti.security.YtiUser;
 import io.swagger.annotations.*;
+
 import org.springframework.stereotype.Component;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
 
 @Component
-@Api(tags = {"Users"}, description = "User requests")
+@Api(tags = { "Users" }, description = "User requests")
 @Path("userRequest")
 public class UserRequest {
 
@@ -26,7 +27,7 @@ public class UserRequest {
     @GET
     @ApiOperation(value = "Get user requests")
     @ApiResponses(value = {
-            @ApiResponse(code = 200, message = "List of user objects")
+        @ApiResponse(code = 200, message = "List of user objects")
     })
     @Produces("application/json")
     public Response getUserRequests() {
@@ -38,8 +39,8 @@ public class UserRequest {
         }
 
         return Response.status(Response.Status.OK)
-                .entity(rhpUsersManager.getUserRequests(user.getEmail()))
-                .build();
+            .entity(rhpUsersManager.getUserRequests(user.getEmail()))
+            .build();
     }
 
     @POST

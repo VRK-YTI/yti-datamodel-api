@@ -4,6 +4,7 @@ import fi.vm.yti.datamodel.api.service.GraphManager;
 import fi.vm.yti.datamodel.api.service.IDManager;
 import fi.vm.yti.datamodel.api.service.JerseyResponseManager;
 import io.swagger.annotations.*;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -15,7 +16,7 @@ import javax.ws.rs.core.Response;
 
 @Component
 @Path("freeID")
-@Api(tags = {"Resource"}, description = "Test if ID is valid and not in use")
+@Api(tags = { "Resource" }, description = "Test if ID is valid and not in use")
 public class FreeID {
 
     private final IDManager idManager;
@@ -35,11 +36,11 @@ public class FreeID {
     @Produces("application/json")
     @ApiOperation(value = "Returns true if ID is valid and not in use", notes = "ID must be valid IRI")
     @ApiResponses(value = {
-            @ApiResponse(code = 200, message = "False or True response")
+        @ApiResponse(code = 200, message = "False or True response")
     })
     public Response json(@ApiParam(value = "ID", required = true) @QueryParam("id") String id) {
 
-        if(idManager.isInvalid(id)) {
+        if (idManager.isInvalid(id)) {
             return jerseyResponseManager.sendBoolean(false);
         }
 

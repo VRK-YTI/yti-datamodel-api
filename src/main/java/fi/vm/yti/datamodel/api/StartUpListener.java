@@ -1,4 +1,5 @@
 package fi.vm.yti.datamodel.api;
+
 import fi.vm.yti.datamodel.api.index.ElasticConnector;
 import fi.vm.yti.datamodel.api.index.SearchIndexManager;
 import fi.vm.yti.datamodel.api.service.GraphManager;
@@ -6,6 +7,7 @@ import fi.vm.yti.datamodel.api.service.NamespaceManager;
 import fi.vm.yti.datamodel.api.service.RHPOrganizationManager;
 import fi.vm.yti.datamodel.api.service.TermedTerminologyManager;
 import fi.vm.yti.migration.MigrationInitializer;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -14,10 +16,12 @@ import java.io.IOException;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import org.slf4j.Logger;import org.slf4j.LoggerFactory;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Component
-public class StartUpListener  {
+public class StartUpListener {
 
     private static final Logger logger = LoggerFactory.getLogger(StartUpListener.class.getName());
 
@@ -48,7 +52,7 @@ public class StartUpListener  {
     @PostConstruct
     public void contextInitialized() {
 
-        logger.info( "System is starting ...");
+        logger.info("System is starting ...");
 
         initDefaultNamespaces();
         initRHPOrganizations();
@@ -57,7 +61,7 @@ public class StartUpListener  {
 
     @PreDestroy
     public void contextDestroyed() {
-        logger.info( "System is closing ...");
+        logger.info("System is closing ...");
     }
 
     @Scheduled(cron = "0 */5 * * * *")
@@ -72,14 +76,14 @@ public class StartUpListener  {
     private void initDefaultNamespaces() {
         namespaceManager.resolveDefaultNamespaceToTheCore();
     }
-    
+
     private void initFramingCache() {
         try {
-			elasticConnector.initCache();
+            elasticConnector.initCache();
             indexManager.reindex();
-		} catch (IOException e) {
-			logger.warn("ES init failed!");
-			logger.warn(e.getMessage());
-		}
+        } catch (IOException e) {
+            logger.warn("ES init failed!");
+            logger.warn(e.getMessage());
+        }
     }
 }

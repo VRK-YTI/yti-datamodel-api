@@ -1,6 +1,7 @@
 package fi.vm.yti.datamodel.api.service;
 
 import fi.vm.yti.datamodel.api.config.ApplicationProperties;
+
 import org.glassfish.jersey.client.ClientProperties;
 import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,31 +18,32 @@ public class ClientFactory {
     private final ApplicationProperties properties;
 
     @Autowired
-    ClientFactory(SSLContext sslContext, ApplicationProperties properties) {
+    ClientFactory(SSLContext sslContext,
+                  ApplicationProperties properties) {
         this.sslContext = sslContext;
         this.properties = properties;
     }
 
     public Client create() {
         return ClientBuilder.newBuilder()
-                .sslContext(sslContext)
-                .build();
+            .sslContext(sslContext)
+            .build();
     }
 
     public Client createWithLongTimeout() {
         return ClientBuilder.newBuilder()
-                .sslContext(sslContext)
-                .property(ClientProperties.CONNECT_TIMEOUT, 180000)
-                .property(ClientProperties.READ_TIMEOUT, 180000)
-                .build();
+            .sslContext(sslContext)
+            .property(ClientProperties.CONNECT_TIMEOUT, 180000)
+            .property(ClientProperties.READ_TIMEOUT, 180000)
+            .build();
     }
 
     public Client createTermedClient() {
 
         Client client = createWithLongTimeout();
         client.register(HttpAuthenticationFeature.basic(
-                properties.getDefaultTermedAPIUser(),
-                properties.getDefaultTermedAPIUserSecret()
+            properties.getDefaultTermedAPIUser(),
+            properties.getDefaultTermedAPIUserSecret()
         ));
 
         return client;

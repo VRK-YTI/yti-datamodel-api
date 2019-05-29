@@ -2,6 +2,7 @@ package fi.vm.yti.datamodel.api.service;
 
 import fi.vm.yti.datamodel.api.config.ApplicationProperties;
 import fi.vm.yti.datamodel.api.utils.LDHelper;
+
 import org.apache.jena.query.ParameterizedSparqlString;
 import org.apache.jena.query.Query;
 import org.apache.jena.query.QueryExecution;
@@ -18,11 +19,13 @@ import org.springframework.stereotype.Service;
 
 import javax.json.*;
 import javax.ws.rs.core.Response;
+
 import java.io.InputStream;
 import java.io.StringWriter;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,8 +60,8 @@ public class RHPOrganizationManager {
         Model model = ModelFactory.createDefaultModel();
         model.setNsPrefix("dcterms", "http://purl.org/dc/terms/");
         model.setNsPrefix("iow", "http://uri.suomi.fi/datamodel/ns/iow#");
-        model.setNsPrefix("skos","http://www.w3.org/2004/02/skos/core#");
-        model.setNsPrefix("foaf","http://xmlns.com/foaf/0.1/");
+        model.setNsPrefix("skos", "http://www.w3.org/2004/02/skos/core#");
+        model.setNsPrefix("foaf", "http://xmlns.com/foaf/0.1/");
 
         Response response = getOrganizations();
 
@@ -76,37 +79,37 @@ public class RHPOrganizationManager {
                 JsonObject prefLabel = org.getJsonObject("prefLabel");
                 JsonObject description = org.getJsonObject("description");
 
-                String preflabel_fi = prefLabel.containsKey("fi") && prefLabel.get("fi").getValueType()!=JsonValue.ValueType.NULL ? prefLabel.getString("fi") : null ;
-                String preflabel_en = prefLabel.containsKey("en") && prefLabel.get("en").getValueType()!=JsonValue.ValueType.NULL  ? prefLabel.getString("en") : null ;
-                String preflabel_sv = prefLabel.containsKey("sv") && prefLabel.get("sv").getValueType()!=JsonValue.ValueType.NULL  ? prefLabel.getString("sv") : null ;
-                String description_fi = description.containsKey("fi") && description.get("fi").getValueType()!=JsonValue.ValueType.NULL  ? description.getString("fi") : null;
-                String description_en = description.containsKey("en") && description.get("en").getValueType()!=JsonValue.ValueType.NULL ? description.getString("en") : null;
-                String description_sv = description.containsKey("sv") && description.get("sv").getValueType()!=JsonValue.ValueType.NULL ? description.getString("sv") : null;
-                String url = org.containsKey("url") && org.get("url").getValueType()!=JsonValue.ValueType.NULL ? org.getString("url") : null;
+                String preflabel_fi = prefLabel.containsKey("fi") && prefLabel.get("fi").getValueType() != JsonValue.ValueType.NULL ? prefLabel.getString("fi") : null;
+                String preflabel_en = prefLabel.containsKey("en") && prefLabel.get("en").getValueType() != JsonValue.ValueType.NULL ? prefLabel.getString("en") : null;
+                String preflabel_sv = prefLabel.containsKey("sv") && prefLabel.get("sv").getValueType() != JsonValue.ValueType.NULL ? prefLabel.getString("sv") : null;
+                String description_fi = description.containsKey("fi") && description.get("fi").getValueType() != JsonValue.ValueType.NULL ? description.getString("fi") : null;
+                String description_en = description.containsKey("en") && description.get("en").getValueType() != JsonValue.ValueType.NULL ? description.getString("en") : null;
+                String description_sv = description.containsKey("sv") && description.get("sv").getValueType() != JsonValue.ValueType.NULL ? description.getString("sv") : null;
+                String url = org.containsKey("url") && org.get("url").getValueType() != JsonValue.ValueType.NULL ? org.getString("url") : null;
 
-                Resource res = model.createResource("urn:uuid:"+uuid);
-                res.addProperty(RDF.type,FOAF.Organization);
+                Resource res = model.createResource("urn:uuid:" + uuid);
+                res.addProperty(RDF.type, FOAF.Organization);
 
-                if(preflabel_fi!=null && preflabel_fi.length()>1)
-                    res.addLiteral(SKOS.prefLabel, ResourceFactory.createLangLiteral(preflabel_fi,"fi"));
+                if (preflabel_fi != null && preflabel_fi.length() > 1)
+                    res.addLiteral(SKOS.prefLabel, ResourceFactory.createLangLiteral(preflabel_fi, "fi"));
 
-                if(preflabel_en!=null && preflabel_en.length()>1)
-                    res.addLiteral(SKOS.prefLabel, ResourceFactory.createLangLiteral(preflabel_en,"en"));
+                if (preflabel_en != null && preflabel_en.length() > 1)
+                    res.addLiteral(SKOS.prefLabel, ResourceFactory.createLangLiteral(preflabel_en, "en"));
 
-                if(preflabel_sv!=null && preflabel_sv.length()>1)
-                    res.addLiteral(SKOS.prefLabel, ResourceFactory.createLangLiteral(preflabel_sv,"sv"));
+                if (preflabel_sv != null && preflabel_sv.length() > 1)
+                    res.addLiteral(SKOS.prefLabel, ResourceFactory.createLangLiteral(preflabel_sv, "sv"));
 
-                if(description_fi!=null && description_fi.length()>1)
-                    res.addLiteral(DCTerms.description, ResourceFactory.createLangLiteral(description_fi,"fi"));
+                if (description_fi != null && description_fi.length() > 1)
+                    res.addLiteral(DCTerms.description, ResourceFactory.createLangLiteral(description_fi, "fi"));
 
-                if(description_en!=null && description_en.length()>1)
-                    res.addLiteral(DCTerms.description, ResourceFactory.createLangLiteral(description_en,"en"));
+                if (description_en != null && description_en.length() > 1)
+                    res.addLiteral(DCTerms.description, ResourceFactory.createLangLiteral(description_en, "en"));
 
-                if(description_sv!=null && description_sv.length()>1)
-                    res.addLiteral(DCTerms.description, ResourceFactory.createLangLiteral(description_sv,"sv"));
+                if (description_sv != null && description_sv.length() > 1)
+                    res.addLiteral(DCTerms.description, ResourceFactory.createLangLiteral(description_sv, "sv"));
 
-                if(url!=null && url.length()>1)
-                    res.addLiteral(FOAF.homepage,url);
+                if (url != null && url.length() > 1)
+                    res.addLiteral(FOAF.homepage, url);
 
                 /*
                 Expected format:
@@ -145,7 +148,7 @@ public class RHPOrganizationManager {
             }
 
         } else {
-            logger.debug("Error getting organizations from RHP: "+response.getStatus());
+            logger.debug("Error getting organizations from RHP: " + response.getStatus());
             return null;
         }
 
@@ -154,7 +157,7 @@ public class RHPOrganizationManager {
 
     public void initOrganizationsFromRHP() {
         Model graph = getOrganizationModelFromRHP();
-        if(graph!=null) {
+        if (graph != null) {
             graphManager.putToGraph(graph, "urn:yti:organizations");
         } else {
             logger.debug("No organizations initialized in group management!");
@@ -168,15 +171,15 @@ public class RHPOrganizationManager {
     public boolean isExistingOrganization(List<UUID> orgList) {
 
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
-        String sparqlOrgList = LDHelper.concatWithReplace(orgList," ","<urn:uuid:@this> a foaf:Organization . ");
-        String queryString = " ASK { GRAPH <urn:yti:organizations> { "+sparqlOrgList+" } }";
+        String sparqlOrgList = LDHelper.concatWithReplace(orgList, " ", "<urn:uuid:@this> a foaf:Organization . ");
+        String queryString = " ASK { GRAPH <urn:yti:organizations> { " + sparqlOrgList + " } }";
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
         pss.setCommandText(queryString);
         Query query = pss.asQuery();
 
-        try(QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), query)) {
+        try (QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), query)) {
             boolean b = qexec.execAsk();
-            logger.info("EXISTS "+sparqlOrgList+":"+b);
+            logger.info("EXISTS " + sparqlOrgList + ":" + b);
             return b;
         } catch (Exception ex) {
             return false;

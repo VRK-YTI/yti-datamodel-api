@@ -10,6 +10,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+
 import org.springframework.stereotype.Component;
 
 import javax.ws.rs.GET;
@@ -18,7 +19,7 @@ import javax.ws.rs.core.Response;
 
 @Component
 @Path("reset")
-@Api(tags = {"Admin"}, description = "DROP ALL and Recover")
+@Api(tags = { "Admin" }, description = "DROP ALL and Recover")
 public class Reset {
 
     private final GraphManager graphManager;
@@ -46,7 +47,7 @@ public class Reset {
     @GET
     @ApiOperation(value = "Drops everything")
     @ApiResponses(value = {
-            @ApiResponse(code = 200, message = "OK")
+        @ApiResponse(code = 200, message = "OK")
     })
     public Response drop() {
 

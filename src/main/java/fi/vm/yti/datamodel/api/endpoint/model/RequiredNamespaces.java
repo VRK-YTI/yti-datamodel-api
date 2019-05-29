@@ -10,6 +10,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+
 import org.apache.jena.query.ParameterizedSparqlString;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -21,7 +22,7 @@ import javax.ws.rs.core.Response;
 
 @Component
 @Path("listNamespaces")
-@Api(tags = {"Model"}, description = "Get list of available namespaces")
+@Api(tags = { "Model" }, description = "Get list of available namespaces")
 public class RequiredNamespaces {
 
     private final EndpointServices endpointServices;
@@ -39,9 +40,9 @@ public class RequiredNamespaces {
     @Produces("application/ld+json")
     @ApiOperation(value = "Get available namespaces from service", notes = "Local model namespaces and technical namespaces")
     @ApiResponses(value = {
-            @ApiResponse(code = 400, message = "Invalid"),
-            @ApiResponse(code = 404, message = "Service not found"),
-            @ApiResponse(code = 500, message = "Internal server error")
+        @ApiResponse(code = 400, message = "Invalid"),
+        @ApiResponse(code = 404, message = "Service not found"),
+        @ApiResponse(code = 500, message = "Internal server error")
     })
     public Response json() {
 
@@ -50,23 +51,23 @@ public class RequiredNamespaces {
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
         /* IF ID is null or default and no group available */
         String queryString = "CONSTRUCT { "
-                + "?g a ?type . "
-                + "?g rdfs:label ?label . "
-                + "?g dcap:preferredXMLNamespaceName ?namespace . "
-                + "?g dcap:preferredXMLNamespacePrefix ?prefix . "
-                + "} "
-                + "WHERE { {"
-                + "GRAPH ?g { "
-                + "?g a ?type . "
-                + "?g rdfs:label ?label . "
-                + "?g dcap:preferredXMLNamespaceName ?namespace . "
-                + "?g dcap:preferredXMLNamespacePrefix ?prefix . } } UNION {"
-                + "GRAPH <urn:csc:iow:namespaces> {"
-                + "?g a ?type . "
-                + "?g rdfs:label ?label . "
-                + "?g dcap:preferredXMLNamespaceName ?namespace . "
-                + "?g dcap:preferredXMLNamespacePrefix ?prefix . }"
-                + "}}";
+            + "?g a ?type . "
+            + "?g rdfs:label ?label . "
+            + "?g dcap:preferredXMLNamespaceName ?namespace . "
+            + "?g dcap:preferredXMLNamespacePrefix ?prefix . "
+            + "} "
+            + "WHERE { {"
+            + "GRAPH ?g { "
+            + "?g a ?type . "
+            + "?g rdfs:label ?label . "
+            + "?g dcap:preferredXMLNamespaceName ?namespace . "
+            + "?g dcap:preferredXMLNamespacePrefix ?prefix . } } UNION {"
+            + "GRAPH <urn:csc:iow:namespaces> {"
+            + "?g a ?type . "
+            + "?g rdfs:label ?label . "
+            + "?g dcap:preferredXMLNamespaceName ?namespace . "
+            + "?g dcap:preferredXMLNamespacePrefix ?prefix . }"
+            + "}}";
 
         pss.setCommandText(queryString);
 

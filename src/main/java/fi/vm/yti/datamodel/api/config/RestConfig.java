@@ -2,6 +2,7 @@ package fi.vm.yti.datamodel.api.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
+
 import org.apache.http.client.HttpClient;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.impl.client.HttpClients;
@@ -17,6 +18,7 @@ import org.springframework.http.converter.json.MappingJackson2HttpMessageConvert
 import org.springframework.web.client.RestTemplate;
 
 import javax.net.ssl.SSLContext;
+
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -46,8 +48,8 @@ public class RestConfig {
     @Bean
     HttpClient httpClient() {
         return HttpClients.custom()
-                .setSSLSocketFactory(new SSLConnectionSocketFactory(sslContext()))
-                .build();
+            .setSSLSocketFactory(new SSLConnectionSocketFactory(sslContext()))
+            .build();
     }
 
     @Bean
@@ -57,14 +59,13 @@ public class RestConfig {
 
         try {
             return SSLContexts.custom()
-                    .loadTrustMaterial(null, naivelyAcceptingTrustStrategy)
-                    .build();
+                .loadTrustMaterial(null, naivelyAcceptingTrustStrategy)
+                .build();
 
         } catch (NoSuchAlgorithmException | KeyManagementException | KeyStoreException e) {
             throw new RuntimeException(e);
         }
     }
-
 
     @Bean
     RestTemplate restTemplate() {

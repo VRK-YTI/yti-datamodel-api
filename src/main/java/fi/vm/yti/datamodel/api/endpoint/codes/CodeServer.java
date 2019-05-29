@@ -8,6 +8,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+
 import org.springframework.stereotype.Component;
 
 import javax.ws.rs.GET;
@@ -19,16 +20,16 @@ import javax.ws.rs.core.Response.Status;
 
 @Component
 @Path("codeServer")
-@Api(tags = {"Codes"}, description = "Available code servers")
+@Api(tags = { "Codes" }, description = "Available code servers")
 public class CodeServer {
 
     @GET
     @Produces("application/ld+json")
     @ApiOperation(value = "Get available code servers", notes = "Get list of available code servers")
     @ApiResponses(value = {
-            @ApiResponse(code = 200, message = "Concepts"),
-            @ApiResponse(code = 406, message = "Term not defined"),
-            @ApiResponse(code = 500, message = "Internal server error")
+        @ApiResponse(code = 200, message = "Concepts"),
+        @ApiResponse(code = 406, message = "Term not defined"),
+        @ApiResponse(code = 500, message = "Internal server error")
     })
     public Response codeServer() {
 

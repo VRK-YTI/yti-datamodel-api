@@ -9,6 +9,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+
 import org.apache.jena.rdf.model.Model;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,7 +23,7 @@ import javax.ws.rs.core.Response;
 
 @Component
 @Path("organizations")
-@Api(tags = {"Organizations"}, description = "Get organizations")
+@Api(tags = { "Organizations" }, description = "Get organizations")
 public class Organizations {
 
     private static final Logger logger = LoggerFactory.getLogger(Organizations.class.getName());
@@ -40,12 +41,12 @@ public class Organizations {
     @GET
     @ApiOperation(value = "Get organizations", notes = "Get organizations from rhp")
     @ApiResponses(value = { @ApiResponse(code = 200, message = "List of organizations"),
-            @ApiResponse(code = 400, message = "Error from organization service"),
-            @ApiResponse(code = 404, message = "Organization service not found") })
+        @ApiResponse(code = 400, message = "Error from organization service"),
+        @ApiResponse(code = 404, message = "Organization service not found") })
     @Produces("application/json")
     public Response getOrganizations() {
         Model orgModel = graphManager.getCoreGraph("urn:yti:organizations");
-        if(orgModel!=null && orgModel.size()>1) {
+        if (orgModel != null && orgModel.size() > 1) {
             return jerseyResponseManager.okModel(orgModel);
         } else {
             return jerseyResponseManager.okEmptyContent();

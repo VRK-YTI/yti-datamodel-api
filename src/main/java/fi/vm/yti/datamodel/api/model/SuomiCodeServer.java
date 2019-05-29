@@ -6,6 +6,7 @@ package fi.vm.yti.datamodel.api.model;
 import fi.vm.yti.datamodel.api.service.CodeSchemeManager;
 import fi.vm.yti.datamodel.api.service.EndpointServices;
 import fi.vm.yti.datamodel.api.utils.LDHelper;
+
 import org.apache.jena.datatypes.RDFDatatype;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.datatypes.xsd.XSDDateTime;
@@ -20,6 +21,7 @@ import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
 import javax.xml.bind.DatatypeConverter;
+
 import java.io.InputStream;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -28,7 +30,9 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.Iterator;
-import org.slf4j.Logger;import org.slf4j.LoggerFactory;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class SuomiCodeServer {
 
@@ -49,14 +53,18 @@ public class SuomiCodeServer {
     private DatasetAdapter adapter;
     private CodeSchemeManager codeSchemeManager;
 
-    public SuomiCodeServer(EndpointServices endpointServices, CodeSchemeManager codeSchemeManager) {
+    public SuomiCodeServer(EndpointServices endpointServices,
+                           CodeSchemeManager codeSchemeManager) {
         this.accessor = new DatasetGraphAccessorHTTP(endpointServices.getSchemesReadWriteAddress());
         this.adapter = new DatasetAdapter(accessor);
         this.endpointServices = endpointServices;
         this.codeSchemeManager = codeSchemeManager;
     }
 
-    public SuomiCodeServer(String uri, String url, EndpointServices endpointServices, CodeSchemeManager codeSchemeManager) {
+    public SuomiCodeServer(String uri,
+                           String url,
+                           EndpointServices endpointServices,
+                           CodeSchemeManager codeSchemeManager) {
         this.accessor = new DatasetGraphAccessorHTTP(endpointServices.getSchemesReadWriteAddress());
         this.adapter = new DatasetAdapter(accessor);
         this.endpointServices = endpointServices;
@@ -99,8 +107,8 @@ public class SuomiCodeServer {
                 String groupID = codeRegistry.getJsonString("uri").getString();
 
                 // FIXME: This should not happen!
-                if(LDHelper.isInvalidIRI(groupID)) {
-                    logger.warn("Invalid IRI: "+groupID);
+                if (LDHelper.isInvalidIRI(groupID)) {
+                    logger.warn("Invalid IRI: " + groupID);
                     return;
                 }
 
@@ -111,11 +119,11 @@ public class SuomiCodeServer {
                 JsonObject registryName = codeRegistry.getJsonObject("prefLabel");
                 JsonObject registryDescription = codeRegistry.getJsonObject("prefLabel");
 
-                if(registryName!=null) {
+                if (registryName != null) {
                     addLangLiteral(group, registryName, name);
                 }
 
-                if(registryDescription!=null) {
+                if (registryDescription != null) {
                     addLangLiteral(group, registryDescription, description);
                 }
 
@@ -141,8 +149,8 @@ public class SuomiCodeServer {
                         String codeListUrl = codeList.getString("url");
 
                         // FIXME: This should not happen!
-                        if(LDHelper.isInvalidIRI(codeListUri)) {
-                            logger.warn("Invalid IRI: "+codeListUri);
+                        if (LDHelper.isInvalidIRI(codeListUri)) {
+                            logger.warn("Invalid IRI: " + codeListUri);
                             return;
                         }
 
@@ -156,83 +164,86 @@ public class SuomiCodeServer {
                         JsonObject codeListDescription = codeList.getJsonObject("description");
                         JsonObject codeListName = codeList.getJsonObject("prefLabel");
 
-                        if(codeListDescription!=null) {
+                        if (codeListDescription != null) {
                             addLangLiteral(valueScheme, codeListDescription, description);
                         }
 
-                        if(codeListName!=null) {
+                        if (codeListName != null) {
                             addLangLiteral(valueScheme, codeListName, name);
                         }
 
                         valueScheme.addLiteral(status, codeList.getString("status"));
                         JsonValue modifiedObject = codeList.get("modified");
 
-                        if(modifiedObject!=null) {
-                            valueScheme.addLiteral(modified, ResourceFactory.createTypedLiteral(codeList.getString("modified"),XSDDatatype.XSDdateTime));
+                        if (modifiedObject != null) {
+                            valueScheme.addLiteral(modified, ResourceFactory.createTypedLiteral(codeList.getString("modified"), XSDDatatype.XSDdateTime));
                         } else {
-                            logger.debug("Modified date null: "+codeListUrl);
+                            logger.debug("Modified date null: " + codeListUrl);
                         }
 
                         // WTF: Zulu time
                         SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
                         DateTimeFormatter dfmt = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
 
-                       if(adapter.containsModel(codeListUri)) {
-                           if(modifiedObject!=null) {
+                        if (adapter.containsModel(codeListUri)) {
+                            if (modifiedObject != null) {
 
-                                   String dateString = codeList.getString("modified");
-                                   LocalDateTime codeSchemeModified = LocalDateTime.parse(dateString, dfmt);
-                                   Date lastModifiedDateTime = codeSchemeManager.lastModified(codeListUri);
+                                String dateString = codeList.getString("modified");
+                                LocalDateTime codeSchemeModified = LocalDateTime.parse(dateString, dfmt);
+                                Date lastModifiedDateTime = codeSchemeManager.lastModified(codeListUri);
 
-                                   if(lastModifiedDateTime==null) {
-                                       updateCodes(codeListUrl+"/codes/", codeListUri);
-                                   } else {
+                                if (lastModifiedDateTime == null) {
+                                    updateCodes(codeListUrl + "/codes/", codeListUri);
+                                } else {
 
-                                       LocalDateTime lastModifiedLocalDateTime = lastModifiedDateTime.toInstant()
-                                               .atZone(ZoneId.of("GMT"))
-                                               .toLocalDateTime();
+                                    LocalDateTime lastModifiedLocalDateTime = lastModifiedDateTime.toInstant()
+                                        .atZone(ZoneId.of("GMT"))
+                                        .toLocalDateTime();
 
-                                       if(codeSchemeModified.isAfter(lastModifiedLocalDateTime)) {
-                                           updateCodes(codeListUrl+"/codes/", codeListUri);
-                                       } else {
-                                           logger.debug("Not updated: " + lastModifiedLocalDateTime.toString() + " vs. " + codeSchemeModified.toString());
-                                       }
-                                   }
+                                    if (codeSchemeModified.isAfter(lastModifiedLocalDateTime)) {
+                                        updateCodes(codeListUrl + "/codes/", codeListUri);
+                                    } else {
+                                        logger.debug("Not updated: " + lastModifiedLocalDateTime.toString() + " vs. " + codeSchemeModified.toString());
+                                    }
+                                }
 
-                           } else {
-                               logger.debug("Modified date is null in codeList API!");
-                               updateCodes(codeListUrl+"/codes/", codeListUri);
-                           }
-                       } else {
-                           updateCodes(codeListUrl+"/codes/", codeListUri);
-                       }
+                            } else {
+                                logger.debug("Modified date is null in codeList API!");
+                                updateCodes(codeListUrl + "/codes/", codeListUri);
+                            }
+                        } else {
+                            updateCodes(codeListUrl + "/codes/", codeListUri);
+                        }
 
                     }
                 } else {
-                    logger.info("Failed to update codelists from "+schemeTarget.getUri().toString());
+                    logger.info("Failed to update codelists from " + schemeTarget.getUri().toString());
                 }
 
             }
 
             adapter.putModel(uri, model);
-            logger.info("Putting schemes to "+uri);
+            logger.info("Putting schemes to " + uri);
             //model.write(System.out, "text/turtle");
 
         }
 
     }
 
-    public static void addLangLiteral(Resource res, JsonObject obj, Property prop) {
-            Iterator<String> langObjIterator = obj.keySet().iterator();
+    public static void addLangLiteral(Resource res,
+                                      JsonObject obj,
+                                      Property prop) {
+        Iterator<String> langObjIterator = obj.keySet().iterator();
 
-            while (langObjIterator.hasNext()) {
-                String lang = langObjIterator.next();
-                String value = obj.getString(lang);
-                res.addLiteral(prop, ResourceFactory.createLangLiteral(value, lang));
-            }
+        while (langObjIterator.hasNext()) {
+            String lang = langObjIterator.next();
+            String value = obj.getString(lang);
+            res.addLiteral(prop, ResourceFactory.createLangLiteral(value, lang));
+        }
     }
 
-    public void updateCodes(String url, String uri) {
+    public void updateCodes(String url,
+                            String uri) {
 
         //logger.debug("Updating "+uri+" from "+url);
 
@@ -243,7 +254,7 @@ public class SuomiCodeServer {
         Response.ResponseBuilder rb;
 
         Client client = ClientBuilder.newClient();
-        WebTarget target = client.target(url).queryParam("format","application/json");
+        WebTarget target = client.target(url).queryParam("format", "application/json");
         Response response = target.request("application/json").get();
 
         if (response.getStatusInfo().getFamily() == Response.Status.Family.SUCCESSFUL) {
@@ -257,14 +268,14 @@ public class SuomiCodeServer {
             JsonArray codeSchemeArr = codeListResponse.getJsonArray("results");
             Iterator<JsonValue> codeIterator = codeSchemeArr.iterator();
 
-            while(codeIterator.hasNext()) {
+            while (codeIterator.hasNext()) {
 
                 JsonObject codeObj = (JsonObject) codeIterator.next();
                 String codeURI = codeObj.getString("uri");
 
                 // FIXME: This should not happen!
-                if(LDHelper.isInvalidIRI(codeURI)) {
-                    logger.warn("Invalid IRI: "+codeURI);
+                if (LDHelper.isInvalidIRI(codeURI)) {
+                    logger.warn("Invalid IRI: " + codeURI);
                     return;
                 }
 
@@ -276,32 +287,30 @@ public class SuomiCodeServer {
                 JsonObject codeName = codeObj.getJsonObject("prefLabel");
                 JsonObject descriptionName = codeObj.getJsonObject("description");
 
-                if(codeName!=null) {
+                if (codeName != null) {
                     addLangLiteral(codeRes, codeName, name);
                 }
 
-                if(descriptionName!=null) {
+                if (descriptionName != null) {
                     addLangLiteral(codeRes, descriptionName, description);
                 }
 
                 codeRes.addLiteral(status, codeObj.getString("status"));
 
-                }
+            }
 
-                if(model.size()<1) {
-                 logger.warn("Codes graph from "+uri+" is empty! No valid codes?");
-                }
+            if (model.size() < 1) {
+                logger.warn("Codes graph from " + uri + " is empty! No valid codes?");
+            }
 
             adapter.putModel(uri, model);
 
-             //model.write(System.out, "text/turtle");
-            logger.info("Saved codes: "+uri);
-
+            //model.write(System.out, "text/turtle");
+            logger.info("Saved codes: " + uri);
 
         } else {
-            logger.info(""+response.getStatus());
+            logger.info("" + response.getStatus());
         }
-
 
     }
 

@@ -18,7 +18,8 @@ public class ResourceSearchRequest {
 
     private Integer pageFrom;
 
-    public ResourceSearchRequest() {}
+    public ResourceSearchRequest() {
+    }
 
     public ResourceSearchRequest(final String query,
                                  final String type,

@@ -93,11 +93,14 @@ public final class ApplicationProperties {
         this.defaultGroupManagementAPI = defaultGroupManagementAPI;
     }
 
-    public String getDefaultTerminologyAPI() { return defaultTerminologyAPI; }
+    public String getDefaultTerminologyAPI() {
+        return defaultTerminologyAPI;
+    }
 
     public void setDefaultTerminologyAPI(String defaultTerminologyAPI) {
         this.defaultTerminologyAPI = defaultTerminologyAPI;
     }
+
     public String getPublicGroupManagementAPI() {
         return publicGroupManagementAPI;
     }
@@ -129,6 +132,7 @@ public final class ApplicationProperties {
     public void setPublicTerminologyFrontend(String publicTerminologyFrontend) {
         this.publicTerminologyFrontend = publicTerminologyFrontend;
     }
+
     public String getPublicTermedAPI() {
         return publicTermedAPI;
     }
@@ -152,7 +156,7 @@ public final class ApplicationProperties {
     public void setElasticPort(String elasticPort) {
         this.elasticPort = elasticPort;
     }
-    
+
     public String getElasticHttpPort() {
         return elasticHttpPort;
     }
@@ -160,7 +164,7 @@ public final class ApplicationProperties {
     public void setElasticHttpPort(String elasticHttpPort) {
         this.elasticHttpPort = elasticHttpPort;
     }
-    
+
     public String getElasticHttpScheme() {
         return elasticHttpScheme;
     }
@@ -177,16 +181,28 @@ public final class ApplicationProperties {
         this.elasticCluster = elasticCluster;
     }
 
-    public String getDefaultSuomiCodeServerAPI() { return this.defaultSuomiCodeServerAPI; }
+    public String getDefaultSuomiCodeServerAPI() {
+        return this.defaultSuomiCodeServerAPI;
+    }
 
-    public void setDefaultSuomiCodeServerAPI(String defaultSuomiCodeServerAPI) { this.defaultSuomiCodeServerAPI = defaultSuomiCodeServerAPI; }
+    public void setDefaultSuomiCodeServerAPI(String defaultSuomiCodeServerAPI) {
+        this.defaultSuomiCodeServerAPI = defaultSuomiCodeServerAPI;
+    }
 
-    public boolean getDevMode() { return this.devMode; }
+    public boolean getDevMode() {
+        return this.devMode;
+    }
 
-    public void setDevMode(boolean devMode) { this.devMode = devMode; }
+    public void setDevMode(boolean devMode) {
+        this.devMode = devMode;
+    }
 
-    public String getEnv() { return this.env; }
+    public String getEnv() {
+        return this.env;
+    }
 
-    public void setEnv(String env) { this.env = env; }
+    public void setEnv(String env) {
+        this.env = env;
+    }
 
 }

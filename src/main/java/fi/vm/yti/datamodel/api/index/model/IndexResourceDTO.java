@@ -95,7 +95,7 @@ public class IndexResourceDTO {
     }
 
     public void highlightLabels(String highlightText) {
-        if(highlightText!=null && highlightText.length()>0) {
+        if (highlightText != null && highlightText.length() > 0) {
             this.label.forEach((lang, label) -> {
                 this.label.put(lang, label.replaceAll("(?i)(?<text>" + highlightText + ")", "<b>${text}</b>"));
             });
@@ -110,8 +110,9 @@ public class IndexResourceDTO {
         this.label = label;
     }
 
-    public void putLabel(String lang, String label) {
-        this.label.put(lang,label);
+    public void putLabel(String lang,
+                         String label) {
+        this.label.put(lang, label);
     }
 
     public Map<String, String> getComment() {

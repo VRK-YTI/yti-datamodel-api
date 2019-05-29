@@ -1,11 +1,11 @@
 /*
- * Licensed under the European Union Public Licence (EUPL) V.1.1 
+ * Licensed under the European Union Public Licence (EUPL) V.1.1
  */
 package fi.vm.yti.datamodel.api.service;
 
-
 import fi.vm.yti.datamodel.api.utils.LDHelper;
 import fi.vm.yti.datamodel.api.utils.XMLSchemaBuilder;
+
 import org.apache.jena.query.ParameterizedSparqlString;
 import org.apache.jena.query.QueryExecution;
 import org.apache.jena.query.QueryExecutionFactory;
@@ -13,11 +13,13 @@ import org.apache.jena.query.QuerySolution;
 import org.apache.jena.query.ResultSet;
 import org.apache.jena.query.ResultSetFactory;
 import org.apache.jena.sparql.resultset.ResultSetPeekable;
+
 import java.text.SimpleDateFormat;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+
 import org.apache.jena.util.SplitIRI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,27 +30,27 @@ import org.w3c.dom.Element;
 public class XMLSchemaWriter {
 
     private static final Logger logger = LoggerFactory.getLogger(XMLSchemaWriter.class.getName());
-    
-    private  static final Map<String, String> DATATYPE_MAP =
-    Collections.unmodifiableMap(new HashMap<String, String>() {{
-        put("http://www.w3.org/2001/XMLSchema#int", "xs:int");
-        put("http://www.w3.org/2001/XMLSchema#integer", "xs:integer");
-        put("http://www.w3.org/2001/XMLSchema#long", "xs:long");
-        put("http://www.w3.org/2001/XMLSchema#float", "xs:float");
-        put("http://www.w3.org/2001/XMLSchema#double", "xs:double");
-        put("http://www.w3.org/2001/XMLSchema#decimal", "xs:decimal");
-        put("http://www.w3.org/2001/XMLSchema#boolean", "xs:boolean");
-        put("http://www.w3.org/2001/XMLSchema#date", "xs:date");
-        put("http://www.w3.org/2001/XMLSchema#dateTime", "xs:dateTime");
-        put("http://www.w3.org/2001/XMLSchema#time", "xs:time");
-        put("http://www.w3.org/2001/XMLSchema#gYear", "xs:gYear");
-        put("http://www.w3.org/2001/XMLSchema#gMonth", "xs:gMont");
-        put("http://www.w3.org/2001/XMLSchema#gDay", "xs:gDay");
-        put("http://www.w3.org/2001/XMLSchema#string", "xs:string");
-        put("http://www.w3.org/1999/02/22-rdf-syntax-ns#langString", "xs:string");
-        put("http://www.w3.org/2000/01/rdf-schema#Literal", "xs:string");
-        put("http://www.w3.org/2001/XMLSchema#anyUri", "xs:anyUri");
-    }});
+
+    private static final Map<String, String> DATATYPE_MAP =
+        Collections.unmodifiableMap(new HashMap<String, String>() {{
+            put("http://www.w3.org/2001/XMLSchema#int", "xs:int");
+            put("http://www.w3.org/2001/XMLSchema#integer", "xs:integer");
+            put("http://www.w3.org/2001/XMLSchema#long", "xs:long");
+            put("http://www.w3.org/2001/XMLSchema#float", "xs:float");
+            put("http://www.w3.org/2001/XMLSchema#double", "xs:double");
+            put("http://www.w3.org/2001/XMLSchema#decimal", "xs:decimal");
+            put("http://www.w3.org/2001/XMLSchema#boolean", "xs:boolean");
+            put("http://www.w3.org/2001/XMLSchema#date", "xs:date");
+            put("http://www.w3.org/2001/XMLSchema#dateTime", "xs:dateTime");
+            put("http://www.w3.org/2001/XMLSchema#time", "xs:time");
+            put("http://www.w3.org/2001/XMLSchema#gYear", "xs:gYear");
+            put("http://www.w3.org/2001/XMLSchema#gMonth", "xs:gMont");
+            put("http://www.w3.org/2001/XMLSchema#gDay", "xs:gDay");
+            put("http://www.w3.org/2001/XMLSchema#string", "xs:string");
+            put("http://www.w3.org/1999/02/22-rdf-syntax-ns#langString", "xs:string");
+            put("http://www.w3.org/2000/01/rdf-schema#Literal", "xs:string");
+            put("http://www.w3.org/2001/XMLSchema#anyUri", "xs:anyUri");
+        }});
 
     /* 
     Alternative way to document?
@@ -76,19 +78,20 @@ public class XMLSchemaWriter {
         this.graphManager = graphManager;
     }
 
-    public String newClassSchema(String classID, String lang) {
+    public String newClassSchema(String classID,
+                                 String lang) {
         logger.info("Creating schema");
         XMLSchemaBuilder xml = new XMLSchemaBuilder();
-       
+
         String className = SplitIRI.localname(classID);
         String localClassName = null;
         String classDescription = null;
         String classTitle = null;
-        
+
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
-        
-        String selectClass = 
-                "SELECT ?localClassName ?type ?label ?description "
+
+        String selectClass =
+            "SELECT ?localClassName ?type ?label ?description "
                 + "WHERE { "
                 + "GRAPH ?resourceID { "
                 + "?resourceID a ?type . "
@@ -102,23 +105,23 @@ public class XMLSchemaWriter {
                 + "}"
                 + "} "
                 + "} ";
-        
+
         pss.setIri("resourceID", classID);
-        if(lang!=null) pss.setLiteral("lang",lang);
+        if (lang != null) pss.setLiteral("lang", lang);
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
-        
+
         pss.setCommandText(selectClass);
 
         boolean classMetadata = false;
- 
-        try(QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), pss.asQuery())) {
+
+        try (QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), pss.asQuery())) {
             ResultSet results = qexec.execSelect();
 
             if (!results.hasNext()) {
                 logger.debug("Resource results is null");
                 return null;
             }
-       
+
             while (results.hasNext()) {
 
                 QuerySolution soln = results.nextSolution();
@@ -128,9 +131,9 @@ public class XMLSchemaWriter {
                 if (soln.contains("description")) {
                     classDescription = soln.getLiteral("description").getString();
                 }
-                
+
                 if (soln.contains("localClassName")) {
-                	localClassName = soln.getLiteral("localClassName").getString();
+                    localClassName = soln.getLiteral("localClassName").getString();
                 }
 
                 String sType = soln.getResource("type").getLocalName();
@@ -142,40 +145,38 @@ public class XMLSchemaWriter {
             }
         }
 
-        Element complexType = xml.newComplexType((localClassName!=null && localClassName.length()>0 ? LDHelper.removeInvalidCharacters(localClassName) : className)+"Type",classID);
+        Element complexType = xml.newComplexType((localClassName != null && localClassName.length() > 0 ? LDHelper.removeInvalidCharacters(localClassName) : className) + "Type", classID);
         Element cdocumentation = xml.newDocumentation(complexType);
         xml.appendElementValue(cdocumentation, "dcterms:title", classTitle);
-        if(classDescription!=null) {
-        	xml.appendElementValue(cdocumentation, "dcterms:description", classDescription);
+        if (classDescription != null) {
+            xml.appendElementValue(cdocumentation, "dcterms:description", classDescription);
         }
 
-        if(classMetadata) {
+        if (classMetadata) {
 
             String selectResources =
-                    "SELECT ?predicate ?id ?predicateName ?label ?description ?datatype ?shapeRef ?shapeRefName ?min ?max ?minLength ?maxLength ?pattern "
-                            + "WHERE { "
-                            + "GRAPH ?resourceID {"
-                            + "?resourceID sh:property ?property . "
-                            + "?property sh:order ?index . "
-                            + "?property sh:path ?predicate . "
-                            + "OPTIONAL { ?property iow:localName ?id . }"
-                            + "?property sh:name ?label . "
-                            + "FILTER (langMatches(lang(?label),?lang))"
-                            + "OPTIONAL { ?property sh:description ?description . "
-                            + "FILTER (langMatches(lang(?description),?lang))"
-                            + "}"
-                            + "OPTIONAL { ?property sh:datatype ?datatype . }"
-                            + "OPTIONAL { ?property sh:node ?shapeRef . BIND(afn:localname(?shapeRef) as ?shapeRefName) }"
-                            + "OPTIONAL { ?property sh:minCount ?min . }"
-                            + "OPTIONAL { ?property sh:maxCount ?max . }"
-                            + "OPTIONAL { ?property sh:pattern ?pattern . }"
-                            + "OPTIONAL { ?property sh:minLength ?minLength . }"
-                            + "OPTIONAL { ?property sh:maxLength ?maxLength . }"
-                            + "BIND(afn:localname(?predicate) as ?predicateName)"
-                            + "}"
-                            + "} ORDER BY ?index ";
-                           
-
+                "SELECT ?predicate ?id ?predicateName ?label ?description ?datatype ?shapeRef ?shapeRefName ?min ?max ?minLength ?maxLength ?pattern "
+                    + "WHERE { "
+                    + "GRAPH ?resourceID {"
+                    + "?resourceID sh:property ?property . "
+                    + "?property sh:order ?index . "
+                    + "?property sh:path ?predicate . "
+                    + "OPTIONAL { ?property iow:localName ?id . }"
+                    + "?property sh:name ?label . "
+                    + "FILTER (langMatches(lang(?label),?lang))"
+                    + "OPTIONAL { ?property sh:description ?description . "
+                    + "FILTER (langMatches(lang(?description),?lang))"
+                    + "}"
+                    + "OPTIONAL { ?property sh:datatype ?datatype . }"
+                    + "OPTIONAL { ?property sh:node ?shapeRef . BIND(afn:localname(?shapeRef) as ?shapeRefName) }"
+                    + "OPTIONAL { ?property sh:minCount ?min . }"
+                    + "OPTIONAL { ?property sh:maxCount ?max . }"
+                    + "OPTIONAL { ?property sh:pattern ?pattern . }"
+                    + "OPTIONAL { ?property sh:minLength ?minLength . }"
+                    + "OPTIONAL { ?property sh:maxLength ?maxLength . }"
+                    + "BIND(afn:localname(?predicate) as ?predicateName)"
+                    + "}"
+                    + "} ORDER BY ?index ";
 
             pss.setCommandText(selectResources);
             if (lang != null) pss.setLiteral("lang", lang);
@@ -192,7 +193,6 @@ public class XMLSchemaWriter {
 
                         QuerySolution soln = results.nextSolution();
                         String predicateName = soln.getLiteral("predicateName").getString();
-
 
                         if (soln.contains("id")) {
                             predicateName = soln.getLiteral("id").getString();
@@ -265,11 +265,10 @@ public class XMLSchemaWriter {
                             newElement.setAttribute("maxOccurs", "unbounded");
                         }
 
-                /* If shape contains pattern or other type of restriction */
+                        /* If shape contains pattern or other type of restriction */
 
                         if (soln.contains("pattern") || soln.contains("maxLength") || soln.contains("minLength")) {
                             Element simpleType = xml.newSimpleType(predicateName + "Type");
-
 
                             if (soln.contains("pattern")) {
                                 Element restriction = xml.newStringRestriction(simpleType);
@@ -293,25 +292,24 @@ public class XMLSchemaWriter {
 
                     }
                 }
-            } 
+            }
 
         }
-      
+
         return xml.toString();
     }
-    
-    
-    
-    public String newModelSchema(String modelID, String lang) {
-    
-        logger.info("Building XML Schema from "+modelID);
-        
+
+    public String newModelSchema(String modelID,
+                                 String lang) {
+
+        logger.info("Building XML Schema from " + modelID);
+
         XMLSchemaBuilder xml = new XMLSchemaBuilder();
-        
+
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
-        
-        String selectClass = 
-                "SELECT ?label ?description "
+
+        String selectClass =
+            "SELECT ?label ?description "
                 + "WHERE { "
                 + "GRAPH ?modelID { "
                 + "?modelID rdfs:label ?label . "
@@ -321,16 +319,16 @@ public class XMLSchemaWriter {
                 + "}"
                 + "} "
                 + "} ";
-        
+
         pss.setIri("modelID", modelID);
-        if(lang!=null) pss.setLiteral("lang",lang);
+        if (lang != null) pss.setLiteral("lang", lang);
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
-        
+
         pss.setCommandText(selectClass);
 
         Element documentation = xml.newDocumentation(xml.getRoot());
 
-        try(QueryExecution qexec =  QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), pss.toString())) {
+        try (QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), pss.toString())) {
 
             ResultSet results = qexec.execSelect();
 
@@ -359,15 +357,14 @@ public class XMLSchemaWriter {
                     xml.appendElementValue(documentation, "dcterms:modified", dateModified);
                 }
 
-
             }
 
         }
         /* Get classes from library */
         pss = new ParameterizedSparqlString();
-        
-        String selectResources = 
-                "SELECT ?resource ?targetClass ?className ?localClassName ?classTitle ?classDescription ?classDeactivated ?property ?propertyDeactivated ?valueList ?schemeList ?predicate ?id ?title ?description ?predicateName ?datatype ?shapeRef ?shapeRefName ?min ?max ?minLength ?maxLength ?pattern "
+
+        String selectResources =
+            "SELECT ?resource ?targetClass ?className ?localClassName ?classTitle ?classDescription ?classDeactivated ?property ?propertyDeactivated ?valueList ?schemeList ?predicate ?id ?title ?description ?predicateName ?datatype ?shapeRef ?shapeRefName ?min ?max ?minLength ?maxLength ?pattern "
                 + "WHERE { "
                 + "GRAPH ?modelPartGraph {"
                 + "?model dcterms:hasPart ?resource . "
@@ -407,20 +404,19 @@ public class XMLSchemaWriter {
                 + "}"
                 + "}"
                 + "ORDER BY ?resource ?index";
-        
-        
-        pss.setIri("modelPartGraph", modelID+"#HasPartGraph");
-        if(lang!=null) pss.setLiteral("lang",lang);
+
+        pss.setIri("modelPartGraph", modelID + "#HasPartGraph");
+        if (lang != null) pss.setLiteral("lang", lang);
         pss.setCommandText(selectResources);
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
-        
-        try(QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), pss.asQuery())) {
+
+        try (QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), pss.asQuery())) {
 
             ResultSet results = qexec.execSelect();
             ResultSetPeekable pResults = ResultSetFactory.makePeekable(results);
 
             if (pResults.hasNext()) {
-            
+
                 boolean firstRun = true;
                 Element complexType = null;
                 Element seq = null;
@@ -431,7 +427,7 @@ public class XMLSchemaWriter {
 
                     if (!soln.contains("className")) return null;
 
-                    if(!soln.contains("classDeactivated") || (soln.contains("classDeactivated") && !soln.getLiteral("classDeactivated").getBoolean())) { 
+                    if (!soln.contains("classDeactivated") || (soln.contains("classDeactivated") && !soln.getLiteral("classDeactivated").getBoolean())) {
 
                         String classID = soln.getResource("resource").getURI();
                         String className = soln.getLiteral("className").getString();
@@ -440,9 +436,9 @@ public class XMLSchemaWriter {
                         if (firstRun) {
 
                             if (soln.contains("targetClass")) {
-                                complexType = xml.newComplexType((localClassName!=null && localClassName.length()>0 ? LDHelper.removeInvalidCharacters(localClassName) : className) + "Type", soln.getResource("targetClass").toString());
+                                complexType = xml.newComplexType((localClassName != null && localClassName.length() > 0 ? LDHelper.removeInvalidCharacters(localClassName) : className) + "Type", soln.getResource("targetClass").toString());
                             } else {
-                                complexType = xml.newComplexType((localClassName!=null && localClassName.length()>0 ? LDHelper.removeInvalidCharacters(localClassName) : className) + "Type", soln.getResource("resource").toString());
+                                complexType = xml.newComplexType((localClassName != null && localClassName.length() > 0 ? LDHelper.removeInvalidCharacters(localClassName) : className) + "Type", soln.getResource("resource").toString());
                             }
 
                             Element classDoc = xml.newDocumentation(complexType);
@@ -458,7 +454,7 @@ public class XMLSchemaWriter {
                             firstRun = false;
                         }
 
-                        if(soln.contains("property") && (!soln.contains("propertyDeactivated") || (soln.contains("propertyDeactivated") && !soln.getLiteral("propertyDeactivated").getBoolean()))) {   
+                        if (soln.contains("property") && (!soln.contains("propertyDeactivated") || (soln.contains("propertyDeactivated") && !soln.getLiteral("propertyDeactivated").getBoolean()))) {
 
                             String predicate = soln.getResource("predicate").getURI();
                             String property = soln.getResource("property").getURI();
@@ -510,7 +506,6 @@ public class XMLSchemaWriter {
                                 if (soln.contains("pattern") || soln.contains("maxLength") || soln.contains("minLength")) {
                                     Element simpleType = xml.newSimpleType(predicateName + "Type");
 
-
                                     if (soln.contains("pattern")) {
                                         Element restriction = xml.newStringRestriction(simpleType);
                                         xml.appendElementValueAttribute(restriction, "xs:maxInclusive", soln.getLiteral("pattern").toString());
@@ -546,7 +541,7 @@ public class XMLSchemaWriter {
                                 }
                             */
                         }
-        
+
                         /* Check if next result is about the same class */
                         if (!pResults.hasNext() || !className.equals(pResults.peek().getLiteral("className").getString())) {
                             firstRun = true;
@@ -557,9 +552,9 @@ public class XMLSchemaWriter {
                 }
             }
         }
-        
+
         return xml.toString();
-        
+
     }
         
   
@@ -615,6 +610,4 @@ public class XMLSchemaWriter {
     
     */
 
-    
-    
 }

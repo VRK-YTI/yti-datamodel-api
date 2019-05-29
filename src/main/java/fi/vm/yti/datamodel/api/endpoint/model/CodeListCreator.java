@@ -9,6 +9,7 @@ import fi.vm.yti.datamodel.api.service.JerseyClient;
 import fi.vm.yti.datamodel.api.service.JerseyResponseManager;
 import fi.vm.yti.datamodel.api.utils.LDHelper;
 import io.swagger.annotations.*;
+
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
 import org.apache.jena.query.ParameterizedSparqlString;
@@ -24,7 +25,7 @@ import javax.ws.rs.core.Response;
 
 @Component
 @Path("codeListCreator")
-@Api(tags = {"Codes"}, description = "Create reusable code list that is not resolved")
+@Api(tags = { "Codes" }, description = "Create reusable code list that is not resolved")
 public class CodeListCreator {
 
     private final IDManager idManager;
@@ -48,48 +49,46 @@ public class CodeListCreator {
     @Produces("application/ld+json")
     @ApiOperation(value = "Create new code list", notes = "Creates new code list")
     @ApiResponses(value = { @ApiResponse(code = 200, message = "New list is created"),
-            @ApiResponse(code = 400, message = "Invalid ID supplied"),
-            @ApiResponse(code = 403, message = "Invalid IRI in parameter"),
-            @ApiResponse(code = 404, message = "Service not found"),
-            @ApiResponse(code = 401, message = "No right to create new")})
+        @ApiResponse(code = 400, message = "Invalid ID supplied"),
+        @ApiResponse(code = 403, message = "Invalid IRI in parameter"),
+        @ApiResponse(code = 404, message = "Service not found"),
+        @ApiResponse(code = 401, message = "No right to create new") })
     public Response newValueScheme(
-            @ApiParam(value = "Codelist uri", required = true) @QueryParam("uri") String uri,
-            @ApiParam(value = "Codelist name", required = true) @QueryParam("label") String label,
-            @ApiParam(value = "Codelist description", required = true) @QueryParam("description") String comment,
-            @ApiParam(value = "Initial language", required = true, allowableValues="fi,en") @QueryParam("lang") String lang) {
-
+        @ApiParam(value = "Codelist uri", required = true) @QueryParam("uri") String uri,
+        @ApiParam(value = "Codelist name", required = true) @QueryParam("label") String label,
+        @ApiParam(value = "Codelist description", required = true) @QueryParam("description") String comment,
+        @ApiParam(value = "Initial language", required = true, allowableValues = "fi,en") @QueryParam("lang") String lang) {
 
         IRI codeListIRI = null;
 
-        if(uri!=null && !uri.equals("undefined")) {
-            try{
+        if (uri != null && !uri.equals("undefined")) {
+            try {
                 codeListIRI = idManager.constructIRI(uri.toLowerCase());
-            } catch(IRIException e) {
+            } catch (IRIException e) {
                 return jerseyResponseManager.invalidIRI();
             }
         } else {
             return jerseyResponseManager.invalidParameter();
         }
 
-
         String queryString;
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
         queryString = "CONSTRUCT  { "
-                + "?iri a dcam:VocabularyEncodingScheme . "
-                + "?iri dcterms:title ?label . "
-                + "?iri dcterms:description ?description . "
-                + "?iri dcterms:identifier ?uuid . "
-                + "?iri dcterms:isPartOf iow:OtherCodeGroup . "
-                + "iow:OtherCodeGroup dcterms:title 'Muut luokitukset'@fi . "
-                + "iow:OtherCodeGroup dcterms:title 'Reference data'@en . "
-                + "} WHERE { "
-                + "BIND(UUID() as ?uuid) "
-                + " }";
+            + "?iri a dcam:VocabularyEncodingScheme . "
+            + "?iri dcterms:title ?label . "
+            + "?iri dcterms:description ?description . "
+            + "?iri dcterms:identifier ?uuid . "
+            + "?iri dcterms:isPartOf iow:OtherCodeGroup . "
+            + "iow:OtherCodeGroup dcterms:title 'Muut luokitukset'@fi . "
+            + "iow:OtherCodeGroup dcterms:title 'Reference data'@en . "
+            + "} WHERE { "
+            + "BIND(UUID() as ?uuid) "
+            + " }";
 
         pss.setLiteral("label", ResourceFactory.createLangLiteral(label, lang));
         pss.setLiteral("description", ResourceFactory.createLangLiteral(comment, lang));
-        pss.setIri("iri",codeListIRI);
+        pss.setIri("iri", codeListIRI);
 
         pss.setCommandText(queryString);
 

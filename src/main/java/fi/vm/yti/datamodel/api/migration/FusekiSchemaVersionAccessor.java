@@ -4,6 +4,7 @@ import fi.vm.yti.datamodel.api.model.AbstractClass;
 import fi.vm.yti.datamodel.api.service.GraphManager;
 import fi.vm.yti.migration.InitializationException;
 import fi.vm.yti.migration.SchemaVersionAccessor;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

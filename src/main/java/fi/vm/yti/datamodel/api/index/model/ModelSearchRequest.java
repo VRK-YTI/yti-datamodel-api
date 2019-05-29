@@ -12,7 +12,8 @@ public class ModelSearchRequest {
 
     private Integer pageFrom;
 
-    public ModelSearchRequest() {}
+    public ModelSearchRequest() {
+    }
 
     public ModelSearchRequest(final String query,
                               final boolean searchResources,

@@ -109,7 +109,7 @@ public class ElasticConnector {
             IndexResponse resp = esClient.index(updateReq, RequestOptions.DEFAULT);
             logger.info("Index update response: " + resp.status().getStatus());
         } catch (IOException e) {
-            logger.warn("Could not add to index: "+id);
+            logger.warn("Could not add to index: " + id);
             logger.warn(ExceptionUtils.getExceptionMessage(e));
         }
     }

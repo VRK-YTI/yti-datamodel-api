@@ -1,5 +1,5 @@
 /*
- * Licensed under the European Union Public Licence (EUPL) V.1.1 
+ * Licensed under the European Union Public Licence (EUPL) V.1.1
  */
 package fi.vm.yti.datamodel.api.service;
 
@@ -15,24 +15,26 @@ public class IDManager {
 
     /**
      * Returns true if url is absolute
+     *
      * @param url as string
      * @return boolean
      */
     public boolean isValidUrl(String url) {
-        
-        if(url==null || url.isEmpty()) return false;
-        
+
+        if (url == null || url.isEmpty()) return false;
+
         try {
-	    IRI testIRI = iriFactory.construct(url);
+            IRI testIRI = iriFactory.construct(url);
             return testIRI.isAbsolute();
-	} catch (IRIException e) {
+        } catch (IRIException e) {
             return false;
         }
-        
+
     }
 
     /**
      * Returns true if url is not absolute
+     *
      * @param url
      * @return boolean
      */
@@ -42,6 +44,7 @@ public class IDManager {
 
     /**
      * Creates IRI from string
+     *
      * @param url
      * @return returns created IRI
      * @throws IRIException

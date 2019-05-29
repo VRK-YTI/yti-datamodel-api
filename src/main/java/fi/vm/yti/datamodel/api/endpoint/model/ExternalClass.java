@@ -10,6 +10,7 @@ import fi.vm.yti.datamodel.api.service.JerseyResponseManager;
 import fi.vm.yti.datamodel.api.utils.LDHelper;
 import fi.vm.yti.datamodel.api.utils.QueryLibrary;
 import io.swagger.annotations.*;
+
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
 import org.apache.jena.query.ParameterizedSparqlString;
@@ -21,11 +22,13 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
-import org.slf4j.Logger;import org.slf4j.LoggerFactory;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Component
 @Path("externalClass")
-@Api(tags = {"Class"}, description = "External class operations")
+@Api(tags = { "Class" }, description = "External class operations")
 public class ExternalClass {
 
     private static final Logger logger = LoggerFactory.getLogger(ExternalClass.class.getName());
@@ -50,74 +53,71 @@ public class ExternalClass {
     @Produces("application/ld+json")
     @ApiOperation(value = "Get external class from requires", notes = "Get class in JSON-LD")
     @ApiResponses(value = {
-            @ApiResponse(code = 404, message = "No such resource"),
-            @ApiResponse(code = 400, message = "Invalid model supplied"),
-            @ApiResponse(code = 404, message = "Service not found"),
-            @ApiResponse(code = 500, message = "Internal server error")
+        @ApiResponse(code = 404, message = "No such resource"),
+        @ApiResponse(code = 400, message = "Invalid model supplied"),
+        @ApiResponse(code = 404, message = "Service not found"),
+        @ApiResponse(code = 500, message = "Internal server error")
     })
     public Response json(
-            @ApiParam(value = "Class id")
-            @QueryParam("id") String id,
-            @ApiParam(value = "Model id", required = true)
-            @QueryParam("model") String model) {
+        @ApiParam(value = "Class id")
+        @QueryParam("id") String id,
+        @ApiParam(value = "Model id", required = true)
+        @QueryParam("model") String model) {
 
         IRI idIRI;
 
         /* Check that Model URI is valid */
-        if(!idManager.isValidUrl(model)) {
+        if (!idManager.isValidUrl(model)) {
             return jerseyResponseManager.invalidIRI();
         }
 
-        if(id==null || id.equals("undefined") || id.equals("default")) {
+        if (id == null || id.equals("undefined") || id.equals("default")) {
 
             /* If no id is provided create a list of classes */
             ParameterizedSparqlString pss = new ParameterizedSparqlString();
             pss.setNsPrefixes(LDHelper.PREFIX_MAP);
 
             String queryString = "CONSTRUCT { "
-                    + "?class rdfs:isDefinedBy ?externalModel . "
-                    + "?externalModel rdfs:label ?externalModelLabel . "
-                    + "?externalModel a dcterms:Standard . "
-                    + "?class sh:name ?label . "
-                    + "?class sh:description ?comment . "
-                    + "?class a rdfs:Class . "
-                    + "?class dcterms:modified ?modified . "
-                    + "} WHERE { "
-                    + "SERVICE ?modelService { "
-                    + "GRAPH ?library { "
-                    + "?library dcterms:requires ?externalModel . "
-                    + "?externalModel rdfs:label ?externalModelLabel . "
-                    + "}}"
-                    + "GRAPH ?externalModel { "
-                    + "?class a ?type . "
-                    + "FILTER(!isBlank(?class)) "
-                    + "VALUES ?type { rdfs:Class owl:Class sh:NodeShape sh:Shape } "
-                    /* GET LABEL */
-                    + "OPTIONAL{{ ?class ?labelPred ?labelStr . "
-                    + "VALUES ?labelPred { rdfs:label sh:name dc:title dcterms:title }"                    
-                    + "FILTER(LANG(?labelStr) = '') BIND(STRLANG(STR(?labelStr),'en') as ?label) }"
-                    + "UNION"
-                    + "{ ?class ?labelPred ?label . "
-                    + "VALUES ?labelPred { rdfs:label sh:name dc:title dcterms:title }"
-                    + " FILTER(LANG(?label)!='') }"
-                    /* GET COMMENT */
-                    + "{ ?class ?commentPred ?commentStr . "
-                    + "VALUES ?commentPred { rdfs:comment skos:definition dcterms:description dc:description prov:definition sh:description }"
-                    + "FILTER(LANG(?commentStr) = '') BIND(STRLANG(STR(?commentStr),'en') as ?comment) }"
-                    + "UNION"
-                    + "{ ?class ?commentPred ?comment . "
-                    + "VALUES ?commentPred { rdfs:comment skos:definition dcterms:description dc:description prov:definition sh:description }"
-                    + " FILTER(LANG(?comment)!='') }"
-                    + "}}"
-                    + "}";
-
+                + "?class rdfs:isDefinedBy ?externalModel . "
+                + "?externalModel rdfs:label ?externalModelLabel . "
+                + "?externalModel a dcterms:Standard . "
+                + "?class sh:name ?label . "
+                + "?class sh:description ?comment . "
+                + "?class a rdfs:Class . "
+                + "?class dcterms:modified ?modified . "
+                + "} WHERE { "
+                + "SERVICE ?modelService { "
+                + "GRAPH ?library { "
+                + "?library dcterms:requires ?externalModel . "
+                + "?externalModel rdfs:label ?externalModelLabel . "
+                + "}}"
+                + "GRAPH ?externalModel { "
+                + "?class a ?type . "
+                + "FILTER(!isBlank(?class)) "
+                + "VALUES ?type { rdfs:Class owl:Class sh:NodeShape sh:Shape } "
+                /* GET LABEL */
+                + "OPTIONAL{{ ?class ?labelPred ?labelStr . "
+                + "VALUES ?labelPred { rdfs:label sh:name dc:title dcterms:title }"
+                + "FILTER(LANG(?labelStr) = '') BIND(STRLANG(STR(?labelStr),'en') as ?label) }"
+                + "UNION"
+                + "{ ?class ?labelPred ?label . "
+                + "VALUES ?labelPred { rdfs:label sh:name dc:title dcterms:title }"
+                + " FILTER(LANG(?label)!='') }"
+                /* GET COMMENT */
+                + "{ ?class ?commentPred ?commentStr . "
+                + "VALUES ?commentPred { rdfs:comment skos:definition dcterms:description dc:description prov:definition sh:description }"
+                + "FILTER(LANG(?commentStr) = '') BIND(STRLANG(STR(?commentStr),'en') as ?comment) }"
+                + "UNION"
+                + "{ ?class ?commentPred ?comment . "
+                + "VALUES ?commentPred { rdfs:comment skos:definition dcterms:description dc:description prov:definition sh:description }"
+                + " FILTER(LANG(?comment)!='') }"
+                + "}}"
+                + "}";
 
             pss.setIri("library", model);
             pss.setIri("modelService", endpointServices.getLocalhostCoreSparqlAddress());
 
-
             pss.setCommandText(queryString);
-
 
             return jerseyClient.constructGraphFromService(pss.toString(), endpointServices.getImportsSparqlAddress());
 
@@ -125,8 +125,7 @@ public class ExternalClass {
 
             try {
                 idIRI = idManager.constructIRI(id);
-            }
-            catch (IRIException e) {
+            } catch (IRIException e) {
                 return jerseyResponseManager.invalidIRI();
             }
 
@@ -144,10 +143,9 @@ public class ExternalClass {
             pss.setIri("modelService", endpointServices.getLocalhostCoreSparqlAddress());
             pss.setCommandText(queryString);
             pss.setIri("classIRI", idIRI);
-            pss.setLiteral("draft","VALID");
+            pss.setLiteral("draft", "VALID");
 
-
-            if(!model.equals("undefined")) {
+            if (!model.equals("undefined")) {
                 pss.setIri("library", model);
             }
             return jerseyClient.constructGraphFromService(pss.toString(), sparqlService);

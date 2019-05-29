@@ -70,7 +70,7 @@ public class ModelQueryFactory {
         QueryStringQueryBuilder labelQuery = null;
 
         if (!query.isEmpty()) {
-            labelQuery = QueryBuilders.queryStringQuery(query+" OR "+query+"* OR *"+query).field("label.*");
+            labelQuery = QueryBuilders.queryStringQuery(query + " OR " + query + "* OR *" + query).field("label.*");
         }
 
         TermsQueryBuilder idQuery = null;

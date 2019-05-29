@@ -6,6 +6,7 @@ package fi.vm.yti.datamodel.api.endpoint.model;
 import fi.vm.yti.datamodel.api.service.*;
 import fi.vm.yti.datamodel.api.utils.LDHelper;
 import io.swagger.annotations.*;
+
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
 import org.apache.jena.query.ParameterizedSparqlString;
@@ -21,7 +22,7 @@ import javax.ws.rs.core.Response;
 
 @Component
 @Path("modelRequirementCreator")
-@Api(tags = {"Model"}, description = "Construct new requirement")
+@Api(tags = { "Model" }, description = "Construct new requirement")
 public class ModelRequirementCreator {
 
     private final EndpointServices endpointServices;
@@ -50,17 +51,17 @@ public class ModelRequirementCreator {
     @Produces("application/ld+json")
     @ApiOperation(value = "Create new model", notes = "Create namespace object. Namespace must be valid URI and end with # or /.")
     @ApiResponses(value = { @ApiResponse(code = 200, message = "New class is created"),
-            @ApiResponse(code = 400, message = "Invalid ID supplied"),
-            @ApiResponse(code = 403, message = "Invalid IRI in parameter"),
-            @ApiResponse(code = 404, message = "Service not found"),
-            @ApiResponse(code = 401, message = "No right to create new")})
+        @ApiResponse(code = 400, message = "Invalid ID supplied"),
+        @ApiResponse(code = 403, message = "Invalid IRI in parameter"),
+        @ApiResponse(code = 404, message = "Service not found"),
+        @ApiResponse(code = 401, message = "No right to create new") })
     public Response newRequiredModel(
-            @ApiParam(value = "Model namespace", required = true) @QueryParam("namespace") String namespace,
-            @ApiParam(value = "Model prefix", required = true) @QueryParam("prefix") String prefix,
-            @ApiParam(value = "Model label", required = true) @QueryParam("label") String label,
-            @ApiParam(value = "Initial language", required = true, allowableValues="fi,en") @QueryParam("lang") String lang) {
+        @ApiParam(value = "Model namespace", required = true) @QueryParam("namespace") String namespace,
+        @ApiParam(value = "Model prefix", required = true) @QueryParam("prefix") String prefix,
+        @ApiParam(value = "Model label", required = true) @QueryParam("label") String label,
+        @ApiParam(value = "Initial language", required = true, allowableValues = "fi,en") @QueryParam("lang") String lang) {
 
-        if(namespace==null || (!namespace.endsWith("#") && !namespace.endsWith("/"))) return jerseyResponseManager.invalidIRI();
+        if (namespace == null || (!namespace.endsWith("#") && !namespace.endsWith("/"))) return jerseyResponseManager.invalidIRI();
 
         IRI namespaceIRI;
 
@@ -74,7 +75,7 @@ public class ModelRequirementCreator {
         boolean isLocalNamespace = true;
 
         if (!graphManager.isExistingServiceGraph(namespace)) {
-            isResolvedNamespace = namespaceManager.resolveNamespace(namespace,null,false);
+            isResolvedNamespace = namespaceManager.resolveNamespace(namespace, null, false);
             isLocalNamespace = false;
         }
 
@@ -82,19 +83,19 @@ public class ModelRequirementCreator {
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
         queryString = "CONSTRUCT  { "
-                + "?g a rdfs:Resource . "
-                + "?g rdfs:label ?label . "
-                + "?g dcap:preferredXMLNamespaceName ?namespace . "
-                + "?g dcap:preferredXMLNamespacePrefix ?prefix . "
-                + (isLocalNamespace?"":"?g iow:isResolved ?resolved . ")
-                + "} WHERE { }";
+            + "?g a rdfs:Resource . "
+            + "?g rdfs:label ?label . "
+            + "?g dcap:preferredXMLNamespaceName ?namespace . "
+            + "?g dcap:preferredXMLNamespacePrefix ?prefix . "
+            + (isLocalNamespace ? "" : "?g iow:isResolved ?resolved . ")
+            + "} WHERE { }";
 
         pss.setCommandText(queryString);
         pss.setIri("g", namespaceIRI);
         pss.setLiteral("label", ResourceFactory.createLangLiteral(label, lang));
-        pss.setLiteral("namespace",namespace);
+        pss.setLiteral("namespace", namespace);
         pss.setLiteral("prefix", prefix);
-        if(!isLocalNamespace) pss.setLiteral("resolved", isResolvedNamespace);
+        if (!isLocalNamespace) pss.setLiteral("resolved", isResolvedNamespace);
 
         return jerseyClient.constructNonEmptyGraphFromService(pss.toString(), endpointServices.getTempConceptReadSparqlAddress());
     }

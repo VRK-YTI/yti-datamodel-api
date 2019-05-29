@@ -5,6 +5,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -16,7 +17,7 @@ import javax.ws.rs.core.Response;
 
 @Component
 @Path("config")
-@Api(tags = {"Admin"}, description = "Get API config")
+@Api(tags = { "Admin" }, description = "Get API config")
 public class Config {
 
     private final JerseyResponseManager jerseyResponseManager;
@@ -26,11 +27,13 @@ public class Config {
         this.jerseyResponseManager = jerseyResponseManager;
     }
 
-    @Context ServletContext context;
+    @Context
+    ServletContext context;
+
     @GET
     @ApiOperation(value = "Returns API config", notes = "Returns API config")
     @ApiResponses(value = {
-            @ApiResponse(code = 200, message = "OK")
+        @ApiResponse(code = 200, message = "OK")
     })
     public Response json() {
 

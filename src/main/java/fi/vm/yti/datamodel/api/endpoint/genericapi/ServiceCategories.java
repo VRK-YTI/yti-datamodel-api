@@ -8,6 +8,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -19,7 +20,7 @@ import javax.ws.rs.core.Response;
 
 @Component
 @Path("serviceCategories")
-@Api(tags = {"Model"}, description = "Get available service categories")
+@Api(tags = { "Model" }, description = "Get available service categories")
 public class ServiceCategories {
 
     private final EndpointServices endpointServices;
@@ -34,16 +35,15 @@ public class ServiceCategories {
     }
 
     @GET
-    @Produces({"application/json","application/ld+json"})
+    @Produces({ "application/json", "application/ld+json" })
     @ApiOperation(value = "Returns list of service categories")
     @ApiResponses(value = {
-            @ApiResponse(code = 200, message = "")
+        @ApiResponse(code = 200, message = "")
     })
     public Response json(@HeaderParam("Accept") String header) {
-        if(header!=null && header.equals("application/ld+json")) {
+        if (header != null && header.equals("application/ld+json")) {
             return jerseyClient.constructGraphFromService(QueryLibrary.constructServiceCategories, endpointServices.getCoreSparqlAddress());
-        }
-        else {
+        } else {
             return Response.status(200).entity(ServiceCategory.values()).build();
         }
     }

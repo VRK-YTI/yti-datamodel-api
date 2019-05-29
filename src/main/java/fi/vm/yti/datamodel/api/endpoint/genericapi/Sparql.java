@@ -5,6 +5,7 @@ import fi.vm.yti.datamodel.api.security.AuthorizationManager;
 import fi.vm.yti.datamodel.api.service.JerseyResponseManager;
 import fi.vm.yti.datamodel.api.utils.LDHelper;
 import io.swagger.annotations.*;
+
 import org.apache.jena.atlas.web.ContentType;
 import org.apache.jena.query.*;
 import org.apache.jena.rdf.model.Model;
@@ -15,13 +16,14 @@ import org.springframework.stereotype.Component;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
+
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
 import java.io.StringWriter;
 
 @Component
 @Path("sparql")
-@Api(tags = {"Admin"}, description = "Edit resources")
+@Api(tags = { "Admin" }, description = "Edit resources")
 public class Sparql {
 
     private final AuthorizationManager authorizationManager;
@@ -42,14 +44,14 @@ public class Sparql {
     @Produces("application/sparql-results+json")
     @ApiOperation(value = "Sparql query to given service", notes = "More notes about this method")
     @ApiResponses(value = {
-            @ApiResponse(code = 400, message = "Query parse error"),
-            @ApiResponse(code = 500, message = "Query exception"),
-            @ApiResponse(code = 200, message = "OK")
+        @ApiResponse(code = 400, message = "Query parse error"),
+        @ApiResponse(code = 500, message = "Query exception"),
+        @ApiResponse(code = 200, message = "OK")
     })
     public Response sparql(
-            @ApiParam(value = "SPARQL Query", required = true) @QueryParam("query") String queryString,
-            @ApiParam(value = "SPARQL Service", defaultValue = "core", allowableValues = "core,prov,imports,scheme,concept") @QueryParam("service") String service,
-            @ApiParam(value = "Accept", required = true, allowableValues="application/sparql-results+json,text/csv, text/turtle") @QueryParam("accept") String accept) {
+        @ApiParam(value = "SPARQL Query", required = true) @QueryParam("query") String queryString,
+        @ApiParam(value = "SPARQL Service", defaultValue = "core", allowableValues = "core,prov,imports,scheme,concept") @QueryParam("service") String service,
+        @ApiParam(value = "Accept", required = true, allowableValues = "application/sparql-results+json,text/csv, text/turtle") @QueryParam("accept") String accept) {
 
         if (!authorizationManager.hasRightToRunSparqlQuery()) {
             return jerseyResponseManager.unauthorized();
@@ -57,47 +59,47 @@ public class Sparql {
 
         Query query;
 
-        try{
+        try {
             queryString = LDHelper.prefix + queryString;
             query = QueryFactory.create(queryString);
-        } catch(QueryParseException ex) {
+        } catch (QueryParseException ex) {
             return Response.status(400).build();
         }
 
-        try(QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getSparqlAddress(service), query)) {
+        try (QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getSparqlAddress(service), query)) {
 
             OutputStream outs = new ByteArrayOutputStream();
             ResultSet results = qexec.execSelect();
 
-            if(accept.equals("text/csv")) {
+            if (accept.equals("text/csv")) {
                 ResultSetFormatter.outputAsCSV(outs, results);
-            }
-            else {
-                ResultSetFormatter.outputAsJSON(outs,results);
+            } else {
+                ResultSetFormatter.outputAsJSON(outs, results);
             }
 
-            return  Response
-                    .ok(outs.toString(), accept)
-                    .build();
+            return Response
+                .ok(outs.toString(), accept)
+                .build();
 
-        } catch(QueryException ex) {
+        } catch (QueryException ex) {
             return Response.status(500).build();
         }
     }
 
-    @GET @Path("/construct")
+    @GET
+    @Path("/construct")
     @Consumes("application/sparql-query")
     @Produces("text/turtle")
     @ApiOperation(value = "Sparql query to given service", notes = "More notes about this method")
     @ApiResponses(value = {
-            @ApiResponse(code = 400, message = "Query parse error"),
-            @ApiResponse(code = 500, message = "Query exception"),
-            @ApiResponse(code = 200, message = "OK")
+        @ApiResponse(code = 400, message = "Query parse error"),
+        @ApiResponse(code = 500, message = "Query exception"),
+        @ApiResponse(code = 200, message = "OK")
     })
     public Response sparqlConstruct(
-            @ApiParam(value = "SPARQL Query", required = true) @QueryParam("query") String queryString,
-            @ApiParam(value = "SPARQL Service", defaultValue = "core", allowableValues = "core,prov,imports,scheme,concept") @QueryParam("service") String service,
-            @ApiParam(value = "Accept", required = true, allowableValues="text/turtle") @QueryParam("accept") String accept) {
+        @ApiParam(value = "SPARQL Query", required = true) @QueryParam("query") String queryString,
+        @ApiParam(value = "SPARQL Service", defaultValue = "core", allowableValues = "core,prov,imports,scheme,concept") @QueryParam("service") String service,
+        @ApiParam(value = "Accept", required = true, allowableValues = "text/turtle") @QueryParam("accept") String accept) {
 
         if (!authorizationManager.hasRightToRunSparqlQuery()) {
             return jerseyResponseManager.unauthorized();
@@ -105,14 +107,14 @@ public class Sparql {
 
         Query query;
 
-        try{
+        try {
             queryString = LDHelper.prefix + queryString;
             query = QueryFactory.create(queryString);
-        } catch(QueryParseException ex) {
+        } catch (QueryParseException ex) {
             return Response.status(400).build();
         }
 
-        try(QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getSparqlAddress(service), query)) {
+        try (QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getSparqlAddress(service), query)) {
 
             OutputStream outs = new ByteArrayOutputStream();
             Model results = qexec.execConstruct();
@@ -120,13 +122,13 @@ public class Sparql {
             StringWriter writer = new StringWriter();
             ContentType contentType = ContentType.create(accept);
             Lang rdfLang = RDFLanguages.contentTypeToLang(contentType);
-            RDFDataMgr.write(writer, results,  RDFWriterRegistry.defaultSerialization(rdfLang));
+            RDFDataMgr.write(writer, results, RDFWriterRegistry.defaultSerialization(rdfLang));
 
-            return  Response
-                    .ok(writer.toString(), accept)
-                    .build();
+            return Response
+                .ok(writer.toString(), accept)
+                .build();
 
-        } catch(QueryException ex) {
+        } catch (QueryException ex) {
             return Response.status(500).build();
         }
     }
@@ -134,27 +136,26 @@ public class Sparql {
     @POST
     @ApiOperation(value = "Sends SPARQL Update query to given service", notes = "PUT Body should be json-ld")
     @ApiResponses(value = {
-            @ApiResponse(code = 204, message = "Graph is saved"),
-            @ApiResponse(code = 400, message = "Invalid graph supplied"),
-            @ApiResponse(code = 403, message = "Illegal graph parameter"),
-            @ApiResponse(code = 404, message = "Service not found"),
-            @ApiResponse(code = 500, message = "Bad data?")
+        @ApiResponse(code = 204, message = "Graph is saved"),
+        @ApiResponse(code = 400, message = "Invalid graph supplied"),
+        @ApiResponse(code = 403, message = "Illegal graph parameter"),
+        @ApiResponse(code = 404, message = "Service not found"),
+        @ApiResponse(code = 500, message = "Bad data?")
     })
 
     public Response sparqlUpdate(
-            @ApiParam(value = "Sparql query", required = true) String body,
-    @ApiParam(value = "SPARQL Service", defaultValue = "core", allowableValues = "core,prov,imports,scheme,concept") @QueryParam("service") String service) {
+        @ApiParam(value = "Sparql query", required = true) String body,
+        @ApiParam(value = "SPARQL Service", defaultValue = "core", allowableValues = "core,prov,imports,scheme,concept") @QueryParam("service") String service) {
 
-
-        if(!authorizationManager.hasRightToRunSparqlQuery()) {
+        if (!authorizationManager.hasRightToRunSparqlQuery()) {
             return jerseyResponseManager.unauthorized();
         }
 
         String query = LDHelper.prefix + body;
 
         try {
-            UpdateRequest queryObj= UpdateFactory.create(query);
-            UpdateProcessor qexec= UpdateExecutionFactory.createRemoteForm(queryObj, endpointServices.getSparqlUpdateAddress(service));
+            UpdateRequest queryObj = UpdateFactory.create(query);
+            UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, endpointServices.getSparqlUpdateAddress(service));
             qexec.execute();
         } catch (UpdateException | QueryParseException ex) {
             return Response.status(400).build();

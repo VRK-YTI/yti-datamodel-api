@@ -24,7 +24,8 @@ public class IndexModelDTO {
     @JsonFormat(with = JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY)
     private List<String> isPartOf;
 
-    public IndexModelDTO() {}
+    public IndexModelDTO() {
+    }
 
     public IndexModelDTO(DataModel model) {
         this.id = model.getId();

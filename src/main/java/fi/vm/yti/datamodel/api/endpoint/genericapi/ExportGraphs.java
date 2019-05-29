@@ -3,6 +3,7 @@ package fi.vm.yti.datamodel.api.endpoint.genericapi;
 import fi.vm.yti.datamodel.api.service.JerseyClient;
 import fi.vm.yti.datamodel.api.service.JerseyResponseManager;
 import io.swagger.annotations.*;
+
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFLanguages;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,7 +17,7 @@ import javax.ws.rs.core.Response;
 
 @Component
 @Path("exportGraphs")
-@Api(tags = {"Admin"}, description = "Export graphs")
+@Api(tags = { "Admin" }, description = "Export graphs")
 public class ExportGraphs {
 
     private final JerseyClient jerseyClient;
@@ -30,19 +31,19 @@ public class ExportGraphs {
     }
 
     @GET
-    @Produces({"application/ld+json"})
+    @Produces({ "application/ld+json" })
     @ApiOperation(value = "Get graphs from service", notes = "Exports whole service")
     @ApiResponses(value = {
-            @ApiResponse(code = 200, message = "OK"),
-            @ApiResponse(code = 500, message = "Internal server error")
+        @ApiResponse(code = 200, message = "OK"),
+        @ApiResponse(code = 500, message = "Internal server error")
     })
     public Response json(
-            @ApiParam(value = "Requested resource", required = true, allowableValues = "core,prov") @QueryParam("service") String service,
-            @ApiParam(value = "Content-type", required = true, allowableValues = "application/ld+json") @QueryParam("content-type") String ctype) {
+        @ApiParam(value = "Requested resource", required = true, allowableValues = "core,prov") @QueryParam("service") String service,
+        @ApiParam(value = "Content-type", required = true, allowableValues = "application/ld+json") @QueryParam("content-type") String ctype) {
 
         Lang clang = RDFLanguages.contentTypeToLang(ctype);
 
-        if(clang==null) {
+        if (clang == null) {
             return jerseyResponseManager.invalidParameter();
         }
 

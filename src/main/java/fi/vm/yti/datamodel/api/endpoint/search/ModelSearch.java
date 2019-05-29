@@ -25,8 +25,9 @@ import io.swagger.annotations.ApiParam;
 
 @Component
 @Path("/searchModels")
-@Api(tags = {"Index"})
+@Api(tags = { "Index" })
 public class ModelSearch {
+
     private static final Logger logger = LoggerFactory.getLogger(ModelSearch.class.getName());
     private SearchIndexManager searchIndexManager;
     private JerseyResponseManager jerseyResponseManager;

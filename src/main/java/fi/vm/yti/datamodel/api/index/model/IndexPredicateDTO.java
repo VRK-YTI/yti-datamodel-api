@@ -14,7 +14,8 @@ public class IndexPredicateDTO extends IndexResourceDTO {
     private Map<String, String> label;
     private Map<String, String> comment;
 
-    public IndexPredicateDTO() {}
+    public IndexPredicateDTO() {
+    }
 
     public IndexPredicateDTO(final String id,
                              final String isDefinedBy,

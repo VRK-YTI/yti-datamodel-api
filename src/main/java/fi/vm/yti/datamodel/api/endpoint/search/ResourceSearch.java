@@ -24,8 +24,9 @@ import io.swagger.annotations.Api;
 
 @Component
 @Path("/searchResources")
-@Api(tags = {"Index"})
+@Api(tags = { "Index" })
 public class ResourceSearch {
+
     private static final Logger logger = LoggerFactory.getLogger(ResourceSearch.class.getName());
     private SearchIndexManager searchIndexManager;
     private JerseyResponseManager jerseyResponseManager;

@@ -61,7 +61,7 @@ public class DeepResourceQueryFactory {
     public SearchRequest createQuery(String query,
                                      String sortLang) {
 
-        QueryStringQueryBuilder queryStringQuery = QueryBuilders.queryStringQuery(query+" OR "+query+"* OR *"+query).field("label.*");
+        QueryStringQueryBuilder queryStringQuery = QueryBuilders.queryStringQuery(query + " OR " + query + "* OR *" + query).field("label.*");
 
         if (sortLang != null && sortLangPattern.matcher(sortLang).matches()) {
             queryStringQuery = queryStringQuery.field("label." + sortLang, 10);
@@ -87,7 +87,8 @@ public class DeepResourceQueryFactory {
         return sr;
     }
 
-    public Map<String, List<DeepSearchHitListDTO<?>>> parseResponse(SearchResponse response, ModelSearchRequest request) {
+    public Map<String, List<DeepSearchHitListDTO<?>>> parseResponse(SearchResponse response,
+                                                                    ModelSearchRequest request) {
         Map<String, List<DeepSearchHitListDTO<?>>> ret = new HashMap<>();
         try {
             Terms groupBy = response.getAggregations().get("group_by_model");

@@ -1,5 +1,5 @@
 /*
- * Licensed under the European Union Public Licence (EUPL) V.1.1 
+ * Licensed under the European Union Public Licence (EUPL) V.1.1
  */
 package fi.vm.yti.datamodel.api.utils;
 
@@ -7,11 +7,9 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 
 /**
- *
  * @author jkesanie
  */
 public class Frames {
-
 
     public static final LinkedHashMap<String, Object> jsonLdKeys;
     public static final LinkedHashMap<String, Object> inScheme;
@@ -60,7 +58,7 @@ public class Frames {
     public static final LinkedHashMap<String, Object> classVisualizationFrame;
     public static final LinkedHashMap<String, Object> origClassContext;
     public static final LinkedHashMap<String, Object> origClassFrame;
-    
+
     static {
 
         jsonLdKeys = new LinkedHashMap<String, Object>() {
@@ -72,34 +70,34 @@ public class Frames {
 
         inScheme = new LinkedHashMap<String, Object>() {
             {
-              put("@id", "http://www.w3.org/2004/02/skos/core#inScheme");
-              put("@type", "@id");                
+                put("@id", "http://www.w3.org/2004/02/skos/core#inScheme");
+                put("@type", "@id");
             }
-          
+
         };
 
         subject = new LinkedHashMap<String, Object>() {
             {
-              put("@id", "http://purl.org/dc/terms/subject");
-              put("@type", "@id");                
+                put("@id", "http://purl.org/dc/terms/subject");
+                put("@type", "@id");
             }
-          
+
         };
 
         comment = new LinkedHashMap<String, Object>() {
             {
-              put("@id", "http://www.w3.org/2000/01/rdf-schema#comment");
-              put("@container", "@language");                
+                put("@id", "http://www.w3.org/2000/01/rdf-schema#comment");
+                put("@container", "@language");
             }
-          
+
         };
-        
+
         description = new LinkedHashMap<String, Object>() {
             {
-              put("@id", "http://purl.org/dc/terms/description");
-              put("@container", "@language");                
+                put("@id", "http://purl.org/dc/terms/description");
+                put("@container", "@language");
             }
-          
+
         };
 
         shDescription = new LinkedHashMap<String, Object>() {
@@ -111,16 +109,16 @@ public class Frames {
 
         path = new LinkedHashMap<String, Object>() {
             {
-              put("@id", "http://www.w3.org/ns/shacl#path");
-              put("@type", "@id");                
+                put("@id", "http://www.w3.org/ns/shacl#path");
+                put("@type", "@id");
             }
-          
-        };                  
-        
+
+        };
+
         property = new LinkedHashMap<String, Object>() {
             {
-              put("@id", "http://www.w3.org/ns/shacl#property");
-              put("@type", "@id");                
+                put("@id", "http://www.w3.org/ns/shacl#property");
+                put("@type", "@id");
             }
         };
 
@@ -138,7 +136,7 @@ public class Frames {
             }
         };
 
-        title =  new LinkedHashMap<String, Object>() {
+        title = new LinkedHashMap<String, Object>() {
             {
                 put("@id", "http://purl.org/dc/terms/title");
                 put("@container", "@language");
@@ -156,7 +154,7 @@ public class Frames {
             {
                 put("@id", "http://purl.org/dc/terms/isPartOf");
                 put("@type", "@id");
-                put("@container","@set");
+                put("@container", "@set");
             }
         };
 
@@ -164,7 +162,7 @@ public class Frames {
             {
                 put("@id", "http://purl.org/dc/terms/contributor");
                 put("@type", "@id");
-                put("@container","@set");
+                put("@container", "@set");
             }
         };
 
@@ -200,72 +198,72 @@ public class Frames {
         };
 
         coreContext = new LinkedHashMap<String, Object>() {
-            {     
-                put("comment", comment);                               
+            {
+                put("comment", comment);
                 put("created", new LinkedHashMap<String, Object>() {
                     {
                         put("@id", "http://purl.org/dc/terms/created");
-                        put("@type", "http://www.w3.org/2001/XMLSchema#dateTime");                
+                        put("@type", "http://www.w3.org/2001/XMLSchema#dateTime");
                     }
                 });
                 put("definition", new LinkedHashMap<String, Object>() {
                     {
                         put("@id", "http://www.w3.org/2004/02/skos/core#definition");
-                        put("@container", "@language");                
+                        put("@container", "@language");
                     }
                 });
                 put("foaf", new LinkedHashMap<String, Object>() {
                     {
                         put("@id", "http://xmlns.com/foaf/0.1/");
-                        put("@type", "@id");                
+                        put("@type", "@id");
                     }
-                });     
+                });
                 put("hasPart", new LinkedHashMap<String, Object>() {
                     {
                         put("@id", "http://purl.org/dc/terms/hasPart");
-                        put("@type", "@id");                
+                        put("@type", "@id");
                     }
                 });
-                put("contributor",contributor);
+                put("contributor", contributor);
                 put("homepage", new LinkedHashMap<String, Object>() {
                     {
-                        put("@id", "http://purl.org/dc/terms/homepage");                        
+                        put("@id", "http://purl.org/dc/terms/homepage");
                     }
-                });       
+                });
                 put("identifier", new LinkedHashMap<String, Object>() {
                     {
-                        put("@id", "http://purl.org/dc/terms/identifier");               
+                        put("@id", "http://purl.org/dc/terms/identifier");
                     }
-                });       
+                });
                 put("imports", new LinkedHashMap<String, Object>() {
                     {
                         put("@id", "http://www.w3.org/2002/07/owl#imports");
-                        put("@type", "@id");                
+                        put("@type", "@id");
                     }
-                });                
-                put("isDefinedBy",isDefinedBy);
+                });
+                put("isDefinedBy", isDefinedBy);
                 put("isPartOf", isPartOf);
-                put("label",label);
+                put("label", label);
                 put("modified", modified);
                 put("nodeKind", new LinkedHashMap<String, Object>() {
                     {
                         put("@id", "http://www.w3.org/ns/shacl#nodeKind");
-                        put("@type", "@id");                
+                        put("@type", "@id");
                     }
-                });                
+                });
                 put("prefLabel", prefLabel);
-                put("title",title);
+                put("title", title);
                 put("prov", "http://www.w3.org/ns/prov#");
                 put("versionInfo", versionInfo);
                 put("editorialNote", new LinkedHashMap<String, Object>() {
                     {
-                        put("@id", "http://www.w3.org/2004/02/skos/core#editorialNote");   
-                        put("@container", "@language");                
+                        put("@id", "http://www.w3.org/2004/02/skos/core#editorialNote");
+                        put("@container", "@language");
                     }
-                });                  
+                });
                 put("localName", new LinkedHashMap<String, Object>() {
                     {
-                        put("@id", "http://uri.suomi.fi/datamodel/ns/iow#localName");                           
+                        put("@id", "http://uri.suomi.fi/datamodel/ns/iow#localName");
                     }
                 });
             }
@@ -278,33 +276,33 @@ public class Frames {
                     {
                         put("@id", "http://termed.thl.fi/meta/graph");
                     }
-                }); 
+                });
                 put("id", new LinkedHashMap<String, Object>() {
                     {
                         put("@id", "http://termed.thl.fi/meta/id");
                     }
-                }); 
+                });
                 put("type", new LinkedHashMap<String, Object>() {
                     {
                         put("@id", "http://termed.thl.fi/meta/type");
                     }
-                }); 
+                });
                 put("uri", new LinkedHashMap<String, Object>() {
                     {
                         put("@id", "http://termed.thl.fi/meta/uri");
                     }
-                });                           
-                put("description", description);                
+                });
+                put("description", description);
             }
-        };        
-        
+        };
+
         conceptContext = new LinkedHashMap<String, Object>() {
             {
                 putAll(coreContext);
                 put("inScheme", inScheme);
-            }            
+            }
         };
-        
+
         classificationContext = new LinkedHashMap<String, Object>() {
             {
                 putAll(coreContext);
@@ -312,40 +310,40 @@ public class Frames {
                     {
                         put("@id", "http://www.w3.org/ns/shacl#order");
                     }
-                }); 
-            }            
-        };  
-        
+                });
+            }
+        };
+
         organizationContext = new LinkedHashMap<String, Object>() {
             {
                 putAll(coreContext);
                 put("description", description);
-            }            
+            }
         };
-        
-       referenceDataServerContext = new LinkedHashMap<String, Object>() {
+
+        referenceDataServerContext = new LinkedHashMap<String, Object>() {
             {
                 putAll(coreContext);
                 put("description", description);
-            }            
-        };      
-        
+            }
+        };
+
         referenceDataContext = new LinkedHashMap<String, Object>() {
             {
                 putAll(coreContext);
                 put("creator", new LinkedHashMap<String, Object>() {
                     {
-                        put("@id", "http://purl.org/dc/terms/creator");                        
+                        put("@id", "http://purl.org/dc/terms/creator");
                     }
-                });  
+                });
                 put("description", description);
-            }            
-        };      
+            }
+        };
 
         referenceDataCodeContext = new LinkedHashMap<String, Object>() {
             {
-                putAll(coreContext);                
-            }            
+                putAll(coreContext);
+            }
         };
 
         preferredXMLNamespaceName = new LinkedHashMap<String, Object>() {
@@ -384,23 +382,23 @@ public class Frames {
                         put("@id", "http://www.w3.org/2000/01/rdf-schema#subPropertyOf");
                         put("@type", "@id");
                     }
-                });                 
+                });
                 put("equivalentProperty", new LinkedHashMap<String, Object>() {
                     {
                         put("@id", "http://www.w3.org/2002/07/owl#equivalentProperty");
                         put("@type", "@id");
                     }
-                });                 
+                });
                 put("datatype", new LinkedHashMap<String, Object>() {
                     {
                         put("@id", "http://www.w3.org/ns/shacl#datatype");
                         put("@type", "@id");
                     }
-                });                 
+                });
                 put("subject", subject);
-            }            
-        };           
-      
+            }
+        };
+
         propertyContext = new LinkedHashMap<String, Object>() {
             {
                 putAll(coreContext);
@@ -410,53 +408,53 @@ public class Frames {
                     {
                         put("@id", "http://www.w3.org/ns/shacl#order");
                     }
-                });     
+                });
                 put("example", new LinkedHashMap<String, Object>() {
                     {
                         put("@id", "http://www.w3.org/2004/02/skos/core#example");
                     }
-                });                
+                });
                 put("defaultValue", new LinkedHashMap<String, Object>() {
                     {
                         put("@id", "http://www.w3.org/ns/shacl#defaultValue");
                     }
-                });                
+                });
                 put("maxCount", new LinkedHashMap<String, Object>() {
                     {
                         put("@id", "http://www.w3.org/ns/shacl#maxCount");
                     }
-                });                
+                });
                 put("minCount", new LinkedHashMap<String, Object>() {
                     {
                         put("@id", "http://www.w3.org/ns/shacl#minCount");
                     }
-                });                
+                });
                 put("maxLength", new LinkedHashMap<String, Object>() {
                     {
                         put("@id", "http://www.w3.org/ns/shacl#maxLength");
                     }
-                });                
+                });
                 put("minLength", new LinkedHashMap<String, Object>() {
                     {
                         put("@id", "http://www.w3.org/ns/shacl#minLength");
                     }
-                });                
+                });
                 put("inValues", new LinkedHashMap<String, Object>() {
                     {
                         put("@id", "http://www.w3.org/ns/shacl#in");
                         put("@container", "@list");
                     }
-                });                
+                });
                 put("hasValue", new LinkedHashMap<String, Object>() {
                     {
-                        put("@id", "http://www.w3.org/ns/shacl#hasValue");                        
+                        put("@id", "http://www.w3.org/ns/shacl#hasValue");
                     }
-                });                
+                });
                 put("pattern", new LinkedHashMap<String, Object>() {
                     {
-                        put("@id", "http://www.w3.org/ns/shacl#pattern");                        
+                        put("@id", "http://www.w3.org/ns/shacl#pattern");
                     }
-                });                 
+                });
                 put("type", new LinkedHashMap<String, Object>() {
                     {
                         put("@id", "http://purl.org/dc/terms/type");
@@ -475,51 +473,51 @@ public class Frames {
                         put("@id", "http://www.w3.org/ns/shacl#classIn");
                         put("@type", "@id");
                     }
-                });                
+                });
                 put("memberOf", new LinkedHashMap<String, Object>() {
                     {
-                        put("@id", "http://purl.org/dc/dcam/memberOf");                        
+                        put("@id", "http://purl.org/dc/dcam/memberOf");
                     }
-                });                
+                });
                 put("stem", new LinkedHashMap<String, Object>() {
                     {
-                        put("@id", "http://www.w3.org/ns/shacl#stem");  
+                        put("@id", "http://www.w3.org/ns/shacl#stem");
                         put("@type", "@id");
                     }
-                }); 
+                });
                 put("languageIn", new LinkedHashMap<String, Object>() {
                     {
                         put("@id", "http://www.w3.org/ns/shacl#languageIn");
                         put("@container", "@list");
                     }
-                });                  
+                });
                 put("isResourceIdentifier", new LinkedHashMap<String, Object>() {
                     {
-                        put("@id", "http://uri.suomi.fi/datamodel/ns/iow#isResourceIdentifier");                        
+                        put("@id", "http://uri.suomi.fi/datamodel/ns/iow#isResourceIdentifier");
                     }
-                });  
+                });
                 put("uniqueLang", new LinkedHashMap<String, Object>() {
                     {
-                        put("@id", "http://www.w3.org/ns/shacl#uniqueLang");                        
+                        put("@id", "http://www.w3.org/ns/shacl#uniqueLang");
                     }
-                });  
+                });
                 put("isXmlWrapper", new LinkedHashMap<String, Object>() {
                     {
-                        put("@id", "http://uri.suomi.fi/datamodel/ns/iow#isXmlWrapper");                        
+                        put("@id", "http://uri.suomi.fi/datamodel/ns/iow#isXmlWrapper");
                     }
-                });  
+                });
                 put("isXmlAttribute", new LinkedHashMap<String, Object>() {
                     {
-                        put("@id", "http://uri.suomi.fi/datamodel/ns/iow#isXmlAttribute");                        
+                        put("@id", "http://uri.suomi.fi/datamodel/ns/iow#isXmlAttribute");
                     }
-                });  
+                });
                 put("name", name);
-                put("description",shDescription);
+                put("description", shDescription);
                 put("readOnlyValue", new LinkedHashMap<String, Object>() {
                     {
                         put("@id", "http://schema.org/readonlyValue");
                     }
-                });                
+                });
 
             }
         };
@@ -546,7 +544,7 @@ public class Frames {
                         put("@id", "http://www.w3.org/2000/01/rdf-schema#subClassOf");
                         put("@type", "@id");
                     }
-                });                
+                });
                 put("equivalentClass", new LinkedHashMap<String, Object>() {
                     {
                         put("@id", "http://www.w3.org/2002/07/owl#equivalentClass");
@@ -570,7 +568,7 @@ public class Frames {
                         put("@id", "http://www.w3.org/ns/shacl#and");
                         put("@container", "@list");
                     }
-                });               
+                });
                 put("notCond", new LinkedHashMap<String, Object>() {
                     {
                         put("@id", "http://www.w3.org/ns/shacl#not");
@@ -591,14 +589,13 @@ public class Frames {
             }
         };
 
-
         namespaceContext = new LinkedHashMap<String, Object>() {
             {
                 putAll(coreContext);
                 put("preferredXMLNamespaceName", preferredXMLNamespaceName);
                 put("preferredXMLNamespacePrefix", preferredXMLNamespacePrefix);
-            }            
-        };        
+            }
+        };
 
         modelContext = new LinkedHashMap<String, Object>() {
             {
@@ -611,40 +608,40 @@ public class Frames {
                         put("@id", "http://rdfs.org/ns/void#rootResource");
                         put("@type", "@id");
                     }
-                });               
+                });
                 put("references", new LinkedHashMap<String, Object>() {
                     {
                         put("@id", "http://purl.org/dc/terms/references");
                         put("@type", "@id");
                     }
-                });               
+                });
                 put("requires", new LinkedHashMap<String, Object>() {
                     {
                         put("@id", "http://purl.org/dc/terms/requires");
                         put("@type", "@id");
                     }
-                });               
+                });
                 put("relations", new LinkedHashMap<String, Object>() {
                     {
                         put("@id", "http://purl.org/dc/terms/relation");
                         put("@container", "@list");
                     }
-                });               
+                });
                 put("codeLists", new LinkedHashMap<String, Object>() {
                     {
                         put("@id", "http://uri.suomi.fi/datamodel/ns/iow#codeLists");
                         put("@type", "@id");
                     }
-                });               
+                });
                 put("language", new LinkedHashMap<String, Object>() {
                     {
                         put("@id", "http://purl.org/dc/terms/language");
                         put("@container", "@list");
                     }
-                });                  
-            }            
+                });
+            }
         };
-        
+
         modelPositionContext = new LinkedHashMap<String, Object>() {
             {
                 putAll(coreContext);
@@ -653,26 +650,26 @@ public class Frames {
                         put("@id", "http://www.w3.org/ns/shacl#path");
                         put("@type", "@id");
                     }
-                });     
-                
+                });
+
                 put("property", new LinkedHashMap<String, Object>() {
                     {
                         put("@id", "http://www.w3.org/ns/shacl#property");
                         put("@type", "@id");
                     }
-                });               
+                });
                 put("pointXY", new LinkedHashMap<String, Object>() {
                     {
-                        put("@id", "http://uri.suomi.fi/datamodel/ns/iow#pointXY");                        
+                        put("@id", "http://uri.suomi.fi/datamodel/ns/iow#pointXY");
                     }
-                });               
+                });
                 put("vertexXY", new LinkedHashMap<String, Object>() {
                     {
                         put("@id", "http://uri.suomi.fi/datamodel/ns/iow#vertexXY");
                         put("@container", "@list");
                     }
-                });            
-            }            
+                });
+            }
         };
 
         conceptFrame = new LinkedHashMap<String, Object>() {
@@ -681,20 +678,20 @@ public class Frames {
             }
         };
 
-
         esModelContext = new LinkedHashMap<String, Object>() {
             {
-                put("label",label);
-                put("comment",comment);
-                put("modified",modified);
-                put("contributor",contributorID);
-                put("isPartOf",isPartOfID);
-                put("useContext",useContext);
-                put("status",versionInfo);
-                put("prefix",preferredXMLNamespacePrefix);
-                put("namespace",preferredXMLNamespaceName);
+                put("label", label);
+                put("comment", comment);
+                put("modified", modified);
+                put("contributor", contributorID);
+                put("isPartOf", isPartOfID);
+                put("useContext", useContext);
+                put("status", versionInfo);
+                put("prefix", preferredXMLNamespacePrefix);
+                put("namespace", preferredXMLNamespaceName);
                 putAll(jsonLdKeys);
-            }};
+            }
+        };
 
         esModelFrame = new LinkedHashMap<String, Object>() {
             {
@@ -706,13 +703,14 @@ public class Frames {
 
         esClassContext = new LinkedHashMap<String, Object>() {
             {
-                put("label",name);
-                put("comment",shDescription);
-                put("modified",modified);
-                put("status",versionInfo);
-                put("isDefinedBy",isDefinedBy);
+                put("label", name);
+                put("comment", shDescription);
+                put("modified", modified);
+                put("status", versionInfo);
+                put("isDefinedBy", isDefinedBy);
                 putAll(jsonLdKeys);
-            }};
+            }
+        };
 
         esClassFrame = new LinkedHashMap<String, Object>() {
             {
@@ -723,13 +721,14 @@ public class Frames {
 
         origClassContext = new LinkedHashMap<String, Object>() {
             {
-                put("name",name);
-                put("description",shDescription);
-                put("modified",modified);
-                put("status",versionInfo);
-                put("isDefinedBy",isDefinedBy);
+                put("name", name);
+                put("description", shDescription);
+                put("modified", modified);
+                put("status", versionInfo);
+                put("isDefinedBy", isDefinedBy);
                 putAll(jsonLdKeys);
-            }};
+            }
+        };
 
         origClassFrame = new LinkedHashMap<String, Object>() {
             {
@@ -738,15 +737,14 @@ public class Frames {
             }
         };
 
-
         esPredicateContext = new LinkedHashMap<String, Object>() {
             {
-                put("label",label);
-                put("comment",comment);
-                put("modified",modified);
-                put("range",range);
-                put("status",versionInfo);
-                put("isDefinedBy",isDefinedBy);
+                put("label", label);
+                put("comment", comment);
+                put("modified", modified);
+                put("range", range);
+                put("status", versionInfo);
+                put("isDefinedBy", isDefinedBy);
                 putAll(jsonLdKeys);
             }
         };
@@ -760,7 +758,7 @@ public class Frames {
 
         classVisualizationFrame = new LinkedHashMap<String, Object>() {
             {
-                put("@context", classContext);                
+                put("@context", classContext);
                 put("@type", new ArrayList<Object>() {
                     {
                         add("rdfs:Class");
@@ -788,7 +786,7 @@ public class Frames {
                                 put("@default", new ArrayList());
                                 put("@embed", false);
                             }
-                        });      
+                        });
                         put("memberOf", new LinkedHashMap<String, Object>() {
                             {
                                 put("@omitDefault", true);
@@ -798,35 +796,34 @@ public class Frames {
                                         put("@embed", "@always");
                                     }
                                 });
-                                
+
                             }
-                        });                          
+                        });
                     }
-                });               
+                });
                 put("subject", new LinkedHashMap<String, Object>() {
                     {
                         put("@embed", false);
                     }
-                });               
+                });
                 put("subClassOf", new LinkedHashMap<String, Object>() {
                     {
                         put("@embed", false);
                     }
-                });               
+                });
                 put("targetClass", new LinkedHashMap<String, Object>() {
                     {
                         put("@embed", false);
                     }
-                });               
+                });
                 put("isDefinedBy", new LinkedHashMap<String, Object>() {
                     {
                         put("@embed", false);
                     }
-                });               
-            }            
-        };        
- 
-    }
+                });
+            }
+        };
 
+    }
 
 }

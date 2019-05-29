@@ -4,7 +4,6 @@ import java.util.List;
 
 public abstract class DeepSearchHitListDTO<T> {
 
-
     private long totalHitCount;
 
     private List<T> topHits;
@@ -19,7 +18,6 @@ public abstract class DeepSearchHitListDTO<T> {
         this.topHits = topHits;
 
     }
-
 
     public long getTotalHitCount() {
 

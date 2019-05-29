@@ -4,11 +4,14 @@
 package fi.vm.yti.datamodel.api.model;
 
 import fi.vm.yti.datamodel.api.service.EndpointServices;
+
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Iterator;
 
-import org.slf4j.Logger;import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonArrayBuilder;
@@ -20,6 +23,7 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
+
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Property;
@@ -44,13 +48,13 @@ public class OPHCodeServer {
     static private Property statusProperty = ResourceFactory.createProperty("http://uri.suomi.fi/datamodel/ns/iow#", "status");
 
     private HashMap<String, String> statusMap = new HashMap<String, String>() {{
-        put("LUONNOS","DRAFT");
+        put("LUONNOS", "DRAFT");
         put("HYVAKSYTTY", "VALID");
         put("PASSIIVINEN", "DEPRECATED");
     }};
 
-
-    public OPHCodeServer(String uri, EndpointServices endpointServices) {
+    public OPHCodeServer(String uri,
+                         EndpointServices endpointServices) {
         DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(endpointServices.getSchemesReadWriteAddress());
         this.adapter = new DatasetAdapter(accessor);
         this.endpointServices = endpointServices;
@@ -73,12 +77,10 @@ public class OPHCodeServer {
 
             Client client = ClientBuilder.newClient();
             logger.info("Updating OPH codeLists: " + uri);
-            WebTarget target = client.target(uri).queryParam("format","application/json");
+            WebTarget target = client.target(uri).queryParam("format", "application/json");
             Response response = target.request("application/json").get();
 
-
             if (response.getStatusInfo().getFamily() == Response.Status.Family.SUCCESSFUL) {
-
 
                 JsonReader jsonReader = Json.createReader(response.readEntity(InputStream.class));
                 JsonArray codeListArray = jsonReader.readArray();
@@ -86,7 +88,7 @@ public class OPHCodeServer {
 
                 Iterator<JsonValue> groupIterator = codeListArray.iterator();
 
-                while(groupIterator.hasNext()) {
+                while (groupIterator.hasNext()) {
 
                     JsonObject codeList = (JsonObject) groupIterator.next();
 
@@ -102,18 +104,17 @@ public class OPHCodeServer {
 
                     Resource group = model.createResource(groupID);
 
-
-                    while(groupNameIterator.hasNext()) {
+                    while (groupNameIterator.hasNext()) {
                         JsonObject groupName = (JsonObject) groupNameIterator.next();
                         String lang = groupName.getString("kieli").toLowerCase();
                         String label = groupName.getString("nimi");
                         JsonValue kuvausValue = groupName.get("kuvaus");
-                        if(kuvausValue!=null && kuvausValue.getValueType()==ValueType.STRING) {
+                        if (kuvausValue != null && kuvausValue.getValueType() == ValueType.STRING) {
                             String comment = groupName.getString("kuvaus");
-                            group.addLiteral(description, ResourceFactory.createLangLiteral(comment,lang));
+                            group.addLiteral(description, ResourceFactory.createLangLiteral(comment, lang));
                         }
                         group.addProperty(RDF.type, ResourceFactory.createResource("http://uri.suomi.fi/datamodel/ns/iow#FCodeGroup"));
-                        group.addLiteral(name, ResourceFactory.createLangLiteral(label,lang));
+                        group.addLiteral(name, ResourceFactory.createLangLiteral(label, lang));
 
                     }
 
@@ -121,36 +122,35 @@ public class OPHCodeServer {
 
                     Iterator<JsonValue> codeListIterator = codeSchemeArr.iterator();
 
-                    while(codeListIterator.hasNext()) {
+                    while (codeListIterator.hasNext()) {
 
                         JsonObject codes = (JsonObject) codeListIterator.next();
 
                         // codes.getString("resourceUri")
                         String koodistoUri = codes.getString("koodistoUri");
-                        String schemeUri = uri+koodistoUri+"/koodi";
+                        String schemeUri = uri + koodistoUri + "/koodi";
                         Resource valueScheme = model.createResource(schemeUri);
                         valueScheme.addProperty(RDF.type, ResourceFactory.createResource("http://uri.suomi.fi/datamodel/ns/iow#FCodeScheme"));
 
                         //group.addProperty(hasPart, valueScheme);
                         valueScheme.addProperty(isPartOf, group);
 
-
                         valueScheme.addLiteral(id, ResourceFactory.createPlainLiteral(koodistoUri));
                         JsonValue owner = codes.get("omistaja");
 
-                        if(owner.getValueType()==ValueType.STRING)
+                        if (owner.getValueType() == ValueType.STRING)
                             valueScheme.addLiteral(creator, ResourceFactory.createPlainLiteral(codes.getString("omistaja")));
 
                         JsonObject latestKoodisto = codes.getJsonObject("latestKoodistoVersio");
 
                         JsonValue status = latestKoodisto.get("tila");
 
-                        if(status.getValueType()==ValueType.STRING) {
+                        if (status.getValueType() == ValueType.STRING) {
                             String statusText = status.toString().replaceAll("\"", "");
-                            if(statusMap.containsKey(statusText)) {
+                            if (statusMap.containsKey(statusText)) {
                                 valueScheme.addLiteral(statusProperty, ResourceFactory.createPlainLiteral(statusMap.get(statusText)));
                             } else {
-                                logger.warn("Could not find status from the codelist: "+koodistoUri);
+                                logger.warn("Could not find status from the codelist: " + koodistoUri);
                                 valueScheme.addLiteral(statusProperty, ResourceFactory.createPlainLiteral("INCOMPLETE"));
                             }
                         } else {
@@ -163,23 +163,23 @@ public class OPHCodeServer {
 
                         Iterator<JsonValue> codeNameIterator = locArr.iterator();
 
-                        while(codeNameIterator.hasNext()) {
+                        while (codeNameIterator.hasNext()) {
                             JsonObject codeName = (JsonObject) codeNameIterator.next();
 
                             String lang = codeName.getString("kieli").toLowerCase();
                             String label = codeName.getString("nimi");
 
                             JsonValue kuvausValue = codeName.get("kuvaus");
-                            if(kuvausValue!=null && kuvausValue.getValueType()==ValueType.STRING) {
+                            if (kuvausValue != null && kuvausValue.getValueType() == ValueType.STRING) {
                                 String comment = codeName.getString("kuvaus");
-                                valueScheme.addLiteral(description, ResourceFactory.createLangLiteral(comment,lang));
+                                valueScheme.addLiteral(description, ResourceFactory.createLangLiteral(comment, lang));
                             }
 
-                            valueScheme.addLiteral(name, ResourceFactory.createLangLiteral(label,lang));
+                            valueScheme.addLiteral(name, ResourceFactory.createLangLiteral(label, lang));
 
                         }
 
-                     // Copying all codelists takes too much time. Better to do this on the fly?
+                        // Copying all codelists takes too much time. Better to do this on the fly?
                      /*   if(!adapter.containsModel(schemeUri)) {
                             updateCodes(schemeUri);
                         }*/
@@ -201,15 +201,14 @@ public class OPHCodeServer {
                 return false;
             }
 
-        } catch(Exception ex) {
+        } catch (Exception ex) {
             logger.warn(ex.getMessage());
             logger.info("Not connected to the code server");
             return false;
         }
     }
 
-
-    /* 
+    /*
     
     {
     "koodiUri": "talonrakennusalanatjarjestys_12",
@@ -255,12 +254,12 @@ public class OPHCodeServer {
         Response.ResponseBuilder rb;
 
         Client client = ClientBuilder.newClient();
-        WebTarget target = client.target(uri).queryParam("format","application/json");
+        WebTarget target = client.target(uri).queryParam("format", "application/json");
         Response response = target.request("application/json").get();
 
         if (response.getStatusInfo().getFamily() == Response.Status.Family.SUCCESSFUL) {
 
-            logger.info("Copying "+uri);
+            logger.info("Copying " + uri);
 
             JsonReader jsonReader = Json.createReader(response.readEntity(InputStream.class));
             JsonArray codeListArray = jsonReader.readArray();
@@ -268,7 +267,7 @@ public class OPHCodeServer {
 
             Iterator<JsonValue> codeIterator = codeListArray.iterator();
 
-            while(codeIterator.hasNext()) {
+            while (codeIterator.hasNext()) {
 
                 JsonObject codeObj = (JsonObject) codeIterator.next();
                 Resource codeRes = model.createResource(codeObj.getString("resourceUri"));
@@ -278,7 +277,7 @@ public class OPHCodeServer {
 
                 String codeStatus = codeObj.getString("tila");
 
-                if(statusMap.containsKey(codeStatus)) {
+                if (statusMap.containsKey(codeStatus)) {
                     codeRes.addLiteral(statusProperty, ResourceFactory.createPlainLiteral(statusMap.get(codeStatus)));
                 }
 
@@ -288,7 +287,7 @@ public class OPHCodeServer {
 
                 Iterator<JsonValue> codeNameIterator = locArr.iterator();
 
-                while(codeNameIterator.hasNext()) {
+                while (codeNameIterator.hasNext()) {
                     JsonObject codeName = (JsonObject) codeNameIterator.next();
 
                     String lang = codeName.getString("kieli").toLowerCase();
@@ -297,9 +296,9 @@ public class OPHCodeServer {
                     codeRes.addLiteral(name, ResourceFactory.createLangLiteral(label, lang));
 
                     JsonValue kuvausValue = codeName.get("kuvaus");
-                    if(kuvausValue!=null && kuvausValue.getValueType()==ValueType.STRING) {
+                    if (kuvausValue != null && kuvausValue.getValueType() == ValueType.STRING) {
                         String comment = codeName.getString("kuvaus");
-                        codeRes.addLiteral(description, ResourceFactory.createLangLiteral(comment,lang));
+                        codeRes.addLiteral(description, ResourceFactory.createLangLiteral(comment, lang));
                     }
 
                 }
@@ -315,29 +314,28 @@ public class OPHCodeServer {
 
             return true;
         } else {
-            logger.info(""+response.getStatus());
+            logger.info("" + response.getStatus());
             return false;
         }
-
 
     }
 
     private JsonArray clean(JsonArray argh) {
 
-        HashMap<String,JsonObject> jsonMap = new HashMap<String,JsonObject>();
+        HashMap<String, JsonObject> jsonMap = new HashMap<String, JsonObject>();
         Iterator arrIte = argh.iterator();
 
-        while(arrIte.hasNext()) {
+        while (arrIte.hasNext()) {
             JsonObject obj = (JsonObject) arrIte.next();
             String name = obj.getString("nimi");
             String lang = obj.getString("kieli").toLowerCase();
-            if(!jsonMap.containsKey(name) || (jsonMap.containsKey(name) && lang.equals("fi")))
+            if (!jsonMap.containsKey(name) || (jsonMap.containsKey(name) && lang.equals("fi")))
                 jsonMap.put(name, obj);
         }
 
         JsonArrayBuilder arrBuild = Json.createArrayBuilder();
         Iterator<String> it = jsonMap.keySet().iterator();
-        while(it.hasNext()) {
+        while (it.hasNext()) {
             String key = it.next();
             arrBuild.add(jsonMap.get(key));
         }

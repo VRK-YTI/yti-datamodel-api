@@ -5,6 +5,7 @@ import fi.vm.yti.datamodel.api.model.AbstractModel;
 import fi.vm.yti.datamodel.api.model.AbstractPredicate;
 import fi.vm.yti.security.AuthenticatedUserProvider;
 import fi.vm.yti.security.YtiUser;
+
 import org.apache.jena.iri.IRI;
 import org.springframework.stereotype.Service;
 
@@ -54,22 +55,26 @@ public class AuthorizationManager {
         return this.userProvider.getUser();
     }
 
-    public boolean hasRightToRemoveClassReference(IRI modelIRI, IRI classIRI) {
+    public boolean hasRightToRemoveClassReference(IRI modelIRI,
+                                                  IRI classIRI) {
         // TODO
         return true;
     }
 
-    public boolean hasRightToAddClassReference(IRI modelIRI, String classId) {
+    public boolean hasRightToAddClassReference(IRI modelIRI,
+                                               String classId) {
         // TODO
         return true;
     }
 
-    public boolean hasRightToAddPredicateReference(IRI modelIRI, String predicateId) {
+    public boolean hasRightToAddPredicateReference(IRI modelIRI,
+                                                   String predicateId) {
         // TODO
         return true;
     }
 
-    public boolean hasRightToRemovePredicateReference(IRI modelIRI, IRI predicateIRI) {
+    public boolean hasRightToRemovePredicateReference(IRI modelIRI,
+                                                      IRI predicateIRI) {
         // TODO
         return true;
     }

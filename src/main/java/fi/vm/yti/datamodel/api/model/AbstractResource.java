@@ -14,18 +14,36 @@ public class AbstractResource {
     protected IRI id;
     private static final Logger logger = LoggerFactory.getLogger(AbstractResource.class.getName());
 
-    public Model asGraph(){
+    public Model asGraph() {
         return this.graph;
     }
-    public Model asGraphCopy() { return ModelFactory.createDefaultModel().add(this.graph); }
-    public String getId() { return this.id.toString();}
-    public String getModelId() { return this.dataModel.getId(); }
+
+    public Model asGraphCopy() {
+        return ModelFactory.createDefaultModel().add(this.graph);
+    }
+
+    public String getId() {
+        return this.id.toString();
+    }
+
+    public String getModelId() {
+        return this.dataModel.getId();
+    }
 
     public String getStatus() {
         return this.graph.getRequiredProperty(ResourceFactory.createResource(this.getId()), OWL.versionInfo).getString();
     }
-    public String getModified() { return this.graph.getRequiredProperty(ResourceFactory.createResource(this.getId()), DCTerms.modified).getString();}
-    public IRI getModelIRI() { return this.dataModel.getIRI(); }
-    public IRI getIRI() { return this.id; }
+
+    public String getModified() {
+        return this.graph.getRequiredProperty(ResourceFactory.createResource(this.getId()), DCTerms.modified).getString();
+    }
+
+    public IRI getModelIRI() {
+        return this.dataModel.getIRI();
+    }
+
+    public IRI getIRI() {
+        return this.id;
+    }
 
 }

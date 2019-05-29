@@ -16,7 +16,8 @@ public final class GroupManagementUserRequest {
         this(randomUUID(), emptyList());
     }
 
-    public GroupManagementUserRequest(UUID organizationId, List<String> role) {
+    public GroupManagementUserRequest(UUID organizationId,
+                                      List<String> role) {
         this.organizationId = organizationId;
         this.role = role;
     }

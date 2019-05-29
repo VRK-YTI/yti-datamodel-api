@@ -5,6 +5,7 @@ import fi.vm.yti.datamodel.api.service.GraphManager;
 import fi.vm.yti.datamodel.api.service.JerseyResponseManager;
 import fi.vm.yti.datamodel.api.utils.LDHelper;
 import io.swagger.annotations.*;
+
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFLanguages;
 import org.slf4j.Logger;
@@ -17,6 +18,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
+
 import java.net.URI;
 import java.util.Arrays;
 import java.util.Date;
@@ -25,7 +27,7 @@ import java.util.Locale;
 
 @Component
 @Path("resolve")
-@Api(tags = {"Admin"}, description = "Resolve resource with ACCEPT header")
+@Api(tags = { "Admin" }, description = "Resolve resource with ACCEPT header")
 public class Resolve {
 
     private static final Logger logger = LoggerFactory.getLogger(Resolve.class);
@@ -51,16 +53,16 @@ public class Resolve {
     @GET
     @ApiOperation(value = "Redirect URI resource.")
     @ApiResponses(value = {
-            @ApiResponse(code = 303, message = "Does a redirect from datamodel resource URI to datamodel API or frontend."),
-            @ApiResponse(code = 406, message = "Resource not found."),
-            @ApiResponse(code = 406, message = "Cannot redirect to given URI.")
+        @ApiResponse(code = 303, message = "Does a redirect from datamodel resource URI to datamodel API or frontend."),
+        @ApiResponse(code = 406, message = "Resource not found."),
+        @ApiResponse(code = 406, message = "Cannot redirect to given URI.")
     })
     public Response resolveUri(@HeaderParam("Accept") String accept,
-                                @HeaderParam("Accept-Language") String acceptLang,
-                                @HeaderParam("If-Modified-Since") String ifModifiedSince,
-                                @ApiParam(value = "Raw / PlainText boolean", defaultValue = "false") @QueryParam("raw") boolean raw,
-                                @ApiParam(value = "Content-type as format") @QueryParam("format") String format,
-                                @ApiParam(value = "Resource URI.", required = true) @QueryParam("uri") final String uri) {
+                               @HeaderParam("Accept-Language") String acceptLang,
+                               @HeaderParam("If-Modified-Since") String ifModifiedSince,
+                               @ApiParam(value = "Raw / PlainText boolean", defaultValue = "false") @QueryParam("raw") boolean raw,
+                               @ApiParam(value = "Content-type as format") @QueryParam("format") String format,
+                               @ApiParam(value = "Resource URI.", required = true) @QueryParam("uri") final String uri) {
         final URI resolveUri = parseUriFromString(uri);
         ensureSuomiFiUriHost(resolveUri.getHost());
 
@@ -70,66 +72,65 @@ public class Resolve {
         final String uriFragment = resolveUri.getFragment();
         final String graphPrefix = uriPath.substring(API_PATH_DATAMODEL.length());
 
-        logger.debug("Resolving: "+uri);
+        logger.debug("Resolving: " + uri);
 
         final String graphName = graphManager.getServiceGraphNameWithPrefix(graphPrefix);
 
-        if(graphName==null) {
-            logger.info("Graph not found: "+graphName);
+        if (graphName == null) {
+            logger.info("Graph not found: " + graphName);
             return Response.status(404).build();
         }
 
-        if(ifModifiedSince!=null) {
-                logger.debug("If-Modified-Since: "+ifModifiedSince);
-                Date modifiedSince = DateUtils.parseDate(ifModifiedSince);
-                if(modifiedSince==null) {
-                    logger.warn("Could not parse If-Modified-Since");
-                    return jerseyResponseManager.invalidParameter();
+        if (ifModifiedSince != null) {
+            logger.debug("If-Modified-Since: " + ifModifiedSince);
+            Date modifiedSince = DateUtils.parseDate(ifModifiedSince);
+            if (modifiedSince == null) {
+                logger.warn("Could not parse If-Modified-Since");
+                return jerseyResponseManager.invalidParameter();
+            }
+            Date modified = graphManager.lastModified(graphName);
+            if (modified != null) {
+                if (modifiedSince.after(modified)) {
+                    return Response.notModified().header("Last-Modified", DateUtils.formatDate(modified)).build();
                 }
-                Date modified = graphManager.lastModified(graphName);
-                if(modified!=null) {
-                    if(modifiedSince.after(modified)) {
-                        return Response.notModified().header("Last-Modified",DateUtils.formatDate(modified)).build();
-                    }
-                }
+            }
         }
 
+        Locale locale = acceptLang == null ? null : Locale.forLanguageTag(acceptLang);
+        String language = locale == null ? null : locale.getDefault().toString().substring(0, 2).toLowerCase();
 
-        Locale locale = acceptLang==null ? null : Locale.forLanguageTag(acceptLang);
-        String language = locale==null ? null : locale.getDefault().toString().substring(0,2).toLowerCase();
+        final URI htmlRedirectUrl = URI.create(uriInfo.getBaseUri().toString().replace("/api/rest/", "/model/") + graphPrefix + (uriFragment != null ? "/" + uriFragment : ""));
 
-        final URI htmlRedirectUrl = URI.create(uriInfo.getBaseUri().toString().replace("/api/rest/","/model/") + graphPrefix + (uriFragment!=null?"/"+uriFragment:""));
-
-        if(format != null && format.length()>5) {
-            accept=format;
+        if (format != null && format.length() > 5) {
+            accept = format;
         }
 
-        if(accept.contains("text/html")) {
-            logger.debug("Redirecting to "+htmlRedirectUrl.toString());
+        if (accept.contains("text/html")) {
+            logger.debug("Redirecting to " + htmlRedirectUrl.toString());
             return Response.seeOther(htmlRedirectUrl).build();
         }
 
-        final List<String> acceptHeaders = Arrays.asList(accept.replaceAll("\\s+","").split(","));
+        final List<String> acceptHeaders = Arrays.asList(accept.replaceAll("\\s+", "").split(","));
 
-        for(String acceptHeader : acceptHeaders) {
+        for (String acceptHeader : acceptHeaders) {
 
-            if(acceptHeader.contains(";")) {
+            if (acceptHeader.contains(";")) {
                 acceptHeader = acceptHeader.split(";")[0];
             }
 
             Lang rdfLang = RDFLanguages.contentTypeToLang(acceptHeader);
 
-            if(acceptHeader.contains("application/schema+json") || acceptHeader.contains("application/xml")) {
-                final URI schemaWithLangURI = URI.create(uriInfo.getBaseUri().toString()+"exportModel?graph="+graphName+"&content-type="+acceptHeader+(language==null?"":"&lang="+language)+"&raw="+raw);
+            if (acceptHeader.contains("application/schema+json") || acceptHeader.contains("application/xml")) {
+                final URI schemaWithLangURI = URI.create(uriInfo.getBaseUri().toString() + "exportModel?graph=" + graphName + "&content-type=" + acceptHeader + (language == null ? "" : "&lang=" + language) + "&raw=" + raw);
                 return Response.seeOther(schemaWithLangURI).build();
-            } else if(rdfLang!=null) {
-                final URI rdfUrl = URI.create(uriInfo.getBaseUri().toString()+"exportModel?graph="+graphName+"&content-type="+rdfLang.getHeaderString()+"&raw="+raw);
-                logger.debug("Resolving to RDF: "+rdfUrl);
+            } else if (rdfLang != null) {
+                final URI rdfUrl = URI.create(uriInfo.getBaseUri().toString() + "exportModel?graph=" + graphName + "&content-type=" + rdfLang.getHeaderString() + "&raw=" + raw);
+                logger.debug("Resolving to RDF: " + rdfUrl);
                 return Response.seeOther(rdfUrl).build();
             }
         }
 
-        logger.debug("Strange accept header. Redirecting to "+htmlRedirectUrl.toString());
+        logger.debug("Strange accept header. Redirecting to " + htmlRedirectUrl.toString());
         return Response.seeOther(htmlRedirectUrl).build();
 
     }
@@ -151,16 +152,15 @@ public class Resolve {
     }
 
     private void checkResourceValidity(final String uriPath) {
-        if (!uriPath.toLowerCase().startsWith(API_PATH_DATAMODEL) ) {
+        if (!uriPath.toLowerCase().startsWith(API_PATH_DATAMODEL)) {
             logger.warn("Datamodel resource URI not resolvable, wrong context path!");
             throw new BadRequestException("Datamodel resource URI not resolvable, wrong context path!");
         } else {
-            if(!LDHelper.isAlphaString(uriPath.substring(API_PATH_DATAMODEL.length()))) {
-                logger.warn("Could not parse path: "+uriPath);
+            if (!LDHelper.isAlphaString(uriPath.substring(API_PATH_DATAMODEL.length()))) {
+                logger.warn("Could not parse path: " + uriPath);
                 throw new BadRequestException("Could not parse graph from uri path");
             }
         }
     }
-
 
 }

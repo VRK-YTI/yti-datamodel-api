@@ -230,10 +230,9 @@ public enum ServiceCategory {
     P9_5,
     P9_6;
 
-
     public static boolean contains(String serviceCategoryString) {
         for (ServiceCategory category : values()) {
-            if (category.name().equals(serviceCategoryString.replaceFirst("\\.","_"))) {
+            if (category.name().equals(serviceCategoryString.replaceFirst("\\.", "_"))) {
                 return true;
             }
         }
@@ -241,8 +240,8 @@ public enum ServiceCategory {
     }
 
     public static boolean containsAll(List<String> services) {
-        for(String serviceString : services) {
-            if(!contains(serviceString)) {
+        for (String serviceString : services) {
+            if (!contains(serviceString)) {
                 return false;
             }
         }

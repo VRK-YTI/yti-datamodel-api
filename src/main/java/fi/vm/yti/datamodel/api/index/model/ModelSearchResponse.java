@@ -1,7 +1,7 @@
 package fi.vm.yti.datamodel.api.index.model;
 
-    import java.util.List;
-    import java.util.Map;
+import java.util.List;
+import java.util.Map;
 
 public class ModelSearchResponse {
 
@@ -10,7 +10,8 @@ public class ModelSearchResponse {
     private List<IndexModelDTO> models;
     private Map<String, List<DeepSearchHitListDTO<?>>> deepHits;
 
-    public ModelSearchResponse() {}
+    public ModelSearchResponse() {
+    }
 
     public ModelSearchResponse(final long totalHitCount,
                                final Integer resultStart,

@@ -5,6 +5,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+
 import org.springframework.stereotype.Component;
 
 import javax.ws.rs.GET;
@@ -14,7 +15,7 @@ import javax.ws.rs.core.Response;
 
 @Component
 @Path("user")
-@Api(tags = {"Users"}, description = "Get user")
+@Api(tags = { "Users" }, description = "Get user")
 public class User {
 
     private final AuthenticatedUserProvider userProvider;
@@ -26,7 +27,7 @@ public class User {
     @GET
     @ApiOperation(value = "Get authenticated user")
     @ApiResponses(value = {
-            @ApiResponse(code = 200, message = "User object")
+        @ApiResponse(code = 200, message = "User object")
     })
     @Produces("application/json")
     public Response getUser() {

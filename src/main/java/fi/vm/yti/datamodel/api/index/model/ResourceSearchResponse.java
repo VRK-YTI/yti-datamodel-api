@@ -9,7 +9,8 @@ public class ResourceSearchResponse {
     private Integer resultStart;
     private List<IndexResourceDTO> resources;
 
-    public ResourceSearchResponse() {}
+    public ResourceSearchResponse() {
+    }
 
     public ResourceSearchResponse(final long totalHitCount,
                                   final Integer resultStart,

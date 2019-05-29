@@ -4,6 +4,7 @@ import fi.vm.yti.datamodel.api.config.ApplicationProperties;
 import fi.vm.yti.datamodel.api.utils.Frames;
 import fi.vm.yti.datamodel.api.utils.LDHelper;
 import fi.vm.yti.datamodel.api.utils.QueryLibrary;
+
 import org.apache.jena.query.*;
 import org.apache.jena.rdf.model.*;
 import org.apache.jena.riot.Lang;
@@ -29,6 +30,7 @@ import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
+
 import java.io.InputStream;
 import java.io.StringWriter;
 import java.util.Iterator;
@@ -69,13 +71,17 @@ public final class TermedTerminologyManager {
         this.jerseyResponseManager = jerseyResponseManager;
     }
 
-    public String createConceptSuggestionJson(String lang, String prefLabel, String definition, String graph, String user) {
+    public String createConceptSuggestionJson(String lang,
+                                              String prefLabel,
+                                              String definition,
+                                              String graph,
+                                              String user) {
 
         JsonObjectBuilder objBuilder = Json.createObjectBuilder();
 
         objBuilder.add("creator", user);
-        objBuilder.add("prefLabel", Json.createObjectBuilder().add("lang",lang).add("value",prefLabel).build());
-        objBuilder.add("definition", Json.createObjectBuilder().add("lang",lang).add("value",definition).build());
+        objBuilder.add("prefLabel", Json.createObjectBuilder().add("lang", lang).add("value", prefLabel).build());
+        objBuilder.add("definition", Json.createObjectBuilder().add("lang", lang).add("value", definition).build());
 
         return jsonObjectToPrettyString(objBuilder.build());
     }
@@ -91,30 +97,30 @@ public final class TermedTerminologyManager {
     public void initConceptsFromTermed() {
         Model schemeModel = getSchemesAsModelFromTermedAPI();
         assert schemeModel != null;
-        putToConceptGraph(schemeModel,"urn:yti:terminology");
+        putToConceptGraph(schemeModel, "urn:yti:terminology");
         Iterator<Resource> schemeList = schemeModel.listResourcesWithProperty(RDF.type, termedGraph);
-        while(schemeList.hasNext()) {
+        while (schemeList.hasNext()) {
             Resource scheme = schemeList.next();
             String schemeUri = scheme.toString();
             String schemeId = scheme.getProperty(termedId).getObject().toString();
 
-            logger.info("Importing: "+schemeUri+ " "+schemeId);
+            logger.info("Importing: " + schemeUri + " " + schemeId);
             Model terminology = getTerminologyAsJenaModel(schemeId, schemeUri);
             putToConceptGraph(terminology, schemeUri);
         }
     }
 
-    public Model constructFromTempConceptService(String query ){
-            try(QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getTempConceptReadSparqlAddress(), query)) {
-                return qexec.execConstruct();
-            }
+    public Model constructFromTempConceptService(String query) {
+        try (QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getTempConceptReadSparqlAddress(), query)) {
+            return qexec.execConstruct();
+        }
     }
 
     public Model constructCleanedModelFromTempConceptService(String query) {
-            try(QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getTempConceptReadSparqlAddress(), query)) {
-                Model objects = qexec.execConstruct();
-                return cleanModelDefinitions(objects);
-            }
+        try (QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getTempConceptReadSparqlAddress(), query)) {
+            Model objects = qexec.execConstruct();
+            return cleanModelDefinitions(objects);
+        }
     }
 
     public Model cleanModelDefinitions(Model objects) {
@@ -122,22 +128,22 @@ public final class TermedTerminologyManager {
 
         Iterator<Statement> defStatement = objects.listStatements(definitionSelector).toList().iterator();
 
-        while(defStatement.hasNext()) {
+        while (defStatement.hasNext()) {
             Statement defStat = defStatement.next();
             Parser markdownParser = Parser.builder().build();
             Node defNode = markdownParser.parse(defStat.getString());
-            defStat.changeObject(ResourceFactory.createLangLiteral(Jsoup.parse(HtmlRenderer.builder().build().render(defNode)).text(),defStat.getLiteral().getLanguage()));
+            defStat.changeObject(ResourceFactory.createLangLiteral(Jsoup.parse(HtmlRenderer.builder().build().render(defNode)).text(), defStat.getLiteral().getLanguage()));
         }
 
         return objects;
     }
 
-
-    public Model constructCleanedModelFromTermedAPI(String conceptUri, String query) {
+    public Model constructCleanedModelFromTermedAPI(String conceptUri,
+                                                    String query) {
 
         Response jerseyResponse = getConceptFromTermedAPI(conceptUri);
         Model conceptModel = LDHelper.getJSONLDResponseAsJenaModel(jerseyResponse);
-        try(QueryExecution qexec = QueryExecutionFactory.create(query,conceptModel)) {
+        try (QueryExecution qexec = QueryExecutionFactory.create(query, conceptModel)) {
             Model objects = qexec.execConstruct();
             return cleanModelDefinitions(objects);
         }
@@ -145,30 +151,30 @@ public final class TermedTerminologyManager {
 
     /**
      * Returns concept as Jersey Response
+     *
      * @param uri uri of the concept
      * @return Response
      */
     public Response getConceptFromTermedAPI(String uri) {
 
-        String url = properties.getDefaultTermedAPI()+"node-trees";
+        String url = properties.getDefaultTermedAPI() + "node-trees";
 
         try {
             Client client = clientFactory.createTermedClient();
 
             WebTarget target = client.target(url)
-                    .queryParam("select", "id,uri,properties.prefLabel")
-                    .queryParam("where","typeId:Concept")
-                    .queryParam("where","uri:"+uri)
-                    .queryParam("max", "-1");
-
+                .queryParam("select", "id,uri,properties.prefLabel")
+                .queryParam("where", "typeId:Concept")
+                .queryParam("where", "uri:" + uri)
+                .queryParam("max", "-1");
 
             Response response = target.request("application/ld+json").property(ClientProperties.FOLLOW_REDIRECTS, Boolean.TRUE).get();
 
-            logger.info("TERMED CONCEPT URI: "+target.getUri().toString());
+            logger.info("TERMED CONCEPT URI: " + target.getUri().toString());
 
             if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-                logger.info( response.getStatus()+" from URL: "+url);
-                logger.info("Location: "+response.getLocation().toString());
+                logger.info(response.getStatus() + " from URL: " + url);
+                logger.info("Location: " + response.getLocation().toString());
                 return jerseyResponseManager.notFound();
             }
 
@@ -176,15 +182,17 @@ public final class TermedTerminologyManager {
             rb.entity(response.readEntity(InputStream.class));
 
             return rb.build();
-        } catch(Exception ex) {
+        } catch (Exception ex) {
             logger.warn("Expect the unexpected!", ex);
             return jerseyResponseManager.notAcceptable();
         }
     }
 
-    public Model constructCleanedModelFromTermedAPIAndCore(String conceptUri, String modelUri, Query query) {
+    public Model constructCleanedModelFromTermedAPIAndCore(String conceptUri,
+                                                           String modelUri,
+                                                           Query query) {
 
-        logger.info("Constructing resource with concept: "+conceptUri);
+        logger.info("Constructing resource with concept: " + conceptUri);
         DatasetAccessor testAcc = DatasetAccessorFactory.createHTTP(endpointServices.getCoreReadAddress());
 
         Model conceptModel = searchConceptFromTermedAPIAsModel(null, null, conceptUri, null);
@@ -192,24 +200,27 @@ public final class TermedTerminologyManager {
         assert conceptModel != null;
         conceptModel.add(testAcc.getModel(modelUri));
 
-        try(QueryExecution qexec = QueryExecutionFactory.create(query,conceptModel)) {
+        try (QueryExecution qexec = QueryExecutionFactory.create(query, conceptModel)) {
             Model objects = qexec.execConstruct();
             return cleanModelDefinitions(objects);
         }
     }
 
-    public Model searchConceptFromTermedAPIAsModel(String query, String schemeURI, String conceptURI, String graphId) {
+    public Model searchConceptFromTermedAPIAsModel(String query,
+                                                   String schemeURI,
+                                                   String conceptURI,
+                                                   String graphId) {
 
-        String url = properties.getDefaultTermedAPI()+"node-trees";
+        String url = properties.getDefaultTermedAPI() + "node-trees";
 
         try {
 
             Client client = clientFactory.createTermedClient();
 
             WebTarget target = client.target(url)
-                    .queryParam("select", "uri,id,references.prefLabelXl:2,properties.prefLabel,properties.definition")
-                    .queryParam("where", "typeId:Concept")
-                    .queryParam("max", "-1");
+                .queryParam("select", "uri,id,references.prefLabelXl:2,properties.prefLabel,properties.definition")
+                .queryParam("where", "typeId:Concept")
+                .queryParam("max", "-1");
 
             if (graphId != null) {
                 target = target.queryParam("where", "graphId:" + graphId);
@@ -219,7 +230,7 @@ public final class TermedTerminologyManager {
                 target = target.queryParam("where", "references.prefLabelXl.properties.prefLabel:" + LDHelper.encode(query));
             } else {
 
-                if(conceptURI.startsWith("urn:uuid:")) conceptURI = conceptURI.replaceFirst("urn:uuid:","");
+                if (conceptURI.startsWith("urn:uuid:")) conceptURI = conceptURI.replaceFirst("urn:uuid:", "");
 
                 if (idManager.isValidUrl(conceptURI)) {
                     target = target.queryParam("where", "uri:" + conceptURI);
@@ -233,7 +244,7 @@ public final class TermedTerminologyManager {
                 target = target.queryParam("where", "graph.uri:" + schemeURI);
             }
 
-            logger.info("TERMED CONCEPT SEARCH: "+target.getUri().toString());
+            logger.info("TERMED CONCEPT SEARCH: " + target.getUri().toString());
 
             Response response = target.request("application/ld+json").get();
 
@@ -243,7 +254,7 @@ public final class TermedTerminologyManager {
 
             conceptModel = namespaceManager.renamePropertyNamespace(conceptModel, "termed:property:", "http://termed.thl.fi/meta/");
 
-            try(QueryExecution qexec = QueryExecutionFactory.create(QueryLibrary.skosXlToSkos, conceptModel)) {
+            try (QueryExecution qexec = QueryExecutionFactory.create(QueryLibrary.skosXlToSkos, conceptModel)) {
 
                 Model simpleSkos = qexec.execConstruct();
 
@@ -254,17 +265,17 @@ public final class TermedTerminologyManager {
                     logger.info(response.getStatus() + " from URL: " + url);
                     return null;
                 }
-                
+
                 return simpleSkos;
             }
-        } catch(Exception ex) {
+        } catch (Exception ex) {
             logger.warn(ex.getMessage());
             return null;
         }
 
     }
 
-    static private final Map<String,Object> conceptContext = new LinkedHashMap<String, Object>() {
+    static private final Map<String, Object> conceptContext = new LinkedHashMap<String, Object>() {
         {
             put("id", new LinkedHashMap<String, Object>() {
                 {
@@ -309,39 +320,40 @@ public final class TermedTerminologyManager {
         }
     };
 
-    public Response searchConceptFromTerminologyAPI(String query, String graphId) {
+    public Response searchConceptFromTerminologyAPI(String query,
+                                                    String graphId) {
 
-        if(graphId==null || graphId!=null && graphId.isEmpty()) {
-            graphId="0";
+        if (graphId == null || graphId != null && graphId.isEmpty()) {
+            graphId = "0";
         }
 
-        String url = properties.getDefaultTerminologyAPI()+"terminology/publicapi/searchconcept";
+        String url = properties.getDefaultTerminologyAPI() + "terminology/publicapi/searchconcept";
 
         Client client = ClientBuilder.newClient();
         WebTarget target = client.target(url)
-                                .queryParam("searchTerm",LDHelper.encode(query))
-                                .queryParam("vocabularyId",graphId);
+            .queryParam("searchTerm", LDHelper.encode(query))
+            .queryParam("vocabularyId", graphId);
 
         Response response = target.request("application/json").get();
         client.close();
 
         if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-            logger.warn("Failed to connect "+response.getStatus()+": "+url);
+            logger.warn("Failed to connect " + response.getStatus() + ": " + url);
             return jerseyResponseManager.serverError();
         }
 
-        Model model = LDHelper.getJSONArrayResponseAsJenaModel(response,conceptContext);
+        Model model = LDHelper.getJSONArrayResponseAsJenaModel(response, conceptContext);
         model.setNsPrefixes(LDHelper.PREFIX_MAP);
 
         /* Lift vocabulary node to separate resource */
-        String qry = LDHelper.prefix+" DELETE { ?concept dcterms:title ?title . }" +
-                "INSERT { ?vocabulary skos:prefLabel ?title . " +
-                "?vocabulary a skos:ConceptScheme . " +
-                "?concept a skos:Concept . }" +
-                "WHERE { ?concept dcterms:title ?title ." +
-                " ?concept skos:inScheme ?vocabulary . }";
+        String qry = LDHelper.prefix + " DELETE { ?concept dcterms:title ?title . }" +
+            "INSERT { ?vocabulary skos:prefLabel ?title . " +
+            "?vocabulary a skos:ConceptScheme . " +
+            "?concept a skos:Concept . }" +
+            "WHERE { ?concept dcterms:title ?title ." +
+            " ?concept skos:inScheme ?vocabulary . }";
 
-        UpdateAction.parseExecute(qry,model);
+        UpdateAction.parseExecute(qry, model);
 
         String modelString = modelManager.writeModelToJSONLDString(model);
 
@@ -350,14 +362,17 @@ public final class TermedTerminologyManager {
 
     }
 
-
     /**
      * Returns concepts from Termed api
+     *
      * @param query query string
      *              * @param schemeURI ID of the scheme
      * @return Response
      */
-    public Response searchConceptFromTermedAPI(String query, String schemeURI, String conceptURI, String graphId) {
+    public Response searchConceptFromTermedAPI(String query,
+                                               String schemeURI,
+                                               String conceptURI,
+                                               String graphId) {
 
         Model simpleSkos = searchConceptFromTermedAPIAsModel(query, schemeURI, conceptURI, graphId);
 
@@ -371,7 +386,10 @@ public final class TermedTerminologyManager {
         return rb.build();
     }
 
-    public Response searchConceptFromTermedAPIPlainJson(String query, String schemeURI, String conceptURI, String graphId) {
+    public Response searchConceptFromTermedAPIPlainJson(String query,
+                                                        String schemeURI,
+                                                        String conceptURI,
+                                                        String graphId) {
         Model simpleSkos = searchConceptFromTermedAPIAsModel(query, schemeURI, conceptURI, graphId);
 
         if (simpleSkos == null) {
@@ -381,49 +399,54 @@ public final class TermedTerminologyManager {
         ResponseBuilder rb = Response.status(Response.Status.OK);
         try {
             rb.entity(modelManager.toPlainJsonString(simpleSkos, Frames.conceptFrame));
-        } catch(Exception ex) {
+        } catch (Exception ex) {
             ex.printStackTrace();
-            return jerseyResponseManager.serverError(); }
+            return jerseyResponseManager.serverError();
+        }
 
         return rb.build();
     }
 
     /**
      * Put model to concept graph
+     *
      * @param model Jena model
-     * @param id IRI of the graph as String
+     * @param id    IRI of the graph as String
      */
-    public void putToConceptGraph(Model model, String id) {
+    public void putToConceptGraph(Model model,
+                                  String id) {
 
         DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(endpointServices.getTempConceptReadWriteAddress());
         DatasetAdapter adapter = new DatasetAdapter(accessor);
-        try { adapter.putModel(id, model); }
-        catch(NullPointerException ex) {
-            logger.warn("Failed to update "+id);
+        try {
+            adapter.putModel(id, model);
+        } catch (NullPointerException ex) {
+            logger.warn("Failed to update " + id);
         }
 
     }
 
     /**
      * Returns Jena model of the terminology
+     *
      * @return Model
      */
     public Model getSchemesAsModelFromTermedAPI() {
-        String url = properties.getDefaultTermedAPI()+"node-trees";
+        String url = properties.getDefaultTermedAPI() + "node-trees";
         try {
             Client client = clientFactory.createTermedClient();
 
             WebTarget target = client.target(url)
-                    .queryParam("select","uri,id,properties.prefLabel,properties.description")
-                    .queryParam("where", "typeId:TerminologicalVocabulary")
-                    .queryParam("max", "-1");
+                .queryParam("select", "uri,id,properties.prefLabel,properties.description")
+                .queryParam("where", "typeId:TerminologicalVocabulary")
+                .queryParam("max", "-1");
 
             Response response = target.request("application/rdf+xml").get();
 
-            logger.info("TERMED SCHEMES: "+target.getUri().toString());
+            logger.info("TERMED SCHEMES: " + target.getUri().toString());
 
             if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-                logger.info( response.getStatus()+" from URL: "+url);
+                logger.info(response.getStatus() + " from URL: " + url);
                 return null;
             }
 
@@ -441,16 +464,16 @@ public final class TermedTerminologyManager {
 
             return schemeModel;
 
-        } catch(Exception ex) {
+        } catch (Exception ex) {
             logger.warn("Expect the unexpected!", ex);
             return null;
         }
     }
 
+    public Model getTerminologyAsJenaModel(String schemeId,
+                                           String schemeUri) {
 
-    public Model getTerminologyAsJenaModel(String schemeId, String schemeUri) {
-
-        String url = properties.getDefaultTermedAPI()+"ext";
+        String url = properties.getDefaultTermedAPI() + "ext";
 
         try {
 
@@ -461,7 +484,7 @@ public final class TermedTerminologyManager {
             Response response = target.request("application/rdf+xml").get();
 
             if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-                logger.info("FAIL: "+target.getUri().toString());
+                logger.info("FAIL: " + target.getUri().toString());
                 return null;
             }
 
@@ -472,21 +495,21 @@ public final class TermedTerminologyManager {
             try {
                 RDFReader reader = model.getReader(Lang.RDFXML.getName());
                 reader.read(model, response.readEntity(InputStream.class), schemeUri);
-            } catch(RiotException ex) {
+            } catch (RiotException ex) {
                 return model;
             }
 
             return model;
 
-        } catch(Exception ex) {
-            logger. warn("Expect the unexpected!", ex);
+        } catch (Exception ex) {
+            logger.warn("Expect the unexpected!", ex);
             return null;
         }
     }
 
-
     /**
      * Returns concept as Jena model from temp concept graph
+     *
      * @param resourceURI
      * @return Model
      */
@@ -494,7 +517,7 @@ public final class TermedTerminologyManager {
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
         pss.setCommandText(QueryLibrary.conceptQuery);
-        pss.setIri("concept",resourceURI);
+        pss.setIri("concept", resourceURI);
         return constructFromTempConceptService(pss.toString());
     }
 
@@ -502,29 +525,28 @@ public final class TermedTerminologyManager {
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
         pss.setCommandText(QueryLibrary.conceptQuery);
-        pss.setIri("concept",resourceURI);
+        pss.setIri("concept", resourceURI);
         return constructCleanedModelFromTempConceptService(pss.toString());
     }
 
-
-    public boolean isUsedConcept(String model, String concept) {
+    public boolean isUsedConcept(String model,
+                                 String concept) {
 
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         String queryString = " ASK { GRAPH ?graph { ?s rdfs:isDefinedBy ?model . ?s ?p ?concept }}";
         pss.setCommandText(queryString);
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
         pss.setIri("concept", concept);
-        pss.setIri("model",model);
+        pss.setIri("model", model);
 
         Query query = pss.asQuery();
-        try(QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), query)) {
+        try (QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), query)) {
             boolean b = qexec.execAsk();
             return b;
         } catch (Exception ex) {
             return false;
         }
     }
-
 
     public boolean isUsedConceptGlobal(String concept) {
 
@@ -535,7 +557,7 @@ public final class TermedTerminologyManager {
         pss.setIri("concept", concept);
 
         Query query = pss.asQuery();
-        try(QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), query)) {
+        try (QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), query)) {
 
             boolean b = qexec.execAsk();
             return b;

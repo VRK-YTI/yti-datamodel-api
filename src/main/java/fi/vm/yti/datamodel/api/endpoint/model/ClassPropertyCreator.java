@@ -10,6 +10,7 @@ import fi.vm.yti.datamodel.api.service.JerseyClient;
 import fi.vm.yti.datamodel.api.service.JerseyResponseManager;
 import fi.vm.yti.datamodel.api.utils.LDHelper;
 import io.swagger.annotations.*;
+
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
 import org.apache.jena.query.ParameterizedSparqlString;
@@ -22,11 +23,12 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
+
 import java.util.UUID;
 
 @Component
 @Path("classProperty")
-@Api(tags = {"Class"}, description = "Operations about property")
+@Api(tags = { "Class" }, description = "Operations about property")
 public class ClassPropertyCreator {
 
     private final IDManager idManager;
@@ -52,13 +54,13 @@ public class ClassPropertyCreator {
     @Produces("application/ld+json")
     @ApiOperation(value = "Get property from model", notes = "More notes about this method")
     @ApiResponses(value = {
-            @ApiResponse(code = 400, message = "Invalid model supplied"),
-            @ApiResponse(code = 404, message = "Service not found"),
-            @ApiResponse(code = 500, message = "Internal server error")
+        @ApiResponse(code = 400, message = "Invalid model supplied"),
+        @ApiResponse(code = 404, message = "Service not found"),
+        @ApiResponse(code = 500, message = "Internal server error")
     })
     public Response json(
-            @ApiParam(value = "Predicate ID", required = true) @QueryParam("predicateID") String predicateID,
-            @ApiParam(value = "Predicate type", allowableValues="owl:DatatypeProperty,owl:ObjectProperty") @QueryParam("type") String type) {
+        @ApiParam(value = "Predicate ID", required = true) @QueryParam("predicateID") String predicateID,
+        @ApiParam(value = "Predicate type", allowableValues = "owl:DatatypeProperty,owl:ObjectProperty") @QueryParam("type") String type) {
 
         IRI predicateIRI, typeIRI;
 
@@ -75,42 +77,42 @@ public class ClassPropertyCreator {
 
             if (graphManager.isExistingServiceGraph(SplitIRI.namespace(predicateID))) {
                 /* Local predicate */
-                if(!graphManager.isExistingGraph(predicateIRI)) {
+                if (!graphManager.isExistingGraph(predicateIRI)) {
                     return jerseyResponseManager.invalidIRI();
                 }
 
                 service = endpointServices.getCoreSparqlAddress();
 
                 queryString = "CONSTRUCT { "
-                        + "?uuid a sh:PropertyShape . "
-                        + "?uuid sh:path ?predicate . "
-                        + "?uuid dcterms:type ?predicateType . "
-                        + "?uuid dcterms:type ?externalType . "
-                        + "?uuid dcterms:created ?creation . "
-                        + "?uuid iow:localName ?localIdentifier . "
-                        + "?uuid owl:equivalentProperty ?mappedPredicate . "
-                        + "?uuid sh:name ?label . "
-                        + "?uuid sh:description ?comment . "
-                        + "?uuid sh:node ?valueClass . "
-                        + "?uuid sh:minCount 1 . "
-                        + "?uuid sh:maxCount 1 . "
-                        + "?uuid sh:datatype ?datatype . } "
-                        + "WHERE { "
-                        + "BIND(now() as ?creation) "
-                        + "OPTIONAL { "
-                        + "GRAPH ?predicate { "
-                        + "?predicate rdfs:label ?label .  "
-                        + "?predicate a ?predicateType . "
-                        + "OPTIONAL { ?predicate owl:equivalentProperty ?mappedPredicate . } "
-                        + "OPTIONAL{ ?predicate rdfs:comment ?comment . } "
-                        + "OPTIONAL{ ?predicate a owl:DatatypeProperty . "
-                        + "?predicate rdfs:range ?datatype . } "
-                        + "OPTIONAL { ?predicate a owl:ObjectProperty . "
-                        + "?predicate rdfs:range ?valueClass . }}}}";
+                    + "?uuid a sh:PropertyShape . "
+                    + "?uuid sh:path ?predicate . "
+                    + "?uuid dcterms:type ?predicateType . "
+                    + "?uuid dcterms:type ?externalType . "
+                    + "?uuid dcterms:created ?creation . "
+                    + "?uuid iow:localName ?localIdentifier . "
+                    + "?uuid owl:equivalentProperty ?mappedPredicate . "
+                    + "?uuid sh:name ?label . "
+                    + "?uuid sh:description ?comment . "
+                    + "?uuid sh:node ?valueClass . "
+                    + "?uuid sh:minCount 1 . "
+                    + "?uuid sh:maxCount 1 . "
+                    + "?uuid sh:datatype ?datatype . } "
+                    + "WHERE { "
+                    + "BIND(now() as ?creation) "
+                    + "OPTIONAL { "
+                    + "GRAPH ?predicate { "
+                    + "?predicate rdfs:label ?label .  "
+                    + "?predicate a ?predicateType . "
+                    + "OPTIONAL { ?predicate owl:equivalentProperty ?mappedPredicate . } "
+                    + "OPTIONAL{ ?predicate rdfs:comment ?comment . } "
+                    + "OPTIONAL{ ?predicate a owl:DatatypeProperty . "
+                    + "?predicate rdfs:range ?datatype . } "
+                    + "OPTIONAL { ?predicate a owl:ObjectProperty . "
+                    + "?predicate rdfs:range ?valueClass . }}}}";
 
                 pss.setCommandText(queryString);
                 pss.setIri("predicate", predicateIRI);
-                pss.setIri("uuid", "urn:uuid:"+classPropertyUUID.toString());
+                pss.setIri("uuid", "urn:uuid:" + classPropertyUUID.toString());
                 pss.setLiteral("localIdentifier", SplitIRI.localname(predicateID));
 
             } else {
@@ -126,50 +128,49 @@ public class ClassPropertyCreator {
              else typeIRI = IDManager.constructIRI(predicateType);
          } */
 
-                if(type==null || type.equals("undefined"))
+                if (type == null || type.equals("undefined"))
                     return jerseyResponseManager.invalidParameter();
 
                 String typeURI = type.replace("owl:", "http://www.w3.org/2002/07/owl#");
                 typeIRI = idManager.constructIRI(typeURI);
-
 
                 service = endpointServices.getImportsSparqlAddress();
 
                 /* TODO: ADD LANGUAGE TAG TO COMMENTS */
 
                 queryString = "CONSTRUCT { "
-                        + "?uuid a sh:PropertyShape . "
-                        + "?uuid sh:path ?predicate . "
-                        + "?uuid dcterms:type ?predicateType . "
-                        + "?uuid dcterms:created ?creation . "
-                        + "?uuid iow:localName ?localIdentifier . "
-                        + "?uuid sh:name ?label . "
-                        + "?uuid sh:description ?comment . "
-                        + "?uuid sh:class ?valueClass . "
-                        + "?uuid sh:minCount 1 . "
-                        + "?uuid sh:maxCount 1 . "
-                        + "?uuid sh:datatype ?prefDatatype . } "
-                        + "WHERE { "
-                        + "BIND(now() as ?creation) "
-                        + "OPTIONAL { ?predicate rdfs:label ?labelStr . FILTER(LANG(?labelStr) = '') BIND(STRLANG(STR(?labelStr),'en') as ?label) }"
-                        + "OPTIONAL { ?predicate rdfs:label ?label . FILTER(LANG(?label)!='') }"
-                        + "VALUES ?commentPred { rdfs:comment skos:definition dcterms:description dc:description }"
-                        + "OPTIONAL { ?predicate ?commentPred ?commentStr . FILTER(LANG(?commentStr) = '') BIND(STRLANG(STR(?commentStr),'en') as ?comment) } "
-                        + "OPTIONAL { ?predicate ?commentPred ?comment . FILTER(LANG(?comment)!='') }"
-                        + "OPTIONAL { ?predicate a owl:DatatypeProperty . "
-                        + "?predicate rdfs:range ?datatype . "
-                        + "BIND(IF(?datatype=rdfs:Literal,xsd:string,?datatype) as ?prefDatatype) } "
-                        + "OPTIONAL { ?predicate a owl:ObjectProperty . ?predicate rdfs:range ?valueClass . } "
-                        + "OPTIONAL { ?predicate a rdf:Property . "
-                        + "FILTER NOT EXISTS { ?predicate a owl:DatatypeProperty . }"
-                        + "?predicate rdfs:range rdfs:Literal . "
-                        + "BIND(xsd:string as ?prefDatatype) } "
-                        + "}";
+                    + "?uuid a sh:PropertyShape . "
+                    + "?uuid sh:path ?predicate . "
+                    + "?uuid dcterms:type ?predicateType . "
+                    + "?uuid dcterms:created ?creation . "
+                    + "?uuid iow:localName ?localIdentifier . "
+                    + "?uuid sh:name ?label . "
+                    + "?uuid sh:description ?comment . "
+                    + "?uuid sh:class ?valueClass . "
+                    + "?uuid sh:minCount 1 . "
+                    + "?uuid sh:maxCount 1 . "
+                    + "?uuid sh:datatype ?prefDatatype . } "
+                    + "WHERE { "
+                    + "BIND(now() as ?creation) "
+                    + "OPTIONAL { ?predicate rdfs:label ?labelStr . FILTER(LANG(?labelStr) = '') BIND(STRLANG(STR(?labelStr),'en') as ?label) }"
+                    + "OPTIONAL { ?predicate rdfs:label ?label . FILTER(LANG(?label)!='') }"
+                    + "VALUES ?commentPred { rdfs:comment skos:definition dcterms:description dc:description }"
+                    + "OPTIONAL { ?predicate ?commentPred ?commentStr . FILTER(LANG(?commentStr) = '') BIND(STRLANG(STR(?commentStr),'en') as ?comment) } "
+                    + "OPTIONAL { ?predicate ?commentPred ?comment . FILTER(LANG(?comment)!='') }"
+                    + "OPTIONAL { ?predicate a owl:DatatypeProperty . "
+                    + "?predicate rdfs:range ?datatype . "
+                    + "BIND(IF(?datatype=rdfs:Literal,xsd:string,?datatype) as ?prefDatatype) } "
+                    + "OPTIONAL { ?predicate a owl:ObjectProperty . ?predicate rdfs:range ?valueClass . } "
+                    + "OPTIONAL { ?predicate a rdf:Property . "
+                    + "FILTER NOT EXISTS { ?predicate a owl:DatatypeProperty . }"
+                    + "?predicate rdfs:range rdfs:Literal . "
+                    + "BIND(xsd:string as ?prefDatatype) } "
+                    + "}";
 
                 pss.setCommandText(queryString);
                 pss.setIri("predicate", predicateIRI);
                 pss.setLiteral("localIdentifier", SplitIRI.localname(predicateID));
-                pss.setIri("uuid", "urn:uuid:"+classPropertyUUID.toString());
+                pss.setIri("uuid", "urn:uuid:" + classPropertyUUID.toString());
                 pss.setIri("predicateType", typeIRI);
 
             }

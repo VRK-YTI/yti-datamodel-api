@@ -59,7 +59,7 @@ public class ResourceQueryFactory {
                                       Integer pageSize,
                                       Integer pageFrom) {
 
-        if(sortField!=null && !sortField.matches("modified|label|comment|isDefinedBy")) {
+        if (sortField != null && !sortField.matches("modified|label|comment|isDefinedBy")) {
             throw new IllegalArgumentException("Allowed fields: modified, label, comment, isDefinedBy");
         }
 
@@ -84,7 +84,7 @@ public class ResourceQueryFactory {
         QueryStringQueryBuilder labelQuery = null;
 
         if (!query.isEmpty()) {
-            labelQuery = QueryBuilders.queryStringQuery(query+" OR "+query+"* OR *"+query).field("label.*");
+            labelQuery = QueryBuilders.queryStringQuery(query + " OR " + query + "* OR *" + query).field("label.*");
 
             if (sortLang != null && sortLangPattern.matcher(sortLang).matches()) {
                 labelQuery = labelQuery.field("label." + sortLang, 10);
@@ -93,15 +93,15 @@ public class ResourceQueryFactory {
             mustList.add(labelQuery);
         }
 
-        if (!query.isEmpty() || type!=null || modelId!=null) {
+        if (!query.isEmpty() || type != null || modelId != null) {
             sourceBuilder.query(boolQuery);
         } else {
             sourceBuilder.query(QueryBuilders.matchAllQuery());
         }
 
-        if(sortField!=null && !sortField.isEmpty() && sortLang!=null && !sortLang.isEmpty()) {
-            sortOrder = (sortOrder==null ? "desc" : (sortOrder.matches("asc|desc") ? sortOrder : "desc"));
-            FieldSortBuilder fieldSort = new FieldSortBuilder(sortField+(sortField.equals("label")||sortField.equals("comment") ? "."+sortLang : "")).order(SortOrder.fromString(sortOrder));
+        if (sortField != null && !sortField.isEmpty() && sortLang != null && !sortLang.isEmpty()) {
+            sortOrder = (sortOrder == null ? "desc" : (sortOrder.matches("asc|desc") ? sortOrder : "desc"));
+            FieldSortBuilder fieldSort = new FieldSortBuilder(sortField + (sortField.equals("label") || sortField.equals("comment") ? "." + sortLang : "")).order(SortOrder.fromString(sortOrder));
             fieldSort.missing("_last");
             sourceBuilder.sort(fieldSort);
         }

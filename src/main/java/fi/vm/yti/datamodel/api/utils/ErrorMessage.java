@@ -1,10 +1,10 @@
 /*
- * Licensed under the European Union Public Licence (EUPL) V.1.1 
+ * Licensed under the European Union Public Licence (EUPL) V.1.1
  */
 package fi.vm.yti.datamodel.api.utils;
 
 final public class ErrorMessage {
-    
+
     final public static String NOTCREATED = toJs("{'errorMessage':'Resource was not created'}");
     final public static String UNAUTHORIZED = toJs("{'errorMessage':'Unauthorized'}");
     final public static String LOCKED = toJs("{'errorMessage':'Locked'}");
@@ -20,9 +20,9 @@ final public class ErrorMessage {
     final public static String INVALIDVOCABULARY = toJs("{'errorMessage':'Invalid SKOSMOS ID'}");
     final public static String INVALIDPARAMETER = toJs("{'errorMessage':'Invalid API parameters'}");
     final public static String NOTACCEPTED = toJs("{'errorMessage':'Not accepted'}");
-    
+
     private static String toJs(String jsonString) {
         return jsonString.replaceAll("'", "\"");
-    } 
-    
+    }
+
 }

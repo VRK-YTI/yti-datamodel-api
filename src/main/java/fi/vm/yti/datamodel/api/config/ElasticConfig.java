@@ -13,27 +13,26 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- *
  * @author amiika
  */
 
 @Configuration
 public class ElasticConfig {
-    
+
     private final ApplicationProperties config;
-    
-    @Autowired 
+
+    @Autowired
     public ElasticConfig(ApplicationProperties config) {
         this.config = config;
     }
-    
+
     @Bean
     @SuppressWarnings("resource")
     protected RestHighLevelClient elasticSearchClient() {
-	RestHighLevelClient client = new RestHighLevelClient(RestClient.builder(
-    			new HttpHost(config.getElasticHost(), Integer.parseInt(config.getElasticHttpPort()),config.getElasticHttpScheme())
-    		));
-    	return client;
+        RestHighLevelClient client = new RestHighLevelClient(RestClient.builder(
+            new HttpHost(config.getElasticHost(), Integer.parseInt(config.getElasticHttpPort()), config.getElasticHttpScheme())
+        ));
+        return client;
     }
-    
+
 }
