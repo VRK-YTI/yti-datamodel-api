@@ -1,6 +1,7 @@
 package fi.vm.yti.datamodel.api.index;
 
 import javax.inject.Singleton;
+import javax.ws.rs.BadRequestException;
 
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
@@ -41,7 +42,7 @@ public class LuceneQueryFactory {
             luceneQuery = parser.parse(parsedQuery, "");
         } catch (QueryNodeException e) {
             logger.warn("Failed to parse: "+parsedQuery);
-            throw new IllegalArgumentException("Invalid query");
+            throw new BadRequestException("Invalid query!");
         }
 
         return QueryBuilders.queryStringQuery(luceneQuery.toString());
