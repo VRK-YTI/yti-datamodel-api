@@ -20,7 +20,7 @@ public class LuceneQueryFactory {
             }
             return QueryBuilders.queryStringQuery(String.join(" AND ", splittedQry));
         } else {
-            return QueryBuilders.queryStringQuery(query + " OR " + query + "* OR *" + query).field("label.*");
+            return QueryBuilders.queryStringQuery(query + " OR " + query + "* OR *" + query);
         }
     }
 
