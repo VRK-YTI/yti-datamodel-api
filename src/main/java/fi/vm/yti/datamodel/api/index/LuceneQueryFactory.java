@@ -14,7 +14,7 @@ public class LuceneQueryFactory {
         if (query.contains("*")) {
             return QueryBuilders.queryStringQuery(query);
         } else if (query.contains(" ")) {
-            String[] splittedQry = query.split(" ");
+            String[] splittedQry = query.split("\\s+");
             for (int i = 0; i < splittedQry.length; i++) {
                 splittedQry[i] = ("(" + splittedQry[i] + " OR *" + splittedQry[i] + " OR " + splittedQry[i] + "*)");
             }
