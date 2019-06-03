@@ -448,6 +448,10 @@ public final class NamespaceManager {
                                     String alternativeURL,
                                     boolean force) {
 
+        if(!namespace.startsWith("http") && (alternativeURL==null || alternativeURL.isEmpty() || !alternativeURL.startsWith("http"))) {
+            return false;
+        }
+
         try { // Unexpected exception
 
             IRI namespaceIRI = null;

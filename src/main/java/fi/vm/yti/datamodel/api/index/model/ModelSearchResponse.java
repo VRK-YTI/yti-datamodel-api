@@ -6,7 +6,8 @@ import java.util.Map;
 public class ModelSearchResponse {
 
     private long totalHitCount;
-    private Integer resultStart;
+    private Integer pageSize;
+    private Integer pageFrom;
     private List<IndexModelDTO> models;
     private Map<String, List<DeepSearchHitListDTO<?>>> deepHits;
 
@@ -14,11 +15,13 @@ public class ModelSearchResponse {
     }
 
     public ModelSearchResponse(final long totalHitCount,
-                               final Integer resultStart,
+                               final Integer pageSize,
+                               final Integer pageFrom,
                                final List<IndexModelDTO> models,
                                final Map<String, List<DeepSearchHitListDTO<?>>> deepHits) {
         this.totalHitCount = totalHitCount;
-        this.resultStart = resultStart;
+        this.pageSize = pageSize;
+        this.pageFrom = pageFrom;
         this.models = models;
         this.deepHits = deepHits;
     }
@@ -31,12 +34,20 @@ public class ModelSearchResponse {
         this.totalHitCount = totalHitCount;
     }
 
-    public Integer getResultStart() {
-        return resultStart;
+    public Integer getPageSize() {
+        return pageSize;
     }
 
-    public void setResultStart(final Integer resultStart) {
-        this.resultStart = resultStart;
+    public void setPageSize(final Integer pageSize) {
+        this.pageSize = pageSize;
+    }
+
+    public Integer getPageFrom() {
+        return pageFrom;
+    }
+
+    public void setPageFrom(final Integer pageFrom) {
+        this.pageFrom = pageFrom;
     }
 
     public List<IndexModelDTO> getModels() {
@@ -59,7 +70,8 @@ public class ModelSearchResponse {
     public String toString() {
         return "ModelSearchResponse{" +
             "totalHitCount=" + totalHitCount +
-            ", resultStart=" + resultStart +
+            ", pageSize=" + pageSize +
+            ", pageFrom=" + pageFrom +
             ", models=" + models +
             ", deepHits=" + deepHits +
             '}';

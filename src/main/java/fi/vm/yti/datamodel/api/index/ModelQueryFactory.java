@@ -11,6 +11,7 @@ import javax.inject.Singleton;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.index.query.MultiMatchQueryBuilder;
+import org.elasticsearch.index.query.Operator;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.QueryStringQueryBuilder;
 import org.elasticsearch.index.query.TermsQueryBuilder;
@@ -37,11 +38,13 @@ public class ModelQueryFactory {
 
     private static final Logger logger = LoggerFactory.getLogger(ModelQueryFactory.class);
     private ObjectMapper objectMapper;
+    private LuceneQueryFactory luceneQueryFactory;
 
     @Autowired
-    public ModelQueryFactory(ObjectMapper objectMapper) {
+    public ModelQueryFactory(ObjectMapper objectMapper, LuceneQueryFactory luceneQueryFactory) {
 
         this.objectMapper = objectMapper;
+        this.luceneQueryFactory = luceneQueryFactory;
 
     }
 
@@ -70,15 +73,14 @@ public class ModelQueryFactory {
         QueryStringQueryBuilder labelQuery = null;
 
         if (!query.isEmpty()) {
-            labelQuery = QueryBuilders.queryStringQuery(query + " OR " + query + "* OR *" + query).field("label.*");
+                labelQuery = luceneQueryFactory.buildPrefixSuffixQuery(query)
+                    .field("label.*");
         }
 
         TermsQueryBuilder idQuery = null;
 
         if (additionalModelIds != null && !additionalModelIds.isEmpty()) {
-
             idQuery = QueryBuilders.termsQuery("id.keyword", additionalModelIds);
-
         }
 
         if (idQuery != null && labelQuery != null) {
@@ -96,8 +98,6 @@ public class ModelQueryFactory {
             sourceBuilder.query(QueryBuilders.matchAllQuery());
         }
 
-        logger.debug(sourceBuilder.toString());
-
         SearchRequest sr = new SearchRequest("dm_models")
             .source(sourceBuilder);
 
@@ -110,7 +110,7 @@ public class ModelQueryFactory {
                                              Map<String, List<DeepSearchHitListDTO<?>>> deepSearchHitList) {
         List<IndexModelDTO> models = new ArrayList<>();
 
-        ModelSearchResponse ret = new ModelSearchResponse(0, request.getPageFrom(), models, deepSearchHitList);
+        ModelSearchResponse ret = new ModelSearchResponse(0, request.getPageSize(), request.getPageFrom(), models, deepSearchHitList);
 
         try {
 

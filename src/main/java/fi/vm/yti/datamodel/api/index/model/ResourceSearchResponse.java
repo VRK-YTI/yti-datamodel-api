@@ -1,22 +1,24 @@
 package fi.vm.yti.datamodel.api.index.model;
 
 import java.util.List;
-import java.util.Map;
 
 public class ResourceSearchResponse {
 
     private long totalHitCount;
-    private Integer resultStart;
+    private Integer pageSize;
+    private Integer pageFrom;
     private List<IndexResourceDTO> resources;
 
     public ResourceSearchResponse() {
     }
 
     public ResourceSearchResponse(final long totalHitCount,
-                                  final Integer resultStart,
+                                  final Integer pageSize,
+                                  final Integer pageFrom,
                                   final List<IndexResourceDTO> resources) {
         this.totalHitCount = totalHitCount;
-        this.resultStart = resultStart;
+        this.pageSize = pageSize;
+        this.pageFrom = pageFrom;
         this.resources = resources;
     }
 
@@ -28,12 +30,20 @@ public class ResourceSearchResponse {
         this.totalHitCount = totalHitCount;
     }
 
-    public Integer getResultStart() {
-        return resultStart;
+    public Integer getPageSize() {
+        return pageSize;
     }
 
-    public void setResultStart(final Integer resultStart) {
-        this.resultStart = resultStart;
+    public void setPageSize(final Integer pageSize) {
+        this.pageSize = pageSize;
+    }
+
+    public Integer getPageFrom() {
+        return pageFrom;
+    }
+
+    public void setPageFrom(final Integer pageFrom) {
+        this.pageFrom = pageFrom;
     }
 
     public List<IndexResourceDTO> getResources() {
@@ -48,7 +58,8 @@ public class ResourceSearchResponse {
     public String toString() {
         return "ResourceSearchResponse{" +
             "totalHitCount=" + totalHitCount +
-            ", resultStart=" + resultStart +
+            ", pageSize=" + pageSize +
+            ", pageFrom=" + pageFrom +
             ", resources=" + resources +
             '}';
     }

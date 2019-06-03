@@ -38,11 +38,13 @@ public class ResourceQueryFactory {
     private static final Logger logger = LoggerFactory.getLogger(ResourceQueryFactory.class);
     private static final Pattern sortLangPattern = Pattern.compile("[a-zA-Z-]+");
     private ObjectMapper objectMapper;
+    private LuceneQueryFactory luceneQueryFactory;
 
     @Autowired
-    public ResourceQueryFactory(ObjectMapper objectMapper) {
+    public ResourceQueryFactory(ObjectMapper objectMapper, LuceneQueryFactory luceneQueryFactory) {
 
         this.objectMapper = objectMapper;
+        this.luceneQueryFactory = luceneQueryFactory;
 
     }
 
@@ -84,7 +86,8 @@ public class ResourceQueryFactory {
         QueryStringQueryBuilder labelQuery = null;
 
         if (!query.isEmpty()) {
-            labelQuery = QueryBuilders.queryStringQuery(query + " OR " + query + "* OR *" + query).field("label.*");
+            labelQuery = luceneQueryFactory.buildPrefixSuffixQuery(query)
+                .field("label.*");
 
             if (sortLang != null && sortLangPattern.matcher(sortLang).matches()) {
                 labelQuery = labelQuery.field("label." + sortLang, 10);
@@ -119,7 +122,7 @@ public class ResourceQueryFactory {
                                                 ResourceSearchRequest request) {
         List<IndexResourceDTO> resources = new ArrayList<>();
 
-        ResourceSearchResponse ret = new ResourceSearchResponse(0, request.getPageFrom(), resources);
+        ResourceSearchResponse ret = new ResourceSearchResponse(0, request.getPageSize(), request.getPageFrom(), resources);
 
         try {
 

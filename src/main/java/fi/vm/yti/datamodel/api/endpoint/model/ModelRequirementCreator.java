@@ -61,7 +61,7 @@ public class ModelRequirementCreator {
         @ApiParam(value = "Model label", required = true) @QueryParam("label") String label,
         @ApiParam(value = "Initial language", required = true, allowableValues = "fi,en") @QueryParam("lang") String lang) {
 
-        if (namespace == null || (!namespace.endsWith("#") && !namespace.endsWith("/"))) return jerseyResponseManager.invalidIRI();
+        if (namespace == null || namespace.isEmpty() || (namespace.startsWith("http") && !(namespace.endsWith("#") && namespace.endsWith("/")) )) return jerseyResponseManager.invalidIRI();
 
         IRI namespaceIRI;
 

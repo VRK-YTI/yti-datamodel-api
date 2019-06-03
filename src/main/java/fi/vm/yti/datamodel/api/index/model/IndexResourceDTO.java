@@ -1,6 +1,7 @@
 package fi.vm.yti.datamodel.api.index.model;
 
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import fi.vm.yti.datamodel.api.model.AbstractClass;
 
@@ -96,9 +97,13 @@ public class IndexResourceDTO {
 
     public void highlightLabels(String highlightText) {
         if (highlightText != null && highlightText.length() > 0) {
-            this.label.forEach((lang, label) -> {
-                this.label.put(lang, label.replaceAll("(?i)(?<text>" + highlightText + ")", "<b>${text}</b>"));
-            });
+            String highLights[] = highlightText.split(" ");
+            for(String highLight : highLights) {
+                this.label.forEach((lang, label) -> {
+                    String matchString = Pattern.quote(highLight);
+                    this.label.put(lang, label.replaceAll("(?i)(?<text>\\b" + matchString + "|"+ matchString+"\\b)", "<b>${text}</b>"));
+                });
+            }
         }
     }
 

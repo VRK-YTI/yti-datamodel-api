@@ -22,6 +22,8 @@ import fi.vm.yti.datamodel.api.index.model.ModelSearchResponse;
 import fi.vm.yti.datamodel.api.service.JerseyResponseManager;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 
 @Component
 @Path("/searchModels")
@@ -45,6 +47,10 @@ public class ModelSearch {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
+    @ApiResponses(value = {
+        @ApiResponse(code = 200, message = "OK"),
+        @ApiResponse(code = 400, message = "Invalid JSON!")
+    })
     public Response searchModels(ModelSearchRequest request) {
         ModelSearchResponse response = searchIndexManager.searchModels(request);
         return jerseyResponseManager.ok(objectMapper.valueToTree(response));

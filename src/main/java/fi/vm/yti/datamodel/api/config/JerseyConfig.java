@@ -3,6 +3,7 @@ package fi.vm.yti.datamodel.api.config;
 import io.swagger.jaxrs.config.BeanConfig;
 import io.swagger.jaxrs.listing.ApiListingResource;
 
+import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.message.GZipEncoder;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -28,6 +29,7 @@ public class JerseyConfig extends ResourceConfig {
         register(MultiPartFeature.class);
         register(ApiListingResource.class);
         register(GZipEncoder.class);
+        register(JsonParseExceptionMapper.class);
 
         register((ContainerResponseFilter) (req, resp) -> {
             resp.getHeaders().add("Cache-Control", "no-cache, no-store, must-revalidate");

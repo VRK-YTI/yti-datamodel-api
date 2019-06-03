@@ -15,6 +15,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.index.query.MultiMatchQueryBuilder;
+import org.elasticsearch.index.query.Operator;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.QueryStringQueryBuilder;
 import org.elasticsearch.script.Script;
@@ -52,16 +53,20 @@ public class DeepResourceQueryFactory {
     private static final Pattern sortLangPattern = Pattern.compile("[a-zA-Z-]+");
     private static final FetchSourceContext sourceIncludes = new FetchSourceContext(true, new String[]{ "id", "status", "label", "comment", "isDefinedBy", "type" }, new String[]{});
     private static final Script topHitScript = new Script(ScriptType.INLINE, Script.DEFAULT_SCRIPT_LANG, "_score", Collections.emptyMap());
+    private LuceneQueryFactory luceneQueryFactory;
 
     @Autowired
-    public DeepResourceQueryFactory(ObjectMapper objectMapper) {
+    public DeepResourceQueryFactory(ObjectMapper objectMapper,
+                                    LuceneQueryFactory luceneQueryFactory) {
+        this.luceneQueryFactory = luceneQueryFactory;
         this.objectMapper = objectMapper;
     }
 
     public SearchRequest createQuery(String query,
                                      String sortLang) {
 
-        QueryStringQueryBuilder queryStringQuery = QueryBuilders.queryStringQuery(query + " OR " + query + "* OR *" + query).field("label.*");
+        QueryStringQueryBuilder queryStringQuery = luceneQueryFactory.buildPrefixSuffixQuery(query)
+            .field("label.*");
 
         if (sortLang != null && sortLangPattern.matcher(sortLang).matches()) {
             queryStringQuery = queryStringQuery.field("label." + sortLang, 10);
@@ -81,8 +86,6 @@ public class DeepResourceQueryFactory {
                         .fetchSource(sourceIncludes))
                     .subAggregation(AggregationBuilders.max("best_class_hit")
                         .script(topHitScript))));
-
-        logger.debug(sr.source().toString());
 
         return sr;
     }
