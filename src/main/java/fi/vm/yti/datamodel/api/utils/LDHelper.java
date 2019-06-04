@@ -46,6 +46,9 @@ public class LDHelper {
     public static final String[] UNRESOLVABLE = { "xsd", "iow", "text", "sh", "afn", "schema", "dcap", "termed" };
 
     public static final String[] RESERVEDWORDS = {
+        "urn",
+        "http",
+        "https",
         "abstract",
         "and",
         "andCond",
