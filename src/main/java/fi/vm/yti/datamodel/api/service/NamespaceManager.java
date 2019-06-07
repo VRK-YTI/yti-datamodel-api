@@ -527,7 +527,7 @@ public final class NamespaceManager {
                                 connection.setRequestProperty("Accept", "application/rdf+xml,application/turtle,text/turtle");
                                 stream = connection.getInputStream();
                             } catch (IOException ex) {
-                                ex.printStackTrace();
+                                logger.warn(ex.getMessage());
                                 logger.warn("Couldnt read from " + namespace);
                                 return false;
                             }

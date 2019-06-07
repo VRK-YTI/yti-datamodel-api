@@ -3,6 +3,8 @@
  */
 package fi.vm.yti.datamodel.api.endpoint.model;
 
+import java.util.Map;
+
 import fi.vm.yti.datamodel.api.service.*;
 import fi.vm.yti.datamodel.api.utils.LDHelper;
 import io.swagger.annotations.*;
@@ -11,6 +13,8 @@ import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
 import org.apache.jena.query.ParameterizedSparqlString;
 import org.apache.jena.rdf.model.ResourceFactory;
+import org.apache.jena.vocabulary.DCTerms;
+import org.apache.jena.vocabulary.RDFS;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -83,16 +87,28 @@ public class ModelRequirementCreator {
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
         queryString = "CONSTRUCT  { "
-            + "?g a rdfs:Resource . "
+            + "?g a ?type . "
             + "?g rdfs:label ?label . "
             + "?g dcap:preferredXMLNamespaceName ?namespace . "
             + "?g dcap:preferredXMLNamespacePrefix ?prefix . "
             + (isLocalNamespace ? "" : "?g iow:isResolved ?resolved . ")
             + "} WHERE { }";
 
+        String type = RDFS.Resource.getURI();
+
+        if(LDHelper.PREFIX_MAP.containsKey(prefix)) {
+            namespace = LDHelper.PREFIX_MAP.get(prefix);
+            type = DCTerms.Standard.getURI();
+        } else if (LDHelper.PREFIX_MAP.containsValue(namespace)) {
+            final String nsFinal = namespace;
+            type = DCTerms.Standard.getURI();
+            prefix = LDHelper.PREFIX_MAP.entrySet().stream().filter(o->o.getValue().equals(nsFinal)).map(Map.Entry::getKey).findFirst().get();
+        }
+
         pss.setCommandText(queryString);
-        pss.setIri("g", namespaceIRI);
+        pss.setIri("g", namespace);
         pss.setLiteral("label", ResourceFactory.createLangLiteral(label, lang));
+        pss.setIri("type",type);
         pss.setLiteral("namespace", namespace);
         pss.setLiteral("prefix", prefix);
         if (!isLocalNamespace) pss.setLiteral("resolved", isResolvedNamespace);
