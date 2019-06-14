@@ -80,7 +80,7 @@ public class ModelQueryFactory {
         TermsQueryBuilder idQuery = null;
 
         if (additionalModelIds != null && !additionalModelIds.isEmpty()) {
-            idQuery = QueryBuilders.termsQuery("id.keyword", additionalModelIds);
+            idQuery = QueryBuilders.termsQuery("id", additionalModelIds);
         }
 
         if (idQuery != null && labelQuery != null) {
