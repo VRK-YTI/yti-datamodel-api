@@ -58,6 +58,12 @@ public class Frames {
     public static final LinkedHashMap<String, Object> classVisualizationFrame;
     public static final LinkedHashMap<String, Object> origClassContext;
     public static final LinkedHashMap<String, Object> origClassFrame;
+    public static final LinkedHashMap<String, Object> libraryType;
+    public static final LinkedHashMap<String, Object> profileType;
+    public static final LinkedHashMap<String, Object> classType;
+    public static final LinkedHashMap<String, Object> shapeType;
+    public static final LinkedHashMap<String, Object> attributeType;
+    public static final LinkedHashMap<String, Object> associationType;
 
     static {
 
@@ -74,6 +80,43 @@ public class Frames {
                 put("@type", "@id");
             }
 
+        };
+
+        libraryType = new LinkedHashMap<String, Object>() {
+            {
+                put("@id", "http://purl.org/ws-mmi-dc/terms/MetadataVocabulary");
+            }
+        };
+
+        profileType = new LinkedHashMap<String, Object>() {
+            {
+                put("@id", "http://purl.org/ws-mmi-dc/terms/DCAP");
+            }
+        };
+
+        classType = new LinkedHashMap<String, Object>() {
+            {
+                put("@id", "http://www.w3.org/2000/01/rdf-schema#Class");
+            }
+
+        };
+
+        shapeType = new LinkedHashMap<String, Object>() {
+            {
+                put("@id", "http://www.w3.org/ns/shacl#NodeShape");
+            }
+        };
+
+        attributeType = new LinkedHashMap<String, Object>() {
+            {
+                put("@id", "http://www.w3.org/2002/07/owl#DatatypeProperty");
+            }
+        };
+
+        associationType = new LinkedHashMap<String, Object>() {
+            {
+                put("@id", "http://www.w3.org/2002/07/owl#ObjectProperty");
+            }
         };
 
         subject = new LinkedHashMap<String, Object>() {
@@ -680,6 +723,8 @@ public class Frames {
 
         esModelContext = new LinkedHashMap<String, Object>() {
             {
+                put("profile",profileType);
+                put("library",libraryType);
                 put("label", label);
                 put("comment", comment);
                 put("modified", modified);
@@ -703,6 +748,8 @@ public class Frames {
 
         esClassContext = new LinkedHashMap<String, Object>() {
             {
+                put("class",classType);
+                put("shape",shapeType);
                 put("label", name);
                 put("comment", shDescription);
                 put("modified", modified);
@@ -739,6 +786,8 @@ public class Frames {
 
         esPredicateContext = new LinkedHashMap<String, Object>() {
             {
+                put("attribute",attributeType);
+                put("association",associationType);
                 put("label", label);
                 put("comment", comment);
                 put("modified", modified);

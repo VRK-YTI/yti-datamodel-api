@@ -158,7 +158,7 @@ public abstract class AbstractPredicate extends AbstractResource {
     }
 
     public String getType() {
-        return this.graph.contains(ResourceFactory.createResource(this.getId()), RDF.type, OWL.ObjectProperty) ? "owl:ObjectProperty" : "owl:DatatypeProperty";
+        return this.graph.contains(ResourceFactory.createResource(this.getId()), RDF.type, OWL.ObjectProperty) ? "association" : "attribute";
     }
 
     public IRI getIRI() {

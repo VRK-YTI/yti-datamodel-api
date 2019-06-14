@@ -153,7 +153,7 @@ public abstract class AbstractModel extends AbstractResource {
     }
 
     public String getType() {
-        return this.graph.contains(ResourceFactory.createResource(this.getId()), RDF.type, LDHelper.curieToResource("dcap:DCAP")) ? "dcap:DCAP" : "dcap:MetadataVocabulary";
+        return this.graph.contains(ResourceFactory.createResource(this.getId()), RDF.type, LDHelper.curieToResource("dcap:DCAP")) ? "profile" : "library";
     }
 
     public Map<String, String> getLabel() {

@@ -158,7 +158,7 @@ public abstract class AbstractClass extends AbstractResource {
     }
 
     public String getType() {
-        return this.graph.contains(ResourceFactory.createResource(this.getId()), RDF.type, RDFS.Class) ? "rdfs:Class" : "sh:NodeShape";
+        return this.graph.contains(ResourceFactory.createResource(this.getId()), RDF.type, RDFS.Class) ? "class" : "shape";
     }
 
     public IRI getModelIRI() {
