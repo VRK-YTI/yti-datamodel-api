@@ -4,9 +4,10 @@ import java.util.List;
 
 public class DeepSearchResourceHitListDTO extends DeepSearchHitListDTO<IndexResourceDTO> {
 
-    public DeepSearchResourceHitListDTO(long totalCount,
+    public DeepSearchResourceHitListDTO(String type,
+                                        long totalCount,
                                         List<IndexResourceDTO> topHits) {
-        super(totalCount, topHits);
+        super(type, totalCount, topHits);
     }
 
 }
