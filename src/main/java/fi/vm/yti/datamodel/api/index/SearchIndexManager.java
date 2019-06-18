@@ -21,8 +21,6 @@ import org.elasticsearch.action.support.master.AcknowledgedResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.xcontent.XContentType;
-import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.index.query.QueryStringQueryBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -97,7 +95,11 @@ public class SearchIndexManager {
         BulkRequest bulkRequest = new BulkRequest();
         resourceList = resourceList.get("@graph");
         resourceList.forEach(resource -> {
-            IndexRequest indexRequest = new IndexRequest(indexName, "doc", resource.get("id").asText()).
+            String resourceId = resource.get("id").asText();
+            if(resourceId.startsWith("iow:")) {
+                resourceId = LDHelper.curieToURI(resourceId);
+            }
+            IndexRequest indexRequest = new IndexRequest(indexName, "doc", LDHelper.encode(resourceId)).
                 source(objectMapper.convertValue(resource, Map.class));
             bulkRequest.add(indexRequest);
         });
@@ -260,30 +262,33 @@ public class SearchIndexManager {
         }
     }
 
-    public void indexClass(String id,
-                           Object obj) {
-        esManager.addToIndex(esManager.ELASTIC_INDEX_RESOURCE, id, obj);
-    }
-
-    public void indexClass(AbstractClass classResource) {
+    public void createIndexClass(AbstractClass classResource) {
         IndexClassDTO indexClass = new IndexClassDTO(classResource);
         logger.debug("Indexing: " + indexClass.getId());
-        esManager.addToIndex(ElasticConnector.ELASTIC_INDEX_RESOURCE, LDHelper.encode(indexClass.getId()), indexClass);
+        esManager.putToIndex(ElasticConnector.ELASTIC_INDEX_RESOURCE, indexClass.getId(), indexClass);
+    }
+
+    public void updateIndexClass(AbstractClass classResource) {
+        IndexClassDTO indexClass = new IndexClassDTO(classResource);
+        logger.debug("Indexing: " + indexClass.getId());
+        esManager.updateToIndex(ElasticConnector.ELASTIC_INDEX_RESOURCE, indexClass.getId(), indexClass);
     }
 
     public void removeClass(String id) {
         esManager.removeFromIndex(LDHelper.encode(id), esManager.ELASTIC_INDEX_RESOURCE);
     }
 
-    public void indexPredicate(String id,
-                               Object obj) {
-        esManager.addToIndex(esManager.ELASTIC_INDEX_RESOURCE, id, obj);
-    }
 
-    public void indexPredicate(AbstractPredicate predicateResource) {
+    public void createIndexPredicate(AbstractPredicate predicateResource) {
         IndexPredicateDTO indexPredicate = new IndexPredicateDTO(predicateResource);
         logger.info("Indexing: " + indexPredicate.getId());
-        esManager.addToIndex(ElasticConnector.ELASTIC_INDEX_RESOURCE, LDHelper.encode(indexPredicate.getId()), indexPredicate);
+        esManager.putToIndex(ElasticConnector.ELASTIC_INDEX_RESOURCE, indexPredicate.getId(), indexPredicate);
+    }
+
+    public void updateIndexPredicate(AbstractPredicate predicateResource) {
+        IndexPredicateDTO indexPredicate = new IndexPredicateDTO(predicateResource);
+        logger.info("Indexing: " + indexPredicate.getId());
+        esManager.updateToIndex(ElasticConnector.ELASTIC_INDEX_RESOURCE, indexPredicate.getId(), indexPredicate);
     }
 
     public void removePredicate(String id) {
@@ -294,15 +299,16 @@ public class SearchIndexManager {
         esManager.removeFromIndex(LDHelper.encode(id), esManager.ELASTIC_INDEX_MODEL);
     }
 
-    public void indexModel(DataModel model) {
+    public void createIndexModel(DataModel model) {
         IndexModelDTO indexModel = new IndexModelDTO(model);
         logger.info("Indexing: " + indexModel.getId());
-        esManager.addToIndex(ElasticConnector.ELASTIC_INDEX_MODEL, LDHelper.encode(indexModel.getId()), indexModel);
+        esManager.putToIndex(ElasticConnector.ELASTIC_INDEX_MODEL, indexModel.getId(), indexModel);
     }
 
-    public void indexModel(String id,
-                           Object obj) {
-        esManager.addToIndex(esManager.ELASTIC_INDEX_MODEL, id, obj);
+    public void updateIndexModel(DataModel model) {
+        IndexModelDTO indexModel = new IndexModelDTO(model);
+        logger.info("Indexing: " + indexModel.getId());
+        esManager.updateToIndex(ElasticConnector.ELASTIC_INDEX_MODEL, indexModel.getId(), indexModel);
     }
 
     public ModelSearchResponse searchModels(ModelSearchRequest request) {

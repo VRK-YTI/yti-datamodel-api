@@ -226,7 +226,7 @@ public class Predicate {
                     provUUID = updatePredicate.getProvUUID();
                 }
 
-                searchIndexManager.indexPredicate(updatePredicate);
+                searchIndexManager.updateIndexPredicate(updatePredicate);
 
                 if (provenanceManager.getProvMode()) {
                     provenanceManager.createProvEntityBundle(updatePredicate.getId(), updatePredicate.asGraph(), user.getId(), updatePredicate.getProvUUID(), oldIdIRI);
@@ -299,7 +299,7 @@ public class Predicate {
             String provUUID = newPredicate.getProvUUID();
             graphManager.createResource(newPredicate);
 
-            searchIndexManager.indexPredicate(newPredicate);
+            searchIndexManager.createIndexPredicate(newPredicate);
 
             if (provenanceManager.getProvMode()) {
                 provenanceManager.createProvenanceActivityFromModel(newPredicate.getId(), newPredicate.asGraph(), newPredicate.getProvUUID(), user.getId());

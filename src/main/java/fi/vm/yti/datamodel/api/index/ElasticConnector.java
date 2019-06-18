@@ -10,6 +10,7 @@ import java.util.Map;
 
 import javax.inject.Singleton;
 
+import org.elasticsearch.action.DocWriteRequest;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.admin.indices.get.GetIndexRequest;
@@ -17,8 +18,11 @@ import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
+import org.elasticsearch.action.update.UpdateRequest;
+import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.transport.NodeDisconnectedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -99,17 +103,36 @@ public class ElasticConnector {
         }
     }
 
-    public void addToIndex(String index,
+    public void putToIndex(String index,
                            String id,
                            Object obj) {
         String encId = LDHelper.encode(id);
         try {
-            IndexRequest updateReq = new IndexRequest(index, "doc", encId);
-            updateReq.source(objectMapper.convertValue(obj, Map.class));
-            IndexResponse resp = esClient.index(updateReq, RequestOptions.DEFAULT);
-            logger.info("Index update response: " + resp.status().getStatus());
+            IndexRequest indexReq = new IndexRequest(index, "doc", encId);
+            indexReq.source(objectMapper.convertValue(obj, Map.class), XContentType.JSON);
+            indexReq.opType(DocWriteRequest.OpType.CREATE);
+            IndexResponse resp = esClient.index(indexReq, RequestOptions.DEFAULT);
+            logger.info("IndexResponse: " + resp.status().getStatus());
         } catch (IOException e) {
             logger.warn("Could not add to index: " + id);
+            logger.warn(ExceptionUtils.getExceptionMessage(e));
+        }
+    }
+
+    public void updateToIndex(String index,
+                           String id,
+                           Object obj) {
+        String encId = LDHelper.encode(id);
+        try {
+            UpdateRequest updateReq = new UpdateRequest();
+            updateReq.index(index);
+            updateReq.type("doc");
+            updateReq.id(encId);
+            updateReq.doc(objectMapper.convertValue(obj, Map.class), XContentType.JSON);
+            UpdateResponse resp = esClient.update(updateReq, RequestOptions.DEFAULT);
+            logger.info("UpdateResponse: " + resp.status().getStatus());
+        } catch (IOException e) {
+            logger.warn("Could not update to index: " + id);
             logger.warn(ExceptionUtils.getExceptionMessage(e));
         }
     }

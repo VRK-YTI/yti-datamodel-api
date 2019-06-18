@@ -242,7 +242,7 @@ public class Models {
 
             graphManager.updateModel(newVocabulary);
 
-            searchIndexManager.indexModel(newVocabulary);
+            searchIndexManager.updateIndexModel(newVocabulary);
 
             serviceDescriptionManager.createGraphDescription(newVocabulary.getId(), user.getId(), newVocabulary.getOrganizations());
 
@@ -309,7 +309,7 @@ public class Models {
 
                 graphManager.createModel(newVocabulary);
 
-                searchIndexManager.indexModel(newVocabulary);
+                searchIndexManager.createIndexModel(newVocabulary);
 
                 serviceDescriptionManager.createGraphDescription(newVocabulary.getId(), user.getId(), newVocabulary.getOrganizations());
 

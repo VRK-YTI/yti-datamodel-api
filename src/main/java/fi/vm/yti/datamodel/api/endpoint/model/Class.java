@@ -228,7 +228,7 @@ public class Class {
                     provUUID = updateClass.getProvUUID();
                 }
 
-                searchIndexManager.indexClass(updateClass);
+                searchIndexManager.updateIndexClass(updateClass);
 
                 if (provenanceManager.getProvMode()) {
                     provenanceManager.createProvEntityBundle(updateClass.getId(), updateClass.asGraph(), user.getId(), updateClass.getProvUUID(), oldIdIRI);
@@ -309,7 +309,7 @@ public class Class {
                 graphManager.createResource(newClass);
                 logger.info("Created " + newClass.getId());
 
-                searchIndexManager.indexClass(newClass);
+                searchIndexManager.createIndexClass(newClass);
 
                 if (provenanceManager.getProvMode()) {
                     provenanceManager.createProvenanceActivityFromModel(newClass.getId(), newClass.asGraph(), newClass.getProvUUID(), user.getId());
