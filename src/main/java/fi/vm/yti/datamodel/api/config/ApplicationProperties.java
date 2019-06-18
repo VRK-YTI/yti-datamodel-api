@@ -19,6 +19,7 @@ public final class ApplicationProperties {
     private String publicTermedAPI;
     private String publicTerminologyFrontend;
     private String publicSuomiCodeServerFrontend;
+    private String publicSuomiCommentsFrontend;
     private String publicGroupManagementFrontend;
     private String elasticHost;
     private String elasticPort;
@@ -123,6 +124,14 @@ public final class ApplicationProperties {
 
     public void setPublicSuomiCodeServerFrontend(String publicSuomiCodeServerFrontend) {
         this.publicSuomiCodeServerFrontend = publicSuomiCodeServerFrontend;
+    }
+
+    public String getPublicSuomiCommentsFrontend() {
+        return publicSuomiCommentsFrontend;
+    }
+
+    public void setPublicSuomiCommentsFrontend(String publicSuomiCommentsFrontend) {
+        this.publicSuomiCommentsFrontend = publicSuomiCommentsFrontend;
     }
 
     public String getPublicTerminologyFrontend() {
