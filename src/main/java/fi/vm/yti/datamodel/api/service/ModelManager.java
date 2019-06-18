@@ -140,7 +140,7 @@ public class ModelManager {
         ((LinkedHashMap<String, Object>) frame.get("@context")).putAll(pm.getMappingCopyStr());
         JsonLdOptions opts = new JsonLdOptions();
         opts.setProcessingMode(opts.JSON_LD_1_1);
-        opts.useNamespaces = false;
+        opts.useNamespaces = true;
         opts.setCompactArrays(true);
         opts.setUseNativeTypes(Boolean.TRUE);
         JsonLDWriteContext ctx = new JsonLDWriteContext();
