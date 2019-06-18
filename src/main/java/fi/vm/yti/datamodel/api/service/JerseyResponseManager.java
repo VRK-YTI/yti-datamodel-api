@@ -70,7 +70,7 @@ public class JerseyResponseManager {
             "\"conceptsFrontend\":\"" + properties.getPublicTerminologyFrontend() + "\", " +
             "\"codes\":\"" + properties.getDefaultSuomiCodeServerAPI() + "\", " +
             "\"codesFrontend\":\"" + properties.getPublicSuomiCodeServerFrontend() + "\", " +
-            "\"commentsFrontend\":\"" + properties.getPublicSuomiCommentsFrontend() + "\", " +
+            "\"commentsFrontend\":\"" + properties.getPublicCommentsFrontend() + "\", " +
             "\"dev\":" + properties.getDevMode() + ", " +
             "\"env\":\"" + properties.getEnv() + "\"}").build();
     }
