@@ -222,7 +222,7 @@ public class SearchIndexManager {
             "} WHERE { " +
             "GRAPH ?predicate { ?predicate a ?predicateType . VALUES ?predicateType { owl:ObjectProperty owl:DatatypeProperty }" +
             "?predicate rdfs:label ?prefLabel . " +
-            "?predicate rdfs:range ?range . " +
+            "OPTIONAL { ?predicate rdfs:range ?range . } " +
             "?predicate owl:versionInfo ?status . " +
             "?predicate dcterms:modified ?modified . " +
             "OPTIONAL { ?predicate rdfs:comment ?definition . FILTER(lang(?definition)!='')}" +
