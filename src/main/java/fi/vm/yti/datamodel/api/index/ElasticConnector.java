@@ -1,11 +1,6 @@
 package fi.vm.yti.datamodel.api.index;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
 import java.util.Map;
 
 import javax.inject.Singleton;
@@ -112,7 +107,7 @@ public class ElasticConnector {
             indexReq.source(objectMapper.convertValue(obj, Map.class), XContentType.JSON);
             indexReq.opType(DocWriteRequest.OpType.CREATE);
             IndexResponse resp = esClient.index(indexReq, RequestOptions.DEFAULT);
-            logger.info("IndexResponse: " + resp.status().getStatus());
+            logger.info("Indexed \"" + id + "\" to \"" + index + "\": " + resp.status().getStatus());
         } catch (IOException e) {
             logger.warn("Could not add to index: " + id);
             logger.warn(ExceptionUtils.getExceptionMessage(e));
@@ -120,8 +115,8 @@ public class ElasticConnector {
     }
 
     public void updateToIndex(String index,
-                           String id,
-                           Object obj) {
+                              String id,
+                              Object obj) {
         String encId = LDHelper.encode(id);
         try {
             UpdateRequest updateReq = new UpdateRequest();
@@ -130,7 +125,7 @@ public class ElasticConnector {
             updateReq.id(encId);
             updateReq.doc(objectMapper.convertValue(obj, Map.class), XContentType.JSON);
             UpdateResponse resp = esClient.update(updateReq, RequestOptions.DEFAULT);
-            logger.info("UpdateResponse: " + resp.status().getStatus());
+            logger.info("Updated \"" + id + "\" to \"" + index + "\": " + resp.status().getStatus());
         } catch (IOException e) {
             logger.warn("Could not update to index: " + id);
             logger.warn(ExceptionUtils.getExceptionMessage(e));
@@ -139,8 +134,11 @@ public class ElasticConnector {
 
     public DeleteResponse removeFromIndex(String id,
                                           String index) {
+        String encId = LDHelper.encode(id);
         try {
-            return esClient.delete(new DeleteRequest(index, "doc", LDHelper.encode(id)), RequestOptions.DEFAULT);
+            DeleteResponse resp = esClient.delete(new DeleteRequest(index, "doc", encId), RequestOptions.DEFAULT);
+            logger.info("Removed \"" + id + "\" from \"" + index + "\": " + resp.status().getStatus());
+            return resp;
         } catch (IOException e) {
             logger.warn(ExceptionUtils.getExceptionMessage(e));
             return null;

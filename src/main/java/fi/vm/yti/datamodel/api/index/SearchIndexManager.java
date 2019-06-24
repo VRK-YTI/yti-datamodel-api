@@ -275,7 +275,7 @@ public class SearchIndexManager {
     }
 
     public void removeClass(String id) {
-        esManager.removeFromIndex(LDHelper.encode(id), esManager.ELASTIC_INDEX_RESOURCE);
+        esManager.removeFromIndex(id, esManager.ELASTIC_INDEX_RESOURCE);
     }
 
 
@@ -292,11 +292,11 @@ public class SearchIndexManager {
     }
 
     public void removePredicate(String id) {
-        esManager.removeFromIndex(LDHelper.encode(id), esManager.ELASTIC_INDEX_RESOURCE);
+        esManager.removeFromIndex(id, esManager.ELASTIC_INDEX_RESOURCE);
     }
 
     public void removeModel(String id) {
-        esManager.removeFromIndex(LDHelper.encode(id), esManager.ELASTIC_INDEX_MODEL);
+        esManager.removeFromIndex(id, esManager.ELASTIC_INDEX_MODEL);
     }
 
     public void createIndexModel(DataModel model) {
