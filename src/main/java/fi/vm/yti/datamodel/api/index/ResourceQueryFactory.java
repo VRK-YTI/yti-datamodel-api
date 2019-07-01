@@ -9,7 +9,6 @@ import javax.inject.Singleton;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.index.query.BoolQueryBuilder;
-import org.elasticsearch.index.query.MultiMatchQueryBuilder;
 import org.elasticsearch.index.query.Operator;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -17,7 +16,6 @@ import org.elasticsearch.index.query.QueryStringQueryBuilder;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
-import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.elasticsearch.search.sort.FieldSortBuilder;
 import org.elasticsearch.search.sort.SortOrder;
 import org.slf4j.Logger;
@@ -41,7 +39,8 @@ public class ResourceQueryFactory {
     private LuceneQueryFactory luceneQueryFactory;
 
     @Autowired
-    public ResourceQueryFactory(ObjectMapper objectMapper, LuceneQueryFactory luceneQueryFactory) {
+    public ResourceQueryFactory(ObjectMapper objectMapper,
+                                LuceneQueryFactory luceneQueryFactory) {
 
         this.objectMapper = objectMapper;
         this.luceneQueryFactory = luceneQueryFactory;
@@ -74,7 +73,7 @@ public class ResourceQueryFactory {
             sourceBuilder.size(pageSize);
 
         BoolQueryBuilder boolQuery = QueryBuilders.boolQuery();
-        List<QueryBuilder> mustList = mustList = boolQuery.must();
+        List<QueryBuilder> mustList = boolQuery.must();
 
         if (type != null) {
             mustList.add(QueryBuilders.matchQuery("type", type).operator(Operator.AND));
@@ -86,8 +85,7 @@ public class ResourceQueryFactory {
         QueryStringQueryBuilder labelQuery = null;
 
         if (!query.isEmpty()) {
-            labelQuery = luceneQueryFactory.buildPrefixSuffixQuery(query)
-                .field("label.*");
+            labelQuery = luceneQueryFactory.buildPrefixSuffixQuery(query).field("label.*");
 
             if (sortLang != null && sortLangPattern.matcher(sortLang).matches()) {
                 labelQuery = labelQuery.field("label." + sortLang, 10);

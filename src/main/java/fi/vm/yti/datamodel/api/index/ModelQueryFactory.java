@@ -10,16 +10,12 @@ import javax.inject.Singleton;
 
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.index.query.MultiMatchQueryBuilder;
-import org.elasticsearch.index.query.Operator;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.QueryStringQueryBuilder;
 import org.elasticsearch.index.query.TermsQueryBuilder;
-import org.elasticsearch.index.search.MatchQuery;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
-import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,7 +37,8 @@ public class ModelQueryFactory {
     private LuceneQueryFactory luceneQueryFactory;
 
     @Autowired
-    public ModelQueryFactory(ObjectMapper objectMapper, LuceneQueryFactory luceneQueryFactory) {
+    public ModelQueryFactory(ObjectMapper objectMapper,
+                             LuceneQueryFactory luceneQueryFactory) {
 
         this.objectMapper = objectMapper;
         this.luceneQueryFactory = luceneQueryFactory;
@@ -64,17 +61,18 @@ public class ModelQueryFactory {
 
         SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
 
-        if (pageFrom != null)
+        if (pageFrom != null) {
             sourceBuilder.from(pageFrom);
+        }
 
-        if (pageSize != null)
+        if (pageSize != null) {
             sourceBuilder.size(pageSize);
+        }
 
         QueryStringQueryBuilder labelQuery = null;
 
         if (!query.isEmpty()) {
-                labelQuery = luceneQueryFactory.buildPrefixSuffixQuery(query)
-                    .field("label.*");
+            labelQuery = luceneQueryFactory.buildPrefixSuffixQuery(query).field("label.*");
         }
 
         TermsQueryBuilder idQuery = null;
