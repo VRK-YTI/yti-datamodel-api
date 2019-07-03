@@ -21,6 +21,9 @@ import org.elasticsearch.action.support.master.AcknowledgedResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.xcontent.XContentType;
+import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.reindex.BulkByScrollResponse;
+import org.elasticsearch.index.reindex.DeleteByQueryRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -96,7 +99,7 @@ public class SearchIndexManager {
         resourceList = resourceList.get("@graph");
         resourceList.forEach(resource -> {
             String resourceId = resource.get("id").asText();
-            if(resourceId.startsWith("iow:")) {
+            if (resourceId.startsWith("iow:")) {
                 resourceId = LDHelper.curieToURI(resourceId);
             }
             IndexRequest indexRequest = new IndexRequest(indexName, "doc", LDHelper.encode(resourceId)).
@@ -278,7 +281,6 @@ public class SearchIndexManager {
         esManager.removeFromIndex(id, esManager.ELASTIC_INDEX_RESOURCE);
     }
 
-
     public void createIndexPredicate(AbstractPredicate predicateResource) {
         IndexPredicateDTO indexPredicate = new IndexPredicateDTO(predicateResource);
         logger.info("Indexing: " + indexPredicate.getId());
@@ -297,6 +299,15 @@ public class SearchIndexManager {
 
     public void removeModel(String id) {
         esManager.removeFromIndex(id, esManager.ELASTIC_INDEX_MODEL);
+
+        try {
+            DeleteByQueryRequest resourceRequest = new DeleteByQueryRequest(esManager.ELASTIC_INDEX_RESOURCE);
+            resourceRequest.setQuery(QueryBuilders.termQuery("isDefinedBy", id));
+            BulkByScrollResponse resourceResponse = esClient.deleteByQuery(resourceRequest, RequestOptions.DEFAULT);
+            logger.info("Removed " + resourceResponse.getDeleted() + " resources from index for model " + id);
+        } catch (Exception e) {
+            logger.warn("Could not delete resources for model " + id + " from index", e);
+        }
     }
 
     public void createIndexModel(DataModel model) {

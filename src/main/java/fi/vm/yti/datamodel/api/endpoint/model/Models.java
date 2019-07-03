@@ -3,39 +3,59 @@
  */
 package fi.vm.yti.datamodel.api.endpoint.model;
 
-import fi.vm.yti.datamodel.api.index.SearchIndexManager;
-import fi.vm.yti.datamodel.api.model.DataModel;
-import fi.vm.yti.datamodel.api.security.AuthorizationManager;
-import fi.vm.yti.datamodel.api.service.*;
-import fi.vm.yti.datamodel.api.utils.LDHelper;
-import fi.vm.yti.datamodel.api.utils.QueryLibrary;
-import fi.vm.yti.security.AuthenticatedUserProvider;
-import fi.vm.yti.security.Role;
-import fi.vm.yti.security.YtiUser;
-import io.swagger.annotations.*;
+import java.util.Set;
+import java.util.UUID;
+
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Response;
 
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
 import org.apache.jena.query.DatasetAccessor;
 import org.apache.jena.query.DatasetAccessorFactory;
 import org.apache.jena.query.ParameterizedSparqlString;
-import org.apache.jena.rdf.model.*;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.Property;
+import org.apache.jena.rdf.model.ResIterator;
+import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.riot.RiotException;
 import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.OWL;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import javax.ws.rs.*;
-import javax.ws.rs.core.Response;
-
-import java.util.Set;
-import java.util.UUID;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import fi.vm.yti.datamodel.api.index.SearchIndexManager;
+import fi.vm.yti.datamodel.api.model.DataModel;
+import fi.vm.yti.datamodel.api.security.AuthorizationManager;
+import fi.vm.yti.datamodel.api.service.EndpointServices;
+import fi.vm.yti.datamodel.api.service.GraphManager;
+import fi.vm.yti.datamodel.api.service.IDManager;
+import fi.vm.yti.datamodel.api.service.JerseyClient;
+import fi.vm.yti.datamodel.api.service.JerseyResponseManager;
+import fi.vm.yti.datamodel.api.service.ModelManager;
+import fi.vm.yti.datamodel.api.service.ProvenanceManager;
+import fi.vm.yti.datamodel.api.service.RHPOrganizationManager;
+import fi.vm.yti.datamodel.api.service.ServiceDescriptionManager;
+import fi.vm.yti.datamodel.api.utils.LDHelper;
+import fi.vm.yti.datamodel.api.utils.QueryLibrary;
+import fi.vm.yti.security.AuthenticatedUserProvider;
+import fi.vm.yti.security.Role;
+import fi.vm.yti.security.YtiUser;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 
 @Component
 @Path("model")
@@ -364,11 +384,11 @@ public class Models {
 
         DataModel deleteModel = new DataModel(modelIRI, graphManager);
 
-        searchIndexManager.removeModel(deleteModel.getId());
-
         if (!authorizationManager.hasRightToEdit(deleteModel)) {
             return jerseyResponseManager.unauthorized();
         }
+
+        searchIndexManager.removeModel(deleteModel.getId());
 
         graphManager.deleteModel(deleteModel);
 
