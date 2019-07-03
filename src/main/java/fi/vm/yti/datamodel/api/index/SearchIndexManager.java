@@ -298,16 +298,17 @@ public class SearchIndexManager {
     }
 
     public void removeModel(String id) {
-        esManager.removeFromIndex(id, esManager.ELASTIC_INDEX_MODEL);
-
         try {
             DeleteByQueryRequest resourceRequest = new DeleteByQueryRequest(esManager.ELASTIC_INDEX_RESOURCE);
             resourceRequest.setQuery(QueryBuilders.termQuery("isDefinedBy", id));
             BulkByScrollResponse resourceResponse = esClient.deleteByQuery(resourceRequest, RequestOptions.DEFAULT);
-            logger.info("Removed " + resourceResponse.getDeleted() + " resources from index for model " + id);
+            logger.info("Removed " + resourceResponse.getDeleted() + " resources from \"" + esManager.ELASTIC_INDEX_RESOURCE + "\" for model \"" + id + "\"");
         } catch (Exception e) {
             logger.warn("Could not delete resources for model " + id + " from index", e);
         }
+
+        // NOTE: The following should have refresh policy causing removal to have effect on immediate searches
+        esManager.removeFromIndex(id, esManager.ELASTIC_INDEX_MODEL);
     }
 
     public void createIndexModel(DataModel model) {

@@ -13,6 +13,7 @@ import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
+import org.elasticsearch.action.support.WriteRequest;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.RequestOptions;
@@ -136,8 +137,12 @@ public class ElasticConnector {
                                           String index) {
         String encId = LDHelper.encode(id);
         try {
-            DeleteResponse resp = esClient.delete(new DeleteRequest(index, "doc", encId), RequestOptions.DEFAULT);
-            logger.info("Removed \"" + id + "\" from \"" + index + "\": " + resp.status().getStatus());
+            // TODO: Consider IMMEDIATE refresh policy?
+            final long startTime = System.currentTimeMillis();
+            DeleteRequest req = new DeleteRequest(index, "doc", encId)
+                .setRefreshPolicy(WriteRequest.RefreshPolicy.WAIT_UNTIL);
+            DeleteResponse resp = esClient.delete(req, RequestOptions.DEFAULT);
+            logger.info("Removed \"" + id + "\" from \"" + index + "\": " + resp.status().getStatus() + " (took " + (System.currentTimeMillis() - startTime) + " ms)");
             return resp;
         } catch (IOException e) {
             logger.warn(ExceptionUtils.getExceptionMessage(e));
