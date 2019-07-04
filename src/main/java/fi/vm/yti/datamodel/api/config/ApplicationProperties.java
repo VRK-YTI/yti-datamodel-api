@@ -25,7 +25,6 @@ public final class ApplicationProperties {
     private String elasticPort;
     private String elasticHttpPort;
     private String elasticHttpScheme;
-    private String elasticCluster;
     private boolean allowComplexElasticQueries;
     private String defaultSuomiCodeServerAPI;
     private boolean devMode;
@@ -181,14 +180,6 @@ public final class ApplicationProperties {
 
     public void setElasticHttpScheme(String elasticHttpScheme) {
         this.elasticHttpScheme = elasticHttpScheme;
-    }
-
-    public String getElasticCluster() {
-        return elasticCluster;
-    }
-
-    public void setElasticCluster(String elasticCluster) {
-        this.elasticCluster = elasticCluster;
     }
 
     public boolean isAllowComplexElasticQueries() {
