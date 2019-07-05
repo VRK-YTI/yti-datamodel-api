@@ -64,19 +64,7 @@ public class ModelQueryFactory {
                                       Collection<String> additionalModelIds,
                                       Integer pageSize,
                                       Integer pageFrom,
-                                      Set<UUID> priviligedOrganizations) {
-
-        // Content must either be in some other state than INCOMPLETE, or the user must match a contributor organization.
-        QueryBuilder statusQuery = QueryBuilders.boolQuery().mustNot(QueryBuilders.termQuery("status", "INCOMPLETE"));
-        QueryBuilder privilegeQuery;
-        if (priviligedOrganizations != null && !priviligedOrganizations.isEmpty()) {
-            privilegeQuery = QueryBuilders.boolQuery()
-                .should(statusQuery)
-                .should(QueryBuilders.termsQuery("contributor", priviligedOrganizations.stream().map(u -> u.toString()).collect(Collectors.toList())))
-                .minimumShouldMatch(1);
-        } else {
-            privilegeQuery = statusQuery;
-        }
+                                      Set<UUID> privilegedOrganizations) {
 
         QueryStringQueryBuilder labelQuery = null;
         if (!query.isEmpty()) {
@@ -100,6 +88,7 @@ public class ModelQueryFactory {
             contentQuery = labelQuery;
         }
 
+        QueryBuilder privilegeQuery = ElasticUtils.createStatusAndContributorQuery(privilegedOrganizations);
         QueryBuilder finalQuery;
         if (contentQuery != null) {
             finalQuery = QueryBuilders.boolQuery()

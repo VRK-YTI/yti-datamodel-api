@@ -5,12 +5,16 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 import java.util.regex.Pattern;
 
 import javax.inject.Singleton;
 
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.QueryStringQueryBuilder;
 import org.elasticsearch.script.Script;
 import org.elasticsearch.script.ScriptType;
@@ -55,18 +59,21 @@ public class DeepResourceQueryFactory {
     }
 
     public SearchRequest createQuery(String query,
-                                     String sortLang) {
+                                     String sortLang,
+                                     Set<UUID> privilegedOrganizations) {
 
-        QueryStringQueryBuilder queryStringQuery = luceneQueryFactory.buildPrefixSuffixQuery(query)
-            .field("label.*");
-
+        QueryStringQueryBuilder queryStringQuery = luceneQueryFactory.buildPrefixSuffixQuery(query).field("label.*");
         if (sortLang != null && sortLangPattern.matcher(sortLang).matches()) {
             queryStringQuery = queryStringQuery.field("label." + sortLang, 10);
         }
 
+        QueryBuilder finalQuery = QueryBuilders.boolQuery()
+            .must(ElasticUtils.createStatusAndContributorQuery(privilegedOrganizations))
+            .must(queryStringQuery);
+
         SearchRequest sr = new SearchRequest("dm_resources")
             .source(new SearchSourceBuilder()
-                .query(queryStringQuery)
+                .query(finalQuery)
                 .size(0)
                 .aggregation(AggregationBuilders.terms("group_by_model")
                     .field("isDefinedBy")

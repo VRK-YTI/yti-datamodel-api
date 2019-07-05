@@ -332,7 +332,7 @@ public class SearchIndexManager {
 
         if (request.isSearchResources() && !request.getQuery().isEmpty()) {
             try {
-                SearchRequest query = deepResourceQueryFactory.createQuery(request.getQuery(), request.getSortLang());
+                SearchRequest query = deepResourceQueryFactory.createQuery(request.getQuery(), request.getSortLang(), privilegedOrganizations);
                 SearchResponse response = esClient.search(query, RequestOptions.DEFAULT);
                 deepSearchHits = deepResourceQueryFactory.parseResponse(response, request);
             } catch (IOException e) {
