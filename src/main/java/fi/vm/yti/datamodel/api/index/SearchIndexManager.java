@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 import javax.inject.Singleton;
 
@@ -323,7 +324,8 @@ public class SearchIndexManager {
         esManager.updateToIndex(ElasticConnector.ELASTIC_INDEX_MODEL, indexModel.getId(), indexModel);
     }
 
-    public ModelSearchResponse searchModels(ModelSearchRequest request) {
+    public ModelSearchResponse searchModels(ModelSearchRequest request,
+                                            Set<UUID> privilegedOrganizations) {
         request.setQuery(request.getQuery() != null ? request.getQuery().trim() : "");
 
         Map<String, List<DeepSearchHitListDTO<?>>> deepSearchHits = null;
@@ -343,9 +345,9 @@ public class SearchIndexManager {
             if (deepSearchHits != null && !deepSearchHits.isEmpty()) {
                 Set<String> additionalModelIds = deepSearchHits.keySet();
                 logger.debug("Deep model search resulted in " + additionalModelIds.size() + " model matches");
-                finalQuery = modelQueryFactory.createQuery(request, additionalModelIds);
+                finalQuery = modelQueryFactory.createQuery(request, additionalModelIds, privilegedOrganizations);
             } else {
-                finalQuery = modelQueryFactory.createQuery(request);
+                finalQuery = modelQueryFactory.createQuery(request, privilegedOrganizations);
             }
             SearchResponse response = esClient.search(finalQuery, RequestOptions.DEFAULT);
             return modelQueryFactory.parseResponse(response, request, deepSearchHits);

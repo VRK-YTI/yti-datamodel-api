@@ -7,7 +7,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.elasticsearch.client.RestHighLevelClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,13 +14,14 @@ import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import fi.vm.yti.datamodel.api.index.ModelQueryFactory;
 import fi.vm.yti.datamodel.api.index.SearchIndexManager;
 import fi.vm.yti.datamodel.api.index.model.ModelSearchRequest;
 import fi.vm.yti.datamodel.api.index.model.ModelSearchResponse;
 import fi.vm.yti.datamodel.api.service.JerseyResponseManager;
+import fi.vm.yti.security.AuthenticatedUserProvider;
+import fi.vm.yti.security.Role;
+import fi.vm.yti.security.YtiUser;
 import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 
@@ -31,14 +31,17 @@ import io.swagger.annotations.ApiResponses;
 public class ModelSearch {
 
     private static final Logger logger = LoggerFactory.getLogger(ModelSearch.class.getName());
+    private AuthenticatedUserProvider userProvider;
     private SearchIndexManager searchIndexManager;
     private JerseyResponseManager jerseyResponseManager;
     private ObjectMapper objectMapper;
 
     @Autowired
-    public ModelSearch(SearchIndexManager searchIndexManager,
+    public ModelSearch(AuthenticatedUserProvider userProvider,
+                       SearchIndexManager searchIndexManager,
                        JerseyResponseManager jerseyResponseManager,
                        ObjectMapper objectMapper) {
+        this.userProvider = userProvider;
         this.searchIndexManager = searchIndexManager;
         this.jerseyResponseManager = jerseyResponseManager;
         this.objectMapper = objectMapper;
@@ -52,7 +55,8 @@ public class ModelSearch {
         @ApiResponse(code = 400, message = "Invalid JSON!")
     })
     public Response searchModels(ModelSearchRequest request) {
-        ModelSearchResponse response = searchIndexManager.searchModels(request);
+        YtiUser user = userProvider.getUser();
+        ModelSearchResponse response = searchIndexManager.searchModels(request, user.getOrganizations(Role.ADMIN, Role.DATA_MODEL_EDITOR));
         return jerseyResponseManager.ok(objectMapper.valueToTree(response));
     }
 
