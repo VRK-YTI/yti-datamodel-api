@@ -15,8 +15,6 @@ import org.springframework.stereotype.Component;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import fi.vm.yti.datamodel.api.index.SearchIndexManager;
-import fi.vm.yti.datamodel.api.index.model.ModelSearchRequest;
-import fi.vm.yti.datamodel.api.index.model.ModelSearchResponse;
 import fi.vm.yti.datamodel.api.index.model.ResourceSearchRequest;
 import fi.vm.yti.datamodel.api.index.model.ResourceSearchResponse;
 import fi.vm.yti.datamodel.api.service.JerseyResponseManager;

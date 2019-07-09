@@ -5,11 +5,15 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 import javax.inject.Singleton;
 
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.QueryStringQueryBuilder;
 import org.elasticsearch.index.query.TermsQueryBuilder;
@@ -45,55 +49,62 @@ public class ModelQueryFactory {
 
     }
 
-    public SearchRequest createQuery(ModelSearchRequest request) {
-        return createQuery(request.getQuery(), Collections.EMPTY_SET, request.getPageSize(), request.getPageFrom());
+    public SearchRequest createQuery(ModelSearchRequest request,
+                                     Set<UUID> priviligedOrganizations) {
+        return createQuery(request.getQuery(), Collections.EMPTY_SET, request.getPageSize(), request.getPageFrom(), priviligedOrganizations);
     }
 
     public SearchRequest createQuery(ModelSearchRequest request,
-                                     Collection<String> additionalModelIds) {
-        return createQuery(request.getQuery(), additionalModelIds, request.getPageSize(), request.getPageFrom());
+                                     Collection<String> additionalModelIds,
+                                     Set<UUID> priviligedOrganizations) {
+        return createQuery(request.getQuery(), additionalModelIds, request.getPageSize(), request.getPageFrom(), priviligedOrganizations);
     }
 
     private SearchRequest createQuery(String query,
                                       Collection<String> additionalModelIds,
                                       Integer pageSize,
-                                      Integer pageFrom) {
-
-        SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
-
-        if (pageFrom != null) {
-            sourceBuilder.from(pageFrom);
-        }
-
-        if (pageSize != null) {
-            sourceBuilder.size(pageSize);
-        }
+                                      Integer pageFrom,
+                                      Set<UUID> privilegedOrganizations) {
 
         QueryStringQueryBuilder labelQuery = null;
-
         if (!query.isEmpty()) {
             labelQuery = luceneQueryFactory.buildPrefixSuffixQuery(query).field("label.*");
         }
 
         TermsQueryBuilder idQuery = null;
-
         if (additionalModelIds != null && !additionalModelIds.isEmpty()) {
             idQuery = QueryBuilders.termsQuery("id", additionalModelIds);
         }
 
+        QueryBuilder contentQuery = null;
         if (idQuery != null && labelQuery != null) {
-
-            sourceBuilder.query(QueryBuilders.boolQuery()
+            contentQuery = QueryBuilders.boolQuery()
                 .should(labelQuery)
                 .should(idQuery)
-                .minimumShouldMatch(1));
-
+                .minimumShouldMatch(1);
         } else if (idQuery != null) {
-            sourceBuilder.query(idQuery);
+            contentQuery = idQuery;
         } else if (labelQuery != null) {
-            sourceBuilder.query(labelQuery);
+            contentQuery = labelQuery;
+        }
+
+        QueryBuilder privilegeQuery = ElasticUtils.createStatusAndContributorQuery(privilegedOrganizations);
+        QueryBuilder finalQuery;
+        if (contentQuery != null) {
+            finalQuery = QueryBuilders.boolQuery()
+                .must(privilegeQuery)
+                .must(contentQuery);
         } else {
-            sourceBuilder.query(QueryBuilders.matchAllQuery());
+            finalQuery = privilegeQuery;
+        }
+
+        SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
+        sourceBuilder.query(finalQuery);
+        if (pageFrom != null) {
+            sourceBuilder.from(pageFrom);
+        }
+        if (pageSize != null) {
+            sourceBuilder.size(pageSize);
         }
 
         SearchRequest sr = new SearchRequest("dm_models")
