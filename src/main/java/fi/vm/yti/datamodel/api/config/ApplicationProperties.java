@@ -1,10 +1,17 @@
 
 package fi.vm.yti.datamodel.api.config;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.core.env.Environment;
 
 @ConfigurationProperties
 public final class ApplicationProperties {
+
+    @Autowired
+    private Environment environment;
+
+    private static final String DEFAULT_TERMED_API_USER_SECRET = "DEFAULTTERMEDAPIUSERSECRET";
 
     private String defaultScheme;
     private String endpoint;
@@ -79,7 +86,12 @@ public final class ApplicationProperties {
     }
 
     public String getDefaultTermedAPIUserSecret() {
-        return defaultTermedAPIUserSecret;
+        final String termedApiPassword = environment.getProperty(DEFAULT_TERMED_API_USER_SECRET);
+        if (termedApiPassword != null) {
+            return termedApiPassword;
+        } else {
+            return defaultTermedAPIUserSecret;
+        }
     }
 
     public void setDefaultTermedAPIUserSecret(String defaultTermedAPIUserSecret) {
