@@ -6,17 +6,17 @@ endpoint=http://localhost:3030
 defaultNamespace=http://uri.suomi.fi/datamodel/ns/
 provenance=true
 defaultScheme=http://dev.finto.fi/
-defaultTermedAPI=https://sanastot-dev.suomi.fi/termed-api/
-defaultGroupManagementAPI=https://rhp-dev.suomi.fi/public-api/
-defaultSuomiCodeServerAPI=https://koodistot-dev.suomi.fi/codelist-api/api/v1/
-defaultTerminologyAPI=https://sanastot-dev.suomi.fi/
-publicTermedAPI=https://sanastot-dev.suomi.fi/termed-api/
-publicGroupManagementAPI=https://rhp-dev.suomi.fi
+defaultTermedAPI=https://sanastot.dev.yti.cloud.vrk.fi/termed-api/
+defaultGroupManagementAPI=https://rhp.dev.yti.cloud.vrk.fi/public-api/
+defaultSuomiCodeServerAPI=https://koodistot.dev.yti.cloud.vrk.fi/codelist-api/api/v1/
+defaultTerminologyAPI=https://sanastot.dev.yti.cloud.vrk.fi/
+publicTermedAPI=https://sanastot.dev.yti.cloud.vrk.fi/termed-api/
+publicGroupManagementAPI=https://rhp.dev.yti.cloud.vrk.fi
 defaultTermedAPIUser=admin
 defaultTermedAPIUserSecret=admin
 
-groupmanagement.url=https://rhp-dev.suomi.fi
-groupmanagement.public.url=https://rhp-dev.suomi.fi
+groupmanagement.url=https://rhp.dev.yti.cloud.vrk.fi
+groupmanagement.public.url=https://rhp.dev.yti.cloud.vrk.fi
 
 elasticHost=127.0.0.1
 elasticPort=9300

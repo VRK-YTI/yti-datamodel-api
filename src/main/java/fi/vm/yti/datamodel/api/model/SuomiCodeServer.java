@@ -77,7 +77,7 @@ public class SuomiCodeServer {
         return adapter.containsModel(uri);
     }
 
-    // https://koodistot-dev.suomi.fi/codelist-api/api/v1/coderegistries/
+    // https://koodistot.dev.yti.cloud.vrk.fi/codelist-api/api/v1/coderegistries/
     public void updateCodelistsFromServer() {
 
         Model model = ModelFactory.createDefaultModel();
