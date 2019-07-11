@@ -1,21 +1,5 @@
 package fi.vm.yti.datamodel.api.index;
 
-import com.github.jsonldjava.core.JsonLdOptions;
-
-import fi.vm.yti.datamodel.api.service.JenaClient;
-import fi.vm.yti.datamodel.api.service.ModelManager;
-import fi.vm.yti.datamodel.api.utils.Frames;
-import fi.vm.yti.datamodel.api.utils.LDHelper;
-
-import org.apache.jena.query.ParameterizedSparqlString;
-import org.apache.jena.query.Query;
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.riot.*;
-import org.apache.jena.riot.system.PrefixMap;
-import org.apache.jena.riot.system.RiotLib;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
 import java.io.IOException;
 import java.io.StringWriter;
 import java.text.SimpleDateFormat;
@@ -23,14 +7,19 @@ import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import javax.inject.Singleton;
 import javax.ws.rs.NotFoundException;
 
+import org.apache.jena.query.ParameterizedSparqlString;
+import org.apache.jena.query.Query;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.riot.JsonLDWriteContext;
+import org.apache.jena.riot.RDFDataMgr;
+import org.apache.jena.riot.RDFFormat;
+import org.apache.jena.riot.WriterGraphRIOT;
+import org.apache.jena.riot.system.PrefixMap;
+import org.apache.jena.riot.system.RiotLib;
 import org.elasticsearch.ElasticsearchException;
-import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
@@ -42,18 +31,30 @@ import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
 import org.elasticsearch.common.xcontent.XContentParser;
 import org.elasticsearch.common.xcontent.XContentType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.github.jsonldjava.core.JsonLdOptions;
+
+import fi.vm.yti.datamodel.api.service.JenaClient;
+import fi.vm.yti.datamodel.api.service.ModelManager;
+import fi.vm.yti.datamodel.api.utils.Frames;
+import fi.vm.yti.datamodel.api.utils.LDHelper;
 
 @Singleton
 @Service
 public final class FrameManager {
 
+    private static final Logger logger = LoggerFactory.getLogger(FrameManager.class);
+    private static final String ELASTIC_INDEX_VIS_MODEL = "dm_vis_models";
+    private final SimpleDateFormat format = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz");
+
     private final RestHighLevelClient esClient;
     private final ElasticConnector esManager;
     private final JenaClient jenaClient;
     private final ModelManager modelManager;
-
-    private static final Logger logger = LoggerFactory.getLogger(FrameManager.class.getName());
-    private final SimpleDateFormat format = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz");
 
     @Autowired
     public FrameManager(
@@ -66,21 +67,12 @@ public final class FrameManager {
         this.modelManager = modelManager;
     }
 
-    public void cleanCachedFrames() throws IOException {
-        boolean exists = esManager.indexExists(esManager.ELASTIC_INDEX_VIS_MODEL);
-        if (exists) {
-            logger.info("Cleaning elastic index");
-            this.esClient.indices().delete(new DeleteIndexRequest(esManager.ELASTIC_INDEX_VIS_MODEL), RequestOptions.DEFAULT);
-            esManager.initCache();
+    public void cleanCachedFrames(boolean createInAnyCase) throws IOException {
+        if (esManager.cleanIndex(ELASTIC_INDEX_VIS_MODEL) || createInAnyCase) {
+            esManager.createIndex(ELASTIC_INDEX_VIS_MODEL);
         } else {
-            logger.info("No index found for cleaning!");
+            logger.info("Index \"" + ELASTIC_INDEX_VIS_MODEL + "\" not found, thus not cleaned nor re-created.");
         }
-    }
-
-    private String updateCachedGraph(String id) throws Exception {
-        String frameStr = graphToFramedString(id, Frames.classVisualizationFrame);
-        cacheClassVisualizationFrame(id, frameStr);
-        return frameStr;
     }
 
     public String getCachedClassVisualizationFrame(String id,
@@ -89,7 +81,7 @@ public final class FrameManager {
         String encId = LDHelper.encode(id);
         String frameStr = null;
         try {
-            Map<String, Object> map = esClient.get(new GetRequest(esManager.ELASTIC_INDEX_VIS_MODEL, "doc", encId), RequestOptions.DEFAULT).getSourceAsMap();
+            Map<String, Object> map = esClient.get(new GetRequest(ELASTIC_INDEX_VIS_MODEL, "doc", encId), RequestOptions.DEFAULT).getSourceAsMap();
             if (map == null) {
                 logger.debug("Creating visualization frame cache for graph " + id);
                 frameStr = updateCachedGraph(id);
@@ -120,7 +112,7 @@ public final class FrameManager {
                 builder.field("modified", format.format(new Date()));
                 builder.field("graph", framed);
                 builder.endObject();
-                IndexRequest updateReq = new IndexRequest(esManager.ELASTIC_INDEX_VIS_MODEL, "doc", encId);
+                IndexRequest updateReq = new IndexRequest(ELASTIC_INDEX_VIS_MODEL, "doc", encId);
                 updateReq.source(builder);
                 IndexResponse resp = esClient.index(updateReq, RequestOptions.DEFAULT);
                 logger.info("Index update response: " + resp.status().getStatus());
@@ -202,4 +194,9 @@ public final class FrameManager {
         return framed;
     }
 
+    private String updateCachedGraph(String id) throws Exception {
+        String frameStr = graphToFramedString(id, Frames.classVisualizationFrame);
+        cacheClassVisualizationFrame(id, frameStr);
+        return frameStr;
+    }
 }
