@@ -1,17 +1,5 @@
 package fi.vm.yti.datamodel.api;
 
-import fi.vm.yti.datamodel.api.index.ElasticConnector;
-import fi.vm.yti.datamodel.api.index.SearchIndexManager;
-import fi.vm.yti.datamodel.api.service.GraphManager;
-import fi.vm.yti.datamodel.api.service.NamespaceManager;
-import fi.vm.yti.datamodel.api.service.RHPOrganizationManager;
-import fi.vm.yti.datamodel.api.service.TermedTerminologyManager;
-import fi.vm.yti.migration.MigrationInitializer;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Component;
-
 import java.io.IOException;
 
 import javax.annotation.PostConstruct;
@@ -19,6 +7,18 @@ import javax.annotation.PreDestroy;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
+
+import fi.vm.yti.datamodel.api.index.ElasticConnector;
+import fi.vm.yti.datamodel.api.index.FrameManager;
+import fi.vm.yti.datamodel.api.index.SearchIndexManager;
+import fi.vm.yti.datamodel.api.service.GraphManager;
+import fi.vm.yti.datamodel.api.service.NamespaceManager;
+import fi.vm.yti.datamodel.api.service.RHPOrganizationManager;
+import fi.vm.yti.datamodel.api.service.TermedTerminologyManager;
+import fi.vm.yti.migration.MigrationInitializer;
 
 @Component
 public class StartUpListener {
@@ -30,23 +30,26 @@ public class StartUpListener {
     private final GraphManager graphManager;
     private final NamespaceManager namespaceManager;
     private final ElasticConnector elasticConnector;
-    private final SearchIndexManager indexManager;
+    private final FrameManager frameManager;
+    private final SearchIndexManager searchIndexManager;
 
     @Autowired
     StartUpListener(TermedTerminologyManager termedTerminologyManager,
                     RHPOrganizationManager rhpOrganizationManager,
                     GraphManager graphManager,
                     NamespaceManager namespaceManager,
-                    ElasticConnector frameManager,
-                    SearchIndexManager indexManager,
+                    ElasticConnector elasticConnector,
+                    FrameManager frameManager,
+                    SearchIndexManager searchIndexManager,
                     MigrationInitializer migrationInitializer /* XXX: dependency to enforce init order */) {
 
         this.termedTerminologyManager = termedTerminologyManager;
         this.rhpOrganizationManager = rhpOrganizationManager;
         this.graphManager = graphManager;
         this.namespaceManager = namespaceManager;
-        this.elasticConnector = frameManager;
-        this.indexManager = indexManager;
+        this.elasticConnector = elasticConnector;
+        this.frameManager = frameManager;
+        this.searchIndexManager = searchIndexManager;
     }
 
     @PostConstruct
@@ -56,7 +59,7 @@ public class StartUpListener {
 
         initDefaultNamespaces();
         initRHPOrganizations();
-        initFramingCache();
+        initElasticsearchIndices();
     }
 
     @PreDestroy
@@ -77,13 +80,13 @@ public class StartUpListener {
         namespaceManager.resolveDefaultNamespaceToTheCore();
     }
 
-    private void initFramingCache() {
+    private void initElasticsearchIndices() {
         try {
-            elasticConnector.initCache();
-            indexManager.reindex();
+            elasticConnector.waitForESNodes();
+            frameManager.cleanCachedFrames(true);
+            searchIndexManager.reindex();
         } catch (IOException e) {
-            logger.warn("ES init failed!");
-            logger.warn(e.getMessage());
+            logger.warn("Elasticsearch initialization failed!", e);
         }
     }
 }

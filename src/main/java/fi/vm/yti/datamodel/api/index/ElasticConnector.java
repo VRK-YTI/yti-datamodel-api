@@ -7,13 +7,16 @@ import javax.inject.Singleton;
 
 import org.elasticsearch.action.DocWriteRequest;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
+import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.admin.indices.get.GetIndexRequest;
+import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest;
 import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.support.WriteRequest;
+import org.elasticsearch.action.support.master.AcknowledgedResponse;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.RequestOptions;
@@ -34,17 +37,12 @@ import fi.vm.yti.datamodel.api.utils.LDHelper;
 @Service
 public class ElasticConnector {
 
+    private static final Logger logger = LoggerFactory.getLogger(ElasticConnector.class);
+    private static final int ES_TIMEOUT = 300;
+
     private final RestHighLevelClient esClient;
     private final ObjectMapper objectMapper;
 
-    public static final String ELASTIC_INDEX_VIS_MODEL = "dm_vis_models";
-    public static final String ELASTIC_INDEX_RESOURCE = "dm_resources";
-    public static final String ELASTIC_INDEX_MODEL = "dm_models";
-    public static final String[] indexes = new String[]{ ELASTIC_INDEX_VIS_MODEL, ELASTIC_INDEX_MODEL, ELASTIC_INDEX_RESOURCE };
-
-    public static final int ES_TIMEOUT = 300;
-
-    private static final Logger logger = LoggerFactory.getLogger(ElasticConnector.class.getName());
 
     @Autowired
     public ElasticConnector(final RestHighLevelClient esClient,
@@ -68,7 +66,7 @@ public class ElasticConnector {
                 if (esClient.ping(RequestOptions.DEFAULT)) {
                     logger.info("ES online");
                     try {
-                        indexExists(ELASTIC_INDEX_VIS_MODEL);
+                        indexExists("dm_does_not_exist");
                         return;
                     } catch (NodeDisconnectedException ex) {
                         logger.info("Node Disconnected?");
@@ -81,21 +79,49 @@ public class ElasticConnector {
         throw new RuntimeException("Could not find required ES instance");
     }
 
-    public void cleanIndex(String index) throws IOException {
+    /**
+     * Delete an index if it exists.
+     * @param index index name
+     * @return true if the index existed and was removed
+     * @throws IOException
+     */
+    public boolean cleanIndex(String index) throws IOException {
         boolean exists = indexExists(index);
         if (exists) {
             logger.info("Cleaning index: " + index);
             this.esClient.indices().delete(new DeleteIndexRequest(index), RequestOptions.DEFAULT);
         }
+        return exists;
     }
 
-    public void initCache() throws IOException {
-        waitForESNodes();
-        for (int i = 0; i < indexes.length; i++) {
-            boolean exists = indexExists(indexes[i]);
-            if (!exists) {
-                esClient.indices().create(new CreateIndexRequest(indexes[i]), RequestOptions.DEFAULT);
+    public void createIndex(String index) {
+        createIndex(index, null);
+    }
+
+    public void createIndex(String index,
+                            String mapping) {
+        CreateIndexRequest request = new CreateIndexRequest(index);
+        try {
+            if (mapping != null && !mapping.isEmpty()) {
+                request.source(mapping, XContentType.JSON);
             }
+            CreateIndexResponse createIndexResponse = esClient.indices().create(request, RequestOptions.DEFAULT);
+            logger.debug("Index \"" + index + "\" created: " + createIndexResponse.isAcknowledged());
+        } catch (IOException ex) {
+            logger.warn("Index creation failed for \"" + index + "\"", ex);
+        }
+    }
+
+    public void updateMapping(String index,
+                              Object mapping) {
+        PutMappingRequest request = new PutMappingRequest(index);
+        request.type("doc");
+        try {
+            request.source(mapping);
+            AcknowledgedResponse putMappingResponse = esClient.indices().putMapping(request, RequestOptions.DEFAULT);
+            logger.debug("Mapping updated for \"" + index + "\": " + putMappingResponse.isAcknowledged());
+        } catch (IOException ex) {
+            logger.warn("Mapping update failed for \"" + index + "\"", ex);
         }
     }
 

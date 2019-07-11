@@ -1460,10 +1460,9 @@ public class GraphManager {
         updateResourceReferencesInAllGraphs(resource.getModelIRI(), oldIdIRI, resource.getIRI());
         updateReferencesInPositionGraph(resource.getModelIRI(), oldIdIRI, resource.getIRI());
         try {
-            frameManager.cleanCachedFrames();
+            frameManager.cleanCachedFrames(false);
         } catch (IOException e) {
-            logger.warn("Could not clean cached frames");
-            logger.warn(e.getMessage());
+            logger.warn("Could not clean cached frames", e);
         }
     }
 
