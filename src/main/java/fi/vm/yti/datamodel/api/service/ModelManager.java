@@ -26,6 +26,7 @@ import org.apache.jena.sparql.graph.GraphFactory;
 import org.apache.jena.sparql.util.Context;
 import org.apache.jena.update.UpdateAction;
 import org.apache.jena.update.UpdateRequest;
+import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDF;
 import org.springframework.stereotype.Service;
@@ -46,6 +47,26 @@ import org.slf4j.LoggerFactory;
 public class ModelManager {
 
     private static final Logger logger = LoggerFactory.getLogger(ModelManager.class.getName());
+
+
+    // FIXME: This rewrites required prefixes to the model. There is a bug in JSON-LD prefix parsing that removes URN namespaces from prefixes.
+    public void fixModelPrefixes(Model model) {
+
+        NodeIterator iterator = model.listObjectsOfProperty(DCTerms.requires);
+        Map<String, String> nsMap = model.getNsPrefixMap();
+
+        while(iterator.hasNext()) {
+            Resource node = iterator.next().asResource();
+            String prefix = node.getRequiredProperty(LDHelper.curieToProperty("dcap:preferredXMLNamespacePrefix")).getLiteral().getString();
+
+            if(!nsMap.containsKey(prefix)) {
+                String namespace = node.getRequiredProperty(LDHelper.curieToProperty("dcap:preferredXMLNamespaceName")).getLiteral().getString();
+                nsMap.put(prefix,namespace);
+            }
+
+        }
+        model.setNsPrefixes(nsMap);
+    }
 
     /**
      * Writes jena model to string

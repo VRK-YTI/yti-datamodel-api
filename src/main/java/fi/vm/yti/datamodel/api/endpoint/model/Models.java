@@ -240,6 +240,8 @@ public class Models {
 
             Model parsedModel = modelManager.createJenaModelFromJSONLDString(body);
 
+            modelManager.fixModelPrefixes(parsedModel);
+
             if (parsedModel.size() == 0) {
                 return jerseyResponseManager.notAcceptable();
             }
