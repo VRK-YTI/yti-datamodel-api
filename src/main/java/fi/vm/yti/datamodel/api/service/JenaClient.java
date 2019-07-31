@@ -147,6 +147,13 @@ public final class JenaClient {
         }
     }
 
+    public Model constructFromExt(String query) {
+        logger.debug("Constructing from " + endpointServices.getCoreSparqlAddress());
+        try (QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getImportsSparqlAddress(), query)) {
+            return qexec.execConstruct();
+        }
+    }
+
     public boolean askQuery(String service,
                             Query query,
                             String graph) {

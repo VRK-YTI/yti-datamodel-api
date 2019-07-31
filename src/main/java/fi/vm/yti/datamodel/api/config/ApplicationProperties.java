@@ -12,8 +12,6 @@ public final class ApplicationProperties {
     private Environment environment;
 
     private static final String DEFAULT_TERMED_API_USER_SECRET = "DEFAULTTERMEDAPIUSERSECRET";
-
-    private String defaultScheme;
     private String endpoint;
     private String defaultNamespace;
     private boolean provenance;
@@ -36,14 +34,6 @@ public final class ApplicationProperties {
     private String defaultSuomiCodeServerAPI;
     private boolean devMode;
     private String env;
-
-    public String getDefaultScheme() {
-        return defaultScheme;
-    }
-
-    public void setDefaultScheme(String defaultScheme) {
-        this.defaultScheme = defaultScheme;
-    }
 
     public String getEndpoint() {
         return endpoint;

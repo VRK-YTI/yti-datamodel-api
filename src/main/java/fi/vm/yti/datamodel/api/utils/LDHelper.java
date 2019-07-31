@@ -510,10 +510,6 @@ public class LDHelper {
         return LDHelper.class.getClassLoader().getResourceAsStream("defaultGraph.json");
     }
 
-    public static InputStream getDefaultSchemes() {
-        return LDHelper.class.getClassLoader().getResourceAsStream("defaultSchemes.json");
-    }
-
     public static InputStream getDefaultCodeServers() {
         return LDHelper.class.getClassLoader().getResourceAsStream("defaultCodeServers.json");
     }

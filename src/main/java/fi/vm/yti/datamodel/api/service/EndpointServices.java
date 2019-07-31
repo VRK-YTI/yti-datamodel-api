@@ -10,11 +10,9 @@ import org.springframework.stereotype.Service;
 public final class EndpointServices {
 
     private String endpoint;
-    private String scheme;
 
     public EndpointServices(ApplicationProperties properties) {
         this.endpoint = properties.getEndpoint();
-        this.scheme = properties.getDefaultScheme();
     }
 
     public RDFConnection getCoreConnection() {
@@ -87,10 +85,6 @@ public final class EndpointServices {
 
     public String getProvSparqlUpdateAddress() {
         return endpoint + "/prov/update";
-    }
-
-    public String getVocabExportAPI(String vocab) {
-        return scheme + "rest/v1/" + vocab + "/data";
     }
 
     public String getImportsReadWriteAddress() {

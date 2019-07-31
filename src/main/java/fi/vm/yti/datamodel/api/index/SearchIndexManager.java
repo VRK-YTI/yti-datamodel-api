@@ -268,6 +268,50 @@ public class SearchIndexManager {
         bulkInsert(ELASTIC_INDEX_MODEL, nodes);
     }
 
+    // TODO: Not in use. Should we use externalClass API instead?
+    private void initExternalClasses() throws  IOException {
+        String qry = LDHelper.prefix + "CONSTRUCT { "
+            + "?class rdfs:isDefinedBy ?externalModel . "
+            + "?class sh:name ?label . "
+            + "?class sh:description ?comment . "
+            + "?class a iow:ExternalClass . "
+            + "} WHERE { "
+            + "GRAPH ?externalModel { "
+            + "?class a ?type . "
+            + "FILTER(!isBlank(?class)) "
+            + "VALUES ?type { rdfs:Class owl:Class sh:NodeShape sh:Shape } "
+            /* GET LABEL */
+            + "OPTIONAL{" +
+            "{ ?class ?labelPred ?labelStr . "
+            + "VALUES ?labelPred { rdfs:label sh:name dc:title dcterms:title }"
+            + "FILTER(LANG(?labelStr) = '') BIND(STRLANG(STR(?labelStr),'en') as ?label) }"
+            + "UNION"
+            + "{ ?class ?labelPred ?label . "
+            + "VALUES ?labelPred { rdfs:label sh:name dc:title dcterms:title }"
+            + " FILTER(LANG(?label)!='') }"
+            /* GET COMMENT */
+            + "{ ?class ?commentPred ?commentStr . "
+            + "VALUES ?commentPred { rdfs:comment skos:definition dcterms:description dc:description prov:definition sh:description }"
+            + "FILTER(LANG(?commentStr) = '') BIND(STRLANG(STR(?commentStr),'en') as ?comment) }"
+            + "UNION"
+            + "{ ?class ?commentPred ?comment . "
+            + "VALUES ?commentPred { rdfs:comment skos:definition dcterms:description dc:description prov:definition sh:description }"
+            + " FILTER(LANG(?comment)!='') }"
+            + "}}"
+            + "}";
+        Model model = jenaClient.constructFromExt(qry);
+        if (model.size() < 1) {
+            logger.warn("Could not find any classes to index!");
+            return;
+        }
+        JsonNode nodes = modelManager.toFramedJsonNode(model, Frames.esClassFrame);
+        if (nodes == null) {
+            logger.warn("Could not parse JSON");
+            return;
+        }
+        bulkInsert(ELASTIC_INDEX_RESOURCE, nodes);
+    }
+
     private void initClassIndex() throws IOException {
         String qry = LDHelper.prefix + " CONSTRUCT {" +
             "?class sh:name ?prefLabel . " +
@@ -297,7 +341,6 @@ public class SearchIndexManager {
             return;
         }
         bulkInsert(ELASTIC_INDEX_RESOURCE, nodes);
-
     }
 
     private void initPredicateIndex() throws IOException {

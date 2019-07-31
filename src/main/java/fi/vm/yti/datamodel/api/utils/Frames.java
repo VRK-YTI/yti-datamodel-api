@@ -60,6 +60,7 @@ public class Frames {
     public static final LinkedHashMap<String, Object> origClassFrame;
     public static final LinkedHashMap<String, Object> libraryType;
     public static final LinkedHashMap<String, Object> profileType;
+    public static final LinkedHashMap<String, Object> externalClassType;
     public static final LinkedHashMap<String, Object> classType;
     public static final LinkedHashMap<String, Object> shapeType;
     public static final LinkedHashMap<String, Object> attributeType;
@@ -99,6 +100,12 @@ public class Frames {
                 put("@id", "http://www.w3.org/2000/01/rdf-schema#Class");
             }
 
+        };
+
+        externalClassType = new LinkedHashMap<String, Object>() {
+            {
+                put("@id", "http://uri.suomi.fi/datamodel/ns/iow#ExternalClass");
+            }
         };
 
         shapeType = new LinkedHashMap<String, Object>() {
@@ -748,6 +755,7 @@ public class Frames {
 
         esClassContext = new LinkedHashMap<String, Object>() {
             {
+                put("externalClass",externalClassType);
                 put("class",classType);
                 put("shape",shapeType);
                 put("label", name);
