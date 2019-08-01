@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.jsonldjava.core.JsonLdOptions;
 import com.github.jsonldjava.core.JsonLdProcessor;
+import com.github.jsonldjava.core.JsonLdUtils;
 import com.github.jsonldjava.utils.JsonUtils;
 
 import fi.vm.yti.datamodel.api.utils.LDHelper;
@@ -17,8 +18,10 @@ import org.apache.jena.query.DatasetFactory;
 import org.apache.jena.query.ParameterizedSparqlString;
 import org.apache.jena.rdf.model.*;
 import org.apache.jena.riot.*;
+import org.apache.jena.riot.lang.JsonLDReader;
 import org.apache.jena.riot.system.ErrorHandlerFactory;
 import org.apache.jena.riot.system.PrefixMap;
+import org.apache.jena.riot.system.PrefixMapFactory;
 import org.apache.jena.riot.system.RiotLib;
 import org.apache.jena.shared.PropertyNotFoundException;
 import org.apache.jena.sparql.core.DatasetGraph;
@@ -47,26 +50,6 @@ import org.slf4j.LoggerFactory;
 public class ModelManager {
 
     private static final Logger logger = LoggerFactory.getLogger(ModelManager.class.getName());
-
-
-    // FIXME: This rewrites required prefixes to the model. There is a bug in JSON-LD prefix parsing that removes URN namespaces from prefixes.
-    public void fixModelPrefixes(Model model) {
-
-        NodeIterator iterator = model.listObjectsOfProperty(DCTerms.requires);
-        Map<String, String> nsMap = model.getNsPrefixMap();
-
-        while(iterator.hasNext()) {
-            Resource node = iterator.next().asResource();
-            String prefix = node.getRequiredProperty(LDHelper.curieToProperty("dcap:preferredXMLNamespacePrefix")).getLiteral().getString();
-
-            if(!nsMap.containsKey(prefix)) {
-                String namespace = node.getRequiredProperty(LDHelper.curieToProperty("dcap:preferredXMLNamespaceName")).getLiteral().getString();
-                nsMap.put(prefix,namespace);
-            }
-
-        }
-        model.setNsPrefixes(nsMap);
-    }
 
     /**
      * Writes jena model to string
@@ -351,7 +334,16 @@ public class ModelManager {
      */
     public Model createJenaModelFromJSONLDString(String modelString) throws IllegalArgumentException {
         Graph graph = GraphFactory.createDefaultGraph();
-
+        PrefixMap pm = PrefixMapFactory.create();
+        try {
+            // FIXME: This is ugly hack for getting all of the prefixes from the json-ld context. For some reason urn namespaces are ignored by the parser.
+            Map jsonObject = (Map) JsonUtils.fromString(modelString);
+            Map context = (Map) jsonObject.get("@context");
+            context.forEach((key,value)->{
+                if(value instanceof String && !LDHelper.isInvalidIRI((String)value)) {
+                    pm.add((String)key,(String)value);
+                }
+            });
         try (InputStream in = new ByteArrayInputStream(modelString.getBytes("UTF-8"))) {
             RDFParser.create()
                 .source(in)
@@ -368,12 +360,14 @@ public class ModelManager {
             logger.error("Unexpected exception", ex);
             throw new IllegalArgumentException("Could not parse the model");
         }
-
         if (graph.size() > 0) {
-            return ModelFactory.createModelForGraph(graph);
+            return ModelFactory.createModelForGraph(graph).setNsPrefixes(pm.getMappingCopyStr());
         } else {
             throw new IllegalArgumentException("Could not parse the model");
         }
-
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new IllegalArgumentException("Could not parse the model");
+        }
     }
 }
