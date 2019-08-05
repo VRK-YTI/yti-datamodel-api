@@ -8,6 +8,8 @@ public class ResourceSearchRequest {
 
     private String isDefinedBy;
 
+    private String status;
+
     private String sortLang;
 
     private String sortField;
@@ -24,6 +26,7 @@ public class ResourceSearchRequest {
     public ResourceSearchRequest(final String query,
                                  final String type,
                                  final String isDefinedBy,
+                                 final String status,
                                  final String sortLang,
                                  final String sortField,
                                  final String sortOrder,
@@ -32,6 +35,7 @@ public class ResourceSearchRequest {
         this.query = query;
         this.type = type;
         this.isDefinedBy = isDefinedBy;
+        this.status = status;
         this.sortLang = sortLang;
         this.sortField = sortField;
         this.sortOrder = sortOrder;
@@ -61,6 +65,14 @@ public class ResourceSearchRequest {
 
     public void setIsDefinedBy(final String isDefinedBy) {
         this.isDefinedBy = isDefinedBy;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(final String status) {
+        this.status = status;
     }
 
     public String getSortLang() {
