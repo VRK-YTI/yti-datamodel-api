@@ -19,7 +19,6 @@ import fi.vm.yti.datamodel.api.index.model.ModelSearchRequest;
 import fi.vm.yti.datamodel.api.index.model.ModelSearchResponse;
 import fi.vm.yti.datamodel.api.service.JerseyResponseManager;
 import fi.vm.yti.security.AuthenticatedUserProvider;
-import fi.vm.yti.security.Role;
 import fi.vm.yti.security.YtiUser;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiResponse;
@@ -55,8 +54,7 @@ public class ModelSearch {
         @ApiResponse(code = 400, message = "Invalid JSON!")
     })
     public Response searchModels(ModelSearchRequest request) {
-        YtiUser user = userProvider.getUser();
-        ModelSearchResponse response = searchIndexManager.searchModels(request, user.getOrganizations(Role.ADMIN, Role.DATA_MODEL_EDITOR));
+        ModelSearchResponse response = searchIndexManager.searchModelsWithUser(request, userProvider.getUser());
         return jerseyResponseManager.ok(objectMapper.valueToTree(response));
     }
 

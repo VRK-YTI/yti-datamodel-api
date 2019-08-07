@@ -17,6 +17,7 @@ import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.elasticsearch.index.reindex.DeleteByQueryRequest;
@@ -39,10 +40,13 @@ import fi.vm.yti.datamodel.api.index.model.ResourceSearchResponse;
 import fi.vm.yti.datamodel.api.model.AbstractClass;
 import fi.vm.yti.datamodel.api.model.AbstractPredicate;
 import fi.vm.yti.datamodel.api.model.DataModel;
+import fi.vm.yti.datamodel.api.service.GraphManager;
 import fi.vm.yti.datamodel.api.service.JenaClient;
 import fi.vm.yti.datamodel.api.service.ModelManager;
 import fi.vm.yti.datamodel.api.utils.Frames;
 import fi.vm.yti.datamodel.api.utils.LDHelper;
+import fi.vm.yti.security.Role;
+import fi.vm.yti.security.YtiUser;
 
 @Singleton
 @Service
@@ -55,6 +59,7 @@ public class SearchIndexManager {
     private RestHighLevelClient esClient;
     private final ElasticConnector esManager;
     private final JenaClient jenaClient;
+    private final GraphManager graphManager;
     private final ObjectMapper objectMapper;
     private final ModelManager modelManager;
     private final ModelQueryFactory modelQueryFactory;
@@ -64,6 +69,7 @@ public class SearchIndexManager {
     @Autowired
     public SearchIndexManager(final ElasticConnector esManager,
                               final JenaClient jenaClient,
+                              final GraphManager graphManager,
                               final ObjectMapper objectMapper,
                               final ModelManager modelManager,
                               final ModelQueryFactory modelQueryFactory,
@@ -72,6 +78,7 @@ public class SearchIndexManager {
         this.esManager = esManager;
         this.esClient = esManager.getEsClient();
         this.jenaClient = jenaClient;
+        this.graphManager = graphManager;
         this.objectMapper = objectMapper;
         this.modelManager = modelManager;
         this.modelQueryFactory = modelQueryFactory;
@@ -154,15 +161,26 @@ public class SearchIndexManager {
         esManager.updateToIndex(ELASTIC_INDEX_MODEL, indexModel.getId(), indexModel);
     }
 
+    public ModelSearchResponse searchModelsWithUser(ModelSearchRequest request, YtiUser user) {
+        if(user.isSuperuser()) {
+            return searchModels(request, null);
+        } else {
+            final Map<UUID, Set<Role>> rolesInOrganizations = user.getRolesInOrganizations();
+            Set<String> privModels = graphManager.getPriviledgedModels(rolesInOrganizations.keySet());
+            return searchModels(request, privModels);
+        }
+    }
+
     public ModelSearchResponse searchModels(ModelSearchRequest request,
-                                            Set<UUID> privilegedOrganizations) {
+                                            Set<String> privModels) {
         request.setQuery(request.getQuery() != null ? request.getQuery().trim() : "");
 
         Map<String, List<DeepSearchHitListDTO<?>>> deepSearchHits = null;
 
         if (request.isSearchResources() && !request.getQuery().isEmpty()) {
             try {
-                SearchRequest query = deepResourceQueryFactory.createQuery(request.getQuery(), request.getSortLang(), privilegedOrganizations);
+                QueryBuilder privQuery = privModels==null ? null : ElasticUtils.createStatusAndModelQuery("isDefinedBy", privModels);
+                SearchRequest query = deepResourceQueryFactory.createQuery(request.getQuery(), request.getSortLang(), privQuery);
                 SearchResponse response = esClient.search(query, RequestOptions.DEFAULT);
                 deepSearchHits = deepResourceQueryFactory.parseResponse(response, request);
             } catch (IOException e) {
@@ -172,12 +190,13 @@ public class SearchIndexManager {
 
         try {
             SearchRequest finalQuery;
+            QueryBuilder privQuery = privModels==null ? null : ElasticUtils.createStatusAndModelQuery("id", privModels);
             if (deepSearchHits != null && !deepSearchHits.isEmpty()) {
                 Set<String> additionalModelIds = deepSearchHits.keySet();
                 logger.debug("Deep model search resulted in " + additionalModelIds.size() + " model matches");
-                finalQuery = modelQueryFactory.createQuery(request, additionalModelIds, privilegedOrganizations);
+                finalQuery = modelQueryFactory.createQuery(request, additionalModelIds, privQuery);
             } else {
-                finalQuery = modelQueryFactory.createQuery(request, privilegedOrganizations);
+                finalQuery = modelQueryFactory.createQuery(request, privQuery);
             }
             SearchResponse response = esClient.search(finalQuery, RequestOptions.DEFAULT);
             return modelQueryFactory.parseResponse(response, request, deepSearchHits);

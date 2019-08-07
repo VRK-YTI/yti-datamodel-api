@@ -322,7 +322,7 @@ public class LDHelper {
         return prefix + queryString;
     }
 
-    public static String concatWithReplace(List<UUID> orgs,
+    public static String concatWithReplace(Collection<UUID> orgs,
                                            String sep,
                                            String replace) {
         StringBuilder sb = new StringBuilder();

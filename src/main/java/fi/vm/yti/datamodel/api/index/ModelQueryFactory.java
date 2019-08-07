@@ -50,21 +50,21 @@ public class ModelQueryFactory {
     }
 
     public SearchRequest createQuery(ModelSearchRequest request,
-                                     Set<UUID> priviligedOrganizations) {
-        return createQuery(request.getQuery(), Collections.EMPTY_SET, request.getPageSize(), request.getPageFrom(), priviligedOrganizations);
+                                     QueryBuilder privilegeQuery) {
+        return createQuery(request.getQuery(), Collections.EMPTY_SET, request.getPageSize(), request.getPageFrom(), privilegeQuery);
     }
 
     public SearchRequest createQuery(ModelSearchRequest request,
                                      Collection<String> additionalModelIds,
-                                     Set<UUID> priviligedOrganizations) {
-        return createQuery(request.getQuery(), additionalModelIds, request.getPageSize(), request.getPageFrom(), priviligedOrganizations);
+                                     QueryBuilder privilegeQuery) {
+        return createQuery(request.getQuery(), additionalModelIds, request.getPageSize(), request.getPageFrom(), privilegeQuery);
     }
 
     private SearchRequest createQuery(String query,
                                       Collection<String> additionalModelIds,
                                       Integer pageSize,
                                       Integer pageFrom,
-                                      Set<UUID> privilegedOrganizations) {
+                                      QueryBuilder privilegeQuery) {
 
         QueryStringQueryBuilder labelQuery = null;
         if (!query.isEmpty()) {
@@ -88,11 +88,12 @@ public class ModelQueryFactory {
             contentQuery = labelQuery;
         }
 
-        QueryBuilder privilegeQuery = ElasticUtils.createStatusAndContributorQuery(privilegedOrganizations);
         QueryBuilder finalQuery;
         if (contentQuery != null) {
-            finalQuery = QueryBuilders.boolQuery()
+            finalQuery = privilegeQuery!=null ? QueryBuilders.boolQuery()
                 .must(privilegeQuery)
+                .must(contentQuery) :
+                QueryBuilders.boolQuery()
                 .must(contentQuery);
         } else {
             finalQuery = privilegeQuery;

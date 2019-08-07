@@ -60,16 +60,18 @@ public class DeepResourceQueryFactory {
 
     public SearchRequest createQuery(String query,
                                      String sortLang,
-                                     Set<UUID> privilegedOrganizations) {
+                                     QueryBuilder privilegeQuery) {
 
         QueryStringQueryBuilder queryStringQuery = luceneQueryFactory.buildPrefixSuffixQuery(query).field("label.*");
         if (sortLang != null && sortLangPattern.matcher(sortLang).matches()) {
             queryStringQuery = queryStringQuery.field("label." + sortLang, 10);
         }
 
-        QueryBuilder finalQuery = QueryBuilders.boolQuery()
-            .must(ElasticUtils.createStatusAndContributorQuery(privilegedOrganizations))
-            .must(queryStringQuery);
+        QueryBuilder finalQuery = privilegeQuery!=null ? QueryBuilders.boolQuery()
+            .must(privilegeQuery)
+            .must(queryStringQuery) :
+            QueryBuilders.boolQuery()
+                .must(queryStringQuery);
 
         SearchRequest sr = new SearchRequest("dm_resources")
             .source(new SearchSourceBuilder()

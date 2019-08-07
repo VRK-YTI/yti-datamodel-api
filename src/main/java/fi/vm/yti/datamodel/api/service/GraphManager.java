@@ -17,7 +17,12 @@ import org.apache.jena.rdf.model.*;
 import org.apache.jena.update.*;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -332,6 +337,37 @@ public class GraphManager {
             return false;
         }
     }
+
+    public Set<String> getPriviledgedModels(Set<UUID> orgs) {
+
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        String selectModelIds =
+            "SELECT DISTINCT ?graph WHERE { "
+                + "GRAPH ?graph { " +
+                " ?graph a owl:Ontology . "
+                + "?graph dcterms:contributor ?orgs . "
+                + "VALUES ?orgs { " + LDHelper.concatWithReplace(orgs, " ", "<urn:uuid:@this>") + " }" +
+                "}}";
+
+        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+        pss.setCommandText(selectModelIds);
+
+        ResultSet results = jenaClient.selectQuery(endpointServices.getCoreSparqlAddress(), pss.asQuery());
+
+        Set<String> modelIds = new HashSet<>();
+
+        while (results.hasNext()) {
+            QuerySolution soln = results.nextSolution();
+            if (soln.contains("graph")) {
+                Resource resType = soln.getResource("graph");
+                modelIds.add(resType.getURI());
+            }
+        }
+
+        return modelIds;
+
+    }
+
 
     /**
      * Returns service graph IRI as string with given prefix
