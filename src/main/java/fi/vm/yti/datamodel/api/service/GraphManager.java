@@ -25,6 +25,8 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.jena.util.ResourceUtils;
 import org.apache.jena.web.DatasetAdapter;
@@ -367,7 +369,6 @@ public class GraphManager {
         return modelIds;
 
     }
-
 
     /**
      * Returns service graph IRI as string with given prefix
@@ -923,6 +924,104 @@ public class GraphManager {
         pss.setCommandText(query);
         logger.info("Rewriting " + oldIRI + " to " + newIRI);
         return pss.asUpdate();
+    }
+
+    public void changeResourceStatuses(String model,
+                                       String initialStatus,
+                                       String endStatus) {
+        String query =
+            "DELETE { " +
+                "GRAPH ?resource { ?any owl:versionInfo ?initialStatus . }" +
+                "}" +
+                "INSERT { " +
+                "GRAPH ?resource { ?any owl:versionInfo ?endStatus . }" +
+                "} " +
+                "WHERE { " +
+                "GRAPH ?hasPartGraph { ?graph dcterms:hasPart ?resource . } " +
+                "GRAPH ?resource { ?resource rdfs:isDefinedBy ?graph . ?any owl:versionInfo ?initialStatus . } " +
+                "}";
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+        pss.setIri("hasPartGraph", model + "#HasPartGraph");
+        pss.setIri("graph", model);
+        pss.setLiteral("initialStatus", initialStatus);
+        pss.setLiteral("endStatus", endStatus);
+        pss.setCommandText(query);
+        UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(pss.asUpdate(), endpointServices.getCoreSparqlUpdateAddress());
+        qexec.execute();
+    }
+
+    /*
+     * Status change for normal users. Only certain status changes are allowed.
+     */
+    public void changeStatuses(String model,
+                                      String initialStatus,
+                                      String endStatus) {
+        switch (initialStatus) {
+            case "INCOMPLETE":
+                if (endStatus.equals("DRAFT")) {
+                    logger.debug("Status changes in "+model+" from "+initialStatus+" to "+endStatus);
+                    changeResourceStatuses(model, initialStatus, endStatus);
+                } else {
+                    throw new IllegalArgumentException("Invalid status change from " + initialStatus + " to " + endStatus);
+                }
+                break;
+            case "DRAFT":
+                final List draftChanges = Stream.of("INCOMPLETE", "VALID", "RETIRED", "INVALID").collect(Collectors.toList());
+                if (draftChanges.contains(endStatus)) {
+                    logger.debug("Status changes in "+model+" from "+initialStatus+" to "+endStatus);
+                    changeResourceStatuses(model, initialStatus, endStatus);
+                } else {
+                    throw new IllegalArgumentException("Invalid status change from " + initialStatus + " to " + endStatus);
+                }
+                break;
+            case "VALID":
+                final List validChanges = Stream.of("RETIRED", "INVALID").collect(Collectors.toList());
+                if (validChanges.contains(endStatus)) {
+                    logger.debug("Status changes in "+model+" from "+initialStatus+" to "+endStatus);
+                    changeResourceStatuses(model, initialStatus, endStatus);
+                } else {
+                    throw new IllegalArgumentException("Invalid status change from " + initialStatus + " to " + endStatus);
+                }
+                break;
+            case "RETIRED":
+                final List removedChanges = Stream.of("VALID", "INVALID").collect(Collectors.toList());
+                if (removedChanges.contains(endStatus)) {
+                    logger.debug("Status changes in "+model+" from "+initialStatus+" to "+endStatus);
+                    changeResourceStatuses(model, initialStatus, endStatus);
+                } else {
+                    throw new IllegalArgumentException("Invalid status change from " + initialStatus + " to " + endStatus);
+                }
+                break;
+            case "INVALID":
+                final List invalidChanges = Stream.of("REMOVED", "VALID").collect(Collectors.toList());
+                if (invalidChanges.contains(endStatus)) {
+                    logger.debug("Status changes in "+model+" from "+initialStatus+" to "+endStatus);
+                    changeResourceStatuses(model, initialStatus, endStatus);
+                } else {
+                    throw new IllegalArgumentException("Invalid status change from " + initialStatus + " to " + endStatus);
+                }
+                break;
+            default:
+                throw new IllegalArgumentException("Unknown status change from " + initialStatus + " to " + endStatus);
+        }
+    }
+
+    /*
+     * Status change for super users. All status changes between statuses are allowed.
+     *
+     */
+    public void changeStatusesAsSuperUser(String model,
+                                      String initialStatus,
+                                      String endStatus) {
+        final List allChanges = Stream.of("INCOMPLETE", "DRAFT", "VALID", "SUPERSEDED", "RETIRED", "INVALID", "RECOMMENDED").collect(Collectors.toList());
+
+        if (allChanges.contains(endStatus) && allChanges.contains(initialStatus)) {
+            logger.debug("Status changes in "+model+" from "+initialStatus+" to "+endStatus+" as SuperUser");
+            changeResourceStatuses(model, initialStatus, endStatus);
+        } else {
+            throw new IllegalArgumentException("Invalid status change from " + initialStatus + " to " + endStatus);
+        }
     }
 
     /**

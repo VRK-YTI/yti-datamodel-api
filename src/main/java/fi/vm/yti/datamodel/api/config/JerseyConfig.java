@@ -30,6 +30,7 @@ public class JerseyConfig extends ResourceConfig {
         register(ApiListingResource.class);
         register(GZipEncoder.class);
         register(JsonParseExceptionMapper.class);
+        register(IllegalArgumentExceptionMapper.class);
 
         register((ContainerResponseFilter) (req, resp) -> {
             resp.getHeaders().add("Cache-Control", "no-cache, no-store, must-revalidate");
