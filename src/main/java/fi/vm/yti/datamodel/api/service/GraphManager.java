@@ -14,13 +14,18 @@ import fi.vm.yti.datamodel.api.utils.LDHelper;
 import org.apache.jena.atlas.web.HttpException;
 import org.apache.jena.query.*;
 import org.apache.jena.rdf.model.*;
+import org.apache.jena.riot.system.PrefixMap;
+import org.apache.jena.riot.system.PrefixMapFactory;
+import org.apache.jena.shared.PrefixMapping;
 import org.apache.jena.update.*;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
@@ -404,6 +409,45 @@ public class GraphManager {
 
         return graphUri;
 
+    }
+
+    /**
+     * Returns prefixmapping for the model that the resource is defined in
+     * @param resource Resource that is defined in a model
+     * @return Prefix and namespace for the model that resource is defined in
+     */
+
+    public PrefixMapping getPrefixMappingFromResource(IRI resource) {
+
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        String selectResources =
+            "SELECT ?prefix ?namespace WHERE { "
+                + "GRAPH ?graph { " +
+                " ?graph a owl:Ontology . " +
+                "?graph dcap:preferredXMLNamespacePrefix ?prefix . " +
+                "?graph dcap:preferredXMLNamespaceName ?namespace . " +
+                "}" +
+                "GRAPH ?resource {" +
+                "?resource rdfs:isDefinedBy ?graph . " +
+                "}}";
+
+        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+        pss.setCommandText(selectResources);
+        pss.setIri("resource", resource);
+
+        ResultSet results = jenaClient.selectQuery(endpointServices.getCoreSparqlAddress(), pss.asQuery());
+
+        while (results.hasNext()) {
+            QuerySolution soln = results.nextSolution();
+            if(!soln.contains("prefix") || !soln.contains("namespace")) {
+                throw new IllegalArgumentException("No model found for "+resource);
+            }
+            String prefix = soln.getLiteral("prefix").getString();
+            String namespace = soln.getLiteral("namespace").getString();
+            PrefixMapping pm = PrefixMapping.Factory.create().setNsPrefix(prefix,namespace);
+            return pm;
+        }
+        throw new IllegalArgumentException("No model found for "+resource);
     }
 
     /**
@@ -924,6 +968,52 @@ public class GraphManager {
         pss.setCommandText(query);
         logger.info("Rewriting " + oldIRI + " to " + newIRI);
         return pss.asUpdate();
+    }
+
+    /**
+     * Adds required object and prefix/namespace to the model graph and export graph
+     * @param model Model where new requirement is added
+     * @param resource Resource of model that is added as requirement
+     */
+    public void addResourceNamespaceToModel(IRI model, IRI resource) {
+        String query =
+                "INSERT { " +
+                "GRAPH ?graph { ?graph dcterms:requires ?resourceGraph . " +
+                    "?resourceGraph a ?resourceGraphType . " +
+                    "?resourceGraph rdfs:label ?label . " +
+                    "?resourceGraph dcap:preferredXMLNamespaceName ?ns . " +
+                    "?resourceGraph dcap:preferredXMLNamespacePrefix ?prefix . }" +
+                "GRAPH ?exportGraph { ?graph dcterms:requires ?resourceGraph . " +
+                    "?resourceGraph a ?resourceGraphType . " +
+                    "?resourceGraph rdfs:label ?label . " +
+                    "?resourceGraph dcap:preferredXMLNamespaceName ?ns . " +
+                    "?resourceGraph dcap:preferredXMLNamespacePrefix ?prefix . }" +
+                  "} " +
+                "WHERE { " +
+                "GRAPH ?resource { ?resource rdfs:isDefinedBy ?resourceGraph . } " +
+                "GRAPH ?resourceGraph { " +
+                    "?resourceGraph a ?resourceGraphType . " +
+                    "?resourceGraph rdfs:label ?label . " +
+                    "?resourceGraph dcap:preferredXMLNamespaceName ?ns . " +
+                    "?resourceGraph dcap:preferredXMLNamespacePrefix ?prefix . " +
+                    "} " +
+                "}";
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+        pss.setIri("graph", model);
+        pss.setIri("exportGraph", model+"#ExportGraph");
+        pss.setIri("resource", resource);
+        pss.setCommandText(query);
+        UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(pss.asUpdate(), endpointServices.getCoreSparqlUpdateAddress());
+        qexec.execute();
+
+        Model prefixModel = ModelFactory.createDefaultModel();
+        prefixModel.setNsPrefixes(getPrefixMappingFromResource(resource));
+        prefixModel.add(ResourceFactory.createResource(model.toString()), RDF.type, OWL.Ontology);
+        DatasetAccessor toAccessor = DatasetAccessorFactory.createHTTP(endpointServices.getCoreReadWriteAddress());
+        toAccessor.add(model.toString(), prefixModel);
+        toAccessor.add(model.toString()+"#ExportGraph", prefixModel);
+
     }
 
     public void changeResourceStatuses(String model,
