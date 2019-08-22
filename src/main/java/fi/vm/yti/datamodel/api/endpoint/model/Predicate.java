@@ -219,14 +219,15 @@ public class Predicate {
                         provUUID = updatePredicate.getProvUUID();
                         logger.info("Changed predicate id from:" + oldid + " to " + id);
                         searchIndexManager.removePredicate(oldid);
+                        searchIndexManager.createIndexPredicate(updatePredicate);
                     }
                 } else {
                     graphManager.updateResource(updatePredicate);
                     logger.info("Updated " + updatePredicate.getId());
                     provUUID = updatePredicate.getProvUUID();
+                    searchIndexManager.updateIndexPredicate(updatePredicate);
                 }
 
-                searchIndexManager.updateIndexPredicate(updatePredicate);
 
                 if (provenanceManager.getProvMode()) {
                     provenanceManager.createProvEntityBundle(updatePredicate.getId(), updatePredicate.asGraph(), user.getId(), updatePredicate.getProvUUID(), oldIdIRI);

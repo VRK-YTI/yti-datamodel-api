@@ -221,14 +221,14 @@ public class Class {
                             provUUID = updateClass.getProvUUID();
                             logger.info("Changed class id from:" + oldid + " to " + id);
                             searchIndexManager.removeClass(oldid);
+                            searchIndexManager.createIndexClass(updateClass);
                         }
                     }
                 } else {
                     graphManager.updateResource(updateClass);
                     provUUID = updateClass.getProvUUID();
+                    searchIndexManager.updateIndexClass(updateClass);
                 }
-
-                searchIndexManager.updateIndexClass(updateClass);
 
                 if (provenanceManager.getProvMode()) {
                     provenanceManager.createProvEntityBundle(updateClass.getId(), updateClass.asGraph(), user.getId(), updateClass.getProvUUID(), oldIdIRI);
