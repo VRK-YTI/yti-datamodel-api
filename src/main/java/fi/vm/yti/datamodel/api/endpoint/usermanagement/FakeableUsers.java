@@ -16,7 +16,7 @@ import javax.ws.rs.core.Response;
 
 @Component
 @Api(tags = { "Users" }, description = "Get fakeable users")
-@Path("fakeableUsers")
+@Path("v1/fakeableUsers")
 public class FakeableUsers {
 
     private final RHPUsersManager rhpUsersManager;

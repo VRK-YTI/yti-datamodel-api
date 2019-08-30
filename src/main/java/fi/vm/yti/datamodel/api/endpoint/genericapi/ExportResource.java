@@ -19,7 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Component
-@Path("exportResource")
+@Path("v1/exportResource")
 @Api(tags = { "Resource" }, description = "Export Classes, Predicates, Shapes etc.")
 public class ExportResource {
 

@@ -16,7 +16,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 
 @Component
-@Path("concept")
+@Path("v1/concept")
 @Api(tags = { "Concept" }, description = "Get concept with id")
 public class Concept {
 

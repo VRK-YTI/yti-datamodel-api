@@ -30,7 +30,7 @@ import java.io.StringWriter;
 import java.util.UUID;
 
 @Component
-@Path("conceptSuggestion")
+@Path("v1/conceptSuggestion")
 @Api(tags = { "Concept" }, description = "Create concept suggestions")
 public class ConceptSuggestion {
 

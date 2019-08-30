@@ -12,7 +12,7 @@ import javax.ws.rs.core.Response;
 
 @Component
 @Api(tags = { "Users" }, description = "User requests")
-@Path("userRequest")
+@Path("v1/userRequest")
 public class UserRequest {
 
     private final AuthenticatedUserProvider authenticatedUserProvider;

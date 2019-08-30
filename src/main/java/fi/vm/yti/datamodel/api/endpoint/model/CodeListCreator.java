@@ -24,7 +24,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 
 @Component
-@Path("codeListCreator")
+@Path("v1/codeListCreator")
 @Api(tags = { "Codes" }, description = "Create reusable code list that is not resolved")
 public class CodeListCreator {
 

@@ -15,7 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Component
-@Path("exportModel")
+@Path("v1/exportModel")
 @Api(tags = { "Model" }, description = "Export models")
 public class ExportModel {
 

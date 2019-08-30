@@ -19,7 +19,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 
 @Component
-@Path("integration/containers")
+@Path("v1/integration/containers")
 @Api(tags = { "Integration" }, description = "Operations about models")
 public class Containers {
 

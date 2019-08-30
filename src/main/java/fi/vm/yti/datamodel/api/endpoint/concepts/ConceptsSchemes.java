@@ -19,7 +19,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Response;
 
 @Component
-@Path("conceptSchemes")
+@Path("v1/conceptSchemes")
 @Api(tags = { "Concept" }, description = "Available concept schemes from Term editor")
 public class ConceptsSchemes {
 

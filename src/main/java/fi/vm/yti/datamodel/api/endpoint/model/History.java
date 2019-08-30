@@ -25,7 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Component
-@Path("history")
+@Path("v1/history")
 @Api(tags = { "History" }, description = "Get list of revisions of the resource from change history")
 public class History {
 

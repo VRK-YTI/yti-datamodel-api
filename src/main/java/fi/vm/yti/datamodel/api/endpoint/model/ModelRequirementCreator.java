@@ -25,7 +25,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 
 @Component
-@Path("modelRequirementCreator")
+@Path("v1/modelRequirementCreator")
 @Api(tags = { "Model" }, description = "Construct new requirement")
 public class ModelRequirementCreator {
 

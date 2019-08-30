@@ -30,7 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Component
-@Path("modelCreator")
+@Path("v1/modelCreator")
 @Api(tags = { "Model" }, description = "Construct new model template")
 public class ModelCreator {
 

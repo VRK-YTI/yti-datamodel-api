@@ -33,7 +33,7 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 
 @Component
-@Path("changeStatuses")
+@Path("v1/changeStatuses")
 @Api(tags = { "Model" })
 public class ChangeStatuses {
 

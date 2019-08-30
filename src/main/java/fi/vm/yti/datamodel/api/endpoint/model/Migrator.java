@@ -31,7 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Component
-@Path("migrate")
+@Path("v1/migrate")
 @Api(tags = { "Admin" }, description = "Migrates datamodels from iow.csc.fi")
 public class Migrator {
 
@@ -94,7 +94,7 @@ public class Migrator {
         @ApiResponse(code = 500, message = "Bad data?")
     })
     public Response postJson(
-        @ApiParam(value = "IOW Service ID in form of http://domain/api/rest/ ", required = true)
+        @ApiParam(value = "IOW Service ID in form of http://domain/api/ ", required = true)
         @QueryParam("service")
             String service,
         @ApiParam(value = "Model URIs", required = true)

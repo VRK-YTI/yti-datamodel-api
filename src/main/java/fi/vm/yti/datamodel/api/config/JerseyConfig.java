@@ -16,7 +16,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.container.ContainerResponseFilter;
 
 @Configuration
-@ApplicationPath("/api/rest")
+@ApplicationPath("/datamodel/api")
 public class JerseyConfig extends ResourceConfig {
 
     @Autowired
@@ -44,7 +44,7 @@ public class JerseyConfig extends ResourceConfig {
         });
 
         BeanConfig beanConfig = new BeanConfig();
-        beanConfig.setBasePath("/api/rest");
+        beanConfig.setBasePath("/datamodel/api");
         beanConfig.setResourcePackage("fi.vm.yti.datamodel.api.endpoint");
         beanConfig.setPrettyPrint(true);
         beanConfig.setScan(true);

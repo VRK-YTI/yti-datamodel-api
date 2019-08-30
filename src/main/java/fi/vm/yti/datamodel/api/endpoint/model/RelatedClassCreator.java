@@ -22,7 +22,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 
 @Component
-@Path("relatedClassCreator")
+@Path("v1/relatedClassCreator")
 @Api(tags = { "Class" }, description = "Construct new related class from existing class")
 public class RelatedClassCreator {
 

@@ -58,7 +58,7 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 
 @Component
-@Path("model")
+@Path("v1/model")
 @Api(tags = { "Model" }, description = "Operations about models")
 public class Models {
 

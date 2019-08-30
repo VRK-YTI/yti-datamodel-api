@@ -29,7 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Component
-@Path("profileCreator")
+@Path("v1/profileCreator")
 @Api(tags = { "Profile" }, description = "Construct new profile template")
 public class ProfileCreator {
 

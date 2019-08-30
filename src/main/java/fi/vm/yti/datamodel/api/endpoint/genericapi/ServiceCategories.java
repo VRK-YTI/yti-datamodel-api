@@ -19,7 +19,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Response;
 
 @Component
-@Path("serviceCategories")
+@Path("v1/serviceCategories")
 @Api(tags = { "Model" }, description = "Get available service categories")
 public class ServiceCategories {
 

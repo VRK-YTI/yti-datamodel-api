@@ -22,7 +22,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 
 @Component
-@Path("relatedPredicateCreator")
+@Path("v1/relatedPredicateCreator")
 @Api(tags = { "Predicate" }, description = "Construct new related property from existing property")
 public class RelatedPredicateCreator {
 

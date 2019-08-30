@@ -21,7 +21,7 @@ import fi.vm.yti.datamodel.api.service.JerseyResponseManager;
 import io.swagger.annotations.Api;
 
 @Component
-@Path("/searchResources")
+@Path("v1/searchResources")
 @Api(tags = { "Index" })
 public class ResourceSearch {
 

@@ -18,7 +18,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.core.Response;
 
 @Component
-@Path("reset")
+@Path("v1/reset")
 @Api(tags = { "Admin" }, description = "DROP ALL and Recover")
 public class Reset {
 

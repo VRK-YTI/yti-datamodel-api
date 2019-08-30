@@ -15,7 +15,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 
 @Component
-@Path("freeID")
+@Path("v1/freeID")
 @Api(tags = { "Resource" }, description = "Test if ID is valid and not in use")
 public class FreeID {
 

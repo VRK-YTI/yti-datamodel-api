@@ -22,7 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Component
-@Path("classCreator")
+@Path("v1/classCreator")
 @Api(tags = { "Class" }, description = "Construct new Class template")
 public class ClassCreator {
 

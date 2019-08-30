@@ -34,8 +34,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
 @Component
-@Path("class")
-@Api(tags = { "Class" }, description = "Class operations")
+@Path("v1/class")
+@Api(tags = { "Class" })
 public class Class {
 
     private static final Logger logger = LoggerFactory.getLogger(Class.class.getName());

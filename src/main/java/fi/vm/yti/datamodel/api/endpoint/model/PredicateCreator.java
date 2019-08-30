@@ -22,7 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Component
-@Path("predicateCreator")
+@Path("v1/predicateCreator")
 @Api(tags = { "Predicate" }, description = "Creates new RDF properties that can be based on SKOS concepts")
 public class PredicateCreator {
 

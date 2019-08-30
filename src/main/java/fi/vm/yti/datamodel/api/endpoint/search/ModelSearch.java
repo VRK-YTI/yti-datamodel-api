@@ -25,7 +25,7 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 
 @Component
-@Path("/searchModels")
+@Path("v1/searchModels")
 @Api(tags = { "Index" })
 public class ModelSearch {
 

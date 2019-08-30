@@ -26,7 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Component
-@Path("replicate")
+@Path("v1/replicate")
 @Api(tags = { "Admin" }, description = "Returns information about replicable models")
 public class Replicator {
 
@@ -82,7 +82,7 @@ public class Replicator {
         @ApiResponse(code = 500, message = "Bad data?")
     })
     public Response postJson(
-        @ApiParam(value = "IOW Service ID in form of http://domain/api/rest/ ", required = true)
+        @ApiParam(value = "IOW Service ID in form of http://domain/api/ ", required = true)
         @QueryParam("service") String service) {
 
         if (service == null || service.equals("undefined")) {

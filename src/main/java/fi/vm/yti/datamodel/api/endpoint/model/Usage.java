@@ -26,7 +26,7 @@ import javax.ws.rs.core.Response;
 import java.util.Map;
 
 @Component
-@Path("usage")
+@Path("v1/usage")
 @Api(tags = { "Resource" }, description = "Returns all known references to the given resource. Resource ID and Model ID are alternative parameters")
 public class Usage {
 

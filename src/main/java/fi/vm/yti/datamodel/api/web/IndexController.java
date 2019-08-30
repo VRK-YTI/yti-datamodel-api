@@ -7,12 +7,18 @@ import org.springframework.web.bind.annotation.RequestMapping;
 public class IndexController {
 
     @RequestMapping("/api")
-    public String index() {
-        return "index.html";
+    public String index2() {
+        return "/index.html";
     }
 
-    @RequestMapping("/api/swagger-ui")
-    public String swaggerIndex() {
-        return "/api/swagger-ui/index.html";
+    @RequestMapping("/")
+    public String index() {
+        return "/index.html";
     }
+
+    @RequestMapping("/datamodel/swagger-ui")
+    public String swaggerIndex() {
+        return "/datamodel/swagger-ui/index.html";
+    }
+
 }

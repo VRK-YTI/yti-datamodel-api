@@ -19,7 +19,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 
 @Component
-@Path("codeValues")
+@Path("v1/codeValues")
 @Api(tags = { "Codes" }, description = "Get codevalues with ID")
 public class Codes {
 

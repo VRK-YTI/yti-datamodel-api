@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.Locale;
 
 @Component
-@Path("resolve")
+@Path("v1/resolve")
 @Api(tags = { "Admin" }, description = "Resolve resource with ACCEPT header")
 public class Resolve {
 
@@ -99,7 +99,7 @@ public class Resolve {
         Locale locale = acceptLang == null ? null : Locale.forLanguageTag(acceptLang);
         String language = locale == null ? null : locale.getDefault().toString().substring(0, 2).toLowerCase();
 
-        final URI htmlRedirectUrl = URI.create(uriInfo.getBaseUri().toString().replace("/api/rest/", "/model/") + graphPrefix + (uriFragment != null ? "/" + uriFragment : ""));
+        final URI htmlRedirectUrl = URI.create(uriInfo.getBaseUri().toString().replace("/datamodel/api/", "/model/") + graphPrefix + (uriFragment != null ? "/" + uriFragment : ""));
 
         if (format != null && format.length() > 5) {
             accept = format;

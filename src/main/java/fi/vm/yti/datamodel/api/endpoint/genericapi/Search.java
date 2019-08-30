@@ -15,7 +15,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 
 @Component
-@Path("search")
+@Path("v1/search")
 @Api(tags = { "Resource" }, description = "Search resources")
 public class Search {
 

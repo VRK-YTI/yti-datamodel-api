@@ -20,7 +20,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
 
 @Component
-@Path("modelVersion")
+@Path("v1/modelVersion")
 @Api(tags = { "Model" }, description = "Create new version of the model with new prefix")
 public class ModelVersion {
 

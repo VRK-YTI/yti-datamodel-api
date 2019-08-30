@@ -13,7 +13,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
 
 @Component
-@Path("resolveNamespace")
+@Path("v1/resolveNamespace")
 @Api(tags = { "Admin" }, description = "Import for external references")
 public class ResolveNamespace {
 

@@ -23,7 +23,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 
 @Component
-@Path("externalPredicate")
+@Path("v1/externalPredicate")
 @Api(tags = { "Predicate" }, description = "External predicate operations")
 public class ExternalPredicate {
 

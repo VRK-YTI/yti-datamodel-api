@@ -22,7 +22,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 
 @Component
-@Path("coreServerCreator")
+@Path("v1/coreServerCreator")
 @Api(tags = { "Codes" }, description = "Create new reference to code server")
 public class CodeServerCreator {
 

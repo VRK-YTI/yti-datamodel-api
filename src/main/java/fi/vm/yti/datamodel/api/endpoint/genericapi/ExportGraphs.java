@@ -16,7 +16,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 
 @Component
-@Path("exportGraphs")
+@Path("v1/exportGraphs")
 @Api(tags = { "Admin" }, description = "Export graphs")
 public class ExportGraphs {
 

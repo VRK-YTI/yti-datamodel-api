@@ -14,7 +14,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Response;
 
 @Component
-@Path("user")
+@Path("v1/user")
 @Api(tags = { "Users" }, description = "Get user")
 public class User {
 

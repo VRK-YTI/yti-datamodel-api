@@ -26,7 +26,7 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 
 @Component
-@Path("newModelRequirement")
+@Path("v1/newModelRequirement")
 @Api(tags = { "Model" })
 public class ModelRequirementUpdater {
 

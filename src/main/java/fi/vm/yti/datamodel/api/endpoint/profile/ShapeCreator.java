@@ -23,7 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Component
-@Path("shapeCreator")
+@Path("v1/shapeCreator")
 @Api(tags = { "Profile" }, description = "Construct new Shape template")
 public class ShapeCreator {
 

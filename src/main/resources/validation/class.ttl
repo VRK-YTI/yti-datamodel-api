@@ -1,0 +1,251 @@
+@prefix infoset: <http://www.w3.org/2001/04/infoset#> .
+@prefix dcap:  <http://purl.org/ws-mmi-dc/terms/> .
+@prefix schema: <http://schema.org/> .
+@prefix void:  <http://rdfs.org/ns/void#> .
+@prefix adms:  <http://www.w3.org/ns/adms#> .
+@prefix dcam:  <http://purl.org/dc/dcam/> .
+@prefix owl:   <http://www.w3.org/2002/07/owl#> .
+@prefix afn:   <http://jena.hpl.hp.com/ARQ/function#> .
+@prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
+@prefix skos:  <http://www.w3.org/2004/02/skos/core#> .
+@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix iow:   <http://uri.suomi.fi/datamodel/ns/iow#> .
+@prefix sd:    <http://www.w3.org/ns/sparql-service-description#> .
+@prefix sh:    <http://www.w3.org/ns/shacl#> .
+@prefix rdf:   <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix api:   <http://www.w3.org/2011/http#> .
+@prefix text:  <http://jena.apache.org/text#> .
+@prefix prov:  <http://www.w3.org/ns/prov#> .
+@prefix foaf:  <http://xmlns.com/foaf/0.1/> .
+@prefix ts:    <http://www.w3.org/2003/06/sw-vocab-status/ns#> .
+@prefix dc:    <http://purl.org/dc/elements/1.1/> .
+
+iow:ResourceShape  a        sh:NodeShape ;
+        rdfs:isDefinedBy    <http://uri.suomi.fi/datamodel/ns/iow> ;
+        sh:description      "Class for shapes"@en ;
+        sh:name             "Class shape"@en ;
+        sh:property         <urn:uuid:4b8326e9-7bc1-4926-a8bd-28a086066e95> , <urn:uuid:bcbe2bb8-6b83-43f5-935a-430c08dab943> , <urn:uuid:ec59a0dd-c1d2-4517-b0d5-871fd018e7ed> , <urn:uuid:7e2aee96-ba49-4278-a49f-9c7910768c0d> , <urn:uuid:0991fa53-590e-4900-a02d-5f415eccd3ee> , <urn:uuid:41382733-27eb-40b4-aeb9-01403b823467> , <urn:uuid:e464a627-1cd1-4cc2-8ba7-07e5acd46c71> , <urn:uuid:a428a148-6dd8-42b3-b22e-bb7fda04e0f7> , <urn:uuid:d70425c4-a467-4e1a-917d-49b2183a71c9> , <urn:uuid:b88a3845-97d2-4726-9d1f-abf34cbb4fa0> , <urn:uuid:b24ec7d4-3066-470a-85d3-f75d341fd054> , <urn:uuid:9df11ac6-678d-4e6f-9a99-6e5b9b498c74> ;
+        sh:targetClass      sh:NodeShape, rdfs:Class;
+
+<urn:uuid:4b8326e9-7bc1-4926-a8bd-28a086066e95>
+        a                   sh:PropertyShape ;
+        dcterms:type        owl:DatatypeProperty ;
+        iow:localName       "created" ;
+        owl:versionInfo     "DRAFT" ;
+        sh:datatype         xsd:dateTime ;
+        sh:description      "Date of creation of the resource."@en ;
+        sh:maxCount         1 ;
+        sh:minCount         1 ;
+        sh:name             "Date Created"@en ;
+        sh:order            6 ;
+        sh:path             dcterms:created .
+
+<urn:uuid:bcbe2bb8-6b83-43f5-935a-430c08dab943>
+        a                   sh:PropertyShape ;
+        sh:datatype         xsd:string ;
+        sh:description      "A human-readable name for the subject." , "Name of the shape"@en ;
+        sh:name             "Name"@en ;
+        sh:maxCount         1 ;
+        sh:minCount         1 ;
+        sh:order            4 ;
+        sh:path             sh:name .
+
+<urn:uuid:ec59a0dd-c1d2-4517-b0d5-871fd018e7ed>
+        a                   sh:PropertyShape ;
+        sh:description      "Association to property constraints"@en ;
+        sh:name             "Property"@en ;
+        sh:node             iow:PropertyConstraint ;
+        sh:order            0 ;
+        sh:path             sh:property .
+
+<urn:uuid:7e2aee96-ba49-4278-a49f-9c7910768c0d>
+        a                   sh:PropertyShape ;
+        sh:description      "The defininition of the subject resource." ;
+        sh:name             "Is defined by"@en ;
+        sh:node             iow:ApplicationProfile ;
+        sh:order            1 ;
+        sh:path             rdfs:isDefinedBy .
+
+<urn:uuid:0991fa53-590e-4900-a02d-5f415eccd3ee>
+        a                   sh:PropertyShape ;
+        sh:datatype         xsd:string ;
+        sh:description      "A description of the subject resource." , "Description of the shape"@en ;
+        sh:name             "Description"@en ;
+        sh:maxCount         1 ;
+        sh:order            5 ;
+        sh:path             sh:description .
+
+<urn:uuid:41382733-27eb-40b4-aeb9-01403b823467>
+        a                   sh:PropertyShape ;
+        sh:description      "The topic of the resource."@en ;
+        sh:name             "Subject"@en ;
+        sh:maxCount         1 ;
+        sh:node             iow:ResourceConcept ;
+        sh:order            2 ;
+        sh:path             dcterms:subject .
+
+<urn:uuid:e464a627-1cd1-4cc2-8ba7-07e5acd46c71>
+        a                   sh:PropertyShape ;
+        sh:datatype         xsd:dateTime ;
+        sh:description      "Date on which the resource was changed."@en ;
+        sh:name             "Date Modified"@en ;
+        sh:maxCount         1 ;
+        sh:minCount         1 ;
+        sh:order            7 ;
+        sh:path             dcterms:modified .
+
+<urn:uuid:a428a148-6dd8-42b3-b22e-bb7fda04e0f7>
+        a                sh:PropertyShape ;
+        sh:datatype      xsd:string ;
+        sh:maxCount      1 ;
+        sh:minCount      1 ;
+        sh:name          "Status"@en ;
+        sh:order         8 ;
+        sh:in            ( "DRAFT" "INVALID" "RETIRED" "SUBMITTED" "SUGGESTED" "SUPERSEDED" "INCOMPLETE" "VALID" ) ;
+        sh:path          iow:status .
+
+<urn:uuid:d70425c4-a467-4e1a-917d-49b2183a71c9>
+        a                sh:PropertyShape ;
+        dcterms:created  "2018-09-25T12:24:40.023+00:00"^^xsd:dateTime ;
+        dcterms:type     owl:ObjectProperty ;
+        iow:localName    "targetClass" ;
+        owl:versionInfo  "DRAFT" ;
+        sh:maxCount      1 ;
+        sh:minCount      1 ;
+        sh:name          "Target class"@en ;
+        sh:node          iow:Class ;
+        sh:order         3 ;
+        sh:path          sh:targetClass .
+
+<urn:uuid:b88a3845-97d2-4726-9d1f-abf34cbb4fa0>
+        a                sh:PropertyShape ;
+        sh:datatype      xsd:string ;
+        sh:description   "Coordinates of the resource, for example \"106,744\""@en ;
+        sh:maxCount      1 ;
+        sh:name          "Point XY"@en ;
+        sh:order         9 ;
+        sh:path          iow:pointXY .
+
+<urn:uuid:b24ec7d4-3066-470a-85d3-f75d341fd054>
+        a                sh:PropertyShape ;
+        sh:datatype      xsd:integer ;
+        sh:description   "The maximum number of properties on an object."@en ;
+        sh:maxCount      1 ;
+        sh:name          "Maximum properties"@en ;
+        sh:order         11 ;
+        sh:path          iow:maxProperties .
+
+<urn:uuid:9df11ac6-678d-4e6f-9a99-6e5b9b498c74>
+        a                sh:PropertyShape ;
+        dcterms:created  "2019-03-28T12:13:43.668+00:00"^^xsd:dateTime ;
+        dcterms:type     owl:DatatypeProperty ;
+        iow:localName    "minProperties" ;
+        owl:versionInfo  "DRAFT" ;
+        sh:datatype      xsd:integer ;
+        sh:description   "The minimum number of properties on an object."@en ;
+        sh:maxCount      1 ;
+        sh:name          "Minimum properties"@en ;
+        sh:order         10 ;
+        sh:path          iow:minProperties .
+
+
+
+
+
+
+
+
+
+
+
+
+
+iow:ResourceConcept  a      sh:NodeShape ;
+        rdfs:isDefinedBy    <http://uri.suomi.fi/datamodel/ns/iow> ;
+        sh:name             "Concept"@en ;
+        sh:property         <urn:uuid:9779cf6b-c62f-4c1c-90fc-58988a84bee0> , <urn:uuid:dbc593b6-575d-4890-888a-122397ccd64c> , <urn:uuid:419c8642-e7d5-4990-ba48-86dddcb7a978> ;
+        sh:targetClass      skos:Concept .
+
+<urn:uuid:9779cf6b-c62f-4c1c-90fc-58988a84bee0>
+        a                   sh:PropertyShape ;
+        sh:datatype         rdf:langString ;
+        sh:description      "Definition of the concept"@en ;
+        sh:minCount         1 ;
+        sh:name             "Definition"@en ;
+        sh:order            1 ;
+        sh:path             skos:definition .
+
+<urn:uuid:dbc593b6-575d-4890-888a-122397ccd64c>
+        a                   sh:PropertyShape ;
+        sh:datatype         rdf:langString ;
+        sh:description      "A resource has no more than one value of skos:prefLabel per language tag, and no more than one value of skos:prefLabel without language tag. The range of skos:prefLabel is the class of RDF plain literals. skos:prefLabel, skos:altLabel and skos:hiddenLabel are pairwise\n      disjoint properties."@en ;
+        sh:maxCount         1 ;
+        sh:minCount         1 ;
+        sh:name             "Preferred label"@en ;
+        sh:order            0 ;
+        sh:path             skos:prefLabel .
+
+<urn:uuid:419c8642-e7d5-4990-ba48-86dddcb7a978>
+        a                   sh:PropertyShape ;
+        sh:name             "is in scheme"@en ;
+        sh:node             iow:ConceptScheme ;
+        sh:order            2 ;
+        sh:path             skos:inScheme .
+
+
+
+
+
+
+
+
+
+
+iow:ConceptScheme  a        sh:NodeShape ;
+        rdfs:isDefinedBy    <http://uri.suomi.fi/datamodel/ns/iow> ;
+        sh:description      "Sanasto joka määrittelee tietomallissa käytettäviä käsitteitä"@fi , "Concept Scheme that is used to formally define concepts that are used in the model"@en ;
+        sh:name             "Terminologinen sanasto"@fi , "Terminological Concept Scheme"@en ;
+        sh:property         <urn:uuid:fb8e6ea8-03db-4f51-b501-e21994e90cb1> , <urn:uuid:128219f0-e202-496c-a09c-2850f1cf8f6b> , <urn:uuid:7a8e8f2a-d69c-47b4-bbea-427dea6f97f9> , <urn:uuid:a1ca508c-dd19-4195-8291-d994b960f0fa> ;
+        sh:targetClass      skos:ConceptScheme .
+
+<urn:uuid:fb8e6ea8-03db-4f51-b501-e21994e90cb1>
+        a                   sh:PropertyShape ;
+        sh:datatype         xsd:string ;
+        sh:description      "Preferred prefix to be used in XML and RDF"@en , "Prefix määrittely käytetään ihmisluettavamman tunnisteen muodostamiseen, esim: jhsmeta:Henkilo jossa jhs: on prefix."@fi ;
+        sh:maxCount         1 ;
+        sh:maxLength        10 ;
+        sh:minCount         1 ;
+        sh:minLength        2 ;
+        sh:name             "Suositettu prefix"@fi , "Preferred prefix"@en ;
+        sh:order            2 ;
+        sh:path             dcap:preferredXMLNamespacePrefix .
+
+<urn:uuid:128219f0-e202-496c-a09c-2850f1cf8f6b>
+        a                   sh:PropertyShape ;
+        sh:datatype         xsd:string ;
+        sh:description      "Preferred namespace for the model to be used in XML or RDF"@en , "Nimiavaruudella tarkoitetaan IRI tunnisteen domain osaa"@fi ;
+        sh:maxCount         1 ;
+        sh:minCount         1 ;
+        sh:name             "Preferred namespace"@en , "Suositettu nimiavaruus"@fi ;
+        sh:order            3 ;
+        sh:path             dcap:preferredXMLNamespaceName .
+
+<urn:uuid:7a8e8f2a-d69c-47b4-bbea-427dea6f97f9>
+        a                   sh:PropertyShape ;
+        sh:datatype         xsd:string ;
+        sh:description      "Sanaston kuvaus"@fi , "An account of the resource."@en ;
+        sh:name             "Description"@en , "Kuvaus"@fi ;
+        sh:maxCount         1 ;
+        sh:order            1 ;
+        sh:path             dcterms:description .
+
+<urn:uuid:a1ca508c-dd19-4195-8291-d994b960f0fa>
+        a                   sh:PropertyShape ;
+        sh:datatype         xsd:string ;
+        sh:description      "Sanaston nimi"@fi , "A name given to the concept scheme"@en ;
+        sh:name             "Title"@en , "Nimi"@fi ;
+        sh:order            0 ;
+        sh:maxCount         1 ;
+        sh:minCount         1 ;
+        sh:path             skos:prefLabel .

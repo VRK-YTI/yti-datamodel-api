@@ -27,7 +27,7 @@ import javax.ws.rs.core.Response;
 import java.util.UUID;
 
 @Component
-@Path("classProperty")
+@Path("v1/classProperty")
 @Api(tags = { "Class" }, description = "Operations about property")
 public class ClassPropertyCreator {
 

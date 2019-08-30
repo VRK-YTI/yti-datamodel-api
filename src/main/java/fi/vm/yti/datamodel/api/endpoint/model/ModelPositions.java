@@ -21,7 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Component
-@Path("modelPositions")
+@Path("v1/modelPositions")
 @Api(tags = { "Model" }, description = "Operations about coordinates")
 public class ModelPositions {
 

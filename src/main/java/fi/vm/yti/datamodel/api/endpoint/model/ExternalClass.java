@@ -27,7 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Component
-@Path("externalClass")
+@Path("v1/externalClass")
 @Api(tags = { "Class" }, description = "External class operations")
 public class ExternalClass {
 

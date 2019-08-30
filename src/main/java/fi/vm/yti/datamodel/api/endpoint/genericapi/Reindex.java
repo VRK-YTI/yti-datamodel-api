@@ -18,7 +18,7 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 
 @Component
-@Path("reindex")
+@Path("v1/reindex")
 @Api(tags = { "Admin" })
 public class Reindex {
 

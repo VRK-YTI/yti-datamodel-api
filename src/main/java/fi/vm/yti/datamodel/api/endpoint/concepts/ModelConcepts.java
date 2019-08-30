@@ -21,7 +21,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 
 @Component
-@Path("modelConcepts")
+@Path("v1/modelConcepts")
 @Api(tags = { "Concept" }, description = "Local concept operations")
 public class ModelConcepts {
 

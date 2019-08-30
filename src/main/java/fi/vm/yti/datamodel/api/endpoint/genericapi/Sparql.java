@@ -22,7 +22,7 @@ import java.io.OutputStream;
 import java.io.StringWriter;
 
 @Component
-@Path("sparql")
+@Path("v1/sparql")
 @Api(tags = { "Admin" }, description = "Edit resources")
 public class Sparql {
 
@@ -87,7 +87,7 @@ public class Sparql {
     }
 
     @GET
-    @Path("/construct")
+    @Path("construct")
     @Consumes("application/sparql-query")
     @Produces("text/turtle")
     @ApiOperation(value = "Sparql query to given service", notes = "More notes about this method")

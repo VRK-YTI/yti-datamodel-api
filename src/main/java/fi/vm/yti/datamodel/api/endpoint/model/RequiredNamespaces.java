@@ -21,7 +21,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Response;
 
 @Component
-@Path("listNamespaces")
+@Path("v1/listNamespaces")
 @Api(tags = { "Model" }, description = "Get list of available namespaces")
 public class RequiredNamespaces {
 

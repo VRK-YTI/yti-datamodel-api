@@ -32,7 +32,7 @@ import org.springframework.stereotype.Component;
  */
 
 @Component
-@Path("framedGraphs")
+@Path("v1/framedGraphs")
 @Api(tags = { "Framed graphs cache" }, description = "Operations for working with framing cache")
 public class FramedGraphs {
 

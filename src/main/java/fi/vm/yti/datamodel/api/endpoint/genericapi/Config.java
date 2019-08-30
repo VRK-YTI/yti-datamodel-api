@@ -16,7 +16,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 
 @Component
-@Path("config")
+@Path("v1/config")
 @Api(tags = { "Admin" }, description = "Get API config")
 public class Config {
 

@@ -34,7 +34,7 @@ import org.slf4j.LoggerFactory;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
 @Component
-@Path("predicate")
+@Path("v1/predicate")
 @Api(tags = { "Predicate" }, description = "Operations about reusable properties")
 public class Predicate {
 

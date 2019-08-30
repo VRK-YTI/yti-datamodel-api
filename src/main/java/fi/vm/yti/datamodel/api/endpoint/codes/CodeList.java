@@ -22,7 +22,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 
 @Component
-@Path("codeList")
+@Path("v1/codeList")
 @Api(tags = { "Codes" }, description = "Get list of codes from code sercer")
 public class CodeList {
 

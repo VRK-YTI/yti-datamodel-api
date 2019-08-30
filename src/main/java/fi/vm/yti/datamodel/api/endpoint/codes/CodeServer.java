@@ -19,7 +19,7 @@ import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
 
 @Component
-@Path("codeServer")
+@Path("v1/codeServer")
 @Api(tags = { "Codes" }, description = "Available code servers")
 public class CodeServer {
 

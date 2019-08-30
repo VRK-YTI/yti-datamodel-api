@@ -22,7 +22,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Response;
 
 @Component
-@Path("organizations")
+@Path("v1/organizations")
 @Api(tags = { "Organizations" }, description = "Get organizations")
 public class Organizations {
 
