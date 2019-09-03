@@ -53,6 +53,10 @@ public class CodeList {
     public Response codeList(
         @ApiParam(value = "Codeserver uri", required = true) @QueryParam("uri") String uri) {
 
+        if(uri==null || uri.isEmpty()) {
+            return jerseyResponseManager.invalidParameter();
+        }
+
         if (uri.startsWith("https://koodistot.suomi.fi")) {
             SuomiCodeServer suomiCodeServer = new SuomiCodeServer("https://koodistot.suomi.fi", applicationProperties.getDefaultSuomiCodeServerAPI(), endpointServices, codeSchemeManager);
             suomiCodeServer.updateCodelistsFromServer();

@@ -130,7 +130,8 @@ public class ReusableClass extends AbstractClass {
         Resource modelResource = relatedClass.getPropertyResourceValue(RDFS.isDefinedBy);
         modelResource.removeProperties();
         relatedClass.removeAll(RDFS.isDefinedBy);
-        relatedClass.addProperty(classRelation, oldClassIRI.toString());
+        relatedClass.removeAll(classRelation);
+        relatedClass.addProperty(classRelation, ResourceFactory.createResource(oldClassIRI.toString()));
         relatedClass.addProperty(RDFS.isDefinedBy, ResourceFactory.createResource(newModelIRI.toString()));
 
         LDHelper.rewriteLiteral(this.graph, relatedClass, DCTerms.created, LDHelper.getDateTimeLiteral());
