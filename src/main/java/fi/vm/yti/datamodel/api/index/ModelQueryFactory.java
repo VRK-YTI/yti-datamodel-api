@@ -3,6 +3,7 @@ package fi.vm.yti.datamodel.api.index;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -52,22 +53,23 @@ public class ModelQueryFactory {
     }
 
     public SearchRequest createQuery(ModelSearchRequest request) {
-        return createQuery(request.getQuery(), request.getStatus(), Collections.EMPTY_SET, request.getPageSize(), request.getPageFrom(), null, request.getFilter());
+        return createQuery(request.getQuery(), request.getStatus(), request.getAfter(), Collections.EMPTY_SET, request.getPageSize(), request.getPageFrom(), null, request.getFilter());
     }
 
     public SearchRequest createQuery(ModelSearchRequest request,
                                      QueryBuilder privilegeQuery) {
-        return createQuery(request.getQuery(), request.getStatus(), Collections.EMPTY_SET, request.getPageSize(), request.getPageFrom(), privilegeQuery, null);
+        return createQuery(request.getQuery(), request.getStatus(), request.getAfter(), Collections.EMPTY_SET, request.getPageSize(), request.getPageFrom(), privilegeQuery, null);
     }
 
     public SearchRequest createQuery(ModelSearchRequest request,
                                      Collection<String> additionalModelIds,
                                      QueryBuilder privilegeQuery) {
-        return createQuery(request.getQuery(), request.getStatus(), additionalModelIds, request.getPageSize(), request.getPageFrom(), privilegeQuery, null);
+        return createQuery(request.getQuery(), request.getStatus(), request.getAfter(), additionalModelIds, request.getPageSize(), request.getPageFrom(), privilegeQuery, null);
     }
 
     private SearchRequest createQuery(String query,
                                       String status,
+                                      Date after,
                                       Collection<String> additionalModelIds,
                                       Integer pageSize,
                                       Integer pageFrom,
@@ -100,6 +102,10 @@ public class ModelQueryFactory {
 
         BoolQueryBuilder boolQuery = QueryBuilders.boolQuery();
         List<QueryBuilder> mustList = boolQuery.must();
+
+        if(after != null) {
+            mustList.add(QueryBuilders.rangeQuery("modified").gte(after));
+        }
 
         if(filter != null) {
             QueryBuilder filterQuery = QueryBuilders.boolQuery()

@@ -1,5 +1,6 @@
 package fi.vm.yti.datamodel.api.index.model;
 
+import java.util.Date;
 import java.util.Set;
 
 public class ModelSearchRequest {
@@ -7,6 +8,8 @@ public class ModelSearchRequest {
     private String query;
 
     private boolean searchResources;
+
+    private Date after;
 
     private String sortLang;
 
@@ -24,6 +27,7 @@ public class ModelSearchRequest {
     public ModelSearchRequest(IntegrationResourceRequest request) {
         this.query = request.getSearchTerm();
         this.status = request.getStatus();
+        this.after = request.getAfter();
         this.sortLang = request.getLanguage();
         this.filter = request.getFilter();
         this.pageFrom = request.getPageFrom();
@@ -34,12 +38,14 @@ public class ModelSearchRequest {
     public ModelSearchRequest(final String query,
                               final boolean searchResources,
                               final String status,
+                              final Date after,
                               final String sortLang,
                               final Integer pageSize,
                               final Integer pageFrom) {
         this.query = query;
         this.searchResources = searchResources;
         this.status = status;
+        this.after = after;
         this.sortLang = sortLang;
         this.pageSize = pageSize;
         this.pageFrom = pageFrom;
@@ -85,6 +91,14 @@ public class ModelSearchRequest {
         this.sortLang = sortLang;
     }
 
+    public Date getAfter() {
+        return after;
+    }
+
+    public void setAfter(final Date after) {
+        this.after = after;
+    }
+
     public Integer getPageSize() {
         return pageSize;
     }
@@ -122,9 +136,12 @@ public class ModelSearchRequest {
         return "ModelSearchRequest{" +
             "query='" + query + '\'' +
             ", searchResources=" + searchResources +
+            ", after='" + after + '\'' +
             ", sortLang='" + sortLang + '\'' +
+            ", status='" + status + '\'' +
             ", pageSize=" + pageSize +
             ", pageFrom=" + pageFrom +
+            ", filter=" + filter +
             '}';
     }
 }

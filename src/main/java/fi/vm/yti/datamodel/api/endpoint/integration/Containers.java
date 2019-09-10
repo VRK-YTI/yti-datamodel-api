@@ -1,5 +1,7 @@
 package fi.vm.yti.datamodel.api.endpoint.integration;
 
+import java.util.Date;
+
 import fi.vm.yti.datamodel.api.index.SearchIndexManager;
 import fi.vm.yti.datamodel.api.index.model.IntegrationAPIResponse;
 import fi.vm.yti.datamodel.api.index.model.IntegrationResourceRequest;
@@ -67,6 +69,8 @@ public class Containers {
         @QueryParam("language") String lang,
         @ApiParam(value = "Status")
         @QueryParam("status") String status,
+        @ApiParam(value = "After")
+        @QueryParam("after") Date after,
         @ApiParam(value = "Search")
         @QueryParam("searchTerm") String search,
         @ApiParam(value = "Pagesize")
@@ -75,8 +79,8 @@ public class Containers {
         @QueryParam("from") Integer from) {
 
         String path = uriInfo.getAbsolutePath().toString();
-
-        IntegrationAPIResponse resp = searchIndexManager.listContainers(lang, status, search, pageSize, from, path);
+        logger.info(after.toString());
+        IntegrationAPIResponse resp = searchIndexManager.listContainers(lang, status, after, search, pageSize, from, path);
         return jerseyResponseManager.ok(objectMapper.valueToTree(resp));
 
     }

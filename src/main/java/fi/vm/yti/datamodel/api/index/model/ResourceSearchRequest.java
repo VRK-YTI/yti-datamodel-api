@@ -1,10 +1,13 @@
 package fi.vm.yti.datamodel.api.index.model;
 
+import java.util.Date;
 import java.util.Set;
 
 public class ResourceSearchRequest {
 
     private String query;
+
+    private Date after;
 
     private String type;
 
@@ -30,6 +33,7 @@ public class ResourceSearchRequest {
     public ResourceSearchRequest(IntegrationResourceRequest request) {
         this.query = request.getSearchTerm();
         this.status = request.getStatus();
+        this.after = request.getAfter();
         this.sortLang = request.getLanguage();
         this.filter = request.getFilter();
         this.pageFrom = request.getPageFrom();
@@ -39,12 +43,14 @@ public class ResourceSearchRequest {
     public ResourceSearchRequest(final String query,
                                  final String isDefinedBy,
                                  final String status,
+                                 final Date after,
                                  final String sortLang,
                                  final Integer pageSize,
                                  final Integer pageFrom) {
         this.query = query;
         this.isDefinedBy = isDefinedBy;
         this.status = status;
+        this.after = after;
         this.sortLang = sortLang;
         this.pageSize = pageSize;
         this.pageFrom = pageFrom;
@@ -102,6 +108,14 @@ public class ResourceSearchRequest {
         this.status = status;
     }
 
+    public Date getAfter() {
+        return after;
+    }
+
+    public void setAfter(final Date after) {
+        this.after = after;
+    }
+
     public String getSortLang() {
         return sortLang;
     }
@@ -154,6 +168,7 @@ public class ResourceSearchRequest {
     public String toString() {
         return "ResourceSearchRequest{" +
             "query='" + query + '\'' +
+            ", after='" + after + '\'' +
             ", type='" + type + '\'' +
             ", isDefinedBy='" + isDefinedBy + '\'' +
             ", status='" + status + '\'' +

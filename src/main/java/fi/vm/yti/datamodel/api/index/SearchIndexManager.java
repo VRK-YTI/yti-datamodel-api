@@ -2,6 +2,7 @@ package fi.vm.yti.datamodel.api.index;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -185,9 +186,9 @@ public class SearchIndexManager {
         }
     }
 
-    public IntegrationAPIResponse listContainers(String lang, String status, String query, Integer pageSize, Integer pageFrom, String path) {
+    public IntegrationAPIResponse listContainers(String lang, String status, Date after, String query, Integer pageSize, Integer pageFrom, String path) {
 
-        ModelSearchRequest modelSearchReq = new ModelSearchRequest(query, false, status, lang, pageSize, pageFrom);
+        ModelSearchRequest modelSearchReq = new ModelSearchRequest(query, false, status, after, lang, pageSize, pageFrom);
         ModelSearchResponse modelSearchResp = searchModels(modelSearchReq,null);
         IntegrationAPIResponse apiResponse = new IntegrationAPIResponse(modelSearchResp,modelSearchReq,path);
 
@@ -195,9 +196,9 @@ public class SearchIndexManager {
 
     }
 
-    public IntegrationAPIResponse listResources(String isDefinedBy, String lang, String status, String query, Integer pageSize, Integer pageFrom, String path) {
+    public IntegrationAPIResponse listResources(String isDefinedBy, String lang, String status, Date after, String query, Integer pageSize, Integer pageFrom, String path) {
 
-        ResourceSearchRequest resSearch = new ResourceSearchRequest(query, isDefinedBy, status, lang, pageSize, pageFrom);
+        ResourceSearchRequest resSearch = new ResourceSearchRequest(query, isDefinedBy, status, after, lang, pageSize, pageFrom);
         ResourceSearchResponse resSearchResp = searchResources(resSearch);
         IntegrationAPIResponse apiResponse = new IntegrationAPIResponse(resSearchResp,resSearch,path);
 
