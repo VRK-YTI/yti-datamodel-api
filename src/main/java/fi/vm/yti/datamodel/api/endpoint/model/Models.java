@@ -267,12 +267,6 @@ public class Models {
             serviceDescriptionManager.createGraphDescription(newVocabulary.getId(), user.getId(), newVocabulary.getOrganizations());
 
             if (provenanceManager.getProvMode()) {
-                provenanceManager.createProvenanceActivityFromModel(newVocabulary.getId(), newVocabulary.asGraph(), newVocabulary.getProvUUID(), user.getId());
-            }
-
-            if (provenanceManager.getProvMode()) {
-                // ProvenanceManager.createProvenanceGraphFromModel(newVocabulary.getId(), newVocabulary.asGraph(), login.getEmail(), newVocabulary.getProvUUID());
-                // ProvenanceManager.createProvEntity(newVocabulary.getId(), login.getEmail(), newVocabulary.getProvUUID());
                 provenanceManager.createProvEntityBundle(newVocabulary.getId(), newVocabulary.asGraph(), user.getId(), newVocabulary.getProvUUID(), null);
             }
 
