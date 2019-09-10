@@ -33,6 +33,8 @@ import fi.vm.yti.datamodel.api.index.model.DeepSearchHitListDTO;
 import fi.vm.yti.datamodel.api.index.model.IndexClassDTO;
 import fi.vm.yti.datamodel.api.index.model.IndexModelDTO;
 import fi.vm.yti.datamodel.api.index.model.IndexPredicateDTO;
+import fi.vm.yti.datamodel.api.index.model.IntegrationAPIResponse;
+import fi.vm.yti.datamodel.api.index.model.IntegrationResourceRequest;
 import fi.vm.yti.datamodel.api.index.model.ModelSearchRequest;
 import fi.vm.yti.datamodel.api.index.model.ModelSearchResponse;
 import fi.vm.yti.datamodel.api.index.model.ResourceSearchRequest;
@@ -171,6 +173,38 @@ public class SearchIndexManager {
         }
     }
 
+    public IntegrationAPIResponse searchContainers(IntegrationResourceRequest integrationRequest, String path) {
+        integrationRequest.setSearchTerm(integrationRequest.getSearchTerm() != null ? integrationRequest.getSearchTerm().trim() : "");
+        try {
+            ModelSearchRequest containerRequest = new ModelSearchRequest(integrationRequest);
+            SearchResponse response = esClient.search(modelQueryFactory.createQuery(containerRequest), RequestOptions.DEFAULT);
+            ModelSearchResponse containerResponse = modelQueryFactory.parseResponse(response,containerRequest,null);
+            return new IntegrationAPIResponse(containerResponse, containerRequest, path);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public IntegrationAPIResponse listContainers(String lang, String status, String query, Integer pageSize, Integer pageFrom, String path) {
+
+        ModelSearchRequest modelSearchReq = new ModelSearchRequest(query, false, status, lang, pageSize, pageFrom);
+        ModelSearchResponse modelSearchResp = searchModels(modelSearchReq,null);
+        IntegrationAPIResponse apiResponse = new IntegrationAPIResponse(modelSearchResp,modelSearchReq,path);
+
+        return apiResponse;
+
+    }
+
+    public IntegrationAPIResponse listResources(String isDefinedBy, String lang, String status, String query, Integer pageSize, Integer pageFrom, String path) {
+
+        ResourceSearchRequest resSearch = new ResourceSearchRequest(query, isDefinedBy, status, lang, pageSize, pageFrom);
+        ResourceSearchResponse resSearchResp = searchResources(resSearch);
+        IntegrationAPIResponse apiResponse = new IntegrationAPIResponse(resSearchResp,resSearch,path);
+
+        return apiResponse;
+
+    }
+
     public ModelSearchResponse searchModels(ModelSearchRequest request,
                                             Set<String> privModels) {
         request.setQuery(request.getQuery() != null ? request.getQuery().trim() : "");
@@ -204,6 +238,19 @@ public class SearchIndexManager {
             throw new RuntimeException(e);
         }
 
+    }
+
+
+    public IntegrationAPIResponse searchResources(IntegrationResourceRequest integrationRequest, String path) {
+        integrationRequest.setSearchTerm(integrationRequest.getSearchTerm() != null ? integrationRequest.getSearchTerm().trim() : "");
+        try {
+            ResourceSearchRequest resourceRequest = new ResourceSearchRequest(integrationRequest);
+            SearchResponse response = esClient.search(resourceQueryFactory.createQuery(resourceRequest), RequestOptions.DEFAULT);
+            ResourceSearchResponse resourceResponse = resourceQueryFactory.parseResponse(response,resourceRequest);
+            return new IntegrationAPIResponse(resourceResponse, resourceRequest, path);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public ResourceSearchResponse searchResources(ResourceSearchRequest request) {

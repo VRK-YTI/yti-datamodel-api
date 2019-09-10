@@ -1,5 +1,10 @@
 package fi.vm.yti.datamodel.api.endpoint.integration;
 
+import fi.vm.yti.datamodel.api.index.SearchIndexManager;
+import fi.vm.yti.datamodel.api.index.model.IntegrationAPIResponse;
+import fi.vm.yti.datamodel.api.index.model.IntegrationResourceRequest;
+import fi.vm.yti.datamodel.api.index.model.ResourceSearchRequest;
+import fi.vm.yti.datamodel.api.index.model.ResourceSearchResponse;
 import fi.vm.yti.datamodel.api.service.EndpointServices;
 import fi.vm.yti.datamodel.api.service.JenaClient;
 import fi.vm.yti.datamodel.api.service.JerseyResponseManager;
@@ -12,12 +17,20 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.web.bind.annotation.RequestBody;
 
+import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Component
 @Path("v1/integration/resources")
@@ -25,65 +38,63 @@ import javax.ws.rs.core.Response;
 public class Resources {
 
     private static final Logger logger = LoggerFactory.getLogger(Resources.class.getName());
-    private final EndpointServices endpointServices;
-    private final JenaClient jenaClient;
+    private final SearchIndexManager searchIndexManager;
     private final JerseyResponseManager jerseyResponseManager;
+    private ObjectMapper objectMapper;
+
+    @Context
+    UriInfo uriInfo;
 
     @Autowired
     Resources(
-        EndpointServices endpointServices,
-        JenaClient jenaClient,
-        JerseyResponseManager jerseyResponseManager) {
-
-        this.endpointServices = endpointServices;
-        this.jenaClient = jenaClient;
+        SearchIndexManager searchIndexManager,
+        JerseyResponseManager jerseyResponseManager,
+        ObjectMapper objectMapper) {
+        this.searchIndexManager = searchIndexManager;
         this.jerseyResponseManager = jerseyResponseManager;
+        this.objectMapper = objectMapper;
     }
 
     @GET
     @Produces("application/json")
-    @ApiOperation(value = "Get containers from service", notes = "More notes about this method")
+    @ApiOperation(value = "Get resources from service")
     @ApiResponses(value = {
         @ApiResponse(code = 400, message = "Invalid model supplied"),
         @ApiResponse(code = 404, message = "Service not found"),
         @ApiResponse(code = 500, message = "Internal server error")
     })
-    public Response json(
+    public Response getResources(
         @ApiParam(value = "Container", required = true)
         @QueryParam("container") String container,
         @ApiParam(value = "Language")
         @QueryParam("language") String lang,
         @ApiParam(value = "Status")
-        @QueryParam("status") String status) {
+        @QueryParam("status") String status,
+        @ApiParam(value = "Search")
+        @QueryParam("searchTerm") String search,
+        @ApiParam(value = "Pagesize")
+        @QueryParam("pageSize") Integer pageSize,
+        @ApiParam(value = "From")
+        @QueryParam("from") Integer from) {
 
         if (container == null) {
             return jerseyResponseManager.invalidParameter();
         }
 
-        if (status == null || status.length() < 4) {
-            status = "DRAFT,INVALID,RETIRED,SUBMITTED,SUPERSEDED,VALID";
-        }
+        String path = uriInfo.getAbsolutePath().toString();
 
-        String statusList = "";
-        String[] statuses = status.split(",");
-        for (int i = 0; i < statuses.length; i++) {
-            statusList += "'" + statuses[i].trim() + "' ";
-        }
-
-        ParameterizedSparqlString pss = new ParameterizedSparqlString();
-        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
-
-        if (lang != null && lang.length() > 1) {
-            pss.setCommandText(QueryLibrary.listResourcesByPreflabelQuery.replace("?statusList", statusList));
-            pss.setLiteral("language", lang);
-        } else {
-            pss.setCommandText(QueryLibrary.listResourcesByModifiedQuery.replace("?statusList", statusList));
-        }
-
-        pss.setIri("model", container);
-
-        return jerseyResponseManager.ok(jenaClient.selectJson(endpointServices.getCoreSparqlAddress(), pss.asQuery()), "application/json");
+        IntegrationAPIResponse apiResp = searchIndexManager.listResources(container,lang,status,search,pageSize,from,path);
+        return jerseyResponseManager.ok(objectMapper.valueToTree(apiResp));
 
     }
 
+    @POST
+    @ApiOperation(value = "Search resources from service")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response searchResources(
+        @RequestBody IntegrationResourceRequest request) {
+        IntegrationAPIResponse response = searchIndexManager.searchResources(request,null);
+        return jerseyResponseManager.ok(objectMapper.valueToTree(response));
+    }
 }

@@ -2,6 +2,7 @@ package fi.vm.yti.datamodel.api.index;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 import javax.inject.Singleton;
@@ -48,7 +49,7 @@ public class ResourceQueryFactory {
     }
 
     public SearchRequest createQuery(ResourceSearchRequest request) {
-        return createQuery(request.getQuery(), request.getType(), request.getIsDefinedBy(), request.getStatus(), request.getSortLang(), request.getSortField(), request.getSortOrder(), request.getPageSize(), request.getPageFrom());
+        return createQuery(request.getQuery(), request.getType(), request.getIsDefinedBy(), request.getStatus(), request.getSortLang(), request.getSortField(), request.getSortOrder(), request.getPageSize(), request.getPageFrom(),request.getFilter());
     }
 
     private SearchRequest createQuery(String query,
@@ -59,7 +60,8 @@ public class ResourceQueryFactory {
                                       String sortField,
                                       String sortOrder,
                                       Integer pageSize,
-                                      Integer pageFrom) {
+                                      Integer pageFrom,
+                                      Set<String> filter) {
 
         if (sortField != null && !sortField.matches("modified|label|comment|isDefinedBy")) {
             throw new IllegalArgumentException("Allowed fields: modified, label, comment, isDefinedBy");
@@ -70,11 +72,23 @@ public class ResourceQueryFactory {
         if (pageFrom != null)
             sourceBuilder.from(pageFrom);
 
-        if (pageSize != null)
+        if (pageSize != null) {
             sourceBuilder.size(pageSize);
+            if (pageFrom == null) {
+                sourceBuilder.from(0);
+            }
+        } else {
+            sourceBuilder.size(10000);
+        }
 
         BoolQueryBuilder boolQuery = QueryBuilders.boolQuery();
         List<QueryBuilder> mustList = boolQuery.must();
+
+        if(filter != null) {
+            QueryBuilder filterQuery = QueryBuilders.boolQuery()
+                .mustNot(QueryBuilders.termsQuery("id", filter));
+            mustList.add(filterQuery);
+        }
 
         if (type != null) {
             mustList.add(QueryBuilders.matchQuery("type", type).operator(Operator.AND));

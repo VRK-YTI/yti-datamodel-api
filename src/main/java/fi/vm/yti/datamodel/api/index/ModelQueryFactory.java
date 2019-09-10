@@ -13,6 +13,8 @@ import javax.inject.Singleton;
 
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.index.query.BoolQueryBuilder;
+import org.elasticsearch.index.query.Operator;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.QueryStringQueryBuilder;
@@ -49,22 +51,28 @@ public class ModelQueryFactory {
 
     }
 
+    public SearchRequest createQuery(ModelSearchRequest request) {
+        return createQuery(request.getQuery(), request.getStatus(), Collections.EMPTY_SET, request.getPageSize(), request.getPageFrom(), null, request.getFilter());
+    }
+
     public SearchRequest createQuery(ModelSearchRequest request,
                                      QueryBuilder privilegeQuery) {
-        return createQuery(request.getQuery(), Collections.EMPTY_SET, request.getPageSize(), request.getPageFrom(), privilegeQuery);
+        return createQuery(request.getQuery(), request.getStatus(), Collections.EMPTY_SET, request.getPageSize(), request.getPageFrom(), privilegeQuery, null);
     }
 
     public SearchRequest createQuery(ModelSearchRequest request,
                                      Collection<String> additionalModelIds,
                                      QueryBuilder privilegeQuery) {
-        return createQuery(request.getQuery(), additionalModelIds, request.getPageSize(), request.getPageFrom(), privilegeQuery);
+        return createQuery(request.getQuery(), request.getStatus(), additionalModelIds, request.getPageSize(), request.getPageFrom(), privilegeQuery, null);
     }
 
     private SearchRequest createQuery(String query,
+                                      String status,
                                       Collection<String> additionalModelIds,
                                       Integer pageSize,
                                       Integer pageFrom,
-                                      QueryBuilder privilegeQuery) {
+                                      QueryBuilder privilegeQuery,
+                                      Set<String> filter) {
 
         QueryStringQueryBuilder labelQuery = null;
         if (!query.isEmpty()) {
@@ -88,28 +96,55 @@ public class ModelQueryFactory {
             contentQuery = labelQuery;
         }
 
-        QueryBuilder finalQuery;
-        if (contentQuery != null) {
-            finalQuery = privilegeQuery!=null ? QueryBuilders.boolQuery()
-                .must(privilegeQuery)
-                .must(contentQuery) :
-                QueryBuilders.boolQuery()
-                .must(contentQuery);
-        } else {
-            finalQuery = privilegeQuery;
+        SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
+
+        BoolQueryBuilder boolQuery = QueryBuilders.boolQuery();
+        List<QueryBuilder> mustList = boolQuery.must();
+
+        if(filter != null) {
+            QueryBuilder filterQuery = QueryBuilders.boolQuery()
+                .mustNot(QueryBuilders.termsQuery("id", filter));
+            mustList.add(filterQuery);
         }
 
-        SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
-        sourceBuilder.query(finalQuery);
+        if (contentQuery != null) {
+            if (privilegeQuery != null) {
+                mustList.add(privilegeQuery);
+                mustList.add(contentQuery);
+                sourceBuilder.query(boolQuery);
+            }
+            if (status != null) {
+                mustList.add(QueryBuilders.matchQuery("status", status).operator(Operator.AND));
+                mustList.add(contentQuery);
+                sourceBuilder.query(boolQuery);
+            }
+            sourceBuilder.query(contentQuery);
+        } else {
+            if (privilegeQuery == null) {
+                QueryBuilder statusQuery = QueryBuilders.boolQuery().mustNot(QueryBuilders.termQuery("status", "INCOMPLETE"));
+                sourceBuilder.query(statusQuery);
+            } else {
+                sourceBuilder.query(privilegeQuery);
+            }
+        }
+
         if (pageFrom != null) {
             sourceBuilder.from(pageFrom);
         }
+
         if (pageSize != null) {
             sourceBuilder.size(pageSize);
+            if (pageFrom == null) {
+                sourceBuilder.from(0);
+            }
+        } else {
+            sourceBuilder.size(10000);
         }
 
         SearchRequest sr = new SearchRequest("dm_models")
             .source(sourceBuilder);
+
+        logger.debug(sr.source().toString());
 
         return sr;
 
@@ -118,6 +153,7 @@ public class ModelQueryFactory {
     public ModelSearchResponse parseResponse(SearchResponse response,
                                              ModelSearchRequest request,
                                              Map<String, List<DeepSearchHitListDTO<?>>> deepSearchHitList) {
+
         List<IndexModelDTO> models = new ArrayList<>();
 
         ModelSearchResponse ret = new ModelSearchResponse(0, request.getPageSize(), request.getPageFrom(), models, deepSearchHitList);

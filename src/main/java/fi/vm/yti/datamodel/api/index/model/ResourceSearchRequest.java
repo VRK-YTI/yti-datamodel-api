@@ -1,5 +1,7 @@
 package fi.vm.yti.datamodel.api.index.model;
 
+import java.util.Set;
+
 public class ResourceSearchRequest {
 
     private String query;
@@ -20,7 +22,32 @@ public class ResourceSearchRequest {
 
     private Integer pageFrom;
 
+    private Set<String> filter;
+
     public ResourceSearchRequest() {
+    }
+
+    public ResourceSearchRequest(IntegrationResourceRequest request) {
+        this.query = request.getSearchTerm();
+        this.status = request.getStatus();
+        this.sortLang = request.getLanguage();
+        this.filter = request.getFilter();
+        this.pageFrom = request.getPageFrom();
+        this.pageSize = request.getPageSize();
+    }
+
+    public ResourceSearchRequest(final String query,
+                                 final String isDefinedBy,
+                                 final String status,
+                                 final String sortLang,
+                                 final Integer pageSize,
+                                 final Integer pageFrom) {
+        this.query = query;
+        this.isDefinedBy = isDefinedBy;
+        this.status = status;
+        this.sortLang = sortLang;
+        this.pageSize = pageSize;
+        this.pageFrom = pageFrom;
     }
 
     public ResourceSearchRequest(final String query,
@@ -115,17 +142,27 @@ public class ResourceSearchRequest {
         this.pageFrom = pageFrom;
     }
 
+    public Set<String> getFilter() {
+        return filter;
+    }
+
+    public void setFilter(final Set<String> filter) {
+        this.filter = filter;
+    }
+
     @Override
     public String toString() {
         return "ResourceSearchRequest{" +
             "query='" + query + '\'' +
             ", type='" + type + '\'' +
             ", isDefinedBy='" + isDefinedBy + '\'' +
+            ", status='" + status + '\'' +
             ", sortLang='" + sortLang + '\'' +
             ", sortField='" + sortField + '\'' +
             ", sortOrder='" + sortOrder + '\'' +
             ", pageSize=" + pageSize +
             ", pageFrom=" + pageFrom +
+            ", filter=" + filter +
             '}';
     }
 }

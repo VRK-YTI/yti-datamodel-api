@@ -26,6 +26,14 @@ public final class ElasticUtils {
         return privilegeQuery;
     }
 
+    public static QueryBuilder filterQuery(String modelProperty, Set<String> filterList) {
+        QueryBuilder privilegeQuery;
+            privilegeQuery = QueryBuilders.boolQuery()
+                .should(QueryBuilders.termsQuery(modelProperty, filterList))
+                .minimumShouldMatch(1);
+        return privilegeQuery;
+    }
+
     public static QueryBuilder createStatusAndContributorQuery(Set<UUID> privilegedOrganizations) {
         // Content must either be in some other state than INCOMPLETE, or the user must match a contributor organization.
         QueryBuilder statusQuery = QueryBuilders.boolQuery().mustNot(QueryBuilders.termQuery("status", "INCOMPLETE"));
