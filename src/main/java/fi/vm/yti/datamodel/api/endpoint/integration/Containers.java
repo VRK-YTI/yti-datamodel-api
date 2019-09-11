@@ -79,7 +79,6 @@ public class Containers {
         @QueryParam("from") Integer from) {
 
         String path = uriInfo.getAbsolutePath().toString();
-        logger.info(after.toString());
         IntegrationAPIResponse resp = searchIndexManager.listContainers(lang, status, after, search, pageSize, from, path);
         return jerseyResponseManager.ok(objectMapper.valueToTree(resp));
 

@@ -247,7 +247,7 @@ public class SearchIndexManager {
         try {
             ResourceSearchRequest resourceRequest = new ResourceSearchRequest(integrationRequest);
             SearchResponse response = esClient.search(resourceQueryFactory.createQuery(resourceRequest), RequestOptions.DEFAULT);
-            ResourceSearchResponse resourceResponse = resourceQueryFactory.parseResponse(response,resourceRequest);
+            ResourceSearchResponse resourceResponse = resourceQueryFactory.parseResponse(response,resourceRequest,false);
             return new IntegrationAPIResponse(resourceResponse, resourceRequest, path);
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -260,7 +260,7 @@ public class SearchIndexManager {
             SearchRequest finalQuery;
             finalQuery = resourceQueryFactory.createQuery(request);
             SearchResponse response = esClient.search(finalQuery, RequestOptions.DEFAULT);
-            return resourceQueryFactory.parseResponse(response, request);
+            return resourceQueryFactory.parseResponse(response, request,true);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

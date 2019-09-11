@@ -135,7 +135,7 @@ public class ResourceQueryFactory {
     }
 
     public ResourceSearchResponse parseResponse(SearchResponse response,
-                                                ResourceSearchRequest request) {
+                                                ResourceSearchRequest request, boolean highlight) {
         List<IndexResourceDTO> resources = new ArrayList<>();
 
         ResourceSearchResponse ret = new ResourceSearchResponse(0, request.getPageSize(), request.getPageFrom(), resources);
@@ -147,7 +147,9 @@ public class ResourceQueryFactory {
 
             for (SearchHit hit : hits) {
                 IndexResourceDTO res = objectMapper.readValue(hit.getSourceAsString(), IndexResourceDTO.class);
-                res.highlightLabels(request.getQuery());
+                if(highlight) {
+                    res.highlightLabels(request.getQuery());
+                }
                 resources.add(res);
             }
 
