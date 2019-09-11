@@ -24,7 +24,7 @@ public class ModelSearchRequest {
     public ModelSearchRequest() {
     }
 
-    public ModelSearchRequest(IntegrationResourceRequest request) {
+    public ModelSearchRequest(IntegrationContainerRequest request) {
         this.query = request.getSearchTerm();
         this.status = request.getStatus();
         this.after = request.getAfter();

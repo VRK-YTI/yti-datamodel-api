@@ -4,6 +4,7 @@ import java.util.Date;
 
 import fi.vm.yti.datamodel.api.index.SearchIndexManager;
 import fi.vm.yti.datamodel.api.index.model.IntegrationAPIResponse;
+import fi.vm.yti.datamodel.api.index.model.IntegrationContainerRequest;
 import fi.vm.yti.datamodel.api.index.model.IntegrationResourceRequest;
 import fi.vm.yti.datamodel.api.service.*;
 import fi.vm.yti.datamodel.api.utils.LDHelper;
@@ -88,7 +89,7 @@ public class Containers {
     @ApiOperation(value = "Search containers from service")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response searchContainers(@RequestBody IntegrationResourceRequest request) {
+    public Response searchContainers(@RequestBody IntegrationContainerRequest request) {
         IntegrationAPIResponse response = searchIndexManager.searchContainers(request,null);
         return jerseyResponseManager.ok(objectMapper.valueToTree(response));
     }

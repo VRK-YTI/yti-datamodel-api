@@ -35,6 +35,7 @@ import fi.vm.yti.datamodel.api.index.model.IndexClassDTO;
 import fi.vm.yti.datamodel.api.index.model.IndexModelDTO;
 import fi.vm.yti.datamodel.api.index.model.IndexPredicateDTO;
 import fi.vm.yti.datamodel.api.index.model.IntegrationAPIResponse;
+import fi.vm.yti.datamodel.api.index.model.IntegrationContainerRequest;
 import fi.vm.yti.datamodel.api.index.model.IntegrationResourceRequest;
 import fi.vm.yti.datamodel.api.index.model.ModelSearchRequest;
 import fi.vm.yti.datamodel.api.index.model.ModelSearchResponse;
@@ -174,7 +175,7 @@ public class SearchIndexManager {
         }
     }
 
-    public IntegrationAPIResponse searchContainers(IntegrationResourceRequest integrationRequest, String path) {
+    public IntegrationAPIResponse searchContainers(IntegrationContainerRequest integrationRequest, String path) {
         integrationRequest.setSearchTerm(integrationRequest.getSearchTerm() != null ? integrationRequest.getSearchTerm().trim() : "");
         try {
             ModelSearchRequest containerRequest = new ModelSearchRequest(integrationRequest);

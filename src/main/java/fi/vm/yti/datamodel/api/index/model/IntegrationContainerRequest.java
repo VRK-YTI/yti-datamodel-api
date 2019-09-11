@@ -3,43 +3,32 @@ package fi.vm.yti.datamodel.api.index.model;
 import java.util.Date;
 import java.util.Set;
 
-public class IntegrationResourceRequest {
+public class IntegrationContainerRequest {
 
     private String searchTerm;
     private String language;
-    private String container;
     private String status;
     private Date after;
     private Set<String> filter;
     private Integer pageSize;
     private Integer pageFrom;
 
-    public IntegrationResourceRequest(){}
+    public IntegrationContainerRequest(){}
 
-    public IntegrationResourceRequest(final String searchTerm,
-                                      final String language,
-                                      final String container,
-                                      final String status,
-                                      final Date after,
-                                      final Set<String> filter,
-                                      final Integer pageSize,
-                                      final Integer pageFrom) {
+    public IntegrationContainerRequest(final String searchTerm,
+                                       final String language,
+                                       final String status,
+                                       final Date after,
+                                       final Set<String> filter,
+                                       final Integer pageSize,
+                                       final Integer pageFrom) {
         this.searchTerm = searchTerm;
         this.language = language;
-        this.container = container;
         this.status = status;
         this.after = after;
         this.filter = filter;
         this.pageSize = pageSize;
         this.pageFrom = pageFrom;
-    }
-
-    public String getContainer() {
-        return container;
-    }
-
-    public void setContainer(final String container) {
-        this.container = container;
     }
 
     public String getSearchTerm() {
@@ -101,10 +90,9 @@ public class IntegrationResourceRequest {
 
     @Override
     public String toString() {
-        return "IntegrationResourceRequest{" +
+        return "IntegrationContainerRequest{" +
             "searchTerm='" + searchTerm + '\'' +
             ", language='" + language + '\'' +
-            ", container='" + container + '\'' +
             ", status='" + status + '\'' +
             ", after='" + after + '\'' +
             ", filter=" + filter +
