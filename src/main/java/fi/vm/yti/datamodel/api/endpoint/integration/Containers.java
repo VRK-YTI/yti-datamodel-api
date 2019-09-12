@@ -80,7 +80,8 @@ public class Containers {
         @QueryParam("from") Integer from) {
 
         String path = uriInfo.getAbsolutePath().toString();
-        IntegrationAPIResponse resp = searchIndexManager.listContainers(lang, status, after, search, pageSize, from, path);
+        IntegrationContainerRequest req = new IntegrationContainerRequest(search, lang, searchIndexManager.parseStatus(status), after, null, pageSize, from);
+        IntegrationAPIResponse resp = searchIndexManager.searchContainers(req,path);
         return jerseyResponseManager.ok(objectMapper.valueToTree(resp));
 
     }

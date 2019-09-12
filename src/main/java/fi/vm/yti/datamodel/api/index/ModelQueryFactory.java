@@ -68,7 +68,7 @@ public class ModelQueryFactory {
     }
 
     private SearchRequest createQuery(String query,
-                                      String status,
+                                      Set<String> status,
                                       Date after,
                                       Collection<String> additionalModelIds,
                                       Integer pageSize,
@@ -113,26 +113,21 @@ public class ModelQueryFactory {
             mustList.add(filterQuery);
         }
 
-        if (contentQuery != null) {
-            if (privilegeQuery != null) {
-                mustList.add(privilegeQuery);
-                mustList.add(contentQuery);
-                sourceBuilder.query(boolQuery);
-            }
-            if (status != null) {
-                mustList.add(QueryBuilders.matchQuery("status", status).operator(Operator.AND));
-                mustList.add(contentQuery);
-                sourceBuilder.query(boolQuery);
-            }
-            sourceBuilder.query(contentQuery);
-        } else {
-            if (privilegeQuery == null) {
-                QueryBuilder statusQuery = QueryBuilders.boolQuery().mustNot(QueryBuilders.termQuery("status", "INCOMPLETE"));
-                sourceBuilder.query(statusQuery);
-            } else {
-                sourceBuilder.query(privilegeQuery);
-            }
+        if (status != null) {
+            QueryBuilder statusQuery = QueryBuilders.boolQuery()
+                .should(QueryBuilders.termsQuery("status", status)).minimumShouldMatch(1);
+            mustList.add(statusQuery);
         }
+
+        if (privilegeQuery != null) {
+            mustList.add(privilegeQuery);
+        }
+
+        if (contentQuery != null) {
+            mustList.add(contentQuery);
+        }
+
+        sourceBuilder.query(boolQuery);
 
         if (pageFrom != null) {
             sourceBuilder.from(pageFrom);

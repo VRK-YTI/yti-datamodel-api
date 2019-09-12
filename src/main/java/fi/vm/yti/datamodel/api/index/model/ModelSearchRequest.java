@@ -13,7 +13,7 @@ public class ModelSearchRequest {
 
     private String sortLang;
 
-    private String status;
+    private Set<String> status;
 
     private Integer pageSize;
 
@@ -37,7 +37,7 @@ public class ModelSearchRequest {
 
     public ModelSearchRequest(final String query,
                               final boolean searchResources,
-                              final String status,
+                              final Set<String> status,
                               final Date after,
                               final String sortLang,
                               final Integer pageSize,
@@ -53,7 +53,7 @@ public class ModelSearchRequest {
 
     public ModelSearchRequest(final String query,
                               final boolean searchResources,
-                              final String status,
+                              final Set<String> status,
                               final String sortLang,
                               final Integer pageSize,
                               final Integer pageFrom,
@@ -123,11 +123,11 @@ public class ModelSearchRequest {
         this.filter = filter;
     }
 
-    public String getStatus() {
+    public Set<String> getStatus() {
         return status;
     }
 
-    public void setStatus(final String status) {
+    public void setStatus(final Set<String> status) {
         this.status = status;
     }
 

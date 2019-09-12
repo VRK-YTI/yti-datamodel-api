@@ -2,7 +2,9 @@ package fi.vm.yti.datamodel.api.index;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -187,24 +189,14 @@ public class SearchIndexManager {
         }
     }
 
-    public IntegrationAPIResponse listContainers(String lang, String status, Date after, String query, Integer pageSize, Integer pageFrom, String path) {
-
-        ModelSearchRequest modelSearchReq = new ModelSearchRequest(query, false, status, after, lang, pageSize, pageFrom);
-        ModelSearchResponse modelSearchResp = searchModels(modelSearchReq,null);
-        IntegrationAPIResponse apiResponse = new IntegrationAPIResponse(modelSearchResp,modelSearchReq,path);
-
-        return apiResponse;
-
-    }
-
-    public IntegrationAPIResponse listResources(String isDefinedBy, String lang, String status, Date after, String query, Integer pageSize, Integer pageFrom, String path) {
-
-        ResourceSearchRequest resSearch = new ResourceSearchRequest(query, isDefinedBy, status, after, lang, pageSize, pageFrom);
-        ResourceSearchResponse resSearchResp = searchResources(resSearch);
-        IntegrationAPIResponse apiResponse = new IntegrationAPIResponse(resSearchResp,resSearch,path);
-
-        return apiResponse;
-
+    public Set<String> parseStatus(String status){
+        Set<String> statuses = new HashSet<>();
+        if(status!=null && !status.isEmpty()) {
+            Arrays.asList(status.split(",")).forEach(s->{
+                statuses.add(s);
+            });
+        }
+        return statuses.isEmpty() ? null : statuses;
     }
 
     public ModelSearchResponse searchModels(ModelSearchRequest request,

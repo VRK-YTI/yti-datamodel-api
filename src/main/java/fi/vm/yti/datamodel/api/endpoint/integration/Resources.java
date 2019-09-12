@@ -86,8 +86,8 @@ public class Resources {
         }
 
         String path = uriInfo.getAbsolutePath().toString();
-
-        IntegrationAPIResponse apiResp = searchIndexManager.listResources(container,lang,status,after,search,pageSize,from,path);
+        IntegrationResourceRequest req = new IntegrationResourceRequest(search,lang,container,searchIndexManager.parseStatus(status),after,null,pageSize,from);
+        IntegrationAPIResponse apiResp = searchIndexManager.searchResources(req,path);
         return jerseyResponseManager.ok(objectMapper.valueToTree(apiResp));
 
     }

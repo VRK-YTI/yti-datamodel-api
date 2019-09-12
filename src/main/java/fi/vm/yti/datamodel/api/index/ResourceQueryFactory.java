@@ -55,7 +55,7 @@ public class ResourceQueryFactory {
     private SearchRequest createQuery(String query,
                                       String type,
                                       String modelId,
-                                      String status,
+                                      Set<String> status,
                                       String sortLang,
                                       String sortField,
                                       String sortOrder,
@@ -91,13 +91,17 @@ public class ResourceQueryFactory {
         }
 
         if (type != null) {
-            mustList.add(QueryBuilders.matchQuery("type", type).operator(Operator.AND));
+            mustList.add(QueryBuilders.matchQuery("type", type));
         }
+
         if (modelId != null) {
-            mustList.add(QueryBuilders.matchQuery("isDefinedBy", modelId).operator(Operator.AND));
+            mustList.add(QueryBuilders.matchQuery("isDefinedBy", modelId));
         }
+
         if (status != null) {
-            mustList.add(QueryBuilders.matchQuery("status", status).operator(Operator.AND));
+            QueryBuilder statusQuery = QueryBuilders.boolQuery()
+                .should(QueryBuilders.termsQuery("status", status)).minimumShouldMatch(1);
+            mustList.add(statusQuery);
         }
 
         QueryStringQueryBuilder labelQuery = null;
@@ -112,7 +116,7 @@ public class ResourceQueryFactory {
             mustList.add(labelQuery);
         }
 
-        if (!query.isEmpty() || type != null || modelId != null || status != null) {
+        if ((query!=null &&!query.isEmpty()) || type != null || modelId != null || status != null) {
             sourceBuilder.query(boolQuery);
         } else {
             sourceBuilder.query(QueryBuilders.matchAllQuery());

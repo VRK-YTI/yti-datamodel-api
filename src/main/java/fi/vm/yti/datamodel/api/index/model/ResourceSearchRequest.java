@@ -13,7 +13,7 @@ public class ResourceSearchRequest {
 
     private String isDefinedBy;
 
-    private String status;
+    private Set<String> status;
 
     private String sortLang;
 
@@ -31,6 +31,7 @@ public class ResourceSearchRequest {
     }
 
     public ResourceSearchRequest(IntegrationResourceRequest request) {
+        this.isDefinedBy = request.getContainer();
         this.query = request.getSearchTerm();
         this.status = request.getStatus();
         this.after = request.getAfter();
@@ -40,9 +41,10 @@ public class ResourceSearchRequest {
         this.pageSize = request.getPageSize();
     }
 
+
     public ResourceSearchRequest(final String query,
                                  final String isDefinedBy,
-                                 final String status,
+                                 final Set<String> status,
                                  final Date after,
                                  final String sortLang,
                                  final Integer pageSize,
@@ -59,7 +61,7 @@ public class ResourceSearchRequest {
     public ResourceSearchRequest(final String query,
                                  final String type,
                                  final String isDefinedBy,
-                                 final String status,
+                                 final Set<String> status,
                                  final String sortLang,
                                  final String sortField,
                                  final String sortOrder,
@@ -100,11 +102,11 @@ public class ResourceSearchRequest {
         this.isDefinedBy = isDefinedBy;
     }
 
-    public String getStatus() {
+    public Set<String> getStatus() {
         return status;
     }
 
-    public void setStatus(final String status) {
+    public void setStatus(final Set<String> status) {
         this.status = status;
     }
 

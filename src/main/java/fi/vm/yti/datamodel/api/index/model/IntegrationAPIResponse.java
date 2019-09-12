@@ -34,7 +34,7 @@ public class IntegrationAPIResponse {
         });
         this.meta.setResultCount(results.size());
         if(path!=null && !path.isEmpty() && this.meta.getFrom()!=null && this.meta.getPageSize()!=null &&  (this.meta.getFrom() + this.meta.getPageSize() < this.meta.getTotalResults())) {
-            this.meta.setNextPage(buildNextUri(path,modelRequest.getQuery(),modelResponse.getPageSize(), modelResponse.getPageFrom(), modelRequest.getSortLang(), modelRequest.getStatus()));
+            this.meta.setNextPage(buildNextUri(path,modelRequest.getQuery(),modelResponse.getPageSize(), modelResponse.getPageFrom(), modelRequest.getSortLang(), String.join(",",modelRequest.getStatus())));
         }
     }
 
@@ -48,7 +48,7 @@ public class IntegrationAPIResponse {
         });
         this.meta.setResultCount(results.size());
         if(path!=null && !path.isEmpty() && this.meta.getFrom()!=null && this.meta.getPageSize()!=null &&  (this.meta.getFrom() + this.meta.getPageSize() < this.meta.getTotalResults())) {
-            this.meta.setNextPage(buildNextUri(path,resourceRequest.getQuery(),resourceResponse.getPageSize(), resourceResponse.getPageFrom(), resourceRequest.getSortLang(), resourceRequest.getStatus()));
+            this.meta.setNextPage(buildNextUri(path,resourceRequest.getQuery(),resourceResponse.getPageSize(), resourceResponse.getPageFrom(), resourceRequest.getSortLang(), String.join(",",resourceRequest.getStatus())));
         }
     }
 

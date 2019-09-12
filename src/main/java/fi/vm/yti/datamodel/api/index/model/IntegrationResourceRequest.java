@@ -1,6 +1,7 @@
 package fi.vm.yti.datamodel.api.index.model;
 
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Set;
 
 public class IntegrationResourceRequest {
@@ -8,7 +9,7 @@ public class IntegrationResourceRequest {
     private String searchTerm;
     private String language;
     private String container;
-    private String status;
+    private Set<String> status;
     private Date after;
     private Set<String> filter;
     private Integer pageSize;
@@ -19,7 +20,7 @@ public class IntegrationResourceRequest {
     public IntegrationResourceRequest(final String searchTerm,
                                       final String language,
                                       final String container,
-                                      final String status,
+                                      final Set<String> status,
                                       final Date after,
                                       final Set<String> filter,
                                       final Integer pageSize,
@@ -58,12 +59,11 @@ public class IntegrationResourceRequest {
         this.language = language;
     }
 
-
-    public String getStatus() {
+    public Set<String> getStatus() {
         return status;
     }
 
-    public void setStatus(final String status) {
+    public void setStatus(final Set<String> status) {
         this.status = status;
     }
 
