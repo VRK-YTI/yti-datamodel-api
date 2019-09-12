@@ -1,6 +1,7 @@
 package fi.vm.yti.datamodel.api.index;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -49,13 +50,14 @@ public class ResourceQueryFactory {
     }
 
     public SearchRequest createQuery(ResourceSearchRequest request) {
-        return createQuery(request.getQuery(), request.getType(), request.getIsDefinedBy(), request.getStatus(), request.getSortLang(), request.getSortField(), request.getSortOrder(), request.getPageSize(), request.getPageFrom(),request.getFilter());
+        return createQuery(request.getQuery(), request.getType(), request.getIsDefinedBy(), request.getStatus(), request.getAfter(), request.getSortLang(), request.getSortField(), request.getSortOrder(), request.getPageSize(), request.getPageFrom(),request.getFilter());
     }
 
     private SearchRequest createQuery(String query,
                                       String type,
                                       String modelId,
                                       Set<String> status,
+                                      Date after,
                                       String sortLang,
                                       String sortField,
                                       String sortOrder,
@@ -83,6 +85,11 @@ public class ResourceQueryFactory {
 
         BoolQueryBuilder boolQuery = QueryBuilders.boolQuery();
         List<QueryBuilder> mustList = boolQuery.must();
+
+        if(after != null) {
+            mustList.add(QueryBuilders.rangeQuery("modified").gte(after));
+        }
+
 
         if(filter != null) {
             QueryBuilder filterQuery = QueryBuilders.boolQuery()
@@ -116,7 +123,7 @@ public class ResourceQueryFactory {
             mustList.add(labelQuery);
         }
 
-        if ((query!=null &&!query.isEmpty()) || type != null || modelId != null || status != null) {
+        if (mustList.size()>0) {
             sourceBuilder.query(boolQuery);
         } else {
             sourceBuilder.query(QueryBuilders.matchAllQuery());

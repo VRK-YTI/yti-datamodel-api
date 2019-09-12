@@ -127,7 +127,11 @@ public class ModelQueryFactory {
             mustList.add(contentQuery);
         }
 
-        sourceBuilder.query(boolQuery);
+        if (mustList.size()>0) {
+            sourceBuilder.query(boolQuery);
+        } else {
+            sourceBuilder.query(QueryBuilders.matchAllQuery());
+        }
 
         if (pageFrom != null) {
             sourceBuilder.from(pageFrom);
