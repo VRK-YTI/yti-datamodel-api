@@ -192,7 +192,6 @@ public class Models {
 
         if (!user.isSuperuser()) {
             ResIterator rem = modelList.listSubjectsWithProperty(status, "INCOMPLETE");
-
             while (rem.hasNext()) {
                 Resource modelResource = rem.nextResource();
                 if (user.isAnonymous()) {

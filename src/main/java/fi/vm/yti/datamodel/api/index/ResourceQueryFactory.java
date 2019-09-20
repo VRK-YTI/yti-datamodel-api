@@ -90,7 +90,6 @@ public class ResourceQueryFactory {
             mustList.add(QueryBuilders.rangeQuery("modified").gte(after));
         }
 
-
         if(filter != null) {
             QueryBuilder filterQuery = QueryBuilders.boolQuery()
                 .mustNot(QueryBuilders.termsQuery("id", filter));
