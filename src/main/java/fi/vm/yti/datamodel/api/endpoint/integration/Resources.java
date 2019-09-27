@@ -65,7 +65,7 @@ public class Resources {
         @QueryParam("language") String lang,
         @ApiParam(value = "Status")
         @QueryParam("status") String status,
-        @ApiParam(value = "Type")
+        @ApiParam(value = "Type values: class, shape, attribute, association")
         @QueryParam("type") String type,
         @ApiParam(value = "After")
         @QueryParam("after") Date after,

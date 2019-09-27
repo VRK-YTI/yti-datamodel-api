@@ -66,7 +66,7 @@ public class Containers {
         @QueryParam("language") String lang,
         @ApiParam(value = "Status")
         @QueryParam("status") String status,
-        @ApiParam(value = "Type")
+        @ApiParam(value = "Type values: library or profile")
         @QueryParam("type") String type,
         @ApiParam(value = "After")
         @QueryParam("after") Date after,
@@ -76,9 +76,9 @@ public class Containers {
         @QueryParam("pageSize") Integer pageSize,
         @ApiParam(value = "From")
         @QueryParam("from") Integer from,
-        @ApiParam(value = "IncludeIncomplete")
+        @ApiParam(value = "Include incomplete")
         @QueryParam("includeIncomplete") boolean includeIncomplete,
-        @ApiParam(value = "IncludeIncompleteFrom")
+        @ApiParam(value = "Include incomplete from organization")
         @QueryParam("includeIncompleteFrom") String includeIncompleteFrom) {
 
         String path = uriInfo.getAbsolutePath().toString();
