@@ -66,6 +66,8 @@ public class Containers {
         @QueryParam("language") String lang,
         @ApiParam(value = "Status")
         @QueryParam("status") String status,
+        @ApiParam(value = "Type")
+        @QueryParam("type") String type,
         @ApiParam(value = "After")
         @QueryParam("after") Date after,
         @ApiParam(value = "Search")
@@ -76,11 +78,11 @@ public class Containers {
         @QueryParam("from") Integer from,
         @ApiParam(value = "IncludeIncomplete")
         @QueryParam("includeIncomplete") boolean includeIncomplete,
-        @ApiParam(value = "IncludeIncomplete")
-        @QueryParam("includeIncomplete") String includeIncompleteFrom) {
+        @ApiParam(value = "IncludeIncompleteFrom")
+        @QueryParam("includeIncompleteFrom") String includeIncompleteFrom) {
 
         String path = uriInfo.getAbsolutePath().toString();
-        IntegrationContainerRequest req = new IntegrationContainerRequest(search, lang, searchIndexManager.parseStringList(status), after, null, pageSize, from, includeIncomplete, searchIndexManager.parseStringList(includeIncompleteFrom));
+        IntegrationContainerRequest req = new IntegrationContainerRequest(search, lang, searchIndexManager.parseStringList(status), type, after, null, pageSize, from, includeIncomplete, searchIndexManager.parseStringList(includeIncompleteFrom));
         IntegrationAPIResponse resp = searchIndexManager.searchContainers(req,path);
         return jerseyResponseManager.ok(objectMapper.valueToTree(resp));
 

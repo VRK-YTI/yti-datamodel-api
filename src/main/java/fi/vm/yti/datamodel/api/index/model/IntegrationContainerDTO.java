@@ -8,6 +8,7 @@ public class IntegrationContainerDTO {
     private Map<String, String> description;
     private String uri;
     private String status;
+    private String type;
     private String modified;
 
     public IntegrationContainerDTO(IndexModelDTO model) {
@@ -15,6 +16,7 @@ public class IntegrationContainerDTO {
         this.description = model.getComment();
         this.uri = model.getId();
         this.status = model.getStatus();
+        this.type = model.getType();
         this.modified = model.getModified();
     }
 
@@ -22,11 +24,13 @@ public class IntegrationContainerDTO {
                                    final Map<String, String> description,
                                    final String uri,
                                    final String status,
+                                   final String type,
                                    final String modified) {
         this.prefLabel = prefLabel;
         this.description = description;
         this.uri = uri;
         this.status = status;
+        this.type = type;
         this.modified = modified;
     }
 
@@ -60,6 +64,14 @@ public class IntegrationContainerDTO {
 
     public void setStatus(final String status) {
         this.status = status;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(final String type) {
+        this.type = type;
     }
 
     public String getModified() {

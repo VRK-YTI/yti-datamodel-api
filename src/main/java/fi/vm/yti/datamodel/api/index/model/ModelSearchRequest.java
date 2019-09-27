@@ -15,6 +15,8 @@ public class ModelSearchRequest {
 
     private Set<String> status;
 
+    private String type;
+
     private Integer pageSize;
 
     private Integer pageFrom;
@@ -31,6 +33,7 @@ public class ModelSearchRequest {
     public ModelSearchRequest(IntegrationContainerRequest request) {
         this.query = request.getSearchTerm();
         this.status = request.getStatus();
+        this.type = request.getType();
         this.after = request.getAfter();
         this.sortLang = request.getLanguage();
         this.filter = request.getFilter();
@@ -43,6 +46,7 @@ public class ModelSearchRequest {
     public ModelSearchRequest(final String query,
                               final boolean searchResources,
                               final Set<String> status,
+                              final String type,
                               final Date after,
                               final String sortLang,
                               final Integer pageSize,
@@ -52,6 +56,7 @@ public class ModelSearchRequest {
         this.query = query;
         this.searchResources = searchResources;
         this.status = status;
+        this.type = type;
         this.after = after;
         this.sortLang = sortLang;
         this.pageSize = pageSize;
@@ -63,6 +68,7 @@ public class ModelSearchRequest {
     public ModelSearchRequest(final String query,
                               final boolean searchResources,
                               final Set<String> status,
+                              final String type,
                               final String sortLang,
                               final Integer pageSize,
                               final Integer pageFrom,
@@ -70,6 +76,7 @@ public class ModelSearchRequest {
         this.query = query;
         this.searchResources = searchResources;
         this.status = status;
+        this.type = type;
         this.sortLang = sortLang;
         this.pageSize = pageSize;
         this.pageFrom = pageFrom;
@@ -138,6 +145,14 @@ public class ModelSearchRequest {
 
     public void setStatus(final Set<String> status) {
         this.status = status;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(final String type) {
+        this.type = type;
     }
 
     public Boolean getIncludeIncomplete() {

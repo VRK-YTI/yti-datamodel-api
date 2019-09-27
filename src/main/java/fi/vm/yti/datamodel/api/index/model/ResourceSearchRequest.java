@@ -34,6 +34,7 @@ public class ResourceSearchRequest {
         this.isDefinedBy = request.getContainer();
         this.query = request.getSearchTerm();
         this.status = request.getStatus();
+        this.type = request.getType();
         this.after = request.getAfter();
         this.sortLang = request.getLanguage();
         this.filter = request.getFilter();

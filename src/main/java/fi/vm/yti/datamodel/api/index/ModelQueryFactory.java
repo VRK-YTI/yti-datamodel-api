@@ -54,17 +54,18 @@ public class ModelQueryFactory {
     }
 
     public SearchRequest createQuery(ModelSearchRequest request) {
-        return createQuery(request.getQuery(), request.getStatus(), request.getAfter(), Collections.EMPTY_SET, request.getPageSize(), request.getPageFrom(), request.getFilter(), request.getIncludeIncomplete(), request.getIncludeIncompleteFrom());
+        return createQuery(request.getQuery(), request.getStatus(), request.getType(), request.getAfter(), Collections.EMPTY_SET, request.getPageSize(), request.getPageFrom(), request.getFilter(), request.getIncludeIncomplete(), request.getIncludeIncompleteFrom());
     }
 
 
     public SearchRequest createQuery(ModelSearchRequest request,
                                      Collection<String> additionalModelIds) {
-        return createQuery(request.getQuery(), request.getStatus(), request.getAfter(), additionalModelIds, request.getPageSize(), request.getPageFrom(), request.getFilter(), request.getIncludeIncomplete(), request.getIncludeIncompleteFrom());
+        return createQuery(request.getQuery(), request.getStatus(), request.getType(), request.getAfter(), additionalModelIds, request.getPageSize(), request.getPageFrom(), request.getFilter(), request.getIncludeIncomplete(), request.getIncludeIncompleteFrom());
     }
 
     private SearchRequest createQuery(String query,
                                       Set<String> status,
+                                      String type,
                                       Date after,
                                       Collection<String> additionalModelIds,
                                       Integer pageSize,
@@ -119,6 +120,10 @@ public class ModelQueryFactory {
             QueryBuilder statusQuery = QueryBuilders.boolQuery()
                 .should(QueryBuilders.termsQuery("status", status)).minimumShouldMatch(1);
             mustList.add(statusQuery);
+        }
+
+        if (type != null) {
+            mustList.add(QueryBuilders.matchQuery("type", type));
         }
 
         if (contentQuery != null) {

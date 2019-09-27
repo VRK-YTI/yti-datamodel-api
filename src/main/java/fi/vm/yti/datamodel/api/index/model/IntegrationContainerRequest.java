@@ -9,6 +9,7 @@ public class IntegrationContainerRequest {
     private String searchTerm;
     private String language;
     private Set<String> status;
+    private String type;
     private Date after;
     private Set<String> filter;
     private Integer pageSize;
@@ -21,6 +22,7 @@ public class IntegrationContainerRequest {
     public IntegrationContainerRequest(final String searchTerm,
                                        final String language,
                                        final Set<String> status,
+                                       final String type,
                                        final Date after,
                                        final Set<String> filter,
                                        final Integer pageSize,
@@ -30,6 +32,7 @@ public class IntegrationContainerRequest {
         this.searchTerm = searchTerm;
         this.language = language;
         this.status = status;
+        this.type = type;
         this.after = after;
         this.filter = filter;
         this.pageSize = pageSize;
@@ -60,6 +63,18 @@ public class IntegrationContainerRequest {
 
     public void setStatus(final Set<String> status) {
         this.status = status;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(final String type) {
+        this.type = type;
+    }
+
+    public void setIncludeIncomplete(final Boolean includeIncomplete) {
+        this.includeIncomplete = includeIncomplete;
     }
 
     public Date getAfter() {

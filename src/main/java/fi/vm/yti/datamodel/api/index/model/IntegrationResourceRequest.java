@@ -10,6 +10,7 @@ public class IntegrationResourceRequest {
     private String language;
     private String container;
     private Set<String> status;
+    private String type;
     private Date after;
     private Set<String> filter;
     private Integer pageSize;
@@ -21,6 +22,7 @@ public class IntegrationResourceRequest {
                                       final String language,
                                       final String container,
                                       final Set<String> status,
+                                      final String type,
                                       final Date after,
                                       final Set<String> filter,
                                       final Integer pageSize,
@@ -29,6 +31,7 @@ public class IntegrationResourceRequest {
         this.language = language;
         this.container = container;
         this.status = status;
+        this.type = type;
         this.after = after;
         this.filter = filter;
         this.pageSize = pageSize;
@@ -65,6 +68,14 @@ public class IntegrationResourceRequest {
 
     public void setStatus(final Set<String> status) {
         this.status = status;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(final String type) {
+        this.type = type;
     }
 
     public Date getAfter() {
