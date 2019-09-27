@@ -1666,6 +1666,7 @@ public class GraphManager {
                                String resourceId,
                                Model oldModel,
                                Model newModel) {
+        LDHelper.rewriteLiteral(newModel, ResourceFactory.createResource(resourceId), DCTerms.modified, LDHelper.getDateTimeLiteral());
         Model exportModel = jenaClient.getModelFromCore(modelId + "#ExportGraph");
         exportModel = modelManager.removeResourceStatements(oldModel, exportModel);
         exportModel.add(newModel);
