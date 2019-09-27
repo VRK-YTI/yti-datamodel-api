@@ -60,15 +60,15 @@ public class DeepResourceQueryFactory {
 
     public SearchRequest createQuery(String query,
                                      String sortLang,
-                                     QueryBuilder privilegeQuery) {
+                                     Set<String> modelIds) {
 
         QueryStringQueryBuilder queryStringQuery = luceneQueryFactory.buildPrefixSuffixQuery(query).field("label.*");
         if (sortLang != null && sortLangPattern.matcher(sortLang).matches()) {
             queryStringQuery = queryStringQuery.field("label." + sortLang, 10);
         }
 
-        QueryBuilder finalQuery = privilegeQuery!=null ? QueryBuilders.boolQuery()
-            .must(privilegeQuery)
+        QueryBuilder finalQuery = modelIds!=null ? QueryBuilders.boolQuery()
+            .must(ElasticUtils.createStatusAndModelQuery("isDefinedBy",modelIds))
             .must(queryStringQuery) :
             QueryBuilders.boolQuery()
                 .must(queryStringQuery);

@@ -13,6 +13,8 @@ public class IntegrationContainerRequest {
     private Set<String> filter;
     private Integer pageSize;
     private Integer pageFrom;
+    private Boolean includeIncomplete;
+    private Set<String> includeIncompleteFrom;
 
     public IntegrationContainerRequest(){}
 
@@ -22,7 +24,9 @@ public class IntegrationContainerRequest {
                                        final Date after,
                                        final Set<String> filter,
                                        final Integer pageSize,
-                                       final Integer pageFrom) {
+                                       final Integer pageFrom,
+                                       final Boolean includeIncomplete,
+                                       final Set<String> includeIncompleteFrom) {
         this.searchTerm = searchTerm;
         this.language = language;
         this.status = status;
@@ -30,6 +34,8 @@ public class IntegrationContainerRequest {
         this.filter = filter;
         this.pageSize = pageSize;
         this.pageFrom = pageFrom;
+        this.includeIncomplete = includeIncomplete;
+        this.includeIncompleteFrom = includeIncompleteFrom;
     }
 
     public String getSearchTerm() {
@@ -88,16 +94,38 @@ public class IntegrationContainerRequest {
         this.pageFrom = pageFrom;
     }
 
+    public Set<String> getIncludeIncompleteFrom() {
+        return includeIncompleteFrom;
+    }
+
+    public void setIncludeIncompleteFrom(final Set<String> includeIncompleteFrom) {
+        this.includeIncompleteFrom = includeIncompleteFrom;
+    }
+
+    public void setIncludeIncompleteEmpty() {
+        this.includeIncompleteFrom = new HashSet<>();
+    }
+
+    public Boolean getIncludeIncomplete() {
+        return includeIncomplete;
+    }
+
+    public void setIncludeIncomplete(final boolean includeIncomplete) {
+        this.includeIncomplete = includeIncomplete;
+    }
+
     @Override
     public String toString() {
         return "IntegrationContainerRequest{" +
             "searchTerm='" + searchTerm + '\'' +
             ", language='" + language + '\'' +
-            ", status='" + status + '\'' +
-            ", after='" + after + '\'' +
+            ", status=" + status +
+            ", after=" + after +
             ", filter=" + filter +
             ", pageSize=" + pageSize +
             ", pageFrom=" + pageFrom +
+            ", includeIncomplete=" + includeIncomplete +
+            ", includeIncompleteFrom=" + includeIncompleteFrom +
             '}';
     }
 }

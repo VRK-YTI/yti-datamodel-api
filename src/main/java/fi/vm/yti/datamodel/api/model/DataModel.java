@@ -83,7 +83,7 @@ public class DataModel extends AbstractModel {
             + "GRAPH <urn:yti:organizations> {"
             + "?org a ?orgType . "
             + "?org skos:prefLabel ?orgLabel . "
-            + "VALUES ?org { " + LDHelper.concatWithReplace(orgList, " ", "<urn:uuid:@this>") + " }"
+            + "VALUES ?org { " + LDHelper.concatUUIDWithReplace(orgList, " ", "<urn:uuid:@this>") + " }"
             + "}"
             + "}";
 

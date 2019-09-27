@@ -5,16 +5,9 @@ import java.util.Date;
 import fi.vm.yti.datamodel.api.index.SearchIndexManager;
 import fi.vm.yti.datamodel.api.index.model.IntegrationAPIResponse;
 import fi.vm.yti.datamodel.api.index.model.IntegrationResourceRequest;
-import fi.vm.yti.datamodel.api.index.model.ResourceSearchRequest;
-import fi.vm.yti.datamodel.api.index.model.ResourceSearchResponse;
-import fi.vm.yti.datamodel.api.service.EndpointServices;
-import fi.vm.yti.datamodel.api.service.JenaClient;
 import fi.vm.yti.datamodel.api.service.JerseyResponseManager;
-import fi.vm.yti.datamodel.api.utils.LDHelper;
-import fi.vm.yti.datamodel.api.utils.QueryLibrary;
 import io.swagger.annotations.*;
 
-import org.apache.jena.query.ParameterizedSparqlString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -86,7 +79,7 @@ public class Resources {
         }
 
         String path = uriInfo.getAbsolutePath().toString();
-        IntegrationResourceRequest req = new IntegrationResourceRequest(search,lang,container,searchIndexManager.parseStatus(status),after,null,pageSize,from);
+        IntegrationResourceRequest req = new IntegrationResourceRequest(search,lang,container,searchIndexManager.parseStringList(status),after,null,pageSize,from);
         IntegrationAPIResponse apiResp = searchIndexManager.searchResources(req,path);
         return jerseyResponseManager.ok(objectMapper.valueToTree(apiResp));
 

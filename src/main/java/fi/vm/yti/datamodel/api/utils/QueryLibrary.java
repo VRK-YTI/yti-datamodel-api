@@ -564,12 +564,28 @@ public class QueryLibrary {
             + "} WHERE { "
             + commonExternalClassQuery);
 
-    final public static String externalShapeQuery = LDHelper.expandSparqlQuery(
+    final public static String dummyExternalShapeQuery = LDHelper.expandSparqlQuery(true,
         "CONSTRUCT { "
             + "?shapeIRI sh:targetClass ?classIRI . "
             + "?shapeIRI rdfs:isDefinedBy ?model . "
             + "?model rdfs:label ?externalModelLabel . "
-            //+ "?shapeIRI a rdfs:Class . "
+            + "?shapeIRI a sh:NodeShape . "
+            + "?shapeIRI dcterms:modified ?modified . "
+            + "?shapeIRI dcterms:created ?creation . "
+            + "} WHERE { "
+            + "GRAPH ?model { "
+            + "?model dcterms:requires ?externalModel . "
+            + "?externalModel rdfs:label ?externalModelLabel . "
+            + "}"
+            + "BIND(now() as ?creation) "
+            + "BIND(now() as ?modified) " +
+            "}");
+
+    final public static String externalShapeQuery = LDHelper.expandSparqlQuery(true,
+        "CONSTRUCT { "
+            + "?shapeIRI sh:targetClass ?classIRI . "
+            + "?shapeIRI rdfs:isDefinedBy ?model . "
+            + "?model rdfs:label ?externalModelLabel . "
             + "?shapeIRI a sh:NodeShape . "
             + "?shapeIRI owl:versionInfo ?draft . "
             + "?shapeIRI sh:name ?label . "

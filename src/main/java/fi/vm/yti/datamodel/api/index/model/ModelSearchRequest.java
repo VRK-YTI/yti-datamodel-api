@@ -21,6 +21,10 @@ public class ModelSearchRequest {
 
     private Set<String> filter;
 
+    private Boolean includeIncomplete;
+
+    private Set<String> includeIncompleteFrom;
+
     public ModelSearchRequest() {
     }
 
@@ -32,8 +36,9 @@ public class ModelSearchRequest {
         this.filter = request.getFilter();
         this.pageFrom = request.getPageFrom();
         this.pageSize = request.getPageSize();
+        this.includeIncomplete = request.getIncludeIncomplete();
+        this.includeIncompleteFrom = request.getIncludeIncompleteFrom();
     }
-
 
     public ModelSearchRequest(final String query,
                               final boolean searchResources,
@@ -41,7 +46,9 @@ public class ModelSearchRequest {
                               final Date after,
                               final String sortLang,
                               final Integer pageSize,
-                              final Integer pageFrom) {
+                              final Integer pageFrom,
+                              final Boolean includeIncomplete,
+                              final Set<String> includeIncompleteFrom) {
         this.query = query;
         this.searchResources = searchResources;
         this.status = status;
@@ -49,6 +56,8 @@ public class ModelSearchRequest {
         this.sortLang = sortLang;
         this.pageSize = pageSize;
         this.pageFrom = pageFrom;
+        this.includeIncomplete = includeIncomplete;
+        this.includeIncompleteFrom = includeIncompleteFrom;
     }
 
     public ModelSearchRequest(final String query,
@@ -131,17 +140,35 @@ public class ModelSearchRequest {
         this.status = status;
     }
 
+    public Boolean getIncludeIncomplete() {
+        return includeIncomplete;
+    }
+
+    public void setIncludeIncomplete(final boolean includeIncomplete) {
+        this.includeIncomplete = includeIncomplete;
+    }
+
+    public Set<String> getIncludeIncompleteFrom() {
+        return includeIncompleteFrom;
+    }
+
+    public void setIncludeIncompleteFrom(final Set<String> includeIncompleteFrom) {
+        this.includeIncompleteFrom = includeIncompleteFrom;
+    }
+
     @Override
     public String toString() {
         return "ModelSearchRequest{" +
             "query='" + query + '\'' +
             ", searchResources=" + searchResources +
-            ", after='" + after + '\'' +
+            ", after=" + after +
             ", sortLang='" + sortLang + '\'' +
-            ", status='" + status + '\'' +
+            ", status=" + status +
             ", pageSize=" + pageSize +
             ", pageFrom=" + pageFrom +
             ", filter=" + filter +
+            ", includeIncomplete=" + includeIncomplete +
+            ", includeIncompleteFrom=" + includeIncompleteFrom +
             '}';
     }
 }

@@ -345,7 +345,9 @@ public class GraphManager {
         }
     }
 
-    public Set<String> getPriviledgedModels(Set<UUID> orgs) {
+    public Set<String> getPriviledgedModels(Set<String> orgs) {
+
+        if(orgs==null) return null;
 
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         String selectModelIds =
@@ -353,7 +355,7 @@ public class GraphManager {
                 + "GRAPH ?graph { " +
                 " ?graph a owl:Ontology . "
                 + "?graph dcterms:contributor ?orgs . "
-                + "VALUES ?orgs { " + LDHelper.concatWithReplace(orgs, " ", "<urn:uuid:@this>") + " }" +
+                + "VALUES ?orgs { " + LDHelper.concatStringWithReplace(orgs, " ", "<urn:uuid:@this>") + " }" +
                 "}}";
 
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);

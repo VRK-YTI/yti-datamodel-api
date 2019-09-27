@@ -171,7 +171,7 @@ public class RHPOrganizationManager {
     public boolean isExistingOrganization(List<UUID> orgList) {
 
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
-        String sparqlOrgList = LDHelper.concatWithReplace(orgList, " ", "<urn:uuid:@this> a foaf:Organization . ");
+        String sparqlOrgList = LDHelper.concatUUIDWithReplace(orgList, " ", "<urn:uuid:@this> a foaf:Organization . ");
         String queryString = " ASK { GRAPH <urn:yti:organizations> { " + sparqlOrgList + " } }";
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
         pss.setCommandText(queryString);

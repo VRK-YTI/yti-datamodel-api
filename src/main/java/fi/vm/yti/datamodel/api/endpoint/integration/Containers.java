@@ -5,13 +5,9 @@ import java.util.Date;
 import fi.vm.yti.datamodel.api.index.SearchIndexManager;
 import fi.vm.yti.datamodel.api.index.model.IntegrationAPIResponse;
 import fi.vm.yti.datamodel.api.index.model.IntegrationContainerRequest;
-import fi.vm.yti.datamodel.api.index.model.IntegrationResourceRequest;
 import fi.vm.yti.datamodel.api.service.*;
-import fi.vm.yti.datamodel.api.utils.LDHelper;
-import fi.vm.yti.datamodel.api.utils.QueryLibrary;
 import io.swagger.annotations.*;
 
-import org.apache.jena.query.ParameterizedSparqlString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -77,10 +73,14 @@ public class Containers {
         @ApiParam(value = "Pagesize")
         @QueryParam("pageSize") Integer pageSize,
         @ApiParam(value = "From")
-        @QueryParam("from") Integer from) {
+        @QueryParam("from") Integer from,
+        @ApiParam(value = "IncludeIncomplete")
+        @QueryParam("includeIncomplete") boolean includeIncomplete,
+        @ApiParam(value = "IncludeIncomplete")
+        @QueryParam("includeIncomplete") String includeIncompleteFrom) {
 
         String path = uriInfo.getAbsolutePath().toString();
-        IntegrationContainerRequest req = new IntegrationContainerRequest(search, lang, searchIndexManager.parseStatus(status), after, null, pageSize, from);
+        IntegrationContainerRequest req = new IntegrationContainerRequest(search, lang, searchIndexManager.parseStringList(status), after, null, pageSize, from, includeIncomplete, searchIndexManager.parseStringList(includeIncompleteFrom));
         IntegrationAPIResponse resp = searchIndexManager.searchContainers(req,path);
         return jerseyResponseManager.ok(objectMapper.valueToTree(resp));
 

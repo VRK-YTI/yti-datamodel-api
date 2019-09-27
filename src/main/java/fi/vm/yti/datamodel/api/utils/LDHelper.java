@@ -322,13 +322,27 @@ public class LDHelper {
         return prefix + queryString;
     }
 
-    public static String concatWithReplace(Collection<UUID> orgs,
+    public static String concatUUIDWithReplace(Collection<UUID> orgs,
                                            String sep,
                                            String replace) {
         StringBuilder sb = new StringBuilder();
         Iterator<UUID> orgIt = orgs.iterator();
         while (orgIt.hasNext()) {
             String orgID = orgIt.next().toString();
+
+            sb.append(replace.replaceAll("@this", orgID));
+            if (orgIt.hasNext()) sb.append(sep);
+        }
+        return sb.toString();
+    }
+
+    public static String concatStringWithReplace(Collection<String> orgs,
+                                           String sep,
+                                           String replace) {
+        StringBuilder sb = new StringBuilder();
+        Iterator<String> orgIt = orgs.iterator();
+        while (orgIt.hasNext()) {
+            String orgID = orgIt.next();
 
             sb.append(replace.replaceAll("@this", orgID));
             if (orgIt.hasNext()) sb.append(sep);

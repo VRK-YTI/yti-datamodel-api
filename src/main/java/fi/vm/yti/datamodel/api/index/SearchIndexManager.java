@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import javax.inject.Singleton;
 
@@ -169,17 +170,23 @@ public class SearchIndexManager {
 
     public ModelSearchResponse searchModelsWithUser(ModelSearchRequest request, YtiUser user) {
         if(user.isSuperuser()) {
-            return searchModels(request, null);
+            return searchModels(request);
         } else {
             final Map<UUID, Set<Role>> rolesInOrganizations = user.getRolesInOrganizations();
-            Set<String> privModels = graphManager.getPriviledgedModels(rolesInOrganizations.keySet());
-            return searchModels(request, privModels);
+            Set<String> orgIds = rolesInOrganizations.keySet().stream().map(u -> u.toString()).collect(Collectors.toSet());
+            request.setIncludeIncompleteFrom(orgIds);
+            return searchModels(request);
         }
     }
 
     public IntegrationAPIResponse searchContainers(IntegrationContainerRequest integrationRequest, String path) {
         integrationRequest.setSearchTerm(integrationRequest.getSearchTerm() != null ? integrationRequest.getSearchTerm().trim() : "");
         try {
+            if(integrationRequest.getIncludeIncomplete()==null || (integrationRequest.getIncludeIncomplete()!=null && !integrationRequest.getIncludeIncomplete())) {
+                if(integrationRequest.getIncludeIncompleteFrom()==null) {
+                    integrationRequest.setIncludeIncompleteEmpty();
+                }
+            }
             ModelSearchRequest containerRequest = new ModelSearchRequest(integrationRequest);
             SearchResponse response = esClient.search(modelQueryFactory.createQuery(containerRequest), RequestOptions.DEFAULT);
             ModelSearchResponse containerResponse = modelQueryFactory.parseResponse(response,containerRequest,null);
@@ -189,7 +196,7 @@ public class SearchIndexManager {
         }
     }
 
-    public Set<String> parseStatus(String status){
+    public Set<String> parseStringList(String status){
         Set<String> statuses = new HashSet<>();
         if(status!=null && !status.isEmpty()) {
             Arrays.asList(status.split(",")).forEach(s->{
@@ -199,16 +206,15 @@ public class SearchIndexManager {
         return statuses.isEmpty() ? null : statuses;
     }
 
-    public ModelSearchResponse searchModels(ModelSearchRequest request,
-                                            Set<String> privModels) {
+    public ModelSearchResponse searchModels(ModelSearchRequest request) {
         request.setQuery(request.getQuery() != null ? request.getQuery().trim() : "");
 
         Map<String, List<DeepSearchHitListDTO<?>>> deepSearchHits = null;
 
         if (request.isSearchResources() && !request.getQuery().isEmpty()) {
             try {
-                QueryBuilder privQuery = privModels==null ? null : ElasticUtils.createStatusAndModelQuery("isDefinedBy", privModels);
-                SearchRequest query = deepResourceQueryFactory.createQuery(request.getQuery(), request.getSortLang(), privQuery);
+                Set<String> modelIds = graphManager.getPriviledgedModels(request.getIncludeIncompleteFrom());
+                SearchRequest query = deepResourceQueryFactory.createQuery(request.getQuery(), request.getSortLang(), modelIds);
                 SearchResponse response = esClient.search(query, RequestOptions.DEFAULT);
                 deepSearchHits = deepResourceQueryFactory.parseResponse(response, request);
             } catch (IOException e) {
@@ -218,13 +224,13 @@ public class SearchIndexManager {
 
         try {
             SearchRequest finalQuery;
-            QueryBuilder privQuery = privModels==null ? null : ElasticUtils.createStatusAndModelQuery("id", privModels);
+           // QueryBuilder privQuery = privModels==null ? null : ElasticUtils.createStatusAndModelQuery("id", privModels);
             if (deepSearchHits != null && !deepSearchHits.isEmpty()) {
                 Set<String> additionalModelIds = deepSearchHits.keySet();
                 logger.debug("Deep model search resulted in " + additionalModelIds.size() + " model matches");
-                finalQuery = modelQueryFactory.createQuery(request, additionalModelIds, privQuery);
+                finalQuery = modelQueryFactory.createQuery(request, additionalModelIds);
             } else {
-                finalQuery = modelQueryFactory.createQuery(request, privQuery);
+                finalQuery = modelQueryFactory.createQuery(request);
             }
             SearchResponse response = esClient.search(finalQuery, RequestOptions.DEFAULT);
             return modelQueryFactory.parseResponse(response, request, deepSearchHits);

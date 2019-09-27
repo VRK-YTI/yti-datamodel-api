@@ -20,6 +20,7 @@ import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
+import org.elasticsearch.index.query.QueryBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.topbraid.shacl.vocabulary.SH;
@@ -50,7 +51,6 @@ public class Shape extends AbstractShape {
         if (!graphManager.isExistingServiceGraph(SplitIRI.namespace(classIRI.toString()))) {
 
             // Shape from external class
-
             ParameterizedSparqlString pss = new ParameterizedSparqlString();
             pss.setNsPrefixes(LDHelper.PREFIX_MAP);
             String queryString;
@@ -64,6 +64,11 @@ public class Shape extends AbstractShape {
             pss.setLiteral("draft", "DRAFT");
             pss.setIri("shapeIRI", shapeIRI);
             this.graph = graphManager.constructModelFromService(pss.toString(), endpointServices.getImportsSparqlAddress());
+
+            if(this.graph.size()<2) {
+              pss.setCommandText(QueryLibrary.dummyExternalShapeQuery);
+              this.graph = graphManager.constructModelFromService(pss.toString(), endpointServices.getCoreSparqlAddress());
+            }
 
         } else {
 

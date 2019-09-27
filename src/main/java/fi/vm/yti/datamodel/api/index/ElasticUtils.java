@@ -34,18 +34,19 @@ public final class ElasticUtils {
         return privilegeQuery;
     }
 
-    public static QueryBuilder createStatusAndContributorQuery(Set<UUID> privilegedOrganizations) {
+    public static QueryBuilder createStatusAndContributorQuery(Set<String> privilegedOrganizations) {
         // Content must either be in some other state than INCOMPLETE, or the user must match a contributor organization.
         QueryBuilder statusQuery = QueryBuilders.boolQuery().mustNot(QueryBuilders.termQuery("status", "INCOMPLETE"));
         QueryBuilder privilegeQuery;
-        if (privilegedOrganizations != null && !privilegedOrganizations.isEmpty()) {
+        if (privilegedOrganizations != null) {
             privilegeQuery = QueryBuilders.boolQuery()
                 .should(statusQuery)
-                .should(QueryBuilders.termsQuery("contributor", privilegedOrganizations.stream().map(u -> u.toString()).collect(Collectors.toList())))
+                .should(QueryBuilders.termsQuery("contributor", privilegedOrganizations))
                 .minimumShouldMatch(1);
         } else {
             privilegeQuery = statusQuery;
         }
         return privilegeQuery;
     }
+
 }

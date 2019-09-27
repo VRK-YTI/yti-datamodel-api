@@ -173,7 +173,7 @@ public class ServiceDescriptionManager {
             throw new NullPointerException();
         }
 
-        String orgString = LDHelper.concatWithReplace(orgs, ",", "<urn:uuid:@this>");
+        String orgString = LDHelper.concatUUIDWithReplace(orgs, ",", "<urn:uuid:@this>");
         logger.info("Parsed org UUIDs: " + orgString);
 
         //String serviceString = concatServices(serviceCategories);

@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 
 import javax.inject.Singleton;
 
+import org.apache.jena.base.Sys;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.index.query.BoolQueryBuilder;
@@ -53,18 +54,13 @@ public class ModelQueryFactory {
     }
 
     public SearchRequest createQuery(ModelSearchRequest request) {
-        return createQuery(request.getQuery(), request.getStatus(), request.getAfter(), Collections.EMPTY_SET, request.getPageSize(), request.getPageFrom(), null, request.getFilter());
+        return createQuery(request.getQuery(), request.getStatus(), request.getAfter(), Collections.EMPTY_SET, request.getPageSize(), request.getPageFrom(), request.getFilter(), request.getIncludeIncomplete(), request.getIncludeIncompleteFrom());
     }
 
-    public SearchRequest createQuery(ModelSearchRequest request,
-                                     QueryBuilder privilegeQuery) {
-        return createQuery(request.getQuery(), request.getStatus(), request.getAfter(), Collections.EMPTY_SET, request.getPageSize(), request.getPageFrom(), privilegeQuery, null);
-    }
 
     public SearchRequest createQuery(ModelSearchRequest request,
-                                     Collection<String> additionalModelIds,
-                                     QueryBuilder privilegeQuery) {
-        return createQuery(request.getQuery(), request.getStatus(), request.getAfter(), additionalModelIds, request.getPageSize(), request.getPageFrom(), privilegeQuery, null);
+                                     Collection<String> additionalModelIds) {
+        return createQuery(request.getQuery(), request.getStatus(), request.getAfter(), additionalModelIds, request.getPageSize(), request.getPageFrom(), request.getFilter(), request.getIncludeIncomplete(), request.getIncludeIncompleteFrom());
     }
 
     private SearchRequest createQuery(String query,
@@ -73,8 +69,9 @@ public class ModelQueryFactory {
                                       Collection<String> additionalModelIds,
                                       Integer pageSize,
                                       Integer pageFrom,
-                                      QueryBuilder privilegeQuery,
-                                      Set<String> filter) {
+                                      Set<String> filter,
+                                      Boolean includeIncomplete,
+                                      Set<String> includeIncompleteFrom) {
 
         QueryStringQueryBuilder labelQuery = null;
         if (!query.isEmpty()) {
@@ -103,6 +100,11 @@ public class ModelQueryFactory {
         BoolQueryBuilder boolQuery = QueryBuilders.boolQuery();
         List<QueryBuilder> mustList = boolQuery.must();
 
+        if(includeIncomplete==null || includeIncompleteFrom!=null) {
+            QueryBuilder incompleteQuery = ElasticUtils.createStatusAndContributorQuery(includeIncompleteFrom);
+            mustList.add(incompleteQuery);
+        }
+
         if(after != null) {
             mustList.add(QueryBuilders.rangeQuery("modified").gte(after));
         }
@@ -117,10 +119,6 @@ public class ModelQueryFactory {
             QueryBuilder statusQuery = QueryBuilders.boolQuery()
                 .should(QueryBuilders.termsQuery("status", status)).minimumShouldMatch(1);
             mustList.add(statusQuery);
-        }
-
-        if (privilegeQuery != null) {
-            mustList.add(privilegeQuery);
         }
 
         if (contentQuery != null) {
