@@ -17,7 +17,8 @@ public class IntegrationContainerRequest {
     private Boolean includeIncomplete;
     private Set<String> includeIncompleteFrom;
 
-    public IntegrationContainerRequest(){}
+    public IntegrationContainerRequest() {
+    }
 
     public IntegrationContainerRequest(final String searchTerm,
                                        final String language,
@@ -73,10 +74,6 @@ public class IntegrationContainerRequest {
         this.type = type;
     }
 
-    public void setIncludeIncomplete(final Boolean includeIncomplete) {
-        this.includeIncomplete = includeIncomplete;
-    }
-
     public Date getAfter() {
         return after;
     }
@@ -125,7 +122,7 @@ public class IntegrationContainerRequest {
         return includeIncomplete;
     }
 
-    public void setIncludeIncomplete(final boolean includeIncomplete) {
+    public void setIncludeIncomplete(final Boolean includeIncomplete) {
         this.includeIncomplete = includeIncomplete;
     }
 

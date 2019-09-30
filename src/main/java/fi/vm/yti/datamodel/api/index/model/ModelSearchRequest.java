@@ -159,7 +159,7 @@ public class ModelSearchRequest {
         return includeIncomplete;
     }
 
-    public void setIncludeIncomplete(final boolean includeIncomplete) {
+    public void setIncludeIncomplete(final Boolean includeIncomplete) {
         this.includeIncomplete = includeIncomplete;
     }
 

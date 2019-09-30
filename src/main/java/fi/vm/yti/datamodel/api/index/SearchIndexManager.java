@@ -170,6 +170,9 @@ public class SearchIndexManager {
 
     public ModelSearchResponse searchModelsWithUser(ModelSearchRequest request, YtiUser user) {
         if(user.isSuperuser()) {
+            if(request.getIncludeIncomplete() == null) {
+                request.setIncludeIncomplete(true);
+            }
             return searchModels(request);
         } else {
             final Map<UUID, Set<Role>> rolesInOrganizations = user.getRolesInOrganizations();
@@ -224,7 +227,6 @@ public class SearchIndexManager {
 
         try {
             SearchRequest finalQuery;
-           // QueryBuilder privQuery = privModels==null ? null : ElasticUtils.createStatusAndModelQuery("id", privModels);
             if (deepSearchHits != null && !deepSearchHits.isEmpty()) {
                 Set<String> additionalModelIds = deepSearchHits.keySet();
                 logger.debug("Deep model search resulted in " + additionalModelIds.size() + " model matches");
