@@ -101,8 +101,18 @@ bootRun {
     jvmArgs = ["-Dspring.output.ansi.enabled=ALWAYS"]
 }
 
+bootJar {
+    mainClassName = "fi.vm.yti.datamodel.api.Application"
+}
+
 jar {
     enabled = true
+    manifest {
+        attributes(
+                'Class-Path': configurations.compile.collect { it.getName() }.join(' '),
+                'Main-Class': 'fi.vm.yti.datamodel.api.Application'
+        )
+    }
 }
 
 sonarqube {
