@@ -101,6 +101,10 @@ bootRun {
     jvmArgs = ["-Dspring.output.ansi.enabled=ALWAYS"]
 }
 
+jar {
+    enabled = true
+}
+
 sonarqube {
     properties {
         property "sonar.projectKey", "yti-datamodel-api"
