@@ -3,7 +3,6 @@
  */
 package fi.vm.yti.datamodel.api.endpoint.model;
 
-import fi.vm.yti.datamodel.api.index.ElasticConnector;
 import fi.vm.yti.datamodel.api.index.SearchIndexManager;
 import fi.vm.yti.datamodel.api.model.ReusablePredicate;
 import fi.vm.yti.datamodel.api.security.AuthorizationManager;
@@ -19,13 +18,10 @@ import org.apache.jena.query.ParameterizedSparqlString;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.riot.RiotException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cloud.sleuth.util.ExceptionUtils;
 import org.springframework.stereotype.Component;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
-
-import java.io.IOException;
 import java.util.Map;
 
 import org.slf4j.Logger;

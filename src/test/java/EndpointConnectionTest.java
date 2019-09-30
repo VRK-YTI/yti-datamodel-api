@@ -6,14 +6,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit4.SpringRunner;
-
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
+import org.springframework.test.context.junit4.SpringRunner;
 
 import static org.junit.Assert.fail;
 
-@RunWith(SpringRunner.class)
 @ContextConfiguration(classes = TestConfiguration.class)
+@RunWith(SpringRunner.class)
 @ActiveProfiles("test")
 @TestPropertySource("classpath:application-test.properties")
 public class EndpointConnectionTest {

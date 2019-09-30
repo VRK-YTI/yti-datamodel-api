@@ -26,7 +26,6 @@ import org.elasticsearch.transport.NodeDisconnectedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cloud.sleuth.util.ExceptionUtils;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -137,7 +136,7 @@ public class ElasticConnector {
             logger.info("Indexed \"" + id + "\" to \"" + index + "\": " + resp.status().getStatus());
         } catch (IOException e) {
             logger.warn("Could not add to index: " + id);
-            logger.warn(ExceptionUtils.getExceptionMessage(e));
+            logger.warn(e.getMessage());
         }
     }
 
@@ -155,7 +154,7 @@ public class ElasticConnector {
             logger.info("Updated \"" + id + "\" to \"" + index + "\": " + resp.status().getStatus());
         } catch (IOException e) {
             logger.warn("Could not update to index: " + id);
-            logger.warn(ExceptionUtils.getExceptionMessage(e));
+            logger.warn(e.getMessage());
         }
     }
 
@@ -171,7 +170,7 @@ public class ElasticConnector {
             logger.info("Removed \"" + id + "\" from \"" + index + "\": " + resp.status().getStatus() + " (took " + (System.currentTimeMillis() - startTime) + " ms)");
             return resp;
         } catch (IOException e) {
-            logger.warn(ExceptionUtils.getExceptionMessage(e));
+            logger.warn(e.getMessage());
             return null;
         }
     }
