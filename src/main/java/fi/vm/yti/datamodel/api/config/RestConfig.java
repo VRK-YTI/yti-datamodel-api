@@ -1,7 +1,7 @@
 package fi.vm.yti.datamodel.api.config;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 
 import org.apache.http.client.HttpClient;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
@@ -35,8 +35,9 @@ public class RestConfig {
     @Autowired
     RestConfig(ObjectMapper objectMapper) {
         objectMapper.setSerializationInclusion(NON_NULL);
+        // ISO8601DateFormat by default when timestamps disabled?
         objectMapper.disable(WRITE_DATES_AS_TIMESTAMPS);
-        objectMapper.setDateFormat(new ISO8601DateFormat());
+        objectMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
         this.objectMapper = objectMapper;
     }
 

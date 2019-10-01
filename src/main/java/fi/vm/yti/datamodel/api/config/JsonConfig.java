@@ -1,5 +1,6 @@
 package fi.vm.yti.datamodel.api.config;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -9,9 +10,6 @@ import javax.json.stream.JsonGenerator;
 
 import java.util.HashMap;
 import java.util.Map;
-
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Configuration
 public class JsonConfig {
@@ -23,8 +21,5 @@ public class JsonConfig {
         return Json.createWriterFactory(config);
     }
 
-    @Bean
-    ObjectMapper objectMapper() {
-        return new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-    }
+    /* JSON serialization and deserialization configuration under RestConfig */
 }
