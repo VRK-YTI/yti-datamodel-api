@@ -23,6 +23,8 @@ apply plugin: "com.jfrog.artifactory"
 
 artifactoryPublish.skip = true
 
+rootProject.name = 'yti-datamodel-api'
+
 jar.baseName = 'yti-datamodel-api'
 
 configurations.all {
