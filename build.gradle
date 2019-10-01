@@ -23,9 +23,7 @@ apply plugin: "com.jfrog.artifactory"
 
 artifactoryPublish.skip = true
 
-rootProject.name = 'yti-datamodel-api'
-
-jar.baseName = 'yti-datamodel-api'
+archivesBaseName = 'yti-datamodel-api'
 
 configurations.all {
     resolutionStrategy.cacheDynamicVersionsFor 0, "seconds"
