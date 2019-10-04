@@ -275,6 +275,41 @@ public final class TermedTerminologyManager {
 
     }
 
+    static private final Map<String, Object> containerContext = new LinkedHashMap<String, Object>() {
+        {
+            put("uri", "@id");
+            put("prefLabel", new LinkedHashMap<String, Object>() {
+                {
+                    put("@id", "http://www.w3.org/2004/02/skos/core#prefLabel");
+                    put("@container", "@language");
+                }
+            });
+            put("description", new LinkedHashMap<String, Object>() {
+                {
+                    put("@id", "http://www.w3.org/2004/02/skos/core#definition");
+                    put("@container", "@language");
+                }
+            });
+            put("status", new LinkedHashMap<String, Object>() {
+                {
+                    put("@id", "http://www.w3.org/2002/07/owl#versionInfo");
+                }
+            });
+            put("modified", new LinkedHashMap<String, Object>() {
+                {
+                    put("@id", "http://purl.org/dc/terms/modified");
+                    put("@type", "http://www.w3.org/2001/XMLSchema#dateTime");
+                }
+            });
+            put("language", new LinkedHashMap<String, Object>() {
+                {
+                    put("@id", "http://purl.org/dc/terms/language");
+                  //  put("@container", "@list");
+                }
+            });
+        }
+    };
+
     static private final Map<String, Object> conceptContext = new LinkedHashMap<String, Object>() {
         {
             put("id", new LinkedHashMap<String, Object>() {
@@ -320,8 +355,32 @@ public final class TermedTerminologyManager {
         }
     };
 
-    public Response searchConceptFromTerminologyAPI(String query,
-                                                    String graphId) {
+    public Model getScemesModelFromTerminologyAPI() {
+
+        String url = properties.getDefaultTerminologyAPI() + "integration/containers";
+
+        Client client = ClientBuilder.newClient();
+        WebTarget target = client.target(url);
+
+        Response response = target.request("application/json").get();
+
+        client.close();
+
+        if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
+            logger.warn("Failed to connect " + response.getStatus() + ": " + url);
+            return null;
+        }
+
+        Model model = LDHelper.getResultObjectResponseAsJenaModel(response, containerContext);
+        model.setNsPrefixes(LDHelper.PREFIX_MAP);
+
+        return model;
+
+    }
+
+
+    public Response searchConceptFromTerminologyPublicAPI(String query,
+                                                          String graphId) {
 
         if (graphId == null || graphId != null && graphId.isEmpty()) {
             graphId = "0";

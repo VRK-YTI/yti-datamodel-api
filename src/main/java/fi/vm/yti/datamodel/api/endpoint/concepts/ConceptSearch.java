@@ -47,7 +47,7 @@ public class ConceptSearch {
             term += "*";
         }
 
-        return termedTerminologyManager.searchConceptFromTerminologyAPI(term, graphId);
+        return termedTerminologyManager.searchConceptFromTerminologyPublicAPI(term, graphId);
 
     }
 }
