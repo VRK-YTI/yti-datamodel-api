@@ -401,6 +401,10 @@ public final class TermedTerminologyManager {
         }
 
         Model model = LDHelper.getResultObjectResponseAsJenaModel(response, containerContext);
+        String qry = LDHelper.prefix + " INSERT { ?scheme a skos:ConceptScheme . }" +
+            "WHERE { ?scheme skos:prefLabel ?label . }";
+        UpdateAction.parseExecute(qry, model);
+
         model.setNsPrefixes(LDHelper.PREFIX_MAP);
 
         return model;
