@@ -647,6 +647,26 @@ public class LDHelper {
         return model;
     }
 
+    public static Model getResultObjectResponseAsJenaModel(Response response,
+                                                        Map<String, Object> contextObject) {
+        Model model = ModelFactory.createDefaultModel();
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            Map<String,Object> jsonObject = mapper.readValue((InputStream) response.getEntity(), new TypeReference<Map<String,Object>>() {
+            });
+            List<Object> jsonList = (List<Object>) jsonObject.get("results");
+            Map<String, Object> rootObject = new HashMap<>();
+            rootObject.put("@context", contextObject);
+            rootObject.put("@graph", jsonList);
+            String jsonLdString = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(rootObject);
+            InputStream targetStream = new ByteArrayInputStream(jsonLdString.getBytes());
+            model = model.read(targetStream, "", "JSON-LD");
+        } catch (IOException ex) {
+            logger.info(ex.getMessage());
+        }
+        return model;
+    }
+
     public static Model getJSONArrayResponseAsJenaModel(Response response,
                                                         Map<String, Object> contextObject) {
         Model model = ModelFactory.createDefaultModel();

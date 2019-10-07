@@ -70,8 +70,7 @@ public class ConceptSuggestion {
         @ApiResponse(code = 401, message = "User is not logged in"),
         @ApiResponse(code = 404, message = "Service not found") })
     public Response newConceptSuggestion(
-        @ApiParam(value = "Model ID") @QueryParam("modelID") String modelID,
-        @ApiParam(value = "GRAPH UUID", required = true) @QueryParam("graphUUID") String graphUUID,
+        @ApiParam(value = "Terminology uri", required = true) @QueryParam("terminologyUri") String terminologyUri,
         @ApiParam(value = "Label", required = true) @QueryParam("label") String label,
         @ApiParam(value = "Comment", required = true) @QueryParam("comment") String comment,
         @ApiParam(value = "Initial language", required = true, allowableValues = "fi,en") @QueryParam("lang") String lang) {
@@ -80,17 +79,10 @@ public class ConceptSuggestion {
             return jerseyResponseManager.unauthorized();
         }
 
-        if (modelID != null && !modelID.equals("undefined")) {
-            if (idManager.isInvalid(modelID)) {
-                return jerseyResponseManager.invalidIRI();
-            }
-        }
-
         logger.info("Creating concept suggestion: " + label);
 
-        // TODO: Clean & refactor terminology manager
-        String jsonString = terminologyManager.createConceptSuggestionJson(lang, label, comment, graphUUID, userProvider.getUser().getId().toString());
-        Response conceptResp = jerseyClient.saveConceptSuggestionUsingTerminologyAPI(jsonString, graphUUID);
+        String jsonString = terminologyManager.createConceptSuggestionJson(lang, label, comment, userProvider.getUser().getId().toString());
+        Response conceptResp = jerseyClient.saveConceptSuggestionUsingTerminologyAPI(jsonString, terminologyUri);
 
         if (conceptResp.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
             logger.info("Concept suggestion could not be saved! Invalid parameter or missing terminology?");
@@ -103,7 +95,6 @@ public class ConceptSuggestion {
         logger.info(respString);
 
         String newConceptUUID = JsonPath.parse(respString).read("$.identifier");
-
         return jerseyResponseManager.successUrnUuid(UUID.fromString(newConceptUUID));
 
     }

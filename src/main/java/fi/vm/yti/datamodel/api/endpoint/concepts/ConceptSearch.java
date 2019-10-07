@@ -38,16 +38,14 @@ public class ConceptSearch {
     public Response concept(
         @ApiParam(value = "Term", required = true)
         @QueryParam("term") String term,
-        @ApiParam(value = "namespace")
-        @QueryParam("namespace") String namespace,
-        @ApiParam(value = "graphId")
-        @QueryParam("graphId") String graphId) {
+        @ApiParam(value = "terminology")
+        @QueryParam("terminology") String terminology) {
 
         if (!term.endsWith("*")) {
             term += "*";
         }
 
-        return termedTerminologyManager.searchConceptFromTerminologyAPI(term, graphId);
+        return termedTerminologyManager.searchConceptFromTerminologyIntegrationAPI(term, terminology);
 
     }
 }
