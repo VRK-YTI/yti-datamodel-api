@@ -433,12 +433,13 @@ public class JerseyClient {
     }
 
     public Response saveConceptSuggestionUsingTerminologyAPI(String body,
-                                                             String graph) {
+                                                             String terminologyUri) {
 
-        String url = properties.getDefaultTerminologyAPI() + "integration/vocabulary/" + graph + "/conceptSuggestion";
+        String url = properties.getDefaultTerminologyAPI() + "integration/terminology/conceptSuggestion";
 
         Client client = ClientBuilder.newClient();
-        WebTarget target = client.target(url);
+        WebTarget target = client.target(url).queryParam("terminologyUri", terminologyUri);
+
         Response response = target.request().post(Entity.entity(body, "application/json"));
 
         if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {

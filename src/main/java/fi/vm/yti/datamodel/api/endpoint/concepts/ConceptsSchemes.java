@@ -43,6 +43,6 @@ public class ConceptsSchemes {
         @ApiResponse(code = 500, message = "Internal server error")
     })
     public Response vocab() {
-        return jerseyResponseManager.okModel(termedTerminologyManager.getScemesModelFromTerminologyAPI());
+        return jerseyResponseManager.okModel(termedTerminologyManager.getSchemesModelFromTerminologyAPI());
     }
 }

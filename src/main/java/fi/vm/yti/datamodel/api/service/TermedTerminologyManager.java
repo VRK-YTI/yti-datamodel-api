@@ -35,6 +35,7 @@ import java.io.InputStream;
 import java.io.StringWriter;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -74,7 +75,6 @@ public final class TermedTerminologyManager {
     public String createConceptSuggestionJson(String lang,
                                               String prefLabel,
                                               String definition,
-                                              String graph,
                                               String user) {
 
         JsonObjectBuilder objBuilder = Json.createObjectBuilder();
@@ -310,6 +310,35 @@ public final class TermedTerminologyManager {
         }
     };
 
+    static private final Map<String, Object> resourceContext = new LinkedHashMap<String, Object>() {
+        {
+            put("uri", "@id");
+            put("prefLabel", new LinkedHashMap<String, Object>() {
+                {
+                    put("@id", "http://www.w3.org/2004/02/skos/core#prefLabel");
+                    put("@container", "@language");
+                }
+            });
+            put("description", new LinkedHashMap<String, Object>() {
+                {
+                    put("@id", "http://www.w3.org/2004/02/skos/core#definition");
+                    put("@container", "@language");
+                }
+            });
+            put("status", new LinkedHashMap<String, Object>() {
+                {
+                    put("@id", "http://www.w3.org/2002/07/owl#versionInfo");
+                }
+            });
+            put("modified", new LinkedHashMap<String, Object>() {
+                {
+                    put("@id", "http://purl.org/dc/terms/modified");
+                    put("@type", "http://www.w3.org/2001/XMLSchema#dateTime");
+                }
+            });
+        }
+    };
+
     static private final Map<String, Object> conceptContext = new LinkedHashMap<String, Object>() {
         {
             put("id", new LinkedHashMap<String, Object>() {
@@ -355,7 +384,7 @@ public final class TermedTerminologyManager {
         }
     };
 
-    public Model getScemesModelFromTerminologyAPI() {
+    public Model getSchemesModelFromTerminologyAPI() {
 
         String url = properties.getDefaultTerminologyAPI() + "integration/containers";
 
@@ -375,6 +404,49 @@ public final class TermedTerminologyManager {
         model.setNsPrefixes(LDHelper.PREFIX_MAP);
 
         return model;
+
+    }
+
+    public Response searchConceptFromTerminologyIntegrationAPI(String query,
+                                                          String vocabularyUri) {
+
+        if ( vocabularyUri == null || vocabularyUri != null && vocabularyUri.isEmpty()) {
+            vocabularyUri = "0";
+        }
+
+        String url = properties.getDefaultTerminologyAPI() + "integration/resources";
+
+        Client client = ClientBuilder.newClient();
+
+        WebTarget target = client.target(url)
+            .queryParam("searchTerm", LDHelper.encode(query))
+            .queryParam("container", vocabularyUri);
+
+        Response response = target.request("application/json").get();
+        client.close();
+
+        if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
+            logger.warn("Failed to connect " + response.getStatus() + ": " + url);
+            return jerseyResponseManager.serverError();
+        }
+
+        Model model = LDHelper.getResultObjectResponseAsJenaModel(response, resourceContext);
+        model.setNsPrefixes(LDHelper.PREFIX_MAP);
+
+        String qry = LDHelper.prefix + " INSERT { ?concept a skos:Concept . ?concept skos:inScheme <"+vocabularyUri+"> }" +
+            "WHERE { ?concept skos:prefLabel ?label . }";
+
+        UpdateAction.parseExecute(qry, model);
+
+        Model schemesModel = getSchemesModelFromTerminologyAPI();
+        Resource schemeResource = schemesModel.getResource(vocabularyUri);
+        List<Statement> resourceStatements = schemesModel. listStatements(schemeResource,null,(RDFNode) null).toList();
+        model.add(resourceStatements);
+
+        String modelString = modelManager.writeModelToJSONLDString(model);
+
+        ResponseBuilder rb = Response.status(Response.Status.OK);
+        return rb.entity(modelString).build();
 
     }
 
