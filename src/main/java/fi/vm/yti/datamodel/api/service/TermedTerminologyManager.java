@@ -414,8 +414,9 @@ public final class TermedTerminologyManager {
     public Response searchConceptFromTerminologyIntegrationAPI(String query,
                                                           String vocabularyUri) {
 
-        if ( vocabularyUri == null || vocabularyUri != null && vocabularyUri.isEmpty()) {
-            vocabularyUri = "0";
+        if (vocabularyUri != null && vocabularyUri.isEmpty()) {
+            vocabularyUri=null;
+            logger.debug("Terminology uri is empty or null");
         }
 
         String url = properties.getDefaultTerminologyAPI() + "integration/resources";
@@ -423,21 +424,26 @@ public final class TermedTerminologyManager {
         Client client = ClientBuilder.newClient();
 
         WebTarget target = client.target(url)
-            .queryParam("searchTerm", LDHelper.encode(query))
-            .queryParam("container", vocabularyUri);
+            .queryParam("searchTerm", LDHelper.encode(query));
+
+        if(vocabularyUri!=null) {
+            target.queryParam("container", vocabularyUri);
+        }
+
+        logger.debug("Searching from ES: "+target.getUri());
 
         Response response = target.request("application/json").get();
         client.close();
 
         if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-            logger.warn("Failed to connect " + response.getStatus() + ": " + url);
+            logger.warn("Failed to connect " + response.getStatus() + ": " + response.getLocation());
             return jerseyResponseManager.serverError();
         }
 
         Model model = LDHelper.getResultObjectResponseAsJenaModel(response, resourceContext);
         model.setNsPrefixes(LDHelper.PREFIX_MAP);
 
-        String qry = LDHelper.prefix + " INSERT { ?concept a skos:Concept . ?concept skos:inScheme <"+vocabularyUri+"> }" +
+        String qry = LDHelper.prefix + " INSERT { ?concept a skos:Concept . }" +
             "WHERE { ?concept skos:prefLabel ?label . }";
 
         UpdateAction.parseExecute(qry, model);

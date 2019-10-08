@@ -3,9 +3,12 @@
  */
 package fi.vm.yti.datamodel.api.endpoint.concepts;
 
+import fi.vm.yti.datamodel.api.service.JerseyResponseManager;
 import fi.vm.yti.datamodel.api.service.TermedTerminologyManager;
 import io.swagger.annotations.*;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -21,10 +24,15 @@ import javax.ws.rs.core.Response;
 public class ConceptSearch {
 
     private final TermedTerminologyManager termedTerminologyManager;
+    private final JerseyResponseManager jerseyResponseManager;
+    private static final Logger logger = LoggerFactory.getLogger(ConceptSearch.class.getName());
 
     @Autowired
-    ConceptSearch(TermedTerminologyManager termedTerminologyManager) {
+    ConceptSearch(JerseyResponseManager jerseyResponseManager,
+                  TermedTerminologyManager termedTerminologyManager) {
+
         this.termedTerminologyManager = termedTerminologyManager;
+        this.jerseyResponseManager = jerseyResponseManager;
     }
 
     @GET
@@ -36,16 +44,16 @@ public class ConceptSearch {
         @ApiResponse(code = 500, message = "Internal server error")
     })
     public Response concept(
-        @ApiParam(value = "Term", required = true)
+        @ApiParam(value = "Search term", required = true)
         @QueryParam("term") String term,
-        @ApiParam(value = "terminology")
-        @QueryParam("terminology") String terminology) {
+        @ApiParam(value = "Terminology URI")
+        @QueryParam("terminologyUri") String terminologyUri) {
 
-        if (!term.endsWith("*")) {
-            term += "*";
+        if(term==null) {
+            return jerseyResponseManager.invalidParameter();
         }
 
-        return termedTerminologyManager.searchConceptFromTerminologyIntegrationAPI(term, terminology);
+        return termedTerminologyManager.searchConceptFromTerminologyIntegrationAPI(term, terminologyUri);
 
     }
 }

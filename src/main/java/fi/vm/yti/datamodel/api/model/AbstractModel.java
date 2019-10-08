@@ -48,14 +48,7 @@ public abstract class AbstractModel extends AbstractResource {
 
         this.id = graphIRI;
 
-        List<Resource> vocabList = this.graph.listSubjectsWithProperty(OWL.versionInfo).toList();
-
-        if (!(vocabList.size() == 1)) {
-            logger.warn("Expected 1 versioned resource, got " + vocabList.size());
-            throw new IllegalArgumentException("Expected 1 versioned resource");
-        }
-
-        Resource modelResource = vocabList.get(0);
+        Resource modelResource = this.graph.getResource(graphIRI.toString());
 
         if (!modelResource.hasProperty(RDF.type, OWL.Ontology)) {
             logger.warn("Expected " + getId() + " type as owl:Ontology");
@@ -89,11 +82,11 @@ public abstract class AbstractModel extends AbstractResource {
         Model orgModel = rhpOrganizationManager.getOrganizationModel();
         this.graph = graph;
 
-        List<Resource> vocabList = this.graph.listSubjectsWithProperty(OWL.versionInfo).toList();
+        List<Resource> vocabList = this.graph.listSubjectsWithProperty(DCTerms.contributor).toList();
 
         if (!(vocabList.size() == 1)) {
-            logger.warn("Expected 1 versioned resource, got " + vocabList.size());
-            throw new IllegalArgumentException("Expected 1 versioned resource");
+            logger.warn("Expected 1 resource with contributors, got " + vocabList.size());
+            throw new IllegalArgumentException("Expected 1 resource");
         }
 
         Resource modelResource = vocabList.get(0);
