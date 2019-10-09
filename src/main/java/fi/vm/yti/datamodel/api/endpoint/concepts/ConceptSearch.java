@@ -4,7 +4,7 @@
 package fi.vm.yti.datamodel.api.endpoint.concepts;
 
 import fi.vm.yti.datamodel.api.service.JerseyResponseManager;
-import fi.vm.yti.datamodel.api.service.TermedTerminologyManager;
+import fi.vm.yti.datamodel.api.service.TerminologyManager;
 import io.swagger.annotations.*;
 
 import org.slf4j.Logger;
@@ -20,24 +20,24 @@ import javax.ws.rs.core.Response;
 
 @Component
 @Path("v1/conceptSearch")
-@Api(tags = { "Concept" }, description = "Concepts search from termed")
+@Api(tags = { "Concept" }, description = "Concepts search from Terminology API")
 public class ConceptSearch {
 
-    private final TermedTerminologyManager termedTerminologyManager;
+    private final TerminologyManager terminologyManager;
     private final JerseyResponseManager jerseyResponseManager;
     private static final Logger logger = LoggerFactory.getLogger(ConceptSearch.class.getName());
 
     @Autowired
     ConceptSearch(JerseyResponseManager jerseyResponseManager,
-                  TermedTerminologyManager termedTerminologyManager) {
+                  TerminologyManager terminologyManager) {
 
-        this.termedTerminologyManager = termedTerminologyManager;
+        this.terminologyManager = terminologyManager;
         this.jerseyResponseManager = jerseyResponseManager;
     }
 
     @GET
     @Produces("application/ld+json")
-    @ApiOperation(value = "Get available concepts", notes = "Search from termed API")
+    @ApiOperation(value = "Get available concepts", notes = "Search from Terminology API")
     @ApiResponses(value = {
         @ApiResponse(code = 200, message = "Concepts"),
         @ApiResponse(code = 406, message = "Term not defined"),
@@ -53,7 +53,7 @@ public class ConceptSearch {
             return jerseyResponseManager.invalidParameter();
         }
 
-        return termedTerminologyManager.searchConceptFromTerminologyIntegrationAPI(term, terminologyUri);
+        return terminologyManager.searchConceptFromTerminologyIntegrationAPI(term, terminologyUri, null);
 
     }
 }

@@ -322,26 +322,6 @@ public class Frames {
         vocabularyContext = new LinkedHashMap<String, Object>() {
             {
                 putAll(coreContext);
-                put("graph", new LinkedHashMap<String, Object>() {
-                    {
-                        put("@id", "http://termed.thl.fi/meta/graph");
-                    }
-                });
-                put("id", new LinkedHashMap<String, Object>() {
-                    {
-                        put("@id", "http://termed.thl.fi/meta/id");
-                    }
-                });
-                put("type", new LinkedHashMap<String, Object>() {
-                    {
-                        put("@id", "http://termed.thl.fi/meta/type");
-                    }
-                });
-                put("uri", new LinkedHashMap<String, Object>() {
-                    {
-                        put("@id", "http://termed.thl.fi/meta/uri");
-                    }
-                });
                 put("description", description);
             }
         };

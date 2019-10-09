@@ -1,32 +1,22 @@
 package fi.vm.yti.datamodel.api.endpoint.concepts;
 
-import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
 
-import fi.vm.yti.datamodel.api.endpoint.model.Class;
 import fi.vm.yti.datamodel.api.security.AuthorizationManager;
 import fi.vm.yti.datamodel.api.service.*;
-import fi.vm.yti.datamodel.api.utils.*;
 import fi.vm.yti.security.AuthenticatedUserProvider;
 import io.swagger.annotations.*;
 
-import org.apache.jena.rdf.model.*;
-import org.apache.jena.vocabulary.RDF;
-import org.apache.jena.vocabulary.SKOS;
-import org.apache.jena.vocabulary.SKOSXL;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import javax.json.JsonObject;
-import javax.json.JsonWriter;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 
-import java.io.StringWriter;
 import java.util.UUID;
 
 @Component
@@ -40,7 +30,7 @@ public class ConceptSuggestion {
     private final ModelManager modelManager;
     private final IDManager idManager;
     private final JerseyClient jerseyClient;
-    private final TermedTerminologyManager terminologyManager;
+    private final TerminologyManager terminologyManager;
 
     private static final Logger logger = LoggerFactory.getLogger(ConceptSuggestion.class.getName());
 
@@ -48,7 +38,7 @@ public class ConceptSuggestion {
     ConceptSuggestion(AuthorizationManager authorizationManager,
                       AuthenticatedUserProvider userProvider,
                       JerseyResponseManager jerseyResponseManager,
-                      TermedTerminologyManager terminologyManager,
+                      TerminologyManager terminologyManager,
                       ModelManager modelManager,
                       IDManager idManager,
                       JerseyClient jerseyClient) {

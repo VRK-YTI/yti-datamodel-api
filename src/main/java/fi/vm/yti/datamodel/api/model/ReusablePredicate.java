@@ -13,11 +13,6 @@ import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.topbraid.shacl.vocabulary.SH;
-
-import java.util.Iterator;
-import java.util.List;
-import java.util.UUID;
 
 public class ReusablePredicate extends AbstractPredicate {
 
@@ -39,7 +34,7 @@ public class ReusablePredicate extends AbstractPredicate {
                              String lang,
                              IRI typeIRI,
                              GraphManager graphManager,
-                             TermedTerminologyManager termedTerminologyManager) {
+                             TerminologyManager terminologyManager) {
 
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
@@ -56,8 +51,6 @@ public class ReusablePredicate extends AbstractPredicate {
             + "?predicateIRI rdfs:comment ?comment . "
             + "?predicateIRI dcterms:subject ?concept . "
             + "?concept a skos:Concept . "
-            + "?concept termed:id ?conceptId . "
-            + "?concept termed:graph ?graphId . "
             + "?concept skos:prefLabel ?label . "
             + "?concept skos:definition ?comment . "
             + "?concept skos:inScheme ?scheme . "
@@ -70,8 +63,6 @@ public class ReusablePredicate extends AbstractPredicate {
             + "?model a ?modelType . "
             + "?model rdfs:label ?modelLabel . "
             + "?concept a skos:Concept . "
-            + "?concept termed:id ?conceptId . "
-            + "?concept termed:graph ?graphId . "
             + "?concept skos:prefLabel ?label . "
             + "?concept skos:inScheme ?scheme . "
             + "?scheme skos:prefLabel ?title . "
@@ -93,7 +84,7 @@ public class ReusablePredicate extends AbstractPredicate {
         String predicateName = LDHelper.propertyName(predicateLabel);
         pss.setIri("predicateIRI", LDHelper.resourceIRI(modelIRI.toString(), predicateName));
 
-        this.graph = termedTerminologyManager.constructCleanedModelFromTermedAPIAndCore(conceptIRI.toString(), modelIRI.toString(), pss.asQuery());
+        this.graph = terminologyManager.constructModelFromTerminologyAPIAndCore(conceptIRI.toString(), modelIRI.toString(), pss.asQuery());
 
     }
 

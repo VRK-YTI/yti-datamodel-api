@@ -8,26 +8,19 @@ import fi.vm.yti.datamodel.api.index.ElasticConnector;
 import fi.vm.yti.datamodel.api.index.FrameManager;
 import fi.vm.yti.datamodel.api.model.AbstractModel;
 import fi.vm.yti.datamodel.api.model.AbstractResource;
-import fi.vm.yti.datamodel.api.utils.Frames;
 import fi.vm.yti.datamodel.api.utils.LDHelper;
 
 import org.apache.jena.atlas.web.HttpException;
 import org.apache.jena.query.*;
 import org.apache.jena.rdf.model.*;
-import org.apache.jena.riot.system.PrefixMap;
-import org.apache.jena.riot.system.PrefixMapFactory;
 import org.apache.jena.shared.PrefixMapping;
 import org.apache.jena.update.*;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
@@ -50,8 +43,6 @@ import org.apache.jena.vocabulary.RDF;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.fasterxml.jackson.databind.JsonNode;
-
 @Service
 public class GraphManager {
 
@@ -59,7 +50,7 @@ public class GraphManager {
 
     private final EndpointServices endpointServices;
     private final JenaClient jenaClient;
-    private final TermedTerminologyManager termedTerminologyManager;
+    private final TerminologyManager terminologyManager;
     private final ModelManager modelManager;
     private final ApplicationProperties properties;
     private final ServiceDescriptionManager serviceDescriptionManager;
@@ -71,7 +62,7 @@ public class GraphManager {
     @Autowired
     GraphManager(EndpointServices endpointServices,
                  JenaClient jenaClient,
-                 TermedTerminologyManager termedTerminologyManager,
+                 TerminologyManager terminologyManager,
                  ModelManager modelManager,
                  ServiceDescriptionManager serviceDescriptionManager,
                  ApplicationProperties properties,
@@ -80,7 +71,7 @@ public class GraphManager {
 
         this.endpointServices = endpointServices;
         this.jenaClient = jenaClient;
-        this.termedTerminologyManager = termedTerminologyManager;
+        this.terminologyManager = terminologyManager;
         this.modelManager = modelManager;
         this.serviceDescriptionManager = serviceDescriptionManager;
         this.properties = properties;
@@ -1571,29 +1562,6 @@ public class GraphManager {
         return jenaClient.constructFromService(query, service);
     }
 
-    /**
-     * Construct from combined model of Concept and Model
-     *
-     * @param conceptID ID of concept
-     * @param modelID   ID of model
-     * @param query     Construct SPARQL query
-     * @return created Jena model
-     */
-    @Deprecated
-    public Model constructModelFromConceptAndCore(String conceptID,
-                                                  String modelID,
-                                                  Query query) {
-
-        Model conceptModel = termedTerminologyManager.getConceptAsJenaModel(conceptID);
-
-        DatasetAccessor testAcc = DatasetAccessorFactory.createHTTP(endpointServices.getCoreReadAddress());
-        conceptModel.add(testAcc.getModel(modelID));
-
-        try (QueryExecution qexec = QueryExecutionFactory.create(query, conceptModel)) {
-            Model resultModel = qexec.execConstruct();
-            return resultModel;
-        }
-    }
 
     public Model getModelInfo(IRI modelIRI) {
 

@@ -17,7 +17,7 @@ import fi.vm.yti.datamodel.api.index.SearchIndexManager;
 import fi.vm.yti.datamodel.api.service.GraphManager;
 import fi.vm.yti.datamodel.api.service.NamespaceManager;
 import fi.vm.yti.datamodel.api.service.RHPOrganizationManager;
-import fi.vm.yti.datamodel.api.service.TermedTerminologyManager;
+import fi.vm.yti.datamodel.api.service.TerminologyManager;
 import fi.vm.yti.migration.MigrationInitializer;
 
 @Component
@@ -25,7 +25,7 @@ public class StartUpListener {
 
     private static final Logger logger = LoggerFactory.getLogger(StartUpListener.class.getName());
 
-    private final TermedTerminologyManager termedTerminologyManager;
+    private final TerminologyManager terminologyManager;
     private final RHPOrganizationManager rhpOrganizationManager;
     private final GraphManager graphManager;
     private final NamespaceManager namespaceManager;
@@ -34,7 +34,7 @@ public class StartUpListener {
     private final SearchIndexManager searchIndexManager;
 
     @Autowired
-    StartUpListener(TermedTerminologyManager termedTerminologyManager,
+    StartUpListener(TerminologyManager terminologyManager,
                     RHPOrganizationManager rhpOrganizationManager,
                     GraphManager graphManager,
                     NamespaceManager namespaceManager,
@@ -43,7 +43,7 @@ public class StartUpListener {
                     SearchIndexManager searchIndexManager,
                     MigrationInitializer migrationInitializer /* XXX: dependency to enforce init order */) {
 
-        this.termedTerminologyManager = termedTerminologyManager;
+        this.terminologyManager = terminologyManager;
         this.rhpOrganizationManager = rhpOrganizationManager;
         this.graphManager = graphManager;
         this.namespaceManager = namespaceManager;

@@ -3,7 +3,7 @@
  */
 package fi.vm.yti.datamodel.api.endpoint.concepts;
 
-import fi.vm.yti.datamodel.api.service.TermedTerminologyManager;
+import fi.vm.yti.datamodel.api.service.TerminologyManager;
 import io.swagger.annotations.*;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,11 +20,11 @@ import javax.ws.rs.core.Response;
 @Api(tags = { "Concept" }, description = "Get concept with id")
 public class Concept {
 
-    private final TermedTerminologyManager termedTerminologyManager;
+    private final TerminologyManager terminologyManager;
 
     @Autowired
-    Concept(TermedTerminologyManager termedTerminologyManager) {
-        this.termedTerminologyManager = termedTerminologyManager;
+    Concept(TerminologyManager terminologyManager) {
+        this.terminologyManager = terminologyManager;
     }
 
     @GET
@@ -36,13 +36,8 @@ public class Concept {
         @ApiResponse(code = 500, message = "Internal server error")
     })
     public Response concept(
-        @ApiParam(value = "id")
-        @QueryParam("id") String id,
-        @ApiParam(value = "namespace")
-        @QueryParam("namespace") String namespace,
-        @ApiParam(value = "graphId")
-        @QueryParam("graphId") String graphId) {
-
-        return termedTerminologyManager.searchConceptFromTermedAPI(null, namespace, id, graphId);
+        @ApiParam(value = "uri")
+        @QueryParam("uri") String uri) {
+        return terminologyManager.searchConceptFromTerminologyIntegrationAPI(null, null, uri);
     }
 }

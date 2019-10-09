@@ -33,7 +33,7 @@ public class ClassCreator {
     private final JerseyClient jerseyClient;
     private final JenaClient jenaClient;
     private final ModelManager modelManager;
-    private final TermedTerminologyManager termedTerminologyManager;
+    private final TerminologyManager terminologyManager;
 
     @Autowired
     ClassCreator(IDManager idManager,
@@ -42,7 +42,7 @@ public class ClassCreator {
                  JerseyClient jerseyClient,
                  JenaClient jenaClient,
                  ModelManager modelManager,
-                 TermedTerminologyManager termedTerminologyManager) {
+                 TerminologyManager terminologyManager) {
 
         this.idManager = idManager;
         this.graphManager = graphManager;
@@ -50,7 +50,7 @@ public class ClassCreator {
         this.jerseyClient = jerseyClient;
         this.jenaClient = jenaClient;
         this.modelManager = modelManager;
-        this.termedTerminologyManager = termedTerminologyManager;
+        this.terminologyManager = terminologyManager;
     }
 
     @GET
@@ -96,7 +96,7 @@ public class ClassCreator {
             ReusableClass newClass;
 
             if (conceptIRI != null) {
-                newClass = new ReusableClass(conceptIRI, modelIRI, classLabel, lang, graphManager, termedTerminologyManager);
+                newClass = new ReusableClass(conceptIRI, modelIRI, classLabel, lang, graphManager, terminologyManager);
             } else {
                 newClass = new ReusableClass(modelIRI, classLabel, lang, graphManager);
             }

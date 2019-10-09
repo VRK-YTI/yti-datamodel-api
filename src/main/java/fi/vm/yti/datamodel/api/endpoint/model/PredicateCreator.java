@@ -32,19 +32,19 @@ public class PredicateCreator {
     private final JerseyResponseManager jerseyResponseManager;
     private final JerseyClient jerseyClient;
     private final GraphManager graphManager;
-    private final TermedTerminologyManager termedTerminologyManager;
+    private final TerminologyManager terminologyManager;
 
     @Autowired
     PredicateCreator(IDManager idManager,
                      JerseyResponseManager jerseyResponseManager,
                      JerseyClient jerseyClient,
                      GraphManager graphManager,
-                     TermedTerminologyManager termedTerminologyManager) {
+                     TerminologyManager terminologyManager) {
         this.idManager = idManager;
         this.jerseyResponseManager = jerseyResponseManager;
         this.jerseyClient = jerseyClient;
         this.graphManager = graphManager;
-        this.termedTerminologyManager = termedTerminologyManager;
+        this.terminologyManager = terminologyManager;
     }
 
     @GET
@@ -81,7 +81,7 @@ public class PredicateCreator {
             ReusablePredicate newPredicate;
 
             if (conceptIRI != null) {
-                newPredicate = new ReusablePredicate(conceptIRI, modelIRI, predicateLabel, lang, typeIRI, graphManager, termedTerminologyManager);
+                newPredicate = new ReusablePredicate(conceptIRI, modelIRI, predicateLabel, lang, typeIRI, graphManager, terminologyManager);
             } else {
                 newPredicate = new ReusablePredicate(modelIRI, predicateLabel, lang, typeIRI, graphManager);
             }

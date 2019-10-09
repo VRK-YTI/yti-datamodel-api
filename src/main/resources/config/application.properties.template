@@ -4,16 +4,13 @@ devMode=true
 env=dev
 spring.application.name=yti-datamodel-api
 endpoint=http://localhost:3030
+endpointPassword=admin
 defaultNamespace=http://uri.suomi.fi/datamodel/ns/
 provenance=true
-defaultTermedAPI=https://sanastot.dev.yti.cloud.vrk.fi/api/
 defaultGroupManagementAPI=https://rhp.dev.yti.cloud.vrk.fi/public-api/
 defaultSuomiCodeServerAPI=https://koodistot.dev.yti.cloud.vrk.fi/codelist-api/api/v1/
 defaultTerminologyAPI=https://sanastot.dev.yti.cloud.vrk.fi/
-publicTermedAPI=https://sanastot.dev.yti.cloud.vrk.fi/api/
 publicGroupManagementAPI=https://rhp.dev.yti.cloud.vrk.fi
-defaultTermedAPIUser=admin
-defaultTermedAPIUserSecret=admin
 
 publicGroupManagementFrontend=https://rhp.dev.yti.cloud.vrk.fi
 publicSuomiCodeServerFrontend=https://koodistot.dev.yti.cloud.vrk.fi

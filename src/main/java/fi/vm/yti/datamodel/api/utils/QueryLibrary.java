@@ -75,47 +75,6 @@ public class QueryLibrary {
             "FILTER(lang(?label)=?lang) " +
             "FILTER(lang(?plabel)=?lang)}";
 
-    final public static String conceptQuery = LDHelper.expandSparqlQuery(true,
-        "CONSTRUCT {" +
-            "?concept skos:prefLabel ?label . " +
-            "?concept rdf:type skos:Concept . " +
-            "?concept skos:definition ?definition . " +
-            "?concept skos:inScheme ?scheme . " +
-            "?scheme a skos:ConceptScheme . " +
-            "?scheme skos:prefLabel ?title . " +
-            "?concept termed:graph ?graph . " +
-            "?graph termed:id ?schemeUUID . }" +
-            "WHERE {" +
-            "?concept skosxl:prefLabel ?xlLabel . " +
-            "?concept skos:definition ?definition . " +
-            "?xlLabel skosxl:literalForm ?label . " +
-            "?concept termed:graph ?graph . " +
-            "?graph termed:id ?schemeUUID . " +
-            "?scheme termed:graph ?graph . " +
-            "?scheme skos:prefLabel ?title . " +
-            "?scheme a skos:ConceptScheme . " +
-            "}" +
-            "");
-
-    final public static String skosXlToSkos = LDHelper.expandSparqlQuery(
-        "CONSTRUCT {" +
-            "?concept skos:prefLabel ?label . " +
-            "?concept rdf:type skos:Concept . " +
-            "?concept skos:definition ?definition . " +
-            "?concept skos:inScheme ?terminology . " +
-            "?concept termed:graph ?graphID . " +
-            "?concept termed:id ?conceptID . " +
-            "?terminology skos:prefLabel ?title . " +
-            "} WHERE {" +
-            "?concept skosxl:prefLabel ?xlLabel . " +
-            "OPTIONAL { ?concept skos:definition ?definition . }" +
-            "?concept termed:graph ?graphID . " +
-            "?concept termed:id ?conceptID . " +
-            "?xlLabel skosxl:literalForm ?label . " +
-            "OPTIONAL {?terminology termed:graph ?graphID . " +
-            "?terminology skos:prefLabel ?title . }" +
-            "}");
-
     final public static String constructServiceCategories = LDHelper.expandSparqlQuery(true,
         "CONSTRUCT {" +
             "?concept rdfs:label ?label . " +

@@ -38,14 +38,4 @@ public class ClientFactory {
             .build();
     }
 
-    public Client createTermedClient() {
-
-        Client client = createWithLongTimeout();
-        client.register(HttpAuthenticationFeature.basic(
-            properties.getDefaultTermedAPIUser(),
-            properties.getDefaultTermedAPIUserSecret()
-        ));
-
-        return client;
-    }
 }

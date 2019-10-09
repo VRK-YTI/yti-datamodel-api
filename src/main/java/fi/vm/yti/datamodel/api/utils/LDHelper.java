@@ -43,7 +43,7 @@ public class LDHelper {
 
     private static final IRIFactory iriFactory = IRIFactory.iriImplementation();
 
-    public static final String[] UNRESOLVABLE = { "xsd", "iow", "text", "sh", "afn", "schema", "dcap", "termed" };
+    public static final String[] UNRESOLVABLE = { "xsd", "iow", "text", "sh", "afn", "schema", "dcap" };
 
     public static final String[] RESERVEDWORDS = {
         "urn",
@@ -178,7 +178,6 @@ public class LDHelper {
             put("schema", "http://schema.org/");
             put("ts", "http://www.w3.org/2003/06/sw-vocab-status/ns#");
             put("dcam", "http://purl.org/dc/dcam/");
-            put("termed", "http://termed.thl.fi/meta/");
             put("at", "http://publications.europa.eu/ontology/authority/");
             put("skosxl", "http://www.w3.org/2008/05/skos-xl#");
             put("httpv", "http://www.w3.org/2011/http#");
@@ -307,7 +306,6 @@ public class LDHelper {
         "PREFIX schema: <http://schema.org/>" +
         "PREFIX ts: <http://www.w3.org/2003/06/sw-vocab-status/ns#>" +
         "PREFIX dcam: <http://purl.org/dc/dcam/>" +
-        "PREFIX termed: <http://termed.thl.fi/meta/>" +
         "PREFIX at: <http://publications.europa.eu/ontology/authority/>" +
         "PREFIX httpv: <http://www.w3.org/2011/http#>";
 
@@ -526,10 +524,6 @@ public class LDHelper {
 
     public static InputStream getDefaultCodeServers() {
         return LDHelper.class.getClassLoader().getResourceAsStream("defaultCodeServers.json");
-    }
-
-    public static InputStream getDefaultGroupsInputStream() {
-        return LDHelper.class.getClassLoader().getResourceAsStream("defaultGroups.json");
     }
 
     public static Object getUserContext() {

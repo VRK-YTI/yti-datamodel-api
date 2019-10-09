@@ -2,12 +2,20 @@ package fi.vm.yti.datamodel.api.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.Credentials;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.CredentialsProvider;
+import org.apache.http.client.HttpClient;
+import org.apache.http.impl.client.BasicCredentialsProvider;
+import org.apache.http.impl.client.HttpClients;
 import org.apache.jena.query.*;
 import org.apache.jena.rdf.model.Literal;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdfconnection.RDFConnection;
 import org.apache.jena.rdfconnection.RDFConnectionRemote;
+import org.apache.jena.riot.web.HttpOp;
 import org.apache.jena.sparql.resultset.ResultSetPeekable;
 import org.apache.jena.update.UpdateExecutionFactory;
 import org.apache.jena.update.UpdateProcessor;
@@ -24,6 +32,8 @@ import javax.json.stream.JsonParser;
 import java.io.ByteArrayOutputStream;
 import java.util.*;
 
+import fi.vm.yti.datamodel.api.config.ApplicationProperties;
+
 @Service
 public final class JenaClient {
 
@@ -34,6 +44,8 @@ public final class JenaClient {
     private final DatasetAccessor importService;
     private final DatasetAccessor provService;
     private final DatasetAccessor schemeService;
+
+    private final ApplicationProperties properties;
 
     // TODO: Or adapters?
     // static final DatasetAdapter coreService = new DatasetAdapter(new DatasetGraphAccessorHTTP(services.getCoreReadWriteAddress()));
@@ -50,12 +62,27 @@ public final class JenaClient {
         }*/
 
     @Autowired
-    JenaClient(EndpointServices endpointServices) {
+    JenaClient(EndpointServices endpointServices, ApplicationProperties properties) {
+        this.properties = properties;
         this.endpointServices = endpointServices;
         this.coreService = DatasetAccessorFactory.createHTTP(endpointServices.getCoreReadWriteAddress());
         this.importService = DatasetAccessorFactory.createHTTP(endpointServices.getImportsReadWriteAddress());
         this.provService = DatasetAccessorFactory.createHTTP(endpointServices.getProvReadWriteAddress());
         this.schemeService = DatasetAccessorFactory.createHTTP(endpointServices.getSchemesReadWriteAddress());
+
+        if(properties.getFusekiPassword()!=null) {
+            logger.debug("Setting fuseki password!");
+            CredentialsProvider credsProvider = new BasicCredentialsProvider();
+            Credentials credentials = new UsernamePasswordCredentials("admin", properties.getFusekiPassword());
+            credsProvider.setCredentials(AuthScope.ANY, credentials);
+            HttpClient httpclient = HttpClients.custom()
+                .setDefaultCredentialsProvider(credsProvider)
+                .build();
+            HttpOp.setDefaultHttpClient(httpclient);
+        } else {
+            logger.debug("No fuseki password found!");
+        }
+
     }
 
     public Model getModelFromSchemes(String graph) {

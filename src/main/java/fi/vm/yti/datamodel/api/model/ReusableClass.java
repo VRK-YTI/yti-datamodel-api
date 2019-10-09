@@ -39,7 +39,7 @@ public class ReusableClass extends AbstractClass {
                          String classLabel,
                          String lang,
                          GraphManager graphManager,
-                         TermedTerminologyManager termedTerminologyManager) {
+                         TerminologyManager terminologyManager) {
 
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
@@ -56,8 +56,6 @@ public class ReusableClass extends AbstractClass {
             + "?classIRI sh:description ?comment . "
             + "?classIRI dcterms:subject ?concept . "
             + "?concept a skos:Concept . "
-            + "?concept termed:id ?conceptId . "
-            + "?concept termed:graph ?graphId . "
             + "?concept skos:prefLabel ?label . "
             + "?concept skos:definition ?comment . "
             + "?concept skos:inScheme ?scheme . "
@@ -69,8 +67,6 @@ public class ReusableClass extends AbstractClass {
             + "?model a ?modelType . "
             + "?model rdfs:label ?modelLabel . "
             + "?concept a skos:Concept . "
-            + "?concept termed:id ?conceptId . "
-            + "?concept termed:graph ?graphId . "
             + "?concept skos:prefLabel ?label . "
             + "?concept skos:inScheme ?scheme . "
             + "?scheme skos:prefLabel ?title . "
@@ -91,7 +87,7 @@ public class ReusableClass extends AbstractClass {
         String resourceName = LDHelper.resourceName(classLabel);
         pss.setIri("classIRI", LDHelper.resourceIRI(modelIRI.toString(), resourceName));
 
-        this.graph = termedTerminologyManager.constructCleanedModelFromTermedAPIAndCore(conceptIRI.toString(), modelIRI.toString(), pss.asQuery());
+        this.graph = terminologyManager.constructModelFromTerminologyAPIAndCore(conceptIRI.toString(), modelIRI.toString(), pss.asQuery());
 
     }
 

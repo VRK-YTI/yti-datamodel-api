@@ -1,27 +1,18 @@
 
 package fi.vm.yti.datamodel.api.config;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.core.env.Environment;
 
 @ConfigurationProperties
 public final class ApplicationProperties {
 
-    @Autowired
-    private Environment environment;
-
-    private static final String DEFAULT_TERMED_API_USER_SECRET = "DEFAULTTERMEDAPIUSERSECRET";
     private String endpoint;
+    private String fusekiPassword;
     private String defaultNamespace;
     private boolean provenance;
-    private String defaultTermedAPI;
-    private String defaultTermedAPIUser;
-    private String defaultTermedAPIUserSecret;
     private String defaultGroupManagementAPI;
     private String defaultTerminologyAPI;
     private String publicGroupManagementAPI;
-    private String publicTermedAPI;
     private String publicTerminologyFrontend;
     private String publicSuomiCodeServerFrontend;
     private String publicCommentsFrontend;
@@ -43,6 +34,14 @@ public final class ApplicationProperties {
         this.endpoint = endpoint;
     }
 
+    public String getFusekiPassword() {
+        return fusekiPassword;
+    }
+
+    public void setFusekiPassword(final String fusekiPassword) {
+        this.fusekiPassword = fusekiPassword;
+    }
+
     public String getDefaultNamespace() {
         return defaultNamespace;
     }
@@ -57,35 +56,6 @@ public final class ApplicationProperties {
 
     public void setProvenance(boolean provenance) {
         this.provenance = provenance;
-    }
-
-    public String getDefaultTermedAPI() {
-        return defaultTermedAPI;
-    }
-
-    public void setDefaultTermedAPI(String defaultTermedAPI) {
-        this.defaultTermedAPI = defaultTermedAPI;
-    }
-
-    public String getDefaultTermedAPIUser() {
-        return defaultTermedAPIUser;
-    }
-
-    public void setDefaultTermedAPIUser(String defaultTermedAPIUser) {
-        this.defaultTermedAPIUser = defaultTermedAPIUser;
-    }
-
-    public String getDefaultTermedAPIUserSecret() {
-        final String termedApiPassword = environment.getProperty(DEFAULT_TERMED_API_USER_SECRET);
-        if (termedApiPassword != null) {
-            return termedApiPassword;
-        } else {
-            return defaultTermedAPIUserSecret;
-        }
-    }
-
-    public void setDefaultTermedAPIUserSecret(String defaultTermedAPIUserSecret) {
-        this.defaultTermedAPIUserSecret = defaultTermedAPIUserSecret;
     }
 
     public String getDefaultGroupManagementAPI() {
@@ -142,14 +112,6 @@ public final class ApplicationProperties {
 
     public void setPublicTerminologyFrontend(String publicTerminologyFrontend) {
         this.publicTerminologyFrontend = publicTerminologyFrontend;
-    }
-
-    public String getPublicTermedAPI() {
-        return publicTermedAPI;
-    }
-
-    public void setPublicTermedAPI(String publicTermedAPI) {
-        this.publicTermedAPI = publicTermedAPI;
     }
 
     public String getElasticHost() {
