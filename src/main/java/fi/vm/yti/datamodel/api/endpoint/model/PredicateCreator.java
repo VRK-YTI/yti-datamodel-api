@@ -58,7 +58,7 @@ public class PredicateCreator {
     public Response newPredicate(
         @ApiParam(value = "Model ID", required = true) @QueryParam("modelID") String modelID,
         @ApiParam(value = "Predicate label", required = true) @QueryParam("predicateLabel") String predicateLabel,
-        @ApiParam(value = "Concept ID") @QueryParam("conceptID") String conceptID,
+        @ApiParam(value = "Concept URI") @QueryParam("conceptID") String conceptUri,
         @ApiParam(value = "Predicate type", required = true, allowableValues = "owl:DatatypeProperty,owl:ObjectProperty") @QueryParam("type") String type,
         @ApiParam(value = "Language", required = true, allowableValues = "fi,en") @QueryParam("lang") String lang) {
 
@@ -66,8 +66,8 @@ public class PredicateCreator {
         IRI modelIRI, typeIRI;
         try {
             String typeURI = type.replace("owl:", "http://www.w3.org/2002/07/owl#");
-            if (conceptID != null && idManager.isValidUrl(conceptID)) {
-                conceptIRI = idManager.constructIRI(conceptID);
+            if (conceptUri != null && idManager.isValidUrl(conceptUri)) {
+                conceptIRI = idManager.constructIRI(conceptUri);
             }
             modelIRI = idManager.constructIRI(modelID);
             typeIRI = idManager.constructIRI(typeURI);

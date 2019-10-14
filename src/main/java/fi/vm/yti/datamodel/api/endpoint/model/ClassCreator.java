@@ -61,9 +61,9 @@ public class ClassCreator {
         @ApiResponse(code = 403, message = "Invalid IRI in parameter"),
         @ApiResponse(code = 404, message = "Service not found") })
     public Response newClass(
-        @ApiParam(value = "Model ID", required = true) @QueryParam("modelID") String modelID,
+        @ApiParam(value = "Model URI", required = true) @QueryParam("modelID") String modelID,
         @ApiParam(value = "Class label", required = true) @QueryParam("classLabel") String classLabel,
-        @ApiParam(value = "Concept ID") @QueryParam("conceptID") String conceptID,
+        @ApiParam(value = "Concept URI") @QueryParam("conceptID") String conceptUri,
         @ApiParam(value = "Language", required = true, allowableValues = "fi,en") @QueryParam("lang") String lang) {
 
         IRI conceptIRI = null;
@@ -71,12 +71,12 @@ public class ClassCreator {
 
         try {
 
-            if (conceptID != null && idManager.isValidUrl(conceptID)) {
-                logger.info("Using concept " + conceptID);
-                conceptIRI = idManager.constructIRI(conceptID);
+            if (conceptUri!= null && idManager.isValidUrl(conceptUri)) {
+                logger.info("Using concept " + conceptUri);
+                conceptIRI = idManager.constructIRI(conceptUri);
             } else {
-                if (conceptID != null) {
-                    logger.warn("Concept is not URI: " + conceptID);
+                if (conceptUri != null) {
+                    logger.warn("Concept is not URI: " + conceptUri);
                 }
             }
 

@@ -8,6 +8,7 @@ public final class ApplicationProperties {
 
     private String endpoint;
     private String fusekiPassword;
+    private String fusekiUser;
     private String defaultNamespace;
     private boolean provenance;
     private String defaultGroupManagementAPI;
@@ -40,6 +41,14 @@ public final class ApplicationProperties {
 
     public void setFusekiPassword(final String fusekiPassword) {
         this.fusekiPassword = fusekiPassword;
+    }
+
+    public String getFusekiUser() {
+        return fusekiUser;
+    }
+
+    public void setFusekiUser(final String fusekiUser) {
+        this.fusekiUser = fusekiUser;
     }
 
     public String getDefaultNamespace() {

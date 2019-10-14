@@ -61,7 +61,8 @@ public final class TerminologyManager {
         this.jerseyResponseManager = jerseyResponseManager;
     }
 
-    public String createConceptSuggestionJson(String lang,
+    public String createConceptSuggestionJson(String terminologyUri,
+                                              String lang,
                                               String prefLabel,
                                               String definition,
                                               String user) {
@@ -71,6 +72,7 @@ public final class TerminologyManager {
         objBuilder.add("creator", user);
         objBuilder.add("prefLabel", Json.createObjectBuilder().add("lang", lang).add("value", prefLabel).build());
         objBuilder.add("definition", Json.createObjectBuilder().add("lang", lang).add("value", definition).build());
+        objBuilder.add("terminologyUri", terminologyUri);
 
         return jsonObjectToPrettyString(objBuilder.build());
     }
@@ -124,8 +126,10 @@ public final class TerminologyManager {
         conceptModel.add(testAcc.getModel(modelUri));
 
         try (QueryExecution qexec = QueryExecutionFactory.create(query, conceptModel)) {
-            Model objects = qexec.execConstruct();
-            return cleanModelDefinitions(objects);
+            return qexec.execConstruct();
+        } catch (Exception ex) {
+            logger.warn("Failed to query created concept model from Terminology API");
+            return null;
         }
     }
 

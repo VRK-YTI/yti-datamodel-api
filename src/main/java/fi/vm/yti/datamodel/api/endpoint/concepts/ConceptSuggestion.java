@@ -71,7 +71,8 @@ public class ConceptSuggestion {
 
         logger.info("Creating concept suggestion: " + label);
 
-        String jsonString = terminologyManager.createConceptSuggestionJson(lang, label, comment, userProvider.getUser().getId().toString());
+        String jsonString = terminologyManager.createConceptSuggestionJson(terminologyUri, lang, label, comment, userProvider.getUser().getId().toString());
+
         Response conceptResp = jerseyClient.saveConceptSuggestionUsingTerminologyAPI(jsonString, terminologyUri);
 
         if (conceptResp.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
@@ -81,11 +82,8 @@ public class ConceptSuggestion {
 
         String respString = conceptResp.readEntity(String.class);
 
-        logger.info("Concept suggestion saved: ");
-        logger.info(respString);
-
-        String newConceptUUID = JsonPath.parse(respString).read("$.identifier");
-        return jerseyResponseManager.successUrnUuid(UUID.fromString(newConceptUUID));
+        String newConceptUri = JsonPath.parse(respString).read("$.uri");
+        return jerseyResponseManager.successUri(newConceptUri);
 
     }
 

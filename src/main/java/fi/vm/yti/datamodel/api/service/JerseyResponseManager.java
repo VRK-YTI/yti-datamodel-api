@@ -50,6 +50,10 @@ public class JerseyResponseManager {
         return Response.status(200).entity("{\"@id\":\"" + uuid + "\"}").build();
     }
 
+    public Response successUri(String uri) {
+        return Response.status(200).entity("{\"uri\":\""+ uri + "\"}").build();
+    }
+
     public Response successUrnUuid(UUID uuid) {
         return Response.status(200).entity("{\"identifier\":\"urn:uuid:" + uuid + "\"}").build();
     }

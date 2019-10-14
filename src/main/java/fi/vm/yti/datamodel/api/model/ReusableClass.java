@@ -76,11 +76,7 @@ public class ReusableClass extends AbstractClass {
 
         pss.setCommandText(queryString);
 
-        if (conceptIRI.toString().startsWith("urn:uuid:"))
-            pss.setLiteral("conceptId", conceptIRI.toString().replaceFirst("urn:uuid:", ""));
-        else
-            pss.setIri("concept", conceptIRI);
-
+        pss.setIri("concept", conceptIRI);
         pss.setIri("model", modelIRI);
         pss.setLiteral("draft", "DRAFT");
         pss.setLiteral("classLabel", ResourceFactory.createLangLiteral(classLabel, lang));

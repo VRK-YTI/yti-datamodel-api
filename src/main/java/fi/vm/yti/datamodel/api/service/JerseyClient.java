@@ -435,6 +435,11 @@ public class JerseyClient {
     public Response saveConceptSuggestionUsingTerminologyAPI(String body,
                                                              String terminologyUri) {
 
+        if(LDHelper.isInvalidIRI(terminologyUri)) {
+            logger.warn("Invalid terminology uri in concept suggestion: "+terminologyUri);
+            throw new IllegalArgumentException("Invalid terminology URI!");
+        }
+
         String url = properties.getDefaultTerminologyAPI() + "integration/terminology/conceptSuggestion";
 
         Client client = ClientBuilder.newClient();

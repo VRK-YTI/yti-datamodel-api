@@ -70,10 +70,10 @@ public final class JenaClient {
         this.provService = DatasetAccessorFactory.createHTTP(endpointServices.getProvReadWriteAddress());
         this.schemeService = DatasetAccessorFactory.createHTTP(endpointServices.getSchemesReadWriteAddress());
 
-        if(properties.getFusekiPassword()!=null) {
-            logger.debug("Setting fuseki password!");
+        if(properties.getFusekiPassword()!=null && properties.getFusekiUser()!=null) {
+            logger.debug("Setting fuseki user & password!");
             CredentialsProvider credsProvider = new BasicCredentialsProvider();
-            Credentials credentials = new UsernamePasswordCredentials("admin", properties.getFusekiPassword());
+            Credentials credentials = new UsernamePasswordCredentials(properties.getFusekiUser(), properties.getFusekiPassword());
             credsProvider.setCredentials(AuthScope.ANY, credentials);
             HttpClient httpclient = HttpClients.custom()
                 .setDefaultCredentialsProvider(credsProvider)

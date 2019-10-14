@@ -72,11 +72,7 @@ public class ReusablePredicate extends AbstractPredicate {
 
         pss.setCommandText(queryString);
 
-        if (conceptIRI.toString().startsWith("urn:uuid:"))
-            pss.setLiteral("conceptId", conceptIRI.toString().replaceFirst("urn:uuid:", ""));
-        else
-            pss.setIri("concept", conceptIRI);
-
+        pss.setIri("concept", conceptIRI);
         pss.setIri("model", modelIRI);
         pss.setIri("type", typeIRI);
         pss.setLiteral("draft", "DRAFT");
