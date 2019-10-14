@@ -159,12 +159,6 @@ public final class TerminologyManager {
                     put("@type", "http://www.w3.org/2001/XMLSchema#dateTime");
                 }
             });
-            put("language", new LinkedHashMap<String, Object>() {
-                {
-                    put("@id", "http://purl.org/dc/terms/language");
-                  //  put("@container", "@list");
-                }
-            });
         }
     };
 
