@@ -54,8 +54,6 @@ public class DataModel extends AbstractModel {
             + "?modelIRI a dcap:MetadataVocabulary . "
             + "?modelIRI rdfs:label ?mlabel . "
             + "?modelIRI owl:versionInfo ?draft . "
-            + "?modelIRI dcterms:created ?creation . "
-            + "?modelIRI dcterms:modified ?creation . "
             //+ "?modelIRI dcterms:language "+allowedLang+" . "
             + "?modelIRI dcap:preferredXMLNamespaceName ?namespace . "
             + "?modelIRI dcap:preferredXMLNamespacePrefix ?prefix . "
@@ -66,7 +64,6 @@ public class DataModel extends AbstractModel {
             + "?org skos:prefLabel ?orgLabel . "
             + "?org a foaf:Organization . "
             + "} WHERE { "
-            + "BIND(now() as ?creation) "
             + "GRAPH <urn:yti:servicecategories> { "
             + "?group skos:notation ?code . "
             + "?group skos:prefLabel ?groupLabel . "
@@ -98,7 +95,12 @@ public class DataModel extends AbstractModel {
             this.graph = qexec.execConstruct();
         }
         RDFList langRDFList = LDHelper.addStringListToModel(this.graph, allowedLang);
-        this.graph.add(ResourceFactory.createResource(namespace.toString()), DCTerms.language, langRDFList);
+        Resource rootResource = ResourceFactory.createResource(namespace.toString());
+
+        this.graph.add(rootResource, DCTerms.language, langRDFList);
+        this.graph.add(rootResource, DCTerms.created, LDHelper.getDateTimeLiteral());
+        this.graph.add(rootResource, DCTerms.modified, LDHelper.getDateTimeLiteral());
+
 
     }
 

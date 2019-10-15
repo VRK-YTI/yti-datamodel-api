@@ -529,16 +529,12 @@ public class QueryLibrary {
             + "?shapeIRI rdfs:isDefinedBy ?model . "
             + "?model rdfs:label ?externalModelLabel . "
             + "?shapeIRI a sh:NodeShape . "
-            + "?shapeIRI dcterms:modified ?modified . "
-            + "?shapeIRI dcterms:created ?creation . "
             + "} WHERE { "
             + "GRAPH ?model { "
             + "?model dcterms:requires ?externalModel . "
             + "?externalModel rdfs:label ?externalModelLabel . "
             + "}"
-            + "BIND(now() as ?creation) "
-            + "BIND(now() as ?modified) " +
-            "}");
+            + "}");
 
     final public static String externalShapeQuery = LDHelper.expandSparqlQuery(true,
         "CONSTRUCT { "
@@ -549,8 +545,6 @@ public class QueryLibrary {
             + "?shapeIRI owl:versionInfo ?draft . "
             + "?shapeIRI sh:name ?label . "
             + "?shapeIRI sh:description ?comment . "
-            + "?shapeIRI dcterms:modified ?modified . "
-            + "?shapeIRI dcterms:created ?creation . "
             + "?shapeIRI sh:property ?property . "
             + "?property a sh:PropertyShape . "
             + "?property sh:datatype ?datatype . "
@@ -560,8 +554,6 @@ public class QueryLibrary {
             + "?property sh:name ?propertyLabel . "
             + "?property sh:description ?propertyComment . "
             + "} WHERE { "
-            + "BIND(now() as ?creation) "
-            + "BIND(now() as ?modified) "
             + commonExternalClassQuery);
 
 }

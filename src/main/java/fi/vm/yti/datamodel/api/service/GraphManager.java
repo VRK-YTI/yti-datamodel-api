@@ -605,30 +605,6 @@ public class GraphManager {
     }
 
     /**
-     * Tries to update the dcterms:modified date of an resource
-     *
-     * @param resource IRI of an Resource as String
-     */
-    public void updateModifyDates(String resource) {
-
-        String query =
-            "DELETE { GRAPH ?resource { ?resource dcterms:modified ?oldModDate . } } "
-                + "INSERT { GRAPH ?resource { ?resource dcterms:modified ?time . } } "
-                + "WHERE { GRAPH ?resource { ?resource dcterms:modified ?oldModDate .  } BIND(now() as ?time) }";
-
-        ParameterizedSparqlString pss = new ParameterizedSparqlString();
-        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
-        pss.setIri("resource", resource);
-
-        pss.setCommandText(query);
-
-        UpdateRequest queryObj = pss.asUpdate();
-        UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, endpointServices.getCoreSparqlUpdateAddress());
-        qexec.execute();
-
-    }
-
-    /**
      * Deletes all graphs from Core service.
      */
     public void deleteGraphs() {
@@ -1627,6 +1603,7 @@ public class GraphManager {
         Model exportModel = resource.asGraphCopy();
         exportModel.add(exportModel.createResource(resource.getModelId()), DCTerms.hasPart, exportModel.createResource(resource.getId()));
         LDHelper.rewriteLiteral(exportModel, ResourceFactory.createResource(resource.getModelId()), DCTerms.modified, LDHelper.getDateTimeLiteral());
+        LDHelper.rewriteLiteral(exportModel, ResourceFactory.createResource(resource.getModelId()), DCTerms.created, LDHelper.getDateTimeLiteral());
         jenaClient.addModelToCore(resource.getModelId() + "#ExportGraph", exportModel);
     }
 
@@ -1635,6 +1612,10 @@ public class GraphManager {
                                Model oldModel,
                                Model newModel) {
         LDHelper.rewriteLiteral(newModel, ResourceFactory.createResource(resourceId), DCTerms.modified, LDHelper.getDateTimeLiteral());
+
+        Literal createdDate = oldModel.getRequiredProperty(ResourceFactory.createResource(resourceId), DCTerms.created).getLiteral();
+        LDHelper.rewriteLiteral(newModel, ResourceFactory.createResource(resourceId), DCTerms.created, createdDate);
+
         Model exportModel = jenaClient.getModelFromCore(modelId + "#ExportGraph");
         exportModel = modelManager.removeResourceStatements(oldModel, exportModel);
         exportModel.add(newModel);
@@ -1644,7 +1625,13 @@ public class GraphManager {
     }
 
     public void updateResource(AbstractResource resource) {
+        LDHelper.rewriteLiteral(resource.asGraph(), ResourceFactory.createResource(resource.getId()), DCTerms.modified, LDHelper.getDateTimeLiteral());
+
         final Model oldModel = jenaClient.getModelFromCore(resource.getId());
+
+        Literal createdDate = oldModel.getRequiredProperty(ResourceFactory.createResource(resource.getId()), DCTerms.created).getLiteral();
+        LDHelper.rewriteLiteral(resource.asGraph(), ResourceFactory.createResource(resource.getId()), DCTerms.created, createdDate);
+
         final Model newModel = resource.asGraph();
         updateResource(resource.getModelId(), resource.getId(), oldModel, newModel);
     }
@@ -1680,6 +1667,8 @@ public class GraphManager {
 
     public void createModel(AbstractModel amodel) {
         LDHelper.rewriteLiteral(amodel.asGraph(), ResourceFactory.createResource(amodel.getId()), DCTerms.modified, LDHelper.getDateTimeLiteral());
+        LDHelper.rewriteLiteral(amodel.asGraph(), ResourceFactory.createResource(amodel.getId()), DCTerms.created, LDHelper.getDateTimeLiteral());
+
         logger.info("Creating model " + amodel.getId());
         jenaClient.putModelToCore(amodel.getId(), amodel.asGraph());
         jenaClient.putModelToCore(amodel.getId() + "#ExportGraph", amodel.asGraph());
@@ -1687,7 +1676,12 @@ public class GraphManager {
 
     public void updateModel(AbstractModel amodel) {
         LDHelper.rewriteLiteral(amodel.asGraph(), ResourceFactory.createResource(amodel.getId()), DCTerms.modified, LDHelper.getDateTimeLiteral());
+
         Model oldModel = jenaClient.getModelFromCore(amodel.getId());
+        Literal createdDate = oldModel.getRequiredProperty(ResourceFactory.createResource(amodel.getId()), DCTerms.created).getLiteral();
+
+        LDHelper.rewriteLiteral(amodel.asGraph(), ResourceFactory.createResource(amodel.getId()), DCTerms.created, createdDate);
+
         Model exportModel = jenaClient.getModelFromCore(amodel.getId() + "#ExportGraph");
 
         // OMG: Model.remove() doesnt remove RDFLists

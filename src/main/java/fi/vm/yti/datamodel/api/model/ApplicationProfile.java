@@ -9,6 +9,7 @@ import org.apache.jena.query.QueryExecution;
 import org.apache.jena.query.QueryExecutionFactory;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.RDFList;
+import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.vocabulary.DCTerms;
 
@@ -57,8 +58,6 @@ public class ApplicationProfile extends AbstractModel {
             + "?modelIRI a dcap:DCAP . "
             + "?modelIRI rdfs:label ?mlabel . "
             + "?modelIRI owl:versionInfo ?draft . "
-            + "?modelIRI dcterms:created ?creation . "
-            + "?modelIRI dcterms:modified ?creation . "
             + "?modelIRI dcap:preferredXMLNamespaceName ?namespace . "
             + "?modelIRI dcap:preferredXMLNamespacePrefix ?prefix . "
             + "?modelIRI dcterms:isPartOf ?group . "
@@ -68,7 +67,6 @@ public class ApplicationProfile extends AbstractModel {
             + "?org skos:prefLabel ?orgLabel . "
             + "?org a foaf:Organization . "
             + "} WHERE { "
-            + "BIND(now() as ?creation) "
             + "GRAPH <urn:yti:servicecategories> { "
             + "?group skos:notation ?code . "
             + "?group skos:prefLabel ?groupLabel . "
@@ -101,7 +99,12 @@ public class ApplicationProfile extends AbstractModel {
         }
 
         RDFList langRDFList = LDHelper.addStringListToModel(this.graph, allowedLang);
-        this.graph.add(ResourceFactory.createResource(namespace.toString()), DCTerms.language, langRDFList);
+        Resource rootResource = ResourceFactory.createResource(namespace.toString());
+
+        this.graph.add(rootResource, DCTerms.language, langRDFList);
+        this.graph.add(rootResource, DCTerms.created, LDHelper.getDateTimeLiteral());
+        this.graph.add(rootResource, DCTerms.modified, LDHelper.getDateTimeLiteral());
+
 
     }
 

@@ -76,7 +76,9 @@ public class ClassPropertyCreator {
             UUID classPropertyUUID = UUID.randomUUID();
 
             if (graphManager.isExistingServiceGraph(SplitIRI.namespace(predicateID))) {
+
                 /* Local predicate */
+
                 if (!graphManager.isExistingGraph(predicateIRI)) {
                     return jerseyResponseManager.invalidIRI();
                 }
@@ -88,7 +90,6 @@ public class ClassPropertyCreator {
                     + "?uuid sh:path ?predicate . "
                     + "?uuid dcterms:type ?predicateType . "
                     + "?uuid dcterms:type ?externalType . "
-                    + "?uuid dcterms:created ?creation . "
                     + "?uuid iow:localName ?localIdentifier . "
                     + "?uuid owl:equivalentProperty ?mappedPredicate . "
                     + "?uuid sh:name ?label . "
@@ -98,7 +99,6 @@ public class ClassPropertyCreator {
                     + "?uuid sh:maxCount 1 . "
                     + "?uuid sh:datatype ?datatype . } "
                     + "WHERE { "
-                    + "BIND(now() as ?creation) "
                     + "OPTIONAL { "
                     + "GRAPH ?predicate { "
                     + "?predicate rdfs:label ?label .  "
@@ -116,17 +116,8 @@ public class ClassPropertyCreator {
                 pss.setLiteral("localIdentifier", SplitIRI.localname(predicateID));
 
             } else {
-             
-         /* Removed predicate addition
-         String predicateType = NamespaceManager.getExternalPredicateType(predicateIRI);
-         
-         if((predicateType==null || predicateType.equals("http://www.w3.org/1999/02/22-rdf-syntax-ns#Property")) && type!=null && !type.equals("undefined")) {
-             String typeURI = type.replace("owl:", "http://www.w3.org/2002/07/owl#");
-             typeIRI = IDManager.constructIRI(typeURI);
-          } else {
-             if(predicateType==null || predicateType.equals("http://www.w3.org/1999/02/22-rdf-syntax-ns#Property")) return JerseyResponseManager.invalidParameter();
-             else typeIRI = IDManager.constructIRI(predicateType);
-         } */
+
+                /* External predicate */
 
                 if (type == null || type.equals("undefined"))
                     return jerseyResponseManager.invalidParameter();
@@ -136,13 +127,10 @@ public class ClassPropertyCreator {
 
                 service = endpointServices.getImportsSparqlAddress();
 
-                /* TODO: ADD LANGUAGE TAG TO COMMENTS */
-
                 queryString = "CONSTRUCT { "
                     + "?uuid a sh:PropertyShape . "
                     + "?uuid sh:path ?predicate . "
                     + "?uuid dcterms:type ?predicateType . "
-                    + "?uuid dcterms:created ?creation . "
                     + "?uuid iow:localName ?localIdentifier . "
                     + "?uuid sh:name ?label . "
                     + "?uuid sh:description ?comment . "
@@ -151,7 +139,6 @@ public class ClassPropertyCreator {
                     + "?uuid sh:maxCount 1 . "
                     + "?uuid sh:datatype ?prefDatatype . } "
                     + "WHERE { "
-                    + "BIND(now() as ?creation) "
                     + "OPTIONAL { ?predicate rdfs:label ?labelStr . FILTER(LANG(?labelStr) = '') BIND(STRLANG(STR(?labelStr),'en') as ?label) }"
                     + "OPTIONAL { ?predicate rdfs:label ?label . FILTER(LANG(?label)!='') }"
                     + "VALUES ?commentPred { rdfs:comment skos:definition dcterms:description dc:description }"
@@ -177,8 +164,6 @@ public class ClassPropertyCreator {
         } catch (IRIException e) {
             return jerseyResponseManager.invalidIRI();
         }
-
-        //logger.info(""+SplitIRI.localname(predicateID));
 
         return jerseyClient.constructNonEmptyGraphFromService(pss.toString(), service);
     }

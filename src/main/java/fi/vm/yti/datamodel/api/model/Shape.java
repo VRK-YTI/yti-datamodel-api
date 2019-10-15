@@ -108,6 +108,9 @@ public class Shape extends AbstractShape {
 
         }
 
+        this.graph.add(ResourceFactory.createResource(shapeIRI.toString()), DCTerms.created, LDHelper.getDateTimeLiteral());
+        this.graph.add(ResourceFactory.createResource(shapeIRI.toString()), DCTerms.modified, LDHelper.getDateTimeLiteral());
+
     }
 
 }

@@ -46,8 +46,6 @@ public class ReusableClass extends AbstractClass {
 
         String queryString = "CONSTRUCT  { "
             + "?classIRI owl:versionInfo ?draft . "
-            + "?classIRI dcterms:modified ?modified . "
-            + "?classIRI dcterms:created ?creation . "
             + "?classIRI a rdfs:Class . "
             + "?classIRI rdfs:isDefinedBy ?model . "
             + "?model rdfs:label ?modelLabel . "
@@ -64,8 +62,6 @@ public class ReusableClass extends AbstractClass {
             + "?scheme a skos:ConceptScheme . "
             + "?scheme skos:prefLabel ?title . "
             + "} WHERE { "
-            + "BIND(now() as ?creation) "
-            + "BIND(now() as ?modified) "
             + "?model a ?modelType . "
             + "?model rdfs:label ?modelLabel . "
             + "?concept a skos:Concept . "
@@ -85,9 +81,12 @@ public class ReusableClass extends AbstractClass {
         pss.setLiteral("draft", "DRAFT");
         pss.setLiteral("classLabel", ResourceFactory.createLangLiteral(classLabel, lang));
         String resourceName = LDHelper.resourceName(classLabel);
-        pss.setIri("classIRI", LDHelper.resourceIRI(modelIRI.toString(), resourceName));
+        String resourceURI = LDHelper.resourceIRI(modelIRI.toString(), resourceName);
+        pss.setIri("classIRI", resourceURI);
 
         this.graph = terminologyManager.constructModelFromTerminologyAPIAndCore(conceptIRI.toString(), modelIRI.toString(), pss.asQuery());
+        this.graph.add(ResourceFactory.createResource(resourceURI), DCTerms.created, LDHelper.getDateTimeLiteral());
+        this.graph.add(ResourceFactory.createResource(resourceURI), DCTerms.modified, LDHelper.getDateTimeLiteral());
 
     }
 
@@ -156,8 +155,6 @@ public class ReusableClass extends AbstractClass {
 
         String queryString = "CONSTRUCT  { "
             + "?classIRI owl:versionInfo ?draft . "
-            + "?classIRI dcterms:modified ?modified . "
-            + "?classIRI dcterms:created ?creation . "
             + "?classIRI a rdfs:Class . "
             + "?classIRI rdfs:isDefinedBy ?model . "
             + "?model rdfs:label ?modelLabel . "
@@ -165,8 +162,6 @@ public class ReusableClass extends AbstractClass {
             + "?classIRI sh:name ?classLabel . "
             + "?classIRI sh:description ?comment . "
             + "} WHERE { "
-            + "BIND(now() as ?creation) "
-            + "BIND(now() as ?modified) "
             + "GRAPH ?model {"
             + "?model a ?modelType . "
             + "?model rdfs:label ?modelLabel . "
@@ -177,9 +172,12 @@ public class ReusableClass extends AbstractClass {
         pss.setLiteral("draft", "DRAFT");
         pss.setLiteral("classLabel", ResourceFactory.createLangLiteral(classLabel, lang));
         String resourceName = LDHelper.resourceName(classLabel);
-        pss.setIri("classIRI", LDHelper.resourceIRI(modelIRI.toString(), resourceName));
+        String resourceUri = LDHelper.resourceIRI(modelIRI.toString(), resourceName);
+        pss.setIri("classIRI", resourceUri);
 
         this.graph = graphManager.constructModelFromCoreGraph(pss.toString());
+        this.graph.add(ResourceFactory.createResource(resourceUri), DCTerms.created, LDHelper.getDateTimeLiteral());
+        this.graph.add(ResourceFactory.createResource(resourceUri), DCTerms.modified, LDHelper.getDateTimeLiteral());
 
     }
 

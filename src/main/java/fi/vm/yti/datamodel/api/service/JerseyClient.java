@@ -95,22 +95,6 @@ public class JerseyClient {
 
     }
 
-    /* FIXME: Remove?
-    public static Response getResponseFromURL(String url, String accept, Map<String, String> queryParams) {
-        Client client = ClientBuilder.newClient();
-        WebTarget target = client.target(url);
-        if(queryParams!=null) {
-            for(String key : queryParams.keySet()) {
-                target = target.queryParam(key, queryParams.get(key));
-            }
-        }
-        Invocation.Builder requestBuilder = target.request();
-        if(accept!=null) requestBuilder = requestBuilder.accept(accept);
-        Response response = requestBuilder.get();
-        return response;
-    }
-    */
-
     /**
      * Reads boolean from any url or returns false
      *
@@ -443,7 +427,7 @@ public class JerseyClient {
         String url = properties.getDefaultTerminologyAPI() + "integration/terminology/conceptSuggestion";
 
         Client client = ClientBuilder.newClient();
-        WebTarget target = client.target(url).queryParam("terminologyUri", terminologyUri);
+        WebTarget target = client.target(url);
 
         Response response = target.request().post(Entity.entity(body, "application/json"));
 

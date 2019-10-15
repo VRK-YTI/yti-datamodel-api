@@ -41,8 +41,6 @@ public class ReusablePredicate extends AbstractPredicate {
 
         String queryString = "CONSTRUCT  { "
             + "?predicateIRI owl:versionInfo ?draft . "
-            + "?predicateIRI dcterms:created ?creation . "
-            + "?predicateIRI dcterms:modified ?modified . "
             + "?predicateIRI a ?type .  "
             + "?predicateIRI rdfs:isDefinedBy ?model . "
             + "?model rdfs:label ?modelLabel . "
@@ -60,8 +58,6 @@ public class ReusablePredicate extends AbstractPredicate {
             + "?scheme skos:prefLabel ?title . "
             + "} "
             + "WHERE { "
-            + "BIND(now() as ?creation) "
-            + "BIND(now() as ?modified) "
             + "?model a ?modelType . "
             + "?model rdfs:label ?modelLabel . "
             + "?concept a skos:Concept . "
@@ -82,9 +78,12 @@ public class ReusablePredicate extends AbstractPredicate {
         pss.setLiteral("draft", "DRAFT");
         pss.setLiteral("predicateLabel", ResourceFactory.createLangLiteral(predicateLabel, lang));
         String predicateName = LDHelper.propertyName(predicateLabel);
-        pss.setIri("predicateIRI", LDHelper.resourceIRI(modelIRI.toString(), predicateName));
+        String predicateUri = LDHelper.resourceIRI(modelIRI.toString(), predicateName);
+        pss.setIri("predicateIRI", predicateUri);
 
         this.graph = terminologyManager.constructModelFromTerminologyAPIAndCore(conceptIRI.toString(), modelIRI.toString(), pss.asQuery());
+        this.graph.add(ResourceFactory.createResource(predicateUri), DCTerms.created, LDHelper.getDateTimeLiteral());
+        this.graph.add(ResourceFactory.createResource(predicateUri), DCTerms.modified, LDHelper.getDateTimeLiteral());
 
     }
 
@@ -146,8 +145,6 @@ public class ReusablePredicate extends AbstractPredicate {
 
         String queryString = "CONSTRUCT  { "
             + "?predicateIRI owl:versionInfo ?draft . "
-            + "?predicateIRI dcterms:created ?creation . "
-            + "?predicateIRI dcterms:modified ?modified . "
             + "?predicateIRI a ?type .  "
             + "?predicateIRI rdfs:isDefinedBy ?model . "
             + "?model rdfs:label ?modelLabel . "
@@ -157,8 +154,6 @@ public class ReusablePredicate extends AbstractPredicate {
             + "WHERE { GRAPH ?model {"
             + "?model a ?modelType . "
             + "?model rdfs:label ?modelLabel . } "
-            + "BIND(now() as ?creation) "
-            + "BIND(now() as ?modified) "
             + "}";
 
         pss.setCommandText(queryString);
@@ -167,9 +162,12 @@ public class ReusablePredicate extends AbstractPredicate {
         pss.setLiteral("draft", "DRAFT");
         pss.setLiteral("predicateLabel", ResourceFactory.createLangLiteral(predicateLabel, lang));
         String predicateName = LDHelper.propertyName(predicateLabel);
-        pss.setIri("predicateIRI", LDHelper.resourceIRI(modelIRI.toString(), predicateName));
+        String predicateUri = LDHelper.resourceIRI(modelIRI.toString(), predicateName);
+        pss.setIri("predicateIRI", predicateUri);
 
         this.graph = graphManager.constructModelFromCoreGraph(pss.toString());
+        this.graph.add(ResourceFactory.createResource(predicateUri), DCTerms.created, LDHelper.getDateTimeLiteral());
+        this.graph.add(ResourceFactory.createResource(predicateUri), DCTerms.modified, LDHelper.getDateTimeLiteral());
 
     }
 
