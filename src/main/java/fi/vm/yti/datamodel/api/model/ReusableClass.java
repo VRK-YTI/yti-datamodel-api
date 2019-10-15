@@ -84,9 +84,12 @@ public class ReusableClass extends AbstractClass {
         String resourceURI = LDHelper.resourceIRI(modelIRI.toString(), resourceName);
         pss.setIri("classIRI", resourceURI);
 
+
+        Literal created = LDHelper.getDateTimeLiteral();
+
         this.graph = terminologyManager.constructModelFromTerminologyAPIAndCore(conceptIRI.toString(), modelIRI.toString(), pss.asQuery());
-        this.graph.add(ResourceFactory.createResource(resourceURI), DCTerms.created, LDHelper.getDateTimeLiteral());
-        this.graph.add(ResourceFactory.createResource(resourceURI), DCTerms.modified, LDHelper.getDateTimeLiteral());
+        this.graph.add(ResourceFactory.createResource(resourceURI), DCTerms.created, created);
+        this.graph.add(ResourceFactory.createResource(resourceURI), DCTerms.modified, created);
 
     }
 
@@ -176,8 +179,11 @@ public class ReusableClass extends AbstractClass {
         pss.setIri("classIRI", resourceUri);
 
         this.graph = graphManager.constructModelFromCoreGraph(pss.toString());
-        this.graph.add(ResourceFactory.createResource(resourceUri), DCTerms.created, LDHelper.getDateTimeLiteral());
-        this.graph.add(ResourceFactory.createResource(resourceUri), DCTerms.modified, LDHelper.getDateTimeLiteral());
+
+        Literal created = LDHelper.getDateTimeLiteral();
+
+        this.graph.add(ResourceFactory.createResource(resourceUri), DCTerms.created, created);
+        this.graph.add(ResourceFactory.createResource(resourceUri), DCTerms.modified, created);
 
     }
 

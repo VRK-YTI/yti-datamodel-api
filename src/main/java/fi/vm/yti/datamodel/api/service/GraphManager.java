@@ -11,6 +11,7 @@ import fi.vm.yti.datamodel.api.model.AbstractResource;
 import fi.vm.yti.datamodel.api.utils.LDHelper;
 
 import org.apache.jena.atlas.web.HttpException;
+import org.apache.jena.graph.impl.LiteralLabelFactory;
 import org.apache.jena.query.*;
 import org.apache.jena.rdf.model.*;
 import org.apache.jena.shared.PrefixMapping;
@@ -338,7 +339,7 @@ public class GraphManager {
 
     public Set<String> getPriviledgedModels(Set<String> orgs) {
 
-        if(orgs==null) return null;
+        if (orgs == null) return null;
 
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         String selectModelIds =
@@ -406,6 +407,7 @@ public class GraphManager {
 
     /**
      * Returns prefixmapping for the model that the resource is defined in
+     *
      * @param resource Resource that is defined in a model
      * @return Prefix and namespace for the model that resource is defined in
      */
@@ -432,15 +434,15 @@ public class GraphManager {
 
         while (results.hasNext()) {
             QuerySolution soln = results.nextSolution();
-            if(!soln.contains("prefix") || !soln.contains("namespace")) {
-                throw new IllegalArgumentException("No model found for "+resource);
+            if (!soln.contains("prefix") || !soln.contains("namespace")) {
+                throw new IllegalArgumentException("No model found for " + resource);
             }
             String prefix = soln.getLiteral("prefix").getString();
             String namespace = soln.getLiteral("namespace").getString();
-            PrefixMapping pm = PrefixMapping.Factory.create().setNsPrefix(prefix,namespace);
+            PrefixMapping pm = PrefixMapping.Factory.create().setNsPrefix(prefix, namespace);
             return pm;
         }
-        throw new IllegalArgumentException("No model found for "+resource);
+        throw new IllegalArgumentException("No model found for " + resource);
     }
 
     /**
@@ -941,36 +943,38 @@ public class GraphManager {
 
     /**
      * Adds required object and prefix/namespace to the model graph and export graph
-     * @param model Model where new requirement is added
+     *
+     * @param model    Model where new requirement is added
      * @param resource Resource of model that is added as requirement
      */
-    public void addResourceNamespaceToModel(IRI model, IRI resource) {
+    public void addResourceNamespaceToModel(IRI model,
+                                            IRI resource) {
         String query =
-                "INSERT { " +
+            "INSERT { " +
                 "GRAPH ?graph { ?graph dcterms:requires ?resourceGraph . " +
-                    "?resourceGraph a ?resourceGraphType . " +
-                    "?resourceGraph rdfs:label ?label . " +
-                    "?resourceGraph dcap:preferredXMLNamespaceName ?ns . " +
-                    "?resourceGraph dcap:preferredXMLNamespacePrefix ?prefix . }" +
+                "?resourceGraph a ?resourceGraphType . " +
+                "?resourceGraph rdfs:label ?label . " +
+                "?resourceGraph dcap:preferredXMLNamespaceName ?ns . " +
+                "?resourceGraph dcap:preferredXMLNamespacePrefix ?prefix . }" +
                 "GRAPH ?exportGraph { ?graph dcterms:requires ?resourceGraph . " +
-                    "?resourceGraph a ?resourceGraphType . " +
-                    "?resourceGraph rdfs:label ?label . " +
-                    "?resourceGraph dcap:preferredXMLNamespaceName ?ns . " +
-                    "?resourceGraph dcap:preferredXMLNamespacePrefix ?prefix . }" +
-                  "} " +
+                "?resourceGraph a ?resourceGraphType . " +
+                "?resourceGraph rdfs:label ?label . " +
+                "?resourceGraph dcap:preferredXMLNamespaceName ?ns . " +
+                "?resourceGraph dcap:preferredXMLNamespacePrefix ?prefix . }" +
+                "} " +
                 "WHERE { " +
                 "GRAPH ?resource { ?resource rdfs:isDefinedBy ?resourceGraph . } " +
                 "GRAPH ?resourceGraph { " +
-                    "?resourceGraph a ?resourceGraphType . " +
-                    "?resourceGraph rdfs:label ?label . " +
-                    "?resourceGraph dcap:preferredXMLNamespaceName ?ns . " +
-                    "?resourceGraph dcap:preferredXMLNamespacePrefix ?prefix . " +
-                    "} " +
+                "?resourceGraph a ?resourceGraphType . " +
+                "?resourceGraph rdfs:label ?label . " +
+                "?resourceGraph dcap:preferredXMLNamespaceName ?ns . " +
+                "?resourceGraph dcap:preferredXMLNamespacePrefix ?prefix . " +
+                "} " +
                 "}";
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
         pss.setIri("graph", model);
-        pss.setIri("exportGraph", model+"#ExportGraph");
+        pss.setIri("exportGraph", model + "#ExportGraph");
         pss.setIri("resource", resource);
         pss.setCommandText(query);
         UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(pss.asUpdate(), endpointServices.getCoreSparqlUpdateAddress());
@@ -981,7 +985,7 @@ public class GraphManager {
         prefixModel.add(ResourceFactory.createResource(model.toString()), RDF.type, OWL.Ontology);
         DatasetAccessor toAccessor = DatasetAccessorFactory.createHTTP(endpointServices.getCoreReadWriteAddress());
         toAccessor.add(model.toString(), prefixModel);
-        toAccessor.add(model.toString()+"#ExportGraph", prefixModel);
+        toAccessor.add(model.toString() + "#ExportGraph", prefixModel);
 
     }
 
@@ -1014,12 +1018,12 @@ public class GraphManager {
      * Status change for normal users. Only certain status changes are allowed.
      */
     public void changeStatuses(String model,
-                                      String initialStatus,
-                                      String endStatus) {
+                               String initialStatus,
+                               String endStatus) {
         switch (initialStatus) {
             case "INCOMPLETE":
                 if (endStatus.equals("DRAFT")) {
-                    logger.debug("Status changes in "+model+" from "+initialStatus+" to "+endStatus);
+                    logger.debug("Status changes in " + model + " from " + initialStatus + " to " + endStatus);
                     changeResourceStatuses(model, initialStatus, endStatus);
                 } else {
                     throw new IllegalArgumentException("Invalid status change from " + initialStatus + " to " + endStatus);
@@ -1028,7 +1032,7 @@ public class GraphManager {
             case "DRAFT":
                 final List draftChanges = Stream.of("INCOMPLETE", "VALID", "RETIRED", "INVALID").collect(Collectors.toList());
                 if (draftChanges.contains(endStatus)) {
-                    logger.debug("Status changes in "+model+" from "+initialStatus+" to "+endStatus);
+                    logger.debug("Status changes in " + model + " from " + initialStatus + " to " + endStatus);
                     changeResourceStatuses(model, initialStatus, endStatus);
                 } else {
                     throw new IllegalArgumentException("Invalid status change from " + initialStatus + " to " + endStatus);
@@ -1037,7 +1041,7 @@ public class GraphManager {
             case "VALID":
                 final List validChanges = Stream.of("RETIRED", "INVALID").collect(Collectors.toList());
                 if (validChanges.contains(endStatus)) {
-                    logger.debug("Status changes in "+model+" from "+initialStatus+" to "+endStatus);
+                    logger.debug("Status changes in " + model + " from " + initialStatus + " to " + endStatus);
                     changeResourceStatuses(model, initialStatus, endStatus);
                 } else {
                     throw new IllegalArgumentException("Invalid status change from " + initialStatus + " to " + endStatus);
@@ -1046,7 +1050,7 @@ public class GraphManager {
             case "RETIRED":
                 final List removedChanges = Stream.of("VALID", "INVALID").collect(Collectors.toList());
                 if (removedChanges.contains(endStatus)) {
-                    logger.debug("Status changes in "+model+" from "+initialStatus+" to "+endStatus);
+                    logger.debug("Status changes in " + model + " from " + initialStatus + " to " + endStatus);
                     changeResourceStatuses(model, initialStatus, endStatus);
                 } else {
                     throw new IllegalArgumentException("Invalid status change from " + initialStatus + " to " + endStatus);
@@ -1055,7 +1059,7 @@ public class GraphManager {
             case "INVALID":
                 final List invalidChanges = Stream.of("REMOVED", "VALID").collect(Collectors.toList());
                 if (invalidChanges.contains(endStatus)) {
-                    logger.debug("Status changes in "+model+" from "+initialStatus+" to "+endStatus);
+                    logger.debug("Status changes in " + model + " from " + initialStatus + " to " + endStatus);
                     changeResourceStatuses(model, initialStatus, endStatus);
                 } else {
                     throw new IllegalArgumentException("Invalid status change from " + initialStatus + " to " + endStatus);
@@ -1071,12 +1075,12 @@ public class GraphManager {
      *
      */
     public void changeStatusesAsSuperUser(String model,
-                                      String initialStatus,
-                                      String endStatus) {
+                                          String initialStatus,
+                                          String endStatus) {
         final List allChanges = Stream.of("INCOMPLETE", "DRAFT", "VALID", "SUPERSEDED", "RETIRED", "INVALID", "RECOMMENDED").collect(Collectors.toList());
 
         if (allChanges.contains(endStatus) && allChanges.contains(initialStatus)) {
-            logger.debug("Status changes in "+model+" from "+initialStatus+" to "+endStatus+" as SuperUser");
+            logger.debug("Status changes in " + model + " from " + initialStatus + " to " + endStatus + " as SuperUser");
             changeResourceStatuses(model, initialStatus, endStatus);
         } else {
             throw new IllegalArgumentException("Invalid status change from " + initialStatus + " to " + endStatus);
@@ -1538,7 +1542,6 @@ public class GraphManager {
         return jenaClient.constructFromService(query, service);
     }
 
-
     public Model getModelInfo(IRI modelIRI) {
 
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
@@ -1598,12 +1601,15 @@ public class GraphManager {
     }
 
     public void createResource(AbstractResource resource) {
+        Literal created = LDHelper.getDateTimeLiteral();
+        LDHelper.rewriteLiteral(resource.asGraph(), ResourceFactory.createResource(resource.getModelId()), DCTerms.modified, created);
+        LDHelper.rewriteLiteral(resource.asGraph(), ResourceFactory.createResource(resource.getModelId()), DCTerms.created, created);
         jenaClient.putModelToCore(resource.getId(), resource.asGraph());
         insertNewGraphReferenceToModel(resource.getId(), resource.getModelId());
         Model exportModel = resource.asGraphCopy();
         exportModel.add(exportModel.createResource(resource.getModelId()), DCTerms.hasPart, exportModel.createResource(resource.getId()));
-        LDHelper.rewriteLiteral(exportModel, ResourceFactory.createResource(resource.getModelId()), DCTerms.modified, LDHelper.getDateTimeLiteral());
-        LDHelper.rewriteLiteral(exportModel, ResourceFactory.createResource(resource.getModelId()), DCTerms.created, LDHelper.getDateTimeLiteral());
+        LDHelper.rewriteLiteral(exportModel, ResourceFactory.createResource(resource.getModelId()), DCTerms.modified, created);
+        LDHelper.rewriteLiteral(exportModel, ResourceFactory.createResource(resource.getModelId()), DCTerms.created, created);
         jenaClient.addModelToCore(resource.getModelId() + "#ExportGraph", exportModel);
     }
 
@@ -1611,15 +1617,15 @@ public class GraphManager {
                                String resourceId,
                                Model oldModel,
                                Model newModel) {
-        LDHelper.rewriteLiteral(newModel, ResourceFactory.createResource(resourceId), DCTerms.modified, LDHelper.getDateTimeLiteral());
 
-        Literal createdDate = oldModel.getRequiredProperty(ResourceFactory.createResource(resourceId), DCTerms.created).getLiteral();
-        LDHelper.rewriteLiteral(newModel, ResourceFactory.createResource(resourceId), DCTerms.created, createdDate);
+        Literal created = LDHelper.getDateTimeLiteral();
+
+        LDHelper.rewriteLiteral(newModel, ResourceFactory.createResource(resourceId), DCTerms.modified, created);
 
         Model exportModel = jenaClient.getModelFromCore(modelId + "#ExportGraph");
         exportModel = modelManager.removeResourceStatements(oldModel, exportModel);
         exportModel.add(newModel);
-        LDHelper.rewriteLiteral(exportModel, ResourceFactory.createResource(modelId), DCTerms.modified, LDHelper.getDateTimeLiteral());
+        LDHelper.rewriteLiteral(exportModel, ResourceFactory.createResource(modelId), DCTerms.modified, created);
         jenaClient.putModelToCore(modelId + "#ExportGraph", exportModel);
         jenaClient.putModelToCore(resourceId, newModel);
     }
@@ -1638,7 +1644,13 @@ public class GraphManager {
 
     public void updateResourceWithNewId(IRI oldIdIRI,
                                         AbstractResource resource) {
-        updateResource(resource.getModelId(), resource.getId(), jenaClient.getModelFromCore(oldIdIRI.toString()), resource.asGraph());
+
+        Model oldModel = jenaClient.getModelFromCore(oldIdIRI.toString());
+
+        Literal createdDate = oldModel.getRequiredProperty(ResourceFactory.createResource(oldIdIRI.toString()), DCTerms.created).getLiteral();
+        LDHelper.rewriteLiteral(resource.asGraph(), ResourceFactory.createResource(resource.getId()), DCTerms.created, createdDate);
+
+        updateResource(resource.getModelId(), resource.getId(), oldModel, resource.asGraph());
         removeGraph(oldIdIRI);
         updateResourceReferencesInAllGraphs(resource.getModelIRI(), oldIdIRI, resource.getIRI());
         updateReferencesInPositionGraph(resource.getModelIRI(), oldIdIRI, resource.getIRI());
@@ -1666,8 +1678,11 @@ public class GraphManager {
     }
 
     public void createModel(AbstractModel amodel) {
-        LDHelper.rewriteLiteral(amodel.asGraph(), ResourceFactory.createResource(amodel.getId()), DCTerms.modified, LDHelper.getDateTimeLiteral());
-        LDHelper.rewriteLiteral(amodel.asGraph(), ResourceFactory.createResource(amodel.getId()), DCTerms.created, LDHelper.getDateTimeLiteral());
+
+        Literal created = LDHelper.getDateTimeLiteral();
+
+        LDHelper.rewriteLiteral(amodel.asGraph(), ResourceFactory.createResource(amodel.getId()), DCTerms.modified, created);
+        LDHelper.rewriteLiteral(amodel.asGraph(), ResourceFactory.createResource(amodel.getId()), DCTerms.created, created);
 
         logger.info("Creating model " + amodel.getId());
         jenaClient.putModelToCore(amodel.getId(), amodel.asGraph());
