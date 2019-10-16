@@ -63,6 +63,10 @@ public class ExportModel {
         /* Check that URIs are valid */
         if (idManager.isInvalid(graph)) {
             return jerseyResponseManager.invalidIRI();
+        } else {
+            if(graph.contains("#")) {
+                graph = graph.split("\\#")[0];
+            }
         }
 
         if (ctype == null) ctype = "application/ld+json";
