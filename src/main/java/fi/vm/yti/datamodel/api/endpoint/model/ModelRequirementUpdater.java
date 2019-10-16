@@ -62,7 +62,7 @@ public class ModelRequirementUpdater {
 
         IRI modelIRI, resourceIRI;
 
-        if(model.isEmpty() || resource.isEmpty()) {
+        if(model == null || resource== null || model.isEmpty() || resource.isEmpty()) {
             jerseyResponseManager.invalidIRI();
         }
 

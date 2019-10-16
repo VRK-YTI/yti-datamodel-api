@@ -30,6 +30,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Service
 public final class TerminologyManager {
@@ -237,16 +238,31 @@ public final class TerminologyManager {
         }
     };
 
-    public Model getSchemesModelFromTerminologyAPI(String schemeUri) {
+    public Model getSchemesModelFromTerminologyAPI(String schemeUri, boolean includeIncomplete) {
+        return getSchemesModelFromTerminologyAPI(schemeUri, includeIncomplete, null);
+    }
+
+    public Model getSchemesModelFromTerminologyAPI(String schemeUri, boolean includeIncomplete, Set<String> includeIncompletefrom) {
 
         String url = properties.getDefaultTerminologyAPI() + "integration/containers";
 
         Client client = ClientBuilder.newClient();
-        WebTarget target = client.target(url).queryParam("includeIncomplete",true);
+        WebTarget target = client.target(url);
+
+        if(includeIncomplete) {
+            target = target.queryParam("includeIncomplete",includeIncomplete);
+        }
+
+        if(includeIncompletefrom!=null && !includeIncompletefrom.isEmpty()) {
+            target = target.queryParam("includeIncompleteFrom", String.join(",",includeIncompletefrom));
+        }
 
         if(schemeUri!=null && !schemeUri.isEmpty()) {
             target = target.queryParam("uri",schemeUri);
         }
+
+        logger.debug("Getting schemes from terminology api:");
+        logger.debug(target.toString());
 
         Response response = target.request("application/json").get();
 
@@ -329,7 +345,7 @@ public final class TerminologyManager {
             vocabularyUri = model.getRequiredProperty(ResourceFactory.createResource(conceptUri),SKOS.inScheme).getResource().getURI();
         }
 
-        Model schemesModel = getSchemesModelFromTerminologyAPI(vocabularyUri);
+        Model schemesModel = getSchemesModelFromTerminologyAPI(vocabularyUri, true);
         model.add(schemesModel);
 
         String modelString = modelManager.writeModelToJSONLDString(model);

@@ -3,8 +3,17 @@
  */
 package fi.vm.yti.datamodel.api.endpoint.concepts;
 
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+import fi.vm.yti.datamodel.api.security.AuthorizationManager;
 import fi.vm.yti.datamodel.api.service.JerseyResponseManager;
 import fi.vm.yti.datamodel.api.service.TerminologyManager;
+import fi.vm.yti.security.AuthenticatedUserProvider;
+import fi.vm.yti.security.Role;
+import fi.vm.yti.security.YtiUser;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
@@ -25,13 +34,19 @@ public class ConceptsSchemes {
 
     private final JerseyResponseManager jerseyResponseManager;
     private final TerminologyManager terminologyManager;
+    private final AuthorizationManager authorizationManager;
+    private final AuthenticatedUserProvider userProvider;
 
     @Autowired
-    ConceptsSchemes(JerseyResponseManager jerseyResponseManager,
+    ConceptsSchemes(AuthorizationManager authorizationManager,
+                    AuthenticatedUserProvider userProvider,
+                    JerseyResponseManager jerseyResponseManager,
                     TerminologyManager terminologyManager) {
 
         this.jerseyResponseManager = jerseyResponseManager;
         this.terminologyManager = terminologyManager;
+        this.authorizationManager = authorizationManager;
+        this.userProvider = userProvider;
     }
 
     @GET
@@ -43,6 +58,21 @@ public class ConceptsSchemes {
         @ApiResponse(code = 500, message = "Internal server error")
     })
     public Response vocab() {
-        return jerseyResponseManager.okModel(terminologyManager.getSchemesModelFromTerminologyAPI(null));
+
+        YtiUser user = userProvider.getUser();
+
+        if(user.isSuperuser()) {
+            return jerseyResponseManager.okModel(terminologyManager.getSchemesModelFromTerminologyAPI(null, true));
+        } else if(user.isAnonymous()) {
+            return jerseyResponseManager.okModel(terminologyManager.getSchemesModelFromTerminologyAPI(null, false));
+        } else {
+            final Map<UUID, Set<Role>> rolesInOrganizations = user.getRolesInOrganizations();
+            Set<String> orgIds = rolesInOrganizations.keySet().stream().map(u -> u.toString()).collect(Collectors.toSet());
+            if(orgIds.isEmpty()) {
+                return jerseyResponseManager.okModel(terminologyManager.getSchemesModelFromTerminologyAPI(null, false));
+            } else {
+                return jerseyResponseManager.okModel(terminologyManager.getSchemesModelFromTerminologyAPI(null, false, orgIds));
+            }
+        }
     }
 }
