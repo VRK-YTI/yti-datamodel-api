@@ -118,13 +118,14 @@ public class Resolve {
                 acceptHeader = acceptHeader.split(";")[0];
             }
 
+            logger.debug("Resolving format: "+acceptHeader);
             Lang rdfLang = RDFLanguages.contentTypeToLang(acceptHeader);
 
             if (acceptHeader.contains("application/schema+json") || acceptHeader.contains("application/xml")) {
-                final URI schemaWithLangURI = URI.create(uriInfo.getBaseUri().toString() + "exportModel?graph=" + graphName + "&content-type=" + acceptHeader + (language == null ? "" : "&lang=" + language) + "&raw=" + raw);
+                final URI schemaWithLangURI = URI.create(uriInfo.getBaseUri().toString() + "v1/exportModel?graph=" + graphName + "&content-type=" + acceptHeader + (language == null ? "" : "&lang=" + language) + "&raw=" + raw);
                 return Response.seeOther(schemaWithLangURI).build();
             } else if (rdfLang != null) {
-                final URI rdfUrl = URI.create(uriInfo.getBaseUri().toString() + "exportModel?graph=" + graphName + "&content-type=" + rdfLang.getHeaderString() + "&raw=" + raw);
+                final URI rdfUrl = URI.create(uriInfo.getBaseUri().toString() + "v1/exportModel?graph=" + graphName + "&content-type=" + rdfLang.getHeaderString() + "&raw=" + raw);
                 logger.debug("Resolving to RDF: " + rdfUrl);
                 return Response.seeOther(rdfUrl).build();
             }

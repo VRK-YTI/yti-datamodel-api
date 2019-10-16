@@ -1602,14 +1602,13 @@ public class GraphManager {
 
     public void createResource(AbstractResource resource) {
         Literal created = LDHelper.getDateTimeLiteral();
-        LDHelper.rewriteLiteral(resource.asGraph(), ResourceFactory.createResource(resource.getModelId()), DCTerms.modified, created);
-        LDHelper.rewriteLiteral(resource.asGraph(), ResourceFactory.createResource(resource.getModelId()), DCTerms.created, created);
+        LDHelper.rewriteLiteral(resource.asGraph(), ResourceFactory.createResource(resource.getId()), DCTerms.modified, created);
+        LDHelper.rewriteLiteral(resource.asGraph(), ResourceFactory.createResource(resource.getId()), DCTerms.created, created);
         jenaClient.putModelToCore(resource.getId(), resource.asGraph());
         insertNewGraphReferenceToModel(resource.getId(), resource.getModelId());
         Model exportModel = resource.asGraphCopy();
         exportModel.add(exportModel.createResource(resource.getModelId()), DCTerms.hasPart, exportModel.createResource(resource.getId()));
         LDHelper.rewriteLiteral(exportModel, ResourceFactory.createResource(resource.getModelId()), DCTerms.modified, created);
-        LDHelper.rewriteLiteral(exportModel, ResourceFactory.createResource(resource.getModelId()), DCTerms.created, created);
         jenaClient.addModelToCore(resource.getModelId() + "#ExportGraph", exportModel);
     }
 

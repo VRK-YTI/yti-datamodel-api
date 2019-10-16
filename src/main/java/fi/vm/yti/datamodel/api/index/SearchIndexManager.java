@@ -111,8 +111,8 @@ public class SearchIndexManager {
     }
 
     public void createIndexClass(AbstractClass classResource) {
+        logger.debug("Indexing: " + classResource.getId());
         IndexClassDTO indexClass = new IndexClassDTO(classResource);
-        logger.debug("Indexing: " + indexClass.getId());
         esManager.putToIndex(ELASTIC_INDEX_RESOURCE, indexClass.getId(), indexClass);
     }
 
