@@ -46,7 +46,11 @@ public class JerseyConfig extends ResourceConfig {
     @Autowired
     public JerseyConfig() {
 
-        packages("fi.vm.yti.datamodel.api.endpoint");
+
+        // https://github.com/spring-projects/spring-boot/issues/1468
+        // FIXME packages("fi.vm.yti.datamodel.api.endpoint"); should work but it doesn't
+        myPackages("fi.vm.yti.datamodel.api.endpoint");
+
         register(OpenApiResource.class);
         register(GZipEncoder.class);
         register(JsonParseExceptionMapper.class);
@@ -61,6 +65,12 @@ public class JerseyConfig extends ResourceConfig {
             resp.getHeaders().add("Access-Control-Allow-Methods", "GET");
         });
 
+    }
+
+    private void myPackages(String... packages) {
+        for (String pack : packages) {
+            new Reflections(pack).getTypesAnnotatedWith(Path.class).forEach(this::register);
+        }
     }
 
 }

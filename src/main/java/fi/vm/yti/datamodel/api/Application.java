@@ -5,9 +5,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = "fi.vm.yti.datamodel.api.*")
 @EnableScheduling
-@ComponentScan({ "fi.vm.yti.datamodel.api" })
 public class Application {
 
     public static void main(String[] args) {
