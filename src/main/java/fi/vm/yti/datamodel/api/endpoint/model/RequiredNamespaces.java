@@ -6,10 +6,10 @@ package fi.vm.yti.datamodel.api.endpoint.model;
 import fi.vm.yti.datamodel.api.service.EndpointServices;
 import fi.vm.yti.datamodel.api.service.JerseyClient;
 import fi.vm.yti.datamodel.api.utils.LDHelper;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import org.apache.jena.query.ParameterizedSparqlString;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,7 +22,7 @@ import javax.ws.rs.core.Response;
 
 @Component
 @Path("v1/listNamespaces")
-@Api(tags = { "Model" }, description = "Get list of available namespaces")
+@Tag(name = "Model")
 public class RequiredNamespaces {
 
     private final EndpointServices endpointServices;
@@ -38,11 +38,11 @@ public class RequiredNamespaces {
 
     @GET
     @Produces("application/ld+json")
-    @ApiOperation(value = "Get available namespaces from service", notes = "Local model namespaces and technical namespaces")
+    @Operation(description = "Get available namespaces from service")
     @ApiResponses(value = {
-        @ApiResponse(code = 400, message = "Invalid"),
-        @ApiResponse(code = 404, message = "Service not found"),
-        @ApiResponse(code = 500, message = "Internal server error")
+        @ApiResponse(responseCode = "400", description = "Invalid"),
+        @ApiResponse(responseCode = "404", description = "Service not found"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     public Response json() {
 

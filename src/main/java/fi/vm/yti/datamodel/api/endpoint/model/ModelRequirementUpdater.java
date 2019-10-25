@@ -19,15 +19,15 @@ import fi.vm.yti.datamodel.api.service.GraphManager;
 import fi.vm.yti.datamodel.api.service.IDManager;
 import fi.vm.yti.datamodel.api.service.JerseyResponseManager;
 import fi.vm.yti.security.AuthenticatedUserProvider;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 @Component
 @Path("v1/newModelRequirement")
-@Api(tags = { "Model" })
+@Tag(name = "Model" )
 public class ModelRequirementUpdater {
 
     private final IDManager idManager;
@@ -50,15 +50,15 @@ public class ModelRequirementUpdater {
     }
 
     @PUT
-    @ApiOperation(value = "Add resource model to required models")
-    @ApiResponses(value = { @ApiResponse(code = 200, message = "Resource model is added"),
-        @ApiResponse(code = 400, message = "Invalid ID supplied"),
-        @ApiResponse(code = 403, message = "Invalid IRI in parameter"),
-        @ApiResponse(code = 404, message = "Service not found"),
-        @ApiResponse(code = 401, message = "No right to add resource") })
-    public Response newRequirement(
-        @ApiParam(value = "Model URI", required = true) @QueryParam("model") String model,
-        @ApiParam(value = "Resource URI", required = true) @QueryParam("resource") String resource) {
+    @Operation(description = "Add resource model to required models")
+    @ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Resource model is added"),
+        @ApiResponse(responseCode = "400", description = "Invalid ID supplied"),
+        @ApiResponse(responseCode = "403", description = "Invalid IRI in parameter"),
+        @ApiResponse(responseCode = "404", description = "Service not found"),
+        @ApiResponse(responseCode = "401", description = "No right to add resource") })
+    public Response putNewRequirement(
+        @Parameter(description = "Model URI", required = true) @QueryParam("model") String model,
+        @Parameter(description = "Resource URI", required = true) @QueryParam("resource") String resource) {
 
         IRI modelIRI, resourceIRI;
 

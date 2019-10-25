@@ -6,7 +6,11 @@ import fi.vm.yti.datamodel.api.security.AuthorizationManager;
 import fi.vm.yti.datamodel.api.service.*;
 import fi.vm.yti.security.AuthenticatedUserProvider;
 import fi.vm.yti.security.YtiUser;
-import io.swagger.annotations.*;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
@@ -19,9 +23,11 @@ import org.springframework.stereotype.Component;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
 
+// Create new version of the model with new prefix
+
 @Component
 @Path("v1/modelVersion")
-@Api(tags = { "Model" }, description = "Create new version of the model with new prefix")
+@Tag(name = "Model" )
 public class ModelVersion {
 
     private static final Logger logger = LoggerFactory.getLogger(Models.class.getName());
@@ -51,19 +57,17 @@ public class ModelVersion {
     }
 
     @POST
-    @ApiOperation(value = "Renames prefix using fixed SPARQL update", notes = "HAZARD operation")
+    @Operation(description = "Create new version from model")
     @ApiResponses(value = {
-        @ApiResponse(code = 200, message = "Change made"),
-        @ApiResponse(code = 400, message = "Invalid graph supplied"),
-        @ApiResponse(code = 403, message = "Illegal graph parameter"),
-        @ApiResponse(code = 404, message = "Service not found")
+        @ApiResponse(responseCode = "200", description = "Change made"),
+        @ApiResponse(responseCode = "400", description = "Invalid graph supplied"),
+        @ApiResponse(responseCode = "403", description = "Illegal graph parameter"),
+        @ApiResponse(responseCode = "404", description = "Service not found")
     })
 
     public Response newVersion(
-        @ApiParam(value = "New prefix")
-        @QueryParam("newPrefix") String newPrefix,
-        @ApiParam(value = "Model URI")
-        @QueryParam("uri") String id) {
+        @Parameter(description = "New prefix") @QueryParam("newPrefix") String newPrefix,
+        @Parameter(description = "Model URI") @QueryParam("uri") String id) {
 
         IRI modelIRI;
         YtiUser user = userProvider.getUser();

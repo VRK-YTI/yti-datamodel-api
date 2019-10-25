@@ -5,7 +5,12 @@ package fi.vm.yti.datamodel.api.endpoint.model;
 
 import fi.vm.yti.datamodel.api.model.ReusableClass;
 import fi.vm.yti.datamodel.api.service.*;
-import io.swagger.annotations.*;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
@@ -23,7 +28,7 @@ import org.slf4j.LoggerFactory;
 
 @Component
 @Path("v1/classCreator")
-@Api(tags = { "Class" }, description = "Construct new Class template")
+@Tag(name = "Class" )
 public class ClassCreator {
 
     private static final Logger logger = LoggerFactory.getLogger(ClassCreator.class.getName());
@@ -55,16 +60,16 @@ public class ClassCreator {
 
     @GET
     @Produces("application/ld+json")
-    @ApiOperation(value = "Create new class", notes = "Create new")
-    @ApiResponses(value = { @ApiResponse(code = 200, message = "New class is created"),
-        @ApiResponse(code = 400, message = "Invalid ID supplied"),
-        @ApiResponse(code = 403, message = "Invalid IRI in parameter"),
-        @ApiResponse(code = 404, message = "Service not found") })
+    @Operation(description = "Create new class")
+    @ApiResponses(value = { @ApiResponse(responseCode = "200", description = "New class is created"),
+        @ApiResponse(responseCode = "400", description = "Invalid ID supplied"),
+        @ApiResponse(responseCode = "403", description = "Invalid IRI in parameter"),
+        @ApiResponse(responseCode = "404", description = "Service not found") })
     public Response newClass(
-        @ApiParam(value = "Model URI", required = true) @QueryParam("modelID") String modelID,
-        @ApiParam(value = "Class label", required = true) @QueryParam("classLabel") String classLabel,
-        @ApiParam(value = "Concept URI") @QueryParam("conceptID") String conceptUri,
-        @ApiParam(value = "Language", required = true, allowableValues = "fi,en") @QueryParam("lang") String lang) {
+        @Parameter(description = "Model URI", required = true) @QueryParam("modelID") String modelID,
+        @Parameter(description = "Class label", required = true) @QueryParam("classLabel") String classLabel,
+        @Parameter(description = "Concept URI") @QueryParam("conceptID") String conceptUri,
+        @Parameter(description = "Language", required = true, schema = @Schema(allowableValues = "fi,en")) @QueryParam("lang") String lang) {
 
         IRI conceptIRI = null;
         IRI modelIRI;

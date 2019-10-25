@@ -6,7 +6,11 @@ import fi.vm.yti.datamodel.api.index.SearchIndexManager;
 import fi.vm.yti.datamodel.api.index.model.IntegrationAPIResponse;
 import fi.vm.yti.datamodel.api.index.model.IntegrationContainerRequest;
 import fi.vm.yti.datamodel.api.service.*;
-import io.swagger.annotations.*;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,7 +36,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Component
 @Path("v1/integration/containers")
-@Api(tags = { "Integration" }, description = "Operations about models")
+@Tag(name = "Integration")
 public class Containers {
 
     @Context
@@ -55,31 +59,22 @@ public class Containers {
 
     @GET
     @Produces("application/json")
-    @ApiOperation(value = "Get containers from service", notes = "More notes about this method")
+    @Operation(description = "Get containers from service")
     @ApiResponses(value = {
-        @ApiResponse(code = 400, message = "Invalid model supplied"),
-        @ApiResponse(code = 404, message = "Service not found"),
-        @ApiResponse(code = 500, message = "Internal server error")
+        @ApiResponse(responseCode = "400", description = "Invalid model supplied"),
+        @ApiResponse(responseCode = "404", description = "Service not found"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     public Response listContainers(
-        @ApiParam(value = "Language")
-        @QueryParam("language") String lang,
-        @ApiParam(value = "Status")
-        @QueryParam("status") String status,
-        @ApiParam(value = "Type values: library or profile")
-        @QueryParam("type") String type,
-        @ApiParam(value = "After")
-        @QueryParam("after") Date after,
-        @ApiParam(value = "Search")
-        @QueryParam("searchTerm") String search,
-        @ApiParam(value = "Pagesize")
-        @QueryParam("pageSize") Integer pageSize,
-        @ApiParam(value = "From")
-        @QueryParam("from") Integer from,
-        @ApiParam(value = "Include incomplete")
-        @QueryParam("includeIncomplete") boolean includeIncomplete,
-        @ApiParam(value = "Include incomplete from organization")
-        @QueryParam("includeIncompleteFrom") String includeIncompleteFrom) {
+        @Parameter(description = "Language") @QueryParam("language") String lang,
+        @Parameter(description = "Status") @QueryParam("status") String status,
+        @Parameter(description = "Type values: library or profile") @QueryParam("type") String type,
+        @Parameter(description = "After") @QueryParam("after") Date after,
+        @Parameter(description = "Search") @QueryParam("searchTerm") String search,
+        @Parameter(description = "Pagesize") @QueryParam("pageSize") Integer pageSize,
+        @Parameter(description = "From") @QueryParam("from") Integer from,
+        @Parameter(description = "Include incomplete") @QueryParam("includeIncomplete") boolean includeIncomplete,
+        @Parameter(description = "Include incomplete from organization") @QueryParam("includeIncompleteFrom") String includeIncompleteFrom) {
 
         String path = uriInfo.getAbsolutePath().toString();
         IntegrationContainerRequest req = new IntegrationContainerRequest(search, lang, searchIndexManager.parseStringList(status), type, after, null, pageSize, from, includeIncomplete, searchIndexManager.parseStringList(includeIncompleteFrom));
@@ -89,7 +84,7 @@ public class Containers {
     }
 
     @POST
-    @ApiOperation(value = "Search containers from service")
+    @Operation(description = "Search containers from service")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response searchContainers(@RequestBody IntegrationContainerRequest request) {

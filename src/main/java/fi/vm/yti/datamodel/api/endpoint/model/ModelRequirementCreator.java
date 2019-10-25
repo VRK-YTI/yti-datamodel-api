@@ -7,7 +7,12 @@ import java.util.Map;
 
 import fi.vm.yti.datamodel.api.service.*;
 import fi.vm.yti.datamodel.api.utils.LDHelper;
-import io.swagger.annotations.*;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
@@ -26,7 +31,7 @@ import javax.ws.rs.core.Response;
 
 @Component
 @Path("v1/modelRequirementCreator")
-@Api(tags = { "Model" }, description = "Construct new requirement")
+@Tag(name = "Model")
 public class ModelRequirementCreator {
 
     private final EndpointServices endpointServices;
@@ -53,17 +58,17 @@ public class ModelRequirementCreator {
 
     @GET
     @Produces("application/ld+json")
-    @ApiOperation(value = "Create new model", notes = "Create namespace object. Namespace must be valid URI and end with # or /.")
-    @ApiResponses(value = { @ApiResponse(code = 200, message = "New class is created"),
-        @ApiResponse(code = 400, message = "Invalid ID supplied"),
-        @ApiResponse(code = 403, message = "Invalid IRI in parameter"),
-        @ApiResponse(code = 404, message = "Service not found"),
-        @ApiResponse(code = 401, message = "No right to create new") })
+    @Operation(description = "Create namespace object. Namespace must be valid URI and end with # or /.")
+    @ApiResponses(value = { @ApiResponse(responseCode = "200", description = "New class is created"),
+        @ApiResponse(responseCode = "400", description = "Invalid ID supplied"),
+        @ApiResponse(responseCode = "403", description = "Invalid IRI in parameter"),
+        @ApiResponse(responseCode = "404", description = "Service not found"),
+        @ApiResponse(responseCode = "401", description = "No right to create new") })
     public Response newRequiredModel(
-        @ApiParam(value = "Model namespace", required = true) @QueryParam("namespace") String namespace,
-        @ApiParam(value = "Model prefix", required = true) @QueryParam("prefix") String prefix,
-        @ApiParam(value = "Model label", required = true) @QueryParam("label") String label,
-        @ApiParam(value = "Initial language", required = true, allowableValues = "fi,en") @QueryParam("lang") String lang) {
+        @Parameter(description = "Model namespace", required = true) @QueryParam("namespace") String namespace,
+        @Parameter(description = "Model prefix", required = true) @QueryParam("prefix") String prefix,
+        @Parameter(description = "Model label", required = true) @QueryParam("label") String label,
+        @Parameter(description = "Initial language", required = true, schema = @Schema(allowableValues = "fi,en")) @QueryParam("lang") String lang) {
 
         if (namespace == null || namespace.isEmpty() || (namespace.startsWith("http") && !(namespace.endsWith("#") || namespace.endsWith("/")) )) return jerseyResponseManager.invalidIRI();
 

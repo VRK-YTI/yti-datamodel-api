@@ -1,10 +1,10 @@
 package fi.vm.yti.datamodel.api.endpoint.usermanagement;
 
 import fi.vm.yti.datamodel.api.service.RHPUsersManager;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -15,7 +15,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Response;
 
 @Component
-@Api(tags = { "Users" }, description = "Get fakeable users")
+@Tag(name = "Admin")
 @Path("v1/fakeableUsers")
 public class FakeableUsers {
 
@@ -27,9 +27,9 @@ public class FakeableUsers {
     }
 
     @GET
-    @ApiOperation(value = "Get fakeable users")
+    @Operation(description = "Get fakeable users")
     @ApiResponses(value = {
-        @ApiResponse(code = 200, message = "List of user objects")
+        @ApiResponse(responseCode = "200", description = "List of user objects")
     })
     @Produces("application/json")
     public Response getFakeableUsers() {

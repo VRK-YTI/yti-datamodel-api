@@ -19,14 +19,13 @@ import fi.vm.yti.datamodel.api.index.model.ModelSearchRequest;
 import fi.vm.yti.datamodel.api.index.model.ModelSearchResponse;
 import fi.vm.yti.datamodel.api.service.JerseyResponseManager;
 import fi.vm.yti.security.AuthenticatedUserProvider;
-import fi.vm.yti.security.YtiUser;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 @Component
 @Path("v1/searchModels")
-@Api(tags = { "Index" })
+@Tag(name = "Index")
 public class ModelSearch {
 
     private static final Logger logger = LoggerFactory.getLogger(ModelSearch.class.getName());
@@ -50,8 +49,8 @@ public class ModelSearch {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @ApiResponses(value = {
-        @ApiResponse(code = 200, message = "OK"),
-        @ApiResponse(code = 400, message = "Invalid JSON!")
+        @ApiResponse(responseCode = "200", description = "OK"),
+        @ApiResponse(responseCode = "400", description = "Invalid JSON!")
     })
     public Response searchModels(ModelSearchRequest request) {
         ModelSearchResponse response = searchIndexManager.searchModelsWithUser(request, userProvider.getUser());

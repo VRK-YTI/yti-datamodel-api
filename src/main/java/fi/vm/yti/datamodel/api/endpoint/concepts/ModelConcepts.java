@@ -8,7 +8,11 @@ import fi.vm.yti.datamodel.api.service.IDManager;
 import fi.vm.yti.datamodel.api.service.JerseyClient;
 import fi.vm.yti.datamodel.api.service.JerseyResponseManager;
 import fi.vm.yti.datamodel.api.utils.LDHelper;
-import io.swagger.annotations.*;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import org.apache.jena.query.ParameterizedSparqlString;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,7 +26,7 @@ import javax.ws.rs.core.Response;
 
 @Component
 @Path("v1/modelConcepts")
-@Api(tags = { "Concept" }, description = "Local concept operations")
+@Tag(name = "Concept")
 public class ModelConcepts {
 
     private final EndpointServices endpointServices;
@@ -44,17 +48,17 @@ public class ModelConcepts {
 
     @GET
     @Produces("application/ld+json")
-    @ApiOperation(value = "Get used concepts from model", notes = "Get used concepts in JSON-LD")
+    @Operation(description = "Get used concepts from model")
     @ApiResponses(value = {
-        @ApiResponse(code = 404, message = "No such resource"),
-        @ApiResponse(code = 400, message = "Invalid model supplied"),
-        @ApiResponse(code = 404, message = "Service not found"),
-        @ApiResponse(code = 500, message = "Internal server error")
+        @ApiResponse(responseCode = "404", description = "No such resource"),
+        @ApiResponse(responseCode = "400", description = "Invalid model supplied"),
+        @ApiResponse(responseCode = "404", description = "Service not found"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
     })
-    public Response json(
-        @ApiParam(value = "Concept id")
+    public Response getModelConcepts(
+        @Parameter(description = "Concept id")
         @QueryParam("id") String id,
-        @ApiParam(value = "Model id", required = true)
+        @Parameter(description = "Model id", required = true)
         @QueryParam("model") String model) {
 
         if (id != null && !id.equals("undefined") && idManager.isInvalid(id)) {

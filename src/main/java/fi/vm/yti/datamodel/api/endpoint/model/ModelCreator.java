@@ -8,7 +8,12 @@ import fi.vm.yti.datamodel.api.model.DataModel;
 import fi.vm.yti.datamodel.api.model.ServiceCategory;
 import fi.vm.yti.datamodel.api.service.*;
 import fi.vm.yti.datamodel.api.utils.LDHelper;
-import io.swagger.annotations.*;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
@@ -31,7 +36,7 @@ import org.slf4j.LoggerFactory;
 
 @Component
 @Path("v1/modelCreator")
-@Api(tags = { "Model" }, description = "Construct new model template")
+@Tag(name = "Model" )
 public class ModelCreator {
 
     private static final Logger logger = LoggerFactory.getLogger(ModelCreator.class.getName());
@@ -64,22 +69,20 @@ public class ModelCreator {
 
     @GET
     @Produces("application/ld+json")
-    @ApiOperation(value = "Create new model", notes = "Create new model")
-    @ApiResponses(value = { @ApiResponse(code = 200, message = "New class is created"),
-        @ApiResponse(code = 400, message = "Invalid ID supplied"),
-        @ApiResponse(code = 403, message = "Invalid IRI in parameter"),
-        @ApiResponse(code = 404, message = "Service not found"),
-        @ApiResponse(code = 401, message = "No right to create new") })
+    @Operation(description = "Create new model")
+    @ApiResponses(value = { @ApiResponse(responseCode = "200", description = "New class is created"),
+        @ApiResponse(responseCode = "400", description = "Invalid ID supplied"),
+        @ApiResponse(responseCode = "403", description = "Invalid IRI in parameter"),
+        @ApiResponse(responseCode = "404", description = "Service not found"),
+        @ApiResponse(responseCode = "401", description = "No right to create new") })
     public Response newModel(
-        @ApiParam(value = "Redirection service", required = false) @QueryParam("redirect") String redirect,
-        @ApiParam(value = "Model prefix", required = true) @QueryParam("prefix") String prefix,
-        @ApiParam(value = "Model label", required = true) @QueryParam("label") String label,
-        @ApiParam(value = "Organization UUIDs", required = true)
-        @QueryParam("orgList") String orgString,
-        @ApiParam(value = "Service URIs", required = true)
-        @QueryParam("serviceList") String servicesString,
-        @ApiParam(value = "Label language", required = true, allowableValues = "fi,en") @QueryParam("lang") String lang,
-        @ApiParam(value = "Allowed languages as space list: 'en sv pl'. Default 'fi en'") @QueryParam("langList") String allowedLang) {
+        @Parameter(description = "Redirection service", required = false) @QueryParam("redirect") String redirect,
+        @Parameter(description = "Model prefix", required = true) @QueryParam("prefix") String prefix,
+        @Parameter(description = "Model label", required = true) @QueryParam("label") String label,
+        @Parameter(description = "Organization UUIDs", required = true) @QueryParam("orgList") String orgString,
+        @Parameter(description = "Service URIs", required = true) @QueryParam("serviceList") String servicesString,
+        @Parameter(description = "Label language", required = true, schema = @Schema(allowableValues = "fi,en")) @QueryParam("lang") String lang,
+        @Parameter(description = "Allowed languages as space list: 'en sv pl'. Default 'fi en'") @QueryParam("langList") String allowedLang) {
 
         List<String> serviceList = Arrays.asList(servicesString.split(" "));
 

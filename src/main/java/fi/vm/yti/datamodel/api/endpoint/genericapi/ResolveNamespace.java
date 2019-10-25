@@ -4,7 +4,11 @@ import fi.vm.yti.datamodel.api.service.EndpointServices;
 import fi.vm.yti.datamodel.api.service.JerseyClient;
 import fi.vm.yti.datamodel.api.service.JerseyResponseManager;
 import fi.vm.yti.datamodel.api.service.NamespaceManager;
-import io.swagger.annotations.*;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -14,7 +18,7 @@ import javax.ws.rs.core.Response;
 
 @Component
 @Path("v1/resolveNamespace")
-@Api(tags = { "Admin" }, description = "Import for external references")
+@Tag(name = "Admin")
 public class ResolveNamespace {
 
     private final EndpointServices endpointServices;
@@ -35,13 +39,14 @@ public class ResolveNamespace {
 
     @GET
     @Produces("application/ld+json")
-    @ApiOperation(value = "Get service description", notes = "More notes about this method")
+    @Operation(description = "Resolve namespace")
     @ApiResponses(value = {
-        @ApiResponse(code = 400, message = "Invalid model supplied"),
-        @ApiResponse(code = 404, message = "Service description not found"),
-        @ApiResponse(code = 500, message = "Internal server error")
+        @ApiResponse(responseCode = "400", description = "Invalid model supplied"),
+        @ApiResponse(responseCode = "404", description = "Service description not found"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
     })
-    public Response getJson(@ApiParam(value = "Namespace", required = true) @QueryParam("namespace") String namespace) {
+    public Response resolveNamespace(
+        @Parameter(description = "Namespace", required = true) @QueryParam("namespace") String namespace) {
 
         if (namespaceManager.resolveNamespace(namespace, null, false)) {
             return jerseyClient.getGraphResponseFromService(namespace, endpointServices.getImportsReadAddress());
@@ -53,15 +58,15 @@ public class ResolveNamespace {
 
     @POST
     @Produces("application/json")
-    @ApiOperation(value = "Get service description", notes = "More notes about this method")
+    @Operation(description = "Resolve namespace from alternative location")
     @ApiResponses(value = {
-        @ApiResponse(code = 400, message = "Invalid model supplied"),
-        @ApiResponse(code = 404, message = "Service description not found"),
-        @ApiResponse(code = 500, message = "Internal server error")
+        @ApiResponse(responseCode = "400", description = "Invalid model supplied"),
+        @ApiResponse(responseCode = "404", description = "Service description not found"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
     })
-    public Response json(@ApiParam(value = "Namespace", required = true) @QueryParam("namespace") String namespace,
-                         @ApiParam(value = "Alternative url for the RDF") @QueryParam("altURL") String alternativeURL,
-                         @ApiParam(value = "Force update", required = true) @QueryParam("force") boolean force) {
+    public Response resolveNamespaceFromAlternativeLocation(@Parameter(description = "Namespace", required = true) @QueryParam("namespace") String namespace,
+                         @Parameter(description = "Alternative url for the RDF") @QueryParam("altURL") String alternativeURL,
+                         @Parameter(description = "Force update", required = true) @QueryParam("force") boolean force) {
 
         if (namespaceManager.resolveNamespace(namespace, (alternativeURL != null && !alternativeURL.equals("undefined") ? alternativeURL : null), force)) {
             return jerseyResponseManager.okEmptyContent();

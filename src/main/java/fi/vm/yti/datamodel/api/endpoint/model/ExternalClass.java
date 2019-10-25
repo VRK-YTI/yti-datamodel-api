@@ -4,12 +4,17 @@
 package fi.vm.yti.datamodel.api.endpoint.model;
 
 import fi.vm.yti.datamodel.api.service.EndpointServices;
+import fi.vm.yti.datamodel.api.service.ExternalGraphManager;
 import fi.vm.yti.datamodel.api.service.IDManager;
 import fi.vm.yti.datamodel.api.service.JerseyClient;
 import fi.vm.yti.datamodel.api.service.JerseyResponseManager;
 import fi.vm.yti.datamodel.api.utils.LDHelper;
 import fi.vm.yti.datamodel.api.utils.QueryLibrary;
-import io.swagger.annotations.*;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
@@ -28,41 +33,39 @@ import org.slf4j.LoggerFactory;
 
 @Component
 @Path("v1/externalClass")
-@Api(tags = { "Class" }, description = "External class operations")
+@Tag(name = "Class")
 public class ExternalClass {
 
     private static final Logger logger = LoggerFactory.getLogger(ExternalClass.class.getName());
     private final JerseyResponseManager jerseyResponseManager;
     private final IDManager idManager;
-    private final EndpointServices endpointServices;
+    private final ExternalGraphManager externalGraphManager;
     private final JerseyClient jerseyClient;
 
     @Autowired
     ExternalClass(JerseyResponseManager jerseyResponseManager,
                   IDManager idManager,
-                  EndpointServices endpointServices,
-                  JerseyClient jerseyClient) {
+                  JerseyClient jerseyClient,
+                  ExternalGraphManager externalGraphManager) {
 
+        this.jerseyClient = jerseyClient;
         this.jerseyResponseManager = jerseyResponseManager;
         this.idManager = idManager;
-        this.endpointServices = endpointServices;
-        this.jerseyClient = jerseyClient;
+        this.externalGraphManager = externalGraphManager;
     }
 
     @GET
     @Produces("application/ld+json")
-    @ApiOperation(value = "Get external class from requires", notes = "Get class in JSON-LD")
+    @Operation(description = "Get external class from requires")
     @ApiResponses(value = {
-        @ApiResponse(code = 404, message = "No such resource"),
-        @ApiResponse(code = 400, message = "Invalid model supplied"),
-        @ApiResponse(code = 404, message = "Service not found"),
-        @ApiResponse(code = 500, message = "Internal server error")
+        @ApiResponse(responseCode = "404", description = "No such resource"),
+        @ApiResponse(responseCode = "400", description = "Invalid model supplied"),
+        @ApiResponse(responseCode = "404", description = "Service not found"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
     })
-    public Response json(
-        @ApiParam(value = "Class id")
-        @QueryParam("id") String id,
-        @ApiParam(value = "Model id", required = true)
-        @QueryParam("model") String model) {
+    public Response getExternalClass(
+        @Parameter(description = "Class id") @QueryParam("id") String id,
+        @Parameter(description = "Model id", required = true) @QueryParam("model") String model) {
 
         IRI idIRI;
 
@@ -73,53 +76,7 @@ public class ExternalClass {
 
         if (id == null || id.equals("undefined") || id.equals("default")) {
 
-            /* If no id is provided create a list of classes */
-            ParameterizedSparqlString pss = new ParameterizedSparqlString();
-            pss.setNsPrefixes(LDHelper.PREFIX_MAP);
-
-            String queryString = "CONSTRUCT { "
-                + "?class rdfs:isDefinedBy ?externalModel . "
-                + "?externalModel rdfs:label ?externalModelLabel . "
-                + "?externalModel a dcterms:Standard . "
-                + "?class sh:name ?label . "
-                + "?class sh:description ?comment . "
-                + "?class a rdfs:Class . "
-                + "?class dcterms:modified ?modified . "
-                + "} WHERE { "
-                + "SERVICE ?modelService { "
-                + "GRAPH ?library { "
-                + "?library dcterms:requires ?externalModel . "
-                + "?externalModel rdfs:label ?externalModelLabel . "
-                + "}}"
-                + "GRAPH ?externalModel { "
-                + "?class a ?type . "
-                + "FILTER(!isBlank(?class)) "
-                + "VALUES ?type { rdfs:Class owl:Class sh:NodeShape sh:Shape } "
-                /* GET LABEL */
-                + "OPTIONAL{{ ?class ?labelPred ?labelStr . "
-                + "VALUES ?labelPred { rdfs:label sh:name dc:title dcterms:title }"
-                + "FILTER(LANG(?labelStr) = '') BIND(STRLANG(STR(?labelStr),'en') as ?label) }"
-                + "UNION"
-                + "{ ?class ?labelPred ?label . "
-                + "VALUES ?labelPred { rdfs:label sh:name dc:title dcterms:title }"
-                + " FILTER(LANG(?label)!='') }"
-                /* GET COMMENT */
-                + "{ ?class ?commentPred ?commentStr . "
-                + "VALUES ?commentPred { rdfs:comment skos:definition dcterms:description dc:description prov:definition sh:description }"
-                + "FILTER(LANG(?commentStr) = '') BIND(STRLANG(STR(?commentStr),'en') as ?comment) }"
-                + "UNION"
-                + "{ ?class ?commentPred ?comment . "
-                + "VALUES ?commentPred { rdfs:comment skos:definition dcterms:description dc:description prov:definition sh:description }"
-                + " FILTER(LANG(?comment)!='') }"
-                + "}}"
-                + "}";
-
-            pss.setIri("library", model);
-            pss.setIri("modelService", endpointServices.getLocalhostCoreSparqlAddress());
-
-            pss.setCommandText(queryString);
-
-            return jerseyClient.constructGraphFromService(pss.toString(), endpointServices.getImportsSparqlAddress());
+            return jerseyClient.constructResponseFromGraph(externalGraphManager.getListOfExternalClasses(model));
 
         } else {
 
@@ -129,26 +86,7 @@ public class ExternalClass {
                 return jerseyResponseManager.invalidIRI();
             }
 
-            String sparqlService = endpointServices.getImportsSparqlAddress();
-
-            ParameterizedSparqlString pss = new ParameterizedSparqlString();
-
-            pss.setNsPrefixes(LDHelper.PREFIX_MAP);
-
-            /* TODO: FIX dublin core etc. rdf:Property properties */
-
-            String queryString = QueryLibrary.externalClassQuery;
-
-            pss.setIri("model", model);
-            pss.setIri("modelService", endpointServices.getLocalhostCoreSparqlAddress());
-            pss.setCommandText(queryString);
-            pss.setIri("classIRI", idIRI);
-            pss.setLiteral("draft", "VALID");
-
-            if (!model.equals("undefined")) {
-                pss.setIri("library", model);
-            }
-            return jerseyClient.constructGraphFromService(pss.toString(), sparqlService);
+            return jerseyClient.constructResponseFromGraph(externalGraphManager.getExternalClass(idIRI, model));
 
         }
     }

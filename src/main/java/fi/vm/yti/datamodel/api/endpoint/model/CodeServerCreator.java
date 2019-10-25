@@ -8,7 +8,12 @@ import fi.vm.yti.datamodel.api.service.IDManager;
 import fi.vm.yti.datamodel.api.service.JerseyClient;
 import fi.vm.yti.datamodel.api.service.JerseyResponseManager;
 import fi.vm.yti.datamodel.api.utils.LDHelper;
-import io.swagger.annotations.*;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import org.apache.jena.query.ParameterizedSparqlString;
 import org.apache.jena.rdf.model.ResourceFactory;
@@ -23,7 +28,7 @@ import javax.ws.rs.core.Response;
 
 @Component
 @Path("v1/coreServerCreator")
-@Api(tags = { "Codes" }, description = "Create new reference to code server")
+@Tag(name = "Codes" )
 public class CodeServerCreator {
 
     private final EndpointServices endpointServices;
@@ -45,18 +50,18 @@ public class CodeServerCreator {
 
     @GET
     @Produces("application/ld+json")
-    @ApiOperation(value = "Create new value scheme", notes = "Creates value scheme object")
-    @ApiResponses(value = { @ApiResponse(code = 200, message = "New class is created"),
-        @ApiResponse(code = 400, message = "Invalid ID supplied"),
-        @ApiResponse(code = 403, message = "Invalid IRI in parameter"),
-        @ApiResponse(code = 404, message = "Service not found"),
-        @ApiResponse(code = 401, message = "No right to create new") })
-    public Response newValueScheme(
-        @ApiParam(value = "Code server api uri", required = true) @QueryParam("uri") String uri,
-        @ApiParam(value = "Code server name", required = true) @QueryParam("label") String label,
-        @ApiParam(value = "Code server description", required = true) @QueryParam("description") String comment,
-        @ApiParam(value = "Initial language", required = true, allowableValues = "fi,en") @QueryParam("lang") String lang,
-        @ApiParam(value = "Update codelists", defaultValue = "false") @QueryParam("update") boolean force) {
+    @Operation(description = "Create new code server object")
+    @ApiResponses(value = { @ApiResponse(responseCode = "200", description = "New class is created"),
+        @ApiResponse(responseCode = "400", description = "Invalid ID supplied"),
+        @ApiResponse(responseCode = "403", description = "Invalid IRI in parameter"),
+        @ApiResponse(responseCode = "404", description = "Service not found"),
+        @ApiResponse(responseCode = "401", description = "No right to create new") })
+    public Response createCodeServer(
+        @Parameter(description = "Code server api uri", required = true) @QueryParam("uri") String uri,
+        @Parameter(description = "Code server name", required = true) @QueryParam("label") String label,
+        @Parameter(description = "Code server description", required = true) @QueryParam("description") String comment,
+        @Parameter(description = "Initial language", required = true, schema = @Schema(allowableValues = "fi,en")) @QueryParam("lang") String lang,
+        @Parameter(description = "Update codelists", schema = @Schema(defaultValue = "false")) @QueryParam("update") boolean force) {
 
         if (uri != null && !uri.equals("undefined")) {
 

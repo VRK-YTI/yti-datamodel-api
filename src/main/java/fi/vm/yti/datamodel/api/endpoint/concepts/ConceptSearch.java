@@ -5,8 +5,11 @@ package fi.vm.yti.datamodel.api.endpoint.concepts;
 
 import fi.vm.yti.datamodel.api.service.JerseyResponseManager;
 import fi.vm.yti.datamodel.api.service.TerminologyManager;
-import io.swagger.annotations.*;
-
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,7 +23,7 @@ import javax.ws.rs.core.Response;
 
 @Component
 @Path("v1/conceptSearch")
-@Api(tags = { "Concept" }, description = "Concepts search from Terminology API")
+@Tag(name = "Concept")
 public class ConceptSearch {
 
     private final TerminologyManager terminologyManager;
@@ -37,16 +40,16 @@ public class ConceptSearch {
 
     @GET
     @Produces("application/ld+json")
-    @ApiOperation(value = "Get available concepts", notes = "Search from Terminology API")
+    @Operation( description = "Get available concepts from Concept API")
     @ApiResponses(value = {
-        @ApiResponse(code = 200, message = "Concepts"),
-        @ApiResponse(code = 406, message = "Term not defined"),
-        @ApiResponse(code = 500, message = "Internal server error")
+        @ApiResponse(responseCode = "200", description = "Concepts"),
+        @ApiResponse(responseCode = "406", description = "Term not defined"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
     })
-    public Response concept(
-        @ApiParam(value = "Search term", required = true)
+    public Response searchConcept(
+        @Parameter(description = "Search term", required = true)
         @QueryParam("term") String term,
-        @ApiParam(value = "Terminology URI")
+        @Parameter(description = "Terminology URI")
         @QueryParam("terminologyUri") String terminologyUri) {
 
         if(term==null) {

@@ -6,7 +6,11 @@ import fi.vm.yti.datamodel.api.index.SearchIndexManager;
 import fi.vm.yti.datamodel.api.index.model.IntegrationAPIResponse;
 import fi.vm.yti.datamodel.api.index.model.IntegrationResourceRequest;
 import fi.vm.yti.datamodel.api.service.JerseyResponseManager;
-import io.swagger.annotations.*;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,7 +33,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Component
 @Path("v1/integration/resources")
-@Api(tags = { "Integration" }, description = "Operations about models")
+@Tag(name = "Integration")
 public class Resources {
 
     private static final Logger logger = LoggerFactory.getLogger(Resources.class.getName());
@@ -52,29 +56,21 @@ public class Resources {
 
     @GET
     @Produces("application/json")
-    @ApiOperation(value = "Get resources from service")
+    @Operation(description = "Get resources from service")
     @ApiResponses(value = {
-        @ApiResponse(code = 400, message = "Invalid model supplied"),
-        @ApiResponse(code = 404, message = "Service not found"),
-        @ApiResponse(code = 500, message = "Internal server error")
+        @ApiResponse(responseCode = "400", description = "Invalid model supplied"),
+        @ApiResponse(responseCode = "404", description = "Service not found"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     public Response getResources(
-        @ApiParam(value = "Container")
-        @QueryParam("container") String container,
-        @ApiParam(value = "Language")
-        @QueryParam("language") String lang,
-        @ApiParam(value = "Status")
-        @QueryParam("status") String status,
-        @ApiParam(value = "Type values: class, shape, attribute, association")
-        @QueryParam("type") String type,
-        @ApiParam(value = "After")
-        @QueryParam("after") Date after,
-        @ApiParam(value = "Search")
-        @QueryParam("searchTerm") String search,
-        @ApiParam(value = "Pagesize")
-        @QueryParam("pageSize") Integer pageSize,
-        @ApiParam(value = "From")
-        @QueryParam("from") Integer from) {
+        @Parameter(description = "Container") @QueryParam("container") String container,
+        @Parameter(description = "Language") @QueryParam("language") String lang,
+        @Parameter(description = "Status") @QueryParam("status") String status,
+        @Parameter(description = "Type values: class, shape, attribute, association") @QueryParam("type") String type,
+        @Parameter(description = "After") @QueryParam("after") Date after,
+        @Parameter(description = "Search") @QueryParam("searchTerm") String search,
+        @Parameter(description = "Pagesize") @QueryParam("pageSize") Integer pageSize,
+        @Parameter(description = "From") @QueryParam("from") Integer from) {
 
         String path = uriInfo.getAbsolutePath().toString();
         IntegrationResourceRequest req = new IntegrationResourceRequest(search,lang,container,searchIndexManager.parseStringList(status),type,after,null,pageSize,from);
@@ -84,7 +80,7 @@ public class Resources {
     }
 
     @POST
-    @ApiOperation(value = "Search resources from service")
+    @Operation(description = "Search resources from service")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response searchResources(

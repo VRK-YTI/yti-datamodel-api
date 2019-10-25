@@ -5,7 +5,12 @@ package fi.vm.yti.datamodel.api.endpoint.model;
 
 import fi.vm.yti.datamodel.api.model.ReusablePredicate;
 import fi.vm.yti.datamodel.api.service.*;
-import io.swagger.annotations.*;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
@@ -21,9 +26,11 @@ import javax.ws.rs.core.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+// Creates new RDF properties that can be based on SKOS concepts
+
 @Component
 @Path("v1/predicateCreator")
-@Api(tags = { "Predicate" }, description = "Creates new RDF properties that can be based on SKOS concepts")
+@Tag(name = "Predicate")
 public class PredicateCreator {
 
     private static final Logger logger = LoggerFactory.getLogger(PredicateCreator.class.getName());
@@ -49,18 +56,18 @@ public class PredicateCreator {
 
     @GET
     @Produces("application/ld+json")
-    @ApiOperation(value = "Create new predicate", notes = "Create new predicate")
-    @ApiResponses(value = { @ApiResponse(code = 200, message = "New predicate is created"),
-        @ApiResponse(code = 400, message = "Invalid ID supplied"),
-        @ApiResponse(code = 403, message = "Invalid IRI in parameter"),
-        @ApiResponse(code = 404, message = "Service not found") })
+    @Operation(description = "Create new predicate")
+    @ApiResponses(value = { @ApiResponse(responseCode = "200", description = "New predicate is created"),
+        @ApiResponse(responseCode = "400", description = "Invalid ID supplied"),
+        @ApiResponse(responseCode = "403", description = "Invalid IRI in parameter"),
+        @ApiResponse(responseCode = "404", description = "Service not found") })
 
-    public Response newPredicate(
-        @ApiParam(value = "Model ID", required = true) @QueryParam("modelID") String modelID,
-        @ApiParam(value = "Predicate label", required = true) @QueryParam("predicateLabel") String predicateLabel,
-        @ApiParam(value = "Concept URI") @QueryParam("conceptID") String conceptUri,
-        @ApiParam(value = "Predicate type", required = true, allowableValues = "owl:DatatypeProperty,owl:ObjectProperty") @QueryParam("type") String type,
-        @ApiParam(value = "Language", required = true, allowableValues = "fi,en") @QueryParam("lang") String lang) {
+    public Response createNewPredicate(
+        @Parameter(description = "Model ID", required = true) @QueryParam("modelID") String modelID,
+        @Parameter(description = "Predicate label", required = true) @QueryParam("predicateLabel") String predicateLabel,
+        @Parameter(description = "Concept URI") @QueryParam("conceptID") String conceptUri,
+        @Parameter(description = "Predicate type", required = true, schema = @Schema(allowableValues = "owl:DatatypeProperty,owl:ObjectProperty")) @QueryParam("type") String type,
+        @Parameter(description = "Language", required = true, schema = @Schema(allowableValues = "fi,en")) @QueryParam("lang") String lang) {
 
         IRI conceptIRI = null;
         IRI modelIRI, typeIRI;

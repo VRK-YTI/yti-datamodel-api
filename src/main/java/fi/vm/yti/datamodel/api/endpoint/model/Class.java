@@ -11,7 +11,11 @@ import fi.vm.yti.datamodel.api.utils.LDHelper;
 import fi.vm.yti.datamodel.api.utils.QueryLibrary;
 import fi.vm.yti.security.AuthenticatedUserProvider;
 import fi.vm.yti.security.YtiUser;
-import io.swagger.annotations.*;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
@@ -35,7 +39,7 @@ import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
 @Component
 @Path("v1/class")
-@Api(tags = { "Class" })
+@Tag(name = "Class" )
 public class Class {
 
     private static final Logger logger = LoggerFactory.getLogger(Class.class.getName());
@@ -83,18 +87,16 @@ public class Class {
 
     @GET
     @Produces("application/ld+json")
-    @ApiOperation(value = "Get class from model", notes = "Get class in JSON-LD")
+    @Operation(description = "Get class from model")
     @ApiResponses(value = {
-        @ApiResponse(code = 404, message = "No such resource"),
-        @ApiResponse(code = 400, message = "Invalid model supplied"),
-        @ApiResponse(code = 404, message = "Service not found"),
-        @ApiResponse(code = 500, message = "Internal server error")
+        @ApiResponse(responseCode = "404", description = "No such resource"),
+        @ApiResponse(responseCode = "400", description = "Invalid model supplied"),
+        @ApiResponse(responseCode = "404", description = "Service not found"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
     })
-    public Response json(
-        @ApiParam(value = "Class id")
-        @QueryParam("id") String id,
-        @ApiParam(value = "Model id")
-        @QueryParam("model") String model) {
+    public Response getClass(
+        @Parameter(description = "Class id") @QueryParam("id") String id,
+        @Parameter(description = "Model id") @QueryParam("model") String model) {
 
         if (id == null || id.equals("undefined") || id.equals("default")) {
 
@@ -150,23 +152,23 @@ public class Class {
     }
 
     @POST
-    @ApiOperation(value = "Update class in certain model OR add reference from existing class to another model AND/OR change Class ID", notes = "PUT Body should be json-ld")
+    @Operation(description = "Update class in certain model OR add reference from existing class to another model AND/OR change Class ID")
     @ApiResponses(value = {
-        @ApiResponse(code = 201, message = "Graph is created"),
-        @ApiResponse(code = 204, message = "Graph is saved"),
-        @ApiResponse(code = 401, message = "Unauthorized"),
-        @ApiResponse(code = 405, message = "Update not allowed"),
-        @ApiResponse(code = 403, message = "Illegal graph parameter"),
-        @ApiResponse(code = 400, message = "Invalid graph supplied"),
-        @ApiResponse(code = 500, message = "Bad data?")
+        @ApiResponse(responseCode = "201", description = "Graph is created"),
+        @ApiResponse(responseCode = "204", description = "Graph is saved"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized"),
+        @ApiResponse(responseCode = "405", description = "Update not allowed"),
+        @ApiResponse(responseCode = "403", description = "Illegal graph parameter"),
+        @ApiResponse(responseCode = "400", description = "Invalid graph supplied"),
+        @ApiResponse(responseCode = "500", description = "Bad data?")
     })
-    public Response postJson(
-        @ApiParam(value = "New graph in application/ld+json", required = false) String body,
-        @ApiParam(value = "Class ID", required = true)
+    public Response postClass(
+        @Parameter(description = "New graph in application/ld+json", required = false) String body,
+        @Parameter(description = "Class ID", required = true)
         @QueryParam("id") String id,
-        @ApiParam(value = "OLD Class ID")
+        @Parameter(description = "OLD Class ID")
         @QueryParam("oldid") String oldid,
-        @ApiParam(value = "Model ID", required = true)
+        @Parameter(description = "Model ID", required = true)
         @QueryParam("model") String model) {
 
         try {
@@ -267,18 +269,18 @@ public class Class {
     }
 
     @PUT
-    @ApiOperation(value = "Create new class to certain model", notes = "PUT Body should be json-ld")
+    @Operation(description = "Create new class to certain model")
     @ApiResponses(value = {
-        @ApiResponse(code = 201, message = "Graph is created"),
-        @ApiResponse(code = 204, message = "Graph is saved"),
-        @ApiResponse(code = 401, message = "Unauthorized"),
-        @ApiResponse(code = 405, message = "Update not allowed"),
-        @ApiResponse(code = 403, message = "Illegal graph parameter"),
-        @ApiResponse(code = 400, message = "Invalid graph supplied"),
-        @ApiResponse(code = 500, message = "Bad data?")
+        @ApiResponse(responseCode = "201", description = "Graph is created"),
+        @ApiResponse(responseCode = "204", description = "Graph is saved"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized"),
+        @ApiResponse(responseCode = "405", description = "Update not allowed"),
+        @ApiResponse(responseCode = "403", description = "Illegal graph parameter"),
+        @ApiResponse(responseCode = "400", description = "Invalid graph supplied"),
+        @ApiResponse(responseCode = "500", description = "Bad data?")
     })
-    public Response putJson(
-        @ApiParam(value = "New graph in application/ld+json", required = true) String body) {
+    public Response putClass(
+        @Parameter(description = "New graph in application/ld+json", required = true) String body) {
 
         try {
 
@@ -325,17 +327,17 @@ public class Class {
     }
 
     @DELETE
-    @ApiOperation(value = "Delete graph from service and service description", notes = "Delete graph")
+    @Operation(description = "Delete graph from service and service description")
     @ApiResponses(value = {
-        @ApiResponse(code = 204, message = "Graph is deleted"),
-        @ApiResponse(code = 403, message = "Illegal graph parameter"),
-        @ApiResponse(code = 404, message = "No such graph"),
-        @ApiResponse(code = 401, message = "Unauthorized")
+        @ApiResponse(responseCode = "204", description = "Graph is deleted"),
+        @ApiResponse(responseCode = "403", description = "Illegal graph parameter"),
+        @ApiResponse(responseCode = "404", description = "No such graph"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized")
     })
     public Response deleteClass(
-        @ApiParam(value = "Model ID", required = true)
+        @Parameter(description = "Model ID", required = true)
         @QueryParam("model") String model,
-        @ApiParam(value = "Class ID", required = true)
+        @Parameter(description = "Class ID", required = true)
         @QueryParam("id") String id) {
 
         /* Check that URIs are valid */

@@ -1,10 +1,10 @@
 package fi.vm.yti.datamodel.api.endpoint.usermanagement;
 
 import fi.vm.yti.security.AuthenticatedUserProvider;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import org.springframework.stereotype.Component;
 
@@ -15,7 +15,7 @@ import javax.ws.rs.core.Response;
 
 @Component
 @Path("v1/user")
-@Api(tags = { "Users" }, description = "Get user")
+@Tag(name = "Users")
 public class User {
 
     private final AuthenticatedUserProvider userProvider;
@@ -25,9 +25,9 @@ public class User {
     }
 
     @GET
-    @ApiOperation(value = "Get authenticated user")
+    @Operation(description = "Get authenticated user")
     @ApiResponses(value = {
-        @ApiResponse(code = 200, message = "User object")
+        @ApiResponse(responseCode = "200", description = "User object")
     })
     @Produces("application/json")
     public Response getUser() {

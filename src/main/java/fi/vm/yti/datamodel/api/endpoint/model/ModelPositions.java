@@ -6,7 +6,12 @@ package fi.vm.yti.datamodel.api.endpoint.model;
 import fi.vm.yti.datamodel.api.model.DataModel;
 import fi.vm.yti.datamodel.api.security.AuthorizationManager;
 import fi.vm.yti.datamodel.api.service.*;
-import io.swagger.annotations.*;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
@@ -22,7 +27,7 @@ import org.slf4j.LoggerFactory;
 
 @Component
 @Path("v1/modelPositions")
-@Api(tags = { "Model" }, description = "Operations about coordinates")
+@Tag(name = "Model")
 public class ModelPositions {
 
     private static final Logger logger = LoggerFactory.getLogger(ModelPositions.class.getName());
@@ -58,14 +63,14 @@ public class ModelPositions {
 
     @GET
     @Produces("application/ld+json")
-    @ApiOperation(value = "Get model from service", notes = "More notes about this method")
+    @Operation(description = "Get model from service")
     @ApiResponses(value = {
-        @ApiResponse(code = 400, message = "Invalid model supplied"),
-        @ApiResponse(code = 404, message = "Service not found"),
-        @ApiResponse(code = 500, message = "Internal server error")
+        @ApiResponse(responseCode = "400", description = "Invalid model supplied"),
+        @ApiResponse(responseCode = "404", description = "Service not found"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
     })
-    public Response json(
-        @ApiParam(value = "Graph id", defaultValue = "default")
+    public Response getModelPositions(
+        @Parameter(description = "Graph id", schema = @Schema(defaultValue = "default"))
         @QueryParam("model") String model) {
 
         return jerseyClient.getNonEmptyGraphResponseFromService(model + "#PositionGraph", endpointServices.getCoreReadAddress(), "application/ld+json", false);
@@ -73,20 +78,20 @@ public class ModelPositions {
     }
 
     @PUT
-    @ApiOperation(value = "Updates model coordinates", notes = "PUT Body should be json-ld")
+    @Operation(description = "Updates model coordinates")
     @ApiResponses(value = {
-        @ApiResponse(code = 201, message = "Graph is created"),
-        @ApiResponse(code = 204, message = "Graph is saved"),
-        @ApiResponse(code = 401, message = "Unauthorized"),
-        @ApiResponse(code = 405, message = "Update not allowed"),
-        @ApiResponse(code = 403, message = "Illegal graph parameter"),
-        @ApiResponse(code = 400, message = "Invalid graph supplied"),
-        @ApiResponse(code = 500, message = "Bad data?")
+        @ApiResponse(responseCode = "201", description = "Graph is created"),
+        @ApiResponse(responseCode = "204", description = "Graph is saved"),
+        @ApiResponse(responseCode = "401", description = "Unauthorized"),
+        @ApiResponse(responseCode = "405", description = "Update not allowed"),
+        @ApiResponse(responseCode = "403", description = "Illegal graph parameter"),
+        @ApiResponse(responseCode = "400", description = "Invalid graph supplied"),
+        @ApiResponse(responseCode = "500", description = "Bad data?")
     })
-    public Response putJson(
-        @ApiParam(value = "New graph in application/ld+json", required = true)
+    public Response putModelPositions(
+        @Parameter(description = "New graph in application/ld+json", required = true)
             String body,
-        @ApiParam(value = "Model ID", required = true)
+        @Parameter(description = "Model ID", required = true)
         @QueryParam("model")
             String model) {
 

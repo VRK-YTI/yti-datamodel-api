@@ -1,7 +1,12 @@
 package fi.vm.yti.datamodel.api.endpoint.genericapi;
 
 import fi.vm.yti.datamodel.api.service.*;
-import io.swagger.annotations.*;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import org.apache.jena.atlas.web.ContentType;
 import org.apache.jena.riot.Lang;
@@ -20,7 +25,7 @@ import org.slf4j.LoggerFactory;
 
 @Component
 @Path("v1/exportResource")
-@Api(tags = { "Resource" }, description = "Export Classes, Predicates, Shapes etc.")
+@Tag(name = "Resource")
 public class ExportResource {
 
     private static final Logger logger = LoggerFactory.getLogger(ExportResource.class.getName());
@@ -54,20 +59,20 @@ public class ExportResource {
     }
 
     @GET
-    @ApiOperation(value = "Get model from service", notes = "More notes about this method")
+    @Operation(description = "Export singe resource")
     @ApiResponses(value = {
-        @ApiResponse(code = 400, message = "Invalid model supplied"),
-        @ApiResponse(code = 403, message = "Invalid model id"),
-        @ApiResponse(code = 404, message = "Service not found"),
-        @ApiResponse(code = 500, message = "Internal server error")
+        @ApiResponse(responseCode = "400", description = "Invalid model supplied"),
+        @ApiResponse(responseCode = "403", description = "Invalid model id"),
+        @ApiResponse(responseCode = "404", description = "Service not found"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
     })
-    public Response json(
+    public Response exportResource(
         @HeaderParam("Accept") String accept,
-        @ApiParam(value = "Requested resource", defaultValue = "default") @QueryParam("graph") String graph,
-        @ApiParam(value = "Raw / PlainText boolean", defaultValue = "false") @QueryParam("raw") boolean raw,
-        @ApiParam(value = "Languages to export") @QueryParam("lang") String lang,
-        @ApiParam(value = "Service to export") @QueryParam("service") String serviceString,
-        @ApiParam(value = "Content-type", allowableValues = "application/ld+json,text/turtle,application/rdf+xml,application/ld+json+context,application/schema+json,application/xml") @QueryParam("content-type") String ctype) {
+        @Parameter(description = "Requested resource", schema = @Schema(defaultValue = "default")) @QueryParam("graph") String graph,
+        @Parameter(description = "Raw / PlainText boolean", schema = @Schema(defaultValue = "false")) @QueryParam("raw") boolean raw,
+        @Parameter(description = "Languages to export") @QueryParam("lang") String lang,
+        @Parameter(description = "Service to export") @QueryParam("service") String serviceString,
+        @Parameter(description = "Content-type", schema = @Schema(allowableValues = "application/ld+json,text/turtle,application/rdf+xml,application/ld+json+context,application/schema+json,application/xml")) @QueryParam("content-type") String ctype) {
 
         if (ctype == null || ctype.equals("undefined")) ctype = accept;
 
@@ -119,8 +124,8 @@ public class ExportResource {
             Lang rdfLang = RDFLanguages.contentTypeToLang(contentType);
 
             if (rdfLang == null) {
+                // Default to turtle
                 rdfLang = Lang.TURTLE;
-                //return JerseyResponseManager.notFound();
             }
 
             return jerseyClient.getGraphResponseFromService(graph, service, contentType.getContentType(), raw);

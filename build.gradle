@@ -12,6 +12,7 @@ buildscript {
 plugins {
     id "io.spring.dependency-management" version "1.0.3.RELEASE"
     id "org.springframework.boot" version "2.1.8.RELEASE"
+   // id "io.swagger.core.v3.swagger-gradle-plugin" version "2.0.9"
     id "org.sonarqube" version "2.6.2"
     id "org.owasp.dependencycheck" version "4.0.2"
 }
@@ -21,14 +22,24 @@ apply plugin: 'io.spring.dependency-management'
 apply plugin: "idea"
 apply plugin: "com.jfrog.artifactory"
 
+allprojects {
+    apply plugin: 'idea'
+    idea {
+        module {
+            outputDir file('build/classes/main')
+            testOutputDir file('build/classes/test')
+        }
+    }
+    if(project.convention.findPlugin(JavaPluginConvention)) {
+        // Change the output directory for the main and test source sets back to the old path
+        sourceSets.main.output.classesDir = new File(buildDir, "classes/main")
+        sourceSets.test.output.classesDir = new File(buildDir, "classes/test")
+    }
+}
+
 artifactoryPublish.skip = true
 
 archivesBaseName = 'yti-datamodel-api'
-
-configurations.all {
-    resolutionStrategy.cacheDynamicVersionsFor 0, "seconds"
-    resolutionStrategy.cacheChangingModulesFor 0, "seconds"
-}
 
 repositories {
     mavenLocal()
@@ -55,6 +66,14 @@ dependencyManagement {
     }
 }
 
+configurations {
+    all {
+        resolutionStrategy.cacheDynamicVersionsFor 0, "seconds"
+        resolutionStrategy.cacheChangingModulesFor 0, "seconds"
+    }
+    swaggerUI { transitive = false }
+}
+
 dependencies {
     compile "org.springframework.boot:spring-boot-starter-web"
     compile "org.springframework.boot:spring-boot-starter-jersey"
@@ -77,7 +96,9 @@ dependencies {
     compile group: 'org.json', name: 'json', version: '20190722'
     compile "org.jsoup:jsoup:1.11.1"
     compile "com.jayway.jsonpath:json-path:2.4.0"
-    compile "io.swagger:swagger-jersey2-jaxrs:1.5.18"
+    compile group: 'io.swagger.core.v3', name: 'swagger-core', version: '2.0.9'
+    compile group: 'io.swagger.core.v3', name: 'swagger-jaxrs2', version: '2.0.9'
+    swaggerUI 'org.webjars:swagger-ui:3.24.0'
     compile "org.topbraid:shacl:1.0.1"
     compile "org.apache.jena:jena-core:3.9.0"
     compile "org.apache.jena:jena-arq:3.9.0"
@@ -125,3 +146,20 @@ dependencyCheck {
         directory = System.getenv('OWASP_DATA_DIR')
     }
 }
+
+task unzipSwagger(type:Copy) {
+    from zipTree(configurations.swaggerUI.singleFile)
+    include "META-INF/resources/webjars/swagger-ui/3.24.0/**"
+    into "build/classes/main/static/swagger-ui"
+    eachFile { f ->
+        if (f.path.endsWith('index.html')) {
+            filter { line ->
+                line.replace('https://petstore.swagger.io/v2/swagger.json', "/datamodel/api/openapi.yaml")
+            }
+        }
+        f.path = f.path.replaceFirst('META-INF/resources/webjars/swagger-ui/3.24.0/', '')
+    }
+    includeEmptyDirs = false
+}
+
+build.dependsOn unzipSwagger

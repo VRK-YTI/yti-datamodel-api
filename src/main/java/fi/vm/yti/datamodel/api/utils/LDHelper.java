@@ -3,8 +3,6 @@ package fi.vm.yti.datamodel.api.utils;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.jsonldjava.core.JsonLdOptions;
-import com.github.jsonldjava.core.JsonLdProcessor;
 import com.github.jsonldjava.utils.JsonUtils;
 
 import org.apache.commons.lang3.StringUtils;
@@ -20,8 +18,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
-import javax.json.Json;
-import javax.json.JsonObject;
 import javax.ws.rs.core.Response;
 
 import java.io.ByteArrayInputStream;
@@ -43,7 +39,7 @@ public class LDHelper {
 
     private static final IRIFactory iriFactory = IRIFactory.iriImplementation();
 
-    public static final String[] UNRESOLVABLE = { "xsd", "iow", "text", "sh", "afn", "schema", "dcap" };
+    public static final String[] UNRESOLVABLE = { "at","xsd", "iow", "text", "sh", "afn", "schema", "dcap" };
 
     public static final String[] RESERVEDWORDS = {
         "urn",

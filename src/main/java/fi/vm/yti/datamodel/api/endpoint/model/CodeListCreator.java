@@ -8,7 +8,12 @@ import fi.vm.yti.datamodel.api.service.IDManager;
 import fi.vm.yti.datamodel.api.service.JerseyClient;
 import fi.vm.yti.datamodel.api.service.JerseyResponseManager;
 import fi.vm.yti.datamodel.api.utils.LDHelper;
-import io.swagger.annotations.*;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
@@ -25,7 +30,7 @@ import javax.ws.rs.core.Response;
 
 @Component
 @Path("v1/codeListCreator")
-@Api(tags = { "Codes" }, description = "Create reusable code list that is not resolved")
+@Tag(name = "Codes" )
 public class CodeListCreator {
 
     private final IDManager idManager;
@@ -47,17 +52,17 @@ public class CodeListCreator {
 
     @GET
     @Produces("application/ld+json")
-    @ApiOperation(value = "Create new code list", notes = "Creates new code list")
-    @ApiResponses(value = { @ApiResponse(code = 200, message = "New list is created"),
-        @ApiResponse(code = 400, message = "Invalid ID supplied"),
-        @ApiResponse(code = 403, message = "Invalid IRI in parameter"),
-        @ApiResponse(code = 404, message = "Service not found"),
-        @ApiResponse(code = 401, message = "No right to create new") })
-    public Response newValueScheme(
-        @ApiParam(value = "Codelist uri", required = true) @QueryParam("uri") String uri,
-        @ApiParam(value = "Codelist name", required = true) @QueryParam("label") String label,
-        @ApiParam(value = "Codelist description", required = true) @QueryParam("description") String comment,
-        @ApiParam(value = "Initial language", required = true, allowableValues = "fi,en") @QueryParam("lang") String lang) {
+    @Operation(description = "Create new code list")
+    @ApiResponses(value = { @ApiResponse(responseCode = "200", description = "New list is created"),
+        @ApiResponse(responseCode = "400", description = "Invalid ID supplied"),
+        @ApiResponse(responseCode = "403", description = "Invalid IRI in parameter"),
+        @ApiResponse(responseCode = "404", description = "Service not found"),
+        @ApiResponse(responseCode = "401", description = "No right to create new") })
+    public Response newCodeList(
+        @Parameter(description = "Codelist uri", required = true) @QueryParam("uri") String uri,
+        @Parameter(description = "Codelist name", required = true) @QueryParam("label") String label,
+        @Parameter(description = "Codelist description", required = true) @QueryParam("description") String comment,
+        @Parameter(description = "Initial language", required = true, schema = @Schema(allowableValues = "fi,en")) @QueryParam("lang") String lang) {
 
         IRI codeListIRI = null;
 

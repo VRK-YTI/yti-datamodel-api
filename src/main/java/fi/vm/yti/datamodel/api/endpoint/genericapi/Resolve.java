@@ -4,7 +4,12 @@ import fi.vm.yti.datamodel.api.config.ApplicationProperties;
 import fi.vm.yti.datamodel.api.service.GraphManager;
 import fi.vm.yti.datamodel.api.service.JerseyResponseManager;
 import fi.vm.yti.datamodel.api.utils.LDHelper;
-import io.swagger.annotations.*;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFLanguages;
@@ -27,7 +32,7 @@ import java.util.Locale;
 
 @Component
 @Path("v1/resolve")
-@Api(tags = { "Admin" }, description = "Resolve resource with ACCEPT header")
+@Tag(name = "Admin")
 public class Resolve {
 
     private static final Logger logger = LoggerFactory.getLogger(Resolve.class);
@@ -51,18 +56,18 @@ public class Resolve {
     UriInfo uriInfo;
 
     @GET
-    @ApiOperation(value = "Redirect URI resource.")
+    @Operation(description = "Redirect URI resource.")
     @ApiResponses(value = {
-        @ApiResponse(code = 303, message = "Does a redirect from datamodel resource URI to datamodel API or frontend."),
-        @ApiResponse(code = 406, message = "Resource not found."),
-        @ApiResponse(code = 406, message = "Cannot redirect to given URI.")
+        @ApiResponse(responseCode = "303", description = "Does a redirect from datamodel resource URI to datamodel API or frontend."),
+        @ApiResponse(responseCode = "406", description = "Resource not found."),
+        @ApiResponse(responseCode = "406", description = "Cannot redirect to given URI.")
     })
     public Response resolveUri(@HeaderParam("Accept") String accept,
                                @HeaderParam("Accept-Language") String acceptLang,
                                @HeaderParam("If-Modified-Since") String ifModifiedSince,
-                               @ApiParam(value = "Raw / PlainText boolean", defaultValue = "false") @QueryParam("raw") boolean raw,
-                               @ApiParam(value = "Content-type as format") @QueryParam("format") String format,
-                               @ApiParam(value = "Resource URI.", required = true) @QueryParam("uri") final String uri) {
+                               @Parameter(description = "Raw / PlainText boolean", schema = @Schema(defaultValue = "false")) @QueryParam("raw") boolean raw,
+                               @Parameter(description = "Content-type as format") @QueryParam("format") String format,
+                               @Parameter(description = "Resource URI.", required = true) @QueryParam("uri") final String uri) {
         final URI resolveUri = parseUriFromString(uri);
         ensureSuomiFiUriHost(resolveUri.getHost());
 

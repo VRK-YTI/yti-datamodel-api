@@ -5,10 +5,10 @@ package fi.vm.yti.datamodel.api.endpoint.usermanagement;
 
 import fi.vm.yti.datamodel.api.service.GraphManager;
 import fi.vm.yti.datamodel.api.service.JerseyResponseManager;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import org.apache.jena.rdf.model.Model;
 import org.slf4j.Logger;
@@ -23,7 +23,7 @@ import javax.ws.rs.core.Response;
 
 @Component
 @Path("v1/organizations")
-@Api(tags = { "Organizations" }, description = "Get organizations")
+@Tag(name = "Organizations")
 public class Organizations {
 
     private static final Logger logger = LoggerFactory.getLogger(Organizations.class.getName());
@@ -39,10 +39,10 @@ public class Organizations {
     }
 
     @GET
-    @ApiOperation(value = "Get organizations", notes = "Get organizations from rhp")
-    @ApiResponses(value = { @ApiResponse(code = 200, message = "List of organizations"),
-        @ApiResponse(code = 400, message = "Error from organization service"),
-        @ApiResponse(code = 404, message = "Organization service not found") })
+    @Operation(description = "Get organizations")
+    @ApiResponses(value = { @ApiResponse(responseCode = "200", description = "List of organizations"),
+        @ApiResponse(responseCode = "400", description = "Error from organization service"),
+        @ApiResponse(responseCode = "404", description = "Organization service not found") })
     @Produces("application/json")
     public Response getOrganizations() {
         Model orgModel = graphManager.getCoreGraph("urn:yti:organizations");

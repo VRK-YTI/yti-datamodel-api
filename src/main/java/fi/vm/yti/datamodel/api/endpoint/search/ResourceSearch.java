@@ -18,11 +18,13 @@ import fi.vm.yti.datamodel.api.index.SearchIndexManager;
 import fi.vm.yti.datamodel.api.index.model.ResourceSearchRequest;
 import fi.vm.yti.datamodel.api.index.model.ResourceSearchResponse;
 import fi.vm.yti.datamodel.api.service.JerseyResponseManager;
-import io.swagger.annotations.Api;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 @Component
 @Path("v1/searchResources")
-@Api(tags = { "Index" })
+@Tag(name = "Index")
 public class ResourceSearch {
 
     private static final Logger logger = LoggerFactory.getLogger(ResourceSearch.class.getName());
@@ -42,6 +44,10 @@ public class ResourceSearch {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "OK"),
+        @ApiResponse(responseCode = "400", description = "Invalid request!")
+    })
     public Response searchModels(ResourceSearchRequest request) {
         ResourceSearchResponse response = searchIndexManager.searchResources(request);
         return jerseyResponseManager.ok(objectMapper.valueToTree(response));

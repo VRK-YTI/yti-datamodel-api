@@ -5,7 +5,11 @@ import com.jayway.jsonpath.JsonPath;
 import fi.vm.yti.datamodel.api.security.AuthorizationManager;
 import fi.vm.yti.datamodel.api.service.*;
 import fi.vm.yti.security.AuthenticatedUserProvider;
-import io.swagger.annotations.*;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,11 +21,9 @@ import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 
-import java.util.UUID;
-
 @Component
 @Path("v1/conceptSuggestion")
-@Api(tags = { "Concept" }, description = "Create concept suggestions")
+@Tag(name = "Concept")
 public class ConceptSuggestion {
 
     private final AuthorizationManager authorizationManager;
@@ -53,17 +55,19 @@ public class ConceptSuggestion {
     }
 
     @PUT
-    @ApiOperation(value = "Create concept suggestion", notes = "Create new concept suggestion")
-    @ApiResponses(value = { @ApiResponse(code = 200, message = "New concept is created"),
-        @ApiResponse(code = 400, message = "Invalid ID supplied"),
-        @ApiResponse(code = 403, message = "Invalid IRI in parameter"),
-        @ApiResponse(code = 401, message = "User is not logged in"),
-        @ApiResponse(code = 404, message = "Service not found") })
+    @Operation(description = "Create new concept suggestion")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "400", description = "Invalid ID supplied"),
+        @ApiResponse(responseCode = "403", description = "Invalid IRI in parameter"),
+        @ApiResponse(responseCode = "401", description = "User is not logged in"),
+        @ApiResponse(responseCode = "404", description = "Service not found") })
     public Response newConceptSuggestion(
-        @ApiParam(value = "Terminology uri", required = true) @QueryParam("terminologyUri") String terminologyUri,
-        @ApiParam(value = "Label", required = true) @QueryParam("label") String label,
-        @ApiParam(value = "Comment", required = true) @QueryParam("comment") String comment,
-        @ApiParam(value = "Initial language", required = true, allowableValues = "fi,en") @QueryParam("lang") String lang) {
+        @Parameter(description = "Terminology uri", required = true) @QueryParam("terminologyUri") String terminologyUri,
+        @Parameter(description = "Label", required = true) @QueryParam("label") String label,
+        @Parameter(description = "Comment", required = true) @QueryParam("comment") String comment,
+        @Parameter(description = "Initial language", required = true) @QueryParam("lang") String lang) {
+
+        // TODO: schema = @Schema(allowableValues = "fi,en"
 
         if (!authorizationManager.hasRightToSuggestConcept()) {
             return jerseyResponseManager.unauthorized();

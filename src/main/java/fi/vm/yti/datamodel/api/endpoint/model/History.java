@@ -7,7 +7,12 @@ import fi.vm.yti.datamodel.api.service.EndpointServices;
 import fi.vm.yti.datamodel.api.service.JerseyClient;
 import fi.vm.yti.datamodel.api.service.NamespaceManager;
 import fi.vm.yti.datamodel.api.utils.LDHelper;
-import io.swagger.annotations.*;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import org.apache.jena.query.ParameterizedSparqlString;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,7 +31,7 @@ import org.slf4j.LoggerFactory;
 
 @Component
 @Path("v1/history")
-@Api(tags = { "History" }, description = "Get list of revisions of the resource from change history")
+@Tag(name = "History" )
 public class History {
 
     private static final Logger logger = LoggerFactory.getLogger(History.class.getName());
@@ -47,17 +52,17 @@ public class History {
 
     @GET
     @Produces("application/ld+json")
-    @ApiOperation(value = "Get activity history for the resource", notes = "More notes about this method")
+    @Operation(description = "Get activity history for the resource")
     @ApiResponses(value = {
-        @ApiResponse(code = 400, message = "Invalid model supplied"),
-        @ApiResponse(code = 404, message = "Service not found"),
-        @ApiResponse(code = 500, message = "Internal server error")
+        @ApiResponse(responseCode = "400", description = "Invalid model supplied"),
+        @ApiResponse(responseCode = "404", description = "Service not found"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
     })
-    public Response json(
-        @ApiParam(value = "resource id")
-        @QueryParam("id") String id,
-        @ApiParam(value = "Peek", defaultValue = "false")
-        @QueryParam("peek") boolean peek) {
+    public Response getHistory(
+        @Parameter(description = "resource id") @QueryParam("id") String id,
+        @Parameter(description = "Peek", schema = @Schema(defaultValue = "false")) @QueryParam("peek") boolean peek) {
+
+        // TODO: Remove or refactor history
 
         if (id == null || id.equals("undefined") || id.equals("default") || peek) {
 

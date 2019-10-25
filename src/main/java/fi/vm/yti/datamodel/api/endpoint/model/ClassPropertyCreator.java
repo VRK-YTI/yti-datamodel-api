@@ -9,7 +9,12 @@ import fi.vm.yti.datamodel.api.service.IDManager;
 import fi.vm.yti.datamodel.api.service.JerseyClient;
 import fi.vm.yti.datamodel.api.service.JerseyResponseManager;
 import fi.vm.yti.datamodel.api.utils.LDHelper;
-import io.swagger.annotations.*;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
@@ -28,7 +33,7 @@ import java.util.UUID;
 
 @Component
 @Path("v1/classProperty")
-@Api(tags = { "Class" }, description = "Operations about property")
+@Tag(name = "Class" )
 public class ClassPropertyCreator {
 
     private final IDManager idManager;
@@ -52,15 +57,15 @@ public class ClassPropertyCreator {
 
     @GET
     @Produces("application/ld+json")
-    @ApiOperation(value = "Get property from model", notes = "More notes about this method")
+    @Operation(description = "Get property from model")
     @ApiResponses(value = {
-        @ApiResponse(code = 400, message = "Invalid model supplied"),
-        @ApiResponse(code = 404, message = "Service not found"),
-        @ApiResponse(code = 500, message = "Internal server error")
+        @ApiResponse(responseCode = "400", description = "Invalid model supplied"),
+        @ApiResponse(responseCode = "404", description = "Service not found"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
     })
-    public Response json(
-        @ApiParam(value = "Predicate ID", required = true) @QueryParam("predicateID") String predicateID,
-        @ApiParam(value = "Predicate type", allowableValues = "owl:DatatypeProperty,owl:ObjectProperty") @QueryParam("type") String type) {
+    public Response createClassProperty(
+        @Parameter(description = "Predicate ID", required = true) @QueryParam("predicateID") String predicateID,
+        @Parameter(description = "Predicate type", schema = @Schema(allowableValues = "owl:DatatypeProperty,owl:ObjectProperty")) @QueryParam("type") String type) {
 
         IRI predicateIRI, typeIRI;
 

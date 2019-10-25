@@ -4,10 +4,10 @@
 package fi.vm.yti.datamodel.api.endpoint.codes;
 
 import fi.vm.yti.datamodel.api.utils.LDHelper;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import org.springframework.stereotype.Component;
 
@@ -20,16 +20,16 @@ import javax.ws.rs.core.Response.Status;
 
 @Component
 @Path("v1/codeServer")
-@Api(tags = { "Codes" }, description = "Available code servers")
+@Tag(name = "Codes")
 public class CodeServer {
 
     @GET
     @Produces("application/ld+json")
-    @ApiOperation(value = "Get available code servers", notes = "Get list of available code servers")
+    @Operation(description = "Get available code servers")
     @ApiResponses(value = {
-        @ApiResponse(code = 200, message = "Concepts"),
-        @ApiResponse(code = 406, message = "Term not defined"),
-        @ApiResponse(code = 500, message = "Internal server error")
+        @ApiResponse(responseCode = "200", description = "Concepts"),
+        @ApiResponse(responseCode = "406", description = "Term not defined"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     public Response codeServer() {
 

@@ -7,11 +7,11 @@ import fi.vm.yti.datamodel.api.index.FrameManager;
 import fi.vm.yti.datamodel.api.service.GraphManager;
 import fi.vm.yti.datamodel.api.service.IDManager;
 import fi.vm.yti.datamodel.api.service.JerseyResponseManager;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import java.util.Date;
 
@@ -27,13 +27,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-/**
- * @author jkesanie
- */
-
 @Component
 @Path("v1/framedGraphs")
-@Api(tags = { "Framed graphs cache" }, description = "Operations for working with framing cache")
+@Tag(name = "Frame")
 public class FramedGraphs {
 
     private final IDManager idManager;
@@ -55,13 +51,13 @@ public class FramedGraphs {
 
     @GET
     @Produces("application/json")
-    @ApiOperation(value = "Get and cache framed model for visualization", notes = "More notes about this method")
+    @Operation(description = "Get and cache framed model for visualization")
     @ApiResponses(value = {
-        @ApiResponse(code = 400, message = "Invalid model URI supplied"),
-        @ApiResponse(code = 500, message = "Internal server error")
+        @ApiResponse(responseCode = "400", description = "Invalid model URI supplied"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
     })
-    public Response json(
-        @ApiParam(value = "Graph id")
+    public Response getFramedGraphs(
+        @Parameter(description = "Graph id")
         @QueryParam("graph") String graph) {
 
         /* Check that URI is valid */

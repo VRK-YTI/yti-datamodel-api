@@ -7,11 +7,14 @@ import fi.vm.yti.datamodel.api.config.ApplicationProperties;
 import fi.vm.yti.datamodel.api.model.OPHCodeServer;
 import fi.vm.yti.datamodel.api.model.SuomiCodeServer;
 import fi.vm.yti.datamodel.api.service.*;
-import io.swagger.annotations.*;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
-import org.glassfish.jersey.jaxb.internal.XmlJaxbElementProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -23,7 +26,7 @@ import javax.ws.rs.core.Response;
 
 @Component
 @Path("v1/codeList")
-@Api(tags = { "Codes" }, description = "Get list of codes from code sercer")
+@Tag(name = "Codes")
 public class CodeList {
 
     private final EndpointServices endpointServices;
@@ -44,14 +47,14 @@ public class CodeList {
 
     @GET
     @Produces("application/ld+json")
-    @ApiOperation(value = "Get list of codelists from code server", notes = "Groups and codeLists")
+    @Operation(description = "Get list of codelists from code server")
     @ApiResponses(value = {
-        @ApiResponse(code = 200, message = "Codelists"),
-        @ApiResponse(code = 406, message = "Term not defined"),
-        @ApiResponse(code = 500, message = "Internal server error")
+        @ApiResponse(responseCode = "200", description = "Codelists"),
+        @ApiResponse(responseCode = "406", description = "Term not defined"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
     })
-    public Response codeList(
-        @ApiParam(value = "Codeserver uri", required = true) @QueryParam("uri") String uri) {
+    public Response getCodeList(
+        @Parameter(description = "Codeserver uri", required = true) @QueryParam("uri") String uri) {
 
         if(uri==null || uri.isEmpty()) {
             return jerseyResponseManager.invalidParameter();

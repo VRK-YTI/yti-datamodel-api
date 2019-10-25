@@ -148,15 +148,6 @@ public class JerseyClient {
 
             Model model = jenaClient.getModelFromCore(graph + "#ExportGraph");
 
-            /*
-            OutputStream out = new ByteArrayOutputStream();
-            
-             Response response = getResponseFromService(graph+"#ExportGraph", services.getCoreReadAddress(), ctype);
-
-            if (response.getStatusInfo().getFamily() != Response.Status.Family.SUCCESSFUL) {
-                return JerseyResponseManager.unexpected();
-            }*/
-
             ResponseBuilder rb;
 
             if (model != null && model.size() > 0) {
@@ -165,15 +156,7 @@ public class JerseyClient {
                 rb = Response.noContent();
             }
 
-            // OutputStream out = new ByteArrayOutputStream();
-            // RDFDataMgr.write(out, model, rdfLang);
-
-            // TODO: ClassExportFrame ?
-            //     if (rdfLang.equals(Lang.JSONLD)) {
-            //        rb.entity(frameManager.graphToFramedString(model, Frames.classVisualizationFrame));
-            //   } else {
             rb.entity(modelManager.writeModelToString(model, format));
-            //   }
 
             if (!raw) {
                 rb.type(contentType.getContentType());

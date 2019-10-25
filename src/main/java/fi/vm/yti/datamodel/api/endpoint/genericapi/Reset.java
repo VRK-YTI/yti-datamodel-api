@@ -6,10 +6,10 @@ import fi.vm.yti.datamodel.api.service.JerseyResponseManager;
 import fi.vm.yti.datamodel.api.service.NamespaceManager;
 import fi.vm.yti.datamodel.api.service.RHPOrganizationManager;
 import fi.vm.yti.migration.Migration;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import org.springframework.stereotype.Component;
 
@@ -19,7 +19,7 @@ import javax.ws.rs.core.Response;
 
 @Component
 @Path("v1/reset")
-@Api(tags = { "Admin" }, description = "DROP ALL and Recover")
+@Tag(name = "Admin")
 public class Reset {
 
     private final GraphManager graphManager;
@@ -45,9 +45,9 @@ public class Reset {
     }
 
     @GET
-    @ApiOperation(value = "Drops everything")
+    @Operation(description = "Drops everything")
     @ApiResponses(value = {
-        @ApiResponse(code = 200, message = "OK")
+        @ApiResponse(responseCode = "200", description = "OK")
     })
     public Response drop() {
 

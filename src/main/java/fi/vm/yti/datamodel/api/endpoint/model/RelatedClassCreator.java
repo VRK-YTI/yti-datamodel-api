@@ -6,7 +6,12 @@ package fi.vm.yti.datamodel.api.endpoint.model;
 import fi.vm.yti.datamodel.api.model.ReusableClass;
 import fi.vm.yti.datamodel.api.service.*;
 import fi.vm.yti.datamodel.api.utils.LDHelper;
-import io.swagger.annotations.*;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
@@ -23,7 +28,7 @@ import javax.ws.rs.core.Response;
 
 @Component
 @Path("v1/relatedClassCreator")
-@Api(tags = { "Class" }, description = "Construct new related class from existing class")
+@Tag(name = "Class" )
 public class RelatedClassCreator {
 
     private static final Logger logger = LoggerFactory.getLogger(RelatedClassCreator.class.getName());
@@ -46,15 +51,15 @@ public class RelatedClassCreator {
 
     @GET
     @Produces("application/ld+json")
-    @ApiOperation(value = "Create new class", notes = "Create new")
-    @ApiResponses(value = { @ApiResponse(code = 200, message = "New class is created"),
-        @ApiResponse(code = 400, message = "Invalid ID supplied"),
-        @ApiResponse(code = 403, message = "Invalid IRI in parameter"),
-        @ApiResponse(code = 404, message = "Service not found") })
+    @Operation(description = "Create new class")
+    @ApiResponses(value = { @ApiResponse(responseCode = "200", description = "New class is created"),
+        @ApiResponse(responseCode = "400", description = "Invalid ID supplied"),
+        @ApiResponse(responseCode = "403", description = "Invalid IRI in parameter"),
+        @ApiResponse(responseCode = "404", description = "Service not found") })
     public Response newClass(
-        @ApiParam(value = "Model ID", required = true) @QueryParam("modelID") String modelID,
-        @ApiParam(value = "Old class id", required = true) @QueryParam("oldClass") String oldClass,
-        @ApiParam(value = "Relation type", required = true, allowableValues = "rdfs:subClassOf, iow:superClassOf, prov:wasDerivedFrom") @QueryParam("relationType") String relationType) {
+        @Parameter(description = "Model ID", required = true) @QueryParam("modelID") String modelID,
+        @Parameter(description = "Old class id", required = true) @QueryParam("oldClass") String oldClass,
+        @Parameter(description = "Relation type", required = true, schema = @Schema(allowableValues = "rdfs:subClassOf, iow:superClassOf, prov:wasDerivedFrom")) @QueryParam("relationType") String relationType) {
 
         IRI modelIRI, oldClassIRI;
 

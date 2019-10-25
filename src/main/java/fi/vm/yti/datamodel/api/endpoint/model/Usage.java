@@ -9,7 +9,11 @@ import fi.vm.yti.datamodel.api.service.JerseyClient;
 import fi.vm.yti.datamodel.api.service.JerseyResponseManager;
 import fi.vm.yti.datamodel.api.service.NamespaceManager;
 import fi.vm.yti.datamodel.api.utils.LDHelper;
-import io.swagger.annotations.*;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
@@ -25,9 +29,11 @@ import javax.ws.rs.core.Response;
 
 import java.util.Map;
 
+// Returns all known references to the given resource. Resource ID and Model ID are alternative parameters
+
 @Component
 @Path("v1/usage")
-@Api(tags = { "Resource" }, description = "Returns all known references to the given resource. Resource ID and Model ID are alternative parameters")
+@Tag(name = "Resource" )
 public class Usage {
 
     private final IDManager idManager;
@@ -52,15 +58,15 @@ public class Usage {
 
     @GET
     @Produces("application/ld+json")
-    @ApiOperation(value = "Get related resources with resource, model or concept uri", notes = "Resolve resource usage")
-    @ApiResponses(value = { @ApiResponse(code = 200, message = "Usage message returned"),
-        @ApiResponse(code = 400, message = "Invalid ID supplied"),
-        @ApiResponse(code = 403, message = "Invalid IRI in parameter"),
-        @ApiResponse(code = 404, message = "Service not found") })
-    public Response Usage(
-        @ApiParam(value = "Resource ID") @QueryParam("id") String id,
-        @ApiParam(value = "Model ID") @QueryParam("model") String model,
-        @ApiParam(value = "Concept ID") @QueryParam("concept") String concept) {
+    @Operation(description = "Get related resources with resource, model or concept uri")
+    @ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Usage message returned"),
+        @ApiResponse(responseCode = "400", description = "Invalid ID supplied"),
+        @ApiResponse(responseCode = "403", description = "Invalid IRI in parameter"),
+        @ApiResponse(responseCode = "404", description = "Service not found") })
+    public Response getUsage(
+        @Parameter(description = "Resource ID") @QueryParam("id") String id,
+        @Parameter(description = "Model ID") @QueryParam("model") String model,
+        @Parameter(description = "Concept ID") @QueryParam("concept") String concept) {
 
         IRI resourceIRI = null;
         IRI modelIRI = null;

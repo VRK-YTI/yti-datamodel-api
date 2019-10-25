@@ -1,10 +1,10 @@
 package fi.vm.yti.datamodel.api.endpoint.genericapi;
 
 import fi.vm.yti.datamodel.api.service.JerseyResponseManager;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -17,7 +17,7 @@ import javax.ws.rs.core.Response;
 
 @Component
 @Path("v1/config")
-@Api(tags = { "Admin" }, description = "Get API config")
+@Tag(name = "Admin")
 public class Config {
 
     private final JerseyResponseManager jerseyResponseManager;
@@ -31,11 +31,11 @@ public class Config {
     ServletContext context;
 
     @GET
-    @ApiOperation(value = "Returns API config", notes = "Returns API config")
+    @Operation(description = "Returns API config")
     @ApiResponses(value = {
-        @ApiResponse(code = 200, message = "OK")
+        @ApiResponse(responseCode = "200", description = "OK")
     })
-    public Response json() {
+    public Response getConfig() {
 
         return jerseyResponseManager.config();
     }

@@ -14,10 +14,10 @@ import fi.vm.yti.datamodel.api.service.TerminologyManager;
 import fi.vm.yti.security.AuthenticatedUserProvider;
 import fi.vm.yti.security.Role;
 import fi.vm.yti.security.YtiUser;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -29,7 +29,7 @@ import javax.ws.rs.core.Response;
 
 @Component
 @Path("v1/conceptSchemes")
-@Api(tags = { "Concept" }, description = "Available concept schemes from Terminology APi")
+@Tag(name = "Concept")
 public class ConceptsSchemes {
 
     private final JerseyResponseManager jerseyResponseManager;
@@ -51,13 +51,13 @@ public class ConceptsSchemes {
 
     @GET
     @Produces("application/ld+json")
-    @ApiOperation(value = "Get available concepts", notes = "Lists terminologies from Terminology API")
+    @Operation(description = "Lists terminologies from Terminology API")
     @ApiResponses(value = {
-        @ApiResponse(code = 200, message = "Concepts"),
-        @ApiResponse(code = 406, message = "Term not defined"),
-        @ApiResponse(code = 500, message = "Internal server error")
+        @ApiResponse(responseCode = "200", description = "Concepts"),
+        @ApiResponse(responseCode = "406", description = "Term not defined"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
     })
-    public Response vocab() {
+    public Response conceptSchemes() {
 
         YtiUser user = userProvider.getUser();
 

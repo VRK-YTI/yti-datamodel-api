@@ -18,23 +18,20 @@ import org.springframework.stereotype.Component;
 
 import fi.vm.yti.datamodel.api.model.DataModel;
 import fi.vm.yti.datamodel.api.security.AuthorizationManager;
-import fi.vm.yti.datamodel.api.service.EndpointServices;
 import fi.vm.yti.datamodel.api.service.GraphManager;
 import fi.vm.yti.datamodel.api.service.IDManager;
-import fi.vm.yti.datamodel.api.service.JenaClient;
 import fi.vm.yti.datamodel.api.service.JerseyResponseManager;
-import fi.vm.yti.datamodel.api.service.NamespaceManager;
 import fi.vm.yti.security.AuthenticatedUserProvider;
 import fi.vm.yti.security.YtiUser;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 @Component
 @Path("v1/changeStatuses")
-@Api(tags = { "Model" })
+@Tag(name = "Model")
 public class ChangeStatuses {
 
 
@@ -61,15 +58,16 @@ public class ChangeStatuses {
 
     @GET
     @Produces("application/ld+json")
-    @ApiOperation(value = "Change statuses")
-    @ApiResponses(value = { @ApiResponse(code = 200, message = "Statuses were changed"),
-        @ApiResponse(code = 400, message = "Invalid ID supplied"),
-        @ApiResponse(code = 403, message = "Invalid IRI in parameter"),
-        @ApiResponse(code = 404, message = "Service not found") })
-    public Response ChangeStatuses(
-        @ApiParam(value = "Model ID") @QueryParam("model") String model,
-        @ApiParam(value = "Initial status") @QueryParam("initialStatus") String initialStatus,
-        @ApiParam(value = "End status") @QueryParam("endStatus") String endStatus) {
+    @Operation(description = "Change statuses")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Statuses were changed"),
+        @ApiResponse(responseCode = "400", description = "Invalid ID supplied"),
+        @ApiResponse(responseCode = "403", description = "Invalid IRI in parameter"),
+        @ApiResponse(responseCode = "404", description = "Service not found") })
+    public Response changeStatuses(
+        @Parameter(description = "Model ID") @QueryParam("model") String model,
+        @Parameter(description = "Initial status") @QueryParam("initialStatus") String initialStatus,
+        @Parameter(description = "End status") @QueryParam("endStatus") String endStatus) {
 
         IRI modelIRI = null;
 

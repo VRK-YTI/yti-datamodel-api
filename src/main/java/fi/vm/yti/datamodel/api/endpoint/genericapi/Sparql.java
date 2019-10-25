@@ -4,7 +4,12 @@ import fi.vm.yti.datamodel.api.service.EndpointServices;
 import fi.vm.yti.datamodel.api.security.AuthorizationManager;
 import fi.vm.yti.datamodel.api.service.JerseyResponseManager;
 import fi.vm.yti.datamodel.api.utils.LDHelper;
-import io.swagger.annotations.*;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import org.apache.jena.atlas.web.ContentType;
 import org.apache.jena.query.*;
@@ -23,7 +28,7 @@ import java.io.StringWriter;
 
 @Component
 @Path("v1/sparql")
-@Api(tags = { "Admin" }, description = "Edit resources")
+@Tag(name = "Admin")
 public class Sparql {
 
     private final AuthorizationManager authorizationManager;
@@ -42,16 +47,16 @@ public class Sparql {
     @GET
     @Consumes("application/sparql-query")
     @Produces("application/sparql-results+json")
-    @ApiOperation(value = "Sparql query to given service", notes = "More notes about this method")
+    @Operation(description = "Sparql query to given service")
     @ApiResponses(value = {
-        @ApiResponse(code = 400, message = "Query parse error"),
-        @ApiResponse(code = 500, message = "Query exception"),
-        @ApiResponse(code = 200, message = "OK")
+        @ApiResponse(responseCode = "400", description = "Query parse error"),
+        @ApiResponse(responseCode = "500", description = "Query exception"),
+        @ApiResponse(responseCode = "200", description = "OK")
     })
     public Response sparql(
-        @ApiParam(value = "SPARQL Query", required = true) @QueryParam("query") String queryString,
-        @ApiParam(value = "SPARQL Service", defaultValue = "core", allowableValues = "core,prov,imports,scheme,concept") @QueryParam("service") String service,
-        @ApiParam(value = "Accept", required = true, allowableValues = "application/sparql-results+json,text/csv, text/turtle") @QueryParam("accept") String accept) {
+        @Parameter(description = "SPARQL Query", required = true) @QueryParam("query") String queryString,
+        @Parameter(description = "SPARQL Service", schema = @Schema(defaultValue = "core", allowableValues = "core,prov,imports,scheme,concept")) @QueryParam("service") String service,
+        @Parameter(description = "Accept", required = true, schema = @Schema(allowableValues = "application/sparql-results+json,text/csv, text/turtle")) @QueryParam("accept") String accept) {
 
         if (!authorizationManager.hasRightToRunSparqlQuery()) {
             return jerseyResponseManager.unauthorized();
@@ -90,16 +95,16 @@ public class Sparql {
     @Path("construct")
     @Consumes("application/sparql-query")
     @Produces("text/turtle")
-    @ApiOperation(value = "Sparql query to given service", notes = "More notes about this method")
+    @Operation(description = "Sparql query to given service")
     @ApiResponses(value = {
-        @ApiResponse(code = 400, message = "Query parse error"),
-        @ApiResponse(code = 500, message = "Query exception"),
-        @ApiResponse(code = 200, message = "OK")
+        @ApiResponse(responseCode = "400", description = "Query parse error"),
+        @ApiResponse(responseCode = "500", description = "Query exception"),
+        @ApiResponse(responseCode = "200", description = "OK")
     })
     public Response sparqlConstruct(
-        @ApiParam(value = "SPARQL Query", required = true) @QueryParam("query") String queryString,
-        @ApiParam(value = "SPARQL Service", defaultValue = "core", allowableValues = "core,prov,imports,scheme,concept") @QueryParam("service") String service,
-        @ApiParam(value = "Accept", required = true, allowableValues = "text/turtle") @QueryParam("accept") String accept) {
+        @Parameter(description = "SPARQL Query", required = true) @QueryParam("query") String queryString,
+        @Parameter(description = "SPARQL Service", schema = @Schema(defaultValue = "core", allowableValues = "core,prov,imports,scheme,concept")) @QueryParam("service") String service,
+        @Parameter(description = "Accept", required = true, schema = @Schema(allowableValues = "text/turtle")) @QueryParam("accept") String accept) {
 
         if (!authorizationManager.hasRightToRunSparqlQuery()) {
             return jerseyResponseManager.unauthorized();
@@ -134,18 +139,18 @@ public class Sparql {
     }
 
     @POST
-    @ApiOperation(value = "Sends SPARQL Update query to given service", notes = "PUT Body should be json-ld")
+    @Operation(description = "Sends SPARQL Update query to given service")
     @ApiResponses(value = {
-        @ApiResponse(code = 204, message = "Graph is saved"),
-        @ApiResponse(code = 400, message = "Invalid graph supplied"),
-        @ApiResponse(code = 403, message = "Illegal graph parameter"),
-        @ApiResponse(code = 404, message = "Service not found"),
-        @ApiResponse(code = 500, message = "Bad data?")
+        @ApiResponse(responseCode = "204", description = "Graph is saved"),
+        @ApiResponse(responseCode = "400", description = "Invalid graph supplied"),
+        @ApiResponse(responseCode = "403", description = "Illegal graph parameter"),
+        @ApiResponse(responseCode = "404", description = "Service not found"),
+        @ApiResponse(responseCode = "500", description = "Bad data?")
     })
 
     public Response sparqlUpdate(
-        @ApiParam(value = "Sparql query", required = true) String body,
-        @ApiParam(value = "SPARQL Service", defaultValue = "core", allowableValues = "core,prov,imports,scheme,concept") @QueryParam("service") String service) {
+        @Parameter(description = "Sparql query", required = true) String body,
+        @Parameter(description = "SPARQL Service", schema = @Schema(defaultValue = "core", allowableValues = "core,prov,imports,scheme,concept")) @QueryParam("service") String service) {
 
         if (!authorizationManager.hasRightToRunSparqlQuery()) {
             return jerseyResponseManager.unauthorized();

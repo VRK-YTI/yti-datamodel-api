@@ -2,7 +2,11 @@ package fi.vm.yti.datamodel.api.endpoint.genericapi;
 
 import fi.vm.yti.datamodel.api.service.JerseyClient;
 import fi.vm.yti.datamodel.api.service.JerseyResponseManager;
-import io.swagger.annotations.*;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFLanguages;
@@ -17,7 +21,7 @@ import javax.ws.rs.core.Response;
 
 @Component
 @Path("v1/exportGraphs")
-@Api(tags = { "Admin" }, description = "Export graphs")
+@Tag(name = "Admin")
 public class ExportGraphs {
 
     private final JerseyClient jerseyClient;
@@ -32,14 +36,17 @@ public class ExportGraphs {
 
     @GET
     @Produces({ "application/ld+json" })
-    @ApiOperation(value = "Get graphs from service", notes = "Exports whole service")
+    @Operation(description = "Get graphs from service")
     @ApiResponses(value = {
-        @ApiResponse(code = 200, message = "OK"),
-        @ApiResponse(code = 500, message = "Internal server error")
+        @ApiResponse(responseCode = "200", description = "OK"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
     })
-    public Response json(
-        @ApiParam(value = "Requested resource", required = true, allowableValues = "core,prov") @QueryParam("service") String service,
-        @ApiParam(value = "Content-type", required = true, allowableValues = "application/ld+json") @QueryParam("content-type") String ctype) {
+    public Response getExportGraphs(
+        @Parameter(description = "Requested resource", required = true) @QueryParam("service") String service,
+        @Parameter(description = "Content-type", required = true) @QueryParam("content-type") String ctype) {
+
+        // TODO: allowableValues = "core,prov"
+        // TODO: allowableValues = "application/ld+json"
 
         Lang clang = RDFLanguages.contentTypeToLang(ctype);
 

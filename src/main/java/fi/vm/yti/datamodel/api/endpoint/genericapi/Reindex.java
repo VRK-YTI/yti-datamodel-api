@@ -12,14 +12,14 @@ import fi.vm.yti.datamodel.api.index.SearchIndexManager;
 import fi.vm.yti.datamodel.api.security.AuthorizationManager;
 import fi.vm.yti.datamodel.api.service.JerseyResponseManager;
 import fi.vm.yti.datamodel.api.service.RHPOrganizationManager;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 @Component
 @Path("v1/reindex")
-@Api(tags = { "Admin" })
+@Tag(name = "Admin")
 public class Reindex {
 
     private final SearchIndexManager searchIndexManager;
@@ -40,11 +40,11 @@ public class Reindex {
 
     @GET
     @Produces("application/json")
-    @ApiOperation(value = "Starts ES reindexing", notes = "Authentication required")
+    @Operation(description = "Starts ES reindexing")
     @ApiResponses(value = {
-        @ApiResponse(code = 200, message = "OK")
+        @ApiResponse(responseCode = "200", description = "OK")
     })
-    public Response json() {
+    public Response reIndexElasticSearchIndexes() {
         if (!authorizationManager.hasRightToDropDatabase()) {
             return jerseyResponseManager.unauthorized();
         }
