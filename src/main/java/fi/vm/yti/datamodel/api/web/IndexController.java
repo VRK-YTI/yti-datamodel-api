@@ -20,9 +20,8 @@ public class IndexController {
     }
 
     @RequestMapping(value = "/datamodel/swagger-ui", method = RequestMethod.GET)
-    public void method(HttpServletResponse httpServletResponse) {
-        httpServletResponse.setHeader("Location", "/swagger-ui/index.html");
-        httpServletResponse.setStatus(302);
+    public String swaggerIndex() {
+        return "/datamodel/swagger-ui/index.html";
     }
 
 }
