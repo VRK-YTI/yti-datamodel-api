@@ -116,15 +116,13 @@ public class ReusablePredicate extends AbstractPredicate {
 
         relatedPredicate = this.graph.getResource(superPredicateIRI);
         relatedPredicate.removeAll(OWL.versionInfo);
-        relatedPredicate.removeAll(RDFS.range);
-        relatedPredicate.removeAll(RDFS.domain);
         relatedPredicate.addLiteral(OWL.versionInfo, "DRAFT");
 
         Resource oldModel = relatedPredicate.getPropertyResourceValue(RDFS.isDefinedBy);
         oldModel.removeProperties();
         relatedPredicate.removeAll(RDFS.isDefinedBy);
         relatedPredicate.addProperty(RDFS.isDefinedBy, ResourceFactory.createResource(newModelIRI.toString()));
-        relatedPredicate.addProperty(relatedProperty, ResourceFactory.createResource(superPredicateIRI));
+        relatedPredicate.addProperty(relatedProperty, ResourceFactory.createResource(oldPredicateIRI.toString()));
 
         LDHelper.rewriteLiteral(this.graph, relatedPredicate, DCTerms.created, LDHelper.getDateTimeLiteral());
         LDHelper.rewriteLiteral(this.graph, relatedPredicate, DCTerms.modified, LDHelper.getDateTimeLiteral());
