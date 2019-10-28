@@ -71,7 +71,7 @@ public class ExternalGraphManager {
         pss.setIri("modelService", endpointServices.getLocalhostCoreSparqlAddress());
         pss.setCommandText(queryString);
 
-        return jenaClient.constructFromExt(pss.asQuery().toString());
+        return jenaClient.constructFromExt(pss.toString());
 
     }
 
@@ -98,7 +98,7 @@ public class ExternalGraphManager {
             pss.setIri("library", model);
         }
 
-        return jenaClient.constructFromExt(pss.asQuery().toString());
+        return jenaClient.constructFromExt(pss.toString());
 
     }
 
@@ -196,7 +196,7 @@ public class ExternalGraphManager {
 
         pss.setCommandText(queryString);
 
-        return jenaClient.constructFromExt(pss.asQuery().toString());
+        return jenaClient.constructFromExt(pss.toString());
     }
 
     public Model getExternalPredicate(IRI idIRI,
@@ -295,7 +295,7 @@ public class ExternalGraphManager {
             pss.setIri("library", model);
         }
 
-        return jenaClient.constructFromExt(pss.asQuery().toString());
+        return jenaClient.constructFromExt(pss.toString());
 
     }
 

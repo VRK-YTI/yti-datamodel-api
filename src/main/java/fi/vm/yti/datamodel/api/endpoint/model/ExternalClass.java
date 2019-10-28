@@ -71,6 +71,7 @@ public class ExternalClass {
 
         /* Check that Model URI is valid */
         if (!idManager.isValidUrl(model)) {
+            logger.debug("Invalid model uri: "+model);
             return jerseyResponseManager.invalidIRI();
         }
 
@@ -79,15 +80,13 @@ public class ExternalClass {
             return jerseyClient.constructResponseFromGraph(externalGraphManager.getListOfExternalClasses(model));
 
         } else {
-
             try {
                 idIRI = idManager.constructIRI(id);
             } catch (IRIException e) {
+                logger.debug("Invalid class iri: "+id);
                 return jerseyResponseManager.invalidIRI();
             }
-
             return jerseyClient.constructResponseFromGraph(externalGraphManager.getExternalClass(idIRI, model));
-
         }
     }
 }

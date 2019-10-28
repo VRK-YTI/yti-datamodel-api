@@ -2,17 +2,8 @@
  * Licensed under the European Union Public Licence (EUPL) V.1.1
  */
 package fi.vm.yti.datamodel.api.service;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.jsonldjava.core.JsonLdError;
-import com.github.jsonldjava.core.JsonLdOptions;
-import com.github.jsonldjava.core.JsonLdProcessor;
-import com.github.jsonldjava.utils.JsonUtils;
-
 import fi.vm.yti.datamodel.api.config.ApplicationProperties;
-import fi.vm.yti.datamodel.api.utils.Frames;
 import fi.vm.yti.datamodel.api.utils.LDHelper;
-
 import org.apache.jena.atlas.web.ContentType;
 import org.apache.jena.query.*;
 import org.apache.jena.rdf.model.Model;
@@ -591,11 +582,11 @@ public class JerseyClient {
 
     public Response constructResponseFromGraph(Model graph) {
 
-        if (graph == null || graph.size() <= 0) {
-            return jerseyResponseManager.error();
+        if (graph.size() <= 0) {
+            logger.debug("Constructed graph is empty!");
         }
 
-        ResponseBuilder rb = Response.ok();
+        ResponseBuilder rb = Response.ok().type("application/ld+json");
         rb.entity(modelManager.writeModelToJSONLDString(graph));
         return rb.build();
     }
