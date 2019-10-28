@@ -25,6 +25,7 @@ public final class ApplicationProperties {
     private boolean allowComplexElasticQueries;
     private String defaultSuomiCodeServerAPI;
     private boolean devMode;
+    private boolean messagingEnabled;
     private String env;
 
     public String getEndpoint() {
@@ -187,4 +188,11 @@ public final class ApplicationProperties {
         this.env = env;
     }
 
+    public boolean getMessagingEnabled() {
+        return messagingEnabled;
+    }
+
+    public void setMessagingEnabled(final boolean messagingEnabled) {
+        this.messagingEnabled = messagingEnabled;
+    }
 }
