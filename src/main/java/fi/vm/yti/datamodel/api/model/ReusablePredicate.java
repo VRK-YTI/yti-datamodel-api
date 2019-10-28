@@ -124,7 +124,7 @@ public class ReusablePredicate extends AbstractPredicate {
         oldModel.removeProperties();
         relatedPredicate.removeAll(RDFS.isDefinedBy);
         relatedPredicate.addProperty(RDFS.isDefinedBy, ResourceFactory.createResource(newModelIRI.toString()));
-        relatedPredicate.addProperty(relatedProperty, superPredicateIRI);
+        relatedPredicate.addProperty(relatedProperty, ResourceFactory.createResource(superPredicateIRI));
 
         LDHelper.rewriteLiteral(this.graph, relatedPredicate, DCTerms.created, LDHelper.getDateTimeLiteral());
         LDHelper.rewriteLiteral(this.graph, relatedPredicate, DCTerms.modified, LDHelper.getDateTimeLiteral());
