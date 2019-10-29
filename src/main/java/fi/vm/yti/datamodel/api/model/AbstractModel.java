@@ -161,6 +161,10 @@ public abstract class AbstractModel extends AbstractResource {
         return LDHelper.RDFNodeListToStringList(this.graph.listObjectsOfProperty(ResourceFactory.createResource(this.getId()), DCTerms.isPartOf).toList(), DCTerms.identifier);
     }
 
+    public List<String> getLanguages() {
+        return LDHelper.RDFListToStringList(this.graph.getRequiredProperty(ResourceFactory.createResource(this.getId()), DCTerms.language).getObject().as(RDFList.class));
+    }
+
     public String getProvUUID() {
         return this.provUUID;
     }

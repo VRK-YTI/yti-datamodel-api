@@ -54,7 +54,7 @@ public class StartUpListener {
 
     @PostConstruct
     public void contextInitialized() {
-
+        System.out.println("WHAAA?");
         logger.info("System is starting ...");
 
         initDefaultNamespaces();

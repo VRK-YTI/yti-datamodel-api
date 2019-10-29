@@ -302,6 +302,7 @@ public class SearchIndexManager {
             "?model rdfs:comment ?comment . " +
             "?model dcterms:description ?definition . " +
             "?model dcterms:modified ?modified . " +
+            "?model dcterms:language ?language . " +
             "?model a ?modelType . " +
             "?model owl:versionInfo ?versionInfo . " +
             "?model iow:useContext ?useContext . " +
@@ -320,10 +321,13 @@ public class SearchIndexManager {
             "?model dcap:preferredXMLNamespacePrefix ?prefix .  " +
             "?model a ?modelType . VALUES ?modelType { dcap:MetadataVocabulary dcap:DCAP }" +
             "?model dcterms:modified ?modified . " +
+            "?model dcterms:language ?language . " +
             "?model dcterms:contributor ?org . BIND(strafter(str(?org), 'urn:uuid:') AS ?orgID) " +
             "?model dcterms:isPartOf ?group . ?group dcterms:identifier ?groupID . }}";
 
         Model model = jenaClient.constructFromCore(qry);
+        System.out.println("Initializing model indexes!?");
+        model.write(System.out);
         if (model.size() < 1) {
             logger.warn("Could not find any models to index!");
             return;
