@@ -74,7 +74,7 @@ public class JerseyResponseManager {
             "\"codes\":\"" + properties.getDefaultSuomiCodeServerAPI() + "\", " +
             "\"codesFrontend\":\"" + properties.getPublicSuomiCodeServerFrontend() + "\", " +
             "\"commentsFrontend\":\"" + properties.getPublicCommentsFrontend() + "\", " +
-            "\"messagingEnabled\":\"" + properties.getMessagingEnabled() + "\", " +
+            "\"messagingEnabled\":" + properties.getMessagingEnabled() + ", " +
             "\"dev\":" + properties.getDevMode() + ", " +
             "\"env\":\"" + properties.getEnv() + "\"}").build();
     }
