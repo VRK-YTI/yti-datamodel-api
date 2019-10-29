@@ -1,9 +1,9 @@
-package fi.vm.yti.datamodel.api.service;
+package fi.vm.yti.datamodel.api.model;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-public class GroupManagementUser {
+public class GroupManagementUserDTO {
 
     private final UUID id;
     private final String email;
@@ -12,15 +12,15 @@ public class GroupManagementUser {
     private final LocalDateTime removedDateTime;
 
     // Jackson constructor
-    private GroupManagementUser() {
+    private GroupManagementUserDTO() {
         this(UUID.randomUUID(), "", "", "", null);
     }
 
-    public GroupManagementUser(UUID id,
-                               String email,
-                               String firstName,
-                               String lastName,
-                               LocalDateTime removedDateTime) {
+    public GroupManagementUserDTO(UUID id,
+                                  String email,
+                                  String firstName,
+                                  String lastName,
+                                  LocalDateTime removedDateTime) {
         this.id = id;
         this.email = email;
         this.firstName = firstName;
