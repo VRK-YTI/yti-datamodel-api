@@ -1,20 +1,19 @@
 package fi.vm.yti.datamodel.api.migration;
 
-import fi.vm.yti.datamodel.api.model.AbstractClass;
-import fi.vm.yti.datamodel.api.service.GraphManager;
-import fi.vm.yti.migration.InitializationException;
-import fi.vm.yti.migration.SchemaVersionAccessor;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import fi.vm.yti.datamodel.api.service.GraphManager;
+import fi.vm.yti.migration.InitializationException;
+import fi.vm.yti.migration.SchemaVersionAccessor;
+
 @Service
 public class FusekiSchemaVersionAccessor implements SchemaVersionAccessor {
 
-    private final GraphManager graphManager;
     private static final Logger logger = LoggerFactory.getLogger(FusekiSchemaVersionAccessor.class.getName());
+    private final GraphManager graphManager;
 
     @Autowired
     FusekiSchemaVersionAccessor(GraphManager graphManager) {

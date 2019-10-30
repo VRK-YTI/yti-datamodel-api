@@ -3,27 +3,7 @@
  */
 package fi.vm.yti.datamodel.api.model;
 
-import fi.vm.yti.datamodel.api.service.CodeSchemeManager;
-import fi.vm.yti.datamodel.api.service.EndpointServices;
-import fi.vm.yti.datamodel.api.utils.LDHelper;
-
-import org.apache.jena.datatypes.RDFDatatype;
-import org.apache.jena.datatypes.xsd.XSDDatatype;
-import org.apache.jena.datatypes.xsd.XSDDateTime;
-import org.apache.jena.rdf.model.*;
-import org.apache.jena.vocabulary.RDF;
-import org.apache.jena.web.DatasetAdapter;
-import org.apache.jena.web.DatasetGraphAccessorHTTP;
-
-import javax.json.*;
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.Response;
-import javax.xml.bind.DatatypeConverter;
-
 import java.io.InputStream;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -31,8 +11,31 @@ import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.Iterator;
 
+import javax.json.Json;
+import javax.json.JsonArray;
+import javax.json.JsonObject;
+import javax.json.JsonReader;
+import javax.json.JsonValue;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.Response;
+
+import org.apache.jena.datatypes.xsd.XSDDatatype;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.rdf.model.Property;
+import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.rdf.model.ResourceFactory;
+import org.apache.jena.vocabulary.RDF;
+import org.apache.jena.web.DatasetAdapter;
+import org.apache.jena.web.DatasetGraphAccessorHTTP;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import fi.vm.yti.datamodel.api.service.CodeSchemeManager;
+import fi.vm.yti.datamodel.api.service.EndpointServices;
+import fi.vm.yti.datamodel.api.utils.LDHelper;
 
 public class SuomiCodeServer {
 
@@ -71,6 +74,18 @@ public class SuomiCodeServer {
         this.uri = uri;
         this.url = url;
         this.codeSchemeManager = codeSchemeManager;
+    }
+
+    public static void addLangLiteral(Resource res,
+                                      JsonObject obj,
+                                      Property prop) {
+        Iterator<String> langObjIterator = obj.keySet().iterator();
+
+        while (langObjIterator.hasNext()) {
+            String lang = langObjIterator.next();
+            String value = obj.getString(lang);
+            res.addLiteral(prop, ResourceFactory.createLangLiteral(value, lang));
+        }
     }
 
     public boolean containsCodeList(String uri) {
@@ -228,18 +243,6 @@ public class SuomiCodeServer {
 
         }
 
-    }
-
-    public static void addLangLiteral(Resource res,
-                                      JsonObject obj,
-                                      Property prop) {
-        Iterator<String> langObjIterator = obj.keySet().iterator();
-
-        while (langObjIterator.hasNext()) {
-            String lang = langObjIterator.next();
-            String value = obj.getString(lang);
-            res.addLiteral(prop, ResourceFactory.createLangLiteral(value, lang));
-        }
     }
 
     public void updateCodes(String url,

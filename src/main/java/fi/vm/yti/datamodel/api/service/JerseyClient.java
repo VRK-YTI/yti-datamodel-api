@@ -2,32 +2,44 @@
  * Licensed under the European Union Public Licence (EUPL) V.1.1
  */
 package fi.vm.yti.datamodel.api.service;
-import fi.vm.yti.datamodel.api.config.ApplicationProperties;
-import fi.vm.yti.datamodel.api.utils.LDHelper;
-import org.apache.jena.atlas.web.ContentType;
-import org.apache.jena.query.*;
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.ModelFactory;
-import org.apache.jena.rdf.model.RDFReader;
-import org.apache.jena.riot.*;
-import org.glassfish.jersey.client.ClientProperties;
-import org.glassfish.jersey.uri.UriComponent;
-import org.springframework.stereotype.Service;
-
-import javax.ws.rs.client.*;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.ResponseBuilder;
-import javax.ws.rs.core.Response.StatusType;
 
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PushbackInputStream;
-import java.util.HashMap;
-import java.util.Map;
 
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.Invocation;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.ResponseBuilder;
+import javax.ws.rs.core.Response.StatusType;
+
+import org.apache.jena.atlas.web.ContentType;
+import org.apache.jena.query.Dataset;
+import org.apache.jena.query.DatasetFactory;
+import org.apache.jena.query.ParameterizedSparqlString;
+import org.apache.jena.query.QuerySolution;
+import org.apache.jena.query.ResultSet;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.rdf.model.RDFReader;
+import org.apache.jena.riot.Lang;
+import org.apache.jena.riot.RDFDataMgr;
+import org.apache.jena.riot.RDFFormat;
+import org.apache.jena.riot.RDFLanguages;
+import org.apache.jena.riot.RDFWriterRegistry;
+import org.apache.jena.riot.RiotException;
+import org.glassfish.jersey.client.ClientProperties;
+import org.glassfish.jersey.uri.UriComponent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+
+import fi.vm.yti.datamodel.api.config.ApplicationProperties;
+import fi.vm.yti.datamodel.api.utils.LDHelper;
 
 @Service
 public class JerseyClient {
@@ -393,8 +405,8 @@ public class JerseyClient {
     public Response saveConceptSuggestionUsingTerminologyAPI(String body,
                                                              String terminologyUri) {
 
-        if(LDHelper.isInvalidIRI(terminologyUri)) {
-            logger.warn("Invalid terminology uri in concept suggestion: "+terminologyUri);
+        if (LDHelper.isInvalidIRI(terminologyUri)) {
+            logger.warn("Invalid terminology uri in concept suggestion: " + terminologyUri);
             throw new IllegalArgumentException("Invalid terminology URI!");
         }
 
@@ -411,7 +423,6 @@ public class JerseyClient {
 
         return response;
     }
-
 
     /**
      * Creates new graph to the service

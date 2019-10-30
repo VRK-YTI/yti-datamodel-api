@@ -7,16 +7,12 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
-import java.util.stream.Collectors;
 
 import javax.inject.Singleton;
 
-import org.apache.jena.base.Sys;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.index.query.BoolQueryBuilder;
-import org.elasticsearch.index.query.Operator;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.QueryStringQueryBuilder;
@@ -56,7 +52,6 @@ public class ModelQueryFactory {
     public SearchRequest createQuery(ModelSearchRequest request) {
         return createQuery(request.getQuery(), request.getStatus(), request.getType(), request.getAfter(), Collections.EMPTY_SET, request.getPageSize(), request.getPageFrom(), request.getFilter(), request.getIncludeIncomplete(), request.getIncludeIncompleteFrom());
     }
-
 
     public SearchRequest createQuery(ModelSearchRequest request,
                                      Collection<String> additionalModelIds) {
@@ -101,16 +96,16 @@ public class ModelQueryFactory {
         BoolQueryBuilder boolQuery = QueryBuilders.boolQuery();
         List<QueryBuilder> mustList = boolQuery.must();
 
-        if(includeIncomplete==null || includeIncompleteFrom!=null) {
+        if (includeIncomplete == null || includeIncompleteFrom != null) {
             QueryBuilder incompleteQuery = ElasticUtils.createStatusAndContributorQuery(includeIncompleteFrom);
             mustList.add(incompleteQuery);
         }
 
-        if(after != null) {
+        if (after != null) {
             mustList.add(QueryBuilders.rangeQuery("modified").gte(after));
         }
 
-        if(filter != null) {
+        if (filter != null) {
             QueryBuilder filterQuery = QueryBuilders.boolQuery()
                 .mustNot(QueryBuilders.termsQuery("id", filter));
             mustList.add(filterQuery);
@@ -130,7 +125,7 @@ public class ModelQueryFactory {
             mustList.add(contentQuery);
         }
 
-        if (mustList.size()>0) {
+        if (mustList.size() > 0) {
             sourceBuilder.query(boolQuery);
         } else {
             sourceBuilder.query(QueryBuilders.matchAllQuery());

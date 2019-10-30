@@ -1,7 +1,8 @@
 package fi.vm.yti.datamodel.api.model;
 
-import fi.vm.yti.datamodel.api.service.*;
-import fi.vm.yti.datamodel.api.utils.*;
+import java.util.Iterator;
+import java.util.List;
+import java.util.UUID;
 
 import org.apache.jena.iri.IRI;
 import org.apache.jena.query.ParameterizedSparqlString;
@@ -11,19 +12,19 @@ import org.apache.jena.rdf.model.Statement;
 import org.apache.jena.rdf.model.StmtIterator;
 import org.apache.jena.util.ResourceUtils;
 import org.apache.jena.util.SplitIRI;
-
-import java.util.Iterator;
-import java.util.List;
-import java.util.UUID;
-
 import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
-import org.elasticsearch.index.query.QueryBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.topbraid.shacl.vocabulary.SH;
+
+import fi.vm.yti.datamodel.api.service.EndpointServices;
+import fi.vm.yti.datamodel.api.service.GraphManager;
+import fi.vm.yti.datamodel.api.service.ModelManager;
+import fi.vm.yti.datamodel.api.utils.LDHelper;
+import fi.vm.yti.datamodel.api.utils.QueryLibrary;
 
 public class Shape extends AbstractShape {
 
@@ -65,9 +66,9 @@ public class Shape extends AbstractShape {
             pss.setIri("shapeIRI", shapeIRI);
             this.graph = graphManager.constructModelFromService(pss.toString(), endpointServices.getImportsSparqlAddress());
 
-            if(this.graph.size()<2) {
-              pss.setCommandText(QueryLibrary.dummyExternalShapeQuery);
-              this.graph = graphManager.constructModelFromService(pss.toString(), endpointServices.getCoreSparqlAddress());
+            if (this.graph.size() < 2) {
+                pss.setCommandText(QueryLibrary.dummyExternalShapeQuery);
+                this.graph = graphManager.constructModelFromService(pss.toString(), endpointServices.getCoreSparqlAddress());
             }
 
         } else {

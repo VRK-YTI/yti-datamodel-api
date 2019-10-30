@@ -3,22 +3,40 @@
  */
 package fi.vm.yti.datamodel.api.service;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.jsonldjava.core.JsonLdOptions;
-import com.github.jsonldjava.core.JsonLdProcessor;
-import com.github.jsonldjava.core.JsonLdUtils;
-import com.github.jsonldjava.utils.JsonUtils;
-
-import fi.vm.yti.datamodel.api.utils.LDHelper;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringWriter;
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.jena.graph.Graph;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.query.DatasetFactory;
 import org.apache.jena.query.ParameterizedSparqlString;
-import org.apache.jena.rdf.model.*;
-import org.apache.jena.riot.*;
-import org.apache.jena.riot.lang.JsonLDReader;
+import org.apache.jena.rdf.model.Literal;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.rdf.model.Property;
+import org.apache.jena.rdf.model.RDFList;
+import org.apache.jena.rdf.model.RDFNode;
+import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.rdf.model.Statement;
+import org.apache.jena.rdf.model.StmtIterator;
+import org.apache.jena.riot.JsonLDWriteContext;
+import org.apache.jena.riot.Lang;
+import org.apache.jena.riot.RDFDataMgr;
+import org.apache.jena.riot.RDFFormat;
+import org.apache.jena.riot.RDFParser;
+import org.apache.jena.riot.WriterDatasetRIOT;
+import org.apache.jena.riot.WriterGraphRIOT;
 import org.apache.jena.riot.system.ErrorHandlerFactory;
 import org.apache.jena.riot.system.PrefixMap;
 import org.apache.jena.riot.system.PrefixMapFactory;
@@ -29,22 +47,19 @@ import org.apache.jena.sparql.graph.GraphFactory;
 import org.apache.jena.sparql.util.Context;
 import org.apache.jena.update.UpdateAction;
 import org.apache.jena.update.UpdateRequest;
-import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDF;
-import org.springframework.stereotype.Service;
-
-import java.io.*;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.jsonldjava.core.JsonLdOptions;
+import com.github.jsonldjava.core.JsonLdProcessor;
+import com.github.jsonldjava.utils.JsonUtils;
+
+import fi.vm.yti.datamodel.api.utils.LDHelper;
 
 @Service
 public class ModelManager {
@@ -339,32 +354,32 @@ public class ModelManager {
             // FIXME: This is ugly hack for getting all of the prefixes from the json-ld context. For some reason urn namespaces are ignored by the parser.
             Map jsonObject = (Map) JsonUtils.fromString(modelString);
             Map context = (Map) jsonObject.get("@context");
-            context.forEach((key,value)->{
-                if(value instanceof String && !LDHelper.isInvalidIRI((String)value)) {
-                    pm.add((String)key,(String)value);
+            context.forEach((key, value) -> {
+                if (value instanceof String && !LDHelper.isInvalidIRI((String) value)) {
+                    pm.add((String) key, (String) value);
                 }
             });
-        try (InputStream in = new ByteArrayInputStream(modelString.getBytes("UTF-8"))) {
-            RDFParser.create()
-                .source(in)
-                .lang(Lang.JSONLD)
-                .errorHandler(ErrorHandlerFactory.errorHandlerStrict)
-                .parse(graph);
-        } catch (UnsupportedEncodingException ex) {
-            logger.error("Unsupported encoding", ex);
-            throw new IllegalArgumentException("Could not parse the model");
-        } catch (IOException ex) {
-            logger.error("IO Exp JSON-LD", ex);
-            throw new IllegalArgumentException("Could not parse the model");
-        } catch (Exception ex) {
-            logger.error("Unexpected exception", ex);
-            throw new IllegalArgumentException("Could not parse the model");
-        }
-        if (graph.size() > 0) {
-            return ModelFactory.createModelForGraph(graph).setNsPrefixes(pm.getMappingCopyStr());
-        } else {
-            throw new IllegalArgumentException("Could not parse the model");
-        }
+            try (InputStream in = new ByteArrayInputStream(modelString.getBytes("UTF-8"))) {
+                RDFParser.create()
+                    .source(in)
+                    .lang(Lang.JSONLD)
+                    .errorHandler(ErrorHandlerFactory.errorHandlerStrict)
+                    .parse(graph);
+            } catch (UnsupportedEncodingException ex) {
+                logger.error("Unsupported encoding", ex);
+                throw new IllegalArgumentException("Could not parse the model");
+            } catch (IOException ex) {
+                logger.error("IO Exp JSON-LD", ex);
+                throw new IllegalArgumentException("Could not parse the model");
+            } catch (Exception ex) {
+                logger.error("Unexpected exception", ex);
+                throw new IllegalArgumentException("Could not parse the model");
+            }
+            if (graph.size() > 0) {
+                return ModelFactory.createModelForGraph(graph).setNsPrefixes(pm.getMappingCopyStr());
+            } else {
+                throw new IllegalArgumentException("Could not parse the model");
+            }
         } catch (IOException e) {
             e.printStackTrace();
             throw new IllegalArgumentException("Could not parse the model");

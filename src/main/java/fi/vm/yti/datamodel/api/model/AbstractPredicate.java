@@ -1,28 +1,32 @@
 package fi.vm.yti.datamodel.api.model;
 
-import fi.vm.yti.datamodel.api.service.GraphManager;
-import fi.vm.yti.datamodel.api.utils.LDHelper;
-
-import org.apache.jena.iri.IRI;
-import org.apache.jena.rdf.model.*;
-import org.apache.jena.vocabulary.DCTerms;
-import org.apache.jena.vocabulary.OWL;
-import org.apache.jena.vocabulary.RDF;
-import org.apache.jena.vocabulary.RDFS;
-
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.apache.jena.iri.IRI;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.rdf.model.ResIterator;
+import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.rdf.model.ResourceFactory;
+import org.apache.jena.rdf.model.Statement;
+import org.apache.jena.rdf.model.StmtIterator;
+import org.apache.jena.vocabulary.DCTerms;
+import org.apache.jena.vocabulary.OWL;
+import org.apache.jena.vocabulary.RDF;
+import org.apache.jena.vocabulary.RDFS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.topbraid.shacl.vocabulary.SH;
+
+import fi.vm.yti.datamodel.api.service.GraphManager;
+import fi.vm.yti.datamodel.api.utils.LDHelper;
 
 public abstract class AbstractPredicate extends AbstractResource {
 
+    private static final Logger logger = LoggerFactory.getLogger(AbstractPredicate.class.getName());
     protected String provUUID;
     protected GraphManager graphManager;
-    private static final Logger logger = LoggerFactory.getLogger(AbstractPredicate.class.getName());
 
     public AbstractPredicate() {
     }
