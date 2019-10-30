@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 import java.util.regex.Pattern;
 
 import javax.inject.Singleton;
@@ -45,10 +44,10 @@ import fi.vm.yti.datamodel.api.index.model.ModelSearchRequest;
 public class DeepResourceQueryFactory {
 
     private static final Logger logger = LoggerFactory.getLogger(DeepResourceQueryFactory.class);
-    private ObjectMapper objectMapper;
     private static final Pattern sortLangPattern = Pattern.compile("[a-zA-Z-]+");
     private static final FetchSourceContext sourceIncludes = new FetchSourceContext(true, new String[]{ "id", "status", "label", "comment", "isDefinedBy", "type" }, new String[]{});
     private static final Script topHitScript = new Script(ScriptType.INLINE, Script.DEFAULT_SCRIPT_LANG, "_score", Collections.emptyMap());
+    private ObjectMapper objectMapper;
     private LuceneQueryFactory luceneQueryFactory;
 
     @Autowired
@@ -67,8 +66,8 @@ public class DeepResourceQueryFactory {
             queryStringQuery = queryStringQuery.field("label." + sortLang, 10);
         }
 
-        QueryBuilder finalQuery = modelIds!=null ? QueryBuilders.boolQuery()
-            .must(ElasticUtils.createStatusAndModelQuery("isDefinedBy",modelIds))
+        QueryBuilder finalQuery = modelIds != null ? QueryBuilders.boolQuery()
+            .must(ElasticUtils.createStatusAndModelQuery("isDefinedBy", modelIds))
             .must(queryStringQuery) :
             QueryBuilders.boolQuery()
                 .must(queryStringQuery);

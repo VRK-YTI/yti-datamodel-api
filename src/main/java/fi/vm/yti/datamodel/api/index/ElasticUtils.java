@@ -1,17 +1,17 @@
 package fi.vm.yti.datamodel.api.index;
 
-import java.util.List;
 import java.util.Set;
-import java.util.UUID;
-import java.util.stream.Collectors;
 
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 
 public final class ElasticUtils {
-    private ElasticUtils() {}
 
-    public static QueryBuilder createStatusAndModelQuery(String modelProperty, Set<String> priviledgedModels) {
+    private ElasticUtils() {
+    }
+
+    public static QueryBuilder createStatusAndModelQuery(String modelProperty,
+                                                         Set<String> priviledgedModels) {
         // Content must be defined in the priviledgedModel or be in other state than INCOMPLETE
         QueryBuilder statusQuery = QueryBuilders.boolQuery().mustNot(QueryBuilders.termQuery("status", "INCOMPLETE"));
         QueryBuilder privilegeQuery;
@@ -26,11 +26,12 @@ public final class ElasticUtils {
         return privilegeQuery;
     }
 
-    public static QueryBuilder filterQuery(String modelProperty, Set<String> filterList) {
+    public static QueryBuilder filterQuery(String modelProperty,
+                                           Set<String> filterList) {
         QueryBuilder privilegeQuery;
-            privilegeQuery = QueryBuilders.boolQuery()
-                .should(QueryBuilders.termsQuery(modelProperty, filterList))
-                .minimumShouldMatch(1);
+        privilegeQuery = QueryBuilders.boolQuery()
+            .should(QueryBuilders.termsQuery(modelProperty, filterList))
+            .minimumShouldMatch(1);
         return privilegeQuery;
     }
 

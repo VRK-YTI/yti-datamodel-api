@@ -3,30 +3,14 @@
  */
 package fi.vm.yti.datamodel.api.service;
 
-import fi.vm.yti.datamodel.api.utils.LDHelper;
-
-import org.apache.jena.query.ParameterizedSparqlString;
-import org.apache.jena.query.QueryExecution;
-import org.apache.jena.query.QueryExecutionFactory;
-import org.apache.jena.query.QuerySolution;
-import org.apache.jena.query.ResultSet;
-import org.apache.jena.query.ResultSetFactory;
-import org.apache.jena.sparql.resultset.ResultSetPeekable;
-
 import java.io.StringWriter;
-import java.text.SimpleDateFormat;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import org.json.JSONArray;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.json.Json;
 import javax.json.JsonArray;
@@ -36,30 +20,27 @@ import javax.json.JsonObjectBuilder;
 import javax.json.JsonWriter;
 import javax.json.JsonWriterFactory;
 
-import org.apache.jena.query.Query;
+import org.apache.jena.query.ParameterizedSparqlString;
+import org.apache.jena.query.QueryExecution;
+import org.apache.jena.query.QueryExecutionFactory;
+import org.apache.jena.query.QuerySolution;
+import org.apache.jena.query.ResultSet;
+import org.apache.jena.query.ResultSetFactory;
+import org.apache.jena.sparql.resultset.ResultSetPeekable;
 import org.apache.jena.util.SplitIRI;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import fi.vm.yti.datamodel.api.utils.LDHelper;
+
 @Service
 public class OpenAPIWriter {
 
     private static final Logger logger = LoggerFactory.getLogger(OpenAPIWriter.class.getName());
-
-    private final EndpointServices endpointServices;
-    private final JsonWriterFactory jsonWriterFactory;
-    private final GraphManager graphManager;
-
-    OpenAPIWriter(EndpointServices endpointServices,
-                  JsonWriterFactory jsonWriterFactory,
-                  GraphManager graphManager) {
-        this.endpointServices = endpointServices;
-        this.jsonWriterFactory = jsonWriterFactory;
-        this.graphManager = graphManager;
-    }
-
     private static final Map<String, String> DATATYPE_MAP =
         Collections.unmodifiableMap(new HashMap<String, String>() {{
             put("http://www.w3.org/2001/XMLSchema#int", "integer");
@@ -81,7 +62,6 @@ public class OpenAPIWriter {
             put("http://www.w3.org/1999/02/22-rdf-syntax-ns#langString", "langString");
             put("http://www.w3.org/2000/01/rdf-schema#Literal", "string");
         }});
-
     private static final Map<String, String> FORMAT_MAP =
         Collections.unmodifiableMap(new HashMap<String, String>() {{
             put("http://www.w3.org/2001/XMLSchema#dateTime", "date-time");
@@ -89,6 +69,17 @@ public class OpenAPIWriter {
             put("http://www.w3.org/2001/XMLSchema#time", "time");
             put("http://www.w3.org/2001/XMLSchema#anyURI", "uri");
         }});
+    private final EndpointServices endpointServices;
+    private final JsonWriterFactory jsonWriterFactory;
+    private final GraphManager graphManager;
+
+    OpenAPIWriter(EndpointServices endpointServices,
+                  JsonWriterFactory jsonWriterFactory,
+                  GraphManager graphManager) {
+        this.endpointServices = endpointServices;
+        this.jsonWriterFactory = jsonWriterFactory;
+        this.graphManager = graphManager;
+    }
 
     public String jsonObjectToPrettyString(JsonObject object) {
         StringWriter stringWriter = new StringWriter();

@@ -1,7 +1,16 @@
 package fi.vm.yti.datamodel.api.service;
 
-import fi.vm.yti.datamodel.api.config.ApplicationProperties;
-import fi.vm.yti.datamodel.api.utils.LDHelper;
+import java.io.InputStream;
+import java.util.Iterator;
+import java.util.List;
+import java.util.UUID;
+
+import javax.json.Json;
+import javax.json.JsonArray;
+import javax.json.JsonObject;
+import javax.json.JsonReader;
+import javax.json.JsonValue;
+import javax.ws.rs.core.Response;
 
 import org.apache.jena.query.ParameterizedSparqlString;
 import org.apache.jena.query.Query;
@@ -15,19 +24,12 @@ import org.apache.jena.sparql.vocabulary.FOAF;
 import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.SKOS;
-import org.springframework.stereotype.Service;
-
-import javax.json.*;
-import javax.ws.rs.core.Response;
-
-import java.io.InputStream;
-import java.io.StringWriter;
-import java.util.Iterator;
-import java.util.List;
-import java.util.UUID;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+
+import fi.vm.yti.datamodel.api.config.ApplicationProperties;
+import fi.vm.yti.datamodel.api.utils.LDHelper;
 
 @Service
 public class RHPOrganizationManager {

@@ -1,18 +1,22 @@
 package fi.vm.yti.datamodel.api.model;
 
-import fi.vm.yti.datamodel.api.service.*;
-import fi.vm.yti.datamodel.api.utils.LDHelper;
+import java.util.List;
+import java.util.UUID;
 
 import org.apache.jena.iri.IRI;
 import org.apache.jena.query.ParameterizedSparqlString;
 import org.apache.jena.query.QueryExecution;
 import org.apache.jena.query.QueryExecutionFactory;
-import org.apache.jena.rdf.model.*;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.RDFList;
+import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.vocabulary.DCTerms;
-import org.topbraid.shacl.vocabulary.SH;
 
-import java.util.List;
-import java.util.UUID;
+import fi.vm.yti.datamodel.api.service.EndpointServices;
+import fi.vm.yti.datamodel.api.service.GraphManager;
+import fi.vm.yti.datamodel.api.service.RHPOrganizationManager;
+import fi.vm.yti.datamodel.api.utils.LDHelper;
 
 public class DataModel extends AbstractModel {
 
@@ -100,7 +104,6 @@ public class DataModel extends AbstractModel {
         this.graph.add(rootResource, DCTerms.language, langRDFList);
         this.graph.add(rootResource, DCTerms.created, LDHelper.getDateTimeLiteral());
         this.graph.add(rootResource, DCTerms.modified, LDHelper.getDateTimeLiteral());
-
 
     }
 

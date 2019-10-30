@@ -3,7 +3,6 @@ package fi.vm.yti.datamodel.api.index;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -21,7 +20,6 @@ import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
-import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.elasticsearch.index.reindex.DeleteByQueryRequest;
@@ -62,8 +60,6 @@ public class SearchIndexManager {
     private static final Logger logger = LoggerFactory.getLogger(SearchIndexManager.class);
     private static final String ELASTIC_INDEX_RESOURCE = "dm_resources";
     private static final String ELASTIC_INDEX_MODEL = "dm_models";
-
-    private RestHighLevelClient esClient;
     private final ElasticConnector esManager;
     private final JenaClient jenaClient;
     private final GraphManager graphManager;
@@ -72,6 +68,7 @@ public class SearchIndexManager {
     private final ModelQueryFactory modelQueryFactory;
     private final DeepResourceQueryFactory deepResourceQueryFactory;
     private final ResourceQueryFactory resourceQueryFactory;
+    private RestHighLevelClient esClient;
 
     @Autowired
     public SearchIndexManager(final ElasticConnector esManager,
@@ -168,9 +165,10 @@ public class SearchIndexManager {
         esManager.updateToIndex(ELASTIC_INDEX_MODEL, indexModel.getId(), indexModel);
     }
 
-    public ModelSearchResponse searchModelsWithUser(ModelSearchRequest request, YtiUser user) {
-        if(user.isSuperuser()) {
-            if(request.getIncludeIncomplete() == null) {
+    public ModelSearchResponse searchModelsWithUser(ModelSearchRequest request,
+                                                    YtiUser user) {
+        if (user.isSuperuser()) {
+            if (request.getIncludeIncomplete() == null) {
                 request.setIncludeIncomplete(true);
             }
             return searchModels(request);
@@ -182,27 +180,28 @@ public class SearchIndexManager {
         }
     }
 
-    public IntegrationAPIResponse searchContainers(IntegrationContainerRequest integrationRequest, String path) {
+    public IntegrationAPIResponse searchContainers(IntegrationContainerRequest integrationRequest,
+                                                   String path) {
         integrationRequest.setSearchTerm(integrationRequest.getSearchTerm() != null ? integrationRequest.getSearchTerm().trim() : "");
         try {
-            if(integrationRequest.getIncludeIncomplete()==null || (integrationRequest.getIncludeIncomplete()!=null && !integrationRequest.getIncludeIncomplete())) {
-                if(integrationRequest.getIncludeIncompleteFrom()==null) {
+            if (integrationRequest.getIncludeIncomplete() == null || (integrationRequest.getIncludeIncomplete() != null && !integrationRequest.getIncludeIncomplete())) {
+                if (integrationRequest.getIncludeIncompleteFrom() == null) {
                     integrationRequest.setIncludeIncompleteEmpty();
                 }
             }
             ModelSearchRequest containerRequest = new ModelSearchRequest(integrationRequest);
             SearchResponse response = esClient.search(modelQueryFactory.createQuery(containerRequest), RequestOptions.DEFAULT);
-            ModelSearchResponse containerResponse = modelQueryFactory.parseResponse(response,containerRequest,null);
+            ModelSearchResponse containerResponse = modelQueryFactory.parseResponse(response, containerRequest, null);
             return new IntegrationAPIResponse(containerResponse, containerRequest, path);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    public Set<String> parseStringList(String status){
+    public Set<String> parseStringList(String status) {
         Set<String> statuses = new HashSet<>();
-        if(status!=null && !status.isEmpty()) {
-            Arrays.asList(status.split(",")).forEach(s->{
+        if (status != null && !status.isEmpty()) {
+            Arrays.asList(status.split(",")).forEach(s -> {
                 statuses.add(s);
             });
         }
@@ -242,13 +241,13 @@ public class SearchIndexManager {
 
     }
 
-
-    public IntegrationAPIResponse searchResources(IntegrationResourceRequest integrationRequest, String path) {
+    public IntegrationAPIResponse searchResources(IntegrationResourceRequest integrationRequest,
+                                                  String path) {
         integrationRequest.setSearchTerm(integrationRequest.getSearchTerm() != null ? integrationRequest.getSearchTerm().trim() : "");
         try {
             ResourceSearchRequest resourceRequest = new ResourceSearchRequest(integrationRequest);
             SearchResponse response = esClient.search(resourceQueryFactory.createQuery(resourceRequest), RequestOptions.DEFAULT);
-            ResourceSearchResponse resourceResponse = resourceQueryFactory.parseResponse(response,resourceRequest,false);
+            ResourceSearchResponse resourceResponse = resourceQueryFactory.parseResponse(response, resourceRequest, false);
             return new IntegrationAPIResponse(resourceResponse, resourceRequest, path);
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -261,7 +260,7 @@ public class SearchIndexManager {
             SearchRequest finalQuery;
             finalQuery = resourceQueryFactory.createQuery(request);
             SearchResponse response = esClient.search(finalQuery, RequestOptions.DEFAULT);
-            return resourceQueryFactory.parseResponse(response, request,true);
+            return resourceQueryFactory.parseResponse(response, request, true);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -337,7 +336,7 @@ public class SearchIndexManager {
     }
 
     // TODO: Not in use. Should we use externalClass API instead?
-    private void initExternalClasses() throws  IOException {
+    private void initExternalClasses() throws IOException {
         String qry = LDHelper.prefix + "CONSTRUCT { "
             + "?class rdfs:isDefinedBy ?externalModel . "
             + "?class sh:name ?label . "

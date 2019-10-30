@@ -1,15 +1,14 @@
 package fi.vm.yti.datamodel.api.service;
 
-import fi.vm.yti.datamodel.api.config.ApplicationProperties;
-
-import org.glassfish.jersey.client.ClientProperties;
-import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
 import javax.net.ssl.SSLContext;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
+
+import org.glassfish.jersey.client.ClientProperties;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import fi.vm.yti.datamodel.api.config.ApplicationProperties;
 
 @Service
 public class ClientFactory {

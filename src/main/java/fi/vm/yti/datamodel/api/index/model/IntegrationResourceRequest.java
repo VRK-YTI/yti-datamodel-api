@@ -1,7 +1,6 @@
 package fi.vm.yti.datamodel.api.index.model;
 
 import java.util.Date;
-import java.util.HashSet;
 import java.util.Set;
 
 public class IntegrationResourceRequest {
@@ -16,7 +15,8 @@ public class IntegrationResourceRequest {
     private Integer pageSize;
     private Integer pageFrom;
 
-    public IntegrationResourceRequest(){}
+    public IntegrationResourceRequest() {
+    }
 
     public IntegrationResourceRequest(final String searchTerm,
                                       final String language,
