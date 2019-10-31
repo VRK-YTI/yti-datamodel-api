@@ -301,7 +301,7 @@ public class SearchIndexManager {
             "?model rdfs:comment ?comment . " +
             "?model dcterms:description ?definition . " +
             "?model dcterms:modified ?modified . " +
-            "?model dcterms:language ?language . " +
+            "?model dcterms:language ?lang . " +
             "?model a ?modelType . " +
             "?model owl:versionInfo ?versionInfo . " +
             "?model iow:useContext ?useContext . " +
@@ -310,19 +310,20 @@ public class SearchIndexManager {
             "?model dcterms:contributor ?orgID . " +
             "?model dcterms:isPartOf ?groupID . " +
             "} WHERE { " +
-            "GRAPH ?model { " +
+            // FIXME: Should be "GRAPH ?model {" but fuseki 2.X throws error
             "?model a owl:Ontology . " +
             "?model rdfs:label ?prefLabel . " +
-            "OPTIONAL {?model rdfs:comment ?comment . FILTER(lang(?comment)!='') }" +
-            "OPTIONAL { ?model iow:useContext ?useContext . }" +
             "?model owl:versionInfo ?versionInfo . " +
             "?model dcap:preferredXMLNamespaceName ?namespace . " +
             "?model dcap:preferredXMLNamespacePrefix ?prefix .  " +
             "?model a ?modelType . VALUES ?modelType { dcap:MetadataVocabulary dcap:DCAP }" +
             "?model dcterms:modified ?modified . " +
-            "?model dcterms:language ?language . " +
+            "?model dcterms:language/rdf:rest*/rdf:first ?lang ." +
             "?model dcterms:contributor ?org . BIND(strafter(str(?org), 'urn:uuid:') AS ?orgID) " +
-            "?model dcterms:isPartOf ?group . ?group dcterms:identifier ?groupID . }}";
+            "?model dcterms:isPartOf ?group . ?group dcterms:identifier ?groupID . " +
+            "OPTIONAL { ?model rdfs:comment ?comment . FILTER(lang(?comment)!='') }" +
+            "OPTIONAL { ?model iow:useContext ?useContext . }" +
+            "}";
 
         Model model = jenaClient.constructFromCore(qry);
         System.out.println("Initializing model indexes!?");

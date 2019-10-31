@@ -65,7 +65,7 @@ public class Frames {
     public static final LinkedHashMap<String, Object> shapeType;
     public static final LinkedHashMap<String, Object> attributeType;
     public static final LinkedHashMap<String, Object> associationType;
-    public static final LinkedHashMap<String, Object> languageList;
+    public static final LinkedHashMap<String, Object> languageSet;
 
     static {
 
@@ -209,10 +209,10 @@ public class Frames {
             }
         };
 
-        languageList = new LinkedHashMap<String, Object>() {
+        languageSet = new LinkedHashMap<String, Object>() {
             {
                 put("@id", "http://purl.org/dc/terms/language");
-                put("@container", "@list");
+                put("@container", "@set");
             }
         };
 
@@ -729,7 +729,7 @@ public class Frames {
                 put("status", versionInfo);
                 put("prefix", preferredXMLNamespacePrefix);
                 put("namespace", preferredXMLNamespaceName);
-                put("language", languageList);
+                put("language", languageSet);
                 putAll(jsonLdKeys);
             }
         };

@@ -44,6 +44,9 @@
         "contributor": {
           "type": "keyword"
         },
+        "language": {
+          "type": "keyword"
+        },
         "isPartOf": {
           "type": "keyword"
         }
