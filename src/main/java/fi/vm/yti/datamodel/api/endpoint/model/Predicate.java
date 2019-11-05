@@ -342,6 +342,8 @@ public class Predicate {
             return jerseyResponseManager.invalidIRI();
         }
 
+        YtiUser user = userProvider.getUser();
+
         /* If Predicate is defined in the model */
         if (id.startsWith(model)) {
             /* Remove graph */
@@ -356,6 +358,10 @@ public class Predicate {
 
                 graphManager.deleteResource(deletePredicate);
                 searchIndexManager.removePredicate(id);
+
+                if (provenanceManager.getProvMode()) {
+                    provenanceManager.invalidateProvenanceActivity(deletePredicate.getId(), deletePredicate.getProvUUID(), user.getId());
+                }
 
             } catch (IllegalArgumentException ex) {
                 logger.warn(ex.toString());

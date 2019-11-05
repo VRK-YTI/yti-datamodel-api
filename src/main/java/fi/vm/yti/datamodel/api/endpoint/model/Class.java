@@ -351,6 +351,7 @@ public class Class {
             return jerseyResponseManager.invalidIRI();
         }
 
+        YtiUser user = userProvider.getUser();
 
         /* If Class is defined in the model */
         if (id.startsWith(model)) {
@@ -365,6 +366,10 @@ public class Class {
 
                 graphManager.deleteResource(deleteClass);
                 searchIndexManager.removeClass(id);
+
+                if (provenanceManager.getProvMode()) {
+                    provenanceManager.invalidateProvenanceActivity(deleteClass.getId(), deleteClass.getProvUUID(), user.getId());
+                }
 
             } catch (IllegalArgumentException ex) {
                 logger.warn(ex.toString());
