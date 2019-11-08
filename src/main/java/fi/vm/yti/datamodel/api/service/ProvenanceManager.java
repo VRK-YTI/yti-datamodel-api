@@ -95,6 +95,7 @@ public class ProvenanceManager {
             + "?graph prov:generated ?jsonld . "
             + "?graph prov:used ?jsonld . "
             + "?graph a prov:Activity . "
+            + "?graph rdfs:isDefinedBy ?modelGraph . "
             + "?graph prov:wasAttributedTo ?user . "
             + "?jsonld a prov:Entity . "
             + "?jsonld prov:wasAttributedTo ?user . "
@@ -118,6 +119,8 @@ public class ProvenanceManager {
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
 
         pss.setIri("graph", graph);
+        String modelGraph = graph.contains("#") ? graph.substring(0,graph.indexOf("#")) : graph;
+        pss.setIri("modelGraph", modelGraph);
         pss.setIri("user", "urn:uuid:" + user.toString());
         pss.setIri("jsonld", provUUID);
         pss.setCommandText(query);
@@ -153,6 +156,59 @@ public class ProvenanceManager {
             + "?graph a prov:Activity . "
             + "?graph prov:used ?jsonld . "
             + "}"
+            + "BIND(now() as ?deleted)"
+            + "}";
+
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+
+        pss.setIri("graph", graph);
+        pss.setIri("user", "urn:uuid:" + user.toString());
+        pss.setIri("jsonld", provUUID);
+        pss.setCommandText(query);
+
+        return pss.asUpdate();
+    }
+
+    public void invalidateModelProvenanceActivity(String graph,
+                                             String provUUID,
+                                             UUID user) {
+        logger.debug("Invalidating provenance graph: "+graph);
+        UpdateRequest queryObj = createModelProvenanceActivityInvalidationRequest(graph, provUUID, user);
+        jenaClient.updateToService(queryObj, endpointServices.getProvSparqlUpdateAddress());
+    }
+
+    public UpdateRequest createModelProvenanceActivityInvalidationRequest(String graph,
+                                                                     String provUUID,
+                                                                     UUID user) {
+        String query
+            = "INSERT { "
+            + "GRAPH ?graph { "
+            + "?graph prov:invalidatedAt ?deleted . "
+            + "?graph prov:wasInvalidatedBy ?user . "
+            + "}"
+            + "GRAPH ?resourceGraph { "
+            + "?resourceGraph prov:invalidatedAt ?deleted . "
+            + "?resourceGraph prov:wasInvalidatedBy ?user . "
+            + "}"
+            + "GRAPH ?jsonld {"
+            + "?graph prov:invalidatedAt ?deleted . "
+            + "?graph prov:wasInvalidatedBy ?user . "
+            + "}"
+            + "}"
+            + "WHERE { "
+            + "GRAPH ?graph { "
+            + "?graph a prov:Activity . "
+            + "?graph prov:used ?jsonld . "
+            + "}"
+            + "OPTIONAL { GRAPH ?resourceGraph { "
+            + "?resourceGraph rdfs:isDefinedBy ?graph . "
+            + "?resourceGraph a prov:Activity . "
+            + "FILTER NOT EXISTS { "
+            + "?resourceGraph prov:invalidatedAt ?deleted . "
+            + "?resourceGraph prov:wasInvalidatedBy ?user . "
+            +"}"
+            +"}}"
             + "BIND(now() as ?deleted)"
             + "}";
 
