@@ -46,7 +46,6 @@ public class JerseyConfig extends ResourceConfig {
     @Autowired
     public JerseyConfig() {
 
-
         // https://github.com/spring-projects/spring-boot/issues/1468
         // FIXME packages("fi.vm.yti.datamodel.api.endpoint"); should work but it doesn't
         myPackages("fi.vm.yti.datamodel.api.endpoint");

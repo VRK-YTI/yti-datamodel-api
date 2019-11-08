@@ -122,7 +122,7 @@ public final class JenaClient {
         return importService.containsModel(graph);
     }
 
-    public void deleteModelFromCore(String graph) {
+    public void cmddeleteModelFromCore(String graph) {
         logger.debug("Deleting model from " + graph);
         coreService.deleteModel(graph);
     }
