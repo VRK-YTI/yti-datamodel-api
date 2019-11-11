@@ -33,12 +33,7 @@ import javax.ws.rs.container.ContainerResponseFilter;
             name = "EUPL-1.2",
             url = "https://opensource.org/licenses/EUPL-1.1"
         )
-    ),
-    servers = {
-        @Server(
-            description = "Datamodel service API",
-            url = "/datamodel/api")
-    }
+    )
 )
 @ApplicationPath("/datamodel/api")
 public class JerseyConfig extends ResourceConfig {
