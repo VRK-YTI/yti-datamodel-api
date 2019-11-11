@@ -146,7 +146,7 @@ task unzipSwagger(type:Copy) {
     eachFile { f ->
         if (f.path.endsWith('index.html')) {
             filter { line ->
-                line.replace('https://petstore.swagger.io/v2/swagger.json', "/datamodel/api/openapi.yaml")
+                line.replace('"https://petstore.swagger.io/v2/swagger.json"', '"/datamodel/api/openapi.yaml", docExpansion: "none", validatorUrl: null')
             }
         }
         f.path = f.path.replaceFirst('META-INF/resources/webjars/swagger-ui/3.24.0/', '')
