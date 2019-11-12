@@ -14,14 +14,12 @@ plugins {
     id "org.springframework.boot" version "2.1.8.RELEASE"
     id "org.sonarqube" version "2.6.2"
     id "org.owasp.dependencycheck" version "4.0.2"
-    id "net.linguica.maven-settings" version "0.5"
 }
 
 apply plugin: "java"
 apply plugin: 'io.spring.dependency-management'
 apply plugin: "idea"
 apply plugin: "com.jfrog.artifactory"
-apply plugin: "net.linguica.maven-settings"
 
 allprojects {
     if(project.convention.findPlugin(JavaPluginConvention)) {
