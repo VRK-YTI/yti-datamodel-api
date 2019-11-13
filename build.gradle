@@ -14,12 +14,14 @@ plugins {
     id "org.springframework.boot" version "2.1.8.RELEASE"
     id "org.sonarqube" version "2.6.2"
     id "org.owasp.dependencycheck" version "4.0.2"
+    id "com.github.ManifestClasspath" version "0.1.0-RELEASE"
 }
 
 apply plugin: "java"
 apply plugin: 'io.spring.dependency-management'
 apply plugin: "idea"
 apply plugin: "com.jfrog.artifactory"
+apply plugin: "com.github.ManifestClasspath"
 
 allprojects {
     if(project.convention.findPlugin(JavaPluginConvention)) {
