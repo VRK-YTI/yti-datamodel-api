@@ -15,6 +15,7 @@ publicGroupManagementAPI=https://rhp.dev.yti.cloud.vrk.fi
 publicGroupManagementFrontend=https://rhp.dev.yti.cloud.vrk.fi
 publicSuomiCodeServerFrontend=https://koodistot.dev.yti.cloud.vrk.fi
 publicTerminologyFrontend=https://sanastot.dev.yti.cloud.vrk.fi
+messagingEnabled=false
 
 groupmanagement.url=https://rhp.dev.yti.cloud.vrk.fi
 groupmanagement.public.url=https://rhp.dev.yti.cloud.vrk.fi
