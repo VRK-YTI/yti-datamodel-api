@@ -6,6 +6,7 @@ import java.util.Set;
 
 public class IntegrationContainerRequest {
 
+    private Set<String> uri;
     private String searchTerm;
     private String language;
     private Set<String> status;
@@ -21,7 +22,8 @@ public class IntegrationContainerRequest {
     public IntegrationContainerRequest() {
     }
 
-    public IntegrationContainerRequest(final String searchTerm,
+    public IntegrationContainerRequest(final Set<String> uri,
+                                       final String searchTerm,
                                        final String language,
                                        final Set<String> status,
                                        final String type,
@@ -32,6 +34,7 @@ public class IntegrationContainerRequest {
                                        final Integer pageFrom,
                                        final Boolean includeIncomplete,
                                        final Set<String> includeIncompleteFrom) {
+        this.uri = uri;
         this.searchTerm = searchTerm;
         this.language = language;
         this.status = status;
@@ -43,6 +46,14 @@ public class IntegrationContainerRequest {
         this.pageFrom = pageFrom;
         this.includeIncomplete = includeIncomplete;
         this.includeIncompleteFrom = includeIncompleteFrom;
+    }
+
+    public Set<String> getUri() {
+        return uri;
+    }
+
+    public void setUri(final Set<String> uri) {
+        this.uri = uri;
     }
 
     public String getSearchTerm() {

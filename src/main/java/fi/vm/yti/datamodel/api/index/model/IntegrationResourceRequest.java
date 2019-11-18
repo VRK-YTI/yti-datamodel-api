@@ -5,6 +5,7 @@ import java.util.Set;
 
 public class IntegrationResourceRequest {
 
+    private Set<String> uri;
     private String searchTerm;
     private String language;
     private Set<String> container;
@@ -19,7 +20,8 @@ public class IntegrationResourceRequest {
     public IntegrationResourceRequest() {
     }
 
-    public IntegrationResourceRequest(final String searchTerm,
+    public IntegrationResourceRequest(final Set<String> uri,
+                                      final String searchTerm,
                                       final String language,
                                       final Set<String> container,
                                       final Set<String> status,
@@ -29,6 +31,7 @@ public class IntegrationResourceRequest {
                                       final Set<String> filter,
                                       final Integer pageSize,
                                       final Integer pageFrom) {
+        this.uri = uri;
         this.searchTerm = searchTerm;
         this.language = language;
         this.container = container;
@@ -39,6 +42,14 @@ public class IntegrationResourceRequest {
         this.filter = filter;
         this.pageSize = pageSize;
         this.pageFrom = pageFrom;
+    }
+
+    public Set<String> getUri() {
+        return uri;
+    }
+
+    public void setUri(final Set<String> uri) {
+        this.uri = uri;
     }
 
     public Set<String> getContainer() {

@@ -5,6 +5,8 @@ import java.util.Set;
 
 public class ModelSearchRequest {
 
+    private Set<String> uri;
+
     private String query;
 
     private boolean searchResources;
@@ -33,6 +35,7 @@ public class ModelSearchRequest {
     }
 
     public ModelSearchRequest(IntegrationContainerRequest request) {
+        this.uri = request.getUri();
         this.query = request.getSearchTerm();
         this.status = request.getStatus();
         this.type = request.getType();
@@ -86,6 +89,14 @@ public class ModelSearchRequest {
         this.pageSize = pageSize;
         this.pageFrom = pageFrom;
         this.filter = filter;
+    }
+
+    public Set<String> getUri() {
+        return uri;
+    }
+
+    public void setUri(final Set<String> uri) {
+        this.uri = uri;
     }
 
     public String getQuery() {

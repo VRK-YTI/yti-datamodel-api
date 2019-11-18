@@ -50,15 +50,16 @@ public class ModelQueryFactory {
     }
 
     public SearchRequest createQuery(ModelSearchRequest request) {
-        return createQuery(request.getQuery(), request.getStatus(), request.getType(), request.getAfter(), request.getBefore(), Collections.EMPTY_SET, request.getPageSize(), request.getPageFrom(), request.getFilter(), request.getIncludeIncomplete(), request.getIncludeIncompleteFrom());
+        return createQuery(request.getUri(),request.getQuery(), request.getStatus(), request.getType(), request.getAfter(), request.getBefore(), Collections.EMPTY_SET, request.getPageSize(), request.getPageFrom(), request.getFilter(), request.getIncludeIncomplete(), request.getIncludeIncompleteFrom());
     }
 
     public SearchRequest createQuery(ModelSearchRequest request,
                                      Collection<String> additionalModelIds) {
-        return createQuery(request.getQuery(), request.getStatus(), request.getType(), request.getAfter(), request.getBefore(), additionalModelIds, request.getPageSize(), request.getPageFrom(), request.getFilter(), request.getIncludeIncomplete(), request.getIncludeIncompleteFrom());
+        return createQuery(request.getUri(), request.getQuery(), request.getStatus(), request.getType(), request.getAfter(), request.getBefore(), additionalModelIds, request.getPageSize(), request.getPageFrom(), request.getFilter(), request.getIncludeIncomplete(), request.getIncludeIncompleteFrom());
     }
 
-    private SearchRequest createQuery(String query,
+    private SearchRequest createQuery(Set<String> uris,
+                                      String query,
                                       Set<String> status,
                                       String type,
                                       Date after,
@@ -96,6 +97,12 @@ public class ModelQueryFactory {
 
         BoolQueryBuilder boolQuery = QueryBuilders.boolQuery();
         List<QueryBuilder> mustList = boolQuery.must();
+
+        if(uris!=null) {
+            QueryBuilder uriQuery = QueryBuilders.boolQuery()
+                .should(QueryBuilders.termsQuery("id", uris)).minimumShouldMatch(1);
+            mustList.add(uriQuery);
+        }
 
         if (includeIncomplete == null || includeIncompleteFrom != null) {
             QueryBuilder incompleteQuery = ElasticUtils.createStatusAndContributorQuery(includeIncompleteFrom);

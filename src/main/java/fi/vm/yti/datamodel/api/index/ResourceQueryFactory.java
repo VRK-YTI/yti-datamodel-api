@@ -49,10 +49,11 @@ public class ResourceQueryFactory {
     }
 
     public SearchRequest createQuery(ResourceSearchRequest request) {
-        return createQuery(request.getQuery(), request.getType(), request.getIsDefinedBy(), request.getIsDefinedBySet(), request.getStatus(), request.getAfter(), request.getBefore(), request.getSortLang(), request.getSortField(), request.getSortOrder(), request.getPageSize(), request.getPageFrom(), request.getFilter());
+        return createQuery(request.getUri(), request.getQuery(), request.getType(), request.getIsDefinedBy(), request.getIsDefinedBySet(), request.getStatus(), request.getAfter(), request.getBefore(), request.getSortLang(), request.getSortField(), request.getSortOrder(), request.getPageSize(), request.getPageFrom(), request.getFilter());
     }
 
-    private SearchRequest createQuery(String query,
+    private SearchRequest createQuery(Set<String> uris,
+                                      String query,
                                       String type,
                                       String modelId,
                                       Set<String> modelSet,
@@ -86,6 +87,12 @@ public class ResourceQueryFactory {
 
         BoolQueryBuilder boolQuery = QueryBuilders.boolQuery();
         List<QueryBuilder> mustList = boolQuery.must();
+
+        if(uris!=null) {
+            QueryBuilder uriQuery = QueryBuilders.boolQuery()
+                .should(QueryBuilders.termsQuery("id", uris)).minimumShouldMatch(1);
+            mustList.add(uriQuery);
+        }
 
         if (after != null) {
             mustList.add(QueryBuilders.rangeQuery("modified").gte(after));

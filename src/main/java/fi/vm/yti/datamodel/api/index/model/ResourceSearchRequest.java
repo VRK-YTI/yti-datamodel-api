@@ -5,6 +5,8 @@ import java.util.Set;
 
 public class ResourceSearchRequest {
 
+    private Set<String> uri;
+
     private String query;
 
     private Date after;
@@ -35,6 +37,7 @@ public class ResourceSearchRequest {
     }
 
     public ResourceSearchRequest(IntegrationResourceRequest request) {
+        this.uri = request.getUri();
         this.isDefinedBySet = request.getContainer();
         this.query = request.getSearchTerm();
         this.status = request.getStatus();
@@ -83,6 +86,14 @@ public class ResourceSearchRequest {
         this.sortOrder = sortOrder;
         this.pageSize = pageSize;
         this.pageFrom = pageFrom;
+    }
+
+    public Set<String> getUri() {
+        return uri;
+    }
+
+    public void setUri(final Set<String> uri) {
+        this.uri = uri;
     }
 
     public String getQuery() {

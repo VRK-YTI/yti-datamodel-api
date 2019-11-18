@@ -66,6 +66,7 @@ public class Containers {
         @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     public Response listContainers(
+        @Parameter(description = "Uris") @QueryParam("uri") String uri,
         @Parameter(description = "Language") @QueryParam("language") String lang,
         @Parameter(description = "Status") @QueryParam("status") String status,
         @Parameter(description = "Type values: library or profile") @QueryParam("type") String type,
@@ -78,7 +79,7 @@ public class Containers {
         @Parameter(description = "Include incomplete from organization") @QueryParam("includeIncompleteFrom") String includeIncompleteFrom) {
 
         String path = uriInfo.getAbsolutePath().toString();
-        IntegrationContainerRequest req = new IntegrationContainerRequest(search, lang, searchIndexManager.parseStringList(status), type, after, before, null, pageSize, from, includeIncomplete, searchIndexManager.parseStringList(includeIncompleteFrom));
+        IntegrationContainerRequest req = new IntegrationContainerRequest(searchIndexManager.parseStringList(uri), search, lang, searchIndexManager.parseStringList(status), type, after, before, null, pageSize, from, includeIncomplete, searchIndexManager.parseStringList(includeIncompleteFrom));
         IntegrationAPIResponse resp = searchIndexManager.searchContainers(req,path);
         return jerseyResponseManager.ok(objectMapper.valueToTree(resp));
 
