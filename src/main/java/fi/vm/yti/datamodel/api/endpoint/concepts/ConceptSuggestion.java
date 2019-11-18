@@ -7,6 +7,7 @@ import fi.vm.yti.datamodel.api.service.*;
 import fi.vm.yti.security.AuthenticatedUserProvider;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -65,9 +66,7 @@ public class ConceptSuggestion {
         @Parameter(description = "Terminology uri", required = true) @QueryParam("terminologyUri") String terminologyUri,
         @Parameter(description = "Label", required = true) @QueryParam("label") String label,
         @Parameter(description = "Comment", required = true) @QueryParam("comment") String comment,
-        @Parameter(description = "Initial language", required = true) @QueryParam("lang") String lang) {
-
-        // TODO: schema = @Schema(allowableValues = "fi,en"
+        @Parameter(description = "Initial language", required = true, schema = @Schema(allowableValues = {"fi","en"})) @QueryParam("lang") String lang) {
 
         if (!authorizationManager.hasRightToSuggestConcept()) {
             return jerseyResponseManager.unauthorized();

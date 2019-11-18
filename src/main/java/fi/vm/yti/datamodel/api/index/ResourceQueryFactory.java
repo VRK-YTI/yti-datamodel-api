@@ -49,14 +49,16 @@ public class ResourceQueryFactory {
     }
 
     public SearchRequest createQuery(ResourceSearchRequest request) {
-        return createQuery(request.getQuery(), request.getType(), request.getIsDefinedBy(), request.getStatus(), request.getAfter(), request.getSortLang(), request.getSortField(), request.getSortOrder(), request.getPageSize(), request.getPageFrom(), request.getFilter());
+        return createQuery(request.getQuery(), request.getType(), request.getIsDefinedBy(), request.getIsDefinedBySet(), request.getStatus(), request.getAfter(), request.getBefore(), request.getSortLang(), request.getSortField(), request.getSortOrder(), request.getPageSize(), request.getPageFrom(), request.getFilter());
     }
 
     private SearchRequest createQuery(String query,
                                       String type,
                                       String modelId,
+                                      Set<String> modelSet,
                                       Set<String> status,
                                       Date after,
+                                      Date before,
                                       String sortLang,
                                       String sortField,
                                       String sortOrder,
@@ -89,6 +91,10 @@ public class ResourceQueryFactory {
             mustList.add(QueryBuilders.rangeQuery("modified").gte(after));
         }
 
+        if (before != null) {
+            mustList.add(QueryBuilders.rangeQuery("modified").lt(before));
+        }
+
         if (filter != null) {
             QueryBuilder filterQuery = QueryBuilders.boolQuery()
                 .mustNot(QueryBuilders.termsQuery("id", filter));
@@ -101,6 +107,10 @@ public class ResourceQueryFactory {
 
         if (modelId != null) {
             mustList.add(QueryBuilders.matchQuery("isDefinedBy", modelId));
+        } else if(modelSet != null) {
+            QueryBuilder modelSetQuery = QueryBuilders.boolQuery()
+                .should(QueryBuilders.termsQuery("isDefinedBy", modelSet)).minimumShouldMatch(1);
+            mustList.add(modelSetQuery);
         }
 
         if (status != null) {

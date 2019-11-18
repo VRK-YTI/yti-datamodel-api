@@ -11,6 +11,8 @@ public class ModelSearchRequest {
 
     private Date after;
 
+    private Date before;
+
     private String sortLang;
 
     private Set<String> status;
@@ -35,6 +37,7 @@ public class ModelSearchRequest {
         this.status = request.getStatus();
         this.type = request.getType();
         this.after = request.getAfter();
+        this.before = request.getBefore();
         this.sortLang = request.getLanguage();
         this.filter = request.getFilter();
         this.pageFrom = request.getPageFrom();
@@ -48,6 +51,7 @@ public class ModelSearchRequest {
                               final Set<String> status,
                               final String type,
                               final Date after,
+                              final Date before,
                               final String sortLang,
                               final Integer pageSize,
                               final Integer pageFrom,
@@ -58,6 +62,7 @@ public class ModelSearchRequest {
         this.status = status;
         this.type = type;
         this.after = after;
+        this.before = before;
         this.sortLang = sortLang;
         this.pageSize = pageSize;
         this.pageFrom = pageFrom;
@@ -113,6 +118,14 @@ public class ModelSearchRequest {
 
     public void setAfter(final Date after) {
         this.after = after;
+    }
+
+    public Date getBefore() {
+        return before;
+    }
+
+    public void setBefore(final Date before) {
+        this.before = before;
     }
 
     public Integer getPageSize() {
@@ -177,8 +190,10 @@ public class ModelSearchRequest {
             "query='" + query + '\'' +
             ", searchResources=" + searchResources +
             ", after=" + after +
+            ", before=" + before +
             ", sortLang='" + sortLang + '\'' +
             ", status=" + status +
+            ", type='" + type + '\'' +
             ", pageSize=" + pageSize +
             ", pageFrom=" + pageFrom +
             ", filter=" + filter +

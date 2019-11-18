@@ -7,10 +7,11 @@ public class IntegrationResourceRequest {
 
     private String searchTerm;
     private String language;
-    private String container;
+    private Set<String> containers;
     private Set<String> status;
     private String type;
     private Date after;
+    private Date before;
     private Set<String> filter;
     private Integer pageSize;
     private Integer pageFrom;
@@ -20,30 +21,32 @@ public class IntegrationResourceRequest {
 
     public IntegrationResourceRequest(final String searchTerm,
                                       final String language,
-                                      final String container,
+                                      final Set<String> containers,
                                       final Set<String> status,
                                       final String type,
                                       final Date after,
+                                      final Date before,
                                       final Set<String> filter,
                                       final Integer pageSize,
                                       final Integer pageFrom) {
         this.searchTerm = searchTerm;
         this.language = language;
-        this.container = container;
+        this.containers = containers;
         this.status = status;
         this.type = type;
         this.after = after;
+        this.before = before;
         this.filter = filter;
         this.pageSize = pageSize;
         this.pageFrom = pageFrom;
     }
 
-    public String getContainer() {
-        return container;
+    public Set<String> getContainers() {
+        return containers;
     }
 
-    public void setContainer(final String container) {
-        this.container = container;
+    public void setContainers(final Set<String> containers) {
+        this.containers = containers;
     }
 
     public String getSearchTerm() {
@@ -86,6 +89,14 @@ public class IntegrationResourceRequest {
         this.after = after;
     }
 
+    public Date getBefore() {
+        return before;
+    }
+
+    public void setBefore(final Date before) {
+        this.before = before;
+    }
+
     public Set<String> getFilter() {
         return filter;
     }
@@ -115,9 +126,11 @@ public class IntegrationResourceRequest {
         return "IntegrationResourceRequest{" +
             "searchTerm='" + searchTerm + '\'' +
             ", language='" + language + '\'' +
-            ", container='" + container + '\'' +
-            ", status='" + status + '\'' +
-            ", after='" + after + '\'' +
+            ", containers=" + containers +
+            ", status=" + status +
+            ", type='" + type + '\'' +
+            ", after=" + after +
+            ", before=" + before +
             ", filter=" + filter +
             ", pageSize=" + pageSize +
             ", pageFrom=" + pageFrom +

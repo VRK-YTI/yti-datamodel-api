@@ -63,7 +63,7 @@ public class ExportModel {
         @Parameter(description = "Requested resource", schema = @Schema(defaultValue = "default")) @QueryParam("graph") String graph,
         @Parameter(description = "Raw / PlainText boolean", schema = @Schema(defaultValue = "false")) @QueryParam("raw") boolean raw,
         @Parameter(description = "Languages to export") @QueryParam("lang") String lang,
-        @Parameter(description = "Content-type", required = true, schema = @Schema(allowableValues = "application/ld+json,text/turtle,application/rdf+xml,application/ld+json+context,application/schema+json,application/xml,application/vnd.oai.openapi+json")) @QueryParam("content-type") String ctype) {
+        @Parameter(description = "Content-type", required = true, schema = @Schema(allowableValues = {"application/ld+json","text/turtle","application/rdf+xml","application/ld+json+context","application/schema+json","application/xml","application/vnd.oai.openapi+json"})) @QueryParam("content-type") String ctype) {
 
         /* Check that URIs are valid */
         if (idManager.isInvalid(graph)) {

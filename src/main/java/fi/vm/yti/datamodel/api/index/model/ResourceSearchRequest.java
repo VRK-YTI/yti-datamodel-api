@@ -9,9 +9,13 @@ public class ResourceSearchRequest {
 
     private Date after;
 
+    private Date before;
+
     private String type;
 
     private String isDefinedBy;
+
+    private Set<String> isDefinedBySet;
 
     private Set<String> status;
 
@@ -31,22 +35,23 @@ public class ResourceSearchRequest {
     }
 
     public ResourceSearchRequest(IntegrationResourceRequest request) {
-        this.isDefinedBy = request.getContainer();
+        this.isDefinedBySet = request.getContainers();
         this.query = request.getSearchTerm();
         this.status = request.getStatus();
         this.type = request.getType();
         this.after = request.getAfter();
+        this.before = request.getBefore();
         this.sortLang = request.getLanguage();
         this.filter = request.getFilter();
         this.pageFrom = request.getPageFrom();
         this.pageSize = request.getPageSize();
     }
 
-
     public ResourceSearchRequest(final String query,
                                  final String isDefinedBy,
                                  final Set<String> status,
                                  final Date after,
+                                 final Date before,
                                  final String sortLang,
                                  final Integer pageSize,
                                  final Integer pageFrom) {
@@ -54,6 +59,7 @@ public class ResourceSearchRequest {
         this.isDefinedBy = isDefinedBy;
         this.status = status;
         this.after = after;
+        this.before = before;
         this.sortLang = sortLang;
         this.pageSize = pageSize;
         this.pageFrom = pageFrom;
@@ -103,6 +109,14 @@ public class ResourceSearchRequest {
         this.isDefinedBy = isDefinedBy;
     }
 
+    public Set<String> getIsDefinedBySet() {
+        return isDefinedBySet;
+    }
+
+    public void setIsDefinedBySet(final Set<String> isDefinedBySet) {
+        this.isDefinedBySet = isDefinedBySet;
+    }
+
     public Set<String> getStatus() {
         return status;
     }
@@ -117,6 +131,14 @@ public class ResourceSearchRequest {
 
     public void setAfter(final Date after) {
         this.after = after;
+    }
+
+    public Date getBefore() {
+        return before;
+    }
+
+    public void setBefore(final Date before) {
+        this.before = before;
     }
 
     public String getSortLang() {
@@ -171,10 +193,12 @@ public class ResourceSearchRequest {
     public String toString() {
         return "ResourceSearchRequest{" +
             "query='" + query + '\'' +
-            ", after='" + after + '\'' +
+            ", after=" + after +
+            ", before=" + before +
             ", type='" + type + '\'' +
             ", isDefinedBy='" + isDefinedBy + '\'' +
-            ", status='" + status + '\'' +
+            ", isDefinedBySet=" + isDefinedBySet +
+            ", status=" + status +
             ", sortLang='" + sortLang + '\'' +
             ", sortField='" + sortField + '\'' +
             ", sortOrder='" + sortOrder + '\'' +

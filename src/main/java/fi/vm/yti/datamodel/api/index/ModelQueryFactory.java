@@ -50,18 +50,19 @@ public class ModelQueryFactory {
     }
 
     public SearchRequest createQuery(ModelSearchRequest request) {
-        return createQuery(request.getQuery(), request.getStatus(), request.getType(), request.getAfter(), Collections.EMPTY_SET, request.getPageSize(), request.getPageFrom(), request.getFilter(), request.getIncludeIncomplete(), request.getIncludeIncompleteFrom());
+        return createQuery(request.getQuery(), request.getStatus(), request.getType(), request.getAfter(), request.getBefore(), Collections.EMPTY_SET, request.getPageSize(), request.getPageFrom(), request.getFilter(), request.getIncludeIncomplete(), request.getIncludeIncompleteFrom());
     }
 
     public SearchRequest createQuery(ModelSearchRequest request,
                                      Collection<String> additionalModelIds) {
-        return createQuery(request.getQuery(), request.getStatus(), request.getType(), request.getAfter(), additionalModelIds, request.getPageSize(), request.getPageFrom(), request.getFilter(), request.getIncludeIncomplete(), request.getIncludeIncompleteFrom());
+        return createQuery(request.getQuery(), request.getStatus(), request.getType(), request.getAfter(), request.getBefore(), additionalModelIds, request.getPageSize(), request.getPageFrom(), request.getFilter(), request.getIncludeIncomplete(), request.getIncludeIncompleteFrom());
     }
 
     private SearchRequest createQuery(String query,
                                       Set<String> status,
                                       String type,
                                       Date after,
+                                      Date before,
                                       Collection<String> additionalModelIds,
                                       Integer pageSize,
                                       Integer pageFrom,
@@ -103,6 +104,10 @@ public class ModelQueryFactory {
 
         if (after != null) {
             mustList.add(QueryBuilders.rangeQuery("modified").gte(after));
+        }
+
+        if (before != null) {
+            mustList.add(QueryBuilders.rangeQuery("modified").lt(before));
         }
 
         if (filter != null) {

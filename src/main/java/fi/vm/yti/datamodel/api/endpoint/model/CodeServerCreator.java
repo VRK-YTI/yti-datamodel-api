@@ -60,7 +60,7 @@ public class CodeServerCreator {
         @Parameter(description = "Code server api uri", required = true) @QueryParam("uri") String uri,
         @Parameter(description = "Code server name", required = true) @QueryParam("label") String label,
         @Parameter(description = "Code server description", required = true) @QueryParam("description") String comment,
-        @Parameter(description = "Initial language", required = true, schema = @Schema(allowableValues = "fi,en")) @QueryParam("lang") String lang,
+        @Parameter(description = "Initial language", required = true, schema = @Schema(allowableValues = {"fi","en"})) @QueryParam("lang") String lang,
         @Parameter(description = "Update codelists", schema = @Schema(defaultValue = "false")) @QueryParam("update") boolean force) {
 
         if (uri != null && !uri.equals("undefined")) {

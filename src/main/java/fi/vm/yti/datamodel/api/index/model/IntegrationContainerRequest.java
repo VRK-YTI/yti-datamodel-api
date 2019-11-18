@@ -11,6 +11,7 @@ public class IntegrationContainerRequest {
     private Set<String> status;
     private String type;
     private Date after;
+    private Date before;
     private Set<String> filter;
     private Integer pageSize;
     private Integer pageFrom;
@@ -25,6 +26,7 @@ public class IntegrationContainerRequest {
                                        final Set<String> status,
                                        final String type,
                                        final Date after,
+                                       final Date before,
                                        final Set<String> filter,
                                        final Integer pageSize,
                                        final Integer pageFrom,
@@ -35,6 +37,7 @@ public class IntegrationContainerRequest {
         this.status = status;
         this.type = type;
         this.after = after;
+        this.before = before;
         this.filter = filter;
         this.pageSize = pageSize;
         this.pageFrom = pageFrom;
@@ -80,6 +83,14 @@ public class IntegrationContainerRequest {
 
     public void setAfter(final Date after) {
         this.after = after;
+    }
+
+    public Date getBefore() {
+        return before;
+    }
+
+    public void setBefore(final Date before) {
+        this.before = before;
     }
 
     public Set<String> getFilter() {
@@ -132,7 +143,9 @@ public class IntegrationContainerRequest {
             "searchTerm='" + searchTerm + '\'' +
             ", language='" + language + '\'' +
             ", status=" + status +
+            ", type='" + type + '\'' +
             ", after=" + after +
+            ", before=" + before +
             ", filter=" + filter +
             ", pageSize=" + pageSize +
             ", pageFrom=" + pageFrom +

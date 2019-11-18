@@ -72,7 +72,7 @@ public class ExportResource {
         @Parameter(description = "Raw / PlainText boolean", schema = @Schema(defaultValue = "false")) @QueryParam("raw") boolean raw,
         @Parameter(description = "Languages to export") @QueryParam("lang") String lang,
         @Parameter(description = "Service to export") @QueryParam("service") String serviceString,
-        @Parameter(description = "Content-type", schema = @Schema(allowableValues = "application/ld+json,text/turtle,application/rdf+xml,application/ld+json+context,application/schema+json,application/xml")) @QueryParam("content-type") String ctype) {
+        @Parameter(description = "Content-type", schema = @Schema(allowableValues = {"application/ld+json","text/turtle","application/rdf+xml","application/ld+json+context","application/schema+json","application/xml"})) @QueryParam("content-type") String ctype) {
 
         if (ctype == null || ctype.equals("undefined")) ctype = accept;
 

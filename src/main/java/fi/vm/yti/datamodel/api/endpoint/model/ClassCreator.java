@@ -69,7 +69,7 @@ public class ClassCreator {
         @Parameter(description = "Model URI", required = true) @QueryParam("modelID") String modelID,
         @Parameter(description = "Class label", required = true) @QueryParam("classLabel") String classLabel,
         @Parameter(description = "Concept URI") @QueryParam("conceptID") String conceptUri,
-        @Parameter(description = "Language", required = true, schema = @Schema(allowableValues = "fi,en")) @QueryParam("lang") String lang) {
+        @Parameter(description = "Language", required = true, schema = @Schema(allowableValues = {"fi","en"})) @QueryParam("lang") String lang) {
 
         IRI conceptIRI = null;
         IRI modelIRI;
