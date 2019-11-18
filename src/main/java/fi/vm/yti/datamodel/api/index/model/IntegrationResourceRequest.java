@@ -7,7 +7,7 @@ public class IntegrationResourceRequest {
 
     private String searchTerm;
     private String language;
-    private Set<String> containers;
+    private Set<String> container;
     private Set<String> status;
     private String type;
     private Date after;
@@ -21,7 +21,7 @@ public class IntegrationResourceRequest {
 
     public IntegrationResourceRequest(final String searchTerm,
                                       final String language,
-                                      final Set<String> containers,
+                                      final Set<String> container,
                                       final Set<String> status,
                                       final String type,
                                       final Date after,
@@ -31,7 +31,7 @@ public class IntegrationResourceRequest {
                                       final Integer pageFrom) {
         this.searchTerm = searchTerm;
         this.language = language;
-        this.containers = containers;
+        this.container = container;
         this.status = status;
         this.type = type;
         this.after = after;
@@ -41,12 +41,12 @@ public class IntegrationResourceRequest {
         this.pageFrom = pageFrom;
     }
 
-    public Set<String> getContainers() {
-        return containers;
+    public Set<String> getContainer() {
+        return container;
     }
 
-    public void setContainers(final Set<String> containers) {
-        this.containers = containers;
+    public void setContainer(final Set<String> container) {
+        this.container = container;
     }
 
     public String getSearchTerm() {
@@ -126,7 +126,7 @@ public class IntegrationResourceRequest {
         return "IntegrationResourceRequest{" +
             "searchTerm='" + searchTerm + '\'' +
             ", language='" + language + '\'' +
-            ", containers=" + containers +
+            ", container=" + container +
             ", status=" + status +
             ", type='" + type + '\'' +
             ", after=" + after +

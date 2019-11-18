@@ -63,7 +63,7 @@ public class Resources {
         @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     public Response getResources(
-        @Parameter(description = "Containers") @QueryParam("containers") String containers,
+        @Parameter(description = "Containers") @QueryParam("container") String container,
         @Parameter(description = "Language") @QueryParam("language") String lang,
         @Parameter(description = "Status") @QueryParam("status") String status,
         @Parameter(description = "Type values: class, shape, attribute, association") @QueryParam("type") String type,
@@ -74,7 +74,7 @@ public class Resources {
         @Parameter(description = "From") @QueryParam("from") Integer from) {
 
         String path = uriInfo.getAbsolutePath().toString();
-        IntegrationResourceRequest req = new IntegrationResourceRequest(search,lang,searchIndexManager.parseStringList(containers),searchIndexManager.parseStringList(status),type,after,before,null,pageSize,from);
+        IntegrationResourceRequest req = new IntegrationResourceRequest(search,lang,searchIndexManager.parseStringList(container),searchIndexManager.parseStringList(status),type,after,before,null,pageSize,from);
         IntegrationAPIResponse apiResp = searchIndexManager.searchResources(req,path);
         return jerseyResponseManager.ok(objectMapper.valueToTree(apiResp));
 

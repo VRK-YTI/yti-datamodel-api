@@ -35,7 +35,7 @@ public class ResourceSearchRequest {
     }
 
     public ResourceSearchRequest(IntegrationResourceRequest request) {
-        this.isDefinedBySet = request.getContainers();
+        this.isDefinedBySet = request.getContainer();
         this.query = request.getSearchTerm();
         this.status = request.getStatus();
         this.type = request.getType();
