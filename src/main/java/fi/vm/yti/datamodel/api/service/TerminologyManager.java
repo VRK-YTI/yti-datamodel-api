@@ -254,7 +254,7 @@ public final class TerminologyManager {
                                                    boolean includeIncomplete,
                                                    Set<String> includeIncompletefrom) {
 
-        String url = properties.getDefaultTerminologyAPI() + "integration/containers";
+        String url = properties.getDefaultTerminologyAPI() + "v1/integration/containers";
 
         Client client = ClientBuilder.newClient();
         WebTarget target = client.target(url);
@@ -303,7 +303,7 @@ public final class TerminologyManager {
             logger.debug("Terminology uri is empty or null");
         }
 
-        String url = properties.getDefaultTerminologyAPI() + "integration/resources";
+        String url = properties.getDefaultTerminologyAPI() + "v1/integration/resources";
 
         Client client = ClientBuilder.newClient();
 
@@ -374,7 +374,7 @@ public final class TerminologyManager {
             graphId = "0";
         }
 
-        String url = properties.getDefaultTerminologyAPI() + "terminology/publicapi/searchconcept";
+        String url = properties.getDefaultTerminologyAPI() + "v1/public/searchconcept";
 
         Client client = ClientBuilder.newClient();
         WebTarget target = client.target(url)
