@@ -95,7 +95,7 @@ public class ResourceQueryFactory {
         }
 
         if (after != null) {
-            mustList.add(QueryBuilders.rangeQuery("modified").gte(after));
+            mustList.add(QueryBuilders.rangeQuery("modified").gte(after).to("now"));
         }
 
         if (before != null) {

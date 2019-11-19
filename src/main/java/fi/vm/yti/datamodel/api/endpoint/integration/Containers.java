@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -70,8 +71,8 @@ public class Containers {
         @Parameter(description = "Language") @QueryParam("language") String lang,
         @Parameter(description = "Status") @QueryParam("status") String status,
         @Parameter(description = "Type values: library or profile") @QueryParam("type") String type,
-        @Parameter(description = "After") @QueryParam("after") Date after,
-        @Parameter(description = "Before") @QueryParam("before") Date before,
+        @Parameter(description = "After") @QueryParam("after") String after,
+        @Parameter(description = "Before") @QueryParam("before") String before,
         @Parameter(description = "Search") @QueryParam("searchTerm") String search,
         @Parameter(description = "Pagesize") @QueryParam("pageSize") Integer pageSize,
         @Parameter(description = "From") @QueryParam("from") Integer from,
@@ -79,7 +80,18 @@ public class Containers {
         @Parameter(description = "Include incomplete from organization") @QueryParam("includeIncompleteFrom") String includeIncompleteFrom) {
 
         String path = uriInfo.getAbsolutePath().toString();
-        IntegrationContainerRequest req = new IntegrationContainerRequest(searchIndexManager.parseStringList(uri), search, lang, searchIndexManager.parseStringList(status), type, after, before, null, pageSize, from, includeIncomplete, searchIndexManager.parseStringList(includeIncompleteFrom));
+
+        Date afterDate = null;
+        if(after!=null && !after.isEmpty()) {
+            afterDate = (new DateTime(after)).toDate();
+        }
+
+        Date beforeDate = null;
+        if(before!=null && !before.isEmpty()) {
+            beforeDate = (new DateTime(before)).toDate();
+        }
+
+        IntegrationContainerRequest req = new IntegrationContainerRequest(searchIndexManager.parseStringList(uri), search, lang, searchIndexManager.parseStringList(status), type, afterDate, beforeDate, null, pageSize, from, includeIncomplete, searchIndexManager.parseStringList(includeIncompleteFrom));
         IntegrationAPIResponse resp = searchIndexManager.searchContainers(req,path);
         return jerseyResponseManager.ok(objectMapper.valueToTree(resp));
 
