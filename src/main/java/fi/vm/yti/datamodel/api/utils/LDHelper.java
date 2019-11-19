@@ -415,6 +415,16 @@ public class LDHelper {
     }
 
     /**
+     * Returns true of string uses alphanumerics only
+     *
+     * @param name name used in something
+     * @return boolean
+     */
+    public static boolean isAlphaNumeric(String name) {
+        return name.matches("[a-zA-Z0-9]+");
+    }
+
+    /**
      * Used to strip invalid characters from model name
      *
      * @param name model name
