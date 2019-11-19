@@ -405,7 +405,7 @@ public class LDHelper {
     }
 
     /**
-     * Returns true of string uses alphanumerics only
+     * Returns true of string uses alphastrings only
      *
      * @param name name used in something
      * @return boolean
@@ -422,6 +422,16 @@ public class LDHelper {
      */
     public static boolean isAlphaNumeric(String name) {
         return name.matches("[a-zA-Z0-9]+");
+    }
+
+    /**
+     * Returns true of string uses alphanumerics only
+     *
+     * @param name name used in something
+     * @return boolean
+     */
+    public static boolean isValidPrefix(String name) {
+        return name.matches("^[a-zA-Z][a-zA-Z0-9-_]+[a-zA-Z0-9]$");
     }
 
     /**

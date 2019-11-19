@@ -162,7 +162,7 @@ public class Resolve {
             logger.warn("Datamodel resource URI not resolvable, wrong context path!");
             throw new BadRequestException("Datamodel resource URI not resolvable, wrong context path!");
         } else {
-            if (!LDHelper.isAlphaNumeric(uriPath.substring(API_PATH_DATAMODEL.length()))) {
+            if (!LDHelper.isValidPrefix(uriPath.substring(API_PATH_DATAMODEL.length()))) {
                 logger.warn("Could not parse path: " + uriPath);
                 throw new BadRequestException("Could not parse graph from uri path");
             }
