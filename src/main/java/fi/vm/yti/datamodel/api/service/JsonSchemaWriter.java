@@ -1035,7 +1035,7 @@ public class JsonSchemaWriter {
                 + "BIND(afn:localname(?predicate) as ?predicateName)"
                 + "}"
                 + "}"
-                + "} GROUP BY ?resource ?property ?propertyDeactivated ?lang ?className ?classTitle ?classDeactivated ?classDescription ?predicate ?predicateName ?datatype ?shapeRef ?shapeRefName ?min ?max ?minLength ?maxLength ?propertyLabel ?propertyDescription ?idBoolean ?pattern "
+                + "} GROUP BY ?resource ?property ?propertyDeactivated ?lang ?className ?localClassName ?classTitle ?classDeactivated ?classDescription ?predicate ?predicateName ?datatype ?shapeRef ?shapeRefName ?min ?max ?minLength ?maxLength ?propertyLabel ?propertyDescription ?idBoolean ?pattern "
                 + "ORDER BY ?resource ?property ?lang";
 
         pss.setIri("modelPartGraph", modelID + "#HasPartGraph");
