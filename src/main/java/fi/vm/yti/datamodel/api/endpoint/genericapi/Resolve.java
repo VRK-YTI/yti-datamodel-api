@@ -104,7 +104,7 @@ public class Resolve {
         Locale locale = acceptLang == null ? null : Locale.forLanguageTag(acceptLang);
         String language = locale == null ? null : locale.getDefault().toString().substring(0, 2).toLowerCase();
 
-        final URI htmlRedirectUrl = URI.create(uriInfo.getBaseUri().toString().replace("/datamodel/api/", "/model/") + graphPrefix + (uriFragment != null ? "/" + uriFragment : ""));
+        final URI htmlRedirectUrl = URI.create(uriInfo.getBaseUri().toString().replace("/datamodel-api/api/", "/model/") + graphPrefix + (uriFragment != null ? "/" + uriFragment : ""));
 
         if (format != null && format.length() > 5) {
             accept = format;

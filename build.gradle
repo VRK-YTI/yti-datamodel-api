@@ -146,11 +146,11 @@ dependencyCheck {
 task unzipSwagger(type:Copy) {
     from zipTree(configurations.swaggerUI.singleFile)
     include "META-INF/resources/webjars/swagger-ui/3.24.0/**"
-    into "build/classes/main/static/datamodel/swagger-ui"
+    into "build/classes/main/static/datamodel-api/swagger-ui"
     eachFile { f ->
         if (f.path.endsWith('index.html')) {
             filter { line ->
-                line.replace('"https://petstore.swagger.io/v2/swagger.json"', '"/datamodel/api/openapi.yaml", docExpansion: "none", validatorUrl: null')
+                line.replace('"https://petstore.swagger.io/v2/swagger.json"', '"/datamodel-api/api/openapi.yaml", docExpansion: "none", validatorUrl: null')
             }
         }
         f.path = f.path.replaceFirst('META-INF/resources/webjars/swagger-ui/3.24.0/', '')
