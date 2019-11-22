@@ -301,6 +301,7 @@ public class SearchIndexManager {
             "?model rdfs:comment ?comment . " +
             "?model dcterms:description ?definition . " +
             "?model dcterms:modified ?modified . " +
+            "?model iow:contentModified ?contentModified . " +
             "?model a ?modelType . " +
             "?model owl:versionInfo ?versionInfo . " +
             "?model iow:useContext ?useContext . " +
@@ -319,6 +320,7 @@ public class SearchIndexManager {
             "?model dcap:preferredXMLNamespacePrefix ?prefix .  " +
             "?model a ?modelType . VALUES ?modelType { dcap:MetadataVocabulary dcap:DCAP }" +
             "?model dcterms:modified ?modified . " +
+            "OPTIONAL { ?model iow:contentModified ?contentModified . }" +
             "?model dcterms:contributor ?org . BIND(strafter(str(?org), 'urn:uuid:') AS ?orgID) " +
             "?model dcterms:isPartOf ?group . ?group dcterms:identifier ?groupID . }}";
 

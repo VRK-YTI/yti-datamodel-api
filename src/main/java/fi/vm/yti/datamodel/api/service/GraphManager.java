@@ -1621,9 +1621,11 @@ public class GraphManager {
         LDHelper.rewriteLiteral(resource.asGraph(), ResourceFactory.createResource(resource.getId()), DCTerms.created, created);
         jenaClient.putModelToCore(resource.getId(), resource.asGraph());
         insertNewGraphReferenceToModel(resource.getId(), resource.getModelId());
+
         Model exportModel = resource.asGraphCopy();
         exportModel.add(exportModel.createResource(resource.getModelId()), DCTerms.hasPart, exportModel.createResource(resource.getId()));
-        LDHelper.rewriteLiteral(exportModel, ResourceFactory.createResource(resource.getModelId()), DCTerms.modified, created);
+        LDHelper.rewriteLiteral(exportModel, ResourceFactory.createResource(resource.getModelId()), LDHelper.curieToProperty("iow:contentModified"), created);
+
         jenaClient.addModelToCore(resource.getModelId() + "#ExportGraph", exportModel);
     }
 
@@ -1632,20 +1634,19 @@ public class GraphManager {
                                Model oldModel,
                                Model newModel) {
 
-        Literal created = LDHelper.getDateTimeLiteral();
-
-        LDHelper.rewriteLiteral(newModel, ResourceFactory.createResource(resourceId), DCTerms.modified, created);
+        Literal modified = LDHelper.getDateTimeLiteral();
+        LDHelper.rewriteLiteral(newModel, ResourceFactory.createResource(resourceId), DCTerms.modified, modified);
 
         Model exportModel = jenaClient.getModelFromCore(modelId + "#ExportGraph");
         exportModel = modelManager.removeResourceStatements(oldModel, exportModel);
         exportModel.add(newModel);
-        LDHelper.rewriteLiteral(exportModel, ResourceFactory.createResource(modelId), DCTerms.modified, created);
+        LDHelper.rewriteLiteral(exportModel, ResourceFactory.createResource(modelId), LDHelper.curieToProperty("iow:contentModified"), modified);
+
         jenaClient.putModelToCore(modelId + "#ExportGraph", exportModel);
         jenaClient.putModelToCore(resourceId, newModel);
     }
 
     public void updateResource(AbstractResource resource) {
-        LDHelper.rewriteLiteral(resource.asGraph(), ResourceFactory.createResource(resource.getId()), DCTerms.modified, LDHelper.getDateTimeLiteral());
 
         final Model oldModel = jenaClient.getModelFromCore(resource.getId());
 
@@ -1685,7 +1686,9 @@ public class GraphManager {
         Model exportModel = jenaClient.getModelFromCore(modelId + "#ExportGraph");
         exportModel = modelManager.removeResourceStatements(resourceModel, exportModel);
         exportModel.remove(exportModel.createResource(modelId), DCTerms.hasPart, exportModel.createResource(resourceId));
-        LDHelper.rewriteLiteral(exportModel, ResourceFactory.createResource(modelId), DCTerms.modified, LDHelper.getDateTimeLiteral());
+
+        LDHelper.rewriteLiteral(exportModel, ResourceFactory.createResource(modelId), LDHelper.curieToProperty("iow:contentModified"), LDHelper.getDateTimeLiteral());
+
         jenaClient.putModelToCore(modelId + "#ExportGraph", exportModel);
         deleteGraphReferenceFromModel(resourceId, modelId);
         jenaClient.deleteModelFromCore(resourceId);
