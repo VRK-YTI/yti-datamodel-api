@@ -305,18 +305,21 @@ public final class TerminologyManager {
 
         String url = properties.getDefaultTerminologyAPI() + "v1/integration/resources";
 
+
         Client client = ClientBuilder.newClient();
 
         WebTarget target = client.target(url)
             .queryParam("includeIncomplete", true);
 
+
         if (conceptUri != null && !conceptUri.isEmpty()) {
-            logger.debug("Getting concept with uri: " + conceptUri);
             target = target.queryParam("uri", conceptUri);
+            logger.debug("Concept url: "+conceptUri);
+            logger.debug("Getting concept from "+target.toString());
         } else {
             if (query != null && !query.isEmpty()) {
-                logger.debug("Concept search term: " + query);
                 target = target.queryParam("searchTerm", LDHelper.encode(query));
+                logger.debug("Searching concept from "+target.toString());
             }
         }
 
