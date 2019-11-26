@@ -113,6 +113,25 @@ public class GraphManager {
         return pss.asUpdate();
     }
 
+    public static UpdateRequest deleteReferencesFromPositionGraphRequest(String modelID,
+                                                                         String resourceID) {
+
+        String query = "delete { GRAPH ?positionGraph { ?s ?p ?o . } }" +
+            "where { GRAPH ?positionGraph {" +
+            "  ?resource (<>|!<>)* ?s . " +
+            "  ?s ?p ?o . " +
+            "}}";
+
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+        pss.setIri("resource", resourceID);
+        pss.setIri("positionGraph", modelID + "#PositionGraph");
+        pss.setCommandText(query);
+        logger.warn("Deleting "+resourceID.toString()+" references from " + modelID.toString() + "#PositionGraph");
+        return pss.asUpdate();
+
+    }
+
     public static UpdateRequest updateReferencesInPositionGraphRequest(IRI modelID,
                                                                        IRI oldID,
                                                                        IRI newID) {
@@ -1399,6 +1418,13 @@ public class GraphManager {
      * @param model Model IRI
      */
 
+    public void deletePositionGraphReferencesFromModel(String modelIRI,
+                                                       String resourceIRI) {
+        UpdateRequest queryObj = deleteReferencesFromPositionGraphRequest(modelIRI, resourceIRI);
+        UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, endpointServices.getCoreSparqlUpdateAddress());
+        qexec.execute();
+    }
+
     public void deleteGraphReferenceFromModel(String graph,
                                               String model) {
         UpdateRequest queryObj = deleteGraphReferenceFromModelRequest(graph, model);
@@ -1688,6 +1714,7 @@ public class GraphManager {
         LDHelper.rewriteLiteral(exportModel, ResourceFactory.createResource(modelId), DCTerms.modified, LDHelper.getDateTimeLiteral());
         jenaClient.putModelToCore(modelId + "#ExportGraph", exportModel);
         deleteGraphReferenceFromModel(resourceId, modelId);
+        deletePositionGraphReferencesFromModel(modelId, resourceId);
         jenaClient.deleteModelFromCore(resourceId);
     }
 
