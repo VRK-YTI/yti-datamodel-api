@@ -118,10 +118,13 @@ public class SearchIndexManager {
 
     public void updateIndexClass(String id) {
         IRI classIri = LDHelper.toIRI(id);
+        logger.debug("WTF?");
         updateIndexClass(new ReusableClass(classIri,graphManager));
+        logger.debug("AREAR?");
     }
 
     public void updateIndexClass(AbstractClass classResource) {
+        logger.debug("YUP?");
         IndexClassDTO indexClass = new IndexClassDTO(classResource);
         logger.debug("Indexing: " + indexClass.getId());
         esManager.updateToIndex(ELASTIC_INDEX_RESOURCE, indexClass.getId(), indexClass);

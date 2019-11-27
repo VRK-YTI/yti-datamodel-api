@@ -13,6 +13,8 @@ import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import javax.naming.ldap.LdapContext;
+
 import org.apache.jena.atlas.web.HttpException;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.datatypes.xsd.XSDDateTime;
@@ -114,7 +116,7 @@ public class GraphManager {
     }
 
     public static UpdateRequest deleteReferencesFromExportGraphRequest(String modelID,
-                                                                         String resourceID) {
+                                                                       String resourceID) {
 
         String query = "delete { GRAPH ?exportGraph { ?s ?p ?o . } }" +
             "where { GRAPH ?exportGraph {" +
@@ -127,7 +129,7 @@ public class GraphManager {
         pss.setIri("resource", resourceID);
         pss.setIri("exportGraph", modelID + "#ExportGraph");
         pss.setCommandText(query);
-        logger.warn("Deleting "+resourceID.toString()+" references from " + modelID.toString() + "#ExportGraph");
+        logger.warn("Deleting " + resourceID.toString() + " references from " + modelID.toString() + "#ExportGraph");
         return pss.asUpdate();
 
     }
@@ -146,7 +148,7 @@ public class GraphManager {
         pss.setIri("resource", resourceID);
         pss.setIri("positionGraph", modelID + "#PositionGraph");
         pss.setCommandText(query);
-        logger.warn("Deleting "+resourceID.toString()+" references from " + modelID.toString() + "#PositionGraph");
+        logger.warn("Deleting " + resourceID.toString() + " references from " + modelID.toString() + "#PositionGraph");
         return pss.asUpdate();
 
     }
@@ -1452,7 +1454,7 @@ public class GraphManager {
     }
 
     public void deleteReferencedResourceFromExportModel(String graph,
-                                                    String model) {
+                                                        String model) {
         UpdateRequest exportQueryObj = deleteReferencesFromExportGraphRequest(model, graph);
         UpdateProcessor expQexec = UpdateExecutionFactory.createRemoteForm(exportQueryObj, endpointServices.getCoreSparqlUpdateAddress());
         expQexec.execute();
@@ -1634,6 +1636,24 @@ public class GraphManager {
 
         return constructModelFromCoreGraph(pss.toString());
 
+    }
+
+    public void updateContentModified(String model) {
+
+        String query
+            = " DELETE { GRAPH ?exportGraph { ?graph dcterms:modified ?oldDate . }}"
+            + " INSERT { GRAPH ?exportGraph { ?graph dcterms:modified ?newDate . }}"
+            + " WHERE { GRAPH ?exportGraph { ?graph a owl:Ontology . ?graph dcterms:modified ?oldDate . }}";
+
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+        pss.setIri("exportGraph", model+"#ExportGraph");
+        pss.setIri("graph", model);
+        pss.setLiteral("newDate", LDHelper.getDateTimeLiteral());
+        pss.setCommandText(query);
+
+        UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(pss.asUpdate(), endpointServices.getCoreSparqlUpdateAddress());
+        qexec.execute();
     }
 
     /**

@@ -243,7 +243,7 @@ public class Predicate {
                     return jerseyResponseManager.usedIRI();
                 } else {
                     graphManager.insertExistingResourceToModel(id, model);
-                    searchIndexManager.updateIndexPredicate(id);
+                    graphManager.updateContentModified(model);
                     logger.info("Created reference from " + model + " to " + id);
                     return jerseyResponseManager.ok();
                 }
@@ -380,7 +380,7 @@ public class Predicate {
             logger.debug("Deleting referenced class "+idIRI.toString()+ "from "+modelIRI.toString());
             graphManager.deleteGraphReferenceFromExportModel(idIRI, modelIRI);
             graphManager.deletePositionGraphReferencesFromModel(model,id);
-            searchIndexManager.removeClass(id);
+            graphManager.updateContentModified(model);
 
             return jerseyResponseManager.ok();
         }
