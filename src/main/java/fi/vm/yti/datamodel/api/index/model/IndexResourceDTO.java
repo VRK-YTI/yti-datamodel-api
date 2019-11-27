@@ -97,7 +97,7 @@ public class IndexResourceDTO {
 
     public void highlightLabels(String highlightText) {
         if (highlightText != null && highlightText.length() > 0) {
-            String highLights[] = highlightText.split("\\s+");
+            String[] highLights = highlightText.split("\\s+");
             for(String highLight : highLights) {
                 this.label.forEach((lang, label) -> {
                     String matchString = Pattern.quote(highLight);
