@@ -248,6 +248,7 @@ public class Class {
                     return jerseyResponseManager.usedIRI();
                 } else {
                     graphManager.insertExistingResourceToModel(id, model);
+                    searchIndexManager.updateIndexPredicate(id);
                     logger.info("Created reference from " + model + " to " + id);
                     return jerseyResponseManager.ok();
                 }
@@ -384,8 +385,11 @@ public class Class {
             }
 
             /* If removing referenced class */
-            graphManager.deleteGraphReferenceFromModel(idIRI, modelIRI);
+            logger.debug("Deleting referenced class "+idIRI.toString()+ "from "+modelIRI.toString());
             graphManager.deleteGraphReferenceFromExportModel(idIRI, modelIRI);
+            graphManager.deletePositionGraphReferencesFromModel(model,id);
+            searchIndexManager.removeClass(id);
+
             return jerseyResponseManager.ok();
         }
     }

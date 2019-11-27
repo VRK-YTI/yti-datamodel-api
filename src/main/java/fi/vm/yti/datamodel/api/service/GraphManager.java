@@ -113,6 +113,25 @@ public class GraphManager {
         return pss.asUpdate();
     }
 
+    public static UpdateRequest deleteReferencesFromExportGraphRequest(String modelID,
+                                                                         String resourceID) {
+
+        String query = "delete { GRAPH ?exportGraph { ?s ?p ?o . } }" +
+            "where { GRAPH ?exportGraph {" +
+            "  ?resource (<>|!<>)* ?s . " +
+            "  ?s ?p ?o . " +
+            "}}";
+
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+        pss.setIri("resource", resourceID);
+        pss.setIri("exportGraph", modelID + "#ExportGraph");
+        pss.setCommandText(query);
+        logger.warn("Deleting "+resourceID.toString()+" references from " + modelID.toString() + "#ExportGraph");
+        return pss.asUpdate();
+
+    }
+
     public static UpdateRequest deleteReferencesFromPositionGraphRequest(String modelID,
                                                                          String resourceID) {
 
@@ -1432,6 +1451,13 @@ public class GraphManager {
         qexec.execute();
     }
 
+    public void deleteReferencedResourceFromExportModel(String graph,
+                                                    String model) {
+        UpdateRequest exportQueryObj = deleteReferencesFromExportGraphRequest(model, graph);
+        UpdateProcessor expQexec = UpdateExecutionFactory.createRemoteForm(exportQueryObj, endpointServices.getCoreSparqlUpdateAddress());
+        expQexec.execute();
+    }
+
     public UpdateRequest deleteGraphReferenceFromModelRequest(String graph,
                                                               String model) {
         String query
@@ -1469,11 +1495,16 @@ public class GraphManager {
 
         String query
             = " DELETE { "
-            + "GRAPH ?exportGraph { ?model dcterms:hasPart ?graph } "
+            + "GRAPH ?exportGraph { ?model dcterms:hasPart ?graph . ?s ?p ?o . } "
+            + "GRAPH ?hasPartGraph { ?model dcterms:hasPart ?graph . } "
             + "} "
             + " WHERE { "
+            + "GRAPH ?hasPartGraph { ?model dcterms:hasPart ?graph . } "
             + "GRAPH ?model { ?model a ?type . } "
-            + "GRAPH ?hasPartGraph { ?model dcterms:hasPart ?graph } "
+            + "GRAPH ?exportGraph { "
+            + "  ?graph (<>|!<>)* ?s . "
+            + "  ?s ?p ?o . "
+            + "}"
             + "}";
 
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
@@ -1495,6 +1526,7 @@ public class GraphManager {
         insertExistingGraphReferenceToModel(id, model);
         insertNewGraphReferenceToExportGraph(id, model);
         addCoreGraphToCoreGraph(id, model + "#ExportGraph");
+
         // FIXME: Refactored this earlier from RDFConnectionRemote to RDFConnection. Not working returns 500!?!?
         /*
         try(RDFConnection conn = endpointServices.getCoreConnection()) {
