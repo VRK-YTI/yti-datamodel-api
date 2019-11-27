@@ -13,8 +13,6 @@ import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import javax.naming.ldap.LdapContext;
-
 import org.apache.jena.atlas.web.HttpException;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.datatypes.xsd.XSDDateTime;
@@ -129,7 +127,7 @@ public class GraphManager {
         pss.setIri("resource", resourceID);
         pss.setIri("exportGraph", modelID + "#ExportGraph");
         pss.setCommandText(query);
-        logger.warn("Deleting " + resourceID.toString() + " references from " + modelID.toString() + "#ExportGraph");
+        logger.warn("Deleting " + resourceID + " references from " + modelID + "#ExportGraph");
         return pss.asUpdate();
 
     }
@@ -148,7 +146,7 @@ public class GraphManager {
         pss.setIri("resource", resourceID);
         pss.setIri("positionGraph", modelID + "#PositionGraph");
         pss.setCommandText(query);
-        logger.warn("Deleting " + resourceID.toString() + " references from " + modelID.toString() + "#PositionGraph");
+        logger.warn("Deleting " + resourceID + " references from " + modelID + "#PositionGraph");
         return pss.asUpdate();
 
     }
