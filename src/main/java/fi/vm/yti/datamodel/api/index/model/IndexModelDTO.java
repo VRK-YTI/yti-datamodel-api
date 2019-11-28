@@ -14,6 +14,7 @@ public class IndexModelDTO {
     private String useContext;
     private String status;
     private String modified;
+    private String contentModified;
     private String type;
     private String prefix;
     private String namespace;
@@ -31,6 +32,7 @@ public class IndexModelDTO {
         this.id = model.getId();
         this.useContext = model.getUseContext();
         this.modified = model.getModified();
+        this.contentModified = model.getModified();
         this.type = model.getType();
         this.prefix = model.getPrefix();
         this.namespace = model.getNamespace();
@@ -45,6 +47,7 @@ public class IndexModelDTO {
                          final String useContext,
                          final String status,
                          final String modified,
+                         final String contentModified,
                          final String type,
                          final String prefix,
                          final String namespace,
@@ -56,6 +59,7 @@ public class IndexModelDTO {
         this.useContext = useContext;
         this.status = status;
         this.modified = modified;
+        this.contentModified = contentModified;
         this.type = type;
         this.prefix = prefix;
         this.namespace = namespace;
@@ -95,6 +99,14 @@ public class IndexModelDTO {
 
     public void setModified(final String modified) {
         this.modified = modified;
+    }
+
+    public String getContentModified() {
+        return contentModified;
+    }
+
+    public void setContentModified(final String contentModified) {
+        this.contentModified = contentModified;
     }
 
     public String getType() {
@@ -160,7 +172,10 @@ public class IndexModelDTO {
             ", useContext='" + useContext + '\'' +
             ", status='" + status + '\'' +
             ", modified='" + modified + '\'' +
+            ", contentModified='" + contentModified + '\'' +
             ", type='" + type + '\'' +
+            ", prefix='" + prefix + '\'' +
+            ", namespace='" + namespace + '\'' +
             ", label=" + label +
             ", comment=" + comment +
             ", contributor=" + contributor +

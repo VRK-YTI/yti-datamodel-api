@@ -1584,20 +1584,19 @@ public class GraphManager {
      * @param graphName Graph IRI as string
      * @return Returns date
      */
-    public Date lastModified(String graphName) {
+    public Date modelContentModified(String graphName) {
 
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         String selectResources =
             "SELECT ?date WHERE { "
                 + "GRAPH ?exportGraph { " +
                 " ?graph a owl:Ontology . "
-                + "?graph dcterms:modified ?date . " +
+                + "?graph iow:contentModified ?date . " +
                 "}}";
 
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
         pss.setCommandText(selectResources);
         pss.setIri("graph", graphName);
-        // TODO: Remove #ExportGraph when creating it dynamically
         pss.setIri("exportGraph", graphName + "#ExportGraph");
 
         ResultSet results = jenaClient.selectQuery(endpointServices.getCoreSparqlAddress(), pss.asQuery());
