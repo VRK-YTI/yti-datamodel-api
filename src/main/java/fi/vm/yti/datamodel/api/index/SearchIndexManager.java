@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 
 import javax.inject.Singleton;
 
+import org.apache.jena.iri.IRI;
 import org.apache.jena.rdf.model.Model;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
@@ -45,6 +46,8 @@ import fi.vm.yti.datamodel.api.index.model.ResourceSearchResponse;
 import fi.vm.yti.datamodel.api.model.AbstractClass;
 import fi.vm.yti.datamodel.api.model.AbstractPredicate;
 import fi.vm.yti.datamodel.api.model.DataModel;
+import fi.vm.yti.datamodel.api.model.ReusableClass;
+import fi.vm.yti.datamodel.api.model.ReusablePredicate;
 import fi.vm.yti.datamodel.api.service.GraphManager;
 import fi.vm.yti.datamodel.api.service.JenaClient;
 import fi.vm.yti.datamodel.api.service.ModelManager;
@@ -113,6 +116,11 @@ public class SearchIndexManager {
         esManager.putToIndex(ELASTIC_INDEX_RESOURCE, indexClass.getId(), indexClass);
     }
 
+    public void updateIndexClass(String id) {
+        IRI classIri = LDHelper.toIRI(id);
+        updateIndexClass(new ReusableClass(classIri,graphManager));
+    }
+
     public void updateIndexClass(AbstractClass classResource) {
         IndexClassDTO indexClass = new IndexClassDTO(classResource);
         logger.debug("Indexing: " + indexClass.getId());
@@ -127,6 +135,11 @@ public class SearchIndexManager {
         IndexPredicateDTO indexPredicate = new IndexPredicateDTO(predicateResource);
         logger.info("Indexing: " + indexPredicate.getId());
         esManager.putToIndex(ELASTIC_INDEX_RESOURCE, indexPredicate.getId(), indexPredicate);
+    }
+
+    public void updateIndexPredicate(String id) {
+        IRI predicateIri = LDHelper.toIRI(id);
+        updateIndexPredicate(new ReusablePredicate(predicateIri,graphManager));
     }
 
     public void updateIndexPredicate(AbstractPredicate predicateResource) {
