@@ -1639,14 +1639,23 @@ public class GraphManager {
     public void updateContentModified(String model) {
 
         String query
-            = " DELETE { GRAPH ?exportGraph { ?graph dcterms:modified ?oldDate . }}"
-            + " INSERT { GRAPH ?exportGraph { ?graph dcterms:modified ?newDate . }}"
-            + " WHERE { GRAPH ?exportGraph { ?graph a owl:Ontology . ?graph dcterms:modified ?oldDate . }}";
+            = " DELETE { " +
+            "GRAPH ?graph { ?graph iow:contentModified ?oldDate1 . }" +
+            "GRAPH ?exportGraph { ?graph iow:contentModified ?oldDate2 . }" +
+            "}"
+            + " INSERT { " +
+            "GRAPH ?graph { ?graph iow:contentModified ?newDate . }" +
+            "GRAPH ?exportGraph { ?graph iow:contentModified ?newDate . }" +
+            "}"
+            + " WHERE { " +
+            "GRAPH ?graph { ?graph a owl:Ontology . OPTIONAL { ?graph iow:contentModified ?oldDate1 . } }" +
+            "GRAPH ?exportGraph { ?graph a owl:Ontology . OPTIONAL { ?graph iow:contentModified ?oldDate2 . } }" +
+            "}";
 
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
-        pss.setIri("exportGraph", model+"#ExportGraph");
         pss.setIri("graph", model);
+        pss.setIri("exportGraph", model+"#ExportGraph");
         pss.setLiteral("newDate", LDHelper.getDateTimeLiteral());
         pss.setCommandText(query);
 
@@ -1665,7 +1674,7 @@ public class GraphManager {
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         String selectResources =
             "SELECT ?date WHERE { "
-                + "GRAPH ?exportGraph { " +
+                + "GRAPH ?graph { " +
                 " ?graph a owl:Ontology . "
                 + "?graph iow:contentModified ?date . " +
                 "}}";
@@ -1673,7 +1682,6 @@ public class GraphManager {
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
         pss.setCommandText(selectResources);
         pss.setIri("graph", graphName);
-        pss.setIri("exportGraph", graphName + "#ExportGraph");
 
         ResultSet results = jenaClient.selectQuery(endpointServices.getCoreSparqlAddress(), pss.asQuery());
 
@@ -1699,9 +1707,10 @@ public class GraphManager {
 
         Model exportModel = resource.asGraphCopy();
         exportModel.add(exportModel.createResource(resource.getModelId()), DCTerms.hasPart, exportModel.createResource(resource.getId()));
-        LDHelper.rewriteLiteral(exportModel, ResourceFactory.createResource(resource.getModelId()), LDHelper.curieToProperty("iow:contentModified"), created);
 
         jenaClient.addModelToCore(resource.getModelId() + "#ExportGraph", exportModel);
+
+        updateContentModified(resource.getModelId());
     }
 
     public void updateResource(String modelId,
@@ -1715,10 +1724,11 @@ public class GraphManager {
         Model exportModel = jenaClient.getModelFromCore(modelId + "#ExportGraph");
         exportModel = modelManager.removeResourceStatements(oldModel, exportModel);
         exportModel.add(newModel);
-        LDHelper.rewriteLiteral(exportModel, ResourceFactory.createResource(modelId), LDHelper.curieToProperty("iow:contentModified"), modified);
 
         jenaClient.putModelToCore(modelId + "#ExportGraph", exportModel);
         jenaClient.putModelToCore(resourceId, newModel);
+
+        updateContentModified(modelId);
     }
 
     public void updateResource(AbstractResource resource) {
@@ -1762,11 +1772,10 @@ public class GraphManager {
         exportModel = modelManager.removeResourceStatements(resourceModel, exportModel);
         exportModel.remove(exportModel.createResource(modelId), DCTerms.hasPart, exportModel.createResource(resourceId));
 
-        LDHelper.rewriteLiteral(exportModel, ResourceFactory.createResource(modelId), LDHelper.curieToProperty("iow:contentModified"), LDHelper.getDateTimeLiteral());
-
         jenaClient.putModelToCore(modelId + "#ExportGraph", exportModel);
         deleteGraphReferenceFromModel(resourceId, modelId);
         deletePositionGraphReferencesFromModel(modelId, resourceId);
+        updateContentModified(modelId);
         jenaClient.deleteModelFromCore(resourceId);
     }
 
