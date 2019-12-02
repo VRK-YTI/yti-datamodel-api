@@ -169,4 +169,8 @@ public abstract class AbstractModel extends AbstractResource {
         return this.modelOrganizations;
     }
 
+    public String getContentModified() {
+        return this.graph.getProperty(ResourceFactory.createResource(this.getId()), LDHelper.curieToProperty("iow:contentModified")).getString();
+    }
+
 }

@@ -32,7 +32,7 @@ public class IndexModelDTO {
         this.id = model.getId();
         this.useContext = model.getUseContext();
         this.modified = model.getModified();
-        this.contentModified = model.getModified();
+        this.contentModified = model.getContentModified();
         this.type = model.getType();
         this.prefix = model.getPrefix();
         this.namespace = model.getNamespace();

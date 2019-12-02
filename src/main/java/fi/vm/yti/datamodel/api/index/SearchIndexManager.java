@@ -180,6 +180,8 @@ public class SearchIndexManager {
     public void updateIndexModel(DataModel model) {
         IndexModelDTO indexModel = new IndexModelDTO(model);
         logger.info("Indexing: " + indexModel.getId());
+        logger.debug("Modified: "+indexModel.getModified());
+        logger.debug("Content modified: "+indexModel.getContentModified());
         esManager.updateToIndex(ELASTIC_INDEX_MODEL, indexModel.getId(), indexModel);
     }
 
