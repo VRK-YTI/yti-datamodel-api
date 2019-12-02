@@ -172,6 +172,11 @@ public class SearchIndexManager {
         esManager.putToIndex(ELASTIC_INDEX_MODEL, indexModel.getId(), indexModel);
     }
 
+    public void updateIndexModel(String modelId) {
+        IRI modelIri = LDHelper.toIRI(modelId);
+        updateIndexModel(new DataModel(modelIri, graphManager));
+    }
+
     public void updateIndexModel(DataModel model) {
         IndexModelDTO indexModel = new IndexModelDTO(model);
         logger.info("Indexing: " + indexModel.getId());
