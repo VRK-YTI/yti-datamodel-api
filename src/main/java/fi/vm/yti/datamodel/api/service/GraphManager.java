@@ -1172,8 +1172,8 @@ public class GraphManager {
                     throw new IllegalArgumentException("Invalid status change from " + initialStatus + " to " + endStatus);
                 }
                 break;
-            case "INVALID":
-                final List invalidChanges = Stream.of("REMOVED", "VALID").collect(Collectors.toList());
+            case "INVALID":git ad
+                final List invalidChanges = Stream.of("RETIRED", "VALID").collect(Collectors.toList());
                 if (invalidChanges.contains(endStatus)) {
                     logger.debug("Status changes in " + model + " from " + initialStatus + " to " + endStatus);
                     changeResourceStatuses(model, initialStatus, endStatus);
