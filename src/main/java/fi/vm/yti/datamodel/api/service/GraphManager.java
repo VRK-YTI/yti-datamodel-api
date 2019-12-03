@@ -6,8 +6,10 @@ package fi.vm.yti.datamodel.api.service;
 import java.io.IOException;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
@@ -33,6 +35,7 @@ import org.apache.jena.rdf.model.ResIterator;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.rdf.model.Statement;
+import org.apache.jena.rdf.model.StmtIterator;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.riot.RDFLanguages;
 import org.apache.jena.shared.PrefixMapping;
@@ -47,10 +50,12 @@ import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.web.DatasetAdapter;
 import org.apache.jena.web.DatasetGraphAccessorHTTP;
+import org.elasticsearch.node.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.topbraid.shacl.vocabulary.SH;
 
 import fi.vm.yti.datamodel.api.config.ApplicationProperties;
 import fi.vm.yti.datamodel.api.index.ElasticConnector;
@@ -73,7 +78,6 @@ public class GraphManager {
     private final String versionGraphURI = "urn:yti:metamodel:version";
     private final ExecutorService executor = Executors.newFixedThreadPool(1);
     private final FrameManager frameManager;
-    private final ElasticConnector elasticConnector;
 
     @Autowired
     GraphManager(EndpointServices endpointServices,
@@ -82,8 +86,7 @@ public class GraphManager {
                  ModelManager modelManager,
                  ServiceDescriptionManager serviceDescriptionManager,
                  ApplicationProperties properties,
-                 FrameManager frameManager,
-                 ElasticConnector elasticConnector) {
+                 FrameManager frameManager) {
 
         this.endpointServices = endpointServices;
         this.jenaClient = jenaClient;
@@ -92,7 +95,6 @@ public class GraphManager {
         this.serviceDescriptionManager = serviceDescriptionManager;
         this.properties = properties;
         this.frameManager = frameManager;
-        this.elasticConnector = elasticConnector;
     }
 
     public static UpdateRequest renameIDRequest(IRI oldID,
@@ -1254,15 +1256,19 @@ public class GraphManager {
                                                    IRI model,
                                                    IRI newModel) {
 
+        Literal created = LDHelper.getDateTimeLiteral();
+
         DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(endpointServices.getCoreReadWriteAddress());
         DatasetAdapter adapter = new DatasetAdapter(accessor);
-
-        // Model oldModelGraph = adapter.getModel(model.toString());
 
         Resource modelResource = oldModelGraph.getResource(model.toString());
         ResourceUtils.renameResource(modelResource, newModel.toString());
         oldModelGraph.setNsPrefix(newPrefix, newModel.toString() + "#");
         Resource newModelResource = ResourceFactory.createResource(newModel.toString());
+        LDHelper.rewriteLiteral(oldModelGraph, newModelResource, DCTerms.created, created);
+        LDHelper.rewriteLiteral(oldModelGraph, newModelResource, DCTerms.modified, created);
+        LDHelper.rewriteLiteral(oldModelGraph, newModelResource, DCTerms.identifier, ResourceFactory.createPlainLiteral("urn:uuid:"+UUID.randomUUID().toString()));
+        LDHelper.removeLiteral(oldModelGraph, newModelResource, LDHelper.curieToProperty("iow:contentModified"));
         LDHelper.rewriteLiteral(oldModelGraph, newModelResource, OWL.versionInfo, ResourceFactory.createPlainLiteral("DRAFT"));
         LDHelper.rewriteResourceReference(oldModelGraph, newModelResource, LDHelper.curieToProperty("prov:wasRevisionOf"), ResourceFactory.createResource(model.toString()));
         LDHelper.rewriteLiteral(oldModelGraph, newModelResource, LDHelper.curieToProperty("dcap:preferredXMLNamespaceName"), ResourceFactory.createPlainLiteral(newModel.toString() + "#"));
@@ -1274,19 +1280,20 @@ public class GraphManager {
         ResourceUtils.renameResource(oldHasPartGraph.getResource(model.toString()), newModel.toString());
 
         Model oldPositionGraph = adapter.getModel(model.toString() + "#PositionGraph");
-        ResIterator positionResources = oldPositionGraph.listSubjects();
-        while (positionResources.hasNext()) {
-            Resource posRes = positionResources.next();
-            if (!posRes.isAnon()) {
-                String posResId = posRes.getURI();
-                if (posResId.startsWith(model.toString() + "#")) {
-                    String newPosId = posResId.replace(model.toString() + "#", newModel.toString() + "#");
-                    ResourceUtils.renameResource(posRes, newPosId);
+        if(oldPositionGraph!=null && oldPositionGraph.size()>2) {
+            ResIterator positionResources = oldPositionGraph.listSubjects();
+            while (positionResources.hasNext()) {
+                Resource posRes = positionResources.next();
+                if (!posRes.isAnon()) {
+                    String posResId = posRes.getURI();
+                    if (posResId.startsWith(model.toString() + "#")) {
+                        String newPosId = posResId.replace(model.toString() + "#", newModel.toString() + "#");
+                        ResourceUtils.renameResource(posRes, newPosId);
+                    }
                 }
             }
+            adapter.putModel(newModel.toString() + "#PositionGraph", oldPositionGraph);
         }
-        adapter.putModel(newModel.toString() + "#PositionGraph", oldPositionGraph);
-
         NodeIterator hasPartObjects = oldHasPartGraph.listObjectsOfProperty(DCTerms.hasPart);
 
         while (hasPartObjects.hasNext()) {
@@ -1302,8 +1309,20 @@ public class GraphManager {
                     Resource newResource = ResourceFactory.createResource(newGraph);
                     oldResourceGraph.setNsPrefix(newPrefix, newModel.toString() + "#");
                     LDHelper.rewriteLiteral(oldResourceGraph, newResource, OWL.versionInfo, ResourceFactory.createPlainLiteral("DRAFT"));
-                    LDHelper.rewriteResourceReference(oldResourceGraph, newResource, LDHelper.curieToProperty("prov:wasRevisionOf"), ResourceFactory.createResource(oldGraph));
+                    LDHelper.rewriteLiteral(oldResourceGraph, newResource, DCTerms.created, created);
+                    LDHelper.rewriteLiteral(oldResourceGraph, newResource, DCTerms.modified, created);
+                    LDHelper.rewriteLiteral(oldResourceGraph, newResource, DCTerms.identifier, ResourceFactory.createPlainLiteral("urn:uuid:"+UUID.randomUUID().toString()));
+                    LDHelper.rewriteResourceReference(oldResourceGraph, newResource, LDHelper.curieToProperty("rdfs:isDefinedBy"), newModelResource);
                     renameObjectNamespaceInModel(oldResourceGraph, model.toString() + "#", newModel.toString() + "#");
+                    LDHelper.rewriteResourceReference(oldResourceGraph, newResource, LDHelper.curieToProperty("prov:wasRevisionOf"), ResourceFactory.createResource(oldGraph));
+
+                    NodeIterator propertyNodes = oldResourceGraph.listObjectsOfProperty(SH.property);
+                    while(propertyNodes.hasNext()) {
+                        Resource propertyShape = propertyNodes.next().asResource();
+                        LDHelper.rewriteLiteral(oldResourceGraph, propertyShape, DCTerms.created, created);
+                        ResourceUtils.renameResource(propertyShape, "urn:uuid:" + UUID.randomUUID().toString());
+                    }
+
                     adapter.putModel(newGraph, oldResourceGraph);
                     ResourceUtils.renameResource(hasPartResource, newGraph);
                 }

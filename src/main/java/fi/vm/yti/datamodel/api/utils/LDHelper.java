@@ -184,6 +184,18 @@ public class LDHelper {
         return ResourceFactory.createTypedLiteral(cal);
     }
 
+
+    public static void removeLiteral(Model model,
+                                      Resource res,
+                                      Property prop) {
+        Selector literalSelector = new SimpleSelector(res, prop, (Literal) null);
+        Iterator<Statement> statements = model.listStatements(literalSelector).toList().iterator();
+
+        while (statements.hasNext()) {
+            model.remove(statements.next());
+        }
+    }
+
     public static void rewriteLiteral(Model model,
                                       Resource res,
                                       Property prop,
