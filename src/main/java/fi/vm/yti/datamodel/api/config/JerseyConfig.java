@@ -33,19 +33,13 @@ import javax.ws.rs.container.ContainerResponseFilter;
             name = "EUPL-1.2",
             url = "https://opensource.org/licenses/EUPL-1.1"
         )
-    ),
-    servers = {
-        @Server(
-            description = "Datamodel service API",
-            url = "/datamodel/api")
-    }
+    )
 )
-@ApplicationPath("/datamodel/api")
+@ApplicationPath("/datamodel-api/api")
 public class JerseyConfig extends ResourceConfig {
 
     @Autowired
     public JerseyConfig() {
-
 
         // https://github.com/spring-projects/spring-boot/issues/1468
         // FIXME packages("fi.vm.yti.datamodel.api.endpoint"); should work but it doesn't

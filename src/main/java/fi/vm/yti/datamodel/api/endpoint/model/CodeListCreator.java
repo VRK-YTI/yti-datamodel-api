@@ -62,7 +62,7 @@ public class CodeListCreator {
         @Parameter(description = "Codelist uri", required = true) @QueryParam("uri") String uri,
         @Parameter(description = "Codelist name", required = true) @QueryParam("label") String label,
         @Parameter(description = "Codelist description", required = true) @QueryParam("description") String comment,
-        @Parameter(description = "Initial language", required = true, schema = @Schema(allowableValues = "fi,en")) @QueryParam("lang") String lang) {
+        @Parameter(description = "Initial language", required = true, schema = @Schema(allowableValues = {"fi","en"})) @QueryParam("lang") String lang) {
 
         IRI codeListIRI = null;
 

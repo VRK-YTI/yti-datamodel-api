@@ -364,6 +364,8 @@ public class Models {
             return jerseyResponseManager.invalidParameter();
         }
 
+        YtiUser user = userProvider.getUser();
+
         if (!graphManager.isExistingGraph(modelIRI)) {
             return jerseyResponseManager.notFound();
         }
@@ -379,6 +381,10 @@ public class Models {
         }
 
         searchIndexManager.removeModel(deleteModel.getId());
+
+        if (provenanceManager.getProvMode()) {
+            provenanceManager.invalidateModelProvenanceActivity(deleteModel.getId(), deleteModel.getProvUUID(), user.getId());
+        }
 
         graphManager.deleteModel(deleteModel);
 

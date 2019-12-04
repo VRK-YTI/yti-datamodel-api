@@ -1,15 +1,14 @@
 package fi.vm.yti.datamodel.api.config;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.json.Json;
 import javax.json.JsonWriterFactory;
 import javax.json.stream.JsonGenerator;
 
-import java.util.HashMap;
-import java.util.Map;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class JsonConfig {

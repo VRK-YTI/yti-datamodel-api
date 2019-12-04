@@ -121,6 +121,7 @@ public class ReusablePredicate extends AbstractPredicate {
         Resource oldModel = relatedPredicate.getPropertyResourceValue(RDFS.isDefinedBy);
         oldModel.removeProperties();
         relatedPredicate.removeAll(RDFS.isDefinedBy);
+        relatedPredicate.removeAll(relatedProperty);
         relatedPredicate.addProperty(RDFS.isDefinedBy, ResourceFactory.createResource(newModelIRI.toString()));
         relatedPredicate.addProperty(relatedProperty, ResourceFactory.createResource(oldPredicateIRI.toString()));
 

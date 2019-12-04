@@ -64,7 +64,7 @@ public class ShapeCreator {
     public Response newClass(
         @Parameter(description = "Profile ID", required = true) @QueryParam("profileID") String profileID,
         @Parameter(description = "Class ID", required = true) @QueryParam("classID") String classID,
-        @Parameter(description = "Language", required = true, schema = @Schema(allowableValues = "fi,en")) @QueryParam("lang") String lang) {
+        @Parameter(description = "Language", required = true, schema = @Schema(allowableValues = {"fi","en"})) @QueryParam("lang") String lang) {
 
         IRI classIRI, profileIRI, shapeIRI;
         try {

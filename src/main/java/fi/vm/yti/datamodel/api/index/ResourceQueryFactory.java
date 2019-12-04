@@ -11,7 +11,6 @@ import javax.inject.Singleton;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.index.query.BoolQueryBuilder;
-import org.elasticsearch.index.query.Operator;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.QueryStringQueryBuilder;
@@ -50,14 +49,17 @@ public class ResourceQueryFactory {
     }
 
     public SearchRequest createQuery(ResourceSearchRequest request) {
-        return createQuery(request.getQuery(), request.getType(), request.getIsDefinedBy(), request.getStatus(), request.getAfter(), request.getSortLang(), request.getSortField(), request.getSortOrder(), request.getPageSize(), request.getPageFrom(),request.getFilter());
+        return createQuery(request.getUri(), request.getQuery(), request.getType(), request.getIsDefinedBy(), request.getIsDefinedBySet(), request.getStatus(), request.getAfter(), request.getBefore(), request.getSortLang(), request.getSortField(), request.getSortOrder(), request.getPageSize(), request.getPageFrom(), request.getFilter());
     }
 
-    private SearchRequest createQuery(String query,
+    private SearchRequest createQuery(Set<String> uris,
+                                      String query,
                                       String type,
                                       String modelId,
+                                      Set<String> modelSet,
                                       Set<String> status,
                                       Date after,
+                                      Date before,
                                       String sortLang,
                                       String sortField,
                                       String sortOrder,
@@ -86,11 +88,21 @@ public class ResourceQueryFactory {
         BoolQueryBuilder boolQuery = QueryBuilders.boolQuery();
         List<QueryBuilder> mustList = boolQuery.must();
 
-        if(after != null) {
-            mustList.add(QueryBuilders.rangeQuery("modified").gte(after));
+        if(uris!=null) {
+            QueryBuilder uriQuery = QueryBuilders.boolQuery()
+                .should(QueryBuilders.termsQuery("id", uris)).minimumShouldMatch(1);
+            mustList.add(uriQuery);
         }
 
-        if(filter != null) {
+        if (after != null) {
+            mustList.add(QueryBuilders.rangeQuery("modified").gte(after).to("now"));
+        }
+
+        if (before != null) {
+            mustList.add(QueryBuilders.rangeQuery("modified").lt(before));
+        }
+
+        if (filter != null) {
             QueryBuilder filterQuery = QueryBuilders.boolQuery()
                 .mustNot(QueryBuilders.termsQuery("id", filter));
             mustList.add(filterQuery);
@@ -102,6 +114,10 @@ public class ResourceQueryFactory {
 
         if (modelId != null) {
             mustList.add(QueryBuilders.matchQuery("isDefinedBy", modelId));
+        } else if(modelSet != null) {
+            QueryBuilder modelSetQuery = QueryBuilders.boolQuery()
+                .should(QueryBuilders.termsQuery("isDefinedBy", modelSet)).minimumShouldMatch(1);
+            mustList.add(modelSetQuery);
         }
 
         if (status != null) {
@@ -122,7 +138,7 @@ public class ResourceQueryFactory {
             mustList.add(labelQuery);
         }
 
-        if (mustList.size()>0) {
+        if (mustList.size() > 0) {
             sourceBuilder.query(boolQuery);
         } else {
             sourceBuilder.query(QueryBuilders.matchAllQuery());
@@ -145,7 +161,8 @@ public class ResourceQueryFactory {
     }
 
     public ResourceSearchResponse parseResponse(SearchResponse response,
-                                                ResourceSearchRequest request, boolean highlight) {
+                                                ResourceSearchRequest request,
+                                                boolean highlight) {
         List<IndexResourceDTO> resources = new ArrayList<>();
 
         ResourceSearchResponse ret = new ResourceSearchResponse(0, request.getPageSize(), request.getPageFrom(), resources);
@@ -157,7 +174,7 @@ public class ResourceQueryFactory {
 
             for (SearchHit hit : hits) {
                 IndexResourceDTO res = objectMapper.readValue(hit.getSourceAsString(), IndexResourceDTO.class);
-                if(highlight) {
+                if (highlight) {
                     res.highlightLabels(request.getQuery());
                 }
                 resources.add(res);

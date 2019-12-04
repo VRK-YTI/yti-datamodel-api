@@ -120,6 +120,9 @@ public class ModelPositions {
             return jerseyResponseManager.invalidParameter();
         }
 
+        // TODO: Does this fix the strange duplication bug?
+        jenaClient.deleteModelFromCore(model+"#PositionGraph");
+
         jenaClient.putModelToCore(model + "#PositionGraph", newPositions);
 
         return jerseyResponseManager.okEmptyContent();

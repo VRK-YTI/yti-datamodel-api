@@ -13,6 +13,7 @@ public final class ApplicationProperties {
     private boolean provenance;
     private String defaultGroupManagementAPI;
     private String defaultTerminologyAPI;
+    private String privateTerminologyAPI;
     private String publicGroupManagementAPI;
     private String publicTerminologyFrontend;
     private String publicSuomiCodeServerFrontend;
@@ -82,6 +83,14 @@ public final class ApplicationProperties {
 
     public void setDefaultTerminologyAPI(String defaultTerminologyAPI) {
         this.defaultTerminologyAPI = defaultTerminologyAPI;
+    }
+
+    public String getPrivateTerminologyAPI() {
+        return privateTerminologyAPI;
+    }
+
+    public void setPrivateTerminologyAPI(String privateTerminologyAPI) {
+        this.privateTerminologyAPI = privateTerminologyAPI;
     }
 
     public String getPublicGroupManagementAPI() {

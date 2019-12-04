@@ -184,6 +184,18 @@ public class LDHelper {
         return ResourceFactory.createTypedLiteral(cal);
     }
 
+
+    public static void removeLiteral(Model model,
+                                      Resource res,
+                                      Property prop) {
+        Selector literalSelector = new SimpleSelector(res, prop, (Literal) null);
+        Iterator<Statement> statements = model.listStatements(literalSelector).toList().iterator();
+
+        while (statements.hasNext()) {
+            model.remove(statements.next());
+        }
+    }
+
     public static void rewriteLiteral(Model model,
                                       Resource res,
                                       Property prop,
@@ -405,13 +417,33 @@ public class LDHelper {
     }
 
     /**
-     * Returns true of string uses alphanumerics only
+     * Returns true of string uses alphastrings only
      *
      * @param name name used in something
      * @return boolean
      */
     public static boolean isAlphaString(String name) {
         return name.matches("[a-zA-Z]+");
+    }
+
+    /**
+     * Returns true of string uses alphanumerics only
+     *
+     * @param name name used in something
+     * @return boolean
+     */
+    public static boolean isAlphaNumeric(String name) {
+        return name.matches("[a-zA-Z0-9]+");
+    }
+
+    /**
+     * Returns true of string uses alphanumerics only
+     *
+     * @param name name used in something
+     * @return boolean
+     */
+    public static boolean isValidPrefix(String name) {
+        return name.matches("^[a-zA-Z][a-zA-Z0-9-_]+[a-zA-Z0-9]$");
     }
 
     /**

@@ -65,7 +65,7 @@ public class ClassPropertyCreator {
     })
     public Response createClassProperty(
         @Parameter(description = "Predicate ID", required = true) @QueryParam("predicateID") String predicateID,
-        @Parameter(description = "Predicate type", schema = @Schema(allowableValues = "owl:DatatypeProperty,owl:ObjectProperty")) @QueryParam("type") String type) {
+        @Parameter(description = "Predicate type", schema = @Schema(allowableValues = {"owl:DatatypeProperty","owl:ObjectProperty"})) @QueryParam("type") String type) {
 
         IRI predicateIRI, typeIRI;
 

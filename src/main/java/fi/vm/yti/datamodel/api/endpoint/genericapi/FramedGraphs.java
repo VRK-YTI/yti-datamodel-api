@@ -65,8 +65,8 @@ public class FramedGraphs {
             return jerseyResponseManager.invalidIRI();
         }
         try {
-            Date lastModified = graphManager.lastModified(graph);
-            String frame = frameManager.getCachedClassVisualizationFrame(graph, lastModified);
+            Date contentModified = graphManager.modelContentModified(graph);
+            String frame = frameManager.getCachedClassVisualizationFrame(graph, contentModified);
 
             return Response.ok(frame, "application/json").build();
         } catch (NotFoundException fex) {

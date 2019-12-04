@@ -1,6 +1,11 @@
 package fi.vm.yti.datamodel.api.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.ByteArrayOutputStream;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.Credentials;
@@ -9,28 +14,30 @@ import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.HttpClient;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.HttpClients;
-import org.apache.jena.query.*;
+import org.apache.jena.query.DatasetAccessor;
+import org.apache.jena.query.DatasetAccessorFactory;
+import org.apache.jena.query.Query;
+import org.apache.jena.query.QueryExecution;
+import org.apache.jena.query.QueryExecutionFactory;
+import org.apache.jena.query.QuerySolution;
+import org.apache.jena.query.ResultSet;
+import org.apache.jena.query.ResultSetFactory;
+import org.apache.jena.query.ResultSetFormatter;
 import org.apache.jena.rdf.model.Literal;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdfconnection.RDFConnection;
-import org.apache.jena.rdfconnection.RDFConnectionRemote;
 import org.apache.jena.riot.web.HttpOp;
 import org.apache.jena.sparql.resultset.ResultSetPeekable;
 import org.apache.jena.update.UpdateExecutionFactory;
 import org.apache.jena.update.UpdateProcessor;
 import org.apache.jena.update.UpdateRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.json.*;
-import javax.json.stream.JsonParser;
-
-import java.io.ByteArrayOutputStream;
-import java.util.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import fi.vm.yti.datamodel.api.config.ApplicationProperties;
 
@@ -62,7 +69,8 @@ public final class JenaClient {
         }*/
 
     @Autowired
-    JenaClient(EndpointServices endpointServices, ApplicationProperties properties) {
+    JenaClient(EndpointServices endpointServices,
+               ApplicationProperties properties) {
         this.properties = properties;
         this.endpointServices = endpointServices;
         this.coreService = DatasetAccessorFactory.createHTTP(endpointServices.getCoreReadWriteAddress());
@@ -70,7 +78,7 @@ public final class JenaClient {
         this.provService = DatasetAccessorFactory.createHTTP(endpointServices.getProvReadWriteAddress());
         this.schemeService = DatasetAccessorFactory.createHTTP(endpointServices.getSchemesReadWriteAddress());
 
-        if(properties.getFusekiPassword()!=null && properties.getFusekiUser()!=null) {
+        if (properties.getFusekiPassword() != null && properties.getFusekiUser() != null) {
             logger.debug("Setting fuseki user & password!");
             CredentialsProvider credsProvider = new BasicCredentialsProvider();
             Credentials credentials = new UsernamePasswordCredentials(properties.getFusekiUser(), properties.getFusekiPassword());

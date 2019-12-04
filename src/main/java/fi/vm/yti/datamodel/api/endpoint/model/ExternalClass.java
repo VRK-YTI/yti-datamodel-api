@@ -3,33 +3,28 @@
  */
 package fi.vm.yti.datamodel.api.endpoint.model;
 
-import fi.vm.yti.datamodel.api.service.EndpointServices;
-import fi.vm.yti.datamodel.api.service.ExternalGraphManager;
-import fi.vm.yti.datamodel.api.service.IDManager;
-import fi.vm.yti.datamodel.api.service.JerseyClient;
-import fi.vm.yti.datamodel.api.service.JerseyResponseManager;
-import fi.vm.yti.datamodel.api.utils.LDHelper;
-import fi.vm.yti.datamodel.api.utils.QueryLibrary;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.tags.Tag;
-
-import org.apache.jena.iri.IRI;
-import org.apache.jena.iri.IRIException;
-import org.apache.jena.query.ParameterizedSparqlString;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 
+import org.apache.jena.iri.IRI;
+import org.apache.jena.iri.IRIException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import fi.vm.yti.datamodel.api.service.ExternalGraphManager;
+import fi.vm.yti.datamodel.api.service.IDManager;
+import fi.vm.yti.datamodel.api.service.JerseyClient;
+import fi.vm.yti.datamodel.api.service.JerseyResponseManager;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 @Component
 @Path("v1/externalClass")
@@ -71,7 +66,7 @@ public class ExternalClass {
 
         /* Check that Model URI is valid */
         if (!idManager.isValidUrl(model)) {
-            logger.debug("Invalid model uri: "+model);
+            logger.debug("Invalid model uri: " + model);
             return jerseyResponseManager.invalidIRI();
         }
 
@@ -83,7 +78,7 @@ public class ExternalClass {
             try {
                 idIRI = idManager.constructIRI(id);
             } catch (IRIException e) {
-                logger.debug("Invalid class iri: "+id);
+                logger.debug("Invalid class iri: " + id);
                 return jerseyResponseManager.invalidIRI();
             }
             return jerseyClient.constructResponseFromGraph(externalGraphManager.getExternalClass(idIRI, model));

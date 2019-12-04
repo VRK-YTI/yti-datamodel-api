@@ -226,6 +226,7 @@ public class Predicate {
                     searchIndexManager.updateIndexPredicate(updatePredicate);
                 }
 
+                searchIndexManager.updateIndexModel(updatePredicate.getModelId());
 
                 if (provenanceManager.getProvMode()) {
                     provenanceManager.createProvEntityBundle(updatePredicate.getId(), updatePredicate.asGraph(), user.getId(), updatePredicate.getProvUUID(), oldIdIRI);
@@ -243,6 +244,8 @@ public class Predicate {
                     return jerseyResponseManager.usedIRI();
                 } else {
                     graphManager.insertExistingResourceToModel(id, model);
+                    graphManager.updateContentModified(model);
+                    logger.info("Created reference from " + model + " to " + id);
                     return jerseyResponseManager.ok();
                 }
             }
@@ -299,6 +302,7 @@ public class Predicate {
             graphManager.createResource(newPredicate);
 
             searchIndexManager.createIndexPredicate(newPredicate);
+            searchIndexManager.updateIndexModel(newPredicate.getModelId());
 
             if (provenanceManager.getProvMode()) {
                 provenanceManager.createProvenanceActivityFromModel(newPredicate.getId(), newPredicate.asGraph(), newPredicate.getProvUUID(), user.getId());
@@ -342,6 +346,8 @@ public class Predicate {
             return jerseyResponseManager.invalidIRI();
         }
 
+        YtiUser user = userProvider.getUser();
+
         /* If Predicate is defined in the model */
         if (id.startsWith(model)) {
             /* Remove graph */
@@ -356,6 +362,11 @@ public class Predicate {
 
                 graphManager.deleteResource(deletePredicate);
                 searchIndexManager.removePredicate(id);
+                searchIndexManager.updateIndexModel(deletePredicate.getModelId());
+
+                if (provenanceManager.getProvMode()) {
+                    provenanceManager.invalidateProvenanceActivity(deletePredicate.getId(), deletePredicate.getProvUUID(), user.getId());
+                }
 
             } catch (IllegalArgumentException ex) {
                 logger.warn(ex.toString());
@@ -369,10 +380,11 @@ public class Predicate {
             }
 
             /* If removing referenced predicate */
-            graphManager.deleteGraphReferenceFromModel(idIRI, modelIRI);
-
+            logger.debug("Deleting referenced class "+idIRI.toString()+ "from "+modelIRI.toString());
             graphManager.deleteGraphReferenceFromExportModel(idIRI, modelIRI);
-            // TODO: Not removed from export model
+            graphManager.deletePositionGraphReferencesFromModel(model,id);
+            graphManager.updateContentModified(model);
+
             return jerseyResponseManager.ok();
         }
     }
