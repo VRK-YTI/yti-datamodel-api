@@ -4,6 +4,7 @@
 package fi.vm.yti.datamodel.api.endpoint.model;
 
 import fi.vm.yti.datamodel.api.service.EndpointServices;
+import fi.vm.yti.datamodel.api.service.GroupManagementService;
 import fi.vm.yti.datamodel.api.service.IDManager;
 import fi.vm.yti.datamodel.api.service.JenaClient;
 import fi.vm.yti.datamodel.api.service.JerseyClient;
@@ -24,6 +25,7 @@ import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
 import org.apache.jena.query.ParameterizedSparqlString;
 import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.NodeIterator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -35,6 +37,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -55,6 +59,7 @@ public class History {
     private final ModelManager modelManager;
     private final JenaClient jenaClient;
     private final AuthenticatedUserProvider userProvider;
+    private final GroupManagementService groupService;
 
     @Autowired
     History(NamespaceManager namespaceManager,
@@ -64,7 +69,8 @@ public class History {
             IDManager idManager,
             ModelManager modelManager,
             JenaClient jenaClient,
-            AuthenticatedUserProvider userProvider) {
+            AuthenticatedUserProvider userProvider,
+            GroupManagementService groupService) {
 
         this.namespaceManager = namespaceManager;
         this.endpointServices = endpointServices;
@@ -74,6 +80,7 @@ public class History {
         this.modelManager = modelManager;
         this.jenaClient = jenaClient;
         this.userProvider = userProvider;
+        this.groupService = groupService;
     }
 
     @GET
@@ -87,7 +94,7 @@ public class History {
     public Response getHistory(
         @Parameter(description = "resource id") @QueryParam("id") String id,
         @Parameter(description = "Peek", schema = @Schema(defaultValue = "false")) @QueryParam("peek") boolean peek) {
-
+        YtiUser user = userProvider.getUser();
         // TODO: Remove or refactor history
 
         if (id == null || id.equals("undefined") || id.equals("default") || peek) {
@@ -120,11 +127,37 @@ public class History {
                 pss.setIri("activity", id);
             }
 
-            return jerseyClient.constructGraphFromService(pss.toString(), endpointServices.getProvReadSparqlAddress());
+
+            Model provModel = jenaClient.constructFromService(pss.toString(), endpointServices.getProvReadSparqlAddress());
+
+            if (user.isSuperuser() || user.getOrganizationsInRole().size() > 0) {
+                provModel.add(groupService.getUsersAsModel());
+            }
+
+            return jerseyClient.constructResponseFromGraph(provModel);
 
         } else {
             logger.info("Gettin " + id + " from prov");
-            return jerseyClient.getGraphResponseFromService(id, endpointServices.getProvReadWriteAddress());
+            Model provModel = jenaClient.getModelFromProv(id);
+
+            if (provModel == null) {
+                return jerseyResponseManager.notFound();
+            }
+
+            if (user.isSuperuser() || user.getOrganizationsInRole().size() > 0) {
+
+                NodeIterator uuidIter = provModel.listObjectsOfProperty(LDHelper.curieToProperty("prov:wasAttributedTo"));
+                List<String> userUuids = new ArrayList<>();
+
+                while (uuidIter.hasNext()) {
+                    String userUuid = uuidIter.next().asResource().getURI().replace("urn:uuid:", "");
+                    userUuids.add(userUuid);
+                }
+
+                provModel.add(groupService.getUsersAsModel(userUuids));
+            }
+
+            return jerseyClient.constructResponseFromGraph(provModel);
         }
     }
 

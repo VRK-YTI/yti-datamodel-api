@@ -9,6 +9,11 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.rdf.model.ResourceFactory;
+import org.apache.jena.sparql.vocabulary.FOAF;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,11 +54,31 @@ public class GroupManagementService {
 
     public void updateUsers() {
         final String url = applicationProperties.getDefaultGroupManagementAPI().replace("public-api","private-api")+"users";
-        logger.debug(url);
         Client client = clientFactory.create();
         List<GroupManagementUserDTO> userList = client.target(url).request(MediaType.APPLICATION_JSON).get(new GenericType<List<GroupManagementUserDTO>>(){});
         userList.forEach(user -> users.put(user.getId(), user));
-        logger.debug("Updated "+userList.size()+" users");
+    }
+
+    public Model getUsersAsModel() {
+        Model model = ModelFactory.createDefaultModel();
+        users.forEach((uuid,user)->{
+            Resource userResource = model.createResource("urn:uuid:"+uuid.toString());
+            userResource.addLiteral(FOAF.firstName,user.getFirstName());
+            userResource.addLiteral(FOAF.lastName,user.getLastName());
+        });
+        return model;
+    }
+
+    public Model getUsersAsModel(List<String> uuids) {
+        Model model = ModelFactory.createDefaultModel();
+        users.forEach((uuid,user)->{
+            if(uuids.contains(uuid.toString())) {
+                Resource userResource = model.createResource("urn:uuid:" + uuid.toString());
+                userResource.addLiteral(FOAF.firstName, user.getFirstName());
+                userResource.addLiteral(FOAF.lastName, user.getLastName());
+            }
+        });
+        return model;
     }
 
 }
