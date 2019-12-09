@@ -11,6 +11,7 @@ public class IntegrationResourceDTO {
     private String status;
     private String type;
     private String modified;
+    private String statusModified;
 
     public IntegrationResourceDTO(IndexResourceDTO resource) {
         this.prefLabel = resource.getLabel();
@@ -18,6 +19,7 @@ public class IntegrationResourceDTO {
         this.uri = resource.getId();
         this.container = resource.getIsDefinedBy();
         this.status = resource.getStatus();
+        this.statusModified = resource.getStatusModified();
         this.type = resource.getType();
         this.modified = resource.getModified();
     }
@@ -26,12 +28,14 @@ public class IntegrationResourceDTO {
                                   final Map<String, String> description,
                                   final String uri,
                                   final String status,
+                                  final String statusModified,
                                   final String type,
                                   final String modified) {
         this.prefLabel = prefLabel;
         this.description = description;
         this.uri = uri;
         this.status = status;
+        this.statusModified = statusModified;
         this.type = type;
         this.modified = modified;
     }
@@ -76,6 +80,14 @@ public class IntegrationResourceDTO {
         this.status = status;
     }
 
+    public String getStatusModified() {
+        return statusModified;
+    }
+
+    public void setStatusModified(final String statusModified) {
+        this.statusModified = statusModified;
+    }
+
     public String getType() {
         return type;
     }
@@ -100,7 +112,9 @@ public class IntegrationResourceDTO {
             ", uri='" + uri + '\'' +
             ", container='" + container + '\'' +
             ", status='" + status + '\'' +
+            ", type='" + type + '\'' +
             ", modified='" + modified + '\'' +
+            ", statusModified='" + statusModified + '\'' +
             '}';
     }
 }
