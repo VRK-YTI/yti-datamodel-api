@@ -213,14 +213,26 @@ public class Predicate {
                         logger.warn(idIRI + " is existing graph!");
                         return jerseyResponseManager.usedIRI();
                     } else {
-                        graphManager.updateResourceWithNewId(oldIdIRI, updatePredicate);
+                        ReusablePredicate oldPredicate = new ReusablePredicate(oldIdIRI,graphManager);
+
+                        if(!oldPredicate.getStatus().equals(updatePredicate.getStatus())) {
+                            updatePredicate.setStatusModified();
+                        }
+
+                        graphManager.updateResourceWithNewId(updatePredicate, oldPredicate);
                         provUUID = updatePredicate.getProvUUID();
                         logger.info("Changed predicate id from:" + oldid + " to " + id);
                         searchIndexManager.removePredicate(oldid);
                         searchIndexManager.createIndexPredicate(updatePredicate);
                     }
                 } else {
-                    graphManager.updateResource(updatePredicate);
+                    ReusablePredicate oldPredicate = new ReusablePredicate(idIRI,graphManager);
+
+                    if(!oldPredicate.getStatus().equals(updatePredicate.getStatus())) {
+                        updatePredicate.setStatusModified();
+                    }
+
+                    graphManager.updateResource(updatePredicate, oldPredicate);
                     logger.info("Updated " + updatePredicate.getId());
                     provUUID = updatePredicate.getProvUUID();
                     searchIndexManager.updateIndexPredicate(updatePredicate);
