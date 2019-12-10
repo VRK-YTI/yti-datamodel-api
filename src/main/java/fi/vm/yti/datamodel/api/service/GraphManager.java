@@ -1741,13 +1741,6 @@ public class GraphManager {
         Literal modified = LDHelper.getDateTimeLiteral();
         LDHelper.rewriteLiteral(newModel, ResourceFactory.createResource(resourceId), DCTerms.modified, modified);
 
-        Literal oldStatus = oldModel.getRequiredProperty(ResourceFactory.createResource(resourceId), OWL.versionInfo).getLiteral();
-        Literal newStatus = newModel.getRequiredProperty(ResourceFactory.createResource(resourceId), OWL.versionInfo).getLiteral();
-
-        if(!oldStatus.sameValueAs(newStatus)) {
-            LDHelper.rewriteLiteral(newModel, ResourceFactory.createResource(resourceId), LDHelper.curieToProperty("iow:statusModified"), modified);
-        }
-
         Model exportModel = jenaClient.getModelFromCore(modelId + "#ExportGraph");
         exportModel = modelManager.removeResourceStatements(oldModel, exportModel);
         exportModel.add(newModel);
@@ -1758,9 +1751,9 @@ public class GraphManager {
         updateContentModified(modelId);
     }
 
-    public void updateResource(AbstractResource resource) {
+    public void updateResource(AbstractResource resource, AbstractResource oldResource) {
 
-        final Model oldModel = jenaClient.getModelFromCore(resource.getId());
+        final Model oldModel = oldResource.asGraph();
 
         Literal createdDate = oldModel.getRequiredProperty(ResourceFactory.createResource(resource.getId()), DCTerms.created).getLiteral();
         LDHelper.rewriteLiteral(resource.asGraph(), ResourceFactory.createResource(resource.getId()), DCTerms.created, createdDate);
@@ -1769,18 +1762,17 @@ public class GraphManager {
         updateResource(resource.getModelId(), resource.getId(), oldModel, newModel);
     }
 
-    public void updateResourceWithNewId(IRI oldIdIRI,
-                                        AbstractResource resource) {
+    public void updateResourceWithNewId(AbstractResource resource, AbstractResource oldResource) {
 
-        Model oldModel = jenaClient.getModelFromCore(oldIdIRI.toString());
+        Model oldModel = oldResource.asGraph();
 
-        Literal createdDate = oldModel.getRequiredProperty(ResourceFactory.createResource(oldIdIRI.toString()), DCTerms.created).getLiteral();
+        Literal createdDate = oldModel.getRequiredProperty(ResourceFactory.createResource(oldResource.getId()), DCTerms.created).getLiteral();
         LDHelper.rewriteLiteral(resource.asGraph(), ResourceFactory.createResource(resource.getId()), DCTerms.created, createdDate);
 
         updateResource(resource.getModelId(), resource.getId(), oldModel, resource.asGraph());
-        removeGraph(oldIdIRI);
-        updateResourceReferencesInAllGraphs(resource.getModelIRI(), oldIdIRI, resource.getIRI());
-        updateReferencesInPositionGraph(resource.getModelIRI(), oldIdIRI, resource.getIRI());
+        removeGraph(oldResource.getIRI());
+        updateResourceReferencesInAllGraphs(resource.getModelIRI(), oldResource.getIRI(), resource.getIRI());
+        updateReferencesInPositionGraph(resource.getModelIRI(), oldResource.getIRI(), resource.getIRI());
         try {
             frameManager.cleanCachedFrames(false);
         } catch (IOException e) {
