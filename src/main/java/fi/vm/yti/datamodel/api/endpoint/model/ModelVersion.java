@@ -1,6 +1,9 @@
 package fi.vm.yti.datamodel.api.endpoint.model;
 
+import java.util.UUID;
+
 import fi.vm.yti.datamodel.api.index.FrameManager;
+import fi.vm.yti.datamodel.api.index.SearchIndexManager;
 import fi.vm.yti.datamodel.api.model.DataModel;
 import fi.vm.yti.datamodel.api.security.AuthorizationManager;
 import fi.vm.yti.datamodel.api.service.*;
@@ -38,6 +41,8 @@ public class ModelVersion {
     private final GraphManager graphManager;
     private final FrameManager frameManager;
     private final ServiceDescriptionManager serviceDescriptionManager;
+    private final SearchIndexManager searchIndexManager;
+    private final ProvenanceManager provenanceManager;
 
     @Autowired
     ModelVersion(AuthorizationManager authorizationManager,
@@ -46,7 +51,9 @@ public class ModelVersion {
                  FrameManager frameManager,
                  ServiceDescriptionManager serviceDescriptionManager,
                  IDManager idManager,
-                 JerseyResponseManager jerseyResponseManager) {
+                 JerseyResponseManager jerseyResponseManager,
+                 SearchIndexManager searchIndexManager,
+                 ProvenanceManager provenanceManager) {
         this.authorizationManager = authorizationManager;
         this.userProvider = userProvider;
         this.idManager = idManager;
@@ -54,6 +61,8 @@ public class ModelVersion {
         this.frameManager = frameManager;
         this.jerseyResponseManager = jerseyResponseManager;
         this.serviceDescriptionManager = serviceDescriptionManager;
+        this.searchIndexManager = searchIndexManager;
+        this.provenanceManager = provenanceManager;
     }
 
     @POST
@@ -123,6 +132,15 @@ public class ModelVersion {
                 serviceDescriptionManager.createGraphDescription(newId, user.getId(), oldVocabulary.getOrganizations());
 
                 logger.info("Created new model");
+
+                if (provenanceManager.getProvMode()) {
+                    provenanceManager.createProvenanceActivityFromModel(newModelIRI.toString(), dataModel, "urn:uuid:"+UUID.randomUUID().toString(), user.getId());
+                    provenanceManager.createProvenanceActivityForNewVersionModel(newModelIRI.toString(), user.getId());
+                }
+
+                searchIndexManager.createIndexModel(newId);
+                searchIndexManager.initClassIndexFromModel(newId);
+                searchIndexManager.initPredicateIndexFromModel(newId);
 
                 dataModel.add(frameManager.constructExportGraph(newModelIRI.toString()));
                 graphManager.putToGraph(dataModel, newModelIRI.toString() + "#ExportGraph");

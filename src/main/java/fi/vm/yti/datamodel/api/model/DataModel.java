@@ -7,6 +7,7 @@ import org.apache.jena.iri.IRI;
 import org.apache.jena.query.ParameterizedSparqlString;
 import org.apache.jena.query.QueryExecution;
 import org.apache.jena.query.QueryExecutionFactory;
+import org.apache.jena.rdf.model.Literal;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.RDFList;
 import org.apache.jena.rdf.model.Resource;
@@ -101,9 +102,11 @@ public class DataModel extends AbstractModel {
         RDFList langRDFList = LDHelper.addStringListToModel(this.graph, allowedLang);
         Resource rootResource = ResourceFactory.createResource(namespace.toString());
 
+        Literal now = LDHelper.getDateTimeLiteral();
         this.graph.add(rootResource, DCTerms.language, langRDFList);
-        this.graph.add(rootResource, DCTerms.created, LDHelper.getDateTimeLiteral());
-        this.graph.add(rootResource, DCTerms.modified, LDHelper.getDateTimeLiteral());
+        this.graph.add(rootResource, DCTerms.created, now);
+        this.graph.add(rootResource, DCTerms.modified, now);
+        this.graph.add(rootResource, LDHelper.curieToProperty("iow:contentModified"), now);
 
     }
 

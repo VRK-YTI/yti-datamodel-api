@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 import javax.inject.Singleton;
 
 import org.apache.jena.iri.IRI;
+import org.apache.jena.query.ParameterizedSparqlString;
 import org.apache.jena.rdf.model.Model;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
@@ -166,15 +167,27 @@ public class SearchIndexManager {
         esManager.removeFromIndex(id, ELASTIC_INDEX_MODEL);
     }
 
+    public void createIndexModel(String modelId) {
+        IRI modelIri = LDHelper.toIRI(modelId);
+        createIndexModel(new DataModel(modelIri,graphManager));
+    }
+
     public void createIndexModel(DataModel model) {
         IndexModelDTO indexModel = new IndexModelDTO(model);
         logger.info("Indexing: " + indexModel.getId());
         esManager.putToIndex(ELASTIC_INDEX_MODEL, indexModel.getId(), indexModel);
     }
 
+    public void updateIndexModel(String modelId) {
+        IRI modelIri = LDHelper.toIRI(modelId);
+        updateIndexModel(new DataModel(modelIri, graphManager));
+    }
+
     public void updateIndexModel(DataModel model) {
         IndexModelDTO indexModel = new IndexModelDTO(model);
         logger.info("Indexing: " + indexModel.getId());
+        logger.debug("Modified: "+indexModel.getModified());
+        logger.debug("Content modified: "+indexModel.getContentModified());
         esManager.updateToIndex(ELASTIC_INDEX_MODEL, indexModel.getId(), indexModel);
     }
 
@@ -314,6 +327,8 @@ public class SearchIndexManager {
             "?model rdfs:comment ?comment . " +
             "?model dcterms:description ?definition . " +
             "?model dcterms:modified ?modified . " +
+            "?model iow:contentModified ?contentModified . " +
+            "?model iow:statusModified ?statusModified . " +
             "?model a ?modelType . " +
             "?model owl:versionInfo ?versionInfo . " +
             "?model iow:useContext ?useContext . " +
@@ -332,6 +347,8 @@ public class SearchIndexManager {
             "?model dcap:preferredXMLNamespacePrefix ?prefix .  " +
             "?model a ?modelType . VALUES ?modelType { dcap:MetadataVocabulary dcap:DCAP }" +
             "?model dcterms:modified ?modified . " +
+            "OPTIONAL { ?model iow:contentModified ?contentModified . }" +
+            "OPTIONAL { ?model iow:statusModified ?statusModified . }" +
             "?model dcterms:contributor ?org . BIND(strafter(str(?org), 'urn:uuid:') AS ?orgID) " +
             "?model dcterms:isPartOf ?group . ?group dcterms:identifier ?groupID . }}";
 
@@ -399,12 +416,14 @@ public class SearchIndexManager {
             "?class rdfs:isDefinedBy ?model . " +
             "?class dcterms:modified ?modified . " +
             "?class owl:versionInfo ?status . " +
+            "?class iow:statusModified ?statusModified . " +
             "?class a ?type . " +
             "} WHERE { " +
             "GRAPH ?class { ?class rdf:type ?classType . VALUES ?classType { sh:NodeShape rdfs:Class }" +
             "?class sh:name ?prefLabel . " +
             "?class owl:versionInfo ?status . " +
             "OPTIONAL { ?class sh:description ?definition . FILTER(lang(?definition)!='')}" +
+            "OPTIONAL { ?class iow:statusModified ?statusModified . }" +
             "?class a ?type . " +
             "?class dcterms:modified ?modified . " +
             "?class rdfs:isDefinedBy ?model . }" +
@@ -423,6 +442,52 @@ public class SearchIndexManager {
         bulkInsert(ELASTIC_INDEX_RESOURCE, nodes);
     }
 
+    public void initClassIndexFromModel(String modelId) {
+        String qry = " CONSTRUCT {" +
+            "?class sh:name ?prefLabel . " +
+            "?class sh:description ?definition . " +
+            "?class rdfs:isDefinedBy ?model . " +
+            "?class dcterms:modified ?modified . " +
+            "?class owl:versionInfo ?status . " +
+            "?class iow:statusModified ?statusModified . " +
+            "?class a ?type . " +
+            "} WHERE { " +
+            "GRAPH ?class { ?class rdf:type ?classType . VALUES ?classType { sh:NodeShape rdfs:Class }" +
+            "?class sh:name ?prefLabel . " +
+            "?class owl:versionInfo ?status . " +
+            "OPTIONAL { ?class sh:description ?definition . FILTER(lang(?definition)!='')}" +
+            "OPTIONAL { ?class iow:statusModified ?statusModified . }" +
+            "?class a ?type . " +
+            "?class dcterms:modified ?modified . " +
+            "?class rdfs:isDefinedBy ?model . }" +
+            "GRAPH ?model {?model a owl:Ontology  . ?model rdfs:label ?label . " +
+            "?model a ?modelType . VALUES ?modelType { dcap:MetadataVocabulary dcap:DCAP }}}";
+
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+        pss.setIri("model",modelId);
+        pss.setCommandText(qry);
+
+        Model model = jenaClient.constructFromCore(pss.asQuery().toString());
+        if (model.size() < 1) {
+            logger.warn("Could not find any classes to index!");
+            return;
+        }
+        JsonNode nodes = null;
+        try {
+            nodes = modelManager.toFramedJsonNode(model, Frames.esClassFrame);
+            if (nodes == null) {
+                logger.warn("Could not parse JSON");
+                return;
+            }
+            bulkInsert(ELASTIC_INDEX_RESOURCE, nodes);
+        } catch (IOException e) {
+            logger.warn("Could not parse JSON");
+            e.printStackTrace();
+            return;
+        }
+    }
+
     private void initPredicateIndex() throws IOException {
         String qry = LDHelper.prefix + " CONSTRUCT {" +
             "?predicate rdfs:label ?prefLabel . " +
@@ -432,19 +497,22 @@ public class SearchIndexManager {
             "?predicate rdfs:comment ?definition . " +
             "?predicate rdfs:isDefinedBy ?model . " +
             "?predicate owl:versionInfo ?status . " +
+            "?predicate iow:statusModified ?statusModified . " +
             "} WHERE { " +
             "GRAPH ?predicate { ?predicate a ?predicateType . VALUES ?predicateType { owl:ObjectProperty owl:DatatypeProperty }" +
+            "?predicate rdfs:isDefinedBy ?model . " +
             "?predicate rdfs:label ?prefLabel . " +
             "OPTIONAL { ?predicate rdfs:range ?range . } " +
+            "OPTIONAL { ?predicate iow:statusModified ?statusModified . }" +
             "?predicate owl:versionInfo ?status . " +
             "?predicate dcterms:modified ?modified . " +
             "OPTIONAL { ?predicate rdfs:comment ?definition . FILTER(lang(?definition)!='')}" +
-            "?class rdfs:isDefinedBy ?model . }" +
+            "}" +
             "GRAPH ?model {?model a owl:Ontology  . ?model rdfs:label ?label . " +
             "?model a ?modelType . VALUES ?modelType { dcap:MetadataVocabulary dcap:DCAP }}}";
         Model model = jenaClient.constructFromCore(qry);
         if (model.size() < 1) {
-            logger.warn("Could not find any associations to index!");
+            logger.warn("Could not find any predicates to index!");
             return;
         }
         JsonNode nodes = modelManager.toFramedJsonNode(model, Frames.esPredicateFrame);
@@ -453,6 +521,54 @@ public class SearchIndexManager {
             return;
         }
         bulkInsert(ELASTIC_INDEX_RESOURCE, nodes);
+    }
+
+    public void initPredicateIndexFromModel(String modelId) {
+        String qry = " CONSTRUCT {" +
+            "?predicate rdfs:label ?prefLabel . " +
+            "?predicate a ?predicateType . " +
+            "?predicate dcterms:modified ?modified . " +
+            "?predicate rdfs:range ?range . " +
+            "?predicate rdfs:comment ?definition . " +
+            "?predicate rdfs:isDefinedBy ?model . " +
+            "?predicate owl:versionInfo ?status . " +
+            "?predicate iow:statusModified ?statusModified . " +
+            "} WHERE { " +
+            "GRAPH ?predicate { ?predicate a ?predicateType . VALUES ?predicateType { owl:ObjectProperty owl:DatatypeProperty }" +
+            "?predicate rdfs:isDefinedBy ?model . " +
+            "?predicate rdfs:label ?prefLabel . " +
+            "OPTIONAL { ?predicate rdfs:range ?range . } " +
+            "OPTIONAL { ?predicate iow:statusModified ?statusModified . }" +
+            "?predicate owl:versionInfo ?status . " +
+            "?predicate dcterms:modified ?modified . " +
+            "OPTIONAL { ?predicate rdfs:comment ?definition . FILTER(lang(?definition)!='')}" +
+            "}" +
+            "GRAPH ?model {?model a owl:Ontology  . ?model rdfs:label ?label . " +
+            "?model a ?modelType . VALUES ?modelType { dcap:MetadataVocabulary dcap:DCAP }}}";
+
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+        pss.setIri("model",modelId);
+        pss.setCommandText(qry);
+
+        Model model = jenaClient.constructFromCore(pss.asQuery().toString());
+        if (model.size() < 1) {
+            logger.warn("Could not find any predicates to index!");
+            return;
+        }
+        JsonNode nodes = null;
+        try {
+            nodes = modelManager.toFramedJsonNode(model, Frames.esPredicateFrame);
+            if (nodes == null) {
+                logger.warn("Could not parse JSON");
+                return;
+            }
+            bulkInsert(ELASTIC_INDEX_RESOURCE, nodes);
+        } catch (IOException e) {
+            logger.warn("Could not parse JSON");
+            e.printStackTrace();
+            return;
+        }
     }
 
     private void initSearchIndexes() throws IOException {

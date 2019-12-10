@@ -93,7 +93,7 @@ public class Resolve {
                 logger.warn("Could not parse If-Modified-Since");
                 return jerseyResponseManager.invalidParameter();
             }
-            Date modified = graphManager.lastModified(graphName);
+            Date modified = graphManager.modelContentModified(graphName);
             if (modified != null) {
                 if (modifiedSince.after(modified)) {
                     return Response.notModified().header("Last-Modified", DateUtils.formatDate(modified)).build();
