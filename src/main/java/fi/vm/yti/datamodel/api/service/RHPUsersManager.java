@@ -45,26 +45,26 @@ public class RHPUsersManager {
         }
     }
 
-    public List<GroupManagementUserRequest> getUserRequests(String email) {
+    public List<GroupManagementUserRequest> getUserRequests(String userId) {
 
-        String url = properties.getDefaultGroupManagementAPI() + "requests";
+        String url = properties.getPrivateGroupManagementAPI() + "requests";
 
         return clientFactory.create()
             .target(url)
-            .queryParam("email", email)
+            .queryParam("userId", userId)
             .request(MediaType.APPLICATION_JSON)
             .get(new GenericType<List<GroupManagementUserRequest>>() {
             });
     }
 
-    public void sendUserRequests(String email,
+    public void sendUserRequests(String userId,
                                  String organizationId) {
 
-        String url = properties.getDefaultGroupManagementAPI() + "request";
+        String url = properties.getPrivateGroupManagementAPI() + "request";
 
         clientFactory.create()
             .target(url)
-            .queryParam("email", email)
+            .queryParam("userId", userId)
             .queryParam("role", Role.DATA_MODEL_EDITOR.toString())
             .queryParam("organizationId", organizationId)
             .request(MediaType.APPLICATION_JSON)
