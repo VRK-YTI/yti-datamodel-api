@@ -328,6 +328,7 @@ public class SearchIndexManager {
             "?model dcterms:description ?definition . " +
             "?model dcterms:modified ?modified . " +
             "?model iow:contentModified ?contentModified . " +
+            "?model iow:statusModified ?statusModified . " +
             "?model a ?modelType . " +
             "?model owl:versionInfo ?versionInfo . " +
             "?model iow:useContext ?useContext . " +
@@ -347,6 +348,7 @@ public class SearchIndexManager {
             "?model a ?modelType . VALUES ?modelType { dcap:MetadataVocabulary dcap:DCAP }" +
             "?model dcterms:modified ?modified . " +
             "OPTIONAL { ?model iow:contentModified ?contentModified . }" +
+            "OPTIONAL { ?model iow:statusModified ?statusModified . }" +
             "?model dcterms:contributor ?org . BIND(strafter(str(?org), 'urn:uuid:') AS ?orgID) " +
             "?model dcterms:isPartOf ?group . ?group dcterms:identifier ?groupID . }}";
 
@@ -414,12 +416,14 @@ public class SearchIndexManager {
             "?class rdfs:isDefinedBy ?model . " +
             "?class dcterms:modified ?modified . " +
             "?class owl:versionInfo ?status . " +
+            "?class iow:statusModified ?statusModified . " +
             "?class a ?type . " +
             "} WHERE { " +
             "GRAPH ?class { ?class rdf:type ?classType . VALUES ?classType { sh:NodeShape rdfs:Class }" +
             "?class sh:name ?prefLabel . " +
             "?class owl:versionInfo ?status . " +
             "OPTIONAL { ?class sh:description ?definition . FILTER(lang(?definition)!='')}" +
+            "OPTIONAL { ?class iow:statusModified ?statusModified . }" +
             "?class a ?type . " +
             "?class dcterms:modified ?modified . " +
             "?class rdfs:isDefinedBy ?model . }" +
@@ -445,12 +449,14 @@ public class SearchIndexManager {
             "?class rdfs:isDefinedBy ?model . " +
             "?class dcterms:modified ?modified . " +
             "?class owl:versionInfo ?status . " +
+            "?class iow:statusModified ?statusModified . " +
             "?class a ?type . " +
             "} WHERE { " +
             "GRAPH ?class { ?class rdf:type ?classType . VALUES ?classType { sh:NodeShape rdfs:Class }" +
             "?class sh:name ?prefLabel . " +
             "?class owl:versionInfo ?status . " +
             "OPTIONAL { ?class sh:description ?definition . FILTER(lang(?definition)!='')}" +
+            "OPTIONAL { ?class iow:statusModified ?statusModified . }" +
             "?class a ?type . " +
             "?class dcterms:modified ?modified . " +
             "?class rdfs:isDefinedBy ?model . }" +
@@ -491,11 +497,13 @@ public class SearchIndexManager {
             "?predicate rdfs:comment ?definition . " +
             "?predicate rdfs:isDefinedBy ?model . " +
             "?predicate owl:versionInfo ?status . " +
+            "?predicate iow:statusModified ?statusModified . " +
             "} WHERE { " +
             "GRAPH ?predicate { ?predicate a ?predicateType . VALUES ?predicateType { owl:ObjectProperty owl:DatatypeProperty }" +
             "?predicate rdfs:isDefinedBy ?model . " +
             "?predicate rdfs:label ?prefLabel . " +
             "OPTIONAL { ?predicate rdfs:range ?range . } " +
+            "OPTIONAL { ?predicate iow:statusModified ?statusModified . }" +
             "?predicate owl:versionInfo ?status . " +
             "?predicate dcterms:modified ?modified . " +
             "OPTIONAL { ?predicate rdfs:comment ?definition . FILTER(lang(?definition)!='')}" +
@@ -524,11 +532,13 @@ public class SearchIndexManager {
             "?predicate rdfs:comment ?definition . " +
             "?predicate rdfs:isDefinedBy ?model . " +
             "?predicate owl:versionInfo ?status . " +
+            "?predicate iow:statusModified ?statusModified . " +
             "} WHERE { " +
             "GRAPH ?predicate { ?predicate a ?predicateType . VALUES ?predicateType { owl:ObjectProperty owl:DatatypeProperty }" +
             "?predicate rdfs:isDefinedBy ?model . " +
             "?predicate rdfs:label ?prefLabel . " +
             "OPTIONAL { ?predicate rdfs:range ?range . } " +
+            "OPTIONAL { ?predicate iow:statusModified ?statusModified . }" +
             "?predicate owl:versionInfo ?status . " +
             "?predicate dcterms:modified ?modified . " +
             "OPTIONAL { ?predicate rdfs:comment ?definition . FILTER(lang(?definition)!='')}" +
