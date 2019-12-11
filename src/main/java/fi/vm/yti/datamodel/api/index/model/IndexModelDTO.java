@@ -13,6 +13,7 @@ public class IndexModelDTO {
     private String id;
     private String useContext;
     private String status;
+    private String statusModified;
     private String modified;
     private String contentModified;
     private String type;
@@ -37,6 +38,7 @@ public class IndexModelDTO {
         this.prefix = model.getPrefix();
         this.namespace = model.getNamespace();
         this.status = model.getStatus();
+        this.statusModified = model.getStatusModified();
         this.label = model.getLabel();
         this.comment = model.getComment();
         this.contributor = model.getOrganizations();
@@ -46,6 +48,7 @@ public class IndexModelDTO {
     public IndexModelDTO(final String id,
                          final String useContext,
                          final String status,
+                         final String statusModified,
                          final String modified,
                          final String contentModified,
                          final String type,
@@ -58,6 +61,7 @@ public class IndexModelDTO {
         this.id = id;
         this.useContext = useContext;
         this.status = status;
+        this.statusModified = statusModified;
         this.modified = modified;
         this.contentModified = contentModified;
         this.type = type;
@@ -91,6 +95,14 @@ public class IndexModelDTO {
 
     public void setStatus(final String status) {
         this.status = status;
+    }
+
+    public String getStatusModified() {
+        return statusModified;
+    }
+
+    public void setStatusModified(final String statusModified) {
+        this.statusModified = statusModified;
     }
 
     public String getModified() {
@@ -171,6 +183,7 @@ public class IndexModelDTO {
             "id='" + id + '\'' +
             ", useContext='" + useContext + '\'' +
             ", status='" + status + '\'' +
+            ", statusModified='" + statusModified + '\'' +
             ", modified='" + modified + '\'' +
             ", contentModified='" + contentModified + '\'' +
             ", type='" + type + '\'' +

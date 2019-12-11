@@ -9,6 +9,7 @@ public class IndexClassDTO extends IndexResourceDTO {
     private String id;
     private String isDefinedBy;
     private String status;
+    private String statusModified;
     private String modified;
     private String type;
     private Map<String, String> label;
@@ -20,6 +21,7 @@ public class IndexClassDTO extends IndexResourceDTO {
     public IndexClassDTO(final String id,
                          final String isDefinedBy,
                          final String status,
+                         final String statusModified,
                          final String modified,
                          final String type,
                          final Map<String, String> label,
@@ -27,6 +29,7 @@ public class IndexClassDTO extends IndexResourceDTO {
         this.id = id;
         this.isDefinedBy = isDefinedBy;
         this.status = status;
+        this.statusModified = statusModified;
         this.modified = modified;
         this.type = type;
         this.label = label;
@@ -37,6 +40,7 @@ public class IndexClassDTO extends IndexResourceDTO {
         this.id = classResource.getId();
         this.isDefinedBy = classResource.getModelId();
         this.status = classResource.getStatus();
+        this.statusModified = classResource.getStatusModified();
         this.modified = classResource.getModified();
         this.type = classResource.getType();
         this.label = classResource.getLabel();
@@ -65,6 +69,16 @@ public class IndexClassDTO extends IndexResourceDTO {
 
     public void setStatus(final String status) {
         this.status = status;
+    }
+
+    @Override
+    public String getStatusModified() {
+        return statusModified;
+    }
+
+    @Override
+    public void setStatusModified(final String statusModified) {
+        this.statusModified = statusModified;
     }
 
     public String getModified() {
@@ -105,6 +119,7 @@ public class IndexClassDTO extends IndexResourceDTO {
             "id='" + id + '\'' +
             ", isDefinedBy='" + isDefinedBy + '\'' +
             ", status='" + status + '\'' +
+            ", statusModified='" + statusModified + '\'' +
             ", modified='" + modified + '\'' +
             ", type='" + type + '\'' +
             ", label=" + label +

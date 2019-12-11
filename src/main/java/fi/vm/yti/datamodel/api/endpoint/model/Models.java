@@ -254,9 +254,13 @@ public class Models {
                 return jerseyResponseManager.unauthorized();
             }
 
+            if(!oldVocabulary.getStatus().equals(newVocabulary.getStatus())) {
+                newVocabulary.setStatusModified();
+            }
+
             UUID provUUID = UUID.fromString(newVocabulary.getProvUUID().replaceFirst("urn:uuid:", ""));
 
-            graphManager.updateModel(newVocabulary);
+            graphManager.updateModel(newVocabulary, oldVocabulary);
 
             searchIndexManager.updateIndexModel(newVocabulary);
 

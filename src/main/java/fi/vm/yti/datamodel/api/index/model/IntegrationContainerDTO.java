@@ -11,6 +11,7 @@ public class IntegrationContainerDTO {
     private String type;
     private String modified;
     private String contentModified;
+    private String statusModified;
 
     public IntegrationContainerDTO(IndexModelDTO model) {
         this.prefLabel = model.getLabel();
@@ -20,6 +21,7 @@ public class IntegrationContainerDTO {
         this.type = model.getType();
         this.modified = model.getModified();
         this.contentModified = model.getContentModified();
+        this.statusModified = model.getStatusModified();
     }
 
     public IntegrationContainerDTO(final Map<String, String> prefLabel,
@@ -28,7 +30,8 @@ public class IntegrationContainerDTO {
                                    final String status,
                                    final String type,
                                    final String modified,
-                                   final String contentModified) {
+                                   final String contentModified,
+                                   final String statusModified) {
         this.prefLabel = prefLabel;
         this.description = description;
         this.uri = uri;
@@ -36,6 +39,7 @@ public class IntegrationContainerDTO {
         this.type = type;
         this.modified = modified;
         this.contentModified = contentModified;
+        this.statusModified = statusModified;
     }
 
     public Map<String, String> getPrefLabel() {
@@ -94,6 +98,14 @@ public class IntegrationContainerDTO {
         this.contentModified = contentModified;
     }
 
+    public String getStatusModified() {
+        return statusModified;
+    }
+
+    public void setStatusModified(final String statusModified) {
+        this.statusModified = statusModified;
+    }
+
     @Override
     public String toString() {
         return "IntegrationContainerDTO{" +
@@ -104,6 +116,7 @@ public class IntegrationContainerDTO {
             ", type='" + type + '\'' +
             ", modified='" + modified + '\'' +
             ", contentModified='" + contentModified + '\'' +
+            ", statusModified='" + statusModified + '\'' +
             '}';
     }
 }

@@ -215,11 +215,17 @@ public class Class {
                         logger.warn(idIRI + " is existing graph!");
                         return jerseyResponseManager.usedIRI();
                     } else {
+                        ReusableClass oldClass = new ReusableClass(oldIdIRI, graphManager);
+
+                        if(!oldClass.getStatus().equals(updateClass.getStatus())) {
+                            updateClass.setStatusModified();
+                        }
+
                         if (graphManager.modelStatusRestrictsRemoving(oldIdIRI)) {
                             logger.warn(idIRI + " is existing graph!");
                             return jerseyResponseManager.depedencies();
                         } else {
-                            graphManager.updateResourceWithNewId(oldIdIRI, updateClass);
+                            graphManager.updateResourceWithNewId(updateClass, oldClass);
                             provUUID = updateClass.getProvUUID();
                             logger.info("Changed class id from:" + oldid + " to " + id);
                             searchIndexManager.removeClass(oldid);
@@ -227,7 +233,13 @@ public class Class {
                         }
                     }
                 } else {
-                    graphManager.updateResource(updateClass);
+                    ReusableClass oldClass = new ReusableClass(idIRI, graphManager);
+
+                    if(!oldClass.getStatus().equals(updateClass.getStatus())) {
+                        updateClass.setStatusModified();
+                    }
+
+                    graphManager.updateResource(updateClass,oldClass);
                     provUUID = updateClass.getProvUUID();
                     searchIndexManager.updateIndexClass(updateClass);
                 }

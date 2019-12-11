@@ -1659,16 +1659,16 @@ public class GraphManager {
 
         String query
             = " DELETE { " +
-            "GRAPH ?graph { ?graph iow:contentModified ?oldDate1 . }" +
-            "GRAPH ?exportGraph { ?graph iow:contentModified ?oldDate2 . }" +
+                "GRAPH ?graph { ?graph iow:contentModified ?oldDate1 . }" +
+                "GRAPH ?exportGraph { ?graph iow:contentModified ?oldDate2 . }" +
             "}"
             + " INSERT { " +
-            "GRAPH ?graph { ?graph iow:contentModified ?newDate . }" +
-            "GRAPH ?exportGraph { ?graph iow:contentModified ?newDate . }" +
+                "GRAPH ?graph { ?graph iow:contentModified ?newDate . }" +
+                "GRAPH ?exportGraph { ?graph iow:contentModified ?newDate . }" +
             "}"
             + " WHERE { " +
-            "GRAPH ?graph { ?graph a owl:Ontology . OPTIONAL { ?graph iow:contentModified ?oldDate1 . } }" +
-            "GRAPH ?exportGraph { ?graph a owl:Ontology . OPTIONAL { ?graph iow:contentModified ?oldDate2 . } }" +
+             "GRAPH ?graph { ?graph a owl:Ontology . OPTIONAL { ?graph iow:contentModified ?oldDate1 . } }" +
+             "GRAPH ?exportGraph { ?graph a owl:Ontology . OPTIONAL { ?graph iow:contentModified ?oldDate2 . } }" +
             "}";
 
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
@@ -1720,6 +1720,7 @@ public class GraphManager {
     public void createResource(AbstractResource resource) {
         Literal created = LDHelper.getDateTimeLiteral();
         LDHelper.rewriteLiteral(resource.asGraph(), ResourceFactory.createResource(resource.getId()), DCTerms.modified, created);
+        LDHelper.rewriteLiteral(resource.asGraph(), ResourceFactory.createResource(resource.getId()), LDHelper.curieToProperty("iow:statusModified"), created);
         LDHelper.rewriteLiteral(resource.asGraph(), ResourceFactory.createResource(resource.getId()), DCTerms.created, created);
         jenaClient.putModelToCore(resource.getId(), resource.asGraph());
         insertNewGraphReferenceToModel(resource.getId(), resource.getModelId());
@@ -1750,9 +1751,9 @@ public class GraphManager {
         updateContentModified(modelId);
     }
 
-    public void updateResource(AbstractResource resource) {
+    public void updateResource(AbstractResource resource, AbstractResource oldResource) {
 
-        final Model oldModel = jenaClient.getModelFromCore(resource.getId());
+        final Model oldModel = oldResource.asGraph();
 
         Literal createdDate = oldModel.getRequiredProperty(ResourceFactory.createResource(resource.getId()), DCTerms.created).getLiteral();
         LDHelper.rewriteLiteral(resource.asGraph(), ResourceFactory.createResource(resource.getId()), DCTerms.created, createdDate);
@@ -1761,18 +1762,17 @@ public class GraphManager {
         updateResource(resource.getModelId(), resource.getId(), oldModel, newModel);
     }
 
-    public void updateResourceWithNewId(IRI oldIdIRI,
-                                        AbstractResource resource) {
+    public void updateResourceWithNewId(AbstractResource resource, AbstractResource oldResource) {
 
-        Model oldModel = jenaClient.getModelFromCore(oldIdIRI.toString());
+        Model oldModel = oldResource.asGraph();
 
-        Literal createdDate = oldModel.getRequiredProperty(ResourceFactory.createResource(oldIdIRI.toString()), DCTerms.created).getLiteral();
+        Literal createdDate = oldModel.getRequiredProperty(ResourceFactory.createResource(oldResource.getId()), DCTerms.created).getLiteral();
         LDHelper.rewriteLiteral(resource.asGraph(), ResourceFactory.createResource(resource.getId()), DCTerms.created, createdDate);
 
         updateResource(resource.getModelId(), resource.getId(), oldModel, resource.asGraph());
-        removeGraph(oldIdIRI);
-        updateResourceReferencesInAllGraphs(resource.getModelIRI(), oldIdIRI, resource.getIRI());
-        updateReferencesInPositionGraph(resource.getModelIRI(), oldIdIRI, resource.getIRI());
+        removeGraph(oldResource.getIRI());
+        updateResourceReferencesInAllGraphs(resource.getModelIRI(), oldResource.getIRI(), resource.getIRI());
+        updateReferencesInPositionGraph(resource.getModelIRI(), oldResource.getIRI(), resource.getIRI());
         try {
             frameManager.cleanCachedFrames(false);
         } catch (IOException e) {
@@ -1803,6 +1803,7 @@ public class GraphManager {
         Literal created = LDHelper.getDateTimeLiteral();
 
         LDHelper.rewriteLiteral(amodel.asGraph(), ResourceFactory.createResource(amodel.getId()), DCTerms.modified, created);
+        LDHelper.rewriteLiteral(amodel.asGraph(), ResourceFactory.createResource(amodel.getId()), LDHelper.curieToProperty("iow:statusModified"), created);
         LDHelper.rewriteLiteral(amodel.asGraph(), ResourceFactory.createResource(amodel.getId()), DCTerms.created, created);
 
         logger.info("Creating model " + amodel.getId());
@@ -1810,12 +1811,12 @@ public class GraphManager {
         jenaClient.putModelToCore(amodel.getId() + "#ExportGraph", amodel.asGraph());
     }
 
-    public void updateModel(AbstractModel amodel) {
-        LDHelper.rewriteLiteral(amodel.asGraph(), ResourceFactory.createResource(amodel.getId()), DCTerms.modified, LDHelper.getDateTimeLiteral());
+    public void updateModel(AbstractModel amodel, AbstractModel omodel) {
+        Literal modified = LDHelper.getDateTimeLiteral();
+        LDHelper.rewriteLiteral(amodel.asGraph(), ResourceFactory.createResource(amodel.getId()), DCTerms.modified, modified);
 
-        Model oldModel = jenaClient.getModelFromCore(amodel.getId());
+        Model oldModel = omodel.asGraph();
         Literal createdDate = oldModel.getRequiredProperty(ResourceFactory.createResource(amodel.getId()), DCTerms.created).getLiteral();
-
         LDHelper.rewriteLiteral(amodel.asGraph(), ResourceFactory.createResource(amodel.getId()), DCTerms.created, createdDate);
 
         Model exportModel = jenaClient.getModelFromCore(amodel.getId() + "#ExportGraph");

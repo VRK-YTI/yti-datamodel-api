@@ -7,6 +7,8 @@ import org.apache.jena.vocabulary.OWL;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import fi.vm.yti.datamodel.api.utils.LDHelper;
+
 public class AbstractResource {
 
     protected Model graph;
@@ -32,6 +34,19 @@ public class AbstractResource {
 
     public String getStatus() {
         return this.graph.getRequiredProperty(ResourceFactory.createResource(this.getId()), OWL.versionInfo).getString();
+    }
+
+    public String getStatusModified() {
+        try {
+            return this.graph.getProperty(ResourceFactory.createResource(this.getId()), LDHelper.curieToProperty("iow:statusModified")).getString();
+        } catch(NullPointerException ex) {
+            // This catch fixes legacy data without statusModified fields.
+            return null;
+        }
+    }
+
+    public void setStatusModified() {
+        LDHelper.rewriteLiteral(this.graph, ResourceFactory.createResource(this.getId()), LDHelper.curieToProperty("iow:statusModified"), LDHelper.getDateTimeLiteral());
     }
 
     public String getModified() {

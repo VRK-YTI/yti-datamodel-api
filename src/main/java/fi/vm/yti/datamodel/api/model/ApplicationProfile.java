@@ -106,7 +106,6 @@ public class ApplicationProfile extends AbstractModel {
         this.graph.add(rootResource, DCTerms.language, langRDFList);
         this.graph.add(rootResource, DCTerms.created, now);
         this.graph.add(rootResource, DCTerms.modified, now);
-        this.graph.add(rootResource, LDHelper.curieToProperty("iow:contentModified"), now);
 
     }
 
