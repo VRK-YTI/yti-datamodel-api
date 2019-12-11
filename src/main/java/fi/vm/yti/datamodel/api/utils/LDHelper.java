@@ -213,10 +213,10 @@ public class LDHelper {
 
             Resource res = resIter.next();
 
-            res.listProperties(prop).forEachRemaining((destatement)->{
+            res.listProperties(prop).toList().forEach((destatement)->{
                     RDFNode refObject = destatement.getObject();
                     if(refObject.isResource()) {
-                        refObject.asResource().listProperties().forEachRemaining((copyStatement)->{
+                        refObject.asResource().listProperties().toList().forEach((copyStatement)->{
                             res.addProperty(copyStatement.getPredicate(),copyStatement.getObject());
                             denormalizedResources.add(copyStatement.getSubject());
                         });
