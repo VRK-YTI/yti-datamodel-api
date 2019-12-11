@@ -8,6 +8,7 @@ endpointPassword=admin
 defaultNamespace=http://uri.suomi.fi/datamodel/ns/
 provenance=true
 defaultGroupManagementAPI=https://rhp.dev.yti.cloud.vrk.fi/public-api/
+privateGroupManagementAPI=https://rhp.dev.yti.cloud.vrk.fi/private-api/
 defaultSuomiCodeServerAPI=https://koodistot.dev.yti.cloud.vrk.fi/codelist-api/api/
 defaultTerminologyAPI=https://sanastot.dev.yti.cloud.vrk.fi/terminology-api/api/
 privateTerminologyAPI=https://sanastot.dev.yti.cloud.vrk.fi/terminology-api/private/
