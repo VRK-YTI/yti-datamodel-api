@@ -15,6 +15,7 @@ import fi.vm.yti.datamodel.api.index.ElasticConnector;
 import fi.vm.yti.datamodel.api.index.FrameManager;
 import fi.vm.yti.datamodel.api.index.SearchIndexManager;
 import fi.vm.yti.datamodel.api.service.GraphManager;
+import fi.vm.yti.datamodel.api.service.GroupManagementService;
 import fi.vm.yti.datamodel.api.service.NamespaceManager;
 import fi.vm.yti.datamodel.api.service.RHPOrganizationManager;
 import fi.vm.yti.datamodel.api.service.TerminologyManager;
@@ -23,7 +24,7 @@ import fi.vm.yti.migration.MigrationInitializer;
 @Component
 public class StartUpListener {
 
-    private static final Logger logger = LoggerFactory.getLogger(StartUpListener.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(StartUpListener.class);
 
     private final TerminologyManager terminologyManager;
     private final RHPOrganizationManager rhpOrganizationManager;
@@ -32,6 +33,7 @@ public class StartUpListener {
     private final ElasticConnector elasticConnector;
     private final FrameManager frameManager;
     private final SearchIndexManager searchIndexManager;
+    private final GroupManagementService groupManagementService;
 
     @Autowired
     StartUpListener(TerminologyManager terminologyManager,
@@ -41,7 +43,9 @@ public class StartUpListener {
                     ElasticConnector elasticConnector,
                     FrameManager frameManager,
                     SearchIndexManager searchIndexManager,
-                    MigrationInitializer migrationInitializer /* XXX: dependency to enforce init order */) {
+                    MigrationInitializer migrationInitializer,
+                    GroupManagementService groupManagementService
+                    /* XXX: dependency to enforce init order */) {
 
         this.terminologyManager = terminologyManager;
         this.rhpOrganizationManager = rhpOrganizationManager;
@@ -50,6 +54,7 @@ public class StartUpListener {
         this.elasticConnector = elasticConnector;
         this.frameManager = frameManager;
         this.searchIndexManager = searchIndexManager;
+        this.groupManagementService = groupManagementService;
     }
 
     @PostConstruct
@@ -60,6 +65,7 @@ public class StartUpListener {
         initDefaultNamespaces();
         initRHPOrganizations();
         initElasticsearchIndices();
+        groupManagementService.updateUsers();
     }
 
     @PreDestroy

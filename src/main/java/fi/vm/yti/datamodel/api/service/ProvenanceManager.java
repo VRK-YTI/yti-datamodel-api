@@ -9,9 +9,12 @@ import fi.vm.yti.datamodel.api.utils.LDHelper;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.query.ParameterizedSparqlString;
 import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.NodeIterator;
 import org.apache.jena.rdf.model.Property;
+import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.update.UpdateRequest;
+import org.apache.jena.vocabulary.DCTerms;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -67,6 +70,21 @@ public class ProvenanceManager {
                                                   UUID user) {
         putToProvenanceGraph(model, provUUID);
         createProvenanceActivity(id, provUUID, user);
+    }
+
+
+    public void createProvenanceActivityForNewVersionModel(String modelId, UUID user) {
+
+        Model hasPartGraph = jenaClient.getModelFromCore(modelId+"#HasPartGraph");
+
+        NodeIterator hasPartObjects = hasPartGraph.listObjectsOfProperty(DCTerms.hasPart);
+
+        while (hasPartObjects.hasNext()) {
+            String resUri = hasPartObjects.nextNode().asResource().toString();
+            Model resourceModel = jenaClient.getModelFromCore(resUri);
+            createProvenanceActivityFromModel(resUri,resourceModel,"urn:uuid:" + UUID.randomUUID().toString(),user);
+        }
+
     }
 
     /**

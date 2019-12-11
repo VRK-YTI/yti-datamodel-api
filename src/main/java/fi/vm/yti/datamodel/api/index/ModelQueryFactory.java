@@ -110,11 +110,25 @@ public class ModelQueryFactory {
         }
 
         if (after != null) {
-            mustList.add(QueryBuilders.rangeQuery("modified").gte(after).to("now"));
+
+            QueryBuilder afterQuery = QueryBuilders.boolQuery()
+                .should(QueryBuilders.rangeQuery("contentModified").gte(after).to("now"))
+                .should(QueryBuilders.rangeQuery("modified").gte(after).to("now"))
+                .minimumShouldMatch(1);
+
+            mustList.add(afterQuery);
+
         }
 
         if (before != null) {
-            mustList.add(QueryBuilders.rangeQuery("modified").lt(before));
+
+            QueryBuilder beforeQuery = QueryBuilders.boolQuery()
+                .should(QueryBuilders.rangeQuery("contentModified").lt(before))
+                .should(QueryBuilders.rangeQuery("modified").lt(before))
+                .minimumShouldMatch(1);
+
+            mustList.add(beforeQuery);
+
         }
 
         if (filter != null) {

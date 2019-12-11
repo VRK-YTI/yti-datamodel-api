@@ -10,6 +10,7 @@ public class IntegrationContainerDTO {
     private String status;
     private String type;
     private String modified;
+    private String contentModified;
 
     public IntegrationContainerDTO(IndexModelDTO model) {
         this.prefLabel = model.getLabel();
@@ -18,6 +19,7 @@ public class IntegrationContainerDTO {
         this.status = model.getStatus();
         this.type = model.getType();
         this.modified = model.getModified();
+        this.contentModified = model.getContentModified();
     }
 
     public IntegrationContainerDTO(final Map<String, String> prefLabel,
@@ -25,13 +27,15 @@ public class IntegrationContainerDTO {
                                    final String uri,
                                    final String status,
                                    final String type,
-                                   final String modified) {
+                                   final String modified,
+                                   final String contentModified) {
         this.prefLabel = prefLabel;
         this.description = description;
         this.uri = uri;
         this.status = status;
         this.type = type;
         this.modified = modified;
+        this.contentModified = contentModified;
     }
 
     public Map<String, String> getPrefLabel() {
@@ -82,6 +86,14 @@ public class IntegrationContainerDTO {
         this.modified = modified;
     }
 
+    public String getContentModified() {
+        return contentModified;
+    }
+
+    public void setContentModified(final String contentModified) {
+        this.contentModified = contentModified;
+    }
+
     @Override
     public String toString() {
         return "IntegrationContainerDTO{" +
@@ -89,7 +101,9 @@ public class IntegrationContainerDTO {
             ", description=" + description +
             ", uri='" + uri + '\'' +
             ", status='" + status + '\'' +
+            ", type='" + type + '\'' +
             ", modified='" + modified + '\'' +
+            ", contentModified='" + contentModified + '\'' +
             '}';
     }
 }

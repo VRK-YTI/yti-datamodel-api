@@ -1,6 +1,8 @@
 package fi.vm.yti.datamodel.api.service;
 
 import fi.vm.yti.datamodel.api.config.ApplicationProperties;
+import fi.vm.yti.datamodel.api.model.GroupManagementUserDTO;
+import fi.vm.yti.datamodel.api.model.GroupManagementUserRequestDTO;
 import fi.vm.yti.security.Role;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -29,7 +31,7 @@ public class RHPUsersManager {
         this.fakeLoginAllowed = fakeLoginAllowed;
     }
 
-    public List<GroupManagementUser> getFakeableUsers() {
+    public List<GroupManagementUserDTO> getFakeableUsers() {
 
         if (fakeLoginAllowed) {
 
@@ -38,14 +40,14 @@ public class RHPUsersManager {
             return clientFactory.create()
                 .target(url)
                 .request(MediaType.APPLICATION_JSON)
-                .get(new GenericType<List<GroupManagementUser>>() {
+                .get(new GenericType<List<GroupManagementUserDTO>>() {
                 });
         } else {
             return Collections.emptyList();
         }
     }
 
-    public List<GroupManagementUserRequest> getUserRequests(String email) {
+    public List<GroupManagementUserRequestDTO> getUserRequests(String email) {
 
         String url = properties.getDefaultGroupManagementAPI() + "requests";
 
@@ -53,7 +55,7 @@ public class RHPUsersManager {
             .target(url)
             .queryParam("email", email)
             .request(MediaType.APPLICATION_JSON)
-            .get(new GenericType<List<GroupManagementUserRequest>>() {
+            .get(new GenericType<List<GroupManagementUserRequestDTO>>() {
             });
     }
 

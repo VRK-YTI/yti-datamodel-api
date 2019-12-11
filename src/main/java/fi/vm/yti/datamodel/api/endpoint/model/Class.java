@@ -232,6 +232,8 @@ public class Class {
                     searchIndexManager.updateIndexClass(updateClass);
                 }
 
+                searchIndexManager.updateIndexModel(updateClass.getModelId());
+
                 if (provenanceManager.getProvMode()) {
                     provenanceManager.createProvEntityBundle(updateClass.getId(), updateClass.asGraph(), user.getId(), updateClass.getProvUUID(), oldIdIRI);
                 }
@@ -313,6 +315,7 @@ public class Class {
                 logger.info("Created " + newClass.getId());
 
                 searchIndexManager.createIndexClass(newClass);
+                searchIndexManager.updateIndexModel(newClass.getModelId());
 
                 if (provenanceManager.getProvMode()) {
                     provenanceManager.createProvenanceActivityFromModel(newClass.getId(), newClass.asGraph(), newClass.getProvUUID(), user.getId());
@@ -367,6 +370,7 @@ public class Class {
 
                 graphManager.deleteResource(deleteClass);
                 searchIndexManager.removeClass(id);
+                searchIndexManager.updateIndexModel(deleteClass.getModelId());
 
                 if (provenanceManager.getProvMode()) {
                     provenanceManager.invalidateProvenanceActivity(deleteClass.getId(), deleteClass.getProvUUID(), user.getId());
