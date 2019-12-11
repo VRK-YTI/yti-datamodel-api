@@ -26,6 +26,8 @@ import org.apache.jena.iri.IRIException;
 import org.apache.jena.query.ParameterizedSparqlString;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.NodeIterator;
+import org.apache.jena.rdf.model.Property;
+import org.apache.jena.rdf.model.Resource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -60,6 +62,7 @@ public class History {
     private final JenaClient jenaClient;
     private final AuthenticatedUserProvider userProvider;
     private final GroupManagementService groupService;
+    private final Property wasAttributedTo = LDHelper.curieToProperty("prov:wasAttributedTo");
 
     @Autowired
     History(NamespaceManager namespaceManager,
@@ -132,6 +135,9 @@ public class History {
 
             if (user.isSuperuser() || user.getOrganizationsInRole().size() > 0) {
                 provModel.add(groupService.getUsersAsModel());
+                LDHelper.denormalizePredicate(provModel, wasAttributedTo);
+            } else {
+                LDHelper.removePredicates(provModel, wasAttributedTo);
             }
 
             return jerseyClient.constructResponseFromGraph(provModel);
@@ -146,7 +152,7 @@ public class History {
 
             if (user.isSuperuser() || user.getOrganizationsInRole().size() > 0) {
 
-                NodeIterator uuidIter = provModel.listObjectsOfProperty(LDHelper.curieToProperty("prov:wasAttributedTo"));
+                NodeIterator uuidIter = provModel.listObjectsOfProperty(wasAttributedTo);
                 List<String> userUuids = new ArrayList<>();
 
                 while (uuidIter.hasNext()) {
@@ -155,6 +161,10 @@ public class History {
                 }
 
                 provModel.add(groupService.getUsersAsModel(userUuids));
+                LDHelper.denormalizePredicate(provModel, wasAttributedTo);
+
+            } else {
+                LDHelper.removePredicates(provModel, wasAttributedTo);
             }
 
             return jerseyClient.constructResponseFromGraph(provModel);

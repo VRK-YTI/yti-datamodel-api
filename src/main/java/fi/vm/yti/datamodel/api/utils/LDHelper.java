@@ -13,6 +13,7 @@ import org.apache.jena.query.ParameterizedSparqlString;
 import org.apache.jena.rdf.model.*;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RiotException;
+import org.apache.jena.util.ResourceUtils;
 import org.glassfish.jersey.uri.UriComponent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -194,6 +195,41 @@ public class LDHelper {
         while (statements.hasNext()) {
             model.remove(statements.next());
         }
+    }
+
+    public static void removePredicates(Model model,
+                                     Property prop) {
+        ResIterator resIter = model.listResourcesWithProperty(prop);
+        while (resIter.hasNext()) {
+            resIter.next().removeAll(prop);
+        }
+    }
+
+    public static void denormalizePredicate(Model model,
+                                        Property prop) {
+        ResIterator resIter = model.listResourcesWithProperty(prop);
+        List<Resource> denormalizedResources = new ArrayList<>();
+        while(resIter.hasNext()) {
+
+            Resource res = resIter.next();
+
+            res.listProperties(prop).forEachRemaining((destatement)->{
+                    RDFNode refObject = destatement.getObject();
+                    if(refObject.isResource()) {
+                        refObject.asResource().listProperties().forEachRemaining((copyStatement)->{
+                            res.addProperty(copyStatement.getPredicate(),copyStatement.getObject());
+                            denormalizedResources.add(copyStatement.getSubject());
+                        });
+                    }
+                });
+
+            res.removeAll(prop);
+        }
+
+        denormalizedResources.forEach((denormRes)->{
+            denormRes.removeProperties();
+        });
+
     }
 
     public static void rewriteLiteral(Model model,

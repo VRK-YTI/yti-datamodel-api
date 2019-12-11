@@ -63,8 +63,7 @@ public class GroupManagementService {
         Model model = ModelFactory.createDefaultModel();
         users.forEach((uuid,user)->{
             Resource userResource = model.createResource("urn:uuid:"+uuid.toString());
-            userResource.addLiteral(FOAF.firstName,user.getFirstName());
-            userResource.addLiteral(FOAF.lastName,user.getLastName());
+            userResource.addLiteral(FOAF.name, user.getFirstName()+" "+user.getLastName());
         });
         return model;
     }
@@ -74,8 +73,7 @@ public class GroupManagementService {
         users.forEach((uuid,user)->{
             if(uuids.contains(uuid.toString())) {
                 Resource userResource = model.createResource("urn:uuid:" + uuid.toString());
-                userResource.addLiteral(FOAF.firstName, user.getFirstName());
-                userResource.addLiteral(FOAF.lastName, user.getLastName());
+                userResource.addLiteral(FOAF.name, user.getFirstName()+" "+user.getLastName());
             }
         });
         return model;
