@@ -17,6 +17,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import fi.vm.yti.datamodel.api.endpoint.genericapi.Search;
+import fi.vm.yti.datamodel.api.index.SearchIndexManager;
 import fi.vm.yti.datamodel.api.model.DataModel;
 import fi.vm.yti.datamodel.api.security.AuthorizationManager;
 import fi.vm.yti.datamodel.api.service.GraphManager;
@@ -42,19 +44,22 @@ public class ChangeStatuses {
     private final IDManager idManager;
     private final JerseyResponseManager jerseyResponseManager;
     private final GraphManager graphManager;
+    private final SearchIndexManager searchIndexManager;
 
     @Autowired
     ChangeStatuses(AuthorizationManager authManager,
                    AuthenticatedUserProvider userProvider,
                    IDManager idManager,
                    JerseyResponseManager jerseyResponseManager,
-                   GraphManager graphManager) {
+                   GraphManager graphManager,
+                   SearchIndexManager searchIndexManager) {
 
         this.authorizationManager = authManager;
         this.userProvider = userProvider;
         this.idManager = idManager;
         this.jerseyResponseManager = jerseyResponseManager;
         this.graphManager = graphManager;
+        this.searchIndexManager = searchIndexManager;
     }
 
     @PUT
@@ -96,6 +101,10 @@ public class ChangeStatuses {
         } else {
             graphManager.changeStatuses(model, initialStatus, endStatus);
         }
+
+        logger.info("Updating resource indexes for "+model);
+        searchIndexManager.initPredicateIndexFromModel(model);
+        searchIndexManager.initClassIndexFromModel(model);
 
         return jerseyResponseManager.ok();
     }
