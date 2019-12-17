@@ -14,7 +14,7 @@ public class IntegrationContainerDTO {
     private String modified;
     private String contentModified;
     private String statusModified;
-    private List<String> language;
+    private List<String> languages;
 
     public IntegrationContainerDTO(IndexModelDTO model) {
         this.prefLabel = model.getLabel();
@@ -25,7 +25,7 @@ public class IntegrationContainerDTO {
         this.modified = model.getModified();
         this.contentModified = model.getContentModified();
         this.statusModified = model.getStatusModified();
-        this.language = model.getLanguage();
+        this.languages = model.getLanguage();
     }
 
     public IntegrationContainerDTO(final Map<String, String> prefLabel,
@@ -36,7 +36,7 @@ public class IntegrationContainerDTO {
                                    final String modified,
                                    final String contentModified,
                                    final String statusModified,
-                                   final List<String> language) {
+                                   final List<String> languages) {
         this.prefLabel = prefLabel;
         this.description = description;
         this.uri = uri;
@@ -45,7 +45,7 @@ public class IntegrationContainerDTO {
         this.modified = modified;
         this.contentModified = contentModified;
         this.statusModified = statusModified;
-        this.language = language;
+        this.languages = languages;
     }
 
     public Map<String, String> getPrefLabel() {
@@ -112,12 +112,12 @@ public class IntegrationContainerDTO {
         this.statusModified = statusModified;
     }
 
-    public List<String> getLanguage() {
-        return language;
+    public List<String> getLanguages() {
+        return languages;
     }
 
-    public void setLanguage(final List<String> language) {
-        this.language = language;
+    public void setLanguages(final List<String> languages) {
+        this.languages = languages;
     }
 
     @Override
@@ -131,7 +131,7 @@ public class IntegrationContainerDTO {
             ", modified='" + modified + '\'' +
             ", contentModified='" + contentModified + '\'' +
             ", statusModified='" + statusModified + '\'' +
-            ", language=" + language +
+            ", languages=" + languages +
             '}';
     }
 }
