@@ -1,6 +1,8 @@
 package fi.vm.yti.datamodel.api.service;
 
 import fi.vm.yti.datamodel.api.config.ApplicationProperties;
+import fi.vm.yti.datamodel.api.model.GroupManagementUserDTO;
+import fi.vm.yti.datamodel.api.model.GroupManagementUserRequestDTO;
 import fi.vm.yti.security.Role;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -29,7 +31,7 @@ public class RHPUsersManager {
         this.fakeLoginAllowed = fakeLoginAllowed;
     }
 
-    public List<GroupManagementUser> getFakeableUsers() {
+    public List<GroupManagementUserDTO> getFakeableUsers() {
 
         if (fakeLoginAllowed) {
 
@@ -38,33 +40,33 @@ public class RHPUsersManager {
             return clientFactory.create()
                 .target(url)
                 .request(MediaType.APPLICATION_JSON)
-                .get(new GenericType<List<GroupManagementUser>>() {
+                .get(new GenericType<List<GroupManagementUserDTO>>() {
                 });
         } else {
             return Collections.emptyList();
         }
     }
 
-    public List<GroupManagementUserRequest> getUserRequests(String email) {
+    public List<GroupManagementUserRequestDTO> getUserRequests(String userId) {
 
-        String url = properties.getDefaultGroupManagementAPI() + "requests";
+        String url = properties.getPrivateGroupManagementAPI() + "requests";
 
         return clientFactory.create()
             .target(url)
-            .queryParam("email", email)
+            .queryParam("userId", userId)
             .request(MediaType.APPLICATION_JSON)
-            .get(new GenericType<List<GroupManagementUserRequest>>() {
+            .get(new GenericType<List<GroupManagementUserRequestDTO>>() {
             });
     }
 
-    public void sendUserRequests(String email,
+    public void sendUserRequests(String userId,
                                  String organizationId) {
 
-        String url = properties.getDefaultGroupManagementAPI() + "request";
+        String url = properties.getPrivateGroupManagementAPI() + "request";
 
         clientFactory.create()
             .target(url)
-            .queryParam("email", email)
+            .queryParam("userId", userId)
             .queryParam("role", Role.DATA_MODEL_EDITOR.toString())
             .queryParam("organizationId", organizationId)
             .request(MediaType.APPLICATION_JSON)

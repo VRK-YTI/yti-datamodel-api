@@ -9,9 +9,14 @@ import fi.vm.yti.datamodel.api.utils.LDHelper;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.query.ParameterizedSparqlString;
 import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.NodeIterator;
 import org.apache.jena.rdf.model.Property;
+import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.update.UpdateRequest;
+import org.apache.jena.vocabulary.DCTerms;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -21,6 +26,7 @@ import java.util.UUID;
 public class ProvenanceManager {
 
     public static final Property generatedAtTime = ResourceFactory.createProperty("http://www.w3.org/ns/prov#", "generatedAtTime");
+    private static final Logger logger = LoggerFactory.getLogger(ProvenanceManager.class);
 
     private final EndpointServices endpointServices;
     private final ApplicationProperties properties;
@@ -66,6 +72,23 @@ public class ProvenanceManager {
         createProvenanceActivity(id, provUUID, user);
     }
 
+
+    public void createProvenanceActivityForNewVersionModel(String modelId, UUID user) {
+
+        Model hasPartGraph = jenaClient.getModelFromCore(modelId+"#HasPartGraph");
+
+        NodeIterator hasPartObjects = hasPartGraph.listObjectsOfProperty(DCTerms.hasPart);
+
+        while (hasPartObjects.hasNext()) {
+            String resUri = hasPartObjects.nextNode().asResource().toString();
+            if(resUri.startsWith(modelId+"#")) {
+                Model resourceModel = jenaClient.getModelFromCore(resUri);
+                createProvenanceActivityFromModel(resUri, resourceModel, "urn:uuid:" + UUID.randomUUID().toString(), user);
+            }
+        }
+
+    }
+
     /**
      * Returns query for creating the PROV Activity
      *
@@ -79,12 +102,20 @@ public class ProvenanceManager {
                                                          String provUUID,
                                                          UUID user) {
         String query
-            = "INSERT { "
+            = "DELETE { "
+            + "GRAPH ?graph {"
+            + "?graph prov:used ?oldEntity . "
+            + "?graph prov:invalidatedAt ?already_deleted . "
+            + "?graph prov:wasInvalidatedBy ?earlier_user . "
+            + "}"
+            + "}"
+            + "INSERT { "
             + "GRAPH ?graph { "
             + "?graph prov:startedAtTime ?creation . "
             + "?graph prov:generated ?jsonld . "
             + "?graph prov:used ?jsonld . "
             + "?graph a prov:Activity . "
+            + "?graph rdfs:isDefinedBy ?modelGraph . "
             + "?graph prov:wasAttributedTo ?user . "
             + "?jsonld a prov:Entity . "
             + "?jsonld prov:wasAttributedTo ?user . "
@@ -96,6 +127,56 @@ public class ProvenanceManager {
             + "}"
             + "WHERE { "
             + "BIND(now() as ?creation)"
+            + "OPTIONAL { "
+             + "GRAPH ?graph {"
+             + "?graph prov:used ?oldEntity . "
+             + "?graph prov:invalidatedAt ?already_deleted . "
+             + "?graph prov:wasInvalidatedBy ?earlier_user . }"
+             + "}"
+            + "}";
+
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+
+        pss.setIri("graph", graph);
+        String modelGraph = graph.contains("#") ? graph.substring(0,graph.indexOf("#")) : graph;
+        pss.setIri("modelGraph", modelGraph);
+        pss.setIri("user", "urn:uuid:" + user.toString());
+        pss.setIri("jsonld", provUUID);
+        pss.setCommandText(query);
+        return pss.asUpdate();
+    }
+
+
+    public void invalidateProvenanceActivity(String graph,
+                                         String provUUID,
+                                         UUID user) {
+        logger.debug("Invalidating provenance graph: "+graph);
+        UpdateRequest queryObj = createProvenanceActivityInvalidationRequest(graph, provUUID, user);
+        jenaClient.updateToService(queryObj, endpointServices.getProvSparqlUpdateAddress());
+    }
+
+    public UpdateRequest createProvenanceActivityInvalidationRequest(String graph,
+                                                         String provUUID,
+                                                         UUID user) {
+        String query
+            = "INSERT { "
+            + "GRAPH ?graph { "
+            + "?graph a prov:Activity . "
+            + "?graph prov:invalidatedAt ?deleted . "
+            + "?graph prov:wasInvalidatedBy ?user . "
+            + "}"
+            + "GRAPH ?jsonld {"
+            + "?graph prov:invalidatedAt ?deleted . "
+            + "?graph prov:wasInvalidatedBy ?user . "
+            + "}"
+            + "}"
+            + "WHERE { "
+            + "GRAPH ?graph { "
+            + "?graph a prov:Activity . "
+            + "?graph prov:used ?jsonld . "
+            + "}"
+            + "BIND(now() as ?deleted)"
             + "}";
 
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
@@ -105,6 +186,60 @@ public class ProvenanceManager {
         pss.setIri("user", "urn:uuid:" + user.toString());
         pss.setIri("jsonld", provUUID);
         pss.setCommandText(query);
+
+        return pss.asUpdate();
+    }
+
+    public void invalidateModelProvenanceActivity(String graph,
+                                             String provUUID,
+                                             UUID user) {
+        logger.debug("Invalidating provenance graph: "+graph);
+        UpdateRequest queryObj = createModelProvenanceActivityInvalidationRequest(graph, provUUID, user);
+        jenaClient.updateToService(queryObj, endpointServices.getProvSparqlUpdateAddress());
+    }
+
+    public UpdateRequest createModelProvenanceActivityInvalidationRequest(String graph,
+                                                                     String provUUID,
+                                                                     UUID user) {
+        String query
+            = "INSERT { "
+            + "GRAPH ?graph { "
+            + "?graph prov:invalidatedAt ?deleted . "
+            + "?graph prov:wasInvalidatedBy ?user . "
+            + "}"
+            + "GRAPH ?resourceGraph { "
+            + "?resourceGraph prov:invalidatedAt ?deleted . "
+            + "?resourceGraph prov:wasInvalidatedBy ?user . "
+            + "}"
+            + "GRAPH ?jsonld {"
+            + "?graph prov:invalidatedAt ?deleted . "
+            + "?graph prov:wasInvalidatedBy ?user . "
+            + "}"
+            + "}"
+            + "WHERE { "
+            + "GRAPH ?graph { "
+            + "?graph a prov:Activity . "
+            + "?graph prov:used ?jsonld . "
+            + "}"
+            + "OPTIONAL { GRAPH ?resourceGraph { "
+            + "?resourceGraph rdfs:isDefinedBy ?graph . "
+            + "?resourceGraph a prov:Activity . "
+            + "FILTER NOT EXISTS { "
+            + "?resourceGraph prov:invalidatedAt ?deleted . "
+            + "?resourceGraph prov:wasInvalidatedBy ?user . "
+            +"}"
+            +"}}"
+            + "BIND(now() as ?deleted)"
+            + "}";
+
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+
+        pss.setIri("graph", graph);
+        pss.setIri("user", "urn:uuid:" + user.toString());
+        pss.setIri("jsonld", provUUID);
+        pss.setCommandText(query);
+
         return pss.asUpdate();
     }
 

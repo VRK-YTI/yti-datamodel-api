@@ -68,7 +68,7 @@ public class ModelRequirementCreator {
         @Parameter(description = "Model namespace", required = true) @QueryParam("namespace") String namespace,
         @Parameter(description = "Model prefix", required = true) @QueryParam("prefix") String prefix,
         @Parameter(description = "Model label", required = true) @QueryParam("label") String label,
-        @Parameter(description = "Initial language", required = true, schema = @Schema(allowableValues = "fi,en")) @QueryParam("lang") String lang) {
+        @Parameter(description = "Initial language", required = true, schema = @Schema(allowableValues = {"fi","en"})) @QueryParam("lang") String lang) {
 
         if (namespace == null || namespace.isEmpty() || (namespace.startsWith("http") && !(namespace.endsWith("#") || namespace.endsWith("/")) )) return jerseyResponseManager.invalidIRI();
 

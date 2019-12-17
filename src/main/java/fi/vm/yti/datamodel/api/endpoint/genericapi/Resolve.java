@@ -93,7 +93,7 @@ public class Resolve {
                 logger.warn("Could not parse If-Modified-Since");
                 return jerseyResponseManager.invalidParameter();
             }
-            Date modified = graphManager.lastModified(graphName);
+            Date modified = graphManager.modelContentModified(graphName);
             if (modified != null) {
                 if (modifiedSince.after(modified)) {
                     return Response.notModified().header("Last-Modified", DateUtils.formatDate(modified)).build();
@@ -104,7 +104,7 @@ public class Resolve {
         Locale locale = acceptLang == null ? null : Locale.forLanguageTag(acceptLang);
         String language = locale == null ? null : locale.getDefault().toString().substring(0, 2).toLowerCase();
 
-        final URI htmlRedirectUrl = URI.create(uriInfo.getBaseUri().toString().replace("/datamodel/api/", "/model/") + graphPrefix + (uriFragment != null ? "/" + uriFragment : ""));
+        final URI htmlRedirectUrl = URI.create(uriInfo.getBaseUri().toString().replace("/datamodel-api/api/", "/model/") + graphPrefix + (uriFragment != null ? "#"+uriFragment : ""));
 
         if (format != null && format.length() > 5) {
             accept = format;
@@ -162,7 +162,7 @@ public class Resolve {
             logger.warn("Datamodel resource URI not resolvable, wrong context path!");
             throw new BadRequestException("Datamodel resource URI not resolvable, wrong context path!");
         } else {
-            if (!LDHelper.isAlphaString(uriPath.substring(API_PATH_DATAMODEL.length()))) {
+            if (!LDHelper.isValidPrefix(uriPath.substring(API_PATH_DATAMODEL.length()))) {
                 logger.warn("Could not parse path: " + uriPath);
                 throw new BadRequestException("Could not parse graph from uri path");
             }

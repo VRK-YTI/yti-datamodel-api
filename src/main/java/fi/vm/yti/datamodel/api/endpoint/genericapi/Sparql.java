@@ -55,8 +55,8 @@ public class Sparql {
     })
     public Response sparql(
         @Parameter(description = "SPARQL Query", required = true) @QueryParam("query") String queryString,
-        @Parameter(description = "SPARQL Service", schema = @Schema(defaultValue = "core", allowableValues = "core,prov,imports,scheme,concept")) @QueryParam("service") String service,
-        @Parameter(description = "Accept", required = true, schema = @Schema(allowableValues = "application/sparql-results+json,text/csv, text/turtle")) @QueryParam("accept") String accept) {
+        @Parameter(description = "SPARQL Service", schema = @Schema(defaultValue = "core", allowableValues = {"core","prov","imports","scheme","concept"})) @QueryParam("service") String service,
+        @Parameter(description = "Accept", required = true, schema = @Schema(allowableValues = {"application/sparql-results+json","text/csv", "text/turtle"})) @QueryParam("accept") String accept) {
 
         if (!authorizationManager.hasRightToRunSparqlQuery()) {
             return jerseyResponseManager.unauthorized();
@@ -103,8 +103,8 @@ public class Sparql {
     })
     public Response sparqlConstruct(
         @Parameter(description = "SPARQL Query", required = true) @QueryParam("query") String queryString,
-        @Parameter(description = "SPARQL Service", schema = @Schema(defaultValue = "core", allowableValues = "core,prov,imports,scheme,concept")) @QueryParam("service") String service,
-        @Parameter(description = "Accept", required = true, schema = @Schema(allowableValues = "text/turtle")) @QueryParam("accept") String accept) {
+        @Parameter(description = "SPARQL Service", schema = @Schema(defaultValue = "core", allowableValues = {"core","prov","imports","scheme","concept"})) @QueryParam("service") String service,
+        @Parameter(description = "Accept", required = true, schema = @Schema(allowableValues = {"text/turtle"})) @QueryParam("accept") String accept) {
 
         if (!authorizationManager.hasRightToRunSparqlQuery()) {
             return jerseyResponseManager.unauthorized();
@@ -150,7 +150,7 @@ public class Sparql {
 
     public Response sparqlUpdate(
         @Parameter(description = "Sparql query", required = true) String body,
-        @Parameter(description = "SPARQL Service", schema = @Schema(defaultValue = "core", allowableValues = "core,prov,imports,scheme,concept")) @QueryParam("service") String service) {
+        @Parameter(description = "SPARQL Service", schema = @Schema(defaultValue = "core", allowableValues = {"core","prov","imports","scheme","concept"})) @QueryParam("service") String service) {
 
         if (!authorizationManager.hasRightToRunSparqlQuery()) {
             return jerseyResponseManager.unauthorized();

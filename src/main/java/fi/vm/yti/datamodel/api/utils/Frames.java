@@ -18,6 +18,8 @@ public class Frames {
     public static final LinkedHashMap<String, Object> name;
     public static final LinkedHashMap<String, Object> title;
     public static final LinkedHashMap<String, Object> modified;
+    public static final LinkedHashMap<String, Object> contentModified;
+    public static final LinkedHashMap<String, Object> statusModified;
     public static final LinkedHashMap<String, Object> contributor;
     public static final LinkedHashMap<String, Object> isPartOf;
     public static final LinkedHashMap<String, Object> contributorID;
@@ -200,6 +202,21 @@ public class Frames {
                 put("@type", "http://www.w3.org/2001/XMLSchema#dateTime");
             }
         };
+
+        contentModified = new LinkedHashMap<String, Object>() {
+            {
+                put("@id", "http://uri.suomi.fi/datamodel/ns/iow#contentModified");
+                put("@type", "http://www.w3.org/2001/XMLSchema#dateTime");
+            }
+        };
+
+        statusModified = new LinkedHashMap<String, Object>() {
+            {
+                put("@id", "http://uri.suomi.fi/datamodel/ns/iow#statusModified");
+                put("@type", "http://www.w3.org/2001/XMLSchema#dateTime");
+            }
+        };
+
 
         isPartOf = new LinkedHashMap<String, Object>() {
             {
@@ -723,6 +740,8 @@ public class Frames {
                 put("label", label);
                 put("comment", comment);
                 put("modified", modified);
+                put("contentModified", contentModified);
+                put("statusModified", statusModified);
                 put("contributor", contributorID);
                 put("isPartOf", isPartOfID);
                 put("useContext", useContext);
@@ -751,6 +770,7 @@ public class Frames {
                 put("comment", shDescription);
                 put("modified", modified);
                 put("status", versionInfo);
+                put("statusModified", statusModified);
                 put("isDefinedBy", isDefinedBy);
                 putAll(jsonLdKeys);
             }
@@ -790,6 +810,7 @@ public class Frames {
                 put("modified", modified);
                 put("range", range);
                 put("status", versionInfo);
+                put("statusModified", statusModified);
                 put("isDefinedBy", isDefinedBy);
                 putAll(jsonLdKeys);
             }

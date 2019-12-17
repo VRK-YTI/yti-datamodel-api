@@ -13,6 +13,7 @@ import org.apache.jena.query.ParameterizedSparqlString;
 import org.apache.jena.rdf.model.*;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RiotException;
+import org.apache.jena.util.ResourceUtils;
 import org.glassfish.jersey.uri.UriComponent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -182,6 +183,53 @@ public class LDHelper {
     public static Literal getDateTimeLiteral() {
         Calendar cal = GregorianCalendar.getInstance();
         return ResourceFactory.createTypedLiteral(cal);
+    }
+
+
+    public static void removeLiteral(Model model,
+                                      Resource res,
+                                      Property prop) {
+        Selector literalSelector = new SimpleSelector(res, prop, (Literal) null);
+        Iterator<Statement> statements = model.listStatements(literalSelector).toList().iterator();
+
+        while (statements.hasNext()) {
+            model.remove(statements.next());
+        }
+    }
+
+    public static void removePredicates(Model model,
+                                     Property prop) {
+        ResIterator resIter = model.listResourcesWithProperty(prop);
+        while (resIter.hasNext()) {
+            resIter.next().removeAll(prop);
+        }
+    }
+
+    public static void denormalizePredicate(Model model,
+                                        Property prop) {
+        ResIterator resIter = model.listResourcesWithProperty(prop);
+        List<Resource> denormalizedResources = new ArrayList<>();
+        while(resIter.hasNext()) {
+
+            Resource res = resIter.next();
+
+            res.listProperties(prop).toList().forEach((destatement)->{
+                    RDFNode refObject = destatement.getObject();
+                    if(refObject.isResource()) {
+                        refObject.asResource().listProperties().toList().forEach((copyStatement)->{
+                            res.addProperty(copyStatement.getPredicate(),copyStatement.getObject());
+                            denormalizedResources.add(copyStatement.getSubject());
+                        });
+                    }
+                });
+
+            res.removeAll(prop);
+        }
+
+        denormalizedResources.forEach((denormRes)->{
+            denormRes.removeProperties();
+        });
+
     }
 
     public static void rewriteLiteral(Model model,
@@ -415,13 +463,33 @@ public class LDHelper {
     }
 
     /**
-     * Returns true of string uses alphanumerics only
+     * Returns true of string uses alphastrings only
      *
      * @param name name used in something
      * @return boolean
      */
     public static boolean isAlphaString(String name) {
         return name.matches("[a-zA-Z]+");
+    }
+
+    /**
+     * Returns true of string uses alphanumerics only
+     *
+     * @param name name used in something
+     * @return boolean
+     */
+    public static boolean isAlphaNumeric(String name) {
+        return name.matches("[a-zA-Z0-9]+");
+    }
+
+    /**
+     * Returns true of string uses alphanumerics only
+     *
+     * @param name name used in something
+     * @return boolean
+     */
+    public static boolean isValidPrefix(String name) {
+        return name.matches("^[a-zA-Z][a-zA-Z0-9-_]+[a-zA-Z0-9]$");
     }
 
     /**

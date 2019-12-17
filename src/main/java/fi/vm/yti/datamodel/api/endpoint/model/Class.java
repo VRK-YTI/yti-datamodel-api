@@ -215,11 +215,17 @@ public class Class {
                         logger.warn(idIRI + " is existing graph!");
                         return jerseyResponseManager.usedIRI();
                     } else {
+                        ReusableClass oldClass = new ReusableClass(oldIdIRI, graphManager);
+
+                        if(!oldClass.getStatus().equals(updateClass.getStatus())) {
+                            updateClass.setStatusModified();
+                        }
+
                         if (graphManager.modelStatusRestrictsRemoving(oldIdIRI)) {
                             logger.warn(idIRI + " is existing graph!");
                             return jerseyResponseManager.depedencies();
                         } else {
-                            graphManager.updateResourceWithNewId(oldIdIRI, updateClass);
+                            graphManager.updateResourceWithNewId(updateClass, oldClass);
                             provUUID = updateClass.getProvUUID();
                             logger.info("Changed class id from:" + oldid + " to " + id);
                             searchIndexManager.removeClass(oldid);
@@ -227,10 +233,18 @@ public class Class {
                         }
                     }
                 } else {
-                    graphManager.updateResource(updateClass);
+                    ReusableClass oldClass = new ReusableClass(idIRI, graphManager);
+
+                    if(!oldClass.getStatus().equals(updateClass.getStatus())) {
+                        updateClass.setStatusModified();
+                    }
+
+                    graphManager.updateResource(updateClass,oldClass);
                     provUUID = updateClass.getProvUUID();
                     searchIndexManager.updateIndexClass(updateClass);
                 }
+
+                searchIndexManager.updateIndexModel(updateClass.getModelId());
 
                 if (provenanceManager.getProvMode()) {
                     provenanceManager.createProvEntityBundle(updateClass.getId(), updateClass.asGraph(), user.getId(), updateClass.getProvUUID(), oldIdIRI);
@@ -248,6 +262,7 @@ public class Class {
                     return jerseyResponseManager.usedIRI();
                 } else {
                     graphManager.insertExistingResourceToModel(id, model);
+                    graphManager.updateContentModified(model);
                     logger.info("Created reference from " + model + " to " + id);
                     return jerseyResponseManager.ok();
                 }
@@ -312,6 +327,7 @@ public class Class {
                 logger.info("Created " + newClass.getId());
 
                 searchIndexManager.createIndexClass(newClass);
+                searchIndexManager.updateIndexModel(newClass.getModelId());
 
                 if (provenanceManager.getProvMode()) {
                     provenanceManager.createProvenanceActivityFromModel(newClass.getId(), newClass.asGraph(), newClass.getProvUUID(), user.getId());
@@ -351,6 +367,7 @@ public class Class {
             return jerseyResponseManager.invalidIRI();
         }
 
+        YtiUser user = userProvider.getUser();
 
         /* If Class is defined in the model */
         if (id.startsWith(model)) {
@@ -365,6 +382,11 @@ public class Class {
 
                 graphManager.deleteResource(deleteClass);
                 searchIndexManager.removeClass(id);
+                searchIndexManager.updateIndexModel(deleteClass.getModelId());
+
+                if (provenanceManager.getProvMode()) {
+                    provenanceManager.invalidateProvenanceActivity(deleteClass.getId(), deleteClass.getProvUUID(), user.getId());
+                }
 
             } catch (IllegalArgumentException ex) {
                 logger.warn(ex.toString());
@@ -379,8 +401,11 @@ public class Class {
             }
 
             /* If removing referenced class */
-            graphManager.deleteGraphReferenceFromModel(idIRI, modelIRI);
+            logger.debug("Deleting referenced class "+idIRI.toString()+ "from "+modelIRI.toString());
             graphManager.deleteGraphReferenceFromExportModel(idIRI, modelIRI);
+            graphManager.deletePositionGraphReferencesFromModel(model,id);
+            graphManager.updateContentModified(model);
+
             return jerseyResponseManager.ok();
         }
     }

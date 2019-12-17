@@ -8,10 +8,12 @@ import fi.vm.yti.datamodel.api.index.model.IntegrationResourceRequest;
 import fi.vm.yti.datamodel.api.service.JerseyResponseManager;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -63,17 +65,29 @@ public class Resources {
         @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     public Response getResources(
-        @Parameter(description = "Container") @QueryParam("container") String container,
+        @Parameter(description = "Uris") @QueryParam("uri") String uri,
+        @Parameter(description = "Containers") @QueryParam("container") String container,
         @Parameter(description = "Language") @QueryParam("language") String lang,
         @Parameter(description = "Status") @QueryParam("status") String status,
-        @Parameter(description = "Type values: class, shape, attribute, association") @QueryParam("type") String type,
-        @Parameter(description = "After") @QueryParam("after") Date after,
+        @Parameter(description = "Resource type: ", schema = @Schema(allowableValues = {"class", "shape", "attribute", "association"})) @QueryParam("type") String type,
+        @Parameter(description = "After as ISO8601 Timestamp") @QueryParam("after") String after,
+        @Parameter(description = "Before as ISO8601 Timestamp") @QueryParam("before") String before,
         @Parameter(description = "Search") @QueryParam("searchTerm") String search,
         @Parameter(description = "Pagesize") @QueryParam("pageSize") Integer pageSize,
         @Parameter(description = "From") @QueryParam("from") Integer from) {
 
+        Date afterDate = null;
+        if(after!=null && !after.isEmpty()) {
+            afterDate = (new DateTime(after)).toDate();
+        }
+
+        Date beforeDate = null;
+        if(before!=null && !before.isEmpty()) {
+            beforeDate = (new DateTime(before)).toDate();
+        }
+
         String path = uriInfo.getAbsolutePath().toString();
-        IntegrationResourceRequest req = new IntegrationResourceRequest(search,lang,container,searchIndexManager.parseStringList(status),type,after,null,pageSize,from);
+        IntegrationResourceRequest req = new IntegrationResourceRequest(searchIndexManager.parseStringList(uri), search,lang,searchIndexManager.parseStringList(container),searchIndexManager.parseStringList(status),type,afterDate,beforeDate,null,pageSize,from);
         IntegrationAPIResponse apiResp = searchIndexManager.searchResources(req,path);
         return jerseyResponseManager.ok(objectMapper.valueToTree(apiResp));
 

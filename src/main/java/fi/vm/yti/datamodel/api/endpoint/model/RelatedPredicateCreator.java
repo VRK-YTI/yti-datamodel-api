@@ -59,7 +59,7 @@ public class RelatedPredicateCreator {
     public Response createRelatedPredicate(
         @Parameter(description = "Model ID", required = true) @QueryParam("modelID") String modelID,
         @Parameter(description = "Old predicate id", required = true) @QueryParam("oldPredicate") String oldPredicate,
-        @Parameter(description = "Relation type", required = true, schema = @Schema(allowableValues = "rdfs:subPropertyOf,iow:superPropertyOf,prov:wasDerivedFrom")) @QueryParam("relationType") String relationType) {
+        @Parameter(description = "Relation type", required = true, schema = @Schema(allowableValues = {"rdfs:subPropertyOf","iow:superPropertyOf","prov:wasDerivedFrom"})) @QueryParam("relationType") String relationType) {
 
         IRI modelIRI, oldPredicateIRI;
 

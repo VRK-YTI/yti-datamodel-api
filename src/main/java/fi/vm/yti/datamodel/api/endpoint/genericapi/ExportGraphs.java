@@ -4,6 +4,7 @@ import fi.vm.yti.datamodel.api.service.JerseyClient;
 import fi.vm.yti.datamodel.api.service.JerseyResponseManager;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -42,11 +43,8 @@ public class ExportGraphs {
         @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     public Response getExportGraphs(
-        @Parameter(description = "Requested resource", required = true) @QueryParam("service") String service,
-        @Parameter(description = "Content-type", required = true) @QueryParam("content-type") String ctype) {
-
-        // TODO: allowableValues = "core,prov"
-        // TODO: allowableValues = "application/ld+json"
+        @Parameter(description = "Requested resource", required = true, schema = @Schema(allowableValues = {"core","prov"})) @QueryParam("service") String service,
+        @Parameter(description = "Content-type", required = true, schema = @Schema(allowableValues = {"application/ld+json","application/trig"})) @QueryParam("content-type") String ctype) {
 
         Lang clang = RDFLanguages.contentTypeToLang(ctype);
 

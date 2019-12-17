@@ -410,7 +410,7 @@ public class JerseyClient {
             throw new IllegalArgumentException("Invalid terminology URI!");
         }
 
-        String url = properties.getDefaultTerminologyAPI() + "integration/terminology/conceptSuggestion";
+        String url = properties.getPrivateTerminologyAPI() + "v1/integration/terminology/conceptSuggestion";
 
         Client client = ClientBuilder.newClient();
         WebTarget target = client.target(url);

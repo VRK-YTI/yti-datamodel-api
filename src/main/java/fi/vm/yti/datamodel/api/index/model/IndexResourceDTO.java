@@ -10,6 +10,7 @@ public class IndexResourceDTO {
     private String id;
     private String isDefinedBy;
     private String status;
+    private String statusModified;
     private String modified;
     private String type;
     private Map<String, String> label;
@@ -22,6 +23,7 @@ public class IndexResourceDTO {
     public IndexResourceDTO(final String id,
                             final String isDefinedBy,
                             final String status,
+                            final String statusModified,
                             final String modified,
                             final String type,
                             final String range,
@@ -30,6 +32,7 @@ public class IndexResourceDTO {
         this.id = id;
         this.isDefinedBy = isDefinedBy;
         this.status = status;
+        this.statusModified = statusModified;
         this.modified = modified;
         this.type = type;
         this.range = range;
@@ -41,6 +44,7 @@ public class IndexResourceDTO {
         this.id = classResource.getId();
         this.isDefinedBy = classResource.getModelId();
         this.status = classResource.getStatus();
+        this.statusModified = classResource.getStatusModified();
         this.modified = classResource.getModified();
         this.type = classResource.getType();
         this.label = classResource.getLabel();
@@ -71,6 +75,14 @@ public class IndexResourceDTO {
         this.status = status;
     }
 
+    public String getStatusModified() {
+        return statusModified;
+    }
+
+    public void setStatusModified(final String statusModified) {
+        this.statusModified = statusModified;
+    }
+
     public String getModified() {
         return modified;
     }
@@ -97,7 +109,7 @@ public class IndexResourceDTO {
 
     public void highlightLabels(String highlightText) {
         if (highlightText != null && highlightText.length() > 0) {
-            String highLights[] = highlightText.split("\\s+");
+            String[] highLights = highlightText.split("\\s+");
             for(String highLight : highLights) {
                 this.label.forEach((lang, label) -> {
                     String matchString = Pattern.quote(highLight);
@@ -134,6 +146,7 @@ public class IndexResourceDTO {
             "id='" + id + '\'' +
             ", isDefinedBy='" + isDefinedBy + '\'' +
             ", status='" + status + '\'' +
+            ", statusModified='" + statusModified + '\'' +
             ", modified='" + modified + '\'' +
             ", type='" + type + '\'' +
             ", label=" + label +

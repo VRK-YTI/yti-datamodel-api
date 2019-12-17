@@ -900,7 +900,7 @@ public class JsonSchemaWriter {
 
                 schema.add("title", title);
 
-                Date modified = graphManager.lastModified(modelID);
+                Date modified = graphManager.modelContentModified(modelID);
                 SimpleDateFormat format = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz");
 
                 if (modified != null) {
@@ -1035,7 +1035,7 @@ public class JsonSchemaWriter {
                 + "BIND(afn:localname(?predicate) as ?predicateName)"
                 + "}"
                 + "}"
-                + "} GROUP BY ?resource ?property ?propertyDeactivated ?lang ?className ?classTitle ?classDeactivated ?classDescription ?predicate ?predicateName ?datatype ?shapeRef ?shapeRefName ?min ?max ?minLength ?maxLength ?propertyLabel ?propertyDescription ?idBoolean ?pattern "
+                + "} GROUP BY ?resource ?property ?propertyDeactivated ?lang ?className ?localClassName ?classTitle ?classDeactivated ?classDescription ?predicate ?predicateName ?datatype ?shapeRef ?shapeRefName ?min ?max ?minLength ?maxLength ?propertyLabel ?propertyDescription ?idBoolean ?pattern "
                 + "ORDER BY ?resource ?property ?lang";
 
         pss.setIri("modelPartGraph", modelID + "#HasPartGraph");

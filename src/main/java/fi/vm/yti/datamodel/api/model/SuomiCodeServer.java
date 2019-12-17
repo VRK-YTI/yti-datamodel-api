@@ -104,7 +104,7 @@ public class SuomiCodeServer {
 
         logger.debug("Updating suomi.fi codeLists: " + url);
 
-        WebTarget target = client.target(url + "coderegistries/").queryParam("format", "application/json");
+        WebTarget target = client.target(url + "v1/coderegistries/").queryParam("format", "application/json");
         Response response = target.request("application/json").get();
 
         if (response.getStatusInfo().getFamily() == Response.Status.Family.SUCCESSFUL) {

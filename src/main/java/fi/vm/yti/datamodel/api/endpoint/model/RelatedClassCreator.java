@@ -59,7 +59,7 @@ public class RelatedClassCreator {
     public Response newClass(
         @Parameter(description = "Model ID", required = true) @QueryParam("modelID") String modelID,
         @Parameter(description = "Old class id", required = true) @QueryParam("oldClass") String oldClass,
-        @Parameter(description = "Relation type", required = true, schema = @Schema(allowableValues = "rdfs:subClassOf, iow:superClassOf, prov:wasDerivedFrom")) @QueryParam("relationType") String relationType) {
+        @Parameter(description = "Relation type", required = true, schema = @Schema(allowableValues = {"rdfs:subClassOf", "iow:superClassOf", "prov:wasDerivedFrom"})) @QueryParam("relationType") String relationType) {
 
         IRI modelIRI, oldClassIRI;
 

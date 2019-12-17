@@ -50,18 +50,20 @@ public class ModelQueryFactory {
     }
 
     public SearchRequest createQuery(ModelSearchRequest request) {
-        return createQuery(request.getQuery(), request.getStatus(), request.getType(), request.getAfter(), Collections.EMPTY_SET, request.getPageSize(), request.getPageFrom(), request.getFilter(), request.getIncludeIncomplete(), request.getIncludeIncompleteFrom());
+        return createQuery(request.getUri(),request.getQuery(), request.getStatus(), request.getType(), request.getAfter(), request.getBefore(), Collections.EMPTY_SET, request.getPageSize(), request.getPageFrom(), request.getFilter(), request.getIncludeIncomplete(), request.getIncludeIncompleteFrom());
     }
 
     public SearchRequest createQuery(ModelSearchRequest request,
                                      Collection<String> additionalModelIds) {
-        return createQuery(request.getQuery(), request.getStatus(), request.getType(), request.getAfter(), additionalModelIds, request.getPageSize(), request.getPageFrom(), request.getFilter(), request.getIncludeIncomplete(), request.getIncludeIncompleteFrom());
+        return createQuery(request.getUri(), request.getQuery(), request.getStatus(), request.getType(), request.getAfter(), request.getBefore(), additionalModelIds, request.getPageSize(), request.getPageFrom(), request.getFilter(), request.getIncludeIncomplete(), request.getIncludeIncompleteFrom());
     }
 
-    private SearchRequest createQuery(String query,
+    private SearchRequest createQuery(Set<String> uris,
+                                      String query,
                                       Set<String> status,
                                       String type,
                                       Date after,
+                                      Date before,
                                       Collection<String> additionalModelIds,
                                       Integer pageSize,
                                       Integer pageFrom,
@@ -96,13 +98,37 @@ public class ModelQueryFactory {
         BoolQueryBuilder boolQuery = QueryBuilders.boolQuery();
         List<QueryBuilder> mustList = boolQuery.must();
 
+        if(uris!=null) {
+            QueryBuilder uriQuery = QueryBuilders.boolQuery()
+                .should(QueryBuilders.termsQuery("id", uris)).minimumShouldMatch(1);
+            mustList.add(uriQuery);
+        }
+
         if (includeIncomplete == null || includeIncompleteFrom != null) {
             QueryBuilder incompleteQuery = ElasticUtils.createStatusAndContributorQuery(includeIncompleteFrom);
             mustList.add(incompleteQuery);
         }
 
         if (after != null) {
-            mustList.add(QueryBuilders.rangeQuery("modified").gte(after));
+
+            QueryBuilder afterQuery = QueryBuilders.boolQuery()
+                .should(QueryBuilders.rangeQuery("contentModified").gte(after).to("now"))
+                .should(QueryBuilders.rangeQuery("modified").gte(after).to("now"))
+                .minimumShouldMatch(1);
+
+            mustList.add(afterQuery);
+
+        }
+
+        if (before != null) {
+
+            QueryBuilder beforeQuery = QueryBuilders.boolQuery()
+                .should(QueryBuilders.rangeQuery("contentModified").lt(before))
+                .should(QueryBuilders.rangeQuery("modified").lt(before))
+                .minimumShouldMatch(1);
+
+            mustList.add(beforeQuery);
+
         }
 
         if (filter != null) {

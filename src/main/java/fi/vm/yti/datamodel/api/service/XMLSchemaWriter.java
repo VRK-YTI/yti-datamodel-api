@@ -349,7 +349,7 @@ public class XMLSchemaWriter {
 
                 xml.appendElementValue(documentation, "dcterms:title", title);
 
-                Date modified = graphManager.lastModified(modelID);
+                Date modified = graphManager.modelContentModified(modelID);
                 SimpleDateFormat format = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz");
 
                 if (modified != null) {

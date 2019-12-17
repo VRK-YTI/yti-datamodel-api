@@ -254,9 +254,13 @@ public class Models {
                 return jerseyResponseManager.unauthorized();
             }
 
+            if(!oldVocabulary.getStatus().equals(newVocabulary.getStatus())) {
+                newVocabulary.setStatusModified();
+            }
+
             UUID provUUID = UUID.fromString(newVocabulary.getProvUUID().replaceFirst("urn:uuid:", ""));
 
-            graphManager.updateModel(newVocabulary);
+            graphManager.updateModel(newVocabulary, oldVocabulary);
 
             searchIndexManager.updateIndexModel(newVocabulary);
 
@@ -364,6 +368,8 @@ public class Models {
             return jerseyResponseManager.invalidParameter();
         }
 
+        YtiUser user = userProvider.getUser();
+
         if (!graphManager.isExistingGraph(modelIRI)) {
             return jerseyResponseManager.notFound();
         }
@@ -379,6 +385,10 @@ public class Models {
         }
 
         searchIndexManager.removeModel(deleteModel.getId());
+
+        if (provenanceManager.getProvMode()) {
+            provenanceManager.invalidateModelProvenanceActivity(deleteModel.getId(), deleteModel.getProvUUID(), user.getId());
+        }
 
         graphManager.deleteModel(deleteModel);
 

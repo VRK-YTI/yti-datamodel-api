@@ -254,7 +254,7 @@ public final class TerminologyManager {
                                                    boolean includeIncomplete,
                                                    Set<String> includeIncompletefrom) {
 
-        String url = properties.getDefaultTerminologyAPI() + "integration/containers";
+        String url = properties.getDefaultTerminologyAPI() + "v1/integration/containers";
 
         Client client = ClientBuilder.newClient();
         WebTarget target = client.target(url);
@@ -303,20 +303,23 @@ public final class TerminologyManager {
             logger.debug("Terminology uri is empty or null");
         }
 
-        String url = properties.getDefaultTerminologyAPI() + "integration/resources";
+        String url = properties.getDefaultTerminologyAPI() + "v1/integration/resources";
+
 
         Client client = ClientBuilder.newClient();
 
         WebTarget target = client.target(url)
             .queryParam("includeIncomplete", true);
 
+
         if (conceptUri != null && !conceptUri.isEmpty()) {
-            logger.debug("Getting concept with uri: " + conceptUri);
             target = target.queryParam("uri", conceptUri);
+            logger.debug("Concept url: "+conceptUri);
+            logger.debug("Getting concept from "+target.toString());
         } else {
             if (query != null && !query.isEmpty()) {
-                logger.debug("Concept search term: " + query);
                 target = target.queryParam("searchTerm", LDHelper.encode(query));
+                logger.debug("Searching concept from "+target.toString());
             }
         }
 
@@ -374,7 +377,7 @@ public final class TerminologyManager {
             graphId = "0";
         }
 
-        String url = properties.getDefaultTerminologyAPI() + "terminology/publicapi/searchconcept";
+        String url = properties.getDefaultTerminologyAPI() + "v1/public/searchconcept";
 
         Client client = ClientBuilder.newClient();
         WebTarget target = client.target(url)

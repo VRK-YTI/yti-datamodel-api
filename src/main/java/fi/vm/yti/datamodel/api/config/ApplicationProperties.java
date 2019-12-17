@@ -12,7 +12,9 @@ public final class ApplicationProperties {
     private String defaultNamespace;
     private boolean provenance;
     private String defaultGroupManagementAPI;
+    private String privateGroupManagementAPI;
     private String defaultTerminologyAPI;
+    private String privateTerminologyAPI;
     private String publicGroupManagementAPI;
     private String publicTerminologyFrontend;
     private String publicSuomiCodeServerFrontend;
@@ -76,12 +78,28 @@ public final class ApplicationProperties {
         this.defaultGroupManagementAPI = defaultGroupManagementAPI;
     }
 
+    public String getPrivateGroupManagementAPI() {
+        return privateGroupManagementAPI;
+    }
+
+    public void setPrivateGroupManagementAPI(String privateGroupManagementAPI) {
+        this.privateGroupManagementAPI = privateGroupManagementAPI;
+    }
+
     public String getDefaultTerminologyAPI() {
         return defaultTerminologyAPI;
     }
 
     public void setDefaultTerminologyAPI(String defaultTerminologyAPI) {
         this.defaultTerminologyAPI = defaultTerminologyAPI;
+    }
+
+    public String getPrivateTerminologyAPI() {
+        return privateTerminologyAPI;
+    }
+
+    public void setPrivateTerminologyAPI(String privateTerminologyAPI) {
+        this.privateTerminologyAPI = privateTerminologyAPI;
     }
 
     public String getPublicGroupManagementAPI() {
