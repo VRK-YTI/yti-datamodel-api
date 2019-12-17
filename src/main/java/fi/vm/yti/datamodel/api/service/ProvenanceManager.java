@@ -81,8 +81,10 @@ public class ProvenanceManager {
 
         while (hasPartObjects.hasNext()) {
             String resUri = hasPartObjects.nextNode().asResource().toString();
-            Model resourceModel = jenaClient.getModelFromCore(resUri);
-            createProvenanceActivityFromModel(resUri,resourceModel,"urn:uuid:" + UUID.randomUUID().toString(),user);
+            if(resUri.startsWith(modelId+"#")) {
+                Model resourceModel = jenaClient.getModelFromCore(resUri);
+                createProvenanceActivityFromModel(resUri, resourceModel, "urn:uuid:" + UUID.randomUUID().toString(), user);
+            }
         }
 
     }
