@@ -299,6 +299,16 @@ public class LDHelper {
         return arrList;
     }
 
+    public static List<String> RDFListToStringList(RDFList nodes) {
+        List<RDFNode> listNodes = nodes.asJavaList();
+        List<String> arrList = new ArrayList();
+        listNodes.forEach(node -> {
+            Literal lit = node.asLiteral();
+            arrList.add(lit.getString());
+        });
+        return arrList;
+    }
+
     public static final Map<String, Object> CONTEXT_MAP =
         Collections.unmodifiableMap(new HashMap<String, Object>() {{
             put("subClassOf", jsonObject("{ '@id': 'http://www.w3.org/2000/01/rdf-schema#subClassOf', '@type': '@id' }"));

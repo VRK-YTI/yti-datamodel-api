@@ -329,6 +329,7 @@ public class SearchIndexManager {
             "?model dcterms:modified ?modified . " +
             "?model iow:contentModified ?contentModified . " +
             "?model iow:statusModified ?statusModified . " +
+            "?model dcterms:language ?lang . " +
             "?model a ?modelType . " +
             "?model owl:versionInfo ?versionInfo . " +
             "?model iow:useContext ?useContext . " +
@@ -340,8 +341,6 @@ public class SearchIndexManager {
             "GRAPH ?model { " +
             "?model a owl:Ontology . " +
             "?model rdfs:label ?prefLabel . " +
-            "OPTIONAL {?model rdfs:comment ?comment . FILTER(lang(?comment)!='') }" +
-            "OPTIONAL { ?model iow:useContext ?useContext . }" +
             "?model owl:versionInfo ?versionInfo . " +
             "?model dcap:preferredXMLNamespaceName ?namespace . " +
             "?model dcap:preferredXMLNamespacePrefix ?prefix .  " +
@@ -349,8 +348,12 @@ public class SearchIndexManager {
             "?model dcterms:modified ?modified . " +
             "OPTIONAL { ?model iow:contentModified ?contentModified . }" +
             "OPTIONAL { ?model iow:statusModified ?statusModified . }" +
+            "?model dcterms:language/rdf:rest*/rdf:first ?lang ." +
             "?model dcterms:contributor ?org . BIND(strafter(str(?org), 'urn:uuid:') AS ?orgID) " +
-            "?model dcterms:isPartOf ?group . ?group dcterms:identifier ?groupID . }}";
+            "?model dcterms:isPartOf ?group . ?group dcterms:identifier ?groupID . " +
+            "OPTIONAL { ?model rdfs:comment ?comment . FILTER(lang(?comment)!='') }" +
+            "OPTIONAL { ?model iow:useContext ?useContext . }" +
+            "}}";
 
         Model model = jenaClient.constructFromCore(qry);
         if (model.size() < 1) {

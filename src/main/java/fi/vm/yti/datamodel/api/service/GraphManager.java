@@ -1449,13 +1449,6 @@ public class GraphManager {
         deleteGraphReferenceFromModel(graph.toString(), model.toString());
     }
 
-    /**
-     * Removes Resource-graph reference from models HasPartGraph
-     *
-     * @param graph Resource IRI reference to be removed
-     * @param model Model IRI
-     */
-
     public void deletePositionGraphReferencesFromModel(String modelIRI,
                                                        String resourceIRI) {
         UpdateRequest queryObj = deleteReferencesFromPositionGraphRequest(modelIRI, resourceIRI);
