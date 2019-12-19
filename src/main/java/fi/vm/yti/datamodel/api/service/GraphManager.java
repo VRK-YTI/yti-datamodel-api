@@ -1112,14 +1112,17 @@ public class GraphManager {
                                        String endStatus) {
         String query =
             "DELETE { " +
-                "GRAPH ?resource { ?any owl:versionInfo ?initialStatus . }" +
+                "GRAPH ?resource { ?any owl:versionInfo ?initialStatus . ?any iow:statusModified ?oldStatusModified . }" +
                 "}" +
                 "INSERT { " +
-                "GRAPH ?resource { ?any owl:versionInfo ?endStatus . }" +
+                "GRAPH ?resource { ?any owl:versionInfo ?endStatus . ?any iow:statusModified ?statusModified . }" +
                 "} " +
                 "WHERE { " +
                 "GRAPH ?hasPartGraph { ?graph dcterms:hasPart ?resource . } " +
-                "GRAPH ?resource { ?resource rdfs:isDefinedBy ?graph . ?any owl:versionInfo ?initialStatus . } " +
+                "GRAPH ?resource { " +
+                "?resource rdfs:isDefinedBy ?graph . " +
+                "?any owl:versionInfo ?initialStatus . " +
+                "OPTIONAL { ?any iow:statusModified ?oldStatusModified . } } " +
                 "}";
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
@@ -1127,6 +1130,7 @@ public class GraphManager {
         pss.setIri("graph", model);
         pss.setLiteral("initialStatus", initialStatus);
         pss.setLiteral("endStatus", endStatus);
+        pss.setLiteral("statusModified", LDHelper.getDateTimeLiteral());
         pss.setCommandText(query);
         UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(pss.asUpdate(), endpointServices.getCoreSparqlUpdateAddress());
         qexec.execute();
