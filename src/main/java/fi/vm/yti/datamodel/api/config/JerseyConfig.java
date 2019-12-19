@@ -7,8 +7,10 @@ import io.swagger.v3.oas.annotations.info.Info;
 import io.swagger.v3.oas.annotations.info.License;
 import io.swagger.v3.oas.annotations.servers.Server;
 
+import org.glassfish.jersey.message.DeflateEncoder;
 import org.glassfish.jersey.message.GZipEncoder;
 import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.server.filter.EncodingFilter;
 import org.reflections.Reflections;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
@@ -46,7 +48,9 @@ public class JerseyConfig extends ResourceConfig {
         myPackages("fi.vm.yti.datamodel.api.endpoint");
 
         register(OpenApiResource.class);
+        register(EncodingFilter.class);
         register(GZipEncoder.class);
+        register(DeflateEncoder.class);
         register(JsonParseExceptionMapper.class);
         register(IllegalArgumentExceptionMapper.class);
         register((ContainerResponseFilter) (req, resp) -> {
