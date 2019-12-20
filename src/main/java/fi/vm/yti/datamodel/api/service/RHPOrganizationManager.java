@@ -119,8 +119,8 @@ public class RHPOrganizationManager {
                       {
                         "uuid": "d9c76d52-03d3-4480-8c2c-b66e6d9c57f2",
                         "prefLabel": {
-                          "en": "Population Register Centre",
-                          "fi": "Väestörekisterikeskus",
+                          "en": "Digital and Population Data Services Agency",
+                          "fi": "Digi- ja väestötietovirasto",
                           "sv": ""
                         },
                         "description": {
@@ -128,7 +128,7 @@ public class RHPOrganizationManager {
                           "fi": "",
                           "sv": ""
                         },
-                        "url": "http://vrk.fi/etusivu"
+                        "url": "http://dvv.fi/"
                       },
                       {
                         "uuid": "2f9eab0b-d6f0-42ce-b3aa-9f3647618b4d",
