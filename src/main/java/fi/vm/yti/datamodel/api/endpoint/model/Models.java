@@ -374,7 +374,7 @@ public class Models {
             return jerseyResponseManager.notFound();
         }
 
-        if (graphManager.modelStatusRestrictsRemoving(modelIRI)) {
+        if (!user.isSuperuser() && graphManager.modelStatusRestrictsRemoving(modelIRI)) {
             return jerseyResponseManager.cannotRemove();
         }
 
