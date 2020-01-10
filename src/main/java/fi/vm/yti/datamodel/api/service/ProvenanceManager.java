@@ -104,6 +104,7 @@ public class ProvenanceManager {
         String query
             = "DELETE { "
             + "GRAPH ?graph {"
+            + "?graph prov:startedAtTime ?anyCreation . "
             + "?graph prov:used ?oldEntity . "
             + "?graph prov:invalidatedAt ?already_deleted . "
             + "?graph prov:wasInvalidatedBy ?earlier_user . "
