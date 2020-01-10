@@ -130,6 +130,7 @@ public class ProvenanceManager {
             + "BIND(now() as ?creation)"
             + "OPTIONAL { "
              + "GRAPH ?graph {"
+             + "?graph prov:startedAtTime ?anyCreation . "
              + "?graph prov:used ?oldEntity . "
              + "?graph prov:invalidatedAt ?already_deleted . "
              + "?graph prov:wasInvalidatedBy ?earlier_user . }"
