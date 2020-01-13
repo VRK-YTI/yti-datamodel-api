@@ -11,6 +11,7 @@ public class IndexPredicateDTO extends IndexResourceDTO {
     private String status;
     private String statusModified;
     private String modified;
+    private String created;
     private String type;
     private Map<String, String> label;
     private Map<String, String> comment;
@@ -23,6 +24,7 @@ public class IndexPredicateDTO extends IndexResourceDTO {
                              final String status,
                              final String statusModified,
                              final String modified,
+                             final String created,
                              final String type,
                              final Map<String, String> label,
                              final Map<String, String> comment) {
@@ -31,6 +33,7 @@ public class IndexPredicateDTO extends IndexResourceDTO {
         this.status = status;
         this.statusModified = statusModified;
         this.modified = modified;
+        this.created = created;
         this.type = type;
         this.label = label;
         this.comment = comment;
@@ -42,6 +45,7 @@ public class IndexPredicateDTO extends IndexResourceDTO {
         this.status = predicate.getStatus();
         this.statusModified = predicate.getStatusModified();
         this.modified = predicate.getModified();
+        this.created = predicate.getCreated();
         this.type = predicate.getType();
         this.label = predicate.getLabel();
         this.comment = predicate.getComment();
@@ -89,6 +93,14 @@ public class IndexPredicateDTO extends IndexResourceDTO {
         this.modified = modified;
     }
 
+    public String getCreated() {
+        return created;
+    }
+
+    public void setCreated(final String created) {
+        this.created = created;
+    }
+
     public String getType() {
         return type;
     }
@@ -121,6 +133,7 @@ public class IndexPredicateDTO extends IndexResourceDTO {
             ", status='" + status + '\'' +
             ", statusModified='" + statusModified + '\'' +
             ", modified='" + modified + '\'' +
+            ", created='" + created + '\'' +
             ", type='" + type + '\'' +
             ", label=" + label +
             ", comment=" + comment +

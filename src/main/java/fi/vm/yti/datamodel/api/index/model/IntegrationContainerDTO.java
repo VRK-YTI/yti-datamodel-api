@@ -11,6 +11,7 @@ public class IntegrationContainerDTO {
     private String status;
     private String type;
     private String modified;
+    private String created;
     private String contentModified;
     private String statusModified;
     private List<String> languages;
@@ -22,6 +23,7 @@ public class IntegrationContainerDTO {
         this.status = model.getStatus();
         this.type = model.getType();
         this.modified = model.getModified();
+        this.created = model.getCreated();
         this.contentModified = model.getContentModified();
         this.statusModified = model.getStatusModified();
         this.languages = model.getLanguage();
@@ -33,6 +35,7 @@ public class IntegrationContainerDTO {
                                    final String status,
                                    final String type,
                                    final String modified,
+                                   final String created,
                                    final String contentModified,
                                    final String statusModified,
                                    final List<String> languages) {
@@ -42,6 +45,7 @@ public class IntegrationContainerDTO {
         this.status = status;
         this.type = type;
         this.modified = modified;
+        this.created = created;
         this.contentModified = contentModified;
         this.statusModified = statusModified;
         this.languages = languages;
@@ -95,6 +99,14 @@ public class IntegrationContainerDTO {
         this.modified = modified;
     }
 
+    public String getCreated() {
+        return created;
+    }
+
+    public void setCreated(final String created) {
+        this.created = created;
+    }
+
     public String getContentModified() {
         return contentModified;
     }
@@ -128,6 +140,7 @@ public class IntegrationContainerDTO {
             ", status='" + status + '\'' +
             ", type='" + type + '\'' +
             ", modified='" + modified + '\'' +
+            ", created='" + created + '\'' +
             ", contentModified='" + contentModified + '\'' +
             ", statusModified='" + statusModified + '\'' +
             ", languages=" + languages +

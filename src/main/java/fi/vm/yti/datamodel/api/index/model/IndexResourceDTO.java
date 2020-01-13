@@ -12,6 +12,7 @@ public class IndexResourceDTO {
     private String status;
     private String statusModified;
     private String modified;
+    private String created;
     private String type;
     private Map<String, String> label;
     private Map<String, String> comment;
@@ -25,6 +26,7 @@ public class IndexResourceDTO {
                             final String status,
                             final String statusModified,
                             final String modified,
+                            final String created,
                             final String type,
                             final String range,
                             final Map<String, String> label,
@@ -34,6 +36,7 @@ public class IndexResourceDTO {
         this.status = status;
         this.statusModified = statusModified;
         this.modified = modified;
+        this.created = created;
         this.type = type;
         this.range = range;
         this.label = label;
@@ -46,6 +49,7 @@ public class IndexResourceDTO {
         this.status = classResource.getStatus();
         this.statusModified = classResource.getStatusModified();
         this.modified = classResource.getModified();
+        this.created = classResource.getCreated();
         this.type = classResource.getType();
         this.label = classResource.getLabel();
         this.comment = classResource.getComment();
@@ -89,6 +93,14 @@ public class IndexResourceDTO {
 
     public void setModified(final String modified) {
         this.modified = modified;
+    }
+
+    public String getCreated() {
+        return created;
+    }
+
+    public void setCreated(final String created) {
+        this.created = created;
     }
 
     public String getType() {
@@ -148,6 +160,7 @@ public class IndexResourceDTO {
             ", status='" + status + '\'' +
             ", statusModified='" + statusModified + '\'' +
             ", modified='" + modified + '\'' +
+            ", created='" + created + '\'' +
             ", type='" + type + '\'' +
             ", label=" + label +
             ", comment=" + comment +

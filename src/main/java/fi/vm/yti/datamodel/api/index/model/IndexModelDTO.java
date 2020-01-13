@@ -15,6 +15,7 @@ public class IndexModelDTO {
     private String status;
     private String statusModified;
     private String modified;
+    private String created;
     private String contentModified;
     private String type;
     private String prefix;
@@ -34,6 +35,7 @@ public class IndexModelDTO {
         this.id = model.getId();
         this.useContext = model.getUseContext();
         this.modified = model.getModified();
+        this.created = model.getCreated();
         this.contentModified = model.getContentModified();
         this.type = model.getType();
         this.prefix = model.getPrefix();
@@ -52,6 +54,7 @@ public class IndexModelDTO {
                          final String status,
                          final String statusModified,
                          final String modified,
+                         final String created,
                          final String contentModified,
                          final String type,
                          final String prefix,
@@ -66,6 +69,7 @@ public class IndexModelDTO {
         this.status = status;
         this.statusModified = statusModified;
         this.modified = modified;
+        this.created = created;
         this.contentModified = contentModified;
         this.type = type;
         this.prefix = prefix;
@@ -113,8 +117,14 @@ public class IndexModelDTO {
         return modified;
     }
 
+    public String getCreated() { return created; }
+
     public void setModified(final String modified) {
         this.modified = modified;
+    }
+
+    public void setCreated(final String created) {
+        this.created = created;
     }
 
     public String getContentModified() {
@@ -197,6 +207,7 @@ public class IndexModelDTO {
             ", status='" + status + '\'' +
             ", statusModified='" + statusModified + '\'' +
             ", modified='" + modified + '\'' +
+            ", created='" + created + '\'' +
             ", contentModified='" + contentModified + '\'' +
             ", type='" + type + '\'' +
             ", prefix='" + prefix + '\'' +

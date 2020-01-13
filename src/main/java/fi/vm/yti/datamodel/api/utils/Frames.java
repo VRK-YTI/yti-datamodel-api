@@ -18,6 +18,7 @@ public class Frames {
     public static final LinkedHashMap<String, Object> name;
     public static final LinkedHashMap<String, Object> title;
     public static final LinkedHashMap<String, Object> modified;
+    public static final LinkedHashMap<String, Object> created;
     public static final LinkedHashMap<String, Object> contentModified;
     public static final LinkedHashMap<String, Object> statusModified;
     public static final LinkedHashMap<String, Object> contributor;
@@ -199,6 +200,13 @@ public class Frames {
         modified = new LinkedHashMap<String, Object>() {
             {
                 put("@id", "http://purl.org/dc/terms/modified");
+                put("@type", "http://www.w3.org/2001/XMLSchema#dateTime");
+            }
+        };
+
+        created = new LinkedHashMap<String, Object>() {
+            {
+                put("@id", "http://purl.org/dc/terms/created");
                 put("@type", "http://www.w3.org/2001/XMLSchema#dateTime");
             }
         };
@@ -740,6 +748,7 @@ public class Frames {
                 put("label", label);
                 put("comment", comment);
                 put("modified", modified);
+                put("created", created);
                 put("contentModified", contentModified);
                 put("statusModified", statusModified);
                 put("contributor", contributorID);
@@ -769,6 +778,7 @@ public class Frames {
                 put("label", name);
                 put("comment", shDescription);
                 put("modified", modified);
+                put("created", created);
                 put("status", versionInfo);
                 put("statusModified", statusModified);
                 put("isDefinedBy", isDefinedBy);
@@ -788,6 +798,7 @@ public class Frames {
                 put("name", name);
                 put("description", shDescription);
                 put("modified", modified);
+                put("created", created);
                 put("status", versionInfo);
                 put("isDefinedBy", isDefinedBy);
                 putAll(jsonLdKeys);
@@ -808,6 +819,7 @@ public class Frames {
                 put("label", label);
                 put("comment", comment);
                 put("modified", modified);
+                put("created", created);
                 put("range", range);
                 put("status", versionInfo);
                 put("statusModified", statusModified);
