@@ -96,7 +96,8 @@ public class Class {
     })
     public Response getClass(
         @Parameter(description = "Class id") @QueryParam("id") String id,
-        @Parameter(description = "Model id") @QueryParam("model") String model) {
+        @Parameter(description = "Model id") @QueryParam("model") String model,
+        @Parameter(description = "Required by model id") @QueryParam("requiredBy") String requiredBy) {
 
         if (id == null || id.equals("undefined") || id.equals("default")) {
 
@@ -105,11 +106,19 @@ public class Class {
             // TODO: Create namespacemap from all models
             pss.setNsPrefixes(LDHelper.PREFIX_MAP);
 
-            String queryString = QueryLibrary.listClassesQuery;
+            String queryString = "";
 
             if (model != null && !model.equals("undefined")) {
+                queryString = QueryLibrary.listClassesQuery;
                 pss.setIri("library", model);
                 pss.setIri("hasPartGraph", model + "#HasPartGraph");
+            } else {
+                if (requiredBy != null && !requiredBy.equals("undefined")) {
+                    queryString = QueryLibrary.requiredClassQuery;
+                    pss.setIri("library", requiredBy);
+                } else {
+                   return  jerseyResponseManager.invalidParameter();
+                }
             }
 
             pss.setCommandText(queryString);
