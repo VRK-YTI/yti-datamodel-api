@@ -339,7 +339,8 @@ public class QueryLibrary {
 
     final public static String requiredClassQuery = LDHelper.expandSparqlQuery(
         "CONSTRUCT { "
-            + "?s ?p ?o . "
+            + "?graph sh:name ?className . "
+            + "?graph a ?classType . "
             + "?graph rdfs:isDefinedBy ?required . "
             + "?required a ?type . "
             + "?required rdfs:label ?label . "
@@ -354,8 +355,9 @@ public class QueryLibrary {
             + "GRAPH ?graph {"
             + "?graph rdfs:isDefinedBy ?required . "
             + "?graph a sh:NodeShape ."
+            + "?graph a ?classType . "
             + "?graph sh:targetClass ?refGraph ."
-            + "?s ?p ?o . "
+            + "?graph sh:name ?className . "
             + "} "
             + "} UNION {"
             + "GRAPH ?library {"
@@ -368,8 +370,9 @@ public class QueryLibrary {
             + "GRAPH ?graph { "
             + "?graph rdfs:isDefinedBy ?required . "
             + "?graph a rdfs:Class . "
+            + "?graph a ?classType . "
             + "FILTER NOT EXISTS { ?graph sh:targetClass ?any . }"
-            + "?s ?p ?o . "
+            + "?graph sh:name ?className . "
             + "}"
             + "}"
             + "}");
@@ -421,6 +424,28 @@ public class QueryLibrary {
             + " ?library a ?type . "
             + " ?library rdfs:label ?label . "
             + "}"
+            + "}");
+
+    final public static String requiredPredicateQuery = LDHelper.expandSparqlQuery(
+        "CONSTRUCT { "
+            + "?graph rdfs:label ?plabel . "
+            + "?graph a ?ptype . "
+            + "?graph rdfs:isDefinedBy ?required . "
+            + "?required a ?type . "
+            + "?required rdfs:label ?label . "
+            + "} WHERE { "
+            + "GRAPH ?library {"
+            + "?library a owl:Ontology . "
+            + "?library dcterms:requires ?required . }"
+            + "GRAPH ?required { "
+            + " ?required a ?type . "
+            + " ?required rdfs:label ?label . }"
+            + "GRAPH ?graph {"
+            + "?graph a ?ptype . "
+            + "VALUES ?ptype { owl:ObjectProperty owl:DatatypeProperty } "
+            + "?graph rdfs:isDefinedBy ?required . "
+            + "?graph rdfs:label ?plabel . "
+            + "} "
             + "}");
 
     final public static String hasPartListQuery = LDHelper.expandSparqlQuery(

@@ -117,7 +117,7 @@ public class Class {
                     queryString = QueryLibrary.requiredClassQuery;
                     pss.setIri("library", requiredBy);
                 } else {
-                   return  jerseyResponseManager.invalidParameter();
+                    queryString = QueryLibrary.listClassesQuery;
                 }
             }
 
