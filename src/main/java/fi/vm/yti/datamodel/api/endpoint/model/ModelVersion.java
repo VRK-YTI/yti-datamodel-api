@@ -150,6 +150,6 @@ public class ModelVersion {
             }
         }
 
-        return Response.status(200).build();
+        return jerseyResponseManager.successUri(newModelIRI.toString());
     }
 }
