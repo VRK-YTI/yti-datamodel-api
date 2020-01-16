@@ -1281,58 +1281,63 @@ public class GraphManager {
         adapter.putModel(newModel.toString(), oldModelGraph);
 
         Model oldHasPartGraph = adapter.getModel(model.toString() + "#HasPartGraph");
-        ResourceUtils.renameResource(oldHasPartGraph.getResource(model.toString()), newModel.toString());
 
-        Model oldPositionGraph = adapter.getModel(model.toString() + "#PositionGraph");
-        if(oldPositionGraph!=null && oldPositionGraph.size()>2) {
-            ResIterator positionResources = oldPositionGraph.listSubjects();
-            while (positionResources.hasNext()) {
-                Resource posRes = positionResources.next();
-                if (!posRes.isAnon()) {
-                    String posResId = posRes.getURI();
-                    if (posResId.startsWith(model.toString() + "#")) {
-                        String newPosId = posResId.replace(model.toString() + "#", newModel.toString() + "#");
-                        ResourceUtils.renameResource(posRes, newPosId);
+        if(oldHasPartGraph!=null && oldHasPartGraph.size()>1) {
+
+            ResourceUtils.renameResource(oldHasPartGraph.getResource(model.toString()), newModel.toString());
+
+            Model oldPositionGraph = adapter.getModel(model.toString() + "#PositionGraph");
+            if (oldPositionGraph != null && oldPositionGraph.size() > 2) {
+                ResIterator positionResources = oldPositionGraph.listSubjects();
+                while (positionResources.hasNext()) {
+                    Resource posRes = positionResources.next();
+                    if (!posRes.isAnon()) {
+                        String posResId = posRes.getURI();
+                        if (posResId.startsWith(model.toString() + "#")) {
+                            String newPosId = posResId.replace(model.toString() + "#", newModel.toString() + "#");
+                            ResourceUtils.renameResource(posRes, newPosId);
+                        }
+                    }
+                }
+                adapter.putModel(newModel.toString() + "#PositionGraph", oldPositionGraph);
+            }
+            NodeIterator hasPartObjects = oldHasPartGraph.listObjectsOfProperty(DCTerms.hasPart);
+
+            while (hasPartObjects.hasNext()) {
+                Resource hasPartResource = hasPartObjects.next().asResource();
+                String oldGraph = hasPartResource.getURI();
+                if (oldGraph.startsWith(model.toString() + "#")) {
+                    String newGraph = oldGraph.replace(model.toString() + "#", newModel.toString() + "#");
+                    logger.info("Creating version from " + oldGraph + " to " + newGraph);
+                    Model oldResourceGraph = adapter.getModel(oldGraph);
+                    if (oldResourceGraph != null) { // FIXME: References to removed resources?!?
+                        Resource oldResource = oldResourceGraph.getResource(oldGraph);
+                        ResourceUtils.renameResource(oldResource, newGraph);
+                        Resource newResource = ResourceFactory.createResource(newGraph);
+                        oldResourceGraph.setNsPrefix(newPrefix, newModel.toString() + "#");
+                        LDHelper.rewriteLiteral(oldResourceGraph, newResource, OWL.versionInfo, ResourceFactory.createPlainLiteral("DRAFT"));
+                        LDHelper.rewriteLiteral(oldResourceGraph, newResource, DCTerms.created, created);
+                        LDHelper.rewriteLiteral(oldResourceGraph, newResource, DCTerms.modified, created);
+                        LDHelper.rewriteLiteral(oldResourceGraph, newResource, DCTerms.identifier, ResourceFactory.createPlainLiteral("urn:uuid:" + UUID.randomUUID().toString()));
+                        LDHelper.rewriteResourceReference(oldResourceGraph, newResource, LDHelper.curieToProperty("rdfs:isDefinedBy"), newModelResource);
+                        renameObjectNamespaceInModel(oldResourceGraph, model.toString() + "#", newModel.toString() + "#");
+                        LDHelper.rewriteResourceReference(oldResourceGraph, newResource, LDHelper.curieToProperty("prov:wasRevisionOf"), ResourceFactory.createResource(oldGraph));
+
+                        NodeIterator propertyNodes = oldResourceGraph.listObjectsOfProperty(SH.property);
+                        while (propertyNodes.hasNext()) {
+                            Resource propertyShape = propertyNodes.next().asResource();
+                            LDHelper.rewriteLiteral(oldResourceGraph, propertyShape, DCTerms.created, created);
+                            ResourceUtils.renameResource(propertyShape, "urn:uuid:" + UUID.randomUUID().toString());
+                        }
+
+                        adapter.putModel(newGraph, oldResourceGraph);
+                        ResourceUtils.renameResource(hasPartResource, newGraph);
                     }
                 }
             }
-            adapter.putModel(newModel.toString() + "#PositionGraph", oldPositionGraph);
+            adapter.putModel(newModel.toString() + "#HasPartGraph", oldHasPartGraph);
         }
-        NodeIterator hasPartObjects = oldHasPartGraph.listObjectsOfProperty(DCTerms.hasPart);
 
-        while (hasPartObjects.hasNext()) {
-            Resource hasPartResource = hasPartObjects.next().asResource();
-            String oldGraph = hasPartResource.getURI();
-            if (oldGraph.startsWith(model.toString() + "#")) {
-                String newGraph = oldGraph.replace(model.toString() + "#", newModel.toString() + "#");
-                logger.info("Creating version from " + oldGraph + " to " + newGraph);
-                Model oldResourceGraph = adapter.getModel(oldGraph);
-                if (oldResourceGraph != null) { // FIXME: References to removed resources?!?
-                    Resource oldResource = oldResourceGraph.getResource(oldGraph);
-                    ResourceUtils.renameResource(oldResource, newGraph);
-                    Resource newResource = ResourceFactory.createResource(newGraph);
-                    oldResourceGraph.setNsPrefix(newPrefix, newModel.toString() + "#");
-                    LDHelper.rewriteLiteral(oldResourceGraph, newResource, OWL.versionInfo, ResourceFactory.createPlainLiteral("DRAFT"));
-                    LDHelper.rewriteLiteral(oldResourceGraph, newResource, DCTerms.created, created);
-                    LDHelper.rewriteLiteral(oldResourceGraph, newResource, DCTerms.modified, created);
-                    LDHelper.rewriteLiteral(oldResourceGraph, newResource, DCTerms.identifier, ResourceFactory.createPlainLiteral("urn:uuid:"+UUID.randomUUID().toString()));
-                    LDHelper.rewriteResourceReference(oldResourceGraph, newResource, LDHelper.curieToProperty("rdfs:isDefinedBy"), newModelResource);
-                    renameObjectNamespaceInModel(oldResourceGraph, model.toString() + "#", newModel.toString() + "#");
-                    LDHelper.rewriteResourceReference(oldResourceGraph, newResource, LDHelper.curieToProperty("prov:wasRevisionOf"), ResourceFactory.createResource(oldGraph));
-
-                    NodeIterator propertyNodes = oldResourceGraph.listObjectsOfProperty(SH.property);
-                    while(propertyNodes.hasNext()) {
-                        Resource propertyShape = propertyNodes.next().asResource();
-                        LDHelper.rewriteLiteral(oldResourceGraph, propertyShape, DCTerms.created, created);
-                        ResourceUtils.renameResource(propertyShape, "urn:uuid:" + UUID.randomUUID().toString());
-                    }
-
-                    adapter.putModel(newGraph, oldResourceGraph);
-                    ResourceUtils.renameResource(hasPartResource, newGraph);
-                }
-            }
-        }
-        adapter.putModel(newModel.toString() + "#HasPartGraph", oldHasPartGraph);
     }
 
     public void renameObjectNamespaceInModel(Model model,

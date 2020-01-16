@@ -76,17 +76,16 @@ public class ProvenanceManager {
     public void createProvenanceActivityForNewVersionModel(String modelId, UUID user) {
 
         Model hasPartGraph = jenaClient.getModelFromCore(modelId+"#HasPartGraph");
-
-        NodeIterator hasPartObjects = hasPartGraph.listObjectsOfProperty(DCTerms.hasPart);
-
-        while (hasPartObjects.hasNext()) {
-            String resUri = hasPartObjects.nextNode().asResource().toString();
-            if(resUri.startsWith(modelId+"#")) {
-                Model resourceModel = jenaClient.getModelFromCore(resUri);
-                createProvenanceActivityFromModel(resUri, resourceModel, "urn:uuid:" + UUID.randomUUID().toString(), user);
+        if(hasPartGraph!=null && hasPartGraph.size()>1) {
+            NodeIterator hasPartObjects = hasPartGraph.listObjectsOfProperty(DCTerms.hasPart);
+            while (hasPartObjects.hasNext()) {
+                String resUri = hasPartObjects.nextNode().asResource().toString();
+                if (resUri.startsWith(modelId + "#")) {
+                    Model resourceModel = jenaClient.getModelFromCore(resUri);
+                    createProvenanceActivityFromModel(resUri, resourceModel, "urn:uuid:" + UUID.randomUUID().toString(), user);
+                }
             }
         }
-
     }
 
     /**
