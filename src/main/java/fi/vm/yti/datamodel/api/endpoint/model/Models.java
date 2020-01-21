@@ -386,9 +386,7 @@ public class Models {
 
         searchIndexManager.removeModel(deleteModel.getId());
 
-        if (provenanceManager.getProvMode()) {
-            provenanceManager.invalidateModelProvenanceActivity(deleteModel.getId(), deleteModel.getProvUUID(), user.getId());
-        }
+        provenanceManager.deleteProvenanceFromModel(deleteModel.getId());
 
         graphManager.deleteModel(deleteModel);
 

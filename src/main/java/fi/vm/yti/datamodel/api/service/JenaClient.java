@@ -127,6 +127,11 @@ public final class JenaClient {
         coreService.deleteModel(graph);
     }
 
+    public void deleteModelFromProv(String graph) {
+        logger.debug("Deleting model from PROV: " + graph);
+        provService.deleteModel(graph);
+    }
+
     public void deleteModelFromScheme(String graph) {
         logger.debug("Deleting codelist from " + graph);
         schemeService.deleteModel(graph);

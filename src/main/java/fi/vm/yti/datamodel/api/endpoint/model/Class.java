@@ -389,13 +389,11 @@ public class Class {
                     return jerseyResponseManager.unauthorized();
                 }
 
+                provenanceManager.deleteProvenanceFromResource(deleteClass.getId());
+
                 graphManager.deleteResource(deleteClass);
                 searchIndexManager.removeClass(id);
                 searchIndexManager.updateIndexModel(deleteClass.getModelId());
-
-                if (provenanceManager.getProvMode()) {
-                    provenanceManager.invalidateProvenanceActivity(deleteClass.getId(), deleteClass.getProvUUID(), user.getId());
-                }
 
             } catch (IllegalArgumentException ex) {
                 logger.warn(ex.toString());

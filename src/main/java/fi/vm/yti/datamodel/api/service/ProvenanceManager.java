@@ -8,11 +8,16 @@ import fi.vm.yti.datamodel.api.utils.LDHelper;
 
 import org.apache.jena.iri.IRI;
 import org.apache.jena.query.ParameterizedSparqlString;
+import org.apache.jena.query.QuerySolution;
+import org.apache.jena.query.ResultSet;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.NodeIterator;
 import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.ResourceFactory;
+import org.apache.jena.update.UpdateException;
+import org.apache.jena.update.UpdateExecutionFactory;
+import org.apache.jena.update.UpdateProcessor;
 import org.apache.jena.update.UpdateRequest;
 import org.apache.jena.vocabulary.DCTerms;
 import org.slf4j.Logger;
@@ -73,8 +78,66 @@ public class ProvenanceManager {
     }
 
 
-    public void createProvenanceActivityForNewVersionModel(String modelId, UUID user) {
+    public String buildRemoveProvEntityQuery(String activityUri) {
+        Model provModel = jenaClient.getModelFromProv(activityUri);
+        String newQuery = "DROP SILENT GRAPH <" + activityUri + ">;\n";
+        if(provModel!=null && provModel.size()>1) {
+            NodeIterator previousVersionObjects = provModel.listObjectsOfProperty(LDHelper.curieToProperty("prov:generated"));
+            while (previousVersionObjects.hasNext()) {
+                String entityUri = previousVersionObjects.next().asResource().getURI();
+                newQuery += "DROP SILENT GRAPH <" + entityUri + ">;\n";
+            }
+        } else {
+            logger.warn("No provenance for "+activityUri);
+        }
+        return newQuery;
+    }
 
+    public String buildRemoveProvModelQuery(String modelId) {
+
+        String newQuery = buildRemoveProvEntityQuery(modelId);
+
+        Model hasPartGraph = jenaClient.getModelFromCore(modelId + "#HasPartGraph");
+        if(hasPartGraph!=null && hasPartGraph.size()>1) {
+            NodeIterator hasPartObjects = hasPartGraph.listObjectsOfProperty(DCTerms.hasPart);
+            while (hasPartObjects.hasNext()) {
+                String resUri = hasPartObjects.nextNode().asResource().toString();
+                newQuery += buildRemoveProvEntityQuery(resUri);
+            }
+        } else {
+            logger.warn("No #HasPart graph "+modelId);
+        }
+
+        return newQuery;
+    }
+
+    public void deleteProvenanceFromResource(String id) {
+     deleteProvenance(id,buildRemoveProvEntityQuery(id));
+    }
+
+    public void deleteProvenanceFromModel(String id) {
+        deleteProvenance(id,buildRemoveProvModelQuery(id));
+    }
+
+    public void deleteProvenance(String id, String query) {
+        logger.info("Removing provenance from " + id);
+
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        pss.setCommandText(query);
+
+        logger.debug(pss.toString());
+
+        UpdateRequest queryObj = pss.asUpdate();
+        UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, endpointServices.getProvSparqlUpdateAddress());
+
+        try {
+            qexec.execute();
+        } catch (UpdateException ex) {
+            logger.warn(ex.toString());
+        }
+    }
+
+    public void createProvenanceActivityForNewVersionModel(String modelId, UUID user) {
         Model hasPartGraph = jenaClient.getModelFromCore(modelId+"#HasPartGraph");
         if(hasPartGraph!=null && hasPartGraph.size()>1) {
             NodeIterator hasPartObjects = hasPartGraph.listObjectsOfProperty(DCTerms.hasPart);
@@ -103,10 +166,7 @@ public class ProvenanceManager {
         String query
             = "DELETE { "
             + "GRAPH ?graph {"
-            + "?graph prov:startedAtTime ?anyCreation . "
-            + "?graph prov:used ?oldEntity . "
-            + "?graph prov:invalidatedAt ?already_deleted . "
-            + "?graph prov:wasInvalidatedBy ?earlier_user . "
+            + "?graph ?oldpredicate ?oldresource . "
             + "}"
             + "}"
             + "INSERT { "
@@ -129,10 +189,7 @@ public class ProvenanceManager {
             + "BIND(now() as ?creation)"
             + "OPTIONAL { "
              + "GRAPH ?graph {"
-             + "?graph prov:startedAtTime ?anyCreation . "
-             + "?graph prov:used ?oldEntity . "
-             + "?graph prov:invalidatedAt ?already_deleted . "
-             + "?graph prov:wasInvalidatedBy ?earlier_user . }"
+             + "?graph ?oldpredicate ?oldresource . }"
              + "}"
             + "}";
 
@@ -145,102 +202,6 @@ public class ProvenanceManager {
         pss.setIri("user", "urn:uuid:" + user.toString());
         pss.setIri("jsonld", provUUID);
         pss.setCommandText(query);
-        return pss.asUpdate();
-    }
-
-
-    public void invalidateProvenanceActivity(String graph,
-                                         String provUUID,
-                                         UUID user) {
-        logger.debug("Invalidating provenance graph: "+graph);
-        UpdateRequest queryObj = createProvenanceActivityInvalidationRequest(graph, provUUID, user);
-        jenaClient.updateToService(queryObj, endpointServices.getProvSparqlUpdateAddress());
-    }
-
-    public UpdateRequest createProvenanceActivityInvalidationRequest(String graph,
-                                                         String provUUID,
-                                                         UUID user) {
-        String query
-            = "INSERT { "
-            + "GRAPH ?graph { "
-            + "?graph a prov:Activity . "
-            + "?graph prov:invalidatedAt ?deleted . "
-            + "?graph prov:wasInvalidatedBy ?user . "
-            + "}"
-            + "GRAPH ?jsonld {"
-            + "?graph prov:invalidatedAt ?deleted . "
-            + "?graph prov:wasInvalidatedBy ?user . "
-            + "}"
-            + "}"
-            + "WHERE { "
-            + "GRAPH ?graph { "
-            + "?graph a prov:Activity . "
-            + "?graph prov:used ?jsonld . "
-            + "}"
-            + "BIND(now() as ?deleted)"
-            + "}";
-
-        ParameterizedSparqlString pss = new ParameterizedSparqlString();
-        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
-
-        pss.setIri("graph", graph);
-        pss.setIri("user", "urn:uuid:" + user.toString());
-        pss.setIri("jsonld", provUUID);
-        pss.setCommandText(query);
-
-        return pss.asUpdate();
-    }
-
-    public void invalidateModelProvenanceActivity(String graph,
-                                             String provUUID,
-                                             UUID user) {
-        logger.debug("Invalidating provenance graph: "+graph);
-        UpdateRequest queryObj = createModelProvenanceActivityInvalidationRequest(graph, provUUID, user);
-        jenaClient.updateToService(queryObj, endpointServices.getProvSparqlUpdateAddress());
-    }
-
-    public UpdateRequest createModelProvenanceActivityInvalidationRequest(String graph,
-                                                                     String provUUID,
-                                                                     UUID user) {
-        String query
-            = "INSERT { "
-            + "GRAPH ?graph { "
-            + "?graph prov:invalidatedAt ?deleted . "
-            + "?graph prov:wasInvalidatedBy ?user . "
-            + "}"
-            + "GRAPH ?resourceGraph { "
-            + "?resourceGraph prov:invalidatedAt ?deleted . "
-            + "?resourceGraph prov:wasInvalidatedBy ?user . "
-            + "}"
-            + "GRAPH ?jsonld {"
-            + "?graph prov:invalidatedAt ?deleted . "
-            + "?graph prov:wasInvalidatedBy ?user . "
-            + "}"
-            + "}"
-            + "WHERE { "
-            + "GRAPH ?graph { "
-            + "?graph a prov:Activity . "
-            + "?graph prov:used ?jsonld . "
-            + "}"
-            + "OPTIONAL { GRAPH ?resourceGraph { "
-            + "?resourceGraph rdfs:isDefinedBy ?graph . "
-            + "?resourceGraph a prov:Activity . "
-            + "FILTER NOT EXISTS { "
-            + "?resourceGraph prov:invalidatedAt ?deleted . "
-            + "?resourceGraph prov:wasInvalidatedBy ?user . "
-            +"}"
-            +"}}"
-            + "BIND(now() as ?deleted)"
-            + "}";
-
-        ParameterizedSparqlString pss = new ParameterizedSparqlString();
-        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
-
-        pss.setIri("graph", graph);
-        pss.setIri("user", "urn:uuid:" + user.toString());
-        pss.setIri("jsonld", provUUID);
-        pss.setCommandText(query);
-
         return pss.asUpdate();
     }
 

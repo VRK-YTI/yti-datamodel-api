@@ -381,13 +381,11 @@ public class Predicate {
                     return jerseyResponseManager.unauthorized();
                 }
 
+                provenanceManager.deleteProvenanceFromResource(deletePredicate.getId());
+
                 graphManager.deleteResource(deletePredicate);
                 searchIndexManager.removePredicate(id);
                 searchIndexManager.updateIndexModel(deletePredicate.getModelId());
-
-                if (provenanceManager.getProvMode()) {
-                    provenanceManager.invalidateProvenanceActivity(deletePredicate.getId(), deletePredicate.getProvUUID(), user.getId());
-                }
 
             } catch (IllegalArgumentException ex) {
                 logger.warn(ex.toString());
