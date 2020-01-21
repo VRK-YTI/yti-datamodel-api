@@ -14,6 +14,7 @@ import org.apache.jena.iri.IRIFactory;
 import org.apache.jena.query.*;
 import org.apache.jena.rdf.model.*;
 import org.apache.jena.riot.Lang;
+import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.riot.RDFLanguages;
 import org.apache.jena.riot.RiotException;
 import org.apache.jena.vocabulary.RDF;
@@ -533,9 +534,10 @@ public final class NamespaceManager {
                             }
                         }
 
+                        String resolvedUrl = connection.getURL().toString();
                         logger.info("Opened connection");
-                        logger.info(connection.getURL().toString());
-                        logger.info(connection.getContentType());
+                        logger.info("Resolved URL: " + resolvedUrl);
+                        logger.info("Content-Type: " + connection.getContentType());
 
                         if (connection.getContentType() == null) {
                             logger.info("Couldnt resolve Content-Type from: " + namespace);
@@ -554,14 +556,16 @@ public final class NamespaceManager {
                         ContentType guess = ContentType.create(contentType);
                         Lang testLang = RDFLanguages.contentTypeToLang(guess);
 
-                        if (connection.getURL().toString().endsWith(".ttl"))
+                        if (contentType.equals("application/xml") || resolvedUrl.endsWith(".xml") || resolvedUrl.endsWith(".rdf")) {
+                            // Try parsing as rdf/xml
+                            testLang = RDFLanguages.fileExtToLang("rdf");
+                        } else if (resolvedUrl.endsWith(".ttl")) {
                             testLang = RDFLanguages.fileExtToLang("ttl");
-
-                        if (connection.getURL().toString().endsWith(".nt"))
+                        } else if (resolvedUrl.endsWith(".nt")) {
                             testLang = RDFLanguages.fileExtToLang("nt");
-
-                        if (connection.getURL().toString().endsWith(".jsonld"))
+                        } else if (resolvedUrl.endsWith(".jsonld")) {
                             testLang = RDFLanguages.fileExtToLang("jsonld");
+                        }
 
                         if (testLang != null) {
 
@@ -583,10 +587,18 @@ public final class NamespaceManager {
                             connection.disconnect();
 
                         } else {
-                            logger.info("Cound not resolve Content-Type " + contentType + " from " + namespace);
+                            logger.info("Could not parse RDF format from content-type!");
+                            try {
+                                // TODO: This seems to parse RDF even from wrong content-types text/html etc.
+                                model = RDFDataMgr.loadModel(resolvedUrl);
+                                logger.info("Parsed something out of " + contentType + " from " + resolvedUrl);
+                            } catch (RiotException e) {
+                                logger.info("Failed to parse RDF using " + contentType + " from " + resolvedUrl);
+                                return false;
+                            }
+
                             stream.close();
                             connection.disconnect();
-                            return false;
                         }
 
                     } catch (UnknownHostException e) {
