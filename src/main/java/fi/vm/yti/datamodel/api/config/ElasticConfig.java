@@ -34,15 +34,9 @@ public class ElasticConfig {
         RestHighLevelClient client = new RestHighLevelClient(RestClient.builder(
             new HttpHost(config.getElasticHost(), Integer.parseInt(config.getElasticHttpPort()), config.getElasticHttpScheme())
         ).setRequestConfigCallback(
-            new RestClientBuilder.RequestConfigCallback() {
-                @Override
-                public RequestConfig.Builder customizeRequestConfig(
-                    RequestConfig.Builder requestConfigBuilder) {
-                    return requestConfigBuilder
-                        .setConnectTimeout(5000)
-                        .setSocketTimeout(60000);
-                }
-            })
+            requestConfigBuilder -> requestConfigBuilder
+                .setConnectTimeout(5000)
+                .setSocketTimeout(60000))
             .setMaxRetryTimeoutMillis(60000)
         );
         return client;
