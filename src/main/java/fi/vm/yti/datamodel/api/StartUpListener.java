@@ -18,7 +18,6 @@ import fi.vm.yti.datamodel.api.service.GraphManager;
 import fi.vm.yti.datamodel.api.service.GroupManagementService;
 import fi.vm.yti.datamodel.api.service.NamespaceManager;
 import fi.vm.yti.datamodel.api.service.RHPOrganizationManager;
-import fi.vm.yti.datamodel.api.service.TerminologyManager;
 import fi.vm.yti.migration.MigrationInitializer;
 
 @Component
@@ -26,7 +25,6 @@ public class StartUpListener {
 
     private static final Logger logger = LoggerFactory.getLogger(StartUpListener.class);
 
-    private final TerminologyManager terminologyManager;
     private final RHPOrganizationManager rhpOrganizationManager;
     private final GraphManager graphManager;
     private final NamespaceManager namespaceManager;
@@ -36,8 +34,7 @@ public class StartUpListener {
     private final GroupManagementService groupManagementService;
 
     @Autowired
-    StartUpListener(TerminologyManager terminologyManager,
-                    RHPOrganizationManager rhpOrganizationManager,
+    StartUpListener(RHPOrganizationManager rhpOrganizationManager,
                     GraphManager graphManager,
                     NamespaceManager namespaceManager,
                     ElasticConnector elasticConnector,
@@ -47,7 +44,6 @@ public class StartUpListener {
                     GroupManagementService groupManagementService
                     /* XXX: dependency to enforce init order */) {
 
-        this.terminologyManager = terminologyManager;
         this.rhpOrganizationManager = rhpOrganizationManager;
         this.graphManager = graphManager;
         this.namespaceManager = namespaceManager;

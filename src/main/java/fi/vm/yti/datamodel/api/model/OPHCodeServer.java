@@ -47,7 +47,7 @@ public class OPHCodeServer {
     private Property creator = ResourceFactory.createProperty("http://purl.org/dc/terms/", "creator");
     static private Property statusProperty = ResourceFactory.createProperty("http://uri.suomi.fi/datamodel/ns/iow#", "status");
 
-    private HashMap<String, String> statusMap = new HashMap<String, String>() {{
+    private final HashMap<String, String> statusMap = new HashMap<String, String>() {{
         put("LUONNOS", "DRAFT");
         put("HYVAKSYTTY", "VALID");
         put("PASSIIVINEN", "DEPRECATED");

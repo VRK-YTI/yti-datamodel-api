@@ -33,6 +33,7 @@ public class ExportModel {
     private final JsonSchemaWriter jsonSchemaWriter;
     private final OpenAPIWriter openAPIWriter;
     private final XMLSchemaWriter xmlSchemaWriter;
+    private final String rawContentType = "text/plain;charset=utf-8";
 
     @Autowired
     ExportModel(IDManager idManager,
@@ -83,14 +84,14 @@ public class ExportModel {
         if (ctype.equals("application/ld+json+context")) {
             String context = contextWriter.newModelContext(graph);
             if (context != null) {
-                return jerseyResponseManager.ok(context, raw ? "text/plain;charset=utf-8" : "application/json");
+                return jerseyResponseManager.ok(context, raw ? rawContentType : "application/json");
             } else {
                 return jerseyResponseManager.notFound();
             }
         } else if (ctype.equals("application/vnd+oai+openapi+json")) {
             String apiStub = openAPIWriter.newOpenApiStub(graph, lang);
             if (apiStub != null) {
-                return jerseyResponseManager.ok(apiStub, raw ? "text/plain;charset=utf-8" : "application/json");
+                return jerseyResponseManager.ok(apiStub, raw ? rawContentType : "application/json");
             }
         } else if (ctype.equals("application/schema+json")) {
             String schema = null;
@@ -101,7 +102,7 @@ public class ExportModel {
                 schema = jsonSchemaWriter.newMultilingualModelSchema(graph);
             }
             if (schema != null) {
-                return jerseyResponseManager.ok(schema, raw ? "text/plain;charset=utf-8" : "application/schema+json");
+                return jerseyResponseManager.ok(schema, raw ? rawContentType : "application/schema+json");
             } else {
                 return jerseyResponseManager.langNotDefined();
             }
@@ -110,7 +111,7 @@ public class ExportModel {
             String schema = xmlSchemaWriter.newModelSchema(graph, lang);
 
             if (schema != null) {
-                return jerseyResponseManager.ok(schema, raw ? "text/plain;charset=utf-8" : "application/xml");
+                return jerseyResponseManager.ok(schema, raw ? rawContentType : "application/xml");
             } else {
                 return jerseyResponseManager.langNotDefined();
             }
