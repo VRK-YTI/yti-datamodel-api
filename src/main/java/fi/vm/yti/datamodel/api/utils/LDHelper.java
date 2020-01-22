@@ -153,6 +153,10 @@ public class LDHelper {
         return !Arrays.stream(UNRESOLVABLE).anyMatch(item::equals);
     }
 
+    public static boolean isReservedPrefix(String prefix) {
+        return PREFIX_MAP.containsKey(prefix);
+    }
+
     public static final Map<String, String> PREFIX_MAP =
         Collections.unmodifiableMap(new HashMap<String, String>() {{
             put("owl", "http://www.w3.org/2002/07/owl#");
