@@ -1,4 +1,4 @@
-server.port=8084
+server.port=9004
 
 devMode=true
 env=dev

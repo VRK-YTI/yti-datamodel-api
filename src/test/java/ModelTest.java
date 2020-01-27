@@ -29,7 +29,7 @@ public class ModelTest  {
 
     private static final Logger logger = LoggerFactory.getLogger(ModelTest.class.getName());
     private static Client testClient = ClientBuilder.newClient().property(ClientProperties.FOLLOW_REDIRECTS,Boolean.TRUE);
-    private static WebTarget target = testClient.target("http://localhost:8084/datamodel-api/api/");
+    private static WebTarget target = testClient.target("http://localhost:9004/datamodel-api/api/");
     private static String testModelId;
 
     public ModelTest() {
