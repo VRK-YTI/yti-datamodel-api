@@ -388,6 +388,8 @@ public class Models {
 
         provenanceManager.deleteProvenanceFromModel(deleteModel.getId());
 
+        graphManager.deleteVersionLinks(deleteModel.getId());
+
         graphManager.deleteModel(deleteModel);
 
         return jerseyResponseManager.ok();
