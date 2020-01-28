@@ -12,6 +12,7 @@ public final class ApplicationProperties {
     private String defaultNamespace;
     private boolean provenance;
     private String defaultGroupManagementAPI;
+    private String privateGroupManagementAPI;
     private String defaultTerminologyAPI;
     private String privateTerminologyAPI;
     private String publicGroupManagementAPI;
@@ -75,6 +76,14 @@ public final class ApplicationProperties {
 
     public void setDefaultGroupManagementAPI(String defaultGroupManagementAPI) {
         this.defaultGroupManagementAPI = defaultGroupManagementAPI;
+    }
+
+    public String getPrivateGroupManagementAPI() {
+        return privateGroupManagementAPI;
+    }
+
+    public void setPrivateGroupManagementAPI(String privateGroupManagementAPI) {
+        this.privateGroupManagementAPI = privateGroupManagementAPI;
     }
 
     public String getDefaultTerminologyAPI() {

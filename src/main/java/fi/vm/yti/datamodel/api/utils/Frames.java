@@ -18,6 +18,7 @@ public class Frames {
     public static final LinkedHashMap<String, Object> name;
     public static final LinkedHashMap<String, Object> title;
     public static final LinkedHashMap<String, Object> modified;
+    public static final LinkedHashMap<String, Object> created;
     public static final LinkedHashMap<String, Object> contentModified;
     public static final LinkedHashMap<String, Object> statusModified;
     public static final LinkedHashMap<String, Object> contributor;
@@ -67,6 +68,7 @@ public class Frames {
     public static final LinkedHashMap<String, Object> shapeType;
     public static final LinkedHashMap<String, Object> attributeType;
     public static final LinkedHashMap<String, Object> associationType;
+    public static final LinkedHashMap<String, Object> languageSet;
 
     static {
 
@@ -202,6 +204,13 @@ public class Frames {
             }
         };
 
+        created = new LinkedHashMap<String, Object>() {
+            {
+                put("@id", "http://purl.org/dc/terms/created");
+                put("@type", "http://www.w3.org/2001/XMLSchema#dateTime");
+            }
+        };
+
         contentModified = new LinkedHashMap<String, Object>() {
             {
                 put("@id", "http://uri.suomi.fi/datamodel/ns/iow#contentModified");
@@ -221,6 +230,13 @@ public class Frames {
             {
                 put("@id", "http://purl.org/dc/terms/isPartOf");
                 put("@type", "@id");
+                put("@container", "@set");
+            }
+        };
+
+        languageSet = new LinkedHashMap<String, Object>() {
+            {
+                put("@id", "http://purl.org/dc/terms/language");
                 put("@container", "@set");
             }
         };
@@ -732,6 +748,7 @@ public class Frames {
                 put("label", label);
                 put("comment", comment);
                 put("modified", modified);
+                put("created", created);
                 put("contentModified", contentModified);
                 put("statusModified", statusModified);
                 put("contributor", contributorID);
@@ -740,6 +757,7 @@ public class Frames {
                 put("status", versionInfo);
                 put("prefix", preferredXMLNamespacePrefix);
                 put("namespace", preferredXMLNamespaceName);
+                put("language", languageSet);
                 putAll(jsonLdKeys);
             }
         };
@@ -760,6 +778,7 @@ public class Frames {
                 put("label", name);
                 put("comment", shDescription);
                 put("modified", modified);
+                put("created", created);
                 put("status", versionInfo);
                 put("statusModified", statusModified);
                 put("isDefinedBy", isDefinedBy);
@@ -779,6 +798,7 @@ public class Frames {
                 put("name", name);
                 put("description", shDescription);
                 put("modified", modified);
+                put("created", created);
                 put("status", versionInfo);
                 put("isDefinedBy", isDefinedBy);
                 putAll(jsonLdKeys);
@@ -799,6 +819,7 @@ public class Frames {
                 put("label", label);
                 put("comment", comment);
                 put("modified", modified);
+                put("created", created);
                 put("range", range);
                 put("status", versionInfo);
                 put("statusModified", statusModified);

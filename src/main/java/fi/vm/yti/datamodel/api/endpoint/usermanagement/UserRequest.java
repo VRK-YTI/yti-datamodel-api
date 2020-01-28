@@ -43,7 +43,7 @@ public class UserRequest {
         }
 
         return Response.status(Response.Status.OK)
-            .entity(rhpUsersManager.getUserRequests(user.getEmail()))
+            .entity(rhpUsersManager.getUserRequests(user.getId().toString()))
             .build();
     }
 
@@ -58,7 +58,7 @@ public class UserRequest {
             throw new RuntimeException("User not authenticated");
         }
 
-        rhpUsersManager.sendUserRequests(user.getEmail(), organizationId);
+        rhpUsersManager.sendUserRequests(user.getId().toString(), organizationId);
 
         return Response.status(Response.Status.OK).build();
     }

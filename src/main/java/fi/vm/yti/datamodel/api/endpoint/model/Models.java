@@ -374,7 +374,7 @@ public class Models {
             return jerseyResponseManager.notFound();
         }
 
-        if (graphManager.modelStatusRestrictsRemoving(modelIRI)) {
+        if (!user.isSuperuser() && graphManager.modelStatusRestrictsRemoving(modelIRI)) {
             return jerseyResponseManager.cannotRemove();
         }
 
@@ -386,9 +386,7 @@ public class Models {
 
         searchIndexManager.removeModel(deleteModel.getId());
 
-        if (provenanceManager.getProvMode()) {
-            provenanceManager.invalidateModelProvenanceActivity(deleteModel.getId(), deleteModel.getProvUUID(), user.getId());
-        }
+        provenanceManager.deleteProvenanceFromModel(deleteModel.getId());
 
         graphManager.deleteModel(deleteModel);
 

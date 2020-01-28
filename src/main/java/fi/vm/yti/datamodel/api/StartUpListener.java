@@ -15,51 +15,52 @@ import fi.vm.yti.datamodel.api.index.ElasticConnector;
 import fi.vm.yti.datamodel.api.index.FrameManager;
 import fi.vm.yti.datamodel.api.index.SearchIndexManager;
 import fi.vm.yti.datamodel.api.service.GraphManager;
+import fi.vm.yti.datamodel.api.service.GroupManagementService;
 import fi.vm.yti.datamodel.api.service.NamespaceManager;
 import fi.vm.yti.datamodel.api.service.RHPOrganizationManager;
-import fi.vm.yti.datamodel.api.service.TerminologyManager;
 import fi.vm.yti.migration.MigrationInitializer;
 
 @Component
 public class StartUpListener {
 
-    private static final Logger logger = LoggerFactory.getLogger(StartUpListener.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(StartUpListener.class);
 
-    private final TerminologyManager terminologyManager;
     private final RHPOrganizationManager rhpOrganizationManager;
     private final GraphManager graphManager;
     private final NamespaceManager namespaceManager;
     private final ElasticConnector elasticConnector;
     private final FrameManager frameManager;
     private final SearchIndexManager searchIndexManager;
+    private final GroupManagementService groupManagementService;
 
     @Autowired
-    StartUpListener(TerminologyManager terminologyManager,
-                    RHPOrganizationManager rhpOrganizationManager,
+    StartUpListener(RHPOrganizationManager rhpOrganizationManager,
                     GraphManager graphManager,
                     NamespaceManager namespaceManager,
                     ElasticConnector elasticConnector,
                     FrameManager frameManager,
                     SearchIndexManager searchIndexManager,
-                    MigrationInitializer migrationInitializer /* XXX: dependency to enforce init order */) {
+                    MigrationInitializer migrationInitializer,
+                    GroupManagementService groupManagementService
+                    /* XXX: dependency to enforce init order */) {
 
-        this.terminologyManager = terminologyManager;
         this.rhpOrganizationManager = rhpOrganizationManager;
         this.graphManager = graphManager;
         this.namespaceManager = namespaceManager;
         this.elasticConnector = elasticConnector;
         this.frameManager = frameManager;
         this.searchIndexManager = searchIndexManager;
+        this.groupManagementService = groupManagementService;
     }
 
     @PostConstruct
     public void contextInitialized() {
-
         logger.info("System is starting ...");
 
         initDefaultNamespaces();
         initRHPOrganizations();
         initElasticsearchIndices();
+        groupManagementService.updateUsers();
     }
 
     @PreDestroy

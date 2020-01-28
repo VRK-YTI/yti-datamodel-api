@@ -15,6 +15,7 @@ public class IndexModelDTO {
     private String status;
     private String statusModified;
     private String modified;
+    private String created;
     private String contentModified;
     private String type;
     private String prefix;
@@ -25,6 +26,7 @@ public class IndexModelDTO {
     private List<UUID> contributor;
     @JsonFormat(with = JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY)
     private List<String> isPartOf;
+    private List<String> language;
 
     public IndexModelDTO() {
     }
@@ -33,6 +35,7 @@ public class IndexModelDTO {
         this.id = model.getId();
         this.useContext = model.getUseContext();
         this.modified = model.getModified();
+        this.created = model.getCreated();
         this.contentModified = model.getContentModified();
         this.type = model.getType();
         this.prefix = model.getPrefix();
@@ -43,6 +46,7 @@ public class IndexModelDTO {
         this.comment = model.getComment();
         this.contributor = model.getOrganizations();
         this.isPartOf = model.getDomains();
+        this.language = model.getLanguages();
     }
 
     public IndexModelDTO(final String id,
@@ -50,6 +54,7 @@ public class IndexModelDTO {
                          final String status,
                          final String statusModified,
                          final String modified,
+                         final String created,
                          final String contentModified,
                          final String type,
                          final String prefix,
@@ -57,12 +62,14 @@ public class IndexModelDTO {
                          final Map<String, String> label,
                          final Map<String, String> comment,
                          final List<UUID> contributor,
-                         final List<String> isPartOf) {
+                         final List<String> isPartOf,
+                         final List<String> language) {
         this.id = id;
         this.useContext = useContext;
         this.status = status;
         this.statusModified = statusModified;
         this.modified = modified;
+        this.created = created;
         this.contentModified = contentModified;
         this.type = type;
         this.prefix = prefix;
@@ -71,6 +78,7 @@ public class IndexModelDTO {
         this.comment = comment;
         this.contributor = contributor;
         this.isPartOf = isPartOf;
+        this.language = language;
     }
 
     public String getId() {
@@ -109,8 +117,14 @@ public class IndexModelDTO {
         return modified;
     }
 
+    public String getCreated() { return created; }
+
     public void setModified(final String modified) {
         this.modified = modified;
+    }
+
+    public void setCreated(final String created) {
+        this.created = created;
     }
 
     public String getContentModified() {
@@ -177,6 +191,14 @@ public class IndexModelDTO {
         this.isPartOf = isPartOf;
     }
 
+    public List<String> getLanguage() {
+        return language;
+    }
+
+    public void setLanguage(final List<String> language) {
+        this.language = language;
+    }
+
     @Override
     public String toString() {
         return "IndexModelDTO{" +
@@ -185,6 +207,7 @@ public class IndexModelDTO {
             ", status='" + status + '\'' +
             ", statusModified='" + statusModified + '\'' +
             ", modified='" + modified + '\'' +
+            ", created='" + created + '\'' +
             ", contentModified='" + contentModified + '\'' +
             ", type='" + type + '\'' +
             ", prefix='" + prefix + '\'' +
@@ -193,6 +216,7 @@ public class IndexModelDTO {
             ", comment=" + comment +
             ", contributor=" + contributor +
             ", isPartOf=" + isPartOf +
+            ", language=" + language +
             '}';
     }
 }

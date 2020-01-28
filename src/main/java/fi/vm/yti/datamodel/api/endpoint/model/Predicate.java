@@ -87,7 +87,8 @@ public class Predicate {
     })
     public Response getPredicate(
         @Parameter(description = "Property id") @QueryParam("id") String id,
-        @Parameter(description = "Model id") @QueryParam("model") String model) {
+        @Parameter(description = "Model id") @QueryParam("model") String model,
+        @Parameter(description = "Required by model id") @QueryParam("requiredBy") String requiredBy) {
 
         if (id == null || id.equals("undefined") || id.equals("default")) {
 
@@ -95,12 +96,20 @@ public class Predicate {
             // TODO: Create namespacemap from models
             pss.setNsPrefixes(LDHelper.PREFIX_MAP);
 
-            String queryString = QueryLibrary.listPredicatesQuery;
+            String queryString = "";
 
             if (model != null && !model.equals("undefined")) {
+                queryString = QueryLibrary.listPredicatesQuery;
                 pss.setIri("library", model);
                 pss.setIri("hasPartGraph", model + "#HasPartGraph");
-            }
+            } else {
+                    if (requiredBy != null && !requiredBy.equals("undefined")) {
+                        queryString = QueryLibrary.requiredPredicateQuery;
+                        pss.setIri("library", requiredBy);
+                    } else {
+                        queryString = QueryLibrary.listPredicatesQuery;
+                    }
+                }
 
             pss.setCommandText(queryString);
 
@@ -372,13 +381,11 @@ public class Predicate {
                     return jerseyResponseManager.unauthorized();
                 }
 
+                provenanceManager.deleteProvenanceFromResource(deletePredicate.getId());
+
                 graphManager.deleteResource(deletePredicate);
                 searchIndexManager.removePredicate(id);
                 searchIndexManager.updateIndexModel(deletePredicate.getModelId());
-
-                if (provenanceManager.getProvMode()) {
-                    provenanceManager.invalidateProvenanceActivity(deletePredicate.getId(), deletePredicate.getProvUUID(), user.getId());
-                }
 
             } catch (IllegalArgumentException ex) {
                 logger.warn(ex.toString());

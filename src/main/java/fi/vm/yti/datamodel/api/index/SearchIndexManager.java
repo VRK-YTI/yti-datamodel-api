@@ -186,6 +186,7 @@ public class SearchIndexManager {
     public void updateIndexModel(DataModel model) {
         IndexModelDTO indexModel = new IndexModelDTO(model);
         logger.info("Indexing: " + indexModel.getId());
+        logger.debug("Created: "+indexModel.getCreated());
         logger.debug("Modified: "+indexModel.getModified());
         logger.debug("Content modified: "+indexModel.getContentModified());
         esManager.updateToIndex(ELASTIC_INDEX_MODEL, indexModel.getId(), indexModel);
@@ -327,8 +328,10 @@ public class SearchIndexManager {
             "?model rdfs:comment ?comment . " +
             "?model dcterms:description ?definition . " +
             "?model dcterms:modified ?modified . " +
+            "?model dcterms:created ?created . " +
             "?model iow:contentModified ?contentModified . " +
             "?model iow:statusModified ?statusModified . " +
+            "?model dcterms:language ?lang . " +
             "?model a ?modelType . " +
             "?model owl:versionInfo ?versionInfo . " +
             "?model iow:useContext ?useContext . " +
@@ -340,17 +343,20 @@ public class SearchIndexManager {
             "GRAPH ?model { " +
             "?model a owl:Ontology . " +
             "?model rdfs:label ?prefLabel . " +
-            "OPTIONAL {?model rdfs:comment ?comment . FILTER(lang(?comment)!='') }" +
-            "OPTIONAL { ?model iow:useContext ?useContext . }" +
             "?model owl:versionInfo ?versionInfo . " +
             "?model dcap:preferredXMLNamespaceName ?namespace . " +
             "?model dcap:preferredXMLNamespacePrefix ?prefix .  " +
             "?model a ?modelType . VALUES ?modelType { dcap:MetadataVocabulary dcap:DCAP }" +
             "?model dcterms:modified ?modified . " +
+            "?model dcterms:created ?created . " +
             "OPTIONAL { ?model iow:contentModified ?contentModified . }" +
             "OPTIONAL { ?model iow:statusModified ?statusModified . }" +
+            "?model dcterms:language/rdf:rest*/rdf:first ?lang ." +
             "?model dcterms:contributor ?org . BIND(strafter(str(?org), 'urn:uuid:') AS ?orgID) " +
-            "?model dcterms:isPartOf ?group . ?group dcterms:identifier ?groupID . }}";
+            "?model dcterms:isPartOf ?group . ?group dcterms:identifier ?groupID . " +
+            "OPTIONAL { ?model rdfs:comment ?comment . FILTER(lang(?comment)!='') }" +
+            "OPTIONAL { ?model iow:useContext ?useContext . }" +
+            "}}";
 
         Model model = jenaClient.constructFromCore(qry);
         if (model.size() < 1) {
@@ -415,6 +421,7 @@ public class SearchIndexManager {
             "?class sh:description ?definition . " +
             "?class rdfs:isDefinedBy ?model . " +
             "?class dcterms:modified ?modified . " +
+            "?class dcterms:created ?created . " +
             "?class owl:versionInfo ?status . " +
             "?class iow:statusModified ?statusModified . " +
             "?class a ?type . " +
@@ -426,6 +433,7 @@ public class SearchIndexManager {
             "OPTIONAL { ?class iow:statusModified ?statusModified . }" +
             "?class a ?type . " +
             "?class dcterms:modified ?modified . " +
+            "?class dcterms:created ?created . " +
             "?class rdfs:isDefinedBy ?model . }" +
             "GRAPH ?model {?model a owl:Ontology  . ?model rdfs:label ?label . " +
             "?model a ?modelType . VALUES ?modelType { dcap:MetadataVocabulary dcap:DCAP }}}";
@@ -448,6 +456,7 @@ public class SearchIndexManager {
             "?class sh:description ?definition . " +
             "?class rdfs:isDefinedBy ?model . " +
             "?class dcterms:modified ?modified . " +
+            "?class dcterms:created ?created . " +
             "?class owl:versionInfo ?status . " +
             "?class iow:statusModified ?statusModified . " +
             "?class a ?type . " +
@@ -459,6 +468,7 @@ public class SearchIndexManager {
             "OPTIONAL { ?class iow:statusModified ?statusModified . }" +
             "?class a ?type . " +
             "?class dcterms:modified ?modified . " +
+            "?class dcterms:created ?created . " +
             "?class rdfs:isDefinedBy ?model . }" +
             "GRAPH ?model {?model a owl:Ontology  . ?model rdfs:label ?label . " +
             "?model a ?modelType . VALUES ?modelType { dcap:MetadataVocabulary dcap:DCAP }}}";
@@ -493,6 +503,7 @@ public class SearchIndexManager {
             "?predicate rdfs:label ?prefLabel . " +
             "?predicate a ?predicateType . " +
             "?predicate dcterms:modified ?modified . " +
+            "?predicate dcterms:created ?created . " +
             "?predicate rdfs:range ?range . " +
             "?predicate rdfs:comment ?definition . " +
             "?predicate rdfs:isDefinedBy ?model . " +
@@ -506,6 +517,7 @@ public class SearchIndexManager {
             "OPTIONAL { ?predicate iow:statusModified ?statusModified . }" +
             "?predicate owl:versionInfo ?status . " +
             "?predicate dcterms:modified ?modified . " +
+            "?predicate dcterms:created ?created . " +
             "OPTIONAL { ?predicate rdfs:comment ?definition . FILTER(lang(?definition)!='')}" +
             "}" +
             "GRAPH ?model {?model a owl:Ontology  . ?model rdfs:label ?label . " +
@@ -528,6 +540,7 @@ public class SearchIndexManager {
             "?predicate rdfs:label ?prefLabel . " +
             "?predicate a ?predicateType . " +
             "?predicate dcterms:modified ?modified . " +
+            "?predicate dcterms:created ?created . " +
             "?predicate rdfs:range ?range . " +
             "?predicate rdfs:comment ?definition . " +
             "?predicate rdfs:isDefinedBy ?model . " +
@@ -541,6 +554,7 @@ public class SearchIndexManager {
             "OPTIONAL { ?predicate iow:statusModified ?statusModified . }" +
             "?predicate owl:versionInfo ?status . " +
             "?predicate dcterms:modified ?modified . " +
+            "?predicate dcterms:created ?created . " +
             "OPTIONAL { ?predicate rdfs:comment ?definition . FILTER(lang(?definition)!='')}" +
             "}" +
             "GRAPH ?model {?model a owl:Ontology  . ?model rdfs:label ?label . " +

@@ -11,6 +11,7 @@ public class IntegrationResourceDTO {
     private String status;
     private String type;
     private String modified;
+    private String created;
     private String statusModified;
 
     public IntegrationResourceDTO(IndexResourceDTO resource) {
@@ -22,6 +23,7 @@ public class IntegrationResourceDTO {
         this.statusModified = resource.getStatusModified();
         this.type = resource.getType();
         this.modified = resource.getModified();
+        this.created = resource.getCreated();
     }
 
     public IntegrationResourceDTO(final Map<String, String> prefLabel,
@@ -30,7 +32,8 @@ public class IntegrationResourceDTO {
                                   final String status,
                                   final String statusModified,
                                   final String type,
-                                  final String modified) {
+                                  final String modified,
+                                  final String created) {
         this.prefLabel = prefLabel;
         this.description = description;
         this.uri = uri;
@@ -38,6 +41,7 @@ public class IntegrationResourceDTO {
         this.statusModified = statusModified;
         this.type = type;
         this.modified = modified;
+        this.created = created;
     }
 
     public Map<String, String> getPrefLabel() {
@@ -104,6 +108,14 @@ public class IntegrationResourceDTO {
         this.modified = modified;
     }
 
+    public String getCreated() {
+        return created;
+    }
+
+    public void setCreated(final String created) {
+        this.created = created;
+    }
+
     @Override
     public String toString() {
         return "IntegrationResourceDTO{" +
@@ -114,6 +126,7 @@ public class IntegrationResourceDTO {
             ", status='" + status + '\'' +
             ", type='" + type + '\'' +
             ", modified='" + modified + '\'' +
+            ", created='" + created + '\'' +
             ", statusModified='" + statusModified + '\'' +
             '}';
     }

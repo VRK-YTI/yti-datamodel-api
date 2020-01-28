@@ -221,9 +221,11 @@ public class OpenAPIWriter {
             pss.setIri("resource", resourceID);
         }
 
-        if (lang != null) {
-            pss.setLiteral("lang", lang);
+        if (lang == null) {
+            lang = "fi";
         }
+
+        pss.setLiteral("lang", lang);
 
         pss.setCommandText(selectResources);
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
@@ -317,17 +319,6 @@ public class OpenAPIWriter {
                             if (soln.contains("datatype")) {
 
                                 String datatype = soln.getResource("datatype").toString();
-
-                                if (soln.contains("idBoolean")) {
-                                    Boolean isId = soln.getLiteral("idBoolean").getBoolean();
-                                    if (isId) {
-                                        // predicate.add("@type", "@id");
-                                    } else {
-                                        //  predicate.add("@type", datatype);
-                                    }
-                                } else {
-                                    //   predicate.add("@type", datatype);
-                                }
 
                                 String jsonDatatype = DATATYPE_MAP.get(datatype);
 
@@ -726,7 +717,13 @@ public class OpenAPIWriter {
                 + "} ";
 
         pss.setIri("modelID", modelID);
-        if (lang != null) pss.setLiteral("lang", lang);
+
+        if (lang==null) {
+            lang = "fi";
+        }
+
+        pss.setLiteral("lang", lang);
+
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
 
         pss.setCommandText(selectClass);

@@ -63,17 +63,17 @@ public class ModelRequirementUpdater {
         IRI modelIRI, resourceIRI;
 
         if(model == null || resource== null || model.isEmpty() || resource.isEmpty()) {
-            jerseyResponseManager.invalidIRI();
+            return jerseyResponseManager.invalidIRI();
         }
 
         if(model.endsWith("#")) {
             if(resource.startsWith(model)) {
-                jerseyResponseManager.invalidIRI();
+                return jerseyResponseManager.invalidIRI();
             }
             model = model.substring(0, model.length() - 1);
         } else {
             if(resource.startsWith(model+"#")) {
-                jerseyResponseManager.invalidIRI();
+                return jerseyResponseManager.invalidIRI();
             }
         }
 

@@ -46,7 +46,6 @@ public class CodeSchemeManager {
     /**
      * Returns date when the model was last modified from the Export graph
      *
-     * @param graphName Graph IRI as string
      * @return Returns date
      */
     public Date lastModified(String scheme) {

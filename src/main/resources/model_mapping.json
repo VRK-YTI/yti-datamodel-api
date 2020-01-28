@@ -32,6 +32,9 @@
         "modified": {
           "type": "date"
         },
+        "created": {
+          "type": "date"
+        },
         "type": {
           "type": "keyword"
         },
@@ -42,6 +45,9 @@
           "type": "keyword"
         },
         "contributor": {
+          "type": "keyword"
+        },
+        "language": {
           "type": "keyword"
         },
         "isPartOf": {

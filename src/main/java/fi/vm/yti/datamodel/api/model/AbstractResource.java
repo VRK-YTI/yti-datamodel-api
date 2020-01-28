@@ -53,6 +53,10 @@ public class AbstractResource {
         return this.graph.getRequiredProperty(ResourceFactory.createResource(this.getId()), DCTerms.modified).getString();
     }
 
+    public String getCreated() {
+        return this.graph.getRequiredProperty(ResourceFactory.createResource(this.getId()), DCTerms.created).getString();
+    }
+
     public IRI getModelIRI() {
         return this.dataModel.getIRI();
     }

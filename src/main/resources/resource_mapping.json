@@ -33,6 +33,9 @@
         "modified": {
           "type": "date"
         },
+        "created": {
+          "type": "date"
+        },
         "type": {
           "type": "keyword"
         },
