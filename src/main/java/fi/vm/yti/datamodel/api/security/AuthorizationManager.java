@@ -38,7 +38,8 @@ public class AuthorizationManager {
     }
 
     public boolean hasRightToCreateNewVersion(AbstractModel model) {
-        return isAdminOfAnyOrganization(model.getOrganizations());
+        return hasRightToAnyOrganization(model.getOrganizations());
+       // return isAdminOfAnyOrganization(model.getOrganizations());
     }
 
     private boolean hasRightToAnyOrganization(Collection<UUID> organizations) {

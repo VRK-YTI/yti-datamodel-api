@@ -1860,4 +1860,46 @@ public class GraphManager {
         removeModel(amodel.getIRI());
     }
 
+    /**
+     * Deletes version links
+     *
+     * @param graph ID of deleted graph
+     */
+    public void deleteVersionLinks(String graph) {
+
+        String query =
+            "DELETE { " +
+                "GRAPH ?anyGraph {" +
+                "?anyRes prov:wasRevisionOf ?oldRes . }"+
+                "GRAPH ?anyModel {" +
+                "?model prov:wasRevisionOf ?g . " +
+                "}} WHERE { " +
+                "OPTIONAL { " +
+                "GRAPH ?oldRes { " +
+                "?oldRes rdfs:isDefinedBy ?g . }" +
+                "GRAPH ?anyGraph {" +
+                "?anyRes prov:wasRevisionOf ?oldRes . }"+
+                "}" +
+                "GRAPH ?anyModel {" +
+                "?model prov:wasRevisionOf ?g . " +
+                "}" +
+                "GRAPH ?g { " +
+                "?g a owl:Ontology ." +
+                "}" +
+                "}";
+
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
+
+        pss.setIri("g", graph);
+        pss.setCommandText(query);
+
+        logger.info("Removing version references with " + graph);
+
+        UpdateRequest queryObj = pss.asUpdate();
+        UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, endpointServices.getCoreSparqlUpdateAddress());
+        qexec.execute();
+
+    }
+
 }
