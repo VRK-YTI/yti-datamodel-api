@@ -1152,7 +1152,7 @@ public class GraphManager {
                 }
                 break;
             case "DRAFT":
-                final List draftChanges = Stream.of("INCOMPLETE", "VALID", "RETIRED", "INVALID").collect(Collectors.toList());
+                final List draftChanges = Stream.of("INCOMPLETE", "VALID", "RETIRED", "INVALID", "SUPERSEDED").collect(Collectors.toList());
                 if (draftChanges.contains(endStatus)) {
                     logger.debug("Status changes in " + model + " from " + initialStatus + " to " + endStatus);
                     changeResourceStatuses(model, initialStatus, endStatus);
@@ -1161,7 +1161,7 @@ public class GraphManager {
                 }
                 break;
             case "VALID":
-                final List validChanges = Stream.of("RETIRED", "INVALID").collect(Collectors.toList());
+                final List validChanges = Stream.of("RETIRED", "INVALID", "SUPERSEDED").collect(Collectors.toList());
                 if (validChanges.contains(endStatus)) {
                     logger.debug("Status changes in " + model + " from " + initialStatus + " to " + endStatus);
                     changeResourceStatuses(model, initialStatus, endStatus);
@@ -1170,7 +1170,7 @@ public class GraphManager {
                 }
                 break;
             case "RETIRED":
-                final List removedChanges = Stream.of("VALID", "INVALID").collect(Collectors.toList());
+                final List removedChanges = Stream.of("VALID", "INVALID", "SUPERSEDED").collect(Collectors.toList());
                 if (removedChanges.contains(endStatus)) {
                     logger.debug("Status changes in " + model + " from " + initialStatus + " to " + endStatus);
                     changeResourceStatuses(model, initialStatus, endStatus);
@@ -1178,8 +1178,17 @@ public class GraphManager {
                     throw new IllegalArgumentException("Invalid status change from " + initialStatus + " to " + endStatus);
                 }
                 break;
+            case "SUPERSEDED":
+                final List supersededChanges = Stream.of("VALID", "INVALID", "RETIRED").collect(Collectors.toList());
+                if (supersededChanges.contains(endStatus)) {
+                    logger.debug("Status changes in " + model + " from " + initialStatus + " to " + endStatus);
+                    changeResourceStatuses(model, initialStatus, endStatus);
+                } else {
+                    throw new IllegalArgumentException("Invalid status change from " + initialStatus + " to " + endStatus);
+                }
+                break;
             case "INVALID":
-                final List invalidChanges = Stream.of("RETIRED", "VALID").collect(Collectors.toList());
+                final List invalidChanges = Stream.of("RETIRED", "VALID", "SUPERSEDED").collect(Collectors.toList());
                 if (invalidChanges.contains(endStatus)) {
                     logger.debug("Status changes in " + model + " from " + initialStatus + " to " + endStatus);
                     changeResourceStatuses(model, initialStatus, endStatus);
