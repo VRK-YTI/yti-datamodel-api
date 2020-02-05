@@ -27,6 +27,7 @@ import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.ResourceFactory;
+import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.web.DatasetAdapter;
 import org.apache.jena.web.DatasetGraphAccessorHTTP;
@@ -55,6 +56,8 @@ public class SuomiCodeServer {
     private DatasetGraphAccessorHTTP accessor;
     private DatasetAdapter adapter;
     private CodeSchemeManager codeSchemeManager;
+    private SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+    private DateTimeFormatter dfmt = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
 
     public SuomiCodeServer(EndpointServices endpointServices,
                            CodeSchemeManager codeSchemeManager) {
@@ -92,8 +95,7 @@ public class SuomiCodeServer {
         return adapter.containsModel(uri);
     }
 
-    // https://koodistot.dev.yti.cloud.vrk.fi/codelist-api/api/v1/coderegistries/
-    public void updateCodelistsFromServer() {
+    public void updateCodeSchemeList() {
 
         Model model = ModelFactory.createDefaultModel();
         model.setNsPrefix("dcterms", "http://purl.org/dc/terms/");
@@ -132,7 +134,7 @@ public class SuomiCodeServer {
                 Resource group = model.createResource(groupID);
 
                 JsonObject registryName = codeRegistry.getJsonObject("prefLabel");
-                JsonObject registryDescription = codeRegistry.getJsonObject("prefLabel");
+                JsonObject registryDescription = codeRegistry.getJsonObject("description");
 
                 if (registryName != null) {
                     addLangLiteral(group, registryName, name);
@@ -188,47 +190,6 @@ public class SuomiCodeServer {
                         }
 
                         valueScheme.addLiteral(status, codeList.getString("status"));
-                        JsonValue modifiedObject = codeList.get("modified");
-
-                        if (modifiedObject != null) {
-                            valueScheme.addLiteral(modified, ResourceFactory.createTypedLiteral(codeList.getString("modified"), XSDDatatype.XSDdateTime));
-                        } else {
-                            logger.debug("Modified date null: " + codeListUrl);
-                        }
-
-                        // WTF: Zulu time
-                        SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
-                        DateTimeFormatter dfmt = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
-
-                        if (adapter.containsModel(codeListUri)) {
-                            if (modifiedObject != null) {
-
-                                String dateString = codeList.getString("modified");
-                                LocalDateTime codeSchemeModified = LocalDateTime.parse(dateString, dfmt);
-                                Date lastModifiedDateTime = codeSchemeManager.lastModified(codeListUri);
-
-                                if (lastModifiedDateTime == null) {
-                                    updateCodes(codeListUrl + "/codes/", codeListUri);
-                                } else {
-
-                                    LocalDateTime lastModifiedLocalDateTime = lastModifiedDateTime.toInstant()
-                                        .atZone(ZoneId.of("GMT"))
-                                        .toLocalDateTime();
-
-                                    if (codeSchemeModified.isAfter(lastModifiedLocalDateTime)) {
-                                        updateCodes(codeListUrl + "/codes/", codeListUri);
-                                    } else {
-                                        logger.debug("Not updated: " + lastModifiedLocalDateTime.toString() + " vs. " + codeSchemeModified.toString());
-                                    }
-                                }
-
-                            } else {
-                                logger.debug("Modified date is null in codeList API!");
-                                updateCodes(codeListUrl + "/codes/", codeListUri);
-                            }
-                        } else {
-                            updateCodes(codeListUrl + "/codes/", codeListUri);
-                        }
 
                     }
                 } else {
@@ -237,32 +198,30 @@ public class SuomiCodeServer {
 
             }
 
+            // model.write(System.out, "text/turtle");
             adapter.putModel(uri, model);
-            logger.info("Putting schemes to " + uri);
-            //model.write(System.out, "text/turtle");
 
+        } else {
+            logger.warn("Connection to " + target.toString() + " failed: " + response.getStatus());
         }
 
     }
 
-    public void updateCodes(String url,
-                            String uri) {
-
-        //logger.debug("Updating "+uri+" from "+url);
-
+    public Model createModelFromCodeList(String containerUri,
+                                         String codeSchemeModified) {
         Model model = ModelFactory.createDefaultModel();
         model.setNsPrefix("dcterms", "http://purl.org/dc/terms/");
         model.setNsPrefix("iow", "http://uri.suomi.fi/datamodel/ns/iow#");
 
-        Response.ResponseBuilder rb;
-
         Client client = ClientBuilder.newClient();
-        WebTarget target = client.target(url).queryParam("format", "application/json");
+        WebTarget target = client.target(url + "v1/integration/resources").queryParam("includeIncomplete", "true").queryParam("container", containerUri).queryParam("format", "application/json");
         Response response = target.request("application/json").get();
 
         if (response.getStatusInfo().getFamily() == Response.Status.Family.SUCCESSFUL) {
 
-            // logger.info("Updated "+target.getUri().toString());
+            Resource valueScheme = model.createResource(containerUri);
+            valueScheme.addProperty(RDF.type, ResourceFactory.createResource("http://uri.suomi.fi/datamodel/ns/iow#FCodeScheme"));
+            valueScheme.addLiteral(modified, ResourceFactory.createTypedLiteral(codeSchemeModified, XSDDatatype.XSDdateTime));
 
             JsonReader jsonReader = Json.createReader(response.readEntity(InputStream.class));
             JsonObject codeListResponse = jsonReader.readObject();
@@ -276,19 +235,18 @@ public class SuomiCodeServer {
                 JsonObject codeObj = (JsonObject) codeIterator.next();
                 String codeURI = codeObj.getString("uri");
 
-                // FIXME: This should not happen!
                 if (LDHelper.isInvalidIRI(codeURI)) {
                     logger.warn("Invalid IRI: " + codeURI);
-                    return;
+                    return null;
                 }
 
                 Resource codeRes = model.createResource(codeURI);
 
                 codeRes.addProperty(RDF.type, ResourceFactory.createResource("http://uri.suomi.fi/datamodel/ns/iow#FCode"));
-                codeRes.addLiteral(id, ResourceFactory.createPlainLiteral(codeObj.getString("codeValue")));
+                codeRes.addLiteral(id, ResourceFactory.createPlainLiteral(codeObj.getString("localName")));
 
                 JsonObject codeName = codeObj.getJsonObject("prefLabel");
-                JsonObject descriptionName = codeObj.getJsonObject("description");
+                JsonObject descriptionName = codeObj.getJsonObject("definition");
 
                 if (codeName != null) {
                     addLangLiteral(codeRes, codeName, name);
@@ -304,17 +262,73 @@ public class SuomiCodeServer {
 
             if (model.size() < 1) {
                 logger.warn("Codes graph from " + uri + " is empty! No valid codes?");
+                return null;
+            } else {
+                return model;
             }
-
-            adapter.putModel(uri, model);
-
-            //model.write(System.out, "text/turtle");
-            logger.info("Saved codes: " + uri);
-
         } else {
-            logger.info("" + response.getStatus());
+            return null;
         }
-
     }
 
+    public void updateCodes(String containerUri) {
+
+        LocalDateTime codeSchemeModified = null;
+        Model model = null;
+        Response.ResponseBuilder rb;
+
+        Client containerClient = ClientBuilder.newClient();
+        WebTarget containerTarget = containerClient.target(url + "v1/integration/containers").queryParam("includeIncomplete", "true").queryParam("uri", containerUri).queryParam("format", "application/json");
+        Response containerResponse = containerTarget.request("application/json").get();
+
+        if (containerResponse.getStatusInfo().getFamily() == Response.Status.Family.SUCCESSFUL) {
+
+            JsonReader jsonReader = Json.createReader(containerResponse.readEntity(InputStream.class));
+            JsonObject codeSchemeResponse = jsonReader.readObject();
+            jsonReader.close();
+
+            try {
+                JsonObject codeList = codeSchemeResponse.getJsonArray("results").getJsonObject(0);
+                String schemeModifiedString = codeList.getString("modified");
+
+                if (schemeModifiedString != null) {
+                    logger.debug("Container last-modified: " + schemeModifiedString);
+                    codeSchemeModified = LocalDateTime.parse(schemeModifiedString, dfmt);
+                }
+
+                if (!containsCodeList(containerUri)) {
+                    logger.debug("No scheme found. Creating scheme: " + containerUri);
+                    model = createModelFromCodeList(containerUri, schemeModifiedString);
+                } else {
+                    Date lastModifiedDateTime = codeSchemeManager.lastModified(containerUri);
+                    if (lastModifiedDateTime == null) {
+                        logger.debug("No modified found. Updating scheme: " + containerUri);
+                        model = createModelFromCodeList(containerUri, schemeModifiedString);
+                    } else {
+                        LocalDateTime lastModifiedLocalDateTime = lastModifiedDateTime.toInstant()
+                            .atZone(ZoneId.of("GMT"))
+                            .toLocalDateTime();
+                        if (codeSchemeModified != null && codeSchemeModified.isAfter(lastModifiedLocalDateTime)) {
+                            logger.debug("Updating scheme to new version: " + containerUri);
+                            model = createModelFromCodeList(containerUri, schemeModifiedString);
+                        } else {
+                            logger.debug("Scheme already up to date: " + containerUri);
+                            return;
+                        }
+                    }
+                }
+            } catch (Exception ex) {
+                logger.warn("Could not find codescheme: "+uri);
+                return;
+            }
+        } else {
+            logger.warn("Could not connect to code service: " + url);
+        }
+
+        if (model == null) {
+            logger.warn("Codes graph from " + containerUri + " is empty! No valid codes?");
+        } else {
+            adapter.putModel(containerUri, model);
+        }
+    }
 }

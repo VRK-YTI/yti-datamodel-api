@@ -922,10 +922,10 @@
     <skos:note xml:lang="sv">I denna servicegrupp behandlas olika karttjänster och tjänster för geodatamaterial.</skos:note>
     <sh:order>1800</sh:order>
     <skos:topConceptOf rdf:resource="http://urn.fi/URN:NBN:fi:au:ptvl:"/>
-    <skos:prefLabel xml:lang="sv">Kartor</skos:prefLabel>
-    <skos:prefLabel xml:lang="en">Maps</skos:prefLabel>
+    <skos:prefLabel xml:lang="sv">Geodata</skos:prefLabel>
+    <skos:prefLabel xml:lang="en">Geospatial data</skos:prefLabel>
     <skos:narrower rdf:resource="http://urn.fi/URN:NBN:fi:au:ptvl:v1158"/>
-    <skos:prefLabel xml:lang="fi">Kartat</skos:prefLabel>
+    <skos:prefLabel xml:lang="fi">Paikkatieto</skos:prefLabel>
     <skos:notation>P18</skos:notation>
     <rdf:type rdf:resource="http://www.w3.org/2004/02/skos/core#Concept"/>
     <skos:inScheme rdf:resource="http://urn.fi/URN:NBN:fi:au:ptvl:"/>

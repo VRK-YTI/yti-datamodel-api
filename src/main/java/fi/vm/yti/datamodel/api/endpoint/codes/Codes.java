@@ -56,6 +56,7 @@ public class Codes {
         @QueryParam("uri") String uri) {
         if (uri.startsWith("http://uri.suomi.fi")) {
             SuomiCodeServer codeServer = new SuomiCodeServer("https://koodistot.suomi.fi", applicationProperties.getDefaultSuomiCodeServerAPI(), endpointServices, codeSchemeManager);
+            codeServer.updateCodes(uri);
         } else if (uri.startsWith("https://virkailija.opintopolku.fi")) {
             OPHCodeServer codeServer = new OPHCodeServer("https://virkailija.opintopolku.fi/koodisto-service/rest/json/", endpointServices);
             if (!codeServer.containsCodeList(uri)) {

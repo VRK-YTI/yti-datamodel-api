@@ -53,8 +53,7 @@ public class CodeSchemeManager {
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         String selectResources =
             "SELECT ?date WHERE { "
-                + "GRAPH ?graph { " +
-                " ?codeScheme a iow:FCodeScheme . "
+                + "GRAPH ?codeScheme { "
                 + "?codeScheme dcterms:modified ?date . " +
                 "}}";
 
