@@ -3,7 +3,6 @@
  */
 package fi.vm.yti.datamodel.api.endpoint.model;
 
-import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -17,10 +16,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import fi.vm.yti.datamodel.api.endpoint.genericapi.Search;
 import fi.vm.yti.datamodel.api.index.SearchIndexManager;
 import fi.vm.yti.datamodel.api.model.DataModel;
-import fi.vm.yti.datamodel.api.security.AuthorizationManager;
+import fi.vm.yti.datamodel.api.security.AuthorizationManagerImpl;
 import fi.vm.yti.datamodel.api.service.GraphManager;
 import fi.vm.yti.datamodel.api.service.IDManager;
 import fi.vm.yti.datamodel.api.service.JerseyResponseManager;
@@ -39,7 +37,7 @@ public class ChangeStatuses {
 
 
     private static final Logger logger = LoggerFactory.getLogger(ChangeStatuses.class);
-    private final AuthorizationManager authorizationManager;
+    private final AuthorizationManagerImpl authorizationManager;
     private final AuthenticatedUserProvider userProvider;
     private final IDManager idManager;
     private final JerseyResponseManager jerseyResponseManager;
@@ -47,7 +45,7 @@ public class ChangeStatuses {
     private final SearchIndexManager searchIndexManager;
 
     @Autowired
-    ChangeStatuses(AuthorizationManager authManager,
+    ChangeStatuses(AuthorizationManagerImpl authManager,
                    AuthenticatedUserProvider userProvider,
                    IDManager idManager,
                    JerseyResponseManager jerseyResponseManager,

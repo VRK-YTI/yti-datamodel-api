@@ -2,7 +2,7 @@ package fi.vm.yti.datamodel.api.endpoint.concepts;
 
 import com.jayway.jsonpath.JsonPath;
 
-import fi.vm.yti.datamodel.api.security.AuthorizationManager;
+import fi.vm.yti.datamodel.api.security.AuthorizationManagerImpl;
 import fi.vm.yti.datamodel.api.service.*;
 import fi.vm.yti.security.AuthenticatedUserProvider;
 import io.swagger.v3.oas.annotations.Operation;
@@ -27,7 +27,7 @@ import javax.ws.rs.core.Response;
 @Tag(name = "Concept")
 public class ConceptSuggestion {
 
-    private final AuthorizationManager authorizationManager;
+    private final AuthorizationManagerImpl authorizationManager;
     private final AuthenticatedUserProvider userProvider;
     private final JerseyResponseManager jerseyResponseManager;
     private final ModelManager modelManager;
@@ -38,7 +38,7 @@ public class ConceptSuggestion {
     private static final Logger logger = LoggerFactory.getLogger(ConceptSuggestion.class.getName());
 
     @Autowired
-    ConceptSuggestion(AuthorizationManager authorizationManager,
+    ConceptSuggestion(AuthorizationManagerImpl authorizationManager,
                       AuthenticatedUserProvider userProvider,
                       JerseyResponseManager jerseyResponseManager,
                       TerminologyManager terminologyManager,

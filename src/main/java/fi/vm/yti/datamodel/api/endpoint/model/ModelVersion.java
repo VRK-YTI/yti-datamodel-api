@@ -5,7 +5,7 @@ import java.util.UUID;
 import fi.vm.yti.datamodel.api.index.FrameManager;
 import fi.vm.yti.datamodel.api.index.SearchIndexManager;
 import fi.vm.yti.datamodel.api.model.DataModel;
-import fi.vm.yti.datamodel.api.security.AuthorizationManager;
+import fi.vm.yti.datamodel.api.security.AuthorizationManagerImpl;
 import fi.vm.yti.datamodel.api.service.*;
 import fi.vm.yti.security.AuthenticatedUserProvider;
 import fi.vm.yti.security.YtiUser;
@@ -34,7 +34,7 @@ import javax.ws.rs.core.Response;
 public class ModelVersion {
 
     private static final Logger logger = LoggerFactory.getLogger(Models.class.getName());
-    private final AuthorizationManager authorizationManager;
+    private final AuthorizationManagerImpl authorizationManager;
     private final AuthenticatedUserProvider userProvider;
     private final IDManager idManager;
     private final JerseyResponseManager jerseyResponseManager;
@@ -45,7 +45,7 @@ public class ModelVersion {
     private final ProvenanceManager provenanceManager;
 
     @Autowired
-    ModelVersion(AuthorizationManager authorizationManager,
+    ModelVersion(AuthorizationManagerImpl authorizationManager,
                  AuthenticatedUserProvider userProvider,
                  GraphManager graphManager,
                  FrameManager frameManager,

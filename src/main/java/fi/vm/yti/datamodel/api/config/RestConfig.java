@@ -17,6 +17,7 @@ import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.web.client.RestTemplate;
 
+import javax.annotation.PostConstruct;
 import javax.net.ssl.SSLContext;
 
 import java.security.KeyManagementException;
@@ -30,15 +31,15 @@ import static com.fasterxml.jackson.databind.SerializationFeature.WRITE_DATES_AS
 @Configuration
 public class RestConfig {
 
-    private final ObjectMapper objectMapper;
-
     @Autowired
-    RestConfig(ObjectMapper objectMapper) {
+    private ObjectMapper objectMapper;
+
+    @PostConstruct
+    private void configureObjectMapper() {
         objectMapper.setSerializationInclusion(NON_NULL);
         // ISO8601DateFormat by default when timestamps disabled?
         objectMapper.disable(WRITE_DATES_AS_TIMESTAMPS);
         objectMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
-        this.objectMapper = objectMapper;
     }
 
     @Bean

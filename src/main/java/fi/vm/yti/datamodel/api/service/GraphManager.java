@@ -1280,7 +1280,7 @@ public class GraphManager {
         Resource newModelResource = ResourceFactory.createResource(newModel.toString());
         LDHelper.rewriteLiteral(oldModelGraph, newModelResource, DCTerms.created, created);
         LDHelper.rewriteLiteral(oldModelGraph, newModelResource, DCTerms.modified, created);
-        LDHelper.rewriteLiteral(oldModelGraph, newModelResource, DCTerms.identifier, ResourceFactory.createPlainLiteral("urn:uuid:"+UUID.randomUUID().toString()));
+        LDHelper.rewriteLiteral(oldModelGraph, newModelResource, DCTerms.identifier, ResourceFactory.createPlainLiteral("urn:uuid:" + UUID.randomUUID().toString()));
         LDHelper.removeLiteral(oldModelGraph, newModelResource, LDHelper.curieToProperty("iow:contentModified"));
         LDHelper.rewriteLiteral(oldModelGraph, newModelResource, OWL.versionInfo, ResourceFactory.createPlainLiteral("INCOMPLETE"));
         LDHelper.rewriteResourceReference(oldModelGraph, newModelResource, LDHelper.curieToProperty("prov:wasRevisionOf"), ResourceFactory.createResource(model.toString()));
@@ -1291,7 +1291,7 @@ public class GraphManager {
 
         Model oldHasPartGraph = adapter.getModel(model.toString() + "#HasPartGraph");
 
-        if(oldHasPartGraph!=null && oldHasPartGraph.size()>1) {
+        if (oldHasPartGraph != null && oldHasPartGraph.size() > 1) {
 
             ResourceUtils.renameResource(oldHasPartGraph.getResource(model.toString()), newModel.toString());
 
@@ -1613,6 +1613,14 @@ public class GraphManager {
 
     }
 
+    public void addToGraph(Model model,
+                           String id) {
+        logger.debug("Adding to " + id);
+        DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(endpointServices.getCoreReadWriteAddress());
+        DatasetAdapter adapter = new DatasetAdapter(accessor);
+        adapter.add(id, model);
+    }
+
     /**
      * Constructs JSON-LD from graph
      *
@@ -1670,22 +1678,22 @@ public class GraphManager {
 
         String query
             = " DELETE { " +
-                "GRAPH ?graph { ?graph iow:contentModified ?oldDate1 . }" +
-                "GRAPH ?exportGraph { ?graph iow:contentModified ?oldDate2 . }" +
+            "GRAPH ?graph { ?graph iow:contentModified ?oldDate1 . }" +
+            "GRAPH ?exportGraph { ?graph iow:contentModified ?oldDate2 . }" +
             "}"
             + " INSERT { " +
-                "GRAPH ?graph { ?graph iow:contentModified ?newDate . }" +
-                "GRAPH ?exportGraph { ?graph iow:contentModified ?newDate . }" +
+            "GRAPH ?graph { ?graph iow:contentModified ?newDate . }" +
+            "GRAPH ?exportGraph { ?graph iow:contentModified ?newDate . }" +
             "}"
             + " WHERE { " +
-             "GRAPH ?graph { ?graph a owl:Ontology . OPTIONAL { ?graph iow:contentModified ?oldDate1 . } }" +
-             "GRAPH ?exportGraph { ?graph a owl:Ontology . OPTIONAL { ?graph iow:contentModified ?oldDate2 . } }" +
+            "GRAPH ?graph { ?graph a owl:Ontology . OPTIONAL { ?graph iow:contentModified ?oldDate1 . } }" +
+            "GRAPH ?exportGraph { ?graph a owl:Ontology . OPTIONAL { ?graph iow:contentModified ?oldDate2 . } }" +
             "}";
 
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
         pss.setIri("graph", model);
-        pss.setIri("exportGraph", model+"#ExportGraph");
+        pss.setIri("exportGraph", model + "#ExportGraph");
         pss.setLiteral("newDate", LDHelper.getDateTimeLiteral());
         pss.setCommandText(query);
 
@@ -1762,7 +1770,8 @@ public class GraphManager {
         updateContentModified(modelId);
     }
 
-    public void updateResource(AbstractResource resource, AbstractResource oldResource) {
+    public void updateResource(AbstractResource resource,
+                               AbstractResource oldResource) {
 
         final Model oldModel = oldResource.asGraph();
 
@@ -1773,7 +1782,8 @@ public class GraphManager {
         updateResource(resource.getModelId(), resource.getId(), oldModel, newModel);
     }
 
-    public void updateResourceWithNewId(AbstractResource resource, AbstractResource oldResource) {
+    public void updateResourceWithNewId(AbstractResource resource,
+                                        AbstractResource oldResource) {
 
         Model oldModel = oldResource.asGraph();
 
@@ -1822,7 +1832,8 @@ public class GraphManager {
         jenaClient.putModelToCore(amodel.getId() + "#ExportGraph", amodel.asGraph());
     }
 
-    public void updateModel(AbstractModel amodel, AbstractModel omodel) {
+    public void updateModel(AbstractModel amodel,
+                            AbstractModel omodel) {
         Literal modified = LDHelper.getDateTimeLiteral();
         LDHelper.rewriteLiteral(amodel.asGraph(), ResourceFactory.createResource(amodel.getId()), DCTerms.modified, modified);
 
@@ -1879,7 +1890,7 @@ public class GraphManager {
         String query =
             "DELETE { " +
                 "GRAPH ?anyGraph {" +
-                "?anyRes prov:wasRevisionOf ?oldRes . }"+
+                "?anyRes prov:wasRevisionOf ?oldRes . }" +
                 "GRAPH ?anyModel {" +
                 "?model prov:wasRevisionOf ?g . " +
                 "}} WHERE { " +
@@ -1887,7 +1898,7 @@ public class GraphManager {
                 "GRAPH ?oldRes { " +
                 "?oldRes rdfs:isDefinedBy ?g . }" +
                 "GRAPH ?anyGraph {" +
-                "?anyRes prov:wasRevisionOf ?oldRes . }"+
+                "?anyRes prov:wasRevisionOf ?oldRes . }" +
                 "}" +
                 "GRAPH ?anyModel {" +
                 "?model prov:wasRevisionOf ?g . " +

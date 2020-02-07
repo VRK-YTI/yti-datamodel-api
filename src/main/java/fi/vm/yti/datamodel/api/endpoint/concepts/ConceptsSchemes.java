@@ -8,7 +8,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import fi.vm.yti.datamodel.api.security.AuthorizationManager;
+import fi.vm.yti.datamodel.api.security.AuthorizationManagerImpl;
 import fi.vm.yti.datamodel.api.service.JerseyResponseManager;
 import fi.vm.yti.datamodel.api.service.TerminologyManager;
 import fi.vm.yti.security.AuthenticatedUserProvider;
@@ -34,11 +34,11 @@ public class ConceptsSchemes {
 
     private final JerseyResponseManager jerseyResponseManager;
     private final TerminologyManager terminologyManager;
-    private final AuthorizationManager authorizationManager;
+    private final AuthorizationManagerImpl authorizationManager;
     private final AuthenticatedUserProvider userProvider;
 
     @Autowired
-    ConceptsSchemes(AuthorizationManager authorizationManager,
+    ConceptsSchemes(AuthorizationManagerImpl authorizationManager,
                     AuthenticatedUserProvider userProvider,
                     JerseyResponseManager jerseyResponseManager,
                     TerminologyManager terminologyManager) {

@@ -14,7 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import fi.vm.yti.datamodel.api.model.DataModel;
-import fi.vm.yti.datamodel.api.security.AuthorizationManager;
+import fi.vm.yti.datamodel.api.security.AuthorizationManagerImpl;
 import fi.vm.yti.datamodel.api.service.GraphManager;
 import fi.vm.yti.datamodel.api.service.IDManager;
 import fi.vm.yti.datamodel.api.service.JerseyResponseManager;
@@ -33,11 +33,11 @@ public class ModelRequirementUpdater {
     private final IDManager idManager;
     private final JerseyResponseManager jerseyResponseManager;
     private final GraphManager graphManager;
-    private final AuthorizationManager authorizationManager;
+    private final AuthorizationManagerImpl authorizationManager;
     private final AuthenticatedUserProvider userProvider;
 
     @Autowired
-    ModelRequirementUpdater(AuthorizationManager authorizationManager,
+    ModelRequirementUpdater(AuthorizationManagerImpl authorizationManager,
                             AuthenticatedUserProvider userProvider,
                             IDManager idManager,
                             JerseyResponseManager jerseyResponseManager,

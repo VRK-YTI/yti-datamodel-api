@@ -110,6 +110,7 @@ public class ModelCreator {
 
         if (!rhpOrganizationManager.isExistingOrganization(orgList)) {
             logger.info("no org");
+            System.out.println("WG?!");
             return jerseyResponseManager.invalidParameter();
         }
 

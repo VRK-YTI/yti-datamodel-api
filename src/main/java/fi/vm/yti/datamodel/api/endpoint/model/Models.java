@@ -36,7 +36,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import fi.vm.yti.datamodel.api.index.SearchIndexManager;
 import fi.vm.yti.datamodel.api.model.DataModel;
-import fi.vm.yti.datamodel.api.security.AuthorizationManager;
+import fi.vm.yti.datamodel.api.security.AuthorizationManagerImpl;
 import fi.vm.yti.datamodel.api.service.EndpointServices;
 import fi.vm.yti.datamodel.api.service.GraphManager;
 import fi.vm.yti.datamodel.api.service.IDManager;
@@ -64,7 +64,7 @@ public class Models {
 
     private static final Logger logger = LoggerFactory.getLogger(Models.class.getName());
 
-    private final AuthorizationManager authorizationManager;
+    private final AuthorizationManagerImpl authorizationManager;
     private final AuthenticatedUserProvider userProvider;
     private final EndpointServices endpointServices;
     private final GraphManager graphManager;
@@ -80,7 +80,7 @@ public class Models {
     private final ObjectMapper objectMapper;
 
     @Autowired
-    Models(AuthorizationManager authorizationManager,
+    Models(AuthorizationManagerImpl authorizationManager,
            AuthenticatedUserProvider userProvider,
            EndpointServices endpointServices,
            GraphManager graphManager,

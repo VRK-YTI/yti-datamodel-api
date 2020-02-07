@@ -4,7 +4,7 @@
 package fi.vm.yti.datamodel.api.endpoint.model;
 
 import fi.vm.yti.datamodel.api.model.DataModel;
-import fi.vm.yti.datamodel.api.security.AuthorizationManager;
+import fi.vm.yti.datamodel.api.security.AuthorizationManagerImpl;
 import fi.vm.yti.datamodel.api.service.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -32,7 +32,7 @@ public class ModelPositions {
 
     private static final Logger logger = LoggerFactory.getLogger(ModelPositions.class.getName());
 
-    private final AuthorizationManager authorizationManager;
+    private final AuthorizationManagerImpl authorizationManager;
     private final JerseyClient jerseyClient;
     private final JerseyResponseManager jerseyResponseManager;
     private final EndpointServices endpointServices;
@@ -42,7 +42,7 @@ public class ModelPositions {
     private final GraphManager graphManager;
 
     @Autowired
-    ModelPositions(AuthorizationManager authorizationManager,
+    ModelPositions(AuthorizationManagerImpl authorizationManager,
                    JerseyClient jerseyClient,
                    JerseyResponseManager jerseyResponseManager,
                    EndpointServices endpointServices,

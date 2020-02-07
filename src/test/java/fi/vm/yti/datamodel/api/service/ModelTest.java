@@ -1,41 +1,51 @@
+package fi.vm.yti.datamodel.api.service;
+
+import com.jayway.jsonpath.Configuration;
+import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.matchers.JsonPathMatchers;
+
+import org.apache.jena.rdf.model.Model;
 import org.glassfish.jersey.client.ClientProperties;
 import org.hamcrest.Matchers;
 import org.junit.*;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.Response;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.test.context.junit4.SpringRunner;
 
-//TODO: Add categories? https://github.com/junit-team/junit4/wiki/Categories
-
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 @RunWith(SpringRunner.class)
-@ContextConfiguration(classes = TestConfiguration.class)
 @ActiveProfiles("test")
 @TestPropertySource("classpath:application-test.properties")
+@SpringBootTest
 public class ModelTest  {
-
-    
-    // TODO: Fix tests
 
     private static final Logger logger = LoggerFactory.getLogger(ModelTest.class.getName());
     private static Client testClient = ClientBuilder.newClient().property(ClientProperties.FOLLOW_REDIRECTS,Boolean.TRUE);
-    private static WebTarget target = testClient.target("http://localhost:9004/datamodel-api/api/");
+    private static WebTarget target = testClient.target("http://localhost:9004/datamodel-api/api/v1/");
     private static String testModelId;
+
+    @Autowired
+    private ModelManager modelManager;
+
+    @Autowired
+    RHPOrganizationManager rhpOrganizationManager;
 
     public ModelTest() {
     }
 
-    @Ignore
     @Test
     public void test1_user() {
 
@@ -46,39 +56,47 @@ public class ModelTest  {
 
     }
 
-    @Ignore
     @Test
     public void test2_createNewModel() {
 
-//        String model = target.path("modelCreator")
-//                .queryParam("prefix","junittest")
-//                .queryParam("label","JUNIT Test Model")
-//                .queryParam("orgList","7d3a3c00-5a6b-489b-a3ed-63bb58c26a63")
-//                .queryParam("serviceList","EDUC")
-//                .queryParam("lang","en")
-//                .request()
-//                .get()
-//                .readEntity(String.class);
-//
-//        Model newModel = ModelManager.createJenaModelFromJSONLDString(model);
-//
-//        if(newModel.size()<=0) {
-//            Assert.fail();
-//        } else {
-//            Response newModelResponse = target.path("model").request().put(Entity.entity(ModelManager.writeModelToJSONLDString(newModel),"application/ld+json"));
-//            Assert.assertEquals(200,newModelResponse.getStatus());
-//
-//            String uuidString = newModelResponse.readEntity(String.class);
-//            logger.info("Created test model: "+uuidString);
-//
-//            Object jsonObject = Configuration.defaultConfiguration().jsonProvider().parse(uuidString);
-//
-//            testModelId = JsonPath.read(jsonObject, "$.@id");
-//
-//            Assert.assertEquals(403,target.path("model").request().put(Entity.entity(ModelManager.writeModelToJSONLDString(newModel),"application/ld+json")).getStatus());
-//
-//
-//        }
+        rhpOrganizationManager.initTestOrganizations();
+
+        Response creatorResponse = target.path("modelCreator")
+                .queryParam("prefix","junit5")
+                .queryParam("label","JUNIT Test Model")
+                .queryParam("orgList","7d3a3c00-5a6b-489b-a3ed-63bb58c26a63")
+                .queryParam("serviceList","EDUC")
+                .queryParam("lang","en")
+                .request()
+                .get();
+
+        if(!creatorResponse.getStatusInfo().getFamily().equals(Response.Status.Family.SUCCESSFUL)) {
+            System.out.println(target.path("modelCreator").getUri());
+            System.out.println(creatorResponse.getStatus());
+            System.out.println(creatorResponse.getStatusInfo().getReasonPhrase());
+            Assert.fail();
+        }
+
+        String model = creatorResponse.readEntity(String.class);
+
+        Model newModel = modelManager.createJenaModelFromJSONLDString(model);
+
+        if(newModel.size()<=0) {
+            Assert.fail();
+        } else {
+            Response newModelResponse = target.path("model").request().put(Entity.entity(modelManager.writeModelToJSONLDString(newModel),"application/ld+json"));
+            Assert.assertEquals(200,newModelResponse.getStatus());
+            String uuidString = newModelResponse.readEntity(String.class);
+            logger.info("Created test model: "+uuidString);
+
+            Object jsonObject = Configuration.defaultConfiguration().jsonProvider().parse(uuidString);
+
+            testModelId = JsonPath.read(jsonObject, "$.@id");
+
+            Assert.assertEquals(403,target.path("model").request().put(Entity.entity(modelManager.writeModelToJSONLDString(newModel),"application/ld+json")).getStatus());
+
+
+        }
 
     }
 
@@ -159,11 +177,9 @@ public class ModelTest  {
 //        Assert.assertEquals(200,updatePredicateResponse.getStatus());
     }
 
-
-    @Ignore
     @AfterClass
     public static void deleteModel() {
-     //   target.path("model").queryParam("id",testModelId).request().delete().getStatus();
+       target.path("model").queryParam("id",testModelId).request().delete().getStatus();
     }
 
 

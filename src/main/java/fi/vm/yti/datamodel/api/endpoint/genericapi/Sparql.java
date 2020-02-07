@@ -1,7 +1,7 @@
 package fi.vm.yti.datamodel.api.endpoint.genericapi;
 
 import fi.vm.yti.datamodel.api.service.EndpointServices;
-import fi.vm.yti.datamodel.api.security.AuthorizationManager;
+import fi.vm.yti.datamodel.api.security.AuthorizationManagerImpl;
 import fi.vm.yti.datamodel.api.service.JerseyResponseManager;
 import fi.vm.yti.datamodel.api.utils.LDHelper;
 import io.swagger.v3.oas.annotations.Operation;
@@ -31,12 +31,12 @@ import java.io.StringWriter;
 @Tag(name = "Admin")
 public class Sparql {
 
-    private final AuthorizationManager authorizationManager;
+    private final AuthorizationManagerImpl authorizationManager;
     private final EndpointServices endpointServices;
     private final JerseyResponseManager jerseyResponseManager;
 
     @Autowired
-    Sparql(AuthorizationManager authorizationManager,
+    Sparql(AuthorizationManagerImpl authorizationManager,
            EndpointServices endpointServices,
            JerseyResponseManager jerseyResponseManager) {
         this.authorizationManager = authorizationManager;
