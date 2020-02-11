@@ -36,6 +36,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import fi.vm.yti.datamodel.api.index.SearchIndexManager;
 import fi.vm.yti.datamodel.api.model.DataModel;
+import fi.vm.yti.datamodel.api.security.AuthorizationManager;
 import fi.vm.yti.datamodel.api.security.AuthorizationManagerImpl;
 import fi.vm.yti.datamodel.api.service.EndpointServices;
 import fi.vm.yti.datamodel.api.service.GraphManager;
@@ -64,7 +65,7 @@ public class Models {
 
     private static final Logger logger = LoggerFactory.getLogger(Models.class.getName());
 
-    private final AuthorizationManagerImpl authorizationManager;
+    private final AuthorizationManager authorizationManager;
     private final AuthenticatedUserProvider userProvider;
     private final EndpointServices endpointServices;
     private final GraphManager graphManager;
@@ -80,7 +81,7 @@ public class Models {
     private final ObjectMapper objectMapper;
 
     @Autowired
-    Models(AuthorizationManagerImpl authorizationManager,
+    Models(AuthorizationManager authorizationManager,
            AuthenticatedUserProvider userProvider,
            EndpointServices endpointServices,
            GraphManager graphManager,
@@ -151,6 +152,8 @@ public class Models {
             if (id.startsWith("urn:")) {
                 return jerseyClient.getGraphResponseFromService(id, endpointServices.getProvReadWriteAddress());
             }
+
+            logger.debug("2");
 
             String sparqlService = endpointServices.getCoreSparqlAddress();
             String graphService = endpointServices.getCoreReadWriteAddress();
@@ -294,16 +297,21 @@ public class Models {
     public Response putModel(
         @Parameter(description = "New graph in application/ld+json", required = true) String body) {
 
+        logger.debug("Storing model");
+
         try {
 
             Model parsedModel = modelManager.createJenaModelFromJSONLDString(body);
 
             if (parsedModel.size() == 0) {
+                logger.debug("Model is empty!");
                 return jerseyResponseManager.notAcceptable();
             }
 
             DataModel newVocabulary = new DataModel(parsedModel, graphManager, rhpOrganizationManager);
             YtiUser user = userProvider.getUser();
+
+            logger.debug("Model parsed");
 
             if (!authorizationManager.hasRightToEdit(newVocabulary)) {
                 logger.info("User is not authorized");
@@ -311,6 +319,7 @@ public class Models {
             }
 
             if (graphManager.isExistingGraph(newVocabulary.getId())) {
+                logger.debug("Is existing graph: "+newVocabulary.getId());
                 return jerseyResponseManager.usedIRI(newVocabulary.getId());
             }
 

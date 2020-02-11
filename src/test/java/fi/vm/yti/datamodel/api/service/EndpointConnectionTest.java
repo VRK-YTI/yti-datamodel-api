@@ -4,6 +4,7 @@ import org.apache.jena.query.*;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
@@ -14,8 +15,9 @@ import fi.vm.yti.datamodel.api.config.ApplicationProperties;
 import static org.junit.Assert.fail;
 
 @RunWith(SpringRunner.class)
-@ActiveProfiles("test")
+@ActiveProfiles("junit")
 @TestPropertySource("classpath:application-test.properties")
+@SpringBootTest
 public class EndpointConnectionTest {
 
     @Autowired

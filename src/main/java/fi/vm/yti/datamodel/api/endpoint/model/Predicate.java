@@ -5,6 +5,7 @@ package fi.vm.yti.datamodel.api.endpoint.model;
 
 import fi.vm.yti.datamodel.api.index.SearchIndexManager;
 import fi.vm.yti.datamodel.api.model.ReusablePredicate;
+import fi.vm.yti.datamodel.api.security.AuthorizationManager;
 import fi.vm.yti.datamodel.api.security.AuthorizationManagerImpl;
 import fi.vm.yti.datamodel.api.service.*;
 import fi.vm.yti.datamodel.api.utils.*;
@@ -39,7 +40,7 @@ import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 public class Predicate {
 
     private static final Logger logger = LoggerFactory.getLogger(Predicate.class.getName());
-    private final AuthorizationManagerImpl authorizationManager;
+    private final AuthorizationManager authorizationManager;
     private final AuthenticatedUserProvider userProvider;
     private final EndpointServices endpointServices;
     private final JerseyClient jerseyClient;
@@ -52,7 +53,7 @@ public class Predicate {
     private final SearchIndexManager searchIndexManager;
 
     @Autowired
-    Predicate(AuthorizationManagerImpl authorizationManager,
+    Predicate(AuthorizationManager authorizationManager,
               AuthenticatedUserProvider userProvider,
               EndpointServices endpointServices,
               JerseyClient jerseyClient,

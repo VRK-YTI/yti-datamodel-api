@@ -1,5 +1,6 @@
 package fi.vm.yti.datamodel.api.endpoint.genericapi;
 
+import fi.vm.yti.datamodel.api.security.AuthorizationManager;
 import fi.vm.yti.datamodel.api.security.AuthorizationManagerImpl;
 import fi.vm.yti.datamodel.api.service.GraphManager;
 import fi.vm.yti.datamodel.api.service.JerseyResponseManager;
@@ -25,14 +26,14 @@ public class Reset {
     private final GraphManager graphManager;
     private final RHPOrganizationManager rhpOrganizationManager;
     private final NamespaceManager namespaceManager;
-    private final AuthorizationManagerImpl authorizationManager;
+    private final AuthorizationManager authorizationManager;
     private final JerseyResponseManager jerseyResponseManager;
     private final Migration migrationManager;
 
     Reset(GraphManager graphManager,
           RHPOrganizationManager rhpOrganizationManager,
           NamespaceManager namespaceManager,
-          AuthorizationManagerImpl authorizationManager,
+          AuthorizationManager authorizationManager,
           JerseyResponseManager jerseyResponseManager,
           Migration migrationManager) {
 

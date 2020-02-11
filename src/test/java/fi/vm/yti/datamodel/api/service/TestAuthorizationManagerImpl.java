@@ -4,6 +4,8 @@ import java.util.Collection;
 import java.util.UUID;
 
 import org.apache.jena.iri.IRI;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
@@ -11,17 +13,12 @@ import fi.vm.yti.datamodel.api.model.AbstractClass;
 import fi.vm.yti.datamodel.api.model.AbstractModel;
 import fi.vm.yti.datamodel.api.model.AbstractPredicate;
 import fi.vm.yti.datamodel.api.security.AuthorizationManager;
-import fi.vm.yti.security.AuthenticatedUserProvider;
 
 @Component
-@Profile("test")
+@Profile("junit")
 public class TestAuthorizationManagerImpl implements AuthorizationManager {
 
-    private final AuthenticatedUserProvider userProvider;
-
-    TestAuthorizationManagerImpl(AuthenticatedUserProvider userProvider) {
-        this.userProvider = userProvider;
-    }
+    private static final Logger logger = LoggerFactory.getLogger(TestAuthorizationManagerImpl.class.getName());
 
     @Override
     public boolean hasRightToEdit(final AbstractModel model) {

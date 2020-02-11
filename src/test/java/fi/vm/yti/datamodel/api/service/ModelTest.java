@@ -4,6 +4,7 @@ import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.matchers.JsonPathMatchers;
 
+import org.apache.jena.iri.IRI;
 import org.apache.jena.rdf.model.Model;
 import org.glassfish.jersey.client.ClientProperties;
 import org.hamcrest.Matchers;
@@ -25,9 +26,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import fi.vm.yti.datamodel.api.config.ApplicationProperties;
+import fi.vm.yti.datamodel.api.model.DataModel;
+import fi.vm.yti.datamodel.api.model.ReusableClass;
+import fi.vm.yti.datamodel.api.model.ReusablePredicate;
+import fi.vm.yti.datamodel.api.security.AuthorizationManager;
+import fi.vm.yti.datamodel.api.utils.LDHelper;
+import fi.vm.yti.security.YtiUser;
+import fi.vm.yti.security.AuthenticatedUserProvider;
+
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 @RunWith(SpringRunner.class)
-@ActiveProfiles("test")
+@ActiveProfiles("junit")
 @TestPropertySource("classpath:application-test.properties")
 @SpringBootTest
 public class ModelTest  {
@@ -35,13 +45,28 @@ public class ModelTest  {
     private static final Logger logger = LoggerFactory.getLogger(ModelTest.class.getName());
     private static Client testClient = ClientBuilder.newClient().property(ClientProperties.FOLLOW_REDIRECTS,Boolean.TRUE);
     private static WebTarget target = testClient.target("http://localhost:9004/datamodel-api/api/v1/");
-    private static String testModelId;
+    private static IRI testModelId;
+
+    @Autowired
+    private ApplicationProperties applicationProperties;
 
     @Autowired
     private ModelManager modelManager;
 
     @Autowired
-    RHPOrganizationManager rhpOrganizationManager;
+    private GraphManager graphManager;
+
+    @Autowired
+    private RHPOrganizationManager rhpOrganizationManager;
+
+    @Autowired
+    private  ServiceDescriptionManager serviceDescriptionManager;
+
+    @Autowired
+    private AuthenticatedUserProvider authenticatedUserProvider;
+
+    @Autowired
+    private AuthorizationManager authorizationManager;
 
     public ModelTest() {
     }
@@ -59,13 +84,19 @@ public class ModelTest  {
     @Test
     public void test2_createNewModel() {
 
+        testModelId = LDHelper.toIRI(applicationProperties.getDefaultNamespace()+"junit5");
+
         rhpOrganizationManager.initTestOrganizations();
+
+        YtiUser user = authenticatedUserProvider.getUser();
+
+        logger.debug(user.getEmail());
 
         Response creatorResponse = target.path("modelCreator")
                 .queryParam("prefix","junit5")
                 .queryParam("label","JUNIT Test Model")
                 .queryParam("orgList","7d3a3c00-5a6b-489b-a3ed-63bb58c26a63")
-                .queryParam("serviceList","EDUC")
+                .queryParam("serviceList","P1")
                 .queryParam("lang","en")
                 .request()
                 .get();
@@ -74,112 +105,80 @@ public class ModelTest  {
             System.out.println(target.path("modelCreator").getUri());
             System.out.println(creatorResponse.getStatus());
             System.out.println(creatorResponse.getStatusInfo().getReasonPhrase());
-            Assert.fail();
+             Assert.fail();
         }
 
         String model = creatorResponse.readEntity(String.class);
 
         Model newModel = modelManager.createJenaModelFromJSONLDString(model);
 
+        DataModel dataModel = new DataModel(newModel, graphManager, rhpOrganizationManager);
+
+        logger.debug("Created model");
+
+        logger.debug("Has right to edit: "+authorizationManager.hasRightToEdit(dataModel));
+
         if(newModel.size()<=0) {
             Assert.fail();
         } else {
-            Response newModelResponse = target.path("model").request().put(Entity.entity(modelManager.writeModelToJSONLDString(newModel),"application/ld+json"));
-            Assert.assertEquals(200,newModelResponse.getStatus());
-            String uuidString = newModelResponse.readEntity(String.class);
-            logger.info("Created test model: "+uuidString);
-
-            Object jsonObject = Configuration.defaultConfiguration().jsonProvider().parse(uuidString);
-
-            testModelId = JsonPath.read(jsonObject, "$.@id");
-
-            Assert.assertEquals(403,target.path("model").request().put(Entity.entity(modelManager.writeModelToJSONLDString(newModel),"application/ld+json")).getStatus());
-
-
+            graphManager.createModel(dataModel);
+            serviceDescriptionManager.createGraphDescription(dataModel.getId(), user.getId(), dataModel.getOrganizations());
+            Assert.assertEquals (true,graphManager.isExistingGraph(dataModel.getIRI()));
         }
 
     }
 
-    @Ignore
     @Test
     public void test3_createNewClassToModel() {
 
-//        String testClass = target.path("classCreator")
-//                .queryParam("modelID",testModelId)
-//                .queryParam("classLabel","JUNIT Test Class")
-//               // .queryParam("conceptID","http://pid.suomi.fi/terminology/oksa/tmpOKSAID518")
-//                .queryParam("lang","en")
-//                .request()
-//                .get()
-//                .readEntity(String.class);
-//
-//        Model classModel = ModelManager.createJenaModelFromJSONLDString(testClass);
-//        String classString = ModelManager.writeModelToJSONLDString(classModel);
-//
-//        Response newClassResponse = target.path("class").request().put(Entity.entity(classString,"application/ld+json"));
-//        Assert.assertEquals(200,newClassResponse.getStatus());
-//        String classId = JsonPath.read(newClassResponse.readEntity(String.class),"$.@id");
-//
-//        logger.info("Created "+classId);
-//
-//        Response classResponse = target.path("class").queryParam("id",classId).request().get();
-//        Assert.assertEquals(200,classResponse.getStatus());
-//        String classResponseString = classResponse.readEntity(String.class);
-//
-//        DocumentContext json = JsonPath.parse(classResponseString);
-//        String jsonPath = "$.@graph[?(@.['@id']=='"+classId+"')].label.@value";
-//        json.set(jsonPath,"Test 2" ).jsonString();
-//
-//         ReusableClass updateClass = new ReusableClass(json.jsonString());
-//
-//         Response updateClassResponse = target.path("class").queryParam("id",updateClass.getId()).queryParam("model",updateClass.getModelId()).request().post(Entity.entity(ModelManager.writeModelToJSONLDString(updateClass.asGraph()),"application/ld+json"));
-//
-//         Assert.assertEquals(200,updateClassResponse.getStatus());
+        String testClass = target.path("classCreator")
+                .queryParam("modelID",testModelId)
+               .queryParam("classLabel","JUNIT Test Class")
+                .queryParam("lang","en")
+              .request()
+               .get()
+                .readEntity(String.class);
+
+        Model classModel = modelManager.createJenaModelFromJSONLDString(testClass);
+
+        ReusableClass reusableClass = new ReusableClass(classModel, graphManager);
+
+        graphManager.createResource(reusableClass);
+
+        Assert.assertEquals(true, graphManager.isExistingGraph(reusableClass.getIRI()));
 
     }
 
-    @Ignore
     @Test
     public void test4_createNewPredicateToModel(){
 
-//        String testPredicate = target.path("predicateCreator")
-//                .queryParam("modelID",testModelId)
-//                .queryParam("predicateLabel","JUNIT Test Predicate")
-//                .queryParam("type","owl:DatatypeProperty")
-//                // .queryParam("conceptID","http://pid.suomi.fi/terminology/oksa/tmpOKSAID518")
-//                .queryParam("lang","en")
-//                .request()
-//                .get()
-//                .readEntity(String.class);
-//
-//        Model predicateModel = ModelManager.createJenaModelFromJSONLDString(testPredicate);
-//        String predicateString = ModelManager.writeModelToJSONLDString(predicateModel);
-//
-//        Response newPredicateResponse = target.path("predicate").request().put(Entity.entity(predicateString,"application/ld+json"));
-//        Assert.assertEquals(200,newPredicateResponse.getStatus());
-//        String newPredicateString = newPredicateResponse.readEntity(String.class);
-//        logger.info(newPredicateString);
-//        String predicateId = JsonPath.read(newPredicateString,"$.@id");
-//
-//        logger.info("Created "+predicateId);
-//
-//        Response predicateResponse = target.path("predicate").queryParam("id",predicateId).request().get();
-//        Assert.assertEquals(200,predicateResponse.getStatus());
-//        String predicateResponseString = predicateResponse.readEntity(String.class);
-//
-//        DocumentContext json = JsonPath.parse(predicateResponseString);
-//        String jsonPath = "$.@graph[?(@.['@id']=='"+predicateId+"')].label.@value";
-//        json.set(jsonPath,"Test 2 Edit" ).jsonString();
-//
-//        ReusablePredicate updatePredicate = new ReusablePredicate(json.jsonString());
-//        Response updatePredicateResponse = target.path("predicate").queryParam("id",updatePredicate.getId()).queryParam("model",updatePredicate.getModelId()).request().post(Entity.entity(ModelManager.writeModelToJSONLDString(updatePredicate.asGraph()),"application/ld+json"));
-//
-//        Assert.assertEquals(200,updatePredicateResponse.getStatus());
+       String testPredicate = target.path("predicateCreator")
+                .queryParam("modelID",testModelId)
+                .queryParam("predicateLabel","JUNIT Test Predicate")
+               .queryParam("type","owl:DatatypeProperty")
+                .queryParam("lang","en")
+               .request()
+               .get()
+           .readEntity(String.class);
+
+        Model predicateModel = modelManager.createJenaModelFromJSONLDString(testPredicate);
+
+        ReusablePredicate reusablePredicate = new ReusablePredicate(predicateModel, graphManager);
+
+        graphManager.createResource(reusablePredicate);
+
+        Assert.assertEquals(true, graphManager.isExistingGraph(reusablePredicate.getIRI()));
+
     }
 
-    @AfterClass
-    public static void deleteModel() {
-       target.path("model").queryParam("id",testModelId).request().delete().getStatus();
+    @Test
+    public void test5_removeModel() {
+
+        graphManager.removeModel(testModelId);
+        serviceDescriptionManager.deleteGraphDescription(testModelId.toString());
+        Assert.assertEquals(false, graphManager.isExistingGraph(testModelId));
+        rhpOrganizationManager.initOrganizationsFromRHP();
+
     }
 
 

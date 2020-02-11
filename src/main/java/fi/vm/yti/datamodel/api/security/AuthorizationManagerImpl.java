@@ -18,6 +18,7 @@ import static fi.vm.yti.security.Role.ADMIN;
 import static fi.vm.yti.security.Role.DATA_MODEL_EDITOR;
 
 @Service
+@Profile("!junit")
 public class AuthorizationManagerImpl implements AuthorizationManager {
 
     private final AuthenticatedUserProvider userProvider;
