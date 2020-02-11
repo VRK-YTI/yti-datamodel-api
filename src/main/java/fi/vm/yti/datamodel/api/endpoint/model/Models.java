@@ -153,8 +153,6 @@ public class Models {
                 return jerseyClient.getGraphResponseFromService(id, endpointServices.getProvReadWriteAddress());
             }
 
-            logger.debug("2");
-
             String sparqlService = endpointServices.getCoreSparqlAddress();
             String graphService = endpointServices.getCoreReadWriteAddress();
 
@@ -297,8 +295,6 @@ public class Models {
     public Response putModel(
         @Parameter(description = "New graph in application/ld+json", required = true) String body) {
 
-        logger.debug("Storing model");
-
         try {
 
             Model parsedModel = modelManager.createJenaModelFromJSONLDString(body);
@@ -310,8 +306,6 @@ public class Models {
 
             DataModel newVocabulary = new DataModel(parsedModel, graphManager, rhpOrganizationManager);
             YtiUser user = userProvider.getUser();
-
-            logger.debug("Model parsed");
 
             if (!authorizationManager.hasRightToEdit(newVocabulary)) {
                 logger.info("User is not authorized");
