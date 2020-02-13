@@ -1068,6 +1068,16 @@ public class GraphManager {
     public void addResourceNamespaceToModel(IRI model,
                                             IRI resource) {
         String query =
+            "DELETE {" +
+                "GRAPH ?graph {" +
+                "?graph dcterms:requires ?conflictGraph . " +
+                "?conflictGraph ?p ?o . " +
+                "}" +
+                "GRAPH ?exportGraph {" +
+                "?graph dcterms:requires ?conflictGraph . " +
+                "?conflictGraph ?p ?o . " +
+                "}"+
+                "}"+
             "INSERT { " +
                 "GRAPH ?graph { ?graph dcterms:requires ?resourceGraph . " +
                 "?resourceGraph a ?resourceGraphType . " +
@@ -1088,7 +1098,14 @@ public class GraphManager {
                 "?resourceGraph dcap:preferredXMLNamespaceName ?ns . " +
                 "?resourceGraph dcap:preferredXMLNamespacePrefix ?prefix . " +
                 "} " +
+                "GRAPH ?graph {"+
+                "OPTIONAL {" +
+                "?conflictGraph dcap:preferredXMLNamespacePrefix ?prefix . " +
+                "?graph dcterms:requires ?conflictGraph . " +
+                "?conflictGraph ?p ?o . " +
+                "}}"+
                 "}";
+
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
         pss.setIri("graph", model);
