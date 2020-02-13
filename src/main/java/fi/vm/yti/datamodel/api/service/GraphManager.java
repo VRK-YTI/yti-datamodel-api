@@ -1098,8 +1098,8 @@ public class GraphManager {
                 "?resourceGraph dcap:preferredXMLNamespaceName ?ns . " +
                 "?resourceGraph dcap:preferredXMLNamespacePrefix ?prefix . " +
                 "} " +
-                "GRAPH ?graph {"+
                 "OPTIONAL {" +
+                "GRAPH ?graph {"+
                 "?conflictGraph dcap:preferredXMLNamespacePrefix ?prefix . " +
                 "?graph dcterms:requires ?conflictGraph . " +
                 "?conflictGraph ?p ?o . " +
