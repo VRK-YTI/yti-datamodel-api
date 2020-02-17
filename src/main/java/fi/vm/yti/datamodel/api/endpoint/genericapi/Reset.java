@@ -1,6 +1,7 @@
 package fi.vm.yti.datamodel.api.endpoint.genericapi;
 
 import fi.vm.yti.datamodel.api.security.AuthorizationManager;
+import fi.vm.yti.datamodel.api.security.AuthorizationManagerImpl;
 import fi.vm.yti.datamodel.api.service.GraphManager;
 import fi.vm.yti.datamodel.api.service.JerseyResponseManager;
 import fi.vm.yti.datamodel.api.service.NamespaceManager;

@@ -1,103 +1,46 @@
 package fi.vm.yti.datamodel.api.security;
 
+import java.util.Collection;
+import java.util.UUID;
+
+import org.apache.jena.iri.IRI;
+
 import fi.vm.yti.datamodel.api.model.AbstractClass;
 import fi.vm.yti.datamodel.api.model.AbstractModel;
 import fi.vm.yti.datamodel.api.model.AbstractPredicate;
-import fi.vm.yti.security.AuthenticatedUserProvider;
 import fi.vm.yti.security.YtiUser;
 
-import org.apache.jena.iri.IRI;
-import org.springframework.stereotype.Service;
+public interface AuthorizationManager {
 
-import java.util.Collection;
-import java.util.EnumSet;
-import java.util.UUID;
+    boolean hasRightToEdit(AbstractModel model);
 
-import static fi.vm.yti.security.Role.ADMIN;
-import static fi.vm.yti.security.Role.DATA_MODEL_EDITOR;
+    boolean hasRightToEdit(AbstractClass model);
 
-@Service
-public class AuthorizationManager {
+    boolean hasRightToEdit(AbstractPredicate model);
 
-    private final AuthenticatedUserProvider userProvider;
+    boolean hasRightToCreateNewVersion(AbstractModel model);
 
-    AuthorizationManager(AuthenticatedUserProvider userProvider) {
-        this.userProvider = userProvider;
-    }
+    boolean hasRightToAnyOrganization(Collection<UUID> organizations);
 
-    public boolean hasRightToEdit(AbstractModel model) {
-        return hasRightToAnyOrganization(model.getOrganizations());
-    }
+    boolean isAdminOfAnyOrganization(Collection<UUID> organizations);
 
-    public boolean hasRightToEdit(AbstractClass model) {
-        return hasRightToAnyOrganization(model.getOrganizations());
-    }
+    boolean hasRightToRemoveClassReference(IRI modelIRI,
+                                                  IRI classIRI);
 
-    public boolean hasRightToEdit(AbstractPredicate model) {
-        return hasRightToAnyOrganization(model.getOrganizations());
-    }
+    boolean hasRightToAddClassReference(IRI modelIRI,
+                                               String classId);
 
-    public boolean hasRightToCreateNewVersion(AbstractModel model) {
-        return hasRightToAnyOrganization(model.getOrganizations());
-       // return isAdminOfAnyOrganization(model.getOrganizations());
-    }
+    boolean hasRightToAddPredicateReference(IRI modelIRI,
+                                                   String predicateId);
+    boolean hasRightToRemovePredicateReference(IRI modelIRI,
+                                                      IRI predicateIRI);
+    boolean canReplicate();
 
-    private boolean hasRightToAnyOrganization(Collection<UUID> organizations) {
-        YtiUser user = getUser();
-        return user.isSuperuser() || user.isInAnyRole(EnumSet.of(ADMIN, DATA_MODEL_EDITOR), organizations);
-    }
+    boolean hasRightToDoMigration();
 
-    private boolean isAdminOfAnyOrganization(Collection<UUID> organizations) {
-        YtiUser user = getUser();
-        return user.isSuperuser() || user.isInAnyRole(EnumSet.of(ADMIN), organizations);
-    }
+    boolean hasRightToRunSparqlQuery();
 
-    private YtiUser getUser() {
-        return this.userProvider.getUser();
-    }
+    boolean hasRightToSuggestConcept();
+    boolean hasRightToDropDatabase();
 
-    public boolean hasRightToRemoveClassReference(IRI modelIRI,
-                                                  IRI classIRI) {
-        // TODO
-        return true;
-    }
-
-    public boolean hasRightToAddClassReference(IRI modelIRI,
-                                               String classId) {
-        // TODO
-        return true;
-    }
-
-    public boolean hasRightToAddPredicateReference(IRI modelIRI,
-                                                   String predicateId) {
-        // TODO
-        return true;
-    }
-
-    public boolean hasRightToRemovePredicateReference(IRI modelIRI,
-                                                      IRI predicateIRI) {
-        // TODO
-        return true;
-    }
-
-    public boolean canReplicate() {
-        return this.getUser().isSuperuser();
-    }
-
-    public boolean hasRightToDoMigration() {
-        return getUser().isSuperuser();
-    }
-
-    public boolean hasRightToRunSparqlQuery() {
-        return getUser().isSuperuser();
-    }
-
-    public boolean hasRightToSuggestConcept() {
-        YtiUser user = getUser();
-        return user.isSuperuser() || !user.getOrganizations(ADMIN, DATA_MODEL_EDITOR).isEmpty();
-    }
-
-    public boolean hasRightToDropDatabase() {
-        return getUser().isSuperuser();
-    }
 }

@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 
 import fi.vm.yti.datamodel.api.index.SearchIndexManager;
 import fi.vm.yti.datamodel.api.security.AuthorizationManager;
+import fi.vm.yti.datamodel.api.security.AuthorizationManagerImpl;
 import fi.vm.yti.datamodel.api.service.JerseyResponseManager;
 import fi.vm.yti.datamodel.api.service.RHPOrganizationManager;
 import io.swagger.v3.oas.annotations.Operation;

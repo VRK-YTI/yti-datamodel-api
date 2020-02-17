@@ -62,7 +62,7 @@ public class CodeList {
 
         if (uri.startsWith("https://koodistot.suomi.fi")) {
             SuomiCodeServer suomiCodeServer = new SuomiCodeServer("https://koodistot.suomi.fi", applicationProperties.getDefaultSuomiCodeServerAPI(), endpointServices, codeSchemeManager);
-            suomiCodeServer.updateCodelistsFromServer();
+            suomiCodeServer.updateCodeSchemeList();
         } else if (uri.startsWith("https://virkailija.opintopolku.fi")) {
             OPHCodeServer codeServer = new OPHCodeServer("https://virkailija.opintopolku.fi/koodisto-service/rest/json/", endpointServices);
             codeServer.updateCodelistsFromServer();

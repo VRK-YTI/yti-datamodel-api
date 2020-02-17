@@ -1,20 +1,23 @@
-import fi.vm.yti.datamodel.api.config.ApplicationProperties;
+package fi.vm.yti.datamodel.api.service;
+
 import org.apache.jena.query.*;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.slf4j.Logger;import org.slf4j.LoggerFactory;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import fi.vm.yti.datamodel.api.config.ApplicationProperties;
 import static org.junit.Assert.fail;
 
-@ContextConfiguration(classes = TestConfiguration.class)
 @RunWith(SpringRunner.class)
-@ActiveProfiles("test")
+@ActiveProfiles("junit")
 @TestPropertySource("classpath:application-test.properties")
+@SpringBootTest
 public class EndpointConnectionTest {
 
     @Autowired

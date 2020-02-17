@@ -37,6 +37,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import fi.vm.yti.datamodel.api.index.SearchIndexManager;
 import fi.vm.yti.datamodel.api.model.DataModel;
 import fi.vm.yti.datamodel.api.security.AuthorizationManager;
+import fi.vm.yti.datamodel.api.security.AuthorizationManagerImpl;
 import fi.vm.yti.datamodel.api.service.EndpointServices;
 import fi.vm.yti.datamodel.api.service.GraphManager;
 import fi.vm.yti.datamodel.api.service.IDManager;
@@ -299,6 +300,7 @@ public class Models {
             Model parsedModel = modelManager.createJenaModelFromJSONLDString(body);
 
             if (parsedModel.size() == 0) {
+                logger.debug("Model is empty!");
                 return jerseyResponseManager.notAcceptable();
             }
 
@@ -311,6 +313,7 @@ public class Models {
             }
 
             if (graphManager.isExistingGraph(newVocabulary.getId())) {
+                logger.debug("Is existing graph: "+newVocabulary.getId());
                 return jerseyResponseManager.usedIRI(newVocabulary.getId());
             }
 

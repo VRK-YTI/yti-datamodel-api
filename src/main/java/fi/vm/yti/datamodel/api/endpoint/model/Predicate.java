@@ -6,6 +6,7 @@ package fi.vm.yti.datamodel.api.endpoint.model;
 import fi.vm.yti.datamodel.api.index.SearchIndexManager;
 import fi.vm.yti.datamodel.api.model.ReusablePredicate;
 import fi.vm.yti.datamodel.api.security.AuthorizationManager;
+import fi.vm.yti.datamodel.api.security.AuthorizationManagerImpl;
 import fi.vm.yti.datamodel.api.service.*;
 import fi.vm.yti.datamodel.api.utils.*;
 import fi.vm.yti.security.AuthenticatedUserProvider;

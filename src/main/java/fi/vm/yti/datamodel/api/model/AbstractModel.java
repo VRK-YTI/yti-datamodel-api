@@ -142,7 +142,8 @@ public abstract class AbstractModel extends AbstractResource {
     }
 
     public String getUseContext() {
-        return this.graph.getRequiredProperty(ResourceFactory.createResource(this.getId()), LDHelper.curieToProperty("iow:useContext")).getString();
+        Statement useContext = this.graph.getProperty(ResourceFactory.createResource(this.getId()), LDHelper.curieToProperty("iow:useContext"));
+        return useContext!=null ? useContext.getString() : "InformationDescription";
     }
 
     public String getType() {

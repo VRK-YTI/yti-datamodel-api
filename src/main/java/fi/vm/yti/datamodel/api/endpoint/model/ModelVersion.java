@@ -6,6 +6,7 @@ import fi.vm.yti.datamodel.api.index.FrameManager;
 import fi.vm.yti.datamodel.api.index.SearchIndexManager;
 import fi.vm.yti.datamodel.api.model.DataModel;
 import fi.vm.yti.datamodel.api.security.AuthorizationManager;
+import fi.vm.yti.datamodel.api.security.AuthorizationManagerImpl;
 import fi.vm.yti.datamodel.api.service.*;
 import fi.vm.yti.security.AuthenticatedUserProvider;
 import fi.vm.yti.security.YtiUser;

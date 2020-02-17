@@ -109,7 +109,6 @@ public class ModelCreator {
         }
 
         if (!rhpOrganizationManager.isExistingOrganization(orgList)) {
-            logger.info("no org");
             return jerseyResponseManager.invalidParameter();
         }
 

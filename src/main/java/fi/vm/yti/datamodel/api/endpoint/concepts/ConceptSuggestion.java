@@ -3,6 +3,7 @@ package fi.vm.yti.datamodel.api.endpoint.concepts;
 import com.jayway.jsonpath.JsonPath;
 
 import fi.vm.yti.datamodel.api.security.AuthorizationManager;
+import fi.vm.yti.datamodel.api.security.AuthorizationManagerImpl;
 import fi.vm.yti.datamodel.api.service.*;
 import fi.vm.yti.security.AuthenticatedUserProvider;
 import io.swagger.v3.oas.annotations.Operation;

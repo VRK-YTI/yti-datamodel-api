@@ -1068,6 +1068,16 @@ public class GraphManager {
     public void addResourceNamespaceToModel(IRI model,
                                             IRI resource) {
         String query =
+            "DELETE {" +
+                "GRAPH ?graph {" +
+                "?graph dcterms:requires ?conflictGraph . " +
+                "?conflictGraph ?p ?o . " +
+                "}" +
+                "GRAPH ?exportGraph {" +
+                "?graph dcterms:requires ?conflictGraph . " +
+                "?conflictGraph ?p ?o . " +
+                "}"+
+                "}"+
             "INSERT { " +
                 "GRAPH ?graph { ?graph dcterms:requires ?resourceGraph . " +
                 "?resourceGraph a ?resourceGraphType . " +
@@ -1088,7 +1098,14 @@ public class GraphManager {
                 "?resourceGraph dcap:preferredXMLNamespaceName ?ns . " +
                 "?resourceGraph dcap:preferredXMLNamespacePrefix ?prefix . " +
                 "} " +
+                "OPTIONAL {" +
+                "GRAPH ?graph {"+
+                "?conflictGraph dcap:preferredXMLNamespacePrefix ?prefix . " +
+                "?graph dcterms:requires ?conflictGraph . " +
+                "?conflictGraph ?p ?o . " +
+                "}}"+
                 "}";
+
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
         pss.setIri("graph", model);
@@ -1152,7 +1169,7 @@ public class GraphManager {
                 }
                 break;
             case "DRAFT":
-                final List draftChanges = Stream.of("INCOMPLETE", "VALID", "RETIRED", "INVALID").collect(Collectors.toList());
+                final List draftChanges = Stream.of("INCOMPLETE", "VALID", "RETIRED", "INVALID", "SUPERSEDED").collect(Collectors.toList());
                 if (draftChanges.contains(endStatus)) {
                     logger.debug("Status changes in " + model + " from " + initialStatus + " to " + endStatus);
                     changeResourceStatuses(model, initialStatus, endStatus);
@@ -1161,7 +1178,7 @@ public class GraphManager {
                 }
                 break;
             case "VALID":
-                final List validChanges = Stream.of("RETIRED", "INVALID").collect(Collectors.toList());
+                final List validChanges = Stream.of("RETIRED", "INVALID", "SUPERSEDED").collect(Collectors.toList());
                 if (validChanges.contains(endStatus)) {
                     logger.debug("Status changes in " + model + " from " + initialStatus + " to " + endStatus);
                     changeResourceStatuses(model, initialStatus, endStatus);
@@ -1170,7 +1187,7 @@ public class GraphManager {
                 }
                 break;
             case "RETIRED":
-                final List removedChanges = Stream.of("VALID", "INVALID").collect(Collectors.toList());
+                final List removedChanges = Stream.of("VALID", "INVALID", "SUPERSEDED").collect(Collectors.toList());
                 if (removedChanges.contains(endStatus)) {
                     logger.debug("Status changes in " + model + " from " + initialStatus + " to " + endStatus);
                     changeResourceStatuses(model, initialStatus, endStatus);
@@ -1178,8 +1195,17 @@ public class GraphManager {
                     throw new IllegalArgumentException("Invalid status change from " + initialStatus + " to " + endStatus);
                 }
                 break;
+            case "SUPERSEDED":
+                final List supersededChanges = Stream.of("VALID", "INVALID", "RETIRED").collect(Collectors.toList());
+                if (supersededChanges.contains(endStatus)) {
+                    logger.debug("Status changes in " + model + " from " + initialStatus + " to " + endStatus);
+                    changeResourceStatuses(model, initialStatus, endStatus);
+                } else {
+                    throw new IllegalArgumentException("Invalid status change from " + initialStatus + " to " + endStatus);
+                }
+                break;
             case "INVALID":
-                final List invalidChanges = Stream.of("RETIRED", "VALID").collect(Collectors.toList());
+                final List invalidChanges = Stream.of("RETIRED", "VALID", "SUPERSEDED").collect(Collectors.toList());
                 if (invalidChanges.contains(endStatus)) {
                     logger.debug("Status changes in " + model + " from " + initialStatus + " to " + endStatus);
                     changeResourceStatuses(model, initialStatus, endStatus);
@@ -1271,7 +1297,7 @@ public class GraphManager {
         Resource newModelResource = ResourceFactory.createResource(newModel.toString());
         LDHelper.rewriteLiteral(oldModelGraph, newModelResource, DCTerms.created, created);
         LDHelper.rewriteLiteral(oldModelGraph, newModelResource, DCTerms.modified, created);
-        LDHelper.rewriteLiteral(oldModelGraph, newModelResource, DCTerms.identifier, ResourceFactory.createPlainLiteral("urn:uuid:"+UUID.randomUUID().toString()));
+        LDHelper.rewriteLiteral(oldModelGraph, newModelResource, DCTerms.identifier, ResourceFactory.createPlainLiteral("urn:uuid:" + UUID.randomUUID().toString()));
         LDHelper.removeLiteral(oldModelGraph, newModelResource, LDHelper.curieToProperty("iow:contentModified"));
         LDHelper.rewriteLiteral(oldModelGraph, newModelResource, OWL.versionInfo, ResourceFactory.createPlainLiteral("INCOMPLETE"));
         LDHelper.rewriteResourceReference(oldModelGraph, newModelResource, LDHelper.curieToProperty("prov:wasRevisionOf"), ResourceFactory.createResource(model.toString()));
@@ -1282,7 +1308,7 @@ public class GraphManager {
 
         Model oldHasPartGraph = adapter.getModel(model.toString() + "#HasPartGraph");
 
-        if(oldHasPartGraph!=null && oldHasPartGraph.size()>1) {
+        if (oldHasPartGraph != null && oldHasPartGraph.size() > 1) {
 
             ResourceUtils.renameResource(oldHasPartGraph.getResource(model.toString()), newModel.toString());
 
@@ -1604,6 +1630,14 @@ public class GraphManager {
 
     }
 
+    public void addToGraph(Model model,
+                           String id) {
+        logger.debug("Adding to " + id);
+        DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(endpointServices.getCoreReadWriteAddress());
+        DatasetAdapter adapter = new DatasetAdapter(accessor);
+        adapter.add(id, model);
+    }
+
     /**
      * Constructs JSON-LD from graph
      *
@@ -1661,22 +1695,22 @@ public class GraphManager {
 
         String query
             = " DELETE { " +
-                "GRAPH ?graph { ?graph iow:contentModified ?oldDate1 . }" +
-                "GRAPH ?exportGraph { ?graph iow:contentModified ?oldDate2 . }" +
+            "GRAPH ?graph { ?graph iow:contentModified ?oldDate1 . }" +
+            "GRAPH ?exportGraph { ?graph iow:contentModified ?oldDate2 . }" +
             "}"
             + " INSERT { " +
-                "GRAPH ?graph { ?graph iow:contentModified ?newDate . }" +
-                "GRAPH ?exportGraph { ?graph iow:contentModified ?newDate . }" +
+            "GRAPH ?graph { ?graph iow:contentModified ?newDate . }" +
+            "GRAPH ?exportGraph { ?graph iow:contentModified ?newDate . }" +
             "}"
             + " WHERE { " +
-             "GRAPH ?graph { ?graph a owl:Ontology . OPTIONAL { ?graph iow:contentModified ?oldDate1 . } }" +
-             "GRAPH ?exportGraph { ?graph a owl:Ontology . OPTIONAL { ?graph iow:contentModified ?oldDate2 . } }" +
+            "GRAPH ?graph { ?graph a owl:Ontology . OPTIONAL { ?graph iow:contentModified ?oldDate1 . } }" +
+            "GRAPH ?exportGraph { ?graph a owl:Ontology . OPTIONAL { ?graph iow:contentModified ?oldDate2 . } }" +
             "}";
 
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
         pss.setIri("graph", model);
-        pss.setIri("exportGraph", model+"#ExportGraph");
+        pss.setIri("exportGraph", model + "#ExportGraph");
         pss.setLiteral("newDate", LDHelper.getDateTimeLiteral());
         pss.setCommandText(query);
 
@@ -1753,7 +1787,8 @@ public class GraphManager {
         updateContentModified(modelId);
     }
 
-    public void updateResource(AbstractResource resource, AbstractResource oldResource) {
+    public void updateResource(AbstractResource resource,
+                               AbstractResource oldResource) {
 
         final Model oldModel = oldResource.asGraph();
 
@@ -1764,7 +1799,8 @@ public class GraphManager {
         updateResource(resource.getModelId(), resource.getId(), oldModel, newModel);
     }
 
-    public void updateResourceWithNewId(AbstractResource resource, AbstractResource oldResource) {
+    public void updateResourceWithNewId(AbstractResource resource,
+                                        AbstractResource oldResource) {
 
         Model oldModel = oldResource.asGraph();
 
@@ -1813,7 +1849,8 @@ public class GraphManager {
         jenaClient.putModelToCore(amodel.getId() + "#ExportGraph", amodel.asGraph());
     }
 
-    public void updateModel(AbstractModel amodel, AbstractModel omodel) {
+    public void updateModel(AbstractModel amodel,
+                            AbstractModel omodel) {
         Literal modified = LDHelper.getDateTimeLiteral();
         LDHelper.rewriteLiteral(amodel.asGraph(), ResourceFactory.createResource(amodel.getId()), DCTerms.modified, modified);
 
@@ -1870,7 +1907,7 @@ public class GraphManager {
         String query =
             "DELETE { " +
                 "GRAPH ?anyGraph {" +
-                "?anyRes prov:wasRevisionOf ?oldRes . }"+
+                "?anyRes prov:wasRevisionOf ?oldRes . }" +
                 "GRAPH ?anyModel {" +
                 "?model prov:wasRevisionOf ?g . " +
                 "}} WHERE { " +
@@ -1878,7 +1915,7 @@ public class GraphManager {
                 "GRAPH ?oldRes { " +
                 "?oldRes rdfs:isDefinedBy ?g . }" +
                 "GRAPH ?anyGraph {" +
-                "?anyRes prov:wasRevisionOf ?oldRes . }"+
+                "?anyRes prov:wasRevisionOf ?oldRes . }" +
                 "}" +
                 "GRAPH ?anyModel {" +
                 "?model prov:wasRevisionOf ?g . " +

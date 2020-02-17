@@ -166,6 +166,20 @@ public class RHPOrganizationManager {
         }
     }
 
+    public void initTestOrganizations() {
+        Model model = ModelFactory.createDefaultModel();
+        model.setNsPrefix("dcterms", "http://purl.org/dc/terms/");
+        model.setNsPrefix("iow", "http://uri.suomi.fi/datamodel/ns/iow#");
+        model.setNsPrefix("skos", "http://www.w3.org/2004/02/skos/core#");
+        model.setNsPrefix("foaf", "http://xmlns.com/foaf/0.1/");
+        Resource res = model.createResource("urn:uuid:7d3a3c00-5a6b-489b-a3ed-63bb58c26a63");
+        res.addProperty(RDF.type, FOAF.Organization);
+        res.addLiteral(SKOS.prefLabel, ResourceFactory.createLangLiteral("Test organization", "en"));
+        res.addLiteral(DCTerms.description, ResourceFactory.createLangLiteral("This organization is for testing only", "en"));
+        res.addLiteral(FOAF.homepage, "http://example.org");
+        graphManager.addToGraph(model, "urn:yti:organizations");
+    }
+
     public Model getOrganizationModel() {
         return graphManager.getCoreGraph("urn:yti:organizations");
     }
