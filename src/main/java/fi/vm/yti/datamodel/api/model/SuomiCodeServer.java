@@ -289,7 +289,10 @@ public class SuomiCodeServer {
 
             try {
                 JsonObject codeList = codeSchemeResponse.getJsonArray("results").getJsonObject(0);
-                String schemeModifiedString = codeList.getString("modified");
+                String schemeModifiedString = codeList.getString("contentModified");
+                if (schemeModifiedString == null) {
+                    schemeModifiedString = codeList.getString("modified");
+                }
 
                 if (schemeModifiedString != null) {
                     logger.debug("Container last-modified: " + schemeModifiedString);
