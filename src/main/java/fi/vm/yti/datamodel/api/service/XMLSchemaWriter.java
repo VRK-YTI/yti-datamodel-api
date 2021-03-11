@@ -184,12 +184,9 @@ public class XMLSchemaWriter {
 
                         QuerySolution soln = results.nextSolution();
 
-                        String predicateName = soln.getLiteral("predicateName").getString();
-                        XmlElementDTO dto = xmlElements.getOrDefault(predicateName, new XmlElementDTO());
+                        String predicateName = getPredicateName(soln);
 
-                        if (soln.contains("id")) {
-                            predicateName = soln.getLiteral("id").getString();
-                        }
+                        XmlElementDTO dto = xmlElements.getOrDefault(predicateName, new XmlElementDTO());
 
                         populateXmlElementDTO(soln, predicateName, dto, "label");
 
@@ -327,13 +324,9 @@ public class XMLSchemaWriter {
                         complexTypeDTO.getDocumentation().put(classLanguage, classDocumentation);
 
                         if (soln.contains("property") && (!soln.contains("propertyDeactivated") || (soln.contains("propertyDeactivated") && !soln.getLiteral("propertyDeactivated").getBoolean()))) {
-                            String predicateName = soln.getLiteral("predicateName").getString();
+                            String predicateName = getPredicateName(soln);
 
                             XmlElementDTO xmlElementDTO = complexTypeDTO.getXmlElements().getOrDefault(predicateName, new XmlElementDTO());
-
-                            if (soln.contains("id")) {
-                                predicateName = soln.getLiteral("id").getString();
-                            }
 
                             populateXmlElementDTO(soln, predicateName, xmlElementDTO, "title");
 
@@ -355,6 +348,15 @@ public class XMLSchemaWriter {
             }
         }
         return xml.toString();
+    }
+
+    private String getPredicateName(QuerySolution soln) {
+        String predicateName = soln.getLiteral("predicateName").getString();
+
+        if (soln.contains("id")) {
+            predicateName = soln.getLiteral("id").getString();
+        }
+        return predicateName;
     }
 
     private LocalizedData getLocalizedData(Map<String, LocalizedData> localizedDataMap, QuerySolution soln, String language, String titleAttribute, String descAttribute) {
@@ -408,10 +410,6 @@ public class XMLSchemaWriter {
 
         Map<String, LocalizedData> localizedDataMap = dto.getLocalizedData();
         LocalizedData localizedData = getLocalizedData(localizedDataMap, soln, language, langAttribute);
-
-        if (soln.contains("id")) {
-            predicateName = soln.getLiteral("id").getString();
-        }
 
         localizedDataMap.put(language, localizedData);
 
