@@ -6,21 +6,15 @@ package fi.vm.yti.datamodel.api.service;
 import fi.vm.yti.datamodel.api.utils.LDHelper;
 import fi.vm.yti.datamodel.api.utils.XMLSchemaBuilder;
 
-import org.apache.jena.query.ParameterizedSparqlString;
-import org.apache.jena.query.QueryExecution;
-import org.apache.jena.query.QueryExecutionFactory;
-import org.apache.jena.query.QuerySolution;
-import org.apache.jena.query.ResultSet;
-import org.apache.jena.query.ResultSetFactory;
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.jena.query.*;
 import org.apache.jena.sparql.resultset.ResultSetPeekable;
 
 import java.text.SimpleDateFormat;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 import org.apache.jena.util.SplitIRI;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -85,8 +79,6 @@ public class XMLSchemaWriter {
 
         String className = SplitIRI.localname(classID);
         String localClassName = null;
-        String classDescription = null;
-        String classTitle = null;
 
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
 
@@ -97,23 +89,24 @@ public class XMLSchemaWriter {
                 + "?resourceID a ?type . "
                 + "?resourceID ?resourceLabel ?label . "
                 + "VALUES ?resourceLabel { rdfs:label sh:name }"
-                + "FILTER (langMatches(lang(?label),?lang))"
                 + "OPTIONAL { ?resourceID iow:localName ?localClassName . } "
                 + "OPTIONAL { ?resourceID ?resourceComment ?description . "
                 + "VALUES ?resourceComment { rdfs:comment sh:description }"
-                + "FILTER (langMatches(lang(?description),?lang))"
                 + "}"
                 + "} "
                 + "} ";
 
         pss.setIri("resourceID", classID);
-        if (lang != null) pss.setLiteral("lang", lang);
+        if (lang != null) {
+            pss.setLiteral("lang", lang);
+        }
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
 
         pss.setCommandText(selectClass);
 
         boolean classMetadata = false;
 
+        Element complexType;
         try (QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), pss.asQuery())) {
             ResultSet results = qexec.execSelect();
 
@@ -122,15 +115,17 @@ public class XMLSchemaWriter {
                 return null;
             }
 
+            Map<String, LocalizedData> localizedData = new HashMap<>();
+
             while (results.hasNext()) {
 
                 QuerySolution soln = results.nextSolution();
 
-                classTitle = soln.getLiteral("label").getString();
+                String labelLanguage = soln.getLiteral("label").getLanguage();
 
-                if (soln.contains("description")) {
-                    classDescription = soln.getLiteral("description").getString();
-                }
+                LocalizedData data = getLocalizedData(localizedData, soln, labelLanguage, "label");
+
+                localizedData.put(labelLanguage, data);
 
                 if (soln.contains("localClassName")) {
                     localClassName = soln.getLiteral("localClassName").getString();
@@ -141,15 +136,11 @@ public class XMLSchemaWriter {
                 if (sType.equals("Class") || sType.equals("Shape") || sType.equals("NodeShape")) {
                     classMetadata = true;
                 }
-
             }
-        }
 
-        Element complexType = xml.newComplexType((localClassName != null && localClassName.length() > 0 ? LDHelper.removeInvalidCharacters(localClassName) : className) + "Type", classID);
-        Element cdocumentation = xml.newDocumentation(complexType);
-        xml.appendElementValue(cdocumentation, "dcterms:title", classTitle);
-        if (classDescription != null) {
-            xml.appendElementValue(cdocumentation, "dcterms:description", classDescription);
+            complexType = xml.newComplexType(getClassName(className, localClassName), classID);
+
+            createDocumentation(xml, complexType, localizedData);
         }
 
         if (classMetadata) {
@@ -163,9 +154,7 @@ public class XMLSchemaWriter {
                     + "?property sh:path ?predicate . "
                     + "OPTIONAL { ?property iow:localName ?id . }"
                     + "?property sh:name ?label . "
-                    + "FILTER (langMatches(lang(?label),?lang))"
                     + "OPTIONAL { ?property sh:description ?description . "
-                    + "FILTER (langMatches(lang(?description),?lang))"
                     + "}"
                     + "OPTIONAL { ?property sh:datatype ?datatype . }"
                     + "OPTIONAL { ?property sh:node ?shapeRef . BIND(afn:localname(?shapeRef) as ?shapeRefName) }"
@@ -189,113 +178,28 @@ public class XMLSchemaWriter {
 
                     Element seq = xml.newSequence(complexType);
 
+                    Map<String, XmlElementDTO> xmlElements = new HashMap<>();
+
                     while (results.hasNext()) {
 
                         QuerySolution soln = results.nextSolution();
+
                         String predicateName = soln.getLiteral("predicateName").getString();
+                        XmlElementDTO dto = xmlElements.getOrDefault(predicateName, new XmlElementDTO());
 
                         if (soln.contains("id")) {
                             predicateName = soln.getLiteral("id").getString();
                         }
 
-                        String predicate = soln.getResource("predicate").getURI();
+                        populateXmlElementDTO(soln, predicateName, dto, "label");
 
-                        String title = soln.getLiteral("label").getString();
-
-                        Element newElement = xml.newSimpleElement(seq, predicateName, predicate);
-                        Element documentation = xml.newDocumentation(newElement);
-
-                        xml.appendElementValue(documentation, "dcterms:title", title);
-
-                        if (soln.contains("min") && soln.getLiteral("min").getInt() > 0) {
-                            int min = soln.getLiteral("min").getInt();
-                            newElement.setAttribute("minOccurs", "" + min);
-                        } else {
-                            newElement.setAttribute("minOccurs", "0");
-                        }
-
-                        if (soln.contains("description")) {
-                            String description = soln.getLiteral("description").getString();
-                            xml.appendElementValue(documentation, "dcterms:description", description);
-                        }
-
-                        if (soln.contains("datatype")) {
-                            String datatype = soln.getResource("datatype").toString();
-                            newElement.setAttribute("type", DATATYPE_MAP.get(datatype));
-                        }
-                
-                /*
-
-                <xs:complexType name="langStringType">
-                <xs:simpleContent>
-                    <xs:extension base="xs:string">
-                        <xs:attribute ref="xml:lang" use="optional"/>
-                    </xs:extension>
-                </xs:simpleContent>
-                </xs:complexType>
-
-                http://examples.oreilly.com/9780596002527/creating-simple-types.html
-                <xs:attribute name="lang" type="xs:language"/> OR
-                
-                <xs:simpleType name="supportedLanguages">
-        <xs:restriction base="xs:language">
-        <xs:enumeration value="en"/>
-        <xs:enumeration value="es"/>
-        </xs:restriction>
-    </xs:simpleType>
-                
-                <xs:attribute name="lang" type="supportedLanguages"/>
-                
-    <xs:element name="title">
-        <xs:complexType>
-        <xs:simpleContent>
-            <xs:extension base="string255">
-            <xs:attribute ref="lang"/>
-            </xs:extension>
-        </xs:simpleContent>
-        </xs:complexType>
-    </xs:element>
-                
-                */
-
-                        if (soln.contains("max") && soln.getLiteral("max").getInt() > 0) {
-                            int max = soln.getLiteral("max").getInt();
-                            newElement.setAttribute("maxOccurs", "" + max);
-                        } else {
-                            newElement.setAttribute("maxOccurs", "unbounded");
-                        }
-
-                        /* If shape contains pattern or other type of restriction */
-
-                        if (soln.contains("pattern") || soln.contains("maxLength") || soln.contains("minLength")) {
-                            Element simpleType = xml.newSimpleType(predicateName + "Type");
-
-                            if (soln.contains("pattern")) {
-                                Element restriction = xml.newStringRestriction(simpleType);
-                                xml.appendElementValueAttribute(restriction, "xs:maxInclusive", soln.getLiteral("pattern").toString());
-                            } else {
-                                Element restriction = xml.newIntRestriction(simpleType);
-                                if (soln.contains("maxLength")) {
-                                    xml.appendElementValueAttribute(restriction, "xs:maxInclusive", "" + soln.getLiteral("maxLength").getInt());
-                                }
-                                if (soln.contains("minLength")) {
-                                    xml.appendElementValueAttribute(restriction, "xs:minInclusive", "" + soln.getLiteral("minLength").getInt());
-                                }
-                            }
-                            newElement.setAttribute("type", predicateName + "Type");
-                        }
-
-                        if (soln.contains("shapeRefName")) {
-                            String shapeRef = soln.getLiteral("shapeRefName").toString();
-                            newElement.setAttribute("type", shapeRef + "Type");
-                        }
-
+                        xmlElements.put(predicateName, dto);
                     }
+
+                    createXmlElements(xml, seq, xmlElements);
                 }
             }
-
         }
-
         return xml.toString();
     }
 
@@ -313,20 +217,17 @@ public class XMLSchemaWriter {
                 + "WHERE { "
                 + "GRAPH ?modelID { "
                 + "?modelID rdfs:label ?label . "
-                + "FILTER (langMatches(lang(?label),?lang))"
                 + "OPTIONAL { ?modelID rdfs:comment ?description . "
-                + "FILTER (langMatches(lang(?description),?lang))"
                 + "}"
                 + "} "
                 + "} ";
 
         pss.setIri("modelID", modelID);
-        if (lang != null) pss.setLiteral("lang", lang);
+        if (lang != null) {
+            pss.setLiteral("lang", lang);
+        }
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
-
         pss.setCommandText(selectClass);
-
-        Element documentation = xml.newDocumentation(xml.getRoot());
 
         try (QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), pss.toString())) {
 
@@ -337,29 +238,17 @@ public class XMLSchemaWriter {
                 return null;
             }
 
+            Map<String, LocalizedData> dataModelLocalizedData = new HashMap<>();
+
             while (results.hasNext()) {
-
                 QuerySolution soln = results.nextSolution();
-                String title = soln.getLiteral("label").getString();
-
-                if (soln.contains("description")) {
-                    String description = soln.getLiteral("description").getString();
-                    xml.appendElementValue(documentation, "dcterms:description", description);
-                }
-
-                xml.appendElementValue(documentation, "dcterms:title", title);
-
-                Date modified = graphManager.modelContentModified(modelID);
-                SimpleDateFormat format = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz");
-
-                if (modified != null) {
-                    String dateModified = format.format(modified);
-                    xml.appendElementValue(documentation, "dcterms:modified", dateModified);
-                }
-
+                String language = soln.getLiteral("label").getLanguage();
+                dataModelLocalizedData.put(language, getLocalizedData(dataModelLocalizedData, soln, language, "label"));
             }
 
+            createDocumentation(xml, xml.getRoot(), dataModelLocalizedData, modelID);
         }
+
         /* Get classes from library */
         pss = new ParameterizedSparqlString();
 
@@ -371,12 +260,10 @@ public class XMLSchemaWriter {
                 + "}"
                 + "GRAPH ?resource {"
                 + "?resource sh:name ?classTitle . "
-                + "FILTER (langMatches(lang(?classTitle),?lang))"
                 + "OPTIONAL { ?resource sh:deactivated ?classDeactivated . }"
                 + "OPTIONAL { ?resource iow:localName ?localClassName . } "
                 + "OPTIONAL { ?resource sh:targetClass ?targetClass . }"
                 + "OPTIONAL { ?resource sh:description ?classDescription . "
-                + "FILTER (langMatches(lang(?classDescription),?lang))"
                 + "}"
                 + "BIND(afn:localname(?resource) as ?className)"
                 + "OPTIONAL{"
@@ -385,9 +272,7 @@ public class XMLSchemaWriter {
                 + "?property sh:path ?predicate . "
                 + "OPTIONAL { ?property iow:localName ?id . }"
                 + "?property sh:name ?title . "
-                + "FILTER (langMatches(lang(?title),?lang))"
                 + "OPTIONAL { ?property sh:description ?description . "
-                + "FILTER (langMatches(lang(?description),?lang))"
                 + "}"
                 + "OPTIONAL { ?property sh:deactivated ?propertyDeactivated . }"
                 + "OPTIONAL { ?property sh:datatype ?datatype . }"
@@ -417,10 +302,7 @@ public class XMLSchemaWriter {
 
             if (pResults.hasNext()) {
 
-                boolean firstRun = true;
-                Element complexType = null;
-                Element seq = null;
-                String previousPredicateID = null;
+                Map<String, XmlComplexTypeDTO> complexTypes = new HashMap<>();
 
                 while (pResults.hasNext()) {
                     QuerySolution soln = pResults.nextSolution();
@@ -429,185 +311,359 @@ public class XMLSchemaWriter {
 
                     if (!soln.contains("classDeactivated") || (soln.contains("classDeactivated") && !soln.getLiteral("classDeactivated").getBoolean())) {
 
-                        String classID = soln.getResource("resource").getURI();
                         String className = soln.getLiteral("className").getString();
+
                         String localClassName = soln.contains("localClassName") ? soln.getLiteral("localClassName").getString() : null;
+                        String classId = soln.contains("targetClass") ? soln.getResource("targetClass").toString() : soln.getResource("resource").toString();
 
-                        if (firstRun) {
+                        XmlComplexTypeDTO complexTypeDTO = complexTypes.getOrDefault(className, new XmlComplexTypeDTO());
+                        complexTypeDTO.setLocalClassName(localClassName);
+                        complexTypeDTO.setClassId(classId);
 
-                            if (soln.contains("targetClass")) {
-                                complexType = xml.newComplexType((localClassName != null && localClassName.length() > 0 ? LDHelper.removeInvalidCharacters(localClassName) : className) + "Type", soln.getResource("targetClass").toString());
-                            } else {
-                                complexType = xml.newComplexType((localClassName != null && localClassName.length() > 0 ? LDHelper.removeInvalidCharacters(localClassName) : className) + "Type", soln.getResource("resource").toString());
-                            }
+                        String classLanguage = soln.getLiteral("classTitle").getLanguage();
 
-                            Element classDoc = xml.newDocumentation(complexType);
-                            xml.appendElementValue(classDoc, "dcterms:title", soln.getLiteral("classTitle").getString());
+                        LocalizedData classDocumentation = getLocalizedData(complexTypeDTO.getDocumentation(), soln, classLanguage, "classTitle", "classDescription");
 
-                            seq = xml.newSequence(complexType);
-
-                            if (soln.contains("description")) {
-                                String description = soln.getLiteral("description").getString();
-                                xml.appendElementValue(classDoc, "dcterms:description", description);
-                            }
-
-                            firstRun = false;
-                        }
+                        complexTypeDTO.getDocumentation().put(classLanguage, classDocumentation);
 
                         if (soln.contains("property") && (!soln.contains("propertyDeactivated") || (soln.contains("propertyDeactivated") && !soln.getLiteral("propertyDeactivated").getBoolean()))) {
-
-                            String predicate = soln.getResource("predicate").getURI();
-                            String property = soln.getResource("property").getURI();
                             String predicateName = soln.getLiteral("predicateName").getString();
 
-                            if (previousPredicateID != null && property.equals(previousPredicateID)) {
-                                logger.warn("Problems with duplicate values in " + className + " " + predicateName);
-                            } else {
+                            XmlElementDTO xmlElementDTO = complexTypeDTO.getXmlElements().getOrDefault(predicateName, new XmlElementDTO());
 
-                                previousPredicateID = property;
-
-                                if (soln.contains("id")) {
-                                    predicateName = soln.getLiteral("id").getString();
-                                }
-
-                                String title = soln.getLiteral("title").getString();
-
-                                Element newElement = xml.newSimpleElement(seq, predicateName, predicate);
-                                documentation = xml.newDocumentation(newElement);
-
-                                xml.appendElementValue(documentation, "dcterms:title", title);
-
-                                if (soln.contains("min") && soln.getLiteral("min").getInt() > 0) {
-                                    int min = soln.getLiteral("min").getInt();
-                                    newElement.setAttribute("minOccurs", "" + min);
-                                } else {
-                                    newElement.setAttribute("minOccurs", "0");
-                                }
-
-                                if (soln.contains("description")) {
-                                    String description = soln.getLiteral("description").getString();
-                                    xml.appendElementValue(documentation, "dcterms:description", description);
-                                }
-
-                                if (soln.contains("datatype")) {
-                                    String datatype = soln.getResource("datatype").toString();
-                                    newElement.setAttribute("type", DATATYPE_MAP.get(datatype));
-                                }
-
-                                if (soln.contains("max") && soln.getLiteral("max").getInt() > 0) {
-                                    int max = soln.getLiteral("max").getInt();
-                                    newElement.setAttribute("maxOccurs", "" + max);
-                                } else {
-                                    newElement.setAttribute("maxOccurs", "unbounded");
-                                }
-
-                                /* If shape contains pattern or other type of restriction */
-
-                                if (soln.contains("pattern") || soln.contains("maxLength") || soln.contains("minLength")) {
-                                    Element simpleType = xml.newSimpleType(predicateName + "Type");
-
-                                    if (soln.contains("pattern")) {
-                                        Element restriction = xml.newStringRestriction(simpleType);
-                                        xml.appendElementValueAttribute(restriction, "xs:maxInclusive", soln.getLiteral("pattern").toString());
-                                    } else {
-                                        Element restriction = xml.newIntRestriction(simpleType);
-                                        if (soln.contains("maxLength")) {
-                                            xml.appendElementValueAttribute(restriction, "xs:maxInclusive", "" + soln.getLiteral("maxLength").getInt());
-                                        }
-                                        if (soln.contains("minLength")) {
-                                            xml.appendElementValueAttribute(restriction, "xs:minInclusive", "" + soln.getLiteral("minLength").getInt());
-                                        }
-                                    }
-                                    newElement.setAttribute("type", predicateName + "Type");
-                                }
-
-                                if (soln.contains("shapeRefName")) {
-                                    String shapeRef = soln.getLiteral("shapeRefName").toString();
-                                    newElement.setAttribute("type", shapeRef + "Type");
-                                }
+                            if (soln.contains("id")) {
+                                predicateName = soln.getLiteral("id").getString();
                             }
-                
-                            /*   
-                                if(soln.contains("valueList")) {
-                                    JsonArray valueList = getValueList(soln.getResource("resource").toString(),soln.getResource("property").toString());
-                                    if(valueList!=null) {
-                                        predicate.add("enum",valueList);    
-                                    }
-                                } else if(soln.contains("schemeList")) {
-                                    JsonArray schemeList = getSchemeValueList(soln.getResource("schemeList").toString());
-                                    if(schemeList!=null) {
-                                        predicate.add("enum",schemeList);
-                                    }
-                                }
-                            */
-                        }
 
-                        /* Check if next result is about the same class */
-                        if (!pResults.hasNext() || !className.equals(pResults.peek().getLiteral("className").getString())) {
-                            firstRun = true;
-                        }
+                            populateXmlElementDTO(soln, predicateName, xmlElementDTO, "title");
 
+                            complexTypeDTO.getXmlElements().put(predicateName, xmlElementDTO);
+                        }
+                        complexTypes.put(className, complexTypeDTO);
                     }
+                }
 
+                for (String classKey : complexTypes.keySet()) {
+                    XmlComplexTypeDTO complexTypeDTO = complexTypes.get(classKey);
+                    Element complexType = xml.newComplexType(getClassName(classKey, complexTypeDTO.getLocalClassName()),
+                            complexTypeDTO.getClassId());
+
+                    createDocumentation(xml, complexType, complexTypeDTO.getDocumentation());
+                    Element seq = xml.newSequence(complexType);
+                    createXmlElements(xml, seq, complexTypeDTO.getXmlElements());
                 }
             }
         }
-
         return xml.toString();
-
     }
-        
-  
-    
-    
-    /*
-    public boolean hasModelRoot(String graphIRI) {
 
-        ParameterizedSparqlString pss = new ParameterizedSparqlString();
-        String queryString = " ASK { GRAPH ?graph { ?graph void:rootResource ?root . }}";
-        
-        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
-        pss.setCommandText(queryString);
-        pss.setIri("graph", graphIRI);
+    private LocalizedData getLocalizedData(Map<String, LocalizedData> localizedDataMap, QuerySolution soln, String language, String titleAttribute, String descAttribute) {
+        LocalizedData localizedData = localizedDataMap.getOrDefault(language, new LocalizedData());
 
-        Query query = pss.asQuery();
-        QueryExecution qexec = QueryExecutionFactory.sparqlService(services.getCoreSparqlAddress(), query);
+        String title = soln.getLiteral(titleAttribute).getString();
 
-        try {
-            boolean b = qexec.execAsk();
-            return b;
-        } catch (Exception ex) {
-            return false;
+        localizedData.setLang(language);
+        localizedData.setTitle(title);
+
+        if (soln.contains(descAttribute) && soln.getLiteral(descAttribute).getLanguage().equals(language)) {
+            localizedData.setDescription(soln.getLiteral(descAttribute).getString());
+        }
+
+        return localizedData;
+    }
+
+    private LocalizedData getLocalizedData(Map<String, LocalizedData> localizedDataMap, QuerySolution soln, String language, String titleAttribute) {
+        return getLocalizedData(localizedDataMap, soln, language, titleAttribute, "description");
+    }
+
+    private void createDocumentation(XMLSchemaBuilder xml, Element newElement, Map<String, LocalizedData> localizedData) {
+        createDocumentation(xml, newElement, localizedData, null);
+    }
+
+    private void createDocumentation(XMLSchemaBuilder xml, Element newElement, Map<String, LocalizedData> localizedData, String modelID) {
+        Element annotation = xml.newAnnotation(newElement);
+
+        for (String langKey : localizedData.keySet()) {
+            LocalizedData data = localizedData.get(langKey);
+            Element documentation = xml.createLocalizedDocumentation(annotation, langKey);
+            xml.appendElementValue(documentation, "dcterms:title", data.getTitle());
+            if (data.getDescription() != null) {
+                xml.appendElementValue(documentation, "dcterms:description", data.getDescription());
+            }
+
+            if (modelID != null) {
+                Date modified = graphManager.modelContentModified(modelID);
+                SimpleDateFormat format = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz");
+
+                if (modified != null) {
+                    String dateModified = format.format(modified);
+                    xml.appendElementValue(documentation, "dcterms:modified", dateModified);
+                }
+            }
         }
     }
-    
-    
-    public String getModelRoot(String graph) {
-        
-         ParameterizedSparqlString pss = new ParameterizedSparqlString();
-                String selectResources = 
-                "SELECT ?root WHERE {"
-                + "GRAPH ?graph { ?graph void:rootResource ?root . }"
-                + "}";
-        
-        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
-        pss.setCommandText(selectResources);
-        pss.setIri("graph", graph);
 
-        QueryExecution qexec = QueryExecutionFactory.sparqlService(services.getCoreSparqlAddress(), pss.asQuery());
-        qexec = QueryExecutionFactory.sparqlService(services.getCoreSparqlAddress(), pss.asQuery());
+    private void populateXmlElementDTO(QuerySolution soln, String predicateName, XmlElementDTO dto, String langAttribute) {
+        String language = soln.getLiteral(langAttribute).getLanguage();
 
-        ResultSet results = qexec.execSelect();
-        
-        if(!results.hasNext()) return null;
-        else {
-            QuerySolution soln = results.next();
-            if(soln.contains("root")) {
-                return soln.getResource("root").toString();
-            } else return null;
+        Map<String, LocalizedData> localizedDataMap = dto.getLocalizedData();
+        LocalizedData localizedData = getLocalizedData(localizedDataMap, soln, language, langAttribute);
+
+        if (soln.contains("id")) {
+            predicateName = soln.getLiteral("id").getString();
+        }
+
+        localizedDataMap.put(language, localizedData);
+
+        String predicate = soln.getResource("predicate").getURI();
+
+        dto.setPredicate(predicate);
+        dto.setPredicateName(predicateName);
+        dto.setLocalizedData(localizedDataMap);
+
+        if (soln.contains("min") && soln.getLiteral("min").getInt() > 0) {
+            dto.setMinOccurs(soln.getLiteral("min").getString());
+        } else {
+            dto.setMinOccurs("0");
+        }
+
+        if (soln.contains("datatype")) {
+            dto.setDataType(soln.getResource("datatype").toString());
+        }
+
+        if (soln.contains("max") && soln.getLiteral("max").getInt() > 0) {
+            dto.setMaxOccurs(soln.getLiteral("max").getString());
+        } else {
+            dto.setMaxOccurs("unbounded");
+        }
+
+        /* If shape contains pattern or other type of restriction */
+        if (soln.contains("pattern")) {
+            dto.setPattern(soln.getLiteral("pattern").toString());
+        }
+        if (soln.contains("maxLength")) {
+            dto.setMaxLength(soln.getLiteral("maxLength").getString());
+        }
+        if (soln.contains("minLength")) {
+            dto.setMinLength(soln.getLiteral("minLength").getString());
+        }
+
+        if (soln.contains("shapeRefName")) {
+            dto.setShapeRefName(soln.getLiteral("shapeRefName").toString());
         }
     }
-    
-    */
 
+    private void createXmlElements(XMLSchemaBuilder xml, Element seq, Map<String, XmlElementDTO> xmlElements) {
+        for (XmlElementDTO dto : xmlElements.values()) {
+
+            Element newElement = xml.newSimpleElement(seq, dto.getPredicateName(), dto.getPredicate());
+
+            createDocumentation(xml, newElement, dto.getLocalizedData());
+
+            newElement.setAttribute("minOccurs", dto.getMinOccurs());
+            newElement.setAttribute("maxOccurs", dto.getMaxOccurs());
+
+            if (dto.getDataType() != null) {
+                newElement.setAttribute("type", DATATYPE_MAP.get(dto.getDataType()));
+            }
+            if (dto.getShapeRefName() != null) {
+                newElement.setAttribute("type", dto.getShapeRefName() + "Type");
+            }
+            if (dto.getPattern() != null || dto.getMaxLength() != null || dto.getMinLength() != null) {
+                Element simpleType = xml.newSimpleType(dto.getPredicateName() + "Type");
+
+                if (dto.getPattern() != null) {
+                    Element restriction = xml.newStringRestriction(simpleType);
+                    xml.appendElementValueAttribute(restriction, "xs:maxInclusive", dto.getPattern());
+                } else {
+                    Element restriction = xml.newIntRestriction(simpleType);
+                    if (dto.getMaxLength() != null) {
+                        xml.appendElementValueAttribute(restriction, "xs:maxInclusive", dto.getMaxLength());
+                    }
+                    if (dto.getMinLength() != null) {
+                        xml.appendElementValueAttribute(restriction, "xs:minInclusive", dto.getMinLength());
+                    }
+                }
+                newElement.setAttribute("type", dto.getPredicateName() + "Type");
+            }
+        }
+    }
+
+    @NotNull
+    private String getClassName(String className, String localClassName) {
+        return (localClassName != null && localClassName.length() > 0 ? LDHelper.removeInvalidCharacters(localClassName) : className) + "Type";
+    }
+}
+
+class LocalizedData {
+    private String lang;
+    private String title;
+    private String description;
+
+    public String getTitle() {
+        return title;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public String getLang() {
+        return lang;
+    }
+
+    public void setLang(String lang) {
+        this.lang = lang;
+    }
+}
+
+class XmlComplexTypeDTO {
+    String localClassName;
+    String classId;
+    Map<String, LocalizedData> documentation = new HashMap<>();
+    Map<String, XmlElementDTO> xmlElements = new HashMap<>();
+
+    public String getLocalClassName() {
+        return localClassName;
+    }
+
+    public void setLocalClassName(String localClassName) {
+        this.localClassName = localClassName;
+    }
+
+    public String getClassId() {
+        return classId;
+    }
+
+    public void setClassId(String classId) {
+        this.classId = classId;
+    }
+
+    public Map<String, LocalizedData> getDocumentation() {
+        return documentation;
+    }
+
+    public void setDocumentation(Map<String, LocalizedData> documentation) {
+        this.documentation = documentation;
+    }
+
+    public Map<String, XmlElementDTO> getXmlElements() {
+        return xmlElements;
+    }
+
+    public void setXmlElements(Map<String, XmlElementDTO> xmlElements) {
+        this.xmlElements = xmlElements;
+    }
+
+    @Override
+    public String toString() {
+        return ToStringBuilder.reflectionToString(this);
+    }
+}
+
+class XmlElementDTO {
+
+    private String predicate;
+    private String predicateName;
+    private Map<String, LocalizedData> localizedData = new HashMap<>();
+    private String minOccurs;
+    private String maxOccurs;
+    private String dataType;
+    private String shapeRefName;
+    private String maxLength;
+    private String minLength;
+    private String pattern;
+
+    public String getPredicate() {
+        return predicate;
+    }
+
+    public void setPredicate(String predicate) {
+        this.predicate = predicate;
+    }
+
+    public Map<String, LocalizedData> getLocalizedData() {
+        return localizedData;
+    }
+
+    public void setLocalizedData(Map<String, LocalizedData> localizedData) {
+        this.localizedData = localizedData;
+    }
+
+    public String getMinOccurs() {
+        return minOccurs;
+    }
+
+    public void setMinOccurs(String minOccurs) {
+        this.minOccurs = minOccurs;
+    }
+
+    public String getMaxOccurs() {
+        return maxOccurs;
+    }
+
+    public void setMaxOccurs(String maxOccurs) {
+        this.maxOccurs = maxOccurs;
+    }
+
+    public String getDataType() {
+        return dataType;
+    }
+
+    public void setDataType(String dataType) {
+        this.dataType = dataType;
+    }
+
+    public String getPredicateName() {
+        return predicateName;
+    }
+
+    public void setPredicateName(String predicateName) {
+        this.predicateName = predicateName;
+    }
+
+    public String getShapeRefName() {
+        return shapeRefName;
+    }
+
+    public void setShapeRefName(String shapeRefName) {
+        this.shapeRefName = shapeRefName;
+    }
+
+    public String getMaxLength() {
+        return maxLength;
+    }
+
+    public void setMaxLength(String maxLength) {
+        this.maxLength = maxLength;
+    }
+
+    public String getMinLength() {
+        return minLength;
+    }
+
+    public void setMinLength(String minLength) {
+        this.minLength = minLength;
+    }
+
+    public String getPattern() {
+        return pattern;
+    }
+
+    public void setPattern(String pattern) {
+        this.pattern = pattern;
+    }
+
+    @Override
+    public String toString() {
+        return ToStringBuilder.reflectionToString(this);
+    }
 }
