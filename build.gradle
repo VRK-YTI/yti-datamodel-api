@@ -38,9 +38,15 @@ archivesBaseName = 'yti-datamodel-api'
 
 repositories {
     mavenLocal()
-    mavenCentral()
-    google()
-    jcenter()
+    mavenCentral {
+        content { excludeGroupByRegex "fi\\.vm\\.yti.*" }
+    }
+    google {
+        content { excludeGroupByRegex "fi\\.vm\\.yti.*" }
+    }
+    jcenter {
+        content { excludeGroupByRegex "fi\\.vm\\.yti.*" }
+    }
 
     // put your artifactory parameters to $HOME/.gradle/gradle.properties
     if (project.hasProperty('artifactoryUrl')) {
