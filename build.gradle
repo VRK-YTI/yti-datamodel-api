@@ -27,7 +27,7 @@ allprojects {
     if(project.convention.findPlugin(JavaPluginConvention)) {
         // Change the output directory for the main and test source sets back to the old path
         sourceSets.main.java.destinationDirectory.value(project.getLayout().getBuildDirectory().dir("classes/${sourceSets.main.name}"));
-        sourceSets.test.java.destinationDirectory.value(project.getLayout().getBuildDirectory().dir("classes/${sourceSets.main.name}"));
+        sourceSets.test.java.destinationDirectory.value(project.getLayout().getBuildDirectory().dir("classes/${sourceSets.test.name}"));
 
     }
 }
