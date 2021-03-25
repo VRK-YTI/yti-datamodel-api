@@ -3,10 +3,10 @@
  */
 package fi.vm.yti.datamodel.api.endpoint.model;
 
+import fi.vm.yti.datamodel.api.index.FrameManager;
 import fi.vm.yti.datamodel.api.index.SearchIndexManager;
 import fi.vm.yti.datamodel.api.model.ReusableClass;
 import fi.vm.yti.datamodel.api.security.AuthorizationManager;
-import fi.vm.yti.datamodel.api.security.AuthorizationManagerImpl;
 import fi.vm.yti.datamodel.api.service.*;
 import fi.vm.yti.datamodel.api.utils.LDHelper;
 import fi.vm.yti.datamodel.api.utils.QueryLibrary;
@@ -57,6 +57,9 @@ public class Class {
     private final ModelManager modelManager;
     private final SearchIndexManager searchIndexManager;
     private final ObjectMapper objectMapper;
+    private final FrameManager frameManager;
+
+    public static final String INDEX_UPDATER_THREAD = "index-updater";
 
     @Autowired
     Class(AuthorizationManager authorizationManager,
@@ -70,7 +73,8 @@ public class Class {
           ProvenanceManager provenanceManager,
           ModelManager modelManager,
           SearchIndexManager searchIndexManager,
-          ObjectMapper objectMapper) {
+          ObjectMapper objectMapper,
+          FrameManager frameManager) {
 
         this.authorizationManager = authorizationManager;
         this.userProvider = userProvider;
@@ -84,6 +88,7 @@ public class Class {
         this.modelManager = modelManager;
         this.searchIndexManager = searchIndexManager;
         this.objectMapper = objectMapper;
+        this.frameManager = frameManager;
     }
 
     @GET
@@ -203,6 +208,17 @@ public class Class {
 
             String provUUID = null;
 
+            // Run visualization index in a background process
+            Runnable indexUpdater = () -> {
+                try {
+                    logger.info("Starting index updater for " + modelIRI.toString());
+                    frameManager.updateCachedGraph(modelIRI.toString());
+                    logger.info("Index updated: " + modelIRI.toString());
+                } catch (Exception e) {
+                    logger.error(e.getMessage(), e);
+                }
+            };
+
             if (isNotEmpty(body)) {
 
                 Model parsedModel = modelManager.createJenaModelFromJSONLDString(body);
@@ -256,6 +272,8 @@ public class Class {
 
                 searchIndexManager.updateIndexModel(updateClass.getModelId());
 
+                new Thread(indexUpdater, INDEX_UPDATER_THREAD).start();
+
                 if (provenanceManager.getProvMode()) {
                     provenanceManager.createProvEntityBundle(updateClass.getId(), updateClass.asGraph(), user.getId(), updateClass.getProvUUID(), oldIdIRI);
                 }
@@ -274,6 +292,9 @@ public class Class {
                     graphManager.insertExistingResourceToModel(id, model);
                     graphManager.updateContentModified(model);
                     logger.info("Created reference from " + model + " to " + id);
+
+                    new Thread(indexUpdater, INDEX_UPDATER_THREAD).start();
+
                     return jerseyResponseManager.ok();
                 }
             }

@@ -10,6 +10,8 @@ import java.util.Map;
 import javax.inject.Singleton;
 import javax.ws.rs.NotFoundException;
 
+import fi.vm.yti.datamodel.api.endpoint.model.Class;
+import org.apache.commons.lang3.ThreadUtils;
 import org.apache.jena.query.ParameterizedSparqlString;
 import org.apache.jena.query.Query;
 import org.apache.jena.rdf.model.Model;
@@ -87,7 +89,14 @@ public final class FrameManager {
                 frameStr = updateCachedGraph(id);
             } else {
                 Object lastModifiedDate = map.get("modified");
-                if (lastModified != null && lastModifiedDate != null && lastModified.after(format.parse(lastModifiedDate.toString()))) {
+
+                // Do not try to update cache if indexer thread is running
+                boolean isIndexerRunning = Thread.getAllStackTraces().keySet().stream().anyMatch(t -> t.getName().equals(Class.INDEX_UPDATER_THREAD));
+
+                if (isIndexerRunning) {
+                    logger.info("Visualization indexing in progress. Use cached data");
+                    frameStr = map.get("graph").toString();
+                } else if (lastModified != null && lastModifiedDate != null && lastModified.after(format.parse(lastModifiedDate.toString()))) {
                     logger.debug("Updating visualization frame: " + id);
                     frameStr = updateCachedGraph(id);
                 } else {
@@ -194,7 +203,7 @@ public final class FrameManager {
         return framed;
     }
 
-    private String updateCachedGraph(String id) throws Exception {
+    public String updateCachedGraph(String id) throws Exception {
         String frameStr = graphToFramedString(id, Frames.classVisualizationFrame);
         cacheClassVisualizationFrame(id, frameStr);
         return frameStr;
