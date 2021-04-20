@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -165,7 +166,25 @@ public final class FrameManager {
         if (model == null) {
             throw new NotFoundException("Could not get model with id " + graph);
         }
-        return graphToFramedString(model, frame);
+
+        // Copy frame content because it will be modified later
+        LinkedHashMap<String, Object> frameCopy = new LinkedHashMap<String, Object>();
+
+        frame.entrySet().forEach(entry -> {
+            if (entry.getValue() instanceof LinkedHashMap) {
+                System.out.println("MAP frame");
+
+                LinkedHashMap<String, Object> listCopy = new LinkedHashMap<String, Object>();
+
+                ((LinkedHashMap<String, Object>) entry.getValue()).entrySet().forEach(subEntry -> {
+                    listCopy.put(subEntry.getKey(), subEntry.getValue());
+                });
+                frameCopy.put(entry.getKey(), listCopy);
+            } else {
+                frameCopy.put(entry.getKey(), entry.getValue());
+            }
+        });
+        return graphToFramedString(model, frameCopy);
     }
 
     protected String graphToFramedString(Model model,
