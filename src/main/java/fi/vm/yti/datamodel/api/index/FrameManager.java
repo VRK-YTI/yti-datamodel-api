@@ -168,13 +168,11 @@ public final class FrameManager {
         }
 
         // Copy frame content because it will be modified later
-        LinkedHashMap<String, Object> frameCopy = new LinkedHashMap<String, Object>();
+        LinkedHashMap<String, Object> frameCopy = new LinkedHashMap<>();
 
         frame.entrySet().forEach(entry -> {
             if (entry.getValue() instanceof LinkedHashMap) {
-                System.out.println("MAP frame");
-
-                LinkedHashMap<String, Object> listCopy = new LinkedHashMap<String, Object>();
+                LinkedHashMap<String, Object> listCopy = new LinkedHashMap<>();
 
                 ((LinkedHashMap<String, Object>) entry.getValue()).entrySet().forEach(subEntry -> {
                     listCopy.put(subEntry.getKey(), subEntry.getValue());
