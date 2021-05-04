@@ -165,7 +165,23 @@ public final class FrameManager {
         if (model == null) {
             throw new NotFoundException("Could not get model with id " + graph);
         }
-        return graphToFramedString(model, frame);
+
+        // Copy frame content because it will be modified later
+        LinkedHashMap<String, Object> frameCopy = new LinkedHashMap<>();
+
+        frame.entrySet().forEach(entry -> {
+            if (entry.getValue() instanceof LinkedHashMap) {
+                LinkedHashMap<String, Object> listCopy = new LinkedHashMap<>();
+
+                ((LinkedHashMap<String, Object>) entry.getValue()).entrySet().forEach(subEntry -> {
+                    listCopy.put(subEntry.getKey(), subEntry.getValue());
+                });
+                frameCopy.put(entry.getKey(), listCopy);
+            } else {
+                frameCopy.put(entry.getKey(), entry.getValue());
+            }
+        });
+        return graphToFramedString(model, frameCopy);
     }
 
     protected String graphToFramedString(Model model,
