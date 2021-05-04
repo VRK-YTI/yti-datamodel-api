@@ -98,6 +98,9 @@ public final class FrameManager {
         } catch (ElasticsearchException ex) {
             logger.error("Datamodel Elastic is not available. Model frame caching is not available.");
             frameStr = graphToFramedString(id, Frames.classVisualizationFrame);
+        } catch (Exception e) {
+            logger.error("Unhandled exception while gettin visualization frame", e);
+            throw e;
         }
         return frameStr;
     }
@@ -153,17 +156,23 @@ public final class FrameManager {
 
         Query query = pss.asQuery();
         Model exportModel = jenaClient.getModelFromCore(graph);
-        Model exportModelConstruct = jenaClient.constructFromService(query.toString(), jenaClient.getEndpointServices().getCoreSparqlAddress());
-        exportModel.add(exportModelConstruct);
-        return exportModel;
+
+        if (exportModel != null) {
+            Model exportModelConstruct = jenaClient.constructFromService(query.toString(), jenaClient.getEndpointServices().getCoreSparqlAddress());
+            exportModel.add(exportModelConstruct);
+            return exportModel;
+        }
+        throw new NotFoundException("Could not found graph " + graph);
     }
 
     protected String graphToFramedString(String graph,
                                          LinkedHashMap<String, Object> frame) throws Exception {
         Model model = jenaClient.getModelFromCore(graph + "#ExportGraph");
-        // Model model = constructExportGraph(graph);
         if (model == null) {
-            throw new NotFoundException("Could not get model with id " + graph);
+            // In some rare cases ExportGraph is not found at this point.
+            // Reconstruct graph in those cases instead of throwing exception
+            logger.warn("Could not found ExportGraph: " + graph);
+            model = constructExportGraph(graph);
         }
 
         // Copy frame content because it will be modified later
