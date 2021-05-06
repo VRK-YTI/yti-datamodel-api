@@ -99,7 +99,7 @@ public final class FrameManager {
             logger.error("Datamodel Elastic is not available. Model frame caching is not available.");
             frameStr = graphToFramedString(id, Frames.classVisualizationFrame);
         } catch (Exception e) {
-            logger.error("Unhandled exception while gettin visualization frame", e);
+            logger.error("Unhandled exception while getting visualization frame", e);
             throw e;
         }
         return frameStr;
@@ -171,7 +171,7 @@ public final class FrameManager {
         if (model == null) {
             // In some rare cases ExportGraph is not found at this point.
             // Reconstruct graph in those cases instead of throwing exception
-            logger.warn("Could not found ExportGraph: " + graph);
+            logger.warn("Could not find ExportGraph: " + graph);
             model = constructExportGraph(graph);
         }
 
