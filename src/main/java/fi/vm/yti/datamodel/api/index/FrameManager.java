@@ -1,54 +1,27 @@
 package fi.vm.yti.datamodel.api.index;
 
-import java.io.IOException;
-import java.io.StringWriter;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.LinkedHashMap;
-import java.util.Map;
-
-import javax.inject.Singleton;
-import javax.ws.rs.NotFoundException;
-
+import fi.vm.yti.datamodel.api.service.JenaClient;
+import fi.vm.yti.datamodel.api.service.ModelManager;
+import fi.vm.yti.datamodel.api.utils.LDHelper;
 import org.apache.jena.query.ParameterizedSparqlString;
 import org.apache.jena.query.Query;
 import org.apache.jena.rdf.model.Model;
-import org.apache.jena.riot.JsonLDWriteContext;
-import org.apache.jena.riot.RDFDataMgr;
-import org.apache.jena.riot.RDFFormat;
-import org.apache.jena.riot.WriterGraphRIOT;
-import org.apache.jena.riot.system.PrefixMap;
-import org.apache.jena.riot.system.RiotLib;
-import org.elasticsearch.ElasticsearchException;
-import org.elasticsearch.action.get.GetRequest;
-import org.elasticsearch.action.index.IndexRequest;
-import org.elasticsearch.action.index.IndexResponse;
-import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
-import org.elasticsearch.common.xcontent.DeprecationHandler;
-import org.elasticsearch.common.xcontent.NamedXContentRegistry;
-import org.elasticsearch.common.xcontent.XContentBuilder;
-import org.elasticsearch.common.xcontent.XContentFactory;
-import org.elasticsearch.common.xcontent.XContentParser;
-import org.elasticsearch.common.xcontent.XContentType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.github.jsonldjava.core.JsonLdOptions;
-
-import fi.vm.yti.datamodel.api.service.JenaClient;
-import fi.vm.yti.datamodel.api.service.ModelManager;
-import fi.vm.yti.datamodel.api.utils.Frames;
-import fi.vm.yti.datamodel.api.utils.LDHelper;
+import javax.inject.Singleton;
+import javax.ws.rs.NotFoundException;
+import java.text.SimpleDateFormat;
 
 @Singleton
 @Service
 public final class FrameManager {
 
     private static final Logger logger = LoggerFactory.getLogger(FrameManager.class);
-    private static final String ELASTIC_INDEX_VIS_MODEL = "dm_vis_models";
+    // private static final String ELASTIC_INDEX_VIS_MODEL = "dm_vis_models";
     private final SimpleDateFormat format = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz");
 
     private final RestHighLevelClient esClient;
@@ -67,6 +40,7 @@ public final class FrameManager {
         this.modelManager = modelManager;
     }
 
+    /*
     public void cleanCachedFrames(boolean createInAnyCase) throws IOException {
         if (esManager.cleanIndex(ELASTIC_INDEX_VIS_MODEL) || createInAnyCase) {
             esManager.createIndex(ELASTIC_INDEX_VIS_MODEL);
@@ -74,7 +48,9 @@ public final class FrameManager {
             logger.info("Index \"" + ELASTIC_INDEX_VIS_MODEL + "\" not found, thus not cleaned nor re-created.");
         }
     }
+     */
 
+    /*
     public String getCachedClassVisualizationFrame(String id,
                                                    Date lastModified) throws Exception {
         logger.info("Getting framed json-ld from cache: " + id);
@@ -103,8 +79,9 @@ public final class FrameManager {
             throw e;
         }
         return frameStr;
-    }
+    }*/
 
+    /*
     public void cacheClassVisualizationFrame(String id,
                                              String framed) {
         String encId = LDHelper.encode(id);
@@ -125,7 +102,7 @@ public final class FrameManager {
             ex.printStackTrace(System.out);
             logger.error("Could not cache visualization frame for id " + id, ex);
         }
-    }
+    }*/
 
     /**
      * Creates export graph by joining all the resources to one graph
@@ -165,6 +142,7 @@ public final class FrameManager {
         throw new NotFoundException("Could not found graph " + graph);
     }
 
+    /*
     protected String graphToFramedString(String graph,
                                          LinkedHashMap<String, Object> frame) throws Exception {
         Model model = jenaClient.getModelFromCore(graph + "#ExportGraph");
@@ -218,10 +196,12 @@ public final class FrameManager {
         }
         return framed;
     }
+     */
 
+    /*
     private String updateCachedGraph(String id) throws Exception {
         String frameStr = graphToFramedString(id, Frames.classVisualizationFrame);
         cacheClassVisualizationFrame(id, frameStr);
         return frameStr;
-    }
+    }*/
 }

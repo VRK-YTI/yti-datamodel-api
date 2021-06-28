@@ -12,21 +12,18 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-
-import java.util.Date;
-
-import javax.ws.rs.GET;
-import javax.ws.rs.NotFoundException;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Response;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import javax.ws.rs.*;
+import javax.ws.rs.core.Response;
+import java.util.Date;
+
+/**
+ * TODO: Remove this class
+ */
 @Component
 @Path("v1/framedGraphs")
 @Tag(name = "Frame")
@@ -66,7 +63,7 @@ public class FramedGraphs {
         }
         try {
             Date contentModified = graphManager.modelContentModified(graph);
-            String frame = frameManager.getCachedClassVisualizationFrame(graph, contentModified);
+            String frame = ""; // frameManager.getCachedClassVisualizationFrame(graph, contentModified);
 
             return Response.ok(frame, "application/json").build();
         } catch (NotFoundException fex) {

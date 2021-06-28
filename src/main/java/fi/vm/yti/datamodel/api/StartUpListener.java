@@ -1,16 +1,5 @@
 package fi.vm.yti.datamodel.api;
 
-import java.io.IOException;
-
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Component;
-
 import fi.vm.yti.datamodel.api.index.ElasticConnector;
 import fi.vm.yti.datamodel.api.index.FrameManager;
 import fi.vm.yti.datamodel.api.index.SearchIndexManager;
@@ -19,6 +8,14 @@ import fi.vm.yti.datamodel.api.service.GroupManagementService;
 import fi.vm.yti.datamodel.api.service.NamespaceManager;
 import fi.vm.yti.datamodel.api.service.RHPOrganizationManager;
 import fi.vm.yti.migration.MigrationInitializer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
+
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 
 @Component
 public class StartUpListener {
@@ -84,9 +81,9 @@ public class StartUpListener {
     private void initElasticsearchIndices() {
         try {
             elasticConnector.waitForESNodes();
-            frameManager.cleanCachedFrames(true);
+            // frameManager.cleanCachedFrames(true);
             searchIndexManager.reindex();
-        } catch (IOException e) {
+        } catch (Exception e) {
             logger.warn("Elasticsearch initialization failed!", e);
         }
     }

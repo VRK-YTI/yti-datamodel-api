@@ -3,39 +3,17 @@
  */
 package fi.vm.yti.datamodel.api.service;
 
-import java.io.IOException;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
+import fi.vm.yti.datamodel.api.config.ApplicationProperties;
+import fi.vm.yti.datamodel.api.index.FrameManager;
+import fi.vm.yti.datamodel.api.model.AbstractModel;
+import fi.vm.yti.datamodel.api.model.AbstractResource;
+import fi.vm.yti.datamodel.api.utils.LDHelper;
 import org.apache.jena.atlas.web.HttpException;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.datatypes.xsd.XSDDateTime;
 import org.apache.jena.iri.IRI;
-import org.apache.jena.query.DatasetAccessor;
-import org.apache.jena.query.DatasetAccessorFactory;
-import org.apache.jena.query.ParameterizedSparqlString;
-import org.apache.jena.query.Query;
-import org.apache.jena.query.QuerySolution;
-import org.apache.jena.query.ResultSet;
-import org.apache.jena.rdf.model.Literal;
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.ModelFactory;
-import org.apache.jena.rdf.model.NodeIterator;
-import org.apache.jena.rdf.model.RDFList;
-import org.apache.jena.rdf.model.RDFNode;
-import org.apache.jena.rdf.model.ResIterator;
-import org.apache.jena.rdf.model.Resource;
-import org.apache.jena.rdf.model.ResourceFactory;
-import org.apache.jena.rdf.model.Statement;
-import org.apache.jena.rdf.model.StmtIterator;
+import org.apache.jena.query.*;
+import org.apache.jena.rdf.model.*;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.riot.RDFLanguages;
 import org.apache.jena.shared.PrefixMapping;
@@ -50,19 +28,17 @@ import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.web.DatasetAdapter;
 import org.apache.jena.web.DatasetGraphAccessorHTTP;
-import org.elasticsearch.node.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.topbraid.shacl.vocabulary.SH;
 
-import fi.vm.yti.datamodel.api.config.ApplicationProperties;
-import fi.vm.yti.datamodel.api.index.ElasticConnector;
-import fi.vm.yti.datamodel.api.index.FrameManager;
-import fi.vm.yti.datamodel.api.model.AbstractModel;
-import fi.vm.yti.datamodel.api.model.AbstractResource;
-import fi.vm.yti.datamodel.api.utils.LDHelper;
+import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 public class GraphManager {
@@ -1811,11 +1787,12 @@ public class GraphManager {
         removeGraph(oldResource.getIRI());
         updateResourceReferencesInAllGraphs(resource.getModelIRI(), oldResource.getIRI(), resource.getIRI());
         updateReferencesInPositionGraph(resource.getModelIRI(), oldResource.getIRI(), resource.getIRI());
+        /*
         try {
             frameManager.cleanCachedFrames(false);
         } catch (IOException e) {
             logger.warn("Could not clean cached frames", e);
-        }
+        }*/
     }
 
     public void deleteResource(AbstractResource resource) {

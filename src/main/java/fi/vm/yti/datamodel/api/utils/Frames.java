@@ -3,7 +3,6 @@
  */
 package fi.vm.yti.datamodel.api.utils;
 
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
 
 /**
@@ -58,7 +57,7 @@ public class Frames {
     public static final LinkedHashMap<String, Object> esClassFrame;
     public static final LinkedHashMap<String, Object> esModelFrame;
     public static final LinkedHashMap<String, Object> esPredicateFrame;
-    public static final LinkedHashMap<String, Object> classVisualizationFrame;
+    // public static final LinkedHashMap<String, Object> classVisualizationFrame;
     public static final LinkedHashMap<String, Object> origClassContext;
     public static final LinkedHashMap<String, Object> origClassFrame;
     public static final LinkedHashMap<String, Object> libraryType;
@@ -834,7 +833,7 @@ public class Frames {
                 put("isDefinedBy", new LinkedHashMap<String, Object>());
             }
         };
-
+        /*
         classVisualizationFrame = new LinkedHashMap<String, Object>() {
             {
                 put("@context", classContext);
@@ -902,7 +901,7 @@ public class Frames {
                 });
             }
         };
-
+        */
     }
 
 }
