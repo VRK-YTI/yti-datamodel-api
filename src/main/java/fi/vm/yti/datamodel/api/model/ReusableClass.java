@@ -50,7 +50,7 @@ public class ReusableClass extends AbstractClass {
             + "?classIRI rdfs:isDefinedBy ?model . "
             + "?model rdfs:label ?modelLabel . "
             + "?model a ?modelType . "
-            + "?classIRI sh:name ?classLabel . "
+            + "?classIRI sh:name ?label . "
             + "?classIRI sh:description ?comment . "
             + "?classIRI dcterms:subject ?concept . "
             + "?concept a skos:Concept . "
