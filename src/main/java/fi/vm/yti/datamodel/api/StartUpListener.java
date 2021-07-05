@@ -81,7 +81,6 @@ public class StartUpListener {
     private void initElasticsearchIndices() {
         try {
             elasticConnector.waitForESNodes();
-            // frameManager.cleanCachedFrames(true);
             searchIndexManager.reindex();
         } catch (Exception e) {
             logger.warn("Elasticsearch initialization failed!", e);

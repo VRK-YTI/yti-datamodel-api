@@ -1787,12 +1787,6 @@ public class GraphManager {
         removeGraph(oldResource.getIRI());
         updateResourceReferencesInAllGraphs(resource.getModelIRI(), oldResource.getIRI(), resource.getIRI());
         updateReferencesInPositionGraph(resource.getModelIRI(), oldResource.getIRI(), resource.getIRI());
-        /*
-        try {
-            frameManager.cleanCachedFrames(false);
-        } catch (IOException e) {
-            logger.warn("Could not clean cached frames", e);
-        }*/
     }
 
     public void deleteResource(AbstractResource resource) {
