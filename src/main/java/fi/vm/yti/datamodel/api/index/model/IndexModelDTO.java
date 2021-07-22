@@ -1,12 +1,11 @@
 package fi.vm.yti.datamodel.api.index.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import fi.vm.yti.datamodel.api.model.DataModel;
+
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-
-import com.fasterxml.jackson.annotation.JsonFormat;
-
-import fi.vm.yti.datamodel.api.model.DataModel;
 
 public class IndexModelDTO {
 
@@ -27,6 +26,7 @@ public class IndexModelDTO {
     @JsonFormat(with = JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY)
     private List<String> isPartOf;
     private List<String> language;
+    private Map<String, String> description;
 
     public IndexModelDTO() {
     }
@@ -47,6 +47,7 @@ public class IndexModelDTO {
         this.contributor = model.getOrganizations();
         this.isPartOf = model.getDomains();
         this.language = model.getLanguages();
+        this.description = model.getDescription();
     }
 
     public IndexModelDTO(final String id,
@@ -63,7 +64,8 @@ public class IndexModelDTO {
                          final Map<String, String> comment,
                          final List<UUID> contributor,
                          final List<String> isPartOf,
-                         final List<String> language) {
+                         final List<String> language,
+                         final Map<String, String> description) {
         this.id = id;
         this.useContext = useContext;
         this.status = status;
@@ -79,6 +81,7 @@ public class IndexModelDTO {
         this.contributor = contributor;
         this.isPartOf = isPartOf;
         this.language = language;
+        this.description = description;
     }
 
     public String getId() {
@@ -199,6 +202,10 @@ public class IndexModelDTO {
         this.language = language;
     }
 
+    public Map<String, String> getDescription() { return description; }
+
+    public void setDescription(Map<String, String> description) { this.description = description; }
+
     @Override
     public String toString() {
         return "IndexModelDTO{" +
@@ -217,6 +224,7 @@ public class IndexModelDTO {
             ", contributor=" + contributor +
             ", isPartOf=" + isPartOf +
             ", language=" + language +
+            ", description=" + description +
             '}';
     }
 }
