@@ -11,7 +11,6 @@ import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.topbraid.shacl.vocabulary.SH;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -182,8 +181,9 @@ public abstract class AbstractModel extends AbstractResource {
         }
     }
 
-    public Map<String, String> getDescription() {
-        return LDHelper.RDFNodeListToMap(this.graph.listObjectsOfProperty(ResourceFactory.createResource(this.getId()), SH.description).toList());
+    public Map<String, String> getDocumentation() {
+        return LDHelper.RDFNodeListToMap(this.graph.listObjectsOfProperty(ResourceFactory.createResource(this.getId()),
+                LDHelper.curieToProperty("iow:documentation")).toList());
     }
 
 }

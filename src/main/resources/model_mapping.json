@@ -19,8 +19,8 @@
           }
         },
         {
-          "description": {
-            "path_match": "description.*",
+          "documentation": {
+            "path_match": "documentation.*",
             "mapping": {
               "type": "text"
             }

@@ -26,7 +26,7 @@ public class IndexModelDTO {
     @JsonFormat(with = JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY)
     private List<String> isPartOf;
     private List<String> language;
-    private Map<String, String> description;
+    private Map<String, String> documentation;
 
     public IndexModelDTO() {
     }
@@ -47,7 +47,7 @@ public class IndexModelDTO {
         this.contributor = model.getOrganizations();
         this.isPartOf = model.getDomains();
         this.language = model.getLanguages();
-        this.description = model.getDescription();
+        this.documentation = model.getDocumentation();
     }
 
     public IndexModelDTO(final String id,
@@ -65,7 +65,7 @@ public class IndexModelDTO {
                          final List<UUID> contributor,
                          final List<String> isPartOf,
                          final List<String> language,
-                         final Map<String, String> description) {
+                         final Map<String, String> documentation) {
         this.id = id;
         this.useContext = useContext;
         this.status = status;
@@ -81,7 +81,7 @@ public class IndexModelDTO {
         this.contributor = contributor;
         this.isPartOf = isPartOf;
         this.language = language;
-        this.description = description;
+        this.documentation = documentation;
     }
 
     public String getId() {
@@ -202,9 +202,9 @@ public class IndexModelDTO {
         this.language = language;
     }
 
-    public Map<String, String> getDescription() { return description; }
+    public Map<String, String> getDocumentation() { return documentation; }
 
-    public void setDescription(Map<String, String> description) { this.description = description; }
+    public void setDocumentation(Map<String, String> documentation) { this.documentation = documentation; }
 
     @Override
     public String toString() {
@@ -224,7 +224,7 @@ public class IndexModelDTO {
             ", contributor=" + contributor +
             ", isPartOf=" + isPartOf +
             ", language=" + language +
-            ", description=" + description +
+            ", documentation=" + documentation +
             '}';
     }
 }
