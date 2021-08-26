@@ -1,7 +1,6 @@
 package fi.vm.yti.datamodel.api;
 
 import fi.vm.yti.datamodel.api.index.ElasticConnector;
-import fi.vm.yti.datamodel.api.index.FrameManager;
 import fi.vm.yti.datamodel.api.index.SearchIndexManager;
 import fi.vm.yti.datamodel.api.service.GraphManager;
 import fi.vm.yti.datamodel.api.service.GroupManagementService;
@@ -26,7 +25,6 @@ public class StartUpListener {
     private final GraphManager graphManager;
     private final NamespaceManager namespaceManager;
     private final ElasticConnector elasticConnector;
-    private final FrameManager frameManager;
     private final SearchIndexManager searchIndexManager;
     private final GroupManagementService groupManagementService;
 
@@ -35,7 +33,6 @@ public class StartUpListener {
                     GraphManager graphManager,
                     NamespaceManager namespaceManager,
                     ElasticConnector elasticConnector,
-                    FrameManager frameManager,
                     SearchIndexManager searchIndexManager,
                     MigrationInitializer migrationInitializer,
                     GroupManagementService groupManagementService
@@ -45,7 +42,6 @@ public class StartUpListener {
         this.graphManager = graphManager;
         this.namespaceManager = namespaceManager;
         this.elasticConnector = elasticConnector;
-        this.frameManager = frameManager;
         this.searchIndexManager = searchIndexManager;
         this.groupManagementService = groupManagementService;
     }

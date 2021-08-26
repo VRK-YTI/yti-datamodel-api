@@ -1,12 +1,10 @@
 package fi.vm.yti.datamodel.api.index;
 
 import fi.vm.yti.datamodel.api.service.JenaClient;
-import fi.vm.yti.datamodel.api.service.ModelManager;
 import fi.vm.yti.datamodel.api.utils.LDHelper;
 import org.apache.jena.query.ParameterizedSparqlString;
 import org.apache.jena.query.Query;
 import org.apache.jena.rdf.model.Model;
-import org.elasticsearch.client.RestHighLevelClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,17 +19,10 @@ public final class FrameManager {
 
     private static final Logger logger = LoggerFactory.getLogger(FrameManager.class);
 
-    private final RestHighLevelClient esClient;
-    private final ElasticConnector esManager;
     private final JenaClient jenaClient;
 
     @Autowired
-    public FrameManager(
-        final ElasticConnector esManager,
-        final JenaClient jenaClient,
-        final ModelManager modelManager) {
-        this.esManager = esManager;
-        this.esClient = esManager.getEsClient();
+    public FrameManager(final JenaClient jenaClient) {
         this.jenaClient = jenaClient;
     }
 

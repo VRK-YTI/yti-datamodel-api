@@ -4,7 +4,6 @@
 package fi.vm.yti.datamodel.api.service;
 
 import fi.vm.yti.datamodel.api.config.ApplicationProperties;
-import fi.vm.yti.datamodel.api.index.FrameManager;
 import fi.vm.yti.datamodel.api.model.AbstractModel;
 import fi.vm.yti.datamodel.api.model.AbstractResource;
 import fi.vm.yti.datamodel.api.utils.LDHelper;
@@ -53,7 +52,6 @@ public class GraphManager {
     private final ServiceDescriptionManager serviceDescriptionManager;
     private final String versionGraphURI = "urn:yti:metamodel:version";
     private final ExecutorService executor = Executors.newFixedThreadPool(1);
-    private final FrameManager frameManager;
 
     @Autowired
     GraphManager(EndpointServices endpointServices,
@@ -61,8 +59,7 @@ public class GraphManager {
                  TerminologyManager terminologyManager,
                  ModelManager modelManager,
                  ServiceDescriptionManager serviceDescriptionManager,
-                 ApplicationProperties properties,
-                 FrameManager frameManager) {
+                 ApplicationProperties properties) {
 
         this.endpointServices = endpointServices;
         this.jenaClient = jenaClient;
@@ -70,7 +67,6 @@ public class GraphManager {
         this.modelManager = modelManager;
         this.serviceDescriptionManager = serviceDescriptionManager;
         this.properties = properties;
-        this.frameManager = frameManager;
     }
 
     public static UpdateRequest renameIDRequest(IRI oldID,
