@@ -2,22 +2,20 @@ package fi.vm.yti.datamodel.api.model;
 
 import fi.vm.yti.datamodel.api.service.GraphManager;
 import fi.vm.yti.datamodel.api.service.RHPOrganizationManager;
-import fi.vm.yti.datamodel.api.utils.*;
-
+import fi.vm.yti.datamodel.api.utils.LDHelper;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.rdf.model.*;
 import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDF;
+import org.apache.jena.vocabulary.RDFS;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-
-import org.apache.jena.vocabulary.RDFS;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public abstract class AbstractModel extends AbstractResource {
 
@@ -181,6 +179,11 @@ public abstract class AbstractModel extends AbstractResource {
             // This catch fixes legacy data without contentModified fields.
             return null;
         }
+    }
+
+    public Map<String, String> getDocumentation() {
+        return LDHelper.RDFNodeListToMap(this.graph.listObjectsOfProperty(ResourceFactory.createResource(this.getId()),
+                LDHelper.curieToProperty("iow:documentation")).toList());
     }
 
 }

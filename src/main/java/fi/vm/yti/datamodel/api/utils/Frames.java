@@ -3,7 +3,6 @@
  */
 package fi.vm.yti.datamodel.api.utils;
 
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
 
 /**
@@ -58,7 +57,6 @@ public class Frames {
     public static final LinkedHashMap<String, Object> esClassFrame;
     public static final LinkedHashMap<String, Object> esModelFrame;
     public static final LinkedHashMap<String, Object> esPredicateFrame;
-    public static final LinkedHashMap<String, Object> classVisualizationFrame;
     public static final LinkedHashMap<String, Object> origClassContext;
     public static final LinkedHashMap<String, Object> origClassFrame;
     public static final LinkedHashMap<String, Object> libraryType;
@@ -834,75 +832,6 @@ public class Frames {
                 put("isDefinedBy", new LinkedHashMap<String, Object>());
             }
         };
-
-        classVisualizationFrame = new LinkedHashMap<String, Object>() {
-            {
-                put("@context", classContext);
-                put("@type", new ArrayList<Object>() {
-                    {
-                        add("rdfs:Class");
-                        add("sh:NodeShape");
-                    }
-                });
-
-                put("property", new LinkedHashMap<String, Object>() {
-                    {
-                        put("path", new LinkedHashMap<String, Object>() {
-                            {
-                                put("@embed", false);
-                            }
-                        });
-                        put("node", new LinkedHashMap<String, Object>() {
-                            {
-                                put("@omitDefault", true);
-                                put("@default", new ArrayList());
-                                put("@embed", false);
-                            }
-                        });
-                        put("classIn", new LinkedHashMap<String, Object>() {
-                            {
-                                put("@omitDefault", true);
-                                put("@default", new ArrayList());
-                                put("@embed", false);
-                            }
-                        });
-                        put("memberOf", new LinkedHashMap<String, Object>() {
-                            {
-                                put("@omitDefault", true);
-                                put("@default", new ArrayList());
-                                put("isPartOf", new LinkedHashMap<String, Object>() {
-                                    {
-                                        put("@embed", "@always");
-                                    }
-                                });
-
-                            }
-                        });
-                    }
-                });
-                put("subject", new LinkedHashMap<String, Object>() {
-                    {
-                        put("@embed", false);
-                    }
-                });
-                put("subClassOf", new LinkedHashMap<String, Object>() {
-                    {
-                        put("@embed", false);
-                    }
-                });
-                put("targetClass", new LinkedHashMap<String, Object>() {
-                    {
-                        put("@embed", false);
-                    }
-                });
-                put("isDefinedBy", new LinkedHashMap<String, Object>() {
-                    {
-                        put("@embed", false);
-                    }
-                });
-            }
-        };
-
     }
 
 }
