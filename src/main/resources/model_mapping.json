@@ -17,6 +17,14 @@
               "type": "text"
             }
           }
+        },
+        {
+          "documentation": {
+            "path_match": "documentation.*",
+            "mapping": {
+              "type": "text"
+            }
+          }
         }
       ],
       "properties": {
