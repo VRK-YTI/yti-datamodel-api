@@ -36,7 +36,7 @@ import javax.ws.rs.container.ContainerResponseFilter;
         )
     )
 )
-@ApplicationPath("/datamodel-api/api")
+@ApplicationPath("/api")
 public class JerseyConfig extends ResourceConfig {
 
     @Autowired
