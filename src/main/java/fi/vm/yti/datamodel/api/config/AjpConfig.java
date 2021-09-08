@@ -9,10 +9,15 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class AjpConfig {
 
+    @Value(value = "${application.contextPath:/datamodel-api}")
+    private String contextPath;
+
     @Bean
     public TomcatServletWebServerFactory servletContainer(@Value("${tomcat.ajp.port:}") Integer ajpPort) {
 
         TomcatServletWebServerFactory tomcat = new TomcatServletWebServerFactory();
+
+        tomcat.setContextPath(contextPath);
 
         if (ajpPort != null) {
             Connector ajpConnector = new Connector("AJP/1.3");
