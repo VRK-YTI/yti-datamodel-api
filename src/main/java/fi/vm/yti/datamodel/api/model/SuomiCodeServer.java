@@ -101,7 +101,6 @@ public class SuomiCodeServer {
         model.setNsPrefix("dcterms", "http://purl.org/dc/terms/");
         model.setNsPrefix("iow", "http://uri.suomi.fi/datamodel/ns/iow#");
 
-        Response.ResponseBuilder rb;
         Client client = ClientBuilder.newClient();
 
         logger.debug("Updating suomi.fi codeLists: " + url);
@@ -163,7 +162,6 @@ public class SuomiCodeServer {
                         JsonObject codeList = (JsonObject) codeListIterator.next();
 
                         String codeListUri = codeList.getString("uri");
-                        String codeListUrl = codeList.getString("url");
 
                         // FIXME: This should not happen!
                         if (LDHelper.isInvalidIRI(codeListUri)) {
@@ -275,7 +273,6 @@ public class SuomiCodeServer {
 
         LocalDateTime codeSchemeModified = null;
         Model model = null;
-        Response.ResponseBuilder rb;
 
         Client containerClient = ClientBuilder.newClient();
         WebTarget containerTarget = containerClient.target(url + "v1/integration/containers").queryParam("includeIncomplete", "true").queryParam("uri", containerUri).queryParam("format", "application/json");

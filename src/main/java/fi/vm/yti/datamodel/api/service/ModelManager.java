@@ -18,10 +18,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.jena.graph.Graph;
-import org.apache.jena.iri.IRI;
-import org.apache.jena.query.DatasetFactory;
-import org.apache.jena.query.ParameterizedSparqlString;
-import org.apache.jena.rdf.model.Literal;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Property;
@@ -30,23 +26,13 @@ import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.Statement;
 import org.apache.jena.rdf.model.StmtIterator;
-import org.apache.jena.riot.JsonLDWriteContext;
-import org.apache.jena.riot.Lang;
-import org.apache.jena.riot.RDFDataMgr;
-import org.apache.jena.riot.RDFFormat;
-import org.apache.jena.riot.RDFParser;
-import org.apache.jena.riot.WriterDatasetRIOT;
-import org.apache.jena.riot.WriterGraphRIOT;
+import org.apache.jena.riot.*;
 import org.apache.jena.riot.system.ErrorHandlerFactory;
 import org.apache.jena.riot.system.PrefixMap;
 import org.apache.jena.riot.system.PrefixMapFactory;
 import org.apache.jena.riot.system.RiotLib;
 import org.apache.jena.shared.PropertyNotFoundException;
-import org.apache.jena.sparql.core.DatasetGraph;
 import org.apache.jena.sparql.graph.GraphFactory;
-import org.apache.jena.sparql.util.Context;
-import org.apache.jena.update.UpdateAction;
-import org.apache.jena.update.UpdateRequest;
 import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDF;
 import org.slf4j.Logger;
@@ -56,7 +42,6 @@ import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.jsonldjava.core.JsonLdOptions;
-import com.github.jsonldjava.core.JsonLdProcessor;
 import com.github.jsonldjava.utils.JsonUtils;
 
 import fi.vm.yti.datamodel.api.utils.LDHelper;
@@ -85,108 +70,38 @@ public class ModelManager {
         return writer.toString();
     }
 
-    public JsonNode toJsonNode(Model m) {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        DatasetGraph g = DatasetFactory.create(m).asDatasetGraph();
-        WriterDatasetRIOT w = RDFDataMgr.createDatasetWriter(RDFFormat.JSONLD_FLATTEN_FLAT);
-        w.write(baos, g, RiotLib.prefixMap(g), null, g.getContext());
-        ObjectMapper objectMapper = new ObjectMapper();
-        try {
-            JsonNode jsonNode = objectMapper.readTree(baos.toByteArray());
-            return jsonNode;
-        } catch (IOException ex) {
-            logger.warn(ex.getMessage(), ex);
-            return null;
-        }
-    }
-
-    public String writeModelToJSONLDString(Model m,
-                                           Context jenaContext) {
-        try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-            WriterDatasetRIOT w = RDFDataMgr.createDatasetWriter(RDFFormat.JSONLD_FRAME_PRETTY);
-            DatasetGraph g = DatasetFactory.create(m).asDatasetGraph();
-            PrefixMap pm = RiotLib.prefixMap(g);
-            //PrefixMap pm = PrefixMapFactory.create(m.getNsPrefixMap());
-            w.write(out, g, pm, null, jenaContext);
-            out.flush();
-            return out.toString("UTF-8");
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public Object stringToFramedObject(String graphString,
-                                       LinkedHashMap<String, Object> newFrame) throws IOException {
-        Object jsonObject = JsonUtils.fromString(graphString);
-        JsonLdOptions opts = new JsonLdOptions();
-        opts.setProcessingMode(opts.JSON_LD_1_1);
-        opts.useNamespaces = true;
-        opts.setCompactArrays(true);
-        opts.setUseNativeTypes(Boolean.TRUE);
-        Object framed = JsonLdProcessor.frame(jsonObject, newFrame, opts);
-        framed = ((ArrayList) ((Map) framed).get("@graph")).get(0);
-        return framed;
-    }
-
-    public Object reFramedStringToObject(String graphString,
-                                         LinkedHashMap<String, Object> originalFrame,
-                                         LinkedHashMap<String, Object> newFrame) throws IOException {
-        Object jsonObject = JsonUtils.fromString(graphString);
-        ((Map) jsonObject).put("@context", originalFrame.get("@context"));
-        JsonLdOptions opts = new JsonLdOptions();
-        opts.setProcessingMode(opts.JSON_LD_1_1);
-        opts.useNamespaces = true;
-        opts.setCompactArrays(true);
-        opts.setUseNativeTypes(Boolean.TRUE);
-        Object framed = JsonLdProcessor.frame(jsonObject, newFrame, opts);
-        framed = ((ArrayList) ((Map) framed).get("@graph")).get(0);
-        return framed;
-    }
-
-    public String mapObjectToString(Object jsonNode) throws IOException {
-        ObjectMapper objectMapper = new ObjectMapper();
-        return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(jsonNode);
-    }
-
     public JsonNode toFramedJsonNode(Model model,
                                      LinkedHashMap<String, Object> frame) throws IOException {
-        WriterGraphRIOT gw = RDFDataMgr.createGraphWriter(RDFFormat.JSONLD_FRAME_PRETTY);
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         Graph modelGraph = model.getGraph();
         PrefixMap pm = RiotLib.prefixMap(modelGraph);
         pm = cleanUpPrefixes(pm);
         pm.putAll(LDHelper.PREFIX_MAP);
-        ((LinkedHashMap<String, Object>) frame.get("@context")).putAll(pm.getMappingCopyStr());
+        ((LinkedHashMap<String, Object>) frame.get("@context")).putAll(pm.getMappingCopy());
         JsonLdOptions opts = new JsonLdOptions();
-        opts.setProcessingMode(opts.JSON_LD_1_1);
+        opts.setProcessingMode(JsonLdOptions.JSON_LD_1_1);
         opts.useNamespaces = true;
         opts.setCompactArrays(true);
         opts.setUseNativeTypes(Boolean.TRUE);
         JsonLDWriteContext ctx = new JsonLDWriteContext();
         ctx.setFrame(frame);
         ctx.setOptions(opts);
-        gw.write(baos, model.getGraph(), pm, null, ctx);
-        ObjectMapper objectMapper = new ObjectMapper();
-        JsonNode jsonNode = objectMapper.readTree(baos.toByteArray());
-        return jsonNode;
-    }
 
-    public String toPlainJsonString(JsonNode jsonNode) throws IOException {
-        ObjectMapper objectMapper = new ObjectMapper();
-        return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(jsonNode.get("@graph"));
-    }
+        RDFWriter w = RDFWriter.create().format(RDFFormat.JSONLD_FRAME_PRETTY)
+                .source(model.getGraph())
+                .context(ctx)
+                .build();
 
-    public String toPlainJsonString(Model model,
-                                    LinkedHashMap<String, Object> frame) throws IOException {
+        w.output(baos);
+
         ObjectMapper objectMapper = new ObjectMapper();
-        JsonNode jsonNode = toFramedJsonNode(model, frame);
-        return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(jsonNode.get("@graph"));
+        return objectMapper.readTree(baos.toByteArray());
     }
 
     public PrefixMap cleanUpPrefixes(PrefixMap map) {
         final Pattern pattern = Pattern.compile("j\\.\\d+");
-        List<String> toBeDeleted = new ArrayList<String>();
-        map.forEach((String t, IRI u) -> {
+        List<String> toBeDeleted = new ArrayList<>();
+        map.forEach((String t, String u) -> {
             Matcher matcher = pattern.matcher(t);
             if (matcher.lookingAt()) {
                 toBeDeleted.add(t);
@@ -196,73 +111,6 @@ public class ModelManager {
             map.delete(t);
         });
         return map;
-    }
-
-    public void removeLanguages(Model model,
-                                List<String> langList) {
-        StmtIterator listIterator = model.listStatements();
-        List<Statement> removeStatements = new ArrayList<>();
-        if (langList == null || langList.isEmpty()) return;
-        while (listIterator.hasNext()) {
-            Statement langStatement = listIterator.next();
-            if (langStatement.getObject().isLiteral()) {
-                Literal lit = langStatement.getLiteral();
-                String litLang = lit.getLanguage();
-                if (litLang != null && !litLang.isEmpty()) {
-                    if (!langList.contains(litLang)) {
-                        removeStatements.add(langStatement);
-                    }
-                }
-            }
-        }
-        model.remove(removeStatements);
-    }
-
-    public Model removeListStatements(Model resource,
-                                      Model model) {
-
-        StmtIterator listIterator = resource.listStatements();
-
-        // OMG: Iterate trough all RDFLists and remove old lists from exportModel
-        while (listIterator.hasNext()) {
-            Statement listStatement = listIterator.next();
-            if (!listStatement.getSubject().isAnon() && listStatement.getObject().isAnon()) {
-                Statement removeStatement = model.getRequiredProperty(listStatement.getSubject(), listStatement.getPredicate());
-                RDFList languageList = removeStatement.getObject().as(RDFList.class);
-                languageList.removeList();
-                removeStatement.remove();
-
-            }
-        }
-
-        return model;
-
-    }
-
-    // TODO: Not working / or in use yet.
-
-    /**
-     * Changes property UUIDs in model
-     *
-     * @param model Shape model to be used in UUID rename
-     *              returns Model with changed UUIDs
-     */
-    public Model updatePropertyUUIDs(Model model) {
-
-        String query =
-            "DELETE { GRAPH ?shape { ?shape sh:property ?prop . ?prop ?p ?o .  } } "
-                + "INSERT { GRAPH ?shape { ?shape sh:property ?newProp . ?newProp ?p ?o . } } "
-                + "WHERE { GRAPH ?shape { ?shape sh:property ?prop . BIND(UUID() AS ?newProp) ?prop ?p ?o . }";
-
-        ParameterizedSparqlString pss = new ParameterizedSparqlString();
-        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
-
-        pss.setCommandText(query);
-        UpdateRequest queryObj = pss.asUpdate();
-        UpdateAction.execute(queryObj, model);
-
-        return model;
-
     }
 
     /**
@@ -277,8 +125,8 @@ public class ModelManager {
 
         StmtIterator listIterator = resource.listStatements();
 
-        List<Statement> statementsToRemove = new ArrayList<Statement>();
-        List<RDFList> listsToRemove = new ArrayList<RDFList>();
+        List<Statement> statementsToRemove = new ArrayList<>();
+        List<RDFList> listsToRemove = new ArrayList<>();
 
         while (listIterator.hasNext()) {
             Statement listStatement = listIterator.next();
@@ -292,7 +140,7 @@ public class ModelManager {
                 try {
                     Statement removeStatement = model.getRequiredProperty(subject, listPredicate);
                     if (!removeStatement.getObject().isAnon()) {
-                        logger.warn("This should'nt happen!");
+                        logger.warn("This shouldn't happen!");
                         logger.warn("Bad data " + subject.toString() + "->" + listPredicate);
                     } else if (removeStatement.getObject().canAs(RDFList.class)) {
                         // If object is list
@@ -304,9 +152,7 @@ public class ModelManager {
                         StmtIterator anonIterator = removeStatement.getObject().asResource().listProperties();
                         while (anonIterator.hasNext()) {
                             Statement anonStatement = anonIterator.next();
-                            Resource anonSubject = anonStatement.getSubject();
                             RDFNode anonSubObject = anonStatement.getObject();
-                            Property anonListPredicate = anonStatement.getPredicate();
                             if (anonSubObject.isAnon() && anonSubObject.canAs(RDFList.class)) {
                                 // If Anon object has list such as sh:and
                                 listsToRemove.add(anonSubObject.as(RDFList.class));
@@ -320,7 +166,7 @@ public class ModelManager {
 
                     }
                 } catch (PropertyNotFoundException ex) {
-                    logger.warn("This should'nt happen!");
+                    logger.warn("This shouldn't happen!");
                     logger.warn(ex.getMessage(), ex);
                 }
                 // Remove ALL triples that are part of resource node such as Class or Property. Keep Ontology triples.
@@ -376,7 +222,7 @@ public class ModelManager {
                 throw new IllegalArgumentException("Could not parse the model");
             }
             if (graph.size() > 0) {
-                return ModelFactory.createModelForGraph(graph).setNsPrefixes(pm.getMappingCopyStr());
+                return ModelFactory.createModelForGraph(graph).setNsPrefixes(pm.getMappingCopy());
             } else {
                 throw new IllegalArgumentException("Could not parse the model");
             }

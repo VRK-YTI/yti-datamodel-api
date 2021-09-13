@@ -76,7 +76,7 @@ public class ModelCreator {
         @ApiResponse(responseCode = "404", description = "Service not found"),
         @ApiResponse(responseCode = "401", description = "No right to create new") })
     public Response newModel(
-        @Parameter(description = "Redirection service", required = false) @QueryParam("redirect") String redirect,
+        @Parameter(description = "Redirection service") @QueryParam("redirect") String redirect,
         @Parameter(description = "Model prefix", required = true) @QueryParam("prefix") String prefix,
         @Parameter(description = "Model label", required = true) @QueryParam("label") String label,
         @Parameter(description = "Organization UUIDs", required = true) @QueryParam("orgList") String orgString,

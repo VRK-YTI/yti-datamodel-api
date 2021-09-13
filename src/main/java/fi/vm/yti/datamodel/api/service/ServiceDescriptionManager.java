@@ -8,7 +8,6 @@ import org.apache.jena.iri.IRIException;
 import org.apache.jena.query.*;
 import org.apache.jena.rdf.model.Literal;
 import org.apache.jena.rdf.model.Property;
-import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.update.UpdateExecutionFactory;
 import org.apache.jena.update.UpdateProcessor;
@@ -26,84 +25,11 @@ public class ServiceDescriptionManager {
     static final private Logger logger = LoggerFactory.getLogger(ServiceDescriptionManager.class.getName());
 
     public static final Property name = ResourceFactory.createProperty("http://www.w3.org/ns/sparql-service-description#", "name");
-    public static final Resource NamedGraph = ResourceFactory.createResource("http://www.w3.org/ns/sparql-service-description#NamedGraph");
 
     private final EndpointServices endpointServices;
 
     ServiceDescriptionManager(EndpointServices endpointServices) {
         this.endpointServices = endpointServices;
-    }
-
-    /**
-     * Updates modified time to service description
-     *
-     * @param graph graph of the model
-     */
-    public void updateGraphDescription(String graph) {
-
-        Literal timestamp = LDHelper.getDateTimeLiteral();
-
-        String query =
-            "WITH <urn:csc:iow:sd>" +
-                "DELETE { " +
-                " ?graph dcterms:modified ?date . " +
-                "} " +
-                "INSERT { " +
-                " ?graph dcterms:modified ?timestamp " +
-                "} WHERE {" +
-                " ?service a sd:Service . " +
-                " ?service sd:graphCollection ?graphCollection . " +
-                " ?graphCollection sd:namedGraph ?graph . " +
-                " ?graph sd:name ?graphName . " +
-                " OPTIONAL {?graph dcterms:modified ?date . }" +
-                "}";
-
-        ParameterizedSparqlString pss = new ParameterizedSparqlString();
-        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
-
-        pss.setIri("graphName", graph);
-        pss.setLiteral("timestamp", timestamp);
-        pss.setCommandText(query);
-
-        UpdateRequest queryObj = pss.asUpdate();
-        UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, endpointServices.getCoreSparqlUpdateAddress());
-        qexec.execute();
-    }
-
-    /**
-     * Get Collection of related organization UUIDs from the model
-     *
-     * @param model ID of the model
-     * @return Collection<UUID>
-     */
-
-    public HashSet<UUID> getModelOrganizations(String model) {
-
-        ParameterizedSparqlString pss = new ParameterizedSparqlString();
-        String getOrgs
-            = "SELECT ?org WHERE { "
-            + "GRAPH <urn:csc:iow:sd> { "
-            + "?graph sd:name ?graphName ."
-            + "?graph dcterms:contributor ?org . "
-            + "}}";
-
-        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
-        pss.setIri("graphName", model);
-        pss.setCommandText(getOrgs);
-
-        try (QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), pss.asQuery())) {
-
-            ResultSet results = qexec.execSelect();
-            HashSet<UUID> orgUUIDs = new HashSet<>();
-
-            while (results.hasNext()) {
-                QuerySolution soln = results.nextSolution();
-                String orgId = soln.getResource("org").toString().split("urn:uuid:")[1];
-                orgUUIDs.add(UUID.fromString(orgId));
-            }
-
-            return orgUUIDs;
-        }
     }
 
     /**
@@ -238,47 +164,6 @@ public class ServiceDescriptionManager {
         pss.setCommandText(query);
 
         logger.info("Removing " + graph);
-
-        UpdateRequest queryObj = pss.asUpdate();
-        UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, endpointServices.getCoreSparqlUpdateAddress());
-        qexec.execute();
-
-    }
-
-    /**
-     * Renames ID of the graph in service description
-     *
-     * @param oldGraph Old graph ID
-     * @param newGraph New graph ID
-     */
-    public void renameServiceGraphName(String oldGraph,
-                                       String newGraph) {
-
-        String query =
-            "DELETE { " +
-                "GRAPH <urn:csc:iow:sd> { " +
-                "?namedGraph sd:name ?graph . " +
-                "}" +
-                "}" +
-                "INSERT {" +
-                "GRAPH <urn:csc:iow:sd> {" +
-                "?namedGraph sd:name ?newIRI . " +
-                "}" +
-                "}" +
-                "WHERE { " +
-                "GRAPH <urn:csc:iow:sd> {" +
-                "?graphs sd:namedGraph ?namedGraph ." +
-                "?namedGraph sd:name ?graph . }" +
-                //"FILTER(?graph=<http://iow.csc.fi/ap/oiliu>)"+
-                //"BIND(IRI(STR('http://iow.csc.fi/ns/oiliu')) as ?newIRI) }"
-                "}";
-
-        ParameterizedSparqlString pss = new ParameterizedSparqlString();
-        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
-
-        pss.setIri("graph", oldGraph);
-        pss.setIri("newIRI", newGraph);
-        pss.setCommandText(query);
 
         UpdateRequest queryObj = pss.asUpdate();
         UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, endpointServices.getCoreSparqlUpdateAddress());

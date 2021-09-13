@@ -11,6 +11,10 @@ import org.glassfish.jersey.message.GZipEncoder;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.server.filter.EncodingFilter;
 import org.reflections.Reflections;
+import org.reflections.scanners.SubTypesScanner;
+import org.reflections.scanners.TypeAnnotationsScanner;
+import org.reflections.util.ClasspathHelper;
+import org.reflections.util.ConfigurationBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 
@@ -66,7 +70,10 @@ public class JerseyConfig extends ResourceConfig {
 
     private void myPackages(String... packages) {
         for (String pack : packages) {
-            new Reflections(pack).getTypesAnnotatedWith(Path.class).forEach(this::register);
+            Reflections reflections = new Reflections(new ConfigurationBuilder()
+                    .setUrls(ClasspathHelper.forPackage(pack))
+                    .setScanners(new SubTypesScanner(), new TypeAnnotationsScanner()));
+            reflections.getTypesAnnotatedWith(Path.class).forEach(this::register);
         }
     }
 
