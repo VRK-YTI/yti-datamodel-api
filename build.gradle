@@ -157,7 +157,7 @@ dependencyCheck {
 task unzipSwagger(type:Copy) {
     from zipTree(configurations.swaggerUI.singleFile)
     include "META-INF/resources/webjars/swagger-ui/3.52.1/**"
-    into "build/classes/main/static/datamodel-api/swagger-ui"
+    into "build/classes/main/static/swagger-ui"
     eachFile { f ->
         if (f.path.endsWith('index.html')) {
             filter { line ->
