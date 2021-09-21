@@ -7,6 +7,9 @@ import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactor
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+
 @Configuration
 public class AjpConfig {
 
@@ -14,7 +17,7 @@ public class AjpConfig {
     private String contextPath;
 
     @Bean
-    public TomcatServletWebServerFactory servletContainer(@Value("${tomcat.ajp.port:}") Integer ajpPort) {
+    public TomcatServletWebServerFactory servletContainer(@Value("${tomcat.ajp.port:}") Integer ajpPort) throws UnknownHostException {
 
         TomcatServletWebServerFactory tomcat = new TomcatServletWebServerFactory();
 
@@ -26,9 +29,11 @@ public class AjpConfig {
             ajpConnector.setSecure(false);
             ajpConnector.setAllowTrace(false);
             ajpConnector.setScheme("http");
+            ajpConnector.setProperty("allowedRequestAttributesPattern", ".*");
 
             AjpNioProtocol protocol = (AjpNioProtocol)ajpConnector.getProtocolHandler();
             protocol.setSecretRequired(false);
+            protocol.setAddress(InetAddress.getByName("0.0.0.0"));
 
             tomcat.addAdditionalTomcatConnectors(ajpConnector);
         }
