@@ -42,7 +42,7 @@ public class OpenAPIWriter {
 
     private static final Logger logger = LoggerFactory.getLogger(OpenAPIWriter.class.getName());
     private static final Map<String, String> DATATYPE_MAP =
-        Collections.unmodifiableMap(new HashMap<String, String>() {{
+        Collections.unmodifiableMap(new HashMap<>() {{
             put("http://www.w3.org/2001/XMLSchema#int", "integer");
             put("http://www.w3.org/2001/XMLSchema#integer", "integer");
             put("http://www.w3.org/2001/XMLSchema#long", "integer");
@@ -63,7 +63,7 @@ public class OpenAPIWriter {
             put("http://www.w3.org/2000/01/rdf-schema#Literal", "string");
         }});
     private static final Map<String, String> FORMAT_MAP =
-        Collections.unmodifiableMap(new HashMap<String, String>() {{
+        Collections.unmodifiableMap(new HashMap<>() {{
             put("http://www.w3.org/2001/XMLSchema#dateTime", "date-time");
             put("http://www.w3.org/2001/XMLSchema#date", "date");
             put("http://www.w3.org/2001/XMLSchema#time", "time");
