@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
-    <springProfile name="dev,test,prod">
+    <springProfile name="local,dev,test,prod">
         <logger name="org.apache" level="WARN"/>
         <logger name="org.springframework" level="INFO"/>
         <logger name="fi.vm" level="INFO"/>
@@ -24,7 +24,8 @@
                             "pid": "${PID:-}",
                             "thread": "%thread",
                             "class": "%logger{40}",
-                            "rest": "%message"
+                            "rest": "%message",
+                            "stacktrace": "%ex{short}"
                             }
                         </pattern>
                     </pattern>
@@ -35,7 +36,7 @@
             <appender-ref ref="STDOUT"/>
         </root>
     </springProfile>
-    <springProfile name="local,docker">
+    <springProfile name="foolocal,docker">
         <include resource="org/springframework/boot/logging/logback/base.xml"/>
         <logger name="org.apache" level="WARN"/>
         <logger name="org.springframework" level="INFO"/>
