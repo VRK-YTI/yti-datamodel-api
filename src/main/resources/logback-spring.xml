@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
-    <springProfile name="local,dev,test,prod">
+    <springProfile name="dev,test,prod">
         <logger name="org.apache" level="WARN"/>
         <logger name="org.springframework" level="INFO"/>
         <logger name="fi.vm" level="INFO"/>
@@ -36,7 +36,7 @@
             <appender-ref ref="STDOUT"/>
         </root>
     </springProfile>
-    <springProfile name="foolocal,docker">
+    <springProfile name="local,docker">
         <include resource="org/springframework/boot/logging/logback/base.xml"/>
         <logger name="org.apache" level="WARN"/>
         <logger name="org.springframework" level="INFO"/>
