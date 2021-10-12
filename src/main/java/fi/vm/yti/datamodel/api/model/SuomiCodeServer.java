@@ -292,24 +292,24 @@ public class SuomiCodeServer {
                 }
 
                 if (schemeModifiedString != null) {
-                    logger.debug("Container last-modified: " + schemeModifiedString);
+                    logger.info("Container last-modified: " + schemeModifiedString);
                     codeSchemeModified = LocalDateTime.parse(schemeModifiedString, dfmt);
                 }
 
                 if (!containsCodeList(containerUri)) {
-                    logger.debug("No scheme found. Creating scheme: " + containerUri);
+                    logger.info("No scheme found. Creating scheme: " + containerUri);
                     model = createModelFromCodeList(containerUri, schemeModifiedString);
                 } else {
                     Date lastModifiedDateTime = codeSchemeManager.lastModified(containerUri);
                     if (lastModifiedDateTime == null) {
-                        logger.debug("No modified found. Updating scheme: " + containerUri);
+                        logger.info("No modified found. Updating scheme: " + containerUri);
                         model = createModelFromCodeList(containerUri, schemeModifiedString);
                     } else {
                         LocalDateTime lastModifiedLocalDateTime = lastModifiedDateTime.toInstant()
                             .atZone(ZoneId.of("GMT"))
                             .toLocalDateTime();
                         if (codeSchemeModified != null && codeSchemeModified.isAfter(lastModifiedLocalDateTime)) {
-                            logger.debug("Updating scheme to new version: " + containerUri);
+                            logger.info("Updating scheme to new version: " + containerUri);
                             model = createModelFromCodeList(containerUri, schemeModifiedString);
                         } else {
                             logger.debug("Scheme already up to date: " + containerUri);
@@ -318,7 +318,7 @@ public class SuomiCodeServer {
                     }
                 }
             } catch (Exception ex) {
-                logger.warn("Could not find codescheme: "+uri);
+                logger.error("Could not find codescheme: " + containerUri, ex);
                 return;
             }
         } else {
