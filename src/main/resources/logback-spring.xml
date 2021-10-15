@@ -25,7 +25,7 @@
                             "thread": "%thread",
                             "class": "%logger{40}",
                             "rest": "%message",
-                            "stacktrace": "%ex{short}"
+                            "stacktrace": "%ex{full}"
                             }
                         </pattern>
                     </pattern>
