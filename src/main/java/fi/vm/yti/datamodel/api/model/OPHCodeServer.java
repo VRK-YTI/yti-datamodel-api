@@ -47,7 +47,7 @@ public class OPHCodeServer {
     private Property creator = ResourceFactory.createProperty("http://purl.org/dc/terms/", "creator");
     static private Property statusProperty = ResourceFactory.createProperty("http://uri.suomi.fi/datamodel/ns/iow#", "status");
 
-    private final HashMap<String, String> statusMap = new HashMap<String, String>() {{
+    private final HashMap<String, String> statusMap = new HashMap<>() {{
         put("LUONNOS", "DRAFT");
         put("HYVAKSYTTY", "VALID");
         put("PASSIIVINEN", "DEPRECATED");
@@ -73,8 +73,6 @@ public class OPHCodeServer {
             model.setNsPrefix("dcterms", "http://purl.org/dc/terms/");
             model.setNsPrefix("iow", "http://uri.suomi.fi/datamodel/ns/iow#");
 
-            Response.ResponseBuilder rb;
-
             Client client = ClientBuilder.newClient();
             logger.info("Updating OPH codeLists: " + uri);
             WebTarget target = client.target(uri).queryParam("format", "application/json");
@@ -99,8 +97,6 @@ public class OPHCodeServer {
                     locGroupName = clean(locGroupName);
 
                     Iterator<JsonValue> groupNameIterator = locGroupName.iterator();
-
-                    // UUID groupUUID = UUID.randomUUID();
 
                     Resource group = model.createResource(groupID);
 
@@ -187,8 +183,6 @@ public class OPHCodeServer {
                     }
 
                 }
-
-                //model.write(System.out);
 
                 DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(endpointServices.getSchemesReadWriteAddress());
                 DatasetAdapter adapter = new DatasetAdapter(accessor);
@@ -322,7 +316,7 @@ public class OPHCodeServer {
 
     private JsonArray clean(JsonArray argh) {
 
-        HashMap<String, JsonObject> jsonMap = new HashMap<String, JsonObject>();
+        HashMap<String, JsonObject> jsonMap = new HashMap<>();
         Iterator arrIte = argh.iterator();
 
         while (arrIte.hasNext()) {

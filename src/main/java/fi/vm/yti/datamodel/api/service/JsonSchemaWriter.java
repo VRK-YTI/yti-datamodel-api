@@ -33,7 +33,6 @@ import javax.json.JsonObjectBuilder;
 import javax.json.JsonWriter;
 import javax.json.JsonWriterFactory;
 
-import org.apache.jena.query.Query;
 import org.apache.jena.util.SplitIRI;
 import org.springframework.stereotype.Service;
 
@@ -55,7 +54,7 @@ public class JsonSchemaWriter {
     }
 
     private static final Map<String, String> DATATYPE_MAP =
-        Collections.unmodifiableMap(new HashMap<String, String>() {{
+        Collections.unmodifiableMap(new HashMap<>() {{
             put("http://www.w3.org/2001/XMLSchema#int", "integer");
             put("http://www.w3.org/2001/XMLSchema#integer", "integer");
             put("http://www.w3.org/2001/XMLSchema#long", "integer");
@@ -77,7 +76,7 @@ public class JsonSchemaWriter {
         }});
 
     private static final Map<String, String> FORMAT_MAP =
-        Collections.unmodifiableMap(new HashMap<String, String>() {{
+        Collections.unmodifiableMap(new HashMap<>() {{
             put("http://www.w3.org/2001/XMLSchema#dateTime", "date-time");
             put("http://www.w3.org/2001/XMLSchema#date", "date");
             put("http://www.w3.org/2001/XMLSchema#time", "time");
@@ -356,24 +355,6 @@ public class JsonSchemaWriter {
         return stringWriter.getBuffer().toString();
     }
 
-    public boolean hasModelRoot(String graphIRI) {
-
-        ParameterizedSparqlString pss = new ParameterizedSparqlString();
-        String queryString = " ASK { GRAPH ?graph { ?graph void:rootResource ?root . }}";
-
-        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
-        pss.setCommandText(queryString);
-        pss.setIri("graph", graphIRI);
-
-        Query query = pss.asQuery();
-        try (QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), query)) {
-            boolean b = qexec.execAsk();
-            return b;
-        } catch (Exception ex) {
-            return false;
-        }
-    }
-
     public JsonArray getSchemeValueList(String schemeID) {
         JsonArrayBuilder builder = Json.createArrayBuilder();
 
@@ -494,15 +475,6 @@ public class JsonSchemaWriter {
         }
     }
 
-    public JsonObject idProperty() {
-        JsonObjectBuilder idPredicate = Json.createObjectBuilder();
-        idPredicate.add("title", "JSON-LD identifier");
-        idPredicate.add("description", "This property is reserved for IRI identifiers. It is highly recommended to use @id to uniquely identify object with IRIs. May be omitted if objects are considered to be non unique or blank nodes.");
-        idPredicate.add("type", "string");
-        idPredicate.add("format", "uri");
-        return idPredicate.build();
-    }
-
     public JsonObjectBuilder getClassDefinitions(String modelID,
                                                  String lang) {
 
@@ -579,8 +551,8 @@ public class JsonSchemaWriter {
 
             JsonObjectBuilder predicate = Json.createObjectBuilder();
 
-            HashSet<String> exampleSet = new HashSet<String>();
-            HashSet<String> requiredPredicates = new HashSet<String>();
+            HashSet<String> exampleSet = new HashSet<>();
+            HashSet<String> requiredPredicates = new HashSet<>();
 
             JsonArrayBuilder exampleList = Json.createArrayBuilder();
             JsonObjectBuilder typeObject = Json.createObjectBuilder();
@@ -590,7 +562,7 @@ public class JsonSchemaWriter {
             int pIndex = 1;
             String predicateName = null;
             String predicateID = null;
-            String className = null;
+            String className;
 
             while (pResults.hasNext()) {
                 QuerySolution soln = pResults.nextSolution();
@@ -786,7 +758,7 @@ public class JsonSchemaWriter {
                             typeObject = Json.createObjectBuilder();
                             arrayType = false;
                             pIndex = 1;
-                            exampleSet = new HashSet<String>();
+                            exampleSet = new HashSet<>();
                             exampleList = Json.createArrayBuilder();
                         }
                     }
@@ -837,7 +809,7 @@ public class JsonSchemaWriter {
                         definitions.add(localClassName != null && localClassName.length() > 0 ? LDHelper.removeInvalidCharacters(localClassName) : className, classDefinition.build());
 
                         properties = Json.createObjectBuilder();
-                        requiredPredicates = new HashSet<String>();
+                        requiredPredicates = new HashSet<>();
                     }
                 }
             }
@@ -1057,7 +1029,7 @@ public class JsonSchemaWriter {
             JsonObjectBuilder properties = Json.createObjectBuilder();
             JsonArrayBuilder required = Json.createArrayBuilder();
 
-            String propertyID = null;
+            String propertyID;
             JsonObjectBuilder classTitleObject = Json.createObjectBuilder();
             JsonObjectBuilder classDescriptionObject = Json.createObjectBuilder();
             JsonObjectBuilder propertyTitleObject = Json.createObjectBuilder();

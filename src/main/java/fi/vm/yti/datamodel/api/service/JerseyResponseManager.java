@@ -42,14 +42,6 @@ public class JerseyResponseManager {
         return Response.ok().entity(content).type(contentType).build();
     }
 
-    public Response okUrnUUID(UUID uuid) {
-        return Response.status(200).entity("{\"@id\":\"urn:uuid:" + uuid + "\"}").build();
-    }
-
-    public Response okUrnUUID(String uuid) {
-        return Response.status(200).entity("{\"@id\":\"" + uuid + "\"}").build();
-    }
-
     public Response successUri(String uri) {
         return Response.status(200).entity("{\"uri\":\""+ uri + "\"}").build();
     }
@@ -118,16 +110,8 @@ public class JerseyResponseManager {
         return Response.status(Response.Status.NOT_ACCEPTABLE).entity(ErrorMessage.NOTACCEPTED).build();
     }
 
-    public Response notCreated(int status) {
-        return Response.status(status).entity(ErrorMessage.NOTCREATED).build();
-    }
-
     public Response cannotRemove() {
         return Response.status(406).entity(ErrorMessage.STATUS).build();
-    }
-
-    public Response unexpected(int status) {
-        return Response.status(status).entity(ErrorMessage.UNEXPECTED).build();
     }
 
     public Response okNoContent() {
@@ -148,10 +132,6 @@ public class JerseyResponseManager {
 
     public Response depedencies() {
         return Response.status(403).entity(ErrorMessage.DEPEDENCIES).build();
-    }
-
-    public Response locked() {
-        return Response.status(423).entity(ErrorMessage.LOCKED).build();
     }
 
     public Response sendBoolean(boolean status) {

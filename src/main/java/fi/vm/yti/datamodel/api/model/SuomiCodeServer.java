@@ -101,7 +101,6 @@ public class SuomiCodeServer {
         model.setNsPrefix("dcterms", "http://purl.org/dc/terms/");
         model.setNsPrefix("iow", "http://uri.suomi.fi/datamodel/ns/iow#");
 
-        Response.ResponseBuilder rb;
         Client client = ClientBuilder.newClient();
 
         logger.debug("Updating suomi.fi codeLists: " + url);
@@ -163,7 +162,6 @@ public class SuomiCodeServer {
                         JsonObject codeList = (JsonObject) codeListIterator.next();
 
                         String codeListUri = codeList.getString("uri");
-                        String codeListUrl = codeList.getString("url");
 
                         // FIXME: This should not happen!
                         if (LDHelper.isInvalidIRI(codeListUri)) {
@@ -275,7 +273,6 @@ public class SuomiCodeServer {
 
         LocalDateTime codeSchemeModified = null;
         Model model = null;
-        Response.ResponseBuilder rb;
 
         Client containerClient = ClientBuilder.newClient();
         WebTarget containerTarget = containerClient.target(url + "v1/integration/containers").queryParam("includeIncomplete", "true").queryParam("uri", containerUri).queryParam("format", "application/json");
@@ -295,24 +292,24 @@ public class SuomiCodeServer {
                 }
 
                 if (schemeModifiedString != null) {
-                    logger.debug("Container last-modified: " + schemeModifiedString);
+                    logger.info("Container last-modified: " + schemeModifiedString);
                     codeSchemeModified = LocalDateTime.parse(schemeModifiedString, dfmt);
                 }
 
                 if (!containsCodeList(containerUri)) {
-                    logger.debug("No scheme found. Creating scheme: " + containerUri);
+                    logger.info("No scheme found. Creating scheme: " + containerUri);
                     model = createModelFromCodeList(containerUri, schemeModifiedString);
                 } else {
                     Date lastModifiedDateTime = codeSchemeManager.lastModified(containerUri);
                     if (lastModifiedDateTime == null) {
-                        logger.debug("No modified found. Updating scheme: " + containerUri);
+                        logger.info("No modified found. Updating scheme: " + containerUri);
                         model = createModelFromCodeList(containerUri, schemeModifiedString);
                     } else {
                         LocalDateTime lastModifiedLocalDateTime = lastModifiedDateTime.toInstant()
                             .atZone(ZoneId.of("GMT"))
                             .toLocalDateTime();
                         if (codeSchemeModified != null && codeSchemeModified.isAfter(lastModifiedLocalDateTime)) {
-                            logger.debug("Updating scheme to new version: " + containerUri);
+                            logger.info("Updating scheme to new version: " + containerUri);
                             model = createModelFromCodeList(containerUri, schemeModifiedString);
                         } else {
                             logger.debug("Scheme already up to date: " + containerUri);
@@ -321,7 +318,7 @@ public class SuomiCodeServer {
                     }
                 }
             } catch (Exception ex) {
-                logger.warn("Could not find codescheme: "+uri);
+                logger.error("Could not find codescheme: " + containerUri, ex);
                 return;
             }
         } else {
