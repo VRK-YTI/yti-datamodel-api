@@ -112,7 +112,7 @@ dependencies {
     compile group: 'org.apache.commons', name: 'commons-text', version: '1.9'
     compile "org.glassfish:javax.json:1.1.4"
     compile "org.glassfish.jersey.media:jersey-media-sse:2.34"
-    compile "com.github.jsonld-java:jsonld-java:0.13.3"
+    compile "com.github.jsonld-java:jsonld-java:0.12.0"
     compile "org.jboss.forge.roaster:roaster-api:2.22.2.Final"
     compile "org.jboss.forge.roaster:roaster-jdt:2.22.2.Final"
     compile "org.reflections:reflections:0.9.12"
