@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.info.Contact;
 import io.swagger.v3.oas.annotations.info.Info;
 import io.swagger.v3.oas.annotations.info.License;
 
+import io.swagger.v3.oas.annotations.servers.Server;
 import org.glassfish.jersey.message.DeflateEncoder;
 import org.glassfish.jersey.message.GZipEncoder;
 import org.glassfish.jersey.server.ResourceConfig;
@@ -38,7 +39,12 @@ import javax.ws.rs.container.ContainerResponseFilter;
             name = "EUPL-1.2",
             url = "https://opensource.org/licenses/EUPL-1.1"
         )
-    )
+    ),
+    servers = {
+        @Server(
+            description = "Datamodel API",
+            url = "/datamodel-api")
+    }
 )
 @ApplicationPath("/api")
 public class JerseyConfig extends ResourceConfig {
