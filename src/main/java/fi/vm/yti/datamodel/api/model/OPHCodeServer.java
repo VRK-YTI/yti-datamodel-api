@@ -76,7 +76,10 @@ public class OPHCodeServer {
             Client client = ClientBuilder.newClient();
             logger.info("Updating OPH codeLists: " + uri);
             WebTarget target = client.target(uri).queryParam("format", "application/json");
-            Response response = target.request("application/json").get();
+            Response response = target
+                    .request("application/json")
+                    .header("Caller-Id", "dvv.fi")
+                    .get();
 
             if (response.getStatusInfo().getFamily() == Response.Status.Family.SUCCESSFUL) {
 
