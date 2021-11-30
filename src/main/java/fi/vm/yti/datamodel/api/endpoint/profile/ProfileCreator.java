@@ -25,10 +25,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -86,11 +83,8 @@ public class ProfileCreator {
         List<String> serviceList = Arrays.asList(servicesString.split(" "));
 
         String[] orgs = orgString.split(" ");
-        List<UUID> orgList = new ArrayList<>();
 
-        for (int i = 0; i < orgs.length; i++) {
-            orgList.add(UUID.fromString(orgs[i]));
-        }
+        List<UUID> orgList = rhpOrganizationManager.getOrganizationIdsWithParent(orgs);
 
         if (!ServiceCategory.containsAll(serviceList)) {
             return jerseyResponseManager.invalidParameter();
