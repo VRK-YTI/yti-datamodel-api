@@ -12,15 +12,13 @@ import org.apache.jena.vocabulary.RDFS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 public abstract class AbstractModel extends AbstractResource {
 
     protected String provUUID;
     protected List<UUID> modelOrganizations;
+    protected List<UUID> editorOrganizations;
 
     private static final Logger logger = LoggerFactory.getLogger(AbstractModel.class.getName());
 
@@ -55,9 +53,15 @@ public abstract class AbstractModel extends AbstractResource {
 
         NodeIterator orgList = this.graph.listObjectsOfProperty(DCTerms.contributor);
         this.modelOrganizations = new ArrayList<>();
+        this.editorOrganizations = new ArrayList<>();
         while (orgList.hasNext()) {
             RDFNode orgRes = orgList.next();
-            this.modelOrganizations.add(UUID.fromString(orgRes.asResource().getURI().replaceFirst("urn:uuid:", "")));
+
+            addParentOrganizationId(orgRes);
+
+            UUID organizationId = UUID.fromString(orgRes.asResource().getURI().replaceFirst("urn:uuid:", ""));
+            this.modelOrganizations.add(organizationId);
+            this.editorOrganizations.add(organizationId);
         }
 
         List<Statement> provIdList = modelResource.listProperties(DCTerms.identifier).toList();
@@ -100,6 +104,7 @@ public abstract class AbstractModel extends AbstractResource {
         NodeIterator orgList = this.graph.listObjectsOfProperty(DCTerms.contributor);
 
         this.modelOrganizations = new ArrayList<>();
+        this.editorOrganizations = new ArrayList<>();
 
         if (!orgList.hasNext()) {
             logger.warn("Expected at least 1 organization");
@@ -114,7 +119,9 @@ public abstract class AbstractModel extends AbstractResource {
             }
             String orgId = orgRes.asResource().getURI().replaceFirst("urn:uuid:", "");
             logger.info("New model is part of " + orgId);
+            addParentOrganizationId(orgRes);
             this.modelOrganizations.add(UUID.fromString(orgId));
+            this.editorOrganizations.add(UUID.fromString(orgId));
         }
 
         this.provUUID = "urn:uuid:" + UUID.randomUUID().toString();
@@ -172,6 +179,10 @@ public abstract class AbstractModel extends AbstractResource {
         return this.modelOrganizations;
     }
 
+    public List<UUID> getEditorOrganizations() {
+        return this.editorOrganizations;
+    }
+
     public String getContentModified() {
         try {
             return this.graph.getProperty(ResourceFactory.createResource(this.getId()), LDHelper.curieToProperty("iow:contentModified")).getString();
@@ -184,6 +195,16 @@ public abstract class AbstractModel extends AbstractResource {
     public Map<String, String> getDocumentation() {
         return LDHelper.RDFNodeListToMap(this.graph.listObjectsOfProperty(ResourceFactory.createResource(this.getId()),
                 LDHelper.curieToProperty("iow:documentation")).toList());
+    }
+
+    private void addParentOrganizationId(RDFNode orgRes) {
+        Statement parent = orgRes.asResource().getProperty(
+                ResourceFactory.createProperty(LDHelper.PREFIX_MAP.get("iow") + "parentOrganization"));
+        try {
+            this.editorOrganizations.add(UUID.fromString(parent.getResource().getURI().replaceFirst("urn:uuid:", "")));
+        } catch (Exception ignore) {
+            // organization has not parent
+        }
     }
 
 }

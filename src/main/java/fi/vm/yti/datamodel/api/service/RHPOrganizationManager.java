@@ -83,6 +83,26 @@ public class RHPOrganizationManager {
         return new ArrayList<>(uniqOrgList);
     }
 
+    public List<String> getChildOrganizations(String parentId) {
+        String service = properties.getPrivateGroupManagementAPI() + "childorganizations?parentId=" + parentId;
+        Response response = clientFactory.create().target(service).request("application/json").get();
+
+        List<String> result = new ArrayList<>();
+        if (response.getStatus() == Response.Status.OK.getStatusCode()) {
+            JsonReader reader = Json.createReader(response.readEntity(InputStream.class));
+            JsonArray jsonValues = reader.readArray();
+
+            for (int i = 0; i < jsonValues.size(); i++) {
+                JsonObject jsonObject = jsonValues.getJsonObject(i);
+                result.add(jsonObject.getString("uuid"));
+            }
+
+        } else {
+            logger.warn("Error fetching child organizations {}", response.getStatus());
+        }
+        return result;
+    }
+
     public Model getOrganizationModelFromRHP() {
 
         Model model = ModelFactory.createDefaultModel();
@@ -141,7 +161,8 @@ public class RHPOrganizationManager {
                 if (url != null && url.length() > 1)
                     res.addLiteral(FOAF.homepage, url);
 
-                Property parentOrganizationProperty = ResourceFactory.createProperty("http://uri.suomi.fi/datamodel/ns/iow#parentOrganization");
+                Property parentOrganizationProperty = ResourceFactory.createProperty(
+                        LDHelper.PREFIX_MAP.get("iow") + "parentOrganization");
                 if (parentId != null) {
                     res.addProperty(parentOrganizationProperty,
                             ResourceFactory.createResource(String.format("urn:uuid:%s", parentId)));
