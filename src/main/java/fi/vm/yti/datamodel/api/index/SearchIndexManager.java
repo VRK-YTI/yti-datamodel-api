@@ -203,12 +203,13 @@ public class SearchIndexManager {
 
             Set<String> orgIds = rolesInOrganizations.keySet().stream().map(u -> u.toString()).collect(Collectors.toSet());
 
-            Set<String> parentIds = orgIds.stream()
+            // show child organization's incomplete content for main organization users
+            Set<String> childOrganizationIds = orgIds.stream()
                     .map(orgId -> organizationManager.getChildOrganizations(orgId))
                     .flatMap(Collection::stream)
                     .collect(Collectors.toSet());
 
-            orgIds.addAll(parentIds);
+            orgIds.addAll(childOrganizationIds);
             request.setIncludeIncompleteFrom(orgIds);
             return searchModels(request);
         }
