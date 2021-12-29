@@ -133,6 +133,10 @@ public abstract class AbstractPredicate extends AbstractResource {
         return this.dataModel.getOrganizations();
     }
 
+    public List<UUID> getEditorOrganizations() {
+        return this.dataModel.getEditorOrganizations();
+    }
+
     public Model asGraph() {
         return this.graph;
     }

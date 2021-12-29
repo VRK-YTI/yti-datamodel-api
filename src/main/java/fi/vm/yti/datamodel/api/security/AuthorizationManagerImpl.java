@@ -28,19 +28,19 @@ public class AuthorizationManagerImpl implements AuthorizationManager {
     }
 
     public boolean hasRightToEdit(AbstractModel model) {
-        return hasRightToAnyOrganization(model.getOrganizations());
+        return hasRightToAnyOrganization(model.getEditorOrganizations());
     }
 
     public boolean hasRightToEdit(AbstractClass model) {
-        return hasRightToAnyOrganization(model.getOrganizations());
+        return hasRightToAnyOrganization(model.getEditorOrganizations());
     }
 
     public boolean hasRightToEdit(AbstractPredicate model) {
-        return hasRightToAnyOrganization(model.getOrganizations());
+        return hasRightToAnyOrganization(model.getEditorOrganizations());
     }
 
     public boolean hasRightToCreateNewVersion(AbstractModel model) {
-        return hasRightToAnyOrganization(model.getOrganizations());
+        return hasRightToAnyOrganization(model.getEditorOrganizations());
        // return isAdminOfAnyOrganization(model.getOrganizations());
     }
 

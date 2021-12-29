@@ -66,6 +66,7 @@ public class ApplicationProfile extends AbstractModel {
             + "?group rdfs:label ?groupLabel . "
             + "?modelIRI dcterms:contributor ?org . "
             + "?org skos:prefLabel ?orgLabel . "
+            + "?org iow:parentOrganization ?parent . "
             + "?org a foaf:Organization . "
             + "} WHERE { "
             + "GRAPH <urn:yti:servicecategories> { "
@@ -77,6 +78,7 @@ public class ApplicationProfile extends AbstractModel {
             + "GRAPH <urn:yti:organizations> {"
             + "?org a ?orgType . "
             + "?org skos:prefLabel ?orgLabel . "
+            + "OPTIONAL { ?org iow:parentOrganization ?parent . } "
             + "VALUES ?org { " + LDHelper.concatUUIDWithReplace(orgList, " ", "<urn:uuid:@this>") + " }"
             + "}"
             + "}";

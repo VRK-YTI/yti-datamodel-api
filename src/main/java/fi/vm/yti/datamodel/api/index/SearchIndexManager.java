@@ -2,16 +2,12 @@ package fi.vm.yti.datamodel.api.index;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import javax.inject.Singleton;
 
+import fi.vm.yti.datamodel.api.service.RHPOrganizationManager;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.query.ParameterizedSparqlString;
 import org.apache.jena.rdf.model.Model;
@@ -73,6 +69,7 @@ public class SearchIndexManager {
     private final DeepResourceQueryFactory deepResourceQueryFactory;
     private final ResourceQueryFactory resourceQueryFactory;
     private RestHighLevelClient esClient;
+    private RHPOrganizationManager organizationManager;
 
     @Autowired
     public SearchIndexManager(final ElasticConnector esManager,
@@ -82,7 +79,8 @@ public class SearchIndexManager {
                               final ModelManager modelManager,
                               final ModelQueryFactory modelQueryFactory,
                               final DeepResourceQueryFactory deepClassQueryFactory,
-                              final ResourceQueryFactory resourceQueryFactory) {
+                              final ResourceQueryFactory resourceQueryFactory,
+                              final RHPOrganizationManager organizationManager) {
         this.esManager = esManager;
         this.esClient = esManager.getEsClient();
         this.jenaClient = jenaClient;
@@ -92,6 +90,7 @@ public class SearchIndexManager {
         this.modelQueryFactory = modelQueryFactory;
         this.deepResourceQueryFactory = deepClassQueryFactory;
         this.resourceQueryFactory = resourceQueryFactory;
+        this.organizationManager = organizationManager;
     }
 
     /**
@@ -201,7 +200,16 @@ public class SearchIndexManager {
             return searchModels(request);
         } else {
             final Map<UUID, Set<Role>> rolesInOrganizations = user.getRolesInOrganizations();
+
             Set<String> orgIds = rolesInOrganizations.keySet().stream().map(u -> u.toString()).collect(Collectors.toSet());
+
+            // show child organization's incomplete content for main organization users
+            Set<String> childOrganizationIds = orgIds.stream()
+                    .map(orgId -> organizationManager.getChildOrganizations(orgId))
+                    .flatMap(Collection::stream)
+                    .collect(Collectors.toSet());
+
+            orgIds.addAll(childOrganizationIds);
             request.setIncludeIncompleteFrom(orgIds);
             return searchModels(request);
         }
