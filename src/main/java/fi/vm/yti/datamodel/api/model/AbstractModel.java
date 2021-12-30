@@ -202,7 +202,7 @@ public abstract class AbstractModel extends AbstractResource {
                 ResourceFactory.createProperty(LDHelper.PREFIX_MAP.get("iow") + "parentOrganization"));
         try {
             this.editorOrganizations.add(UUID.fromString(parent.getResource().getURI().replaceFirst("urn:uuid:", "")));
-        } catch (ResourceRequiredException ignore) {
+        } catch (ResourceRequiredException | NullPointerException ignore) {
             // organization has not parent
         }
     }
