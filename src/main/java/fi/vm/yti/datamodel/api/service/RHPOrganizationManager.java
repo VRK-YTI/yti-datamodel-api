@@ -1,9 +1,7 @@
 package fi.vm.yti.datamodel.api.service;
 
 import java.io.InputStream;
-import java.util.Iterator;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 import javax.json.Json;
 import javax.json.JsonArray;
@@ -16,10 +14,7 @@ import org.apache.jena.query.ParameterizedSparqlString;
 import org.apache.jena.query.Query;
 import org.apache.jena.query.QueryExecution;
 import org.apache.jena.query.QueryExecutionFactory;
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.ModelFactory;
-import org.apache.jena.rdf.model.Resource;
-import org.apache.jena.rdf.model.ResourceFactory;
+import org.apache.jena.rdf.model.*;
 import org.apache.jena.sparql.vocabulary.FOAF;
 import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.RDF;
@@ -57,6 +52,57 @@ public class RHPOrganizationManager {
         return clientFactory.create().target(service).request("application/json").get();
     }
 
+    public UUID getParentOrganizationId(String childOrganizationId) {
+        String service = properties.getPrivateGroupManagementAPI() + "parentorganization?childOrganizationId=" + childOrganizationId;
+        Response response = clientFactory.create().target(service).request("application/json").get();
+
+        if (response.getStatus() == Response.Status.OK.getStatusCode()) {
+            JsonReader reader = Json.createReader(response.readEntity(InputStream.class));
+            JsonObject jsonObject = reader.readObject();
+            String uuid = jsonObject.getString("uuid");
+
+            return UUID.fromString(uuid);
+        }
+        return null;
+    }
+
+    public List<UUID> getOrganizationIdsWithParent(String[] orgs) {
+        Set<UUID> uniqOrgList = new HashSet<>();
+
+        for (int i = 0; i < orgs.length; i++) {
+            uniqOrgList.add(UUID.fromString(orgs[i]));
+
+            logger.info("Finding parent organization for {}", orgs[i]);
+            UUID parentId = getParentOrganizationId(orgs[i]);
+
+            if (parentId != null) {
+                logger.info("Add parent organization {} as a contributor", parentId.toString());
+                uniqOrgList.add(parentId);
+            }
+        }
+        return new ArrayList<>(uniqOrgList);
+    }
+
+    public List<String> getChildOrganizations(String parentId) {
+        String service = properties.getPrivateGroupManagementAPI() + "childorganizations?parentId=" + parentId;
+        Response response = clientFactory.create().target(service).request("application/json").get();
+
+        List<String> result = new ArrayList<>();
+        if (response.getStatus() == Response.Status.OK.getStatusCode()) {
+            JsonReader reader = Json.createReader(response.readEntity(InputStream.class));
+            JsonArray jsonValues = reader.readArray();
+
+            for (int i = 0; i < jsonValues.size(); i++) {
+                JsonObject jsonObject = jsonValues.getJsonObject(i);
+                result.add(jsonObject.getString("uuid"));
+            }
+
+        } else {
+            logger.warn("Error fetching child organizations {}", response.getStatus());
+        }
+        return result;
+    }
+
     public Model getOrganizationModelFromRHP() {
 
         Model model = ModelFactory.createDefaultModel();
@@ -89,6 +135,8 @@ public class RHPOrganizationManager {
                 String description_sv = description.containsKey("sv") && description.get("sv").getValueType() != JsonValue.ValueType.NULL ? description.getString("sv") : null;
                 String url = org.containsKey("url") && org.get("url").getValueType() != JsonValue.ValueType.NULL ? org.getString("url") : null;
 
+                String parentId = org.containsKey("parentId") && org.get("parentId").getValueType() != JsonValue.ValueType.NULL ? org.getString("parentId") : null;
+
                 Resource res = model.createResource("urn:uuid:" + uuid);
                 res.addProperty(RDF.type, FOAF.Organization);
 
@@ -113,6 +161,15 @@ public class RHPOrganizationManager {
                 if (url != null && url.length() > 1)
                     res.addLiteral(FOAF.homepage, url);
 
+                Property parentOrganizationProperty = ResourceFactory.createProperty(
+                        LDHelper.PREFIX_MAP.get("iow") + "parentOrganization");
+                if (parentId != null) {
+                    res.addProperty(parentOrganizationProperty,
+                            ResourceFactory.createResource(String.format("urn:uuid:%s", parentId)));
+                } else {
+                    // for json framing set empty value for main organizations
+                    res.addLiteral(parentOrganizationProperty, "");
+                }
                 /*
                 Expected format:
                      [
