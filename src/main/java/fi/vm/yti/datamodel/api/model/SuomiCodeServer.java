@@ -269,7 +269,7 @@ public class SuomiCodeServer {
         }
     }
 
-    public void updateCodes(String containerUri) {
+    public void updateCodes(String containerUri, boolean force) {
 
         LocalDateTime codeSchemeModified = null;
         Model model = null;
@@ -301,8 +301,8 @@ public class SuomiCodeServer {
                     model = createModelFromCodeList(containerUri, schemeModifiedString);
                 } else {
                     Date lastModifiedDateTime = codeSchemeManager.lastModified(containerUri);
-                    if (lastModifiedDateTime == null) {
-                        logger.info("No modified found. Updating scheme: " + containerUri);
+                    if (lastModifiedDateTime == null || force) {
+                        logger.info("No modified found or forced update. Updating scheme: " + containerUri);
                         model = createModelFromCodeList(containerUri, schemeModifiedString);
                     } else {
                         LocalDateTime lastModifiedLocalDateTime = lastModifiedDateTime.toInstant()
