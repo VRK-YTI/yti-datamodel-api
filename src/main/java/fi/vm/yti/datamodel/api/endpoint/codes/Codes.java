@@ -53,10 +53,12 @@ public class Codes {
     })
     public Response getCodes(
         @Parameter(description = "uri", required = true)
-        @QueryParam("uri") String uri) {
+        @QueryParam("uri") String uri,
+        @Parameter(description = "forced update")
+        @QueryParam("force") boolean force) {
         if (uri.startsWith("http://uri.suomi.fi")) {
             SuomiCodeServer codeServer = new SuomiCodeServer("https://koodistot.suomi.fi", applicationProperties.getDefaultSuomiCodeServerAPI(), endpointServices, codeSchemeManager);
-            codeServer.updateCodes(uri);
+            codeServer.updateCodes(uri, force);
         } else if (uri.startsWith("https://virkailija.opintopolku.fi")) {
             OPHCodeServer codeServer = new OPHCodeServer("https://virkailija.opintopolku.fi/koodisto-service/rest/json/", endpointServices);
             if (!codeServer.containsCodeList(uri)) {
