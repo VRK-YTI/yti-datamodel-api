@@ -3,13 +3,12 @@ package fi.vm.yti.datamodel.api.service;
 import java.io.InputStream;
 import java.util.*;
 
-import javax.json.Json;
-import javax.json.JsonArray;
-import javax.json.JsonObject;
-import javax.json.JsonReader;
-import javax.json.JsonValue;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.Invocation;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
 
+import jakarta.json.*;
 import org.apache.jena.query.ParameterizedSparqlString;
 import org.apache.jena.query.Query;
 import org.apache.jena.query.QueryExecution;
@@ -49,6 +48,10 @@ public class RHPOrganizationManager {
     public Response getOrganizations() {
         String service = properties.getDefaultGroupManagementAPI() + "organizations?onlyValid=true";
         logger.debug("Getting organizations from: "+service);
+        Client client = clientFactory.create();
+        WebTarget target = client.target(service);
+        Invocation.Builder builder = target.request("application/json");
+        Response resp = builder.get();
         return clientFactory.create().target(service).request("application/json").get();
     }
 

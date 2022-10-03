@@ -5,8 +5,6 @@ package fi.vm.yti.datamodel.api.service;
 
 import fi.vm.yti.datamodel.api.utils.LDHelper;
 
-import org.apache.jena.query.DatasetAccessor;
-import org.apache.jena.query.DatasetAccessorFactory;
 import org.apache.jena.query.ParameterizedSparqlString;
 import org.apache.jena.query.QueryExecution;
 import org.apache.jena.query.QueryExecutionFactory;
@@ -14,6 +12,7 @@ import org.apache.jena.query.QuerySolution;
 import org.apache.jena.query.ResultSet;
 import org.apache.jena.rdf.model.Literal;
 import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdfconnection.RDFConnection;
 import org.apache.jena.update.UpdateExecutionFactory;
 import org.apache.jena.update.UpdateProcessor;
 import org.apache.jena.update.UpdateRequest;
@@ -274,8 +273,8 @@ public class ImportManager {
 
             Model results = qexec.execConstruct();
 
-            DatasetAccessor accessor = DatasetAccessorFactory.createHTTP(endpointServices.getCoreReadWriteAddress());
-            accessor.add(resource, results);
+            RDFConnection connection = RDFConnection.connect(endpointServices.getCoreReadWriteAddress());
+            connection.load(resource, results);
         }
 
     }

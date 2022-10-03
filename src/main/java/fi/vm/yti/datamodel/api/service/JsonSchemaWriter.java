@@ -5,6 +5,7 @@ package fi.vm.yti.datamodel.api.service;
 
 import fi.vm.yti.datamodel.api.utils.LDHelper;
 
+import jakarta.json.*;
 import org.apache.jena.query.ParameterizedSparqlString;
 import org.apache.jena.query.QueryExecution;
 import org.apache.jena.query.QueryExecutionFactory;
@@ -25,13 +26,6 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.json.Json;
-import javax.json.JsonArray;
-import javax.json.JsonArrayBuilder;
-import javax.json.JsonObject;
-import javax.json.JsonObjectBuilder;
-import javax.json.JsonWriter;
-import javax.json.JsonWriterFactory;
 
 import org.apache.jena.util.SplitIRI;
 import org.springframework.stereotype.Service;

@@ -13,6 +13,7 @@ import org.apache.jena.datatypes.xsd.XSDDateTime;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.query.*;
 import org.apache.jena.rdf.model.*;
+import org.apache.jena.rdfconnection.RDFConnection;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.riot.RDFLanguages;
 import org.apache.jena.shared.PrefixMapping;
@@ -25,8 +26,6 @@ import org.apache.jena.util.ResourceUtils;
 import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDF;
-import org.apache.jena.web.DatasetAdapter;
-import org.apache.jena.web.DatasetGraphAccessorHTTP;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -311,15 +310,15 @@ public class GraphManager {
                                                     String fromService,
                                                     String toService) throws NullPointerException {
 
-        DatasetAccessor fromAccessor = DatasetAccessorFactory.createHTTP(fromService);
-        Model graphModel = fromAccessor.getModel(fromGraph);
+        RDFConnection fromConnection = RDFConnection.connect(fromService);
+        Model graphModel = fromConnection.fetch(fromGraph);
 
         if (graphModel == null) {
             throw new NullPointerException();
         }
 
-        DatasetAccessor toAccessor = DatasetAccessorFactory.createHTTP(toService);
-        toAccessor.add(toGraph, graphModel);
+        RDFConnection toConnection = RDFConnection.connect(toService);
+        toConnection.load(toGraph, graphModel);
 
     }
 
@@ -693,12 +692,11 @@ public class GraphManager {
      */
     public void createDefaultGraph() {
 
-        DatasetAccessor accessor = DatasetAccessorFactory.createHTTP(endpointServices.getCoreReadWriteAddress());
+        RDFConnection connection = RDFConnection.connect(endpointServices.getCoreReadWriteAddress());
 
         Model m = ModelFactory.createDefaultModel();
         RDFDataMgr.read(m, LDHelper.getDefaultGraphInputStream(), RDFLanguages.JSONLD);
-
-        accessor.putModel("urn:csc:iow:sd", m);
+        connection.put("urn:csc:iow:sd", m);
 
     }
 
@@ -1090,9 +1088,9 @@ public class GraphManager {
         Model prefixModel = ModelFactory.createDefaultModel();
         prefixModel.setNsPrefixes(getPrefixMappingFromResource(resource));
         prefixModel.add(ResourceFactory.createResource(model.toString()), RDF.type, OWL.Ontology);
-        DatasetAccessor toAccessor = DatasetAccessorFactory.createHTTP(endpointServices.getCoreReadWriteAddress());
-        toAccessor.add(model.toString(), prefixModel);
-        toAccessor.add(model.toString() + "#ExportGraph", prefixModel);
+        RDFConnection connection = RDFConnection.connect(endpointServices.getCoreReadWriteAddress());
+        connection.load(model.toString(), prefixModel);
+        connection.load(model.toString() + "#ExportGraph", prefixModel);
 
     }
 
@@ -1260,8 +1258,7 @@ public class GraphManager {
 
         Literal created = LDHelper.getDateTimeLiteral();
 
-        DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(endpointServices.getCoreReadWriteAddress());
-        DatasetAdapter adapter = new DatasetAdapter(accessor);
+        RDFConnection connection = RDFConnection.connect(endpointServices.getCoreReadWriteAddress());
 
         Resource modelResource = oldModelGraph.getResource(model.toString());
         ResourceUtils.renameResource(modelResource, newModel.toString());
@@ -1276,15 +1273,15 @@ public class GraphManager {
         LDHelper.rewriteLiteral(oldModelGraph, newModelResource, LDHelper.curieToProperty("dcap:preferredXMLNamespaceName"), ResourceFactory.createPlainLiteral(newModel.toString() + "#"));
         LDHelper.rewriteLiteral(oldModelGraph, newModelResource, LDHelper.curieToProperty("dcap:preferredXMLNamespacePrefix"), ResourceFactory.createPlainLiteral(newPrefix));
         renameObjectNamespaceInModel(oldModelGraph, model.toString() + "#", newModel.toString() + "#");
-        adapter.putModel(newModel.toString(), oldModelGraph);
+        connection.put(newModel.toString(), oldModelGraph);
 
-        Model oldHasPartGraph = adapter.getModel(model.toString() + "#HasPartGraph");
+        Model oldHasPartGraph = connection.fetch(model.toString() + "#HasPartGraph");
 
         if (oldHasPartGraph != null && oldHasPartGraph.size() > 1) {
 
             ResourceUtils.renameResource(oldHasPartGraph.getResource(model.toString()), newModel.toString());
 
-            Model oldPositionGraph = adapter.getModel(model.toString() + "#PositionGraph");
+            Model oldPositionGraph = connection.fetch((model.toString() + "#PositionGraph"));
             if (oldPositionGraph != null && oldPositionGraph.size() > 2) {
                 ResIterator positionResources = oldPositionGraph.listSubjects();
                 while (positionResources.hasNext()) {
@@ -1297,7 +1294,7 @@ public class GraphManager {
                         }
                     }
                 }
-                adapter.putModel(newModel.toString() + "#PositionGraph", oldPositionGraph);
+                connection.put(newModel.toString() + "#PositionGraph", oldPositionGraph);
             }
             NodeIterator hasPartObjects = oldHasPartGraph.listObjectsOfProperty(DCTerms.hasPart);
 
@@ -1307,7 +1304,7 @@ public class GraphManager {
                 if (oldGraph.startsWith(model.toString() + "#")) {
                     String newGraph = oldGraph.replace(model.toString() + "#", newModel.toString() + "#");
                     logger.info("Creating version from " + oldGraph + " to " + newGraph);
-                    Model oldResourceGraph = adapter.getModel(oldGraph);
+                    Model oldResourceGraph = connection.fetch(oldGraph);
                     if (oldResourceGraph != null) { // FIXME: References to removed resources?!?
                         Resource oldResource = oldResourceGraph.getResource(oldGraph);
                         ResourceUtils.renameResource(oldResource, newGraph);
@@ -1328,12 +1325,12 @@ public class GraphManager {
                             ResourceUtils.renameResource(propertyShape, "urn:uuid:" + UUID.randomUUID().toString());
                         }
 
-                        adapter.putModel(newGraph, oldResourceGraph);
+                        connection.put(newGraph, oldResourceGraph);
                         ResourceUtils.renameResource(hasPartResource, newGraph);
                     }
                 }
             }
-            adapter.putModel(newModel.toString() + "#HasPartGraph", oldHasPartGraph);
+            connection.put(newModel.toString() + "#HasPartGraph", oldHasPartGraph);
         }
 
     }
@@ -1567,14 +1564,14 @@ public class GraphManager {
     public void addCoreGraphToCoreGraph(String fromGraph,
                                         String toGraph) throws NullPointerException {
 
-        DatasetAccessor fromAccessor = DatasetAccessorFactory.createHTTP(endpointServices.getCoreReadWriteAddress());
-        Model graphModel = fromAccessor.getModel(fromGraph);
+        RDFConnection connection = RDFConnection.connect(endpointServices.getCoreReadWriteAddress());
+        Model model =connection.fetch(fromGraph);
 
-        if (graphModel == null) {
+        if (model == null) {
             throw new NullPointerException();
         }
 
-        fromAccessor.add(toGraph, graphModel);
+        connection.load(toGraph, model);
     }
 
     /**
@@ -1596,18 +1593,15 @@ public class GraphManager {
             logger.warn(ex.getMessage());
         } */
 
-        DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(endpointServices.getCoreReadWriteAddress());
-        DatasetAdapter adapter = new DatasetAdapter(accessor);
-        adapter.putModel(id, model);
-
+        RDFConnection connection = RDFConnection.connect(endpointServices.getCoreReadWriteAddress());
+        connection.put(id, model);
     }
 
     public void addToGraph(Model model,
                            String id) {
         logger.debug("Adding to " + id);
-        DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(endpointServices.getCoreReadWriteAddress());
-        DatasetAdapter adapter = new DatasetAdapter(accessor);
-        adapter.add(id, model);
+        RDFConnection connection = RDFConnection.connect(endpointServices.getCoreReadWriteAddress());
+        connection.load(id, model);
     }
 
     /**

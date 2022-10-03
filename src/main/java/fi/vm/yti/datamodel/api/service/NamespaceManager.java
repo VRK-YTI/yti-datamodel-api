@@ -390,7 +390,8 @@ public final class NamespaceManager {
 
                             logger.info("Trying to parse " + testLang.getName() + " from " + namespace);
 
-                            RDFReader reader = model.getReader(testLang.getName());
+
+                            RDFReaderI reader = model.getReader(testLang.getName());
 
                             reader.setProperty("error-mode", "lax");
 

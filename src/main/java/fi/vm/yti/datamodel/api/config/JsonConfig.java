@@ -3,10 +3,10 @@ package fi.vm.yti.datamodel.api.config;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.json.Json;
-import javax.json.JsonWriterFactory;
-import javax.json.stream.JsonGenerator;
 
+import jakarta.json.Json;
+import jakarta.json.JsonWriterFactory;
+import jakarta.json.stream.JsonGenerator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 

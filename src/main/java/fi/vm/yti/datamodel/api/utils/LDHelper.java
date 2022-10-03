@@ -710,8 +710,7 @@ public class LDHelper {
         Model model = ModelFactory.createDefaultModel();
 
         try {
-            RDFReader reader = model.getReader(Lang.JSONLD.getName());
-            reader.read(model, (InputStream) response.getEntity(), "urn:yti:resource");
+            model.read((InputStream) response.getEntity(), "urn:yti:resource");
         } catch (RiotException ex) {
             logger.info(ex.getMessage());
             return model;
