@@ -1,7 +1,5 @@
 package fi.vm.yti.datamodel.api.service;
 
-import com.jayway.jsonpath.Configuration;
-import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.matchers.JsonPathMatchers;
 
 import org.apache.jena.iri.IRI;
@@ -20,7 +18,6 @@ import org.springframework.test.context.TestPropertySource;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
 

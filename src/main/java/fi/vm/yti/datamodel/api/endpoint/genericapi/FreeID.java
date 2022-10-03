@@ -3,7 +3,6 @@ package fi.vm.yti.datamodel.api.endpoint.genericapi;
 import fi.vm.yti.datamodel.api.service.GraphManager;
 import fi.vm.yti.datamodel.api.service.IDManager;
 import fi.vm.yti.datamodel.api.service.JerseyResponseManager;
-import fi.vm.yti.datamodel.api.utils.LDHelper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
