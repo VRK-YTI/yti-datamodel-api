@@ -75,7 +75,7 @@ public class ContextWriter {
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
         pss.setCommandText(selectResources);
 
-        try (QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), pss.asQuery())) {
+        try (QueryExecution qexec = QueryExecution.service(endpointServices.getCoreSparqlAddress(), pss.asQuery())) {
 
             ResultSet results = qexec.execSelect();
 
@@ -154,7 +154,7 @@ public class ContextWriter {
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
         pss.setCommandText(selectResources);
 
-        QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), pss.asQuery());
+        QueryExecution qexec = QueryExecution.service(endpointServices.getCoreSparqlAddress(), pss.asQuery());
 
         ResultSet results = qexec.execSelect();
 

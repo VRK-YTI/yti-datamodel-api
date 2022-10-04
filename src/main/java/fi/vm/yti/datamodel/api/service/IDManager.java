@@ -44,7 +44,7 @@ public class IDManager {
 
     /**
      * Creates IRI from string
-     *
+     * TODO: this needs to be somehow replaced by IRIx?
      * @param url
      * @return returns created IRI
      * @throws IRIException

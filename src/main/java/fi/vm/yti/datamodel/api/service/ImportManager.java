@@ -7,7 +7,6 @@ import fi.vm.yti.datamodel.api.utils.LDHelper;
 
 import org.apache.jena.query.ParameterizedSparqlString;
 import org.apache.jena.query.QueryExecution;
-import org.apache.jena.query.QueryExecutionFactory;
 import org.apache.jena.query.QuerySolution;
 import org.apache.jena.query.ResultSet;
 import org.apache.jena.rdf.model.Literal;
@@ -149,7 +148,7 @@ public class ImportManager {
         pss.setNsPrefix("rdfs", "http://www.w3.org/2000/01/rdf-schema#");
         pss.setCommandText(selectResources);
 
-        try (QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), pss.asQuery())) {
+        try (QueryExecution qexec = QueryExecution.service(endpointServices.getCoreSparqlAddress(), pss.asQuery())) {
 
             ResultSet results = qexec.execSelect();
 
@@ -173,7 +172,7 @@ public class ImportManager {
         pss.setIri("resource", resource);
         pss.setCommandText(selectResources);
 
-        try (QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), pss.asQuery())) {
+        try (QueryExecution qexec = QueryExecution.service(endpointServices.getCoreSparqlAddress(), pss.asQuery())) {
 
             ResultSet results = qexec.execSelect();
             int id = 1;
@@ -269,7 +268,7 @@ public class ImportManager {
 
         pss.setCommandText(query);
 
-        try (QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), pss.asQuery())) {
+        try (QueryExecution qexec = QueryExecution.service(endpointServices.getCoreSparqlAddress(), pss.asQuery())) {
 
             Model results = qexec.execConstruct();
 

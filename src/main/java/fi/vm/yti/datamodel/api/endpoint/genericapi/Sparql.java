@@ -71,7 +71,7 @@ public class Sparql {
             return Response.status(400).build();
         }
 
-        try (QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getSparqlAddress(service), query)) {
+        try (QueryExecution qexec = QueryExecution.service(endpointServices.getSparqlAddress(service), query)) {
 
             OutputStream outs = new ByteArrayOutputStream();
             ResultSet results = qexec.execSelect();
@@ -119,7 +119,7 @@ public class Sparql {
             return Response.status(400).build();
         }
 
-        try (QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getSparqlAddress(service), query)) {
+        try (QueryExecution qexec = QueryExecution.service(endpointServices.getSparqlAddress(service), query)) {
 
             OutputStream outs = new ByteArrayOutputStream();
             Model results = qexec.execConstruct();

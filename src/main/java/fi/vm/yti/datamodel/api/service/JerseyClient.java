@@ -112,8 +112,12 @@ public class JerseyClient {
                 logger.info("Unknown RDF type: " + ctype);
                 return jerseyResponseManager.notFound();
             }
-
-            RDFFormat format = RDFWriterRegistry.defaultSerialization(rdfLang);
+            RDFFormat format;
+            if(ctype.equals("application/ld+json")){
+                format = RDFFormat.JSONLD10_COMPACT_PRETTY;
+            }else{
+                format = RDFWriterRegistry.defaultSerialization(rdfLang);
+            }
 
             Model model = jenaClient.getModelFromCore(graph + "#ExportGraph");
 

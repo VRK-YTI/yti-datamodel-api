@@ -6,7 +6,6 @@ import java.util.UUID;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.query.ParameterizedSparqlString;
 import org.apache.jena.query.QueryExecution;
-import org.apache.jena.query.QueryExecutionFactory;
 import org.apache.jena.rdf.model.Literal;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.RDFList;
@@ -98,7 +97,7 @@ public class DataModel extends AbstractModel {
         pss.setLiteral("mlabel", ResourceFactory.createLangLiteral(label, lang));
         pss.setLiteral("defLang", lang);
 
-        try (QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), pss.toString())) {
+        try (QueryExecution qexec = QueryExecution.service(endpointServices.getCoreSparqlAddress(), pss.toString())) {
             this.graph = qexec.execConstruct();
         }
         RDFList langRDFList = LDHelper.addStringListToModel(this.graph, allowedLang);

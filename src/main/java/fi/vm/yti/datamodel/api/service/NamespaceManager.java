@@ -188,7 +188,7 @@ public final class NamespaceManager {
 
         Map namespaceMap = new HashMap<String, String>();
 
-        try (QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), pss.asQuery())) {
+        try (QueryExecution qexec = QueryExecution.service(endpointServices.getCoreSparqlAddress(), pss.asQuery())) {
 
             ResultSet results = qexec.execSelect();
 

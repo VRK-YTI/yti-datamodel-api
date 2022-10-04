@@ -8,7 +8,6 @@ import fi.vm.yti.datamodel.api.utils.LDHelper;
 import jakarta.json.*;
 import org.apache.jena.query.ParameterizedSparqlString;
 import org.apache.jena.query.QueryExecution;
-import org.apache.jena.query.QueryExecutionFactory;
 import org.apache.jena.query.QuerySolution;
 import org.apache.jena.query.ResultSet;
 import org.apache.jena.query.ResultSetFactory;
@@ -108,7 +107,7 @@ public class JsonSchemaWriter {
 
         boolean classMetadata = false;
 
-        try (QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), pss.asQuery())) {
+        try (QueryExecution qexec = QueryExecution.service(endpointServices.getCoreSparqlAddress(), pss.asQuery())) {
 
             ResultSet results = qexec.execSelect();
 
@@ -187,7 +186,7 @@ public class JsonSchemaWriter {
             pss.setIri("resourceID", classID);
             if (lang != null) pss.setLiteral("lang", lang);
 
-            try (QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), pss.asQuery())) {
+            try (QueryExecution qexec = QueryExecution.service(endpointServices.getCoreSparqlAddress(), pss.asQuery())) {
 
                 ResultSet results = qexec.execSelect();
 
@@ -366,7 +365,7 @@ public class JsonSchemaWriter {
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
         pss.setCommandText(selectList);
 
-        try (QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getSchemesSparqlAddress(), pss.toString())) {
+        try (QueryExecution qexec = QueryExecution.service(endpointServices.getSchemesSparqlAddress(), pss.toString())) {
 
             ResultSet results = qexec.execSelect();
 
@@ -404,7 +403,7 @@ public class JsonSchemaWriter {
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
         pss.setCommandText(selectList);
 
-        try (QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), pss.toString())) {
+        try (QueryExecution qexec = QueryExecution.service(endpointServices.getCoreSparqlAddress(), pss.toString())) {
 
             ResultSet results = qexec.execSelect();
 
@@ -455,7 +454,7 @@ public class JsonSchemaWriter {
         pss.setCommandText(selectResources);
         pss.setIri("graph", graph);
 
-        try (QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), pss.asQuery())) {
+        try (QueryExecution qexec = QueryExecution.service(endpointServices.getCoreSparqlAddress(), pss.asQuery())) {
 
             ResultSet results = qexec.execSelect();
 
@@ -531,7 +530,7 @@ public class JsonSchemaWriter {
         pss.setCommandText(selectResources);
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
 
-        try (QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), pss.asQuery())) {
+        try (QueryExecution qexec = QueryExecution.service(endpointServices.getCoreSparqlAddress(), pss.asQuery())) {
 
             ResultSet results = qexec.execSelect();
             ResultSetPeekable pResults = ResultSetFactory.makePeekable(results);
@@ -838,7 +837,7 @@ public class JsonSchemaWriter {
 
         pss.setCommandText(selectClass);
 
-        try (QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), pss.toString())) {
+        try (QueryExecution qexec = QueryExecution.service(endpointServices.getCoreSparqlAddress(), pss.toString())) {
 
             ResultSet results = qexec.execSelect();
 
@@ -934,7 +933,7 @@ public class JsonSchemaWriter {
 
         pss.setCommandText(selectClass);
 
-        try (QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), pss.asQuery())) {
+        try (QueryExecution qexec = QueryExecution.service(endpointServices.getCoreSparqlAddress(), pss.asQuery())) {
 
             ResultSet results = qexec.execSelect();
 
@@ -1007,7 +1006,7 @@ public class JsonSchemaWriter {
         pss.setIri("modelPartGraph", modelID + "#HasPartGraph");
         pss.setCommandText(selectResources);
 
-        try (QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), pss.asQuery())) {
+        try (QueryExecution qexec = QueryExecution.service(endpointServices.getCoreSparqlAddress(), pss.asQuery())) {
 
             ResultSet results = qexec.execSelect();
             ResultSetPeekable pResults = ResultSetFactory.makePeekable(results);

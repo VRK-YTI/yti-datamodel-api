@@ -29,14 +29,13 @@ public class ElasticConfig {
     @Bean
     @SuppressWarnings("resource")
     protected RestHighLevelClient elasticSearchClient() {
-        RestHighLevelClient client = new RestHighLevelClient(RestClient.builder(
+        return new RestHighLevelClient(RestClient.builder(
             new HttpHost(config.getElasticHost(), Integer.parseInt(config.getElasticHttpPort()), config.getElasticHttpScheme())
         ).setRequestConfigCallback(
             requestConfigBuilder -> requestConfigBuilder
                 .setConnectTimeout(5000)
                 .setSocketTimeout(60000))
-            .setMaxRetryTimeoutMillis(60000)
         );
-        return client;
+        //Elasticsearch documentation recommends to only rely on the 
     }
 }

@@ -15,7 +15,6 @@ import java.util.regex.Pattern;
 import jakarta.json.*;
 import org.apache.jena.query.ParameterizedSparqlString;
 import org.apache.jena.query.QueryExecution;
-import org.apache.jena.query.QueryExecutionFactory;
 import org.apache.jena.query.QuerySolution;
 import org.apache.jena.query.ResultSet;
 import org.apache.jena.query.ResultSetFactory;
@@ -99,7 +98,7 @@ public class OpenAPIWriter {
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
         pss.setCommandText(selectList);
 
-        try (QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getSchemesSparqlAddress(), pss.toString())) {
+        try (QueryExecution qexec = QueryExecution.service(endpointServices.getSchemesSparqlAddress(), pss.toString())) {
 
             ResultSet results = qexec.execSelect();
 
@@ -137,7 +136,7 @@ public class OpenAPIWriter {
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
         pss.setCommandText(selectList);
 
-        try (QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), pss.toString())) {
+        try (QueryExecution qexec = QueryExecution.service(endpointServices.getCoreSparqlAddress(), pss.toString())) {
 
             ResultSet results = qexec.execSelect();
 
@@ -223,7 +222,7 @@ public class OpenAPIWriter {
         pss.setCommandText(selectResources);
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
 
-        try (QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), pss.asQuery())) {
+        try (QueryExecution qexec = QueryExecution.service(endpointServices.getCoreSparqlAddress(), pss.asQuery())) {
 
             ResultSet results = qexec.execSelect();
             ResultSetPeekable pResults = ResultSetFactory.makePeekable(results);
@@ -721,7 +720,7 @@ public class OpenAPIWriter {
 
         pss.setCommandText(selectClass);
 
-        try (QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), pss.toString())) {
+        try (QueryExecution qexec = QueryExecution.service(endpointServices.getCoreSparqlAddress(), pss.toString())) {
 
             ResultSet results = qexec.execSelect();
 

@@ -59,7 +59,7 @@ public class ModelManager {
      */
     public String writeModelToJSONLDString(Model model) {
         StringWriter writer = new StringWriter();
-        RDFDataMgr.write(writer, model, RDFFormat.JSONLD);
+        RDFDataMgr.write(writer, model, RDFFormat.JSONLD10_COMPACT_PRETTY);
         return writer.toString();
     }
 

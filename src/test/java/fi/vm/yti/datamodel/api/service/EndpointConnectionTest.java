@@ -34,7 +34,7 @@ public class EndpointConnectionTest {
         logger.info("Testing "+endpoint);
 
         Query query = QueryFactory.create(queryString);
-        try(QueryExecution qexec = QueryExecutionFactory.sparqlService(endpoint, query)) {
+        try(QueryExecution qexec = QueryExecution.service(endpoint, query)) {
             ResultSet results = qexec.execSelect();
             while(results.hasNext()) {
                 QuerySolution soln = results.nextSolution();

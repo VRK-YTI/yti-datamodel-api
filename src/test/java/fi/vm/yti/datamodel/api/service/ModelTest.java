@@ -33,6 +33,8 @@ import fi.vm.yti.datamodel.api.utils.LDHelper;
 import fi.vm.yti.security.YtiUser;
 import fi.vm.yti.security.AuthenticatedUserProvider;
 
+import static org.junit.Assert.*;
+
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 @RunWith(SpringRunner.class)
 @ActiveProfiles("junit")
@@ -103,7 +105,7 @@ public class ModelTest  {
             System.out.println(target.path("modelCreator").getUri());
             System.out.println(creatorResponse.getStatus());
             System.out.println(creatorResponse.getStatusInfo().getReasonPhrase());
-             Assert.fail();
+             fail();
         }
 
         String model = creatorResponse.readEntity(String.class);
@@ -117,11 +119,11 @@ public class ModelTest  {
         logger.debug("Has right to edit: "+authorizationManager.hasRightToEdit(dataModel));
 
         if(newModel.size()<=0) {
-            Assert.fail();
+            fail();
         } else {
             graphManager.createModel(dataModel);
             serviceDescriptionManager.createGraphDescription(dataModel.getId(), user.getId(), dataModel.getOrganizations());
-            Assert.assertEquals (true,graphManager.isExistingGraph(dataModel.getIRI()));
+            assertTrue(graphManager.isExistingGraph(dataModel.getIRI()));
         }
 
     }
@@ -143,7 +145,7 @@ public class ModelTest  {
 
         graphManager.createResource(reusableClass);
 
-        Assert.assertEquals(true, graphManager.isExistingGraph(reusableClass.getIRI()));
+        assertTrue(graphManager.isExistingGraph(reusableClass.getIRI()));
 
     }
 
@@ -165,7 +167,7 @@ public class ModelTest  {
 
         graphManager.createResource(reusablePredicate);
 
-        Assert.assertEquals(true, graphManager.isExistingGraph(reusablePredicate.getIRI()));
+        assertTrue(graphManager.isExistingGraph(reusablePredicate.getIRI()));
 
     }
 
@@ -174,7 +176,7 @@ public class ModelTest  {
 
         graphManager.removeModel(testModelId);
         serviceDescriptionManager.deleteGraphDescription(testModelId.toString());
-        Assert.assertEquals(false, graphManager.isExistingGraph(testModelId));
+        assertFalse(graphManager.isExistingGraph(testModelId));
         rhpOrganizationManager.initOrganizationsFromRHP();
 
     }
