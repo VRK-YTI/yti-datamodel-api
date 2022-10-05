@@ -4,7 +4,6 @@ import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.Credentials;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.CredentialsProvider;
-import org.apache.http.client.HttpClient;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.jena.query.Query;
@@ -51,10 +50,8 @@ public final class JenaClient {
             logger.debug("Setting fuseki user & password!");
             CredentialsProvider credsProvider = new BasicCredentialsProvider();
             Credentials credentials = new UsernamePasswordCredentials(properties.getFusekiUser(), properties.getFusekiPassword());
-            logger.debug("user:" + properties.getFusekiUser());
-            logger.debug("password:" + properties.getFusekiPassword());
             credsProvider.setCredentials(AuthScope.ANY, credentials);
-            HttpClient httpclient = HttpClients.custom()
+            HttpClients.custom()
                 .setDefaultCredentialsProvider(credsProvider)
                 .build();
         } else {
