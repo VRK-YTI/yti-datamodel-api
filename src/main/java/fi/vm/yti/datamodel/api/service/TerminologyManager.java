@@ -5,23 +5,22 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
-import javax.json.Json;
-import javax.json.JsonObject;
-import javax.json.JsonObjectBuilder;
-import javax.json.JsonWriter;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 
-import org.apache.jena.query.DatasetAccessor;
-import org.apache.jena.query.DatasetAccessorFactory;
+import jakarta.json.Json;
+import jakarta.json.JsonObject;
+import jakarta.json.JsonObjectBuilder;
+import jakarta.json.JsonWriter;
 import org.apache.jena.query.Query;
 import org.apache.jena.query.QueryExecution;
 import org.apache.jena.query.QueryExecutionFactory;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ResourceFactory;
+import org.apache.jena.rdfconnection.RDFConnection;
 import org.apache.jena.update.UpdateAction;
 import org.apache.jena.vocabulary.SKOS;
 import org.slf4j.Logger;
@@ -141,12 +140,12 @@ public final class TerminologyManager {
                                                          Query query) {
 
         logger.info("Constructing resource with concept: " + conceptUri);
-        DatasetAccessor testAcc = DatasetAccessorFactory.createHTTP(endpointServices.getCoreReadAddress());
+        RDFConnection connection = RDFConnection.connect(endpointServices.getCoreReadAddress());
 
         Model conceptModel = searchConceptFromTerminologyIntegrationAPIAsModel(null, null, conceptUri);
 
         assert conceptModel != null;
-        conceptModel.add(testAcc.getModel(modelUri));
+        conceptModel.add(connection.fetch(modelUri));
 
         try (QueryExecution qexec = QueryExecutionFactory.create(query, conceptModel)) {
             return qexec.execConstruct();

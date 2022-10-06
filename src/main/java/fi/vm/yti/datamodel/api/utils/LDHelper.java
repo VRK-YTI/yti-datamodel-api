@@ -11,9 +11,7 @@ import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIFactory;
 import org.apache.jena.query.ParameterizedSparqlString;
 import org.apache.jena.rdf.model.*;
-import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RiotException;
-import org.apache.jena.util.ResourceUtils;
 import org.glassfish.jersey.uri.UriComponent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -710,8 +708,7 @@ public class LDHelper {
         Model model = ModelFactory.createDefaultModel();
 
         try {
-            RDFReader reader = model.getReader(Lang.JSONLD.getName());
-            reader.read(model, (InputStream) response.getEntity(), "urn:yti:resource");
+            model.read((InputStream) response.getEntity(), "urn:yti:resource");
         } catch (RiotException ex) {
             logger.info(ex.getMessage());
             return model;

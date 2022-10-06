@@ -11,26 +11,20 @@ import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.Iterator;
 
-import javax.json.Json;
-import javax.json.JsonArray;
-import javax.json.JsonObject;
-import javax.json.JsonReader;
-import javax.json.JsonValue;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
 
+import jakarta.json.*;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.ResourceFactory;
-import org.apache.jena.vocabulary.DCTerms;
+import org.apache.jena.rdfconnection.RDFConnection;
 import org.apache.jena.vocabulary.RDF;
-import org.apache.jena.web.DatasetAdapter;
-import org.apache.jena.web.DatasetGraphAccessorHTTP;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,16 +47,14 @@ public class SuomiCodeServer {
     private final EndpointServices endpointServices;
     private String uri;
     private String url;
-    private DatasetGraphAccessorHTTP accessor;
-    private DatasetAdapter adapter;
+    private RDFConnection connection;
     private CodeSchemeManager codeSchemeManager;
     private SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
     private DateTimeFormatter dfmt = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
 
     public SuomiCodeServer(EndpointServices endpointServices,
                            CodeSchemeManager codeSchemeManager) {
-        this.accessor = new DatasetGraphAccessorHTTP(endpointServices.getSchemesReadWriteAddress());
-        this.adapter = new DatasetAdapter(accessor);
+        this.connection = RDFConnection.connect(endpointServices.getSchemesReadWriteAddress());
         this.endpointServices = endpointServices;
         this.codeSchemeManager = codeSchemeManager;
     }
@@ -71,8 +63,8 @@ public class SuomiCodeServer {
                            String url,
                            EndpointServices endpointServices,
                            CodeSchemeManager codeSchemeManager) {
-        this.accessor = new DatasetGraphAccessorHTTP(endpointServices.getSchemesReadWriteAddress());
-        this.adapter = new DatasetAdapter(accessor);
+        this.connection = RDFConnection.connect(endpointServices.getSchemesReadWriteAddress());
+
         this.endpointServices = endpointServices;
         this.uri = uri;
         this.url = url;
@@ -92,7 +84,7 @@ public class SuomiCodeServer {
     }
 
     public boolean containsCodeList(String uri) {
-        return adapter.containsModel(uri);
+        return connection.fetchDataset().containsNamedModel(uri);
     }
 
     public void updateCodeSchemeList() {
@@ -197,7 +189,7 @@ public class SuomiCodeServer {
             }
 
             // model.write(System.out, "text/turtle");
-            adapter.putModel(uri, model);
+            connection.put(uri, model);
 
         } else {
             logger.warn("Connection to " + target.toString() + " failed: " + response.getStatus());
@@ -328,7 +320,7 @@ public class SuomiCodeServer {
         if (model == null) {
             logger.warn("Codes graph from " + containerUri + " is empty! No valid codes?");
         } else {
-            adapter.putModel(containerUri, model);
+            connection.put(containerUri, model);
         }
     }
 }

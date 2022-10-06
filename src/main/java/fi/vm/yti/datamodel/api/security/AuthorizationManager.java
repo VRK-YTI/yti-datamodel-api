@@ -8,7 +8,6 @@ import org.apache.jena.iri.IRI;
 import fi.vm.yti.datamodel.api.model.AbstractClass;
 import fi.vm.yti.datamodel.api.model.AbstractModel;
 import fi.vm.yti.datamodel.api.model.AbstractPredicate;
-import fi.vm.yti.security.YtiUser;
 
 public interface AuthorizationManager {
 

@@ -14,7 +14,6 @@ import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
-import javax.ws.rs.core.Response.StatusType;
 
 import org.apache.jena.atlas.web.ContentType;
 import org.apache.jena.query.ParameterizedSparqlString;
@@ -26,7 +25,6 @@ import org.apache.jena.riot.RDFFormat;
 import org.apache.jena.riot.RDFLanguages;
 import org.apache.jena.riot.RDFWriterRegistry;
 import org.glassfish.jersey.client.ClientProperties;
-import org.glassfish.jersey.uri.UriComponent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -114,8 +112,12 @@ public class JerseyClient {
                 logger.info("Unknown RDF type: " + ctype);
                 return jerseyResponseManager.notFound();
             }
-
-            RDFFormat format = RDFWriterRegistry.defaultSerialization(rdfLang);
+            RDFFormat format;
+            if(ctype.equals("application/ld+json")){
+                format = RDFFormat.JSONLD10_COMPACT_PRETTY;
+            }else{
+                format = RDFWriterRegistry.defaultSerialization(rdfLang);
+            }
 
             Model model = jenaClient.getModelFromCore(graph + "#ExportGraph");
 

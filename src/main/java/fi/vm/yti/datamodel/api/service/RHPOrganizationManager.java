@@ -3,17 +3,15 @@ package fi.vm.yti.datamodel.api.service;
 import java.io.InputStream;
 import java.util.*;
 
-import javax.json.Json;
-import javax.json.JsonArray;
-import javax.json.JsonObject;
-import javax.json.JsonReader;
-import javax.json.JsonValue;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.Invocation;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
 
+import jakarta.json.*;
 import org.apache.jena.query.ParameterizedSparqlString;
 import org.apache.jena.query.Query;
 import org.apache.jena.query.QueryExecution;
-import org.apache.jena.query.QueryExecutionFactory;
 import org.apache.jena.rdf.model.*;
 import org.apache.jena.sparql.vocabulary.FOAF;
 import org.apache.jena.vocabulary.DCTerms;
@@ -250,7 +248,7 @@ public class RHPOrganizationManager {
         pss.setCommandText(queryString);
         Query query = pss.asQuery();
 
-        try (QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), query)) {
+        try (QueryExecution qexec = QueryExecution.service(endpointServices.getCoreSparqlAddress(), query)) {
             boolean b = qexec.execAsk();
             logger.info("EXISTS " + sparqlOrgList + ":" + b);
             return b;

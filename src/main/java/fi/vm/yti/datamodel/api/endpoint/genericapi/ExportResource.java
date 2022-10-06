@@ -128,7 +128,7 @@ public class ExportResource {
                 rdfLang = Lang.TURTLE;
             }
 
-            return jerseyClient.getGraphResponseFromService(graph, service, contentType.getContentType(), raw);
+            return jerseyClient.getGraphResponseFromService(graph, service, contentType.getContentTypeStr(), raw);
         } catch (Exception ex) {
             logger.warn("Expect the unexpected!", ex);
             return jerseyResponseManager.serverError();

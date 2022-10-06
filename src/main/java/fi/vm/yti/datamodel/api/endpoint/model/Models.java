@@ -17,13 +17,12 @@ import javax.ws.rs.core.Response;
 
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIException;
-import org.apache.jena.query.DatasetAccessor;
-import org.apache.jena.query.DatasetAccessorFactory;
 import org.apache.jena.query.ParameterizedSparqlString;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.ResIterator;
 import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.rdfconnection.RDFConnection;
 import org.apache.jena.riot.RiotException;
 import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.OWL;
@@ -156,8 +155,8 @@ public class Models {
             String graphService = endpointServices.getCoreReadWriteAddress();
 
             /* TODO: Create Namespace service? */
-            DatasetAccessor accessor = DatasetAccessorFactory.createHTTP(graphService);
-            Model model = accessor.getModel(id);
+            RDFConnection connection = RDFConnection.connect(graphService);
+            Model model = connection.fetch(id);
 
             if (model == null) {
                 return jerseyResponseManager.notFound();
