@@ -310,15 +310,18 @@ public class GraphManager {
                                                     String fromService,
                                                     String toService) throws NullPointerException {
 
-        RDFConnection fromConnection = RDFConnection.connect(fromService);
-        Model graphModel = fromConnection.fetch(fromGraph);
+        Model graphModel;
+        try(RDFConnection fromConnection = RDFConnection.connect(fromService)){
+            graphModel = fromConnection.fetch(fromGraph);
+        }
 
         if (graphModel == null) {
             throw new NullPointerException();
         }
 
-        RDFConnection toConnection = RDFConnection.connect(toService);
-        toConnection.load(toGraph, graphModel);
+        try(RDFConnection toConnection = RDFConnection.connect(toService)){
+            toConnection.load(toGraph, graphModel);
+        }
 
     }
 
@@ -691,13 +694,11 @@ public class GraphManager {
      * Initializes Core service with default Graph from static resources file
      */
     public void createDefaultGraph() {
-
-        RDFConnection connection = RDFConnection.connect(endpointServices.getCoreReadWriteAddress());
-
-        Model m = ModelFactory.createDefaultModel();
-        RDFDataMgr.read(m, LDHelper.getDefaultGraphInputStream(), RDFLanguages.JSONLD);
-        connection.put("urn:csc:iow:sd", m);
-
+        try(RDFConnection connection = RDFConnection.connect(endpointServices.getCoreReadWriteAddress())){
+            Model m = ModelFactory.createDefaultModel();
+            RDFDataMgr.read(m, LDHelper.getDefaultGraphInputStream(), RDFLanguages.JSONLD);
+            connection.put("urn:csc:iow:sd", m);
+        }
     }
 
     /**
@@ -1088,9 +1089,10 @@ public class GraphManager {
         Model prefixModel = ModelFactory.createDefaultModel();
         prefixModel.setNsPrefixes(getPrefixMappingFromResource(resource));
         prefixModel.add(ResourceFactory.createResource(model.toString()), RDF.type, OWL.Ontology);
-        RDFConnection connection = RDFConnection.connect(endpointServices.getCoreReadWriteAddress());
-        connection.load(model.toString(), prefixModel);
-        connection.load(model.toString() + "#ExportGraph", prefixModel);
+        try(RDFConnection connection = RDFConnection.connect(endpointServices.getCoreReadWriteAddress())){
+            connection.load(model.toString(), prefixModel);
+            connection.load(model.toString() + "#ExportGraph", prefixModel);
+        }
 
     }
 
@@ -1274,14 +1276,21 @@ public class GraphManager {
         LDHelper.rewriteLiteral(oldModelGraph, newModelResource, LDHelper.curieToProperty("dcap:preferredXMLNamespacePrefix"), ResourceFactory.createPlainLiteral(newPrefix));
         renameObjectNamespaceInModel(oldModelGraph, model.toString() + "#", newModel.toString() + "#");
         connection.put(newModel.toString(), oldModelGraph);
-
-        Model oldHasPartGraph = connection.fetch(model.toString() + "#HasPartGraph");
-
+        Model oldHasPartGraph;
+        try{
+            oldHasPartGraph = connection.fetch(model.toString() + "#HasPartGraph");
+        }catch(HttpException ex){
+            oldHasPartGraph = null;
+        }
         if (oldHasPartGraph != null && oldHasPartGraph.size() > 1) {
 
             ResourceUtils.renameResource(oldHasPartGraph.getResource(model.toString()), newModel.toString());
-
-            Model oldPositionGraph = connection.fetch((model.toString() + "#PositionGraph"));
+            Model oldPositionGraph;
+            try{
+                oldPositionGraph = connection.fetch((model.toString() + "#PositionGraph"));
+            }catch(HttpException ex){
+                oldPositionGraph = null;
+            }
             if (oldPositionGraph != null && oldPositionGraph.size() > 2) {
                 ResIterator positionResources = oldPositionGraph.listSubjects();
                 while (positionResources.hasNext()) {
@@ -1304,7 +1313,12 @@ public class GraphManager {
                 if (oldGraph.startsWith(model.toString() + "#")) {
                     String newGraph = oldGraph.replace(model.toString() + "#", newModel.toString() + "#");
                     logger.info("Creating version from " + oldGraph + " to " + newGraph);
-                    Model oldResourceGraph = connection.fetch(oldGraph);
+                    Model oldResourceGraph;
+                    try{
+                        oldResourceGraph = connection.fetch(oldGraph);
+                    }catch(HttpException ex){
+                        oldResourceGraph = null;
+                    }
                     if (oldResourceGraph != null) { // FIXME: References to removed resources?!?
                         Resource oldResource = oldResourceGraph.getResource(oldGraph);
                         ResourceUtils.renameResource(oldResource, newGraph);
@@ -1564,14 +1578,21 @@ public class GraphManager {
     public void addCoreGraphToCoreGraph(String fromGraph,
                                         String toGraph) throws NullPointerException {
 
-        RDFConnection connection = RDFConnection.connect(endpointServices.getCoreReadWriteAddress());
-        Model model =connection.fetch(fromGraph);
+        try(RDFConnection connection = RDFConnection.connect(endpointServices.getCoreReadWriteAddress())){
+            Model model;
+            try{
+                 model = connection.fetch(fromGraph);
+            }catch(HttpException ex){
+                model = null;
+            }
 
-        if (model == null) {
-            throw new NullPointerException();
+            if (model == null) {
+                throw new NullPointerException();
+            }
+
+            connection.load(toGraph, model);
         }
 
-        connection.load(toGraph, model);
     }
 
     /**
@@ -1593,15 +1614,17 @@ public class GraphManager {
             logger.warn(ex.getMessage());
         } */
 
-        RDFConnection connection = RDFConnection.connect(endpointServices.getCoreReadWriteAddress());
-        connection.put(id, model);
+        try(RDFConnection connection = RDFConnection.connect(endpointServices.getCoreReadWriteAddress())){
+            connection.put(id, model);
+        }
     }
 
     public void addToGraph(Model model,
                            String id) {
-        logger.debug("Adding to " + id);
-        RDFConnection connection = RDFConnection.connect(endpointServices.getCoreReadWriteAddress());
-        connection.load(id, model);
+        logger.debug("Adding to {}", id);
+        try(RDFConnection connection = RDFConnection.connect(endpointServices.getCoreReadWriteAddress())){
+            connection.load(id, model);
+        }
     }
 
     /**

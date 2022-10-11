@@ -272,8 +272,9 @@ public class ImportManager {
 
             Model results = qexec.execConstruct();
 
-            RDFConnection connection = RDFConnection.connect(endpointServices.getCoreReadWriteAddress());
-            connection.load(resource, results);
+            try(RDFConnection connection = RDFConnection.connect(endpointServices.getCoreReadWriteAddress())){
+                connection.load(resource, results);
+            }
         }
 
     }

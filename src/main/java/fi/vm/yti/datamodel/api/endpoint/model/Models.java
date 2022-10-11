@@ -155,8 +155,10 @@ public class Models {
             String graphService = endpointServices.getCoreReadWriteAddress();
 
             /* TODO: Create Namespace service? */
-            RDFConnection connection = RDFConnection.connect(graphService);
-            Model model = connection.fetch(id);
+            Model model;
+            try(RDFConnection connection = RDFConnection.connect(graphService)){
+                model = connection.fetch(id);
+            }
 
             if (model == null) {
                 return jerseyResponseManager.notFound();
