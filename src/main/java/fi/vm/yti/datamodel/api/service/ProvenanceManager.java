@@ -281,7 +281,7 @@ public class ProvenanceManager {
      *
      * @param oldid Old id
      * @param newid New id
-     * @return
+     * @return update request
      */
     public UpdateRequest renameIDRequest(String oldid,
                                          String newid) {

@@ -26,7 +26,7 @@ public class XMLSchemaWriter {
     private static final Logger logger = LoggerFactory.getLogger(XMLSchemaWriter.class.getName());
 
     private static final Map<String, String> DATATYPE_MAP =
-        Collections.unmodifiableMap(new HashMap<String, String>() {{
+        Collections.unmodifiableMap(new HashMap<>() {{
             put("http://www.w3.org/2001/XMLSchema#int", "xs:int");
             put("http://www.w3.org/2001/XMLSchema#integer", "xs:integer");
             put("http://www.w3.org/2001/XMLSchema#long", "xs:long");

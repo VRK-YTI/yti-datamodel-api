@@ -9,8 +9,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import org.apache.jena.atlas.web.ContentType;
-import org.apache.jena.riot.Lang;
-import org.apache.jena.riot.RDFLanguages;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -121,13 +119,6 @@ public class ExportResource {
 
         try {
             ContentType contentType = ContentType.create(ctype);
-            Lang rdfLang = RDFLanguages.contentTypeToLang(contentType);
-
-            if (rdfLang == null) {
-                // Default to turtle
-                rdfLang = Lang.TURTLE;
-            }
-
             return jerseyClient.getGraphResponseFromService(graph, service, contentType.getContentTypeStr(), raw);
         } catch (Exception ex) {
             logger.warn("Expect the unexpected!", ex);

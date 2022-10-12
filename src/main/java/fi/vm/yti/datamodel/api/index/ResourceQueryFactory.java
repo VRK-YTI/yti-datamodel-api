@@ -126,7 +126,7 @@ public class ResourceQueryFactory {
             mustList.add(statusQuery);
         }
 
-        QueryStringQueryBuilder labelQuery = null;
+        QueryStringQueryBuilder labelQuery;
 
         if (!query.isEmpty()) {
             labelQuery = luceneQueryFactory.buildPrefixSuffixQuery(query).field("label.*");

@@ -55,7 +55,6 @@ public class Shape extends AbstractShape {
             ParameterizedSparqlString pss = new ParameterizedSparqlString();
             pss.setNsPrefixes(LDHelper.PREFIX_MAP);
             String queryString;
-            String service = "imports";
             logger.info("Using ext query:");
             queryString = QueryLibrary.externalShapeQuery;
             pss.setCommandText(queryString);

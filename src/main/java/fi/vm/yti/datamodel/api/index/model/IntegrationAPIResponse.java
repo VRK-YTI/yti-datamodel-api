@@ -29,9 +29,7 @@ public class IntegrationAPIResponse {
         this.meta = new IntegrationMetaDTO(modelResponse.getPageSize(),modelResponse.getPageFrom(), Integer.valueOf(Math.toIntExact(modelResponse.getTotalHitCount())));
         List<IndexModelDTO> models = modelResponse.getModels();
         results = new ArrayList<>();
-        models.forEach(m->{
-            results.add(new IntegrationContainerDTO(m));
-        });
+        models.forEach(m-> results.add(new IntegrationContainerDTO(m)));
         this.meta.setResultCount(results.size());
         if(path!=null && !path.isEmpty() && this.meta.getFrom()!=null && this.meta.getPageSize()!=null &&  (this.meta.getFrom() + this.meta.getPageSize() < this.meta.getTotalResults())) {
             this.meta.setNextPage(buildNextUri(path,modelRequest.getQuery(),modelResponse.getPageSize(), modelResponse.getPageFrom(), modelRequest.getSortLang(), String.join(",",modelRequest.getStatus())));
@@ -43,9 +41,7 @@ public class IntegrationAPIResponse {
         this.meta = new IntegrationMetaDTO(resourceResponse.getPageSize(),resourceResponse.getPageFrom(), Integer.valueOf(Math.toIntExact(resourceResponse.getTotalHitCount())));
         List<IndexResourceDTO> models = resourceResponse.getResources();
         results = new ArrayList<>();
-        models.forEach(m->{
-            results.add(new IntegrationResourceDTO(m));
-        });
+        models.forEach(m-> results.add(new IntegrationResourceDTO(m)));
         this.meta.setResultCount(results.size());
         if(path!=null && !path.isEmpty() && this.meta.getFrom()!=null && this.meta.getPageSize()!=null &&  (this.meta.getFrom() + this.meta.getPageSize() < this.meta.getTotalResults())) {
             this.meta.setNextPage(buildNextUri(path,resourceRequest.getQuery(),resourceResponse.getPageSize(), resourceResponse.getPageFrom(), resourceRequest.getSortLang(), String.join(",",resourceRequest.getStatus())));

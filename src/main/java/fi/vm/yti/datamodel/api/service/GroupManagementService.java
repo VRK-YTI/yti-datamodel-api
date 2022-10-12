@@ -53,7 +53,8 @@ public class GroupManagementService {
     public void updateUsers() {
         final String url = applicationProperties.getDefaultGroupManagementAPI().replace("public-api","private-api")+"users";
         Client client = clientFactory.create();
-        List<GroupManagementUserDTO> userList = client.target(url).request(MediaType.APPLICATION_JSON).get(new GenericType<List<GroupManagementUserDTO>>(){});
+        List<GroupManagementUserDTO> userList = client.target(url).request(MediaType.APPLICATION_JSON).get(new GenericType<>() {
+        });
         userList.forEach(user -> users.put(user.getId(), user));
     }
 

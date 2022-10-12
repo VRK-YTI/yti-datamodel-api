@@ -72,7 +72,7 @@ public class DeepResourceQueryFactory {
             QueryBuilders.boolQuery()
                 .must(queryStringQuery);
 
-        SearchRequest sr = new SearchRequest("dm_resources")
+        return new SearchRequest("dm_resources")
             .source(new SearchSourceBuilder()
                 .query(finalQuery)
                 .size(0)
@@ -89,8 +89,6 @@ public class DeepResourceQueryFactory {
                             .fetchSource(sourceIncludes))
                         .subAggregation(AggregationBuilders.max("best_class_hit")
                             .script(topHitScript)))));
-
-        return sr;
     }
 
     public Map<String, List<DeepSearchHitListDTO<?>>> parseResponse(SearchResponse response,

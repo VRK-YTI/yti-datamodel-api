@@ -4,7 +4,6 @@
 package fi.vm.yti.datamodel.api.model;
 
 import java.io.InputStream;
-import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -34,23 +33,22 @@ import fi.vm.yti.datamodel.api.utils.LDHelper;
 
 public class SuomiCodeServer {
 
-    static final private Logger logger = LoggerFactory.getLogger(SuomiCodeServer.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(SuomiCodeServer.class.getName());
 
-    static private Property name = ResourceFactory.createProperty("http://purl.org/dc/terms/", "title");
-    static private Property description = ResourceFactory.createProperty("http://purl.org/dc/terms/", "description");
-    static private Property modified = ResourceFactory.createProperty("http://purl.org/dc/terms/", "modified");
-    static private Property isPartOf = ResourceFactory.createProperty("http://purl.org/dc/terms/", "isPartOf");
-    static private Property id = ResourceFactory.createProperty("http://purl.org/dc/terms/", "identifier");
-    static private Property creator = ResourceFactory.createProperty("http://purl.org/dc/terms/", "creator");
-    static private Property status = ResourceFactory.createProperty("http://uri.suomi.fi/datamodel/ns/iow#", "status");
+    private static Property name = ResourceFactory.createProperty("http://purl.org/dc/terms/", "title");
+    private static Property description = ResourceFactory.createProperty("http://purl.org/dc/terms/", "description");
+    private static Property modified = ResourceFactory.createProperty("http://purl.org/dc/terms/", "modified");
+    private static Property isPartOf = ResourceFactory.createProperty("http://purl.org/dc/terms/", "isPartOf");
+    private static Property id = ResourceFactory.createProperty("http://purl.org/dc/terms/", "identifier");
+    private static Property creator = ResourceFactory.createProperty("http://purl.org/dc/terms/", "creator");
+    private static Property status = ResourceFactory.createProperty("http://uri.suomi.fi/datamodel/ns/iow#", "status");
 
     private final EndpointServices endpointServices;
     private String uri;
     private String url;
     private RDFConnection connection;
     private CodeSchemeManager codeSchemeManager;
-    private SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
-    private DateTimeFormatter dfmt = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+    private final DateTimeFormatter dfmt = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
 
     public SuomiCodeServer(EndpointServices endpointServices,
                            CodeSchemeManager codeSchemeManager) {

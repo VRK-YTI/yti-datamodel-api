@@ -28,7 +28,7 @@ public class ContextWriter {
     /**
      * Creates context from JSONObjectBuilder
      *
-     * @param context
+     * @param context JsonObject builder to build context from
      * @return Returns JSON-LD Context
      */
     private String createDefaultContext(JsonObjectBuilder context) {

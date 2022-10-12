@@ -82,12 +82,12 @@ public class ElasticConnector {
      * Delete an index if it exists.
      * @param index index name
      * @return true if the index existed and was removed
-     * @throws IOException
+     * @throws IOException in case there is a problem sending the request or parsing back the response
      */
     public boolean cleanIndex(String index) throws IOException {
         boolean exists = indexExists(index);
         if (exists) {
-            logger.info("Cleaning index: " + index);
+            logger.info("Cleaning index: {}", index);
             this.esClient.indices().delete(new DeleteIndexRequest(index), RequestOptions.DEFAULT);
         }
         return exists;

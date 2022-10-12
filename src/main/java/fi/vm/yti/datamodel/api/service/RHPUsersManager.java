@@ -40,7 +40,7 @@ public class RHPUsersManager {
             return clientFactory.create()
                 .target(url)
                 .request(MediaType.APPLICATION_JSON)
-                .get(new GenericType<List<GroupManagementUserDTO>>() {
+                .get(new GenericType<>() {
                 });
         } else {
             return Collections.emptyList();
@@ -55,7 +55,7 @@ public class RHPUsersManager {
             .target(url)
             .queryParam("userId", userId)
             .request(MediaType.APPLICATION_JSON)
-            .get(new GenericType<List<GroupManagementUserRequestDTO>>() {
+            .get(new GenericType<>() {
             });
     }
 

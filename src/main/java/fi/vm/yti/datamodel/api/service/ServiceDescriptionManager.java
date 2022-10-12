@@ -22,7 +22,7 @@ import org.slf4j.LoggerFactory;
 @Service
 public class ServiceDescriptionManager {
 
-    static final private Logger logger = LoggerFactory.getLogger(ServiceDescriptionManager.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(ServiceDescriptionManager.class.getName());
 
     public static final Property name = ResourceFactory.createProperty("http://www.w3.org/ns/sparql-service-description#", "name");
 
@@ -70,12 +70,9 @@ public class ServiceDescriptionManager {
 
         Query query = pss.asQuery();
         try (QueryExecution qexec = QueryExecutionFactory.sparqlService(endpoint, query)) {
-            boolean b = qexec.execAsk();
-
-            return b;
-
+            return qexec.execAsk();
         } catch (Exception ex) {
-            logger.warn("Failed in checking the endpoint status: " + endpoint);
+            logger.warn("Failed in checking the endpoint status: {}", endpoint);
             return false;
         }
 
@@ -101,9 +98,6 @@ public class ServiceDescriptionManager {
 
         String orgString = LDHelper.concatUUIDWithReplace(orgs, ",", "<urn:uuid:@this>");
         logger.info("Parsed org UUIDs: " + orgString);
-
-        //String serviceString = concatServices(serviceCategories);
-        // logger.info("Parsed services: "+serviceString);
 
         String query =
             "WITH <urn:csc:iow:sd>" +

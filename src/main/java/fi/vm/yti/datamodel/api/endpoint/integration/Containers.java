@@ -13,8 +13,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import org.joda.time.DateTime;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -43,7 +41,6 @@ public class Containers {
     @Context
     UriInfo uriInfo;
 
-    private static final Logger logger = LoggerFactory.getLogger(Containers.class.getName());
     private final SearchIndexManager searchIndexManager;
     private final JerseyResponseManager jerseyResponseManager;
     private ObjectMapper objectMapper;

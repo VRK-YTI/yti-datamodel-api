@@ -121,15 +121,6 @@ public class XMLSchemaBuilder {
         return documentation;
     }
 
-    public Element newDocumentation(Element elem) {
-        Element annotation = this.document.createElement("xs:annotation");
-        Element documentation = this.document.createElement("xs:documentation");
-        annotation.appendChild(documentation);
-        elem.appendChild(annotation);
-
-        return documentation;
-    }
-
     public void appendElementValue(Element element,
                                    String name,
                                    String value) {

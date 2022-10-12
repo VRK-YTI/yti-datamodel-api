@@ -11,8 +11,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -31,7 +29,6 @@ public class FreePrefix {
     private final JerseyResponseManager jerseyResponseManager;
     private final GraphManager graphManager;
     private final ApplicationProperties applicationProperties;
-    private static final Logger logger = LoggerFactory.getLogger(FreePrefix.class.getName());
 
     @Autowired
     FreePrefix(IDManager idManager,
