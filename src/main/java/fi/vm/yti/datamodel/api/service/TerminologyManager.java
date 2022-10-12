@@ -139,13 +139,15 @@ public final class TerminologyManager {
                                                          String modelUri,
                                                          Query query) {
 
-        logger.info("Constructing resource with concept: " + conceptUri);
-        RDFConnection connection = RDFConnection.connect(endpointServices.getCoreReadAddress());
+        logger.info("Constructing resource with concept: {}", conceptUri);
+
 
         Model conceptModel = searchConceptFromTerminologyIntegrationAPIAsModel(null, null, conceptUri);
 
         assert conceptModel != null;
-        conceptModel.add(connection.fetch(modelUri));
+        try(RDFConnection connection = RDFConnection.connect(endpointServices.getCoreReadAddress())){
+            conceptModel.add(connection.fetch(modelUri));
+        }
 
         try (QueryExecution qexec = QueryExecutionFactory.create(query, conceptModel)) {
             return qexec.execConstruct();
