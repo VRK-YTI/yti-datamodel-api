@@ -71,36 +71,15 @@ public class JerseyClient {
     }
 
     /**
-     * Returns Jersey response from Fuseki service
-     *
-     * @param id      Id of the graph
-     * @param service Id of the service
-     * @param ctype   Requested content-type
-     * @return Response
-     */
-    public Response getResponseFromService(String id,
-                                           String service,
-                                           String ctype) {
-        Client client = ClientBuilder.newClient();
-        WebTarget target = client.target(service).queryParam("graph", id);
-        logger.debug("Getting response from " + target.getUri().toString());
-        return target.request(ctype).get();
-
-    }
-
-
-    /**
      * Returns Export graph as Jersey Response
      *
      * @param graph ID of the graph
      * @param raw   If true returns content as text
-     * @param lang  Language of the required graph
      * @param ctype Required content type
      * @return Response
      */
     public Response getExportGraph(String graph,
                                    boolean raw,
-                                   String lang,
                                    String ctype) {
 
         try {
@@ -109,7 +88,7 @@ public class JerseyClient {
 
             Lang rdfLang = RDFLanguages.contentTypeToLang(contentType);
             if (rdfLang == null) {
-                logger.info("Unknown RDF type: " + ctype);
+                logger.info("Unknown RDF type: {}", ctype);
                 return jerseyResponseManager.notFound();
             }
             RDFFormat format;

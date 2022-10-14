@@ -10,8 +10,6 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -28,7 +26,6 @@ public class ConceptSearch {
 
     private final TerminologyManager terminologyManager;
     private final JerseyResponseManager jerseyResponseManager;
-    private static final Logger logger = LoggerFactory.getLogger(ConceptSearch.class.getName());
 
     @Autowired
     ConceptSearch(JerseyResponseManager jerseyResponseManager,

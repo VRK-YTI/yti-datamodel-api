@@ -121,7 +121,6 @@ public class Sparql {
 
         try (QueryExecution qexec = QueryExecution.service(endpointServices.getSparqlAddress(service), query)) {
 
-            OutputStream outs = new ByteArrayOutputStream();
             Model results = qexec.execConstruct();
 
             StringWriter writer = new StringWriter();

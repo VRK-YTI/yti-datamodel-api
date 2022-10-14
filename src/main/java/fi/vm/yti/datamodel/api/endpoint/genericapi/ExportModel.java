@@ -79,7 +79,7 @@ public class ExportModel {
 
         ctype = ctype.replace(" ", "+");
 
-        logger.info("Exporting format: " + ctype);
+        logger.info("Exporting format: {}", ctype);
 
         if (ctype.equals("application/ld+json+context")) {
             String context = contextWriter.newModelContext(graph);
@@ -94,9 +94,9 @@ public class ExportModel {
                 return jerseyResponseManager.ok(apiStub, raw ? rawContentType : "application/json");
             }
         } else if (ctype.equals("application/schema+json")) {
-            String schema = null;
+            String schema;
             if (lang != null && !lang.equals("undefined") && !lang.equals("null")) {
-                logger.info("Exporting schema in " + lang);
+                logger.info("Exporting schema in {}", lang);
                 schema = jsonSchemaWriter.newModelSchema(graph, lang);
             } else {
                 schema = jsonSchemaWriter.newMultilingualModelSchema(graph);
@@ -118,6 +118,6 @@ public class ExportModel {
         }
 
         /* IF ctype is none of the above try to export graph in RDF format */
-        return jerseyClient.getExportGraph(graph, raw, lang, ctype);
+        return jerseyClient.getExportGraph(graph, raw, ctype);
     }
 }

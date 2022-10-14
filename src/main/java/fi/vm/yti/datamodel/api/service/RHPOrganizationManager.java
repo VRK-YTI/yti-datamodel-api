@@ -3,9 +3,6 @@ package fi.vm.yti.datamodel.api.service;
 import java.io.InputStream;
 import java.util.*;
 
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.Invocation;
-import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
 
 import jakarta.json.*;

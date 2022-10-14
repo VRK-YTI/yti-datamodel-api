@@ -43,8 +43,6 @@ import fi.vm.yti.datamodel.api.index.model.ResourceSearchResponse;
 import fi.vm.yti.datamodel.api.model.AbstractClass;
 import fi.vm.yti.datamodel.api.model.AbstractPredicate;
 import fi.vm.yti.datamodel.api.model.DataModel;
-import fi.vm.yti.datamodel.api.model.ReusableClass;
-import fi.vm.yti.datamodel.api.model.ReusablePredicate;
 import fi.vm.yti.datamodel.api.service.GraphManager;
 import fi.vm.yti.datamodel.api.service.JenaClient;
 import fi.vm.yti.datamodel.api.service.ModelManager;
@@ -116,11 +114,6 @@ public class SearchIndexManager {
         esManager.putToIndex(ELASTIC_INDEX_RESOURCE, indexClass.getId(), indexClass);
     }
 
-    public void updateIndexClass(String id) {
-        IRI classIri = LDHelper.toIRI(id);
-        updateIndexClass(new ReusableClass(classIri,graphManager));
-    }
-
     public void updateIndexClass(AbstractClass classResource) {
         IndexClassDTO indexClass = new IndexClassDTO(classResource);
         logger.debug("Indexing: " + indexClass.getId());
@@ -135,11 +128,6 @@ public class SearchIndexManager {
         IndexPredicateDTO indexPredicate = new IndexPredicateDTO(predicateResource);
         logger.info("Indexing: " + indexPredicate.getId());
         esManager.putToIndex(ELASTIC_INDEX_RESOURCE, indexPredicate.getId(), indexPredicate);
-    }
-
-    public void updateIndexPredicate(String id) {
-        IRI predicateIri = LDHelper.toIRI(id);
-        updateIndexPredicate(new ReusablePredicate(predicateIri,graphManager));
     }
 
     public void updateIndexPredicate(AbstractPredicate predicateResource) {
@@ -201,7 +189,7 @@ public class SearchIndexManager {
         } else {
             final Map<UUID, Set<Role>> rolesInOrganizations = user.getRolesInOrganizations();
 
-            Set<String> orgIds = rolesInOrganizations.keySet().stream().map(u -> u.toString()).collect(Collectors.toSet());
+            Set<String> orgIds = rolesInOrganizations.keySet().stream().map(UUID::toString).collect(Collectors.toSet());
 
             // show child organization's incomplete content for main organization users
             Set<String> childOrganizationIds = orgIds.stream()
@@ -236,9 +224,7 @@ public class SearchIndexManager {
     public Set<String> parseStringList(String status) {
         Set<String> statuses = new HashSet<>();
         if (status != null && !status.isEmpty()) {
-            Arrays.asList(status.split(",")).forEach(s -> {
-                statuses.add(s);
-            });
+            statuses.addAll(Arrays.asList(status.split(",")));
         }
         return statuses.isEmpty() ? null : statuses;
     }
@@ -491,7 +477,7 @@ public class SearchIndexManager {
             logger.warn("Could not find any classes to index!");
             return;
         }
-        JsonNode nodes = null;
+        JsonNode nodes;
         try {
             nodes = modelManager.toFramedJsonNode(model, Frames.esClassFrame);
             if (nodes == null) {
@@ -502,7 +488,6 @@ public class SearchIndexManager {
         } catch (IOException e) {
             logger.warn("Could not parse JSON");
             e.printStackTrace();
-            return;
         }
     }
 
@@ -578,7 +563,7 @@ public class SearchIndexManager {
             logger.warn("Could not find any predicates to index!");
             return;
         }
-        JsonNode nodes = null;
+        JsonNode nodes;
         try {
             nodes = modelManager.toFramedJsonNode(model, Frames.esPredicateFrame);
             if (nodes == null) {
@@ -589,7 +574,6 @@ public class SearchIndexManager {
         } catch (IOException e) {
             logger.warn("Could not parse JSON");
             e.printStackTrace();
-            return;
         }
     }
 

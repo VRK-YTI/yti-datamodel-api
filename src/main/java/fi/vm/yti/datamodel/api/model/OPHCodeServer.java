@@ -238,15 +238,13 @@ public class OPHCodeServer {
         model.setNsPrefix("dcterms", "http://purl.org/dc/terms/");
         model.setNsPrefix("iow", "http://uri.suomi.fi/datamodel/ns/iow#");
 
-        Response.ResponseBuilder rb;
-
         Client client = ClientBuilder.newClient();
         WebTarget target = client.target(uri).queryParam("format", "application/json");
         Response response = target.request("application/json").get();
 
         if (response.getStatusInfo().getFamily() == Response.Status.Family.SUCCESSFUL) {
 
-            logger.info("Copying " + uri);
+            logger.info("Copying {}", uri);
 
             JsonReader jsonReader = Json.createReader(response.readEntity(InputStream.class));
             JsonArray codeListArray = jsonReader.readArray();

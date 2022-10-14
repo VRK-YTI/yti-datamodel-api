@@ -10,8 +10,6 @@ import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.datatypes.xsd.XSDDateTime;
 import org.apache.jena.query.*;
 import org.apache.jena.rdf.model.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -20,7 +18,6 @@ import java.util.Date;
 @Service
 public class CodeSchemeManager {
 
-    private static final Logger logger = LoggerFactory.getLogger(CodeSchemeManager.class.getName());
     private final EndpointServices endpointServices;
     private final JenaClient jenaClient;
     private final ApplicationProperties properties;
@@ -33,10 +30,6 @@ public class CodeSchemeManager {
         this.endpointServices = endpointServices;
         this.jenaClient = jenaClient;
         this.properties = properties;
-    }
-
-    public void deleteCodeSchemeGraph(String graph) {
-        jenaClient.deleteModelFromScheme(graph);
     }
 
     public Model getSchemeGraph(String graph) {

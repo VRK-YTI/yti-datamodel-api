@@ -67,7 +67,7 @@ public class ConceptsSchemes {
             return jerseyResponseManager.okModel(terminologyManager.getSchemesModelFromTerminologyAPI(null, false));
         } else {
             final Map<UUID, Set<Role>> rolesInOrganizations = user.getRolesInOrganizations();
-            Set<String> orgIds = rolesInOrganizations.keySet().stream().map(u -> u.toString()).collect(Collectors.toSet());
+            Set<String> orgIds = rolesInOrganizations.keySet().stream().map(UUID::toString).collect(Collectors.toSet());
             if(orgIds.isEmpty()) {
                 return jerseyResponseManager.okModel(terminologyManager.getSchemesModelFromTerminologyAPI(null, false));
             } else {
