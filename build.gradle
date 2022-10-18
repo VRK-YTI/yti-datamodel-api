@@ -109,7 +109,7 @@ dependencies {
     compile "org.apache.jena:jena-core:3.17.0"
     compile "org.apache.jena:jena-arq:3.17.0"
     compile "org.apache.jena:jena-rdfconnection:3.17.0"
-    compile group: 'org.apache.commons', name: 'commons-text', version: '1.9'
+    compile group: 'org.apache.commons', name: 'commons-text', version: '1.10.0'
     compile "org.glassfish:javax.json:1.1.4"
     compile "org.glassfish.jersey.media:jersey-media-sse:2.34"
     compile "com.github.jsonld-java:jsonld-java:0.12.0"
