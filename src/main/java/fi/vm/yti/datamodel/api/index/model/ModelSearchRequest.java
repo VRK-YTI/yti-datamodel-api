@@ -9,6 +9,8 @@ public class ModelSearchRequest {
 
     private String query;
 
+    private String language;
+
     private boolean searchResources;
 
     private Date after;
@@ -50,6 +52,7 @@ public class ModelSearchRequest {
     }
 
     public ModelSearchRequest(final String query,
+                              final String language,
                               final boolean searchResources,
                               final Set<String> status,
                               final String type,
@@ -61,6 +64,7 @@ public class ModelSearchRequest {
                               final Boolean includeIncomplete,
                               final Set<String> includeIncompleteFrom) {
         this.query = query;
+        this.language = language;
         this.searchResources = searchResources;
         this.status = status;
         this.type = type;
@@ -74,6 +78,7 @@ public class ModelSearchRequest {
     }
 
     public ModelSearchRequest(final String query,
+                              final String language,
                               final boolean searchResources,
                               final Set<String> status,
                               final String type,
@@ -82,6 +87,7 @@ public class ModelSearchRequest {
                               final Integer pageFrom,
                               final Set<String> filter) {
         this.query = query;
+        this.language = language;
         this.searchResources = searchResources;
         this.status = status;
         this.type = type;
@@ -105,6 +111,14 @@ public class ModelSearchRequest {
 
     public void setQuery(final String query) {
         this.query = query;
+    }
+
+    public String getLanguage() {
+        return language;
+    }
+
+    public void setLanguage(String language) {
+        this.language = language;
     }
 
     public boolean isSearchResources() {
@@ -199,6 +213,7 @@ public class ModelSearchRequest {
     public String toString() {
         return "ModelSearchRequest{" +
             "query='" + query + '\'' +
+            ", language=" + language +
             ", searchResources=" + searchResources +
             ", after=" + after +
             ", before=" + before +

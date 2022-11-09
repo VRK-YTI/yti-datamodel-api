@@ -50,16 +50,17 @@ public class ModelQueryFactory {
     }
 
     public SearchRequest createQuery(ModelSearchRequest request) {
-        return createQuery(request.getUri(),request.getQuery(), request.getStatus(), request.getType(), request.getAfter(), request.getBefore(), Collections.EMPTY_SET, request.getPageSize(), request.getPageFrom(), request.getFilter(), request.getIncludeIncomplete(), request.getIncludeIncompleteFrom());
+        return createQuery(request.getUri(),request.getQuery(), request.getLanguage(), request.getStatus(), request.getType(), request.getAfter(), request.getBefore(), Collections.emptySet(), request.getPageSize(), request.getPageFrom(), request.getFilter(), request.getIncludeIncomplete(), request.getIncludeIncompleteFrom());
     }
 
     public SearchRequest createQuery(ModelSearchRequest request,
                                      Collection<String> additionalModelIds) {
-        return createQuery(request.getUri(), request.getQuery(), request.getStatus(), request.getType(), request.getAfter(), request.getBefore(), additionalModelIds, request.getPageSize(), request.getPageFrom(), request.getFilter(), request.getIncludeIncomplete(), request.getIncludeIncompleteFrom());
+        return createQuery(request.getUri(), request.getQuery(), request.getLanguage(), request.getStatus(), request.getType(), request.getAfter(), request.getBefore(), additionalModelIds, request.getPageSize(), request.getPageFrom(), request.getFilter(), request.getIncludeIncomplete(), request.getIncludeIncompleteFrom());
     }
 
     private SearchRequest createQuery(Set<String> uris,
                                       String query,
+                                      String language,
                                       Set<String> status,
                                       String type,
                                       Date after,
@@ -97,6 +98,11 @@ public class ModelQueryFactory {
 
         BoolQueryBuilder boolQuery = QueryBuilders.boolQuery();
         List<QueryBuilder> mustList = boolQuery.must();
+
+        if (language != null ) {
+            mustList.add(QueryBuilders.termsQuery(
+                    "language", language));
+        }
 
         if(uris!=null) {
             QueryBuilder uriQuery = QueryBuilders.boolQuery()
@@ -151,7 +157,7 @@ public class ModelQueryFactory {
             mustList.add(contentQuery);
         }
 
-        if (mustList.size() > 0) {
+        if (!mustList.isEmpty()) {
             sourceBuilder.query(boolQuery);
         } else {
             sourceBuilder.query(QueryBuilders.matchAllQuery());
@@ -173,7 +179,7 @@ public class ModelQueryFactory {
         SearchRequest sr = new SearchRequest("dm_models")
             .source(sourceBuilder);
 
-        logger.debug(sr.source().toString());
+        logger.debug("Model Query request: {}", sr.source());
 
         return sr;
 
