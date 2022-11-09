@@ -321,7 +321,7 @@ public final class NamespaceManager {
                     connection.setInstanceFollowRedirects(true);
                     //,text/rdf+n3,application/turtle,application/rdf+n3
                     //"application/rdf+xml,application/xml,text/html");
-                    connection.setRequestProperty("Accept", "application/rdf+xml;q=1,application/turtle;q=0.8,application/x-turtle;q=0.8,text/turtle;q=0.8,text/rdf+n3;q=0.5,application/n3;q=0.5,text/n3;q=0.5");
+                    connection.setRequestProperty("Accept", "application/rdf+xml;q=1,application/turtle;q=0.8,application/x-turtle;q=0.8,text/turtle;q=0.8,application/ld+json;q=0.7,text/rdf+n3;q=0.5,application/n3;q=0.5,text/n3;q=0.5");
 
                     try { // SocketTimeOut
 
@@ -338,7 +338,7 @@ public final class NamespaceManager {
                                 connection.setConnectTimeout(8000);
                                 connection.setReadTimeout(30000);
                                 connection.setInstanceFollowRedirects(true);
-                                connection.setRequestProperty("Accept", "application/rdf+xml,application/turtle,text/turtle");
+                                connection.setRequestProperty("Accept", "application/rdf+xml,application/turtle,text/turtle,application/ld+json");
                                 stream = connection.getInputStream();
                             } catch (IOException ex) {
                                 logger.warn(ex.getMessage());
