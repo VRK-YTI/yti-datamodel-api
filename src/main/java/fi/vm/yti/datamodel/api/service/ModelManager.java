@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -27,10 +28,7 @@ import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.Statement;
 import org.apache.jena.rdf.model.StmtIterator;
 import org.apache.jena.riot.*;
-import org.apache.jena.riot.system.ErrorHandlerFactory;
-import org.apache.jena.riot.system.PrefixMap;
-import org.apache.jena.riot.system.PrefixMapFactory;
-import org.apache.jena.riot.system.RiotLib;
+import org.apache.jena.riot.system.*;
 import org.apache.jena.shared.PropertyNotFoundException;
 import org.apache.jena.sparql.graph.GraphFactory;
 import org.apache.jena.vocabulary.OWL;
@@ -59,7 +57,7 @@ public class ModelManager {
      */
     public String writeModelToJSONLDString(Model model) {
         StringWriter writer = new StringWriter();
-        RDFDataMgr.write(writer, model, RDFFormat.JSONLD);
+        RDFDataMgr.write(writer, model, RDFFormat.JSONLD10_COMPACT_PRETTY);
         return writer.toString();
     }
 
@@ -74,7 +72,7 @@ public class ModelManager {
                                      LinkedHashMap<String, Object> frame) throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         Graph modelGraph = model.getGraph();
-        PrefixMap pm = RiotLib.prefixMap(modelGraph);
+        PrefixMap pm = Prefixes.adapt(modelGraph);
         pm = cleanUpPrefixes(pm);
         pm.putAll(LDHelper.PREFIX_MAP);
         ((LinkedHashMap<String, Object>) frame.get("@context")).putAll(pm.getMappingCopy());
@@ -107,9 +105,7 @@ public class ModelManager {
                 toBeDeleted.add(t);
             }
         });
-        toBeDeleted.forEach((String t) -> {
-            map.delete(t);
-        });
+        toBeDeleted.forEach(map::delete);
         return map;
     }
 
@@ -205,7 +201,7 @@ public class ModelManager {
                     pm.add((String) key, (String) value);
                 }
             });
-            try (InputStream in = new ByteArrayInputStream(modelString.getBytes("UTF-8"))) {
+            try (InputStream in = new ByteArrayInputStream(modelString.getBytes(StandardCharsets.UTF_8))) {
                 RDFParser.create()
                     .source(in)
                     .lang(Lang.JSONLD)

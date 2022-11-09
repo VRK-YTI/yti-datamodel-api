@@ -12,17 +12,9 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.json.Json;
-import javax.json.JsonArray;
-import javax.json.JsonArrayBuilder;
-import javax.json.JsonObject;
-import javax.json.JsonObjectBuilder;
-import javax.json.JsonWriter;
-import javax.json.JsonWriterFactory;
-
+import jakarta.json.*;
 import org.apache.jena.query.ParameterizedSparqlString;
 import org.apache.jena.query.QueryExecution;
-import org.apache.jena.query.QueryExecutionFactory;
 import org.apache.jena.query.QuerySolution;
 import org.apache.jena.query.ResultSet;
 import org.apache.jena.query.ResultSetFactory;
@@ -106,7 +98,7 @@ public class OpenAPIWriter {
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
         pss.setCommandText(selectList);
 
-        try (QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getSchemesSparqlAddress(), pss.toString())) {
+        try (QueryExecution qexec = QueryExecution.service(endpointServices.getSchemesSparqlAddress(), pss.toString())) {
 
             ResultSet results = qexec.execSelect();
 
@@ -144,7 +136,7 @@ public class OpenAPIWriter {
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
         pss.setCommandText(selectList);
 
-        try (QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), pss.toString())) {
+        try (QueryExecution qexec = QueryExecution.service(endpointServices.getCoreSparqlAddress(), pss.toString())) {
 
             ResultSet results = qexec.execSelect();
 
@@ -230,7 +222,7 @@ public class OpenAPIWriter {
         pss.setCommandText(selectResources);
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
 
-        try (QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), pss.asQuery())) {
+        try (QueryExecution qexec = QueryExecution.service(endpointServices.getCoreSparqlAddress(), pss.asQuery())) {
 
             ResultSet results = qexec.execSelect();
             ResultSetPeekable pResults = ResultSetFactory.makePeekable(results);
@@ -246,9 +238,9 @@ public class OpenAPIWriter {
 
             JsonObjectBuilder predicate = Json.createObjectBuilder();
 
-            HashSet<String> exampleSet = new HashSet<String>();
-            HashSet<String> pathSet = new HashSet<String>();
-            HashSet<String> requiredPredicates = new HashSet<String>();
+            HashSet<String> exampleSet = new HashSet<>();
+            HashSet<String> pathSet = new HashSet<>();
+            HashSet<String> requiredPredicates = new HashSet<>();
 
             JsonArrayBuilder exampleList = Json.createArrayBuilder();
             JsonObjectBuilder typeObject = Json.createObjectBuilder();
@@ -449,7 +441,7 @@ public class OpenAPIWriter {
                             typeObject = Json.createObjectBuilder();
                             arrayType = false;
                             pIndex = 1;
-                            exampleSet = new HashSet<String>();
+                            exampleSet = new HashSet<>();
                             exampleList = Json.createArrayBuilder();
                         }
                     }
@@ -469,12 +461,6 @@ public class OpenAPIWriter {
                         uriDocs.add("description", "Class identifier");
                         classDefinition.add("externalDocs", uriDocs.build());
 
-                        /*
-                        if (soln.contains("targetClass")) {
-                            classDefinition.add("@id", soln.getResource("targetClass").toString());
-                        } else {
-                            classDefinition.add("@id", soln.getResource("resource").toString());
-                        }*/
                         if (soln.contains("classDescription")) {
                             classDefinition.add("description", soln.getLiteral("classDescription").getString());
                         }
@@ -653,7 +639,7 @@ public class OpenAPIWriter {
                             }
                         }
 
-                        pathSet = new HashSet<String>();
+                        pathSet = new HashSet<>();
 
                         JsonArrayBuilder required = Json.createArrayBuilder();
 
@@ -672,20 +658,18 @@ public class OpenAPIWriter {
 
                         definitions.add(className, classDefinition.build());
                         properties = Json.createObjectBuilder();
-                        requiredPredicates = new HashSet<String>();
+                        requiredPredicates = new HashSet<>();
                     }
                 }
             }
 
-            Map<String, Object> defs = new HashMap<String, Object>() {
+            return new HashMap<>() {
                 {
                     put("definitions", definitions);
                     put("paths", paths);
                     put("tags", tags);
                 }
             };
-
-            return defs;
         }
     }
 
@@ -728,7 +712,7 @@ public class OpenAPIWriter {
 
         pss.setCommandText(selectClass);
 
-        try (QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), pss.toString())) {
+        try (QueryExecution qexec = QueryExecution.service(endpointServices.getCoreSparqlAddress(), pss.toString())) {
 
             ResultSet results = qexec.execSelect();
 
@@ -748,27 +732,10 @@ public class OpenAPIWriter {
                     String description = soln.getLiteral("description").getString();
                     infoObject.add("description", (lang.equals("fi") ? "Automaattisesti generoitu Open API rajapintakuvaus. Huom! Rajapintakuvauksen voi tuottaa useammalla eri kielellä. Tietomallin kuvaus kielellä fi: " : "Automatically generated Open API specification. Notice that this specification can be generated in multiple languages! Datamodel description in " + lang + ": ") + description);
                 }
-                
-                /*
-                if (!modelID.endsWith("/") || !modelID.endsWith("#"))
-                    schema.add("@id", modelID + "#");
-                else
-                    schema.add("@id", modelID);
-                */
 
                 infoObject.add("title", title);
 
                 infoObject.add("version", "0.01");
-
-                /*
-                Date modified = graphManager.lastModified(modelID);
-                SimpleDateFormat format = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz");
-
-                if (modified != null) {
-                    String dateModified = format.format(modified);
-                    schema.add("modified", dateModified);
-                }*/
-
             }
 
             externalDocs.add("url", modelID);

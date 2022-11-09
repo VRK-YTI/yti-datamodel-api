@@ -13,6 +13,7 @@ import org.apache.jena.datatypes.xsd.XSDDateTime;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.query.*;
 import org.apache.jena.rdf.model.*;
+import org.apache.jena.rdfconnection.RDFConnection;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.riot.RDFLanguages;
 import org.apache.jena.shared.PrefixMapping;
@@ -20,13 +21,10 @@ import org.apache.jena.update.UpdateException;
 import org.apache.jena.update.UpdateExecutionFactory;
 import org.apache.jena.update.UpdateProcessor;
 import org.apache.jena.update.UpdateRequest;
-import org.apache.jena.util.FileManager;
 import org.apache.jena.util.ResourceUtils;
 import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDF;
-import org.apache.jena.web.DatasetAdapter;
-import org.apache.jena.web.DatasetGraphAccessorHTTP;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,8 +34,6 @@ import org.topbraid.shacl.vocabulary.SH;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Service
 public class GraphManager {
@@ -304,22 +300,25 @@ public class GraphManager {
      * @param toGraph     New graph IRI as String
      * @param fromService Service where graph exists
      * @param toService   Service where graph is copied
-     * @throws NullPointerException
+     * @throws NullPointerException if from graph model is null
      */
     public static void addGraphFromServiceToService(String fromGraph,
                                                     String toGraph,
                                                     String fromService,
                                                     String toService) throws NullPointerException {
 
-        DatasetAccessor fromAccessor = DatasetAccessorFactory.createHTTP(fromService);
-        Model graphModel = fromAccessor.getModel(fromGraph);
+        Model graphModel;
+        try(RDFConnection fromConnection = RDFConnection.connect(fromService)){
+            graphModel = fromConnection.fetch(fromGraph);
+        }
 
         if (graphModel == null) {
             throw new NullPointerException();
         }
 
-        DatasetAccessor toAccessor = DatasetAccessorFactory.createHTTP(toService);
-        toAccessor.add(toGraph, graphModel);
+        try(RDFConnection toConnection = RDFConnection.connect(toService)){
+            toConnection.load(toGraph, graphModel);
+        }
 
     }
 
@@ -365,8 +364,7 @@ public class GraphManager {
         Query query = pss.asQuery();
 
         try {
-            boolean b = jenaClient.askQuery(endpointServices.getCoreSparqlAddress(), query, "urn:csc:iow:sd");
-            return b;
+            return jenaClient.askQuery(endpointServices.getCoreSparqlAddress(), query, "urn:csc:iow:sd");
         } catch (Exception ex) {
             logger.warn("Default graph test failed", ex);
             return false;
@@ -374,8 +372,8 @@ public class GraphManager {
     }
 
     public void initServiceCategories() {
-        Model m = FileManager.get().loadModel("ptvl-skos.rdf");
-        jenaClient.putModelToCore("urn:yti:servicecategories", m);
+        Model model = RDFDataMgr.loadModel("ptvl-skos.rdf");
+        jenaClient.putModelToCore("urn:yti:servicecategories", model);
     }
 
     /**
@@ -460,8 +458,7 @@ public class GraphManager {
 
         Query query = pss.asQuery();
         try {
-            boolean b = jenaClient.askQuery(endpointServices.getCoreSparqlAddress(), query);
-            return b;
+            return jenaClient.askQuery(endpointServices.getCoreSparqlAddress(), query);
         } catch (Exception ex) {
             return false;
         }
@@ -485,8 +482,7 @@ public class GraphManager {
         Query query = pss.asQuery();
 
         try {
-            boolean b = jenaClient.askQuery(endpointServices.getCoreSparqlAddress(), query);
-            return b;
+            return jenaClient.askQuery(endpointServices.getCoreSparqlAddress(), query);
         } catch (Exception ex) {
             return false;
         }
@@ -517,8 +513,7 @@ public class GraphManager {
 
         Query query = pss.asQuery();
         try {
-            boolean b = jenaClient.askQuery(endpointServices.getCoreSparqlAddress(), query);
-            return b;
+            return jenaClient.askQuery(endpointServices.getCoreSparqlAddress(), query);
         } catch (Exception ex) {
             return false;
         }
@@ -550,8 +545,7 @@ public class GraphManager {
 
         Query query = pss.asQuery();
         try {
-            boolean b = jenaClient.askQuery(endpointServices.getCoreSparqlAddress(), query);
-            return b;
+            return jenaClient.askQuery(endpointServices.getCoreSparqlAddress(), query);
         } catch (Exception ex) {
             return false;
         }
@@ -573,8 +567,7 @@ public class GraphManager {
 
         Query query = pss.asQuery();
         try {
-            boolean b = jenaClient.askQuery(endpointServices.getCoreSparqlAddress(), query);
-            return b;
+            return jenaClient.askQuery(endpointServices.getCoreSparqlAddress(), query);
         } catch (Exception ex) {
             return false;
         }
@@ -682,8 +675,7 @@ public class GraphManager {
             }
             String prefix = soln.getLiteral("prefix").getString();
             String namespace = soln.getLiteral("namespace").getString();
-            PrefixMapping pm = PrefixMapping.Factory.create().setNsPrefix(prefix, namespace);
-            return pm;
+            return PrefixMapping.Factory.create().setNsPrefix(prefix, namespace);
         }
         throw new IllegalArgumentException("No model found for " + resource);
     }
@@ -692,14 +684,11 @@ public class GraphManager {
      * Initializes Core service with default Graph from static resources file
      */
     public void createDefaultGraph() {
-
-        DatasetAccessor accessor = DatasetAccessorFactory.createHTTP(endpointServices.getCoreReadWriteAddress());
-
-        Model m = ModelFactory.createDefaultModel();
-        RDFDataMgr.read(m, LDHelper.getDefaultGraphInputStream(), RDFLanguages.JSONLD);
-
-        accessor.putModel("urn:csc:iow:sd", m);
-
+        try(RDFConnection connection = RDFConnection.connect(endpointServices.getCoreReadWriteAddress())){
+            Model m = ModelFactory.createDefaultModel();
+            RDFDataMgr.read(m, LDHelper.getDefaultGraphInputStream(), RDFLanguages.JSONLD);
+            connection.put("urn:csc:iow:sd", m);
+        }
     }
 
     /**
@@ -745,29 +734,16 @@ public class GraphManager {
         pss.setCommandText(query);
         pss.setIri("graph", id);
 
-        logger.info("Removing model from " + id);
+        logger.info("Removing model from {}", id);
 
         UpdateRequest queryObj = pss.asUpdate();
         UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, endpointServices.getCoreSparqlUpdateAddress());
-
-        /* TODO: remove when resolved JENA-1255 */
-        // namespaceBugFix(id.toString());
 
         try {
             qexec.execute();
         } catch (UpdateException ex) {
             logger.warn(ex.toString());
         }
-    }
-
-    /**
-     * TODO: remove when resolved JENA-1255. This removes model graph by putting empty model to the graph.
-     *
-     * @param id
-     */
-    public void namespaceBugFix(String id) {
-        Model empty = ModelFactory.createDefaultModel();
-        jenaClient.putModelToCore(id, empty);
     }
 
     /**
@@ -821,32 +797,6 @@ public class GraphManager {
          UpdateAction.execute(request, graphStore) ;
 
          */
-    }
-
-    /**
-     * TODO: Remove!? Not in use. Fixed in front?
-     *
-     * @param model
-     */
-    public void deleteExternalGraphReferences(String model) {
-
-        String query = "DELETE { "
-            + "GRAPH ?graph { ?any rdfs:label ?label . } } "
-            + "WHERE { GRAPH ?graph { "
-            + "?graph dcterms:requires ?any . "
-            + "?any a dcap:MetadataVocabulary . "
-            + "?any rdfs:label ?label . "
-            + "}}";
-
-        ParameterizedSparqlString pss = new ParameterizedSparqlString();
-        pss.setNsPrefixes(LDHelper.PREFIX_MAP);
-        pss.setIri("graph", model);
-
-        pss.setCommandText(query);
-
-        UpdateRequest queryObj = pss.asUpdate();
-        UpdateProcessor qexec = UpdateExecutionFactory.createRemoteForm(queryObj, endpointServices.getCoreSparqlUpdateAddress());
-        qexec.execute();
     }
 
     /**
@@ -1090,9 +1040,10 @@ public class GraphManager {
         Model prefixModel = ModelFactory.createDefaultModel();
         prefixModel.setNsPrefixes(getPrefixMappingFromResource(resource));
         prefixModel.add(ResourceFactory.createResource(model.toString()), RDF.type, OWL.Ontology);
-        DatasetAccessor toAccessor = DatasetAccessorFactory.createHTTP(endpointServices.getCoreReadWriteAddress());
-        toAccessor.add(model.toString(), prefixModel);
-        toAccessor.add(model.toString() + "#ExportGraph", prefixModel);
+        try(RDFConnection connection = RDFConnection.connect(endpointServices.getCoreReadWriteAddress())){
+            connection.load(model.toString(), prefixModel);
+            connection.load(model.toString() + "#ExportGraph", prefixModel);
+        }
 
     }
 
@@ -1141,45 +1092,45 @@ public class GraphManager {
                 }
                 break;
             case "DRAFT":
-                final List draftChanges = Stream.of("INCOMPLETE", "VALID", "RETIRED", "INVALID", "SUPERSEDED").collect(Collectors.toList());
+                final List<String> draftChanges = List.of("INCOMPLETE", "VALID", "RETIRED", "INVALID", "SUPERSEDED");
                 if (draftChanges.contains(endStatus)) {
-                    logger.debug("Status changes in " + model + " from " + initialStatus + " to " + endStatus);
+                    logger.debug("Status changes in {} from {} to {}", model, initialStatus, endStatus);
                     changeResourceStatuses(model, initialStatus, endStatus);
                 } else {
                     throw new IllegalArgumentException("Invalid status change from " + initialStatus + " to " + endStatus);
                 }
                 break;
             case "VALID":
-                final List validChanges = Stream.of("RETIRED", "INVALID", "SUPERSEDED").collect(Collectors.toList());
+                final List<String> validChanges = List.of("RETIRED", "INVALID", "SUPERSEDED");
                 if (validChanges.contains(endStatus)) {
-                    logger.debug("Status changes in " + model + " from " + initialStatus + " to " + endStatus);
+                    logger.debug("Status changes in {} from {} to {}", model, initialStatus, endStatus);
                     changeResourceStatuses(model, initialStatus, endStatus);
                 } else {
                     throw new IllegalArgumentException("Invalid status change from " + initialStatus + " to " + endStatus);
                 }
                 break;
             case "RETIRED":
-                final List removedChanges = Stream.of("VALID", "INVALID", "SUPERSEDED").collect(Collectors.toList());
+                final List<String> removedChanges = List.of("VALID", "INVALID", "SUPERSEDED");
                 if (removedChanges.contains(endStatus)) {
-                    logger.debug("Status changes in " + model + " from " + initialStatus + " to " + endStatus);
+                    logger.debug("Status changes in {} from {} to {}", model, initialStatus, endStatus);
                     changeResourceStatuses(model, initialStatus, endStatus);
                 } else {
                     throw new IllegalArgumentException("Invalid status change from " + initialStatus + " to " + endStatus);
                 }
                 break;
             case "SUPERSEDED":
-                final List supersededChanges = Stream.of("VALID", "INVALID", "RETIRED").collect(Collectors.toList());
+                final List<String> supersededChanges = List.of("VALID", "INVALID", "RETIRED");
                 if (supersededChanges.contains(endStatus)) {
-                    logger.debug("Status changes in " + model + " from " + initialStatus + " to " + endStatus);
+                    logger.debug("Status changes in {} from {} to {}", model, initialStatus, endStatus);
                     changeResourceStatuses(model, initialStatus, endStatus);
                 } else {
                     throw new IllegalArgumentException("Invalid status change from " + initialStatus + " to " + endStatus);
                 }
                 break;
             case "INVALID":
-                final List invalidChanges = Stream.of("RETIRED", "VALID", "SUPERSEDED").collect(Collectors.toList());
+                final List<String> invalidChanges = List.of("RETIRED", "VALID", "SUPERSEDED");
                 if (invalidChanges.contains(endStatus)) {
-                    logger.debug("Status changes in " + model + " from " + initialStatus + " to " + endStatus);
+                    logger.debug("Status changes in {} from {} to {}", model, initialStatus, endStatus);
                     changeResourceStatuses(model, initialStatus, endStatus);
                 } else {
                     throw new IllegalArgumentException("Invalid status change from " + initialStatus + " to " + endStatus);
@@ -1197,7 +1148,7 @@ public class GraphManager {
     public void changeStatusesAsSuperUser(String model,
                                           String initialStatus,
                                           String endStatus) {
-        final List allChanges = Stream.of("INCOMPLETE", "DRAFT", "VALID", "SUPERSEDED", "RETIRED", "INVALID", "RECOMMENDED").collect(Collectors.toList());
+        final List<String> allChanges = List.of("INCOMPLETE", "DRAFT", "VALID", "SUPERSEDED", "RETIRED", "INVALID", "RECOMMENDED");
 
         if (allChanges.contains(endStatus) && allChanges.contains(initialStatus)) {
             logger.debug("Status changes in " + model + " from " + initialStatus + " to " + endStatus + " as SuperUser");
@@ -1260,8 +1211,7 @@ public class GraphManager {
 
         Literal created = LDHelper.getDateTimeLiteral();
 
-        DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(endpointServices.getCoreReadWriteAddress());
-        DatasetAdapter adapter = new DatasetAdapter(accessor);
+        RDFConnection connection = RDFConnection.connect(endpointServices.getCoreReadWriteAddress());
 
         Resource modelResource = oldModelGraph.getResource(model.toString());
         ResourceUtils.renameResource(modelResource, newModel.toString());
@@ -1276,15 +1226,22 @@ public class GraphManager {
         LDHelper.rewriteLiteral(oldModelGraph, newModelResource, LDHelper.curieToProperty("dcap:preferredXMLNamespaceName"), ResourceFactory.createPlainLiteral(newModel.toString() + "#"));
         LDHelper.rewriteLiteral(oldModelGraph, newModelResource, LDHelper.curieToProperty("dcap:preferredXMLNamespacePrefix"), ResourceFactory.createPlainLiteral(newPrefix));
         renameObjectNamespaceInModel(oldModelGraph, model.toString() + "#", newModel.toString() + "#");
-        adapter.putModel(newModel.toString(), oldModelGraph);
-
-        Model oldHasPartGraph = adapter.getModel(model.toString() + "#HasPartGraph");
-
+        connection.put(newModel.toString(), oldModelGraph);
+        Model oldHasPartGraph;
+        try{
+            oldHasPartGraph = connection.fetch(model.toString() + "#HasPartGraph");
+        }catch(HttpException ex){
+            oldHasPartGraph = null;
+        }
         if (oldHasPartGraph != null && oldHasPartGraph.size() > 1) {
 
             ResourceUtils.renameResource(oldHasPartGraph.getResource(model.toString()), newModel.toString());
-
-            Model oldPositionGraph = adapter.getModel(model.toString() + "#PositionGraph");
+            Model oldPositionGraph;
+            try{
+                oldPositionGraph = connection.fetch((model.toString() + "#PositionGraph"));
+            }catch(HttpException ex){
+                oldPositionGraph = null;
+            }
             if (oldPositionGraph != null && oldPositionGraph.size() > 2) {
                 ResIterator positionResources = oldPositionGraph.listSubjects();
                 while (positionResources.hasNext()) {
@@ -1297,7 +1254,7 @@ public class GraphManager {
                         }
                     }
                 }
-                adapter.putModel(newModel.toString() + "#PositionGraph", oldPositionGraph);
+                connection.put(newModel.toString() + "#PositionGraph", oldPositionGraph);
             }
             NodeIterator hasPartObjects = oldHasPartGraph.listObjectsOfProperty(DCTerms.hasPart);
 
@@ -1307,7 +1264,12 @@ public class GraphManager {
                 if (oldGraph.startsWith(model.toString() + "#")) {
                     String newGraph = oldGraph.replace(model.toString() + "#", newModel.toString() + "#");
                     logger.info("Creating version from " + oldGraph + " to " + newGraph);
-                    Model oldResourceGraph = adapter.getModel(oldGraph);
+                    Model oldResourceGraph;
+                    try{
+                        oldResourceGraph = connection.fetch(oldGraph);
+                    }catch(HttpException ex){
+                        oldResourceGraph = null;
+                    }
                     if (oldResourceGraph != null) { // FIXME: References to removed resources?!?
                         Resource oldResource = oldResourceGraph.getResource(oldGraph);
                         ResourceUtils.renameResource(oldResource, newGraph);
@@ -1328,12 +1290,12 @@ public class GraphManager {
                             ResourceUtils.renameResource(propertyShape, "urn:uuid:" + UUID.randomUUID().toString());
                         }
 
-                        adapter.putModel(newGraph, oldResourceGraph);
+                        connection.put(newGraph, oldResourceGraph);
                         ResourceUtils.renameResource(hasPartResource, newGraph);
                     }
                 }
             }
-            adapter.putModel(newModel.toString() + "#HasPartGraph", oldHasPartGraph);
+            connection.put(newModel.toString() + "#HasPartGraph", oldHasPartGraph);
         }
 
     }
@@ -1562,19 +1524,26 @@ public class GraphManager {
      *
      * @param fromGraph Graph IRI as string
      * @param toGraph   New copied graph IRI as string
-     * @throws NullPointerException
+     * @throws NullPointerException if from graph is null
      */
     public void addCoreGraphToCoreGraph(String fromGraph,
                                         String toGraph) throws NullPointerException {
 
-        DatasetAccessor fromAccessor = DatasetAccessorFactory.createHTTP(endpointServices.getCoreReadWriteAddress());
-        Model graphModel = fromAccessor.getModel(fromGraph);
+        try(RDFConnection connection = RDFConnection.connect(endpointServices.getCoreReadWriteAddress())){
+            Model model;
+            try{
+                 model = connection.fetch(fromGraph);
+            }catch(HttpException ex){
+                model = null;
+            }
 
-        if (graphModel == null) {
-            throw new NullPointerException();
+            if (model == null) {
+                throw new NullPointerException();
+            }
+
+            connection.load(toGraph, model);
         }
 
-        fromAccessor.add(toGraph, graphModel);
     }
 
     /**
@@ -1596,18 +1565,17 @@ public class GraphManager {
             logger.warn(ex.getMessage());
         } */
 
-        DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(endpointServices.getCoreReadWriteAddress());
-        DatasetAdapter adapter = new DatasetAdapter(accessor);
-        adapter.putModel(id, model);
-
+        try(RDFConnection connection = RDFConnection.connect(endpointServices.getCoreReadWriteAddress())){
+            connection.put(id, model);
+        }
     }
 
     public void addToGraph(Model model,
                            String id) {
-        logger.debug("Adding to " + id);
-        DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(endpointServices.getCoreReadWriteAddress());
-        DatasetAdapter adapter = new DatasetAdapter(accessor);
-        adapter.add(id, model);
+        logger.debug("Adding to {}", id);
+        try(RDFConnection connection = RDFConnection.connect(endpointServices.getCoreReadWriteAddress())){
+            connection.load(id, model);
+        }
     }
 
     /**
@@ -1629,12 +1597,6 @@ public class GraphManager {
      */
     public Model constructModelFromCoreGraph(String query) {
         return jenaClient.constructFromService(query, endpointServices.getCoreSparqlAddress());
-      /* try (RDFConnectionRemote conn = endpointServices.getCoreConnection()) {
-            return conn.queryConstruct(query);
-        } catch (Exception ex) {
-            logger.warn(ex.getMessage());
-            return null;
-        } */
     }
 
     public Model constructModelFromService(String query,
@@ -1840,16 +1802,12 @@ public class GraphManager {
         while (exportModel.contains(modelResource, DCTerms.relation)) {
             Statement relatedStatement = exportModel.getProperty(modelResource, DCTerms.relation);
             RDFList relatedLinkList = relatedStatement.getObject().as(RDFList.class);
-            relatedLinkList.asJavaList().forEach((node) -> {
-                node.asResource().removeProperties();
-            });
+            relatedLinkList.asJavaList().forEach(node -> node.asResource().removeProperties());
             relatedLinkList.removeList();
             relatedStatement.remove();
         }
 
-        exportModel.getNsPrefixMap().forEach((key, value) -> {
-            exportModel.removeNsPrefix(key);
-        });
+        exportModel.getNsPrefixMap().forEach((key, value) -> exportModel.removeNsPrefix(key));
 
         exportModel.setNsPrefixes(amodel.asGraph().getNsPrefixMap());
 

@@ -16,7 +16,6 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
-import fi.vm.yti.datamodel.api.service.XMLSchemaWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
@@ -119,15 +118,6 @@ public class XMLSchemaBuilder {
         Element documentation = this.document.createElement("xs:documentation");
         documentation.setAttribute("xml:lang", language);
         annotation.appendChild(documentation);
-        return documentation;
-    }
-
-    public Element newDocumentation(Element elem) {
-        Element annotation = this.document.createElement("xs:annotation");
-        Element documentation = this.document.createElement("xs:documentation");
-        annotation.appendChild(documentation);
-        elem.appendChild(annotation);
-
         return documentation;
     }
 

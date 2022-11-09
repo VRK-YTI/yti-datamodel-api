@@ -9,16 +9,12 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Iterator;
 
+import jakarta.json.*;
+import org.apache.jena.rdfconnection.RDFConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.json.Json;
-import javax.json.JsonArray;
-import javax.json.JsonArrayBuilder;
-import javax.json.JsonObject;
-import javax.json.JsonReader;
-import javax.json.JsonValue;
-import javax.json.JsonValue.ValueType;
+
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
@@ -30,15 +26,13 @@ import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.vocabulary.RDF;
-import org.apache.jena.web.DatasetAdapter;
-import org.apache.jena.web.DatasetGraphAccessorHTTP;
 
 public class OPHCodeServer {
 
     static final private Logger logger = LoggerFactory.getLogger(OPHCodeServer.class.getName());
 
     private final EndpointServices endpointServices;
-    private DatasetAdapter adapter;
+    private RDFConnection connection;
     private String uri;
     private Property description = ResourceFactory.createProperty("http://purl.org/dc/terms/", "description");
     private Property name = ResourceFactory.createProperty("http://purl.org/dc/terms/", "title");
@@ -55,14 +49,13 @@ public class OPHCodeServer {
 
     public OPHCodeServer(String uri,
                          EndpointServices endpointServices) {
-        DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(endpointServices.getSchemesReadWriteAddress());
-        this.adapter = new DatasetAdapter(accessor);
+        this.connection = RDFConnection.connect(endpointServices.getSchemesReadWriteAddress());
         this.endpointServices = endpointServices;
         this.uri = uri;
     }
 
     public boolean containsCodeList(String uri) {
-        return adapter.containsModel(uri);
+        return connection.fetchDataset().containsNamedModel(uri);
     }
 
     public boolean updateCodelistsFromServer() {
@@ -108,7 +101,7 @@ public class OPHCodeServer {
                         String lang = groupName.getString("kieli").toLowerCase();
                         String label = groupName.getString("nimi");
                         JsonValue kuvausValue = groupName.get("kuvaus");
-                        if (kuvausValue != null && kuvausValue.getValueType() == ValueType.STRING) {
+                        if (kuvausValue != null && kuvausValue.getValueType() == JsonValue.ValueType.STRING) {
                             String comment = groupName.getString("kuvaus");
                             group.addLiteral(description, ResourceFactory.createLangLiteral(comment, lang));
                         }
@@ -137,14 +130,14 @@ public class OPHCodeServer {
                         valueScheme.addLiteral(id, ResourceFactory.createPlainLiteral(koodistoUri));
                         JsonValue owner = codes.get("omistaja");
 
-                        if (owner.getValueType() == ValueType.STRING)
+                        if (owner.getValueType() == JsonValue.ValueType.STRING)
                             valueScheme.addLiteral(creator, ResourceFactory.createPlainLiteral(codes.getString("omistaja")));
 
                         JsonObject latestKoodisto = codes.getJsonObject("latestKoodistoVersio");
 
                         JsonValue status = latestKoodisto.get("tila");
 
-                        if (status.getValueType() == ValueType.STRING) {
+                        if (status.getValueType() == JsonValue.ValueType.STRING) {
                             String statusText = status.toString().replaceAll("\"", "");
                             if (statusMap.containsKey(statusText)) {
                                 valueScheme.addLiteral(statusProperty, ResourceFactory.createPlainLiteral(statusMap.get(statusText)));
@@ -169,7 +162,7 @@ public class OPHCodeServer {
                             String label = codeName.getString("nimi");
 
                             JsonValue kuvausValue = codeName.get("kuvaus");
-                            if (kuvausValue != null && kuvausValue.getValueType() == ValueType.STRING) {
+                            if (kuvausValue != null && kuvausValue.getValueType() == JsonValue.ValueType.STRING) {
                                 String comment = codeName.getString("kuvaus");
                                 valueScheme.addLiteral(description, ResourceFactory.createLangLiteral(comment, lang));
                             }
@@ -187,10 +180,7 @@ public class OPHCodeServer {
 
                 }
 
-                DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(endpointServices.getSchemesReadWriteAddress());
-                DatasetAdapter adapter = new DatasetAdapter(accessor);
-
-                adapter.putModel(uri, model);
+                connection.put(uri, model);
 
                 return true;
 
@@ -248,15 +238,13 @@ public class OPHCodeServer {
         model.setNsPrefix("dcterms", "http://purl.org/dc/terms/");
         model.setNsPrefix("iow", "http://uri.suomi.fi/datamodel/ns/iow#");
 
-        Response.ResponseBuilder rb;
-
         Client client = ClientBuilder.newClient();
         WebTarget target = client.target(uri).queryParam("format", "application/json");
         Response response = target.request("application/json").get();
 
         if (response.getStatusInfo().getFamily() == Response.Status.Family.SUCCESSFUL) {
 
-            logger.info("Copying " + uri);
+            logger.info("Copying {}", uri);
 
             JsonReader jsonReader = Json.createReader(response.readEntity(InputStream.class));
             JsonArray codeListArray = jsonReader.readArray();
@@ -293,7 +281,7 @@ public class OPHCodeServer {
                     codeRes.addLiteral(name, ResourceFactory.createLangLiteral(label, lang));
 
                     JsonValue kuvausValue = codeName.get("kuvaus");
-                    if (kuvausValue != null && kuvausValue.getValueType() == ValueType.STRING) {
+                    if (kuvausValue != null && kuvausValue.getValueType() == JsonValue.ValueType.STRING) {
                         String comment = codeName.getString("kuvaus");
                         codeRes.addLiteral(description, ResourceFactory.createLangLiteral(comment, lang));
                     }
@@ -304,10 +292,7 @@ public class OPHCodeServer {
 
             //   RDFDataMgr.write(System.out, model, Lang.TURTLE) ;
 
-            DatasetGraphAccessorHTTP accessor = new DatasetGraphAccessorHTTP(endpointServices.getSchemesReadWriteAddress());
-            DatasetAdapter adapter = new DatasetAdapter(accessor);
-
-            adapter.putModel(uri, model);
+            connection.put(uri, model);
 
             return true;
         } else {

@@ -2,7 +2,6 @@ package fi.vm.yti.datamodel.api.endpoint.genericapi;
 
 import fi.vm.yti.datamodel.api.security.AuthorizationManager;
 import fi.vm.yti.datamodel.api.service.EndpointServices;
-import fi.vm.yti.datamodel.api.security.AuthorizationManagerImpl;
 import fi.vm.yti.datamodel.api.service.JerseyResponseManager;
 import fi.vm.yti.datamodel.api.utils.LDHelper;
 import io.swagger.v3.oas.annotations.Operation;
@@ -72,7 +71,7 @@ public class Sparql {
             return Response.status(400).build();
         }
 
-        try (QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getSparqlAddress(service), query)) {
+        try (QueryExecution qexec = QueryExecution.service(endpointServices.getSparqlAddress(service), query)) {
 
             OutputStream outs = new ByteArrayOutputStream();
             ResultSet results = qexec.execSelect();
@@ -120,9 +119,8 @@ public class Sparql {
             return Response.status(400).build();
         }
 
-        try (QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getSparqlAddress(service), query)) {
+        try (QueryExecution qexec = QueryExecution.service(endpointServices.getSparqlAddress(service), query)) {
 
-            OutputStream outs = new ByteArrayOutputStream();
             Model results = qexec.execConstruct();
 
             StringWriter writer = new StringWriter();

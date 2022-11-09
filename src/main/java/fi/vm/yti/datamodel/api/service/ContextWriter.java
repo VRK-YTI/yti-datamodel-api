@@ -5,13 +5,13 @@ package fi.vm.yti.datamodel.api.service;
 
 import fi.vm.yti.datamodel.api.utils.LDHelper;
 
+import jakarta.json.Json;
+import jakarta.json.JsonObjectBuilder;
 import org.apache.jena.query.*;
 import org.apache.jena.vocabulary.RDFS;
 import org.springframework.stereotype.Service;
 import org.topbraid.shacl.vocabulary.SH;
 
-import javax.json.Json;
-import javax.json.JsonObjectBuilder;
 
 @Service
 public class ContextWriter {
@@ -28,7 +28,7 @@ public class ContextWriter {
     /**
      * Creates context from JSONObjectBuilder
      *
-     * @param context
+     * @param context JsonObject builder to build context from
      * @return Returns JSON-LD Context
      */
     private String createDefaultContext(JsonObjectBuilder context) {
@@ -75,7 +75,7 @@ public class ContextWriter {
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
         pss.setCommandText(selectResources);
 
-        try (QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), pss.asQuery())) {
+        try (QueryExecution qexec = QueryExecution.service(endpointServices.getCoreSparqlAddress(), pss.asQuery())) {
 
             ResultSet results = qexec.execSelect();
 
@@ -154,7 +154,7 @@ public class ContextWriter {
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
         pss.setCommandText(selectResources);
 
-        QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), pss.asQuery());
+        QueryExecution qexec = QueryExecution.service(endpointServices.getCoreSparqlAddress(), pss.asQuery());
 
         ResultSet results = qexec.execSelect();
 

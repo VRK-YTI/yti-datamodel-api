@@ -6,9 +6,7 @@
 package fi.vm.yti.datamodel.api.config;
 
 import org.apache.http.HttpHost;
-import org.apache.http.client.config.RequestConfig;
 import org.elasticsearch.client.RestClient;
-import org.elasticsearch.client.RestClientBuilder;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -31,14 +29,13 @@ public class ElasticConfig {
     @Bean
     @SuppressWarnings("resource")
     protected RestHighLevelClient elasticSearchClient() {
-        RestHighLevelClient client = new RestHighLevelClient(RestClient.builder(
+        return new RestHighLevelClient(RestClient.builder(
             new HttpHost(config.getElasticHost(), Integer.parseInt(config.getElasticHttpPort()), config.getElasticHttpScheme())
         ).setRequestConfigCallback(
             requestConfigBuilder -> requestConfigBuilder
                 .setConnectTimeout(5000)
                 .setSocketTimeout(60000))
-            .setMaxRetryTimeoutMillis(60000)
         );
-        return client;
+        //Elasticsearch documentation recommends to only rely on the 
     }
 }

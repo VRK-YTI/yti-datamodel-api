@@ -14,7 +14,6 @@ import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
-import javax.ws.rs.core.Response.StatusType;
 
 import org.apache.jena.atlas.web.ContentType;
 import org.apache.jena.query.ParameterizedSparqlString;
@@ -26,7 +25,6 @@ import org.apache.jena.riot.RDFFormat;
 import org.apache.jena.riot.RDFLanguages;
 import org.apache.jena.riot.RDFWriterRegistry;
 import org.glassfish.jersey.client.ClientProperties;
-import org.glassfish.jersey.uri.UriComponent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -73,36 +71,15 @@ public class JerseyClient {
     }
 
     /**
-     * Returns Jersey response from Fuseki service
-     *
-     * @param id      Id of the graph
-     * @param service Id of the service
-     * @param ctype   Requested content-type
-     * @return Response
-     */
-    public Response getResponseFromService(String id,
-                                           String service,
-                                           String ctype) {
-        Client client = ClientBuilder.newClient();
-        WebTarget target = client.target(service).queryParam("graph", id);
-        logger.debug("Getting response from " + target.getUri().toString());
-        return target.request(ctype).get();
-
-    }
-
-
-    /**
      * Returns Export graph as Jersey Response
      *
      * @param graph ID of the graph
      * @param raw   If true returns content as text
-     * @param lang  Language of the required graph
      * @param ctype Required content type
      * @return Response
      */
     public Response getExportGraph(String graph,
                                    boolean raw,
-                                   String lang,
                                    String ctype) {
 
         try {
@@ -111,11 +88,15 @@ public class JerseyClient {
 
             Lang rdfLang = RDFLanguages.contentTypeToLang(contentType);
             if (rdfLang == null) {
-                logger.info("Unknown RDF type: " + ctype);
+                logger.info("Unknown RDF type: {}", ctype);
                 return jerseyResponseManager.notFound();
             }
-
-            RDFFormat format = RDFWriterRegistry.defaultSerialization(rdfLang);
+            RDFFormat format;
+            if(ctype.equals("application/ld+json")){
+                format = RDFFormat.JSONLD10_COMPACT_PRETTY;
+            }else{
+                format = RDFWriterRegistry.defaultSerialization(rdfLang);
+            }
 
             Model model = jenaClient.getModelFromCore(graph + "#ExportGraph");
 

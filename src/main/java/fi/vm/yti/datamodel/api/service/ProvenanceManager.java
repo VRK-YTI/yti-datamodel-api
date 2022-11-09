@@ -8,12 +8,9 @@ import fi.vm.yti.datamodel.api.utils.LDHelper;
 
 import org.apache.jena.iri.IRI;
 import org.apache.jena.query.ParameterizedSparqlString;
-import org.apache.jena.query.QuerySolution;
-import org.apache.jena.query.ResultSet;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.NodeIterator;
 import org.apache.jena.rdf.model.Property;
-import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.update.UpdateException;
 import org.apache.jena.update.UpdateExecutionFactory;
@@ -284,7 +281,7 @@ public class ProvenanceManager {
      *
      * @param oldid Old id
      * @param newid New id
-     * @return
+     * @return update request
      */
     public UpdateRequest renameIDRequest(String oldid,
                                          String newid) {

@@ -3,8 +3,6 @@ package fi.vm.yti.datamodel.api.service;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.query.ParameterizedSparqlString;
 import org.apache.jena.rdf.model.Model;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -14,7 +12,6 @@ import fi.vm.yti.datamodel.api.utils.QueryLibrary;
 @Service
 public class ExternalGraphManager {
 
-    private static final Logger logger = LoggerFactory.getLogger(ExternalGraphManager.class.getName());
     private final EndpointServices endpointServices;
     private final JenaClient jenaClient;
 
@@ -77,8 +74,6 @@ public class ExternalGraphManager {
 
     public Model getExternalClass(IRI id,
                                   String model) {
-
-        String sparqlService = endpointServices.getImportsSparqlAddress();
 
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
 
@@ -201,8 +196,6 @@ public class ExternalGraphManager {
 
     public Model getExternalPredicate(IRI idIRI,
                                       String model) {
-
-        String sparqlService = endpointServices.getImportsSparqlAddress();
 
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
 

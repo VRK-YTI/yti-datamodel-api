@@ -11,9 +11,7 @@ import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIFactory;
 import org.apache.jena.query.ParameterizedSparqlString;
 import org.apache.jena.rdf.model.*;
-import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RiotException;
-import org.apache.jena.util.ResourceUtils;
 import org.glassfish.jersey.uri.UriComponent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -147,7 +145,7 @@ public class LDHelper {
     /**
      * Used in startup to load external schemas. Returns false if matches any of UNRESOLVABLE array
      *
-     * @param item
+     * @param item item to check
      * @return boolean
      */
     public static boolean isPrefixResolvable(String item) {
@@ -159,7 +157,7 @@ public class LDHelper {
     }
 
     public static final Map<String, String> PREFIX_MAP =
-        Collections.unmodifiableMap(new HashMap<String, String>() {{
+        Collections.unmodifiableMap(new HashMap<>() {{
             put("owl", "http://www.w3.org/2002/07/owl#");
             put("xsd", "http://www.w3.org/2001/XMLSchema#");
             put("rdf", "http://www.w3.org/1999/02/22-rdf-syntax-ns#");
@@ -231,9 +229,7 @@ public class LDHelper {
             res.removeAll(prop);
         }
 
-        denormalizedResources.forEach((denormRes)->{
-            denormRes.removeProperties();
-        });
+        denormalizedResources.forEach(Resource::removeProperties);
 
     }
 
@@ -297,16 +293,14 @@ public class LDHelper {
 
     public static List<String> RDFNodeListToStringList(List<RDFNode> nodes,
                                                        Property pred) {
-        List<String> arrList = new ArrayList();
-        nodes.forEach(node -> {
-            arrList.add(node.asResource().getRequiredProperty(pred).getLiteral().getString());
-        });
+        List<String> arrList = new ArrayList<>();
+        nodes.forEach(node -> arrList.add(node.asResource().getRequiredProperty(pred).getLiteral().getString()));
         return arrList;
     }
 
     public static List<String> RDFListToStringList(RDFList nodes) {
         List<RDFNode> listNodes = nodes.asJavaList();
-        List<String> arrList = new ArrayList();
+        List<String> arrList = new ArrayList<>();
         listNodes.forEach(node -> {
             Literal lit = node.asLiteral();
             arrList.add(lit.getString());
@@ -315,14 +309,14 @@ public class LDHelper {
     }
 
     public static final Map<String, Object> CONTEXT_MAP =
-        Collections.unmodifiableMap(new HashMap<String, Object>() {{
+        Collections.unmodifiableMap(new HashMap<>() {{
             put("subClassOf", jsonObject("{ '@id': 'http://www.w3.org/2000/01/rdf-schema#subClassOf', '@type': '@id' }"));
             put("property", jsonObject("{ '@id': 'http://www.w3.org/ns/shacl#property', '@type': '@id' }"));
             put("predicate", jsonObject("{ '@id': 'http://www.w3.org/ns/shacl#predicate', '@type': '@id' }"));
         }});
 
     public static final Map<String, Object> OPH_MAP =
-        Collections.unmodifiableMap(new HashMap<String, Object>() {{
+        Collections.unmodifiableMap(new HashMap<>() {{
             put("koodistos", jsonObject("{ '@id': 'http://www.w3.org/2000/01/rdf-schema#subClassOf', '@type': '@id' }"));
             put("koodistoUrl", jsonObject("{ '@id': 'http://www.w3.org/ns/shacl#property', '@type': '@id' }"));
             put("predicate", jsonObject("{ '@id': 'http://www.w3.org/ns/shacl#predicate', '@type': '@id' }"));
@@ -413,7 +407,9 @@ public class LDHelper {
         StringBuilder sb = new StringBuilder();
         Iterator<String> seIt = services.iterator();
         while (seIt.hasNext()) {
-            sb.append(wrap + seIt.next() + wrap);
+            sb.append(wrap);
+            sb.append(seIt.next());
+            sb.append(wrap);
             if (seIt.hasNext()) sb.append(sep);
         }
         return sb.toString();
@@ -710,8 +706,7 @@ public class LDHelper {
         Model model = ModelFactory.createDefaultModel();
 
         try {
-            RDFReader reader = model.getReader(Lang.JSONLD.getName());
-            reader.read(model, (InputStream) response.getEntity(), "urn:yti:resource");
+            model.read((InputStream) response.getEntity(), "urn:yti:resource");
         } catch (RiotException ex) {
             logger.info(ex.getMessage());
             return model;
@@ -725,7 +720,7 @@ public class LDHelper {
         Model model = ModelFactory.createDefaultModel();
         try {
             ObjectMapper mapper = new ObjectMapper();
-            Map<String,Object> jsonObject = mapper.readValue((InputStream) response.getEntity(), new TypeReference<Map<String,Object>>() {
+            Map<String,Object> jsonObject = mapper.readValue((InputStream) response.getEntity(), new TypeReference<>() {
             });
             List<Object> jsonList = (List<Object>) jsonObject.get("results");
             Map<String, Object> rootObject = new HashMap<>();
@@ -745,7 +740,7 @@ public class LDHelper {
         Model model = ModelFactory.createDefaultModel();
         try {
             ObjectMapper mapper = new ObjectMapper();
-            List<Object> jsonList = mapper.readValue((InputStream) response.getEntity(), new TypeReference<List<Object>>() {
+            List<Object> jsonList = mapper.readValue((InputStream) response.getEntity(), new TypeReference<>() {
             });
             Map<String, Object> rootObject = new HashMap<>();
             rootObject.put("@context", contextObject);

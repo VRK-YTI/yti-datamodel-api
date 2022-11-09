@@ -1,0 +1,47 @@
+{
+  "size": 10000,
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "terms": {
+            "language":  ["fi"]
+          }
+        },
+        {
+          "bool": {
+            "must_not": [
+              {
+                "term": {
+                  "status": {
+                    "value": "INCOMPLETE"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "query_string": {
+            "query": "test test* *test",
+            "fields": ["label.*^1.0"]
+          }
+        },
+        {
+          "bool": {
+            "should": [
+              {
+                "terms": {
+                  "status": [
+                    "VALID",
+                    "DRAFT"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+}

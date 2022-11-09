@@ -4,8 +4,6 @@ import org.apache.jena.iri.IRI;
 import org.apache.jena.rdf.model.*;
 import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.OWL;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import fi.vm.yti.datamodel.api.utils.LDHelper;
 
@@ -14,7 +12,6 @@ public class AbstractResource {
     protected Model graph;
     protected DataModel dataModel;
     protected IRI id;
-    private static final Logger logger = LoggerFactory.getLogger(AbstractResource.class.getName());
 
     public Model asGraph() {
         return this.graph;

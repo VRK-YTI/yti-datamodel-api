@@ -28,7 +28,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.*;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 @Service
@@ -59,12 +58,10 @@ public final class NamespaceManager {
         Property preferredXMLNamespacePrefix = ResourceFactory.createProperty("http://purl.org/ws-mmi-dc/terms/preferredXMLNamespacePrefix");
         RDFNode nsTypeStandard = ResourceFactory.createResource("http://purl.org/dc/terms/Standard");
 
-        Iterator i = LDHelper.PREFIX_MAP.entrySet().iterator();
 
-        while (i.hasNext()) {
-            Map.Entry ns = (Map.Entry) i.next();
-            String prefix = ns.getKey().toString();
-            String namespace = ns.getValue().toString();
+        for(Map.Entry<String, String> ns: LDHelper.PREFIX_MAP.entrySet()){
+            String prefix = ns.getKey();
+            String namespace = ns.getValue();
 
             if (LDHelper.isPrefixResolvable(prefix)) {
                 // TODO: Check & optimize resolving
@@ -92,7 +89,7 @@ public final class NamespaceManager {
     /**
      * Creates namespace model from default prefix-map
      *
-     * @return
+     * @return default namespace model
      */
     public Model getDefaultNamespaceModel() {
 
@@ -102,12 +99,9 @@ public final class NamespaceManager {
         Property preferredXMLNamespacePrefix = ResourceFactory.createProperty("http://purl.org/ws-mmi-dc/terms/preferredXMLNamespacePrefix");
         RDFNode nsTypeStandard = ResourceFactory.createResource("http://purl.org/dc/terms/Standard");
 
-        Iterator i = LDHelper.PREFIX_MAP.entrySet().iterator();
-
-        while (i.hasNext()) {
-            Map.Entry ns = (Map.Entry) i.next();
-            String prefix = ns.getKey().toString();
-            String namespace = ns.getValue().toString();
+        for(Map.Entry<String, String> ns: LDHelper.PREFIX_MAP.entrySet()){
+            String prefix = ns.getKey();
+            String namespace = ns.getValue();
 
             Resource nsResource = nsModel.createResource(namespace);
             nsModel.addLiteral(nsResource, preferredXMLNamespaceName, nsModel.createLiteral(namespace));
@@ -186,9 +180,9 @@ public final class NamespaceManager {
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
         pss.setCommandText(selectResources);
 
-        Map namespaceMap = new HashMap<String, String>();
+        Map<String, String> namespaceMap = new HashMap<>();
 
-        try (QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), pss.asQuery())) {
+        try (QueryExecution qexec = QueryExecution.service(endpointServices.getCoreSparqlAddress(), pss.asQuery())) {
 
             ResultSet results = qexec.execSelect();
 
@@ -315,7 +309,7 @@ public final class NamespaceManager {
                     return false;
                 }
 
-                HttpURLConnection connection = null;
+                HttpURLConnection connection;
 
                 try { // IOException
 
@@ -390,7 +384,8 @@ public final class NamespaceManager {
 
                             logger.info("Trying to parse " + testLang.getName() + " from " + namespace);
 
-                            RDFReader reader = model.getReader(testLang.getName());
+
+                            RDFReaderI reader = model.getReader(testLang.getName());
 
                             reader.setProperty("error-mode", "lax");
 

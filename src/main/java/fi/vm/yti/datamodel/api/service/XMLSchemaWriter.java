@@ -26,7 +26,7 @@ public class XMLSchemaWriter {
     private static final Logger logger = LoggerFactory.getLogger(XMLSchemaWriter.class.getName());
 
     private static final Map<String, String> DATATYPE_MAP =
-        Collections.unmodifiableMap(new HashMap<String, String>() {{
+        Collections.unmodifiableMap(new HashMap<>() {{
             put("http://www.w3.org/2001/XMLSchema#int", "xs:int");
             put("http://www.w3.org/2001/XMLSchema#integer", "xs:integer");
             put("http://www.w3.org/2001/XMLSchema#long", "xs:long");
@@ -107,7 +107,7 @@ public class XMLSchemaWriter {
         boolean classMetadata = false;
 
         Element complexType;
-        try (QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), pss.asQuery())) {
+        try (QueryExecution qexec = QueryExecution.service(endpointServices.getCoreSparqlAddress(), pss.asQuery())) {
             ResultSet results = qexec.execSelect();
 
             if (!results.hasNext()) {
@@ -170,7 +170,7 @@ public class XMLSchemaWriter {
             pss.setCommandText(selectResources);
             if (lang != null) pss.setLiteral("lang", lang);
 
-            try (QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), pss.asQuery())) {
+            try (QueryExecution qexec = QueryExecution.service(endpointServices.getCoreSparqlAddress(), pss.asQuery())) {
 
                 ResultSet results = qexec.execSelect();
 
@@ -226,7 +226,7 @@ public class XMLSchemaWriter {
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
         pss.setCommandText(selectClass);
 
-        try (QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), pss.toString())) {
+        try (QueryExecution qexec = QueryExecution.service(endpointServices.getCoreSparqlAddress(), pss.toString())) {
 
             ResultSet results = qexec.execSelect();
 
@@ -292,7 +292,7 @@ public class XMLSchemaWriter {
         pss.setCommandText(selectResources);
         pss.setNsPrefixes(LDHelper.PREFIX_MAP);
 
-        try (QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), pss.asQuery())) {
+        try (QueryExecution qexec = QueryExecution.service(endpointServices.getCoreSparqlAddress(), pss.asQuery())) {
 
             ResultSet results = qexec.execSelect();
             ResultSetPeekable pResults = ResultSetFactory.makePeekable(results);

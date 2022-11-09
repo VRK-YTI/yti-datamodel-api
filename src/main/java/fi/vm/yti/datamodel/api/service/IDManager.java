@@ -35,7 +35,7 @@ public class IDManager {
     /**
      * Returns true if url is not absolute
      *
-     * @param url
+     * @param url Url to check
      * @return boolean
      */
     public boolean isInvalid(String url) {
@@ -44,8 +44,8 @@ public class IDManager {
 
     /**
      * Creates IRI from string
-     *
-     * @param url
+     * TODO: this needs to be somehow replaced by IRIx?
+     * @param url URL
      * @return returns created IRI
      * @throws IRIException
      * @throws NullPointerException

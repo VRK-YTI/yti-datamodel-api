@@ -9,7 +9,6 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import fi.vm.yti.datamodel.api.security.AuthorizationManager;
-import fi.vm.yti.datamodel.api.security.AuthorizationManagerImpl;
 import fi.vm.yti.datamodel.api.service.JerseyResponseManager;
 import fi.vm.yti.datamodel.api.service.TerminologyManager;
 import fi.vm.yti.security.AuthenticatedUserProvider;
@@ -68,7 +67,7 @@ public class ConceptsSchemes {
             return jerseyResponseManager.okModel(terminologyManager.getSchemesModelFromTerminologyAPI(null, false));
         } else {
             final Map<UUID, Set<Role>> rolesInOrganizations = user.getRolesInOrganizations();
-            Set<String> orgIds = rolesInOrganizations.keySet().stream().map(u -> u.toString()).collect(Collectors.toSet());
+            Set<String> orgIds = rolesInOrganizations.keySet().stream().map(UUID::toString).collect(Collectors.toSet());
             if(orgIds.isEmpty()) {
                 return jerseyResponseManager.okModel(terminologyManager.getSchemesModelFromTerminologyAPI(null, false));
             } else {

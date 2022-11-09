@@ -1,9 +1,6 @@
 package fi.vm.yti.datamodel.api.endpoint.genericapi;
 
-import java.io.ByteArrayOutputStream;
-import java.io.OutputStream;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import javax.ws.rs.GET;
@@ -13,7 +10,6 @@ import javax.ws.rs.core.Response;
 
 import org.apache.jena.query.Query;
 import org.apache.jena.query.QueryExecution;
-import org.apache.jena.query.QueryExecutionFactory;
 import org.apache.jena.query.QueryFactory;
 import org.apache.jena.query.QuerySolution;
 import org.apache.jena.query.ResultSet;
@@ -69,7 +65,7 @@ public class Count {
 
         Query query = QueryFactory.create(queryString);
 
-        Map mapping = new HashMap<String,String>();
+        Map<String, String> mapping = new HashMap<>();
         mapping.put(LDHelper.curieToURI("dcap:DCAP"),"profiles");
         mapping.put(LDHelper.curieToURI("dcap:MetadataVocabulary"),"libraries");
         mapping.put(LDHelper.curieToURI("rdfs:Class"),"classes");
@@ -77,16 +73,14 @@ public class Count {
         mapping.put(LDHelper.curieToURI("owl:ObjectProperty"),"associations");
         mapping.put(LDHelper.curieToURI("owl:DatatypeProperty"),"attributes");
 
-        try (QueryExecution qexec = QueryExecutionFactory.sparqlService(endpointServices.getCoreSparqlAddress(), query)) {
+        try (QueryExecution qexec = QueryExecution.service(endpointServices.getCoreSparqlAddress(), query)) {
             ResultSet results = qexec.execSelect();
-            List<String> resultVars = results.getResultVars();
 
-            Map object = new HashMap<String, String>();
-            OutputStream outs = new ByteArrayOutputStream();
+            Map<String, String> object = new HashMap<>();
 
             while(results.hasNext()) {
                 QuerySolution soln = results.next();
-                String key = (String) mapping.get(soln.get("type").asResource().getURI());
+                String key = mapping.get(soln.get("type").asResource().getURI());
                 String val = soln.get("gc").asLiteral().getString();
                 object.put(key,val);
             }

@@ -12,13 +12,11 @@ import javax.ws.rs.core.MediaType;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Resource;
-import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.sparql.vocabulary.FOAF;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -55,7 +53,8 @@ public class GroupManagementService {
     public void updateUsers() {
         final String url = applicationProperties.getDefaultGroupManagementAPI().replace("public-api","private-api")+"users";
         Client client = clientFactory.create();
-        List<GroupManagementUserDTO> userList = client.target(url).request(MediaType.APPLICATION_JSON).get(new GenericType<List<GroupManagementUserDTO>>(){});
+        List<GroupManagementUserDTO> userList = client.target(url).request(MediaType.APPLICATION_JSON).get(new GenericType<>() {
+        });
         userList.forEach(user -> users.put(user.getId(), user));
     }
 

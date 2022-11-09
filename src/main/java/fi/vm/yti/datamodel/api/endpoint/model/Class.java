@@ -6,7 +6,6 @@ package fi.vm.yti.datamodel.api.endpoint.model;
 import fi.vm.yti.datamodel.api.index.SearchIndexManager;
 import fi.vm.yti.datamodel.api.model.ReusableClass;
 import fi.vm.yti.datamodel.api.security.AuthorizationManager;
-import fi.vm.yti.datamodel.api.security.AuthorizationManagerImpl;
 import fi.vm.yti.datamodel.api.service.*;
 import fi.vm.yti.datamodel.api.utils.LDHelper;
 import fi.vm.yti.datamodel.api.utils.QueryLibrary;
@@ -107,7 +106,7 @@ public class Class {
             // TODO: Create namespacemap from all models
             pss.setNsPrefixes(LDHelper.PREFIX_MAP);
 
-            String queryString = "";
+            String queryString;
 
             if (model != null && !model.equals("undefined")) {
                 queryString = QueryLibrary.listClassesQuery;
@@ -201,7 +200,7 @@ public class Class {
                 return jerseyResponseManager.invalidIRI();
             }
 
-            String provUUID = null;
+            String provUUID;
 
             if (isNotEmpty(body)) {
 
@@ -367,17 +366,15 @@ public class Class {
         @QueryParam("id") String id) {
 
         /* Check that URIs are valid */
-        IRI modelIRI, idIRI;
+        IRI modelIRI;
+        IRI idIRI;
         try {
             modelIRI = idManager.constructIRI(model);
             idIRI = idManager.constructIRI(id);
-        } catch (NullPointerException e) {
-            return jerseyResponseManager.invalidIRI();
-        } catch (IRIException e) {
+        } catch (NullPointerException | IRIException e) {
             return jerseyResponseManager.invalidIRI();
         }
 
-        YtiUser user = userProvider.getUser();
 
         /* If Class is defined in the model */
         if (id.startsWith(model)) {
@@ -409,7 +406,7 @@ public class Class {
             }
 
             /* If removing referenced class */
-            logger.debug("Deleting referenced class "+idIRI.toString()+ "from "+modelIRI.toString());
+            logger.debug("Deleting referenced class {} from {}", idIRI, modelIRI);
             graphManager.deleteGraphReferenceFromExportModel(idIRI, modelIRI);
             graphManager.deletePositionGraphReferencesFromModel(model,id);
             graphManager.updateContentModified(model);

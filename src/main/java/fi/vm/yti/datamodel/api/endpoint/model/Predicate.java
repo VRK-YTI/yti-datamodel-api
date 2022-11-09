@@ -96,7 +96,7 @@ public class Predicate {
             // TODO: Create namespacemap from models
             pss.setNsPrefixes(LDHelper.PREFIX_MAP);
 
-            String queryString = "";
+            String queryString;
 
             if (model != null && !model.equals("undefined")) {
                 queryString = QueryLibrary.listPredicatesQuery;
@@ -197,7 +197,7 @@ public class Predicate {
                 return jerseyResponseManager.invalidIRI();
             }
 
-            String provUUID = null;
+            String provUUID;
 
             if (isNotEmpty(body)) {
 
