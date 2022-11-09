@@ -110,6 +110,7 @@ dependencies {
     implementation group: 'io.swagger.core.v3', name: 'swagger-core', version: '2.1.10'
     implementation group: 'io.swagger.core.v3', name: 'swagger-jaxrs2', version: '2.1.10'
     swaggerUI 'org.webjars:swagger-ui:3.52.1'
+
     implementation 'org.topbraid:shacl:1.4.2'
     implementation "org.apache.jena:jena-core:4.6.1"
     implementation "org.apache.jena:jena-arq:4.6.1"
