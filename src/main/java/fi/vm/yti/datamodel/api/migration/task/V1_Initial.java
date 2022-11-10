@@ -21,6 +21,7 @@ public class V1_Initial implements MigrationTask {
 
     @Override
     public void migrate() {
+        /*
         logger.debug("Creating default graph and service categories");
         graphManager.createDefaultGraph();
         graphManager.initServiceCategories();
@@ -28,5 +29,6 @@ public class V1_Initial implements MigrationTask {
         if (!graphManager.testDefaultGraph()) {
             throw new RuntimeException("Failed to create default graph");
         }
+         */
     }
 }
