@@ -22,7 +22,7 @@ public class FusekiSchemaVersionAccessor implements SchemaVersionAccessor {
 
     @Override
     public boolean isInitialized() throws InitializationException {
-        return graphManager.isVersionGraphInitialized();
+        return true; // graphManager.isVersionGraphInitialized();
     }
 
     @Override
