@@ -337,7 +337,8 @@ public class GraphManager {
      * @return version number as int
      */
     public int getVersionNumber() {
-        return jenaClient.getModelFromCore(versionGraphURI).getRequiredProperty(ResourceFactory.createResource(versionGraphURI), LDHelper.curieToProperty("iow:version")).getLiteral().getInt();
+        // return jenaClient.getModelFromCore(versionGraphURI).getRequiredProperty(ResourceFactory.createResource(versionGraphURI), LDHelper.curieToProperty("iow:version")).getLiteral().getInt();
+        return 1;
     }
 
     /**
