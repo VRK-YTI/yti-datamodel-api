@@ -89,7 +89,7 @@ dependencies {
     implementation "org.springframework.security:spring-security-config"
     implementation "org.springframework.security:spring-security-web"
 
-    implementation "fi.vm.yti:yti-spring-security:9.9.8"
+    implementation "fi.vm.yti:yti-spring-security:0.3.0"
     implementation "fi.vm.yti:yti-spring-migration:0.2.0"
 
     compileOnly "org.springframework.boot:spring-boot-configuration-processor"
