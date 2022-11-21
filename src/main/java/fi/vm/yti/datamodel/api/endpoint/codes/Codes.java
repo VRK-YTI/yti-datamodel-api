@@ -60,7 +60,7 @@ public class Codes {
             SuomiCodeServer codeServer = new SuomiCodeServer("https://koodistot.suomi.fi", applicationProperties.getDefaultSuomiCodeServerAPI(), endpointServices, codeSchemeManager);
             codeServer.updateCodes(uri, force);
         } else if (uri.startsWith("https://virkailija.opintopolku.fi")) {
-            OPHCodeServer codeServer = new OPHCodeServer("https://virkailija.opintopolku.fi/koodisto-service/rest/json/", endpointServices);
+            OPHCodeServer codeServer = new OPHCodeServer("https://virkailija.opintopolku.fi/koodisto-service/rest/json/", endpointServices, codeSchemeManager);
             if (!codeServer.containsCodeList(uri)) {
                 codeServer.updateCodes(uri);
             }
@@ -95,7 +95,7 @@ public class Codes {
         if (uri.startsWith("http://uri.suomi.fi")) {
             SuomiCodeServer codeServer = new SuomiCodeServer("https://koodistot.suomi.fi", applicationProperties.getDefaultSuomiCodeServerAPI(), endpointServices, codeSchemeManager);
         } else if (uri.startsWith("https://virkailija.opintopolku.fi")) {
-            OPHCodeServer codeServer = new OPHCodeServer("https://virkailija.opintopolku.fi/koodisto-service/rest/json/", endpointServices);
+            OPHCodeServer codeServer = new OPHCodeServer("https://virkailija.opintopolku.fi/koodisto-service/rest/json/", endpointServices, codeSchemeManager);
             codeServer.updateCodes(uri);
         } else {
             return jerseyResponseManager.invalidParameter();

@@ -7,11 +7,7 @@ import org.apache.http.client.CredentialsProvider;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.jena.atlas.web.HttpException;
-import org.apache.jena.query.Query;
-import org.apache.jena.query.QueryExecution;
-import org.apache.jena.query.QueryExecutionFactory;
-import org.apache.jena.query.ResultSet;
-import org.apache.jena.query.ResultSetFactory;
+import org.apache.jena.query.*;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdfconnection.RDFConnection;
 import org.apache.jena.update.UpdateExecutionFactory;
@@ -96,7 +92,7 @@ public final class JenaClient {
     }
 
     public boolean containsSchemaModel(String graph) {
-        return importService.fetchDataset().containsNamedModel(graph);
+        return exists(graph, endpointServices.getImportsSparqlAddress());
     }
 
     public void deleteModelFromCore(String graph) {
@@ -110,7 +106,7 @@ public final class JenaClient {
     }
 
     public boolean isInCore(String graph) {
-        return coreService.fetchDataset().containsNamedModel(graph);
+        return exists(graph, endpointServices.getCoreSparqlAddress());
     }
 
     public void putModelToCore(String graph,
@@ -188,5 +184,18 @@ public final class JenaClient {
 
     public EndpointServices getEndpointServices() {
         return this.endpointServices;
+    }
+
+    private boolean exists(String uri, String endpoint) {
+        String query = "ASK WHERE { GRAPH ?graph {} }";
+        ParameterizedSparqlString pss = new ParameterizedSparqlString();
+        pss.setIri("graph", uri);
+        pss.setCommandText(query);
+
+        boolean exists;
+        try (QueryExecution exec = QueryExecution.service(endpoint, pss.toString())) {
+            exists = exec.execAsk();
+        }
+        return exists;
     }
 }

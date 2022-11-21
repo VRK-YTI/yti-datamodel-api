@@ -64,7 +64,7 @@ public class CodeList {
             SuomiCodeServer suomiCodeServer = new SuomiCodeServer("https://koodistot.suomi.fi", applicationProperties.getDefaultSuomiCodeServerAPI(), endpointServices, codeSchemeManager);
             suomiCodeServer.updateCodeSchemeList();
         } else if (uri.startsWith("https://virkailija.opintopolku.fi")) {
-            OPHCodeServer codeServer = new OPHCodeServer("https://virkailija.opintopolku.fi/koodisto-service/rest/json/", endpointServices);
+            OPHCodeServer codeServer = new OPHCodeServer("https://virkailija.opintopolku.fi/koodisto-service/rest/json/", endpointServices, codeSchemeManager);
             codeServer.updateCodelistsFromServer();
         } else {
             return jerseyResponseManager.invalidParameter();
