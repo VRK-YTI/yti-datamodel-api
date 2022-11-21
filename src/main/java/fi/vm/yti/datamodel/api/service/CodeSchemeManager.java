@@ -71,16 +71,6 @@ public class CodeSchemeManager {
     }
 
     public boolean codeSchemeExists(String uri) {
-        String query = "ASK WHERE { GRAPH ?graph {} }";
-        ParameterizedSparqlString pss = new ParameterizedSparqlString();
-        pss.setIri("graph", uri);
-        pss.setCommandText(query);
-
-        boolean exists;
-        try (QueryExecution exec = QueryExecution.service(
-                endpointServices.getSchemesSparqlAddress(), pss.toString())) {
-            exists = exec.execAsk();
-        }
-        return exists;
+        return jenaClient.exists(uri, endpointServices.getSchemesSparqlAddress());
     }
 }

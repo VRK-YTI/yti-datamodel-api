@@ -186,16 +186,12 @@ public final class JenaClient {
         return this.endpointServices;
     }
 
-    private boolean exists(String uri, String endpoint) {
+    public boolean exists(String uri, String endpoint) {
         String query = "ASK WHERE { GRAPH ?graph {} }";
         ParameterizedSparqlString pss = new ParameterizedSparqlString();
         pss.setIri("graph", uri);
         pss.setCommandText(query);
 
-        boolean exists;
-        try (QueryExecution exec = QueryExecution.service(endpoint, pss.toString())) {
-            exists = exec.execAsk();
-        }
-        return exists;
+        return askQuery(endpoint, pss.asQuery());
     }
 }
