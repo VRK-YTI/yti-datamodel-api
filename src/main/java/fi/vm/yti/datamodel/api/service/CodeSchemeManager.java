@@ -70,4 +70,7 @@ public class CodeSchemeManager {
         return modified;
     }
 
+    public boolean codeSchemeExists(String uri) {
+        return jenaClient.exists(uri, endpointServices.getSchemesSparqlAddress());
+    }
 }
