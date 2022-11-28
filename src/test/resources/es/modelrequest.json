@@ -9,6 +9,28 @@
           }
         },
         {
+          "terms": {
+            "isPartOf": [
+              "P1"
+            ],
+            "boost": 1.0
+          }
+        },
+        {
+          "terms": {
+            "contributor": [
+              "7d3a3c00-5a6b-489b-a3ed-63bb58c26a63"
+            ],
+            "boost": 1.0
+          }
+        },
+        {
+          "terms": {
+            "type": [
+              "profile","library"],
+            "boost":1.0}
+        },
+        {
           "bool": {
             "must_not": [
               {

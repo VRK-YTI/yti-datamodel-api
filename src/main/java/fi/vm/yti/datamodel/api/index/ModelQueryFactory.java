@@ -1,12 +1,6 @@
 package fi.vm.yti.datamodel.api.index;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import javax.inject.Singleton;
 
@@ -50,19 +44,21 @@ public class ModelQueryFactory {
     }
 
     public SearchRequest createQuery(ModelSearchRequest request) {
-        return createQuery(request.getUri(),request.getQuery(), request.getLanguage(), request.getStatus(), request.getType(), request.getAfter(), request.getBefore(), Collections.emptySet(), request.getPageSize(), request.getPageFrom(), request.getFilter(), request.getIncludeIncomplete(), request.getIncludeIncompleteFrom());
+        return createQuery(request.getUri(),request.getQuery(), request.getLanguage(), request.getStatus(), request.getOrganizations(), request.getGroups(), request.getType(), request.getAfter(), request.getBefore(), Collections.emptySet(), request.getPageSize(), request.getPageFrom(), request.getFilter(), request.getIncludeIncomplete(), request.getIncludeIncompleteFrom());
     }
 
     public SearchRequest createQuery(ModelSearchRequest request,
                                      Collection<String> additionalModelIds) {
-        return createQuery(request.getUri(), request.getQuery(), request.getLanguage(), request.getStatus(), request.getType(), request.getAfter(), request.getBefore(), additionalModelIds, request.getPageSize(), request.getPageFrom(), request.getFilter(), request.getIncludeIncomplete(), request.getIncludeIncompleteFrom());
+        return createQuery(request.getUri(), request.getQuery(), request.getLanguage(), request.getStatus(), request.getOrganizations(), request.getGroups(), request.getType(), request.getAfter(), request.getBefore(), additionalModelIds, request.getPageSize(), request.getPageFrom(), request.getFilter(), request.getIncludeIncomplete(), request.getIncludeIncompleteFrom());
     }
 
     private SearchRequest createQuery(Set<String> uris,
                                       String query,
                                       String language,
                                       Set<String> status,
-                                      String type,
+                                      Set<String> organizations,
+                                      Set<String> groups,
+                                      Set<String> types,
                                       Date after,
                                       Date before,
                                       Collection<String> additionalModelIds,
@@ -102,6 +98,16 @@ public class ModelQueryFactory {
         if (language != null ) {
             mustList.add(QueryBuilders.termsQuery(
                     "language", language));
+        }
+
+        if (organizations != null && !organizations.isEmpty()) {
+            mustList.add(QueryBuilders.termsQuery(
+                    "contributor", organizations));
+        }
+
+        if (groups != null && !groups.isEmpty()) {
+            mustList.add(QueryBuilders.termsQuery(
+                    "isPartOf", groups));
         }
 
         if(uris!=null) {
@@ -149,8 +155,8 @@ public class ModelQueryFactory {
             mustList.add(statusQuery);
         }
 
-        if (type != null) {
-            mustList.add(QueryBuilders.matchQuery("type", type));
+        if (types != null && !types.isEmpty()) {
+            mustList.add(QueryBuilders.termsQuery("type", types));
         }
 
         if (contentQuery != null) {
