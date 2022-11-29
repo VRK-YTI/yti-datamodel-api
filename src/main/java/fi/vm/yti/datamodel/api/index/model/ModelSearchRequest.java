@@ -21,7 +21,7 @@ public class ModelSearchRequest {
 
     private Set<String> status;
 
-    private String type;
+    private Set<String> type;
 
     private Integer pageSize;
 
@@ -33,6 +33,10 @@ public class ModelSearchRequest {
 
     private Set<String> includeIncompleteFrom;
 
+    private Set<String> organizations;
+
+    private Set<String> groups;
+
     public ModelSearchRequest() {
     }
 
@@ -40,7 +44,7 @@ public class ModelSearchRequest {
         this.uri = request.getUri();
         this.query = request.getSearchTerm();
         this.status = request.getStatus();
-        this.type = request.getType();
+        this.type = request.getType() != null ? Set.of(request.getType()) : Set.of();
         this.after = request.getAfter();
         this.before = request.getBefore();
         this.sortLang = request.getLanguage();
@@ -49,52 +53,6 @@ public class ModelSearchRequest {
         this.pageSize = request.getPageSize();
         this.includeIncomplete = request.getIncludeIncomplete();
         this.includeIncompleteFrom = request.getIncludeIncompleteFrom();
-    }
-
-    public ModelSearchRequest(final String query,
-                              final String language,
-                              final boolean searchResources,
-                              final Set<String> status,
-                              final String type,
-                              final Date after,
-                              final Date before,
-                              final String sortLang,
-                              final Integer pageSize,
-                              final Integer pageFrom,
-                              final Boolean includeIncomplete,
-                              final Set<String> includeIncompleteFrom) {
-        this.query = query;
-        this.language = language;
-        this.searchResources = searchResources;
-        this.status = status;
-        this.type = type;
-        this.after = after;
-        this.before = before;
-        this.sortLang = sortLang;
-        this.pageSize = pageSize;
-        this.pageFrom = pageFrom;
-        this.includeIncomplete = includeIncomplete;
-        this.includeIncompleteFrom = includeIncompleteFrom;
-    }
-
-    public ModelSearchRequest(final String query,
-                              final String language,
-                              final boolean searchResources,
-                              final Set<String> status,
-                              final String type,
-                              final String sortLang,
-                              final Integer pageSize,
-                              final Integer pageFrom,
-                              final Set<String> filter) {
-        this.query = query;
-        this.language = language;
-        this.searchResources = searchResources;
-        this.status = status;
-        this.type = type;
-        this.sortLang = sortLang;
-        this.pageSize = pageSize;
-        this.pageFrom = pageFrom;
-        this.filter = filter;
     }
 
     public Set<String> getUri() {
@@ -185,11 +143,11 @@ public class ModelSearchRequest {
         this.status = status;
     }
 
-    public String getType() {
+    public Set<String> getType() {
         return type;
     }
 
-    public void setType(final String type) {
+    public void setType(final Set<String> type) {
         this.type = type;
     }
 
@@ -209,6 +167,22 @@ public class ModelSearchRequest {
         this.includeIncompleteFrom = includeIncompleteFrom;
     }
 
+    public Set<String> getOrganizations() {
+        return organizations;
+    }
+
+    public void setOrganizations(Set<String> organizations) {
+        this.organizations = organizations;
+    }
+
+    public Set<String> getGroups() {
+        return groups;
+    }
+
+    public void setGroups(Set<String> groups) {
+        this.groups = groups;
+    }
+
     @Override
     public String toString() {
         return "ModelSearchRequest{" +
@@ -225,6 +199,8 @@ public class ModelSearchRequest {
             ", filter=" + filter +
             ", includeIncomplete=" + includeIncomplete +
             ", includeIncompleteFrom=" + includeIncompleteFrom +
+            ", organizations=" + organizations +
+            ", groups=" + groups +
             '}';
     }
 }
