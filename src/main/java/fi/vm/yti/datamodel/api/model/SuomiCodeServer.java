@@ -82,7 +82,7 @@ public class SuomiCodeServer {
     }
 
     public boolean containsCodeList(String uri) {
-        return connection.fetchDataset().containsNamedModel(uri);
+        return codeSchemeManager.codeSchemeExists(uri);
     }
 
     public void updateCodeSchemeList() {

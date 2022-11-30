@@ -3,6 +3,7 @@
  */
 package fi.vm.yti.datamodel.api.model;
 
+import fi.vm.yti.datamodel.api.service.CodeSchemeManager;
 import fi.vm.yti.datamodel.api.service.EndpointServices;
 
 import java.io.InputStream;
@@ -32,6 +33,7 @@ public class OPHCodeServer {
     static final private Logger logger = LoggerFactory.getLogger(OPHCodeServer.class.getName());
 
     private final EndpointServices endpointServices;
+    private final CodeSchemeManager codeSchemeManager;
     private RDFConnection connection;
     private String uri;
     private Property description = ResourceFactory.createProperty("http://purl.org/dc/terms/", "description");
@@ -48,14 +50,16 @@ public class OPHCodeServer {
     }};
 
     public OPHCodeServer(String uri,
-                         EndpointServices endpointServices) {
+                         EndpointServices endpointServices,
+                         CodeSchemeManager codeSchemeManager) {
         this.connection = RDFConnection.connect(endpointServices.getSchemesReadWriteAddress());
         this.endpointServices = endpointServices;
         this.uri = uri;
+        this.codeSchemeManager = codeSchemeManager;
     }
 
     public boolean containsCodeList(String uri) {
-        return connection.fetchDataset().containsNamedModel(uri);
+        return codeSchemeManager.codeSchemeExists(uri);
     }
 
     public boolean updateCodelistsFromServer() {
