@@ -46,9 +46,18 @@ public class ResolveNamespace {
         @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     public Response resolveNamespace(
-        @Parameter(description = "Namespace", required = true) @QueryParam("namespace") String namespace) {
+        @Parameter(description = "Namespace", required = true) @QueryParam("namespace") String namespace,
+        @Parameter(description = "Content type for accept header") @QueryParam("accept") String accept) {
 
-        if (namespaceManager.resolveNamespace(namespace, null, false)) {
+        boolean resolved;
+
+        if (accept == null) {
+            resolved = namespaceManager.resolveNamespace(namespace, null, false);
+        } else {
+            resolved = namespaceManager.resolveNamespace(namespace, null, false, accept);
+        }
+
+        if (resolved) {
             return jerseyClient.getGraphResponseFromService(namespace, endpointServices.getImportsReadAddress());
         } else {
             return jerseyResponseManager.invalidIRI();

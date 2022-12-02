@@ -13,10 +13,7 @@ import org.apache.jena.iri.IRIException;
 import org.apache.jena.iri.IRIFactory;
 import org.apache.jena.query.*;
 import org.apache.jena.rdf.model.*;
-import org.apache.jena.riot.Lang;
-import org.apache.jena.riot.RDFDataMgr;
-import org.apache.jena.riot.RDFLanguages;
-import org.apache.jena.riot.RiotException;
+import org.apache.jena.riot.*;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
 import org.slf4j.Logger;
@@ -257,10 +254,25 @@ public final class NamespaceManager {
         return type;
 
     }
-    
+
     public boolean resolveNamespace(String namespace,
                                     String alternativeURL,
                                     boolean force) {
+        String accept = "application/rdf+xml;q=1," +
+                "application/turtle;q=0.8," +
+                "application/x-turtle;q=0.8," +
+                "text/turtle;q=0.8," +
+                "application/ld+json;q=0.7," +
+                "text/rdf+n3;q=0.5," +
+                "application/n3;q=0.5," +
+                "text/n3;q=0.5";
+        return resolveNamespace(namespace, alternativeURL, force, accept);
+    }
+
+    public boolean resolveNamespace(String namespace,
+                                    String alternativeURL,
+                                    boolean force,
+                                    String accept) {
 
         if(!namespace.startsWith("http") && (alternativeURL==null || alternativeURL.isEmpty() || !alternativeURL.startsWith("http"))) {
             return false;
@@ -319,9 +331,7 @@ public final class NamespaceManager {
                     // 2,5 minutes
                     connection.setReadTimeout(30000);
                     connection.setInstanceFollowRedirects(true);
-                    //,text/rdf+n3,application/turtle,application/rdf+n3
-                    //"application/rdf+xml,application/xml,text/html");
-                    connection.setRequestProperty("Accept", "application/rdf+xml;q=1,application/turtle;q=0.8,application/x-turtle;q=0.8,text/turtle;q=0.8,application/ld+json;q=0.7,text/rdf+n3;q=0.5,application/n3;q=0.5,text/n3;q=0.5");
+                    connection.setRequestProperty("Accept", accept);
 
                     try { // SocketTimeOut
 
@@ -403,11 +413,13 @@ public final class NamespaceManager {
                         } else {
                             logger.info("Could not parse RDF format from content-type!");
                             try {
-                                // TODO: This seems to parse RDF even from wrong content-types text/html etc.
-                                model = RDFDataMgr.loadModel(resolvedUrl);
+                                RDFParser.create()
+                                        .lang(Lang.JSONLD)
+                                        .source(stream)
+                                        .parse(model);
                                 logger.info("Parsed something out of " + contentType + " from " + resolvedUrl);
-                            } catch (RiotException e) {
-                                logger.info("Failed to parse RDF using " + contentType + " from " + resolvedUrl);
+                            } catch (Exception e) {
+                                logger.error("Failed to parse RDF using " + contentType + " from " + resolvedUrl, e);
                                 return false;
                             }
 
