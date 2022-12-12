@@ -1,13 +1,13 @@
 {
   "@graph": [
     {
-      "@id": "http://uri.suomi.fi/datamodel/ns/test",
+      "@id": "http://uri.suomi.fi/datamodel-v2/ns/test",
       "@type": ["owl:Ontology", "dcap:MetadataVocabulary"],
       "isPartOf": "http://urn.fi/URN:NBN:fi:au:ptvl:v1105",
       "dcterms:language": {
         "@list": ["fi", "en", "sv"]
       },
-      "preferredXMLNamespaceName": "http://uri.suomi.fi/datamodel/ns/test#",
+      "preferredXMLNamespaceName": "http://uri.suomi.fi/datamodel-v2/ns/test#",
       "preferredXMLNamespacePrefix": "test",
       "label": {
         "@language": "fi",
