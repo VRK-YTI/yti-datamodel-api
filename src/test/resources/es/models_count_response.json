@@ -1,0 +1,57 @@
+{
+  "took": 103,
+  "timed_out": false,
+  "_shards": { "total": 10, "successful": 10, "skipped": 0, "failed": 0 },
+  "hits": { "total": 8, "max_score": 0.0, "hits": [] },
+  "aggregations": {
+    "sterms#statusagg": {
+      "doc_count_error_upper_bound": 0,
+      "sum_other_doc_count": 0,
+      "buckets": [
+        { "key": "DRAFT", "doc_count": 7 },
+        { "key": "VALID", "doc_count": 1 }
+      ]
+    },
+    "sterms#typeagg": {
+      "doc_count_error_upper_bound": 0,
+      "sum_other_doc_count": 0,
+      "buckets": [
+        {
+          "key": "library",
+          "doc_count": 3
+        },
+        {
+          "key": "profile",
+          "doc_count": 1
+        }
+      ]
+    },
+    "sterms#infodomainagg": {
+      "doc_count_error_upper_bound": 0,
+      "sum_other_doc_count": 0,
+      "buckets": [
+        {
+          "key": "P13",
+          "doc_count": 2
+        },
+        {
+          "key": "P11",
+          "doc_count": 1
+        },
+        {
+          "key": "P21",
+          "doc_count": 1
+        }
+      ]
+    },
+    "sterms#langagg": {
+      "doc_count_error_upper_bound": 0,
+      "sum_other_doc_count": 0,
+      "buckets": [
+        { "key": "fi", "doc_count": 13 },
+        { "key": "sv", "doc_count": 10 },
+        { "key": "en", "doc_count": 8 }
+      ]
+    }
+  }
+}
