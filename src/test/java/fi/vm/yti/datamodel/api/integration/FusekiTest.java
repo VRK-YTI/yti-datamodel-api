@@ -10,6 +10,7 @@ import org.apache.jena.rdfconnection.RDFConnection;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.riot.RDFParser;
+import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
@@ -38,13 +39,13 @@ public class FusekiTest {
     @BeforeClass
     public static void setUp() {
         // clean resources before test execution
-        // connectionWrite.delete(GRAPH_NAME);
+        connectionWrite.delete(GRAPH_NAME);
     }
 
     @AfterClass
     public static void cleanResources() {
         // clean resources after test execution
-        connectionWrite.delete(GRAPH_NAME);
+        // connectionWrite.delete(GRAPH_NAME);
     }
 
     /**
@@ -60,6 +61,25 @@ public class FusekiTest {
                 .parse(model);
 
         connectionWrite.put(GRAPH_NAME, model);
+    }
+
+    @Test
+    public void testModelCreate() {
+        Model model = ModelFactory.createDefaultModel();
+        model.setNsPrefix("dcterms", "http://purl.org/dc/terms/");
+        model.setNsPrefix("rdfs", "http://www.w3.org/2000/01/rdf-schema#");
+
+        model.createResource(GRAPH_NAME)
+                .addProperty(RDF.type, OWL.Ontology)
+                .addProperty(RDFS.label, model.createLiteral("test", "fi"))
+                .addProperty(RDFS.label, model.createLiteral("asdf", "sv"))
+                .addProperty(DCTerms.language, "fi")
+                .addProperty(DCTerms.language, "sv")
+                .addProperty(DCTerms.isPartOf, model
+                        .createResource("http://urn.fi/URN:NBN:fi:au:ptvl:v1105")
+                            .addProperty(RDFS.label, model.createLiteral("Group label", "fi")));
+
+        RDFDataMgr.write(System.out, model, Lang.JSONLD);
     }
 
     /**
@@ -118,7 +138,7 @@ public class FusekiTest {
 
         Model model = connectionSparql.queryConstruct(test);
 
-        RDFDataMgr.write(System.out, model, Lang.JSONLD);
+        // RDFDataMgr.write(System.out, model, Lang.JSONLD);
     }
 
     /**
@@ -145,12 +165,18 @@ public class FusekiTest {
     public void t998_PrintModel() {
         RDFConnection connection = RDFConnection.connect(FUSEKI_URL + "/core/get");
         Model model = connection.fetch(GRAPH_NAME);
+        StmtIterator stmtIterator = model.listStatements();
+
+        while (stmtIterator.hasNext()) {
+            Statement statement = stmtIterator.nextStatement();
+            // System.out.println(statement);
+        }
         RDFDataMgr.write(System.out, model, Lang.JSONLD);
     }
 
     private void createClassResource(Model model, String classIdentifier, Literal... labels) {
         Resource resource = model.createResource(GRAPH_NAME + classIdentifier)
-                .addProperty(RDF.type, OWL.Class)
+                .addProperty(RDF.type, SH.class_)
                 .addProperty(RDFS.isDefinedBy, ResourceFactory.createResource(GRAPH_NAME));
 
         for (Literal label : labels) {
