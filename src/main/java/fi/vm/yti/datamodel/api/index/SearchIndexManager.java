@@ -7,7 +7,10 @@ import java.util.stream.Collectors;
 
 import javax.inject.Singleton;
 
+import fi.vm.yti.datamodel.api.index.model.*;
 import fi.vm.yti.datamodel.api.service.RHPOrganizationManager;
+import fi.vm.yti.datamodel.api.v2.elasticsearch.dto.CountSearchResponse;
+import fi.vm.yti.datamodel.api.v2.elasticsearch.queries.CountQueryFactory;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.query.ParameterizedSparqlString;
 import org.apache.jena.rdf.model.Model;
@@ -29,17 +32,6 @@ import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import fi.vm.yti.datamodel.api.index.model.DeepSearchHitListDTO;
-import fi.vm.yti.datamodel.api.index.model.IndexClassDTO;
-import fi.vm.yti.datamodel.api.index.model.IndexModelDTO;
-import fi.vm.yti.datamodel.api.index.model.IndexPredicateDTO;
-import fi.vm.yti.datamodel.api.index.model.IntegrationAPIResponse;
-import fi.vm.yti.datamodel.api.index.model.IntegrationContainerRequest;
-import fi.vm.yti.datamodel.api.index.model.IntegrationResourceRequest;
-import fi.vm.yti.datamodel.api.index.model.ModelSearchRequest;
-import fi.vm.yti.datamodel.api.index.model.ModelSearchResponse;
-import fi.vm.yti.datamodel.api.index.model.ResourceSearchRequest;
-import fi.vm.yti.datamodel.api.index.model.ResourceSearchResponse;
 import fi.vm.yti.datamodel.api.model.AbstractClass;
 import fi.vm.yti.datamodel.api.model.AbstractPredicate;
 import fi.vm.yti.datamodel.api.model.DataModel;
@@ -66,6 +58,7 @@ public class SearchIndexManager {
     private final ModelQueryFactory modelQueryFactory;
     private final DeepResourceQueryFactory deepResourceQueryFactory;
     private final ResourceQueryFactory resourceQueryFactory;
+    private final CountQueryFactory countQueryFactory;
     private RestHighLevelClient esClient;
     private RHPOrganizationManager organizationManager;
 
@@ -78,6 +71,7 @@ public class SearchIndexManager {
                               final ModelQueryFactory modelQueryFactory,
                               final DeepResourceQueryFactory deepClassQueryFactory,
                               final ResourceQueryFactory resourceQueryFactory,
+                              final CountQueryFactory countQueryFactory,
                               final RHPOrganizationManager organizationManager) {
         this.esManager = esManager;
         this.esClient = esManager.getEsClient();
@@ -87,6 +81,7 @@ public class SearchIndexManager {
         this.modelManager = modelManager;
         this.modelQueryFactory = modelQueryFactory;
         this.deepResourceQueryFactory = deepClassQueryFactory;
+        this.countQueryFactory = countQueryFactory;
         this.resourceQueryFactory = resourceQueryFactory;
         this.organizationManager = organizationManager;
     }
@@ -109,14 +104,14 @@ public class SearchIndexManager {
     }
 
     public void createIndexClass(AbstractClass classResource) {
-        logger.debug("Indexing: " + classResource.getId());
+        logger.debug("Indexing: {}", classResource.getId());
         IndexClassDTO indexClass = new IndexClassDTO(classResource);
         esManager.putToIndex(ELASTIC_INDEX_RESOURCE, indexClass.getId(), indexClass);
     }
 
     public void updateIndexClass(AbstractClass classResource) {
         IndexClassDTO indexClass = new IndexClassDTO(classResource);
-        logger.debug("Indexing: " + indexClass.getId());
+        logger.debug("Indexing: {}", indexClass.getId());
         esManager.updateToIndex(ELASTIC_INDEX_RESOURCE, indexClass.getId(), indexClass);
     }
 
@@ -126,13 +121,13 @@ public class SearchIndexManager {
 
     public void createIndexPredicate(AbstractPredicate predicateResource) {
         IndexPredicateDTO indexPredicate = new IndexPredicateDTO(predicateResource);
-        logger.info("Indexing: " + indexPredicate.getId());
+        logger.info("Indexing: {}", indexPredicate.getId());
         esManager.putToIndex(ELASTIC_INDEX_RESOURCE, indexPredicate.getId(), indexPredicate);
     }
 
     public void updateIndexPredicate(AbstractPredicate predicateResource) {
         IndexPredicateDTO indexPredicate = new IndexPredicateDTO(predicateResource);
-        logger.info("Indexing: " + indexPredicate.getId());
+        logger.info("Indexing: {}", indexPredicate.getId());
         esManager.updateToIndex(ELASTIC_INDEX_RESOURCE, indexPredicate.getId(), indexPredicate);
     }
 
@@ -145,7 +140,7 @@ public class SearchIndexManager {
             DeleteByQueryRequest resourceRequest = new DeleteByQueryRequest(ELASTIC_INDEX_RESOURCE);
             resourceRequest.setQuery(QueryBuilders.termQuery("isDefinedBy", id));
             BulkByScrollResponse resourceResponse = esClient.deleteByQuery(resourceRequest, RequestOptions.DEFAULT);
-            logger.info("Removed " + resourceResponse.getDeleted() + " resources from \"" + ELASTIC_INDEX_RESOURCE + "\" for model \"" + id + "\"");
+            logger.info("Removed {} resources from \"{}\" for model \"{}\"", resourceResponse.getDeleted(), ELASTIC_INDEX_RESOURCE, id);
         } catch (Exception e) {
             logger.warn("Could not delete resources for model " + id + " from index", e);
         }
@@ -161,7 +156,7 @@ public class SearchIndexManager {
 
     public void createIndexModel(DataModel model) {
         IndexModelDTO indexModel = new IndexModelDTO(model);
-        logger.info("Indexing: " + indexModel.getId());
+        logger.info("Indexing: {}", indexModel.getId());
         esManager.putToIndex(ELASTIC_INDEX_MODEL, indexModel.getId(), indexModel);
     }
 
@@ -172,10 +167,10 @@ public class SearchIndexManager {
 
     public void updateIndexModel(DataModel model) {
         IndexModelDTO indexModel = new IndexModelDTO(model);
-        logger.info("Indexing: " + indexModel.getId());
-        logger.debug("Created: "+indexModel.getCreated());
-        logger.debug("Modified: "+indexModel.getModified());
-        logger.debug("Content modified: "+indexModel.getContentModified());
+        logger.info("Indexing: {}", indexModel.getId());
+        logger.debug("Created: {}", indexModel.getCreated());
+        logger.debug("Modified: {}", indexModel.getModified());
+        logger.debug("Content modified: {}", indexModel.getContentModified());
         esManager.updateToIndex(ELASTIC_INDEX_MODEL, indexModel.getId(), indexModel);
     }
 
@@ -249,7 +244,7 @@ public class SearchIndexManager {
             SearchRequest finalQuery;
             if (deepSearchHits != null && !deepSearchHits.isEmpty()) {
                 Set<String> additionalModelIds = deepSearchHits.keySet();
-                logger.debug("Deep model search resulted in " + additionalModelIds.size() + " model matches");
+                logger.debug("Deep model search resulted in {} model matches", additionalModelIds.size());
                 finalQuery = modelQueryFactory.createQuery(request, additionalModelIds);
             } else {
                 finalQuery = modelQueryFactory.createQuery(request);
@@ -287,6 +282,20 @@ public class SearchIndexManager {
         }
     }
 
+    /**
+     * List counts of data model grouped by different search results
+     * @return response containing counts for data models
+     */
+    public CountSearchResponse getCounts(){
+        SearchRequest query = countQueryFactory.createModelQuery();
+        try {
+            SearchResponse response = esClient.search(query, RequestOptions.DEFAULT);
+            return countQueryFactory.parseResponse(response);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     private String getResourceMappings() throws IOException {
         InputStream is = SearchIndexManager.class.getClassLoader().getResourceAsStream("resource_mapping.json");
         Object obj = objectMapper.readTree(is);
@@ -313,7 +322,7 @@ public class SearchIndexManager {
             bulkRequest.add(indexRequest);
         });
         BulkResponse bresp = esClient.bulk(bulkRequest, RequestOptions.DEFAULT);
-        logger.debug("Bulk insert status: " + bresp.status().getStatus());
+        logger.debug("Bulk insert status: {}", bresp.status().getStatus());
     }
 
     private void initModelIndex() throws IOException {
