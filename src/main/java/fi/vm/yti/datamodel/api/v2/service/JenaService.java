@@ -19,7 +19,7 @@ public class JenaService {
         coreWrite.put(graphName, model);
     }
 
-    public Model getDataModel(String graphName) {
-        return coreRead.fetch(graphName);
+    public Model getDataModel(String modelId) {
+        return coreRead.fetch(modelId);
     }
 }

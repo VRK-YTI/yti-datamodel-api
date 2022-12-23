@@ -30,7 +30,7 @@ public class Datamodel {
 
     @PUT
     public void createModel(@RequestBody DataModelDTO modelDTO) {
-        logger.info(modelDTO.toString());
+        logger.info("Create model {}", modelDTO.toString());
 
         Model jenaModel = mapper.mapToJenaModel(modelDTO);
 
