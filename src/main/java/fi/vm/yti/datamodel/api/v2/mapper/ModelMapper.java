@@ -3,6 +3,7 @@ package fi.vm.yti.datamodel.api.v2.mapper;
 import fi.vm.yti.datamodel.api.v2.dto.DataModelDTO;
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
 import fi.vm.yti.datamodel.api.v2.dto.ModelType;
+import fi.vm.yti.datamodel.api.v2.dto.Status;
 import fi.vm.yti.datamodel.api.v2.elasticsearch.index.IndexModel;
 import fi.vm.yti.datamodel.api.v2.service.JenaService;
 import org.apache.jena.datatypes.xsd.XSDDateTime;
@@ -10,10 +11,12 @@ import org.apache.jena.rdf.model.*;
 import org.apache.jena.vocabulary.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Service
 public class ModelMapper {
 
     private final Logger log = LoggerFactory.getLogger(ModelMapper.class);
@@ -24,17 +27,24 @@ public class ModelMapper {
         this.jenaService = jenaService;
     }
 
-    private static final Map<String, String> prefixes = Map.of(
+    private static final Map<String, String> PREFIXES = Map.of(
             "rdfs", "http://www.w3.org/2000/01/rdf-schema#",
             "dcterms", "http://purl.org/dc/terms/",
             "owl", "http://www.w3.org/2002/07/owl#",
-            "dcap", "http://www.w3.org/2002/07/dcap#"
+            "dcap", "http://purl.org/ws-mmi-dc/terms/",
+            "xsd", "http://www.w3.org/2001/XMLSchema#",
+            "iow", "http://uri.suomi.fi/datamodel/ns/iow#"
     );
 
+    /**
+     * Map DataModelDTO to Jena model
+     * @param modelDTO Data Model DTO
+     * @return Model
+     */
     public Model mapToJenaModel(DataModelDTO modelDTO) {
         log.info("Mapping DatamodelDTO to Jena Model");
         var model = ModelFactory.createDefaultModel();
-        model.setNsPrefixes(prefixes);
+        model.setNsPrefixes(PREFIXES);
 
         // TODO: type of application profile?
         Resource type = modelDTO.getType().equals(ModelType.LIBRARY)
@@ -54,12 +64,15 @@ public class ModelMapper {
         var contentModified = model.createProperty("http://uri.suomi.fi/datamodel/ns/iow#contentModified");
         modelResource.addProperty(contentModified, ResourceFactory.createTypedLiteral(creationDate));
 
-        var statusModified = model.createProperty("status:modified");
+        //TODO what is the prefix of this?
+        var statusModified = model.createProperty("status:Modified");
         modelResource.addProperty(statusModified, ResourceFactory.createTypedLiteral(creationDate));
 
+        //TODO is this needed
         var preferredXmlNamespacePrefix = model.createProperty("http://purl.org/ws-mmi-dc/terms/preferredXMLNamespacePrefix");
         modelResource.addProperty(preferredXmlNamespacePrefix, modelDTO.getPrefix());
 
+        //TODO is this needed
         var preferredXmlNamespace = model.createProperty("http://purl.org/ws-mmi-dc/terms/preferredXMLNamespaceName");
         modelResource.addProperty(preferredXmlNamespace, ModelConstants.SUOMI_FI_NAMESPACE + modelDTO.getPrefix());
 
@@ -86,6 +99,58 @@ public class ModelMapper {
         return model;
     }
 
+    /**
+     * Map a Model to DataModelDTO
+     * @param prefix model prefix
+     * @param model Model
+     * @return Data Model DTO
+     */
+    public DataModelDTO mapToDataModelDTO(String prefix, Model model) {
+
+        var datamodelDTO = new DataModelDTO();
+        datamodelDTO.setPrefix(prefix);
+
+        var modelResource = model.getResource(ModelConstants.SUOMI_FI_NAMESPACE + prefix);
+
+        var type = modelResource.getProperty(RDF.type).getObject().equals(OWL.Ontology) ? ModelType.LIBRARY : ModelType.PROFILE;
+        datamodelDTO.setType(type);
+
+        var status = Status.valueOf(modelResource.getProperty(OWL.versionInfo).getObject().toString().toUpperCase());
+        datamodelDTO.setStatus(status);
+
+        //Language
+        datamodelDTO.setLanguages(arrayPropertyToSet(modelResource, DCTerms.language));
+
+        //Label
+        datamodelDTO.setLabel(localizedPropertyToMap(modelResource, RDFS.label));
+
+        //Description
+        datamodelDTO.setDescription(localizedPropertyToMap(modelResource, RDFS.comment));
+
+        var existingGroups = jenaService.getServiceCategories();
+        var groups = modelResource.listProperties(DCTerms.isPartOf).toList().stream().map(prop -> {
+            var resource = existingGroups.getResource(prop.getObject().toString());
+            return resource.getProperty(SKOS.notation).getObject().toString();
+        }).collect(Collectors.toSet());
+        datamodelDTO.setGroups(groups);
+
+        var organizations = modelResource.listProperties(DCTerms.contributor).toList().stream().map(prop -> {
+            var orgUri = prop.getObject().toString();
+            return UUID.fromString(
+                    orgUri.substring(
+                            orgUri.lastIndexOf(":")+ 1));
+        }).collect(Collectors.toSet());
+        datamodelDTO.setOrganizations(organizations);
+
+        return datamodelDTO;
+    }
+
+    /**
+     * Map a DataModel to a IndexModel
+     * @param prefix Prefix of model
+     * @param model Model
+     * @return Index model
+     */
     public IndexModel mapToIndexModel(String prefix, Model model){
         var resource = model.getResource(ModelConstants.SUOMI_FI_NAMESPACE + prefix);
         var indexModel = new IndexModel();
@@ -119,6 +184,12 @@ public class ModelMapper {
     }
 
 
+    /**
+     * Localized property to Map of (language, value)
+     * @param resource Resource to get property from
+     * @param property Property type
+     * @return Map of (language, value)
+     */
     private Map<String, String> localizedPropertyToMap(Resource resource, Property property){
         var map = new HashMap<String, String>();
         resource.listProperties(property).forEach(prop -> {
@@ -129,12 +200,37 @@ public class ModelMapper {
         return map;
     }
 
+    /**
+     * Convert array property to list of strings
+     * @param resource Resource to get property from
+     * @param property Property type
+     * @return List of property values
+     */
     private List<String> arrayPropertyToList(Resource resource, Property property){
         var list = new ArrayList<String>();
         resource.listProperties(property).forEach(val -> list.add(val.getObject().toString()));
         return list;
     }
 
+    /**
+     * Convert array property to set of strings
+     * @param resource Resource to get property from
+     * @param property Property type
+     * @return Set of property values
+     */
+    private Set<String> arrayPropertyToSet(Resource resource, Property property){
+        var list = new HashSet<String>();
+        resource.listProperties(property).forEach(val -> list.add(val.getObject().toString()));
+        return list;
+    }
+
+    /**
+     * Add localized property to model
+     * @param data Map of (language, value)
+     * @param resource Resource to add to
+     * @param property Property to add
+     * @param model Model to add to
+     */
     private void addLocalizedProperty(Map<String, String> data,
                                       Resource resource,
                                       Property property,

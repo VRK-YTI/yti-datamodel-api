@@ -1,10 +1,8 @@
 package fi.vm.yti.datamodel.api.v2.service;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import org.apache.jena.atlas.web.HttpException;
-import org.apache.jena.query.Query;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdfconnection.RDFConnection;
 import org.slf4j.Logger;

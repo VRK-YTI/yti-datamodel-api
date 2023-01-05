@@ -8,7 +8,6 @@ import java.util.UUID;
 
 public class DataModelDTO {
 
-    private String id;
     private ModelType type;
     private String prefix;
     private Status status;
@@ -18,13 +17,7 @@ public class DataModelDTO {
     private Set<UUID> organizations = Set.of();
     private Set<String> groups = Set.of();
 
-    public String getId() {
-        return id;
-    }
 
-    public void setId(String id) {
-        this.id = id;
-    }
 
     public ModelType getType() {
         return type;

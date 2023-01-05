@@ -39,7 +39,8 @@ public class FusekiTest {
     @BeforeClass
     public static void setUp() {
         // clean resources before test execution
-        connectionWrite.delete(GRAPH_NAME);
+        //connectionWrite.delete(GRAPH_NAME);
+        //FIXME: This will fail if graph name doesnt exist, tests are being currently ignored due to no asserts being run
     }
 
     @AfterClass

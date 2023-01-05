@@ -25,7 +25,7 @@ public class ElasticIndexer {
         this.objectMapper = objectMapper;
     }
 
-    public void reindex() throws IOException {
+    public void reindex() {
         try {
             elasticConnector.cleanIndex(ELASTIC_INDEX_MODEL);
             logger.info("v2 Indexes cleaned");
@@ -63,9 +63,8 @@ public class ElasticIndexer {
 
     /**
      * Init search indexes
-     * @throws IOException
      */
-    private void initSearchIndexes() throws IOException {
+    private void initSearchIndexes() {
         initModelIndex();
     }
 

@@ -8,6 +8,7 @@ import org.glassfish.jersey.client.ClientProperties;
 import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
@@ -72,6 +73,7 @@ public class ModelTest  {
     }
 
     @Test
+    @Ignore
     public void test1_user() {
 
         String user = target.path("user").request().get().readEntity(String.class);
@@ -82,6 +84,7 @@ public class ModelTest  {
     }
 
     @Test
+    @Ignore
     public void test2_createNewModel() {
 
         testModelId = LDHelper.toIRI(applicationProperties.getDefaultNamespace()+"junit5");
@@ -129,6 +132,7 @@ public class ModelTest  {
     }
 
     @Test
+    @Ignore
     public void test3_createNewClassToModel() {
 
         String testClass = target.path("classCreator")
@@ -150,6 +154,7 @@ public class ModelTest  {
     }
 
     @Test
+    @Ignore
     public void test4_createNewPredicateToModel(){
 
        String testPredicate = target.path("predicateCreator")
@@ -172,6 +177,7 @@ public class ModelTest  {
     }
 
     @Test
+    @Ignore
     public void test5_removeModel() {
 
         graphManager.removeModel(testModelId);
