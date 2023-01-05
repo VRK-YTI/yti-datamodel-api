@@ -14,7 +14,7 @@
     }
   },
   "aggregations": {
-    "sterms#statusagg": {
+    "statusagg": {
       "terms": {
         "script": {
           "source": "doc.containsKey('status') ? doc.status : params._source.properties.status[0].value",

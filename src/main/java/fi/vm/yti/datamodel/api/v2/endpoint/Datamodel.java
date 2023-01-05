@@ -1,6 +1,5 @@
 package fi.vm.yti.datamodel.api.v2.endpoint;
 
-import fi.vm.yti.datamodel.api.index.SearchIndexManager;
 import fi.vm.yti.datamodel.api.security.AuthorizationManager;
 import fi.vm.yti.datamodel.api.v2.dto.DataModelDTO;
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
@@ -14,16 +13,10 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
-import javax.ws.rs.Consumes;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
+import org.springframework.web.bind.annotation.*;
 
 import static fi.vm.yti.security.AuthorizationException.check;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @RestController
 //FIXME api/v2/model will not work at all, possible interference from Jersey?
@@ -42,9 +35,9 @@ public class Datamodel {
 
     private final ModelMapper mapper;
 
-    public Datamodel(JenaService jenaService, AuthorizationManager authorizationManager, ElasticIndexer elasticIndexer) {
+    public Datamodel(JenaService jenaService, AuthorizationManager authorizationManager, ElasticIndexer elasticIndexer, ModelMapper modelMapper) {
         this.authorizationManager = authorizationManager;
-        this.mapper = new ModelMapper(jenaService);
+        this.mapper = modelMapper;
         this.elasticIndexer = elasticIndexer;
         this.jenaService = jenaService;
     }
@@ -52,9 +45,7 @@ public class Datamodel {
     @Operation(summary = "Create a new model")
     @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "The JSON data for the new model node")
     @ApiResponse(responseCode = "200", description = "The ID for the newly created model")
-    @PutMapping
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
+    @PutMapping(produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
     public void createModel(@ValidDatamodel @RequestBody DataModelDTO modelDTO) {
         logger.info("Create model {}", modelDTO);
         check(authorizationManager.hasRightToAnyOrganization(modelDTO.getOrganizations()));
@@ -65,6 +56,14 @@ public class Datamodel {
 
         var indexModel = mapper.mapToIndexModel(modelDTO.getPrefix(), jenaModel);
         elasticIndexer.createModelToIndex(indexModel);
+    }
+
+    @Operation(summary = "Get a model from fuseki")
+    @ApiResponse(responseCode = "200", description = "Datamodel object for the found model")
+    @GetMapping(value = "/{prefix}", produces = APPLICATION_JSON_VALUE)
+    public DataModelDTO getModel(@PathVariable String prefix){
+        var model = jenaService.getDataModel(ModelConstants.SUOMI_FI_NAMESPACE + prefix);
+        return mapper.mapToDataModelDTO(prefix, model);
     }
 
 }
