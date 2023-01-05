@@ -4,11 +4,13 @@ import fi.vm.yti.datamodel.api.v2.dto.DataModelDTO;
 import fi.vm.yti.datamodel.api.v2.dto.ModelType;
 import fi.vm.yti.datamodel.api.v2.dto.Status;
 import fi.vm.yti.datamodel.api.v2.mapper.ModelMapper;
+import fi.vm.yti.datamodel.api.v2.service.JenaService;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDFS;
 import org.junit.Test;
+import org.mockito.Mock;
 
 import java.util.Map;
 import java.util.Set;
@@ -18,7 +20,10 @@ import static org.junit.Assert.*;
 
 public class ModelMapperTest {
 
-    ModelMapper mapper = new ModelMapper();
+
+    @Mock
+    JenaService jenaService;
+    ModelMapper mapper = new ModelMapper(jenaService);
 
     @Test
     public void testDataModelMapping() {
