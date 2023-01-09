@@ -28,6 +28,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(SpringExtension.class)
@@ -81,6 +82,56 @@ class ModelMapperTest {
         assertNotNull(organizationResource);
 
         assertEquals(2, modelResource.listProperties(RDFS.label).toList().size());
+        assertEquals(Status.DRAFT, Status.valueOf(modelResource.getProperty(OWL.versionInfo).getString()));
+    }
+
+    @Test
+    void testMapToUpdateJenaModel() {
+        Model m = ModelFactory.createDefaultModel();
+
+        var stream = getClass().getResourceAsStream("/test_datamodel.ttl");
+        assertNotNull(stream);
+        RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
+
+        when(jenaService.getDataModel(anyString())).thenReturn(m);
+
+        UUID organizationId = UUID.randomUUID();
+
+        DataModelDTO dto = new DataModelDTO();
+        dto.setLabel(Map.of(
+                "fi", "new test label",
+                "sv", "new test label sv"));
+        dto.setDescription(Map.of(
+                "fi", "new test description"));
+        dto.setStatus(Status.DRAFT);
+        dto.setGroups(Set.of("P11"));
+        dto.setLanguages(Set.of("fi", "sv"));
+        dto.setOrganizations(Set.of(organizationId));
+
+        //unchanged values
+        Resource modelResource = m.getResource("http://uri.suomi.fi/datamodel/ns/test");
+        assertEquals(1, modelResource.listProperties(RDFS.label).toList().size());
+        assertEquals("testlabel", modelResource.listProperties(RDFS.label).next().getString());
+
+        assertEquals(1, modelResource.listProperties(RDFS.comment).toList().size());
+        assertEquals("test desc", modelResource.listProperties(RDFS.comment).next().getString());
+
+        assertEquals(Status.VALID, Status.valueOf(modelResource.getProperty(OWL.versionInfo).getString()));
+
+        Model model = mapper.mapToUpdateJenaModel("test", dto);
+
+        //changed values
+        modelResource = model.getResource("http://uri.suomi.fi/datamodel/ns/test");
+        Resource groupResource = model.getResource("http://urn.fi/URN:NBN:fi:uuid:au:ptvl:v1105");
+        Resource organizationResource = model.getResource(String.format("urn:uuid:%s", organizationId));
+
+        assertNotNull(modelResource);
+        assertNotNull(groupResource);
+        assertNotNull(organizationResource);
+
+        assertEquals(2, modelResource.listProperties(RDFS.label).toList().size());
+        assertEquals("new test label", modelResource.listProperties(RDFS.label, "fi").next().getString());
+
         assertEquals(Status.DRAFT, Status.valueOf(modelResource.getProperty(OWL.versionInfo).getString()));
     }
 

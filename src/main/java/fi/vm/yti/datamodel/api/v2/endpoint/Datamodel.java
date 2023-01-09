@@ -58,6 +58,23 @@ public class Datamodel {
         elasticIndexer.createModelToIndex(indexModel);
     }
 
+    @Operation(summary = "Create a new model")
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "The JSON data for the new model node")
+    @ApiResponse(responseCode = "200", description = "The ID for the newly created model")
+    @PostMapping(path = "/{prefix}", produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
+    public void updateModel(@ValidDatamodel(updateModel = true) @RequestBody DataModelDTO modelDTO,
+                            @PathVariable String prefix) {
+        logger.info("Updating model {}", modelDTO);
+        check(authorizationManager.hasRightToAnyOrganization(modelDTO.getOrganizations()));
+
+        var jenaModel = mapper.mapToUpdateJenaModel(prefix, modelDTO);
+
+        jenaService.createDataModel(ModelConstants.SUOMI_FI_NAMESPACE + modelDTO.getPrefix(), jenaModel);
+
+        var indexModel = mapper.mapToIndexModel(prefix, jenaModel);
+        elasticIndexer.updateModelToIndex(indexModel);
+    }
+
     @Operation(summary = "Get a model from fuseki")
     @ApiResponse(responseCode = "200", description = "Datamodel object for the found model")
     @GetMapping(value = "/{prefix}", produces = APPLICATION_JSON_VALUE)

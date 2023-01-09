@@ -39,6 +39,7 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -82,10 +83,10 @@ class DatamodelTest {
 
     @Test
     void shouldValidateAndCreate() throws Exception {
-        var dataModelDTO = createDatamodelDTO();
+        var dataModelDTO = createDatamodelDTO(false);
         //Mock validation stuff
         var mockModel = ModelFactory.createDefaultModel();
-        var res = mockModel.createResource("urn:uuid:" + RANDOM_ORG);
+        var res = mockModel.createResource(ModelConstants.URN_UUID + RANDOM_ORG);
         res.addProperty(SKOS.notation, "P11");
         when(jenaService.getOrganizations()).thenReturn(mockModel);
         when(jenaService.getServiceCategories()).thenReturn(mockModel);
@@ -110,6 +111,40 @@ class DatamodelTest {
         verifyNoMoreInteractions(this.modelMapper);
         verify(this.elasticIndexer)
                 .createModelToIndex(any(IndexModel.class));
+        verifyNoMoreInteractions(this.elasticIndexer);
+    }
+
+    @Test
+    void shouldValidateAndUpdate() throws Exception {
+        var dataModelDTO = createDatamodelDTO(true);
+
+        //Mock validation stuff
+        var mockModel = ModelFactory.createDefaultModel();
+        var res = mockModel.createResource(ModelConstants.URN_UUID + RANDOM_ORG);
+        res.addProperty(SKOS.notation, "P11");
+        when(jenaService.getOrganizations()).thenReturn(mockModel);
+        when(jenaService.getServiceCategories()).thenReturn(mockModel);
+
+        //Mock mapping
+        var model = mock(Model.class);
+        var indexmodel = mock(IndexModel.class);
+        when(modelMapper.mapToUpdateJenaModel(anyString(), any(DataModelDTO.class))).thenReturn(model);
+        when(modelMapper.mapToIndexModel("test", model)).thenReturn(indexmodel);
+
+        this.mvc
+                .perform(post("/v2/model/test")
+                        .contentType("application/json")
+                        .content(convertObjectToJsonString(dataModelDTO)))
+                .andExpect(status().isOk());
+
+        //Check that functions are called
+        verify(this.modelMapper)
+                .mapToUpdateJenaModel(anyString(), any(DataModelDTO.class));
+        verify(this.modelMapper)
+                .mapToIndexModel(anyString(), any(Model.class));
+        verifyNoMoreInteractions(this.modelMapper);
+        verify(this.elasticIndexer)
+                .updateModelToIndex(any(IndexModel.class));
         verifyNoMoreInteractions(this.elasticIndexer);
     }
 
@@ -140,19 +175,30 @@ class DatamodelTest {
     void shouldInValidate(DataModelDTO dataModelDTO) throws Exception {
         //Mock validation stuff
         var mockModel = ModelFactory.createDefaultModel();
-        var res = mockModel.createResource("urn:uuid:" + RANDOM_ORG);
+        var res = mockModel.createResource(ModelConstants.URN_UUID + RANDOM_ORG);
         res.addProperty(SKOS.notation, "P11");
         when(jenaService.getOrganizations()).thenReturn(mockModel);
         when(jenaService.getServiceCategories()).thenReturn(mockModel);
 
-        //Mock mapping
-        var model = mock(Model.class);
-        var indexmodel = mock(IndexModel.class);
-        when(modelMapper.mapToJenaModel(dataModelDTO)).thenReturn(model);
-        when(modelMapper.mapToIndexModel("test", model)).thenReturn(indexmodel);
-
         this.mvc
                 .perform(put("/v2/model")
+                        .contentType("application/json")
+                        .content(convertObjectToJsonString(dataModelDTO)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideDataModelUpdateInvalidData")
+    void shouldInValidateUpdate(DataModelDTO dataModelDTO) throws Exception {
+        //Mock validation stuff
+        var mockModel = ModelFactory.createDefaultModel();
+        var res = mockModel.createResource(ModelConstants.URN_UUID + RANDOM_ORG);
+        res.addProperty(SKOS.notation, "P11");
+        when(jenaService.getOrganizations()).thenReturn(mockModel);
+        when(jenaService.getServiceCategories()).thenReturn(mockModel);
+
+        this.mvc
+                .perform(post("/v2/model/test")
                         .contentType("application/json")
                         .content(convertObjectToJsonString(dataModelDTO)))
                 .andExpect(status().isBadRequest());
@@ -164,16 +210,23 @@ class DatamodelTest {
     }
 
 
-    private static DataModelDTO createDatamodelDTO(){
+    /**
+     * Create Datamodel DTO for testing
+     * @param updateModel true if model will be used for updating instead of creating
+     * @return DataModelDTO
+     */
+    private static DataModelDTO createDatamodelDTO(boolean updateModel){
         DataModelDTO dataModelDTO = new DataModelDTO();
         dataModelDTO.setDescription(Map.of("fi", "test description"));
         dataModelDTO.setLabel(Map.of("fi", "test label"));
         dataModelDTO.setGroups(Set.of("P11"));
         dataModelDTO.setLanguages(Set.of("fi"));
         dataModelDTO.setOrganizations(Set.of(RANDOM_ORG));
-        dataModelDTO.setPrefix("test");
+        if(!updateModel){
+            dataModelDTO.setPrefix("test");
+            dataModelDTO.setType(ModelType.LIBRARY);
+        }
         dataModelDTO.setStatus(Status.DRAFT);
-        dataModelDTO.setType(ModelType.LIBRARY);
         return dataModelDTO;
     }
 
@@ -183,49 +236,68 @@ class DatamodelTest {
         var args = new ArrayList<DataModelDTO>();
 
         // without a prefLabel
-        var dataModelDTO = createDatamodelDTO();
+        var dataModelDTO = createDatamodelDTO(false);
         dataModelDTO.setPrefix("123");
         args.add(dataModelDTO);
 
-        dataModelDTO = createDatamodelDTO();
+        dataModelDTO = createDatamodelDTO(false);
         dataModelDTO.setPrefix("asd123asd1232asd123");
         args.add(dataModelDTO);
 
-        dataModelDTO = createDatamodelDTO();
+        dataModelDTO = createDatamodelDTO(false);
         dataModelDTO.setOrganizations(Collections.emptySet());
         args.add(dataModelDTO);
 
-        dataModelDTO = createDatamodelDTO();
+        dataModelDTO = createDatamodelDTO(false);
         dataModelDTO.setOrganizations(Set.of(UUID.randomUUID()));
         args.add(dataModelDTO);
 
-        dataModelDTO = createDatamodelDTO();
+        dataModelDTO = createDatamodelDTO(false);
         dataModelDTO.setGroups(Collections.emptySet());
         args.add(dataModelDTO);
 
-        dataModelDTO = createDatamodelDTO();
+        dataModelDTO = createDatamodelDTO(false);
         dataModelDTO.setGroups(Set.of("Not real group"));
         args.add(dataModelDTO);
 
-        dataModelDTO = createDatamodelDTO();
+        dataModelDTO = createDatamodelDTO(false);
         dataModelDTO.setLanguages(Set.of("Not real lang"));
         args.add(dataModelDTO);
 
-
-        dataModelDTO = createDatamodelDTO();
+        dataModelDTO = createDatamodelDTO(false);
         dataModelDTO.setLabel(Map.of("Not real lang", "label"));
         args.add(dataModelDTO);
 
-        dataModelDTO = createDatamodelDTO();
+        dataModelDTO = createDatamodelDTO(false);
+        dataModelDTO.setLabel(Collections.emptyMap());
+        args.add(dataModelDTO);
+
+        dataModelDTO = createDatamodelDTO(false);
         dataModelDTO.setLabel(Map.of("fi", RandomStringUtils.random(textAreaMaxPlus)));
         args.add(dataModelDTO);
 
-        dataModelDTO = createDatamodelDTO();
+        dataModelDTO = createDatamodelDTO(false);
         dataModelDTO.setDescription(Map.of("Not real lang", "desc"));
         args.add(dataModelDTO);
 
-        dataModelDTO = createDatamodelDTO();
+        dataModelDTO = createDatamodelDTO(false);
         dataModelDTO.setDescription(Map.of("fi", RandomStringUtils.random(textAreaMaxPlus)));
+        args.add(dataModelDTO);
+
+        return args.stream().map(Arguments::of);
+    }
+
+    private static Stream<Arguments> provideDataModelUpdateInvalidData() {
+        var args = new ArrayList<DataModelDTO>();
+
+        //prefix should not be allowed
+        var dataModelDTO = createDatamodelDTO(true);
+        dataModelDTO.setPrefix("test");
+        args.add(dataModelDTO);
+
+        //changing type should not be allowed
+        dataModelDTO = createDatamodelDTO(false);
+        dataModelDTO.setType(ModelType.PROFILE);
         args.add(dataModelDTO);
 
         return args.stream().map(Arguments::of);

@@ -22,5 +22,6 @@ public @interface ValidDatamodel {
 
     Class<?>[] groups() default {};
 
+    boolean updateModel() default false;
     Class<? extends Payload>[] payload() default {};
 }

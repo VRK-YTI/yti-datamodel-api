@@ -7,4 +7,5 @@ public class ModelConstants {
     }
 
     public static final String SUOMI_FI_NAMESPACE = "http://uri.suomi.fi/datamodel/ns/";
+    public static final String URN_UUID = "urn:uuid:";
 }
