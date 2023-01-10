@@ -89,12 +89,80 @@ public class ModelMapper {
 
         var organizationsModel = jenaService.getOrganizations();
         modelDTO.getOrganizations().forEach(org -> {
-            var queryRes = ResourceFactory.createResource("urn:uuid:" + org.toString());
+            var queryRes = ResourceFactory.createResource(ModelConstants.URN_UUID + org.toString());
             var resource = organizationsModel.containsResource(queryRes);
             if(resource){
-                modelResource.addProperty(DCTerms.contributor, organizationsModel.getResource("urn:uuid:" + org.toString()));
+                modelResource.addProperty(DCTerms.contributor, organizationsModel.getResource(ModelConstants.URN_UUID + org.toString()));
             }
         });
+
+        return model;
+    }
+
+
+    public Model mapToUpdateJenaModel(String prefix, DataModelDTO dataModelDTO){
+        var updateDate = new XSDDateTime(Calendar.getInstance());
+        var hasUpdated = false;
+
+        var model = jenaService.getDataModel(ModelConstants.SUOMI_FI_NAMESPACE + prefix);
+
+        var modelResource = model.getResource(ModelConstants.SUOMI_FI_NAMESPACE + prefix);
+
+        if(dataModelDTO.getStatus() != null){
+            modelResource.removeAll(OWL.versionInfo);
+            modelResource.addProperty(OWL.versionInfo, dataModelDTO.getStatus().name());
+            modelResource.removeAll(model.getProperty("status:modified"));
+            modelResource.addProperty(model.createProperty("status:Modified"), ResourceFactory.createTypedLiteral(updateDate));
+            hasUpdated = true;
+        }
+
+        if(dataModelDTO.getLabel() != null){
+            modelResource.removeAll(RDFS.label);
+            addLocalizedProperty(dataModelDTO.getLabel(), modelResource, RDFS.label, model);
+            hasUpdated = true;
+        }
+
+        if(dataModelDTO.getDescription() != null){
+            modelResource.removeAll(RDFS.comment);
+            addLocalizedProperty(dataModelDTO.getDescription(), modelResource, RDFS.comment, model);
+            hasUpdated = true;
+        }
+
+        if(dataModelDTO.getLanguages() != null){
+            modelResource.removeAll(DCTerms.language);
+            dataModelDTO.getLanguages().forEach(lang -> modelResource.addProperty(DCTerms.language, lang));
+            hasUpdated = true;
+        }
+
+        if(dataModelDTO.getGroups() != null){
+            modelResource.removeAll(DCTerms.isPartOf);
+            var groupModel = jenaService.getServiceCategories();
+            dataModelDTO.getGroups().forEach(group -> {
+                var groups = groupModel.listResourcesWithProperty(SKOS.notation, group);
+                if (groups.hasNext()) {
+                    modelResource.addProperty(DCTerms.isPartOf, groups.next());
+                }
+            });
+            hasUpdated = true;
+        }
+
+        if(dataModelDTO.getOrganizations() != null){
+            modelResource.removeAll(DCTerms.contributor);
+            var organizationsModel = jenaService.getOrganizations();
+            dataModelDTO.getOrganizations().forEach(org -> {
+                var queryRes = ResourceFactory.createResource(ModelConstants.URN_UUID + org.toString());
+                var resource = organizationsModel.containsResource(queryRes);
+                if(resource){
+                    modelResource.addProperty(DCTerms.contributor, organizationsModel.getResource(ModelConstants.URN_UUID + org.toString()));
+                }
+            });
+            hasUpdated = true;
+        }
+
+        if(hasUpdated){
+            modelResource.removeAll(DCTerms.modified);
+            modelResource.addProperty(DCTerms.modified, ResourceFactory.createTypedLiteral(updateDate));
+        }
 
         return model;
     }
@@ -156,7 +224,7 @@ public class ModelMapper {
         var indexModel = new IndexModel();
         indexModel.setId(ModelConstants.SUOMI_FI_NAMESPACE + prefix);
         indexModel.setStatus(resource.getProperty(OWL.versionInfo).getString());
-        indexModel.setStatusModified(resource.getProperty(model.getProperty("status:modified")).getString());
+        indexModel.setStatusModified(resource.getProperty(model.getProperty("status:Modified")).getString());
         indexModel.setModified(resource.getProperty(DCTerms.modified).getString());
         indexModel.setCreated(resource.getProperty(DCTerms.created).getString());
         indexModel.setContentModified(resource.getProperty(model.getProperty(ModelConstants.SUOMI_FI_NAMESPACE + "iow#contentModified")).getString());
