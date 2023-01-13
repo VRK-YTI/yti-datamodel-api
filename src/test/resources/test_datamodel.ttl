@@ -20,4 +20,3 @@
                 "test" ;
         iow:contentModified             "2023-01-03T12:44:45.799Z"^^xsd:dateTime ;
         owl:versionInfo                 "VALID" ;
-        <status:modified>               "2023-01-03T12:44:45.799Z"^^xsd:dateTime .
