@@ -125,7 +125,6 @@ dependencies {
     implementation 'org.reflections:reflections:0.10.2'
     implementation 'com.google.guava:guava:31.1-jre'
 
-    testImplementation "junit:junit:4.13.2"
     testImplementation "org.springframework.boot:spring-boot-starter-test"
     testImplementation 'com.jayway.jsonpath:json-path-assert:2.7.0'
     testImplementation 'org.mockito:mockito-core:4.8.0'
@@ -156,6 +155,9 @@ jacocoTestReport {
     reports {
         xml.enabled true
     }
+}
+test {
+    useJUnitPlatform()
 }
 
 dependencyCheck {

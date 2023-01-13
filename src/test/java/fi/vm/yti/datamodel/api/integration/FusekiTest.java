@@ -14,18 +14,16 @@ import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.FixMethodOrder;
-import org.junit.Test;
-import org.junit.runners.MethodSorters;
+import org.junit.jupiter.api.*;
 import org.topbraid.shacl.vocabulary.SH;
 
 import java.io.InputStream;
 import java.util.UUID;
 
-@FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public class FusekiTest {
+//FIXME: You can run these locally if you want to, but these cannot be run in jenkins
+@TestMethodOrder(MethodOrderer.MethodName.class)
+@Disabled
+class FusekiTest {
 
     public static final String GRAPH_NAME = "http://uri.suomi.fi/datamodel-v2/ns/test";
 
@@ -36,14 +34,14 @@ public class FusekiTest {
     static final RDFConnection connectionRead = RDFConnection.connect(FUSEKI_URL + "/core/get");
     static final RDFConnection connectionSparql = RDFConnection.connect(FUSEKI_URL + "/core/sparql");
 
-    @BeforeClass
+    @BeforeAll
     public static void setUp() {
         // clean resources before test execution
         //connectionWrite.delete(GRAPH_NAME);
         //FIXME: This will fail if graph name doesnt exist, tests are being currently ignored due to no asserts being run
     }
 
-    @AfterClass
+    @AfterAll
     public static void cleanResources() {
         // clean resources after test execution
         // connectionWrite.delete(GRAPH_NAME);
@@ -53,7 +51,7 @@ public class FusekiTest {
      * Parses rdf data from file and saves datamodel metadata
      */
     @Test
-    public void t001_SaveDatamodel() {
+    void t001_SaveDatamodel() {
         InputStream data = this.getClass().getResourceAsStream("/create_model.json");
         Model model = ModelFactory.createDefaultModel();
         RDFParser
@@ -65,7 +63,7 @@ public class FusekiTest {
     }
 
     @Test
-    public void testModelCreate() {
+    void testModelCreate() {
         Model model = ModelFactory.createDefaultModel();
         model.setNsPrefix("dcterms", "http://purl.org/dc/terms/");
         model.setNsPrefix("rdfs", "http://www.w3.org/2000/01/rdf-schema#");
@@ -87,7 +85,7 @@ public class FusekiTest {
      * Add two classes to the model
      */
     @Test
-    public void t002_AddClasses() {
+    void t002_AddClasses() {
 
         Model model = connectionRead.fetch(GRAPH_NAME);
 
@@ -104,7 +102,7 @@ public class FusekiTest {
      * Fetches class from model and adds new property (comment)
      */
     @Test
-    public void t004_ModifyClass() {
+    void t004_ModifyClass() {
         Model model = connectionRead.fetch(GRAPH_NAME);
         Resource resource = model.getResource(GRAPH_NAME + "#TestClass");
         resource.addProperty(RDFS.comment, model.createLiteral("Test description", "fi"));
@@ -115,7 +113,7 @@ public class FusekiTest {
      * Get class information with simple sparql query
      */
     @Test
-    public void t005_GetClass() {
+    void t005_GetClass() {
         String query = "CONSTRUCT WHERE {" +
                 "?class ?p ?o" +
                 "}";
@@ -147,7 +145,7 @@ public class FusekiTest {
      * Creates two attributes and adds them to the class
      */
     @Test
-    public void t006_AddClassProperty() {
+    void t006_AddClassProperty() {
         Model model = connectionRead.fetch(GRAPH_NAME);
         Resource classResource = model.getResource(GRAPH_NAME + "#TestClass");
 
@@ -163,7 +161,7 @@ public class FusekiTest {
     }
 
     @Test
-    public void t998_PrintModel() {
+    void t998_PrintModel() {
         RDFConnection connection = RDFConnection.connect(FUSEKI_URL + "/core/get");
         Model model = connection.fetch(GRAPH_NAME);
         StmtIterator stmtIterator = model.listStatements();
