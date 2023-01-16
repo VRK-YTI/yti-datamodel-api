@@ -24,10 +24,11 @@ public class JenaService {
 
     private final Cache<String, Model> modelCache;
 
-    public JenaService(@Value("${termed.cache.expiration:1800}") Long cacheExpireTime) {
-        this.coreWrite = RDFConnection.connect("http://localhost:3030/core/data");
-        this.coreRead = RDFConnection.connect("http://localhost:3030/core/get");
-        this.coreSparql = RDFConnection.connect("http://localhost:3030/core/sparql");
+    public JenaService(@Value("${model.cache.expiration:1800}") Long cacheExpireTime,
+                       @Value(("${endpoint}")) String endpoint) {
+        this.coreWrite = RDFConnection.connect(endpoint + "/core/data");
+        this.coreRead = RDFConnection.connect(endpoint + "/core/get");
+        this.coreSparql = RDFConnection.connect( endpoint + "/core/sparql");
         this.modelCache = CacheBuilder.newBuilder()
                 .expireAfterWrite(cacheExpireTime, TimeUnit.SECONDS)
                 .maximumSize(1000)
