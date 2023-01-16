@@ -166,7 +166,38 @@ class ModelMapperTest {
 
         assertEquals(1, result.getGroups().size());
         assertTrue(result.getGroups().contains("P11"));
-        System.out.println(m);
+    }
+
+    @Test
+    void testMapToDatamodelDtoOld(){
+        Model mOld = ModelFactory.createDefaultModel();
+        var streamOld = getClass().getResourceAsStream("/test_datamodel_v1.ttl");
+        assertNotNull(streamOld);
+        RDFDataMgr.read(mOld, streamOld, RDFLanguages.TURTLE);
+        var resultOld = mapper.mapToDataModelDTO("testaa", mOld);
+
+        assertEquals("testaa", resultOld.getPrefix());
+        assertEquals(ModelType.LIBRARY, resultOld.getType());
+        assertEquals(Status.DRAFT, resultOld.getStatus());
+
+        assertEquals(1, resultOld.getLabel().size());
+        assertTrue(resultOld.getLabel().containsValue("Testaa"));
+        assertTrue(resultOld.getLabel().containsKey("fi"));
+
+
+        assertEquals(1, resultOld.getDescription().size());
+        assertTrue(resultOld.getDescription().containsValue("Testaa desc"));
+        assertTrue(resultOld.getDescription().containsKey("fi"));
+
+        assertEquals(2, resultOld.getLanguages().size());
+        assertTrue(resultOld.getLanguages().contains("fi"));
+        assertTrue(resultOld.getLanguages().contains("en"));
+
+        assertEquals(1, resultOld.getOrganizations().size());
+        assertTrue(resultOld.getOrganizations().contains(UUID.fromString("7d3a3c00-5a6b-489b-a3ed-63bb58c26a63")));
+
+        assertEquals(1, resultOld.getGroups().size());
+        assertTrue(resultOld.getGroups().contains("P11"));
     }
 
     @Test
@@ -205,6 +236,43 @@ class ModelMapperTest {
 
         assertEquals(1, result.getIsPartOf().size());
         assertTrue(result.getIsPartOf().contains("P11"));
-        System.out.println(m);
+    }
+
+    @Test
+    void testMapToIndexModelOld(){
+        Model mOld = ModelFactory.createDefaultModel();
+
+        var streamOld = getClass().getResourceAsStream("/test_datamodel_v1.ttl");
+        assertNotNull(streamOld);
+        RDFDataMgr.read(mOld, streamOld, RDFLanguages.TURTLE);
+
+        var resultOld = mapper.mapToIndexModel("testaa", mOld);
+
+        assertEquals("testaa", resultOld.getPrefix());
+        assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "testaa", resultOld.getId());
+        assertEquals("library", resultOld.getType());
+        assertEquals("DRAFT", resultOld.getStatus());
+        assertEquals("2018-03-20T16:21:07.067Z", resultOld.getModified());
+        assertEquals("2018-03-20T17:59:44", resultOld.getCreated());
+
+        assertEquals(0, resultOld.getDocumentation().size());
+
+        assertEquals(1, resultOld.getLabel().size());
+        assertTrue(resultOld.getLabel().containsValue("Testaa"));
+        assertTrue(resultOld.getLabel().containsKey("fi"));
+
+        assertEquals(1, resultOld.getComment().size());
+        assertTrue(resultOld.getComment().containsValue("Testaa desc"));
+        assertTrue(resultOld.getComment().containsKey("fi"));
+
+        assertEquals(2, resultOld.getLanguage().size());
+        assertTrue(resultOld.getLanguage().contains("fi"));
+        assertTrue(resultOld.getLanguage().contains("en"));
+
+        assertEquals(1, resultOld.getContributor().size());
+        assertTrue(resultOld.getContributor().contains(UUID.fromString("7d3a3c00-5a6b-489b-a3ed-63bb58c26a63")));
+
+        assertEquals(1, resultOld.getIsPartOf().size());
+        assertTrue(resultOld.getIsPartOf().contains("P11"));
     }
 }

@@ -59,12 +59,13 @@ testaa:test-property  a     owl:DatatypeProperty ;
 
 <http://uri.suomi.fi/datamodel/ns/testaa>
         a                               owl:Ontology , dcap:DCAP ;
+        rdfs:comment                    "Testaa desc"@fi ;
         rdfs:label                      "Testaa"@fi ;
         dcterms:contributor             <urn:uuid:7d3a3c00-5a6b-489b-a3ed-63bb58c26a63> ;
         dcterms:created                 "2018-03-20T17:59:44"^^xsd:dateTime ;
         dcterms:hasPart                 testaa:test-property , testaa:Test ;
         dcterms:identifier              "urn:uuid:f15bc8e6-8e6c-46fc-abc7-edcdd728aa94" ;
-        dcterms:isPartOf                <http://urn.fi/URN:NBN:fi:au:ptvl:v1001> ;
+        dcterms:isPartOf                <http://urn.fi/URN:NBN:fi:au:ptvl:v1105> ;
         dcterms:language                ( "fi" "en" ) ;
         dcterms:modified                "2018-03-20T16:21:07.067Z"^^xsd:dateTime ;
         dcterms:references              <http://uri.suomi.fi/terminology/jhs/terminological-vocabulary-1> ;
