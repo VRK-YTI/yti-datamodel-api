@@ -9,7 +9,6 @@ public class IndexModel {
 
     private String id;
     private String status;
-    private String statusModified;
     private String modified;
     private String created;
     private String contentModified;
@@ -41,14 +40,6 @@ public class IndexModel {
 
     public void setStatus(String status) {
         this.status = status;
-    }
-
-    public String getStatusModified() {
-        return statusModified;
-    }
-
-    public void setStatusModified(String statusModified) {
-        this.statusModified = statusModified;
     }
 
     public String getModified() {

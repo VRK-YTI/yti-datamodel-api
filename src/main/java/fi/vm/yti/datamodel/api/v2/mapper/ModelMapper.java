@@ -1,9 +1,6 @@
 package fi.vm.yti.datamodel.api.v2.mapper;
 
-import fi.vm.yti.datamodel.api.v2.dto.DataModelDTO;
-import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
-import fi.vm.yti.datamodel.api.v2.dto.ModelType;
-import fi.vm.yti.datamodel.api.v2.dto.Status;
+import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.elasticsearch.index.IndexModel;
 import fi.vm.yti.datamodel.api.v2.service.JenaService;
 import org.apache.jena.datatypes.xsd.XSDDateTime;
@@ -27,15 +24,6 @@ public class ModelMapper {
         this.jenaService = jenaService;
     }
 
-    private static final Map<String, String> PREFIXES = Map.of(
-            "rdfs", "http://www.w3.org/2000/01/rdf-schema#",
-            "dcterms", "http://purl.org/dc/terms/",
-            "owl", "http://www.w3.org/2002/07/owl#",
-            "dcap", "http://purl.org/ws-mmi-dc/terms/",
-            "xsd", "http://www.w3.org/2001/XMLSchema#",
-            "iow", "http://uri.suomi.fi/datamodel/ns/iow#"
-    );
-
     /**
      * Map DataModelDTO to Jena model
      * @param modelDTO Data Model DTO
@@ -44,7 +32,7 @@ public class ModelMapper {
     public Model mapToJenaModel(DataModelDTO modelDTO) {
         log.info("Mapping DatamodelDTO to Jena Model");
         var model = ModelFactory.createDefaultModel();
-        model.setNsPrefixes(PREFIXES);
+        model.setNsPrefixes(ModelConstants.PREFIXES);
 
         // TODO: type of application profile?
         Resource type = modelDTO.getType().equals(ModelType.LIBRARY)
@@ -61,12 +49,7 @@ public class ModelMapper {
 
         modelDTO.getLanguages().forEach(lang -> modelResource.addProperty(DCTerms.language, lang));
 
-        var contentModified = model.createProperty("http://uri.suomi.fi/datamodel/ns/iow#contentModified");
-        modelResource.addProperty(contentModified, ResourceFactory.createTypedLiteral(creationDate));
-
-        //TODO what is the prefix of this?
-        var statusModified = model.createProperty("status:Modified");
-        modelResource.addProperty(statusModified, ResourceFactory.createTypedLiteral(creationDate));
+        modelResource.addProperty(Iow.contentModified, ResourceFactory.createTypedLiteral(creationDate));
 
         //TODO is this needed
         var preferredXmlNamespacePrefix = model.createProperty("http://purl.org/ws-mmi-dc/terms/preferredXMLNamespacePrefix");
@@ -111,8 +94,6 @@ public class ModelMapper {
         if(dataModelDTO.getStatus() != null){
             modelResource.removeAll(OWL.versionInfo);
             modelResource.addProperty(OWL.versionInfo, dataModelDTO.getStatus().name());
-            modelResource.removeAll(model.getProperty("status:modified"));
-            modelResource.addProperty(model.createProperty("status:Modified"), ResourceFactory.createTypedLiteral(updateDate));
             hasUpdated = true;
         }
 
@@ -224,10 +205,13 @@ public class ModelMapper {
         var indexModel = new IndexModel();
         indexModel.setId(ModelConstants.SUOMI_FI_NAMESPACE + prefix);
         indexModel.setStatus(resource.getProperty(OWL.versionInfo).getString());
-        indexModel.setStatusModified(resource.getProperty(model.getProperty("status:Modified")).getString());
         indexModel.setModified(resource.getProperty(DCTerms.modified).getString());
         indexModel.setCreated(resource.getProperty(DCTerms.created).getString());
-        indexModel.setContentModified(resource.getProperty(model.getProperty(ModelConstants.SUOMI_FI_NAMESPACE + "iow#contentModified")).getString());
+
+        var contentModified = resource.getProperty(Iow.contentModified);
+        if(contentModified != null){
+            indexModel.setContentModified(contentModified.getString());
+        }
         indexModel.setType(resource.getProperty(RDF.type).getObject().equals(OWL.Ontology) ? "library" : "profile");
         indexModel.setPrefix(prefix);
         indexModel.setLabel(localizedPropertyToMap(resource, RDFS.label));
@@ -245,8 +229,7 @@ public class ModelMapper {
         indexModel.setIsPartOf(groups);
         indexModel.setLanguage(arrayPropertyToList(resource, DCTerms.language));
 
-        var documentationProperty = model.getProperty(ModelConstants.SUOMI_FI_NAMESPACE + "iow#documentation");
-        indexModel.setDocumentation(localizedPropertyToMap(resource, documentationProperty));
+        indexModel.setDocumentation(localizedPropertyToMap(resource, Iow.documentation));
 
         return indexModel;
     }

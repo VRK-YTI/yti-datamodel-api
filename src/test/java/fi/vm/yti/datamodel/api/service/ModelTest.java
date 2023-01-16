@@ -6,12 +6,10 @@ import org.apache.jena.iri.IRI;
 import org.apache.jena.rdf.model.Model;
 import org.glassfish.jersey.client.ClientProperties;
 import org.hamcrest.Matchers;
-import org.junit.Assert;
-import org.junit.FixMethodOrder;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.MethodSorters;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
@@ -24,7 +22,6 @@ import javax.ws.rs.core.Response;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.test.context.junit4.SpringRunner;
 import fi.vm.yti.datamodel.api.config.ApplicationProperties;
 import fi.vm.yti.datamodel.api.model.DataModel;
 import fi.vm.yti.datamodel.api.model.ReusableClass;
@@ -34,14 +31,17 @@ import fi.vm.yti.datamodel.api.utils.LDHelper;
 import fi.vm.yti.security.YtiUser;
 import fi.vm.yti.security.AuthenticatedUserProvider;
 
-import static org.junit.Assert.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
 
-@FixMethodOrder(MethodSorters.NAME_ASCENDING)
-@RunWith(SpringRunner.class)
+
+@TestMethodOrder(MethodOrderer.MethodName.class)
 @ActiveProfiles("junit")
 @TestPropertySource("classpath:application-test.properties")
 @SpringBootTest
-public class ModelTest  {
+@Disabled
+//TODO: this is part of v1 is this in use anymore
+class ModelTest  {
 
     private static final Logger logger = LoggerFactory.getLogger(ModelTest.class.getName());
     private static Client testClient = ClientBuilder.newClient().property(ClientProperties.FOLLOW_REDIRECTS,Boolean.TRUE);
@@ -73,19 +73,17 @@ public class ModelTest  {
     }
 
     @Test
-    @Ignore
-    public void test1_user() {
+    void test1_user() {
 
         String user = target.path("user").request().get().readEntity(String.class);
-        Assert.assertThat(user,JsonPathMatchers.hasJsonPath("$.email",Matchers.notNullValue()));
-        Assert.assertThat(user,JsonPathMatchers.hasJsonPath("$.firstName"));
-        Assert.assertThat(user,JsonPathMatchers.hasJsonPath("$.lastName"));
+        assertThat(user,JsonPathMatchers.hasJsonPath("$.email",Matchers.notNullValue()));
+        assertThat(user,JsonPathMatchers.hasJsonPath("$.firstName"));
+        assertThat(user,JsonPathMatchers.hasJsonPath("$.lastName"));
 
     }
 
     @Test
-    @Ignore
-    public void test2_createNewModel() {
+    void test2_createNewModel() {
 
         testModelId = LDHelper.toIRI(applicationProperties.getDefaultNamespace()+"junit5");
 
@@ -132,8 +130,7 @@ public class ModelTest  {
     }
 
     @Test
-    @Ignore
-    public void test3_createNewClassToModel() {
+    void test3_createNewClassToModel() {
 
         String testClass = target.path("classCreator")
                 .queryParam("modelID",testModelId)
@@ -154,8 +151,7 @@ public class ModelTest  {
     }
 
     @Test
-    @Ignore
-    public void test4_createNewPredicateToModel(){
+    void test4_createNewPredicateToModel(){
 
        String testPredicate = target.path("predicateCreator")
                 .queryParam("modelID",testModelId)
@@ -177,8 +173,7 @@ public class ModelTest  {
     }
 
     @Test
-    @Ignore
-    public void test5_removeModel() {
+    void test5_removeModel() {
 
         graphManager.removeModel(testModelId);
         serviceDescriptionManager.deleteGraphDescription(testModelId.toString());

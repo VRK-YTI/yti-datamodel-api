@@ -1,0 +1,61 @@
+{
+  "mappings": {
+    "doc": {
+      "dynamic_templates": [
+        {
+          "label": {
+            "path_match": "label.*",
+            "mapping": {
+              "type": "text"
+            }
+          }
+        },
+        {
+          "comment": {
+            "path_match": "comment.*",
+            "mapping": {
+              "type": "text"
+            }
+          }
+        },
+        {
+          "documentation": {
+            "path_match": "documentation.*",
+            "mapping": {
+              "type": "text"
+            }
+          }
+        }
+      ],
+      "properties": {
+        "id": {
+          "type": "keyword"
+        },
+        "status": {
+          "type": "keyword"
+        },
+        "contentModified": {
+          "type": "date"
+        },
+        "created": {
+          "type": "date"
+        },
+        "type": {
+          "type": "keyword"
+        },
+        "prefix": {
+          "type": "keyword"
+        },
+        "contributor": {
+          "type": "keyword"
+        },
+        "language": {
+          "type": "keyword"
+        },
+        "isPartOf": {
+          "type": "keyword"
+        }
+      }
+    }
+  }
+}

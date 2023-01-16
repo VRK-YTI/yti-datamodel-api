@@ -3,6 +3,7 @@ package fi.vm.yti.datamodel.api.v2.service;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import org.apache.jena.atlas.web.HttpException;
+import org.apache.jena.query.Query;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdfconnection.RDFConnection;
 import org.slf4j.Logger;
@@ -19,12 +20,14 @@ public class JenaService {
 
     private final RDFConnection coreWrite;
     private final RDFConnection coreRead;
+    private final RDFConnection coreSparql;
 
     private final Cache<String, Model> modelCache;
 
     public JenaService(@Value("${termed.cache.expiration:1800}") Long cacheExpireTime) {
         this.coreWrite = RDFConnection.connect("http://localhost:3030/core/data");
         this.coreRead = RDFConnection.connect("http://localhost:3030/core/get");
+        this.coreSparql = RDFConnection.connect("http://localhost:3030/core/sparql");
         this.modelCache = CacheBuilder.newBuilder()
                 .expireAfterWrite(cacheExpireTime, TimeUnit.SECONDS)
                 .maximumSize(1000)
@@ -39,6 +42,14 @@ public class JenaService {
         logger.debug("Getting model from core {}", graph);
         try{
             return coreRead.fetch(graph);
+        }catch(HttpException ex){
+            return null;
+        }
+    }
+
+    public Model constructWithQuery(Query query){
+        try{
+            return coreSparql.queryConstruct(query);
         }catch(HttpException ex){
             return null;
         }
