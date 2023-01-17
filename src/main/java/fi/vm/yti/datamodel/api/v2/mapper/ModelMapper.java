@@ -1,10 +1,12 @@
 package fi.vm.yti.datamodel.api.v2.mapper;
 
 import fi.vm.yti.datamodel.api.v2.dto.*;
+import fi.vm.yti.datamodel.api.v2.dto.OrganizationDTO;
 import fi.vm.yti.datamodel.api.v2.elasticsearch.index.IndexModel;
 import fi.vm.yti.datamodel.api.v2.service.JenaService;
 import org.apache.jena.datatypes.xsd.XSDDateTime;
 import org.apache.jena.rdf.model.*;
+import org.apache.jena.sparql.vocabulary.FOAF;
 import org.apache.jena.shared.JenaException;
 import org.apache.jena.vocabulary.*;
 import org.slf4j.Logger;
@@ -260,16 +262,7 @@ public class ModelMapper {
      */
     private List<String> arrayPropertyToList(Resource resource, Property property){
         var list = new ArrayList<String>();
-        try{
-            resource.getProperty(property)
-                    .getList()
-                    .asJavaList()
-                    .forEach(node -> list.add(node.toString()));
-        }catch(JenaException ex){
-            //if item could not be gotten as list it means it is multiple statements of the property
-            resource.listProperties(property)
-                    .forEach(val -> list.add(val.getObject().toString()));
-        }
+        resource.listProperties(property).forEach(val -> list.add(val.getObject().toString()));
         return list;
     }
 
@@ -281,16 +274,7 @@ public class ModelMapper {
      */
     private Set<String> arrayPropertyToSet(Resource resource, Property property){
         var list = new HashSet<String>();
-        try{
-            resource.getProperty(property)
-                    .getList()
-                    .asJavaList()
-                    .forEach(node -> list.add(node.toString()));
-        }catch(JenaException ex){
-            //if item could not be gotten as list it means it is multiple statements of the property
-            resource.listProperties(property)
-                    .forEach(val -> list.add(val.getObject().toString()));
-        }
+        resource.listProperties(property).forEach(val -> list.add(val.getObject().toString()));
         return list;
     }
 

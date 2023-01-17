@@ -1,0 +1,26 @@
+@prefix iow:   <http://uri.suomi.fi/datamodel/ns/iow#> .
+@prefix dcap:  <http://purl.org/ws-mmi-dc/terms/> .
+@prefix rdf:   <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix owl:   <http://www.w3.org/2002/07/owl#> .
+@prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
+@prefix skos:  <http://www.w3.org/2004/02/skos/core#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
+
+<http://urn.fi/URN:NBN:fi:au:ptvl:v1171>
+        a                    <http://xmlns.com/foaf/0.1/Group> ;
+        rdfs:label           "Consumer matters"@en , "Kuluttaja-asiat"@fi , "Konsumentärenden"@sv ;
+        dcterms:description  "This service class includes consumer protection and consumer rights from the perspective of trade in goods and services as well as insurance."@en , "Tässä palveluluokassa käsitellään kuluttajansuojaa ja kuluttajan oikeuksia tavara- ja palvelukaupan sekä vakuutusten kannalta."@fi , "I denna servicegrupp behandlas konsumentskydd och konsumenters rättigheter inom varuhandel och service samt försäkring."@sv ;
+        dcterms:identifier   "P21" .
+
+<http://urn.fi/URN:NBN:fi:au:ptvl:v1152>
+        a                    <http://xmlns.com/foaf/0.1/Group> ;
+        rdfs:label           "Matkailu"@fi , "Tourism"@en , "Turism"@sv ;
+        dcterms:description  "I denna servicegrupp behandlas resetjänster, resedokument, gränstjänster, turisters säkerhet och finländska beskickningars tjänster."@sv , "Tässä palveluluokassa käsitellään matkailupalveluja, matkustusasiakirjoja, rajapalveluja, matkailijan turvallisuutta ja Suomen ulkomaan-edustustojen palveluja."@fi , "This service class contains tourism services, travel documents, border services, traveller’s safety and the services of Finland's foreign missions."@en ;
+        dcterms:identifier   "P17" .
+
+<http://urn.fi/URN:NBN:fi:au:ptvl:v1105>
+        a                    <http://xmlns.com/foaf/0.1/Group> ;
+        rdfs:label           "Näringar"@sv , "Industries"@en , "Elinkeinot"@fi ;
+        dcterms:description  "Denna servicegrupp omfattar alla tjänster relaterade till företagsverksamhet från etablering av företag till utveckling av affärsverksamheten och nedläggning av företag."@sv , "Tähän palveluluokkaan kuuluvat kaikki yritystoimintaan liittyvät palvelut yrityksen perustamisesta liiketoiminnan kehittämiseen ja aina yrityksen lopettamiseen saakka."@fi , "This service class contains all services related to enterprising from the establishment of an enterprise to business development and winding up a company."@en ;
+        dcterms:identifier   "P11" .

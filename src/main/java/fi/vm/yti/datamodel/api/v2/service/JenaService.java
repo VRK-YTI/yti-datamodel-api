@@ -2,10 +2,19 @@ package fi.vm.yti.datamodel.api.v2.service;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
+import org.apache.jena.arq.querybuilder.ConstructBuilder;
+import org.apache.jena.arq.querybuilder.ExprFactory;
+import org.apache.jena.arq.querybuilder.WhereBuilder;
 import org.apache.jena.atlas.web.HttpException;
 import org.apache.jena.query.Query;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdfconnection.RDFConnection;
+import org.apache.jena.sparql.vocabulary.FOAF;
+import org.apache.jena.vocabulary.DCTerms;
+import org.apache.jena.vocabulary.RDF;
+import org.apache.jena.vocabulary.RDFS;
+import org.apache.jena.vocabulary.SKOS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -64,21 +73,38 @@ public class JenaService {
             return serviceCategories;
         }
 
-        serviceCategories = getDataModel("urn:yti:servicecategories");
+        String cat = "?category";
+        ConstructBuilder builder = new ConstructBuilder()
+                .addPrefixes(ModelConstants.PREFIXES)
+                .addConstruct(cat, RDFS.label, "?label")
+                .addConstruct(cat, RDF.type, FOAF.Group)
+                .addConstruct(cat, DCTerms.identifier, "?id")
+                .addConstruct(cat, DCTerms.description, "?note")
+                .addWhere(cat, RDF.type, SKOS.Concept)
+                .addWhere(cat, SKOS.prefLabel, "?label")
+                .addWhere(cat, SKOS.notation, "?id")
+                .addWhere(cat, SKOS.note, "?note")
+                .addFilter(new ExprFactory().notexists(
+                        new WhereBuilder().addWhere(cat, SKOS.broader, "?topCategory")
+                ));
+
+        serviceCategories = constructWithQuery(builder.build());
+
         modelCache.put("serviceCategories", serviceCategories);
         return serviceCategories;
     }
 
     public Model getOrganizations(){
-        var serviceCategories = modelCache.getIfPresent("organizations");
+        var organizations = modelCache.getIfPresent("organizations");
 
-        if(serviceCategories != null){
+        if(organizations != null){
             logger.info("Used cache for organizations");
-            return serviceCategories;
+            return organizations;
         }
 
-        serviceCategories = getDataModel("urn:yti:organizations");
-        modelCache.put("organizations", serviceCategories);
-        return serviceCategories;
+        organizations = getDataModel("urn:yti:organizations");
+
+        modelCache.put("organizations", organizations);
+        return organizations;
     }
 }
