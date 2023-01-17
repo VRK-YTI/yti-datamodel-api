@@ -243,7 +243,7 @@ public class ModelMapper {
         while (iterator.hasNext()) {
             var resource = iterator.next().asResource();
             var labels = localizedPropertyToMap(resource, RDFS.label);
-            var identifier = resource.getProperty(DCTerms.identifier).getObject().toString();
+            var identifier = resource.getProperty(SKOS.notation).getObject().toString();
             result.add(new ServiceCategoryDTO(resource.getURI(), labels, identifier));
         }
         return result;
