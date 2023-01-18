@@ -1,15 +1,13 @@
 package fi.vm.yti.datamodel.api.mapper;
 
 
-import fi.vm.yti.datamodel.api.v2.dto.DataModelDTO;
-import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
-import fi.vm.yti.datamodel.api.v2.dto.ModelType;
-import fi.vm.yti.datamodel.api.v2.dto.Status;
+import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.mapper.ModelMapper;
 import fi.vm.yti.datamodel.api.v2.service.JenaService;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.riot.RDFLanguages;
 import org.apache.jena.vocabulary.OWL;
@@ -274,5 +272,52 @@ class ModelMapperTest {
 
         assertEquals(1, resultOld.getIsPartOf().size());
         assertTrue(resultOld.getIsPartOf().contains("P11"));
+    }
+
+    @Test
+    void testMapOrganizationsToDTO() {
+        var model = ModelFactory.createDefaultModel();
+        var stream = getClass().getResourceAsStream("/organizations.ttl");
+        assertNotNull(stream);
+        RDFDataMgr.read(model, stream, Lang.TURTLE);
+
+        var organizations = mapper.mapToListOrganizationDTO(model);
+
+        assertEquals(3, organizations.size());
+
+        var org = organizations.stream()
+                .filter(o -> o.getId().equals("7d3a3c00-5a6b-489b-a3ed-63bb58c26a63"))
+                .findFirst()
+                .orElseThrow();
+        var child = organizations.stream()
+                .filter(o -> o.getId().equals("8fab2816-03c5-48cd-9d48-b61048f435da"))
+                .findFirst()
+                .orElseThrow();
+
+        assertEquals("Yhteentoimivuusalustan yllapito", org.getLabel().get("fi"));
+        assertEquals("Utvecklare av interoperabilitetsplattform", org.getLabel().get("sv"));
+        assertEquals("Interoperability platform developers", org.getLabel().get("en"));
+
+        assertEquals(UUID.fromString("74776e94-7f51-48dc-aeec-c084c4defa09"), child.getParentOrganization());
+    }
+
+    @Test
+    void testMapServiceCategoriesToDTO() {
+        var model = ModelFactory.createDefaultModel();
+        var stream = getClass().getResourceAsStream("/service-categories.ttl");
+        assertNotNull(stream);
+        RDFDataMgr.read(model, stream, Lang.TURTLE);
+
+        var serviceCategories = mapper.mapToListServiceCategoryDTO(model);
+
+        assertEquals(3, serviceCategories.size());
+
+        var cat = serviceCategories.get(0);
+
+        assertEquals("P11", cat.getIdentifier());
+        assertEquals("http://urn.fi/URN:NBN:fi:au:ptvl:v1105", cat.getId());
+        assertEquals("Elinkeinot", cat.getLabel().get("fi"));
+        assertEquals("Industries", cat.getLabel().get("en"));
+        assertEquals("Näringar", cat.getLabel().get("sv"));
     }
 }

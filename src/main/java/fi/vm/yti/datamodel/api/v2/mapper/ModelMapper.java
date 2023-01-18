@@ -6,6 +6,7 @@ import fi.vm.yti.datamodel.api.v2.service.JenaService;
 import org.apache.jena.datatypes.xsd.XSDDateTime;
 import org.apache.jena.rdf.model.*;
 import org.apache.jena.shared.JenaException;
+import org.apache.jena.sparql.vocabulary.FOAF;
 import org.apache.jena.vocabulary.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -233,6 +234,43 @@ public class ModelMapper {
         indexModel.setDocumentation(localizedPropertyToMap(resource, Iow.documentation));
 
         return indexModel;
+    }
+
+    public List<ServiceCategoryDTO> mapToListServiceCategoryDTO(Model serviceCategoryModel) {
+        var iterator = serviceCategoryModel.listResourcesWithProperty(RDF.type, FOAF.Group);
+        List<ServiceCategoryDTO> result = new ArrayList<>();
+
+        while (iterator.hasNext()) {
+            var resource = iterator.next().asResource();
+            var labels = localizedPropertyToMap(resource, RDFS.label);
+            var identifier = resource.getProperty(SKOS.notation).getObject().toString();
+            result.add(new ServiceCategoryDTO(resource.getURI(), labels, identifier));
+        }
+        return result;
+    }
+    
+    public List<OrganizationDTO> mapToListOrganizationDTO(Model organizationModel) {
+        var iterator = organizationModel.listResourcesWithProperty(RDF.type, FOAF.Organization);
+        List<OrganizationDTO> result = new ArrayList<>();
+
+        while (iterator.hasNext()) {
+            var resource = iterator.next().asResource();
+
+            var labels = localizedPropertyToMap(resource, SKOS.prefLabel);
+            var id = getUUID(resource.getURI());
+            var parentId = getUUID(resource.getProperty(Iow.parentOrganization).getObject().toString());
+
+            result.add(new OrganizationDTO(id.toString(), labels, parentId));
+        }
+        return result;
+    }
+
+    private UUID getUUID(String urn) {
+        try {
+            return UUID.fromString(urn.replace("urn:uuid:", ""));
+        } catch (Exception e) {
+            return null;
+        }
     }
 
 
