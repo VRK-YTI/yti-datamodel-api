@@ -9,6 +9,7 @@ import fi.vm.yti.datamodel.api.v2.dto.ModelType;
 import fi.vm.yti.datamodel.api.v2.dto.Status;
 import fi.vm.yti.datamodel.api.v2.elasticsearch.index.ElasticIndexer;
 import fi.vm.yti.datamodel.api.v2.elasticsearch.index.IndexModel;
+import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
 import fi.vm.yti.datamodel.api.v2.mapper.ModelMapper;
 import fi.vm.yti.datamodel.api.v2.service.JenaService;
 import fi.vm.yti.datamodel.api.v2.validator.ExceptionHandlerAdvice;
@@ -168,6 +169,19 @@ class DatamodelTest {
         verify(modelMapper)
                 .mapToDataModelDTO(eq("test"), any(Model.class));
         verifyNoMoreInteractions(this.modelMapper);
+    }
+
+    @Test
+    void shouldReturnNotFound() throws Exception {
+        when(jenaService.getDataModel(anyString())).thenThrow(ResourceNotFoundException.class);
+
+        this.mvc
+                .perform(get("/v2/model/not-found")
+                        .accept(MediaType.APPLICATION_JSON_VALUE)
+                        .contentType(MediaType.APPLICATION_JSON_VALUE))
+                .andDo(print())
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE));
     }
 
     @ParameterizedTest

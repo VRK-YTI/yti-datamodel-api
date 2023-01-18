@@ -2,6 +2,7 @@ package fi.vm.yti.datamodel.api.v2.service;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
 import org.apache.jena.atlas.web.HttpException;
 import org.apache.jena.query.Query;
 import org.apache.jena.rdf.model.Model;
@@ -9,6 +10,7 @@ import org.apache.jena.rdfconnection.RDFConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.concurrent.TimeUnit;
@@ -39,12 +41,17 @@ public class JenaService {
         coreWrite.put(graphName, model);
     }
 
-    public Model getDataModel(String graph){
+    public Model getDataModel(String graph) {
         logger.debug("Getting model from core {}", graph);
-        try{
+        try {
             return coreRead.fetch(graph);
-        }catch(HttpException ex){
-            return null;
+        } catch (HttpException ex) {
+            if (ex.getStatusCode() == HttpStatus.NOT_FOUND.value()) {
+                logger.warn("Model not found with prefix {}", graph);
+                throw new ResourceNotFoundException(graph);
+            } else {
+                throw new RuntimeException("Error fetching graph");
+            }
         }
     }
 
