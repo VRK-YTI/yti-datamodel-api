@@ -116,7 +116,7 @@ class ModelMapperTest {
 
         assertEquals(Status.VALID, Status.valueOf(modelResource.getProperty(OWL.versionInfo).getString()));
 
-        Model model = mapper.mapToUpdateJenaModel("test", dto);
+        Model model = mapper.mapToUpdateJenaModel("test", dto, m);
 
         //changed values
         modelResource = model.getResource("http://uri.suomi.fi/datamodel/ns/test");

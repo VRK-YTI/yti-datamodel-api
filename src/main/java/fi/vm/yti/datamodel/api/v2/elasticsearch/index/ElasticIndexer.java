@@ -126,6 +126,7 @@ public class ElasticIndexer {
             var indexModel = modelMapper.mapToIndexModel(resource.getLocalName(), newModel);
             list.add(indexModel);
         }
+        //TODO check why http://uri.suomi/fi/datamodel/ns/aaa is not indexes
         var values = objectMapper.valueToTree(list);
         bulkInsert(ELASTIC_INDEX_MODEL, values);
     }

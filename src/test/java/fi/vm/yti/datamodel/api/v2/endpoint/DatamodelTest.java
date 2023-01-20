@@ -80,6 +80,7 @@ class DatamodelTest {
                 .build();
 
         when(authorizationManager.hasRightToAnyOrganization(anyCollection())).thenReturn(true);
+        when(authorizationManager.hasRightToModel(any(), any())).thenReturn(true);
     }
 
     @Test
@@ -129,7 +130,8 @@ class DatamodelTest {
         //Mock mapping
         var model = mock(Model.class);
         var indexmodel = mock(IndexModel.class);
-        when(modelMapper.mapToUpdateJenaModel(anyString(), any(DataModelDTO.class))).thenReturn(model);
+        when(jenaService.getDataModel(anyString())).thenReturn(mock(Model.class));
+        when(modelMapper.mapToUpdateJenaModel(anyString(), any(DataModelDTO.class), any(Model.class))).thenReturn(model);
         when(modelMapper.mapToIndexModel("test", model)).thenReturn(indexmodel);
 
         this.mvc
@@ -140,7 +142,7 @@ class DatamodelTest {
 
         //Check that functions are called
         verify(this.modelMapper)
-                .mapToUpdateJenaModel(anyString(), any(DataModelDTO.class));
+                .mapToUpdateJenaModel(anyString(), any(DataModelDTO.class), any(Model.class));
         verify(this.modelMapper)
                 .mapToIndexModel(anyString(), any(Model.class));
         verifyNoMoreInteractions(this.modelMapper);

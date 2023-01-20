@@ -85,11 +85,9 @@ public class ModelMapper {
     }
 
 
-    public Model mapToUpdateJenaModel(String prefix, DataModelDTO dataModelDTO){
+    public Model mapToUpdateJenaModel(String prefix, DataModelDTO dataModelDTO, Model model){
         var updateDate = new XSDDateTime(Calendar.getInstance());
         var hasUpdated = false;
-
-        var model = jenaService.getDataModel(ModelConstants.SUOMI_FI_NAMESPACE + prefix);
 
         var modelResource = model.getResource(ModelConstants.SUOMI_FI_NAMESPACE + prefix);
 
