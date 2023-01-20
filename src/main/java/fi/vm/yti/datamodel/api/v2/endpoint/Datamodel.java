@@ -65,11 +65,15 @@ public class Datamodel {
     public void updateModel(@ValidDatamodel(updateModel = true) @RequestBody DataModelDTO modelDTO,
                             @PathVariable String prefix) {
         logger.info("Updating model {}", modelDTO);
-        check(authorizationManager.hasRightToAnyOrganization(modelDTO.getOrganizations()));
 
-        var jenaModel = mapper.mapToUpdateJenaModel(prefix, modelDTO);
+        var oldModel = jenaService.getDataModel(ModelConstants.SUOMI_FI_NAMESPACE + prefix);
 
-        jenaService.createDataModel(ModelConstants.SUOMI_FI_NAMESPACE + modelDTO.getPrefix(), jenaModel);
+        check(authorizationManager.hasRightToModel(prefix, oldModel));
+
+        var jenaModel = mapper.mapToUpdateJenaModel(prefix, modelDTO, oldModel);
+
+        jenaService.createDataModel(ModelConstants.SUOMI_FI_NAMESPACE + prefix, jenaModel);
+
 
         var indexModel = mapper.mapToIndexModel(prefix, jenaModel);
         elasticIndexer.updateModelToIndex(indexModel);

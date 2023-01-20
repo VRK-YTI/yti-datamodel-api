@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.UUID;
 
 import org.apache.jena.iri.IRI;
+import org.apache.jena.rdf.model.Model;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Profile;
@@ -42,6 +43,11 @@ public class TestAuthorizationManagerImpl implements AuthorizationManager {
 
     @Override
     public boolean hasRightToAnyOrganization(final Collection<UUID> organizations) {
+        return true;
+    }
+
+    @Override
+    public boolean hasRightToModel(final String prefix, final Model model) {
         return true;
     }
 
