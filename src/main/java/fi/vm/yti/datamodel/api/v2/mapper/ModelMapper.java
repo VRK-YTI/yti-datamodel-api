@@ -466,13 +466,13 @@ public class ModelMapper {
     private void addExternalNamespaceToDatamodel(DataModelDTO modelDTO, Model model, Resource resource){
             modelDTO.getExternalNamespaces().forEach(namespace -> {
                 var nsUri = namespace.getNamespace();
-                var nsRes = model.createResource(nsUri);
                 var resolvedNamespace = ModelFactory.createDefaultModel();
                 try{
                     resolvedNamespace.read(nsUri);
                     var extRes = resolvedNamespace.getResource(nsUri);
                     var resType = extRes.getProperty(RDF.type).getResource();
 
+                    var nsRes = model.createResource(nsUri);
                     nsRes.addProperty(RDFS.label, namespace.getName());
                     nsRes.addProperty(PREFERRED_XML_NAMESPACE_PREFIX, namespace.getPrefix());
                     nsRes.addProperty(DCTerms.type, resType);
