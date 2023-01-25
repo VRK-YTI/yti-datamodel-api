@@ -17,7 +17,8 @@ public class DataModelDTO {
     private Set<UUID> organizations = Set.of();
     private Set<String> groups = Set.of();
 
-
+    private Set<String> internalNamespaces = Set.of();
+    private Set<ExternalNamespaceDTO> externalNamespaces = Set.of();
 
     public ModelType getType() {
         return type;
@@ -86,5 +87,21 @@ public class DataModelDTO {
     @Override
     public String toString() {
         return ToStringBuilder.reflectionToString(this);
+    }
+
+    public Set<ExternalNamespaceDTO> getExternalNamespaces() {
+        return externalNamespaces;
+    }
+
+    public void setExternalNamespaces(Set<ExternalNamespaceDTO> externalNamespaces) {
+        this.externalNamespaces = externalNamespaces;
+    }
+
+    public Set<String> getInternalNamespaces() {
+        return internalNamespaces;
+    }
+
+    public void setInternalNamespaces(Set<String> internalNamespaces) {
+        this.internalNamespaces = internalNamespaces;
     }
 }

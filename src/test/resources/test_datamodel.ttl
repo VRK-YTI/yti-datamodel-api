@@ -6,7 +6,7 @@
 @prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
 
 <http://uri.suomi.fi/datamodel/ns/test>
-        a                               owl:Ontology ;
+        a                               dcap:DCAP ;
         rdfs:comment                    "test desc"@fi ;
         rdfs:label                      "testlabel"@fi ;
         dcterms:contributor             <urn:uuid:7d3a3c00-5a6b-489b-a3ed-63bb58c26a63> ;
@@ -14,9 +14,16 @@
         dcterms:identifier              "d2edb497-ba0b-49c9-aeb7-49749d836434" ;
         dcterms:isPartOf                <http://urn.fi/URN:NBN:fi:au:ptvl:v1105> ;
         dcterms:language                "fi" ;
+        owl:imports                     "http://uri.suomi.fi/datamodel/ns/int" ;
+        dcterms:requires                "https://www.example.com/ns/ext" ;
         dcterms:modified                "2023-01-03T12:44:45.799Z"^^xsd:dateTime ;
         dcap:preferredXMLNamespaceName  "http://uri.suomi.fi/datamodel/ns/test" ;
         dcap:preferredXMLNamespacePrefix
                 "test" ;
         iow:contentModified             "2023-01-03T12:44:45.799Z"^^xsd:dateTime ;
-        owl:versionInfo                 "VALID" ;
+        owl:versionInfo                 "VALID" .
+
+<https://www.example.com/ns/ext>
+        dcterms:type                        rdfs:Resource ;
+        rdfs:label                          "test resource"@fi;
+        dcap:preferredXMLNamespacePrefix    "extres" ;

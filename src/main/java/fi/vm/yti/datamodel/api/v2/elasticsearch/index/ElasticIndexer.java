@@ -114,7 +114,8 @@ public class ElasticIndexer {
         //TODO swap to commented text once older migration is ready
         //addProperty(constructBuilder, DCTerms.language, "?language");
         constructBuilder.addConstruct(GRAPH_VARIABLE, DCTerms.language, "?language")
-                .addWhere(GRAPH_VARIABLE, "dcterms:language/rdf:rest*/rdf:first", "?language");
+                .addWhereValueVar("?langTypes", DCTerms.language, "dcterms:language/rdf:rest*/rdf:first")
+                .addWhere(GRAPH_VARIABLE, "?langTypes", "?language");
 
         var indexModels = jenaService.constructWithQuery(constructBuilder.build());
         var it = indexModels.listSubjects();
@@ -126,7 +127,6 @@ public class ElasticIndexer {
             var indexModel = modelMapper.mapToIndexModel(resource.getLocalName(), newModel);
             list.add(indexModel);
         }
-        //TODO check why http://uri.suomi/fi/datamodel/ns/aaa is not indexes
         var values = objectMapper.valueToTree(list);
         bulkInsert(ELASTIC_INDEX_MODEL, values);
     }

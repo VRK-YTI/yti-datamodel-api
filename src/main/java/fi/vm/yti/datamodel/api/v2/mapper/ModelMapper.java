@@ -2,7 +2,9 @@ package fi.vm.yti.datamodel.api.v2.mapper;
 
 import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.elasticsearch.index.IndexModel;
+import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
 import fi.vm.yti.datamodel.api.v2.service.JenaService;
+import org.apache.jena.atlas.web.HttpException;
 import org.apache.jena.datatypes.xsd.XSDDateTime;
 import org.apache.jena.rdf.model.*;
 import org.apache.jena.shared.JenaException;
@@ -10,6 +12,7 @@ import org.apache.jena.sparql.vocabulary.FOAF;
 import org.apache.jena.vocabulary.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -21,6 +24,8 @@ public class ModelMapper {
     private final Logger log = LoggerFactory.getLogger(ModelMapper.class);
 
     private final JenaService jenaService;
+
+    private static final Property PREFERRED_XML_NAMESPACE_PREFIX = ResourceFactory.createProperty("http://purl.org/ws-mmi-dc/terms/preferredXMLNamespacePrefix");
 
     public ModelMapper (JenaService jenaService){
         this.jenaService = jenaService;
@@ -53,9 +58,9 @@ public class ModelMapper {
 
         modelResource.addProperty(Iow.contentModified, ResourceFactory.createTypedLiteral(creationDate));
 
+
         //TODO is this needed
-        var preferredXmlNamespacePrefix = model.createProperty("http://purl.org/ws-mmi-dc/terms/preferredXMLNamespacePrefix");
-        modelResource.addProperty(preferredXmlNamespacePrefix, modelDTO.getPrefix());
+        modelResource.addProperty(PREFERRED_XML_NAMESPACE_PREFIX, modelDTO.getPrefix());
 
         //TODO is this needed
         var preferredXmlNamespace = model.createProperty("http://purl.org/ws-mmi-dc/terms/preferredXMLNamespaceName");
@@ -72,14 +77,13 @@ public class ModelMapper {
             }
         });
 
-        var organizationsModel = jenaService.getOrganizations();
-        modelDTO.getOrganizations().forEach(org -> {
-            var queryRes = ResourceFactory.createResource(ModelConstants.URN_UUID + org.toString());
-            var resource = organizationsModel.containsResource(queryRes);
-            if(resource){
-                modelResource.addProperty(DCTerms.contributor, organizationsModel.getResource(ModelConstants.URN_UUID + org.toString()));
-            }
-        });
+        addOrgsToModel(modelDTO, modelResource);
+
+        addInternalNamespaceToDatamodel(modelDTO, modelResource);
+        //As this could not be reasonably checked using the constraint validator we do not add external namespaces to core vocabularies
+        if(!modelDTO.getType().equals(ModelType.LIBRARY)){
+            addExternalNamespaceToDatamodel(modelDTO, model, modelResource);
+        }
 
         return model;
     }
@@ -129,14 +133,49 @@ public class ModelMapper {
 
         if(dataModelDTO.getOrganizations() != null){
             modelResource.removeAll(DCTerms.contributor);
-            var organizationsModel = jenaService.getOrganizations();
-            dataModelDTO.getOrganizations().forEach(org -> {
-                var queryRes = ResourceFactory.createResource(ModelConstants.URN_UUID + org.toString());
-                var resource = organizationsModel.containsResource(queryRes);
-                if(resource){
-                    modelResource.addProperty(DCTerms.contributor, organizationsModel.getResource(ModelConstants.URN_UUID + org.toString()));
+            addOrgsToModel(dataModelDTO, modelResource);
+            hasUpdated = true;
+        }
+
+
+        if(dataModelDTO.getInternalNamespaces() != null){
+            var reqIterator = modelResource.listProperties(DCTerms.requires);
+            while(reqIterator.hasNext()){
+                var next = reqIterator.next();
+                if(next.getObject().toString().startsWith(ModelConstants.SUOMI_FI_NAMESPACE)){
+                    reqIterator.remove();
                 }
-            });
+            }
+            var importsIterator = modelResource.listProperties(OWL.imports);
+            while(importsIterator.hasNext()){
+                var next = importsIterator.next();
+                if(next.getObject().toString().startsWith(ModelConstants.SUOMI_FI_NAMESPACE)){
+                    importsIterator.remove();
+                }
+            }
+            addInternalNamespaceToDatamodel(dataModelDTO, modelResource);
+            hasUpdated = true;
+        }
+
+
+        //As this could not be reasonably checked using the constraint validator we do not add external namespaces to core vocabularies(Ontologies)
+        if(dataModelDTO.getExternalNamespaces() != null && !modelResource.getProperty(RDF.type).getResource().equals(OWL.Ontology)){
+            var reqIterator = modelResource.listProperties(DCTerms.requires);
+            while(reqIterator.hasNext()){
+                var next = reqIterator.next();
+                if(!next.getObject().toString().startsWith(ModelConstants.SUOMI_FI_NAMESPACE)){
+                    reqIterator.remove();
+                }
+            }
+            var importsIterator = modelResource.listProperties(OWL.imports);
+            while(importsIterator.hasNext()){
+                var next = importsIterator.next();
+                if(!next.getObject().toString().startsWith(ModelConstants.SUOMI_FI_NAMESPACE)){
+                    importsIterator.remove();
+                }
+            }
+
+            addExternalNamespaceToDatamodel(dataModelDTO, model, modelResource);
             hasUpdated = true;
         }
 
@@ -185,11 +224,16 @@ public class ModelMapper {
 
         var organizations = modelResource.listProperties(DCTerms.contributor).toList().stream().map(prop -> {
             var orgUri = prop.getObject().toString();
-            return UUID.fromString(
-                    orgUri.substring(
-                            orgUri.lastIndexOf(":")+ 1));
+            return getUUID(orgUri);
         }).collect(Collectors.toSet());
         datamodelDTO.setOrganizations(organizations);
+
+        var internalNamespaces = new HashSet<String>();
+        var externalNamespaces = new HashSet<ExternalNamespaceDTO>();
+        addNamespacesToList(internalNamespaces, externalNamespaces, model, modelResource, OWL.imports);
+        addNamespacesToList(internalNamespaces, externalNamespaces, model, modelResource, DCTerms.requires);
+        datamodelDTO.setInternalNamespaces(internalNamespaces);
+        datamodelDTO.setExternalNamespaces(externalNamespaces);
 
         return datamodelDTO;
     }
@@ -219,8 +263,7 @@ public class ModelMapper {
         var contributors = new ArrayList<UUID>();
         resource.listProperties(DCTerms.contributor).forEach(contributor -> {
             var value = contributor.getObject().toString();
-            var uuidString = value.substring(value.lastIndexOf(":")+1);
-            contributors.add(UUID.fromString(uuidString));
+            contributors.add(getUUID(value));
         });
         indexModel.setContributor(contributors);
         var isPartOf = arrayPropertyToList(resource, DCTerms.isPartOf);
@@ -263,6 +306,12 @@ public class ModelMapper {
         return result;
     }
 
+    /**
+     * Get UUID from urn
+     * Will return null if urn cannot be parsed
+     * @param urn URN string formatted as urn:uuid:{uuid}
+     * @return UUID
+     */
     private UUID getUUID(String urn) {
         try {
             return UUID.fromString(urn.replace("urn:uuid:", ""));
@@ -345,5 +394,102 @@ public class ModelMapper {
             return;
         }
         data.forEach((lang, value) -> resource.addProperty(property, model.createLiteral(value, lang)));
+    }
+
+
+    /**
+     * Add organizations to a model
+     * @param modelDTO Payload to get organizations from
+     * @param modelResource Model resource to add orgs to
+     */
+    private void addOrgsToModel(DataModelDTO modelDTO, Resource modelResource) {
+        var organizationsModel = jenaService.getOrganizations();
+        modelDTO.getOrganizations().forEach(org -> {
+            var queryRes = ResourceFactory.createResource(ModelConstants.URN_UUID + org.toString());
+            var resource = organizationsModel.containsResource(queryRes);
+            if(resource){
+                modelResource.addProperty(DCTerms.contributor, organizationsModel.getResource(ModelConstants.URN_UUID + org.toString()));
+            }
+        });
+    }
+
+    /**
+     * Add namespaces from model to two sets
+     * @param intNs Internal namespaces set - Defined by having http://uri.suomi.fi/ as the namespace
+     * @param extNs External namespaces set - Everything not internal
+     * @param model Model to get external namespace information from
+     * @param resource Model resource where the given property lies
+     * @param property Property to get namespace reference from
+     */
+    private void addNamespacesToList(Set<String> intNs, Set<ExternalNamespaceDTO> extNs, Model model, Resource resource, Property property){
+        resource.listProperties(property).forEach(prop -> {
+            var ns = prop.getObject().toString();
+            if(ns.startsWith(ModelConstants.SUOMI_FI_NAMESPACE)){
+                intNs.add(ns);
+            }else {
+                var extNsModel = model.getResource(ns);
+                var extPrefix = extNsModel.getProperty(PREFERRED_XML_NAMESPACE_PREFIX).getObject().toString();
+                var extNsDTO = new ExternalNamespaceDTO();
+                extNsDTO.setNamespace(ns);
+                extNsDTO.setPrefix(extPrefix);
+                extNsDTO.setName(extNsModel.getProperty(RDFS.label).getObject().toString());
+                extNs.add(extNsDTO);
+            }
+        });
+    }
+
+    /**
+     * Add internal namespace to data model, if model type cannot be resolved the namespace won't be added
+     * @param modelDTO Model DTO to get internal namespaces from
+     * @param resource Data model resource to add linking property (OWL.imports or DCTerms.requires)
+     */
+    private void addInternalNamespaceToDatamodel(DataModelDTO modelDTO, Resource resource){
+        modelDTO.getInternalNamespaces().forEach(namespace -> {
+            var ns = jenaService.getDataModel(namespace);
+            if(ns != null){
+                var nsType = ns.getResource(namespace).getProperty(RDF.type).getResource();
+                if(nsType.equals(OWL.Ontology)){
+                    resource.addProperty(OWL.imports, namespace);
+                }else{
+                    resource.addProperty(DCTerms.requires, namespace);
+                }
+            }
+        });
+    }
+
+    /**
+     * Add external namespaces to data model
+     * @param modelDTO Model DTO to get external namespaces from
+     * @param model Data model to add namespace resource to
+     * @param resource Data model resource to add linking property (OWL.imports or DCTerms.requires)
+     */
+    private void addExternalNamespaceToDatamodel(DataModelDTO modelDTO, Model model, Resource resource){
+            modelDTO.getExternalNamespaces().forEach(namespace -> {
+                var nsUri = namespace.getNamespace();
+                var nsRes = model.createResource(nsUri);
+                var resolvedNamespace = ModelFactory.createDefaultModel();
+                try{
+                    resolvedNamespace.read(nsUri);
+                    var extRes = resolvedNamespace.getResource(nsUri);
+                    var resType = extRes.getProperty(RDF.type).getResource();
+
+                    nsRes.addProperty(RDFS.label, namespace.getName());
+                    nsRes.addProperty(PREFERRED_XML_NAMESPACE_PREFIX, namespace.getPrefix());
+                    nsRes.addProperty(DCTerms.type, resType);
+                    if(resType.equals(OWL.Ontology)){
+                        resource.addProperty(OWL.imports, nsUri);
+                    }else{
+                        resource.addProperty(DCTerms.requires, nsUri);
+                    }
+                }catch (HttpException ex){
+                    if (ex.getStatusCode() == HttpStatus.NOT_FOUND.value()) {
+                        log.warn("Model not found with prefix {}", nsUri);
+                        throw new ResourceNotFoundException(nsUri);
+                    } else {
+                        throw new RuntimeException("Error fetching external namespace");
+                    }
+                }
+
+            });
     }
 }
