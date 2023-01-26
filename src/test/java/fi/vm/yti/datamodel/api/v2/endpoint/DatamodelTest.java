@@ -3,10 +3,7 @@ package fi.vm.yti.datamodel.api.v2.endpoint;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import fi.vm.yti.datamodel.api.security.AuthorizationManager;
-import fi.vm.yti.datamodel.api.v2.dto.DataModelDTO;
-import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
-import fi.vm.yti.datamodel.api.v2.dto.ModelType;
-import fi.vm.yti.datamodel.api.v2.dto.Status;
+import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.elasticsearch.index.ElasticIndexer;
 import fi.vm.yti.datamodel.api.v2.elasticsearch.index.IndexModel;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
@@ -238,6 +235,12 @@ class DatamodelTest {
         dataModelDTO.setGroups(Set.of("P11"));
         dataModelDTO.setLanguages(Set.of("fi"));
         dataModelDTO.setOrganizations(Set.of(RANDOM_ORG));
+        dataModelDTO.setInternalNamespaces(Set.of("http://uri.suomi.fi/datamodel/ns/test"));
+        var extNs = new ExternalNamespaceDTO();
+        extNs.setName("test external namespace");
+        extNs.setPrefix("testprefix");
+        extNs.setNamespace("http://example.com/ns/test");
+        dataModelDTO.setExternalNamespaces(Set.of(extNs));
         if(!updateModel){
             dataModelDTO.setPrefix("test");
             dataModelDTO.setType(ModelType.LIBRARY);
@@ -251,13 +254,20 @@ class DatamodelTest {
 
         var args = new ArrayList<DataModelDTO>();
 
-        // without a prefLabel
         var dataModelDTO = createDatamodelDTO(false);
+        dataModelDTO.setType(null);
+        args.add(dataModelDTO);
+
+        dataModelDTO = createDatamodelDTO(false);
         dataModelDTO.setPrefix("123");
         args.add(dataModelDTO);
 
         dataModelDTO = createDatamodelDTO(false);
         dataModelDTO.setPrefix("asd123asd1232asd123");
+        args.add(dataModelDTO);
+
+        dataModelDTO = createDatamodelDTO(false);
+        dataModelDTO.setPrefix(null);
         args.add(dataModelDTO);
 
         dataModelDTO = createDatamodelDTO(false);
@@ -298,6 +308,37 @@ class DatamodelTest {
 
         dataModelDTO = createDatamodelDTO(false);
         dataModelDTO.setDescription(Map.of("fi", RandomStringUtils.random(textAreaMaxPlus)));
+        args.add(dataModelDTO);
+
+        dataModelDTO = createDatamodelDTO(false);
+        dataModelDTO.setInternalNamespaces(Set.of("http://example.com/ns/test"));
+        args.add(dataModelDTO);
+
+        dataModelDTO = createDatamodelDTO(false);
+        var invalidExtRes = new ExternalNamespaceDTO();
+        invalidExtRes.setName("this is invalid");
+        //Reserved namespace, see ValidationConstants.RESERVED_NAMESPACES
+        invalidExtRes.setPrefix("dcterms");
+        invalidExtRes.setNamespace("http:://example.com/ns/test");
+        dataModelDTO.setExternalNamespaces(Set.of(invalidExtRes));
+        args.add(dataModelDTO);
+
+        dataModelDTO = createDatamodelDTO(false);
+        invalidExtRes = new ExternalNamespaceDTO();
+        invalidExtRes.setName("this is invalid");
+        //Reserved word, see ValidationConstants.RESERVED_WORDS
+        invalidExtRes.setPrefix("rootResource");
+        invalidExtRes.setNamespace("http:://example.com/ns/test");
+        dataModelDTO.setExternalNamespaces(Set.of(invalidExtRes));
+        args.add(dataModelDTO);
+
+        dataModelDTO = createDatamodelDTO(false);
+        invalidExtRes = new ExternalNamespaceDTO();
+        invalidExtRes.setName("this is invalid");
+        //uri.suomi.fi cannot be set as external namespace
+        invalidExtRes.setPrefix("test");
+        invalidExtRes.setNamespace("http://uri.suomi.fi/datamodel/ns/test");
+        dataModelDTO.setExternalNamespaces(Set.of(invalidExtRes));
         args.add(dataModelDTO);
 
         return args.stream().map(Arguments::of);

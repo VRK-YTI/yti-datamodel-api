@@ -13,6 +13,9 @@ import javax.validation.ConstraintValidatorContext;
 public class DataModelValidator extends BaseValidator implements
         ConstraintValidator<ValidDatamodel, DataModelDTO> {
 
+    private static final String MSG_VALUE_MISSING = "should-have-value";
+    private static final String MSG_NOT_ALLOWED_UPDATE = "not-allowed-update";
+
     @Autowired
     private JenaService jenaService;
 
@@ -26,6 +29,7 @@ public class DataModelValidator extends BaseValidator implements
     @Override
     public boolean isValid(DataModelDTO dataModel, ConstraintValidatorContext context) {
         setConstraintViolationAdded(false);
+        checkModelType(context, dataModel);
         checkPrefix(context, dataModel);
         checkLanguages(context, dataModel);
         checkLabels(context, dataModel);
@@ -33,9 +37,8 @@ public class DataModelValidator extends BaseValidator implements
         checkOrganizations(context, dataModel);
         checkGroups(context, dataModel);
 
-        if(updateModel){
-            checkModelType(context, dataModel);
-        }
+        checkInternalNamespaces(context, dataModel);
+        checkExternalNamespaces(context, dataModel);
 
         return !isConstraintViolationAdded();
     }
@@ -50,8 +53,11 @@ public class DataModelValidator extends BaseValidator implements
         var prefix = dataModel.getPrefix();
         if(updateModel){
             if(prefix != null){
-                addConstraintViolation(context, "not-allowed-update", prefixPropertyLabel);
+                addConstraintViolation(context, MSG_NOT_ALLOWED_UPDATE, prefixPropertyLabel);
             }
+            return;
+        }else if(prefix == null){
+            addConstraintViolation(context, MSG_VALUE_MISSING, prefixPropertyLabel);
             return;
         }
         if(prefix.length() < 3 || prefix.length() > 10){
@@ -70,15 +76,17 @@ public class DataModelValidator extends BaseValidator implements
      */
     private void checkModelType(ConstraintValidatorContext context, DataModelDTO dataModel) {
         var modelType = dataModel.getType();
-        if(modelType != null){
-            addConstraintViolation(context, "not-allowed-update", "type");
+        if(updateModel && modelType != null){
+            addConstraintViolation(context, MSG_NOT_ALLOWED_UPDATE, "type");
+        }else if(!updateModel && modelType == null){
+            addConstraintViolation(context, MSG_VALUE_MISSING, "type");
         }
     }
 
     /**
      * Check if languages are valid
      * @param context Constraint validator context
-     * @param dataModel Datamodel
+     * @param dataModel Data model
      */
     private void checkLanguages(ConstraintValidatorContext context, DataModelDTO dataModel){
         var languages = dataModel.getLanguages();
@@ -93,7 +101,7 @@ public class DataModelValidator extends BaseValidator implements
     /**
      * Check if labels are valid
      * @param context Constraint validator context
-     * @param dataModel Datamodel
+     * @param dataModel Data Model
      */
     private void checkLabels(ConstraintValidatorContext context, DataModelDTO dataModel){
         final var labelPropertyLabel = "label";
@@ -115,7 +123,7 @@ public class DataModelValidator extends BaseValidator implements
     /**
      * Check if descriptions are valid
      * @param context Constraint validator context
-     * @param dataModel Datamodel
+     * @param dataModel Data model
      */
     private void checkDescription(ConstraintValidatorContext context, DataModelDTO dataModel){
         var description = dataModel.getDescription();
@@ -142,7 +150,7 @@ public class DataModelValidator extends BaseValidator implements
         var organizations = dataModel.getOrganizations();
         var existingOrgs = jenaService.getOrganizations();
         if(organizations == null || organizations.isEmpty()){
-            addConstraintViolation(context, "should-have-value", "organization");
+            addConstraintViolation(context, MSG_VALUE_MISSING, "organization");
             return;
         }
         organizations.forEach(org -> {
@@ -162,7 +170,7 @@ public class DataModelValidator extends BaseValidator implements
         var groups = dataModel.getGroups();
         var existingGroups = jenaService.getServiceCategories();
         if(groups == null || groups.isEmpty()){
-            addConstraintViolation(context, "should-have-value", "groups");
+            addConstraintViolation(context, MSG_VALUE_MISSING, "groups");
             return;
         }
         groups.forEach(group -> {
@@ -171,5 +179,43 @@ public class DataModelValidator extends BaseValidator implements
                 addConstraintViolation(context, "does-not-exist." + group, "groups");
             }
         });
+    }
+
+
+    /**
+     * Check if internal namespaces are valid
+     * @param context Constrain validator context
+     * @param dataModel Data model
+     */
+    private void checkInternalNamespaces(ConstraintValidatorContext context, DataModelDTO dataModel){
+        var namespaces = dataModel.getInternalNamespaces();
+        if(namespaces != null && namespaces.stream().anyMatch(ns -> !ns.startsWith(ModelConstants.SUOMI_FI_NAMESPACE))){
+            addConstraintViolation(context, "namespace-not-internal", "internalNamespaces");
+        }
+    }
+
+    /**
+     * Check if external namespaces are valid
+     * NOTE: Due to the nature of how updating works we cannot check the profile type here
+     * @param context Constraint validator context
+     * @param dataModel Data model
+     */
+    private void checkExternalNamespaces(ConstraintValidatorContext context, DataModelDTO dataModel){
+        //TODO: do we need to add checking if the string is a valid URI?
+        var namespaces = dataModel.getExternalNamespaces();
+        var externalNamespace = "externalNamespaces";
+        if(namespaces != null){
+            namespaces.forEach(namespace -> {
+                if(namespace.getNamespace().startsWith(ModelConstants.SUOMI_FI_NAMESPACE)){
+                    addConstraintViolation(context, "namespace-not-allowed", externalNamespace);
+                }
+
+                //Checking for reserved words and reserved namespaces. This error won't distinguish which one it was
+                if(ValidationConstants.RESERVED_WORDS.contains(namespace.getPrefix())
+                || ValidationConstants.RESERVED_NAMESPACES.containsKey(namespace.getPrefix())){
+                    addConstraintViolation(context, "prefix-is-reserved", externalNamespace);
+                }
+            });
+        }
     }
 }

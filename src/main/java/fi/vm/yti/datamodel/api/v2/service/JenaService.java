@@ -12,7 +12,6 @@ import org.apache.jena.query.Query;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdfconnection.RDFConnection;
 import org.apache.jena.sparql.vocabulary.FOAF;
-import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
 import org.apache.jena.vocabulary.SKOS;
@@ -80,7 +79,7 @@ public class JenaService {
             return serviceCategories;
         }
 
-        String cat = "?category";
+        var cat = "?category";
         ConstructBuilder builder = new ConstructBuilder()
                 .addPrefixes(ModelConstants.PREFIXES)
                 .addConstruct(cat, RDFS.label, "?label")

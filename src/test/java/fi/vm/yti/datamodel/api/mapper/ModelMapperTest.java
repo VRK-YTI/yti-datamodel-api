@@ -7,12 +7,11 @@ import fi.vm.yti.datamodel.api.v2.service.JenaService;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.rdf.model.Statement;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.riot.RDFLanguages;
-import org.apache.jena.vocabulary.OWL;
-import org.apache.jena.vocabulary.RDFS;
-import org.apache.jena.vocabulary.SKOS;
+import org.apache.jena.vocabulary.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -26,7 +25,8 @@ import java.util.Set;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(SpringExtension.class)
@@ -53,8 +53,17 @@ class ModelMapperTest {
 
     @Test
     void testMapToJenaModel() {
+        var mockModel = mock(Model.class);
+        when(jenaService.getDataModel(anyString())).thenReturn(mockModel);
+        var mockRes = mock(Resource.class);
+        when(mockModel.getResource(anyString())).thenReturn(mockRes);
+        var mockStm = mock(Statement.class);
+        when(mockRes.getProperty(any())).thenReturn(mockStm);
+        when(mockStm.getResource()).thenReturn(RDFS.Resource);
+
         UUID organizationId = UUID.randomUUID();
 
+        //TODO: should we have 2 separate tests for ModelType.LIBRARY and ModelType.PROFILE?
         DataModelDTO dto = new DataModelDTO();
         dto.setPrefix("test");
         dto.setLabel(Map.of(
@@ -67,7 +76,13 @@ class ModelMapperTest {
         dto.setGroups(Set.of("P11"));
         dto.setLanguages(Set.of("fi", "sv"));
         dto.setOrganizations(Set.of(organizationId));
-        dto.setType(ModelType.LIBRARY);
+        dto.setType(ModelType.PROFILE);
+        dto.setInternalNamespaces(Set.of("http://uri.suomi.fi/datamodel/ns/newint"));
+        var externalDTO = new ExternalNamespaceDTO();
+        externalDTO.setName("test dto");
+        externalDTO.setNamespace("http://www.w3.org/2000/01/rdf-schema#");
+        externalDTO.setPrefix("ext");
+        dto.setExternalNamespaces(Set.of(externalDTO));
 
         Model model = mapper.mapToJenaModel(dto);
 
@@ -81,17 +96,28 @@ class ModelMapperTest {
 
         assertEquals(2, modelResource.listProperties(RDFS.label).toList().size());
         assertEquals(Status.DRAFT, Status.valueOf(modelResource.getProperty(OWL.versionInfo).getString()));
+
+        assertEquals(1, modelResource.listProperties(OWL.imports).toList().size());
+        assertEquals(1, modelResource.listProperties(DCTerms.requires).toList().size());
+        assertNotNull(model.getResource("http://example.com/ns/ext"));
     }
 
     @Test
     void testMapToUpdateJenaModel() {
         Model m = ModelFactory.createDefaultModel();
-
+        //TODO: should we have 2 separate tests for ModelType.LIBRARY and ModelType.PROFILE?
         var stream = getClass().getResourceAsStream("/test_datamodel.ttl");
         assertNotNull(stream);
         RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
 
-        when(jenaService.getDataModel(anyString())).thenReturn(m);
+        when(jenaService.getDataModel("test")).thenReturn(m);
+        var mockModel = mock(Model.class);
+        when(jenaService.getDataModel(anyString())).thenReturn(mockModel);
+        var mockRes = mock(Resource.class);
+        when(mockModel.getResource(anyString())).thenReturn(mockRes);
+        var mockStm = mock(Statement.class);
+        when(mockRes.getProperty(any())).thenReturn(mockStm);
+        when(mockStm.getResource()).thenReturn(RDFS.Resource);
 
         UUID organizationId = UUID.randomUUID();
 
@@ -106,6 +132,14 @@ class ModelMapperTest {
         dto.setLanguages(Set.of("fi", "sv"));
         dto.setOrganizations(Set.of(organizationId));
 
+        dto.setInternalNamespaces(Set.of("http://uri.suomi.fi/datamodel/ns/newint"));
+        var externalDTO = new ExternalNamespaceDTO();
+        externalDTO.setName("test dto");
+        externalDTO.setNamespace("http://www.w3.org/2000/01/rdf-schema#");
+        externalDTO.setPrefix("ext");
+
+        dto.setExternalNamespaces(Set.of(externalDTO));
+
         //unchanged values
         Resource modelResource = m.getResource("http://uri.suomi.fi/datamodel/ns/test");
         assertEquals(1, modelResource.listProperties(RDFS.label).toList().size());
@@ -115,6 +149,12 @@ class ModelMapperTest {
         assertEquals("test desc", modelResource.listProperties(RDFS.comment).next().getString());
 
         assertEquals(Status.VALID, Status.valueOf(modelResource.getProperty(OWL.versionInfo).getString()));
+
+        assertEquals(1, modelResource.listProperties(OWL.imports).toList().size());
+        assertEquals("http://uri.suomi.fi/datamodel/ns/int", modelResource.listProperties(OWL.imports).next().getString());
+
+        assertEquals(1, modelResource.listProperties(DCTerms.requires).toList().size());
+        assertEquals("https://www.example.com/ns/ext", modelResource.listProperties(DCTerms.requires).next().getString());
 
         Model model = mapper.mapToUpdateJenaModel("test", dto, m);
 
@@ -131,6 +171,12 @@ class ModelMapperTest {
         assertEquals("new test label", modelResource.listProperties(RDFS.label, "fi").next().getString());
 
         assertEquals(Status.DRAFT, Status.valueOf(modelResource.getProperty(OWL.versionInfo).getString()));
+
+        assertEquals(1, modelResource.listProperties(DCTerms.requires).toList().size());
+        assertEquals("http://uri.suomi.fi/datamodel/ns/newint", modelResource.listProperties(DCTerms.requires).next().getString());
+
+        assertEquals(1, modelResource.listProperties(OWL.imports).toList().size());
+        assertEquals("http://www.w3.org/2000/01/rdf-schema#", modelResource.listProperties(OWL.imports).next().getString());
     }
 
     @Test
@@ -144,7 +190,7 @@ class ModelMapperTest {
         var result = mapper.mapToDataModelDTO("test", m);
 
         assertEquals("test", result.getPrefix());
-        assertEquals(ModelType.LIBRARY, result.getType());
+        assertEquals(ModelType.PROFILE, result.getType());
         assertEquals(Status.VALID, result.getStatus());
 
         assertEquals(1, result.getLabel().size());
@@ -210,7 +256,7 @@ class ModelMapperTest {
 
         assertEquals("test", result.getPrefix());
         assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "test", result.getId());
-        assertEquals("library", result.getType());
+        assertEquals("profile", result.getType());
         assertEquals("VALID", result.getStatus());
         assertEquals("2023-01-03T12:44:45.799Z", result.getModified());
         assertEquals("2023-01-03T12:44:45.799Z", result.getCreated());
