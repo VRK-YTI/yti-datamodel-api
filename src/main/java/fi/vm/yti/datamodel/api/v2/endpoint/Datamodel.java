@@ -19,7 +19,6 @@ import static fi.vm.yti.security.AuthorizationException.check;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @RestController
-//FIXME api/v2/model will not work at all, possible interference from Jersey?
 @RequestMapping("v2/model")
 @Tag(name = "Model" )
 @Validated

@@ -19,6 +19,4 @@ public class JsonConfig {
         config.put(JsonGenerator.PRETTY_PRINTING, true);
         return Json.createWriterFactory(config);
     }
-
-    /* JSON serialization and deserialization configuration under RestConfig */
 }

@@ -11,6 +11,7 @@ import org.apache.jena.atlas.web.HttpException;
 import org.apache.jena.query.Query;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdfconnection.RDFConnection;
+import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.sparql.vocabulary.FOAF;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
@@ -47,6 +48,11 @@ public class JenaService {
 
     public void createDataModel(String graphName, Model model) {
         coreWrite.put(graphName, model);
+    }
+
+    public void initServiceCategories() {
+        Model model = RDFDataMgr.loadModel("ptvl-skos.rdf");
+        coreWrite.put("urn:yti:servicecategories", model);
     }
 
     public Model getDataModel(String graph) {
@@ -112,5 +118,14 @@ public class JenaService {
 
         modelCache.put("organizations", organizations);
         return organizations;
+    }
+
+    public int getVersionNumber() {
+        // TODO: migrations
+        return 1;
+    }
+
+    public void setVersionNumber(int version) {
+        // TODO: migrations
     }
 }

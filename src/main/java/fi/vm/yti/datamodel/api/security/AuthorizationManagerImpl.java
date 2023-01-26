@@ -1,8 +1,5 @@
 package fi.vm.yti.datamodel.api.security;
 
-import fi.vm.yti.datamodel.api.model.AbstractClass;
-import fi.vm.yti.datamodel.api.model.AbstractModel;
-import fi.vm.yti.datamodel.api.model.AbstractPredicate;
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
 import fi.vm.yti.security.AuthenticatedUserProvider;
 import fi.vm.yti.security.YtiUser;
@@ -29,23 +26,6 @@ public class AuthorizationManagerImpl implements AuthorizationManager {
 
     AuthorizationManagerImpl(AuthenticatedUserProvider userProvider) {
         this.userProvider = userProvider;
-    }
-
-    public boolean hasRightToEdit(AbstractModel model) {
-        return hasRightToAnyOrganization(model.getEditorOrganizations());
-    }
-
-    public boolean hasRightToEdit(AbstractClass model) {
-        return hasRightToAnyOrganization(model.getEditorOrganizations());
-    }
-
-    public boolean hasRightToEdit(AbstractPredicate model) {
-        return hasRightToAnyOrganization(model.getEditorOrganizations());
-    }
-
-    public boolean hasRightToCreateNewVersion(AbstractModel model) {
-        return hasRightToAnyOrganization(model.getEditorOrganizations());
-       // return isAdminOfAnyOrganization(model.getOrganizations());
     }
 
     public boolean hasRightToAnyOrganization(Collection<UUID> organizations) {

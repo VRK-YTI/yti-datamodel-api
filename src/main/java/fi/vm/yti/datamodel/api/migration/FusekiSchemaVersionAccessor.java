@@ -1,11 +1,10 @@
 package fi.vm.yti.datamodel.api.migration;
 
+import fi.vm.yti.datamodel.api.v2.service.JenaService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import fi.vm.yti.datamodel.api.service.GraphManager;
 import fi.vm.yti.migration.InitializationException;
 import fi.vm.yti.migration.SchemaVersionAccessor;
 
@@ -13,11 +12,10 @@ import fi.vm.yti.migration.SchemaVersionAccessor;
 public class FusekiSchemaVersionAccessor implements SchemaVersionAccessor {
 
     private static final Logger logger = LoggerFactory.getLogger(FusekiSchemaVersionAccessor.class.getName());
-    private final GraphManager graphManager;
+    private final JenaService jenaService;
 
-    @Autowired
-    FusekiSchemaVersionAccessor(GraphManager graphManager) {
-        this.graphManager = graphManager;
+    public FusekiSchemaVersionAccessor(JenaService jenaService) {
+        this.jenaService = jenaService;
     }
 
     @Override
@@ -33,11 +31,11 @@ public class FusekiSchemaVersionAccessor implements SchemaVersionAccessor {
 
     @Override
     public int getSchemaVersion() {
-        return graphManager.getVersionNumber();
+        return jenaService.getVersionNumber();
     }
 
     @Override
     public void setSchemaVersion(int version) {
-        graphManager.setVersionNumber(version);
+        jenaService.setVersionNumber(version);
     }
 }

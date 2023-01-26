@@ -1,84 +1,69 @@
 package fi.vm.yti.datamodel.api.v2.endpoint;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import fi.vm.yti.datamodel.api.index.SearchIndexManager;
+import fi.vm.yti.datamodel.api.v2.dto.OrganizationDTO;
+import fi.vm.yti.datamodel.api.v2.dto.ServiceCategoryDTO;
 import fi.vm.yti.datamodel.api.v2.elasticsearch.dto.CountSearchResponse;
-import fi.vm.yti.datamodel.api.service.JerseyResponseManager;
 import fi.vm.yti.datamodel.api.v2.service.FrontendService;
+import fi.vm.yti.datamodel.api.v2.service.SearchIndexService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
+import java.util.List;
 
-@Component
-@Path("v2/frontend")
+@RestController
+@RequestMapping("v2/frontend")
 @Tag(name = "Frontend")
 public class FrontendController {
 
     private static final Logger logger = LoggerFactory.getLogger(FrontendController.class);
-    private final SearchIndexManager searchIndexManager;
-    private final JerseyResponseManager jerseyResponseManager;
+    private final SearchIndexService searchIndexService;
     private final ObjectMapper objectMapper;
     private final FrontendService frontendService;
 
     @Autowired
-    public FrontendController(SearchIndexManager searchIndexManager,
-                       JerseyResponseManager jerseyResponseManager,
-                       ObjectMapper objectMapper,
-                      FrontendService frontendService) {
-        this.searchIndexManager = searchIndexManager;
-        this.jerseyResponseManager = jerseyResponseManager;
+    public FrontendController(SearchIndexService searchIndexService,
+                              ObjectMapper objectMapper,
+                              FrontendService frontendService) {
+        this.searchIndexService = searchIndexService;
         this.objectMapper = objectMapper;
         this.frontendService = frontendService;
     }
 
-
-    @GET
     @Operation(summary = "Get counts", description = "List counts of data model grouped by different search results")
-    @Path("/counts")
-    @Produces(MediaType.APPLICATION_JSON)
     @ApiResponse(responseCode = "200", description = "Counts response container object as JSON")
-    public Response getCounts() {
+    @GetMapping(path = "/counts", produces = MediaType.APPLICATION_JSON_VALUE)
+    public JsonNode getCounts() {
         logger.info("GET /counts requested");
-        CountSearchResponse response = searchIndexManager.getCounts();
-        return jerseyResponseManager.ok(objectMapper.valueToTree(response));
+        CountSearchResponse response = searchIndexService.getCounts();
+        return objectMapper.valueToTree(response);
     }
 
-    @GET
     @Operation(summary = "Get organizations", description = "List of organizations sorted by name")
-    @Path("/organizations")
-    @Produces(MediaType.APPLICATION_JSON)
     @ApiResponse(responseCode = "200", description = "Organization list as JSON")
-    public Response getOrganizations(
-            @QueryParam("sortLang") String sortLang,
-            @QueryParam("includeChildOrganizations") boolean includeChildOrganizations) {
-        return jerseyResponseManager.ok(
-                objectMapper.valueToTree(
-                        frontendService.getOrganizations(sortLang, includeChildOrganizations)
-                )
-        );
+    @GetMapping(path = "/organizations", produces = MediaType.APPLICATION_JSON_VALUE)
+    public List<OrganizationDTO> getOrganizations(
+            @RequestParam("sortLang") String sortLang,
+            @RequestParam(value = "includeChildOrganizations", required = false) boolean includeChildOrganizations) {
+        logger.info("GET /organizations requested");
+        return frontendService.getOrganizations(sortLang, includeChildOrganizations);
     }
 
-    @GET
     @Operation(summary = "Get service categories", description = "List of service categories sorted by name")
-    @Path("/serviceCategories")
-    @Produces(MediaType.APPLICATION_JSON)
     @ApiResponse(responseCode = "200", description = "Service categories as JSON")
-    public Response getServiceCategories(@QueryParam("sortLang") String sortLang) {
-        return jerseyResponseManager.ok(
-                objectMapper.valueToTree(
-                        frontendService.getServiceCategories(sortLang)
-                )
-        );
+    @GetMapping(path = "/serviceCategories", produces = MediaType.APPLICATION_JSON_VALUE)
+    public List<ServiceCategoryDTO> getServiceCategories(@RequestParam("sortLang") String sortLang) {
+        logger.info("GET /serviceCategories requested");
+        return frontendService.getServiceCategories(sortLang);
     }
 }

@@ -1,7 +1,0 @@
-<#if licenseFirst??>
-${licenseFirst}
-</#if>
-${licensePrefix}Licensed under the European Union Public Licence (EUPL) V.1.1 
-<#if licenseLast??>
-${licenseLast}
-</#if>

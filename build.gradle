@@ -10,12 +10,11 @@ buildscript {
 }
 
 plugins {
-    id "io.spring.dependency-management" version "1.0.11.RELEASE"
-    id "org.springframework.boot" version "2.5.12"
+    id "io.spring.dependency-management" version "1.1.0"
+    id "org.springframework.boot" version "3.0.2"
     id "org.sonarqube" version "3.3"
     id "jacoco"
     id "org.owasp.dependencycheck" version "7.4.4"
-    id "com.github.ManifestClasspath" version "0.1.0-RELEASE"
     id "com.gorylenko.gradle-git-properties" version "2.3.1"
     id "com.github.ben-manes.versions" version "0.39.0"
 }
@@ -24,16 +23,6 @@ apply plugin: "java"
 apply plugin: 'io.spring.dependency-management'
 apply plugin: "idea"
 apply plugin: "com.jfrog.artifactory"
-apply plugin: "com.github.ManifestClasspath"
-
-allprojects {
-    if(project.convention.findPlugin(JavaPluginConvention)) {
-        // Change the output directory for the main and test source sets back to the old path
-        sourceSets.main.java.destinationDirectory.value(project.getLayout().getBuildDirectory().dir("classes/${sourceSets.main.name}"));
-        sourceSets.test.java.destinationDirectory.value(project.getLayout().getBuildDirectory().dir("classes/${sourceSets.test.name}"));
-
-    }
-}
 
 artifactoryPublish.skip = true
 
@@ -63,83 +52,52 @@ repositories {
     }
 }
 
-sourceCompatibility = 11
-targetCompatibility = 11
+sourceCompatibility = 17
+targetCompatibility = 17
 
 dependencyManagement {
     imports {
-        mavenBom 'org.springframework.cloud:spring-cloud-dependencies:2020.0.5'
+        mavenBom 'org.springframework.cloud:spring-cloud-dependencies:2022.0.0'
     }
-}
-
-configurations {
-    all {
-        resolutionStrategy.cacheDynamicVersionsFor 0, "seconds"
-        resolutionStrategy.cacheChangingModulesFor 0, "seconds"
-    }
-    swaggerUI { transitive = false }
 }
 
 dependencies {
     implementation "org.springframework.boot:spring-boot-starter-web"
-    implementation "org.springframework.boot:spring-boot-starter-jersey"
     implementation "org.springframework.boot:spring-boot-starter-actuator"
-    implementation "org.springframework.boot:spring-boot-starter-jetty"
-
     implementation "org.springframework.security:spring-security-core"
+    implementation "org.springframework.boot:spring-boot-starter-tomcat"
+    implementation "org.springframework.boot:spring-boot-starter-validation"
     implementation "org.springframework.security:spring-security-config"
     implementation "org.springframework.security:spring-security-web"
 
-    implementation "fi.vm.yti:yti-spring-security:0.2.0"
+    implementation "fi.vm.yti:yti-spring-security:9.0.8"
     implementation "fi.vm.yti:yti-spring-migration:0.2.0"
 
-    compileOnly "org.springframework.boot:spring-boot-configuration-processor"
-
     implementation "org.springframework.cloud:spring-cloud-starter-config"
-    implementation "org.springframework.cloud:spring-cloud-starter-sleuth"
 
     implementation "ch.qos.logback:logback-core"
-    implementation 'net.logstash.logback:logstash-logback-encoder:7.2'
-    compileOnly 'org.jetbrains:annotations:23.0.0'
-    implementation 'org.elasticsearch:elasticsearch:6.8.22'
-    implementation 'org.elasticsearch.client:elasticsearch-rest-client:6.8.22'
-    implementation 'org.elasticsearch.client:elasticsearch-rest-high-level-client:6.8.22'
-    implementation "com.atlassian.commonmark:commonmark:0.17.0"
-    implementation group: 'org.json', name: 'json', version: '20220320'
-    implementation 'org.jsoup:jsoup:1.15.3'
-    implementation 'com.jayway.jsonpath:json-path:2.7.0'
-    implementation group: 'io.swagger.core.v3', name: 'swagger-core', version: '2.1.10'
-    implementation group: 'io.swagger.core.v3', name: 'swagger-jaxrs2', version: '2.1.10'
-    swaggerUI 'org.webjars:swagger-ui:3.52.1'
+    implementation "net.logstash.logback:logstash-logback-encoder:7.2"
+    implementation "jakarta.validation:jakarta.validation-api:3.0.2"
 
-    implementation 'org.topbraid:shacl:1.4.2'
+    implementation "org.elasticsearch:elasticsearch:6.8.22"
+    implementation "org.elasticsearch.client:elasticsearch-rest-client:6.8.22"
+    implementation "org.elasticsearch.client:elasticsearch-rest-high-level-client:6.8.22"
+    implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:2.0.2"
+
+    implementation "org.topbraid:shacl:1.4.2"
     implementation "org.apache.jena:jena-core:4.6.1"
     implementation "org.apache.jena:jena-arq:4.6.1"
     implementation "org.apache.jena:jena-rdfconnection:4.6.1"
     implementation "org.apache.jena:jena-querybuilder:4.6.1"
-    implementation group: 'org.apache.commons', name: 'commons-text', version: '1.10.0'
-    implementation "org.glassfish.jersey.media:jersey-media-sse:2.34"
-    implementation "com.github.jsonld-java:jsonld-java:0.12.0"
-    implementation 'org.jboss.forge.roaster:roaster-api:2.26.0.Final'
-    implementation 'org.jboss.forge.roaster:roaster-jdt:2.26.0.Final'
-    implementation 'org.reflections:reflections:0.10.2'
-    implementation 'com.google.guava:guava:31.1-jre'
+    implementation "com.google.guava:guava:31.1-jre"
+
+    compileOnly "org.springframework.boot:spring-boot-configuration-processor"
+    compileOnly "org.jetbrains:annotations:23.0.0"
 
     testImplementation "org.springframework.boot:spring-boot-starter-test"
-    testImplementation 'com.jayway.jsonpath:json-path-assert:2.7.0'
-    testImplementation 'org.mockito:mockito-core:4.8.0'
-    testImplementation 'net.bytebuddy:byte-buddy:1.12.16'
-}
-
-compileJava.dependsOn(processResources)
-
-bootRun {
-    systemProperties System.properties
-    jvmArgs = ["-Dspring.output.ansi.enabled=ALWAYS"]
-}
-
-springBoot {
-    mainClassName = "fi.vm.yti.datamodel.api.Application"
+    testImplementation "com.jayway.jsonpath:json-path-assert:2.7.0"
+    testImplementation "org.mockito:mockito-core:4.8.0"
+    testImplementation "net.bytebuddy:byte-buddy:1.12.22"
 }
 
 sonarqube {
@@ -170,21 +128,3 @@ dependencyCheck {
         directory = System.getenv('OWASP_DATA_DIR')
     }
 }
-
-task unzipSwagger(type:Copy) {
-    from zipTree(configurations.swaggerUI.singleFile)
-    include "META-INF/resources/webjars/swagger-ui/3.52.1/**"
-    into "build/classes/main/static/swagger-ui"
-    eachFile { f ->
-        if (f.path.endsWith('index.html')) {
-            filter { line ->
-                line.replace('"https://petstore.swagger.io/v2/swagger.json"', '"/datamodel-api/api/openapi.yaml", docExpansion: "none", validatorUrl: null')
-            }
-        }
-        f.path = f.path.replaceFirst('META-INF/resources/webjars/swagger-ui/3.52.1/', '')
-    }
-    includeEmptyDirs = false
-}
-
-build.dependsOn unzipSwagger
-bootJar.dependsOn unzipSwagger
