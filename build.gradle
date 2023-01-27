@@ -70,7 +70,7 @@ dependencies {
     implementation "org.springframework.security:spring-security-config"
     implementation "org.springframework.security:spring-security-web"
 
-    implementation "fi.vm.yti:yti-spring-security:9.0.8"
+    implementation "fi.vm.yti:yti-spring-security:0.4.0"
     implementation "fi.vm.yti:yti-spring-migration:0.2.0"
 
     implementation "org.springframework.cloud:spring-cloud-starter-config"

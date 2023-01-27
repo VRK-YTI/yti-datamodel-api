@@ -1,4 +1,4 @@
-FROM yti-docker-java17-base:alpine
+FROM yti-docker-java17-base:awscorretto
 
 ADD build/libs/yti-datamodel-api.jar yti-datamodel-api.jar
 
