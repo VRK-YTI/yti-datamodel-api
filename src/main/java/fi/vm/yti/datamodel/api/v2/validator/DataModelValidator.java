@@ -10,6 +10,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 
+import static fi.vm.yti.datamodel.api.v2.validator.ValidationConstants.PREFIX_MAX_LENGTH;
+import static fi.vm.yti.datamodel.api.v2.validator.ValidationConstants.PREFIX_REGEX;
+
 public class DataModelValidator extends BaseValidator implements
         ConstraintValidator<ValidDatamodel, DataModelDTO> {
 
@@ -60,11 +63,11 @@ public class DataModelValidator extends BaseValidator implements
             addConstraintViolation(context, MSG_VALUE_MISSING, prefixPropertyLabel);
             return;
         }
-        if(prefix.length() < 3 || prefix.length() > 10){
-            addConstraintViolation(context, "character-count-mismatch", prefixPropertyLabel);
-        }
-        if(!dataModel.getPrefix().matches("^[a-z][a-z0-9-_]{2,}")){
-            addConstraintViolation(context, "not-matching-pattern", prefixPropertyLabel);
+        //Check prefix text content
+        checkPrefixContent(context, prefix, prefixPropertyLabel);
+        //Checking if in use is different for datamodels and its resources so it is not in the above function
+        if(jenaService.doesDataModelExist(ModelConstants.SUOMI_FI_NAMESPACE + prefix)){
+            addConstraintViolation(context, "prefix-in-use", prefixPropertyLabel);
         }
     }
 
@@ -206,16 +209,35 @@ public class DataModelValidator extends BaseValidator implements
         var externalNamespace = "externalNamespaces";
         if(namespaces != null){
             namespaces.forEach(namespace -> {
+                if(namespace.getPrefix() == null || namespace.getName() == null || namespace.getNamespace() == null){
+                    addConstraintViolation(context, "namespace-missing-value", externalNamespace);
+                }
                 if(namespace.getNamespace().startsWith(ModelConstants.SUOMI_FI_NAMESPACE)){
-                    addConstraintViolation(context, "namespace-not-allowed", externalNamespace);
+                    addConstraintViolation(context, "namespace-not-external", externalNamespace);
                 }
-
-                //Checking for reserved words and reserved namespaces. This error won't distinguish which one it was
-                if(ValidationConstants.RESERVED_WORDS.contains(namespace.getPrefix())
-                || ValidationConstants.RESERVED_NAMESPACES.containsKey(namespace.getPrefix())){
-                    addConstraintViolation(context, "prefix-is-reserved", externalNamespace);
-                }
+                checkPrefixContent(context, namespace.getPrefix(), externalNamespace);
             });
+        }
+    }
+
+    /**
+     * Helper function for checking prefix contents
+     * @param context Constraint validator context
+     * @param prefix Prefix
+     * @param property Property name if violation happens
+     */
+    private void checkPrefixContent(ConstraintValidatorContext context, String prefix, String property){
+        //Checking for reserved words and reserved namespaces. This error won't distinguish which one it was
+        if(ValidationConstants.RESERVED_WORDS.contains(prefix)
+                || ValidationConstants.RESERVED_NAMESPACES.containsKey(prefix)){
+            addConstraintViolation(context, "prefix-is-reserved", property);
+        }
+
+        if(prefix.length() < 3 || prefix.length() > PREFIX_MAX_LENGTH){
+            addConstraintViolation(context, "prefix-character-count-mismatch", property);
+        }
+        if(!prefix.matches(PREFIX_REGEX)){
+            addConstraintViolation(context, "prefix-not-matching-pattern", property);
         }
     }
 }

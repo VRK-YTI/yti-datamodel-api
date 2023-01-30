@@ -4,10 +4,12 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
+import org.apache.jena.arq.querybuilder.AskBuilder;
 import org.apache.jena.arq.querybuilder.ConstructBuilder;
 import org.apache.jena.arq.querybuilder.ExprFactory;
 import org.apache.jena.arq.querybuilder.WhereBuilder;
 import org.apache.jena.atlas.web.HttpException;
+import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.query.Query;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdfconnection.RDFConnection;
@@ -74,6 +76,16 @@ public class JenaService {
             return coreSparql.queryConstruct(query);
         }catch(HttpException ex){
             return null;
+        }
+    }
+
+    public boolean doesDataModelExist(String graph){
+        var askBuilder = new AskBuilder()
+                .addGraph(NodeFactory.createURI(graph), "?s", "?p", "?o");
+        try {
+            return coreSparql.queryAsk(askBuilder.build());
+        }catch(HttpException ex){
+            throw new RuntimeException("Error querying graph");
         }
     }
 

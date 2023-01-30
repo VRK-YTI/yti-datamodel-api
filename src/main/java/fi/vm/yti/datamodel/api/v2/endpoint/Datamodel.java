@@ -4,6 +4,7 @@ import fi.vm.yti.datamodel.api.security.AuthorizationManager;
 import fi.vm.yti.datamodel.api.v2.dto.DataModelDTO;
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
 import fi.vm.yti.datamodel.api.v2.elasticsearch.index.ElasticIndexer;
+import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
 import fi.vm.yti.datamodel.api.v2.mapper.ModelMapper;
 import fi.vm.yti.datamodel.api.v2.service.JenaService;
 import fi.vm.yti.datamodel.api.v2.validator.ValidDatamodel;
@@ -66,6 +67,9 @@ public class Datamodel {
         logger.info("Updating model {}", modelDTO);
 
         var oldModel = jenaService.getDataModel(ModelConstants.SUOMI_FI_NAMESPACE + prefix);
+        if(oldModel == null){
+            throw new ResourceNotFoundException(prefix);
+        }
 
         check(authorizationManager.hasRightToModel(prefix, oldModel));
 
