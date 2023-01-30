@@ -32,9 +32,9 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import java.util.*;
 import java.util.stream.Stream;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -158,7 +158,6 @@ class DatamodelTest {
                 .perform(get("/v2/model/test")
                         .accept(MediaType.APPLICATION_JSON_VALUE)
                         .contentType(MediaType.APPLICATION_JSON_VALUE))
-                .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE));
 
@@ -178,7 +177,6 @@ class DatamodelTest {
                 .perform(get("/v2/model/not-found")
                         .accept(MediaType.APPLICATION_JSON_VALUE)
                         .contentType(MediaType.APPLICATION_JSON_VALUE))
-                .andDo(print())
                 .andExpect(status().isNotFound())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE));
     }
@@ -198,6 +196,31 @@ class DatamodelTest {
                         .contentType("application/json")
                         .content(convertObjectToJsonString(dataModelDTO)))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void shouldInvalidateSamePrefix() throws Exception {
+        //Mock validation stuff
+        var mockModel = ModelFactory.createDefaultModel();
+        var res = mockModel.createResource(ModelConstants.URN_UUID + RANDOM_ORG);
+        res.addProperty(SKOS.notation, "P11");
+        when(jenaService.getOrganizations()).thenReturn(mockModel);
+        when(jenaService.getServiceCategories()).thenReturn(mockModel);
+
+        this.mvc
+                .perform(put("/v2/model")
+                        .contentType("application/json")
+                        .content(convertObjectToJsonString(createDatamodelDTO(false))))
+                .andExpect(status().isOk());
+
+        when(jenaService.doesDataModelExist(anyString())).thenReturn(true);
+
+        this.mvc
+                .perform(put("/v2/model")
+                        .contentType("application/json")
+                        .content(convertObjectToJsonString(createDatamodelDTO(false))))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string(containsString("prefix-in-use")));
     }
 
     @ParameterizedTest
