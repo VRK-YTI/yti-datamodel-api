@@ -10,9 +10,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
-import fi.vm.yti.datamodel.api.model.AbstractClass;
-import fi.vm.yti.datamodel.api.model.AbstractModel;
-import fi.vm.yti.datamodel.api.model.AbstractPredicate;
 import fi.vm.yti.datamodel.api.security.AuthorizationManager;
 
 @Component
@@ -20,26 +17,6 @@ import fi.vm.yti.datamodel.api.security.AuthorizationManager;
 public class TestAuthorizationManagerImpl implements AuthorizationManager {
 
     private static final Logger logger = LoggerFactory.getLogger(TestAuthorizationManagerImpl.class.getName());
-
-    @Override
-    public boolean hasRightToEdit(final AbstractModel model) {
-        return true;
-    }
-
-    @Override
-    public boolean hasRightToEdit(final AbstractClass model) {
-        return true;
-    }
-
-    @Override
-    public boolean hasRightToEdit(final AbstractPredicate model) {
-        return true;
-    }
-
-    @Override
-    public boolean hasRightToCreateNewVersion(final AbstractModel model) {
-        return true;
-    }
 
     @Override
     public boolean hasRightToAnyOrganization(final Collection<UUID> organizations) {

@@ -9,33 +9,34 @@ import org.apache.http.HttpHost;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-/**
- * @author amiika
- */
 
 @Configuration
 public class ElasticConfig {
 
-    private final ApplicationProperties config;
+    private final String elasticHost;
+    private final Integer elasticHttpPort;
+    private final String elasticScheme;
 
     @Autowired
-    public ElasticConfig(ApplicationProperties config) {
-        this.config = config;
+    public ElasticConfig(@Value("${elasticHost}") String elasticHost,
+                         @Value("${elasticHttpPort}") String elasticHttpPort,
+                         @Value("${elasticHttpScheme:http}") String elasticScheme) {
+        this.elasticHost = elasticHost;
+        this.elasticHttpPort = Integer.parseInt(elasticHttpPort);
+        this.elasticScheme = elasticScheme;
     }
 
     @Bean
-    @SuppressWarnings("resource")
     protected RestHighLevelClient elasticSearchClient() {
         return new RestHighLevelClient(RestClient.builder(
-            new HttpHost(config.getElasticHost(), Integer.parseInt(config.getElasticHttpPort()), config.getElasticHttpScheme())
+                new HttpHost(elasticHost, elasticHttpPort, elasticScheme)
         ).setRequestConfigCallback(
-            requestConfigBuilder -> requestConfigBuilder
-                .setConnectTimeout(5000)
-                .setSocketTimeout(60000))
+                requestConfigBuilder -> requestConfigBuilder
+                        .setConnectTimeout(5000)
+                        .setSocketTimeout(60000))
         );
-        //Elasticsearch documentation recommends to only rely on the 
     }
 }

@@ -2,13 +2,20 @@ package fi.vm.yti.datamodel.api.v2.service;
 
 import static fi.vm.yti.datamodel.api.v2.dto.ModelConstants.*;
 
+import fi.vm.yti.datamodel.api.index.ElasticConnector;
 import fi.vm.yti.datamodel.api.v2.dto.BaseDTO;
 import fi.vm.yti.datamodel.api.v2.dto.OrganizationDTO;
 import fi.vm.yti.datamodel.api.v2.dto.ServiceCategoryDTO;
+import fi.vm.yti.datamodel.api.v2.elasticsearch.dto.CountSearchResponse;
+import fi.vm.yti.datamodel.api.v2.elasticsearch.queries.CountQueryFactory;
 import fi.vm.yti.datamodel.api.v2.mapper.ModelMapper;
+import org.elasticsearch.action.search.SearchRequest;
+import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.client.RequestOptions;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -18,7 +25,8 @@ public class FrontendService {
     private final JenaService jenaService;
     private final ModelMapper modelMapper;
 
-    public FrontendService(JenaService jenaService, ModelMapper modelMapper) {
+    public FrontendService(JenaService jenaService,
+                           ModelMapper modelMapper) {
         this.jenaService = jenaService;
         this.modelMapper = modelMapper;
     }

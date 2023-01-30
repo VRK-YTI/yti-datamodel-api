@@ -3,8 +3,7 @@ package fi.vm.yti.datamodel.api.index;
 import java.io.IOException;
 import java.util.Map;
 
-import javax.inject.Singleton;
-
+import fi.vm.yti.datamodel.api.v2.utils.DataModelUtils;
 import org.elasticsearch.action.DocWriteRequest;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
@@ -30,9 +29,6 @@ import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import fi.vm.yti.datamodel.api.utils.LDHelper;
-
-@Singleton
 @Service
 public class ElasticConnector {
 
@@ -74,8 +70,8 @@ public class ElasticConnector {
                 Thread.sleep(1000);
             }
         } catch (Exception ex) {
+            logger.error(ex.getMessage(), ex);
         }
-        throw new RuntimeException("Could not find required ES instance");
     }
 
     /**
@@ -127,7 +123,7 @@ public class ElasticConnector {
     public void putToIndex(String index,
                            String id,
                            Object obj) {
-        String encId = LDHelper.encode(id);
+        String encId = DataModelUtils.encode(id);
         try {
             IndexRequest indexReq = new IndexRequest(index, "doc", encId);
             indexReq.source(objectMapper.convertValue(obj, Map.class), XContentType.JSON);
@@ -143,7 +139,7 @@ public class ElasticConnector {
     public void updateToIndex(String index,
                               String id,
                               Object obj) {
-        String encId = LDHelper.encode(id);
+        String encId = DataModelUtils.encode(id);
         try {
             UpdateRequest updateReq = new UpdateRequest();
             updateReq.index(index);
@@ -160,7 +156,7 @@ public class ElasticConnector {
 
     public DeleteResponse removeFromIndex(String id,
                                           String index) {
-        String encId = LDHelper.encode(id);
+        String encId = DataModelUtils.encode(id);
         try {
             // TODO: Consider IMMEDIATE refresh policy?
             final long startTime = System.currentTimeMillis();

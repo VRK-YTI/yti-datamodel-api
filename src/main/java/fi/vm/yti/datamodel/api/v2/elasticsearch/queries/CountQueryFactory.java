@@ -1,5 +1,6 @@
 package fi.vm.yti.datamodel.api.v2.elasticsearch.queries;
 
+import fi.vm.yti.datamodel.api.v2.dto.Status;
 import fi.vm.yti.datamodel.api.v2.elasticsearch.dto.CountDTO;
 import fi.vm.yti.datamodel.api.v2.elasticsearch.dto.CountSearchResponse;
 import org.elasticsearch.action.search.SearchRequest;
@@ -17,20 +18,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import javax.inject.Singleton;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-@Singleton
 @Service
 public class CountQueryFactory {
 
     private static final Logger log = LoggerFactory.getLogger(CountQueryFactory.class);
 
     public SearchRequest createModelQuery() {
-        QueryBuilder withIncompleteHandling = QueryBuilders.boolQuery().mustNot(QueryBuilders.termQuery("status", "INCOMPLETE"));
+        QueryBuilder withIncompleteHandling = QueryBuilders.boolQuery()
+                .mustNot(QueryBuilders.termQuery("status", Status.INCOMPLETE.name()));
 
         SearchRequest sr = new SearchRequest("dm_models")
                 .source(new SearchSourceBuilder()

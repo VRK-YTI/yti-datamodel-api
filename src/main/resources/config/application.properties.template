@@ -37,3 +37,6 @@ fake.login.allowed=true
 fake.login.mail=testi.testaaja@example.org
 fake.login.firstName=Testi
 fake.login.lastName=Testaaja
+
+spring.elasticsearch.uris=http://localhost:9002
+management.endpoints.web.exposure.include=health,info

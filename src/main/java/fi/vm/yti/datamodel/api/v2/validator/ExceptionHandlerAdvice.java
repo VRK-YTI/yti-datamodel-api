@@ -1,8 +1,7 @@
 package fi.vm.yti.datamodel.api.v2.validator;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.validation.ConstraintViolationException;
-
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.ConstraintViolationException;
 
 import fi.vm.yti.datamodel.api.v2.endpoint.error.ApiError;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.ApiValidationError;
@@ -14,6 +13,7 @@ import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -41,7 +41,7 @@ public class ExceptionHandlerAdvice extends ResponseEntityExceptionHandler {
     protected @NotNull ResponseEntity<Object> handleHttpMessageNotReadable(
             @NotNull HttpMessageNotReadableException ex,
             @NotNull HttpHeaders headers,
-            @NotNull HttpStatus status,
+            @NotNull HttpStatusCode status,
             @NotNull WebRequest request) {
         return buildResponseEntity(new ApiError(HttpStatus.BAD_REQUEST, "Malformed JSON request", ex));
     }
