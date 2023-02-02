@@ -1,4 +1,4 @@
-package fi.vm.yti.datamodel.api.v2.elasticsearch;
+package fi.vm.yti.datamodel.api.v2.opensearch;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;

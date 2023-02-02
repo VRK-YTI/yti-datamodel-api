@@ -22,10 +22,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class EsUtils {
+public class OpenSearchUtils {
 
     public static String getJsonString(String file) throws Exception {
-        return new String(EsUtils.class
+        return new String(OpenSearchUtils.class
                 .getResourceAsStream(file).readAllBytes(), StandardCharsets.UTF_8);
     }
 

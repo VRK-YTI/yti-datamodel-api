@@ -32,7 +32,7 @@ import java.util.Map;
 public class OpenSearchIndexer {
 
     private final Logger logger = LoggerFactory.getLogger(OpenSearchIndexer.class);
-    private static final String ELASTIC_INDEX_MODEL = "models_v2";
+    private static final String OPEN_SEARCH_INDEX_MODEL = "models_v2";
     private static final String GRAPH_VARIABLE = "?model";
     private final OpenSearchConnector openSearchConnector;
     private final ObjectMapper objectMapper;
@@ -55,9 +55,9 @@ public class OpenSearchIndexer {
 
     public void reindex() {
         try {
-            openSearchConnector.cleanIndex(ELASTIC_INDEX_MODEL);
+            openSearchConnector.cleanIndex(OPEN_SEARCH_INDEX_MODEL);
             logger.info("v2 Indexes cleaned");
-            openSearchConnector.createIndex(ELASTIC_INDEX_MODEL, getModelMappings());
+            openSearchConnector.createIndex(OPEN_SEARCH_INDEX_MODEL, getModelMappings());
             initSearchIndexes();
             logger.info("Indexes initialized");
         } catch (IOException ex) {
@@ -77,7 +77,7 @@ public class OpenSearchIndexer {
      */
     public void createModelToIndex(IndexModel model){
         logger.info("Indexing: {}", model.getId());
-        openSearchConnector.putToIndex(ELASTIC_INDEX_MODEL, model.getId(), model);
+        openSearchConnector.putToIndex(OPEN_SEARCH_INDEX_MODEL, model.getId(), model);
     }
 
     /**
@@ -85,7 +85,7 @@ public class OpenSearchIndexer {
      * @param model Model to index
      */
     public void updateModelToIndex(IndexModel model){
-        openSearchConnector.updateToIndex(ELASTIC_INDEX_MODEL, model.getId(), model);
+        openSearchConnector.updateToIndex(OPEN_SEARCH_INDEX_MODEL, model.getId(), model);
     }
 
     /**
@@ -128,7 +128,7 @@ public class OpenSearchIndexer {
             list.add(indexModel);
         }
         var values = objectMapper.valueToTree(list);
-        bulkInsert(ELASTIC_INDEX_MODEL, values);
+        bulkInsert(OPEN_SEARCH_INDEX_MODEL, values);
     }
 
     private void addProperty(ConstructBuilder builder, Property property, String propertyName){

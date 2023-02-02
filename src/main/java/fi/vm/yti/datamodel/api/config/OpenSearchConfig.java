@@ -16,23 +16,23 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class OpenSearchConfig {
 
-    private final String elasticHost;
-    private final Integer elasticHttpPort;
-    private final String elasticScheme;
+    private final String openSearchHost;
+    private final Integer openSearchHttpPort;
+    private final String openSearchScheme;
 
     @Autowired
-    public OpenSearchConfig(@Value("${elasticHost}") String elasticHost,
-                            @Value("${elasticHttpPort}") String elasticHttpPort,
-                            @Value("${elasticHttpScheme:http}") String elasticScheme) {
-        this.elasticHost = elasticHost;
-        this.elasticHttpPort = Integer.parseInt(elasticHttpPort);
-        this.elasticScheme = elasticScheme;
+    public OpenSearchConfig(@Value("${openSearchHost}") String openSearchHost,
+                            @Value("${openSearchHttpPort}") String openSearchHttpPort,
+                            @Value("${openSearchHttpScheme:http}") String openSearchScheme) {
+        this.openSearchHost = openSearchHost;
+        this.openSearchHttpPort = Integer.parseInt(openSearchHttpPort);
+        this.openSearchScheme = openSearchScheme;
     }
 
     @Bean
-    protected RestHighLevelClient elasticSearchClient() {
+    protected RestHighLevelClient openSearchClient() {
         return new RestHighLevelClient(RestClient.builder(
-                new HttpHost(elasticHost, elasticHttpPort, elasticScheme)
+                new HttpHost(openSearchHost, openSearchHttpPort, openSearchScheme)
         ).setRequestConfigCallback(
                 requestConfigBuilder -> requestConfigBuilder
                         .setConnectTimeout(5000)

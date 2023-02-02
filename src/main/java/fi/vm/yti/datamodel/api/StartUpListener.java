@@ -44,7 +44,7 @@ public class StartUpListener {
         initDefaultNamespaces();
         initOrganizations();
         initServiceCategories();
-        initElasticsearchIndices();
+        initOpenSearchIndices();
         groupManagementService.updateUsers();
     }
 
@@ -61,12 +61,12 @@ public class StartUpListener {
         namespaceService.resolveDefaultNamespaces();
     }
 
-    private void initElasticsearchIndices() {
+    private void initOpenSearchIndices() {
         try {
             openSearchConnector.waitForESNodes();
             openSearchIndexer.reindex();
         } catch (Exception e) {
-            logger.warn("Elasticsearch initialization failed!", e);
+            logger.warn("OpenSearch initialization failed!", e);
         }
     }
 }
