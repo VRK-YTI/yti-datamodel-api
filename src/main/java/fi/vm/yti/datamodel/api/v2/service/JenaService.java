@@ -54,7 +54,11 @@ public class JenaService {
 
     public void initServiceCategories() {
         Model model = RDFDataMgr.loadModel("ptvl-skos.rdf");
-        coreWrite.put("urn:yti:servicecategories", model);
+        coreWrite.put(ModelConstants.SERVICE_CATEGORY_GRAPH, model);
+    }
+
+    public void saveOrganizations(Model model) {
+        coreWrite.put(ModelConstants.ORGANIZATION_GRAPH, model);
     }
 
     public Model getDataModel(String graph) {

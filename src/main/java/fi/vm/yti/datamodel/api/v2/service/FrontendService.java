@@ -2,20 +2,14 @@ package fi.vm.yti.datamodel.api.v2.service;
 
 import static fi.vm.yti.datamodel.api.v2.dto.ModelConstants.*;
 
-import fi.vm.yti.datamodel.api.index.ElasticConnector;
 import fi.vm.yti.datamodel.api.v2.dto.BaseDTO;
 import fi.vm.yti.datamodel.api.v2.dto.OrganizationDTO;
 import fi.vm.yti.datamodel.api.v2.dto.ServiceCategoryDTO;
-import fi.vm.yti.datamodel.api.v2.elasticsearch.dto.CountSearchResponse;
-import fi.vm.yti.datamodel.api.v2.elasticsearch.queries.CountQueryFactory;
 import fi.vm.yti.datamodel.api.v2.mapper.ModelMapper;
-import org.elasticsearch.action.search.SearchRequest;
-import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.client.RequestOptions;
+import fi.vm.yti.datamodel.api.v2.mapper.OrganizationMapper;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -33,7 +27,7 @@ public class FrontendService {
 
     public List<OrganizationDTO> getOrganizations(@NotNull String sortLanguage, boolean includeChildOrganizations) {
         var organizations = jenaService.getOrganizations();
-        var dtos = modelMapper.mapToListOrganizationDTO(organizations);
+        var dtos = OrganizationMapper.mapToListOrganizationDTO(organizations);
 
         sortByLabel(sortLanguage, dtos);
 

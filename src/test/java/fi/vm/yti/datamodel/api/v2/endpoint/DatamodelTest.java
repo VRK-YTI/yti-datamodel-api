@@ -19,6 +19,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -238,6 +239,29 @@ class DatamodelTest {
                         .contentType("application/json")
                         .content(convertObjectToJsonString(dataModelDTO)))
                 .andExpect(status().isBadRequest());
+    }
+
+    @ParameterizedTest
+    @CsvSource({"http","test"})
+    void shouldCheckFreePrefixWhenExists(String prefix) throws Exception {
+        when(jenaService.doesDataModelExist(ModelConstants.SUOMI_FI_NAMESPACE + "test")).thenReturn(true);
+
+        this.mvc
+                .perform(get("/v2/model/freePrefix/" + prefix)
+                    .contentType("application/json"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("false")));
+    }
+
+    @Test
+    void shouldCheckFreePrefixWhenNotExist() throws Exception {
+        when(jenaService.doesDataModelExist(anyString())).thenReturn(false);
+
+        this.mvc
+                .perform(get("/v2/model/freePrefix/xyz")
+                        .contentType("application/json"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("true")));
     }
 
     private String convertObjectToJsonString(DataModelDTO datamodel) throws JsonProcessingException {

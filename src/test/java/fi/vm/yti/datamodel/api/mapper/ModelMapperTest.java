@@ -35,7 +35,6 @@ import static org.mockito.Mockito.when;
 })
 class ModelMapperTest {
 
-
     @MockBean
     JenaService jenaService;
     @Autowired
@@ -256,8 +255,8 @@ class ModelMapperTest {
 
         assertEquals("test", result.getPrefix());
         assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "test", result.getId());
-        assertEquals("profile", result.getType());
-        assertEquals("VALID", result.getStatus());
+        assertEquals(ModelType.PROFILE.name(), result.getType());
+        assertEquals(Status.VALID.name(), result.getStatus());
         assertEquals("2023-01-03T12:44:45.799Z", result.getModified());
         assertEquals("2023-01-03T12:44:45.799Z", result.getCreated());
         assertEquals("2023-01-03T12:44:45.799Z", result.getContentModified());
@@ -294,8 +293,8 @@ class ModelMapperTest {
 
         assertEquals("testaa", resultOld.getPrefix());
         assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "testaa", resultOld.getId());
-        assertEquals("library", resultOld.getType());
-        assertEquals("DRAFT", resultOld.getStatus());
+        assertEquals(ModelType.LIBRARY.name(), resultOld.getType());
+        assertEquals(Status.DRAFT.name(), resultOld.getStatus());
         assertEquals("2018-03-20T16:21:07.067Z", resultOld.getModified());
         assertEquals("2018-03-20T17:59:44", resultOld.getCreated());
 
@@ -320,32 +319,7 @@ class ModelMapperTest {
         assertTrue(resultOld.getIsPartOf().contains("P11"));
     }
 
-    @Test
-    void testMapOrganizationsToDTO() {
-        var model = ModelFactory.createDefaultModel();
-        var stream = getClass().getResourceAsStream("/organizations.ttl");
-        assertNotNull(stream);
-        RDFDataMgr.read(model, stream, Lang.TURTLE);
 
-        var organizations = mapper.mapToListOrganizationDTO(model);
-
-        assertEquals(3, organizations.size());
-
-        var org = organizations.stream()
-                .filter(o -> o.getId().equals("7d3a3c00-5a6b-489b-a3ed-63bb58c26a63"))
-                .findFirst()
-                .orElseThrow();
-        var child = organizations.stream()
-                .filter(o -> o.getId().equals("8fab2816-03c5-48cd-9d48-b61048f435da"))
-                .findFirst()
-                .orElseThrow();
-
-        assertEquals("Yhteentoimivuusalustan yllapito", org.getLabel().get("fi"));
-        assertEquals("Utvecklare av interoperabilitetsplattform", org.getLabel().get("sv"));
-        assertEquals("Interoperability platform developers", org.getLabel().get("en"));
-
-        assertEquals(UUID.fromString("74776e94-7f51-48dc-aeec-c084c4defa09"), child.getParentOrganization());
-    }
 
     @Test
     void testMapServiceCategoriesToDTO() {

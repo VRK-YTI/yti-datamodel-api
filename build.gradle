@@ -69,6 +69,7 @@ dependencies {
     implementation "org.springframework.boot:spring-boot-starter-validation"
     implementation "org.springframework.security:spring-security-config"
     implementation "org.springframework.security:spring-security-web"
+    implementation "org.springframework.boot:spring-boot-starter-webflux"
 
     implementation "fi.vm.yti:yti-spring-security:0.4.0"
     implementation "fi.vm.yti:yti-spring-migration:0.2.0"
