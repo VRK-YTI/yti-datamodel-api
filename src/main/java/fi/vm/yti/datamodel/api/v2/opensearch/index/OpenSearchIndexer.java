@@ -1,8 +1,8 @@
-package fi.vm.yti.datamodel.api.v2.elasticsearch.index;
+package fi.vm.yti.datamodel.api.v2.opensearch.index;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import fi.vm.yti.datamodel.api.index.ElasticConnector;
+import fi.vm.yti.datamodel.api.index.OpenSearchConnector;
 import fi.vm.yti.datamodel.api.v2.dto.Iow;
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
 import fi.vm.yti.datamodel.api.v2.mapper.ModelMapper;
@@ -14,10 +14,10 @@ import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
-import org.elasticsearch.action.bulk.BulkRequest;
-import org.elasticsearch.action.index.IndexRequest;
-import org.elasticsearch.client.RequestOptions;
-import org.elasticsearch.client.RestHighLevelClient;
+import org.opensearch.action.bulk.BulkRequest;
+import org.opensearch.action.index.IndexRequest;
+import org.opensearch.client.RequestOptions;
+import org.opensearch.client.RestHighLevelClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -29,24 +29,24 @@ import java.util.Map;
 
 
 @Service
-public class ElasticIndexer {
+public class OpenSearchIndexer {
 
-    private final Logger logger = LoggerFactory.getLogger(ElasticIndexer.class);
+    private final Logger logger = LoggerFactory.getLogger(OpenSearchIndexer.class);
     private static final String ELASTIC_INDEX_MODEL = "models_v2";
     private static final String GRAPH_VARIABLE = "?model";
-    private final ElasticConnector elasticConnector;
+    private final OpenSearchConnector openSearchConnector;
     private final ObjectMapper objectMapper;
     private final JenaService jenaService;
     private final ModelMapper modelMapper;
     private final RestHighLevelClient esClient;
 
 
-    public ElasticIndexer(ElasticConnector elasticConnector,
-                          ObjectMapper objectMapper,
-                          JenaService jenaService,
-                          ModelMapper modelMapper,
-                          RestHighLevelClient esClient){
-        this.elasticConnector = elasticConnector;
+    public OpenSearchIndexer(OpenSearchConnector openSearchConnector,
+                             ObjectMapper objectMapper,
+                             JenaService jenaService,
+                             ModelMapper modelMapper,
+                             RestHighLevelClient esClient){
+        this.openSearchConnector = openSearchConnector;
         this.objectMapper = objectMapper;
         this.jenaService = jenaService;
         this.modelMapper = modelMapper;
@@ -55,9 +55,9 @@ public class ElasticIndexer {
 
     public void reindex() {
         try {
-            elasticConnector.cleanIndex(ELASTIC_INDEX_MODEL);
+            openSearchConnector.cleanIndex(ELASTIC_INDEX_MODEL);
             logger.info("v2 Indexes cleaned");
-            elasticConnector.createIndex(ELASTIC_INDEX_MODEL, getModelMappings());
+            openSearchConnector.createIndex(ELASTIC_INDEX_MODEL, getModelMappings());
             initSearchIndexes();
             logger.info("Indexes initialized");
         } catch (IOException ex) {
@@ -66,7 +66,7 @@ public class ElasticIndexer {
     }
 
     private String getModelMappings() throws IOException {
-        InputStream is = ElasticIndexer.class.getClassLoader().getResourceAsStream("model_v2_mapping.json");
+        InputStream is = OpenSearchIndexer.class.getClassLoader().getResourceAsStream("model_v2_mapping.json");
         Object obj = objectMapper.readTree(is);
         return objectMapper.writeValueAsString(obj);
     }
@@ -77,7 +77,7 @@ public class ElasticIndexer {
      */
     public void createModelToIndex(IndexModel model){
         logger.info("Indexing: {}", model.getId());
-        elasticConnector.putToIndex(ELASTIC_INDEX_MODEL, model.getId(), model);
+        openSearchConnector.putToIndex(ELASTIC_INDEX_MODEL, model.getId(), model);
     }
 
     /**
@@ -85,7 +85,7 @@ public class ElasticIndexer {
      * @param model Model to index
      */
     public void updateModelToIndex(IndexModel model){
-        elasticConnector.updateToIndex(ELASTIC_INDEX_MODEL, model.getId(), model);
+        openSearchConnector.updateToIndex(ELASTIC_INDEX_MODEL, model.getId(), model);
     }
 
     /**
@@ -144,7 +144,8 @@ public class ElasticIndexer {
     public void bulkInsert(String indexName, JsonNode indexModels) throws IOException {
         var bulkrequest = new BulkRequest();
         indexModels.forEach(indexModel -> {
-            var req = new IndexRequest(indexName, "doc", indexModel.get("id").asText())
+            var req = new IndexRequest(indexName)
+                    .id(indexModel.get("id").asText())
                     .source(objectMapper.convertValue(indexModel, Map.class));
             bulkrequest.add(req);
         });

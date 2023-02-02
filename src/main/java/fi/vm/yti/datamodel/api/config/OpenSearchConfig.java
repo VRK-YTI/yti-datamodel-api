@@ -6,24 +6,24 @@
 package fi.vm.yti.datamodel.api.config;
 
 import org.apache.http.HttpHost;
-import org.elasticsearch.client.RestClient;
-import org.elasticsearch.client.RestHighLevelClient;
+import org.opensearch.client.RestClient;
+import org.opensearch.client.RestHighLevelClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-public class ElasticConfig {
+public class OpenSearchConfig {
 
     private final String elasticHost;
     private final Integer elasticHttpPort;
     private final String elasticScheme;
 
     @Autowired
-    public ElasticConfig(@Value("${elasticHost}") String elasticHost,
-                         @Value("${elasticHttpPort}") String elasticHttpPort,
-                         @Value("${elasticHttpScheme:http}") String elasticScheme) {
+    public OpenSearchConfig(@Value("${elasticHost}") String elasticHost,
+                            @Value("${elasticHttpPort}") String elasticHttpPort,
+                            @Value("${elasticHttpScheme:http}") String elasticScheme) {
         this.elasticHost = elasticHost;
         this.elasticHttpPort = Integer.parseInt(elasticHttpPort);
         this.elasticScheme = elasticScheme;

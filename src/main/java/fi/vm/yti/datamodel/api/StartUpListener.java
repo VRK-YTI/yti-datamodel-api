@@ -1,7 +1,7 @@
 package fi.vm.yti.datamodel.api;
 
-import fi.vm.yti.datamodel.api.index.ElasticConnector;
-import fi.vm.yti.datamodel.api.v2.elasticsearch.index.ElasticIndexer;
+import fi.vm.yti.datamodel.api.index.OpenSearchConnector;
+import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
 import fi.vm.yti.datamodel.api.v2.service.GroupManagementService;
 import fi.vm.yti.datamodel.api.v2.service.JenaService;
 import fi.vm.yti.datamodel.api.v2.service.NamespaceService;
@@ -19,20 +19,20 @@ public class StartUpListener {
     private static final Logger logger = LoggerFactory.getLogger(StartUpListener.class);
 
     private final GroupManagementService groupManagementService;
-    private final ElasticConnector elasticConnector;
-    private final ElasticIndexer elasticIndexer;
+    private final OpenSearchConnector openSearchConnector;
+    private final OpenSearchIndexer openSearchIndexer;
     private final JenaService jenaService;
     private final NamespaceService namespaceService;
 
     @Autowired
     StartUpListener(GroupManagementService groupManagementService,
-                    ElasticConnector elasticConnector,
-                    ElasticIndexer elasticIndexer,
+                    OpenSearchConnector openSearchConnector,
+                    OpenSearchIndexer openSearchIndexer,
                     JenaService jenaService,
                     NamespaceService namespaceService) {
         this.groupManagementService = groupManagementService;
-        this.elasticConnector = elasticConnector;
-        this.elasticIndexer = elasticIndexer;
+        this.openSearchConnector = openSearchConnector;
+        this.openSearchIndexer = openSearchIndexer;
         this.jenaService = jenaService;
         this.namespaceService = namespaceService;
     }
@@ -63,8 +63,8 @@ public class StartUpListener {
 
     private void initElasticsearchIndices() {
         try {
-            elasticConnector.waitForESNodes();
-            elasticIndexer.reindex();
+            openSearchConnector.waitForESNodes();
+            openSearchIndexer.reindex();
         } catch (Exception e) {
             logger.warn("Elasticsearch initialization failed!", e);
         }

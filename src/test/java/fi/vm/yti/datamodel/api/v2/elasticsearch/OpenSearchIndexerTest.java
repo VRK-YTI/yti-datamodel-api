@@ -2,14 +2,14 @@ package fi.vm.yti.datamodel.api.v2.elasticsearch;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import fi.vm.yti.datamodel.api.index.ElasticConnector;
-import fi.vm.yti.datamodel.api.v2.elasticsearch.index.ElasticIndexer;
+import fi.vm.yti.datamodel.api.index.OpenSearchConnector;
+import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
 import fi.vm.yti.datamodel.api.v2.mapper.ModelMapper;
 import fi.vm.yti.datamodel.api.v2.service.JenaService;
 import org.apache.jena.query.Query;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ResIterator;
-import org.elasticsearch.client.RestHighLevelClient;
+import org.opensearch.client.RestHighLevelClient;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,15 +24,15 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(SpringExtension.class)
 @Import({
-        ElasticIndexer.class
+        OpenSearchIndexer.class
 })
-public class ElasticIndexerTest {
+public class OpenSearchIndexerTest {
 
     @MockBean
     JenaService jenaService;
 
     @MockBean
-    ElasticConnector elasticConnector;
+    OpenSearchConnector openSearchConnector;
 
     @MockBean
     ObjectMapper objectMapper;
@@ -44,7 +44,7 @@ public class ElasticIndexerTest {
     RestHighLevelClient esClient;
 
     @Autowired
-    ElasticIndexer elasticIndexer;
+    OpenSearchIndexer openSearchIndexer;
 
 
     @Test
@@ -55,7 +55,7 @@ public class ElasticIndexerTest {
         when(model.listSubjects()).thenReturn(subjects);
         when(objectMapper.valueToTree(any())).thenReturn(mock(JsonNode.class));
 
-        elasticIndexer.initModelIndex();
+        openSearchIndexer.initModelIndex();
 
         verify(this.jenaService).constructWithQuery(any(Query.class));
     }

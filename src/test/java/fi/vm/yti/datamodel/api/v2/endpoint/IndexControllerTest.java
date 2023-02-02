@@ -1,7 +1,7 @@
 package fi.vm.yti.datamodel.api.v2.endpoint;
 
 import fi.vm.yti.datamodel.api.security.AuthorizationManager;
-import fi.vm.yti.datamodel.api.v2.elasticsearch.index.ElasticIndexer;
+import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
 import fi.vm.yti.datamodel.api.v2.service.JenaService;
 import fi.vm.yti.datamodel.api.v2.validator.ExceptionHandlerAdvice;
 import org.junit.jupiter.api.BeforeEach;
@@ -32,7 +32,7 @@ class IndexControllerTest {
     private AuthorizationManager authorizationManager;
 
     @MockBean
-    private ElasticIndexer elasticIndexer;
+    private OpenSearchIndexer openSearchIndexer;
 
     @Autowired
     private IndexController indexController;
@@ -56,6 +56,6 @@ class IndexControllerTest {
             .perform(get("/v2/index/reindex"))
             .andExpect(status().isOk());
 
-        verify(this.elasticIndexer).reindex();
+        verify(this.openSearchIndexer).reindex();
     }
 }

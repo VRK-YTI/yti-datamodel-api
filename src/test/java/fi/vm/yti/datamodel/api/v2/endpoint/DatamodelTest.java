@@ -4,8 +4,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import fi.vm.yti.datamodel.api.security.AuthorizationManager;
 import fi.vm.yti.datamodel.api.v2.dto.*;
-import fi.vm.yti.datamodel.api.v2.elasticsearch.index.ElasticIndexer;
-import fi.vm.yti.datamodel.api.v2.elasticsearch.index.IndexModel;
+import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
+import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexModel;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
 import fi.vm.yti.datamodel.api.v2.mapper.ModelMapper;
 import fi.vm.yti.datamodel.api.v2.service.JenaService;
@@ -59,7 +59,7 @@ class DatamodelTest {
     private AuthorizationManager authorizationManager;
 
     @MockBean
-    private ElasticIndexer elasticIndexer;
+    private OpenSearchIndexer openSearchIndexer;
 
     @MockBean
     private ModelMapper modelMapper;
@@ -109,9 +109,9 @@ class DatamodelTest {
         verify(this.modelMapper)
                 .mapToIndexModel(anyString(), any(Model.class));
         verifyNoMoreInteractions(this.modelMapper);
-        verify(this.elasticIndexer)
+        verify(this.openSearchIndexer)
                 .createModelToIndex(any(IndexModel.class));
-        verifyNoMoreInteractions(this.elasticIndexer);
+        verifyNoMoreInteractions(this.openSearchIndexer);
     }
 
     @Test
@@ -144,9 +144,9 @@ class DatamodelTest {
         verify(this.modelMapper)
                 .mapToIndexModel(anyString(), any(Model.class));
         verifyNoMoreInteractions(this.modelMapper);
-        verify(this.elasticIndexer)
+        verify(this.openSearchIndexer)
                 .updateModelToIndex(any(IndexModel.class));
-        verifyNoMoreInteractions(this.elasticIndexer);
+        verifyNoMoreInteractions(this.openSearchIndexer);
     }
 
     @Test

@@ -2,18 +2,18 @@ package fi.vm.yti.datamodel.api.v2.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import fi.vm.yti.datamodel.api.index.ElasticConnector;
-import fi.vm.yti.datamodel.api.v2.elasticsearch.dto.IndexModelDTO;
-import fi.vm.yti.datamodel.api.v2.elasticsearch.dto.ModelSearchRequest;
-import fi.vm.yti.datamodel.api.v2.elasticsearch.dto.CountSearchResponse;
-import fi.vm.yti.datamodel.api.v2.elasticsearch.dto.ModelSearchResponse;
-import fi.vm.yti.datamodel.api.v2.elasticsearch.queries.CountQueryFactory;
+import fi.vm.yti.datamodel.api.index.OpenSearchConnector;
+import fi.vm.yti.datamodel.api.v2.opensearch.dto.IndexModelDTO;
+import fi.vm.yti.datamodel.api.v2.opensearch.dto.ModelSearchRequest;
+import fi.vm.yti.datamodel.api.v2.opensearch.dto.CountSearchResponse;
+import fi.vm.yti.datamodel.api.v2.opensearch.dto.ModelSearchResponse;
+import fi.vm.yti.datamodel.api.v2.opensearch.queries.CountQueryFactory;
 import fi.vm.yti.security.Role;
 import fi.vm.yti.security.YtiUser;
-import org.elasticsearch.action.search.SearchRequest;
-import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.client.RequestOptions;
-import org.elasticsearch.client.RestHighLevelClient;
+import org.opensearch.action.search.SearchRequest;
+import org.opensearch.action.search.SearchResponse;
+import org.opensearch.client.RequestOptions;
+import org.opensearch.client.RestHighLevelClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -31,12 +31,12 @@ public class SearchIndexService {
     private final GroupManagementService groupManagementService;
     private final ObjectMapper objectMapper;
 
-    public SearchIndexService(ElasticConnector elasticConnector,
+    public SearchIndexService(OpenSearchConnector openSearchConnector,
                               CountQueryFactory countQueryFactory,
                               GroupManagementService groupManagementService,
                               ObjectMapper objectMapper) {
         this.countQueryFactory = countQueryFactory;
-        this.client = elasticConnector.getEsClient();
+        this.client = openSearchConnector.getClient();
         this.groupManagementService = groupManagementService;
         this.objectMapper = objectMapper;
     }
@@ -93,7 +93,7 @@ public class SearchIndexService {
 
             var modelSearchResponse = new ModelSearchResponse();
             modelSearchResponse.setModels(models);
-            modelSearchResponse.setTotalHitCount(response.getHits().getTotalHits());
+            modelSearchResponse.setTotalHitCount(response.getHits().getTotalHits().value);
             modelSearchResponse.setPageFrom(request.getPageFrom());
             modelSearchResponse.setPageSize(request.getPageSize());
 

@@ -1,4 +1,4 @@
-package fi.vm.yti.datamodel.api.v2.elasticsearch.dto;
+package fi.vm.yti.datamodel.api.v2.opensearch.dto;
 
 import java.util.Collections;
 import java.util.Map;

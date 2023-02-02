@@ -1,10 +1,10 @@
 package fi.vm.yti.datamodel.api.v2.elasticsearch;
 
 import fi.vm.yti.datamodel.api.index.EsUtils;
-import fi.vm.yti.datamodel.api.v2.elasticsearch.dto.CountSearchResponse;
-import fi.vm.yti.datamodel.api.v2.elasticsearch.queries.CountQueryFactory;
-import org.elasticsearch.action.search.SearchRequest;
-import org.elasticsearch.action.search.SearchResponse;
+import fi.vm.yti.datamodel.api.v2.opensearch.dto.CountSearchResponse;
+import fi.vm.yti.datamodel.api.v2.opensearch.queries.CountQueryFactory;
+import org.opensearch.action.search.SearchRequest;
+import org.opensearch.action.search.SearchResponse;
 
 import org.junit.jupiter.api.Test;
 import org.skyscreamer.jsonassert.JSONAssert;
