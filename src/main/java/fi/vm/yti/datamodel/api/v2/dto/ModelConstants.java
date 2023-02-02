@@ -1,5 +1,6 @@
 package fi.vm.yti.datamodel.api.v2.dto;
 
+import java.util.List;
 import java.util.Map;
 
 public class ModelConstants {
@@ -11,7 +12,9 @@ public class ModelConstants {
     public static final String SUOMI_FI_NAMESPACE = "http://uri.suomi.fi/datamodel/ns/";
     public static final String URN_UUID = "urn:uuid:";
     public static final String DEFAULT_LANGUAGE = "fi";
-
+    public static final List<String> USED_LANGUAGES = List.of("fi", "sv", "en");
+    public static final String ORGANIZATION_GRAPH = "urn:yti:organizations";
+    public static final String SERVICE_CATEGORY_GRAPH = "urn:yti:servicecategories";
     public static final Map<String, String> PREFIXES = Map.of(
             "rdfs", "http://www.w3.org/2000/01/rdf-schema#",
             "rdf", "http://www.w3.org/1999/02/22-rdf-syntax-ns#", //TODO this can be removed once migration for old rdf lists are done

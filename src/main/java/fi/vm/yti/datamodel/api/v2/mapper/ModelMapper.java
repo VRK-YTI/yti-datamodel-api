@@ -18,6 +18,9 @@ import org.springframework.stereotype.Service;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static fi.vm.yti.datamodel.api.v2.mapper.MapperUtils.localizedPropertyToMap;
+import static fi.vm.yti.datamodel.api.v2.mapper.MapperUtils.getUUID;
+
 @Service
 public class ModelMapper {
 
@@ -256,7 +259,9 @@ public class ModelMapper {
         if(contentModified != null){
             indexModel.setContentModified(contentModified.getString());
         }
-        indexModel.setType(resource.getProperty(RDF.type).getObject().equals(OWL.Ontology) ? "library" : "profile");
+        indexModel.setType(resource.getProperty(RDF.type).getObject().equals(OWL.Ontology)
+                ? ModelType.LIBRARY.name()
+                : ModelType.PROFILE.name());
         indexModel.setPrefix(prefix);
         indexModel.setLabel(localizedPropertyToMap(resource, RDFS.label));
         indexModel.setComment(localizedPropertyToMap(resource, RDFS.comment));
@@ -288,53 +293,6 @@ public class ModelMapper {
             result.add(new ServiceCategoryDTO(resource.getURI(), labels, identifier));
         }
         return result;
-    }
-    
-    public List<OrganizationDTO> mapToListOrganizationDTO(Model organizationModel) {
-        var iterator = organizationModel.listResourcesWithProperty(RDF.type, FOAF.Organization);
-        List<OrganizationDTO> result = new ArrayList<>();
-
-        while (iterator.hasNext()) {
-            var resource = iterator.next().asResource();
-
-            var labels = localizedPropertyToMap(resource, SKOS.prefLabel);
-            var id = getUUID(resource.getURI());
-            var parentId = getUUID(resource.getProperty(Iow.parentOrganization).getObject().toString());
-
-            result.add(new OrganizationDTO(id.toString(), labels, parentId));
-        }
-        return result;
-    }
-
-    /**
-     * Get UUID from urn
-     * Will return null if urn cannot be parsed
-     * @param urn URN string formatted as urn:uuid:{uuid}
-     * @return UUID
-     */
-    private UUID getUUID(String urn) {
-        try {
-            return UUID.fromString(urn.replace("urn:uuid:", ""));
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
-
-    /**
-     * Localized property to Map of (language, value)
-     * @param resource Resource to get property from
-     * @param property Property type
-     * @return Map of (language, value)
-     */
-    private Map<String, String> localizedPropertyToMap(Resource resource, Property property){
-        var map = new HashMap<String, String>();
-        resource.listProperties(property).forEach(prop -> {
-            var lang = prop.getLanguage();
-            var value = prop.getString();
-            map.put(lang, value);
-        });
-        return map;
     }
 
     /**
@@ -408,7 +366,7 @@ public class ModelMapper {
             var queryRes = ResourceFactory.createResource(ModelConstants.URN_UUID + org.toString());
             var resource = organizationsModel.containsResource(queryRes);
             if(resource){
-                modelResource.addProperty(DCTerms.contributor, organizationsModel.getResource(ModelConstants.URN_UUID + org.toString()));
+                modelResource.addProperty(DCTerms.contributor, organizationsModel.getResource(ModelConstants.URN_UUID + org));
             }
         });
     }

@@ -8,6 +8,7 @@ import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
 import fi.vm.yti.datamodel.api.v2.mapper.ModelMapper;
 import fi.vm.yti.datamodel.api.v2.service.JenaService;
 import fi.vm.yti.datamodel.api.v2.validator.ValidDatamodel;
+import fi.vm.yti.datamodel.api.v2.validator.ValidationConstants;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -35,7 +36,10 @@ public class Datamodel {
 
     private final ModelMapper mapper;
 
-    public Datamodel(JenaService jenaService, AuthorizationManager authorizationManager, ElasticIndexer elasticIndexer, ModelMapper modelMapper) {
+    public Datamodel(JenaService jenaService,
+                     AuthorizationManager authorizationManager,
+                     ElasticIndexer elasticIndexer,
+                     ModelMapper modelMapper) {
         this.authorizationManager = authorizationManager;
         this.mapper = modelMapper;
         this.elasticIndexer = elasticIndexer;
@@ -58,7 +62,7 @@ public class Datamodel {
         elasticIndexer.createModelToIndex(indexModel);
     }
 
-    @Operation(summary = "Create a new model")
+    @Operation(summary = "Modify model")
     @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "The JSON data for the new model node")
     @ApiResponse(responseCode = "200", description = "The ID for the newly created model")
     @PostMapping(path = "/{prefix}", produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
@@ -88,6 +92,16 @@ public class Datamodel {
     public DataModelDTO getModel(@PathVariable String prefix){
         var model = jenaService.getDataModel(ModelConstants.SUOMI_FI_NAMESPACE + prefix);
         return mapper.mapToDataModelDTO(prefix, model);
+    }
+
+    @Operation(summary = "Check if prefix already exists")
+    @ApiResponse(responseCode = "200", description = "Boolean value indicating whether prefix")
+    @GetMapping(value = "/freePrefix/{prefix}", produces = APPLICATION_JSON_VALUE)
+    public Boolean freePrefix(@PathVariable String prefix) {
+        if (ValidationConstants.RESERVED_WORDS.contains(prefix)) {
+            return false;
+        }
+        return !jenaService.doesDataModelExist(ModelConstants.SUOMI_FI_NAMESPACE + prefix);
     }
 
 }

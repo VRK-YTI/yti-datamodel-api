@@ -1,5 +1,7 @@
 package fi.vm.yti.datamodel.api.v2.dto;
 
+import org.apache.commons.lang3.builder.ToStringBuilder;
+
 import java.util.Map;
 
 public abstract class BaseDTO {
@@ -17,5 +19,10 @@ public abstract class BaseDTO {
 
     public Map<String, String> getLabel() {
         return label;
+    }
+
+    @Override
+    public String toString() {
+        return ToStringBuilder.reflectionToString(this);
     }
 }
