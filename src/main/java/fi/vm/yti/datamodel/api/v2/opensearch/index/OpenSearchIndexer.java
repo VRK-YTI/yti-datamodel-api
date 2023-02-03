@@ -31,8 +31,8 @@ import java.util.Map;
 @Service
 public class OpenSearchIndexer {
 
+    public static final String OPEN_SEARCH_INDEX_MODEL = "models_v2";
     private final Logger logger = LoggerFactory.getLogger(OpenSearchIndexer.class);
-    private static final String OPEN_SEARCH_INDEX_MODEL = "models_v2";
     private static final String GRAPH_VARIABLE = "?model";
     private final OpenSearchConnector openSearchConnector;
     private final ObjectMapper objectMapper;

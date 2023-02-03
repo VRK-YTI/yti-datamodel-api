@@ -3,6 +3,7 @@ package fi.vm.yti.datamodel.api.v2.opensearch.queries;
 import fi.vm.yti.datamodel.api.v2.dto.Status;
 import fi.vm.yti.datamodel.api.v2.opensearch.dto.CountDTO;
 import fi.vm.yti.datamodel.api.v2.opensearch.dto.CountSearchResponse;
+import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
 import org.opensearch.action.search.SearchRequest;
 import org.opensearch.action.search.SearchResponse;
 import org.opensearch.index.query.QueryBuilder;
@@ -32,7 +33,7 @@ public class CountQueryFactory {
         QueryBuilder withIncompleteHandling = QueryBuilders.boolQuery()
                 .mustNot(QueryBuilders.termQuery("status", Status.INCOMPLETE.name()));
 
-        SearchRequest sr = new SearchRequest("dm_models")
+        SearchRequest sr = new SearchRequest(OpenSearchIndexer.OPEN_SEARCH_INDEX_MODEL)
                 .source(new SearchSourceBuilder()
                         .size(0)
                         .query(withIncompleteHandling)
