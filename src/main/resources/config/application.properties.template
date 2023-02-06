@@ -22,11 +22,17 @@ messagingEnabled=false
 groupmanagement.url=https://rhp.dev.yti.cloud.dvv.fi
 groupmanagement.public.url=https://rhp.dev.yti.cloud.dvv.fi
 
+# Old elasticsearch properties
 elasticHost=127.0.0.1
 elasticPort=9300
 elasticHttpPort=9200
 elasticHttpScheme=http
 elasticCluster=elasticsearch
+
+openSearchHost=127.0.0.1
+openSearchHttpPort=9003
+openSearchHttpScheme=http
+allowComplexOpenSearchQueries=false
 
 migration.enabled=true
 migration.packageLocation=fi.vm.yti.datamodel.api.migration.task

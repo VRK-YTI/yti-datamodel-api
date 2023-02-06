@@ -3,7 +3,7 @@ package fi.vm.yti.datamodel.api.v2.endpoint;
 import fi.vm.yti.datamodel.api.security.AuthorizationManager;
 import fi.vm.yti.datamodel.api.v2.dto.DataModelDTO;
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
-import fi.vm.yti.datamodel.api.v2.elasticsearch.index.ElasticIndexer;
+import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
 import fi.vm.yti.datamodel.api.v2.mapper.ModelMapper;
 import fi.vm.yti.datamodel.api.v2.service.JenaService;
@@ -30,7 +30,7 @@ public class Datamodel {
 
     private final AuthorizationManager authorizationManager;
 
-    private final ElasticIndexer elasticIndexer;
+    private final OpenSearchIndexer openSearchIndexer;
 
     private final JenaService jenaService;
 
@@ -38,11 +38,11 @@ public class Datamodel {
 
     public Datamodel(JenaService jenaService,
                      AuthorizationManager authorizationManager,
-                     ElasticIndexer elasticIndexer,
+                     OpenSearchIndexer openSearchIndexer,
                      ModelMapper modelMapper) {
         this.authorizationManager = authorizationManager;
         this.mapper = modelMapper;
-        this.elasticIndexer = elasticIndexer;
+        this.openSearchIndexer = openSearchIndexer;
         this.jenaService = jenaService;
     }
 
@@ -59,7 +59,7 @@ public class Datamodel {
         jenaService.createDataModel(ModelConstants.SUOMI_FI_NAMESPACE + modelDTO.getPrefix(), jenaModel);
 
         var indexModel = mapper.mapToIndexModel(modelDTO.getPrefix(), jenaModel);
-        elasticIndexer.createModelToIndex(indexModel);
+        openSearchIndexer.createModelToIndex(indexModel);
     }
 
     @Operation(summary = "Modify model")
@@ -83,7 +83,7 @@ public class Datamodel {
 
 
         var indexModel = mapper.mapToIndexModel(prefix, jenaModel);
-        elasticIndexer.updateModelToIndex(indexModel);
+        openSearchIndexer.updateModelToIndex(indexModel);
     }
 
     @Operation(summary = "Get a model from fuseki")

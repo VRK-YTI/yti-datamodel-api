@@ -1,7 +1,7 @@
 package fi.vm.yti.datamodel.api.v2.endpoint;
 
 import fi.vm.yti.datamodel.api.security.AuthorizationManager;
-import fi.vm.yti.datamodel.api.v2.elasticsearch.index.ElasticIndexer;
+import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,10 +16,10 @@ import static fi.vm.yti.security.AuthorizationException.check;
 public class IndexController {
 
 
-    private final ElasticIndexer indexer;
+    private final OpenSearchIndexer indexer;
     private final AuthorizationManager authorizationManager;
 
-    public IndexController(ElasticIndexer indexer,
+    public IndexController(OpenSearchIndexer indexer,
                            AuthorizationManager authorizationManager) {
         this.indexer = indexer;
         this.authorizationManager = authorizationManager;

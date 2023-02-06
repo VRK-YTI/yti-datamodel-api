@@ -1,10 +1,10 @@
-package fi.vm.yti.datamodel.api.v2.elasticsearch;
+package fi.vm.yti.datamodel.api.v2.opensearch;
 
-import fi.vm.yti.datamodel.api.index.EsUtils;
-import fi.vm.yti.datamodel.api.v2.elasticsearch.dto.CountSearchResponse;
-import fi.vm.yti.datamodel.api.v2.elasticsearch.queries.CountQueryFactory;
-import org.elasticsearch.action.search.SearchRequest;
-import org.elasticsearch.action.search.SearchResponse;
+import fi.vm.yti.datamodel.api.index.OpenSearchUtils;
+import fi.vm.yti.datamodel.api.v2.opensearch.dto.CountSearchResponse;
+import fi.vm.yti.datamodel.api.v2.opensearch.queries.CountQueryFactory;
+import org.opensearch.action.search.SearchRequest;
+import org.opensearch.action.search.SearchResponse;
 
 import org.junit.jupiter.api.Test;
 import org.skyscreamer.jsonassert.JSONAssert;
@@ -20,7 +20,7 @@ class CountQueryFactoryTest {
 
     @Test
     void testModelCounts() throws Exception {
-        String expected = EsUtils.getJsonString("/es/models_count_request.json");
+        String expected = OpenSearchUtils.getJsonString("/es/models_count_request.json");
 
         SearchRequest request = factory.createModelQuery();
 
@@ -29,7 +29,7 @@ class CountQueryFactoryTest {
 
     @Test
     void testParseModelCountResponse() throws Exception {
-        SearchResponse response = EsUtils.getMockResponse("/es/models_count_response.json");
+        SearchResponse response = OpenSearchUtils.getMockResponse("/es/models_count_response.json");
 
         CountSearchResponse countSearchResponse = factory.parseResponse(response);
 

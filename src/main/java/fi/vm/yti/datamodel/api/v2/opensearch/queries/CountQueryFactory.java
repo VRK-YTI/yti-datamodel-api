@@ -1,19 +1,20 @@
-package fi.vm.yti.datamodel.api.v2.elasticsearch.queries;
+package fi.vm.yti.datamodel.api.v2.opensearch.queries;
 
 import fi.vm.yti.datamodel.api.v2.dto.Status;
-import fi.vm.yti.datamodel.api.v2.elasticsearch.dto.CountDTO;
-import fi.vm.yti.datamodel.api.v2.elasticsearch.dto.CountSearchResponse;
-import org.elasticsearch.action.search.SearchRequest;
-import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.script.Script;
-import org.elasticsearch.search.aggregations.AggregationBuilders;
-import org.elasticsearch.search.aggregations.BucketOrder;
-import org.elasticsearch.search.aggregations.bucket.MultiBucketsAggregation;
-import org.elasticsearch.search.aggregations.bucket.terms.Terms;
-import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilder;
-import org.elasticsearch.search.builder.SearchSourceBuilder;
+import fi.vm.yti.datamodel.api.v2.opensearch.dto.CountDTO;
+import fi.vm.yti.datamodel.api.v2.opensearch.dto.CountSearchResponse;
+import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
+import org.opensearch.action.search.SearchRequest;
+import org.opensearch.action.search.SearchResponse;
+import org.opensearch.index.query.QueryBuilder;
+import org.opensearch.index.query.QueryBuilders;
+import org.opensearch.script.Script;
+import org.opensearch.search.aggregations.AggregationBuilders;
+import org.opensearch.search.aggregations.BucketOrder;
+import org.opensearch.search.aggregations.bucket.MultiBucketsAggregation;
+import org.opensearch.search.aggregations.bucket.terms.Terms;
+import org.opensearch.search.aggregations.bucket.terms.TermsAggregationBuilder;
+import org.opensearch.search.builder.SearchSourceBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -32,7 +33,7 @@ public class CountQueryFactory {
         QueryBuilder withIncompleteHandling = QueryBuilders.boolQuery()
                 .mustNot(QueryBuilders.termQuery("status", Status.INCOMPLETE.name()));
 
-        SearchRequest sr = new SearchRequest("dm_models")
+        SearchRequest sr = new SearchRequest(OpenSearchIndexer.OPEN_SEARCH_INDEX_MODEL)
                 .source(new SearchSourceBuilder()
                         .size(0)
                         .query(withIncompleteHandling)
@@ -113,7 +114,7 @@ public class CountQueryFactory {
 
     public CountSearchResponse parseResponse(SearchResponse response) {
         var ret = new CountSearchResponse();
-        ret.setTotalHitCount(response.getHits().getTotalHits());
+        ret.setTotalHitCount(response.getHits().getTotalHits().value);
 
 
         Terms statusAgg = response.getAggregations().get("statusagg");

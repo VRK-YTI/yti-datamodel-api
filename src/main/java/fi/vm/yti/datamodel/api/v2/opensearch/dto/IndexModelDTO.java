@@ -1,4 +1,4 @@
-package fi.vm.yti.datamodel.api.v2.elasticsearch.dto;
+package fi.vm.yti.datamodel.api.v2.opensearch.dto;
 
 import fi.vm.yti.datamodel.api.v2.dto.ModelType;
 import fi.vm.yti.datamodel.api.v2.dto.Status;

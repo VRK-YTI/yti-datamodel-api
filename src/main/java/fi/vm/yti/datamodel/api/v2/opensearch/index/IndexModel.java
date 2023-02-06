@@ -1,4 +1,4 @@
-package fi.vm.yti.datamodel.api.v2.elasticsearch.index;
+package fi.vm.yti.datamodel.api.v2.opensearch.index;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import java.util.List;
