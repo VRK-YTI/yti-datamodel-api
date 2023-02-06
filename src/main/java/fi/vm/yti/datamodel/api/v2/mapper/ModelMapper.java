@@ -7,7 +7,6 @@ import fi.vm.yti.datamodel.api.v2.service.JenaService;
 import org.apache.jena.atlas.web.HttpException;
 import org.apache.jena.datatypes.xsd.XSDDateTime;
 import org.apache.jena.rdf.model.*;
-import org.apache.jena.shared.JenaException;
 import org.apache.jena.sparql.vocabulary.FOAF;
 import org.apache.jena.vocabulary.*;
 import org.slf4j.Logger;
@@ -18,17 +17,12 @@ import org.springframework.stereotype.Service;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static fi.vm.yti.datamodel.api.v2.mapper.MapperUtils.localizedPropertyToMap;
-import static fi.vm.yti.datamodel.api.v2.mapper.MapperUtils.getUUID;
-
 @Service
 public class ModelMapper {
 
     private final Logger log = LoggerFactory.getLogger(ModelMapper.class);
 
     private final JenaService jenaService;
-
-    private static final Property PREFERRED_XML_NAMESPACE_PREFIX = ResourceFactory.createProperty("http://purl.org/ws-mmi-dc/terms/preferredXMLNamespacePrefix");
 
     public ModelMapper (JenaService jenaService){
         this.jenaService = jenaService;
@@ -42,15 +36,14 @@ public class ModelMapper {
     public Model mapToJenaModel(DataModelDTO modelDTO) {
         log.info("Mapping DatamodelDTO to Jena Model");
         var model = ModelFactory.createDefaultModel();
-        model.setNsPrefixes(ModelConstants.PREFIXES);
-
+        var modelUri = ModelConstants.SUOMI_FI_NAMESPACE + modelDTO.getPrefix();
         // TODO: type of application profile?
         Resource type = modelDTO.getType().equals(ModelType.LIBRARY)
                 ? OWL.Ontology
                 : ResourceFactory.createProperty("http://www.w3.org/2002/07/dcap#DCAP");
 
         var creationDate = new XSDDateTime(Calendar.getInstance());
-        var modelResource = model.createResource(ModelConstants.SUOMI_FI_NAMESPACE + modelDTO.getPrefix())
+        var modelResource = model.createResource(modelUri)
                 .addProperty(RDF.type, type)
                 .addProperty(OWL.versionInfo, modelDTO.getStatus().name())
                 .addProperty(DCTerms.identifier, UUID.randomUUID().toString())
@@ -61,16 +54,11 @@ public class ModelMapper {
 
         modelResource.addProperty(Iow.contentModified, ResourceFactory.createTypedLiteral(creationDate));
 
+        modelResource.addProperty(DCAP.preferredXMLNamespacePrefix, modelDTO.getPrefix());
+        modelResource.addProperty(DCAP.preferredXMLNamespace, modelUri);
 
-        //TODO is this needed
-        modelResource.addProperty(PREFERRED_XML_NAMESPACE_PREFIX, modelDTO.getPrefix());
-
-        //TODO is this needed
-        var preferredXmlNamespace = model.createProperty("http://purl.org/ws-mmi-dc/terms/preferredXMLNamespaceName");
-        modelResource.addProperty(preferredXmlNamespace, ModelConstants.SUOMI_FI_NAMESPACE + modelDTO.getPrefix());
-
-        addLocalizedProperty(modelDTO.getLabel(), modelResource, RDFS.label, model);
-        addLocalizedProperty(modelDTO.getDescription(), modelResource, RDFS.comment, model);
+        MapperUtils.addLocalizedProperty(modelDTO.getLanguages(), modelDTO.getLabel(), modelResource, RDFS.label, model);
+        MapperUtils.addLocalizedProperty(modelDTO.getLanguages(), modelDTO.getDescription(), modelResource, RDFS.comment, model);
 
         var groupModel = jenaService.getServiceCategories();
         modelDTO.getGroups().forEach(group -> {
@@ -82,11 +70,14 @@ public class ModelMapper {
 
         addOrgsToModel(modelDTO, modelResource);
 
-        addInternalNamespaceToDatamodel(modelDTO, modelResource);
+        addInternalNamespaceToDatamodel(modelDTO, modelResource, model);
         //As this could not be reasonably checked using the constraint validator we do not add external namespaces to core vocabularies
         if(!modelDTO.getType().equals(ModelType.LIBRARY)){
             addExternalNamespaceToDatamodel(modelDTO, model, modelResource);
         }
+
+
+        model.setNsPrefix(modelDTO.getPrefix(), modelUri + "#");
 
         return model;
     }
@@ -97,6 +88,7 @@ public class ModelMapper {
         var hasUpdated = false;
 
         var modelResource = model.getResource(ModelConstants.SUOMI_FI_NAMESPACE + prefix);
+        var langs = MapperUtils.arrayPropertyToSet(modelResource, DCTerms.language);
 
         if(dataModelDTO.getStatus() != null){
             modelResource.removeAll(OWL.versionInfo);
@@ -106,13 +98,13 @@ public class ModelMapper {
 
         if(dataModelDTO.getLabel() != null){
             modelResource.removeAll(RDFS.label);
-            addLocalizedProperty(dataModelDTO.getLabel(), modelResource, RDFS.label, model);
+            MapperUtils.addLocalizedProperty(langs, dataModelDTO.getLabel(), modelResource, RDFS.label, model);
             hasUpdated = true;
         }
 
         if(dataModelDTO.getDescription() != null){
             modelResource.removeAll(RDFS.comment);
-            addLocalizedProperty(dataModelDTO.getDescription(), modelResource, RDFS.comment, model);
+            MapperUtils.addLocalizedProperty(langs, dataModelDTO.getDescription(), modelResource, RDFS.comment, model);
             hasUpdated = true;
         }
 
@@ -140,6 +132,7 @@ public class ModelMapper {
             hasUpdated = true;
         }
 
+        //TODO remove namespace and remove linked resource to namepsace
 
         if(dataModelDTO.getInternalNamespaces() != null){
             var reqIterator = modelResource.listProperties(DCTerms.requires);
@@ -156,7 +149,7 @@ public class ModelMapper {
                     importsIterator.remove();
                 }
             }
-            addInternalNamespaceToDatamodel(dataModelDTO, modelResource);
+            addInternalNamespaceToDatamodel(dataModelDTO, modelResource, model);
             hasUpdated = true;
         }
 
@@ -210,13 +203,13 @@ public class ModelMapper {
         datamodelDTO.setStatus(status);
 
         //Language
-        datamodelDTO.setLanguages(arrayPropertyToSet(modelResource, DCTerms.language));
+        datamodelDTO.setLanguages(MapperUtils.arrayPropertyToSet(modelResource, DCTerms.language));
 
         //Label
-        datamodelDTO.setLabel(localizedPropertyToMap(modelResource, RDFS.label));
+        datamodelDTO.setLabel(MapperUtils.localizedPropertyToMap(modelResource, RDFS.label));
 
         //Description
-        datamodelDTO.setDescription(localizedPropertyToMap(modelResource, RDFS.comment));
+        datamodelDTO.setDescription(MapperUtils.localizedPropertyToMap(modelResource, RDFS.comment));
 
         var existingGroups = jenaService.getServiceCategories();
         var groups = modelResource.listProperties(DCTerms.isPartOf).toList().stream().map(prop -> {
@@ -227,7 +220,7 @@ public class ModelMapper {
 
         var organizations = modelResource.listProperties(DCTerms.contributor).toList().stream().map(prop -> {
             var orgUri = prop.getObject().toString();
-            return getUUID(orgUri);
+            return MapperUtils.getUUID(orgUri);
         }).collect(Collectors.toSet());
         datamodelDTO.setOrganizations(organizations);
 
@@ -263,21 +256,21 @@ public class ModelMapper {
                 ? ModelType.LIBRARY.name()
                 : ModelType.PROFILE.name());
         indexModel.setPrefix(prefix);
-        indexModel.setLabel(localizedPropertyToMap(resource, RDFS.label));
-        indexModel.setComment(localizedPropertyToMap(resource, RDFS.comment));
+        indexModel.setLabel(MapperUtils.localizedPropertyToMap(resource, RDFS.label));
+        indexModel.setComment(MapperUtils.localizedPropertyToMap(resource, RDFS.comment));
         var contributors = new ArrayList<UUID>();
         resource.listProperties(DCTerms.contributor).forEach(contributor -> {
             var value = contributor.getObject().toString();
-            contributors.add(getUUID(value));
+            contributors.add(MapperUtils.getUUID(value));
         });
         indexModel.setContributor(contributors);
-        var isPartOf = arrayPropertyToList(resource, DCTerms.isPartOf);
+        var isPartOf = MapperUtils.arrayPropertyToList(resource, DCTerms.isPartOf);
         var serviceCategories = jenaService.getServiceCategories();
         var groups = isPartOf.stream().map(serviceCat -> serviceCategories.getResource(serviceCat).getProperty(SKOS.notation).getObject().toString()).collect(Collectors.toList());
         indexModel.setIsPartOf(groups);
-        indexModel.setLanguage(arrayPropertyToList(resource, DCTerms.language));
+        indexModel.setLanguage(MapperUtils.arrayPropertyToList(resource, DCTerms.language));
 
-        indexModel.setDocumentation(localizedPropertyToMap(resource, Iow.documentation));
+        indexModel.setDocumentation(MapperUtils.localizedPropertyToMap(resource, Iow.documentation));
 
         return indexModel;
     }
@@ -288,72 +281,12 @@ public class ModelMapper {
 
         while (iterator.hasNext()) {
             var resource = iterator.next().asResource();
-            var labels = localizedPropertyToMap(resource, RDFS.label);
+            var labels = MapperUtils.localizedPropertyToMap(resource, RDFS.label);
             var identifier = resource.getProperty(SKOS.notation).getObject().toString();
             result.add(new ServiceCategoryDTO(resource.getURI(), labels, identifier));
         }
         return result;
     }
-
-    /**
-     * Convert array property to list of strings
-     * @param resource Resource to get property from
-     * @param property Property type
-     * @return List of property values
-     */
-    private List<String> arrayPropertyToList(Resource resource, Property property){
-        var list = new ArrayList<String>();
-        try{
-            resource.getProperty(property)
-                    .getList()
-                    .asJavaList()
-                    .forEach(node -> list.add(node.toString()));
-        }catch(JenaException ex){
-            //if item could not be gotten as list it means it is multiple statements of the property
-            resource.listProperties(property)
-                    .forEach(val -> list.add(val.getObject().toString()));
-        }
-        return list;
-    }
-
-    /**
-     * Convert array property to set of strings
-     * @param resource Resource to get property from
-     * @param property Property type
-     * @return Set of property values
-     */
-    private Set<String> arrayPropertyToSet(Resource resource, Property property){
-        var list = new HashSet<String>();
-        try{
-            resource.getProperty(property)
-                    .getList()
-                    .asJavaList()
-                    .forEach(node -> list.add(node.toString()));
-        }catch(JenaException ex){
-            //if item could not be gotten as list it means it is multiple statements of the property
-            resource.listProperties(property)
-                    .forEach(val -> list.add(val.getObject().toString()));
-        }
-        return list;
-    }
-
-    /**
-     * Add localized property to model
-     * @param data Map of (language, value)
-     * @param resource Resource to add to
-     * @param property Property to add
-     * @param model Model to add to
-     */
-    private void addLocalizedProperty(Map<String, String> data,
-                                      Resource resource,
-                                      Property property,
-                                      Model model) {
-        if (data == null) {
-            return;
-        }
-        data.forEach((lang, value) -> resource.addProperty(property, model.createLiteral(value, lang)));
-    }
-
 
     /**
      * Add organizations to a model
@@ -386,7 +319,7 @@ public class ModelMapper {
                 intNs.add(ns);
             }else {
                 var extNsModel = model.getResource(ns);
-                var extPrefix = extNsModel.getProperty(PREFERRED_XML_NAMESPACE_PREFIX).getObject().toString();
+                var extPrefix = extNsModel.getProperty(DCAP.preferredXMLNamespacePrefix).getObject().toString();
                 var extNsDTO = new ExternalNamespaceDTO();
                 extNsDTO.setNamespace(ns);
                 extNsDTO.setPrefix(extPrefix);
@@ -401,16 +334,19 @@ public class ModelMapper {
      * @param modelDTO Model DTO to get internal namespaces from
      * @param resource Data model resource to add linking property (OWL.imports or DCTerms.requires)
      */
-    private void addInternalNamespaceToDatamodel(DataModelDTO modelDTO, Resource resource){
+    private void addInternalNamespaceToDatamodel(DataModelDTO modelDTO, Resource resource, Model model){
         modelDTO.getInternalNamespaces().forEach(namespace -> {
             var ns = jenaService.getDataModel(namespace);
             if(ns != null){
-                var nsType = ns.getResource(namespace).getProperty(RDF.type).getResource();
+                var nsRes = ns.getResource(namespace);
+                var prefix= nsRes.getProperty(DCAP.preferredXMLNamespacePrefix).getObject().toString();
+                var nsType = nsRes.getProperty(RDF.type).getResource();
                 if(nsType.equals(OWL.Ontology)){
                     resource.addProperty(OWL.imports, namespace);
                 }else{
                     resource.addProperty(DCTerms.requires, namespace);
                 }
+                model.setNsPrefix(prefix, namespace);
             }
         });
     }
@@ -432,13 +368,14 @@ public class ModelMapper {
 
                     var nsRes = model.createResource(nsUri);
                     nsRes.addProperty(RDFS.label, namespace.getName());
-                    nsRes.addProperty(PREFERRED_XML_NAMESPACE_PREFIX, namespace.getPrefix());
+                    nsRes.addProperty(DCAP.preferredXMLNamespacePrefix, namespace.getPrefix());
                     nsRes.addProperty(DCTerms.type, resType);
                     if(resType.equals(OWL.Ontology)){
                         resource.addProperty(OWL.imports, nsUri);
                     }else{
                         resource.addProperty(DCTerms.requires, nsUri);
                     }
+                    model.setNsPrefix(namespace.getPrefix(), nsUri);
                 }catch (HttpException ex){
                     if (ex.getStatusCode() == HttpStatus.NOT_FOUND.value()) {
                         log.warn("Model not found with prefix {}", nsUri);
@@ -447,7 +384,6 @@ public class ModelMapper {
                         throw new RuntimeException("Error fetching external namespace");
                     }
                 }
-
             });
     }
 }

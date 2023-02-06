@@ -83,10 +83,32 @@ public class JenaService {
         }
     }
 
+    /**
+     * Check if Data model exists, this method just asks if a given graph can be found.
+     * @param graph Graph url of data model
+     * @return exists
+     */
     public boolean doesDataModelExist(String graph){
         var askBuilder = new AskBuilder()
                 .addGraph(NodeFactory.createURI(graph), "?s", "?p", "?o");
         try {
+            return coreSparql.queryAsk(askBuilder.build());
+        }catch(HttpException ex){
+            throw new RuntimeException("Error querying graph");
+        }
+    }
+
+    /**
+     * Check if given classUri (subject) found in graph
+     * @param graph Graph
+     * @param classUri Class URI
+     * @return exists
+     */
+    public boolean doesClassExistInGraph(String graph, String classUri){
+        var askBuilder = new AskBuilder()
+                .addGraph(NodeFactory.createURI(graph),
+                        NodeFactory.createURI(classUri), "?p", "?o");
+        try{
             return coreSparql.queryAsk(askBuilder.build());
         }catch(HttpException ex){
             throw new RuntimeException("Error querying graph");

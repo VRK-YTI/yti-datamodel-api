@@ -5,15 +5,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import fi.vm.yti.datamodel.api.index.OpenSearchConnector;
 import fi.vm.yti.datamodel.api.v2.dto.Iow;
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
+import fi.vm.yti.datamodel.api.v2.mapper.ClassMapper;
 import fi.vm.yti.datamodel.api.v2.mapper.ModelMapper;
 import fi.vm.yti.datamodel.api.v2.service.JenaService;
 import org.apache.jena.arq.querybuilder.ConstructBuilder;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Property;
-import org.apache.jena.vocabulary.DCTerms;
-import org.apache.jena.vocabulary.OWL;
-import org.apache.jena.vocabulary.RDF;
-import org.apache.jena.vocabulary.RDFS;
+import org.apache.jena.vocabulary.*;
 import org.opensearch.action.bulk.BulkRequest;
 import org.opensearch.action.index.IndexRequest;
 import org.opensearch.client.RequestOptions;
@@ -32,12 +30,16 @@ import java.util.Map;
 public class OpenSearchIndexer {
 
     public static final String OPEN_SEARCH_INDEX_MODEL = "models_v2";
+    private static final String OPEN_SEARCH_INDEX_CLASS = "class_v2";
+
     private final Logger logger = LoggerFactory.getLogger(OpenSearchIndexer.class);
     private static final String GRAPH_VARIABLE = "?model";
     private final OpenSearchConnector openSearchConnector;
     private final ObjectMapper objectMapper;
     private final JenaService jenaService;
     private final ModelMapper modelMapper;
+    private final ClassMapper classMapper;
+
     private final RestHighLevelClient esClient;
 
 
@@ -45,19 +47,23 @@ public class OpenSearchIndexer {
                              ObjectMapper objectMapper,
                              JenaService jenaService,
                              ModelMapper modelMapper,
-                             RestHighLevelClient esClient){
+                             ClassMapper classMapper, RestHighLevelClient esClient){
         this.openSearchConnector = openSearchConnector;
         this.objectMapper = objectMapper;
         this.jenaService = jenaService;
         this.modelMapper = modelMapper;
+        this.classMapper = classMapper;
         this.esClient = esClient;
     }
 
     public void reindex() {
         try {
             openSearchConnector.cleanIndex(OPEN_SEARCH_INDEX_MODEL);
+            openSearchConnector.cleanIndex(OPEN_SEARCH_INDEX_CLASS);
             logger.info("v2 Indexes cleaned");
             openSearchConnector.createIndex(OPEN_SEARCH_INDEX_MODEL, getModelMappings());
+            openSearchConnector.createIndex(OPEN_SEARCH_INDEX_CLASS, getClassMappings());
+
             initSearchIndexes();
             logger.info("Indexes initialized");
         } catch (IOException ex) {
@@ -67,6 +73,12 @@ public class OpenSearchIndexer {
 
     private String getModelMappings() throws IOException {
         InputStream is = OpenSearchIndexer.class.getClassLoader().getResourceAsStream("model_v2_mapping.json");
+        Object obj = objectMapper.readTree(is);
+        return objectMapper.writeValueAsString(obj);
+    }
+
+    private String getClassMappings() throws IOException {
+        InputStream is = OpenSearchIndexer.class.getClassLoader().getResourceAsStream("class_v2_mapping.json");
         Object obj = objectMapper.readTree(is);
         return objectMapper.writeValueAsString(obj);
     }
@@ -89,10 +101,30 @@ public class OpenSearchIndexer {
     }
 
     /**
+     * A new class to index
+     * @param indexClass Class to index
+     */
+    public void createClassToIndex(IndexClass indexClass){
+        logger.info("Indexing: {}", indexClass.getId());
+        openSearchConnector.putToIndex(OPEN_SEARCH_INDEX_CLASS, indexClass.getId(), indexClass);
+    }
+
+    /**
+     * Update exisitng class in index
+     * @param indexClass Class to index
+     */
+    public void updateClassToIndex(IndexClass indexClass){
+        logger.info("Updating index for: {}", indexClass.getId());
+        openSearchConnector.updateToIndex(OPEN_SEARCH_INDEX_CLASS, indexClass.getId(), indexClass);
+    }
+
+
+    /**
      * Init search indexes
      */
     private void initSearchIndexes() throws IOException {
         initModelIndex();
+        initClassIndex();
     }
 
     /**
@@ -131,6 +163,34 @@ public class OpenSearchIndexer {
         bulkInsert(OPEN_SEARCH_INDEX_MODEL, values);
     }
 
+    public void initClassIndex() throws IOException {
+        var constructBuilder = new ConstructBuilder()
+                .addPrefixes(ModelConstants.PREFIXES)
+                .addWhere(GRAPH_VARIABLE, RDF.type, "?classType")
+                .addWhereValueVar("?classType", OWL.Class);
+        addProperty(constructBuilder, RDFS.label, "?label");
+        addProperty(constructBuilder, OWL.versionInfo, "?versionInfo");
+        addProperty(constructBuilder, DCTerms.modified, "?modified");
+        addProperty(constructBuilder, DCTerms.created, "?created");
+        addOptional(constructBuilder, Iow.contentModified, "?contentModified");
+        addProperty(constructBuilder, RDFS.isDefinedBy, "?isDefinedBy");
+        addOptional(constructBuilder, SKOS.note, "?comment");
+        addOptional(constructBuilder, RDFS.subClassOf, "?subClassOf");
+        addOptional(constructBuilder, OWL.equivalentClass, "?equivalentClass");
+        var indexClasses = jenaService.constructWithQuery(constructBuilder.build());
+        var it = indexClasses.listSubjects();
+        var list = new ArrayList<IndexClass>();
+        while(it.hasNext()){
+            var resource = it.next();
+            var newClass = ModelFactory.createDefaultModel()
+                    .add(resource.listProperties());
+            var indexClass = classMapper.mapToIndexClass(newClass, resource.getURI());
+            list.add(indexClass);
+        }
+        var values = objectMapper.valueToTree(list);
+        bulkInsert(OPEN_SEARCH_INDEX_CLASS, values);
+    }
+
     private void addProperty(ConstructBuilder builder, Property property, String propertyName){
         builder.addConstruct(GRAPH_VARIABLE, property, propertyName)
                 .addWhere(GRAPH_VARIABLE, property, propertyName);
@@ -141,12 +201,12 @@ public class OpenSearchIndexer {
                 .addOptional(GRAPH_VARIABLE, property, propertyName);
     }
 
-    public void bulkInsert(String indexName, JsonNode indexModels) throws IOException {
+    public void bulkInsert(String indexName, JsonNode indexObjects) throws IOException {
         var bulkrequest = new BulkRequest();
-        indexModels.forEach(indexModel -> {
+        indexObjects.forEach(indexObject -> {
             var req = new IndexRequest(indexName)
-                    .id(indexModel.get("id").asText())
-                    .source(objectMapper.convertValue(indexModel, Map.class));
+                    .id(indexObject.get("id").asText())
+                    .source(objectMapper.convertValue(indexObject, Map.class));
             bulkrequest.add(req);
         });
         if(bulkrequest.numberOfActions() > 0){

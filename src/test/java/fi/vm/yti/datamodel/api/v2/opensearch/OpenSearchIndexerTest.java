@@ -3,6 +3,7 @@ package fi.vm.yti.datamodel.api.v2.opensearch;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import fi.vm.yti.datamodel.api.index.OpenSearchConnector;
+import fi.vm.yti.datamodel.api.v2.mapper.ClassMapper;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
 import fi.vm.yti.datamodel.api.v2.mapper.ModelMapper;
 import fi.vm.yti.datamodel.api.v2.service.JenaService;
@@ -19,14 +20,13 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.io.IOException;
 
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(SpringExtension.class)
 @Import({
         OpenSearchIndexer.class
 })
-public class OpenSearchIndexerTest {
+class OpenSearchIndexerTest {
 
     @MockBean
     JenaService jenaService;
@@ -39,6 +39,9 @@ public class OpenSearchIndexerTest {
 
     @MockBean
     ModelMapper modelMapper;
+
+    @MockBean
+    ClassMapper classMapper;
 
     @MockBean
     RestHighLevelClient esClient;
