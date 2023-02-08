@@ -1,12 +1,9 @@
 package fi.vm.yti.datamodel.api.v2.validator;
 
+import fi.vm.yti.datamodel.api.v2.endpoint.error.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 
-import fi.vm.yti.datamodel.api.v2.endpoint.error.ApiError;
-import fi.vm.yti.datamodel.api.v2.endpoint.error.ApiValidationError;
-import fi.vm.yti.datamodel.api.v2.endpoint.error.ApiValidationErrorDetails;
-import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
 import org.hibernate.validator.internal.engine.path.PathImpl;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.core.Ordered;
@@ -60,6 +57,11 @@ public class ExceptionHandlerAdvice extends ResponseEntityExceptionHandler {
 
         apiError.setDetails(errors);
         return buildResponseEntity(apiError);
+    }
+
+    @ExceptionHandler(MappingError.class)
+    protected  ResponseEntity<Object> handleMappingError(MappingError error){
+        return new ResponseEntity<>(error.getMessage(), BAD_REQUEST);
     }
 
     @ExceptionHandler(ResourceNotFoundException.class)

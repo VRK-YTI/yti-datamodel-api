@@ -4,10 +4,7 @@ package fi.vm.yti.datamodel.api.mapper;
 import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.mapper.ModelMapper;
 import fi.vm.yti.datamodel.api.v2.service.JenaService;
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.ModelFactory;
-import org.apache.jena.rdf.model.Resource;
-import org.apache.jena.rdf.model.Statement;
+import org.apache.jena.rdf.model.*;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.riot.RDFLanguages;
@@ -58,6 +55,7 @@ class ModelMapperTest {
         when(mockModel.getResource(anyString())).thenReturn(mockRes);
         var mockStm = mock(Statement.class);
         when(mockRes.getProperty(any())).thenReturn(mockStm);
+        when(mockStm.getObject()).thenReturn(ResourceFactory.createPlainLiteral("test"));
         when(mockStm.getResource()).thenReturn(RDFS.Resource);
 
         UUID organizationId = UUID.randomUUID();
@@ -116,14 +114,14 @@ class ModelMapperTest {
         when(mockModel.getResource(anyString())).thenReturn(mockRes);
         var mockStm = mock(Statement.class);
         when(mockRes.getProperty(any())).thenReturn(mockStm);
+        when(mockStm.getObject()).thenReturn(ResourceFactory.createPlainLiteral("test"));
         when(mockStm.getResource()).thenReturn(RDFS.Resource);
 
         UUID organizationId = UUID.randomUUID();
 
         DataModelDTO dto = new DataModelDTO();
         dto.setLabel(Map.of(
-                "fi", "new test label",
-                "sv", "new test label sv"));
+                "fi", "new test label"));
         dto.setDescription(Map.of(
                 "fi", "new test description"));
         dto.setStatus(Status.DRAFT);
@@ -166,7 +164,7 @@ class ModelMapperTest {
         assertNotNull(groupResource);
         assertNotNull(organizationResource);
 
-        assertEquals(2, modelResource.listProperties(RDFS.label).toList().size());
+        assertEquals(1, modelResource.listProperties(RDFS.label).toList().size());
         assertEquals("new test label", modelResource.listProperties(RDFS.label, "fi").next().getString());
 
         assertEquals(Status.DRAFT, Status.valueOf(modelResource.getProperty(OWL.versionInfo).getString()));
