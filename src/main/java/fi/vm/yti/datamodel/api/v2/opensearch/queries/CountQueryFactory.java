@@ -3,163 +3,70 @@ package fi.vm.yti.datamodel.api.v2.opensearch.queries;
 import fi.vm.yti.datamodel.api.v2.dto.Status;
 import fi.vm.yti.datamodel.api.v2.opensearch.dto.CountDTO;
 import fi.vm.yti.datamodel.api.v2.opensearch.dto.CountSearchResponse;
-import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
-import org.opensearch.action.search.SearchRequest;
-import org.opensearch.action.search.SearchResponse;
-import org.opensearch.index.query.QueryBuilder;
-import org.opensearch.index.query.QueryBuilders;
-import org.opensearch.script.Script;
-import org.opensearch.search.aggregations.AggregationBuilders;
-import org.opensearch.search.aggregations.BucketOrder;
-import org.opensearch.search.aggregations.bucket.MultiBucketsAggregation;
-import org.opensearch.search.aggregations.bucket.terms.Terms;
-import org.opensearch.search.aggregations.bucket.terms.TermsAggregationBuilder;
-import org.opensearch.search.builder.SearchSourceBuilder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.opensearch.client.opensearch._types.FieldValue;
+import org.opensearch.client.opensearch._types.aggregations.Aggregation;
+import org.opensearch.client.opensearch._types.aggregations.AggregationBuilders;
+import org.opensearch.client.opensearch._types.query_dsl.Query;
+import org.opensearch.client.opensearch._types.query_dsl.QueryBuilders;
+import org.opensearch.client.opensearch.core.SearchRequest;
+import org.opensearch.client.opensearch.core.SearchResponse;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.stream.Collectors;
+
+import static fi.vm.yti.datamodel.api.v2.opensearch.OpenSearchUtil.logPayload;
 
 @Service
 public class CountQueryFactory {
 
-    private static final Logger log = LoggerFactory.getLogger(CountQueryFactory.class);
-
     public SearchRequest createModelQuery() {
-        QueryBuilder withIncompleteHandling = QueryBuilders.boolQuery()
-                .mustNot(QueryBuilders.termQuery("status", Status.INCOMPLETE.name()));
+        Query status = QueryBuilders.bool()
+                .mustNot(QueryBuilders.term()
+                        .field("status")
+                        .value(FieldValue.of(Status.INCOMPLETE.name()))
+                        .build()._toQuery())
+                .build()._toQuery();
 
-        SearchRequest sr = new SearchRequest(OpenSearchIndexer.OPEN_SEARCH_INDEX_MODEL)
-                .source(new SearchSourceBuilder()
-                        .size(0)
-                        .query(withIncompleteHandling)
-                        .aggregation(createStatusAggregation())
-                        .aggregation(createTypeAggregation())
-                        .aggregation(createLanguageAggregation())
-                        .aggregation(createInformationDomainAggregation())
-                        );
+        SearchRequest sr = new SearchRequest.Builder()
+                .size(0)
+                .query(status)
+                .aggregations("statuses", getAggregation("status"))
+                .aggregations("types", getAggregation("type"))
+                .aggregations("languages", getAggregation("language"))
+                .aggregations("groups", getAggregation("isPartOf"))
+                .build();
 
-        log.debug("Count request: {}", sr);
+        logPayload(sr);
         return sr;
     }
 
-    private TermsAggregationBuilder createStatusAggregation() {
-        var scriptSource = "doc.containsKey('status') ? doc.status : params._source.properties.status[0].value";
-        Map<String, Object> params = new HashMap<>(16);
-        var script = new Script(
-                Script.DEFAULT_SCRIPT_TYPE,
-                Script.DEFAULT_SCRIPT_LANG,
-                scriptSource,
-                params);
-
-        return AggregationBuilders
-                .terms("statusagg")
-                .size(300)
-                .script(script);
+    private static Aggregation getAggregation(String fieldName) {
+        return AggregationBuilders.terms().field(fieldName).build()._toAggregation();
     }
 
-
-    private TermsAggregationBuilder createTypeAggregation() {
-        var scriptSource = "doc.containsKey('type') ? doc.type : params._source.properties.type[0].value";
-        Map<String, Object> params = new HashMap<>(16);
-        var script = new Script(
-                Script.DEFAULT_SCRIPT_TYPE,
-                Script.DEFAULT_SCRIPT_LANG,
-                scriptSource,
-                params);
-
-        return AggregationBuilders
-                .terms("typeagg")
-                .size(300)
-                .script(script);
-    }
-
-    private TermsAggregationBuilder createLanguageAggregation() {
-        String scriptSource = "params._source.language" +
-                ".stream()" +
-                ".collect(Collectors.toList())";
-
-        var script = new Script(
-                Script.DEFAULT_SCRIPT_TYPE,
-                Script.DEFAULT_SCRIPT_LANG,
-                scriptSource,
-                new HashMap<>(16));
-
-        return AggregationBuilders
-                .terms("langagg")
-                .order(BucketOrder.count(false))
-                .size(300)
-                .script(script);
-    }
-
-    private TermsAggregationBuilder createInformationDomainAggregation() {
-        var scriptSource = "params._source.isPartOf";
-
-        Map<String, Object> params = new HashMap<>(16);
-        var script = new Script(
-                Script.DEFAULT_SCRIPT_TYPE,
-                Script.DEFAULT_SCRIPT_LANG,
-                scriptSource,
-                params);
-
-        return AggregationBuilders
-                .terms("infodomainagg")
-                .size(300)
-                .script(script);
-    }
-
-    public CountSearchResponse parseResponse(SearchResponse response) {
+    public CountSearchResponse parseResponse(SearchResponse<?> response) {
         var ret = new CountSearchResponse();
-        ret.setTotalHitCount(response.getHits().getTotalHits().value);
-
-
-        Terms statusAgg = response.getAggregations().get("statusagg");
-        var statuses = statusAgg
-                .getBuckets()
-                .stream()
-                .collect(Collectors.toMap(
-                        MultiBucketsAggregation.Bucket::getKeyAsString,
-                        MultiBucketsAggregation.Bucket::getDocCount));
-
-        Terms typeAgg = response.getAggregations().get("typeagg");
-        var types = typeAgg
-                .getBuckets()
-                .stream()
-                .collect(Collectors.toMap(
-                        MultiBucketsAggregation.Bucket::getKeyAsString,
-                        MultiBucketsAggregation.Bucket::getDocCount));
-
-        Terms infodomainAgg = response.getAggregations().get("infodomainagg");
-        var infoDomains = infodomainAgg
-                .getBuckets()
-                .stream()
-                .collect(Collectors.toMap(
-                        MultiBucketsAggregation.Bucket::getKeyAsString,
-                        MultiBucketsAggregation.Bucket::getDocCount));
-
-        Map<String, Long> languages = new HashMap<>();
-        Terms langagg = response.getAggregations().get("langagg");
-        if (langagg != null) {
-            languages = langagg
-                    .getBuckets()
-                    .stream()
-                    .collect(
-                            LinkedHashMap::new,
-                            (map, item) -> map.put(
-                                    item.getKeyAsString(),
-                                    item.getDocCount()
-                            ),
-                            Map::putAll
-                    );
-        }
-
-        ret.setCounts(new CountDTO(statuses, languages, types, infoDomains));
-
+        var counts = new CountDTO(
+                getBucketValues(response, "statuses"),
+                getBucketValues(response, "languages"),
+                getBucketValues(response, "types"),
+                getBucketValues(response, "groups")
+        );
+        ret.setTotalHitCount(response.hits().total().value());
+        ret.setCounts(counts);
         return ret;
+    }
+
+    private static Map<String, Long> getBucketValues(SearchResponse<?> response, String aggregateName) {
+        Map<String, Long> result = new HashMap<>();
+        response.aggregations()
+                .get(aggregateName)
+                .sterms()
+                .buckets()
+                .array()
+                .forEach(bucket -> result.put(bucket.key(), bucket.docCount()));
+        return result;
     }
 
 }

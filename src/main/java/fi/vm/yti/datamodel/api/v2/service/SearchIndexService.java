@@ -1,19 +1,19 @@
 package fi.vm.yti.datamodel.api.v2.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import fi.vm.yti.datamodel.api.index.OpenSearchConnector;
 import fi.vm.yti.datamodel.api.v2.opensearch.dto.IndexModelDTO;
 import fi.vm.yti.datamodel.api.v2.opensearch.dto.ModelSearchRequest;
 import fi.vm.yti.datamodel.api.v2.opensearch.dto.CountSearchResponse;
 import fi.vm.yti.datamodel.api.v2.opensearch.dto.ModelSearchResponse;
+import fi.vm.yti.datamodel.api.v2.opensearch.index.DataModelDocument;
+import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
 import fi.vm.yti.datamodel.api.v2.opensearch.queries.CountQueryFactory;
 import fi.vm.yti.security.Role;
 import fi.vm.yti.security.YtiUser;
-import org.opensearch.action.search.SearchRequest;
-import org.opensearch.action.search.SearchResponse;
-import org.opensearch.client.RequestOptions;
-import org.opensearch.client.RestHighLevelClient;
+import org.opensearch.client.opensearch.OpenSearchClient;
+import org.opensearch.client.opensearch.core.SearchRequest;
+import org.opensearch.client.opensearch.core.SearchResponse;
+import org.opensearch.client.opensearch.core.search.Hit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -27,18 +27,15 @@ public class SearchIndexService {
 
     private static final Logger LOG = LoggerFactory.getLogger(SearchIndexService.class);
     private final CountQueryFactory countQueryFactory;
-    private final RestHighLevelClient client;
+    private final OpenSearchClient client;
     private final GroupManagementService groupManagementService;
-    private final ObjectMapper objectMapper;
 
     public SearchIndexService(OpenSearchConnector openSearchConnector,
                               CountQueryFactory countQueryFactory,
-                              GroupManagementService groupManagementService,
-                              ObjectMapper objectMapper) {
+                              GroupManagementService groupManagementService) {
         this.countQueryFactory = countQueryFactory;
         this.client = openSearchConnector.getClient();
         this.groupManagementService = groupManagementService;
-        this.objectMapper = objectMapper;
     }
 
     /**
@@ -48,7 +45,7 @@ public class SearchIndexService {
     public CountSearchResponse getCounts() {
         SearchRequest query = countQueryFactory.createModelQuery();
         try {
-            SearchResponse response = client.search(query, RequestOptions.DEFAULT);
+            SearchResponse<DataModelDocument> response = client.search(query, DataModelDocument.class);
             return countQueryFactory.parseResponse(response);
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -80,20 +77,15 @@ public class SearchIndexService {
     private ModelSearchResponse searchModels(ModelSearchRequest request) {
         try {
             // TODO: implement search
-            var response = client.search(new SearchRequest("models_v2"), RequestOptions.DEFAULT);
-            var models = Arrays.stream(response.getHits().getHits())
-                    .map(hit -> {
-                        try {
-                            return objectMapper.readValue(hit.getSourceAsString(), IndexModelDTO.class);
-                        } catch (JsonProcessingException e) {
-                            throw new RuntimeException(e);
-                        }
-                    })
-                    .collect(Collectors.toList());
+            SearchRequest build = new SearchRequest.Builder().index(OpenSearchIndexer.OPEN_SEARCH_INDEX_MODEL).build();
+            SearchResponse<IndexModelDTO> response = client.search(build, IndexModelDTO.class);
 
             var modelSearchResponse = new ModelSearchResponse();
-            modelSearchResponse.setModels(models);
-            modelSearchResponse.setTotalHitCount(response.getHits().getTotalHits().value);
+            modelSearchResponse.setModels(response.hits().hits().stream()
+                    .map(Hit::source)
+                    .collect(Collectors.toList())
+            );
+            modelSearchResponse.setTotalHitCount(response.hits().total().value());
             modelSearchResponse.setPageFrom(request.getPageFrom());
             modelSearchResponse.setPageSize(request.getPageSize());
 

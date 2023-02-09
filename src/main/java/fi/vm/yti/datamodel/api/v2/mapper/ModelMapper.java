@@ -1,7 +1,7 @@
 package fi.vm.yti.datamodel.api.v2.mapper;
 
 import fi.vm.yti.datamodel.api.v2.dto.*;
-import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexModel;
+import fi.vm.yti.datamodel.api.v2.opensearch.index.DataModelDocument;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
 import fi.vm.yti.datamodel.api.v2.service.JenaService;
 import org.apache.jena.atlas.web.HttpException;
@@ -235,14 +235,14 @@ public class ModelMapper {
     }
 
     /**
-     * Map a DataModel to a IndexModel
+     * Map a DataModel to a DataModelDocument
      * @param prefix Prefix of model
      * @param model Model
      * @return Index model
      */
-    public IndexModel mapToIndexModel(String prefix, Model model){
+    public DataModelDocument mapToIndexModel(String prefix, Model model){
         var resource = model.getResource(ModelConstants.SUOMI_FI_NAMESPACE + prefix);
-        var indexModel = new IndexModel();
+        var indexModel = new DataModelDocument();
         indexModel.setId(ModelConstants.SUOMI_FI_NAMESPACE + prefix);
         indexModel.setStatus(resource.getProperty(OWL.versionInfo).getString());
         indexModel.setModified(resource.getProperty(DCTerms.modified).getString());
@@ -271,7 +271,6 @@ public class ModelMapper {
         indexModel.setLanguage(MapperUtils.arrayPropertyToList(resource, DCTerms.language));
 
         indexModel.setDocumentation(MapperUtils.localizedPropertyToMap(resource, Iow.documentation));
-
         return indexModel;
     }
 

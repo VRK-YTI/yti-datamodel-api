@@ -5,16 +5,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-public class IndexModel {
-
-    private String id;
-    private String status;
-    private String modified;
-    private String created;
+public class DataModelDocument extends BaseDocument {
     private String contentModified;
     private String type;
     private String prefix;
-    private Map<String, String> label;
     private Map<String, String> comment;
     @JsonFormat(with = JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY)
     private List<UUID> contributor;
@@ -23,39 +17,7 @@ public class IndexModel {
     private List<String> language;
     private Map<String, String> documentation;
 
-    public IndexModel() {
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
-    }
-
-    public String getModified() {
-        return modified;
-    }
-
-    public void setModified(String modified) {
-        this.modified = modified;
-    }
-
-    public String getCreated() {
-        return created;
-    }
-
-    public void setCreated(String created) {
-        this.created = created;
+    public DataModelDocument() {
     }
 
     public String getContentModified() {
@@ -80,14 +42,6 @@ public class IndexModel {
 
     public void setPrefix(String prefix) {
         this.prefix = prefix;
-    }
-
-    public Map<String, String> getLabel() {
-        return label;
-    }
-
-    public void setLabel(Map<String, String> label) {
-        this.label = label;
     }
 
     public Map<String, String> getComment() {
