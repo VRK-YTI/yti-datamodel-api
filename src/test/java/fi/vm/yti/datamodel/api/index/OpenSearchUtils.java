@@ -1,68 +1,52 @@
 package fi.vm.yti.datamodel.api.index;
 
-import org.opensearch.action.search.SearchResponse;
-import org.opensearch.common.ParseField;
-import org.opensearch.common.xcontent.ContextParser;
-import org.opensearch.common.xcontent.DeprecationHandler;
-import org.opensearch.common.xcontent.NamedXContentRegistry;
-import org.opensearch.common.xcontent.XContentParser;
-import org.opensearch.common.xcontent.json.JsonXContent;
-import org.opensearch.search.aggregations.Aggregation;
-import org.opensearch.search.aggregations.bucket.terms.ParsedStringTerms;
-import org.opensearch.search.aggregations.bucket.terms.StringTerms;
-import org.opensearch.search.aggregations.metrics.MaxAggregationBuilder;
-import org.opensearch.search.aggregations.metrics.ParsedMax;
-import org.opensearch.search.aggregations.metrics.ParsedTopHits;
-import org.opensearch.search.aggregations.metrics.TopHitsAggregationBuilder;
+import jakarta.json.stream.JsonGenerator;
+import org.opensearch.client.json.JsonpMapper;
+import org.opensearch.client.json.JsonpSerializable;
+import org.opensearch.client.json.jackson.JacksonJsonpMapper;
+import org.opensearch.client.opensearch._types.ShardStatistics;
+import org.opensearch.client.opensearch.core.SearchResponse;
 
-import java.io.IOException;
+import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 public class OpenSearchUtils {
+
+    private static final JsonpMapper MAPPER = new JacksonJsonpMapper();
 
     public static String getJsonString(String file) throws Exception {
         return new String(OpenSearchUtils.class
                 .getResourceAsStream(file).readAllBytes(), StandardCharsets.UTF_8);
     }
 
-    public static SearchResponse getMockResponse(String path) throws Exception {
-        return getSearchResponseFromJson(getJsonString(path));
+    /**
+     * Serialize object to JSON
+     * @param object object to serialize
+     * @return object as JSON string
+     */
+    public static String getPayload(JsonpSerializable object) {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        JsonGenerator generator = MAPPER.jsonProvider().createGenerator(out);
+        MAPPER.serialize(object, generator);
+        generator.close();
+        return out.toString();
     }
 
-    // for use with getSearchResponseFromJson
-    private static List<NamedXContentRegistry.Entry> getDefaultNamedXContents() {
-        Map<String, ContextParser<Object, ? extends Aggregation>> map = new HashMap<>();
-        // Elasticsearch needs a hint to know what type of aggregation to
-        // parse this as. The hint is provided by elastic when
-        // adding ?typed_keys to the query.
-        // e.g. "sterms#group_by_terminology"
-        map.put(TopHitsAggregationBuilder.NAME, (p, c) ->
-                ParsedTopHits.fromXContent(p, (String) c));
-        map.put(StringTerms.NAME, (p, c) ->
-                ParsedStringTerms.fromXContent(p, (String) c));
-        map.put(MaxAggregationBuilder.NAME, (p, c) ->
-                ParsedMax.fromXContent(p, (String) c));
-        return map.entrySet().stream()
-                .map(entry -> new NamedXContentRegistry.Entry(
-                        Aggregation.class,
-                        new ParseField(entry.getKey()),
-                        entry.getValue()))
-                .collect(Collectors.toList());
-    }
-
-    // helper method for generating elasticsearch SearchResponse from JSON
-    private static SearchResponse getSearchResponseFromJson(String jsonResponse) throws IOException {
-        NamedXContentRegistry registry = new NamedXContentRegistry(
-                getDefaultNamedXContents());
-        XContentParser parser = JsonXContent.jsonXContent.createParser(
-                registry,
-                DeprecationHandler.THROW_UNSUPPORTED_OPERATION,
-                jsonResponse);
-        SearchResponse searchResponse = SearchResponse.fromXContent(parser);
-        return searchResponse;
+    /**
+     * Add mandatory information to OpenSearch response
+     * @return SearchResponse builder
+     * @param <T> type of response data
+     */
+    public static <T> SearchResponse.Builder<T> getBaseResponse() {
+        return new SearchResponse.Builder<T>()
+                .took(1)
+                .timedOut(false)
+                .shards(new ShardStatistics.Builder()
+                        .failed(0)
+                        .successful(1)
+                        .total(1)
+                        .skipped(0)
+                        .build()
+                );
     }
 }

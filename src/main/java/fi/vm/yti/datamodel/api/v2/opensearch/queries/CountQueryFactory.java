@@ -60,12 +60,17 @@ public class CountQueryFactory {
 
     private static Map<String, Long> getBucketValues(SearchResponse<?> response, String aggregateName) {
         Map<String, Long> result = new HashMap<>();
-        response.aggregations()
-                .get(aggregateName)
+        var aggregation = response.aggregations().get(aggregateName);
+
+        if (aggregation == null) {
+            return result;
+        }
+        aggregation
                 .sterms()
                 .buckets()
                 .array()
                 .forEach(bucket -> result.put(bucket.key(), bucket.docCount()));
+
         return result;
     }
 

@@ -14,36 +14,24 @@
     }
   },
   "aggregations": {
-    "statusagg": {
+    "types": {
       "terms": {
-        "script": {
-          "source": "doc.containsKey('status') ? doc.status : params._source.properties.status[0].value",
-          "lang": "painless"
-        }
+        "field": "type"
       }
     },
-    "infodomainagg": {
+    "languages": {
       "terms": {
-        "script": {
-          "source": "params._source.isPartOf",
-          "lang": "painless"
-        }
+        "field": "language"
       }
     },
-    "typeagg": {
+    "statuses": {
       "terms": {
-        "script": {
-          "source": "doc.containsKey('type') ? doc.type : params._source.properties.type[0].value",
-          "lang": "painless"
-        }
+        "field": "status"
       }
     },
-    "langagg": {
+    "groups": {
       "terms": {
-        "script": {
-          "source": "params._source.language.stream().collect(Collectors.toList())",
-          "lang": "painless"
-        }
+        "field": "isPartOf"
       }
     }
   }
