@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import fi.vm.yti.datamodel.api.security.AuthorizationManager;
 import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
-import fi.vm.yti.datamodel.api.v2.opensearch.index.DataModelDocument;
+import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexModel;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
 import fi.vm.yti.datamodel.api.v2.mapper.ModelMapper;
 import fi.vm.yti.datamodel.api.v2.service.JenaService;
@@ -92,7 +92,7 @@ class DatamodelTest {
 
         //Mock mapping
         var model = mock(Model.class);
-        var indexmodel = mock(DataModelDocument.class);
+        var indexmodel = mock(IndexModel.class);
         when(modelMapper.mapToJenaModel(any(DataModelDTO.class))).thenReturn(model);
         when(modelMapper.mapToIndexModel("test", model)).thenReturn(indexmodel);
 
@@ -109,7 +109,7 @@ class DatamodelTest {
                 .mapToIndexModel(anyString(), any(Model.class));
         verifyNoMoreInteractions(this.modelMapper);
         verify(this.openSearchIndexer)
-                .createModelToIndex(any(DataModelDocument.class));
+                .createModelToIndex(any(IndexModel.class));
         verifyNoMoreInteractions(this.openSearchIndexer);
     }
 
@@ -126,7 +126,7 @@ class DatamodelTest {
 
         //Mock mapping
         var model = mock(Model.class);
-        var indexmodel = mock(DataModelDocument.class);
+        var indexmodel = mock(IndexModel.class);
         when(jenaService.getDataModel(anyString())).thenReturn(mock(Model.class));
         when(modelMapper.mapToUpdateJenaModel(anyString(), any(DataModelDTO.class), any(Model.class))).thenReturn(model);
         when(modelMapper.mapToIndexModel("test", model)).thenReturn(indexmodel);
@@ -144,7 +144,7 @@ class DatamodelTest {
                 .mapToIndexModel(anyString(), any(Model.class));
         verifyNoMoreInteractions(this.modelMapper);
         verify(this.openSearchIndexer)
-                .updateModelToIndex(any(DataModelDocument.class));
+                .updateModelToIndex(any(IndexModel.class));
         verifyNoMoreInteractions(this.openSearchIndexer);
     }
 

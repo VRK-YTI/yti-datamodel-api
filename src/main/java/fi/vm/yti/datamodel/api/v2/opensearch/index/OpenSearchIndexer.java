@@ -12,6 +12,7 @@ import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Property;
 import org.apache.jena.vocabulary.*;
 import org.opensearch.client.opensearch.OpenSearchClient;
+import org.opensearch.client.opensearch._types.mapping.*;
 import org.opensearch.client.opensearch.core.BulkRequest;
 import org.opensearch.client.opensearch.core.BulkResponse;
 import org.opensearch.client.opensearch.core.bulk.BulkOperation;
@@ -23,6 +24,7 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 
 @Service
@@ -43,7 +45,7 @@ public class OpenSearchIndexer {
                              JenaService jenaService,
                              ModelMapper modelMapper,
                              ClassMapper classMapper,
-                             OpenSearchClient client){
+                             OpenSearchClient client) {
         this.openSearchConnector = openSearchConnector;
         this.jenaService = jenaService;
         this.modelMapper = modelMapper;
@@ -56,61 +58,67 @@ public class OpenSearchIndexer {
             openSearchConnector.cleanIndex(OPEN_SEARCH_INDEX_MODEL);
             openSearchConnector.cleanIndex(OPEN_SEARCH_INDEX_CLASS);
             logger.info("v2 Indexes cleaned");
-            openSearchConnector.createIndex(OPEN_SEARCH_INDEX_CLASS);
-            openSearchConnector.createIndex(OPEN_SEARCH_INDEX_MODEL);
+            openSearchConnector.createIndex(OPEN_SEARCH_INDEX_MODEL, getModelMappings());
+            openSearchConnector.createIndex(OPEN_SEARCH_INDEX_CLASS, getClassMappings());
             initSearchIndexes();
+
             logger.info("Indexes initialized");
         } catch (IOException ex) {
             logger.warn("Reindex failed!", ex);
         }
     }
 
-    /*
-    private String getModelMappings() throws IOException {
-        InputStream is = OpenSearchIndexer.class.getClassLoader().getResourceAsStream("model_v2_mapping.json");
-        Object obj = objectMapper.readTree(is);
-        return objectMapper.writeValueAsString(obj);
+    private TypeMapping getModelMappings() {
+        return new TypeMapping.Builder()
+                .dynamicTemplates(List.of(getDynamicTemplate("label", "label.*")))
+                .dynamicTemplates(List.of(getDynamicTemplate("comment", "comment.*")))
+                .dynamicTemplates(List.of(getDynamicTemplate("documentation", "documentation.*")))
+                .properties(getModelProperties())
+                .build();
     }
 
-    private String getClassMappings() throws IOException {
-        InputStream is = OpenSearchIndexer.class.getClassLoader().getResourceAsStream("class_v2_mapping.json");
-        Object obj = objectMapper.readTree(is);
-        return objectMapper.writeValueAsString(obj);
+    private TypeMapping getClassMappings() {
+        return new TypeMapping.Builder()
+                .dynamicTemplates(List.of(getDynamicTemplate("label", "label.*")))
+                .properties(getClassProperties())
+                .build();
     }
-
-     */
 
     /**
      * A new model to index
+     *
      * @param model Model to index
      */
-    public void createModelToIndex(DataModelDocument model){
+    public void createModelToIndex(IndexModel model) {
         logger.info("Indexing: {}", model.getId());
         openSearchConnector.putToIndex(OPEN_SEARCH_INDEX_MODEL, model.getId(), model);
     }
 
     /**
      * Update existing model in index
+     *
      * @param model Model to index
      */
-    public void updateModelToIndex(DataModelDocument model){
+    public void updateModelToIndex(IndexModel model) {
         openSearchConnector.updateToIndex(OPEN_SEARCH_INDEX_MODEL, model.getId(), model);
     }
 
     /**
      * A new class to index
+     *
      * @param indexClass Class to index
      */
-    public void createClassToIndex(IndexClass indexClass){
+    public void createClassToIndex(IndexClass indexClass) {
         logger.info("Indexing: {}", indexClass.getId());
         openSearchConnector.putToIndex(OPEN_SEARCH_INDEX_CLASS, indexClass.getId(), indexClass);
     }
 
     /**
-     * Update exisitng class in index
+     * Update existing class in index
+     *
      * @param indexClass Class to index
      */
-    public void updateClassToIndex(IndexClass indexClass){
+    public void updateClassToIndex(IndexClass indexClass) {
         logger.info("Updating index for: {}", indexClass.getId());
         openSearchConnector.updateToIndex(OPEN_SEARCH_INDEX_CLASS, indexClass.getId(), indexClass);
     }
@@ -148,8 +156,8 @@ public class OpenSearchIndexer {
 
         var indexModels = jenaService.constructWithQuery(constructBuilder.build());
         var it = indexModels.listSubjects();
-        var list = new ArrayList<DataModelDocument>();
-        while(it.hasNext()){
+        var list = new ArrayList<IndexModel>();
+        while (it.hasNext()) {
             var resource = it.next();
             var newModel = ModelFactory.createDefaultModel()
                     .add(resource.listProperties());
@@ -176,37 +184,37 @@ public class OpenSearchIndexer {
         var indexClasses = jenaService.constructWithQuery(constructBuilder.build());
         var it = indexClasses.listSubjects();
         var list = new ArrayList<IndexClass>();
-        while(it.hasNext()){
+        while (it.hasNext()) {
             var resource = it.next();
             var newClass = ModelFactory.createDefaultModel()
                     .add(resource.listProperties());
             var indexClass = classMapper.mapToIndexClass(newClass, resource.getURI());
             list.add(indexClass);
         }
-        bulkInsert(OPEN_SEARCH_INDEX_CLASS, List.of());
+        bulkInsert(OPEN_SEARCH_INDEX_CLASS, list);
     }
 
-    private void addProperty(ConstructBuilder builder, Property property, String propertyName){
+    private void addProperty(ConstructBuilder builder, Property property, String propertyName) {
         builder.addConstruct(GRAPH_VARIABLE, property, propertyName)
                 .addWhere(GRAPH_VARIABLE, property, propertyName);
     }
 
-    private void addOptional(ConstructBuilder builder, Property property, String propertyName){
+    private void addOptional(ConstructBuilder builder, Property property, String propertyName) {
         builder.addConstruct(GRAPH_VARIABLE, property, propertyName)
                 .addOptional(GRAPH_VARIABLE, property, propertyName);
     }
 
-    public <T extends BaseDocument> void bulkInsert(String indexName,
-                                                    List<T> documents) throws IOException {
+    public <T extends IndexBase> void bulkInsert(String indexName,
+                                                 List<T> documents) throws IOException {
         var bulkRequest = new BulkRequest.Builder();
         List<BulkOperation> bulkOperations = new ArrayList<>();
         documents.forEach(doc ->
-            bulkOperations.add(new IndexOperation.Builder<BaseDocument>()
-                    .index(indexName)
-                    .id(DataModelUtils.encode(doc.getId()))
-                    .document(doc)
-                    .build().
-                    _toBulkOperation())
+                bulkOperations.add(new IndexOperation.Builder<IndexBase>()
+                        .index(indexName)
+                        .id(DataModelUtils.encode(doc.getId()))
+                        .document(doc)
+                        .build().
+                        _toBulkOperation())
         );
         if (bulkOperations.isEmpty()) {
             logger.info("No data to index");
@@ -215,5 +223,52 @@ public class OpenSearchIndexer {
         bulkRequest.operations(bulkOperations);
         BulkResponse response = client.bulk(bulkRequest.build());
         logger.debug("Bulk insert status: {}", response.toString());
+    }
+
+
+    private Map<String, org.opensearch.client.opensearch._types.mapping.Property> getModelProperties() {
+        return Map.of("id", getKeywordProperty(),
+                "status", getKeywordProperty(),
+                "type", getKeywordProperty(),
+                "prefix", getKeywordProperty(),
+                "contributor", getKeywordProperty(),
+                "language", getKeywordProperty(),
+                "isPartOf", getKeywordProperty(),
+                "created", getDateProperty(),
+                "contentModified", getDateProperty());
+    }
+
+    private Map<String, org.opensearch.client.opensearch._types.mapping.Property> getClassProperties() {
+        return Map.of("id", getKeywordProperty(),
+                "status", getKeywordProperty(),
+                "isDefinedBy", getKeywordProperty(),
+                "comment", getKeywordProperty(),
+                "namespace", getKeywordProperty(),
+                "identifier", getKeywordProperty(),
+                "created", getDateProperty(),
+                "modified", getDateProperty(),
+                "contentModified", getDateProperty());
+    }
+
+    private static Map<String, DynamicTemplate> getDynamicTemplate(String name, String pathMatch) {
+        return Map.of(name, new DynamicTemplate.Builder()
+                .pathMatch(pathMatch)
+                .mapping(getTextProperty()).build());
+    }
+
+    private static org.opensearch.client.opensearch._types.mapping.Property getKeywordProperty() {
+        return new org.opensearch.client.opensearch._types.mapping.Property.Builder()
+                .keyword(new KeywordProperty.Builder().build())
+                .build();
+    }
+
+    private static org.opensearch.client.opensearch._types.mapping.Property getDateProperty() {
+        return new org.opensearch.client.opensearch._types.mapping.Property.Builder()
+                .date(new DateProperty.Builder().build()).build();
+    }
+
+    private static org.opensearch.client.opensearch._types.mapping.Property getTextProperty() {
+        return new org.opensearch.client.opensearch._types.mapping.Property.Builder()
+                .text(new TextProperty.Builder().build()).build();
     }
 }

@@ -5,7 +5,7 @@ import fi.vm.yti.datamodel.api.v2.opensearch.dto.IndexModelDTO;
 import fi.vm.yti.datamodel.api.v2.opensearch.dto.ModelSearchRequest;
 import fi.vm.yti.datamodel.api.v2.opensearch.dto.CountSearchResponse;
 import fi.vm.yti.datamodel.api.v2.opensearch.dto.ModelSearchResponse;
-import fi.vm.yti.datamodel.api.v2.opensearch.index.DataModelDocument;
+import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexModel;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
 import fi.vm.yti.datamodel.api.v2.opensearch.queries.CountQueryFactory;
 import fi.vm.yti.security.Role;
@@ -45,7 +45,7 @@ public class SearchIndexService {
     public CountSearchResponse getCounts() {
         SearchRequest query = countQueryFactory.createModelQuery();
         try {
-            SearchResponse<DataModelDocument> response = client.search(query, DataModelDocument.class);
+            SearchResponse<IndexModel> response = client.search(query, IndexModel.class);
             return countQueryFactory.parseResponse(response);
         } catch (IOException e) {
             throw new RuntimeException(e);

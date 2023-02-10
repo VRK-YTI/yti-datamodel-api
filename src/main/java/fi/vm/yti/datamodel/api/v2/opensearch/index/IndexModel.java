@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-public class DataModelDocument extends BaseDocument {
+public class IndexModel extends IndexBase {
     private String contentModified;
     private String type;
     private String prefix;
@@ -17,7 +17,7 @@ public class DataModelDocument extends BaseDocument {
     private List<String> language;
     private Map<String, String> documentation;
 
-    public DataModelDocument() {
+    public IndexModel() {
     }
 
     public String getContentModified() {

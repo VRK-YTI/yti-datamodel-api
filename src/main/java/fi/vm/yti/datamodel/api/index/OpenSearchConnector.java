@@ -1,8 +1,6 @@
 package fi.vm.yti.datamodel.api.index;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.Map;
 
 import fi.vm.yti.datamodel.api.v2.utils.DataModelUtils;
 import org.opensearch.client.opensearch.OpenSearchClient;
@@ -76,21 +74,14 @@ public class OpenSearchConnector {
         }
     }
 
-    public void createIndex(String index) {
+    public void createIndex(String index, TypeMapping mappings) {
         var request = new CreateIndexRequest.Builder()
                 .index(index)
-                .mappings(
-                    new TypeMapping.Builder()
-                            .dynamicTemplates(List.of(getDynamicTemplate("label", "label.*")))
-                            .dynamicTemplates(List.of(getDynamicTemplate("comment", "comment.*")))
-                            .dynamicTemplates(List.of(getDynamicTemplate("documentation", "documentation.*")))
-                            .properties(getProperties())
-                            .build()
-                ).build();
+                .mappings(mappings).build();
         logPayload(request);
         try {
             client.indices().create(request);
-            logger.debug("Index {} created", index);
+            logger.info("Index {} created", index);
         } catch (IOException | OpenSearchException ex) {
             logger.warn("Index creation failed for " + index, ex);
         }
@@ -151,36 +142,5 @@ public class OpenSearchConnector {
         }
     }
 
-    private Map<String, Property> getProperties() {
-        return Map.of("id", getKeywordProperty(),
-                "status", getKeywordProperty(),
-                "type", getKeywordProperty(),
-                "prefix", getKeywordProperty(),
-                "contributor", getKeywordProperty(),
-                "language", getKeywordProperty(),
-                "isPartOf", getKeywordProperty(),
-                "created", getDateProperty(),
-                "contentModified", getDateProperty());
-    }
-
-    private static Map<String, DynamicTemplate> getDynamicTemplate(String name, String pathMatch) {
-        return Map.of(name, new DynamicTemplate.Builder()
-                .pathMatch(pathMatch)
-                .mapping(getTextProperty()).build());
-    }
-
-    private static Property getKeywordProperty() {
-        return new Property.Builder()
-                .keyword(new KeywordProperty.Builder().build())
-                .build();
-    }
-
-    private static Property getDateProperty() {
-        return new Property.Builder().date(new DateProperty.Builder().build()).build();
-    }
-
-    private static Property getTextProperty() {
-        return new Property.Builder().text(new TextProperty.Builder().build()).build();
-    }
 
 }

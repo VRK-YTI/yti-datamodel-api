@@ -2,14 +2,14 @@ package fi.vm.yti.datamodel.api.v2.opensearch.index;
 
 import java.util.Map;
 
-public class BaseDocument {
+public class IndexBase {
     private String id;
     private Map<String, String> label;
     private String status;
     private String modified;
     private String created;
 
-    public BaseDocument() {
+    public IndexBase() {
     }
 
     public String getId() {
