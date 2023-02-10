@@ -7,11 +7,9 @@ import org.opensearch.client.opensearch.OpenSearchClient;
 import org.opensearch.client.opensearch._types.OpenSearchException;
 import org.opensearch.client.opensearch._types.Refresh;
 import org.opensearch.client.opensearch._types.mapping.*;
-import org.opensearch.client.opensearch.core.DeleteRequest;
-import org.opensearch.client.opensearch.core.DeleteResponse;
-import org.opensearch.client.opensearch.core.IndexRequest;
-import org.opensearch.client.opensearch.core.UpdateRequest;
+import org.opensearch.client.opensearch.core.*;
 import org.opensearch.client.opensearch.indices.*;
+import org.opensearch.client.opensearch.indices.ExistsRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,8 +35,8 @@ public class OpenSearchConnector {
 
     public boolean indexExists(String index) throws IOException {
         return client.indices().exists(
-                    new ExistsRequest.Builder().index(index).build()
-                ).value();
+                new ExistsRequest.Builder().index(index).build()
+        ).value();
     }
 
     public void waitForESNodes() {
@@ -63,6 +61,7 @@ public class OpenSearchConnector {
 
     /**
      * Delete an index if it exists.
+     *
      * @param index index name
      * @throws IOException in case there is a problem sending the request or parsing back the response
      */
@@ -70,7 +69,8 @@ public class OpenSearchConnector {
         boolean exists = indexExists(index);
         if (exists) {
             logger.info("Cleaning index: {}", index);
-            this.client.indices().delete(new DeleteIndexRequest.Builder().index(index).build());
+            this.client.indices().delete(new DeleteIndexRequest.Builder()
+                    .index(index).build());
         }
     }
 
@@ -88,14 +88,15 @@ public class OpenSearchConnector {
     }
 
     public <T> void putToIndex(String index,
-                           String id,
-                           T doc) {
+                               String id,
+                               T doc) {
         String encId = DataModelUtils.encode(id);
         try {
-            IndexRequest<T> indexReq = new IndexRequest.Builder<T>().index(index)
-                .id(encId)
-                .document(doc)
-                .build();
+            IndexRequest<T> indexReq = new IndexRequest.Builder<T>()
+                    .index(index)
+                    .id(encId)
+                    .document(doc)
+                    .build();
 
             logPayload(indexReq);
             client.index(indexReq);
@@ -106,18 +107,18 @@ public class OpenSearchConnector {
     }
 
     public <T> void updateToIndex(String index,
-                              String id,
-                              T doc) {
+                                  String id,
+                                  T doc) {
         String encId = DataModelUtils.encode(id);
         try {
-            UpdateRequest<String, T> request = new UpdateRequest.Builder<String, T>()
-                .index(index)
-                .id(encId)
-                .doc(doc)
-                .build();
+            var request = new UpdateRequest.Builder<String, T>()
+                    .index(index)
+                    .id(encId)
+                    .doc(doc)
+                    .build();
             logPayload(request);
-            var resp = client.update(request, String.class);
-            logger.info("Updated \"" + id + "\" to \"" + index + "\": " + resp.toString());
+            var response = client.update(request, String.class);
+            logger.info("Updated {} to {}", response.id(), response.index());
         } catch (IOException | OpenSearchException e) {
             logger.warn("Could not update to index: " + id, e);
         }

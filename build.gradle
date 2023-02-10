@@ -82,7 +82,6 @@ dependencies {
 
     implementation "org.opensearch.client:opensearch-java:2.2.0"
     implementation "org.opensearch.client:opensearch-rest-client:2.3.0"
-    // implementation "org.opensearch.client:opensearch-rest-high-level-client:2.3.0"
     implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:2.0.2"
 
     implementation "org.topbraid:shacl:1.4.2"
