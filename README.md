@@ -26,8 +26,10 @@ For each project run `build.sh` located at the project root folder. The script b
 
 Start dependant containers
 ```
-docker-compose up -d yti-groupmanagement yti-fuseki yti-datamodel-elasticsearch
+docker-compose up -d yti-groupmanagement yti-fuseki-v4 yti-datamodel-opensearch
 ```
+
+Copy content from main/resources/config/application.properties.template to file application-local.properties and adjust values as needed.
 
 ### Populate data to the database
 ```

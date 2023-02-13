@@ -1,16 +1,26 @@
 package fi.vm.yti.datamodel.api.v2.opensearch;
 
 import fi.vm.yti.datamodel.api.index.OpenSearchUtils;
+import fi.vm.yti.datamodel.api.v2.dto.Status;
 import fi.vm.yti.datamodel.api.v2.opensearch.dto.CountSearchResponse;
 import fi.vm.yti.datamodel.api.v2.opensearch.queries.CountQueryFactory;
-import org.opensearch.action.search.SearchRequest;
-import org.opensearch.action.search.SearchResponse;
 
 import org.junit.jupiter.api.Test;
+import org.opensearch.client.opensearch._types.aggregations.Aggregate;
+import org.opensearch.client.opensearch._types.aggregations.Buckets;
+import org.opensearch.client.opensearch._types.aggregations.StringTermsAggregate;
+import org.opensearch.client.opensearch._types.aggregations.StringTermsBucket;
+import org.opensearch.client.opensearch.core.SearchRequest;
+import org.opensearch.client.opensearch.core.SearchResponse;
+import org.opensearch.client.opensearch.core.search.HitsMetadata;
+import org.opensearch.client.opensearch.core.search.TotalHits;
+import org.opensearch.client.opensearch.core.search.TotalHitsRelation;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.skyscreamer.jsonassert.JSONCompareMode;
 
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -24,14 +34,32 @@ class CountQueryFactoryTest {
 
         SearchRequest request = factory.createModelQuery();
 
-        JSONAssert.assertEquals(expected, request.source().toString(), JSONCompareMode.LENIENT);
+        JSONAssert.assertEquals(expected, OpenSearchUtils.getPayload(request), JSONCompareMode.LENIENT);
     }
 
     @Test
-    void testParseModelCountResponse() throws Exception {
-        SearchResponse response = OpenSearchUtils.getMockResponse("/es/models_count_response.json");
+    void testParseModelCountResponse() {
+        SearchResponse.Builder<Object> response = OpenSearchUtils.getBaseResponse();
 
-        CountSearchResponse countSearchResponse = factory.parseResponse(response);
+        response
+                .hits(new HitsMetadata.Builder<>()
+                        .hits(List.of())
+                        .total(new TotalHits.Builder()
+                                .value(8)
+                                .relation(TotalHitsRelation.Eq)
+                                .build())
+                        .build())
+                .aggregations(getAggregation("statuses", Map.of(
+                        Status.DRAFT.name(), 7L,
+                        Status.VALID.name(), 1L
+                )))
+                .aggregations(getAggregation("groups", Map.of(
+                        "P13", 2L,
+                        "P11", 1L,
+                        "P21", 1L
+                )));
+
+        CountSearchResponse countSearchResponse = factory.parseResponse(response.build());
 
         assertEquals(8, countSearchResponse.getTotalHitCount());
         Map<String, Long> groups = countSearchResponse.getCounts().getGroups();
@@ -43,7 +71,26 @@ class CountQueryFactoryTest {
         assertEquals(1L, groups.get("P21"));
 
         assertEquals(2, statuses.keySet().size());
-        assertEquals(7, statuses.get("DRAFT"));
-        assertEquals(1, statuses.get("VALID"));
+        assertEquals(7, statuses.get(Status.DRAFT.name()));
+        assertEquals(1, statuses.get(Status.VALID.name()));
+    }
+
+    private static Map<String, Aggregate> getAggregation(String key, Map<String, Long> data) {
+
+        List<StringTermsBucket> buckets = data.entrySet().stream().map(d ->
+                        new StringTermsBucket.Builder()
+                                .key(d.getKey())
+                                .docCount(d.getValue())
+                                .build())
+                .collect(Collectors.toList());
+
+        return Map.of(key, new Aggregate.Builder()
+                .sterms(new StringTermsAggregate.Builder()
+                        .sumOtherDocCount(1)
+                        .buckets(new Buckets.Builder<StringTermsBucket>()
+                                .array(buckets)
+                                .build())
+                        .build())
+                .build());
     }
 }
