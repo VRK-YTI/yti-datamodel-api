@@ -1,5 +1,6 @@
 package fi.vm.yti.datamodel.api.v2.service;
 
+import org.apache.jena.atlas.web.HttpException;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.riot.RiotException;
 import org.springframework.stereotype.Service;
@@ -27,7 +28,7 @@ public class NamespaceResolver {
                 jenaService.putNamespaceToImports(namespace, model);
                 return true;
             }
-        } catch (RiotException exception){
+        } catch (RiotException | HttpException ex){
             //if namespace resolution fails for any reason we send false back
             //example: url not real, url can't find anything, url does not contain valid syntax
             return false;
