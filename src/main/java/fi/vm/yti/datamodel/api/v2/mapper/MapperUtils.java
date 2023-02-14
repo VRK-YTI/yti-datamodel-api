@@ -76,6 +76,10 @@ public class MapperUtils {
      */
     public static List<String> arrayPropertyToList(Resource resource, Property property){
         var list = new ArrayList<String>();
+        //return empty list if property is not found
+        if(!resource.hasProperty(property)){
+            return list;
+        }
         try{
             resource.getProperty(property)
                     .getList()
@@ -93,10 +97,14 @@ public class MapperUtils {
      * Convert array property to set of strings
      * @param resource Resource to get property from
      * @param property Property type
-     * @return Set of property values
+     * @return Set of property values, empty if property is not found
      */
     public static Set<String> arrayPropertyToSet(Resource resource, Property property){
         var list = new HashSet<String>();
+        //return empty list if property is not found
+        if(!resource.hasProperty(property)){
+            return list;
+        }
         try{
             resource.getProperty(property)
                     .getList()

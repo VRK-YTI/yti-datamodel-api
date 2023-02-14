@@ -45,8 +45,8 @@ class ClassMapperTest {
         ClassDTO dto = new ClassDTO();
         dto.setIdentifier("TestClass");
         dto.setSubject("http://uri.suomi.fi/terminology/test/test1");
-        dto.setEquivalentClass(Set.of("http://uri.suomi.fi/datamodel/ns/test#EqClass"));
-        dto.setSubClassOf(Set.of("http://uri.suomi.fi/datamodel/ns/test#SubClass"));
+        dto.setEquivalentClass(Set.of("http://uri.suomi.fi/datamodel/ns/int#EqClass"));
+        dto.setSubClassOf(Set.of("https://www.example.com/ns/ext#SubClass"));
         dto.setComment("comment");
         dto.setLabel(Map.of("fi", "test label"));
         dto.setStatus(Status.DRAFT);
@@ -76,9 +76,9 @@ class ClassMapperTest {
         assertEquals("comment", classResource.getProperty(SKOS.note).getObject().toString());
 
         assertEquals(1, classResource.listProperties(RDFS.subClassOf).toList().size());
-        assertEquals("http://uri.suomi.fi/datamodel/ns/test#SubClass", classResource.getProperty(RDFS.subClassOf).getObject().toString());
+        assertEquals("https://www.example.com/ns/ext#SubClass", classResource.getProperty(RDFS.subClassOf).getObject().toString());
         assertEquals(1, classResource.listProperties(OWL.equivalentClass).toList().size());
-        assertEquals("http://uri.suomi.fi/datamodel/ns/test#EqClass", classResource.getProperty(OWL.equivalentClass).getObject().toString());
+        assertEquals("http://uri.suomi.fi/datamodel/ns/int#EqClass", classResource.getProperty(OWL.equivalentClass).getObject().toString());
     }
 
     @Test

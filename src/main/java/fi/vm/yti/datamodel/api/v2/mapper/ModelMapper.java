@@ -71,11 +71,7 @@ public class ModelMapper {
         addOrgsToModel(modelDTO, modelResource);
 
         addInternalNamespaceToDatamodel(modelDTO, modelResource, model);
-        //As this could not be reasonably checked using the constraint validator we do not add external namespaces to core vocabularies
-        if(!modelDTO.getType().equals(ModelType.LIBRARY)){
-            addExternalNamespaceToDatamodel(modelDTO, model, modelResource);
-        }
-
+        addExternalNamespaceToDatamodel(modelDTO, model, modelResource);
 
         model.setNsPrefix(modelDTO.getPrefix(), modelUri + "#");
 
@@ -133,7 +129,7 @@ public class ModelMapper {
         }
 
         //TODO remove namespace and remove linked resource to namepsace
-
+        //TODO possible to simplify this code (extract the removal to its own function and use for both external and internal namespaces)
         if(dataModelDTO.getInternalNamespaces() != null){
             var reqIterator = modelResource.listProperties(DCTerms.requires);
             while(reqIterator.hasNext()){
@@ -153,9 +149,7 @@ public class ModelMapper {
             hasUpdated = true;
         }
 
-
-        //As this could not be reasonably checked using the constraint validator we do not add external namespaces to core vocabularies(Ontologies)
-        if(dataModelDTO.getExternalNamespaces() != null && !modelResource.getProperty(RDF.type).getResource().equals(OWL.Ontology)){
+        if(dataModelDTO.getExternalNamespaces() != null){
             var reqIterator = modelResource.listProperties(DCTerms.requires);
             while(reqIterator.hasNext()){
                 var next = reqIterator.next();

@@ -1,13 +1,17 @@
 package fi.vm.yti.datamodel.api.v2.validator;
 
 import fi.vm.yti.datamodel.api.v2.dto.ClassDTO;
+import fi.vm.yti.datamodel.api.v2.service.JenaService;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
+import org.apache.jena.graph.NodeFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 
 public class ClassValidator extends BaseValidator implements
         ConstraintValidator<ValidClass, ClassDTO> {
 
-    private static final String MSG_VALUE_MISSING = "should-have-value";
+    @Autowired
+    private JenaService jenaService;
 
     boolean updateClass;
 
@@ -51,21 +55,31 @@ public class ClassValidator extends BaseValidator implements
         var status = classDTO.getStatus();
         //Status has to be defined when creating
         if(!updateClass && status == null){
-            addConstraintViolation(context, MSG_VALUE_MISSING, "status");
+            addConstraintViolation(context, ValidationConstants.MSG_VALUE_MISSING, "status");
         }
     }
 
     private void checkEquivalentClass(ConstraintValidatorContext context, ClassDTO classDTO){
         var equivalentClass = classDTO.getEquivalentClass();
         equivalentClass.forEach(eqClass -> {
-            //TODO check if equivalentClass is found in the resolved namespace
+            var asUri = NodeFactory.createURI(eqClass);
+            //if namespace is resolvable make sure class can be found in resolved namespace
+            if(jenaService.doesResolvedNamespaceExist(asUri.getNameSpace())
+                    && jenaService.doesClassExistInNamespace(asUri.getNameSpace(), asUri.getURI())){
+                addConstraintViolation(context, "class-not-found-in-resolved-namespace", "eqClass");
+            }
         });
     }
 
     private void checkSubClassOf(ConstraintValidatorContext context, ClassDTO classDTO){
         var subClassOf = classDTO.getSubClassOf();
         subClassOf.forEach(subClass -> {
-            //TODO check if subClassOf is found in the resolved namespaces
+            var asUri = NodeFactory.createURI(subClass);
+            //if namespace is resolvable make sure class can be found in resolved namespace
+            if(jenaService.doesResolvedNamespaceExist(asUri.getNameSpace())
+            && jenaService.doesClassExistInNamespace(asUri.getNameSpace(), asUri.getURI())){
+                    addConstraintViolation(context, "class-not-found-in-resolved-namespace", "subClassOf");
+            }
         });
     }
 
@@ -77,7 +91,7 @@ public class ClassValidator extends BaseValidator implements
     private void checkIdentifier(ConstraintValidatorContext context, ClassDTO classDTO){
         var identifier = classDTO.getIdentifier();
         if(identifier == null || identifier.isBlank()){
-            addConstraintViolation(context, MSG_VALUE_MISSING, "identifier");
+            addConstraintViolation(context, ValidationConstants.MSG_VALUE_MISSING, "identifier");
         }
     }
 }
