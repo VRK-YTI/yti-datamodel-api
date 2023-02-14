@@ -19,12 +19,12 @@ public class AjpConfig {
     @Bean
     public TomcatServletWebServerFactory servletContainer(@Value("${tomcat.ajp.port:}") Integer ajpPort) throws UnknownHostException {
 
-        TomcatServletWebServerFactory tomcat = new TomcatServletWebServerFactory();
+        var tomcat = new TomcatServletWebServerFactory();
 
         tomcat.setContextPath(contextPath);
 
         if (ajpPort != null) {
-            Connector ajpConnector = new Connector("AJP/1.3");
+            var ajpConnector = new Connector("AJP/1.3");
             ajpConnector.setPort(ajpPort);
             ajpConnector.setSecure(false);
             ajpConnector.setAllowTrace(false);

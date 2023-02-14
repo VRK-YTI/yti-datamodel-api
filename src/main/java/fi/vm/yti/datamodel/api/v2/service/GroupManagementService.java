@@ -64,9 +64,6 @@ public class GroupManagementService {
     public List<GroupManagementUserDTO> getFakeableUsers() {
 
         if (fakeLoginAllowed) {
-
-            // String url = properties.getDefaultGroupManagementAPI() + "users";
-
             var webClient = webClientBuilder.baseUrl(defaultGroupManagementUrl).build();
 
             try {

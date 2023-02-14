@@ -117,8 +117,8 @@ public class OpenSearchConnector {
                     .doc(doc)
                     .build();
             logPayload(request);
-            var response = client.update(request, String.class);
-            logger.info("Updated {} to {}", response.id(), response.index());
+            client.update(request, String.class);
+            logger.info("Updated {} to {}", id, index);
         } catch (IOException | OpenSearchException e) {
             logger.warn("Could not update to index: " + id, e);
         }
@@ -135,7 +135,7 @@ public class OpenSearchConnector {
                     .refresh(Refresh.WaitFor)
                     .build();
             DeleteResponse resp = client.delete(req);
-            logger.info("Removed {} from {}: {} (took {} ms)", id, index, resp.toString(), System.currentTimeMillis() - startTime);
+            logger.info("Removed {} from {} (took {} ms)", id, index, System.currentTimeMillis() - startTime);
             return resp;
         } catch (IOException e) {
             logger.warn(e.getMessage(), e);

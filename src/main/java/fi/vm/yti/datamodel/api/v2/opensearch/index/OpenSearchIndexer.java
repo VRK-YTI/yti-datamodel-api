@@ -222,7 +222,7 @@ public class OpenSearchIndexer {
         }
         bulkRequest.operations(bulkOperations);
         BulkResponse response = client.bulk(bulkRequest.build());
-        logger.debug("Bulk insert status: {}", response.toString());
+        logger.debug("Bulk insert status: {}", response);
     }
 
 

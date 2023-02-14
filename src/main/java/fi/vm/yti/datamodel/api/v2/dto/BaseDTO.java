@@ -8,7 +8,7 @@ public abstract class BaseDTO {
     private final String id;
     private final Map<String, String> label;
 
-    public BaseDTO(String id, Map<String, String> label) {
+    protected BaseDTO(String id, Map<String, String> label) {
         this.id = id;
         this.label = label;
     }

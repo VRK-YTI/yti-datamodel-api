@@ -11,7 +11,6 @@ import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class FrontendService {
@@ -33,7 +32,7 @@ public class FrontendService {
 
         return includeChildOrganizations ? dtos : dtos.stream()
                 .filter(dto -> dto.getParentOrganization() == null)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public List<ServiceCategoryDTO> getServiceCategories(@NotNull String sortLanguage) {
@@ -47,9 +46,9 @@ public class FrontendService {
 
     private void sortByLabel(@NotNull String sortLanguage, List<? extends BaseDTO> dtos) {
         dtos.sort((a, b) -> {
-            var label_a = a.getLabel().getOrDefault(sortLanguage, a.getLabel().get(DEFAULT_LANGUAGE));
-            var label_b = b.getLabel().getOrDefault(sortLanguage, b.getLabel().get(DEFAULT_LANGUAGE));
-            return label_a.compareTo(label_b);
+            var labelA = a.getLabel().getOrDefault(sortLanguage, a.getLabel().get(DEFAULT_LANGUAGE));
+            var labelB = b.getLabel().getOrDefault(sortLanguage, b.getLabel().get(DEFAULT_LANGUAGE));
+            return labelA.compareTo(labelB);
         });
     }
 }
