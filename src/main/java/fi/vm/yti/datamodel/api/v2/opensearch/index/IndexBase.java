@@ -9,9 +9,6 @@ public class IndexBase {
     private String modified;
     private String created;
 
-    public IndexBase() {
-    }
-
     public String getId() {
         return id;
     }

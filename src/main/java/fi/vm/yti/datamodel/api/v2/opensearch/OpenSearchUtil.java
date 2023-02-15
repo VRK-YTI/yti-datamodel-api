@@ -1,6 +1,5 @@
 package fi.vm.yti.datamodel.api.v2.opensearch;
 
-import jakarta.json.stream.JsonGenerator;
 import org.opensearch.client.json.JsonpMapper;
 import org.opensearch.client.json.JsonpSerializable;
 import org.opensearch.client.json.jackson.JacksonJsonpMapper;
@@ -23,8 +22,8 @@ public class OpenSearchUtil {
      */
     public static void logPayload(JsonpSerializable object) {
         if (LOG.isDebugEnabled()) {
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            JsonGenerator generator = MAPPER.jsonProvider().createGenerator(out);
+            var out = new ByteArrayOutputStream();
+            var generator = MAPPER.jsonProvider().createGenerator(out);
             MAPPER.serialize(object, generator);
             generator.close();
             LOG.debug("Payload for object of type {}", object.getClass().getSimpleName());

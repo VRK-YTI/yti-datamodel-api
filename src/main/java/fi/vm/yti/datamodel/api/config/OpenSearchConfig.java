@@ -4,7 +4,6 @@ import org.apache.http.HttpHost;
 import org.opensearch.client.RestClient;
 import org.opensearch.client.json.jackson.JacksonJsonpMapper;
 import org.opensearch.client.opensearch.OpenSearchClient;
-import org.opensearch.client.transport.OpenSearchTransport;
 import org.opensearch.client.transport.rest_client.RestClientTransport;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -29,7 +28,7 @@ public class OpenSearchConfig {
 
     @Bean
     protected OpenSearchClient openSearchClient() {
-        RestClient restClient = RestClient.builder(
+        var restClient = RestClient.builder(
                 new HttpHost(openSearchHost, openSearchHttpPort, openSearchScheme)
         ).setRequestConfigCallback(requestConfigBuilder ->
                 requestConfigBuilder
@@ -37,7 +36,7 @@ public class OpenSearchConfig {
                         .setSocketTimeout(60000)
         ).build();
 
-        OpenSearchTransport transport = new RestClientTransport(restClient, new JacksonJsonpMapper());
+        var transport = new RestClientTransport(restClient, new JacksonJsonpMapper());
         return new OpenSearchClient(transport);
     }
 }
