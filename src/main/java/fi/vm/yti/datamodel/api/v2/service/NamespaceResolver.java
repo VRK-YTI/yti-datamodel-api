@@ -3,10 +3,14 @@ package fi.vm.yti.datamodel.api.v2.service;
 import org.apache.jena.atlas.web.HttpException;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.riot.RiotException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 @Service
 public class NamespaceResolver {
+
+    private final Logger logger = LoggerFactory.getLogger(NamespaceResolver.class);
 
     private final JenaService jenaService;
 
@@ -28,9 +32,11 @@ public class NamespaceResolver {
                 jenaService.putNamespaceToImports(namespace, model);
                 return true;
             }
-        } catch (RiotException | HttpException ex){
-            //if namespace resolution fails for any reason we send false back
-            //example: url not real, url can't find anything, url does not contain valid syntax
+        } catch (RiotException ex){
+            logger.warn("Namespace not resolvable: {}", ex.getMessage());
+            return false;
+        } catch (HttpException ex){
+            logger.warn("Namespace not resolvable due to HTTP error, Status code: {}", ex.getStatusCode());
             return false;
         }
         return false;

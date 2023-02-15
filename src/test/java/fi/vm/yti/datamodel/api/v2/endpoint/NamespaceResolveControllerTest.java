@@ -3,6 +3,9 @@ package fi.vm.yti.datamodel.api.v2.endpoint;
 import fi.vm.yti.datamodel.api.v2.service.NamespaceResolver;
 import fi.vm.yti.datamodel.api.v2.validator.ExceptionHandlerAdvice;
 import fi.vm.yti.datamodel.api.v2.validator.ValidationConstants;
+import fi.vm.yti.security.AuthenticatedUserProvider;
+import fi.vm.yti.security.Role;
+import fi.vm.yti.security.YtiUser;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -16,13 +19,13 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import java.util.Objects;
+import java.time.LocalDateTime;
+import java.util.*;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -39,8 +42,23 @@ class NamespaceResolveControllerTest {
     @MockBean
     private NamespaceResolver namespaceResolver;
 
+    @MockBean
+    private AuthenticatedUserProvider authenticatedUserProvider;
+
     @Autowired
     private NamespaceResolveController namespaceResolveController;
+
+    private final YtiUser mockUser = new YtiUser("test@localhost",
+            "test",
+            "tester",
+            UUID.randomUUID(),
+            true,
+            false,
+            LocalDateTime.of(2001, 1, 1, 0,0),
+            LocalDateTime.of(2001, 1, 1, 0,0),
+            new HashMap<>(Map.of(UUID.randomUUID(), Set.of(Role.ADMIN))),
+            "",
+            "");
 
     @BeforeEach
     public void setup() {
@@ -48,6 +66,8 @@ class NamespaceResolveControllerTest {
                 .standaloneSetup(this.namespaceResolveController)
                 .setControllerAdvice(new ExceptionHandlerAdvice())
                 .build();
+
+        when(authenticatedUserProvider.getUser()).thenReturn(mockUser);
     }
 
     @Test
