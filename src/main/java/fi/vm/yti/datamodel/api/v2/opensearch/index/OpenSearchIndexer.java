@@ -178,7 +178,7 @@ public class OpenSearchIndexer {
         addProperty(constructBuilder, DCTerms.created, "?created");
         addOptional(constructBuilder, Iow.contentModified, "?contentModified");
         addProperty(constructBuilder, RDFS.isDefinedBy, "?isDefinedBy");
-        addOptional(constructBuilder, SKOS.note, "?comment");
+        addOptional(constructBuilder, SKOS.note, "?note");
         addOptional(constructBuilder, RDFS.subClassOf, "?subClassOf");
         addOptional(constructBuilder, OWL.equivalentClass, "?equivalentClass");
         var indexClasses = jenaService.constructWithQuery(constructBuilder.build());

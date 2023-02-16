@@ -150,6 +150,7 @@ class ClassControllerTest {
         dto.setLabel(Map.of("fi", "test label"));
         dto.setEquivalentClass(Set.of("tietomallit.suomi.fi/ns/notrealns/FakeClass"));
         dto.setSubClassOf(Set.of("tietomallit.suomi.fi/ns/notrealns/FakeClass"));
+        dto.setNote(Map.of("fi", "test note"));
         return dto;
     }
 
