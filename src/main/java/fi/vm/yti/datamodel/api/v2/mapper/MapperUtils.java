@@ -98,8 +98,11 @@ public class MapperUtils {
     public static Set<String> arrayPropertyToSet(Resource resource, Property property){
         var list = new HashSet<String>();
         try{
-            resource.getProperty(property)
-                    .getList()
+            var statement = resource.getProperty(property);
+            if (statement == null) {
+                return list;
+            }
+            statement.getList()
                     .asJavaList()
                     .forEach(node -> list.add(node.toString()));
         }catch(JenaException ex){

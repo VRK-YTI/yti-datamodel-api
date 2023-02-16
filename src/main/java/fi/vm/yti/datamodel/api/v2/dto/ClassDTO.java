@@ -14,6 +14,7 @@ public class ClassDTO {
     private Set<String> subClassOf = Set.of();
     private String subject;
     private String identifier;
+    private Map<String, String> note = Map.of();
 
     public Map<String, String> getLabel() {
         return label;
@@ -69,6 +70,14 @@ public class ClassDTO {
 
     public void setIdentifier(String identifier) {
         this.identifier = identifier;
+    }
+
+    public Map<String, String> getNote() {
+        return note;
+    }
+
+    public void setNote(Map<String, String> note) {
+        this.note = note;
     }
 
     @Override

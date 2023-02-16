@@ -1,9 +1,11 @@
 package fi.vm.yti.datamodel.api.v2.opensearch.index;
 
+import java.util.Map;
+
 public class IndexClass extends IndexBase {
     private String isDefinedBy;
     private String contentModified;
-    private String comment;
+    private Map<String, String> note;
     private String identifier;
     private String namespace;
 
@@ -23,12 +25,12 @@ public class IndexClass extends IndexBase {
         this.contentModified = contentModified;
     }
 
-    public String getComment() {
-        return comment;
+    public Map<String, String> getNote() {
+        return note;
     }
 
-    public void setComment(String comment) {
-        this.comment = comment;
+    public void setNote(Map<String, String> note) {
+        this.note = note;
     }
 
     public String getIdentifier() {
