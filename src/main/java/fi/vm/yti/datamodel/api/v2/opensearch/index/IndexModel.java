@@ -1,13 +1,15 @@
 package fi.vm.yti.datamodel.api.v2.opensearch.index;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import fi.vm.yti.datamodel.api.v2.dto.ModelType;
+
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 public class IndexModel extends IndexBase {
     private String contentModified;
-    private String type;
+    private ModelType type;
     private String prefix;
     private Map<String, String> comment;
     @JsonFormat(with = JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY)
@@ -17,9 +19,6 @@ public class IndexModel extends IndexBase {
     private List<String> language;
     private Map<String, String> documentation;
 
-    public IndexModel() {
-    }
-
     public String getContentModified() {
         return contentModified;
     }
@@ -28,11 +27,11 @@ public class IndexModel extends IndexBase {
         this.contentModified = contentModified;
     }
 
-    public String getType() {
+    public ModelType getType() {
         return type;
     }
 
-    public void setType(String type) {
+    public void setType(ModelType type) {
         this.type = type;
     }
 

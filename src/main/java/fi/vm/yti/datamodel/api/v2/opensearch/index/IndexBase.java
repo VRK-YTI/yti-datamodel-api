@@ -1,11 +1,13 @@
 package fi.vm.yti.datamodel.api.v2.opensearch.index;
 
+import fi.vm.yti.datamodel.api.v2.dto.Status;
+
 import java.util.Map;
 
-public class IndexBase {
+public abstract class IndexBase {
     private String id;
     private Map<String, String> label;
-    private String status;
+    private Status status;
     private String modified;
     private String created;
 
@@ -25,11 +27,11 @@ public class IndexBase {
         this.label = label;
     }
 
-    public String getStatus() {
+    public Status getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(Status status) {
         this.status = status;
     }
 
