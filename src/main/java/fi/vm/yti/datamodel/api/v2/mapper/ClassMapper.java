@@ -11,6 +11,7 @@ import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
 import fi.vm.yti.datamodel.api.v2.service.JenaService;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.datatypes.xsd.XSDDateTime;
+import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.vocabulary.*;
@@ -60,12 +61,30 @@ public class ClassMapper {
         MapperUtils.addLocalizedProperty(langs, dto.getNote(), classResource, SKOS.note, model);
         //Status
         classResource.addProperty(OWL.versionInfo, dto.getStatus().name());
+
+        //namespaces so we don't add any that aren't in model.
+        //user will have to add namespaces to model before adding class with these.
+        var owlImports = MapperUtils.arrayPropertyToSet(modelResource, OWL.imports);
+        var dcTermsRequires = MapperUtils.arrayPropertyToSet(modelResource, DCTerms.requires);
         //Equivalent class
-        //Checking of resolvability should be done in validator
-        dto.getEquivalentClass().forEach(eq -> classResource.addProperty(OWL.equivalentClass, eq));
+        dto.getEquivalentClass().forEach(eq -> {
+            var namespace = NodeFactory.createURI(eq).getNameSpace().replace("#", "");
+            if(!owlImports.contains(namespace) && !dcTermsRequires.contains(namespace)){
+                throw new MappingError("Equivalent class namespace not in owl:imports or dcterms:requires");
+            }
+            classResource.addProperty(OWL.equivalentClass, eq);
+        });
         //Sub Class
-        //Checking of resolvability should be done in validator
-        dto.getSubClassOf().forEach(sub -> classResource.addProperty(RDFS.subClassOf, sub));
+        if(dto.getSubClassOf() == null || dto.getSubClassOf().isEmpty()){
+            classResource.addProperty(RDFS.subClassOf, OWL.Thing);
+        }
+        dto.getSubClassOf().forEach(sub -> {
+            var namespace = NodeFactory.createURI(sub).getNameSpace().replace("#", "");
+            if(!owlImports.contains(namespace) && !dcTermsRequires.contains(namespace)){
+                throw new MappingError("Sub class namespace not in owl:imports or dcterms:requires");
+            }
+            classResource.addProperty(RDFS.subClassOf, sub);
+        });
         //Subject
         //TODO are all subjects resolved before hand or do we resolve on the fly?
         //This can be expanded when adding terminology functionality

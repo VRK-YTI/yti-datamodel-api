@@ -10,14 +10,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 
-import static fi.vm.yti.datamodel.api.v2.validator.ValidationConstants.PREFIX_MAX_LENGTH;
-import static fi.vm.yti.datamodel.api.v2.validator.ValidationConstants.PREFIX_REGEX;
-
 public class DataModelValidator extends BaseValidator implements
         ConstraintValidator<ValidDatamodel, DataModelDTO> {
-
-    private static final String MSG_VALUE_MISSING = "should-have-value";
-    private static final String MSG_NOT_ALLOWED_UPDATE = "not-allowed-update";
 
     @Autowired
     private JenaService jenaService;
@@ -56,11 +50,11 @@ public class DataModelValidator extends BaseValidator implements
         var prefix = dataModel.getPrefix();
         if(updateModel){
             if(prefix != null){
-                addConstraintViolation(context, MSG_NOT_ALLOWED_UPDATE, prefixPropertyLabel);
+                addConstraintViolation(context, ValidationConstants.MSG_NOT_ALLOWED_UPDATE, prefixPropertyLabel);
             }
             return;
         }else if(prefix == null){
-            addConstraintViolation(context, MSG_VALUE_MISSING, prefixPropertyLabel);
+            addConstraintViolation(context, ValidationConstants.MSG_VALUE_MISSING, prefixPropertyLabel);
             return;
         }
         //Check prefix text content
@@ -80,9 +74,9 @@ public class DataModelValidator extends BaseValidator implements
     private void checkModelType(ConstraintValidatorContext context, DataModelDTO dataModel) {
         var modelType = dataModel.getType();
         if(updateModel && modelType != null){
-            addConstraintViolation(context, MSG_NOT_ALLOWED_UPDATE, "type");
+            addConstraintViolation(context, ValidationConstants.MSG_NOT_ALLOWED_UPDATE, "type");
         }else if(!updateModel && modelType == null){
-            addConstraintViolation(context, MSG_VALUE_MISSING, "type");
+            addConstraintViolation(context, ValidationConstants.MSG_VALUE_MISSING, "type");
         }
     }
 
@@ -153,7 +147,7 @@ public class DataModelValidator extends BaseValidator implements
         var organizations = dataModel.getOrganizations();
         var existingOrgs = jenaService.getOrganizations();
         if(organizations == null || organizations.isEmpty()){
-            addConstraintViolation(context, MSG_VALUE_MISSING, "organization");
+            addConstraintViolation(context, ValidationConstants.MSG_VALUE_MISSING, "organization");
             return;
         }
         organizations.forEach(org -> {
@@ -173,7 +167,7 @@ public class DataModelValidator extends BaseValidator implements
         var groups = dataModel.getGroups();
         var existingGroups = jenaService.getServiceCategories();
         if(groups == null || groups.isEmpty()){
-            addConstraintViolation(context, MSG_VALUE_MISSING, "groups");
+            addConstraintViolation(context, ValidationConstants.MSG_VALUE_MISSING, "groups");
             return;
         }
         groups.forEach(group -> {
@@ -204,7 +198,6 @@ public class DataModelValidator extends BaseValidator implements
      * @param dataModel Data model
      */
     private void checkExternalNamespaces(ConstraintValidatorContext context, DataModelDTO dataModel){
-        //TODO: do we need to add checking if the string is a valid URI?
         var namespaces = dataModel.getExternalNamespaces();
         var externalNamespace = "externalNamespaces";
         if(namespaces != null){
@@ -233,10 +226,10 @@ public class DataModelValidator extends BaseValidator implements
             addConstraintViolation(context, "prefix-is-reserved", property);
         }
 
-        if(prefix.length() < 3 || prefix.length() > PREFIX_MAX_LENGTH){
+        if(prefix.length() < 3 || prefix.length() > ValidationConstants.PREFIX_MAX_LENGTH){
             addConstraintViolation(context, "prefix-character-count-mismatch", property);
         }
-        if(!prefix.matches(PREFIX_REGEX)){
+        if(!prefix.matches(ValidationConstants.PREFIX_REGEX)){
             addConstraintViolation(context, "prefix-not-matching-pattern", property);
         }
     }

@@ -4,10 +4,7 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
-import org.apache.jena.arq.querybuilder.AskBuilder;
-import org.apache.jena.arq.querybuilder.ConstructBuilder;
-import org.apache.jena.arq.querybuilder.ExprFactory;
-import org.apache.jena.arq.querybuilder.WhereBuilder;
+import org.apache.jena.arq.querybuilder.*;
 import org.apache.jena.atlas.web.HttpException;
 import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.query.Query;
@@ -35,6 +32,10 @@ public class JenaService {
     private final RDFConnection coreRead;
     private final RDFConnection coreSparql;
 
+    private final RDFConnection importWrite;
+    private final RDFConnection importRead;
+    private final RDFConnection importSparql;
+
     private final Cache<String, Model> modelCache;
 
     public JenaService(@Value("${model.cache.expiration:1800}") Long cacheExpireTime,
@@ -42,6 +43,10 @@ public class JenaService {
         this.coreWrite = RDFConnection.connect(endpoint + "/core/data");
         this.coreRead = RDFConnection.connect(endpoint + "/core/get");
         this.coreSparql = RDFConnection.connect( endpoint + "/core/sparql");
+        this.importWrite = RDFConnection.connect(endpoint + "/imports/data");
+        this.importRead = RDFConnection.connect(endpoint + "/imports/get");
+        this.importSparql = RDFConnection.connect(endpoint + "/imports/sparql");
+
         this.modelCache = CacheBuilder.newBuilder()
                 .expireAfterWrite(cacheExpireTime, TimeUnit.SECONDS)
                 .maximumSize(1000)
@@ -53,7 +58,7 @@ public class JenaService {
     }
 
     public void initServiceCategories() {
-        Model model = RDFDataMgr.loadModel("ptvl-skos.rdf");
+        var model = RDFDataMgr.loadModel("ptvl-skos.rdf");
         coreWrite.put(ModelConstants.SERVICE_CATEGORY_GRAPH, model);
     }
 
@@ -156,6 +161,45 @@ public class JenaService {
 
         modelCache.put("organizations", organizations);
         return organizations;
+    }
+
+    public void putNamespaceToImports(String graphName, Model model){
+        importWrite.put(graphName, model);
+    }
+
+    public Model getNamespaceFromImports(String graphName){
+        logger.debug("Getting model from core {}", graphName);
+        try {
+            return importRead.fetch(graphName);
+        } catch (HttpException ex) {
+            if (ex.getStatusCode() == HttpStatus.NOT_FOUND.value()) {
+                logger.warn("Namespace not found: {}", graphName);
+                throw new ResourceNotFoundException(graphName);
+            } else {
+                throw new RuntimeException("Error fetching graph");
+            }
+        }
+    }
+
+    public boolean doesResolvedNamespaceExist(String namespace){
+        var askBuilder = new AskBuilder()
+                .addGraph(NodeFactory.createURI(namespace), "?s", "?p", "?o");
+        try {
+            return importSparql.queryAsk(askBuilder.build());
+        }catch(HttpException ex){
+            throw new RuntimeException("Error querying graph");
+        }
+    }
+
+    public boolean doesClassExistInNamespace(String namespace, String classUri){
+        var askBuilder = new AskBuilder()
+                .addGraph(NodeFactory.createURI(namespace),
+                        NodeFactory.createURI(classUri), "?p", "?o");
+        try{
+            return importSparql.queryAsk(askBuilder.build());
+        }catch(HttpException ex){
+            throw new RuntimeException("Error querying graph");
+        }
     }
 
     public int getVersionNumber() {

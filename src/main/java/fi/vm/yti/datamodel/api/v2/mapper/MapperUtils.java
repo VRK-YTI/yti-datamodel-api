@@ -76,9 +76,16 @@ public class MapperUtils {
      */
     public static List<String> arrayPropertyToList(Resource resource, Property property){
         var list = new ArrayList<String>();
+        //return empty list if property is not found
+        if(!resource.hasProperty(property)){
+            return list;
+        }
         try{
-            resource.getProperty(property)
-                    .getList()
+            var statement = resource.getProperty(property);
+            if (statement == null) {
+                return list;
+            }
+            statement.getList()
                     .asJavaList()
                     .forEach(node -> list.add(node.toString()));
         }catch(JenaException ex){
@@ -93,7 +100,7 @@ public class MapperUtils {
      * Convert array property to set of strings
      * @param resource Resource to get property from
      * @param property Property type
-     * @return Set of property values
+     * @return Set of property values, empty if property is not found
      */
     public static Set<String> arrayPropertyToSet(Resource resource, Property property){
         var list = new HashSet<String>();

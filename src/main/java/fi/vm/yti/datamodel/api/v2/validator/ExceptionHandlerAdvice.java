@@ -61,7 +61,17 @@ public class ExceptionHandlerAdvice extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(MappingError.class)
     protected  ResponseEntity<Object> handleMappingError(MappingError error){
-        return new ResponseEntity<>(error.getMessage(), BAD_REQUEST);
+        var apiError = new ApiError(BAD_REQUEST);
+        apiError.setMessage(error.getMessage());
+        return ResponseEntity.badRequest().body(apiError);
+    }
+
+    @ExceptionHandler(ResolvingException.class)
+    protected  ResponseEntity<Object> handleMappingError(ResolvingException error){
+        var apiError = new ApiGenericError(BAD_REQUEST);
+        apiError.setMessage(error.getMessage());
+        apiError.setDetails(error.getDetails());
+        return ResponseEntity.badRequest().body(apiError);
     }
 
     @ExceptionHandler(ResourceNotFoundException.class)
