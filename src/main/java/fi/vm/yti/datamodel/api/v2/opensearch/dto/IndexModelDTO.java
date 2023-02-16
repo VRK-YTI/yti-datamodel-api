@@ -1,11 +1,13 @@
 package fi.vm.yti.datamodel.api.v2.opensearch.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import fi.vm.yti.datamodel.api.v2.dto.ModelType;
 import fi.vm.yti.datamodel.api.v2.dto.Status;
 
 import java.util.List;
 import java.util.Map;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class IndexModelDTO {
     private String id;
     private Status status;

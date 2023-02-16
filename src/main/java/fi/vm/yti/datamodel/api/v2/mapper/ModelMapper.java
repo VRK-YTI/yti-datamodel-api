@@ -229,7 +229,7 @@ public class ModelMapper {
     }
 
     /**
-     * Map a DataModel to a IndexModel
+     * Map a DataModel to a DataModelDocument
      * @param prefix Prefix of model
      * @param model Model
      * @return Index model
@@ -265,7 +265,6 @@ public class ModelMapper {
         indexModel.setLanguage(MapperUtils.arrayPropertyToList(resource, DCTerms.language));
 
         indexModel.setDocumentation(MapperUtils.localizedPropertyToMap(resource, Iow.documentation));
-
         return indexModel;
     }
 

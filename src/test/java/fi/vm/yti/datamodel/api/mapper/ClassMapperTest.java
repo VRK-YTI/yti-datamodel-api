@@ -1,5 +1,6 @@
 package fi.vm.yti.datamodel.api.mapper;
 
+import fi.vm.yti.datamodel.api.security.AuthorizationManager;
 import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.mapper.ClassMapper;
 import fi.vm.yti.datamodel.api.v2.service.JenaService;
@@ -20,7 +21,9 @@ import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 
@@ -32,6 +35,8 @@ class ClassMapperTest {
 
     @MockBean
     JenaService jenaService;
+    @MockBean
+    AuthorizationManager authorizationManager;
     @Autowired
     ClassMapper mapper;
 
@@ -50,6 +55,7 @@ class ClassMapperTest {
         dto.setComment("comment");
         dto.setLabel(Map.of("fi", "test label"));
         dto.setStatus(Status.DRAFT);
+        dto.setNote(Map.of("fi", "test note"));
 
         mapper.createClassAndMapToModel("test", m, dto);
 
@@ -73,7 +79,8 @@ class ClassMapperTest {
         assertEquals(XSDDatatype.XSDNCName, classResource.getProperty(DCTerms.identifier).getLiteral().getDatatype());
         assertEquals("TestClass", classResource.getProperty(DCTerms.identifier).getLiteral().getString());
 
-        assertEquals("comment", classResource.getProperty(SKOS.note).getObject().toString());
+        assertEquals("comment", classResource.getProperty(SKOS.editorialNote).getObject().toString());
+        assertEquals("test note", classResource.getProperty(SKOS.note).getLiteral().getString());
 
         assertEquals(1, classResource.listProperties(RDFS.subClassOf).toList().size());
         assertEquals("https://www.example.com/ns/ext#SubClass", classResource.getProperty(RDFS.subClassOf).getObject().toString());
@@ -91,7 +98,8 @@ class ClassMapperTest {
 
         var dto = mapper.mapToClassDTO("test", "TestClass", m);
 
-        assertEquals("test comment", dto.getComment());
+        // not authenticated
+        assertNull(dto.getComment());
         assertEquals(Status.VALID, dto.getStatus());
         assertEquals("TestClass", dto.getIdentifier());
         assertEquals(1, dto.getEquivalentClass().size());
@@ -101,6 +109,23 @@ class ClassMapperTest {
         assertEquals(1, dto.getLabel().size());
         assertEquals("test label", dto.getLabel().get("fi"));
         assertEquals("http://uri.suomi.fi/terminology/test/test1", dto.getSubject());
+        assertEquals(2, dto.getNote().size());
+        assertEquals("test note fi", dto.getNote().get("fi"));
+        assertEquals("test note en", dto.getNote().get("en"));
+    }
+
+    @Test
+    void testMapToClassDTOAuthenticatedUser() {
+        when(jenaService.doesClassExistInGraph(anyString(), anyString())).thenReturn(true);
+        when(authorizationManager.hasRightToModel(anyString(), any(Model.class))).thenReturn(true);
+        Model m = ModelFactory.createDefaultModel();
+        var stream = getClass().getResourceAsStream("/test_datamodel_with_class.ttl");
+        assertNotNull(stream);
+        RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
+
+        var dto = mapper.mapToClassDTO("test", "TestClass", m);
+
+        assertEquals("comment visible for admin", dto.getComment());
     }
 
     @Test
@@ -114,7 +139,7 @@ class ClassMapperTest {
         var indexClass = mapper.mapToIndexClass(m, "http://uri.suomi.fi/datamodel/ns/test#TestClass");
 
         assertEquals("http://uri.suomi.fi/datamodel/ns/test#TestClass", indexClass.getId());
-        assertEquals("test comment", indexClass.getComment());
+        assertEquals("test note fi", indexClass.getNote().get("fi"));
         assertEquals("VALID", indexClass.getStatus());
         assertEquals("TestClass", indexClass.getIdentifier());
         assertEquals("http://uri.suomi.fi/datamodel/ns/test", indexClass.getIsDefinedBy());

@@ -24,6 +24,9 @@ import static fi.vm.yti.datamodel.api.v2.mapper.MapperUtils.localizedPropertyToM
 
 public class OrganizationMapper {
 
+    private OrganizationMapper() {
+    }
+
     public static Model mapGroupManagementOrganizationToModel(List<GroupManagementOrganizationDTO> organizations) {
         var orgModel = ModelFactory.createDefaultModel();
 
@@ -66,7 +69,9 @@ public class OrganizationMapper {
             Statement stmt = resource.getProperty(Iow.parentOrganization);
             UUID parentId = stmt != null ? getUUID(stmt.getObject().toString()) : null;
 
-            result.add(new OrganizationDTO(id.toString(), labels, parentId));
+            if (id != null) {
+                result.add(new OrganizationDTO(id.toString(), labels, parentId));
+            }
         }
         return result;
     }

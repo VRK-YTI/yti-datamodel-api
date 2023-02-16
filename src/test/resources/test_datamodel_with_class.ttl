@@ -43,4 +43,5 @@ test:TestClass  rdf:type     owl:Class ;
         dcterms:subject      "http://uri.suomi.fi/terminology/test/test1" ;
         owl:equivalentClass  "http://uri.suomi.fi/datamodel/ns/test#EqClass" ;
         owl:versionInfo      "VALID" ;
-        skos:note            "test comment" .
+        skos:editorialNote   "comment visible for admin" ;
+        skos:note         "test note fi"@fi, "test note en"@en .

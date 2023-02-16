@@ -10,9 +10,9 @@ import fi.vm.yti.datamodel.api.v2.service.JenaService;
 import org.apache.jena.query.Query;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ResIterator;
-import org.opensearch.client.RestHighLevelClient;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.opensearch.client.opensearch.OpenSearchClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
@@ -44,7 +44,7 @@ class OpenSearchIndexerTest {
     ClassMapper classMapper;
 
     @MockBean
-    RestHighLevelClient esClient;
+    OpenSearchClient client;
 
     @Autowired
     OpenSearchIndexer openSearchIndexer;

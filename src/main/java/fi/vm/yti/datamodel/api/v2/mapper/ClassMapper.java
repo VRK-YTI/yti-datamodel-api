@@ -1,5 +1,6 @@
 package fi.vm.yti.datamodel.api.v2.mapper;
 
+import fi.vm.yti.datamodel.api.security.AuthorizationManager;
 import fi.vm.yti.datamodel.api.v2.dto.ClassDTO;
 import fi.vm.yti.datamodel.api.v2.dto.Iow;
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
@@ -27,8 +28,11 @@ public class ClassMapper {
 
     private final JenaService jenaService;
 
-    public ClassMapper(JenaService jenaService) {
+    private final AuthorizationManager authorizationManager;
+
+    public ClassMapper(JenaService jenaService, AuthorizationManager authorizationManager) {
         this.jenaService = jenaService;
+        this.authorizationManager = authorizationManager;
     }
 
     public String createClassAndMapToModel(String prefix, Model model, ClassDTO dto){
@@ -51,8 +55,10 @@ public class ClassMapper {
         var modelResource = model.getResource(ModelConstants.SUOMI_FI_NAMESPACE + prefix);
         var langs = MapperUtils.arrayPropertyToSet(modelResource, DCTerms.language);
         MapperUtils.addLocalizedProperty(langs, dto.getLabel(), classResource, RDFS.label, model);
-        //Comment
-        classResource.addProperty(SKOS.note, dto.getComment());
+        //Comment (not visible for unauthenticated users)
+        classResource.addProperty(SKOS.editorialNote, dto.getComment());
+        //Note
+        MapperUtils.addLocalizedProperty(langs, dto.getNote(), classResource, SKOS.note, model);
         //Status
         classResource.addProperty(OWL.versionInfo, dto.getStatus().name());
 
@@ -92,9 +98,10 @@ public class ClassMapper {
 
     /**
      * Map model with given prefix and class identifier
-     * @param modelPrefix Model prefix
+     *
+     * @param modelPrefix     Model prefix
      * @param classIdentifier class identifier
-     * @param model Model
+     * @param model           Model
      * @return Class DTO
      */
     public ClassDTO mapToClassDTO(String modelPrefix, String classIdentifier, Model model){
@@ -111,7 +118,10 @@ public class ClassMapper {
         classDTO.setEquivalentClass(MapperUtils.arrayPropertyToSet(classResource, OWL.equivalentClass));
         classDTO.setSubject(MapperUtils.propertyToString(classResource, DCTerms.subject));
         classDTO.setIdentifier(classResource.getLocalName());
-        classDTO.setComment(MapperUtils.propertyToString(classResource, SKOS.note));
+        classDTO.setNote(MapperUtils.localizedPropertyToMap(classResource, SKOS.note));
+        if (authorizationManager.hasRightToModel(modelPrefix, model)) {
+            classDTO.setComment(MapperUtils.propertyToString(classResource, SKOS.editorialNote));
+        }
         return classDTO;
     }
 
@@ -123,7 +133,7 @@ public class ClassMapper {
         var classResource = model.getResource(classUri);
         indexClass.setId(classUri);
         indexClass.setLabel(MapperUtils.localizedPropertyToMap(classResource, RDFS.label));
-        indexClass.setComment(MapperUtils.propertyToString(classResource, SKOS.note));
+        indexClass.setNote(MapperUtils.localizedPropertyToMap(classResource, SKOS.note));
         indexClass.setStatus(MapperUtils.propertyToString(classResource, OWL.versionInfo));
         indexClass.setIsDefinedBy(MapperUtils.propertyToString(classResource, RDFS.isDefinedBy));
         indexClass.setIdentifier(classResource.getLocalName());
