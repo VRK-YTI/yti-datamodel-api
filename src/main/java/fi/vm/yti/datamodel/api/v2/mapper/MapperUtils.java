@@ -81,8 +81,11 @@ public class MapperUtils {
             return list;
         }
         try{
-            resource.getProperty(property)
-                    .getList()
+            var statement = resource.getProperty(property);
+            if (statement == null) {
+                return list;
+            }
+            statement.getList()
                     .asJavaList()
                     .forEach(node -> list.add(node.toString()));
         }catch(JenaException ex){
@@ -101,10 +104,6 @@ public class MapperUtils {
      */
     public static Set<String> arrayPropertyToSet(Resource resource, Property property){
         var list = new HashSet<String>();
-        //return empty list if property is not found
-        if(!resource.hasProperty(property)){
-            return list;
-        }
         try{
             var statement = resource.getProperty(property);
             if (statement == null) {
