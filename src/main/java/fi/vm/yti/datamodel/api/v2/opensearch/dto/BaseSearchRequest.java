@@ -1,5 +1,7 @@
 package fi.vm.yti.datamodel.api.v2.opensearch.dto;
 
+import fi.vm.yti.datamodel.api.v2.dto.Status;
+
 import java.util.Set;
 
 public abstract class BaseSearchRequest {
@@ -8,7 +10,7 @@ public abstract class BaseSearchRequest {
 
     private String sortLang;
 
-    private Set<String> status;
+    private Set<Status> status;
 
     private Integer pageSize;
 
@@ -30,11 +32,11 @@ public abstract class BaseSearchRequest {
         this.sortLang = sortLang;
     }
 
-    public Set<String> getStatus() {
+    public Set<Status> getStatus() {
         return status;
     }
 
-    public void setStatus(Set<String> status) {
+    public void setStatus(Set<Status> status) {
         this.status = status;
     }
 

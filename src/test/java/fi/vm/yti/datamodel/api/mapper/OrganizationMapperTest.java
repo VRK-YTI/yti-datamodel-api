@@ -20,7 +20,7 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.*;
 import static fi.vm.yti.datamodel.api.v2.dto.ModelConstants.URN_UUID;
 
-public class OrganizationMapperTest {
+class OrganizationMapperTest {
 
     @Test
     void testMapOrganizationsToDTO() {

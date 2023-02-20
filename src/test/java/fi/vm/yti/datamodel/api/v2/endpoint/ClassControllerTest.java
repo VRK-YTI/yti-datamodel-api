@@ -1,7 +1,5 @@
 package fi.vm.yti.datamodel.api.v2.endpoint;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import fi.vm.yti.datamodel.api.security.AuthorizationManager;
 import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexClass;
@@ -81,7 +79,7 @@ class ClassControllerTest {
         this.mvc
                 .perform(put("/v2/class/test")
                         .contentType("application/json")
-                        .content(convertObjectToJsonString(classDTO)))
+                        .content(EndpointUtils.convertObjectToJsonString(classDTO)))
                 .andExpect(status().isOk());
 
         //Check that functions are called
@@ -103,7 +101,7 @@ class ClassControllerTest {
         this.mvc
                 .perform(put("/v2/class/test")
                         .contentType("application/json")
-                        .content(convertObjectToJsonString(classDTO)))
+                        .content(EndpointUtils.convertObjectToJsonString(classDTO)))
                 .andExpect(status().isNotFound());
     }
 
@@ -113,7 +111,7 @@ class ClassControllerTest {
         this.mvc
                 .perform(put("/v2/class/test")
                         .contentType("application/json")
-                        .content(convertObjectToJsonString(classDTO)))
+                        .content(EndpointUtils.convertObjectToJsonString(classDTO)))
                 .andExpect(status().isBadRequest());
     }
 
@@ -154,9 +152,5 @@ class ClassControllerTest {
         return dto;
     }
 
-    private String convertObjectToJsonString(ClassDTO classDTO) throws JsonProcessingException {
-        var mapper = new ObjectMapper();
-        return mapper.writeValueAsString(classDTO);
-    }
 
 }

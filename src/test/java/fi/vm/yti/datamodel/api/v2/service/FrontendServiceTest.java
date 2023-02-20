@@ -23,7 +23,7 @@ import static org.mockito.Mockito.when;
         FrontendService.class,
         ModelMapper.class
 })
-public class FrontendServiceTest {
+class FrontendServiceTest {
 
     @MockBean
     private JenaService jenaService;

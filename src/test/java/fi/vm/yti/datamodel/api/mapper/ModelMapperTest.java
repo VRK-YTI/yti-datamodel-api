@@ -253,8 +253,8 @@ class ModelMapperTest {
 
         assertEquals("test", result.getPrefix());
         assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "test", result.getId());
-        assertEquals(ModelType.PROFILE.name(), result.getType());
-        assertEquals(Status.VALID.name(), result.getStatus());
+        assertEquals(ModelType.PROFILE, result.getType());
+        assertEquals(Status.VALID, result.getStatus());
         assertEquals("2023-01-03T12:44:45.799Z", result.getModified());
         assertEquals("2023-01-03T12:44:45.799Z", result.getCreated());
         assertEquals("2023-01-03T12:44:45.799Z", result.getContentModified());
@@ -291,8 +291,8 @@ class ModelMapperTest {
 
         assertEquals("testaa", resultOld.getPrefix());
         assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "testaa", resultOld.getId());
-        assertEquals(ModelType.LIBRARY.name(), resultOld.getType());
-        assertEquals(Status.DRAFT.name(), resultOld.getStatus());
+        assertEquals(ModelType.LIBRARY, resultOld.getType());
+        assertEquals(Status.DRAFT, resultOld.getStatus());
         assertEquals("2018-03-20T16:21:07.067Z", resultOld.getModified());
         assertEquals("2018-03-20T17:59:44", resultOld.getCreated());
 
