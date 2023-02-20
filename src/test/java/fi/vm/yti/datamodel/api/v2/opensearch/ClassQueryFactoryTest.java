@@ -13,14 +13,10 @@ import java.util.Collections;
 import java.util.Set;
 
 import static org.springframework.test.util.AssertionErrors.assertEquals;
-import static org.springframework.test.util.AssertionErrors.assertNull;
 
 
 class ClassQueryFactoryTest {
-
-
-
-
+    
     @Test
     void createInternalClassQueryValues() throws Exception {
         var request = new ClassSearchRequest();
@@ -53,6 +49,5 @@ class ClassQueryFactoryTest {
         assertEquals("Page from value not matching", QueryFactoryUtils.DEFAULT_PAGE_FROM, classQuery.from());
         assertEquals("Page size value not matching", QueryFactoryUtils.DEFAULT_PAGE_SIZE, classQuery.size());
         assertEquals("Label should be sorted in finnish by default", "label.fi.keyword", classQuery.sort().get(0).field().field());
-        assertNull("No query should be by default", classQuery.query());
     }
 }

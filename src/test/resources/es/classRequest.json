@@ -27,6 +27,15 @@
             "isDefinedBy": ["http://uri.suomi.fi/datamodel/ns/groupNs"]
           }
         }
+      ],
+      "must_not": [
+        {
+          "term": {
+            "status": {
+              "value": "INCOMPLETE"
+            }
+          }
+        }
       ]
     }
   },

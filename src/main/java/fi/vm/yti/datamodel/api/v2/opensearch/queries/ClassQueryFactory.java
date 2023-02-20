@@ -1,5 +1,6 @@
 package fi.vm.yti.datamodel.api.v2.opensearch.queries;
 
+import fi.vm.yti.datamodel.api.v2.dto.Status;
 import fi.vm.yti.datamodel.api.v2.opensearch.dto.ClassSearchRequest;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
 import org.opensearch.client.opensearch._types.FieldValue;
@@ -24,7 +25,15 @@ public class ClassQueryFactory {
         //only provides static methods
     }
     public static SearchRequest createInternalClassQuery(ClassSearchRequest request, Set<String> fromNamespaces, Set<String> groupRestrictedNamespaces) {
-        List<Query> queryVariantList = new ArrayList<>();
+        List<Query> must = new ArrayList<>();
+        List<Query> mustNot = new ArrayList<>();
+
+        var removeIncompleteStatus = QueryBuilders.term()
+                        .field("status")
+                        .value(FieldValue.of(Status.INCOMPLETE.name()))
+                        .build()._toQuery();
+        mustNot.add(removeIncompleteStatus);
+
 
         if(request.getQuery() != null){
             var query = request.getQuery();
@@ -33,7 +42,7 @@ public class ClassQueryFactory {
                     .fields("label.*")
                     .fuzziness("2")
                     .build();
-            queryVariantList.add(labelQuery._toQuery());
+            must.add(labelQuery._toQuery());
         }
 
         var statuses = request.getStatus();
@@ -47,7 +56,7 @@ public class ClassQueryFactory {
                                     .toList()
                             ))
             );
-            queryVariantList.add(statusQuery._toQuery());
+            must.add(statusQuery._toQuery());
         }
 
         if(fromNamespaces != null && !fromNamespaces.isEmpty()){
@@ -59,7 +68,7 @@ public class ClassQueryFactory {
                                             .map(FieldValue::of)
                                             .toList()
                             )));
-            queryVariantList.add(fromNamespacesQuery._toQuery());
+            must.add(fromNamespacesQuery._toQuery());
         }
 
         if(groupRestrictedNamespaces != null && !groupRestrictedNamespaces.isEmpty()){
@@ -71,11 +80,12 @@ public class ClassQueryFactory {
                                     .map(FieldValue::of)
                                     .toList()
                     )));
-            queryVariantList.add(groupRestrictedNamespacesQuery._toQuery());
+            must.add(groupRestrictedNamespacesQuery._toQuery());
         }
 
-        var finalQuery = queryVariantList.isEmpty() ? null : QueryBuilders.bool()
-                .must(queryVariantList)
+        var finalQuery = QueryBuilders.bool()
+                .must(must)
+                .mustNot(mustNot)
                 .build()
                 ._toQuery();
 
