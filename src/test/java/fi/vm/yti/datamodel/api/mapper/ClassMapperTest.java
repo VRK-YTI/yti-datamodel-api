@@ -140,7 +140,7 @@ class ClassMapperTest {
 
         assertEquals("http://uri.suomi.fi/datamodel/ns/test#TestClass", indexClass.getId());
         assertEquals("test note fi", indexClass.getNote().get("fi"));
-        assertEquals("VALID", indexClass.getStatus());
+        assertEquals(Status.VALID, indexClass.getStatus());
         assertEquals("TestClass", indexClass.getIdentifier());
         assertEquals("http://uri.suomi.fi/datamodel/ns/test", indexClass.getIsDefinedBy());
         assertEquals("http://uri.suomi.fi/datamodel/ns/test#", indexClass.getNamespace());

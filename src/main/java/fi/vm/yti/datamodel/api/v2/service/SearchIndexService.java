@@ -1,15 +1,19 @@
 package fi.vm.yti.datamodel.api.v2.service;
 
 import fi.vm.yti.datamodel.api.index.OpenSearchConnector;
-import fi.vm.yti.datamodel.api.v2.opensearch.dto.IndexModelDTO;
-import fi.vm.yti.datamodel.api.v2.opensearch.dto.ModelSearchRequest;
-import fi.vm.yti.datamodel.api.v2.opensearch.dto.CountSearchResponse;
-import fi.vm.yti.datamodel.api.v2.opensearch.dto.ModelSearchResponse;
+import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
+import fi.vm.yti.datamodel.api.v2.opensearch.dto.*;
+import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexClass;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexModel;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
+import fi.vm.yti.datamodel.api.v2.opensearch.queries.ClassQueryFactory;
 import fi.vm.yti.datamodel.api.v2.opensearch.queries.CountQueryFactory;
+import fi.vm.yti.datamodel.api.v2.opensearch.queries.ModelQueryFactory;
 import fi.vm.yti.security.Role;
 import fi.vm.yti.security.YtiUser;
+import org.apache.jena.atlas.lib.SetUtils;
+import org.apache.jena.vocabulary.DCTerms;
+import org.apache.jena.vocabulary.OWL;
 import org.opensearch.client.opensearch.OpenSearchClient;
 import org.opensearch.client.opensearch.core.SearchRequest;
 import org.opensearch.client.opensearch.core.SearchResponse;
@@ -29,13 +33,15 @@ public class SearchIndexService {
     private final CountQueryFactory countQueryFactory;
     private final OpenSearchClient client;
     private final GroupManagementService groupManagementService;
+    private final JenaService jenaService;
 
     public SearchIndexService(OpenSearchConnector openSearchConnector,
                               CountQueryFactory countQueryFactory,
-                              GroupManagementService groupManagementService) {
+                              GroupManagementService groupManagementService, JenaService jenaService) {
         this.countQueryFactory = countQueryFactory;
         this.client = openSearchConnector.getClient();
         this.groupManagementService = groupManagementService;
+        this.jenaService = jenaService;
     }
 
     /**
@@ -52,8 +58,8 @@ public class SearchIndexService {
         }
     }
 
-    public ModelSearchResponse searchModels(ModelSearchRequest request,
-                                            YtiUser user) {
+    public SearchResponseDTO<IndexModel> searchModels(ModelSearchRequest request,
+                                                      YtiUser user) {
         if (!user.isSuperuser()) {
             final Map<UUID, Set<Role>> rolesInOrganizations = user.getRolesInOrganizations();
 
@@ -74,14 +80,43 @@ public class SearchIndexService {
         return searchModels(request);
     }
 
-    private ModelSearchResponse searchModels(ModelSearchRequest request) {
+    public SearchResponseDTO<IndexClass> searchInternalClasses(ClassSearchRequest request) throws IOException {
+        Set<String> namespaces = null;
+        if(request.getFromAddedNamespaces() != null){
+            namespaces = getNamespacesFromModel(request.getFromAddedNamespaces());
+        }
+
+        Set<String> groupRestrictedNamespaces = null;
+        if(request.getGroups() != null){
+            SearchRequest fromModel = ModelQueryFactory.createModelQuery(request.getGroups());
+            SearchResponse<IndexModel> modelResponse = client.search(fromModel, IndexModel.class);
+            groupRestrictedNamespaces = modelResponse.hits().hits().stream()
+                    .map(hit -> hit.source().getId()).collect(Collectors.toSet());
+        }
+
+        SearchRequest build = ClassQueryFactory.createInternalClassQuery(request, namespaces, groupRestrictedNamespaces);
+        SearchResponse<IndexClass> response = client.search(build, IndexClass.class);
+
+        var result = new SearchResponseDTO<IndexClass>();
+        result.setResponseObjects(response.hits().hits().stream()
+                .map(Hit::source)
+                .toList()
+        );
+        result.setTotalHitCount(response.hits().total().value());
+        result.setPageFrom(request.getPageFrom());
+        result.setPageSize(request.getPageSize());
+
+        return result;
+    }
+
+    private SearchResponseDTO<IndexModel> searchModels(ModelSearchRequest request) {
         try {
             // TODO: implement search
             SearchRequest build = new SearchRequest.Builder().index(OpenSearchIndexer.OPEN_SEARCH_INDEX_MODEL).build();
-            SearchResponse<IndexModelDTO> response = client.search(build, IndexModelDTO.class);
+            SearchResponse<IndexModel> response = client.search(build, IndexModel.class);
 
-            var modelSearchResponse = new ModelSearchResponse();
-            modelSearchResponse.setModels(response.hits().hits().stream()
+            var modelSearchResponse = new SearchResponseDTO<IndexModel>();
+            modelSearchResponse.setResponseObjects(response.hits().hits().stream()
                     .map(Hit::source)
                     .collect(Collectors.toList())
             );
@@ -94,5 +129,16 @@ public class SearchIndexService {
             LOG.error(e.getMessage(), e);
             throw new RuntimeException(e);
         }
+    }
+
+    private Set<String> getNamespacesFromModel(String modelUri){
+        var model = jenaService.getDataModel(modelUri);
+        if(model != null){
+            var resource = model.getResource(modelUri);
+            var owlImport = MapperUtils.arrayPropertyToSet(resource, OWL.imports);
+            var dcTermsRequires = MapperUtils.arrayPropertyToSet(resource, DCTerms.requires);
+            return SetUtils.union(owlImport, dcTermsRequires);
+        }
+        return Collections.emptySet();
     }
 }

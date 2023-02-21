@@ -21,7 +21,7 @@ import static fi.vm.yti.datamodel.api.v2.opensearch.OpenSearchUtil.logPayload;
 public class CountQueryFactory {
 
     public SearchRequest createModelQuery() {
-        Query status = QueryBuilders.bool()
+        var status = QueryBuilders.bool()
                 .mustNot(QueryBuilders.term()
                         .field("status")
                         .value(FieldValue.of(Status.INCOMPLETE.name()))

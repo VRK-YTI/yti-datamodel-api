@@ -31,7 +31,7 @@ import java.util.Map;
 public class OpenSearchIndexer {
 
     public static final String OPEN_SEARCH_INDEX_MODEL = "models_v2";
-    private static final String OPEN_SEARCH_INDEX_CLASS = "class_v2";
+    public static final String OPEN_SEARCH_INDEX_CLASS = "class_v2";
 
     private final Logger logger = LoggerFactory.getLogger(OpenSearchIndexer.class);
     private static final String GRAPH_VARIABLE = "?model";
@@ -70,16 +70,14 @@ public class OpenSearchIndexer {
 
     private TypeMapping getModelMappings() {
         return new TypeMapping.Builder()
-                .dynamicTemplates(List.of(getDynamicTemplate("label", "label.*")))
-                .dynamicTemplates(List.of(getDynamicTemplate("comment", "comment.*")))
-                .dynamicTemplates(List.of(getDynamicTemplate("documentation", "documentation.*")))
+                .dynamicTemplates(getModelDynamicTemplates())
                 .properties(getModelProperties())
                 .build();
     }
 
     private TypeMapping getClassMappings() {
         return new TypeMapping.Builder()
-                .dynamicTemplates(List.of(getDynamicTemplate("label", "label.*")))
+                .dynamicTemplates(getClassDynamicTemplates())
                 .properties(getClassProperties())
                 .build();
     }
@@ -225,6 +223,20 @@ public class OpenSearchIndexer {
         logger.debug("Bulk insert status: {}", response);
     }
 
+    private List<Map<String, DynamicTemplate>> getModelDynamicTemplates() {
+        return List.of(
+                getDynamicTemplate("label", "label.*"),
+                getDynamicTemplate("comment", "comment.*"),
+                getDynamicTemplate("documentation", "documentation.*")
+        );
+    }
+
+    private List<Map<String, DynamicTemplate>> getClassDynamicTemplates() {
+        return List.of(
+                getDynamicTemplate("label", "label.*"),
+                getDynamicTemplate("note", "note.*")
+        );
+    }
 
     private Map<String, org.opensearch.client.opensearch._types.mapping.Property> getModelProperties() {
         return Map.of("id", getKeywordProperty(),
@@ -253,7 +265,20 @@ public class OpenSearchIndexer {
     private static Map<String, DynamicTemplate> getDynamicTemplate(String name, String pathMatch) {
         return Map.of(name, new DynamicTemplate.Builder()
                 .pathMatch(pathMatch)
-                .mapping(getTextProperty()).build());
+                .mapping(getTextKeyWordProperty()).build());
+    }
+
+    private static org.opensearch.client.opensearch._types.mapping.Property getTextKeyWordProperty() {
+        return new org.opensearch.client.opensearch._types.mapping.Property.Builder()
+                .text(new TextProperty.Builder()
+                        .fields("keyword",
+                                new KeywordProperty.Builder()
+                                        .ignoreAbove(256)
+                                        .build()
+                                        ._toProperty())
+                                        .build()
+                     )
+                .build();
     }
 
     private static org.opensearch.client.opensearch._types.mapping.Property getKeywordProperty() {
@@ -265,10 +290,5 @@ public class OpenSearchIndexer {
     private static org.opensearch.client.opensearch._types.mapping.Property getDateProperty() {
         return new org.opensearch.client.opensearch._types.mapping.Property.Builder()
                 .date(new DateProperty.Builder().build()).build();
-    }
-
-    private static org.opensearch.client.opensearch._types.mapping.Property getTextProperty() {
-        return new org.opensearch.client.opensearch._types.mapping.Property.Builder()
-                .text(new TextProperty.Builder().build()).build();
     }
 }

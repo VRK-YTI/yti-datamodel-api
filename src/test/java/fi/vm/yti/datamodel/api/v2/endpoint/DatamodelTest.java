@@ -1,7 +1,5 @@
 package fi.vm.yti.datamodel.api.v2.endpoint;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import fi.vm.yti.datamodel.api.security.AuthorizationManager;
 import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
@@ -99,7 +97,7 @@ class DatamodelTest {
         this.mvc
                 .perform(put("/v2/model")
                         .contentType("application/json")
-                        .content(convertObjectToJsonString(dataModelDTO)))
+                        .content(EndpointUtils.convertObjectToJsonString(dataModelDTO)))
                 .andExpect(status().isOk());
 
         //Check that functions are called
@@ -134,7 +132,7 @@ class DatamodelTest {
         this.mvc
                 .perform(post("/v2/model/test")
                         .contentType("application/json")
-                        .content(convertObjectToJsonString(dataModelDTO)))
+                        .content(EndpointUtils.convertObjectToJsonString(dataModelDTO)))
                 .andExpect(status().isOk());
 
         //Check that functions are called
@@ -194,7 +192,7 @@ class DatamodelTest {
         this.mvc
                 .perform(put("/v2/model")
                         .contentType("application/json")
-                        .content(convertObjectToJsonString(dataModelDTO)))
+                        .content(EndpointUtils.convertObjectToJsonString(dataModelDTO)))
                 .andExpect(status().isBadRequest());
     }
 
@@ -210,7 +208,7 @@ class DatamodelTest {
         this.mvc
                 .perform(put("/v2/model")
                         .contentType("application/json")
-                        .content(convertObjectToJsonString(createDatamodelDTO(false))))
+                        .content(EndpointUtils.convertObjectToJsonString(createDatamodelDTO(false))))
                 .andExpect(status().isOk());
 
         when(jenaService.doesDataModelExist(anyString())).thenReturn(true);
@@ -218,7 +216,7 @@ class DatamodelTest {
         this.mvc
                 .perform(put("/v2/model")
                         .contentType("application/json")
-                        .content(convertObjectToJsonString(createDatamodelDTO(false))))
+                        .content(EndpointUtils.convertObjectToJsonString(createDatamodelDTO(false))))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().string(containsString("prefix-in-use")));
     }
@@ -236,7 +234,7 @@ class DatamodelTest {
         this.mvc
                 .perform(post("/v2/model/test")
                         .contentType("application/json")
-                        .content(convertObjectToJsonString(dataModelDTO)))
+                        .content(EndpointUtils.convertObjectToJsonString(dataModelDTO)))
                 .andExpect(status().isBadRequest());
     }
 
@@ -262,12 +260,6 @@ class DatamodelTest {
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("true")));
     }
-
-    private String convertObjectToJsonString(DataModelDTO datamodel) throws JsonProcessingException {
-        var mapper = new ObjectMapper();
-        return mapper.writeValueAsString(datamodel);
-    }
-
 
     /**
      * Create Datamodel DTO for testing

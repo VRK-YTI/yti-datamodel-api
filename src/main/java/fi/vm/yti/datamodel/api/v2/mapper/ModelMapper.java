@@ -238,7 +238,7 @@ public class ModelMapper {
         var resource = model.getResource(ModelConstants.SUOMI_FI_NAMESPACE + prefix);
         var indexModel = new IndexModel();
         indexModel.setId(ModelConstants.SUOMI_FI_NAMESPACE + prefix);
-        indexModel.setStatus(resource.getProperty(OWL.versionInfo).getString());
+        indexModel.setStatus(Status.valueOf(resource.getProperty(OWL.versionInfo).getString()));
         indexModel.setModified(resource.getProperty(DCTerms.modified).getString());
         indexModel.setCreated(resource.getProperty(DCTerms.created).getString());
 
@@ -247,8 +247,8 @@ public class ModelMapper {
             indexModel.setContentModified(contentModified.getString());
         }
         indexModel.setType(resource.getProperty(RDF.type).getObject().equals(OWL.Ontology)
-                ? ModelType.LIBRARY.name()
-                : ModelType.PROFILE.name());
+                ? ModelType.LIBRARY
+                : ModelType.PROFILE);
         indexModel.setPrefix(prefix);
         indexModel.setLabel(MapperUtils.localizedPropertyToMap(resource, RDFS.label));
         indexModel.setComment(MapperUtils.localizedPropertyToMap(resource, RDFS.comment));

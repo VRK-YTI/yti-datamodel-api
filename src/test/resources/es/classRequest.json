@@ -1,0 +1,50 @@
+{
+  "from": 1,
+  "size": 100,
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "query_string": {
+            "fields": [
+              "label.*"
+            ],
+            "fuzziness": "2"
+          }
+        },
+        {
+          "terms": {
+            "status": ["VALID", "DRAFT"]
+          }
+        },
+        {
+          "terms": {
+            "isDefinedBy": ["http://uri.suomi.fi/datamodel/ns/addedNs"]
+          }
+        },
+        {
+          "terms": {
+            "isDefinedBy": ["http://uri.suomi.fi/datamodel/ns/groupNs"]
+          }
+        }
+      ],
+      "must_not": [
+        {
+          "term": {
+            "status": {
+              "value": "INCOMPLETE"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "sort": [
+    {
+      "label.en.keyword": {
+        "order": "asc",
+        "unmapped_type": "keyword"
+      }
+    }
+  ]
+}

@@ -134,7 +134,7 @@ public class ClassMapper {
         indexClass.setId(classUri);
         indexClass.setLabel(MapperUtils.localizedPropertyToMap(classResource, RDFS.label));
         indexClass.setNote(MapperUtils.localizedPropertyToMap(classResource, SKOS.note));
-        indexClass.setStatus(MapperUtils.propertyToString(classResource, OWL.versionInfo));
+        indexClass.setStatus(Status.valueOf(MapperUtils.propertyToString(classResource, OWL.versionInfo)));
         indexClass.setIsDefinedBy(MapperUtils.propertyToString(classResource, RDFS.isDefinedBy));
         indexClass.setIdentifier(classResource.getLocalName());
         indexClass.setNamespace(classResource.getNameSpace());

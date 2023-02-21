@@ -1,12 +1,14 @@
 package fi.vm.yti.datamodel.api.v2.opensearch.dto;
 
+import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexBase;
+
 import java.util.List;
 
-public class ModelSearchResponse {
+public class SearchResponseDTO<T extends IndexBase> {
     private long totalHitCount;
     private Integer pageSize;
     private Integer pageFrom;
-    private List<IndexModelDTO> models;
+    private List<T> responseObjects;
 
     public long getTotalHitCount() {
         return totalHitCount;
@@ -32,11 +34,11 @@ public class ModelSearchResponse {
         this.pageFrom = pageFrom;
     }
 
-    public List<IndexModelDTO> getModels() {
-        return models;
+    public List<T> getResponseObjects() {
+        return responseObjects;
     }
 
-    public void setModels(List<IndexModelDTO> models) {
-        this.models = models;
+    public void setResponseObjects(List<T> responseObjects) {
+        this.responseObjects = responseObjects;
     }
 }
