@@ -149,9 +149,8 @@ public class OpenSearchIndexer {
         //TODO swap to commented text once older migration is ready
         //addProperty(constructBuilder, DCTerms.language, "?language");
         constructBuilder.addConstruct(GRAPH_VARIABLE, DCTerms.language, "?language")
-                .addWhereValueVar("?langTypes", DCTerms.language, "dcterms:language/rdf:rest*/rdf:first")
-                .addWhere(GRAPH_VARIABLE, "?langTypes", "?language");
-
+                .addOptional(GRAPH_VARIABLE, "dcterms:language/rdf:rest*/rdf:first", "?language")
+                .addOptional(GRAPH_VARIABLE, DCTerms.language, "?language");
         var indexModels = jenaService.constructWithQuery(constructBuilder.build());
         var it = indexModels.listSubjects();
         var list = new ArrayList<IndexModel>();

@@ -75,7 +75,7 @@ public class JenaService {
                 logger.warn("Model not found with prefix {}", graph);
                 throw new ResourceNotFoundException(graph);
             } else {
-                throw new RuntimeException("Error fetching graph");
+                throw new JenaQueryException();
             }
         }
     }
@@ -99,7 +99,7 @@ public class JenaService {
         try {
             return coreSparql.queryAsk(askBuilder.build());
         }catch(HttpException ex){
-            throw new RuntimeException("Error querying graph");
+            throw new JenaQueryException();
         }
     }
 
@@ -116,7 +116,7 @@ public class JenaService {
         try{
             return coreSparql.queryAsk(askBuilder.build());
         }catch(HttpException ex){
-            throw new RuntimeException("Error querying graph");
+            throw new JenaQueryException();
         }
     }
 
@@ -176,7 +176,7 @@ public class JenaService {
                 logger.warn("Namespace not found: {}", graphName);
                 throw new ResourceNotFoundException(graphName);
             } else {
-                throw new RuntimeException("Error fetching graph");
+                throw new JenaQueryException();
             }
         }
     }
@@ -187,7 +187,7 @@ public class JenaService {
         try {
             return importSparql.queryAsk(askBuilder.build());
         }catch(HttpException ex){
-            throw new RuntimeException("Error querying graph");
+            throw new JenaQueryException();
         }
     }
 
@@ -198,7 +198,7 @@ public class JenaService {
         try{
             return importSparql.queryAsk(askBuilder.build());
         }catch(HttpException ex){
-            throw new RuntimeException("Error querying graph");
+            throw new JenaQueryException();
         }
     }
 

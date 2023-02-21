@@ -3,10 +3,10 @@ package fi.vm.yti.datamodel.api.v2.opensearch.queries;
 import fi.vm.yti.datamodel.api.v2.dto.Status;
 import fi.vm.yti.datamodel.api.v2.opensearch.dto.CountDTO;
 import fi.vm.yti.datamodel.api.v2.opensearch.dto.CountSearchResponse;
+import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
 import org.opensearch.client.opensearch._types.FieldValue;
 import org.opensearch.client.opensearch._types.aggregations.Aggregation;
 import org.opensearch.client.opensearch._types.aggregations.AggregationBuilders;
-import org.opensearch.client.opensearch._types.query_dsl.Query;
 import org.opensearch.client.opensearch._types.query_dsl.QueryBuilders;
 import org.opensearch.client.opensearch.core.SearchRequest;
 import org.opensearch.client.opensearch.core.SearchResponse;
@@ -29,6 +29,7 @@ public class CountQueryFactory {
                 .build()._toQuery();
 
         SearchRequest sr = new SearchRequest.Builder()
+                .index(OpenSearchIndexer.OPEN_SEARCH_INDEX_MODEL)
                 .size(0)
                 .query(status)
                 .aggregations("statuses", getAggregation("status"))
