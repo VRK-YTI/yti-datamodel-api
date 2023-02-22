@@ -42,7 +42,7 @@ public class OpenSearchConnector {
     public void waitForESNodes() {
         logger.info("Waiting for ES (timeout " + ES_TIMEOUT + "s)");
         try {
-            for (int i = 0; i < ES_TIMEOUT; i++) {
+            for (var i = 0; i < ES_TIMEOUT; i++) {
                 if (client.ping().value()) {
                     logger.info("ES online");
                     try {

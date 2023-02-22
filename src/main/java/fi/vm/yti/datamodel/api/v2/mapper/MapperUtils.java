@@ -76,10 +76,6 @@ public class MapperUtils {
      */
     public static List<String> arrayPropertyToList(Resource resource, Property property){
         var list = new ArrayList<String>();
-        //return empty list if property is not found
-        if(!resource.hasProperty(property)){
-            return list;
-        }
         try{
             var statement = resource.getProperty(property);
             if (statement == null) {

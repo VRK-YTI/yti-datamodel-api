@@ -3,6 +3,7 @@ package fi.vm.yti.datamodel.api.v2.mapper;
 import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexModel;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
+import fi.vm.yti.datamodel.api.v2.service.JenaQueryException;
 import fi.vm.yti.datamodel.api.v2.service.JenaService;
 import org.apache.jena.atlas.web.HttpException;
 import org.apache.jena.datatypes.xsd.XSDDateTime;
@@ -374,7 +375,7 @@ public class ModelMapper {
                         log.warn("Model not found with prefix {}", nsUri);
                         throw new ResourceNotFoundException(nsUri);
                     } else {
-                        throw new RuntimeException("Error fetching external namespace");
+                        throw new JenaQueryException("Error fetching external namespace");
                     }
                 }
             });

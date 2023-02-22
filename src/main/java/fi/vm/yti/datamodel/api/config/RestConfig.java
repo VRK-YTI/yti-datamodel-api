@@ -80,7 +80,7 @@ public class RestConfig {
 
     @Bean
     RestTemplate restTemplate() {
-        RestTemplate restTemplate = new RestTemplate(httpRequestFactory());
+        var restTemplate = new RestTemplate(httpRequestFactory());
 
         for (HttpMessageConverter<?> converter : restTemplate.getMessageConverters()) {
             if (converter instanceof MappingJackson2HttpMessageConverter) {
