@@ -59,7 +59,7 @@ public class ClassController {
     @ApiResponse(responseCode =  "200", description = "Class updated in model successfully")
     @PutMapping(value = "/{prefix}/{classIdentifier}", consumes = APPLICATION_JSON_VALUE)
     public void updateClass(@PathVariable String prefix, @PathVariable String classIdentifier, @RequestBody @ValidClass(updateClass = true) ClassDTO classDTO){
-        logger.info("Updating model {}", classIdentifier);
+        logger.info("Updating class {}", classIdentifier);
 
         var graph = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
         var classURI = graph + "#" + classIdentifier;
