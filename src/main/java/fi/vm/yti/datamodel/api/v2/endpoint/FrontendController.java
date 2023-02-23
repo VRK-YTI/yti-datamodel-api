@@ -70,15 +70,15 @@ public class FrontendController {
 
     @Operation(summary = "Search models")
     @ApiResponse(responseCode = "200", description = "List of data model objects")
-    @PostMapping(value = "/searchModels", produces = APPLICATION_JSON_VALUE)
-    public SearchResponseDTO<IndexModel> getModels(@RequestBody ModelSearchRequest request) {
+    @GetMapping(value = "/searchModels", produces = APPLICATION_JSON_VALUE)
+    public SearchResponseDTO<IndexModel> getModels(ModelSearchRequest request) {
         return searchIndexService.searchModels(request, userProvider.getUser());
     }
 
     @Operation(summary = "Search classes", description = "List of classes")
     @ApiResponse(responseCode = "200", description = "List of classes as JSON")
-    @GetMapping(path = "/searchInternalClasses", produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
-    public SearchResponseDTO<IndexClass> getClasses(@RequestBody ClassSearchRequest request) throws IOException {
+    @GetMapping(path = "/searchInternalClasses", produces = APPLICATION_JSON_VALUE)
+    public SearchResponseDTO<IndexClass> getClasses(ClassSearchRequest request) throws IOException {
         return searchIndexService.searchInternalClasses(request);
     }
 }

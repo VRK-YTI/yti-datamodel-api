@@ -69,6 +69,25 @@ public class MapperUtils {
     }
 
     /**
+     * Updates localized property
+     * @param languages Languages of the datamodel, localized property has to be in language
+     * @param data Data to add
+     * @param resource Resource
+     * @param property Property
+     * @param model Model
+     */
+    public static void updateLocalizedProperty(Set<String> languages,
+                                               Map<String, String> data,
+                                               Resource resource,
+                                               Property property,
+                                               Model model) {
+        if(data != null && languages != null && !languages.isEmpty()){
+            resource.removeAll(property);
+            addLocalizedProperty(languages, data, resource, property, model);
+        }
+    }
+
+    /**
      * Convert array property to list of strings
      * @param resource Resource to get property from
      * @param property Property type
@@ -131,5 +150,34 @@ public class MapperUtils {
         var object = prop.getObject();
         //null check for object
         return object == null ? null : object.toString();
+    }
+
+    /**
+     * Update string property
+     * If string is empty|blank value is removed
+     * @param resource Resource
+     * @param property Property
+     * @param value Value
+     */
+    public static void updateStringProperty(Resource resource, Property property, String value){
+        if(value != null){
+            resource.removeAll(property);
+            if(!value.isBlank()){
+                resource.addProperty(property, value);
+            }
+        }
+    }
+
+    /**
+     * Adds an optional string property
+     * This has a null check, so it does not need to be separately added
+     * @param resource Resource
+     * @param property Property
+     * @param value Value
+     */
+    public static void addOptionalStringProperty(Resource resource, Property property, String value){
+        if(value != null && !value.isBlank()){
+            resource.addProperty(property, value);
+        }
     }
 }

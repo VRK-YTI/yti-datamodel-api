@@ -39,6 +39,7 @@ public class ModelMapper {
         var model = ModelFactory.createDefaultModel();
         var modelUri = ModelConstants.SUOMI_FI_NAMESPACE + modelDTO.getPrefix();
         // TODO: type of application profile?
+        model.setNsPrefixes(ModelConstants.PREFIXES);
         Resource type = modelDTO.getType().equals(ModelType.LIBRARY)
                 ? OWL.Ontology
                 : ResourceFactory.createProperty("http://www.w3.org/2002/07/dcap#DCAP");

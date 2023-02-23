@@ -7,14 +7,14 @@ import java.util.Set;
 
 public class ClassDTO {
 
-    private Map<String, String> label = Map.of();
-    private String comment;
+    private Map<String, String> label;
+    private String editorialNote;
     private Status status;
-    private Set<String> equivalentClass = Set.of();
-    private Set<String> subClassOf = Set.of();
+    private Set<String> equivalentClass;
+    private Set<String> subClassOf;
     private String subject;
     private String identifier;
-    private Map<String, String> note = Map.of();
+    private Map<String, String> note;
 
     public Map<String, String> getLabel() {
         return label;
@@ -24,12 +24,12 @@ public class ClassDTO {
         this.label = label;
     }
 
-    public String getComment() {
-        return comment;
+    public String getEditorialNote() {
+        return editorialNote;
     }
 
-    public void setComment(String comment) {
-        this.comment = comment;
+    public void setEditorialNote(String editorialNote) {
+        this.editorialNote = editorialNote;
     }
 
     public Status getStatus() {
