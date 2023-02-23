@@ -73,7 +73,7 @@ class FrontendControllerTest {
 
     @Test
     void searchModelsTest() throws Exception {
-        this.mvc.perform(post("/v2/frontend/searchModels")
+        this.mvc.perform(get("/v2/frontend/searchModels")
                         .contentType("application/json")
                         .content(EndpointUtils.convertObjectToJsonString(new ModelSearchRequest())))
                 .andExpect(status().isOk());
