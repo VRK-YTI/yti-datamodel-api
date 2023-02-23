@@ -11,6 +11,7 @@ public class ValidationConstants {
 
     public static final String MSG_VALUE_MISSING = "should-have-value";
     public static final String MSG_NOT_ALLOWED_UPDATE =  "not-allowed-update";
+    public static final String MSG_OVER_CHARACTER_LIMIT = "value-over-character-limit.";
 
     public static final int TEXT_FIELD_MAX_LENGTH = 150;
     public static final int TEXT_AREA_MAX_LENGTH = 5000;

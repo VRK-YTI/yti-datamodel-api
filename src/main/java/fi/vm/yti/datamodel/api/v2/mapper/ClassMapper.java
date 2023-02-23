@@ -13,6 +13,8 @@ import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.datatypes.xsd.XSDDateTime;
 import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.Property;
+import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.vocabulary.*;
 import org.slf4j.Logger;
@@ -20,6 +22,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.Calendar;
+import java.util.Set;
 
 @Service
 public class ClassMapper {
@@ -55,45 +58,65 @@ public class ClassMapper {
         var modelResource = model.getResource(ModelConstants.SUOMI_FI_NAMESPACE + prefix);
         var langs = MapperUtils.arrayPropertyToSet(modelResource, DCTerms.language);
         MapperUtils.addLocalizedProperty(langs, dto.getLabel(), classResource, RDFS.label, model);
-        //Comment (not visible for unauthenticated users)
-        classResource.addProperty(SKOS.editorialNote, dto.getComment());
         //Note
         MapperUtils.addLocalizedProperty(langs, dto.getNote(), classResource, SKOS.note, model);
-        //Status
-        classResource.addProperty(OWL.versionInfo, dto.getStatus().name());
+        MapperUtils.addOptionalStringProperty(classResource, SKOS.editorialNote, dto.getEditorialNote());
+        MapperUtils.addOptionalStringProperty(classResource, DCTerms.subject, dto.getSubject());
 
-        //namespaces so we don't add any that aren't in model.
-        //user will have to add namespaces to model before adding class with these.
         var owlImports = MapperUtils.arrayPropertyToSet(modelResource, OWL.imports);
         var dcTermsRequires = MapperUtils.arrayPropertyToSet(modelResource, DCTerms.requires);
         //Equivalent class
-        dto.getEquivalentClass().forEach(eq -> {
-            var namespace = NodeFactory.createURI(eq).getNameSpace().replace("#", "");
-            if(!owlImports.contains(namespace) && !dcTermsRequires.contains(namespace)){
-                throw new MappingError("Equivalent class namespace not in owl:imports or dcterms:requires");
-            }
-            classResource.addProperty(OWL.equivalentClass, eq);
-        });
+        if(dto.getEquivalentClass() != null){
+            dto.getEquivalentClass().forEach(eq -> addClassRelationship(owlImports, dcTermsRequires, classResource, OWL.equivalentClass, eq));
+        }
         //Sub Class
         if(dto.getSubClassOf() == null || dto.getSubClassOf().isEmpty()){
-            classResource.addProperty(RDFS.subClassOf, OWL.Thing);
+            classResource.addProperty(RDFS.subClassOf, OWL.Thing); //Add OWL:Thing if nothing else is specified
+        }else{
+            dto.getSubClassOf().forEach(sub -> addClassRelationship(owlImports, dcTermsRequires, classResource, RDFS.subClassOf, sub));
         }
-        dto.getSubClassOf().forEach(sub -> {
-            var namespace = NodeFactory.createURI(sub).getNameSpace().replace("#", "");
-            if(!owlImports.contains(namespace) && !dcTermsRequires.contains(namespace)){
-                throw new MappingError("Sub class namespace not in owl:imports or dcterms:requires");
-            }
-            classResource.addProperty(RDFS.subClassOf, sub);
-        });
-        //Subject
-        //TODO are all subjects resolved before hand or do we resolve on the fly?
-        //This can be expanded when adding terminology functionality
-        classResource.addProperty(DCTerms.subject, dto.getSubject());
 
-        model.getResource(ModelConstants.SUOMI_FI_NAMESPACE + prefix)
-                .addProperty(DCTerms.hasPart, classUri);
+        modelResource.addProperty(DCTerms.hasPart, classUri);
 
         return classUri;
+    }
+
+    public void mapToUpdateClass(Model model, String graph, Resource classResource, ClassDTO classDTO) {
+        logger.info("Updating class in graph {}", graph);
+        var updateDate = new XSDDateTime(Calendar.getInstance());
+        var modelResource = model.getResource(graph);
+        var languages = MapperUtils.arrayPropertyToSet(modelResource, DCTerms.language);
+
+        MapperUtils.updateLocalizedProperty(languages, classDTO.getLabel(), classResource, RDFS.label, model);
+        MapperUtils.updateLocalizedProperty(languages, classDTO.getNote(), classResource, SKOS.note, model);
+        MapperUtils.updateStringProperty(classResource, SKOS.editorialNote, classDTO.getEditorialNote());
+        MapperUtils.updateStringProperty(classResource, DCTerms.subject, classDTO.getSubject());
+
+        var status = classDTO.getStatus();
+        if (status != null) {
+            MapperUtils.updateStringProperty(classResource, OWL.versionInfo, status.name());
+        }
+
+        var owlImports = MapperUtils.arrayPropertyToSet(modelResource, OWL.imports);
+        var dcTermsRequires = MapperUtils.arrayPropertyToSet(modelResource, DCTerms.requires);
+
+        var equivalentClasses = classDTO.getEquivalentClass();
+        if(equivalentClasses != null){
+            classResource.removeAll(OWL.equivalentClass);
+            equivalentClasses.forEach(eq -> addClassRelationship(owlImports, dcTermsRequires, classResource, OWL.equivalentClass, eq));
+        }
+
+        var subClassOf = classDTO.getSubClassOf();
+        if (subClassOf != null){
+            classResource.removeAll(RDFS.subClassOf);
+            if(subClassOf.isEmpty()){
+                classResource.addProperty(RDFS.subClassOf, OWL.Thing); //Add OWL:Thing if no subClassOf is specified
+            }else{
+                subClassOf.forEach(sub -> addClassRelationship(owlImports, dcTermsRequires, classResource, RDFS.subClassOf, sub));
+            }
+        }
+        modelResource.removeAll(DCTerms.modified);
+        modelResource.addProperty(DCTerms.modified, ResourceFactory.createTypedLiteral(updateDate));
     }
 
     /**
@@ -120,7 +143,7 @@ public class ClassMapper {
         classDTO.setIdentifier(classResource.getLocalName());
         classDTO.setNote(MapperUtils.localizedPropertyToMap(classResource, SKOS.note));
         if (authorizationManager.hasRightToModel(modelPrefix, model)) {
-            classDTO.setComment(MapperUtils.propertyToString(classResource, SKOS.editorialNote));
+            classDTO.setEditorialNote(MapperUtils.propertyToString(classResource, SKOS.editorialNote));
         }
         return classDTO;
     }
@@ -133,7 +156,6 @@ public class ClassMapper {
         var classResource = model.getResource(classUri);
         indexClass.setId(classUri);
         indexClass.setLabel(MapperUtils.localizedPropertyToMap(classResource, RDFS.label));
-        indexClass.setNote(MapperUtils.localizedPropertyToMap(classResource, SKOS.note));
         indexClass.setStatus(Status.valueOf(MapperUtils.propertyToString(classResource, OWL.versionInfo)));
         indexClass.setIsDefinedBy(MapperUtils.propertyToString(classResource, RDFS.isDefinedBy));
         indexClass.setIdentifier(classResource.getLocalName());
@@ -141,12 +163,34 @@ public class ClassMapper {
         indexClass.setModified(classResource.getProperty(DCTerms.modified).getString());
         indexClass.setCreated(classResource.getProperty(DCTerms.created).getString());
 
+        var note = MapperUtils.localizedPropertyToMap(classResource, SKOS.note);
+        if(!note.isEmpty()){
+            indexClass.setNote(note);
+        }
+
         var contentModified = classResource.getProperty(Iow.contentModified);
         if(contentModified != null){
             indexClass.setContentModified(contentModified.getString());
         }
 
         return indexClass;
+    }
+
+    /**
+     * Add class relationship to class.
+     * Class namespace needs to be in data model (owlImports or dcTermsRequires)
+     * @param owlImports Owl imports
+     * @param dcTermsRequires DcTerms requires
+     * @param resource Resource
+     * @param property Property
+     * @param classUri Class URI
+     */
+    private void addClassRelationship(Set<String> owlImports, Set<String> dcTermsRequires, Resource resource, Property property, String classUri){
+        var namespace = NodeFactory.createURI(classUri).getNameSpace().replace("#", "");
+        if(!owlImports.contains(namespace) && !dcTermsRequires.contains(namespace)){
+            throw new MappingError("Class namespace not in owl:imports or dcterms:requires");
+        }
+        resource.addProperty(property, classUri);
     }
 
 }

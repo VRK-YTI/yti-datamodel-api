@@ -112,7 +112,7 @@ public class DataModelValidator extends BaseValidator implements
                 addConstraintViolation(context, "language-not-in-language-list." + key, labelPropertyLabel);
             }
             if(value.length() > ValidationConstants.TEXT_FIELD_MAX_LENGTH){
-                addConstraintViolation(context, "value-over-character-limit." + ValidationConstants.TEXT_FIELD_MAX_LENGTH, labelPropertyLabel);
+                addConstraintViolation(context, ValidationConstants.MSG_OVER_CHARACTER_LIMIT + ValidationConstants.TEXT_FIELD_MAX_LENGTH, labelPropertyLabel);
             }
         });
     }
@@ -133,7 +133,7 @@ public class DataModelValidator extends BaseValidator implements
                 addConstraintViolation(context, "language-not-in-language-list." + key, "description");
             }
             if(value.length() > ValidationConstants.TEXT_AREA_MAX_LENGTH){
-                addConstraintViolation(context, "value-over-character-limit." + ValidationConstants.TEXT_AREA_MAX_LENGTH, "description");
+                addConstraintViolation(context, ValidationConstants.MSG_OVER_CHARACTER_LIMIT + ValidationConstants.TEXT_AREA_MAX_LENGTH, "description");
             }
         });
     }

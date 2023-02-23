@@ -11,6 +11,8 @@ import fi.vm.yti.datamodel.api.v2.validator.ValidClass;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,6 +24,8 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 @Tag(name = "Class" )
 @Validated
 public class ClassController {
+
+    private final Logger logger = LoggerFactory.getLogger(ClassController.class);
 
     private final AuthorizationManager authorizationManager;
     private final JenaService jenaService;
@@ -49,6 +53,29 @@ public class ClassController {
         jenaService.createDataModel(ModelConstants.SUOMI_FI_NAMESPACE + prefix, model);
         var indexClass = classMapper.mapToIndexClass(model, classURi);
         openSearchIndexer.createClassToIndex(indexClass);
+    }
+
+    @Operation(summary = "Update a class in a model")
+    @ApiResponse(responseCode =  "200", description = "Class updated in model successfully")
+    @PutMapping(value = "/{prefix}/{classIdentifier}", consumes = APPLICATION_JSON_VALUE)
+    public void updateClass(@PathVariable String prefix, @PathVariable String classIdentifier, @RequestBody @ValidClass(updateClass = true) ClassDTO classDTO){
+        logger.info("Updating class {}", classIdentifier);
+
+        var graph = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
+        var classURI = graph + "#" + classIdentifier;
+        if(!jenaService.doesClassExistInGraph(graph, graph + "#" + classIdentifier)){
+            throw new ResourceNotFoundException(classIdentifier);
+        }
+
+        var model = jenaService.getDataModel(graph);
+        check(authorizationManager.hasRightToModel(prefix, model));
+
+        var classResource = model.getResource(classURI);
+
+        classMapper.mapToUpdateClass(model, graph, classResource, classDTO);
+
+        var indexClass = classMapper.mapToIndexClass(model, classURI);
+        openSearchIndexer.updateClassToIndex(indexClass);
     }
 
     @Operation(summary = "Get a class from a data model")
