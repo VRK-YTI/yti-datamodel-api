@@ -5,7 +5,6 @@ import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.opensearch.dto.*;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexClass;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexModel;
-import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
 import fi.vm.yti.datamodel.api.v2.opensearch.queries.ClassQueryFactory;
 import fi.vm.yti.datamodel.api.v2.opensearch.queries.CountQueryFactory;
 import fi.vm.yti.datamodel.api.v2.opensearch.queries.ModelQueryFactory;
@@ -80,7 +79,7 @@ public class SearchIndexService {
         return searchModels(request);
     }
 
-    public SearchResponseDTO<IndexClass> searchInternalClasses(ClassSearchRequest request) throws IOException {
+       public SearchResponseDTO<IndexClass> searchInternalClasses(ClassSearchRequest request) throws IOException {
         Set<String> namespaces = null;
         if(request.getFromAddedNamespaces() != null){
             namespaces = getNamespacesFromModel(request.getFromAddedNamespaces());
@@ -88,9 +87,12 @@ public class SearchIndexService {
 
         Set<String> groupRestrictedNamespaces = null;
         if(request.getGroups() != null){
-            SearchRequest fromModel = ModelQueryFactory.createModelQuery(request.getGroups());
+            var modelSearchRequest = new ModelSearchRequest();
+            modelSearchRequest.setGroups(request.getGroups());
+            SearchRequest fromModel = ModelQueryFactory.createModelQuery(modelSearchRequest);
             SearchResponse<IndexModel> modelResponse = client.search(fromModel, IndexModel.class);
             groupRestrictedNamespaces = modelResponse.hits().hits().stream()
+                    .filter(hit -> hit.source() != null)
                     .map(hit -> hit.source().getId()).collect(Collectors.toSet());
         }
 
@@ -111,8 +113,7 @@ public class SearchIndexService {
 
     private SearchResponseDTO<IndexModel> searchModels(ModelSearchRequest request) {
         try {
-            // TODO: implement search
-            SearchRequest build = new SearchRequest.Builder().index(OpenSearchIndexer.OPEN_SEARCH_INDEX_MODEL).build();
+            SearchRequest build = ModelQueryFactory.createModelQuery(request);
             SearchResponse<IndexModel> response = client.search(build, IndexModel.class);
 
             var modelSearchResponse = new SearchResponseDTO<IndexModel>();

@@ -1,18 +1,23 @@
 package fi.vm.yti.datamodel.api.v2.opensearch.dto;
 
+import fi.vm.yti.datamodel.api.v2.dto.ModelType;
+
 import java.util.Set;
+import java.util.UUID;
 
 public class ModelSearchRequest extends BaseSearchRequest {
 
     private String language;
 
-    private Set<String> type;
+    private Set<ModelType> type;
 
     private Set<String> includeIncompleteFrom;
 
-    private Set<String> organizations;
+    private Set<UUID> organizations;
 
     private Set<String> groups;
+
+    private boolean searchResources;
 
     public String getLanguage() {
         return language;
@@ -22,11 +27,11 @@ public class ModelSearchRequest extends BaseSearchRequest {
         this.language = language;
     }
 
-    public Set<String> getType() {
+    public Set<ModelType> getType() {
         return type;
     }
 
-    public void setType(Set<String> type) {
+    public void setType(Set<ModelType> type) {
         this.type = type;
     }
 
@@ -38,11 +43,11 @@ public class ModelSearchRequest extends BaseSearchRequest {
         this.includeIncompleteFrom = includeIncompleteFrom;
     }
 
-    public Set<String> getOrganizations() {
+    public Set<UUID> getOrganizations() {
         return organizations;
     }
 
-    public void setOrganizations(Set<String> organizations) {
+    public void setOrganizations(Set<UUID> organizations) {
         this.organizations = organizations;
     }
 
@@ -52,5 +57,13 @@ public class ModelSearchRequest extends BaseSearchRequest {
 
     public void setGroups(Set<String> groups) {
         this.groups = groups;
+    }
+
+    public boolean isSearchResources() {
+        return searchResources;
+    }
+
+    public void setSearchResources(boolean searchResources) {
+        this.searchResources = searchResources;
     }
 }
