@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.util.List;
+import java.util.UUID;
 
 import static fi.vm.yti.datamodel.api.v2.mapper.OrganizationMapper.mapGroupManagementOrganizationToModel;
 
@@ -57,7 +58,7 @@ public class GroupManagementService {
         // TODO:
     }
 
-    public List<String> getChildOrganizations(String orgId) {
+    public List<UUID> getChildOrganizations(UUID orgId) {
         return List.of();
     }
 

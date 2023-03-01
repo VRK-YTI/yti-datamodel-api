@@ -31,7 +31,9 @@ class ClassQueryFactoryTest {
         var groupNamespaces = Set.of("http://uri.suomi.fi/datamodel/ns/groupNs");
         var addedNamespaces = Set.of("http://uri.suomi.fi/datamodel/ns/addedNs");
 
-        var classQuery = ClassQueryFactory.createInternalClassQuery(request, addedNamespaces, groupNamespaces);
+        var allowedIncompleteDatamodels = Set.of("http://uri.suomi.fi/datamodel/ns/test");
+
+        var classQuery = ClassQueryFactory.createInternalClassQuery(request, addedNamespaces, groupNamespaces, allowedIncompleteDatamodels);
 
         String expected = OpenSearchUtils.getJsonString("/es/classRequest.json");
         JSONAssert.assertEquals(expected, OpenSearchUtils.getPayload(classQuery), JSONCompareMode.LENIENT);
@@ -44,7 +46,7 @@ class ClassQueryFactoryTest {
     void createInternalClassQueryDefaults() {
         var request = new ClassSearchRequest();
 
-        var classQuery = ClassQueryFactory.createInternalClassQuery(request, Collections.emptySet(), Collections.emptySet());
+        var classQuery = ClassQueryFactory.createInternalClassQuery(request, Collections.emptySet(), Collections.emptySet(), Collections.emptySet());
 
         assertEquals("Page from value not matching", QueryFactoryUtils.DEFAULT_PAGE_FROM, classQuery.from());
         assertEquals("Page size value not matching", QueryFactoryUtils.DEFAULT_PAGE_SIZE, classQuery.size());

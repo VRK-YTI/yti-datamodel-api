@@ -28,12 +28,23 @@
           }
         }
       ],
-      "must_not": [
+      "should": [
         {
-          "term": {
-            "status": {
-              "value": "INCOMPLETE"
-            }
+          "bool": {
+            "must_not": [
+              {
+                "term": {
+                  "status": {
+                    "value": "INCOMPLETE"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "terms": {
+            "isDefinedBy": ["http://uri.suomi.fi/datamodel/ns/test"]
           }
         }
       ]

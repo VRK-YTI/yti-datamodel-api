@@ -24,12 +24,12 @@ class ModelQueryFactoryTest {
         request.setType(Set.of(ModelType.PROFILE));
         request.setSearchResources(true);
         request.setOrganizations(Set.of(UUID.fromString("7d3a3c00-5a6b-489b-a3ed-63bb58c26a63")));
-        request.setSearchResources(true);
         request.setLanguage("en");
         request.setPageFrom(1);
         request.setPageSize(100);
         request.setStatus(Set.of(Status.DRAFT, Status.VALID));
         request.setSortLang("en");
+        request.setIncludeIncompleteFrom(Set.of(UUID.fromString("7d3a3c00-5a6b-489b-a3ed-63bb58c26a63")));
 
         var modelQuery = ModelQueryFactory.createModelQuery(request);
 

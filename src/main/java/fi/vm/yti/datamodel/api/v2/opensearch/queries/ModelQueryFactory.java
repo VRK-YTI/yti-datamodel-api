@@ -29,7 +29,7 @@ public class ModelQueryFactory {
 
         var incompleteFrom = request.getIncludeIncompleteFrom();
         if(incompleteFrom != null && !incompleteFrom.isEmpty()){
-            var incompleteFromQuery = QueryFactoryUtils.termsQuery("contributor", incompleteFrom.stream().toList());
+            var incompleteFromQuery = QueryFactoryUtils.termsQuery("contributor", incompleteFrom.stream().map(UUID::toString).toList());
             should.add(incompleteFromQuery);
         }
 

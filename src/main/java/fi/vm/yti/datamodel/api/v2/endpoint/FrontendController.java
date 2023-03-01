@@ -79,6 +79,6 @@ public class FrontendController {
     @ApiResponse(responseCode = "200", description = "List of classes as JSON")
     @GetMapping(path = "/searchInternalClasses", produces = APPLICATION_JSON_VALUE)
     public SearchResponseDTO<IndexClass> getClasses(ClassSearchRequest request) throws IOException {
-        return searchIndexService.searchInternalClasses(request);
+        return searchIndexService.searchInternalClasses(request, userProvider.getUser());
     }
 }
