@@ -3,14 +3,12 @@ package fi.vm.yti.datamodel.api.v2.opensearch.queries;
 import fi.vm.yti.datamodel.api.v2.dto.Status;
 import fi.vm.yti.datamodel.api.v2.opensearch.dto.ClassSearchRequest;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
-import org.opensearch.client.opensearch._types.FieldValue;
 import org.opensearch.client.opensearch._types.SortOptions;
 import org.opensearch.client.opensearch._types.SortOptionsBuilders;
 import org.opensearch.client.opensearch._types.SortOrder;
 import org.opensearch.client.opensearch._types.mapping.FieldType;
 import org.opensearch.client.opensearch._types.query_dsl.Query;
 import org.opensearch.client.opensearch._types.query_dsl.QueryBuilders;
-import org.opensearch.client.opensearch._types.query_dsl.TermsQuery;
 import org.opensearch.client.opensearch.core.SearchRequest;
 
 import java.util.ArrayList;
@@ -24,68 +22,44 @@ public class ClassQueryFactory {
     private ClassQueryFactory(){
         //only provides static methods
     }
-    public static SearchRequest createInternalClassQuery(ClassSearchRequest request, Set<String> fromNamespaces, Set<String> groupRestrictedNamespaces) {
+    public static SearchRequest createInternalClassQuery(ClassSearchRequest request, Set<String> fromNamespaces, Set<String> groupRestrictedNamespaces, Set<String> allowedDatamodels) {
         List<Query> must = new ArrayList<>();
-        List<Query> mustNot = new ArrayList<>();
+        List<Query> should = new ArrayList<>();
 
-        var removeIncompleteStatus = QueryBuilders.term()
-                        .field("status")
-                        .value(FieldValue.of(Status.INCOMPLETE.name()))
-                        .build()._toQuery();
-        mustNot.add(removeIncompleteStatus);
+
+        if(allowedDatamodels != null && !allowedDatamodels.isEmpty()){
+            var allowedDatamodelsQuery = QueryFactoryUtils.termsQuery("isDefinedBy", allowedDatamodels.stream().toList());
+            should.add(allowedDatamodelsQuery);
+        }
+
+        var removeIncompleteStatus = QueryFactoryUtils.hideIncompleteStatusQuery();
+        should.add(removeIncompleteStatus);
 
 
         if(request.getQuery() != null){
-            var query = request.getQuery();
-            var labelQuery = QueryBuilders.queryString()
-                    .query("*" + query + "*")
-                    .fields("label.*")
-                    .fuzziness("2")
-                    .build();
-            must.add(labelQuery._toQuery());
+            var labelQuery = QueryFactoryUtils.labelQuery(request.getQuery());
+            must.add(labelQuery);
         }
 
         var statuses = request.getStatus();
         if(statuses != null && !statuses.isEmpty()){
-            var statusQuery = TermsQuery.of(query ->
-                    query
-                        .field("status")
-                        .terms(terms -> terms.value(
-                            statuses.stream()
-                                    .map(status -> FieldValue.of(status.name()))
-                                    .toList()
-                            ))
-            );
-            must.add(statusQuery._toQuery());
+            var statusQuery = QueryFactoryUtils.termsQuery("status", statuses.stream().map(Status::name).toList());
+            must.add(statusQuery);
         }
 
         if(fromNamespaces != null && !fromNamespaces.isEmpty()){
-            var fromNamespacesQuery = TermsQuery.of(query ->
-                    query
-                        .field("isDefinedBy")
-                        .terms(terms -> terms.value(
-                                fromNamespaces.stream()
-                                            .map(FieldValue::of)
-                                            .toList()
-                            )));
-            must.add(fromNamespacesQuery._toQuery());
+            var fromNamespacesQuery = QueryFactoryUtils.termsQuery("isDefinedBy", fromNamespaces.stream().toList());
+            must.add(fromNamespacesQuery);
         }
 
         if(groupRestrictedNamespaces != null && !groupRestrictedNamespaces.isEmpty()){
-            var groupRestrictedNamespacesQuery = TermsQuery.of(query ->
-                    query
-                       .field("isDefinedBy")
-                    .terms(terms -> terms.value(
-                            groupRestrictedNamespaces.stream()
-                                    .map(FieldValue::of)
-                                    .toList()
-                    )));
-            must.add(groupRestrictedNamespacesQuery._toQuery());
+            var groupRestrictedNamespacesQuery = QueryFactoryUtils.termsQuery("isDefinedBy", groupRestrictedNamespaces.stream().toList());
+            must.add(groupRestrictedNamespacesQuery);
         }
 
         var finalQuery = QueryBuilders.bool()
                 .must(must)
-                .mustNot(mustNot)
+                .should(should)
                 .build()
                 ._toQuery();
 

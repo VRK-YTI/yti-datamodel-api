@@ -67,7 +67,7 @@ class FrontendControllerTest {
                             .contentType("application/json")
                         .content(EndpointUtils.convertObjectToJsonString(new ClassSearchRequest())))
                         .andExpect(status().isOk());
-        verify(searchIndexService).searchInternalClasses(any(ClassSearchRequest.class));
+        verify(searchIndexService).searchInternalClasses(any(ClassSearchRequest.class), any(YtiUser.class));
 
     }
 

@@ -1,6 +1,12 @@
 package fi.vm.yti.datamodel.api.v2.opensearch.queries;
 
 
+import fi.vm.yti.datamodel.api.v2.dto.Status;
+import org.opensearch.client.opensearch._types.FieldValue;
+import org.opensearch.client.opensearch._types.query_dsl.*;
+
+import java.util.List;
+
 public class QueryFactoryUtils {
 
     private QueryFactoryUtils(){
@@ -25,6 +31,39 @@ public class QueryFactoryUtils {
         }else{
             return pageSize;
         }
+    }
+
+    //COMMON QUERIES
+
+    public static Query hideIncompleteStatusQuery(){
+        var termQuery = TermQuery.of(q -> q
+                .field("status")
+                .value(FieldValue.of(Status.INCOMPLETE.name()))
+                )._toQuery();
+        return BoolQuery.of(q -> q.mustNot(termQuery))._toQuery();
+    }
+
+    public static Query termsQuery(String field, List<String> values){
+        return TermsQuery.of(q -> q
+                .field(field)
+                .terms(t -> t
+                        .value(values.stream().map(FieldValue::of).toList())))
+                ._toQuery();
+    }
+
+    public static Query termQuery(String field, String value){
+        return TermQuery.of(q -> q
+                        .field(field)
+                        .value(FieldValue.of(value)))
+                ._toQuery();
+    }
+
+    public static Query labelQuery(String query) {
+        return QueryStringQuery.of(q -> q
+                .query("*" + query + "*")
+                .fields("label.*")
+                .fuzziness("2")
+                )._toQuery();
     }
 
 }

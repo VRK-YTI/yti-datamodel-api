@@ -62,4 +62,17 @@ class OpenSearchIndexerTest {
 
         verify(this.jenaService).constructWithQuery(any(Query.class));
     }
+
+    @Test
+    void initClassIndexTest() throws IOException {
+        var model = mock(Model.class);
+        var subjects = mock(ResIterator.class);
+        when(jenaService.constructWithQuery(any(Query.class))).thenReturn(model);
+        when(model.listSubjects()).thenReturn(subjects);
+        when(objectMapper.valueToTree(any())).thenReturn(mock(JsonNode.class));
+
+        openSearchIndexer.initClassIndex();
+
+        verify(this.jenaService).constructWithQuery(any(Query.class));
+    }
 }

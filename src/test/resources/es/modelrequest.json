@@ -1,35 +1,50 @@
 {
-  "size": 10000,
+  "size": 100,
+  "from": 1,
   "query": {
     "bool": {
       "must": [
         {
-          "terms": {
-            "language":  ["fi"]
+          "term": {
+            "language":  {
+              "value": "en"
+            }
           }
         },
         {
           "terms": {
             "isPartOf": [
+              "P11",
               "P1"
-            ],
-            "boost": 1.0
+            ]
           }
         },
         {
           "terms": {
             "contributor": [
               "7d3a3c00-5a6b-489b-a3ed-63bb58c26a63"
-            ],
-            "boost": 1.0
+            ]
           }
         },
         {
           "terms": {
-            "type": [
-              "profile","library"],
-            "boost":1.0}
+            "type": ["PROFILE"]
+            }
         },
+        {
+          "terms": {
+            "status": ["DRAFT", "VALID"]
+          }
+        },
+        {
+          "query_string": {
+            "query": "*test query*",
+            "fields": ["label.*"],
+            "fuzziness": "2"
+          }
+        }
+      ],
+      "should": [
         {
           "bool": {
             "must_not": [
@@ -44,26 +59,19 @@
           }
         },
         {
-          "query_string": {
-            "query": "test test* *test",
-            "fields": ["label.*^1.0"]
-          }
-        },
-        {
-          "bool": {
-            "should": [
-              {
-                "terms": {
-                  "status": [
-                    "VALID",
-                    "DRAFT"
-                  ]
-                }
-              }
-            ]
+          "terms": {
+            "contributor": ["7d3a3c00-5a6b-489b-a3ed-63bb58c26a63"]
           }
         }
       ]
     }
-  }
+  },
+  "sort": [
+    {
+      "label.en.keyword": {
+        "order": "asc",
+        "unmapped_type": "keyword"
+      }
+    }
+  ]
 }
