@@ -29,7 +29,6 @@ import java.util.stream.Stream;
 
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @TestPropertySource(properties = {
@@ -85,11 +84,15 @@ class ClassControllerTest {
                 .andExpect(status().isOk());
 
         //Check that functions are called
+        verify(this.jenaService, times(2)).doesResolvedNamespaceExist(anyString());
+        verify(this.jenaService).getDataModel(anyString());
         verify(this.classMapper)
                 .createClassAndMapToModel(anyString(), any(Model.class), any(ClassDTO.class));
         verify(this.classMapper)
                 .mapToIndexClass(eq(mockModel), anyString());
         verifyNoMoreInteractions(this.classMapper);
+        verify(this.jenaService).putDataModelToCore(anyString(), any(Model.class));
+        verifyNoMoreInteractions(this.jenaService);
         verify(this.openSearchIndexer)
                 .createClassToIndex(any(IndexClass.class));
         verifyNoMoreInteractions(this.openSearchIndexer);
@@ -114,11 +117,14 @@ class ClassControllerTest {
                 .andExpect(status().isOk());
 
         //Check that functions are called
+        verify(jenaService).getDataModel(anyString());
         verify(this.classMapper)
                 .createClassAndMapToModel(anyString(), any(Model.class), any(ClassDTO.class));
         verify(this.classMapper)
                 .mapToIndexClass(eq(mockModel), anyString());
         verifyNoMoreInteractions(this.classMapper);
+        verify(this.jenaService).putDataModelToCore(anyString(), any(Model.class));
+        verifyNoMoreInteractions(this.jenaService);
         verify(this.openSearchIndexer)
                 .createClassToIndex(any(IndexClass.class));
         verifyNoMoreInteractions(this.openSearchIndexer);
@@ -143,7 +149,6 @@ class ClassControllerTest {
                 .perform(put("/v2/class/test")
                         .contentType("application/json")
                         .content(EndpointUtils.convertObjectToJsonString(classDTO)))
-                .andDo(print())
                 .andExpect(status().isBadRequest());
     }
 
@@ -186,7 +191,7 @@ class ClassControllerTest {
 
         when(jenaService.getDataModel(anyString())).thenReturn(mockModel);
         when(mockModel.getResource(anyString())).thenReturn(mock(Resource.class));
-        when(jenaService.doesClassExistInGraph(anyString(), anyString())).thenReturn(true);
+        when(jenaService.doesResourceExistInGraph(anyString(), anyString())).thenReturn(true);
         when(classMapper.mapToIndexClass(any(Model.class), anyString())).thenReturn(mock(IndexClass.class));
 
         this.mvc
@@ -196,11 +201,16 @@ class ClassControllerTest {
                 .andExpect(status().isOk());
 
         //Check that functions are called
+        verify(this.jenaService, times(2)).doesResolvedNamespaceExist(anyString());
+        verify(this.jenaService).doesResourceExistInGraph(anyString(), anyString());
+        verify(this.jenaService).getDataModel(anyString());
         verify(this.classMapper)
                 .mapToUpdateClass(any(Model.class), anyString(), any(Resource.class), any(ClassDTO.class));
         verify(this.classMapper)
                 .mapToIndexClass(eq(mockModel), anyString());
         verifyNoMoreInteractions(this.classMapper);
+        verify(this.jenaService).putDataModelToCore(anyString(), any(Model.class));
+        verifyNoMoreInteractions(this.jenaService);
         verify(this.openSearchIndexer)
                 .updateClassToIndex(any(IndexClass.class));
         verifyNoMoreInteractions(this.openSearchIndexer);
@@ -209,7 +219,7 @@ class ClassControllerTest {
     @Test
     void shouldNotFindClass() throws Exception {
         var classDTO = createClassDTO(true);
-        when(jenaService.doesClassExistInGraph(anyString(), anyString())).thenReturn(false);
+        when(jenaService.doesResourceExistInGraph(anyString(), anyString())).thenReturn(false);
 
         this.mvc
                 .perform(put("/v2/class/test/class")
@@ -225,7 +235,6 @@ class ClassControllerTest {
                 .perform(put("/v2/class/test/class")
                         .contentType("application/json")
                         .content(EndpointUtils.convertObjectToJsonString(classDTO)))
-                .andDo(print())
                 .andExpect(status().isBadRequest());
     }
 

@@ -1,6 +1,7 @@
 package fi.vm.yti.datamodel.api.v2.mapper;
 
 import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
+import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.Resource;
@@ -180,4 +181,22 @@ public class MapperUtils {
             resource.addProperty(property, value);
         }
     }
+
+    /**
+     * Add resource relationship to resource.
+     * Resource namespace needs to be in data model (owlImports or dcTermsRequires)
+     * @param owlImports Owl imports
+     * @param dcTermsRequires DcTerms requires
+     * @param resource Resource
+     * @param property Property
+     * @param resourceUri Resource URI
+     */
+    public static void addResourceRelationship(Set<String> owlImports, Set<String> dcTermsRequires, Resource resource, Property property, String resourceUri){
+        var namespace = NodeFactory.createURI(resourceUri).getNameSpace().replace("#", "");
+        if(!owlImports.contains(namespace) && !dcTermsRequires.contains(namespace)){
+            throw new MappingError("Resource namespace not in owl:imports or dcterms:requires");
+        }
+        resource.addProperty(property, resourceUri);
+    }
+
 }

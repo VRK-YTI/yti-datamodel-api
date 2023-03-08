@@ -82,7 +82,7 @@ public class ClassValidator extends BaseValidator implements
                 var asUri = NodeFactory.createURI(eqClass);
                 //if namespace is resolvable make sure class can be found in resolved namespace
                 if(jenaService.doesResolvedNamespaceExist(asUri.getNameSpace())
-                        && jenaService.doesClassExistInNamespace(asUri.getNameSpace(), asUri.getURI())){
+                        && jenaService.doesResourceExistInImportedNamespace(asUri.getNameSpace(), asUri.getURI())){
                     addConstraintViolation(context, "class-not-found-in-resolved-namespace", "eqClass");
                 }
             });
@@ -96,7 +96,7 @@ public class ClassValidator extends BaseValidator implements
                 var asUri = NodeFactory.createURI(subClass);
                 //if namespace is resolvable make sure class can be found in resolved namespace
                 if(jenaService.doesResolvedNamespaceExist(asUri.getNameSpace())
-                        && jenaService.doesClassExistInNamespace(asUri.getNameSpace(), asUri.getURI())){
+                        && jenaService.doesResourceExistInImportedNamespace(asUri.getNameSpace(), asUri.getURI())){
                     addConstraintViolation(context, "class-not-found-in-resolved-namespace", "subClassOf");
                 }
             });

@@ -113,7 +113,7 @@ class ClassMapperTest {
 
     @Test
     void testMapToClassDTO(){
-        when(jenaService.doesClassExistInGraph(anyString(), anyString())).thenReturn(true);
+        when(jenaService.doesResourceExistInGraph(anyString(), anyString())).thenReturn(true);
         Model m = ModelFactory.createDefaultModel();
         var stream = getClass().getResourceAsStream("/test_datamodel_with_class.ttl");
         assertNotNull(stream);
@@ -139,7 +139,7 @@ class ClassMapperTest {
 
     @Test
     void testMapToClassMinimalDTO(){
-        when(jenaService.doesClassExistInGraph(anyString(), anyString())).thenReturn(true);
+        when(jenaService.doesResourceExistInGraph(anyString(), anyString())).thenReturn(true);
         Model m = ModelFactory.createDefaultModel();
         var stream = getClass().getResourceAsStream("/models/test_datamodel_with_minimal_class.ttl");
         assertNotNull(stream);
@@ -161,7 +161,7 @@ class ClassMapperTest {
 
     @Test
     void testMapToClassDTOAuthenticatedUser() {
-        when(jenaService.doesClassExistInGraph(anyString(), anyString())).thenReturn(true);
+        when(jenaService.doesResourceExistInGraph(anyString(), anyString())).thenReturn(true);
         when(authorizationManager.hasRightToModel(anyString(), any(Model.class))).thenReturn(true);
         Model m = ModelFactory.createDefaultModel();
         var stream = getClass().getResourceAsStream("/test_datamodel_with_class.ttl");
@@ -175,7 +175,7 @@ class ClassMapperTest {
 
     @Test
     void testMapToIndexClass(){
-        when(jenaService.doesClassExistInGraph(anyString(), anyString())).thenReturn(true);
+        when(jenaService.doesResourceExistInGraph(anyString(), anyString())).thenReturn(true);
         Model m = ModelFactory.createDefaultModel();
         var stream = getClass().getResourceAsStream("/test_datamodel_with_class.ttl");
         assertNotNull(stream);
@@ -195,7 +195,7 @@ class ClassMapperTest {
 
     @Test
     void testMapToIndexClassMinimal(){
-        when(jenaService.doesClassExistInGraph(anyString(), anyString())).thenReturn(true);
+        when(jenaService.doesResourceExistInGraph(anyString(), anyString())).thenReturn(true);
         Model m = ModelFactory.createDefaultModel();
         var stream = getClass().getResourceAsStream("/models/test_datamodel_with_minimal_class.ttl");
         assertNotNull(stream);
