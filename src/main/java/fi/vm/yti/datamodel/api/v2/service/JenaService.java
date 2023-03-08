@@ -21,8 +21,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -39,7 +37,6 @@ public class JenaService {
     private final RDFConnection importSparql;
     private final RDFConnection conceptRead;
     private final RDFConnection conceptWrite;
-    private final RDFConnection conceptSparql;
 
     private final Cache<String, Model> modelCache;
 
@@ -53,7 +50,6 @@ public class JenaService {
         this.importSparql = RDFConnection.connect(endpoint + "/imports/sparql");
         this.conceptWrite = RDFConnection.connect(endpoint + "/concept/data");
         this.conceptRead = RDFConnection.connect(endpoint + "/concept/get");
-        this.conceptSparql = RDFConnection.connect(endpoint + "/concept/sparql");
 
         this.modelCache = CacheBuilder.newBuilder()
                 .expireAfterWrite(cacheExpireTime, TimeUnit.SECONDS)
