@@ -2,11 +2,13 @@ package fi.vm.yti.datamodel.api.v2.endpoint;
 
 import fi.vm.yti.datamodel.api.security.AuthorizationManager;
 import fi.vm.yti.datamodel.api.v2.dto.DataModelDTO;
+import fi.vm.yti.datamodel.api.v2.dto.DataModelExpandDTO;
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
 import fi.vm.yti.datamodel.api.v2.mapper.ModelMapper;
 import fi.vm.yti.datamodel.api.v2.service.JenaService;
+import fi.vm.yti.datamodel.api.v2.service.TerminologyService;
 import fi.vm.yti.datamodel.api.v2.validator.ValidDatamodel;
 import fi.vm.yti.datamodel.api.v2.validator.ValidationConstants;
 import io.swagger.v3.oas.annotations.Operation;
@@ -36,14 +38,18 @@ public class Datamodel {
 
     private final ModelMapper mapper;
 
+    private final TerminologyService terminologyService;
+
     public Datamodel(JenaService jenaService,
                      AuthorizationManager authorizationManager,
                      OpenSearchIndexer openSearchIndexer,
-                     ModelMapper modelMapper) {
+                     ModelMapper modelMapper,
+                     TerminologyService terminologyService) {
         this.authorizationManager = authorizationManager;
         this.mapper = modelMapper;
         this.openSearchIndexer = openSearchIndexer;
         this.jenaService = jenaService;
+        this.terminologyService = terminologyService;
     }
 
     @Operation(summary = "Create a new model")
@@ -77,6 +83,8 @@ public class Datamodel {
 
         check(authorizationManager.hasRightToModel(prefix, oldModel));
 
+        terminologyService.resolveTerminology(modelDTO.getTerminologies());
+
         var jenaModel = mapper.mapToUpdateJenaModel(prefix, modelDTO, oldModel);
 
         jenaService.createDataModel(ModelConstants.SUOMI_FI_NAMESPACE + prefix, jenaModel);
@@ -89,7 +97,7 @@ public class Datamodel {
     @Operation(summary = "Get a model from fuseki")
     @ApiResponse(responseCode = "200", description = "Datamodel object for the found model")
     @GetMapping(value = "/{prefix}", produces = APPLICATION_JSON_VALUE)
-    public DataModelDTO getModel(@PathVariable String prefix){
+    public DataModelExpandDTO getModel(@PathVariable String prefix){
         var model = jenaService.getDataModel(ModelConstants.SUOMI_FI_NAMESPACE + prefix);
         return mapper.mapToDataModelDTO(prefix, model);
     }

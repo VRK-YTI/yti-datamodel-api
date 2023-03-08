@@ -37,6 +37,7 @@ public class DataModelValidator extends BaseValidator implements
         checkInternalNamespaces(context, dataModel);
         checkExternalNamespaces(context, dataModel);
 
+        checkTerminologies(context, dataModel);
         return !isConstraintViolationAdded();
     }
 
@@ -231,6 +232,16 @@ public class DataModelValidator extends BaseValidator implements
         }
         if(!prefix.matches(ValidationConstants.PREFIX_REGEX)){
             addConstraintViolation(context, "prefix-not-matching-pattern", property);
+        }
+    }
+
+    private void checkTerminologies(ConstraintValidatorContext context, DataModelDTO dataModel) {
+        if (dataModel.getTerminologies() == null) {
+            return;
+        }
+
+        if (!dataModel.getTerminologies().stream().allMatch(uri -> uri.matches("^https?://uri.suomi.fi/terminology/(.*)"))) {
+            addConstraintViolation(context, "invalid-terminology-uri", "terminologies");
         }
     }
 }
