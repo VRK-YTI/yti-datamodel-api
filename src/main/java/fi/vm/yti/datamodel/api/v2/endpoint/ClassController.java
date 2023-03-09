@@ -5,6 +5,7 @@ import fi.vm.yti.datamodel.api.v2.dto.ClassDTO;
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
 import fi.vm.yti.datamodel.api.v2.mapper.ClassMapper;
+import fi.vm.yti.datamodel.api.v2.mapper.ResourceMapper;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
 import fi.vm.yti.datamodel.api.v2.service.JenaService;
 import fi.vm.yti.datamodel.api.v2.validator.ValidClass;
@@ -30,12 +31,14 @@ public class ClassController {
     private final AuthorizationManager authorizationManager;
     private final JenaService jenaService;
     private final ClassMapper classMapper;
+    private final ResourceMapper resourceMapper;
     private final OpenSearchIndexer openSearchIndexer;
 
-    public ClassController(AuthorizationManager authorizationManager, JenaService jenaService, ClassMapper classMapper, OpenSearchIndexer openSearchIndexer){
+    public ClassController(AuthorizationManager authorizationManager, JenaService jenaService, ClassMapper classMapper, ResourceMapper resourceMapper, OpenSearchIndexer openSearchIndexer){
         this.authorizationManager = authorizationManager;
         this.jenaService = jenaService;
         this.classMapper = classMapper;
+        this.resourceMapper = resourceMapper;
         this.openSearchIndexer = openSearchIndexer;
     }
 
@@ -51,8 +54,8 @@ public class ClassController {
 
         var classURi = classMapper.createClassAndMapToModel(prefix, model, classDTO);
         jenaService.putDataModelToCore(ModelConstants.SUOMI_FI_NAMESPACE + prefix, model);
-        var indexClass = classMapper.mapToIndexClass(model, classURi);
-        openSearchIndexer.createClassToIndex(indexClass);
+        var indexClass = resourceMapper.mapToIndexResource(model, classURi);
+        openSearchIndexer.createResourceToIndex(indexClass);
     }
 
     @Operation(summary = "Update a class in a model")
@@ -75,8 +78,8 @@ public class ClassController {
         classMapper.mapToUpdateClass(model, graph, classResource, classDTO);
         jenaService.putDataModelToCore(graph, model);
 
-        var indexClass = classMapper.mapToIndexClass(model, classURI);
-        openSearchIndexer.updateClassToIndex(indexClass);
+        var indexClass = resourceMapper.mapToIndexResource(model, classURI);
+        openSearchIndexer.updateResourceToIndex(indexClass);
     }
 
     @Operation(summary = "Get a class from a data model")

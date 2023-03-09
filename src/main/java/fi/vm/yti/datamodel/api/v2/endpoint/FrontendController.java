@@ -4,7 +4,7 @@ import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
 import fi.vm.yti.datamodel.api.v2.dto.OrganizationDTO;
 import fi.vm.yti.datamodel.api.v2.dto.ServiceCategoryDTO;
 import fi.vm.yti.datamodel.api.v2.opensearch.dto.*;
-import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexClass;
+import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexResource;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexModel;
 import fi.vm.yti.datamodel.api.v2.service.FrontendService;
 import fi.vm.yti.datamodel.api.v2.service.SearchIndexService;
@@ -75,10 +75,10 @@ public class FrontendController {
         return searchIndexService.searchModels(request, userProvider.getUser());
     }
 
-    @Operation(summary = "Search classes", description = "List of classes")
-    @ApiResponse(responseCode = "200", description = "List of classes as JSON")
-    @GetMapping(path = "/searchInternalClasses", produces = APPLICATION_JSON_VALUE)
-    public SearchResponseDTO<IndexClass> getClasses(ClassSearchRequest request) throws IOException {
-        return searchIndexService.searchInternalClasses(request, userProvider.getUser());
+    @Operation(summary = "Search resources", description = "List of resources")
+    @ApiResponse(responseCode = "200", description = "List of resources as JSON")
+    @GetMapping(path = "/searchInternalResources", produces = APPLICATION_JSON_VALUE)
+    public SearchResponseDTO<IndexResource> getInternalResources(ResourceSearchRequest request) throws IOException {
+        return searchIndexService.searchInternalResources(request, userProvider.getUser());
     }
 }

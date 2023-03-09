@@ -3,9 +3,9 @@ package fi.vm.yti.datamodel.api.v2.service;
 import fi.vm.yti.datamodel.api.index.OpenSearchConnector;
 import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.opensearch.dto.*;
-import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexClass;
+import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexResource;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexModel;
-import fi.vm.yti.datamodel.api.v2.opensearch.queries.ClassQueryFactory;
+import fi.vm.yti.datamodel.api.v2.opensearch.queries.ResourceQueryFactory;
 import fi.vm.yti.datamodel.api.v2.opensearch.queries.CountQueryFactory;
 import fi.vm.yti.datamodel.api.v2.opensearch.queries.ModelQueryFactory;
 import fi.vm.yti.security.Role;
@@ -86,7 +86,7 @@ public class SearchIndexService {
         }
     }
 
-    public SearchResponseDTO<IndexClass> searchInternalClasses(ClassSearchRequest request, YtiUser user) throws IOException {
+    public SearchResponseDTO<IndexResource> searchInternalResources(ResourceSearchRequest request, YtiUser user) throws IOException {
         Set<String> allowedDatamodels = new HashSet<>();
         if(!user.isSuperuser()){
                 var organizations = getOrganizationsForUser(user);
@@ -99,10 +99,10 @@ public class SearchIndexService {
                         .filter(hit -> hit.source() != null)
                         .map(hit -> hit.source().getId()).collect(Collectors.toSet());
         }
-        return searchInternalClasses(request, allowedDatamodels);
+        return searchInternalResources(request, allowedDatamodels);
     }
 
-       public SearchResponseDTO<IndexClass> searchInternalClasses(ClassSearchRequest request, Set<String> allowedDatamodels) throws IOException {
+       public SearchResponseDTO<IndexResource> searchInternalResources(ResourceSearchRequest request, Set<String> allowedDatamodels) throws IOException {
         Set<String> namespaces = null;
 
         if(request.getFromAddedNamespaces() != null){
@@ -120,10 +120,10 @@ public class SearchIndexService {
                     .map(hit -> hit.source().getId()).collect(Collectors.toSet());
         }
 
-        SearchRequest build = ClassQueryFactory.createInternalClassQuery(request, namespaces, groupRestrictedNamespaces, allowedDatamodels);
-        SearchResponse<IndexClass> response = client.search(build, IndexClass.class);
+        SearchRequest build = ResourceQueryFactory.createInternalResourceQuery(request, namespaces, groupRestrictedNamespaces, allowedDatamodels);
+        SearchResponse<IndexResource> response = client.search(build, IndexResource.class);
 
-        var result = new SearchResponseDTO<IndexClass>();
+        var result = new SearchResponseDTO<IndexResource>();
         result.setResponseObjects(response.hits().hits().stream()
                 .map(Hit::source)
                 .toList()

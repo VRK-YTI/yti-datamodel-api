@@ -3,8 +3,8 @@ package fi.vm.yti.datamodel.api.v2.opensearch.index;
 import fi.vm.yti.datamodel.api.index.OpenSearchConnector;
 import fi.vm.yti.datamodel.api.v2.dto.Iow;
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
-import fi.vm.yti.datamodel.api.v2.mapper.ClassMapper;
 import fi.vm.yti.datamodel.api.v2.mapper.ModelMapper;
+import fi.vm.yti.datamodel.api.v2.mapper.ResourceMapper;
 import fi.vm.yti.datamodel.api.v2.service.JenaService;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelUtils;
 import org.apache.jena.arq.querybuilder.ConstructBuilder;
@@ -31,35 +31,34 @@ import java.util.Map;
 public class OpenSearchIndexer {
 
     public static final String OPEN_SEARCH_INDEX_MODEL = "models_v2";
-    public static final String OPEN_SEARCH_INDEX_CLASS = "class_v2";
+    public static final String OPEN_SEARCH_INDEX_RESOURCE = "resources_v2";
 
     private final Logger logger = LoggerFactory.getLogger(OpenSearchIndexer.class);
     private static final String GRAPH_VARIABLE = "?model";
     private final OpenSearchConnector openSearchConnector;
     private final JenaService jenaService;
     private final ModelMapper modelMapper;
-    private final ClassMapper classMapper;
+    private final ResourceMapper resourceMapper;
     private final OpenSearchClient client;
 
     public OpenSearchIndexer(OpenSearchConnector openSearchConnector,
                              JenaService jenaService,
                              ModelMapper modelMapper,
-                             ClassMapper classMapper,
-                             OpenSearchClient client) {
+                             ResourceMapper resourceMapper, OpenSearchClient client) {
         this.openSearchConnector = openSearchConnector;
         this.jenaService = jenaService;
         this.modelMapper = modelMapper;
-        this.classMapper = classMapper;
+        this.resourceMapper = resourceMapper;
         this.client = client;
     }
 
     public void reindex() {
         try {
             openSearchConnector.cleanIndex(OPEN_SEARCH_INDEX_MODEL);
-            openSearchConnector.cleanIndex(OPEN_SEARCH_INDEX_CLASS);
+            openSearchConnector.cleanIndex(OPEN_SEARCH_INDEX_RESOURCE);
             logger.info("v2 Indexes cleaned");
             openSearchConnector.createIndex(OPEN_SEARCH_INDEX_MODEL, getModelMappings());
-            openSearchConnector.createIndex(OPEN_SEARCH_INDEX_CLASS, getClassMappings());
+            openSearchConnector.createIndex(OPEN_SEARCH_INDEX_RESOURCE, getResourceMappings());
             initSearchIndexes();
 
             logger.info("Indexes initialized");
@@ -75,7 +74,7 @@ public class OpenSearchIndexer {
                 .build();
     }
 
-    private TypeMapping getClassMappings() {
+    private TypeMapping getResourceMappings() {
         return new TypeMapping.Builder()
                 .dynamicTemplates(getClassDynamicTemplates())
                 .properties(getClassProperties())
@@ -104,21 +103,21 @@ public class OpenSearchIndexer {
     /**
      * A new class to index
      *
-     * @param indexClass Class to index
+     * @param indexResource Class to index
      */
-    public void createClassToIndex(IndexClass indexClass) {
-        logger.info("Indexing: {}", indexClass.getId());
-        openSearchConnector.putToIndex(OPEN_SEARCH_INDEX_CLASS, indexClass.getId(), indexClass);
+    public void createResourceToIndex(IndexResource indexResource) {
+        logger.info("Indexing: {}", indexResource.getId());
+        openSearchConnector.putToIndex(OPEN_SEARCH_INDEX_RESOURCE, indexResource.getId(), indexResource);
     }
 
     /**
      * Update existing class in index
      *
-     * @param indexClass Class to index
+     * @param indexResource Class to index
      */
-    public void updateClassToIndex(IndexClass indexClass) {
-        logger.info("Updating index for: {}", indexClass.getId());
-        openSearchConnector.updateToIndex(OPEN_SEARCH_INDEX_CLASS, indexClass.getId(), indexClass);
+    public void updateResourceToIndex(IndexResource indexResource) {
+        logger.info("Updating index for: {}", indexResource.getId());
+        openSearchConnector.updateToIndex(OPEN_SEARCH_INDEX_RESOURCE, indexResource.getId(), indexResource);
     }
 
 
@@ -127,7 +126,7 @@ public class OpenSearchIndexer {
      */
     private void initSearchIndexes() throws IOException {
         initModelIndex();
-        initClassIndex();
+        initResourceIndex();
     }
 
     /**
@@ -164,11 +163,12 @@ public class OpenSearchIndexer {
         bulkInsert(OPEN_SEARCH_INDEX_MODEL, list);
     }
 
-    public void initClassIndex() throws IOException {
+    public void initResourceIndex() throws IOException {
         var constructBuilder = new ConstructBuilder()
                 .addPrefixes(ModelConstants.PREFIXES)
-                .addWhere(GRAPH_VARIABLE, RDF.type, "?classType")
-                .addWhereValueVar("?classType", OWL.Class);
+                .addConstruct(GRAPH_VARIABLE, RDF.type, "?resourceType")
+                .addWhere(GRAPH_VARIABLE, RDF.type, "?resourceType")
+                .addWhereValueVar("?resourceType", OWL.Class, OWL.ObjectProperty, OWL.DatatypeProperty);
         addProperty(constructBuilder, RDFS.label, "?label");
         addProperty(constructBuilder, OWL.versionInfo, "?versionInfo");
         addProperty(constructBuilder, DCTerms.modified, "?modified");
@@ -177,18 +177,21 @@ public class OpenSearchIndexer {
         addProperty(constructBuilder, RDFS.isDefinedBy, "?isDefinedBy");
         addOptional(constructBuilder, SKOS.note, "?note");
         addOptional(constructBuilder, RDFS.subClassOf, "?subClassOf");
+        addOptional(constructBuilder, RDFS.subPropertyOf, "?subPropertyOf");
         addOptional(constructBuilder, OWL.equivalentClass, "?equivalentClass");
+        addOptional(constructBuilder, OWL.equivalentProperty, "?equivalentProperty");
         var indexClasses = jenaService.constructWithQuery(constructBuilder.build());
         var it = indexClasses.listSubjects();
-        var list = new ArrayList<IndexClass>();
+        var list = new ArrayList<IndexResource>();
         while (it.hasNext()) {
             var resource = it.next();
             var newClass = ModelFactory.createDefaultModel()
+                    .setNsPrefixes(indexClasses.getNsPrefixMap())
                     .add(resource.listProperties());
-            var indexClass = classMapper.mapToIndexClass(newClass, resource.getURI());
+            var indexClass = resourceMapper.mapToIndexResource(newClass, resource.getURI());
             list.add(indexClass);
         }
-        bulkInsert(OPEN_SEARCH_INDEX_CLASS, list);
+        bulkInsert(OPEN_SEARCH_INDEX_RESOURCE, list);
     }
 
     private void addProperty(ConstructBuilder builder, Property property, String propertyName) {
@@ -219,7 +222,7 @@ public class OpenSearchIndexer {
         }
         bulkRequest.operations(bulkOperations);
         BulkResponse response = client.bulk(bulkRequest.build());
-        logger.debug("Bulk insert status: {}", response);
+        logger.debug("Bulk insert status: errors: {}, items: {}, took: {}", response.errors(), response.items().size(), response.took());
     }
 
     private List<Map<String, DynamicTemplate>> getModelDynamicTemplates() {
@@ -258,7 +261,8 @@ public class OpenSearchIndexer {
                 "identifier", getKeywordProperty(),
                 "created", getDateProperty(),
                 "modified", getDateProperty(),
-                "contentModified", getDateProperty());
+                "contentModified", getDateProperty(),
+                "resourceType", getKeywordProperty());
     }
 
     private static Map<String, DynamicTemplate> getDynamicTemplate(String name, String pathMatch) {

@@ -53,10 +53,10 @@ public class ResourceController {
         }
         check(authorizationManager.hasRightToModel(prefix, model));
 
-        resourceMapper.mapToResource(graphUri, model, dto);
-        jenaService.putDataModelToCore(ModelConstants.SUOMI_FI_NAMESPACE + prefix, model);
-       // var indexClass = classMapper.mapToIndexClass(model, classURi);
-        //openSearchIndexer.createClassToIndex(indexClass);
+        var resourceUri = resourceMapper.mapToResource(graphUri, model, dto);
+        jenaService.putDataModelToCore(graphUri, model);
+        var indexClass = resourceMapper.mapToIndexResource(model, resourceUri);
+        openSearchIndexer.createResourceToIndex(indexClass);
     }
 
     @Operation(summary = "Update a resource in a model")

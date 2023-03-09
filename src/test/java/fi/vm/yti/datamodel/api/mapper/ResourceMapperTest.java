@@ -23,6 +23,8 @@ import java.util.Map;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(SpringExtension.class)
 @Import({
@@ -231,5 +233,45 @@ class ResourceMapperTest {
         assertEquals("https://www.example.com/ns/ext#SubRes", resourceResource.getProperty(RDFS.subPropertyOf).getObject().toString());
         assertEquals(1, resourceResource.listProperties(OWL.equivalentProperty).toList().size());
         assertEquals("http://uri.suomi.fi/datamodel/ns/int#EqRes", resourceResource.getProperty(OWL.equivalentProperty).getObject().toString());
+    }
+
+    @Test
+    void testMapToIndexResource(){
+        when(jenaService.doesResourceExistInGraph(anyString(), anyString())).thenReturn(true);
+        Model m = ModelFactory.createDefaultModel();
+        var stream = getClass().getResourceAsStream("/test_datamodel_with_class.ttl");
+        assertNotNull(stream);
+        RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
+
+        var indexClass = mapper.mapToIndexResource(m, "http://uri.suomi.fi/datamodel/ns/test#TestClass");
+
+        assertEquals("http://uri.suomi.fi/datamodel/ns/test#TestClass", indexClass.getId());
+        assertEquals("test note fi", indexClass.getNote().get("fi"));
+        assertEquals(Status.VALID, indexClass.getStatus());
+        assertEquals("TestClass", indexClass.getIdentifier());
+        assertEquals("http://uri.suomi.fi/datamodel/ns/test", indexClass.getIsDefinedBy());
+        assertEquals("http://uri.suomi.fi/datamodel/ns/test#", indexClass.getNamespace());
+        assertEquals(1, indexClass.getLabel().size());
+        assertEquals("test label", indexClass.getLabel().get("fi"));
+    }
+
+    @Test
+    void testMapToIndexResourceMinimal(){
+        when(jenaService.doesResourceExistInGraph(anyString(), anyString())).thenReturn(true);
+        Model m = ModelFactory.createDefaultModel();
+        var stream = getClass().getResourceAsStream("/models/test_datamodel_with_minimal_class.ttl");
+        assertNotNull(stream);
+        RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
+
+        var indexClass = mapper.mapToIndexResource(m, "http://uri.suomi.fi/datamodel/ns/test#TestClass");
+
+        assertEquals("http://uri.suomi.fi/datamodel/ns/test#TestClass", indexClass.getId());
+        assertEquals(Status.VALID, indexClass.getStatus());
+        assertEquals("TestClass", indexClass.getIdentifier());
+        assertEquals("http://uri.suomi.fi/datamodel/ns/test", indexClass.getIsDefinedBy());
+        assertEquals("http://uri.suomi.fi/datamodel/ns/test#", indexClass.getNamespace());
+        assertEquals(1, indexClass.getLabel().size());
+        assertEquals("test label", indexClass.getLabel().get("fi"));
+        assertNull(indexClass.getNote());
     }
 }

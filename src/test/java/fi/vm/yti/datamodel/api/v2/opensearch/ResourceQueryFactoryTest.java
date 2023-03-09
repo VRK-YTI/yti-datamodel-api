@@ -1,9 +1,10 @@
 package fi.vm.yti.datamodel.api.v2.opensearch;
 
 import fi.vm.yti.datamodel.api.index.OpenSearchUtils;
+import fi.vm.yti.datamodel.api.v2.dto.ResourceType;
 import fi.vm.yti.datamodel.api.v2.dto.Status;
-import fi.vm.yti.datamodel.api.v2.opensearch.dto.ClassSearchRequest;
-import fi.vm.yti.datamodel.api.v2.opensearch.queries.ClassQueryFactory;
+import fi.vm.yti.datamodel.api.v2.opensearch.dto.ResourceSearchRequest;
+import fi.vm.yti.datamodel.api.v2.opensearch.queries.ResourceQueryFactory;
 import fi.vm.yti.datamodel.api.v2.opensearch.queries.QueryFactoryUtils;
 import org.junit.jupiter.api.Test;
 import org.skyscreamer.jsonassert.JSONAssert;
@@ -15,11 +16,11 @@ import java.util.Set;
 import static org.springframework.test.util.AssertionErrors.assertEquals;
 
 
-class ClassQueryFactoryTest {
+class ResourceQueryFactoryTest {
     
     @Test
     void createInternalClassQueryValues() throws Exception {
-        var request = new ClassSearchRequest();
+        var request = new ResourceSearchRequest();
         request.setQuery("test query");
         request.setGroups(Set.of("P11", "P1"));
         request.setFromAddedNamespaces("http://uri.suomi.fi/datamodel/ns/test");
@@ -27,13 +28,14 @@ class ClassQueryFactoryTest {
         request.setPageSize(100);
         request.setStatus(Set.of(Status.DRAFT, Status.VALID));
         request.setSortLang("en");
+        request.setResourceTypes(Set.of(ResourceType.ATTRIBUTE, ResourceType.ASSOCIATION));
 
         var groupNamespaces = Set.of("http://uri.suomi.fi/datamodel/ns/groupNs");
         var addedNamespaces = Set.of("http://uri.suomi.fi/datamodel/ns/addedNs");
 
         var allowedIncompleteDatamodels = Set.of("http://uri.suomi.fi/datamodel/ns/test");
 
-        var classQuery = ClassQueryFactory.createInternalClassQuery(request, addedNamespaces, groupNamespaces, allowedIncompleteDatamodels);
+        var classQuery = ResourceQueryFactory.createInternalResourceQuery(request, addedNamespaces, groupNamespaces, allowedIncompleteDatamodels);
 
         String expected = OpenSearchUtils.getJsonString("/es/classRequest.json");
         JSONAssert.assertEquals(expected, OpenSearchUtils.getPayload(classQuery), JSONCompareMode.LENIENT);
@@ -44,9 +46,9 @@ class ClassQueryFactoryTest {
 
     @Test
     void createInternalClassQueryDefaults() {
-        var request = new ClassSearchRequest();
+        var request = new ResourceSearchRequest();
 
-        var classQuery = ClassQueryFactory.createInternalClassQuery(request, Collections.emptySet(), Collections.emptySet(), Collections.emptySet());
+        var classQuery = ResourceQueryFactory.createInternalResourceQuery(request, Collections.emptySet(), Collections.emptySet(), Collections.emptySet());
 
         assertEquals("Page from value not matching", QueryFactoryUtils.DEFAULT_PAGE_FROM, classQuery.from());
         assertEquals("Page size value not matching", QueryFactoryUtils.DEFAULT_PAGE_SIZE, classQuery.size());
