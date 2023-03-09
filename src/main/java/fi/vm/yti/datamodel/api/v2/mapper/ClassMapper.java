@@ -1,11 +1,7 @@
 package fi.vm.yti.datamodel.api.v2.mapper;
 
 import fi.vm.yti.datamodel.api.security.AuthorizationManager;
-import fi.vm.yti.datamodel.api.v2.dto.ClassDTO;
-import fi.vm.yti.datamodel.api.v2.dto.Iow;
-import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
-import fi.vm.yti.datamodel.api.v2.dto.Status;
-import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexClass;
+import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
 import fi.vm.yti.datamodel.api.v2.service.JenaService;
@@ -143,34 +139,6 @@ public class ClassMapper {
             classDTO.setEditorialNote(MapperUtils.propertyToString(classResource, SKOS.editorialNote));
         }
         return classDTO;
-    }
-
-    public IndexClass mapToIndexClass(Model model, String classUri){
-        var indexClass = new IndexClass();
-        if(!jenaService.doesResourceExistInGraph(classUri.substring(0, classUri.indexOf('#')), classUri)){
-            throw new ResourceNotFoundException(classUri);
-        }
-        var classResource = model.getResource(classUri);
-        indexClass.setId(classUri);
-        indexClass.setLabel(MapperUtils.localizedPropertyToMap(classResource, RDFS.label));
-        indexClass.setStatus(Status.valueOf(MapperUtils.propertyToString(classResource, OWL.versionInfo)));
-        indexClass.setIsDefinedBy(MapperUtils.propertyToString(classResource, RDFS.isDefinedBy));
-        indexClass.setIdentifier(classResource.getLocalName());
-        indexClass.setNamespace(classResource.getNameSpace());
-        indexClass.setModified(classResource.getProperty(DCTerms.modified).getString());
-        indexClass.setCreated(classResource.getProperty(DCTerms.created).getString());
-
-        var note = MapperUtils.localizedPropertyToMap(classResource, SKOS.note);
-        if(!note.isEmpty()){
-            indexClass.setNote(note);
-        }
-
-        var contentModified = classResource.getProperty(Iow.contentModified);
-        if(contentModified != null){
-            indexClass.setContentModified(contentModified.getString());
-        }
-
-        return indexClass;
     }
 
 }

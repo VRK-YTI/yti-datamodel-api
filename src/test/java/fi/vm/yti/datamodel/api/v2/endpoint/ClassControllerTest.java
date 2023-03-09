@@ -2,7 +2,8 @@ package fi.vm.yti.datamodel.api.v2.endpoint;
 
 import fi.vm.yti.datamodel.api.security.AuthorizationManager;
 import fi.vm.yti.datamodel.api.v2.dto.*;
-import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexClass;
+import fi.vm.yti.datamodel.api.v2.mapper.ResourceMapper;
+import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexResource;
 import fi.vm.yti.datamodel.api.v2.mapper.ClassMapper;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
 import fi.vm.yti.datamodel.api.v2.service.JenaService;
@@ -53,6 +54,9 @@ class ClassControllerTest {
     @MockBean
     private ClassMapper classMapper;
 
+    @MockBean
+    private ResourceMapper resourceMapper;
+
     @Autowired
     private ClassController classController;
 
@@ -75,7 +79,7 @@ class ClassControllerTest {
 
         when(jenaService.getDataModel(anyString())).thenReturn(mockModel);
         when(classMapper.createClassAndMapToModel(anyString(), any(Model.class), any(ClassDTO.class))).thenReturn("test");
-        when(classMapper.mapToIndexClass(any(Model.class), anyString())).thenReturn(mock(IndexClass.class));
+        when(resourceMapper.mapToIndexResource(any(Model.class), anyString())).thenReturn(mock(IndexResource.class));
 
         this.mvc
                 .perform(put("/v2/class/test")
@@ -88,13 +92,13 @@ class ClassControllerTest {
         verify(this.jenaService).getDataModel(anyString());
         verify(this.classMapper)
                 .createClassAndMapToModel(anyString(), any(Model.class), any(ClassDTO.class));
-        verify(this.classMapper)
-                .mapToIndexClass(eq(mockModel), anyString());
+        verify(this.resourceMapper)
+                .mapToIndexResource(eq(mockModel), anyString());
         verifyNoMoreInteractions(this.classMapper);
         verify(this.jenaService).putDataModelToCore(anyString(), any(Model.class));
         verifyNoMoreInteractions(this.jenaService);
         verify(this.openSearchIndexer)
-                .createClassToIndex(any(IndexClass.class));
+                .createResourceToIndex(any(IndexResource.class));
         verifyNoMoreInteractions(this.openSearchIndexer);
     }
 
@@ -108,7 +112,7 @@ class ClassControllerTest {
 
         when(jenaService.getDataModel(anyString())).thenReturn(mockModel);
         when(classMapper.createClassAndMapToModel(anyString(), any(Model.class), any(ClassDTO.class))).thenReturn("test");
-        when(classMapper.mapToIndexClass(any(Model.class), anyString())).thenReturn(mock(IndexClass.class));
+        when(resourceMapper.mapToIndexResource(any(Model.class), anyString())).thenReturn(mock(IndexResource.class));
 
         this.mvc
                 .perform(put("/v2/class/test")
@@ -120,13 +124,13 @@ class ClassControllerTest {
         verify(jenaService).getDataModel(anyString());
         verify(this.classMapper)
                 .createClassAndMapToModel(anyString(), any(Model.class), any(ClassDTO.class));
-        verify(this.classMapper)
-                .mapToIndexClass(eq(mockModel), anyString());
+        verify(this.resourceMapper)
+                .mapToIndexResource(eq(mockModel), anyString());
         verifyNoMoreInteractions(this.classMapper);
         verify(this.jenaService).putDataModelToCore(anyString(), any(Model.class));
         verifyNoMoreInteractions(this.jenaService);
         verify(this.openSearchIndexer)
-                .createClassToIndex(any(IndexClass.class));
+                .createResourceToIndex(any(IndexResource.class));
         verifyNoMoreInteractions(this.openSearchIndexer);
     }
 
@@ -192,7 +196,7 @@ class ClassControllerTest {
         when(jenaService.getDataModel(anyString())).thenReturn(mockModel);
         when(mockModel.getResource(anyString())).thenReturn(mock(Resource.class));
         when(jenaService.doesResourceExistInGraph(anyString(), anyString())).thenReturn(true);
-        when(classMapper.mapToIndexClass(any(Model.class), anyString())).thenReturn(mock(IndexClass.class));
+        when(resourceMapper.mapToIndexResource(any(Model.class), anyString())).thenReturn(mock(IndexResource.class));
 
         this.mvc
                 .perform(put("/v2/class/test/class")
@@ -206,13 +210,13 @@ class ClassControllerTest {
         verify(this.jenaService).getDataModel(anyString());
         verify(this.classMapper)
                 .mapToUpdateClass(any(Model.class), anyString(), any(Resource.class), any(ClassDTO.class));
-        verify(this.classMapper)
-                .mapToIndexClass(eq(mockModel), anyString());
+        verify(this.resourceMapper)
+                .mapToIndexResource(eq(mockModel), anyString());
         verifyNoMoreInteractions(this.classMapper);
         verify(this.jenaService).putDataModelToCore(anyString(), any(Model.class));
         verifyNoMoreInteractions(this.jenaService);
         verify(this.openSearchIndexer)
-                .updateClassToIndex(any(IndexClass.class));
+                .updateResourceToIndex(any(IndexResource.class));
         verifyNoMoreInteractions(this.openSearchIndexer);
     }
 

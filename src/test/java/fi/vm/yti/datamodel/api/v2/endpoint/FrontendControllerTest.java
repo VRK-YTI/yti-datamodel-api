@@ -1,6 +1,6 @@
 package fi.vm.yti.datamodel.api.v2.endpoint;
 
-import fi.vm.yti.datamodel.api.v2.opensearch.dto.ClassSearchRequest;
+import fi.vm.yti.datamodel.api.v2.opensearch.dto.ResourceSearchRequest;
 import fi.vm.yti.datamodel.api.v2.opensearch.dto.ModelSearchRequest;
 import fi.vm.yti.datamodel.api.v2.service.FrontendService;
 import fi.vm.yti.datamodel.api.v2.service.SearchIndexService;
@@ -61,12 +61,12 @@ class FrontendControllerTest {
     }
 
     @Test
-    void searchInternalClassesTest() throws Exception {
-        this.mvc.perform(get("/v2/frontend/searchInternalClasses")
+    void searchInternalResourcesTest() throws Exception {
+        this.mvc.perform(get("/v2/frontend/searchInternalResources")
                             .contentType("application/json")
-                        .content(EndpointUtils.convertObjectToJsonString(new ClassSearchRequest())))
+                        .content(EndpointUtils.convertObjectToJsonString(new ResourceSearchRequest())))
                         .andExpect(status().isOk());
-        verify(searchIndexService).searchInternalClasses(any(ClassSearchRequest.class), any(YtiUser.class));
+        verify(searchIndexService).searchInternalResources(any(ResourceSearchRequest.class), any(YtiUser.class));
 
     }
 

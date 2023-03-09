@@ -3,7 +3,7 @@ package fi.vm.yti.datamodel.api.v2.opensearch;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import fi.vm.yti.datamodel.api.index.OpenSearchConnector;
-import fi.vm.yti.datamodel.api.v2.mapper.ClassMapper;
+import fi.vm.yti.datamodel.api.v2.mapper.ResourceMapper;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
 import fi.vm.yti.datamodel.api.v2.mapper.ModelMapper;
 import fi.vm.yti.datamodel.api.v2.service.JenaService;
@@ -41,7 +41,7 @@ class OpenSearchIndexerTest {
     ModelMapper modelMapper;
 
     @MockBean
-    ClassMapper classMapper;
+    ResourceMapper resourceMapper;
 
     @MockBean
     OpenSearchClient client;
@@ -64,14 +64,14 @@ class OpenSearchIndexerTest {
     }
 
     @Test
-    void initClassIndexTest() throws IOException {
+    void initResourceIndexTest() throws IOException {
         var model = mock(Model.class);
         var subjects = mock(ResIterator.class);
         when(jenaService.constructWithQuery(any(Query.class))).thenReturn(model);
         when(model.listSubjects()).thenReturn(subjects);
         when(objectMapper.valueToTree(any())).thenReturn(mock(JsonNode.class));
 
-        openSearchIndexer.initClassIndex();
+        openSearchIndexer.initResourceIndex();
 
         verify(this.jenaService).constructWithQuery(any(Query.class));
     }

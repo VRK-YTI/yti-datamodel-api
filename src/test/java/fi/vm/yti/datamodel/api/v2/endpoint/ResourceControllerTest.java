@@ -74,6 +74,7 @@ class ResourceControllerTest {
         var mockModel = mock(Model.class);
 
         when(jenaService.getDataModel(anyString())).thenReturn(mockModel);
+        when(mapper.mapToResource(anyString(), any(Model.class), any(ResourceDTO.class))).thenReturn("test");
 
         this.mvc
                 .perform(put("/v2/resource/test")
@@ -89,10 +90,9 @@ class ResourceControllerTest {
         verify(this.mapper)
                 .mapToResource(anyString(), any(Model.class), any(ResourceDTO.class));
         verify(this.jenaService).putDataModelToCore(anyString(), any(Model.class));
+        verify(this.mapper).mapToIndexResource(any(Model.class), anyString());
         verifyNoMoreInteractions(this.mapper);
-        verify(this.jenaService).putDataModelToCore(anyString(), any(Model.class));
         verifyNoMoreInteractions(this.jenaService);
-        //TODO add indexing tests once added
     }
 
     @Test
@@ -105,6 +105,7 @@ class ResourceControllerTest {
         var mockModel = mock(Model.class);
 
         when(jenaService.getDataModel(anyString())).thenReturn(mockModel);
+        when(mapper.mapToResource(anyString(), any(Model.class), any(ResourceDTO.class))).thenReturn("test");
 
         this.mvc
                 .perform(put("/v2/resource/test")
@@ -117,9 +118,10 @@ class ResourceControllerTest {
         verify(this.jenaService).getDataModel(anyString());
         verify(this.mapper)
                 .mapToResource(anyString(), any(Model.class), any(ResourceDTO.class));
-        verifyNoMoreInteractions(this.mapper);
         verify(this.jenaService).putDataModelToCore(anyString(), any(Model.class));
         verifyNoMoreInteractions(this.jenaService);
+        verify(this.mapper).mapToIndexResource(any(Model.class), anyString());
+        verifyNoMoreInteractions(this.mapper);
     }
 
     @Test

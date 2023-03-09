@@ -19,6 +19,11 @@
         },
         {
           "terms": {
+            "resourceType": ["ATTRIBUTE", "ASSOCIATION"]
+          }
+        },
+        {
+          "terms": {
             "isDefinedBy": ["http://uri.suomi.fi/datamodel/ns/addedNs"]
           }
         },

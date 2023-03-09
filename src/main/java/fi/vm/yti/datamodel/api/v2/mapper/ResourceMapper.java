@@ -1,8 +1,11 @@
 package fi.vm.yti.datamodel.api.v2.mapper;
 
+import fi.vm.yti.datamodel.api.v2.dto.Iow;
 import fi.vm.yti.datamodel.api.v2.dto.ResourceDTO;
 import fi.vm.yti.datamodel.api.v2.dto.ResourceType;
+import fi.vm.yti.datamodel.api.v2.dto.Status;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
+import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexResource;
 import fi.vm.yti.datamodel.api.v2.service.JenaService;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.datatypes.xsd.XSDDateTime;
@@ -69,5 +72,39 @@ public class ResourceMapper {
         return resourceUri;
     }
 
+    public IndexResource mapToIndexResource(Model model, String resourceUri){
+        var indexResource = new IndexResource();
+        var resource = model.getResource(resourceUri);
+
+        indexResource.setId(resourceUri);
+        indexResource.setLabel(MapperUtils.localizedPropertyToMap(resource, RDFS.label));
+        indexResource.setStatus(Status.valueOf(MapperUtils.propertyToString(resource, OWL.versionInfo)));
+        indexResource.setIsDefinedBy(MapperUtils.propertyToString(resource, RDFS.isDefinedBy));
+        indexResource.setIdentifier(resource.getLocalName());
+        indexResource.setNamespace(resource.getNameSpace());
+        indexResource.setModified(resource.getProperty(DCTerms.modified).getString());
+        indexResource.setCreated(resource.getProperty(DCTerms.created).getString());
+
+        var note = MapperUtils.localizedPropertyToMap(resource, SKOS.note);
+        if(!note.isEmpty()){
+            indexResource.setNote(note);
+        }
+
+        var contentModified = resource.getProperty(Iow.contentModified);
+        if(contentModified != null){
+            indexResource.setContentModified(contentModified.getString());
+        }
+
+        var typeProperty = resource.getProperty(RDF.type).getResource();
+        if(typeProperty.equals(OWL.ObjectProperty)){
+            indexResource.setResourceType(ResourceType.ASSOCIATION);
+        }else if(typeProperty.equals(OWL.DatatypeProperty)){
+            indexResource.setResourceType(ResourceType.ATTRIBUTE);
+        }else{
+            indexResource.setResourceType(ResourceType.CLASS);
+        }
+
+        return indexResource;
+    }
 
 }
