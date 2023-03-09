@@ -60,6 +60,7 @@ public class Datamodel {
         logger.info("Create model {}", modelDTO);
         check(authorizationManager.hasRightToAnyOrganization(modelDTO.getOrganizations()));
 
+        terminologyService.resolveTerminology(modelDTO.getTerminologies());
         var jenaModel = mapper.mapToJenaModel(modelDTO);
 
         jenaService.createDataModel(ModelConstants.SUOMI_FI_NAMESPACE + modelDTO.getPrefix(), jenaModel);
