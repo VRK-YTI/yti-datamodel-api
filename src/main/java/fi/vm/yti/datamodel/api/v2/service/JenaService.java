@@ -53,7 +53,7 @@ public class JenaService {
                 .build();
     }
 
-    public void createDataModel(String graphName, Model model) {
+    public void putDataModelToCore(String graphName, Model model) {
         coreWrite.put(graphName, model);
     }
 
@@ -109,7 +109,7 @@ public class JenaService {
      * @param classUri Class URI
      * @return exists
      */
-    public boolean doesClassExistInGraph(String graph, String classUri){
+    public boolean doesResourceExistInGraph(String graph, String classUri){
         var askBuilder = new AskBuilder()
                 .addGraph(NodeFactory.createURI(graph),
                         NodeFactory.createURI(classUri), "?p", "?o");
@@ -191,10 +191,10 @@ public class JenaService {
         }
     }
 
-    public boolean doesClassExistInNamespace(String namespace, String classUri){
+    public boolean doesResourceExistInImportedNamespace(String namespace, String resourceUri){
         var askBuilder = new AskBuilder()
                 .addGraph(NodeFactory.createURI(namespace),
-                        NodeFactory.createURI(classUri), "?p", "?o");
+                        NodeFactory.createURI(resourceUri), "?p", "?o");
         try{
             return importSparql.queryAsk(askBuilder.build());
         }catch(HttpException ex){

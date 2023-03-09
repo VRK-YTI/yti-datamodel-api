@@ -50,7 +50,7 @@ public class ClassController {
         check(authorizationManager.hasRightToModel(prefix, model));
 
         var classURi = classMapper.createClassAndMapToModel(prefix, model, classDTO);
-        jenaService.createDataModel(ModelConstants.SUOMI_FI_NAMESPACE + prefix, model);
+        jenaService.putDataModelToCore(ModelConstants.SUOMI_FI_NAMESPACE + prefix, model);
         var indexClass = classMapper.mapToIndexClass(model, classURi);
         openSearchIndexer.createClassToIndex(indexClass);
     }
@@ -63,7 +63,7 @@ public class ClassController {
 
         var graph = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
         var classURI = graph + "#" + classIdentifier;
-        if(!jenaService.doesClassExistInGraph(graph, graph + "#" + classIdentifier)){
+        if(!jenaService.doesResourceExistInGraph(graph, graph + "#" + classIdentifier)){
             throw new ResourceNotFoundException(classIdentifier);
         }
 
@@ -73,6 +73,7 @@ public class ClassController {
         var classResource = model.getResource(classURI);
 
         classMapper.mapToUpdateClass(model, graph, classResource, classDTO);
+        jenaService.putDataModelToCore(graph, model);
 
         var indexClass = classMapper.mapToIndexClass(model, classURI);
         openSearchIndexer.updateClassToIndex(indexClass);

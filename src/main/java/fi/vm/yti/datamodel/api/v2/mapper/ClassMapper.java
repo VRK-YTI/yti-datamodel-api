@@ -11,9 +11,7 @@ import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
 import fi.vm.yti.datamodel.api.v2.service.JenaService;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.datatypes.xsd.XSDDateTime;
-import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.vocabulary.*;
@@ -22,7 +20,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.Calendar;
-import java.util.Set;
 
 @Service
 public class ClassMapper {
@@ -43,7 +40,7 @@ public class ClassMapper {
 
         var creationDate = new XSDDateTime(Calendar.getInstance());
         var classUri = ModelConstants.SUOMI_FI_NAMESPACE + prefix + "#" + dto.getIdentifier();
-        if(jenaService.doesClassExistInGraph(ModelConstants.SUOMI_FI_NAMESPACE + prefix, classUri)){
+        if(jenaService.doesResourceExistInGraph(ModelConstants.SUOMI_FI_NAMESPACE + prefix, classUri)){
             throw new MappingError("Class already exists");
         }
         var classResource = model.createResource(classUri)
@@ -67,13 +64,13 @@ public class ClassMapper {
         var dcTermsRequires = MapperUtils.arrayPropertyToSet(modelResource, DCTerms.requires);
         //Equivalent class
         if(dto.getEquivalentClass() != null){
-            dto.getEquivalentClass().forEach(eq -> addClassRelationship(owlImports, dcTermsRequires, classResource, OWL.equivalentClass, eq));
+            dto.getEquivalentClass().forEach(eq -> MapperUtils.addResourceRelationship(owlImports, dcTermsRequires, classResource, OWL.equivalentClass, eq));
         }
         //Sub Class
         if(dto.getSubClassOf() == null || dto.getSubClassOf().isEmpty()){
             classResource.addProperty(RDFS.subClassOf, OWL.Thing); //Add OWL:Thing if nothing else is specified
         }else{
-            dto.getSubClassOf().forEach(sub -> addClassRelationship(owlImports, dcTermsRequires, classResource, RDFS.subClassOf, sub));
+            dto.getSubClassOf().forEach(sub -> MapperUtils.addResourceRelationship(owlImports, dcTermsRequires, classResource, RDFS.subClassOf, sub));
         }
 
         modelResource.addProperty(DCTerms.hasPart, classUri);
@@ -103,7 +100,7 @@ public class ClassMapper {
         var equivalentClasses = classDTO.getEquivalentClass();
         if(equivalentClasses != null){
             classResource.removeAll(OWL.equivalentClass);
-            equivalentClasses.forEach(eq -> addClassRelationship(owlImports, dcTermsRequires, classResource, OWL.equivalentClass, eq));
+            equivalentClasses.forEach(eq -> MapperUtils.addResourceRelationship(owlImports, dcTermsRequires, classResource, OWL.equivalentClass, eq));
         }
 
         var subClassOf = classDTO.getSubClassOf();
@@ -112,7 +109,7 @@ public class ClassMapper {
             if(subClassOf.isEmpty()){
                 classResource.addProperty(RDFS.subClassOf, OWL.Thing); //Add OWL:Thing if no subClassOf is specified
             }else{
-                subClassOf.forEach(sub -> addClassRelationship(owlImports, dcTermsRequires, classResource, RDFS.subClassOf, sub));
+                subClassOf.forEach(sub -> MapperUtils.addResourceRelationship(owlImports, dcTermsRequires, classResource, RDFS.subClassOf, sub));
             }
         }
         modelResource.removeAll(DCTerms.modified);
@@ -130,7 +127,7 @@ public class ClassMapper {
     public ClassDTO mapToClassDTO(String modelPrefix, String classIdentifier, Model model){
         var classDTO = new ClassDTO();
         var classUri = ModelConstants.SUOMI_FI_NAMESPACE + modelPrefix + "#" + classIdentifier;
-        if(!jenaService.doesClassExistInGraph(ModelConstants.SUOMI_FI_NAMESPACE + modelPrefix , classUri)){
+        if(!jenaService.doesResourceExistInGraph(ModelConstants.SUOMI_FI_NAMESPACE + modelPrefix , classUri)){
             throw new ResourceNotFoundException(classUri);
         }
         var classResource = model.getResource(classUri);
@@ -150,7 +147,7 @@ public class ClassMapper {
 
     public IndexClass mapToIndexClass(Model model, String classUri){
         var indexClass = new IndexClass();
-        if(!jenaService.doesClassExistInGraph(classUri.substring(0, classUri.indexOf('#')), classUri)){
+        if(!jenaService.doesResourceExistInGraph(classUri.substring(0, classUri.indexOf('#')), classUri)){
             throw new ResourceNotFoundException(classUri);
         }
         var classResource = model.getResource(classUri);
@@ -174,23 +171,6 @@ public class ClassMapper {
         }
 
         return indexClass;
-    }
-
-    /**
-     * Add class relationship to class.
-     * Class namespace needs to be in data model (owlImports or dcTermsRequires)
-     * @param owlImports Owl imports
-     * @param dcTermsRequires DcTerms requires
-     * @param resource Resource
-     * @param property Property
-     * @param classUri Class URI
-     */
-    private void addClassRelationship(Set<String> owlImports, Set<String> dcTermsRequires, Resource resource, Property property, String classUri){
-        var namespace = NodeFactory.createURI(classUri).getNameSpace().replace("#", "");
-        if(!owlImports.contains(namespace) && !dcTermsRequires.contains(namespace)){
-            throw new MappingError("Class namespace not in owl:imports or dcterms:requires");
-        }
-        resource.addProperty(property, classUri);
     }
 
 }

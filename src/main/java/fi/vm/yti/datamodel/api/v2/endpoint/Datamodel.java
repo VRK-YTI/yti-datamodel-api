@@ -56,7 +56,7 @@ public class Datamodel {
 
         var jenaModel = mapper.mapToJenaModel(modelDTO);
 
-        jenaService.createDataModel(ModelConstants.SUOMI_FI_NAMESPACE + modelDTO.getPrefix(), jenaModel);
+        jenaService.putDataModelToCore(ModelConstants.SUOMI_FI_NAMESPACE + modelDTO.getPrefix(), jenaModel);
 
         var indexModel = mapper.mapToIndexModel(modelDTO.getPrefix(), jenaModel);
         openSearchIndexer.createModelToIndex(indexModel);
@@ -79,7 +79,7 @@ public class Datamodel {
 
         var jenaModel = mapper.mapToUpdateJenaModel(prefix, modelDTO, oldModel);
 
-        jenaService.createDataModel(ModelConstants.SUOMI_FI_NAMESPACE + prefix, jenaModel);
+        jenaService.putDataModelToCore(ModelConstants.SUOMI_FI_NAMESPACE + prefix, jenaModel);
 
 
         var indexModel = mapper.mapToIndexModel(prefix, jenaModel);
