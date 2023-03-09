@@ -24,7 +24,7 @@ public class TerminologyService {
      * Control which environment is used for resolving terminology uris.
      * Possible values: awsdev, awstest and awslocal. Resolve from prod if empty
      */
-    @Value("${awsEnv:}")
+    @Value("${env:}")
     private String awsEnv;
 
     private final WebClient.Builder webClientBuilder;
