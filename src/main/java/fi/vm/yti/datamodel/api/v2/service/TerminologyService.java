@@ -20,6 +20,10 @@ import java.util.Set;
 public class TerminologyService {
     private static final Logger LOG = LoggerFactory.getLogger(TerminologyService.class);
 
+    /**
+     * Control which environment is used for resolving terminology uris.
+     * Possible values: awsdev, awstest and awslocal. Resolve from prod if empty
+     */
     @Value("${awsEnv:}")
     private String awsEnv;
 
@@ -37,15 +41,18 @@ public class TerminologyService {
      */
     public void resolveTerminology(Set<String> terminologyUris) {
 
+        WebClient.Builder builder = webClientBuilder.clientConnector(new ReactorClientHttpConnector(
+                HttpClient.create().followRedirect(true)
+        ));
+
         for (String u : terminologyUris) {
             var uri = URI.create(u);
-            var baseUrl = uri.getScheme().concat("://").concat(uri.getHost());
-            var client = webClientBuilder.clientConnector(new ReactorClientHttpConnector(
-                    HttpClient.create().followRedirect(true)
-            )).baseUrl(baseUrl).build();
-
+            var client = builder.baseUrl(uri.getScheme()
+                    .concat("://")
+                    .concat(uri.getHost()))
+                .build();
             try {
-                var result = client.get().uri(builder -> builder
+                var result = client.get().uri(uriBuilder -> uriBuilder
                                 .path(uri.getPath())
                                 .queryParam("env", awsEnv)
                                 .build()
