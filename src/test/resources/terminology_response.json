@@ -1,0 +1,73 @@
+[
+  {
+    "id": "88236b55-e939-4fe1-a5d8-609980b9d680",
+    "code": "concept-3",
+    "uri": "http://uri.suomi.fi/terminology/defa91d0/concept-3",
+    "number": 3,
+    "createdBy": "ebe948a6-42da-7c4b-421e-de9ff0ddc0ba",
+    "createdDate": "2022-09-22T08:13:31Z",
+    "lastModifiedBy": "ebe948a6-42da-7c4b-421e-de9ff0ddc0ba",
+    "lastModifiedDate": "2022-09-22T08:13:31Z",
+    "type": {
+      "id": "Concept",
+      "graph": {
+        "id": "80f70ae3-7a1e-4155-ab5e-c989e098e7b3"
+      }
+    },
+    "properties": {
+      "status": [
+        {
+          "lang": "",
+          "value": "DRAFT",
+          "regex": "(?s)^.*$"
+        }
+      ]
+    },
+    "references": {},
+    "referrers": {}
+  },
+  {
+    "id": "f8215e58-9afb-4df9-9130-bb1c96f3b546",
+    "code": "terminological-vocabulary-0",
+    "uri": "http://uri.suomi.fi/terminology/defa91d0/terminological-vocabulary-0",
+    "number": 0,
+    "createdBy": "23006bf4-4c09-4438-8224-785fdf108812",
+    "createdDate": "2022-09-22T04:23:51Z",
+    "lastModifiedBy": "ebe948a6-42da-7c4b-421e-de9ff0ddc0ba",
+    "lastModifiedDate": "2022-09-22T04:36:32Z",
+    "type": {
+      "id": "TerminologicalVocabulary",
+      "graph": {
+        "id": "80f70ae3-7a1e-4155-ab5e-c989e098e7b3"
+      }
+    },
+    "properties": {
+      "prefLabel": [
+        {
+          "lang": "fi",
+          "value": "Testisanasto",
+          "regex": "(?s)^.*$"
+        },
+        {
+          "lang": "en",
+          "value": "Test terminology",
+          "regex": "(?s)^.*$"
+        }
+      ]
+    },
+    "references": {
+      "inGroup": [
+        {
+          "id": "9ba19f8d-d688-39cc-b620-ebb7875e6e9b",
+          "code": "v1001"
+        }
+      ],
+      "contributor": [
+        {
+          "id": "7d3a3c00-5a6b-489b-a3ed-63bb58c26a63"
+        }
+      ]
+    },
+    "referrers": {}
+  }
+]

@@ -35,6 +35,8 @@ public class JenaService {
     private final RDFConnection importWrite;
     private final RDFConnection importRead;
     private final RDFConnection importSparql;
+    private final RDFConnection conceptRead;
+    private final RDFConnection conceptWrite;
 
     private final Cache<String, Model> modelCache;
 
@@ -46,6 +48,8 @@ public class JenaService {
         this.importWrite = RDFConnection.connect(endpoint + "/imports/data");
         this.importRead = RDFConnection.connect(endpoint + "/imports/get");
         this.importSparql = RDFConnection.connect(endpoint + "/imports/sparql");
+        this.conceptWrite = RDFConnection.connect(endpoint + "/concept/data");
+        this.conceptRead = RDFConnection.connect(endpoint + "/concept/get");
 
         this.modelCache = CacheBuilder.newBuilder()
                 .expireAfterWrite(cacheExpireTime, TimeUnit.SECONDS)
@@ -199,6 +203,22 @@ public class JenaService {
             return importSparql.queryAsk(askBuilder.build());
         }catch(HttpException ex){
             throw new JenaQueryException();
+        }
+    }
+
+    public void putTerminologyToConcepts(String graph, Model model) {
+        conceptWrite.put(graph, model);
+    }
+
+    public Model getTerminology(String graph) {
+        try {
+            return modelCache.get(graph, () -> {
+                logger.debug("Fetch terminology from Fuseki {}", graph);
+                return conceptRead.fetch(graph);
+            });
+        } catch (Exception e) {
+            logger.warn("Error fetching terminology information {}", e.getMessage());
+            return null;
         }
     }
 

@@ -1,13 +1,10 @@
 package fi.vm.yti.datamodel.api.v2.dto;
 
-import org.apache.commons.lang3.builder.ToStringBuilder;
-
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-public class DataModelDTO {
-
+public class DataModelExpandDTO {
     private ModelType type;
     private String prefix;
     private Status status;
@@ -16,10 +13,9 @@ public class DataModelDTO {
     private Set<String> languages = Set.of();
     private Set<UUID> organizations = Set.of();
     private Set<String> groups = Set.of();
-
     private Set<String> internalNamespaces = Set.of();
     private Set<ExternalNamespaceDTO> externalNamespaces = Set.of();
-    private Set<String> terminologies = Set.of();
+    private Set<TerminologyDTO> terminologies = Set.of();
 
     public ModelType getType() {
         return type;
@@ -85,9 +81,12 @@ public class DataModelDTO {
         this.groups = groups;
     }
 
-    @Override
-    public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+    public Set<String> getInternalNamespaces() {
+        return internalNamespaces;
+    }
+
+    public void setInternalNamespaces(Set<String> internalNamespaces) {
+        this.internalNamespaces = internalNamespaces;
     }
 
     public Set<ExternalNamespaceDTO> getExternalNamespaces() {
@@ -98,19 +97,11 @@ public class DataModelDTO {
         this.externalNamespaces = externalNamespaces;
     }
 
-    public Set<String> getInternalNamespaces() {
-        return internalNamespaces;
-    }
-
-    public void setInternalNamespaces(Set<String> internalNamespaces) {
-        this.internalNamespaces = internalNamespaces;
-    }
-
-    public Set<String> getTerminologies() {
+    public Set<TerminologyDTO> getTerminologies() {
         return terminologies;
     }
 
-    public void setTerminologies(Set<String> terminologies) {
+    public void setTerminologies(Set<TerminologyDTO> terminologies) {
         this.terminologies = terminologies;
     }
 }

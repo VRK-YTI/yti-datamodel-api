@@ -75,6 +75,8 @@ public class ModelMapper {
         addInternalNamespaceToDatamodel(modelDTO, modelResource, model);
         addExternalNamespaceToDatamodel(modelDTO, model, modelResource);
 
+        modelDTO.getTerminologies().forEach(terminology -> modelResource.addProperty(DCTerms.references, terminology));
+
         model.setNsPrefix(modelDTO.getPrefix(), modelUri + "#");
 
         return model;
@@ -171,6 +173,14 @@ public class ModelMapper {
             hasUpdated = true;
         }
 
+        if (dataModelDTO.getTerminologies() != null) {
+            modelResource.removeAll(DCTerms.references);
+            dataModelDTO.getTerminologies().forEach(terminology ->
+                    modelResource.addProperty(DCTerms.references, terminology)
+            );
+            hasUpdated = true;
+        }
+
         if(hasUpdated){
             modelResource.removeAll(DCTerms.modified);
             modelResource.addProperty(DCTerms.modified, ResourceFactory.createTypedLiteral(updateDate));
@@ -180,14 +190,14 @@ public class ModelMapper {
     }
 
     /**
-     * Map a Model to DataModelDTO
+     * Map a Model to DataModelExpandDTO
      * @param prefix model prefix
      * @param model Model
      * @return Data Model DTO
      */
-    public DataModelDTO mapToDataModelDTO(String prefix, Model model) {
+    public DataModelExpandDTO mapToDataModelDTO(String prefix, Model model) {
 
-        var datamodelDTO = new DataModelDTO();
+        var datamodelDTO = new DataModelExpandDTO();
         datamodelDTO.setPrefix(prefix);
 
         var modelResource = model.getResource(ModelConstants.SUOMI_FI_NAMESPACE + prefix);
@@ -226,6 +236,17 @@ public class ModelMapper {
         addNamespacesToList(internalNamespaces, externalNamespaces, model, modelResource, DCTerms.requires);
         datamodelDTO.setInternalNamespaces(internalNamespaces);
         datamodelDTO.setExternalNamespaces(externalNamespaces);
+
+        Set<TerminologyDTO> terminologies = modelResource.listProperties(DCTerms.references).toList().stream().map(ref -> {
+            var graph = ref.getObject().toString();
+            var terminologyModel = jenaService.getTerminology(graph);
+            if (terminologyModel == null) {
+                return new TerminologyDTO(graph);
+            }
+            return TerminologyMapper.mapToTerminologyDTO(graph, terminologyModel);
+        }).collect(Collectors.toSet());
+
+        datamodelDTO.setTerminologies(terminologies);
 
         return datamodelDTO;
     }

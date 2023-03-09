@@ -7,6 +7,7 @@ import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexModel;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
 import fi.vm.yti.datamodel.api.v2.mapper.ModelMapper;
 import fi.vm.yti.datamodel.api.v2.service.JenaService;
+import fi.vm.yti.datamodel.api.v2.service.TerminologyService;
 import fi.vm.yti.datamodel.api.v2.validator.ExceptionHandlerAdvice;
 import fi.vm.yti.datamodel.api.v2.validator.ValidationConstants;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -60,6 +61,9 @@ class DatamodelTest {
 
     @MockBean
     private ModelMapper modelMapper;
+
+    @MockBean
+    private TerminologyService terminologyService;
 
     @Autowired
     private Datamodel datamodel;
@@ -150,7 +154,7 @@ class DatamodelTest {
     void shouldReturnModel() throws Exception {
         var mockModel = mock(Model.class);
         when(jenaService.getDataModel(anyString())).thenReturn(mockModel);
-        when(modelMapper.mapToDataModelDTO(anyString(), any(Model.class))).thenReturn(new DataModelDTO());
+        when(modelMapper.mapToDataModelDTO(anyString(), any(Model.class))).thenReturn(new DataModelExpandDTO());
 
         this.mvc
                 .perform(get("/v2/model/test")
@@ -284,6 +288,7 @@ class DatamodelTest {
             dataModelDTO.setType(ModelType.LIBRARY);
         }
         dataModelDTO.setStatus(Status.DRAFT);
+        dataModelDTO.setTerminologies(Set.of("http://uri.suomi.fi/terminology/test"));
         return dataModelDTO;
     }
 
@@ -377,6 +382,10 @@ class DatamodelTest {
         invalidExtRes.setPrefix("test");
         invalidExtRes.setNamespace("http://uri.suomi.fi/datamodel/ns/test");
         dataModelDTO.setExternalNamespaces(Set.of(invalidExtRes));
+        args.add(dataModelDTO);
+
+        dataModelDTO = createDatamodelDTO(false);
+        dataModelDTO.setTerminologies(Set.of("http://invalid.url"));
         args.add(dataModelDTO);
 
         return args.stream().map(Arguments::of);
