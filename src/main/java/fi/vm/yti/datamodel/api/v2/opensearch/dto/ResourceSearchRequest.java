@@ -6,15 +6,24 @@ import java.util.Set;
 
 public class ResourceSearchRequest extends BaseSearchRequest{
 
-    private String fromAddedNamespaces;
+    private String limitToDataModel;
+    private boolean fromAddedNamespaces;
     private Set<String> groups;
     private Set<ResourceType> resourceTypes;
 
-    public String getFromAddedNamespaces() {
+    public String getLimitToDataModel() {
+        return limitToDataModel;
+    }
+
+    public void setLimitToDataModel(String limitToDataModel) {
+        this.limitToDataModel = limitToDataModel;
+    }
+
+    public boolean isFromAddedNamespaces() {
         return fromAddedNamespaces;
     }
 
-    public void setFromAddedNamespaces(String fromAddedNamespaces) {
+    public void setFromAddedNamespaces(boolean fromAddedNamespaces) {
         this.fromAddedNamespaces = fromAddedNamespaces;
     }
 

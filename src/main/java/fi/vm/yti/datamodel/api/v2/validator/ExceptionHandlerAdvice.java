@@ -66,6 +66,14 @@ public class ExceptionHandlerAdvice extends ResponseEntityExceptionHandler {
         return ResponseEntity.badRequest().body(apiError);
     }
 
+    @ExceptionHandler(OpenSearchException.class)
+    protected  ResponseEntity<Object> handleOpenSearchException(OpenSearchException exception){
+        var apiError = new ApiGenericError(BAD_REQUEST);
+        apiError.setMessage(exception.getMessage());
+        apiError.setDetails("Index: " + exception.getIndex());
+        return ResponseEntity.badRequest().body(apiError);
+    }
+
     @ExceptionHandler(ResolvingException.class)
     protected  ResponseEntity<Object> handleMappingError(ResolvingException error){
         var apiError = new ApiGenericError(BAD_REQUEST);

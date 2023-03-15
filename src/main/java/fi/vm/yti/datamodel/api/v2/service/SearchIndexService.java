@@ -1,16 +1,17 @@
 package fi.vm.yti.datamodel.api.v2.service;
 
 import fi.vm.yti.datamodel.api.index.OpenSearchConnector;
+import fi.vm.yti.datamodel.api.v2.endpoint.error.OpenSearchException;
 import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.opensearch.dto.*;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexResource;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexModel;
+import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
 import fi.vm.yti.datamodel.api.v2.opensearch.queries.ResourceQueryFactory;
 import fi.vm.yti.datamodel.api.v2.opensearch.queries.CountQueryFactory;
 import fi.vm.yti.datamodel.api.v2.opensearch.queries.ModelQueryFactory;
 import fi.vm.yti.security.Role;
 import fi.vm.yti.security.YtiUser;
-import org.apache.jena.atlas.lib.SetUtils;
 import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.OWL;
 import org.opensearch.client.opensearch.OpenSearchClient;
@@ -53,7 +54,7 @@ public class SearchIndexService {
             SearchResponse<IndexModel> response = client.search(query, IndexModel.class);
             return countQueryFactory.parseResponse(response);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new OpenSearchException(e.getMessage(), OpenSearchIndexer.OPEN_SEARCH_INDEX_MODEL);
         }
     }
 
@@ -80,9 +81,9 @@ public class SearchIndexService {
             modelSearchResponse.setPageSize(request.getPageSize());
 
             return modelSearchResponse;
-        } catch (Exception e) {
+        } catch (IOException e) {
             LOG.error(e.getMessage(), e);
-            throw new RuntimeException(e);
+            throw new OpenSearchException(e.getMessage(), OpenSearchIndexer.OPEN_SEARCH_INDEX_MODEL);
         }
     }
 
@@ -103,10 +104,16 @@ public class SearchIndexService {
     }
 
        public SearchResponseDTO<IndexResource> searchInternalResources(ResourceSearchRequest request, Set<String> allowedDatamodels) throws IOException {
-        Set<String> namespaces = null;
+        Set<String> namespaces = new HashSet<>();
+        if(request.getLimitToDataModel() != null && !request.getLimitToDataModel().isBlank()){
+            namespaces.add(request.getLimitToDataModel());
+        }
 
-        if(request.getFromAddedNamespaces() != null){
-            namespaces = getNamespacesFromModel(request.getFromAddedNamespaces());
+        if(request.isFromAddedNamespaces()){
+            if(request.getLimitToDataModel() == null){
+                throw new OpenSearchException("limitToDataModel cannot be empty if getting from added namespace", OpenSearchIndexer.OPEN_SEARCH_INDEX_RESOURCE);
+            }
+            getNamespacesFromModel(request.getLimitToDataModel(), namespaces);
         }
 
         Set<String> groupRestrictedNamespaces = null;
@@ -135,15 +142,13 @@ public class SearchIndexService {
         return result;
     }
 
-    private Set<String> getNamespacesFromModel(String modelUri){
+    private void getNamespacesFromModel(String modelUri, Set<String> namespaces){
         var model = jenaService.getDataModel(modelUri);
         if(model != null){
             var resource = model.getResource(modelUri);
-            var owlImport = MapperUtils.arrayPropertyToSet(resource, OWL.imports);
-            var dcTermsRequires = MapperUtils.arrayPropertyToSet(resource, DCTerms.requires);
-            return SetUtils.union(owlImport, dcTermsRequires);
+            namespaces.addAll(MapperUtils.arrayPropertyToSet(resource, OWL.imports));
+            namespaces.addAll(MapperUtils.arrayPropertyToSet(resource, DCTerms.requires));
         }
-        return Collections.emptySet();
     }
 
     private Set<UUID> getOrganizationsForUser(YtiUser user){
