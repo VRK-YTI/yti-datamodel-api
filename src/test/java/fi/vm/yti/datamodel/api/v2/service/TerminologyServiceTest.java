@@ -10,11 +10,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
-import org.springframework.http.client.reactive.ClientHttpConnector;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
@@ -36,10 +36,11 @@ import static org.mockito.Mockito.*;
 public class TerminologyServiceTest {
 
     @MockBean
-    private WebClient.Builder builder;
+    @Qualifier("uriResolveClient")
+    private WebClient client;
     @MockBean
     private JenaService jenaService;
-    private ObjectMapper mapper = new ObjectMapper();
+    private final ObjectMapper mapper = new ObjectMapper();
     @Captor
     private ArgumentCaptor<String> stringCaptor;
     @Captor
@@ -73,11 +74,6 @@ public class TerminologyServiceTest {
     }
 
     private void mockWebClient(List<TerminologyNodeDTO> result) {
-        var client = mock(WebClient.class);
-        when(builder.clientConnector(any(ClientHttpConnector.class))).thenReturn(builder);
-        when(builder.baseUrl(anyString())).thenReturn(builder);
-        when(builder.build()).thenReturn(client);
-
         var req = mock(WebClient.RequestHeadersUriSpec.class);
         var res = mock(WebClient.ResponseSpec.class);
         var mono = mock(Mono.class);
