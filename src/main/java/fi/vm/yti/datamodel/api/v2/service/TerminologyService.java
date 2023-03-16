@@ -4,13 +4,12 @@ import fi.vm.yti.datamodel.api.v2.dto.TerminologyNodeDTO;
 import fi.vm.yti.datamodel.api.v2.mapper.TerminologyMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.MediaType;
-import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
-import reactor.netty.http.client.HttpClient;
 
 import java.net.URI;
 import java.util.List;
@@ -26,13 +25,14 @@ public class TerminologyService {
      */
     @Value("${env:}")
     private String awsEnv;
-
-    private final WebClient.Builder webClientBuilder;
+    private final WebClient client;
     private final JenaService jenaService;
 
-    public TerminologyService(WebClient.Builder webClientBuilder, JenaService jenaService) {
-        this.webClientBuilder = webClientBuilder;
+    public TerminologyService(
+            @Qualifier("uriResolveClient") WebClient webClient,
+            JenaService jenaService) {
         this.jenaService = jenaService;
+        this.client = webClient;
     }
 
     /**
@@ -41,16 +41,9 @@ public class TerminologyService {
      */
     public void resolveTerminology(Set<String> terminologyUris) {
 
-        WebClient.Builder builder = webClientBuilder.clientConnector(new ReactorClientHttpConnector(
-                HttpClient.create().followRedirect(true)
-        ));
-
         for (String u : terminologyUris) {
             var uri = URI.create(u);
-            var client = builder.baseUrl(uri.getScheme()
-                    .concat("://")
-                    .concat(uri.getHost()))
-                .build();
+            LOG.debug("Fetching terminology {}", uri);
             try {
                 var result = client.get().uri(uriBuilder -> uriBuilder
                                 .path(uri.getPath())

@@ -4,6 +4,7 @@ import fi.vm.yti.datamodel.api.v2.dto.GroupManagementOrganizationDTO;
 import fi.vm.yti.datamodel.api.v2.dto.GroupManagementUserDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
@@ -20,22 +21,19 @@ public class GroupManagementService {
     private static final Logger LOG = LoggerFactory.getLogger(GroupManagementService.class);
     private final JenaService jenaService;
 
-    private final WebClient.Builder webClientBuilder;
-
-    @Value("${defaultGroupManagementAPI}")
-    private String defaultGroupManagementUrl;
+    private final WebClient webClient;
 
     @Value("${fake.login.allowed:false}")
     private boolean fakeLoginAllowed;
 
-    public GroupManagementService(WebClient.Builder webClientBuilder,
-                                  JenaService jenaService) {
+    public GroupManagementService(
+            @Qualifier("groupManagementClient") WebClient webClient,
+            JenaService jenaService) {
         this.jenaService = jenaService;
-        this.webClientBuilder = webClientBuilder;
+        this.webClient = webClient;
     }
 
     public void initOrganizations() {
-        var webClient = webClientBuilder.baseUrl(defaultGroupManagementUrl).build();
 
         try {
             var organizations = webClient.get().uri(builder -> builder
@@ -65,7 +63,6 @@ public class GroupManagementService {
     public List<GroupManagementUserDTO> getFakeableUsers() {
 
         if (fakeLoginAllowed) {
-            var webClient = webClientBuilder.baseUrl(defaultGroupManagementUrl).build();
 
             try {
                 return webClient.get().uri(builder -> builder
