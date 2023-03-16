@@ -23,7 +23,8 @@ class ResourceQueryFactoryTest {
         var request = new ResourceSearchRequest();
         request.setQuery("test query");
         request.setGroups(Set.of("P11", "P1"));
-        request.setFromAddedNamespaces("http://uri.suomi.fi/datamodel/ns/test");
+        request.setLimitToDataModel("http://uri.suomi.fi/datamodel/ns/test");
+        request.setFromAddedNamespaces(true);
         request.setPageFrom(1);
         request.setPageSize(100);
         request.setStatus(Set.of(Status.DRAFT, Status.VALID));
