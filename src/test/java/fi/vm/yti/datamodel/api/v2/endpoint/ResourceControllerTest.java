@@ -3,6 +3,7 @@ package fi.vm.yti.datamodel.api.v2.endpoint;
 import fi.vm.yti.datamodel.api.security.AuthorizationManager;
 import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.mapper.ResourceMapper;
+import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexResource;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
 import fi.vm.yti.datamodel.api.v2.service.JenaService;
 import fi.vm.yti.datamodel.api.v2.validator.ExceptionHandlerAdvice;
@@ -27,6 +28,7 @@ import java.util.*;
 import java.util.stream.Stream;
 
 import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -75,6 +77,7 @@ class ResourceControllerTest {
 
         when(jenaService.getDataModel(anyString())).thenReturn(mockModel);
         when(mapper.mapToResource(anyString(), any(Model.class), any(ResourceDTO.class))).thenReturn("test");
+        when(mapper.mapToIndexResource(any(Model.class), anyString())).thenReturn(mock(IndexResource.class));
 
         this.mvc
                 .perform(put("/v2/resource/test")
@@ -90,13 +93,15 @@ class ResourceControllerTest {
         verify(this.mapper)
                 .mapToResource(anyString(), any(Model.class), any(ResourceDTO.class));
         verify(this.jenaService).putDataModelToCore(anyString(), any(Model.class));
+        verifyNoMoreInteractions(this.jenaService);
         verify(this.mapper).mapToIndexResource(any(Model.class), anyString());
         verifyNoMoreInteractions(this.mapper);
-        verifyNoMoreInteractions(this.jenaService);
+        verify(this.openSearchIndexer).createResourceToIndex(any(IndexResource.class));
+        verifyNoMoreInteractions(this.openSearchIndexer);
     }
 
     @Test
-    void shouldValidateAndCreateMinimalClass() throws Exception {
+    void shouldValidateAndCreateMinimalAssociation() throws Exception {
         var resourceDTO = new ResourceDTO();
         resourceDTO.setIdentifier("Identifier");
         resourceDTO.setStatus(Status.DRAFT);
@@ -106,7 +111,7 @@ class ResourceControllerTest {
 
         when(jenaService.getDataModel(anyString())).thenReturn(mockModel);
         when(mapper.mapToResource(anyString(), any(Model.class), any(ResourceDTO.class))).thenReturn("test");
-
+        when(mapper.mapToIndexResource(any(Model.class), anyString())).thenReturn(mock(IndexResource.class));
         this.mvc
                 .perform(put("/v2/resource/test")
                         .contentType("application/json")
@@ -122,6 +127,8 @@ class ResourceControllerTest {
         verifyNoMoreInteractions(this.jenaService);
         verify(this.mapper).mapToIndexResource(any(Model.class), anyString());
         verifyNoMoreInteractions(this.mapper);
+        verify(this.openSearchIndexer).createResourceToIndex(any(IndexResource.class));
+        verifyNoMoreInteractions(this.openSearchIndexer);
     }
 
     @Test
@@ -234,6 +241,33 @@ class ResourceControllerTest {
                         .contentType("application/json")
                         .content(EndpointUtils.convertObjectToJsonString(resourceDTO)))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void shouldGetResource() throws Exception {
+        var mock = mock(Model.class);
+        when(jenaService.doesResourceExistInGraph(anyString(), anyString())).thenReturn(true);
+        when(jenaService.getDataModel(anyString())).thenReturn(mock);
+        when(jenaService.getOrganizations()).thenReturn(mock(Model.class));
+        when(authorizationManager.hasRightToModel(anyString(), eq(mock))).thenReturn(true);
+        when(mapper.mapToResourceInfoDTO(eq(mock), anyString(), anyString(), any(Model.class), anyBoolean())).thenReturn(new ResourceInfoDTO());
+
+        mvc.perform(get("/v2/resource/test/resource"))
+                .andExpect(status().isOk());
+
+        verify(jenaService).doesResourceExistInGraph(anyString(), anyString());
+        verify(jenaService).getDataModel(anyString());
+        verify(jenaService).getOrganizations();
+        verify(authorizationManager).hasRightToModel(anyString(), eq(mock));
+        verify(mapper).mapToResourceInfoDTO(eq(mock), anyString(), anyString(), any(Model.class), anyBoolean());
+    }
+
+    @Test
+    void shouldNotFindResourceGet() throws Exception {
+        mvc.perform(get("/v2/resource/test/resource"))
+                .andExpect(status().isNotFound());
+
+        verify(jenaService).doesResourceExistInGraph(anyString(), anyString());
     }
 
     private static Stream<Arguments> provideUpdateResourceDTOInvalidData() {

@@ -115,7 +115,7 @@ class ClassMapperTest {
     void testMapToClassDTO(){
         when(jenaService.doesResourceExistInGraph(anyString(), anyString())).thenReturn(true);
         Model m = ModelFactory.createDefaultModel();
-        var stream = getClass().getResourceAsStream("/test_datamodel_with_class.ttl");
+        var stream = getClass().getResourceAsStream("/models/test_datamodel_with_resources.ttl");
         assertNotNull(stream);
         RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
 
@@ -141,7 +141,7 @@ class ClassMapperTest {
     void testMapToClassMinimalDTO(){
         when(jenaService.doesResourceExistInGraph(anyString(), anyString())).thenReturn(true);
         Model m = ModelFactory.createDefaultModel();
-        var stream = getClass().getResourceAsStream("/models/test_datamodel_with_minimal_class.ttl");
+        var stream = getClass().getResourceAsStream("/models/test_datamodel_with_minimal_resources.ttl");
         assertNotNull(stream);
         RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
 
@@ -164,7 +164,7 @@ class ClassMapperTest {
         when(jenaService.doesResourceExistInGraph(anyString(), anyString())).thenReturn(true);
         when(authorizationManager.hasRightToModel(anyString(), any(Model.class))).thenReturn(true);
         Model m = ModelFactory.createDefaultModel();
-        var stream = getClass().getResourceAsStream("/test_datamodel_with_class.ttl");
+        var stream = getClass().getResourceAsStream("/models/test_datamodel_with_resources.ttl");
         assertNotNull(stream);
         RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
 
@@ -176,7 +176,7 @@ class ClassMapperTest {
     @Test
     void testMapToUpdateClass(){
         Model m = ModelFactory.createDefaultModel();
-        var stream = getClass().getResourceAsStream("/test_datamodel_with_class.ttl");
+        var stream = getClass().getResourceAsStream("/models/test_datamodel_with_resources.ttl");
         assertNotNull(stream);
         RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
         var resource = m.getResource("http://uri.suomi.fi/datamodel/ns/test#TestClass");
@@ -222,7 +222,7 @@ class ClassMapperTest {
     @Test
     void testMapToUpdateClassNullValuesDTO(){
         Model m = ModelFactory.createDefaultModel();
-        var stream = getClass().getResourceAsStream("/test_datamodel_with_class.ttl");
+        var stream = getClass().getResourceAsStream("/models/test_datamodel_with_resources.ttl");
         assertNotNull(stream);
         RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
         var resource = m.getResource("http://uri.suomi.fi/datamodel/ns/test#TestClass");
@@ -259,7 +259,7 @@ class ClassMapperTest {
     @Test
     void testMapToUpdateClassEmptyValuesDTO(){
         Model m = ModelFactory.createDefaultModel();
-        var stream = getClass().getResourceAsStream("/test_datamodel_with_class.ttl");
+        var stream = getClass().getResourceAsStream("/models/test_datamodel_with_resources.ttl");
         assertNotNull(stream);
         RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
         var resource = m.getResource("http://uri.suomi.fi/datamodel/ns/test#TestClass");

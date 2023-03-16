@@ -1,12 +1,8 @@
 package fi.vm.yti.datamodel.api.v2.mapper;
 
-import fi.vm.yti.datamodel.api.v2.dto.Iow;
-import fi.vm.yti.datamodel.api.v2.dto.ResourceDTO;
-import fi.vm.yti.datamodel.api.v2.dto.ResourceType;
-import fi.vm.yti.datamodel.api.v2.dto.Status;
+import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexResource;
-import fi.vm.yti.datamodel.api.v2.service.JenaService;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.datatypes.xsd.XSDDateTime;
 import org.apache.jena.rdf.model.Model;
@@ -19,19 +15,9 @@ import java.util.Calendar;
 @Service
 public class ResourceMapper {
 
-    private final JenaService jenaService;
-
-    public ResourceMapper(JenaService jenaService) {
-        this.jenaService = jenaService;
-    }
-
     public String mapToResource(String graphUri, Model model, ResourceDTO dto){
         var creationDate = new XSDDateTime(Calendar.getInstance());
         var resourceUri = graphUri + "#" + dto.getIdentifier();
-        if(jenaService.doesResourceExistInGraph(graphUri, resourceUri)){
-            throw new MappingError("Resource already exists");
-        }
-
         var resourceType = dto.getType().equals(ResourceType.ASSOCIATION) ? OWL.ObjectProperty : OWL.DatatypeProperty;
 
         var resourceResource = model.createResource(resourceUri)
@@ -105,6 +91,43 @@ public class ResourceMapper {
         }
 
         return indexResource;
+    }
+
+    public ResourceInfoDTO mapToResourceInfoDTO(Model model, String prefix, String classIdentifier, Model orgModel, boolean hasRightToModel) {
+        var dto = new ResourceInfoDTO();
+        var modelUri = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
+        var resourceUri = modelUri + "#" + classIdentifier;
+        var resourceResource = model.getResource(resourceUri);
+        var type = resourceResource.getProperty(RDF.type).getResource();
+        if(type.equals(OWL.ObjectProperty)){
+            dto.setType(ResourceType.ASSOCIATION);
+        }else if(type.equals(OWL.DatatypeProperty)){
+            dto.setType(ResourceType.ATTRIBUTE);
+        }else{
+            throw new MappingError("Unsupported rdf:type");
+        }
+        dto.setLabel(MapperUtils.localizedPropertyToMap(resourceResource, RDFS.label));
+        var status = Status.valueOf(resourceResource.getProperty(OWL.versionInfo).getObject().toString().toUpperCase());
+        dto.setStatus(status);
+        dto.setSubResourceOf(MapperUtils.arrayPropertyToSet(resourceResource, RDFS.subPropertyOf));
+        dto.setEquivalentResource(MapperUtils.arrayPropertyToSet(resourceResource, OWL.equivalentProperty));
+        dto.setSubject(MapperUtils.propertyToString(resourceResource, DCTerms.subject));
+        dto.setIdentifier(resourceResource.getLocalName());
+        dto.setNote(MapperUtils.localizedPropertyToMap(resourceResource, SKOS.note));
+        if (hasRightToModel) {
+            dto.setEditorialNote(MapperUtils.propertyToString(resourceResource, SKOS.editorialNote));
+        }
+
+
+        var created = resourceResource.getProperty(DCTerms.created).getLiteral().getString();
+        var modified = resourceResource.getProperty(DCTerms.modified).getLiteral().getString();
+        dto.setCreated(created);
+        dto.setModified(modified);
+        var contributors = MapperUtils.arrayPropertyToSet(model.getResource(modelUri), DCTerms.contributor);
+        dto.setContributor(OrganizationMapper.mapOrganizationsToDTO(contributors, orgModel));
+        dto.setContact(MapperUtils.propertyToString(resourceResource, Iow.contact));
+
+        return dto;
     }
 
 }
