@@ -14,9 +14,7 @@ import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.SKOS;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 import static fi.vm.yti.datamodel.api.v2.dto.ModelConstants.*;
 import static fi.vm.yti.datamodel.api.v2.mapper.MapperUtils.getUUID;
@@ -54,6 +52,23 @@ public class OrganizationMapper {
             }
         }
         return orgModel;
+    }
+
+    public static Set<OrganizationDTO> mapOrganizationsToDTO(Set<String> organizations, Model organizationModel) {
+        var result = new HashSet<OrganizationDTO>();
+        organizations.forEach(org -> {
+            var orgRes = organizationModel.getResource(org);
+            var labels = localizedPropertyToMap(orgRes, SKOS.prefLabel);
+            var id = getUUID(orgRes.getURI());
+
+            Statement stmt = orgRes.getProperty(Iow.parentOrganization);
+            UUID parentId = stmt != null ? getUUID(stmt.getObject().toString()) : null;
+
+            if (id != null) {
+                result.add(new OrganizationDTO(id.toString(), labels, parentId));
+            }
+        });
+        return result;
     }
 
     public static List<OrganizationDTO> mapToListOrganizationDTO(Model organizationModel) {

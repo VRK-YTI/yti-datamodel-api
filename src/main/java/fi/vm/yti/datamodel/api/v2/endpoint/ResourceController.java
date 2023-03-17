@@ -3,6 +3,7 @@ package fi.vm.yti.datamodel.api.v2.endpoint;
 import fi.vm.yti.datamodel.api.security.AuthorizationManager;
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
 import fi.vm.yti.datamodel.api.v2.dto.ResourceDTO;
+import fi.vm.yti.datamodel.api.v2.dto.ResourceInfoDTO;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
 import fi.vm.yti.datamodel.api.v2.mapper.ResourceMapper;
@@ -77,6 +78,26 @@ public class ResourceController {
         //jenaService.createDataModel(ModelConstants.SUOMI_FI_NAMESPACE + prefix, model);
         // var indexClass = classMapper.mapToIndexClass(model, classURi);
         //openSearchIndexer.createClassToIndex(indexClass);
+    }
+
+    @Operation(summary = "Find a class from a model")
+    @ApiResponse(responseCode = "200", description = "Class found")
+    @GetMapping(value = "/{prefix}/{resourceIdentifier}", produces = APPLICATION_JSON_VALUE)
+    public ResourceInfoDTO getResource(@PathVariable String prefix, @PathVariable String resourceIdentifier){
+        var graphUri = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
+        if(!jenaService.doesResourceExistInGraph(graphUri,graphUri + "#" + resourceIdentifier)){
+            throw new ResourceNotFoundException("Resource does not exist");
+        }
+
+        var model = jenaService.getDataModel(graphUri);
+        if(model == null){
+            throw new ResourceNotFoundException(prefix);
+        }
+
+        var orgModel = jenaService.getOrganizations();
+        var hasRightToModel = authorizationManager.hasRightToModel(prefix, model);
+
+        return resourceMapper.mapToResourceInfoDTO(model, prefix, resourceIdentifier, orgModel, hasRightToModel);
     }
 
 }
