@@ -4,17 +4,18 @@ import fi.vm.yti.datamodel.api.v2.dto.GroupManagementOrganizationDTO;
 import fi.vm.yti.datamodel.api.v2.dto.Iow;
 
 import fi.vm.yti.datamodel.api.v2.dto.OrganizationDTO;
+import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.ResourceFactory;
-import org.apache.jena.rdf.model.Statement;
 import org.apache.jena.sparql.vocabulary.FOAF;
 import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.SKOS;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static fi.vm.yti.datamodel.api.v2.dto.ModelConstants.*;
 import static fi.vm.yti.datamodel.api.v2.mapper.MapperUtils.getUUID;
@@ -55,20 +56,17 @@ public class OrganizationMapper {
     }
 
     public static Set<OrganizationDTO> mapOrganizationsToDTO(Set<String> organizations, Model organizationModel) {
-        var result = new HashSet<OrganizationDTO>();
-        organizations.forEach(org -> {
+        return organizations.stream().map(org -> {
             var orgRes = organizationModel.getResource(org);
             var labels = localizedPropertyToMap(orgRes, SKOS.prefLabel);
             var id = getUUID(orgRes.getURI());
 
-            Statement stmt = orgRes.getProperty(Iow.parentOrganization);
-            UUID parentId = stmt != null ? getUUID(stmt.getObject().toString()) : null;
-
-            if (id != null) {
-                result.add(new OrganizationDTO(id.toString(), labels, parentId));
+            var parentId = getUUID(MapperUtils.propertyToString(orgRes, Iow.parentOrganization));
+            if(id == null){
+                throw new MappingError("Could not map organization");
             }
-        });
-        return result;
+            return new OrganizationDTO(id.toString(), labels, parentId);
+        }).collect(Collectors.toSet());
     }
 
     public static List<OrganizationDTO> mapToListOrganizationDTO(Model organizationModel) {
@@ -81,8 +79,7 @@ public class OrganizationMapper {
             var labels = localizedPropertyToMap(resource, SKOS.prefLabel);
             var id = getUUID(resource.getURI());
 
-            Statement stmt = resource.getProperty(Iow.parentOrganization);
-            UUID parentId = stmt != null ? getUUID(stmt.getObject().toString()) : null;
+            var parentId = getUUID(MapperUtils.propertyToString(resource, Iow.parentOrganization));
 
             if (id != null) {
                 result.add(new OrganizationDTO(id.toString(), labels, parentId));

@@ -3,6 +3,7 @@ package fi.vm.yti.datamodel.api.v2.endpoint;
 import fi.vm.yti.datamodel.api.security.AuthorizationManager;
 import fi.vm.yti.datamodel.api.v2.dto.ClassDTO;
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
+import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
 import fi.vm.yti.datamodel.api.v2.mapper.ClassMapper;
 import fi.vm.yti.datamodel.api.v2.mapper.ResourceMapper;
@@ -46,14 +47,18 @@ public class ClassController {
     @ApiResponse(responseCode = "200", description = "Class added to model successfully")
     @PutMapping(value = "/{prefix}", consumes = APPLICATION_JSON_VALUE)
     public void createClass(@PathVariable String prefix, @RequestBody @ValidClass ClassDTO classDTO){
-        var model = jenaService.getDataModel(ModelConstants.SUOMI_FI_NAMESPACE + prefix);
+        var modelURI = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
+        if(jenaService.doesResourceExistInGraph(modelURI, modelURI + "#" + classDTO.getIdentifier())){
+            throw new MappingError("Class already exists");
+        }
+        var model = jenaService.getDataModel(modelURI);
         if(model == null){
-            throw new ResourceNotFoundException(prefix);
+            throw new ResourceNotFoundException(modelURI);
         }
         check(authorizationManager.hasRightToModel(prefix, model));
 
-        var classURi = classMapper.createClassAndMapToModel(prefix, model, classDTO);
-        jenaService.putDataModelToCore(ModelConstants.SUOMI_FI_NAMESPACE + prefix, model);
+        var classURi = classMapper.createClassAndMapToModel(modelURI, model, classDTO);
+        jenaService.putDataModelToCore(modelURI, model);
         var indexClass = resourceMapper.mapToIndexResource(model, classURi);
         openSearchIndexer.createResourceToIndex(indexClass);
     }
@@ -86,10 +91,16 @@ public class ClassController {
     @ApiResponse(responseCode = "200", description = "Class found successfully")
     @GetMapping(value = "/{prefix}/{classIdentifier}", produces = APPLICATION_JSON_VALUE)
     public ClassDTO getClass(@PathVariable String prefix, @PathVariable String classIdentifier){
-        var model = jenaService.getDataModel(ModelConstants.SUOMI_FI_NAMESPACE + prefix);
-        if(model == null){
-            throw new ResourceNotFoundException(prefix);
+        var modelURI = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
+        if(!jenaService.doesResourceExistInGraph(modelURI , modelURI + "#" + classIdentifier)){
+            throw new ResourceNotFoundException(modelURI + "#" + classIdentifier);
         }
-        return classMapper.mapToClassDTO(prefix, classIdentifier, model);
+        var model = jenaService.getDataModel(modelURI);
+        if(model == null){
+            throw new ResourceNotFoundException(modelURI);
+        }
+        var hasRightToModel = authorizationManager.hasRightToModel(prefix, model);
+
+        return classMapper.mapToClassDTO(prefix, classIdentifier, model, hasRightToModel);
     }
 }

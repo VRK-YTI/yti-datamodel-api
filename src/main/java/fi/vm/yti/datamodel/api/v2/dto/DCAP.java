@@ -13,4 +13,5 @@ public class DCAP {
 
     public static final Property preferredXMLNamespacePrefix = ResourceFactory.createProperty(URI, "preferredXMLNamespacePrefix");
     public static final Property preferredXMLNamespace = ResourceFactory.createProperty(URI, "preferredXMLNamespace");
+    public static final Property DCAP = ResourceFactory.createProperty(URI, "DCAP");
 }
