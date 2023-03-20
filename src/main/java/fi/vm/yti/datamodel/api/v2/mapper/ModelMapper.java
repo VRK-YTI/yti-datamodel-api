@@ -1,6 +1,7 @@
 package fi.vm.yti.datamodel.api.v2.mapper;
 
 import fi.vm.yti.datamodel.api.v2.dto.*;
+import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexModel;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
 import fi.vm.yti.datamodel.api.v2.service.JenaQueryException;
@@ -8,7 +9,6 @@ import fi.vm.yti.datamodel.api.v2.service.JenaService;
 import org.apache.jena.atlas.web.HttpException;
 import org.apache.jena.datatypes.xsd.XSDDateTime;
 import org.apache.jena.rdf.model.*;
-import org.apache.jena.sparql.vocabulary.FOAF;
 import org.apache.jena.vocabulary.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,7 +42,7 @@ public class ModelMapper {
         model.setNsPrefixes(ModelConstants.PREFIXES);
         Resource type = modelDTO.getType().equals(ModelType.LIBRARY)
                 ? OWL.Ontology
-                : ResourceFactory.createProperty("http://www.w3.org/2002/07/dcap#DCAP");
+                : DCAP.DCAP;
 
         var creationDate = new XSDDateTime(Calendar.getInstance());
         var modelResource = model.createResource(modelUri)
@@ -202,10 +202,16 @@ public class ModelMapper {
 
         var modelResource = model.getResource(ModelConstants.SUOMI_FI_NAMESPACE + prefix);
 
-        var type = modelResource.getProperty(RDF.type).getObject().equals(OWL.Ontology) ? ModelType.LIBRARY : ModelType.PROFILE;
-        datamodelDTO.setType(type);
+        var types = modelResource.listProperties(RDF.type).mapWith(Statement::getResource).toList();
+        if(types.contains(DCAP.DCAP) || types.contains(ResourceFactory.createProperty("http://www.w3.org/2002/07/dcap#DCAP"))){
+            datamodelDTO.setType(ModelType.PROFILE);
+        }else if(types.contains(OWL.Ontology)){
+            datamodelDTO.setType(ModelType.LIBRARY);
+        }else{
+            throw new MappingError("RDF:type not supported for data model");
+        }
 
-        var status = Status.valueOf(modelResource.getProperty(OWL.versionInfo).getObject().toString().toUpperCase());
+        var status = Status.valueOf(MapperUtils.propertyToString(modelResource, OWL.versionInfo));
         datamodelDTO.setStatus(status);
 
         //Language
@@ -218,17 +224,17 @@ public class ModelMapper {
         datamodelDTO.setDescription(MapperUtils.localizedPropertyToMap(modelResource, RDFS.comment));
 
         var existingGroups = jenaService.getServiceCategories();
-        var groups = modelResource.listProperties(DCTerms.isPartOf).toList().stream().map(prop -> {
-            var resource = existingGroups.getResource(prop.getObject().toString());
-            return resource.getProperty(SKOS.notation).getObject().toString();
-        }).collect(Collectors.toSet());
-        datamodelDTO.setGroups(groups);
+        var groups = MapperUtils.arrayPropertyToSet(modelResource, DCTerms.isPartOf);
+        datamodelDTO.setGroups(ServiceCategoryMapper.mapServiceCategoriesToDTO(groups, existingGroups));
 
-        var organizations = modelResource.listProperties(DCTerms.contributor).toList().stream().map(prop -> {
-            var orgUri = prop.getObject().toString();
-            return MapperUtils.getUUID(orgUri);
-        }).collect(Collectors.toSet());
-        datamodelDTO.setOrganizations(organizations);
+        var organizations = MapperUtils.arrayPropertyToSet(modelResource, DCTerms.contributor);
+        datamodelDTO.setOrganizations(OrganizationMapper.mapOrganizationsToDTO(organizations, jenaService.getOrganizations()));
+
+        var created = modelResource.getProperty(DCTerms.created).getLiteral().getString();
+        var modified = modelResource.getProperty(DCTerms.modified).getLiteral().getString();
+        datamodelDTO.setCreated(created);
+        datamodelDTO.setModified(modified);
+
 
         var internalNamespaces = new HashSet<String>();
         var externalNamespaces = new HashSet<ExternalNamespaceDTO>();
@@ -264,14 +270,18 @@ public class ModelMapper {
         indexModel.setStatus(Status.valueOf(resource.getProperty(OWL.versionInfo).getString()));
         indexModel.setModified(resource.getProperty(DCTerms.modified).getString());
         indexModel.setCreated(resource.getProperty(DCTerms.created).getString());
-
         var contentModified = resource.getProperty(Iow.contentModified);
-        if(contentModified != null){
+        if(contentModified != null) {
             indexModel.setContentModified(contentModified.getString());
         }
-        indexModel.setType(resource.getProperty(RDF.type).getObject().equals(OWL.Ontology)
-                ? ModelType.LIBRARY
-                : ModelType.PROFILE);
+        var types = resource.listProperties(RDF.type).mapWith(Statement::getResource).toList();
+        if(types.contains(DCAP.DCAP) || types.contains(ResourceFactory.createProperty("http://www.w3.org/2002/07/dcap#DCAP"))){
+            indexModel.setType(ModelType.PROFILE);
+        }else if(types.contains(OWL.Ontology)){
+            indexModel.setType(ModelType.LIBRARY);
+        }else{
+            throw new MappingError("RDF:type not supported for data model");
+        }
         indexModel.setPrefix(prefix);
         indexModel.setLabel(MapperUtils.localizedPropertyToMap(resource, RDFS.label));
         indexModel.setComment(MapperUtils.localizedPropertyToMap(resource, RDFS.comment));
@@ -289,19 +299,6 @@ public class ModelMapper {
 
         indexModel.setDocumentation(MapperUtils.localizedPropertyToMap(resource, Iow.documentation));
         return indexModel;
-    }
-
-    public List<ServiceCategoryDTO> mapToListServiceCategoryDTO(Model serviceCategoryModel) {
-        var iterator = serviceCategoryModel.listResourcesWithProperty(RDF.type, FOAF.Group);
-        List<ServiceCategoryDTO> result = new ArrayList<>();
-
-        while (iterator.hasNext()) {
-            var resource = iterator.next().asResource();
-            var labels = MapperUtils.localizedPropertyToMap(resource, RDFS.label);
-            var identifier = resource.getProperty(SKOS.notation).getObject().toString();
-            result.add(new ServiceCategoryDTO(resource.getURI(), labels, identifier));
-        }
-        return result;
     }
 
     /**

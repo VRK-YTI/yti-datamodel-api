@@ -5,9 +5,9 @@ import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.mapper.ModelMapper;
 import fi.vm.yti.datamodel.api.v2.service.JenaService;
 import org.apache.jena.rdf.model.*;
-import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.riot.RDFLanguages;
+import org.apache.jena.sparql.vocabulary.FOAF;
 import org.apache.jena.vocabulary.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -39,12 +39,17 @@ class ModelMapperTest {
 
     @BeforeEach
     public void init(){
-        var mockModel = ModelFactory.createDefaultModel();
-        mockModel.createResource("urn:uuid:7d3a3c00-5a6b-489b-a3ed-63bb58c26a63");
-        var groupRes = mockModel.createResource("http://urn.fi/URN:NBN:fi:au:ptvl:v1105");
-        groupRes.addProperty(SKOS.notation, "P11");
-        when(jenaService.getOrganizations()).thenReturn(mockModel);
-        when(jenaService.getServiceCategories()).thenReturn(mockModel);
+        var mockGroups = ModelFactory.createDefaultModel();
+        mockGroups.createResource("http://urn.fi/URN:NBN:fi:au:ptvl:v1105")
+                .addProperty(SKOS.notation, "P11")
+                .addProperty(RDFS.label, ResourceFactory.createLangLiteral("test group", "fi"));
+        when(jenaService.getServiceCategories()).thenReturn(mockGroups);
+
+        var mockOrgs = ModelFactory.createDefaultModel();
+        mockOrgs.createResource("urn:uuid:7d3a3c00-5a6b-489b-a3ed-63bb58c26a63")
+                .addProperty(RDF.type, FOAF.Organization)
+                .addProperty(SKOS.prefLabel, ResourceFactory.createLangLiteral("test org", "fi"));
+        when(jenaService.getOrganizations()).thenReturn(mockOrgs);
     }
 
     @Test
@@ -203,10 +208,10 @@ class ModelMapperTest {
         assertTrue(result.getLanguages().contains("fi"));
 
         assertEquals(1, result.getOrganizations().size());
-        assertTrue(result.getOrganizations().contains(UUID.fromString("7d3a3c00-5a6b-489b-a3ed-63bb58c26a63")));
+        assertEquals("7d3a3c00-5a6b-489b-a3ed-63bb58c26a63", result.getOrganizations().stream().findFirst().orElseThrow().getId());
 
         assertEquals(1, result.getGroups().size());
-        assertTrue(result.getGroups().contains("P11"));
+        assertEquals("P11", result.getGroups().stream().findFirst().orElseThrow().getIdentifier());
     }
 
     @Test
@@ -218,7 +223,7 @@ class ModelMapperTest {
         var resultOld = mapper.mapToDataModelDTO("testaa", mOld);
 
         assertEquals("testaa", resultOld.getPrefix());
-        assertEquals(ModelType.LIBRARY, resultOld.getType());
+        assertEquals(ModelType.PROFILE, resultOld.getType());
         assertEquals(Status.DRAFT, resultOld.getStatus());
 
         assertEquals(1, resultOld.getLabel().size());
@@ -235,10 +240,10 @@ class ModelMapperTest {
         assertTrue(resultOld.getLanguages().contains("en"));
 
         assertEquals(1, resultOld.getOrganizations().size());
-        assertTrue(resultOld.getOrganizations().contains(UUID.fromString("7d3a3c00-5a6b-489b-a3ed-63bb58c26a63")));
+        assertEquals("7d3a3c00-5a6b-489b-a3ed-63bb58c26a63", resultOld.getOrganizations().stream().findFirst().orElseThrow().getId());
 
         assertEquals(1, resultOld.getGroups().size());
-        assertTrue(resultOld.getGroups().contains("P11"));
+        assertEquals("P11", resultOld.getGroups().stream().findFirst().orElseThrow().getIdentifier());
     }
 
     @Test
@@ -291,7 +296,7 @@ class ModelMapperTest {
 
         assertEquals("testaa", resultOld.getPrefix());
         assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "testaa", resultOld.getId());
-        assertEquals(ModelType.LIBRARY, resultOld.getType());
+        assertEquals(ModelType.PROFILE, resultOld.getType());
         assertEquals(Status.DRAFT, resultOld.getStatus());
         assertEquals("2018-03-20T16:21:07.067Z", resultOld.getModified());
         assertEquals("2018-03-20T17:59:44", resultOld.getCreated());
@@ -315,27 +320,5 @@ class ModelMapperTest {
 
         assertEquals(1, resultOld.getIsPartOf().size());
         assertTrue(resultOld.getIsPartOf().contains("P11"));
-    }
-
-
-
-    @Test
-    void testMapServiceCategoriesToDTO() {
-        var model = ModelFactory.createDefaultModel();
-        var stream = getClass().getResourceAsStream("/service-categories.ttl");
-        assertNotNull(stream);
-        RDFDataMgr.read(model, stream, Lang.TURTLE);
-
-        var serviceCategories = mapper.mapToListServiceCategoryDTO(model);
-
-        assertEquals(3, serviceCategories.size());
-
-        var cat = serviceCategories.get(0);
-
-        assertEquals("P11", cat.getIdentifier());
-        assertEquals("http://urn.fi/URN:NBN:fi:au:ptvl:v1105", cat.getId());
-        assertEquals("Elinkeinot", cat.getLabel().get("fi"));
-        assertEquals("Industries", cat.getLabel().get("en"));
-        assertEquals("Näringar", cat.getLabel().get("sv"));
     }
 }

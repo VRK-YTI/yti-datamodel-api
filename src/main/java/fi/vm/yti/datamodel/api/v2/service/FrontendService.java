@@ -5,8 +5,8 @@ import static fi.vm.yti.datamodel.api.v2.dto.ModelConstants.*;
 import fi.vm.yti.datamodel.api.v2.dto.BaseDTO;
 import fi.vm.yti.datamodel.api.v2.dto.OrganizationDTO;
 import fi.vm.yti.datamodel.api.v2.dto.ServiceCategoryDTO;
-import fi.vm.yti.datamodel.api.v2.mapper.ModelMapper;
 import fi.vm.yti.datamodel.api.v2.mapper.OrganizationMapper;
+import fi.vm.yti.datamodel.api.v2.mapper.ServiceCategoryMapper;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 
@@ -16,12 +16,8 @@ import java.util.List;
 public class FrontendService {
 
     private final JenaService jenaService;
-    private final ModelMapper modelMapper;
-
-    public FrontendService(JenaService jenaService,
-                           ModelMapper modelMapper) {
+    public FrontendService(JenaService jenaService) {
         this.jenaService = jenaService;
-        this.modelMapper = modelMapper;
     }
 
     public List<OrganizationDTO> getOrganizations(@NotNull String sortLanguage, boolean includeChildOrganizations) {
@@ -37,7 +33,7 @@ public class FrontendService {
 
     public List<ServiceCategoryDTO> getServiceCategories(@NotNull String sortLanguage) {
         var serviceCategories = jenaService.getServiceCategories();
-        var dtos = modelMapper.mapToListServiceCategoryDTO(serviceCategories);
+        var dtos = ServiceCategoryMapper.mapToListServiceCategoryDTO(serviceCategories);
 
         sortByLabel(sortLanguage, dtos);
 

@@ -30,6 +30,8 @@ import java.util.stream.Stream;
 
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @TestPropertySource(properties = {
@@ -89,6 +91,7 @@ class ClassControllerTest {
 
         //Check that functions are called
         verify(this.jenaService, times(2)).doesResolvedNamespaceExist(anyString());
+        verify(jenaService).doesResourceExistInGraph(anyString(), anyString());
         verify(this.jenaService).getDataModel(anyString());
         verify(this.classMapper)
                 .createClassAndMapToModel(anyString(), any(Model.class), any(ClassDTO.class));
@@ -121,6 +124,7 @@ class ClassControllerTest {
                 .andExpect(status().isOk());
 
         //Check that functions are called
+        verify(jenaService).doesResourceExistInGraph(anyString(), anyString());
         verify(jenaService).getDataModel(anyString());
         verify(this.classMapper)
                 .createClassAndMapToModel(anyString(), any(Model.class), any(ClassDTO.class));
@@ -250,6 +254,32 @@ class ClassControllerTest {
         args.add(classDTO);
 
         return args.stream().map(Arguments::of);
+    }
+
+    @Test
+    void shouldGetClass() throws Exception {
+        when(jenaService.doesResourceExistInGraph(anyString(), anyString())).thenReturn(true);
+        when(jenaService.getDataModel(anyString())).thenReturn(mock(Model.class));
+
+        mvc.perform(get("/v2/class/test/class"))
+                .andDo(print())
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void shouldResourceNotExistGet() throws Exception {
+        mvc.perform(get("/v2/class/test/class"))
+                .andDo(print())
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void shouldModelNotExistGet() throws Exception {
+        when(jenaService.doesResourceExistInGraph(anyString(), anyString())).thenReturn(true);
+
+        mvc.perform(get("/v2/class/test/class"))
+                .andDo(print())
+                .andExpect(status().isNotFound());
     }
 
     private static ClassDTO createClassDTO(boolean update){

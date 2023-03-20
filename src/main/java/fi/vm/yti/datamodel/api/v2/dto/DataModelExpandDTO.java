@@ -2,7 +2,6 @@ package fi.vm.yti.datamodel.api.v2.dto;
 
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 
 public class DataModelExpandDTO {
     private ModelType type;
@@ -11,11 +10,13 @@ public class DataModelExpandDTO {
     private Map<String, String> label = Map.of();
     private Map<String, String> description = Map.of();
     private Set<String> languages = Set.of();
-    private Set<UUID> organizations = Set.of();
-    private Set<String> groups = Set.of();
+    private Set<OrganizationDTO> organizations = Set.of();
+    private Set<ServiceCategoryDTO> groups = Set.of();
     private Set<String> internalNamespaces = Set.of();
     private Set<ExternalNamespaceDTO> externalNamespaces = Set.of();
     private Set<TerminologyDTO> terminologies = Set.of();
+    private String modified;
+    private String created;
 
     public ModelType getType() {
         return type;
@@ -65,19 +66,19 @@ public class DataModelExpandDTO {
         this.languages = languages;
     }
 
-    public Set<UUID> getOrganizations() {
+    public Set<OrganizationDTO> getOrganizations() {
         return organizations;
     }
 
-    public void setOrganizations(Set<UUID> organizations) {
+    public void setOrganizations(Set<OrganizationDTO> organizations) {
         this.organizations = organizations;
     }
 
-    public Set<String> getGroups() {
+    public Set<ServiceCategoryDTO> getGroups() {
         return groups;
     }
 
-    public void setGroups(Set<String> groups) {
+    public void setGroups(Set<ServiceCategoryDTO> groups) {
         this.groups = groups;
     }
 
@@ -103,5 +104,21 @@ public class DataModelExpandDTO {
 
     public void setTerminologies(Set<TerminologyDTO> terminologies) {
         this.terminologies = terminologies;
+    }
+
+    public String getModified() {
+        return modified;
+    }
+
+    public void setModified(String modified) {
+        this.modified = modified;
+    }
+
+    public String getCreated() {
+        return created;
+    }
+
+    public void setCreated(String created) {
+        this.created = created;
     }
 }

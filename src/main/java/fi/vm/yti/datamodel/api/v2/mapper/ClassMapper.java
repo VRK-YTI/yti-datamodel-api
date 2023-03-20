@@ -1,10 +1,6 @@
 package fi.vm.yti.datamodel.api.v2.mapper;
 
-import fi.vm.yti.datamodel.api.security.AuthorizationManager;
 import fi.vm.yti.datamodel.api.v2.dto.*;
-import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
-import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
-import fi.vm.yti.datamodel.api.v2.service.JenaService;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.datatypes.xsd.XSDDateTime;
 import org.apache.jena.rdf.model.Model;
@@ -22,33 +18,21 @@ public class ClassMapper {
 
     private static final Logger logger = LoggerFactory.getLogger(ClassMapper.class);
 
-    private final JenaService jenaService;
-
-    private final AuthorizationManager authorizationManager;
-
-    public ClassMapper(JenaService jenaService, AuthorizationManager authorizationManager) {
-        this.jenaService = jenaService;
-        this.authorizationManager = authorizationManager;
-    }
-
-    public String createClassAndMapToModel(String prefix, Model model, ClassDTO dto){
-        logger.info("Adding class to {}", prefix);
+    public String createClassAndMapToModel(String modelURI, Model model, ClassDTO dto){
+        logger.info("Adding class to {}", modelURI);
 
         var creationDate = new XSDDateTime(Calendar.getInstance());
-        var classUri = ModelConstants.SUOMI_FI_NAMESPACE + prefix + "#" + dto.getIdentifier();
-        if(jenaService.doesResourceExistInGraph(ModelConstants.SUOMI_FI_NAMESPACE + prefix, classUri)){
-            throw new MappingError("Class already exists");
-        }
+        var classUri = modelURI + "#" + dto.getIdentifier();
         var classResource = model.createResource(classUri)
                 .addProperty(RDF.type, OWL.Class)
                 .addProperty(OWL.versionInfo, dto.getStatus().name())
                 .addProperty(DCTerms.modified, ResourceFactory.createTypedLiteral(creationDate))
                 .addProperty(DCTerms.created, ResourceFactory.createTypedLiteral(creationDate))
-                .addProperty(RDFS.isDefinedBy, ModelConstants.SUOMI_FI_NAMESPACE + prefix);
+                .addProperty(RDFS.isDefinedBy, modelURI);
 
         classResource.addProperty(DCTerms.identifier, ResourceFactory.createTypedLiteral(dto.getIdentifier(), XSDDatatype.XSDNCName));
         //Labels
-        var modelResource = model.getResource(ModelConstants.SUOMI_FI_NAMESPACE + prefix);
+        var modelResource = model.getResource(modelURI);
         var langs = MapperUtils.arrayPropertyToSet(modelResource, DCTerms.language);
         MapperUtils.addLocalizedProperty(langs, dto.getLabel(), classResource, RDFS.label, model);
         //Note
@@ -120,12 +104,9 @@ public class ClassMapper {
      * @param model           Model
      * @return Class DTO
      */
-    public ClassDTO mapToClassDTO(String modelPrefix, String classIdentifier, Model model){
+    public ClassDTO mapToClassDTO(String modelPrefix, String classIdentifier, Model model, boolean hasRightToModel){
         var classDTO = new ClassDTO();
         var classUri = ModelConstants.SUOMI_FI_NAMESPACE + modelPrefix + "#" + classIdentifier;
-        if(!jenaService.doesResourceExistInGraph(ModelConstants.SUOMI_FI_NAMESPACE + modelPrefix , classUri)){
-            throw new ResourceNotFoundException(classUri);
-        }
         var classResource = model.getResource(classUri);
         classDTO.setLabel(MapperUtils.localizedPropertyToMap(classResource, RDFS.label));
         var status = Status.valueOf(classResource.getProperty(OWL.versionInfo).getObject().toString().toUpperCase());
@@ -135,7 +116,7 @@ public class ClassMapper {
         classDTO.setSubject(MapperUtils.propertyToString(classResource, DCTerms.subject));
         classDTO.setIdentifier(classResource.getLocalName());
         classDTO.setNote(MapperUtils.localizedPropertyToMap(classResource, SKOS.note));
-        if (authorizationManager.hasRightToModel(modelPrefix, model)) {
+        if (hasRightToModel) {
             classDTO.setEditorialNote(MapperUtils.propertyToString(classResource, SKOS.editorialNote));
         }
         return classDTO;

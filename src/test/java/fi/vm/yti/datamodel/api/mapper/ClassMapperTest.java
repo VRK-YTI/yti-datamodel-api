@@ -1,9 +1,7 @@
 package fi.vm.yti.datamodel.api.mapper;
 
-import fi.vm.yti.datamodel.api.security.AuthorizationManager;
 import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.mapper.ClassMapper;
-import fi.vm.yti.datamodel.api.v2.service.JenaService;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.rdf.model.*;
 import org.apache.jena.riot.RDFDataMgr;
@@ -12,7 +10,6 @@ import org.apache.jena.vocabulary.*;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
@@ -21,9 +18,6 @@ import java.util.Map;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
 
 
 @ExtendWith(SpringExtension.class)
@@ -32,10 +26,6 @@ import static org.mockito.Mockito.when;
 })
 class ClassMapperTest {
 
-    @MockBean
-    JenaService jenaService;
-    @MockBean
-    AuthorizationManager authorizationManager;
     @Autowired
     ClassMapper mapper;
 
@@ -56,7 +46,7 @@ class ClassMapperTest {
         dto.setStatus(Status.DRAFT);
         dto.setNote(Map.of("fi", "test note"));
 
-        mapper.createClassAndMapToModel("test", m, dto);
+        mapper.createClassAndMapToModel("http://uri.suomi.fi/datamodel/ns/test", m, dto);
 
         Resource modelResource = m.getResource("http://uri.suomi.fi/datamodel/ns/test");
         Resource classResource = m.getResource("http://uri.suomi.fi/datamodel/ns/test#TestClass");
@@ -99,7 +89,7 @@ class ClassMapperTest {
         dto.setStatus(Status.VALID);
         dto.setIdentifier("Identifier");
 
-        mapper.createClassAndMapToModel("test", m, dto);
+        mapper.createClassAndMapToModel("http://uri.suomi.fi/datamodel/ns/test", m, dto);
 
         Resource modelResource = m.getResource("http://uri.suomi.fi/datamodel/ns/test");
         Resource classResource = m.getResource("http://uri.suomi.fi/datamodel/ns/test#Identifier");
@@ -113,13 +103,12 @@ class ClassMapperTest {
 
     @Test
     void testMapToClassDTO(){
-        when(jenaService.doesResourceExistInGraph(anyString(), anyString())).thenReturn(true);
         Model m = ModelFactory.createDefaultModel();
         var stream = getClass().getResourceAsStream("/models/test_datamodel_with_resources.ttl");
         assertNotNull(stream);
         RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
 
-        var dto = mapper.mapToClassDTO("test", "TestClass", m);
+        var dto = mapper.mapToClassDTO("test", "TestClass", m, false);
 
         // not authenticated
         assertNull(dto.getEditorialNote());
@@ -139,13 +128,12 @@ class ClassMapperTest {
 
     @Test
     void testMapToClassMinimalDTO(){
-        when(jenaService.doesResourceExistInGraph(anyString(), anyString())).thenReturn(true);
         Model m = ModelFactory.createDefaultModel();
         var stream = getClass().getResourceAsStream("/models/test_datamodel_with_minimal_resources.ttl");
         assertNotNull(stream);
         RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
 
-        var dto = mapper.mapToClassDTO("test", "TestClass", m);
+        var dto = mapper.mapToClassDTO("test", "TestClass", m, true);
 
         // not authenticated
         assertNull(dto.getEditorialNote());
@@ -161,14 +149,12 @@ class ClassMapperTest {
 
     @Test
     void testMapToClassDTOAuthenticatedUser() {
-        when(jenaService.doesResourceExistInGraph(anyString(), anyString())).thenReturn(true);
-        when(authorizationManager.hasRightToModel(anyString(), any(Model.class))).thenReturn(true);
         Model m = ModelFactory.createDefaultModel();
         var stream = getClass().getResourceAsStream("/models/test_datamodel_with_resources.ttl");
         assertNotNull(stream);
         RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
 
-        var dto = mapper.mapToClassDTO("test", "TestClass", m);
+        var dto = mapper.mapToClassDTO("test", "TestClass", m, true);
 
         assertEquals("comment visible for admin", dto.getEditorialNote());
     }
