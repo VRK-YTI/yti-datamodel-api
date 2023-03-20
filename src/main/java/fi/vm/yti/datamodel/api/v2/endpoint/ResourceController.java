@@ -25,11 +25,9 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 @Validated
 public class ResourceController {
 
-
     private final JenaService jenaService;
     private final AuthorizationManager authorizationManager;
     private final OpenSearchIndexer openSearchIndexer;
-
     private final ResourceMapper resourceMapper;
 
     public ResourceController(JenaService jenaService, AuthorizationManager authorizationManager, OpenSearchIndexer openSearchIndexer, ResourceMapper resourceMapper) {
@@ -61,23 +59,28 @@ public class ResourceController {
     }
 
     @Operation(summary = "Update a resource in a model")
-    @ApiResponse(responseCode = "200", description = "Class added to model successfully")
+    @ApiResponse(responseCode = "200", description = "Resource updated to model successfully")
     @PutMapping(value = "/{prefix}/{resourceIdentifier}", consumes = APPLICATION_JSON_VALUE)
-    public void updateResource(@PathVariable String prefix, @RequestBody @ValidResource(updateProperty = true) ResourceDTO dto){
-        if(!jenaService.doesResourceExistInGraph(ModelConstants.SUOMI_FI_NAMESPACE + prefix, ModelConstants.SUOMI_FI_NAMESPACE + prefix + "#" + dto.getIdentifier())){
+    public void updateResource(@PathVariable String prefix, @PathVariable String resourceIdentifier, @RequestBody @ValidResource(updateProperty = true) ResourceDTO dto){
+        var graphUri = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
+
+        if(!jenaService.doesResourceExistInGraph(graphUri, graphUri + "#" + resourceIdentifier)){
             throw new ResourceNotFoundException("Resource does not exist");
         }
 
-        var model = jenaService.getDataModel(ModelConstants.SUOMI_FI_NAMESPACE + prefix);
+        var model = jenaService.getDataModel(graphUri);
         if(model == null){
+            //This should probably never happen,
+            //but we will catch it just in case
+            //something happens with the database
             throw new ResourceNotFoundException(prefix);
         }
-        //check(authorizationManager.hasRightToModel(prefix, model));
+        check(authorizationManager.hasRightToModel(prefix, model));
 
-        //resourceMapper.mapToResource(ModelConstants.SUOMI_FI_NAMESPACE + prefix, model, dto);
-        //jenaService.createDataModel(ModelConstants.SUOMI_FI_NAMESPACE + prefix, model);
-        // var indexClass = classMapper.mapToIndexClass(model, classURi);
-        //openSearchIndexer.createClassToIndex(indexClass);
+        resourceMapper.mapToUpdateResource(graphUri, model, resourceIdentifier, dto);
+        jenaService.putDataModelToCore(graphUri, model);
+        var indexResource = resourceMapper.mapToIndexResource(model, graphUri + "#" + resourceIdentifier);
+        openSearchIndexer.updateResourceToIndex(indexResource);
     }
 
     @Operation(summary = "Find a class from a model")

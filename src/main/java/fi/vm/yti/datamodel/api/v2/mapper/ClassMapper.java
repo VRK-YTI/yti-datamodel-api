@@ -92,8 +92,8 @@ public class ClassMapper {
                 subClassOf.forEach(sub -> MapperUtils.addResourceRelationship(owlImports, dcTermsRequires, classResource, RDFS.subClassOf, sub));
             }
         }
-        modelResource.removeAll(DCTerms.modified);
-        modelResource.addProperty(DCTerms.modified, ResourceFactory.createTypedLiteral(updateDate));
+        classResource.removeAll(DCTerms.modified);
+        classResource.addProperty(DCTerms.modified, ResourceFactory.createTypedLiteral(updateDate));
     }
 
     /**

@@ -46,9 +46,9 @@ public class ResourceMapper {
         //Sub Class
         if(dto.getSubResourceOf() == null || dto.getSubResourceOf().isEmpty()){
             if(dto.getType().equals(ResourceType.ASSOCIATION)){
-                resourceResource.addProperty(RDFS.subPropertyOf, OWL2.topObjectProperty); //Add OWL:Thing if nothing else is specified
+                resourceResource.addProperty(RDFS.subPropertyOf, OWL2.topObjectProperty); //Add OWL:TopObjectProperty if nothing else is specified
             }else{
-                resourceResource.addProperty(RDFS.subPropertyOf, OWL2.topDataProperty); //Add OWL:Thing if nothing else is specified
+                resourceResource.addProperty(RDFS.subPropertyOf, OWL2.topDataProperty); //Add OWL:TopDataProperty if nothing else is specified
             }
         }else{
             dto.getSubResourceOf().forEach(sub -> MapperUtils.addResourceRelationship(owlImports, dcTermsRequires, resourceResource, RDFS.subPropertyOf, sub));
@@ -56,6 +56,54 @@ public class ResourceMapper {
 
         modelResource.addProperty(DCTerms.hasPart, resourceUri);
         return resourceUri;
+    }
+
+    public void mapToUpdateResource(String graphUri, Model model, String resourceIdentifier, ResourceDTO dto) {
+        var updateDate = new XSDDateTime(Calendar.getInstance());
+        var modelResource = model.getResource(graphUri);
+        var languages = MapperUtils.arrayPropertyToSet(modelResource, DCTerms.language);
+        var resource = model.getResource(graphUri + "#" + resourceIdentifier);
+
+        var type = resource.getProperty(RDF.type).getResource();
+        if(type.equals(OWL.Class)){
+            throw new MappingError("Class cannot be updated through this endpoint");
+        }
+
+        MapperUtils.updateLocalizedProperty(languages, dto.getLabel(), resource, RDFS.label, model);
+        MapperUtils.updateLocalizedProperty(languages, dto.getNote(), resource, SKOS.note, model);
+        MapperUtils.updateStringProperty(resource, SKOS.editorialNote, dto.getEditorialNote());
+        MapperUtils.updateStringProperty(resource, DCTerms.subject, dto.getSubject());
+
+        var status = dto.getStatus();
+        if (status != null) {
+            MapperUtils.updateStringProperty(resource, OWL.versionInfo, status.name());
+        }
+
+        var owlImports = MapperUtils.arrayPropertyToSet(modelResource, OWL.imports);
+        var dcTermsRequires = MapperUtils.arrayPropertyToSet(modelResource, DCTerms.requires);
+
+        var equivalentResources = dto.getEquivalentResource();
+        if(equivalentResources != null){
+            resource.removeAll(OWL.equivalentProperty);
+            equivalentResources.forEach(eq -> MapperUtils.addResourceRelationship(owlImports, dcTermsRequires, resource, OWL.equivalentProperty, eq));
+        }
+
+        var getSubResourceOf = dto.getSubResourceOf();
+        if (getSubResourceOf != null){
+            resource.removeAll(RDFS.subPropertyOf);
+            if(getSubResourceOf.isEmpty()){
+                if(type.equals(OWL.ObjectProperty)){
+                    resource.addProperty(RDFS.subPropertyOf, OWL2.topObjectProperty); //Add OWL:TopObjectProperty if nothing else is specified
+                }else{
+                    resource.addProperty(RDFS.subPropertyOf, OWL2.topDataProperty); //Add OWL:TopDataProperty if nothing else is specified
+                }
+            }else{
+                getSubResourceOf.forEach(sub -> MapperUtils.addResourceRelationship(owlImports, dcTermsRequires, resource, RDFS.subPropertyOf, sub));
+            }
+        }
+
+        resource.removeAll(DCTerms.modified);
+        resource.addProperty(DCTerms.modified, ResourceFactory.createTypedLiteral(updateDate));
     }
 
     public IndexResource mapToIndexResource(Model model, String resourceUri){
@@ -117,7 +165,6 @@ public class ResourceMapper {
         if (hasRightToModel) {
             dto.setEditorialNote(MapperUtils.propertyToString(resourceResource, SKOS.editorialNote));
         }
-
 
         var created = resourceResource.getProperty(DCTerms.created).getLiteral().getString();
         var modified = resourceResource.getProperty(DCTerms.modified).getLiteral().getString();

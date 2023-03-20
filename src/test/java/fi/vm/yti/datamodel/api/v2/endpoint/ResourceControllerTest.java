@@ -30,6 +30,7 @@ import java.util.stream.Stream;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -134,10 +135,29 @@ class ResourceControllerTest {
     @Test
     void shouldNotFindModel() throws Exception {
         var resourceDTO = createResourceDTO(false);
+        var updateDTO = createResourceDTO(true);
+
+        //NOTE for this test. This should probably never happen in any kind of situation.
+        // but the controller can catch it if it happens
+
 
         //finding models from jena is not mocked so it should return null and return 404 not found
         this.mvc
                 .perform(put("/v2/resource/test")
+                        .contentType("application/json")
+                        .content(EndpointUtils.convertObjectToJsonString(resourceDTO)))
+                .andExpect(status().isNotFound());
+
+        when(jenaService.doesResourceExistInGraph(anyString(), anyString())).thenReturn(true);
+
+        this.mvc
+                .perform(put("/v2/resource/test/resource")
+                        .contentType("application/json")
+                        .content(EndpointUtils.convertObjectToJsonString(updateDTO)))
+                .andExpect(status().isNotFound());
+
+        this.mvc
+                .perform(get("/v2/resource/test/resource")
                         .contentType("application/json")
                         .content(EndpointUtils.convertObjectToJsonString(resourceDTO)))
                 .andExpect(status().isNotFound());
@@ -211,14 +231,21 @@ class ResourceControllerTest {
         when(jenaService.getDataModel(anyString())).thenReturn(mockModel);
         when(mockModel.getResource(anyString())).thenReturn(mock(Resource.class));
         when(jenaService.doesResourceExistInGraph(anyString(), anyString())).thenReturn(true);
-
+        when(mapper.mapToIndexResource(any(Model.class), anyString())).thenReturn(new IndexResource());
         this.mvc
                 .perform(put("/v2/resource/test/resource")
                         .contentType("application/json")
                         .content(EndpointUtils.convertObjectToJsonString(resourceDTO)))
+                .andDo(print())
                 .andExpect(status().isOk());
 
-        //TODO add update and validate checks
+        verify(jenaService).doesResourceExistInGraph(anyString(), anyString());
+        verify(jenaService).getDataModel(anyString());
+        verify(authorizationManager).hasRightToModel(anyString(), any(Model.class));
+        verify(mapper).mapToUpdateResource(anyString(), any(Model.class), anyString(), any(ResourceDTO.class));
+        verify(jenaService).putDataModelToCore(anyString(), any(Model.class));
+        verify(mapper).mapToIndexResource(any(Model.class), anyString());
+        verify(openSearchIndexer).updateResourceToIndex(any(IndexResource.class));
     }
 
     @Test
@@ -285,6 +312,7 @@ class ResourceControllerTest {
         dto.setEditorialNote("test comment");
         if(!update){
             dto.setIdentifier("Identifier");
+            dto.setType(ResourceType.ASSOCIATION);
         }
         dto.setStatus(Status.DRAFT);
         dto.setSubject("sanastot.suomi.fi/notrealurl");
@@ -292,7 +320,6 @@ class ResourceControllerTest {
         dto.setEquivalentResource(Set.of("tietomallit.suomi.fi/ns/notrealns/FakeResource"));
         dto.setSubResourceOf(Set.of("tietomallit.suomi.fi/ns/notrealns/FakeResource"));
         dto.setNote(Map.of("fi", "test note"));
-        dto.setType(ResourceType.ASSOCIATION);
         return dto;
     }
 

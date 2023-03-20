@@ -37,6 +37,8 @@ public class ResourceValidator extends BaseValidator implements ConstraintValida
     private void checkType(ConstraintValidatorContext context, ResourceDTO resourceDTO){
         if(!updateProperty && resourceDTO.getType() == null){
             addConstraintViolation(context, ValidationConstants.MSG_VALUE_MISSING, "type");
+        }else if (updateProperty && resourceDTO.getType() != null){
+            addConstraintViolation(context, ValidationConstants.MSG_NOT_ALLOWED_UPDATE, "type");
         }
     }
 
