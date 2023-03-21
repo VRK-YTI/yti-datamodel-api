@@ -466,6 +466,8 @@ class ResourceMapperTest {
         assertEquals("7d3a3c00-5a6b-489b-a3ed-63bb58c26a63", dto.getContributor().stream().findFirst().orElseThrow().getId());
     }
 
+
+
     @Test
     void failMapToResourceInfoDTOClass(){
         Model m = ModelFactory.createDefaultModel();
@@ -473,7 +475,8 @@ class ResourceMapperTest {
         assertNotNull(stream);
         RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
 
-        assertThrows(MappingError.class, () -> mapper.mapToResourceInfoDTO(m, "test", "TestClass", getOrgModel(), true));
+
+        assertThrowsExactly(MappingError.class, () -> mapper.mapToResourceInfoDTO(m, "test", "TestClass", getOrgModel(), true));
     }
 
     @Test
@@ -483,7 +486,150 @@ class ResourceMapperTest {
         assertNotNull(stream);
         RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
 
-        assertThrows(MappingError.class, () -> mapper.mapToResourceInfoDTO(m, "test", "TestClass", getOrgModel(), true));
+        assertThrowsExactly(MappingError.class, () -> mapper.mapToResourceInfoDTO(m, "test", "TestClass", getOrgModel(), true));
+    }
+
+    @Test
+    void mapToUpdateModelAttribute() {
+        Model m = ModelFactory.createDefaultModel();
+        var stream = getClass().getResourceAsStream("/models/test_datamodel_with_resources.ttl");
+        assertNotNull(stream);
+        RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
+        var resource = m.getResource("http://uri.suomi.fi/datamodel/ns/test#TestAttribute");
+
+        var dto = new ResourceDTO();
+        dto.setLabel(Map.of("fi", "new label"));
+        dto.setStatus(Status.INVALID);
+        dto.setNote(Map.of("fi", "new note"));
+        dto.setEquivalentResource(Set.of("http://uri.suomi.fi/datamodel/ns/int#NewEq"));
+        dto.setSubResourceOf(Set.of("https://www.example.com/ns/ext#NewSub"));
+        dto.setSubject("http://uri.suomi.fi/terminology/qwe");
+        dto.setEditorialNote("new editorial note");
+
+        assertEquals(OWL.DatatypeProperty, resource.getProperty(RDF.type).getResource());
+        assertEquals("http://uri.suomi.fi/datamodel/ns/test", resource.getProperty(RDFS.isDefinedBy).getObject().toString());
+        assertEquals("test attribute", resource.getProperty(RDFS.label).getLiteral().getString());
+        assertEquals("fi", resource.getProperty(RDFS.label).getLiteral().getLanguage());
+        assertEquals("TestAttribute", resource.getProperty(DCTerms.identifier).getLiteral().getString());
+        assertEquals("http://uri.suomi.fi/terminology/test/test1", resource.getProperty(DCTerms.subject).getLiteral().getString());
+        assertEquals("http://uri.suomi.fi/datamodel/ns/test#EqResource", resource.getProperty(OWL.equivalentProperty).getObject().toString());
+        assertEquals("http://uri.suomi.fi/datamodel/ns/test#SubResource", resource.getProperty(RDFS.subPropertyOf).getObject().toString());
+        assertEquals(Status.VALID.name(), resource.getProperty(OWL.versionInfo).getObject().toString());
+        assertEquals("comment visible for admin", resource.getProperty(SKOS.editorialNote).getObject().toString());
+        assertEquals(2, resource.listProperties(SKOS.note).toList().size());
+
+        mapper.mapToUpdateResource("http://uri.suomi.fi/datamodel/ns/test", m, "TestAttribute", dto);
+
+        assertEquals(OWL.DatatypeProperty, resource.getProperty(RDF.type).getResource());
+        assertEquals("http://uri.suomi.fi/datamodel/ns/test", resource.getProperty(RDFS.isDefinedBy).getObject().toString());
+        assertEquals("new label", resource.getProperty(RDFS.label).getLiteral().getString());
+        assertEquals("fi", resource.getProperty(RDFS.label).getLiteral().getLanguage());
+        assertEquals("TestAttribute", resource.getProperty(DCTerms.identifier).getLiteral().getString());
+        assertEquals("http://uri.suomi.fi/terminology/qwe", resource.getProperty(DCTerms.subject).getLiteral().getString());
+        assertEquals("http://uri.suomi.fi/datamodel/ns/int#NewEq", resource.getProperty(OWL.equivalentProperty).getObject().toString());
+        assertEquals("https://www.example.com/ns/ext#NewSub", resource.getProperty(RDFS.subPropertyOf).getObject().toString());
+        assertEquals(Status.INVALID.name(), resource.getProperty(OWL.versionInfo).getObject().toString());
+        assertEquals("new editorial note", resource.getProperty(SKOS.editorialNote).getObject().toString());
+        assertEquals(1, resource.listProperties(SKOS.note).toList().size());
+        assertEquals("new note", resource.getProperty(SKOS.note).getLiteral().getString());
+        assertEquals("fi", resource.getProperty(SKOS.note).getLiteral().getLanguage());
+    }
+
+    @Test
+    void mapToUpdateModelAssociation() {
+        Model m = ModelFactory.createDefaultModel();
+        var stream = getClass().getResourceAsStream("/models/test_datamodel_with_resources.ttl");
+        assertNotNull(stream);
+        RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
+        var resource = m.getResource("http://uri.suomi.fi/datamodel/ns/test#TestAssociation");
+
+        var dto = new ResourceDTO();
+        dto.setLabel(Map.of("fi", "new label"));
+        dto.setStatus(Status.INVALID);
+        dto.setNote(Map.of("fi", "new note"));
+        dto.setEquivalentResource(Set.of("http://uri.suomi.fi/datamodel/ns/int#NewEq"));
+        dto.setSubResourceOf(Set.of("https://www.example.com/ns/ext#NewSub"));
+        dto.setSubject("http://uri.suomi.fi/terminology/qwe");
+        dto.setEditorialNote("new editorial note");
+
+        assertEquals(OWL.ObjectProperty, resource.getProperty(RDF.type).getResource());
+        assertEquals("http://uri.suomi.fi/datamodel/ns/test", resource.getProperty(RDFS.isDefinedBy).getObject().toString());
+        assertEquals("test association", resource.getProperty(RDFS.label).getLiteral().getString());
+        assertEquals("fi", resource.getProperty(RDFS.label).getLiteral().getLanguage());
+        assertEquals("TestAssociation", resource.getProperty(DCTerms.identifier).getLiteral().getString());
+        assertEquals("http://uri.suomi.fi/terminology/test/test1", resource.getProperty(DCTerms.subject).getLiteral().getString());
+        assertEquals("http://uri.suomi.fi/datamodel/ns/test#EqResource", resource.getProperty(OWL.equivalentProperty).getObject().toString());
+        assertEquals("http://uri.suomi.fi/datamodel/ns/test#SubResource", resource.getProperty(RDFS.subPropertyOf).getObject().toString());
+        assertEquals(Status.VALID.name(), resource.getProperty(OWL.versionInfo).getObject().toString());
+        assertEquals("comment visible for admin", resource.getProperty(SKOS.editorialNote).getObject().toString());
+        assertEquals(2, resource.listProperties(SKOS.note).toList().size());
+
+        mapper.mapToUpdateResource("http://uri.suomi.fi/datamodel/ns/test", m, "TestAssociation", dto);
+
+        assertEquals(OWL.ObjectProperty, resource.getProperty(RDF.type).getResource());
+        assertEquals("http://uri.suomi.fi/datamodel/ns/test", resource.getProperty(RDFS.isDefinedBy).getObject().toString());
+        assertEquals("new label", resource.getProperty(RDFS.label).getLiteral().getString());
+        assertEquals("fi", resource.getProperty(RDFS.label).getLiteral().getLanguage());
+        assertEquals("TestAssociation", resource.getProperty(DCTerms.identifier).getLiteral().getString());
+        assertEquals("http://uri.suomi.fi/terminology/qwe", resource.getProperty(DCTerms.subject).getLiteral().getString());
+        assertEquals("http://uri.suomi.fi/datamodel/ns/int#NewEq", resource.getProperty(OWL.equivalentProperty).getObject().toString());
+        assertEquals("https://www.example.com/ns/ext#NewSub", resource.getProperty(RDFS.subPropertyOf).getObject().toString());
+        assertEquals(Status.INVALID.name(), resource.getProperty(OWL.versionInfo).getObject().toString());
+        assertEquals("new editorial note", resource.getProperty(SKOS.editorialNote).getObject().toString());
+        assertEquals(1, resource.listProperties(SKOS.note).toList().size());
+        assertEquals("new note", resource.getProperty(SKOS.note).getLiteral().getString());
+        assertEquals("fi", resource.getProperty(SKOS.note).getLiteral().getLanguage());
+    }
+
+    @Test
+    void mapToUpdateAttributeEmptySubResource(){
+        Model m = ModelFactory.createDefaultModel();
+        var stream = getClass().getResourceAsStream("/models/test_datamodel_with_resources.ttl");
+        assertNotNull(stream);
+        RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
+        var resource = m.getResource("http://uri.suomi.fi/datamodel/ns/test#TestAttribute");
+
+        //Shouldn't change if null
+        mapper.mapToUpdateResource("http://uri.suomi.fi/datamodel/ns/test", m, "TestAttribute", new ResourceDTO());
+        assertEquals("http://uri.suomi.fi/datamodel/ns/test#SubResource", resource.getProperty(RDFS.subPropertyOf).getObject().toString());
+
+        var dto = new ResourceDTO();
+        dto.setSubResourceOf(Set.of());
+
+        //should change if empty
+        mapper.mapToUpdateResource("http://uri.suomi.fi/datamodel/ns/test", m, "TestAttribute", dto);
+        assertEquals("http://www.w3.org/2002/07/owl#topDataProperty", resource.getProperty(RDFS.subPropertyOf).getObject().toString());
+    }
+
+    @Test
+    void mapToUpdateAssociationEmptySubResource(){
+        Model m = ModelFactory.createDefaultModel();
+        var stream = getClass().getResourceAsStream("/models/test_datamodel_with_resources.ttl");
+        assertNotNull(stream);
+        RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
+        var resource = m.getResource("http://uri.suomi.fi/datamodel/ns/test#TestAssociation");
+
+        //Shouldn't change if null
+        mapper.mapToUpdateResource("http://uri.suomi.fi/datamodel/ns/test", m, "TestAssociation", new ResourceDTO());
+        assertEquals("http://uri.suomi.fi/datamodel/ns/test#SubResource", resource.getProperty(RDFS.subPropertyOf).getObject().toString());
+
+        var dto = new ResourceDTO();
+        dto.setSubResourceOf(Set.of());
+
+        //should change if empty
+        mapper.mapToUpdateResource("http://uri.suomi.fi/datamodel/ns/test", m, "TestAssociation", dto);
+        assertEquals("http://www.w3.org/2002/07/owl#topObjectProperty", resource.getProperty(RDFS.subPropertyOf).getObject().toString());
+    }
+
+    @Test
+    void failToMapUpdateModelClass() {
+        Model m = ModelFactory.createDefaultModel();
+        var stream = getClass().getResourceAsStream("/models/test_datamodel_with_resources.ttl");
+        assertNotNull(stream);
+        RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
+
+        assertThrowsExactly(MappingError.class, () -> mapper.mapToUpdateResource("http://uri.suomi.fi/datamodel/ns/test", m, "TestClass", new ResourceDTO()));
+
     }
 
     private Model getOrgModel(){
