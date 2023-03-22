@@ -9,8 +9,6 @@ import org.apache.jena.riot.RDFLanguages;
 import org.apache.jena.vocabulary.*;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Import;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.Collections;
@@ -21,13 +19,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 
 @ExtendWith(SpringExtension.class)
-@Import({
-        ClassMapper.class
-})
 class ClassMapperTest {
-
-    @Autowired
-    ClassMapper mapper;
 
     @Test
     void testCreateClassAndMapToModel() {
@@ -46,7 +38,7 @@ class ClassMapperTest {
         dto.setStatus(Status.DRAFT);
         dto.setNote(Map.of("fi", "test note"));
 
-        mapper.createClassAndMapToModel("http://uri.suomi.fi/datamodel/ns/test", m, dto);
+        ClassMapper.createClassAndMapToModel("http://uri.suomi.fi/datamodel/ns/test", m, dto);
 
         Resource modelResource = m.getResource("http://uri.suomi.fi/datamodel/ns/test");
         Resource classResource = m.getResource("http://uri.suomi.fi/datamodel/ns/test#TestClass");
@@ -89,7 +81,7 @@ class ClassMapperTest {
         dto.setStatus(Status.VALID);
         dto.setIdentifier("Identifier");
 
-        mapper.createClassAndMapToModel("http://uri.suomi.fi/datamodel/ns/test", m, dto);
+        ClassMapper.createClassAndMapToModel("http://uri.suomi.fi/datamodel/ns/test", m, dto);
 
         Resource modelResource = m.getResource("http://uri.suomi.fi/datamodel/ns/test");
         Resource classResource = m.getResource("http://uri.suomi.fi/datamodel/ns/test#Identifier");
@@ -108,7 +100,7 @@ class ClassMapperTest {
         assertNotNull(stream);
         RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
 
-        var dto = mapper.mapToClassDTO("test", "TestClass", m, false);
+        var dto = ClassMapper.mapToClassDTO("test", "TestClass", m, false);
 
         // not authenticated
         assertNull(dto.getEditorialNote());
@@ -133,7 +125,7 @@ class ClassMapperTest {
         assertNotNull(stream);
         RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
 
-        var dto = mapper.mapToClassDTO("test", "TestClass", m, true);
+        var dto = ClassMapper.mapToClassDTO("test", "TestClass", m, true);
 
         // not authenticated
         assertNull(dto.getEditorialNote());
@@ -154,7 +146,7 @@ class ClassMapperTest {
         assertNotNull(stream);
         RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
 
-        var dto = mapper.mapToClassDTO("test", "TestClass", m, true);
+        var dto = ClassMapper.mapToClassDTO("test", "TestClass", m, true);
 
         assertEquals("comment visible for admin", dto.getEditorialNote());
     }
@@ -188,7 +180,7 @@ class ClassMapperTest {
         assertEquals("comment visible for admin", resource.getProperty(SKOS.editorialNote).getObject().toString());
         assertEquals(2, resource.listProperties(SKOS.note).toList().size());
 
-        mapper.mapToUpdateClass(m, "http://uri.suomi.fi/datamodel/ns/test", resource, dto);
+        ClassMapper.mapToUpdateClass(m, "http://uri.suomi.fi/datamodel/ns/test", resource, dto);
 
         assertEquals(OWL.Class, resource.getProperty(RDF.type).getResource());
         assertEquals("http://uri.suomi.fi/datamodel/ns/test", resource.getProperty(RDFS.isDefinedBy).getObject().toString());
@@ -227,7 +219,7 @@ class ClassMapperTest {
         assertEquals("comment visible for admin", resource.getProperty(SKOS.editorialNote).getObject().toString());
         assertEquals(2, resource.listProperties(SKOS.note).toList().size());
 
-        mapper.mapToUpdateClass(m, "http://uri.suomi.fi/datamodel/ns/test", resource, dto);
+        ClassMapper.mapToUpdateClass(m, "http://uri.suomi.fi/datamodel/ns/test", resource, dto);
 
         assertEquals(OWL.Class, resource.getProperty(RDF.type).getResource());
         assertEquals("http://uri.suomi.fi/datamodel/ns/test", resource.getProperty(RDFS.isDefinedBy).getObject().toString());
@@ -263,7 +255,7 @@ class ClassMapperTest {
         assertEquals("comment visible for admin", resource.getProperty(SKOS.editorialNote).getObject().toString());
         assertEquals(2, resource.listProperties(SKOS.note).toList().size());
 
-        mapper.mapToUpdateClass(m, "http://uri.suomi.fi/datamodel/ns/test", resource, dto);
+        ClassMapper.mapToUpdateClass(m, "http://uri.suomi.fi/datamodel/ns/test", resource, dto);
 
         assertNull(resource.getProperty(DCTerms.subject));
         assertNull(resource.getProperty(OWL.equivalentClass));

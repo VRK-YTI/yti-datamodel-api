@@ -9,16 +9,18 @@ import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.vocabulary.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
 
 import java.util.Calendar;
 
-@Service
 public class ClassMapper {
+
+    private ClassMapper(){
+        //Static class
+    }
 
     private static final Logger logger = LoggerFactory.getLogger(ClassMapper.class);
 
-    public String createClassAndMapToModel(String modelURI, Model model, ClassDTO dto){
+    public static String createClassAndMapToModel(String modelURI, Model model, ClassDTO dto){
         logger.info("Adding class to {}", modelURI);
 
         var creationDate = new XSDDateTime(Calendar.getInstance());
@@ -58,7 +60,7 @@ public class ClassMapper {
         return classUri;
     }
 
-    public void mapToUpdateClass(Model model, String graph, Resource classResource, ClassDTO classDTO) {
+    public static void mapToUpdateClass(Model model, String graph, Resource classResource, ClassDTO classDTO) {
         logger.info("Updating class in graph {}", graph);
         var updateDate = new XSDDateTime(Calendar.getInstance());
         var modelResource = model.getResource(graph);
@@ -104,7 +106,7 @@ public class ClassMapper {
      * @param model           Model
      * @return Class DTO
      */
-    public ClassDTO mapToClassDTO(String modelPrefix, String classIdentifier, Model model, boolean hasRightToModel){
+    public static ClassDTO mapToClassDTO(String modelPrefix, String classIdentifier, Model model, boolean hasRightToModel){
         var classDTO = new ClassDTO();
         var classUri = ModelConstants.SUOMI_FI_NAMESPACE + modelPrefix + "#" + classIdentifier;
         var classResource = model.getResource(classUri);

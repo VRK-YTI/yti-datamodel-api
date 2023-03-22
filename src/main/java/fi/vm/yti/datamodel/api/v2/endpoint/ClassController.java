@@ -31,15 +31,13 @@ public class ClassController {
 
     private final AuthorizationManager authorizationManager;
     private final JenaService jenaService;
-    private final ClassMapper classMapper;
-    private final ResourceMapper resourceMapper;
     private final OpenSearchIndexer openSearchIndexer;
 
-    public ClassController(AuthorizationManager authorizationManager, JenaService jenaService, ClassMapper classMapper, ResourceMapper resourceMapper, OpenSearchIndexer openSearchIndexer){
+    public ClassController(AuthorizationManager authorizationManager,
+                           JenaService jenaService,
+                           OpenSearchIndexer openSearchIndexer){
         this.authorizationManager = authorizationManager;
         this.jenaService = jenaService;
-        this.classMapper = classMapper;
-        this.resourceMapper = resourceMapper;
         this.openSearchIndexer = openSearchIndexer;
     }
 
@@ -57,9 +55,9 @@ public class ClassController {
         }
         check(authorizationManager.hasRightToModel(prefix, model));
 
-        var classURi = classMapper.createClassAndMapToModel(modelURI, model, classDTO);
+        var classURi = ClassMapper.createClassAndMapToModel(modelURI, model, classDTO);
         jenaService.putDataModelToCore(modelURI, model);
-        var indexClass = resourceMapper.mapToIndexResource(model, classURi);
+        var indexClass = ResourceMapper.mapToIndexResource(model, classURi);
         openSearchIndexer.createResourceToIndex(indexClass);
     }
 
@@ -80,10 +78,10 @@ public class ClassController {
 
         var classResource = model.getResource(classURI);
 
-        classMapper.mapToUpdateClass(model, graph, classResource, classDTO);
+        ClassMapper.mapToUpdateClass(model, graph, classResource, classDTO);
         jenaService.putDataModelToCore(graph, model);
 
-        var indexClass = resourceMapper.mapToIndexResource(model, classURI);
+        var indexClass = ResourceMapper.mapToIndexResource(model, classURI);
         openSearchIndexer.updateResourceToIndex(indexClass);
     }
 
@@ -101,6 +99,6 @@ public class ClassController {
         }
         var hasRightToModel = authorizationManager.hasRightToModel(prefix, model);
 
-        return classMapper.mapToClassDTO(prefix, classIdentifier, model, hasRightToModel);
+        return ClassMapper.mapToClassDTO(prefix, classIdentifier, model, hasRightToModel);
     }
 }

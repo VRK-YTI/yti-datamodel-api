@@ -11,7 +11,10 @@ import fi.vm.yti.datamodel.api.v2.validator.ExceptionHandlerAdvice;
 import fi.vm.yti.datamodel.api.v2.validator.ValidationConstants;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.riot.RDFDataMgr;
+import org.apache.jena.riot.RDFLanguages;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -28,6 +31,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import java.util.*;
 import java.util.stream.Stream;
 
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -53,12 +57,6 @@ class ClassControllerTest {
     @MockBean
     private OpenSearchIndexer openSearchIndexer;
 
-    @MockBean
-    private ClassMapper classMapper;
-
-    @MockBean
-    private ResourceMapper resourceMapper;
-
     @Autowired
     private ClassController classController;
 
@@ -80,29 +78,28 @@ class ClassControllerTest {
         var mockModel = mock(Model.class);
 
         when(jenaService.getDataModel(anyString())).thenReturn(mockModel);
-        when(classMapper.createClassAndMapToModel(anyString(), any(Model.class), any(ClassDTO.class))).thenReturn("test");
-        when(resourceMapper.mapToIndexResource(any(Model.class), anyString())).thenReturn(mock(IndexResource.class));
+        try(var resourceMapper = mockStatic(ResourceMapper.class);
+            var classMapper = mockStatic(ClassMapper.class)) {
+            resourceMapper.when(() -> ResourceMapper.mapToIndexResource(any(Model.class), anyString())).thenReturn(new IndexResource());
+            classMapper.when(() -> ClassMapper.createClassAndMapToModel(anyString(), any(Model.class), any(ClassDTO.class))).thenReturn("test");
+            this.mvc
+                    .perform(put("/v2/class/test")
+                            .contentType("application/json")
+                            .content(EndpointUtils.convertObjectToJsonString(classDTO)))
+                    .andExpect(status().isOk());
 
-        this.mvc
-                .perform(put("/v2/class/test")
-                        .contentType("application/json")
-                        .content(EndpointUtils.convertObjectToJsonString(classDTO)))
-                .andExpect(status().isOk());
-
-        //Check that functions are called
-        verify(this.jenaService, times(2)).doesResolvedNamespaceExist(anyString());
-        verify(jenaService).doesResourceExistInGraph(anyString(), anyString());
-        verify(this.jenaService).getDataModel(anyString());
-        verify(this.classMapper)
-                .createClassAndMapToModel(anyString(), any(Model.class), any(ClassDTO.class));
-        verify(this.resourceMapper)
-                .mapToIndexResource(eq(mockModel), anyString());
-        verifyNoMoreInteractions(this.classMapper);
-        verify(this.jenaService).putDataModelToCore(anyString(), any(Model.class));
-        verifyNoMoreInteractions(this.jenaService);
-        verify(this.openSearchIndexer)
-                .createResourceToIndex(any(IndexResource.class));
-        verifyNoMoreInteractions(this.openSearchIndexer);
+            //Check that functions are called
+            verify(this.jenaService, times(2)).doesResolvedNamespaceExist(anyString());
+            verify(jenaService).doesResourceExistInGraph(anyString(), anyString());
+            verify(this.jenaService).getDataModel(anyString());
+            classMapper.verify(() -> ClassMapper.createClassAndMapToModel(anyString(), any(Model.class), any(ClassDTO.class)));
+            verify(this.jenaService).putDataModelToCore(anyString(), any(Model.class));
+            verifyNoMoreInteractions(this.jenaService);
+            resourceMapper.verify(() -> ResourceMapper.mapToIndexResource(any(Model.class), anyString()));
+            verify(this.openSearchIndexer)
+                    .createResourceToIndex(any(IndexResource.class));
+            verifyNoMoreInteractions(this.openSearchIndexer);
+        }
     }
 
     @Test
@@ -114,28 +111,27 @@ class ClassControllerTest {
         var mockModel = mock(Model.class);
 
         when(jenaService.getDataModel(anyString())).thenReturn(mockModel);
-        when(classMapper.createClassAndMapToModel(anyString(), any(Model.class), any(ClassDTO.class))).thenReturn("test");
-        when(resourceMapper.mapToIndexResource(any(Model.class), anyString())).thenReturn(mock(IndexResource.class));
+        try(var resourceMapper = mockStatic(ResourceMapper.class);
+            var classMapper = mockStatic(ClassMapper.class)) {
+            resourceMapper.when(() -> ResourceMapper.mapToIndexResource(any(Model.class), anyString())).thenReturn(new IndexResource());
+            classMapper.when(() -> ClassMapper.createClassAndMapToModel(anyString(), any(Model.class), any(ClassDTO.class))).thenReturn("test");
+            this.mvc
+                    .perform(put("/v2/class/test")
+                            .contentType("application/json")
+                            .content(EndpointUtils.convertObjectToJsonString(classDTO)))
+                    .andExpect(status().isOk());
 
-        this.mvc
-                .perform(put("/v2/class/test")
-                        .contentType("application/json")
-                        .content(EndpointUtils.convertObjectToJsonString(classDTO)))
-                .andExpect(status().isOk());
-
-        //Check that functions are called
-        verify(jenaService).doesResourceExistInGraph(anyString(), anyString());
-        verify(jenaService).getDataModel(anyString());
-        verify(this.classMapper)
-                .createClassAndMapToModel(anyString(), any(Model.class), any(ClassDTO.class));
-        verify(this.resourceMapper)
-                .mapToIndexResource(eq(mockModel), anyString());
-        verifyNoMoreInteractions(this.classMapper);
-        verify(this.jenaService).putDataModelToCore(anyString(), any(Model.class));
-        verifyNoMoreInteractions(this.jenaService);
-        verify(this.openSearchIndexer)
-                .createResourceToIndex(any(IndexResource.class));
-        verifyNoMoreInteractions(this.openSearchIndexer);
+            //Check that functions are called
+            verify(jenaService).doesResourceExistInGraph(anyString(), anyString());
+            verify(jenaService).getDataModel(anyString());
+            classMapper.verify(() -> ClassMapper.createClassAndMapToModel(anyString(), any(Model.class), any(ClassDTO.class)));
+            verify(this.jenaService).putDataModelToCore(anyString(), any(Model.class));
+            verifyNoMoreInteractions(this.jenaService);
+            resourceMapper.verify(() -> ResourceMapper.mapToIndexResource(any(Model.class), anyString()));
+            verify(this.openSearchIndexer)
+                    .createResourceToIndex(any(IndexResource.class));
+            verifyNoMoreInteractions(this.openSearchIndexer);
+        }
     }
 
     @Test
@@ -200,28 +196,31 @@ class ClassControllerTest {
         when(jenaService.getDataModel(anyString())).thenReturn(mockModel);
         when(mockModel.getResource(anyString())).thenReturn(mock(Resource.class));
         when(jenaService.doesResourceExistInGraph(anyString(), anyString())).thenReturn(true);
-        when(resourceMapper.mapToIndexResource(any(Model.class), anyString())).thenReturn(mock(IndexResource.class));
 
-        this.mvc
-                .perform(put("/v2/class/test/class")
-                        .contentType("application/json")
-                        .content(EndpointUtils.convertObjectToJsonString(classDTO)))
-                .andExpect(status().isOk());
+        try(var resourceMapper = mockStatic(ResourceMapper.class);
+            var classMapper = mockStatic(ClassMapper.class)) {
+            resourceMapper.when(() -> ResourceMapper.mapToIndexResource(any(Model.class), anyString())).thenReturn(new IndexResource());
+            //mockito will use our mocked static even though we do not call when(). so nothing is needed here
 
-        //Check that functions are called
-        verify(this.jenaService, times(2)).doesResolvedNamespaceExist(anyString());
-        verify(this.jenaService).doesResourceExistInGraph(anyString(), anyString());
-        verify(this.jenaService).getDataModel(anyString());
-        verify(this.classMapper)
-                .mapToUpdateClass(any(Model.class), anyString(), any(Resource.class), any(ClassDTO.class));
-        verify(this.resourceMapper)
-                .mapToIndexResource(eq(mockModel), anyString());
-        verifyNoMoreInteractions(this.classMapper);
-        verify(this.jenaService).putDataModelToCore(anyString(), any(Model.class));
-        verifyNoMoreInteractions(this.jenaService);
-        verify(this.openSearchIndexer)
-                .updateResourceToIndex(any(IndexResource.class));
-        verifyNoMoreInteractions(this.openSearchIndexer);
+            this.mvc
+                    .perform(put("/v2/class/test/class")
+                            .contentType("application/json")
+                            .content(EndpointUtils.convertObjectToJsonString(classDTO)))
+                    .andDo(print())
+                    .andExpect(status().isOk());
+
+            //Check that functions are called
+            verify(this.jenaService, times(2)).doesResolvedNamespaceExist(anyString());
+            verify(this.jenaService).doesResourceExistInGraph(anyString(), anyString());
+            verify(this.jenaService).getDataModel(anyString());
+            classMapper.verify(() -> ClassMapper.mapToUpdateClass(any(Model.class), anyString(), any(Resource.class), any(ClassDTO.class)));
+            verify(this.jenaService).putDataModelToCore(anyString(), any(Model.class));
+            verifyNoMoreInteractions(this.jenaService);
+            resourceMapper.verify(() -> ResourceMapper.mapToIndexResource(any(Model.class), anyString()));
+            verify(this.openSearchIndexer)
+                    .updateResourceToIndex(any(IndexResource.class));
+            verifyNoMoreInteractions(this.openSearchIndexer);
+        }
     }
 
     @Test
@@ -258,10 +257,15 @@ class ClassControllerTest {
 
     @Test
     void shouldGetClass() throws Exception {
-        when(jenaService.doesResourceExistInGraph(anyString(), anyString())).thenReturn(true);
-        when(jenaService.getDataModel(anyString())).thenReturn(mock(Model.class));
+        Model m = ModelFactory.createDefaultModel();
+        var stream = getClass().getResourceAsStream("/models/test_datamodel_with_resources.ttl");
+        assertNotNull(stream);
+        RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
 
-        mvc.perform(get("/v2/class/test/class"))
+        when(jenaService.doesResourceExistInGraph(anyString(), anyString())).thenReturn(true);
+        when(jenaService.getDataModel(anyString())).thenReturn(m);
+
+        mvc.perform(get("/v2/class/test/TestClass"))
                 .andDo(print())
                 .andExpect(status().isOk());
     }
