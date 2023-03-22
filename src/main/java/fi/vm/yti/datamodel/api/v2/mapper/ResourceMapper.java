@@ -8,14 +8,16 @@ import org.apache.jena.datatypes.xsd.XSDDateTime;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.vocabulary.*;
-import org.springframework.stereotype.Service;
 
 import java.util.Calendar;
 
-@Service
 public class ResourceMapper {
 
-    public String mapToResource(String graphUri, Model model, ResourceDTO dto){
+    private ResourceMapper(){
+        //Static class
+    }
+
+    public static String mapToResource(String graphUri, Model model, ResourceDTO dto){
         var creationDate = new XSDDateTime(Calendar.getInstance());
         var resourceUri = graphUri + "#" + dto.getIdentifier();
         var resourceType = dto.getType().equals(ResourceType.ASSOCIATION) ? OWL.ObjectProperty : OWL.DatatypeProperty;
@@ -58,7 +60,7 @@ public class ResourceMapper {
         return resourceUri;
     }
 
-    public void mapToUpdateResource(String graphUri, Model model, String resourceIdentifier, ResourceDTO dto) {
+    public static void mapToUpdateResource(String graphUri, Model model, String resourceIdentifier, ResourceDTO dto) {
         var updateDate = new XSDDateTime(Calendar.getInstance());
         var modelResource = model.getResource(graphUri);
         var languages = MapperUtils.arrayPropertyToSet(modelResource, DCTerms.language);
@@ -106,7 +108,7 @@ public class ResourceMapper {
         resource.addProperty(DCTerms.modified, ResourceFactory.createTypedLiteral(updateDate));
     }
 
-    public IndexResource mapToIndexResource(Model model, String resourceUri){
+    public static IndexResource mapToIndexResource(Model model, String resourceUri){
         var indexResource = new IndexResource();
         var resource = model.getResource(resourceUri);
 
@@ -141,7 +143,7 @@ public class ResourceMapper {
         return indexResource;
     }
 
-    public ResourceInfoDTO mapToResourceInfoDTO(Model model, String prefix, String classIdentifier, Model orgModel, boolean hasRightToModel) {
+    public static ResourceInfoDTO mapToResourceInfoDTO(Model model, String prefix, String classIdentifier, Model orgModel, boolean hasRightToModel) {
         var dto = new ResourceInfoDTO();
         var modelUri = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
         var resourceUri = modelUri + "#" + classIdentifier;

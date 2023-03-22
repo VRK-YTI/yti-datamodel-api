@@ -5,7 +5,6 @@ import fi.vm.yti.datamodel.api.v2.dto.ResourceType;
 import fi.vm.yti.datamodel.api.v2.dto.Status;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
 import fi.vm.yti.datamodel.api.v2.mapper.ResourceMapper;
-import fi.vm.yti.datamodel.api.v2.service.JenaService;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
@@ -17,29 +16,16 @@ import org.apache.jena.sparql.vocabulary.FOAF;
 import org.apache.jena.vocabulary.*;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.Import;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.Map;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(SpringExtension.class)
-@Import({
-        ResourceMapper.class
-})
 class ResourceMapperTest {
 
-    @MockBean
-    JenaService jenaService;
-
-    @Autowired
-    ResourceMapper mapper;
     @Test
     void mapToResourceAssociation() {
         Model m = ModelFactory.createDefaultModel();
@@ -58,7 +44,7 @@ class ResourceMapperTest {
         dto.setStatus(Status.DRAFT);
         dto.setNote(Map.of("fi", "test note"));
 
-        mapper.mapToResource("http://uri.suomi.fi/datamodel/ns/test", m, dto);
+        ResourceMapper.mapToResource("http://uri.suomi.fi/datamodel/ns/test", m, dto);
 
         Resource modelResource = m.getResource("http://uri.suomi.fi/datamodel/ns/test");
         Resource resourceResource = m.getResource("http://uri.suomi.fi/datamodel/ns/test#Resource");
@@ -107,7 +93,7 @@ class ResourceMapperTest {
         dto.setStatus(Status.DRAFT);
         dto.setNote(Map.of("fi", "test note"));
 
-        mapper.mapToResource("http://uri.suomi.fi/datamodel/ns/test", m, dto);
+        ResourceMapper.mapToResource("http://uri.suomi.fi/datamodel/ns/test", m, dto);
 
         Resource modelResource = m.getResource("http://uri.suomi.fi/datamodel/ns/test");
         Resource resourceResource = m.getResource("http://uri.suomi.fi/datamodel/ns/test#Resource");
@@ -156,7 +142,7 @@ class ResourceMapperTest {
         dto.setStatus(Status.DRAFT);
         dto.setNote(Map.of("fi", "test note"));
 
-        mapper.mapToResource("http://uri.suomi.fi/datamodel/ns/test", m, dto);
+        ResourceMapper.mapToResource("http://uri.suomi.fi/datamodel/ns/test", m, dto);
 
         Resource modelResource = m.getResource("http://uri.suomi.fi/datamodel/ns/test");
         Resource resourceResource = m.getResource("http://uri.suomi.fi/datamodel/ns/test#Resource");
@@ -206,7 +192,7 @@ class ResourceMapperTest {
         dto.setStatus(Status.DRAFT);
         dto.setNote(Map.of("fi", "test note"));
 
-        mapper.mapToResource("http://uri.suomi.fi/datamodel/ns/test", m, dto);
+        ResourceMapper.mapToResource("http://uri.suomi.fi/datamodel/ns/test", m, dto);
 
         Resource modelResource = m.getResource("http://uri.suomi.fi/datamodel/ns/test");
         Resource resourceResource = m.getResource("http://uri.suomi.fi/datamodel/ns/test#Resource");
@@ -240,13 +226,12 @@ class ResourceMapperTest {
 
     @Test
     void testMapToIndexResourceClass(){
-        when(jenaService.doesResourceExistInGraph(anyString(), anyString())).thenReturn(true);
         Model m = ModelFactory.createDefaultModel();
         var stream = getClass().getResourceAsStream("/models/test_datamodel_with_resources.ttl");
         assertNotNull(stream);
         RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
 
-        var indexClass = mapper.mapToIndexResource(m, "http://uri.suomi.fi/datamodel/ns/test#TestClass");
+        var indexClass = ResourceMapper.mapToIndexResource(m, "http://uri.suomi.fi/datamodel/ns/test#TestClass");
 
         assertEquals("http://uri.suomi.fi/datamodel/ns/test#TestClass", indexClass.getId());
         assertEquals("test note fi", indexClass.getNote().get("fi"));
@@ -260,13 +245,12 @@ class ResourceMapperTest {
 
     @Test
     void testMapToIndexResourceAttribute(){
-        when(jenaService.doesResourceExistInGraph(anyString(), anyString())).thenReturn(true);
         Model m = ModelFactory.createDefaultModel();
         var stream = getClass().getResourceAsStream("/models/test_datamodel_with_resources.ttl");
         assertNotNull(stream);
         RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
 
-        var indexClass = mapper.mapToIndexResource(m, "http://uri.suomi.fi/datamodel/ns/test#TestAttribute");
+        var indexClass = ResourceMapper.mapToIndexResource(m, "http://uri.suomi.fi/datamodel/ns/test#TestAttribute");
 
         assertEquals("http://uri.suomi.fi/datamodel/ns/test#TestAttribute", indexClass.getId());
         assertEquals("test note fi", indexClass.getNote().get("fi"));
@@ -280,13 +264,12 @@ class ResourceMapperTest {
 
     @Test
     void testMapToIndexResourceAssociation(){
-        when(jenaService.doesResourceExistInGraph(anyString(), anyString())).thenReturn(true);
         Model m = ModelFactory.createDefaultModel();
         var stream = getClass().getResourceAsStream("/models/test_datamodel_with_resources.ttl");
         assertNotNull(stream);
         RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
 
-        var indexClass = mapper.mapToIndexResource(m, "http://uri.suomi.fi/datamodel/ns/test#TestAssociation");
+        var indexClass = ResourceMapper.mapToIndexResource(m, "http://uri.suomi.fi/datamodel/ns/test#TestAssociation");
 
         assertEquals("http://uri.suomi.fi/datamodel/ns/test#TestAssociation", indexClass.getId());
         assertEquals("test note fi", indexClass.getNote().get("fi"));
@@ -300,13 +283,12 @@ class ResourceMapperTest {
 
     @Test
     void testMapToIndexResourceMinimalClass(){
-        when(jenaService.doesResourceExistInGraph(anyString(), anyString())).thenReturn(true);
         Model m = ModelFactory.createDefaultModel();
         var stream = getClass().getResourceAsStream("/models/test_datamodel_with_minimal_resources.ttl");
         assertNotNull(stream);
         RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
 
-        var indexClass = mapper.mapToIndexResource(m, "http://uri.suomi.fi/datamodel/ns/test#TestClass");
+        var indexClass = ResourceMapper.mapToIndexResource(m, "http://uri.suomi.fi/datamodel/ns/test#TestClass");
 
         assertEquals("http://uri.suomi.fi/datamodel/ns/test#TestClass", indexClass.getId());
         assertEquals(Status.VALID, indexClass.getStatus());
@@ -320,13 +302,12 @@ class ResourceMapperTest {
 
     @Test
     void testMapToIndexResourceMinimalAttribute(){
-        when(jenaService.doesResourceExistInGraph(anyString(), anyString())).thenReturn(true);
         Model m = ModelFactory.createDefaultModel();
         var stream = getClass().getResourceAsStream("/models/test_datamodel_with_minimal_resources.ttl");
         assertNotNull(stream);
         RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
 
-        var indexResource = mapper.mapToIndexResource(m, "http://uri.suomi.fi/datamodel/ns/test#TestAttribute");
+        var indexResource = ResourceMapper.mapToIndexResource(m, "http://uri.suomi.fi/datamodel/ns/test#TestAttribute");
 
         assertEquals("http://uri.suomi.fi/datamodel/ns/test#TestAttribute", indexResource.getId());
         assertEquals(Status.VALID, indexResource.getStatus());
@@ -340,13 +321,12 @@ class ResourceMapperTest {
 
     @Test
     void testMapToIndexResourceMinimalAssociation(){
-        when(jenaService.doesResourceExistInGraph(anyString(), anyString())).thenReturn(true);
         Model m = ModelFactory.createDefaultModel();
         var stream = getClass().getResourceAsStream("/models/test_datamodel_with_minimal_resources.ttl");
         assertNotNull(stream);
         RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
 
-        var indexResource = mapper.mapToIndexResource(m, "http://uri.suomi.fi/datamodel/ns/test#TestAssociation");
+        var indexResource = ResourceMapper.mapToIndexResource(m, "http://uri.suomi.fi/datamodel/ns/test#TestAssociation");
 
         assertEquals("http://uri.suomi.fi/datamodel/ns/test#TestAssociation", indexResource.getId());
         assertEquals(Status.VALID, indexResource.getStatus());
@@ -365,7 +345,7 @@ class ResourceMapperTest {
         assertNotNull(stream);
         RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
 
-        var dto = mapper.mapToResourceInfoDTO(m, "test", "TestAttribute", getOrgModel(), true);
+        var dto = ResourceMapper.mapToResourceInfoDTO(m, "test", "TestAttribute", getOrgModel(), true);
 
         assertEquals(ResourceType.ATTRIBUTE, dto.getType());
         assertEquals(1, dto.getLabel().size());
@@ -394,7 +374,7 @@ class ResourceMapperTest {
         assertNotNull(stream);
         RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
 
-        var dto = mapper.mapToResourceInfoDTO(m, "test", "TestAssociation", getOrgModel(), true);
+        var dto = ResourceMapper.mapToResourceInfoDTO(m, "test", "TestAssociation", getOrgModel(), true);
 
         assertEquals(ResourceType.ASSOCIATION, dto.getType());
         assertEquals(1, dto.getLabel().size());
@@ -423,7 +403,7 @@ class ResourceMapperTest {
         assertNotNull(stream);
         RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
 
-        var dto = mapper.mapToResourceInfoDTO(m, "test", "TestAttribute", getOrgModel(), true);
+        var dto = ResourceMapper.mapToResourceInfoDTO(m, "test", "TestAttribute", getOrgModel(), true);
 
         assertEquals(ResourceType.ATTRIBUTE, dto.getType());
         assertEquals(1, dto.getLabel().size());
@@ -448,7 +428,7 @@ class ResourceMapperTest {
         assertNotNull(stream);
         RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
 
-        var dto = mapper.mapToResourceInfoDTO(m, "test", "TestAssociation", getOrgModel(), true);
+        var dto = ResourceMapper.mapToResourceInfoDTO(m, "test", "TestAssociation", getOrgModel(), true);
 
         assertEquals(ResourceType.ASSOCIATION, dto.getType());
         assertEquals(1, dto.getLabel().size());
@@ -476,7 +456,7 @@ class ResourceMapperTest {
         RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
 
 
-        assertThrowsExactly(MappingError.class, () -> mapper.mapToResourceInfoDTO(m, "test", "TestClass", getOrgModel(), true));
+        assertThrowsExactly(MappingError.class, () -> ResourceMapper.mapToResourceInfoDTO(m, "test", "TestClass", getOrgModel(), true));
     }
 
     @Test
@@ -486,7 +466,7 @@ class ResourceMapperTest {
         assertNotNull(stream);
         RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
 
-        assertThrowsExactly(MappingError.class, () -> mapper.mapToResourceInfoDTO(m, "test", "TestClass", getOrgModel(), true));
+        assertThrowsExactly(MappingError.class, () -> ResourceMapper.mapToResourceInfoDTO(m, "test", "TestClass", getOrgModel(), true));
     }
 
     @Test
@@ -518,7 +498,7 @@ class ResourceMapperTest {
         assertEquals("comment visible for admin", resource.getProperty(SKOS.editorialNote).getObject().toString());
         assertEquals(2, resource.listProperties(SKOS.note).toList().size());
 
-        mapper.mapToUpdateResource("http://uri.suomi.fi/datamodel/ns/test", m, "TestAttribute", dto);
+        ResourceMapper.mapToUpdateResource("http://uri.suomi.fi/datamodel/ns/test", m, "TestAttribute", dto);
 
         assertEquals(OWL.DatatypeProperty, resource.getProperty(RDF.type).getResource());
         assertEquals("http://uri.suomi.fi/datamodel/ns/test", resource.getProperty(RDFS.isDefinedBy).getObject().toString());
@@ -564,7 +544,7 @@ class ResourceMapperTest {
         assertEquals("comment visible for admin", resource.getProperty(SKOS.editorialNote).getObject().toString());
         assertEquals(2, resource.listProperties(SKOS.note).toList().size());
 
-        mapper.mapToUpdateResource("http://uri.suomi.fi/datamodel/ns/test", m, "TestAssociation", dto);
+        ResourceMapper.mapToUpdateResource("http://uri.suomi.fi/datamodel/ns/test", m, "TestAssociation", dto);
 
         assertEquals(OWL.ObjectProperty, resource.getProperty(RDF.type).getResource());
         assertEquals("http://uri.suomi.fi/datamodel/ns/test", resource.getProperty(RDFS.isDefinedBy).getObject().toString());
@@ -590,14 +570,14 @@ class ResourceMapperTest {
         var resource = m.getResource("http://uri.suomi.fi/datamodel/ns/test#TestAttribute");
 
         //Shouldn't change if null
-        mapper.mapToUpdateResource("http://uri.suomi.fi/datamodel/ns/test", m, "TestAttribute", new ResourceDTO());
+        ResourceMapper.mapToUpdateResource("http://uri.suomi.fi/datamodel/ns/test", m, "TestAttribute", new ResourceDTO());
         assertEquals("http://uri.suomi.fi/datamodel/ns/test#SubResource", resource.getProperty(RDFS.subPropertyOf).getObject().toString());
 
         var dto = new ResourceDTO();
         dto.setSubResourceOf(Set.of());
 
         //should change if empty
-        mapper.mapToUpdateResource("http://uri.suomi.fi/datamodel/ns/test", m, "TestAttribute", dto);
+        ResourceMapper.mapToUpdateResource("http://uri.suomi.fi/datamodel/ns/test", m, "TestAttribute", dto);
         assertEquals("http://www.w3.org/2002/07/owl#topDataProperty", resource.getProperty(RDFS.subPropertyOf).getObject().toString());
     }
 
@@ -610,14 +590,14 @@ class ResourceMapperTest {
         var resource = m.getResource("http://uri.suomi.fi/datamodel/ns/test#TestAssociation");
 
         //Shouldn't change if null
-        mapper.mapToUpdateResource("http://uri.suomi.fi/datamodel/ns/test", m, "TestAssociation", new ResourceDTO());
+        ResourceMapper.mapToUpdateResource("http://uri.suomi.fi/datamodel/ns/test", m, "TestAssociation", new ResourceDTO());
         assertEquals("http://uri.suomi.fi/datamodel/ns/test#SubResource", resource.getProperty(RDFS.subPropertyOf).getObject().toString());
 
         var dto = new ResourceDTO();
         dto.setSubResourceOf(Set.of());
 
         //should change if empty
-        mapper.mapToUpdateResource("http://uri.suomi.fi/datamodel/ns/test", m, "TestAssociation", dto);
+        ResourceMapper.mapToUpdateResource("http://uri.suomi.fi/datamodel/ns/test", m, "TestAssociation", dto);
         assertEquals("http://www.w3.org/2002/07/owl#topObjectProperty", resource.getProperty(RDFS.subPropertyOf).getObject().toString());
     }
 
@@ -628,7 +608,7 @@ class ResourceMapperTest {
         assertNotNull(stream);
         RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
 
-        assertThrowsExactly(MappingError.class, () -> mapper.mapToUpdateResource("http://uri.suomi.fi/datamodel/ns/test", m, "TestClass", new ResourceDTO()));
+        assertThrowsExactly(MappingError.class, () -> ResourceMapper.mapToUpdateResource("http://uri.suomi.fi/datamodel/ns/test", m, "TestClass", new ResourceDTO()));
 
     }
 

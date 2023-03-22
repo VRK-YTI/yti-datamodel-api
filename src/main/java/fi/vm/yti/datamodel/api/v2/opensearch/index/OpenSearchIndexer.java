@@ -38,17 +38,15 @@ public class OpenSearchIndexer {
     private final OpenSearchConnector openSearchConnector;
     private final JenaService jenaService;
     private final ModelMapper modelMapper;
-    private final ResourceMapper resourceMapper;
     private final OpenSearchClient client;
 
     public OpenSearchIndexer(OpenSearchConnector openSearchConnector,
                              JenaService jenaService,
                              ModelMapper modelMapper,
-                             ResourceMapper resourceMapper, OpenSearchClient client) {
+                             OpenSearchClient client) {
         this.openSearchConnector = openSearchConnector;
         this.jenaService = jenaService;
         this.modelMapper = modelMapper;
-        this.resourceMapper = resourceMapper;
         this.client = client;
     }
 
@@ -188,7 +186,7 @@ public class OpenSearchIndexer {
             var newClass = ModelFactory.createDefaultModel()
                     .setNsPrefixes(indexClasses.getNsPrefixMap())
                     .add(resource.listProperties());
-            var indexClass = resourceMapper.mapToIndexResource(newClass, resource.getURI());
+            var indexClass = ResourceMapper.mapToIndexResource(newClass, resource.getURI());
             list.add(indexClass);
         }
         bulkInsert(OPEN_SEARCH_INDEX_RESOURCE, list);

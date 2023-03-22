@@ -28,13 +28,11 @@ public class ResourceController {
     private final JenaService jenaService;
     private final AuthorizationManager authorizationManager;
     private final OpenSearchIndexer openSearchIndexer;
-    private final ResourceMapper resourceMapper;
 
-    public ResourceController(JenaService jenaService, AuthorizationManager authorizationManager, OpenSearchIndexer openSearchIndexer, ResourceMapper resourceMapper) {
+    public ResourceController(JenaService jenaService, AuthorizationManager authorizationManager, OpenSearchIndexer openSearchIndexer) {
         this.jenaService = jenaService;
         this.authorizationManager = authorizationManager;
         this.openSearchIndexer = openSearchIndexer;
-        this.resourceMapper = resourceMapper;
     }
 
     @Operation(summary = "Add a class to a model")
@@ -52,9 +50,9 @@ public class ResourceController {
         }
         check(authorizationManager.hasRightToModel(prefix, model));
 
-        var resourceUri = resourceMapper.mapToResource(graphUri, model, dto);
+        var resourceUri = ResourceMapper.mapToResource(graphUri, model, dto);
         jenaService.putDataModelToCore(graphUri, model);
-        var indexClass = resourceMapper.mapToIndexResource(model, resourceUri);
+        var indexClass = ResourceMapper.mapToIndexResource(model, resourceUri);
         openSearchIndexer.createResourceToIndex(indexClass);
     }
 
@@ -77,9 +75,9 @@ public class ResourceController {
         }
         check(authorizationManager.hasRightToModel(prefix, model));
 
-        resourceMapper.mapToUpdateResource(graphUri, model, resourceIdentifier, dto);
+        ResourceMapper.mapToUpdateResource(graphUri, model, resourceIdentifier, dto);
         jenaService.putDataModelToCore(graphUri, model);
-        var indexResource = resourceMapper.mapToIndexResource(model, graphUri + "#" + resourceIdentifier);
+        var indexResource = ResourceMapper.mapToIndexResource(model, graphUri + "#" + resourceIdentifier);
         openSearchIndexer.updateResourceToIndex(indexResource);
     }
 
@@ -100,7 +98,7 @@ public class ResourceController {
         var orgModel = jenaService.getOrganizations();
         var hasRightToModel = authorizationManager.hasRightToModel(prefix, model);
 
-        return resourceMapper.mapToResourceInfoDTO(model, prefix, resourceIdentifier, orgModel, hasRightToModel);
+        return ResourceMapper.mapToResourceInfoDTO(model, prefix, resourceIdentifier, orgModel, hasRightToModel);
     }
 
 }
