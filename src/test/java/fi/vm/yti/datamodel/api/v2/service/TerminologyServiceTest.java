@@ -33,7 +33,7 @@ import static org.mockito.Mockito.*;
 @Import({
         TerminologyService.class
 })
-public class TerminologyServiceTest {
+class TerminologyServiceTest {
 
     @MockBean
     @Qualifier("uriResolveClient")
