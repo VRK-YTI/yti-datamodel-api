@@ -264,10 +264,15 @@ class ClassControllerTest {
 
         when(jenaService.doesResourceExistInGraph(anyString(), anyString())).thenReturn(true);
         when(jenaService.getDataModel(anyString())).thenReturn(m);
-
-        mvc.perform(get("/v2/class/test/TestClass"))
-                .andDo(print())
-                .andExpect(status().isOk());
+        when(jenaService.getOrganizations()).thenReturn(mock(Model.class));
+        when(authorizationManager.hasRightToModel(anyString(), any(Model.class))).thenReturn(true);
+        try(var mapper = mockStatic(ClassMapper.class)) {
+            mapper.when(() -> ClassMapper.mapToClassDTO(any(Model.class), anyString(), anyString(), any(Model.class), anyBoolean()))
+                    .thenReturn(new ClassInfoDTO());
+            mvc.perform(get("/v2/class/test/TestClass"))
+                    .andDo(print())
+                    .andExpect(status().isOk());
+        }
     }
 
     @Test

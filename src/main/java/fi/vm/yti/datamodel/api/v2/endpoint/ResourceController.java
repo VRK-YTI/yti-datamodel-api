@@ -98,7 +98,7 @@ public class ResourceController {
         var orgModel = jenaService.getOrganizations();
         var hasRightToModel = authorizationManager.hasRightToModel(prefix, model);
 
-        return ResourceMapper.mapToResourceInfoDTO(model, prefix, resourceIdentifier, orgModel, hasRightToModel);
+        return ResourceMapper.mapToResourceInfoDTO(model, graphUri, resourceIdentifier, orgModel, hasRightToModel);
     }
 
 }

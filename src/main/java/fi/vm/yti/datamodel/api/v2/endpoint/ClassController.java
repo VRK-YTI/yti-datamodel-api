@@ -2,6 +2,7 @@ package fi.vm.yti.datamodel.api.v2.endpoint;
 
 import fi.vm.yti.datamodel.api.security.AuthorizationManager;
 import fi.vm.yti.datamodel.api.v2.dto.ClassDTO;
+import fi.vm.yti.datamodel.api.v2.dto.ClassInfoDTO;
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
@@ -88,7 +89,7 @@ public class ClassController {
     @Operation(summary = "Get a class from a data model")
     @ApiResponse(responseCode = "200", description = "Class found successfully")
     @GetMapping(value = "/{prefix}/{classIdentifier}", produces = APPLICATION_JSON_VALUE)
-    public ClassDTO getClass(@PathVariable String prefix, @PathVariable String classIdentifier){
+    public ClassInfoDTO getClass(@PathVariable String prefix, @PathVariable String classIdentifier){
         var modelURI = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
         if(!jenaService.doesResourceExistInGraph(modelURI , modelURI + "#" + classIdentifier)){
             throw new ResourceNotFoundException(modelURI + "#" + classIdentifier);
@@ -99,6 +100,8 @@ public class ClassController {
         }
         var hasRightToModel = authorizationManager.hasRightToModel(prefix, model);
 
-        return ClassMapper.mapToClassDTO(prefix, classIdentifier, model, hasRightToModel);
+        var orgModel = jenaService.getOrganizations();
+
+        return ClassMapper.mapToClassDTO(model, modelURI, classIdentifier, orgModel, hasRightToModel);
     }
 }

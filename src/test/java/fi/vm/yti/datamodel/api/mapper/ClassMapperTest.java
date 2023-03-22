@@ -6,6 +6,7 @@ import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.rdf.model.*;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.riot.RDFLanguages;
+import org.apache.jena.sparql.vocabulary.FOAF;
 import org.apache.jena.vocabulary.*;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -100,7 +101,7 @@ class ClassMapperTest {
         assertNotNull(stream);
         RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
 
-        var dto = ClassMapper.mapToClassDTO("test", "TestClass", m, false);
+        var dto = ClassMapper.mapToClassDTO(m, "http://uri.suomi.fi/datamodel/ns/test", "TestClass", getOrgModel(), false);
 
         // not authenticated
         assertNull(dto.getEditorialNote());
@@ -116,6 +117,11 @@ class ClassMapperTest {
         assertEquals(2, dto.getNote().size());
         assertEquals("test note fi", dto.getNote().get("fi"));
         assertEquals("test note en", dto.getNote().get("en"));
+        assertEquals("2023-02-03T11:46:36.404Z", dto.getModified());
+        assertEquals("2023-02-03T11:46:36.404Z", dto.getCreated());
+        assertEquals("test org", dto.getContributor().stream().findFirst().orElseThrow().getLabel().get("fi"));
+        assertEquals("7d3a3c00-5a6b-489b-a3ed-63bb58c26a63", dto.getContributor().stream().findFirst().orElseThrow().getId());
+        assertEquals("http://uri.suomi.fi/datamodel/ns/test#TestClass", dto.getUri());
     }
 
     @Test
@@ -125,7 +131,7 @@ class ClassMapperTest {
         assertNotNull(stream);
         RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
 
-        var dto = ClassMapper.mapToClassDTO("test", "TestClass", m, true);
+        var dto = ClassMapper.mapToClassDTO(m, "http://uri.suomi.fi/datamodel/ns/test", "TestClass", getOrgModel(), true);
 
         // not authenticated
         assertNull(dto.getEditorialNote());
@@ -137,6 +143,11 @@ class ClassMapperTest {
         assertEquals("test label", dto.getLabel().get("fi"));
         assertNull(dto.getSubject());
         assertTrue(dto.getNote().isEmpty());
+        assertEquals("2023-02-03T11:46:36.404Z", dto.getModified());
+        assertEquals("2023-02-03T11:46:36.404Z", dto.getCreated());
+        assertEquals("test org", dto.getContributor().stream().findFirst().orElseThrow().getLabel().get("fi"));
+        assertEquals("7d3a3c00-5a6b-489b-a3ed-63bb58c26a63", dto.getContributor().stream().findFirst().orElseThrow().getId());
+        assertEquals("http://uri.suomi.fi/datamodel/ns/test#TestClass", dto.getUri());
     }
 
     @Test
@@ -146,7 +157,7 @@ class ClassMapperTest {
         assertNotNull(stream);
         RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
 
-        var dto = ClassMapper.mapToClassDTO("test", "TestClass", m, true);
+        var dto = ClassMapper.mapToClassDTO(m, "http://uri.suomi.fi/datamodel/ns/test", "TestClass", getOrgModel(), true);
 
         assertEquals("comment visible for admin", dto.getEditorialNote());
     }
@@ -263,6 +274,14 @@ class ClassMapperTest {
         assertEquals(OWL.Thing, resource.getProperty(RDFS.subClassOf).getResource());
         assertNull(resource.getProperty(SKOS.editorialNote));
         assertNull(resource.getProperty(SKOS.note));
+    }
+
+    private Model getOrgModel(){
+        var model = ModelFactory.createDefaultModel();
+        model.createResource("urn:uuid:7d3a3c00-5a6b-489b-a3ed-63bb58c26a63")
+                .addProperty(RDF.type, FOAF.Organization)
+                .addProperty(SKOS.prefLabel, ResourceFactory.createLangLiteral("test org", "fi"));
+        return model;
     }
 
 }

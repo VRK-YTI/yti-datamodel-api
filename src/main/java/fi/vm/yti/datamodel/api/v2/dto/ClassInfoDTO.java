@@ -3,30 +3,21 @@ package fi.vm.yti.datamodel.api.v2.dto;
 import java.util.Map;
 import java.util.Set;
 
-public class ResourceInfoDTO {
+public class ClassInfoDTO {
 
-    private ResourceType type;
     private Map<String, String> label;
     private String editorialNote;
     private Status status;
-    private Set<String> subResourceOf;
-    private Set<String> equivalentResource;
+    private Set<String> equivalentClass;
+    private Set<String> subClassOf;
     private String subject;
     private String identifier;
     private Map<String, String> note;
-    private String modified;
     private String created;
-    private String contact;
-    private Set<OrganizationDTO> contributor;
+    private String modified;
     private String uri;
-
-    public ResourceType getType() {
-        return type;
-    }
-
-    public void setType(ResourceType type) {
-        this.type = type;
-    }
+    private Set<OrganizationDTO> contributor;
+    private String contact;
 
     public Map<String, String> getLabel() {
         return label;
@@ -52,20 +43,20 @@ public class ResourceInfoDTO {
         this.status = status;
     }
 
-    public Set<String> getSubResourceOf() {
-        return subResourceOf;
+    public Set<String> getEquivalentClass() {
+        return equivalentClass;
     }
 
-    public void setSubResourceOf(Set<String> subResourceOf) {
-        this.subResourceOf = subResourceOf;
+    public void setEquivalentClass(Set<String> equivalentClass) {
+        this.equivalentClass = equivalentClass;
     }
 
-    public Set<String> getEquivalentResource() {
-        return equivalentResource;
+    public Set<String> getSubClassOf() {
+        return subClassOf;
     }
 
-    public void setEquivalentResource(Set<String> equivalentResource) {
-        this.equivalentResource = equivalentResource;
+    public void setSubClassOf(Set<String> subClassOf) {
+        this.subClassOf = subClassOf;
     }
 
     public String getSubject() {
@@ -92,14 +83,6 @@ public class ResourceInfoDTO {
         this.note = note;
     }
 
-    public String getModified() {
-        return modified;
-    }
-
-    public void setModified(String modified) {
-        this.modified = modified;
-    }
-
     public String getCreated() {
         return created;
     }
@@ -108,12 +91,20 @@ public class ResourceInfoDTO {
         this.created = created;
     }
 
-    public String getContact() {
-        return contact;
+    public String getModified() {
+        return modified;
     }
 
-    public void setContact(String contact) {
-        this.contact = contact;
+    public void setModified(String modified) {
+        this.modified = modified;
+    }
+
+    public String getUri() {
+        return uri;
+    }
+
+    public void setUri(String uri) {
+        this.uri = uri;
     }
 
     public Set<OrganizationDTO> getContributor() {
@@ -124,11 +115,11 @@ public class ResourceInfoDTO {
         this.contributor = contributor;
     }
 
-    public String getUri() {
-        return uri;
+    public String getContact() {
+        return contact;
     }
 
-    public void setUri(String uri) {
-        this.uri = uri;
+    public void setContact(String contact) {
+        this.contact = contact;
     }
 }

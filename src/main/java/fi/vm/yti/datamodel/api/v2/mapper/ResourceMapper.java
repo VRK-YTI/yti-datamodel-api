@@ -143,10 +143,9 @@ public class ResourceMapper {
         return indexResource;
     }
 
-    public static ResourceInfoDTO mapToResourceInfoDTO(Model model, String prefix, String classIdentifier, Model orgModel, boolean hasRightToModel) {
+    public static ResourceInfoDTO mapToResourceInfoDTO(Model model, String modelUri, String resourceIdentifier, Model orgModel, boolean hasRightToModel) {
         var dto = new ResourceInfoDTO();
-        var modelUri = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
-        var resourceUri = modelUri + "#" + classIdentifier;
+        var resourceUri = modelUri + "#" + resourceIdentifier;
         var resourceResource = model.getResource(resourceUri);
         var type = resourceResource.getProperty(RDF.type).getResource();
         if(type.equals(OWL.ObjectProperty)){
@@ -156,6 +155,7 @@ public class ResourceMapper {
         }else{
             throw new MappingError("Unsupported rdf:type");
         }
+        dto.setUri(resourceUri);
         dto.setLabel(MapperUtils.localizedPropertyToMap(resourceResource, RDFS.label));
         var status = Status.valueOf(resourceResource.getProperty(OWL.versionInfo).getObject().toString().toUpperCase());
         dto.setStatus(status);
@@ -172,10 +172,10 @@ public class ResourceMapper {
         var modified = resourceResource.getProperty(DCTerms.modified).getLiteral().getString();
         dto.setCreated(created);
         dto.setModified(modified);
-        var contributors = MapperUtils.arrayPropertyToSet(model.getResource(modelUri), DCTerms.contributor);
+        var modelResource = model.getResource(modelUri);
+        var contributors = MapperUtils.arrayPropertyToSet(modelResource, DCTerms.contributor);
         dto.setContributor(OrganizationMapper.mapOrganizationsToDTO(contributors, orgModel));
-        dto.setContact(MapperUtils.propertyToString(resourceResource, Iow.contact));
-
+        dto.setContact(MapperUtils.propertyToString(modelResource, Iow.contact));
         return dto;
     }
 
