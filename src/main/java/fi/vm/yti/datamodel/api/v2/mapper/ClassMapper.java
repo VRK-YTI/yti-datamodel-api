@@ -101,27 +101,38 @@ public class ClassMapper {
     /**
      * Map model with given prefix and class identifier
      *
-     * @param modelPrefix     Model prefix
+     * @param model Model
+     * @param modelUri Model uri
      * @param classIdentifier class identifier
-     * @param model           Model
+     * @param orgModel Model of organisations
+     * @param hasRightToModel does current user have right to model
      * @return Class DTO
      */
-    public static ClassDTO mapToClassDTO(String modelPrefix, String classIdentifier, Model model, boolean hasRightToModel){
-        var classDTO = new ClassDTO();
-        var classUri = ModelConstants.SUOMI_FI_NAMESPACE + modelPrefix + "#" + classIdentifier;
+    public static ClassInfoDTO mapToClassDTO(Model model, String modelUri, String classIdentifier, Model orgModel, boolean hasRightToModel){
+        var dto = new ClassInfoDTO();
+        var classUri = modelUri + "#" + classIdentifier;
         var classResource = model.getResource(classUri);
-        classDTO.setLabel(MapperUtils.localizedPropertyToMap(classResource, RDFS.label));
-        var status = Status.valueOf(classResource.getProperty(OWL.versionInfo).getObject().toString().toUpperCase());
-        classDTO.setStatus(status);
-        classDTO.setSubClassOf(MapperUtils.arrayPropertyToSet(classResource, RDFS.subClassOf));
-        classDTO.setEquivalentClass(MapperUtils.arrayPropertyToSet(classResource, OWL.equivalentClass));
-        classDTO.setSubject(MapperUtils.propertyToString(classResource, DCTerms.subject));
-        classDTO.setIdentifier(classResource.getLocalName());
-        classDTO.setNote(MapperUtils.localizedPropertyToMap(classResource, SKOS.note));
+        dto.setUri(classUri);
+        dto.setLabel(MapperUtils.localizedPropertyToMap(classResource, RDFS.label));
+        dto.setStatus(Status.valueOf(MapperUtils.propertyToString(classResource, OWL.versionInfo)));
+        dto.setSubClassOf(MapperUtils.arrayPropertyToSet(classResource, RDFS.subClassOf));
+        dto.setEquivalentClass(MapperUtils.arrayPropertyToSet(classResource, OWL.equivalentClass));
+        dto.setSubject(MapperUtils.propertyToString(classResource, DCTerms.subject));
+        dto.setIdentifier(classResource.getLocalName());
+        dto.setNote(MapperUtils.localizedPropertyToMap(classResource, SKOS.note));
         if (hasRightToModel) {
-            classDTO.setEditorialNote(MapperUtils.propertyToString(classResource, SKOS.editorialNote));
+            dto.setEditorialNote(MapperUtils.propertyToString(classResource, SKOS.editorialNote));
         }
-        return classDTO;
+
+        var created = classResource.getProperty(DCTerms.created).getLiteral().getString();
+        var modified = classResource.getProperty(DCTerms.modified).getLiteral().getString();
+        dto.setCreated(created);
+        dto.setModified(modified);
+        var modelResource = model.getResource(modelUri);
+        var contributors = MapperUtils.arrayPropertyToSet(modelResource, DCTerms.contributor);
+        dto.setContributor(OrganizationMapper.mapOrganizationsToDTO(contributors, orgModel));
+        dto.setContact(MapperUtils.propertyToString(modelResource, Iow.contact));
+        return dto;
     }
 
 }

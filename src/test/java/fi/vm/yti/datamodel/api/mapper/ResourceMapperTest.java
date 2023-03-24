@@ -345,7 +345,7 @@ class ResourceMapperTest {
         assertNotNull(stream);
         RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
 
-        var dto = ResourceMapper.mapToResourceInfoDTO(m, "test", "TestAttribute", getOrgModel(), true);
+        var dto = ResourceMapper.mapToResourceInfoDTO(m, "http://uri.suomi.fi/datamodel/ns/test", "TestAttribute", getOrgModel(), true);
 
         assertEquals(ResourceType.ATTRIBUTE, dto.getType());
         assertEquals(1, dto.getLabel().size());
@@ -365,6 +365,7 @@ class ResourceMapperTest {
         assertEquals("2023-02-03T11:46:36.404Z", dto.getCreated());
         assertEquals("test org", dto.getContributor().stream().findFirst().orElseThrow().getLabel().get("fi"));
         assertEquals("7d3a3c00-5a6b-489b-a3ed-63bb58c26a63", dto.getContributor().stream().findFirst().orElseThrow().getId());
+        assertEquals("http://uri.suomi.fi/datamodel/ns/test#TestAttribute", dto.getUri());
     }
 
     @Test
@@ -374,7 +375,7 @@ class ResourceMapperTest {
         assertNotNull(stream);
         RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
 
-        var dto = ResourceMapper.mapToResourceInfoDTO(m, "test", "TestAssociation", getOrgModel(), true);
+        var dto = ResourceMapper.mapToResourceInfoDTO(m, "http://uri.suomi.fi/datamodel/ns/test", "TestAssociation", getOrgModel(), true);
 
         assertEquals(ResourceType.ASSOCIATION, dto.getType());
         assertEquals(1, dto.getLabel().size());
@@ -394,6 +395,7 @@ class ResourceMapperTest {
         assertEquals("2023-02-03T11:46:36.404Z", dto.getCreated());
         assertEquals("test org", dto.getContributor().stream().findFirst().orElseThrow().getLabel().get("fi"));
         assertEquals("7d3a3c00-5a6b-489b-a3ed-63bb58c26a63", dto.getContributor().stream().findFirst().orElseThrow().getId());
+        assertEquals("http://uri.suomi.fi/datamodel/ns/test#TestAssociation", dto.getUri());
     }
 
     @Test
@@ -403,7 +405,7 @@ class ResourceMapperTest {
         assertNotNull(stream);
         RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
 
-        var dto = ResourceMapper.mapToResourceInfoDTO(m, "test", "TestAttribute", getOrgModel(), true);
+        var dto = ResourceMapper.mapToResourceInfoDTO(m, "http://uri.suomi.fi/datamodel/ns/test", "TestAttribute", getOrgModel(), true);
 
         assertEquals(ResourceType.ATTRIBUTE, dto.getType());
         assertEquals(1, dto.getLabel().size());
@@ -419,6 +421,7 @@ class ResourceMapperTest {
         assertEquals("2023-02-03T11:46:36.404Z", dto.getCreated());
         assertEquals("test org", dto.getContributor().stream().findFirst().orElseThrow().getLabel().get("fi"));
         assertEquals("7d3a3c00-5a6b-489b-a3ed-63bb58c26a63", dto.getContributor().stream().findFirst().orElseThrow().getId());
+        assertEquals("http://uri.suomi.fi/datamodel/ns/test#TestAttribute", dto.getUri());
     }
 
     @Test
@@ -428,7 +431,7 @@ class ResourceMapperTest {
         assertNotNull(stream);
         RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
 
-        var dto = ResourceMapper.mapToResourceInfoDTO(m, "test", "TestAssociation", getOrgModel(), true);
+        var dto = ResourceMapper.mapToResourceInfoDTO(m, "http://uri.suomi.fi/datamodel/ns/test", "TestAssociation", getOrgModel(), true);
 
         assertEquals(ResourceType.ASSOCIATION, dto.getType());
         assertEquals(1, dto.getLabel().size());
@@ -444,6 +447,7 @@ class ResourceMapperTest {
         assertEquals("2023-02-03T11:46:36.404Z", dto.getCreated());
         assertEquals("test org", dto.getContributor().stream().findFirst().orElseThrow().getLabel().get("fi"));
         assertEquals("7d3a3c00-5a6b-489b-a3ed-63bb58c26a63", dto.getContributor().stream().findFirst().orElseThrow().getId());
+        assertEquals("http://uri.suomi.fi/datamodel/ns/test#TestAssociation", dto.getUri());
     }
 
 
@@ -456,7 +460,7 @@ class ResourceMapperTest {
         RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
 
 
-        assertThrowsExactly(MappingError.class, () -> ResourceMapper.mapToResourceInfoDTO(m, "test", "TestClass", getOrgModel(), true));
+        assertThrowsExactly(MappingError.class, () -> ResourceMapper.mapToResourceInfoDTO(m, "http://uri.suomi.fi/datamodel/ns/test", "TestClass", getOrgModel(), true));
     }
 
     @Test
@@ -466,7 +470,7 @@ class ResourceMapperTest {
         assertNotNull(stream);
         RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
 
-        assertThrowsExactly(MappingError.class, () -> ResourceMapper.mapToResourceInfoDTO(m, "test", "TestClass", getOrgModel(), true));
+        assertThrowsExactly(MappingError.class, () -> ResourceMapper.mapToResourceInfoDTO(m, "http://uri.suomi.fi/datamodel/ns/test", "TestClass", getOrgModel(), true));
     }
 
     @Test
