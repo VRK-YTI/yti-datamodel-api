@@ -3,7 +3,7 @@ package fi.vm.yti.datamodel.api.v2.dto;
 import java.util.Map;
 import java.util.Set;
 
-public class ClassInfoDTO {
+public class ClassInfoDTO extends ResourceInfoBaseDTO {
 
     private Map<String, String> label;
     private String editorialNote;
@@ -13,8 +13,6 @@ public class ClassInfoDTO {
     private String subject;
     private String identifier;
     private Map<String, String> note;
-    private String created;
-    private String modified;
     private String uri;
     private Set<OrganizationDTO> contributor;
     private String contact;
@@ -81,22 +79,6 @@ public class ClassInfoDTO {
 
     public void setNote(Map<String, String> note) {
         this.note = note;
-    }
-
-    public String getCreated() {
-        return created;
-    }
-
-    public void setCreated(String created) {
-        this.created = created;
-    }
-
-    public String getModified() {
-        return modified;
-    }
-
-    public void setModified(String modified) {
-        this.modified = modified;
     }
 
     public String getUri() {

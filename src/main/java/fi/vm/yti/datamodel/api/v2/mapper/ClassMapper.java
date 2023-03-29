@@ -1,6 +1,7 @@
 package fi.vm.yti.datamodel.api.v2.mapper;
 
 import fi.vm.yti.datamodel.api.v2.dto.*;
+import fi.vm.yti.security.YtiUser;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.datatypes.xsd.XSDDateTime;
 import org.apache.jena.rdf.model.Model;
@@ -11,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Calendar;
+import java.util.function.Consumer;
 
 public class ClassMapper {
 
@@ -20,7 +22,7 @@ public class ClassMapper {
 
     private static final Logger logger = LoggerFactory.getLogger(ClassMapper.class);
 
-    public static String createClassAndMapToModel(String modelURI, Model model, ClassDTO dto){
+    public static String createClassAndMapToModel(String modelURI, Model model, ClassDTO dto, YtiUser user){
         logger.info("Adding class to {}", modelURI);
 
         var creationDate = new XSDDateTime(Calendar.getInstance());
@@ -30,7 +32,9 @@ public class ClassMapper {
                 .addProperty(OWL.versionInfo, dto.getStatus().name())
                 .addProperty(DCTerms.modified, ResourceFactory.createTypedLiteral(creationDate))
                 .addProperty(DCTerms.created, ResourceFactory.createTypedLiteral(creationDate))
-                .addProperty(RDFS.isDefinedBy, modelURI);
+                .addProperty(RDFS.isDefinedBy, modelURI)
+                .addProperty(Iow.creator, user.getId().toString())
+                .addProperty(Iow.modifier, user.getId().toString());
 
         classResource.addProperty(DCTerms.identifier, ResourceFactory.createTypedLiteral(dto.getIdentifier(), XSDDatatype.XSDNCName));
         //Labels
@@ -60,7 +64,7 @@ public class ClassMapper {
         return classUri;
     }
 
-    public static void mapToUpdateClass(Model model, String graph, Resource classResource, ClassDTO classDTO) {
+    public static void mapToUpdateClass(Model model, String graph, Resource classResource, ClassDTO classDTO, YtiUser user) {
         logger.info("Updating class in graph {}", graph);
         var updateDate = new XSDDateTime(Calendar.getInstance());
         var modelResource = model.getResource(graph);
@@ -96,6 +100,8 @@ public class ClassMapper {
         }
         classResource.removeAll(DCTerms.modified);
         classResource.addProperty(DCTerms.modified, ResourceFactory.createTypedLiteral(updateDate));
+        classResource.removeAll(Iow.modifier);
+        classResource.addProperty(Iow.modifier, user.getId().toString());
     }
 
     /**
@@ -108,7 +114,11 @@ public class ClassMapper {
      * @param hasRightToModel does current user have right to model
      * @return Class DTO
      */
-    public static ClassInfoDTO mapToClassDTO(Model model, String modelUri, String classIdentifier, Model orgModel, boolean hasRightToModel){
+    public static ClassInfoDTO mapToClassDTO(Model model, String modelUri,
+                                             String classIdentifier,
+                                             Model orgModel,
+                                             boolean hasRightToModel,
+                                             Consumer<ResourceInfoBaseDTO> userMapper){
         var dto = new ClassInfoDTO();
         var classUri = modelUri + "#" + classIdentifier;
         var classResource = model.getResource(classUri);
@@ -132,6 +142,12 @@ public class ClassMapper {
         var contributors = MapperUtils.arrayPropertyToSet(modelResource, DCTerms.contributor);
         dto.setContributor(OrganizationMapper.mapOrganizationsToDTO(contributors, orgModel));
         dto.setContact(MapperUtils.propertyToString(modelResource, Iow.contact));
+        dto.setCreator(MapperUtils.propertyToString(modelResource, Iow.creator));
+        dto.setModifier(MapperUtils.propertyToString(modelResource, Iow.modifier));
+
+        if (userMapper != null) {
+            userMapper.accept(dto);
+        }
         return dto;
     }
 

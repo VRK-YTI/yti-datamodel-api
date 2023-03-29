@@ -6,10 +6,13 @@ import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexModel;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
 import fi.vm.yti.datamodel.api.v2.mapper.ModelMapper;
+import fi.vm.yti.datamodel.api.v2.service.GroupManagementService;
 import fi.vm.yti.datamodel.api.v2.service.JenaService;
 import fi.vm.yti.datamodel.api.v2.service.TerminologyService;
 import fi.vm.yti.datamodel.api.v2.validator.ExceptionHandlerAdvice;
 import fi.vm.yti.datamodel.api.v2.validator.ValidationConstants;
+import fi.vm.yti.security.AuthenticatedUserProvider;
+import fi.vm.yti.security.YtiUser;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
@@ -20,6 +23,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -30,6 +34,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import static org.hamcrest.Matchers.containsString;
@@ -65,11 +70,20 @@ class DatamodelTest {
     @MockBean
     private TerminologyService terminologyService;
 
+    @MockBean
+    private GroupManagementService groupManagementService;
+
+    @MockBean
+    private AuthenticatedUserProvider userProvider;
+
+    @Mock
+    Consumer<ResourceInfoBaseDTO> consumer;
+
     @Autowired
     private Datamodel datamodel;
 
     private static final UUID RANDOM_ORG = UUID.randomUUID();
-
+    private static final YtiUser USER = EndpointUtils.mockUser;
 
     @BeforeEach
     public void setup() {
@@ -80,6 +94,7 @@ class DatamodelTest {
 
         when(authorizationManager.hasRightToAnyOrganization(anyCollection())).thenReturn(true);
         when(authorizationManager.hasRightToModel(any(), any())).thenReturn(true);
+        when(userProvider.getUser()).thenReturn(USER);
     }
 
     @Test
@@ -95,7 +110,7 @@ class DatamodelTest {
         //Mock mapping
         var model = mock(Model.class);
         var indexmodel = mock(IndexModel.class);
-        when(modelMapper.mapToJenaModel(any(DataModelDTO.class))).thenReturn(model);
+        when(modelMapper.mapToJenaModel(any(DataModelDTO.class), any(YtiUser.class))).thenReturn(model);
         when(modelMapper.mapToIndexModel("test", model)).thenReturn(indexmodel);
 
         this.mvc
@@ -106,7 +121,7 @@ class DatamodelTest {
 
         //Check that functions are called
         verify(this.modelMapper)
-                .mapToJenaModel(any(DataModelDTO.class));
+                .mapToJenaModel(any(DataModelDTO.class), any(YtiUser.class));
         verify(this.modelMapper)
                 .mapToIndexModel(anyString(), any(Model.class));
         verifyNoMoreInteractions(this.modelMapper);
@@ -130,7 +145,7 @@ class DatamodelTest {
         var model = mock(Model.class);
         var indexmodel = mock(IndexModel.class);
         when(jenaService.getDataModel(anyString())).thenReturn(mock(Model.class));
-        when(modelMapper.mapToUpdateJenaModel(anyString(), any(DataModelDTO.class), any(Model.class))).thenReturn(model);
+        when(modelMapper.mapToUpdateJenaModel(anyString(), any(DataModelDTO.class), any(Model.class), any(YtiUser.class))).thenReturn(model);
         when(modelMapper.mapToIndexModel("test", model)).thenReturn(indexmodel);
 
         this.mvc
@@ -141,7 +156,7 @@ class DatamodelTest {
 
         //Check that functions are called
         verify(this.modelMapper)
-                .mapToUpdateJenaModel(anyString(), any(DataModelDTO.class), any(Model.class));
+                .mapToUpdateJenaModel(anyString(), any(DataModelDTO.class), any(Model.class), any(YtiUser.class));
         verify(this.modelMapper)
                 .mapToIndexModel(anyString(), any(Model.class));
         verifyNoMoreInteractions(this.modelMapper);
@@ -153,8 +168,9 @@ class DatamodelTest {
     @Test
     void shouldReturnModel() throws Exception {
         var mockModel = mock(Model.class);
+        when(groupManagementService.mapUser()).thenReturn(consumer);
         when(jenaService.getDataModel(anyString())).thenReturn(mockModel);
-        when(modelMapper.mapToDataModelDTO(anyString(), any(Model.class))).thenReturn(new DataModelExpandDTO());
+        when(modelMapper.mapToDataModelDTO(anyString(), any(Model.class), eq(consumer))).thenReturn(new DataModelInfoDTO());
 
         this.mvc
                 .perform(get("/v2/model/test")
@@ -167,7 +183,7 @@ class DatamodelTest {
                 .getDataModel(ModelConstants.SUOMI_FI_NAMESPACE + "test");
         verifyNoMoreInteractions(this.jenaService);
         verify(modelMapper)
-                .mapToDataModelDTO(eq("test"), any(Model.class));
+                .mapToDataModelDTO(eq("test"), any(Model.class), eq(consumer));
         verifyNoMoreInteractions(this.modelMapper);
     }
 
