@@ -241,8 +241,8 @@ public class ModelMapper {
         var modified = modelResource.getProperty(DCTerms.modified).getLiteral().getString();
         datamodelDTO.setCreated(created);
         datamodelDTO.setModified(modified);
-        datamodelDTO.setCreator(MapperUtils.propertyToString(modelResource, Iow.creator));
-        datamodelDTO.setModifier(MapperUtils.propertyToString(modelResource, Iow.modifier));
+        datamodelDTO.setCreator(new UserDTO(MapperUtils.propertyToString(modelResource, Iow.creator)));
+        datamodelDTO.setModifier(new UserDTO(MapperUtils.propertyToString(modelResource, Iow.modifier)));
 
         var internalNamespaces = new HashSet<String>();
         var externalNamespaces = new HashSet<ExternalNamespaceDTO>();

@@ -142,8 +142,8 @@ public class ClassMapper {
         var contributors = MapperUtils.arrayPropertyToSet(modelResource, DCTerms.contributor);
         dto.setContributor(OrganizationMapper.mapOrganizationsToDTO(contributors, orgModel));
         dto.setContact(MapperUtils.propertyToString(modelResource, Iow.contact));
-        dto.setCreator(MapperUtils.propertyToString(modelResource, Iow.creator));
-        dto.setModifier(MapperUtils.propertyToString(modelResource, Iow.modifier));
+        dto.setCreator(new UserDTO(MapperUtils.propertyToString(modelResource, Iow.creator)));
+        dto.setModifier(new UserDTO(MapperUtils.propertyToString(modelResource, Iow.modifier)));
 
         if (userMapper != null) {
             userMapper.accept(dto);

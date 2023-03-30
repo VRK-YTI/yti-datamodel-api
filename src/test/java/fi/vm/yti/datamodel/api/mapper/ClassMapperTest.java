@@ -161,16 +161,20 @@ class ClassMapperTest {
         assertNotNull(stream);
         RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
 
-        Consumer<ResourceInfoBaseDTO> consumer = (ResourceInfoBaseDTO dto) -> {
-            dto.setCreator("creator fake-user");
-            dto.setModifier("modifier fake-user");
+        Consumer<ResourceInfoBaseDTO> userMapper = (ResourceInfoBaseDTO dto) -> {
+            var creator = new UserDTO("123");
+            var modifier = new UserDTO("123");
+            creator.setName("creator fake-user");
+            modifier.setName("modifier fake-user");
+            dto.setCreator(creator);
+            dto.setModifier(modifier);
         };
 
-        var dto = ClassMapper.mapToClassDTO(m, "http://uri.suomi.fi/datamodel/ns/test", "TestClass", getOrgModel(), true, consumer);
+        var dto = ClassMapper.mapToClassDTO(m, "http://uri.suomi.fi/datamodel/ns/test", "TestClass", getOrgModel(), true, userMapper);
 
         assertEquals("comment visible for admin", dto.getEditorialNote());
-        assertEquals("creator fake-user", dto.getCreator());
-        assertEquals("modifier fake-user", dto.getModifier());
+        assertEquals("creator fake-user", dto.getCreator().getName());
+        assertEquals("modifier fake-user", dto.getModifier().getName());
     }
 
     @Test

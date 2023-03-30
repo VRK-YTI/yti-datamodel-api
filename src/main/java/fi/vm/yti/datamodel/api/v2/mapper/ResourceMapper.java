@@ -3,6 +3,7 @@ package fi.vm.yti.datamodel.api.v2.mapper;
 import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexResource;
+import fi.vm.yti.security.YtiUser;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.datatypes.xsd.XSDDateTime;
 import org.apache.jena.rdf.model.Model;
@@ -10,6 +11,7 @@ import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.vocabulary.*;
 
 import java.util.Calendar;
+import java.util.function.Consumer;
 
 public class ResourceMapper {
 
@@ -17,7 +19,7 @@ public class ResourceMapper {
         //Static class
     }
 
-    public static String mapToResource(String graphUri, Model model, ResourceDTO dto){
+    public static String mapToResource(String graphUri, Model model, ResourceDTO dto, YtiUser user){
         var creationDate = new XSDDateTime(Calendar.getInstance());
         var resourceUri = graphUri + "#" + dto.getIdentifier();
         var resourceType = dto.getType().equals(ResourceType.ASSOCIATION) ? OWL.ObjectProperty : OWL.DatatypeProperty;
@@ -56,11 +58,13 @@ public class ResourceMapper {
             dto.getSubResourceOf().forEach(sub -> MapperUtils.addResourceRelationship(owlImports, dcTermsRequires, resourceResource, RDFS.subPropertyOf, sub));
         }
 
+        modelResource.addProperty(Iow.creator, user.getId().toString());
+        modelResource.addProperty(Iow.modifier, user.getId().toString());
         modelResource.addProperty(DCTerms.hasPart, resourceUri);
         return resourceUri;
     }
 
-    public static void mapToUpdateResource(String graphUri, Model model, String resourceIdentifier, ResourceDTO dto) {
+    public static void mapToUpdateResource(String graphUri, Model model, String resourceIdentifier, ResourceDTO dto, YtiUser user) {
         var updateDate = new XSDDateTime(Calendar.getInstance());
         var modelResource = model.getResource(graphUri);
         var languages = MapperUtils.arrayPropertyToSet(modelResource, DCTerms.language);
@@ -106,6 +110,8 @@ public class ResourceMapper {
 
         resource.removeAll(DCTerms.modified);
         resource.addProperty(DCTerms.modified, ResourceFactory.createTypedLiteral(updateDate));
+        resource.removeAll(Iow.modifier);
+        resource.addProperty(Iow.modifier, user.getId().toString());
     }
 
     public static IndexResource mapToIndexResource(Model model, String resourceUri){
@@ -143,7 +149,9 @@ public class ResourceMapper {
         return indexResource;
     }
 
-    public static ResourceInfoDTO mapToResourceInfoDTO(Model model, String modelUri, String resourceIdentifier, Model orgModel, boolean hasRightToModel) {
+    public static ResourceInfoDTO mapToResourceInfoDTO(Model model, String modelUri,
+                                                       String resourceIdentifier, Model orgModel,
+                                                       boolean hasRightToModel, Consumer<ResourceInfoBaseDTO> userMapper) {
         var dto = new ResourceInfoDTO();
         var resourceUri = modelUri + "#" + resourceIdentifier;
         var resourceResource = model.getResource(resourceUri);
@@ -176,6 +184,11 @@ public class ResourceMapper {
         var contributors = MapperUtils.arrayPropertyToSet(modelResource, DCTerms.contributor);
         dto.setContributor(OrganizationMapper.mapOrganizationsToDTO(contributors, orgModel));
         dto.setContact(MapperUtils.propertyToString(modelResource, Iow.contact));
+        dto.setCreator(new UserDTO(MapperUtils.propertyToString(resourceResource, Iow.creator)));
+        dto.setModifier(new UserDTO(MapperUtils.propertyToString(resourceResource, Iow.modifier)));
+        if (userMapper != null) {
+            userMapper.accept(dto);
+        }
         return dto;
     }
 

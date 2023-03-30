@@ -66,19 +66,19 @@ public class GroupManagementService {
 
     public Consumer<ResourceInfoBaseDTO> mapUser() {
         // TODO: fetch users and set them to cache
-        return (ResourceInfoBaseDTO dto) -> {
-            var creator = userCache.getIfPresent(dto.getCreator());
-            var modifier = userCache.getIfPresent(dto.getModifier());
+        return (var dto) -> {
+            var creator = userCache.getIfPresent(dto.getCreator().getId());
+            var modifier = userCache.getIfPresent(dto.getModifier().getId());
             if (creator != null) {
-                dto.setCreator(creator.getFirstName() + " " + creator.getLastName());
+                dto.getCreator().setName(creator.getFirstName() + " " + creator.getLastName());
             } else {
-                dto.setCreator("fake user");
+                dto.getCreator().setName("fake user");
             }
 
             if (modifier != null) {
-                dto.setModifier(modifier.getFirstName() + " " + modifier.getLastName());
+                dto.getModifier().setName(modifier.getFirstName() + " " + modifier.getLastName());
             } else {
-                dto.setModifier("fake user");
+                dto.getModifier().setName("fake user");
             }
         };
     }

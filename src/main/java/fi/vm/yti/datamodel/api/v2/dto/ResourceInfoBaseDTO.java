@@ -3,8 +3,8 @@ package fi.vm.yti.datamodel.api.v2.dto;
 public class ResourceInfoBaseDTO {
     private String created;
     private String modified;
-    private String modifier;
-    private String creator;
+    private UserDTO modifier;
+    private UserDTO creator;
 
     public String getCreated() {
         return created;
@@ -22,19 +22,19 @@ public class ResourceInfoBaseDTO {
         this.modified = modified;
     }
 
-    public String getModifier() {
+    public UserDTO getModifier() {
         return modifier;
     }
 
-    public void setModifier(String modifier) {
+    public void setModifier(UserDTO modifier) {
         this.modifier = modifier;
     }
 
-    public String getCreator() {
+    public UserDTO getCreator() {
         return creator;
     }
 
-    public void setCreator(String creator) {
+    public void setCreator(UserDTO creator) {
         this.creator = creator;
     }
 }

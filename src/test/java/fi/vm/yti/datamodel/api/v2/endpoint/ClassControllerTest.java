@@ -10,6 +10,7 @@ import fi.vm.yti.datamodel.api.v2.service.GroupManagementService;
 import fi.vm.yti.datamodel.api.v2.service.JenaService;
 import fi.vm.yti.datamodel.api.v2.validator.ExceptionHandlerAdvice;
 import fi.vm.yti.datamodel.api.v2.validator.ValidationConstants;
+import fi.vm.yti.security.AuthenticatedUserProvider;
 import fi.vm.yti.security.YtiUser;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.jena.rdf.model.Model;
@@ -22,7 +23,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -64,8 +64,12 @@ class ClassControllerTest {
     @MockBean
     private GroupManagementService groupManagementService;
 
-    @Mock
-    Consumer<ResourceInfoBaseDTO> consumer;
+    @MockBean
+    private AuthenticatedUserProvider userProvider;
+
+    private final Consumer<ResourceInfoBaseDTO> userMapper = (var dto) -> {} ;
+
+    private static final YtiUser USER = EndpointUtils.mockUser;
 
     @Autowired
     private ClassController classController;
@@ -80,6 +84,7 @@ class ClassControllerTest {
 
         when(authorizationManager.hasRightToAnyOrganization(anyCollection())).thenReturn(true);
         when(authorizationManager.hasRightToModel(any(), any())).thenReturn(true);
+        when(userProvider.getUser()).thenReturn(USER);
     }
 
     @Test
@@ -276,9 +281,9 @@ class ClassControllerTest {
         when(jenaService.getDataModel(anyString())).thenReturn(m);
         when(jenaService.getOrganizations()).thenReturn(mock(Model.class));
         when(authorizationManager.hasRightToModel(anyString(), any(Model.class))).thenReturn(true);
-        when(groupManagementService.mapUser()).thenReturn(consumer);
+        when(groupManagementService.mapUser()).thenReturn(userMapper);
         try(var mapper = mockStatic(ClassMapper.class)) {
-            mapper.when(() -> ClassMapper.mapToClassDTO(any(Model.class), anyString(), anyString(), any(Model.class), anyBoolean(), eq(consumer)))
+            mapper.when(() -> ClassMapper.mapToClassDTO(any(Model.class), anyString(), anyString(), any(Model.class), anyBoolean(), eq(userMapper)))
                     .thenReturn(new ClassInfoDTO());
             mvc.perform(get("/v2/class/test/TestClass"))
                     .andDo(print())
