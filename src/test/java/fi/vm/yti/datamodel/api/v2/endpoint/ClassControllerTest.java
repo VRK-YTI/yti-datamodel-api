@@ -33,8 +33,7 @@ import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -289,6 +288,49 @@ class ClassControllerTest {
         mvc.perform(get("/v2/class/test/class"))
                 .andDo(print())
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void shouldDeleteClass() throws Exception {
+        when(jenaService.doesResourceExistInGraph(anyString(), anyString())).thenReturn(true);
+        when(jenaService.getDataModel(anyString())).thenReturn(mock(Model.class));
+        when(authorizationManager.hasRightToModel(anyString(), any(Model.class))).thenReturn(true);
+
+
+        mvc.perform(delete("/v2/class/test/class"))
+                .andExpect(status().isOk());
+
+        verify(jenaService).doesResourceExistInGraph(anyString(), anyString());
+        verify(jenaService).getDataModel(anyString());
+        verify(authorizationManager).hasRightToModel(anyString(), any(Model.class));
+        verify(jenaService).deleteResource(anyString());
+        verify(openSearchIndexer).deleteResourceFromIndex(anyString());
+    }
+
+    @Test
+    void shouldFailToFindClassDelete() throws Exception {
+        mvc.perform(delete("/v2/class/test/class"))
+                .andExpect(status().isNotFound());
+
+        verify(jenaService).doesResourceExistInGraph(anyString(), anyString());
+        verifyNoMoreInteractions(jenaService);
+        verifyNoInteractions(authorizationManager, openSearchIndexer);
+    }
+
+    @Test
+    void shouldFailAuthorisationDelete() throws Exception {
+        when(jenaService.doesResourceExistInGraph(anyString(), anyString())).thenReturn(true);
+        when(jenaService.getDataModel(anyString())).thenReturn(mock(Model.class));
+        when(authorizationManager.hasRightToModel(anyString(), any(Model.class))).thenReturn(false);
+
+        mvc.perform(delete("/v2/class/test/class"))
+                .andExpect(status().isUnauthorized());
+
+        verify(jenaService).doesResourceExistInGraph(anyString(), anyString());
+        verify(jenaService).getDataModel(anyString());
+        verifyNoMoreInteractions(jenaService);
+        verify(authorizationManager).hasRightToModel(anyString(), any(Model.class));
+        verifyNoInteractions(openSearchIndexer);
     }
 
     private static ClassDTO createClassDTO(boolean update){

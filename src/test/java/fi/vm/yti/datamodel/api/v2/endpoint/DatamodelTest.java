@@ -34,10 +34,9 @@ import java.util.stream.Stream;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @TestPropertySource(properties = {
@@ -405,5 +404,48 @@ class DatamodelTest {
         args.add(dataModelDTO);
 
         return args.stream().map(Arguments::of);
+    }
+
+    @Test
+    void shouldDeleteDataModel() throws Exception {
+        when(jenaService.doesDataModelExist(anyString())).thenReturn(true);
+        when(jenaService.getDataModel(anyString())).thenReturn(mock(Model.class));
+        when(authorizationManager.hasRightToModel(anyString(), any(Model.class))).thenReturn(true);
+
+
+        mvc.perform(delete("/v2/model/test/"))
+                .andExpect(status().isOk());
+
+        verify(jenaService).doesDataModelExist(anyString());
+        verify(jenaService).getDataModel(anyString());
+        verify(authorizationManager).hasRightToModel(anyString(), any(Model.class));
+        verify(jenaService).deleteDataModel(anyString());
+        verify(openSearchIndexer).deleteModelFromIndex(anyString());
+    }
+
+    @Test
+    void shouldFailToFindDataModelDelete() throws Exception {
+        mvc.perform(delete("/v2/model/test"))
+                .andExpect(status().isNotFound());
+
+        verify(jenaService).doesDataModelExist(anyString());
+        verifyNoMoreInteractions(jenaService);
+        verifyNoInteractions(authorizationManager, openSearchIndexer);
+    }
+
+    @Test
+    void shouldFailAuthorisationDelete() throws Exception {
+        when(jenaService.doesDataModelExist(anyString())).thenReturn(true);
+        when(jenaService.getDataModel(anyString())).thenReturn(mock(Model.class));
+        when(authorizationManager.hasRightToModel(anyString(), any(Model.class))).thenReturn(false);
+
+        mvc.perform(delete("/v2/model/test"))
+                .andExpect(status().isUnauthorized());
+
+        verify(jenaService).doesDataModelExist(anyString());
+        verify(jenaService).getDataModel(anyString());
+        verifyNoMoreInteractions(jenaService);
+        verify(authorizationManager).hasRightToModel(anyString(), any(Model.class));
+        verifyNoInteractions(openSearchIndexer);
     }
 }

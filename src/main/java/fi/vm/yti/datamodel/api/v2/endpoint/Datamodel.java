@@ -113,4 +113,22 @@ public class Datamodel {
         return !jenaService.doesDataModelExist(ModelConstants.SUOMI_FI_NAMESPACE + prefix);
     }
 
+    @Operation(summary = "Delete a model from fuseki")
+    @ApiResponse(responseCode = "200", description = "Model deleted successfully")
+    @DeleteMapping(value = "/{prefix}")
+    public void deleteModel(@PathVariable String prefix) {
+        var modelUri = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
+        if(!jenaService.doesDataModelExist(modelUri)){
+            throw new ResourceNotFoundException(modelUri);
+        }
+        var model = jenaService.getDataModel(modelUri);
+        if(model == null){
+            throw new ResourceNotFoundException(modelUri);
+        }
+        check(authorizationManager.hasRightToModel(prefix, model));
+
+        jenaService.deleteDataModel(modelUri);
+        openSearchIndexer.deleteModelFromIndex(modelUri);
+    }
+
 }

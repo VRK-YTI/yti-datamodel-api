@@ -104,4 +104,22 @@ public class ClassController {
 
         return ClassMapper.mapToClassDTO(model, modelURI, classIdentifier, orgModel, hasRightToModel);
     }
+
+    @Operation(summary = "Delete a class from a data model")
+    @ApiResponse(responseCode = "200", description = "Class deleted successfully")
+    @DeleteMapping(value = "/{prefix}/{classIdentifier}")
+    public void deleteClass(@PathVariable String prefix, @PathVariable String classIdentifier){
+        var modelURI = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
+        var classURI  = modelURI + "#" + classIdentifier;
+        if(!jenaService.doesResourceExistInGraph(modelURI , classURI)){
+            throw new ResourceNotFoundException(classURI);
+        }
+        var model = jenaService.getDataModel(modelURI);
+        if(model == null){
+            throw new ResourceNotFoundException(modelURI);
+        }
+        check(authorizationManager.hasRightToModel(prefix, model));
+        jenaService.deleteResource(classURI);
+        openSearchIndexer.deleteResourceFromIndex(classURI);
+    }
 }

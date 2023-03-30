@@ -14,7 +14,6 @@ import org.apache.jena.vocabulary.*;
 import org.opensearch.client.opensearch.OpenSearchClient;
 import org.opensearch.client.opensearch._types.mapping.*;
 import org.opensearch.client.opensearch.core.BulkRequest;
-import org.opensearch.client.opensearch.core.BulkResponse;
 import org.opensearch.client.opensearch.core.bulk.BulkOperation;
 import org.opensearch.client.opensearch.core.bulk.IndexOperation;
 import org.slf4j.Logger;
@@ -98,6 +97,10 @@ public class OpenSearchIndexer {
         openSearchConnector.updateToIndex(OPEN_SEARCH_INDEX_MODEL, model.getId(), model);
     }
 
+    public void deleteModelFromIndex(String graph) {
+        openSearchConnector.removeFromIndex(OPEN_SEARCH_INDEX_MODEL, graph);
+    }
+
     /**
      * A new class to index
      *
@@ -116,6 +119,11 @@ public class OpenSearchIndexer {
     public void updateResourceToIndex(IndexResource indexResource) {
         logger.info("Updating index for: {}", indexResource.getId());
         openSearchConnector.updateToIndex(OPEN_SEARCH_INDEX_RESOURCE, indexResource.getId(), indexResource);
+    }
+
+    public void deleteResourceFromIndex(String id){
+        logger.info("Removing index for: {}", id);
+        openSearchConnector.removeFromIndex(OPEN_SEARCH_INDEX_RESOURCE, id);
     }
 
 
@@ -204,7 +212,6 @@ public class OpenSearchIndexer {
 
     public <T extends IndexBase> void bulkInsert(String indexName,
                                                  List<T> documents) throws IOException {
-        var bulkRequest = new BulkRequest.Builder();
         List<BulkOperation> bulkOperations = new ArrayList<>();
         documents.forEach(doc ->
                 bulkOperations.add(new IndexOperation.Builder<IndexBase>()
@@ -218,9 +225,10 @@ public class OpenSearchIndexer {
             logger.info("No data to index");
             return;
         }
-        bulkRequest.operations(bulkOperations);
-        BulkResponse response = client.bulk(bulkRequest.build());
-        logger.debug("Bulk insert status: errors: {}, items: {}, took: {}", response.errors(), response.items().size(), response.took());
+        var bulkRequest = new BulkRequest.Builder()
+                                .operations(bulkOperations);
+        var response = client.bulk(bulkRequest.build());
+        logger.debug("Bulk insert status for {}: errors: {}, items: {}, took: {}", indexName, response.errors(), response.items().size(), response.took());
     }
 
     private List<Map<String, DynamicTemplate>> getModelDynamicTemplates() {

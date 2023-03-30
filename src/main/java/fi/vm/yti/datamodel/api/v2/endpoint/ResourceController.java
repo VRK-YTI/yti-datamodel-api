@@ -101,4 +101,23 @@ public class ResourceController {
         return ResourceMapper.mapToResourceInfoDTO(model, graphUri, resourceIdentifier, orgModel, hasRightToModel);
     }
 
+    @Operation(summary = "Delete a resource from a data model")
+    @ApiResponse(responseCode = "200", description = "Resource deleted successfully")
+    @DeleteMapping(value = "/{prefix}/{resourceIdentifier}")
+    public void deleteResource(@PathVariable String prefix, @PathVariable String resourceIdentifier){
+        var modelURI = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
+        var resourceUri  = modelURI + "#" + resourceIdentifier;
+        if(!jenaService.doesResourceExistInGraph(modelURI , resourceUri)){
+            throw new ResourceNotFoundException(resourceUri);
+        }
+        var model = jenaService.getDataModel(modelURI);
+        if(model == null){
+            throw new ResourceNotFoundException(modelURI);
+        }
+        check(authorizationManager.hasRightToModel(prefix, model));
+
+        jenaService.deleteResource(resourceUri);
+        openSearchIndexer.deleteResourceFromIndex(resourceUri);
+    }
+
 }
