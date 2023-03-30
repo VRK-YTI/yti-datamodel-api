@@ -75,6 +75,8 @@ class ResourceMapperTest {
         assertEquals("https://www.example.com/ns/ext#SubRes", resourceResource.getProperty(RDFS.subPropertyOf).getObject().toString());
         assertEquals(1, resourceResource.listProperties(OWL.equivalentProperty).toList().size());
         assertEquals("http://uri.suomi.fi/datamodel/ns/int#EqRes", resourceResource.getProperty(OWL.equivalentProperty).getObject().toString());
+        assertEquals(mockUser.getId().toString(), resourceResource.getProperty(Iow.creator).getObject().toString());
+        assertEquals(mockUser.getId().toString(), resourceResource.getProperty(Iow.modifier).getObject().toString());
     }
 
     @Test
@@ -502,6 +504,7 @@ class ResourceMapperTest {
         assertNotNull(stream);
         RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
         var resource = m.getResource("http://uri.suomi.fi/datamodel/ns/test#TestAttribute");
+        var mockUser = EndpointUtils.mockUser;
 
         var dto = new ResourceDTO();
         dto.setLabel(Map.of("fi", "new label"));
@@ -524,7 +527,7 @@ class ResourceMapperTest {
         assertEquals("comment visible for admin", resource.getProperty(SKOS.editorialNote).getObject().toString());
         assertEquals(2, resource.listProperties(SKOS.note).toList().size());
 
-        ResourceMapper.mapToUpdateResource("http://uri.suomi.fi/datamodel/ns/test", m, "TestAttribute", dto, EndpointUtils.mockUser);
+        ResourceMapper.mapToUpdateResource("http://uri.suomi.fi/datamodel/ns/test", m, "TestAttribute", dto, mockUser);
 
         assertEquals(OWL.DatatypeProperty, resource.getProperty(RDF.type).getResource());
         assertEquals("http://uri.suomi.fi/datamodel/ns/test", resource.getProperty(RDFS.isDefinedBy).getObject().toString());
@@ -539,6 +542,8 @@ class ResourceMapperTest {
         assertEquals(1, resource.listProperties(SKOS.note).toList().size());
         assertEquals("new note", resource.getProperty(SKOS.note).getLiteral().getString());
         assertEquals("fi", resource.getProperty(SKOS.note).getLiteral().getLanguage());
+        assertEquals(mockUser.getId().toString(), resource.getProperty(Iow.modifier).getObject().toString());
+        assertEquals("2a5c075f-0d0e-4688-90e0-29af1eebbf6d", resource.getProperty(Iow.creator).getObject().toString());
     }
 
     @Test

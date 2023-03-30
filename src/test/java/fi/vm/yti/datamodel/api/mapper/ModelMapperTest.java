@@ -107,6 +107,7 @@ class ModelMapperTest {
         assertNotNull(model.getResource("http://example.com/ns/ext"));
 
         assertEquals(mockUser.getId().toString(), modelResource.getProperty(Iow.creator).getObject().toString());
+        assertEquals(mockUser.getId().toString(), modelResource.getProperty(Iow.modifier).getObject().toString());
     }
 
     @Test
@@ -186,6 +187,7 @@ class ModelMapperTest {
         assertEquals(1, modelResource.listProperties(OWL.imports).toList().size());
         assertEquals("http://www.w3.org/2000/01/rdf-schema#", modelResource.listProperties(OWL.imports).next().getString());
         assertEquals(mockUser.getId().toString(), modelResource.getProperty(Iow.modifier).getString());
+        assertEquals("2a5c075f-0d0e-4688-90e0-29af1eebbf6d", modelResource.getProperty(Iow.creator).getObject().toString());
     }
 
     @Test

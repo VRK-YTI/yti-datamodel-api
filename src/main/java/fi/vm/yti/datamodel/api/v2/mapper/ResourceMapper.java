@@ -29,7 +29,9 @@ public class ResourceMapper {
                 .addProperty(OWL.versionInfo, dto.getStatus().name())
                 .addProperty(DCTerms.modified, ResourceFactory.createTypedLiteral(creationDate))
                 .addProperty(DCTerms.created, ResourceFactory.createTypedLiteral(creationDate))
-                .addProperty(RDFS.isDefinedBy, graphUri);
+                .addProperty(RDFS.isDefinedBy, graphUri)
+                .addProperty(Iow.creator, user.getId().toString())
+                .addProperty(Iow.modifier, user.getId().toString());
 
         resourceResource.addProperty(DCTerms.identifier, ResourceFactory.createTypedLiteral(dto.getIdentifier(), XSDDatatype.XSDNCName));
         //Labels
@@ -58,8 +60,6 @@ public class ResourceMapper {
             dto.getSubResourceOf().forEach(sub -> MapperUtils.addResourceRelationship(owlImports, dcTermsRequires, resourceResource, RDFS.subPropertyOf, sub));
         }
 
-        modelResource.addProperty(Iow.creator, user.getId().toString());
-        modelResource.addProperty(Iow.modifier, user.getId().toString());
         modelResource.addProperty(DCTerms.hasPart, resourceUri);
         return resourceUri;
     }

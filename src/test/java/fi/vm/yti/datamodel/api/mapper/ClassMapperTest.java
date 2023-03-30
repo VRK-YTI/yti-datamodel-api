@@ -71,6 +71,8 @@ class ClassMapperTest {
         assertEquals("https://www.example.com/ns/ext#SubClass", classResource.getProperty(RDFS.subClassOf).getObject().toString());
         assertEquals(1, classResource.listProperties(OWL.equivalentClass).toList().size());
         assertEquals("http://uri.suomi.fi/datamodel/ns/int#EqClass", classResource.getProperty(OWL.equivalentClass).getObject().toString());
+        assertEquals(mockUser.getId().toString(), classResource.getProperty(Iow.creator).getString());
+        assertEquals(mockUser.getId().toString(), classResource.getProperty(Iow.modifier).getString());
     }
 
     @Test
@@ -222,6 +224,8 @@ class ClassMapperTest {
         assertEquals(1, resource.listProperties(SKOS.note).toList().size());
         assertEquals("new note", resource.getProperty(SKOS.note).getLiteral().getString());
         assertEquals("fi", resource.getProperty(SKOS.note).getLiteral().getLanguage());
+        assertEquals(mockUser.getId().toString(), resource.getProperty(Iow.modifier).getObject().toString());
+        assertEquals("2a5c075f-0d0e-4688-90e0-29af1eebbf6d", resource.getProperty(Iow.creator).getObject().toString());
     }
 
     @Test
