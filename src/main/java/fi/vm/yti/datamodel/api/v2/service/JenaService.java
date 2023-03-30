@@ -31,6 +31,7 @@ public class JenaService {
     private final RDFConnection coreWrite;
     private final RDFConnection coreRead;
     private final RDFConnection coreSparql;
+    private final RDFConnection coreUpdate;
 
     private final RDFConnection importWrite;
     private final RDFConnection importRead;
@@ -45,6 +46,7 @@ public class JenaService {
         this.coreWrite = RDFConnection.connect(endpoint + "/core/data");
         this.coreRead = RDFConnection.connect(endpoint + "/core/get");
         this.coreSparql = RDFConnection.connect( endpoint + "/core/sparql");
+        this.coreUpdate = RDFConnection.connect(endpoint + "/core/update");
         this.importWrite = RDFConnection.connect(endpoint + "/imports/data");
         this.importRead = RDFConnection.connect(endpoint + "/imports/get");
         this.importSparql = RDFConnection.connect(endpoint + "/imports/sparql");
@@ -78,6 +80,39 @@ public class JenaService {
             if (ex.getStatusCode() == HttpStatus.NOT_FOUND.value()) {
                 logger.warn("Model not found with prefix {}", graph);
                 throw new ResourceNotFoundException(graph);
+            } else {
+                throw new JenaQueryException();
+            }
+        }
+    }
+
+    public void deleteDataModel(String graph) {
+        logger.debug("Deleting model from core {}", graph);
+        try{
+            coreWrite.delete(graph);
+        } catch (HttpException ex) {
+            if (ex.getStatusCode() == HttpStatus.NOT_FOUND.value()) {
+                logger.warn("Model not found with prefix {}", graph);
+                throw new ResourceNotFoundException(graph);
+            } else {
+                throw new JenaQueryException();
+            }
+        }
+    }
+
+    public void deleteResource(String resource) {
+        logger.debug("Deleting resource from core {}", resource);
+        var deleteBuilder = new UpdateBuilder();
+        var expr = deleteBuilder.getExprFactory();
+        var filter = expr.or(expr.eq("?s", NodeFactory.createURI(resource)), expr.eq("?o", NodeFactory.createURI(resource)));
+        deleteBuilder.addDelete("?g", "?s", "?p", "?o")
+                .addGraph("?g", new WhereBuilder().addWhere("?s", "?p", "?o").addFilter(filter));
+        try{
+            coreUpdate.update(deleteBuilder.buildRequest());
+        } catch (HttpException ex) {
+            if (ex.getStatusCode() == HttpStatus.NOT_FOUND.value()) {
+                logger.warn("Model not found with prefix {}", resource);
+                throw new ResourceNotFoundException(resource);
             } else {
                 throw new JenaQueryException();
             }

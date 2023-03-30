@@ -193,7 +193,8 @@ public class MapperUtils {
      */
     public static void addResourceRelationship(Set<String> owlImports, Set<String> dcTermsRequires, Resource resource, Property property, String resourceUri){
         var namespace = NodeFactory.createURI(resourceUri).getNameSpace().replace("#", "");
-        if(!owlImports.contains(namespace) && !dcTermsRequires.contains(namespace)){
+        var ownNamespace = resource.getNameSpace().replace("#", "");
+        if(!ownNamespace.equals(namespace) &&!owlImports.contains(namespace) && !dcTermsRequires.contains(namespace)){
             throw new MappingError("Resource namespace not in owl:imports or dcterms:requires");
         }
         resource.addProperty(property, resourceUri);

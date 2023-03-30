@@ -124,8 +124,8 @@ public class OpenSearchConnector {
         }
     }
 
-    public DeleteResponse removeFromIndex(String id,
-                                          String index) {
+    public void removeFromIndex(String index,
+                                          String id) {
         String encId = DataModelUtils.encode(id);
         try {
             final long startTime = System.currentTimeMillis();
@@ -134,12 +134,10 @@ public class OpenSearchConnector {
                     .id(encId)
                     .refresh(Refresh.WaitFor)
                     .build();
-            DeleteResponse resp = client.delete(req);
+            client.delete(req);
             logger.info("Removed {} from {} (took {} ms)", id, index, System.currentTimeMillis() - startTime);
-            return resp;
         } catch (IOException e) {
             logger.warn(e.getMessage(), e);
-            return null;
         }
     }
 
