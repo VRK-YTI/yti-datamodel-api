@@ -2,15 +2,17 @@ package fi.vm.yti.datamodel.api.v2.endpoint;
 
 import fi.vm.yti.datamodel.api.security.AuthorizationManager;
 import fi.vm.yti.datamodel.api.v2.dto.DataModelDTO;
-import fi.vm.yti.datamodel.api.v2.dto.DataModelExpandDTO;
+import fi.vm.yti.datamodel.api.v2.dto.DataModelInfoDTO;
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
 import fi.vm.yti.datamodel.api.v2.mapper.ModelMapper;
+import fi.vm.yti.datamodel.api.v2.service.GroupManagementService;
 import fi.vm.yti.datamodel.api.v2.service.JenaService;
 import fi.vm.yti.datamodel.api.v2.service.TerminologyService;
 import fi.vm.yti.datamodel.api.v2.validator.ValidDatamodel;
 import fi.vm.yti.datamodel.api.v2.validator.ValidationConstants;
+import fi.vm.yti.security.AuthenticatedUserProvider;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -40,16 +42,24 @@ public class Datamodel {
 
     private final TerminologyService terminologyService;
 
+    private final AuthenticatedUserProvider userProvider;
+
+    private final GroupManagementService groupManagementService;
+
     public Datamodel(JenaService jenaService,
                      AuthorizationManager authorizationManager,
                      OpenSearchIndexer openSearchIndexer,
                      ModelMapper modelMapper,
-                     TerminologyService terminologyService) {
+                     TerminologyService terminologyService,
+                     AuthenticatedUserProvider userProvider,
+                     GroupManagementService groupManagementService) {
         this.authorizationManager = authorizationManager;
         this.mapper = modelMapper;
         this.openSearchIndexer = openSearchIndexer;
         this.jenaService = jenaService;
         this.terminologyService = terminologyService;
+        this.userProvider = userProvider;
+        this.groupManagementService = groupManagementService;
     }
 
     @Operation(summary = "Create a new model")
@@ -61,7 +71,7 @@ public class Datamodel {
         check(authorizationManager.hasRightToAnyOrganization(modelDTO.getOrganizations()));
 
         terminologyService.resolveTerminology(modelDTO.getTerminologies());
-        var jenaModel = mapper.mapToJenaModel(modelDTO);
+        var jenaModel = mapper.mapToJenaModel(modelDTO, userProvider.getUser());
 
         jenaService.putDataModelToCore(ModelConstants.SUOMI_FI_NAMESPACE + modelDTO.getPrefix(), jenaModel);
 
@@ -86,7 +96,7 @@ public class Datamodel {
 
         terminologyService.resolveTerminology(modelDTO.getTerminologies());
 
-        var jenaModel = mapper.mapToUpdateJenaModel(prefix, modelDTO, oldModel);
+        var jenaModel = mapper.mapToUpdateJenaModel(prefix, modelDTO, oldModel, userProvider.getUser());
 
         jenaService.putDataModelToCore(ModelConstants.SUOMI_FI_NAMESPACE + prefix, jenaModel);
 
@@ -98,9 +108,12 @@ public class Datamodel {
     @Operation(summary = "Get a model from fuseki")
     @ApiResponse(responseCode = "200", description = "Datamodel object for the found model")
     @GetMapping(value = "/{prefix}", produces = APPLICATION_JSON_VALUE)
-    public DataModelExpandDTO getModel(@PathVariable String prefix){
+    public DataModelInfoDTO getModel(@PathVariable String prefix){
         var model = jenaService.getDataModel(ModelConstants.SUOMI_FI_NAMESPACE + prefix);
-        return mapper.mapToDataModelDTO(prefix, model);
+        var hasRightsToModel = authorizationManager.hasRightToModel(prefix, model);
+
+        var userMapper = hasRightsToModel ? groupManagementService.mapUser() : null;
+        return mapper.mapToDataModelDTO(prefix, model, userMapper);
     }
 
     @Operation(summary = "Check if prefix already exists")

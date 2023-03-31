@@ -5,9 +5,12 @@ import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.mapper.ResourceMapper;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexResource;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
+import fi.vm.yti.datamodel.api.v2.service.GroupManagementService;
 import fi.vm.yti.datamodel.api.v2.service.JenaService;
 import fi.vm.yti.datamodel.api.v2.validator.ExceptionHandlerAdvice;
 import fi.vm.yti.datamodel.api.v2.validator.ValidationConstants;
+import fi.vm.yti.security.AuthenticatedUserProvider;
+import fi.vm.yti.security.YtiUser;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
@@ -27,6 +30,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -56,9 +60,18 @@ class ResourceControllerTest {
     @MockBean
     private OpenSearchIndexer openSearchIndexer;
 
+    @MockBean
+    private AuthenticatedUserProvider userProvider;
+
+    @MockBean
+    private GroupManagementService groupManagementService;
+
     @Autowired
     private ResourceController resourceController;
 
+    private final Consumer<ResourceInfoBaseDTO> userMapper = (var dto) -> {};
+
+    private static final YtiUser USER = EndpointUtils.mockUser;
 
     @BeforeEach
     public void setup() {
@@ -69,6 +82,8 @@ class ResourceControllerTest {
 
         when(authorizationManager.hasRightToAnyOrganization(anyCollection())).thenReturn(true);
         when(authorizationManager.hasRightToModel(any(), any())).thenReturn(true);
+        when(userProvider.getUser()).thenReturn(USER);
+        when(groupManagementService.mapUser()).thenReturn(userMapper);
     }
 
     @Test
@@ -78,7 +93,7 @@ class ResourceControllerTest {
         when(jenaService.getDataModel(anyString())).thenReturn(mock(Model.class));
 
         try(var mapper = mockStatic(ResourceMapper.class)) {
-            mapper.when(() -> ResourceMapper.mapToResource(anyString(), any(Model.class), any(ResourceDTO.class))).thenReturn("test");
+            mapper.when(() -> ResourceMapper.mapToResource(anyString(), any(Model.class), any(ResourceDTO.class), any(YtiUser.class))).thenReturn("test");
             mapper.when(() -> ResourceMapper.mapToIndexResource(any(Model.class), anyString())).thenReturn(new IndexResource());
             this.mvc
                     .perform(put("/v2/resource/test")
@@ -89,7 +104,7 @@ class ResourceControllerTest {
             verify(this.jenaService, times(2)).doesResolvedNamespaceExist(anyString());
             verify(this.jenaService).doesResourceExistInGraph(anyString(), anyString());
             verify(this.jenaService).getDataModel(anyString());
-            mapper.verify(() -> ResourceMapper.mapToResource(anyString(), any(Model.class), any(ResourceDTO.class)));
+            mapper.verify(() -> ResourceMapper.mapToResource(anyString(), any(Model.class), any(ResourceDTO.class), any(YtiUser.class)));
             verify(this.jenaService).putDataModelToCore(anyString(), any(Model.class));
             verifyNoMoreInteractions(this.jenaService);
             mapper.verify(() -> ResourceMapper.mapToIndexResource(any(Model.class), anyString()));
@@ -113,7 +128,7 @@ class ResourceControllerTest {
         when(jenaService.getDataModel(anyString())).thenReturn(mock(Model.class));
 
         try(var mapper = mockStatic(ResourceMapper.class)) {
-            mapper.when(() -> ResourceMapper.mapToResource(anyString(), any(Model.class), any(ResourceDTO.class))).thenReturn("test");
+            mapper.when(() -> ResourceMapper.mapToResource(anyString(), any(Model.class), any(ResourceDTO.class), any(YtiUser.class))).thenReturn("test");
             mapper.when(() -> ResourceMapper.mapToIndexResource(any(Model.class), anyString())).thenReturn(new IndexResource());
             this.mvc
                     .perform(put("/v2/resource/test")
@@ -125,7 +140,7 @@ class ResourceControllerTest {
             //Check that functions are called
             verify(this.jenaService).doesResourceExistInGraph(anyString(), anyString());
             verify(this.jenaService).getDataModel(anyString());
-            mapper.verify(() -> ResourceMapper.mapToResource(anyString(), any(Model.class), any(ResourceDTO.class)));
+            mapper.verify(() -> ResourceMapper.mapToResource(anyString(), any(Model.class), any(ResourceDTO.class), any(YtiUser.class)));
             verify(this.jenaService).putDataModelToCore(anyString(), any(Model.class));
             verifyNoMoreInteractions(this.jenaService);
             mapper.verify(() -> ResourceMapper.mapToIndexResource(any(Model.class), anyString()));
@@ -278,14 +293,14 @@ class ResourceControllerTest {
         when(authorizationManager.hasRightToModel(anyString(), any(Model.class))).thenReturn(true);
 
         try(var mapper = mockStatic(ResourceMapper.class)) {
-            mapper.when(() -> ResourceMapper.mapToResourceInfoDTO(any(Model.class), anyString(), anyString(), any(Model.class), anyBoolean()))
+            mapper.when(() -> ResourceMapper.mapToResourceInfoDTO(any(Model.class), anyString(), anyString(), any(Model.class), anyBoolean(), eq(userMapper)))
                     .thenReturn(new ResourceInfoDTO());
             mvc.perform(get("/v2/resource/test/TestAttribute"))
                     .andExpect(status().isOk());
             verify(jenaService).doesResourceExistInGraph(anyString(), anyString());
             verify(jenaService).getDataModel(anyString());
             verify(jenaService).getOrganizations();
-            mapper.verify(() -> ResourceMapper.mapToResourceInfoDTO(any(Model.class), anyString(), anyString(), any(Model.class), anyBoolean()));
+            mapper.verify(() -> ResourceMapper.mapToResourceInfoDTO(any(Model.class), anyString(), anyString(), any(Model.class), anyBoolean(), eq(userMapper)));
             verify(authorizationManager).hasRightToModel(anyString(), any(Model.class));
         }
 

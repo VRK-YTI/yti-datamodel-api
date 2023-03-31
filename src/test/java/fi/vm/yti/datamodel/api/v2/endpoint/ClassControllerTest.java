@@ -6,9 +6,12 @@ import fi.vm.yti.datamodel.api.v2.mapper.ResourceMapper;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexResource;
 import fi.vm.yti.datamodel.api.v2.mapper.ClassMapper;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
+import fi.vm.yti.datamodel.api.v2.service.GroupManagementService;
 import fi.vm.yti.datamodel.api.v2.service.JenaService;
 import fi.vm.yti.datamodel.api.v2.validator.ExceptionHandlerAdvice;
 import fi.vm.yti.datamodel.api.v2.validator.ValidationConstants;
+import fi.vm.yti.security.AuthenticatedUserProvider;
+import fi.vm.yti.security.YtiUser;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
@@ -29,6 +32,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -56,6 +60,16 @@ class ClassControllerTest {
     @MockBean
     private OpenSearchIndexer openSearchIndexer;
 
+    @MockBean
+    private GroupManagementService groupManagementService;
+
+    @MockBean
+    private AuthenticatedUserProvider userProvider;
+
+    private final Consumer<ResourceInfoBaseDTO> userMapper = (var dto) -> {} ;
+
+    private static final YtiUser USER = EndpointUtils.mockUser;
+
     @Autowired
     private ClassController classController;
 
@@ -69,6 +83,7 @@ class ClassControllerTest {
 
         when(authorizationManager.hasRightToAnyOrganization(anyCollection())).thenReturn(true);
         when(authorizationManager.hasRightToModel(any(), any())).thenReturn(true);
+        when(userProvider.getUser()).thenReturn(USER);
     }
 
     @Test
@@ -80,7 +95,7 @@ class ClassControllerTest {
         try(var resourceMapper = mockStatic(ResourceMapper.class);
             var classMapper = mockStatic(ClassMapper.class)) {
             resourceMapper.when(() -> ResourceMapper.mapToIndexResource(any(Model.class), anyString())).thenReturn(new IndexResource());
-            classMapper.when(() -> ClassMapper.createClassAndMapToModel(anyString(), any(Model.class), any(ClassDTO.class))).thenReturn("test");
+            classMapper.when(() -> ClassMapper.createClassAndMapToModel(anyString(), any(Model.class), any(ClassDTO.class), any(YtiUser.class))).thenReturn("test");
             this.mvc
                     .perform(put("/v2/class/test")
                             .contentType("application/json")
@@ -91,7 +106,7 @@ class ClassControllerTest {
             verify(this.jenaService, times(2)).doesResolvedNamespaceExist(anyString());
             verify(jenaService).doesResourceExistInGraph(anyString(), anyString());
             verify(this.jenaService).getDataModel(anyString());
-            classMapper.verify(() -> ClassMapper.createClassAndMapToModel(anyString(), any(Model.class), any(ClassDTO.class)));
+            classMapper.verify(() -> ClassMapper.createClassAndMapToModel(anyString(), any(Model.class), any(ClassDTO.class), any(YtiUser.class)));
             verify(this.jenaService).putDataModelToCore(anyString(), any(Model.class));
             verifyNoMoreInteractions(this.jenaService);
             resourceMapper.verify(() -> ResourceMapper.mapToIndexResource(any(Model.class), anyString()));
@@ -113,7 +128,7 @@ class ClassControllerTest {
         try(var resourceMapper = mockStatic(ResourceMapper.class);
             var classMapper = mockStatic(ClassMapper.class)) {
             resourceMapper.when(() -> ResourceMapper.mapToIndexResource(any(Model.class), anyString())).thenReturn(new IndexResource());
-            classMapper.when(() -> ClassMapper.createClassAndMapToModel(anyString(), any(Model.class), any(ClassDTO.class))).thenReturn("test");
+            classMapper.when(() -> ClassMapper.createClassAndMapToModel(anyString(), any(Model.class), any(ClassDTO.class), any(YtiUser.class))).thenReturn("test");
             this.mvc
                     .perform(put("/v2/class/test")
                             .contentType("application/json")
@@ -123,7 +138,7 @@ class ClassControllerTest {
             //Check that functions are called
             verify(jenaService).doesResourceExistInGraph(anyString(), anyString());
             verify(jenaService).getDataModel(anyString());
-            classMapper.verify(() -> ClassMapper.createClassAndMapToModel(anyString(), any(Model.class), any(ClassDTO.class)));
+            classMapper.verify(() -> ClassMapper.createClassAndMapToModel(anyString(), any(Model.class), any(ClassDTO.class), any(YtiUser.class)));
             verify(this.jenaService).putDataModelToCore(anyString(), any(Model.class));
             verifyNoMoreInteractions(this.jenaService);
             resourceMapper.verify(() -> ResourceMapper.mapToIndexResource(any(Model.class), anyString()));
@@ -212,7 +227,7 @@ class ClassControllerTest {
             verify(this.jenaService, times(2)).doesResolvedNamespaceExist(anyString());
             verify(this.jenaService).doesResourceExistInGraph(anyString(), anyString());
             verify(this.jenaService).getDataModel(anyString());
-            classMapper.verify(() -> ClassMapper.mapToUpdateClass(any(Model.class), anyString(), any(Resource.class), any(ClassDTO.class)));
+            classMapper.verify(() -> ClassMapper.mapToUpdateClass(any(Model.class), anyString(), any(Resource.class), any(ClassDTO.class), any(YtiUser.class)));
             verify(this.jenaService).putDataModelToCore(anyString(), any(Model.class));
             verifyNoMoreInteractions(this.jenaService);
             resourceMapper.verify(() -> ResourceMapper.mapToIndexResource(any(Model.class), anyString()));
@@ -265,8 +280,9 @@ class ClassControllerTest {
         when(jenaService.getDataModel(anyString())).thenReturn(m);
         when(jenaService.getOrganizations()).thenReturn(mock(Model.class));
         when(authorizationManager.hasRightToModel(anyString(), any(Model.class))).thenReturn(true);
+        when(groupManagementService.mapUser()).thenReturn(userMapper);
         try(var mapper = mockStatic(ClassMapper.class)) {
-            mapper.when(() -> ClassMapper.mapToClassDTO(any(Model.class), anyString(), anyString(), any(Model.class), anyBoolean()))
+            mapper.when(() -> ClassMapper.mapToClassDTO(any(Model.class), anyString(), anyString(), any(Model.class), anyBoolean(), eq(userMapper)))
                     .thenReturn(new ClassInfoDTO());
             mvc.perform(get("/v2/class/test/TestClass"))
                     .andDo(print())

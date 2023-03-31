@@ -9,8 +9,10 @@ import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
 import fi.vm.yti.datamodel.api.v2.mapper.ClassMapper;
 import fi.vm.yti.datamodel.api.v2.mapper.ResourceMapper;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
+import fi.vm.yti.datamodel.api.v2.service.GroupManagementService;
 import fi.vm.yti.datamodel.api.v2.service.JenaService;
 import fi.vm.yti.datamodel.api.v2.validator.ValidClass;
+import fi.vm.yti.security.AuthenticatedUserProvider;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -33,13 +35,19 @@ public class ClassController {
     private final AuthorizationManager authorizationManager;
     private final JenaService jenaService;
     private final OpenSearchIndexer openSearchIndexer;
+    private final GroupManagementService groupManagementService;
+    private final AuthenticatedUserProvider userProvider;
 
     public ClassController(AuthorizationManager authorizationManager,
                            JenaService jenaService,
-                           OpenSearchIndexer openSearchIndexer){
+                           OpenSearchIndexer openSearchIndexer,
+                           GroupManagementService groupManagementService,
+                           AuthenticatedUserProvider userProvider){
         this.authorizationManager = authorizationManager;
         this.jenaService = jenaService;
         this.openSearchIndexer = openSearchIndexer;
+        this.groupManagementService = groupManagementService;
+        this.userProvider = userProvider;
     }
 
     @Operation(summary = "Add a class to a model")
@@ -56,7 +64,7 @@ public class ClassController {
         }
         check(authorizationManager.hasRightToModel(prefix, model));
 
-        var classURi = ClassMapper.createClassAndMapToModel(modelURI, model, classDTO);
+        var classURi = ClassMapper.createClassAndMapToModel(modelURI, model, classDTO, userProvider.getUser());
         jenaService.putDataModelToCore(modelURI, model);
         var indexClass = ResourceMapper.mapToIndexResource(model, classURi);
         openSearchIndexer.createResourceToIndex(indexClass);
@@ -79,7 +87,7 @@ public class ClassController {
 
         var classResource = model.getResource(classURI);
 
-        ClassMapper.mapToUpdateClass(model, graph, classResource, classDTO);
+        ClassMapper.mapToUpdateClass(model, graph, classResource, classDTO, userProvider.getUser());
         jenaService.putDataModelToCore(graph, model);
 
         var indexClass = ResourceMapper.mapToIndexResource(model, classURI);
@@ -102,7 +110,9 @@ public class ClassController {
 
         var orgModel = jenaService.getOrganizations();
 
-        return ClassMapper.mapToClassDTO(model, modelURI, classIdentifier, orgModel, hasRightToModel);
+        var userMapper = hasRightToModel ? groupManagementService.mapUser() : null;
+        return ClassMapper.mapToClassDTO(model, modelURI, classIdentifier, orgModel,
+                hasRightToModel, userMapper);
     }
 
     @Operation(summary = "Delete a class from a data model")

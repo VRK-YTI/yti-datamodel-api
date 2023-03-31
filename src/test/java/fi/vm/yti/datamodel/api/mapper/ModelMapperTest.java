@@ -2,8 +2,10 @@ package fi.vm.yti.datamodel.api.mapper;
 
 
 import fi.vm.yti.datamodel.api.v2.dto.*;
+import fi.vm.yti.datamodel.api.v2.endpoint.EndpointUtils;
 import fi.vm.yti.datamodel.api.v2.mapper.ModelMapper;
 import fi.vm.yti.datamodel.api.v2.service.JenaService;
+import fi.vm.yti.security.YtiUser;
 import org.apache.jena.rdf.model.*;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.riot.RDFLanguages;
@@ -64,6 +66,7 @@ class ModelMapperTest {
         when(mockStm.getResource()).thenReturn(RDFS.Resource);
 
         UUID organizationId = UUID.randomUUID();
+        YtiUser mockUser = EndpointUtils.mockUser;
 
         //TODO: should we have 2 separate tests for ModelType.LIBRARY and ModelType.PROFILE?
         DataModelDTO dto = new DataModelDTO();
@@ -86,7 +89,7 @@ class ModelMapperTest {
         externalDTO.setPrefix("ext");
         dto.setExternalNamespaces(Set.of(externalDTO));
 
-        Model model = mapper.mapToJenaModel(dto);
+        Model model = mapper.mapToJenaModel(dto, mockUser);
 
         Resource modelResource = model.getResource("http://uri.suomi.fi/datamodel/ns/test");
         Resource groupResource = model.getResource("http://urn.fi/URN:NBN:fi:uuid:au:ptvl:v1105");
@@ -102,6 +105,9 @@ class ModelMapperTest {
         assertEquals(1, modelResource.listProperties(OWL.imports).toList().size());
         assertEquals(1, modelResource.listProperties(DCTerms.requires).toList().size());
         assertNotNull(model.getResource("http://example.com/ns/ext"));
+
+        assertEquals(mockUser.getId().toString(), modelResource.getProperty(Iow.creator).getObject().toString());
+        assertEquals(mockUser.getId().toString(), modelResource.getProperty(Iow.modifier).getObject().toString());
     }
 
     @Test
@@ -123,6 +129,7 @@ class ModelMapperTest {
         when(mockStm.getResource()).thenReturn(RDFS.Resource);
 
         UUID organizationId = UUID.randomUUID();
+        YtiUser mockUser = EndpointUtils.mockUser;
 
         DataModelDTO dto = new DataModelDTO();
         dto.setLabel(Map.of(
@@ -158,7 +165,7 @@ class ModelMapperTest {
         assertEquals(1, modelResource.listProperties(DCTerms.requires).toList().size());
         assertEquals("https://www.example.com/ns/ext", modelResource.listProperties(DCTerms.requires).next().getString());
 
-        Model model = mapper.mapToUpdateJenaModel("test", dto, m);
+        Model model = mapper.mapToUpdateJenaModel("test", dto, m, mockUser);
 
         //changed values
         modelResource = model.getResource("http://uri.suomi.fi/datamodel/ns/test");
@@ -179,6 +186,8 @@ class ModelMapperTest {
 
         assertEquals(1, modelResource.listProperties(OWL.imports).toList().size());
         assertEquals("http://www.w3.org/2000/01/rdf-schema#", modelResource.listProperties(OWL.imports).next().getString());
+        assertEquals(mockUser.getId().toString(), modelResource.getProperty(Iow.modifier).getString());
+        assertEquals("2a5c075f-0d0e-4688-90e0-29af1eebbf6d", modelResource.getProperty(Iow.creator).getObject().toString());
     }
 
     @Test
@@ -189,7 +198,7 @@ class ModelMapperTest {
         assertNotNull(stream);
         RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
 
-        var result = mapper.mapToDataModelDTO("test", m);
+        var result = mapper.mapToDataModelDTO("test", m, null);
 
         assertEquals("test", result.getPrefix());
         assertEquals(ModelType.PROFILE, result.getType());
@@ -220,7 +229,7 @@ class ModelMapperTest {
         var streamOld = getClass().getResourceAsStream("/test_datamodel_v1.ttl");
         assertNotNull(streamOld);
         RDFDataMgr.read(mOld, streamOld, RDFLanguages.TURTLE);
-        var resultOld = mapper.mapToDataModelDTO("testaa", mOld);
+        var resultOld = mapper.mapToDataModelDTO("testaa", mOld, null);
 
         assertEquals("testaa", resultOld.getPrefix());
         assertEquals(ModelType.PROFILE, resultOld.getType());

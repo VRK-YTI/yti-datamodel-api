@@ -3,7 +3,7 @@ package fi.vm.yti.datamodel.api.v2.dto;
 import java.util.Map;
 import java.util.Set;
 
-public class DataModelExpandDTO {
+public class DataModelInfoDTO extends ResourceInfoBaseDTO {
     private ModelType type;
     private String prefix;
     private Status status;
@@ -15,8 +15,6 @@ public class DataModelExpandDTO {
     private Set<String> internalNamespaces = Set.of();
     private Set<ExternalNamespaceDTO> externalNamespaces = Set.of();
     private Set<TerminologyDTO> terminologies = Set.of();
-    private String modified;
-    private String created;
 
     public ModelType getType() {
         return type;
@@ -106,19 +104,4 @@ public class DataModelExpandDTO {
         this.terminologies = terminologies;
     }
 
-    public String getModified() {
-        return modified;
-    }
-
-    public void setModified(String modified) {
-        this.modified = modified;
-    }
-
-    public String getCreated() {
-        return created;
-    }
-
-    public void setCreated(String created) {
-        this.created = created;
-    }
 }

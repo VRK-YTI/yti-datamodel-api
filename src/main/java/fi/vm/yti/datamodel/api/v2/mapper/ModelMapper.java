@@ -6,6 +6,7 @@ import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexModel;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
 import fi.vm.yti.datamodel.api.v2.service.JenaQueryException;
 import fi.vm.yti.datamodel.api.v2.service.JenaService;
+import fi.vm.yti.security.YtiUser;
 import org.apache.jena.atlas.web.HttpException;
 import org.apache.jena.datatypes.xsd.XSDDateTime;
 import org.apache.jena.rdf.model.*;
@@ -16,6 +17,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 @Service
@@ -34,7 +36,7 @@ public class ModelMapper {
      * @param modelDTO Data Model DTO
      * @return Model
      */
-    public Model mapToJenaModel(DataModelDTO modelDTO) {
+    public Model mapToJenaModel(DataModelDTO modelDTO, YtiUser user) {
         log.info("Mapping DatamodelDTO to Jena Model");
         var model = ModelFactory.createDefaultModel();
         var modelUri = ModelConstants.SUOMI_FI_NAMESPACE + modelDTO.getPrefix();
@@ -50,7 +52,9 @@ public class ModelMapper {
                 .addProperty(OWL.versionInfo, modelDTO.getStatus().name())
                 .addProperty(DCTerms.identifier, UUID.randomUUID().toString())
                 .addProperty(DCTerms.modified, ResourceFactory.createTypedLiteral(creationDate))
-                .addProperty(DCTerms.created, ResourceFactory.createTypedLiteral(creationDate));
+                .addProperty(DCTerms.created, ResourceFactory.createTypedLiteral(creationDate))
+                .addProperty(Iow.creator, user.getId().toString())
+                .addProperty(Iow.modifier, user.getId().toString());
 
         modelDTO.getLanguages().forEach(lang -> modelResource.addProperty(DCTerms.language, lang));
 
@@ -83,7 +87,7 @@ public class ModelMapper {
     }
 
 
-    public Model mapToUpdateJenaModel(String prefix, DataModelDTO dataModelDTO, Model model){
+    public Model mapToUpdateJenaModel(String prefix, DataModelDTO dataModelDTO, Model model, YtiUser user){
         var updateDate = new XSDDateTime(Calendar.getInstance());
         var hasUpdated = false;
 
@@ -184,6 +188,8 @@ public class ModelMapper {
         if(hasUpdated){
             modelResource.removeAll(DCTerms.modified);
             modelResource.addProperty(DCTerms.modified, ResourceFactory.createTypedLiteral(updateDate));
+            modelResource.removeAll(Iow.modifier);
+            modelResource.addProperty(Iow.modifier, user.getId().toString());
         }
 
         return model;
@@ -191,13 +197,14 @@ public class ModelMapper {
 
     /**
      * Map a Model to DataModelExpandDTO
+     *
      * @param prefix model prefix
-     * @param model Model
+     * @param model  Model
      * @return Data Model DTO
      */
-    public DataModelExpandDTO mapToDataModelDTO(String prefix, Model model) {
+    public DataModelInfoDTO mapToDataModelDTO(String prefix, Model model, Consumer<ResourceInfoBaseDTO> userMapper) {
 
-        var datamodelDTO = new DataModelExpandDTO();
+        var datamodelDTO = new DataModelInfoDTO();
         datamodelDTO.setPrefix(prefix);
 
         var modelResource = model.getResource(ModelConstants.SUOMI_FI_NAMESPACE + prefix);
@@ -234,7 +241,8 @@ public class ModelMapper {
         var modified = modelResource.getProperty(DCTerms.modified).getLiteral().getString();
         datamodelDTO.setCreated(created);
         datamodelDTO.setModified(modified);
-
+        datamodelDTO.setCreator(new UserDTO(MapperUtils.propertyToString(modelResource, Iow.creator)));
+        datamodelDTO.setModifier(new UserDTO(MapperUtils.propertyToString(modelResource, Iow.modifier)));
 
         var internalNamespaces = new HashSet<String>();
         var externalNamespaces = new HashSet<ExternalNamespaceDTO>();
@@ -254,6 +262,9 @@ public class ModelMapper {
 
         datamodelDTO.setTerminologies(terminologies);
 
+        if (userMapper != null) {
+            userMapper.accept(datamodelDTO);
+        }
         return datamodelDTO;
     }
 

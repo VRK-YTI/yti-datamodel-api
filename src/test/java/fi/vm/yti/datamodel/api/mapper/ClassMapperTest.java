@@ -1,6 +1,7 @@
 package fi.vm.yti.datamodel.api.mapper;
 
 import fi.vm.yti.datamodel.api.v2.dto.*;
+import fi.vm.yti.datamodel.api.v2.endpoint.EndpointUtils;
 import fi.vm.yti.datamodel.api.v2.mapper.ClassMapper;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.rdf.model.*;
@@ -15,6 +16,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -28,6 +30,7 @@ class ClassMapperTest {
         var stream = getClass().getResourceAsStream("/test_datamodel.ttl");
         assertNotNull(stream);
         RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
+        var mockUser = EndpointUtils.mockUser;
 
         ClassDTO dto = new ClassDTO();
         dto.setIdentifier("TestClass");
@@ -39,7 +42,7 @@ class ClassMapperTest {
         dto.setStatus(Status.DRAFT);
         dto.setNote(Map.of("fi", "test note"));
 
-        ClassMapper.createClassAndMapToModel("http://uri.suomi.fi/datamodel/ns/test", m, dto);
+        ClassMapper.createClassAndMapToModel("http://uri.suomi.fi/datamodel/ns/test", m, dto, mockUser);
 
         Resource modelResource = m.getResource("http://uri.suomi.fi/datamodel/ns/test");
         Resource classResource = m.getResource("http://uri.suomi.fi/datamodel/ns/test#TestClass");
@@ -68,6 +71,8 @@ class ClassMapperTest {
         assertEquals("https://www.example.com/ns/ext#SubClass", classResource.getProperty(RDFS.subClassOf).getObject().toString());
         assertEquals(1, classResource.listProperties(OWL.equivalentClass).toList().size());
         assertEquals("http://uri.suomi.fi/datamodel/ns/int#EqClass", classResource.getProperty(OWL.equivalentClass).getObject().toString());
+        assertEquals(mockUser.getId().toString(), classResource.getProperty(Iow.creator).getString());
+        assertEquals(mockUser.getId().toString(), classResource.getProperty(Iow.modifier).getString());
     }
 
     @Test
@@ -76,13 +81,14 @@ class ClassMapperTest {
         var stream = getClass().getResourceAsStream("/test_datamodel.ttl");
         assertNotNull(stream);
         RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
+        var mockUser = EndpointUtils.mockUser;
 
         ClassDTO dto = new ClassDTO();
         dto.setSubClassOf(Collections.emptySet());
         dto.setStatus(Status.VALID);
         dto.setIdentifier("Identifier");
 
-        ClassMapper.createClassAndMapToModel("http://uri.suomi.fi/datamodel/ns/test", m, dto);
+        ClassMapper.createClassAndMapToModel("http://uri.suomi.fi/datamodel/ns/test", m, dto, mockUser);
 
         Resource modelResource = m.getResource("http://uri.suomi.fi/datamodel/ns/test");
         Resource classResource = m.getResource("http://uri.suomi.fi/datamodel/ns/test#Identifier");
@@ -101,7 +107,7 @@ class ClassMapperTest {
         assertNotNull(stream);
         RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
 
-        var dto = ClassMapper.mapToClassDTO(m, "http://uri.suomi.fi/datamodel/ns/test", "TestClass", getOrgModel(), false);
+        var dto = ClassMapper.mapToClassDTO(m, "http://uri.suomi.fi/datamodel/ns/test", "TestClass", getOrgModel(), false, null);
 
         // not authenticated
         assertNull(dto.getEditorialNote());
@@ -131,7 +137,7 @@ class ClassMapperTest {
         assertNotNull(stream);
         RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
 
-        var dto = ClassMapper.mapToClassDTO(m, "http://uri.suomi.fi/datamodel/ns/test", "TestClass", getOrgModel(), true);
+        var dto = ClassMapper.mapToClassDTO(m, "http://uri.suomi.fi/datamodel/ns/test", "TestClass", getOrgModel(), true, null);
 
         // not authenticated
         assertNull(dto.getEditorialNote());
@@ -157,9 +163,20 @@ class ClassMapperTest {
         assertNotNull(stream);
         RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
 
-        var dto = ClassMapper.mapToClassDTO(m, "http://uri.suomi.fi/datamodel/ns/test", "TestClass", getOrgModel(), true);
+        Consumer<ResourceInfoBaseDTO> userMapper = (ResourceInfoBaseDTO dto) -> {
+            var creator = new UserDTO("123");
+            var modifier = new UserDTO("123");
+            creator.setName("creator fake-user");
+            modifier.setName("modifier fake-user");
+            dto.setCreator(creator);
+            dto.setModifier(modifier);
+        };
+
+        var dto = ClassMapper.mapToClassDTO(m, "http://uri.suomi.fi/datamodel/ns/test", "TestClass", getOrgModel(), true, userMapper);
 
         assertEquals("comment visible for admin", dto.getEditorialNote());
+        assertEquals("creator fake-user", dto.getCreator().getName());
+        assertEquals("modifier fake-user", dto.getModifier().getName());
     }
 
     @Test
@@ -169,6 +186,7 @@ class ClassMapperTest {
         assertNotNull(stream);
         RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
         var resource = m.getResource("http://uri.suomi.fi/datamodel/ns/test#TestClass");
+        var mockUser = EndpointUtils.mockUser;
 
         var dto = new ClassDTO();
         dto.setLabel(Map.of("fi", "new label"));
@@ -191,7 +209,7 @@ class ClassMapperTest {
         assertEquals("comment visible for admin", resource.getProperty(SKOS.editorialNote).getObject().toString());
         assertEquals(2, resource.listProperties(SKOS.note).toList().size());
 
-        ClassMapper.mapToUpdateClass(m, "http://uri.suomi.fi/datamodel/ns/test", resource, dto);
+        ClassMapper.mapToUpdateClass(m, "http://uri.suomi.fi/datamodel/ns/test", resource, dto, mockUser);
 
         assertEquals(OWL.Class, resource.getProperty(RDF.type).getResource());
         assertEquals("http://uri.suomi.fi/datamodel/ns/test", resource.getProperty(RDFS.isDefinedBy).getObject().toString());
@@ -206,6 +224,8 @@ class ClassMapperTest {
         assertEquals(1, resource.listProperties(SKOS.note).toList().size());
         assertEquals("new note", resource.getProperty(SKOS.note).getLiteral().getString());
         assertEquals("fi", resource.getProperty(SKOS.note).getLiteral().getLanguage());
+        assertEquals(mockUser.getId().toString(), resource.getProperty(Iow.modifier).getObject().toString());
+        assertEquals("2a5c075f-0d0e-4688-90e0-29af1eebbf6d", resource.getProperty(Iow.creator).getObject().toString());
     }
 
     @Test
@@ -215,6 +235,7 @@ class ClassMapperTest {
         assertNotNull(stream);
         RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
         var resource = m.getResource("http://uri.suomi.fi/datamodel/ns/test#TestClass");
+        var mockUser = EndpointUtils.mockUser;
 
         var dto = new ClassDTO();
 
@@ -230,7 +251,7 @@ class ClassMapperTest {
         assertEquals("comment visible for admin", resource.getProperty(SKOS.editorialNote).getObject().toString());
         assertEquals(2, resource.listProperties(SKOS.note).toList().size());
 
-        ClassMapper.mapToUpdateClass(m, "http://uri.suomi.fi/datamodel/ns/test", resource, dto);
+        ClassMapper.mapToUpdateClass(m, "http://uri.suomi.fi/datamodel/ns/test", resource, dto, mockUser);
 
         assertEquals(OWL.Class, resource.getProperty(RDF.type).getResource());
         assertEquals("http://uri.suomi.fi/datamodel/ns/test", resource.getProperty(RDFS.isDefinedBy).getObject().toString());
@@ -252,6 +273,7 @@ class ClassMapperTest {
         assertNotNull(stream);
         RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
         var resource = m.getResource("http://uri.suomi.fi/datamodel/ns/test#TestClass");
+        var mockUser = EndpointUtils.mockUser;
 
         var dto = new ClassDTO();
         dto.setSubject("");
@@ -266,7 +288,7 @@ class ClassMapperTest {
         assertEquals("comment visible for admin", resource.getProperty(SKOS.editorialNote).getObject().toString());
         assertEquals(2, resource.listProperties(SKOS.note).toList().size());
 
-        ClassMapper.mapToUpdateClass(m, "http://uri.suomi.fi/datamodel/ns/test", resource, dto);
+        ClassMapper.mapToUpdateClass(m, "http://uri.suomi.fi/datamodel/ns/test", resource, dto, mockUser);
 
         assertNull(resource.getProperty(DCTerms.subject));
         assertNull(resource.getProperty(OWL.equivalentClass));

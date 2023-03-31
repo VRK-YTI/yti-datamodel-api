@@ -15,5 +15,6 @@ public class Iow {
     public static final Property documentation = ResourceFactory.createProperty(URI, "documentation");
     public static final Property parentOrganization = ResourceFactory.createProperty(URI, "parentOrganization");
     public static final Property contact = ResourceFactory.createProperty(URI, "contact");
-
+    public static final Property creator = ResourceFactory.createProperty(URI, "creator");
+    public static final Property modifier = ResourceFactory.createProperty(URI, "modifier");
 }
