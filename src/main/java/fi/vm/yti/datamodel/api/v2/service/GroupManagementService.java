@@ -67,6 +67,9 @@ public class GroupManagementService {
     public Consumer<ResourceInfoBaseDTO> mapUser() {
         // TODO: fetch users and set them to cache
         return (var dto) -> {
+            if (dto.getCreator().getId() == null || dto.getModifier().getId() == null) {
+                return;
+            }
             var creator = userCache.getIfPresent(dto.getCreator().getId());
             var modifier = userCache.getIfPresent(dto.getModifier().getId());
             if (creator != null) {
