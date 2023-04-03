@@ -38,7 +38,6 @@ import java.util.stream.Stream;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @TestPropertySource(properties = {
@@ -220,7 +219,6 @@ class ClassControllerTest {
                     .perform(put("/v2/class/test/class")
                             .contentType("application/json")
                             .content(EndpointUtils.convertObjectToJsonString(classDTO)))
-                    .andDo(print())
                     .andExpect(status().isOk());
 
             //Check that functions are called
@@ -285,7 +283,6 @@ class ClassControllerTest {
             mapper.when(() -> ClassMapper.mapToClassDTO(any(Model.class), anyString(), anyString(), any(Model.class), anyBoolean(), eq(userMapper)))
                     .thenReturn(new ClassInfoDTO());
             mvc.perform(get("/v2/class/test/TestClass"))
-                    .andDo(print())
                     .andExpect(status().isOk());
         }
     }
@@ -293,7 +290,6 @@ class ClassControllerTest {
     @Test
     void shouldResourceNotExistGet() throws Exception {
         mvc.perform(get("/v2/class/test/class"))
-                .andDo(print())
                 .andExpect(status().isNotFound());
     }
 
@@ -302,7 +298,6 @@ class ClassControllerTest {
         when(jenaService.doesResourceExistInGraph(anyString(), anyString())).thenReturn(true);
 
         mvc.perform(get("/v2/class/test/class"))
-                .andDo(print())
                 .andExpect(status().isNotFound());
     }
 
