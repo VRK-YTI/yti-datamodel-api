@@ -33,6 +33,7 @@ public class DataModelValidator extends BaseValidator implements
         checkDescription(context, dataModel);
         checkOrganizations(context, dataModel);
         checkGroups(context, dataModel);
+        checkContact(context, dataModel);
 
         checkInternalNamespaces(context, dataModel);
         checkExternalNamespaces(context, dataModel);
@@ -177,6 +178,18 @@ public class DataModelValidator extends BaseValidator implements
                 addConstraintViolation(context, "does-not-exist." + group, "groups");
             }
         });
+    }
+
+    /**
+     * Check contact,
+     * @param context Constraint validator context
+     * @param dataModel DataModel
+     */
+    private void checkContact(ConstraintValidatorContext context, DataModelDTO dataModel){
+        var contact = dataModel.getContact();
+        if(contact != null && contact.length() > ValidationConstants.EMAIL_FIELD_MAX_LENGTH ) {
+            addConstraintViolation(context, ValidationConstants.MSG_OVER_CHARACTER_LIMIT, "contact");
+        }
     }
 
 

@@ -3,6 +3,7 @@ package fi.vm.yti.datamodel.api.mapper;
 
 import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.endpoint.EndpointUtils;
+import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.mapper.ModelMapper;
 import fi.vm.yti.datamodel.api.v2.service.JenaService;
 import fi.vm.yti.security.YtiUser;
@@ -83,6 +84,7 @@ class ModelMapperTest {
         dto.setOrganizations(Set.of(organizationId));
         dto.setType(ModelType.PROFILE);
         dto.setInternalNamespaces(Set.of("http://uri.suomi.fi/datamodel/ns/newint"));
+        dto.setContact("test@localhost");
         var externalDTO = new ExternalNamespaceDTO();
         externalDTO.setName("test dto");
         externalDTO.setNamespace("http://www.w3.org/2000/01/rdf-schema#");
@@ -106,8 +108,10 @@ class ModelMapperTest {
         assertEquals(1, modelResource.listProperties(DCTerms.requires).toList().size());
         assertNotNull(model.getResource("http://example.com/ns/ext"));
 
-        assertEquals(mockUser.getId().toString(), modelResource.getProperty(Iow.creator).getObject().toString());
-        assertEquals(mockUser.getId().toString(), modelResource.getProperty(Iow.modifier).getObject().toString());
+        assertEquals(mockUser.getId().toString(), MapperUtils.propertyToString(modelResource, Iow.creator));
+        assertEquals(mockUser.getId().toString(), MapperUtils.propertyToString(modelResource, Iow.modifier));
+
+        assertEquals("test@localhost", MapperUtils.propertyToString(modelResource, Iow.contact));
     }
 
     @Test
@@ -140,6 +144,7 @@ class ModelMapperTest {
         dto.setGroups(Set.of("P11"));
         dto.setLanguages(Set.of("fi", "sv"));
         dto.setOrganizations(Set.of(organizationId));
+        dto.setContact("new@localhost");
 
         dto.setInternalNamespaces(Set.of("http://uri.suomi.fi/datamodel/ns/newint"));
         var externalDTO = new ExternalNamespaceDTO();
@@ -165,6 +170,8 @@ class ModelMapperTest {
         assertEquals(1, modelResource.listProperties(DCTerms.requires).toList().size());
         assertEquals("https://www.example.com/ns/ext", modelResource.listProperties(DCTerms.requires).next().getString());
 
+        assertEquals("test@localhost", MapperUtils.propertyToString(modelResource, Iow.contact));
+
         Model model = mapper.mapToUpdateJenaModel("test", dto, m, mockUser);
 
         //changed values
@@ -188,6 +195,8 @@ class ModelMapperTest {
         assertEquals("http://www.w3.org/2000/01/rdf-schema#", modelResource.listProperties(OWL.imports).next().getString());
         assertEquals(mockUser.getId().toString(), modelResource.getProperty(Iow.modifier).getString());
         assertEquals("2a5c075f-0d0e-4688-90e0-29af1eebbf6d", modelResource.getProperty(Iow.creator).getObject().toString());
+
+        assertEquals("new@localhost", MapperUtils.propertyToString(modelResource, Iow.contact));
     }
 
     @Test
@@ -221,6 +230,8 @@ class ModelMapperTest {
 
         assertEquals(1, result.getGroups().size());
         assertEquals("P11", result.getGroups().stream().findFirst().orElseThrow().getIdentifier());
+
+        assertEquals("test@localhost", result.getContact());
     }
 
     @Test

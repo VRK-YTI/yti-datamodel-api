@@ -309,6 +309,7 @@ class DatamodelTest {
 
     private static Stream<Arguments> provideDataModelInvalidData() {
         var textAreaMaxPlus = ValidationConstants.TEXT_AREA_MAX_LENGTH + 20;
+        var emailAreaMaxPlus = ValidationConstants.EMAIL_FIELD_MAX_LENGTH + 20;
 
         var args = new ArrayList<DataModelDTO>();
 
@@ -401,6 +402,10 @@ class DatamodelTest {
 
         dataModelDTO = createDatamodelDTO(false);
         dataModelDTO.setTerminologies(Set.of("http://invalid.url"));
+        args.add(dataModelDTO);
+
+        dataModelDTO = createDatamodelDTO(false);
+        dataModelDTO.setContact(RandomStringUtils.random(emailAreaMaxPlus));
         args.add(dataModelDTO);
 
         return args.stream().map(Arguments::of);
