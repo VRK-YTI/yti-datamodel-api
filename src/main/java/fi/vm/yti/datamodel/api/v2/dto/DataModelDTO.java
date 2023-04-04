@@ -20,6 +20,7 @@ public class DataModelDTO {
     private Set<String> internalNamespaces = Set.of();
     private Set<ExternalNamespaceDTO> externalNamespaces = Set.of();
     private Set<String> terminologies = Set.of();
+    private String contact;
 
     public ModelType getType() {
         return type;
@@ -112,5 +113,13 @@ public class DataModelDTO {
 
     public void setTerminologies(Set<String> terminologies) {
         this.terminologies = terminologies;
+    }
+
+    public String getContact() {
+        return contact;
+    }
+
+    public void setContact(String contact) {
+        this.contact = contact;
     }
 }

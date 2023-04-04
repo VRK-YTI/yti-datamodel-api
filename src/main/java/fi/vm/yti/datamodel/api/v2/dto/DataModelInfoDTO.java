@@ -16,6 +16,8 @@ public class DataModelInfoDTO extends ResourceInfoBaseDTO {
     private Set<ExternalNamespaceDTO> externalNamespaces = Set.of();
     private Set<TerminologyDTO> terminologies = Set.of();
 
+    private String contact;
+
     public ModelType getType() {
         return type;
     }
@@ -104,4 +106,11 @@ public class DataModelInfoDTO extends ResourceInfoBaseDTO {
         this.terminologies = terminologies;
     }
 
+    public String getContact() {
+        return contact;
+    }
+
+    public void setContact(String contact) {
+        this.contact = contact;
+    }
 }

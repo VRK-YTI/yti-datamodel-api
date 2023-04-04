@@ -14,6 +14,7 @@ public class ValidationConstants {
     public static final String MSG_OVER_CHARACTER_LIMIT = "value-over-character-limit.";
 
     public static final int TEXT_FIELD_MAX_LENGTH = 150;
+    public static final int EMAIL_FIELD_MAX_LENGTH = 320;
     public static final int TEXT_AREA_MAX_LENGTH = 5000;
 
     public static final int PREFIX_MAX_LENGTH = 10;
