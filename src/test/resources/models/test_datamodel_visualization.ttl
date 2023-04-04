@@ -1,0 +1,37 @@
+@prefix dcap:    <http://purl.org/ws-mmi-dc/terms/> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix iow:     <http://uri.suomi.fi/datamodel/ns/iow#> .
+@prefix owl:     <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+@prefix test:    <http://uri.suomi.fi/datamodel/ns/test#> .
+@prefix rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix skos:    <http://www.w3.org/2004/02/skos/core#> .
+
+<http://uri.suomi.fi/datamodel/ns/test>
+        a                     dcap:DCAP ;
+        dcterms:requires      "https://www.example.com/ns/external" ;
+        owl:imports           "http://uri.suomi.fi/datamodel/ns/testmodel" .
+
+test:TestClass1  rdf:type     owl:Class ;
+        rdfs:isDefinedBy     "http://uri.suomi.fi/datamodel/ns/test" ;
+        dcterms:identifier   "testclass1"^^xsd:NCName ;
+        rdfs:label           "Label 1"@fi ;
+        rdfs:subClassOf      "http://uri.suomi.fi/datamodel/ns/testmodel#TestClass" .
+
+test:TestClass2  rdf:type     owl:Class ;
+        rdfs:isDefinedBy     "http://uri.suomi.fi/datamodel/ns/test" ;
+        dcterms:identifier   "testclass2"^^xsd:NCName ;
+        rdfs:label           "Label 2"@fi ;
+        rdfs:subClassOf      "http://uri.suomi.fi/datamodel/ns/test#testclass1" .
+
+test:TestClass3  rdf:type     owl:Class ;
+        rdfs:isDefinedBy     "http://uri.suomi.fi/datamodel/ns/test" ;
+        dcterms:identifier   "testclass3"^^xsd:NCName ;
+        rdfs:label           "Label 3"@fi ;
+        rdfs:subClassOf      "https://www.example.com/ns/external#ExternalClass" .
+
+<https://www.example.com/ns/external>
+        dcterms:type                        rdfs:Resource ;
+        rdfs:label                          "External namespace 1"@fi;
+        dcap:preferredXMLNamespacePrefix    "ext" .
