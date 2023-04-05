@@ -61,7 +61,9 @@ test:TestAttribute  rdf:type     owl:DatatypeProperty ;
         skos:editorialNote      "comment visible for admin" ;
         skos:note               "test note fi"@fi, "test note en"@en ;
         iow:creator             "2a5c075f-0d0e-4688-90e0-29af1eebbf6d" ;
-        iow:modifier            "2a5c075f-0d0e-4688-90e0-29af1eebbf6d" .
+        iow:modifier            "2a5c075f-0d0e-4688-90e0-29af1eebbf6d" ;
+        rdfs:domain             "http://uri.suomi.fi/datamodel/ns/test#DomainClass" ;
+        rdfs:range              "http://uri.suomi.fi/datamodel/ns/test#RangeClass" .
 
 test:TestAssociation  rdf:type     owl:ObjectProperty ;
         rdfs:isDefinedBy        "http://uri.suomi.fi/datamodel/ns/test" ;
@@ -76,5 +78,7 @@ test:TestAssociation  rdf:type     owl:ObjectProperty ;
         skos:editorialNote      "comment visible for admin" ;
         skos:note               "test note fi"@fi, "test note en"@en ;
         iow:creator             "2a5c075f-0d0e-4688-90e0-29af1eebbf6d" ;
-        iow:modifier            "2a5c075f-0d0e-4688-90e0-29af1eebbf6d" .
+        iow:modifier            "2a5c075f-0d0e-4688-90e0-29af1eebbf6d" ;
+        rdfs:domain             "http://uri.suomi.fi/datamodel/ns/test#DomainClass" ;
+        rdfs:range              "http://uri.suomi.fi/datamodel/ns/test#RangeClass"
 

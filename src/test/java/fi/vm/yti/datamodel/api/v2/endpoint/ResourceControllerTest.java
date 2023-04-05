@@ -37,6 +37,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -90,6 +91,8 @@ class ResourceControllerTest {
         var resourceDTO = createResourceDTO(false);
 
         when(jenaService.getDataModel(anyString())).thenReturn(mock(Model.class));
+        when(jenaService.checkIfResourceIsOneOfTypes(eq("http://uri.suomi.fi/datamodel/ns/int#FakeClass"), anyList(), anyBoolean())).thenReturn(true);
+
 
         try(var mapper = mockStatic(ResourceMapper.class)) {
             mapper.when(() -> ResourceMapper.mapToResource(anyString(), any(Model.class), any(ResourceDTO.class), any(YtiUser.class))).thenReturn("test");
@@ -102,6 +105,7 @@ class ResourceControllerTest {
             verify(this.jenaService, times(2)).doesResolvedNamespaceExist(anyString());
             verify(this.jenaService).doesResourceExistInGraph(anyString(), anyString());
             verify(this.jenaService).getDataModel(anyString());
+            verify(jenaService, times(2)).checkIfResourceIsOneOfTypes(eq("http://uri.suomi.fi/datamodel/ns/int#FakeClass"), anyList(), anyBoolean());
             mapper.verify(() -> ResourceMapper.mapToResource(anyString(), any(Model.class), any(ResourceDTO.class), any(YtiUser.class)));
             verify(this.jenaService).putDataModelToCore(anyString(), any(Model.class));
             verifyNoMoreInteractions(this.jenaService);
@@ -150,6 +154,7 @@ class ResourceControllerTest {
     void shouldNotFindModel() throws Exception {
         var resourceDTO = createResourceDTO(false);
         var updateDTO = createResourceDTO(true);
+        when(jenaService.checkIfResourceIsOneOfTypes(eq("http://uri.suomi.fi/datamodel/ns/int#FakeClass"), anyList(), anyBoolean())).thenReturn(true);
 
         //NOTE for this test. This should probably never happen in any kind of situation.
         // but the controller can catch it if it happens
@@ -160,6 +165,7 @@ class ResourceControllerTest {
                 .perform(put("/v2/resource/test")
                         .contentType("application/json")
                         .content(EndpointUtils.convertObjectToJsonString(resourceDTO)))
+                .andDo(print())
                 .andExpect(status().isNotFound());
 
         when(jenaService.doesResourceExistInGraph(anyString(), anyString())).thenReturn(true);
@@ -180,6 +186,7 @@ class ResourceControllerTest {
     @Test
     void resourceShouldAlreadyExist() throws Exception {
         when(jenaService.doesResourceExistInGraph(anyString(), anyString())).thenReturn(true);
+        when(jenaService.checkIfResourceIsOneOfTypes(eq("http://uri.suomi.fi/datamodel/ns/int#FakeClass"), anyList(), anyBoolean())).thenReturn(true);
         var resourceDTO = createResourceDTO(false);
 
         //finding models from jena is not mocked so it should return null and return 404 not found
@@ -234,6 +241,14 @@ class ResourceControllerTest {
         resourceDTO.setType(null);
         args.add(resourceDTO);
 
+        resourceDTO = createResourceDTO(false);
+        resourceDTO.setDomain("http://uri.suomi.fi/datamodel/ns/int#InvalidClass");
+        args.add(resourceDTO);
+
+        resourceDTO = createResourceDTO(false);
+        resourceDTO.setRange("http://uri.suomi.fi/datamodel/ns/int#InvalidClass");
+        args.add(resourceDTO);
+
         return args.stream().map(Arguments::of);
     }
 
@@ -242,6 +257,7 @@ class ResourceControllerTest {
         var resourceDTO = createResourceDTO(true);
         Model m = ModelFactory.createDefaultModel();
         var stream = getClass().getResourceAsStream("/models/test_datamodel_with_resources.ttl");
+        when(jenaService.checkIfResourceIsOneOfTypes(eq("http://uri.suomi.fi/datamodel/ns/int#FakeClass"), anyList(), anyBoolean())).thenReturn(true);
         assertNotNull(stream);
         RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
 
@@ -264,6 +280,7 @@ class ResourceControllerTest {
     void shouldNotFindResource() throws Exception {
         var resourceDTO = createResourceDTO(true);
         when(jenaService.doesResourceExistInGraph(anyString(), anyString())).thenReturn(false);
+        when(jenaService.checkIfResourceIsOneOfTypes(eq("http://uri.suomi.fi/datamodel/ns/int#FakeClass"), anyList(), anyBoolean())).thenReturn(true);
 
         this.mvc
                 .perform(put("/v2/resource/test/resource")
@@ -378,6 +395,8 @@ class ResourceControllerTest {
         dto.setLabel(Map.of("fi", "test label"));
         dto.setEquivalentResource(Set.of("http://uri.suomi.fi/datamodel/ns/int#FakeResource"));
         dto.setSubResourceOf(Set.of("http://uri.suomi.fi/datamodel/ns/int#FakeResource"));
+        dto.setDomain("http://uri.suomi.fi/datamodel/ns/int#FakeClass");
+        dto.setRange("http://uri.suomi.fi/datamodel/ns/int#FakeClass");
         dto.setNote(Map.of("fi", "test note"));
         return dto;
     }

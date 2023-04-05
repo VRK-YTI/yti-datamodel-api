@@ -16,6 +16,8 @@ public class ResourceDTO {
     private String subject;
     private String identifier;
     private Map<String, String> note;
+    private String domain;
+    private String range;
 
     public ResourceType getType() {
         return type;
@@ -87,6 +89,22 @@ public class ResourceDTO {
 
     public void setSubject(String subject) {
         this.subject = subject;
+    }
+
+    public String getDomain() {
+        return domain;
+    }
+
+    public void setDomain(String domain) {
+        this.domain = domain;
+    }
+
+    public String getRange() {
+        return range;
+    }
+
+    public void setRange(String range) {
+        this.range = range;
     }
 
     @Override

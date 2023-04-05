@@ -60,6 +60,9 @@ public class ResourceMapper {
             dto.getSubResourceOf().forEach(sub -> MapperUtils.addResourceRelationship(owlImports, dcTermsRequires, resourceResource, RDFS.subPropertyOf, sub));
         }
 
+        MapperUtils.addOptionalStringProperty(resourceResource, RDFS.domain, dto.getDomain());
+        MapperUtils.addOptionalStringProperty(resourceResource, RDFS.range, dto.getRange());
+
         modelResource.addProperty(DCTerms.hasPart, resourceUri);
         return resourceUri;
     }
@@ -108,6 +111,9 @@ public class ResourceMapper {
             }
         }
 
+        MapperUtils.updateStringProperty(resource, RDFS.domain, dto.getDomain());
+        MapperUtils.updateStringProperty(resource, RDFS.range, dto.getRange());
+
         resource.removeAll(DCTerms.modified);
         resource.addProperty(DCTerms.modified, ResourceFactory.createTypedLiteral(updateDate));
         resource.removeAll(Iow.modifier);
@@ -145,6 +151,9 @@ public class ResourceMapper {
         }else{
             indexResource.setResourceType(ResourceType.CLASS);
         }
+
+        indexResource.setDomain(MapperUtils.propertyToString(resource, RDFS.domain));
+        indexResource.setRange(MapperUtils.propertyToString(resource, RDFS.range));
 
         return indexResource;
     }
@@ -189,6 +198,9 @@ public class ResourceMapper {
         if (userMapper != null) {
             userMapper.accept(dto);
         }
+
+        dto.setDomain(MapperUtils.propertyToString(resourceResource, RDFS.domain));
+        dto.setRange(MapperUtils.propertyToString(resourceResource, RDFS.range));
         return dto;
     }
 
