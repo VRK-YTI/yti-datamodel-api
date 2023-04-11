@@ -9,6 +9,7 @@ import org.apache.jena.atlas.web.HttpException;
 import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.query.Query;
 import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdfconnection.RDFConnection;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.sparql.vocabulary.FOAF;
@@ -21,6 +22,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -154,6 +156,28 @@ public class JenaService {
                         NodeFactory.createURI(classUri), "?p", "?o");
         try{
             return coreSparql.queryAsk(askBuilder.build());
+        }catch(HttpException ex){
+            throw new JenaQueryException();
+        }
+    }
+
+     /**
+     * Check if resource uri is one of given types
+     * @param resourceUri Resource uri
+     * @param types List of types to check
+     * @param checkImports Should imports be checked instead of core
+     * @return true if resource is one of types
+     */
+    public boolean checkIfResourceIsOneOfTypes(String resourceUri, List<Resource> types, boolean checkImports) {
+        var askBuilder  =new AskBuilder()
+                .addWhere(NodeFactory.createURI(resourceUri), RDF.type, "?type")
+                .addValueVar("?type", types.toArray());
+        try{
+            if(checkImports){
+                return importSparql.queryAsk(askBuilder.build());
+            }else {
+                return coreSparql.queryAsk(askBuilder.build());
+            }
         }catch(HttpException ex){
             throw new JenaQueryException();
         }

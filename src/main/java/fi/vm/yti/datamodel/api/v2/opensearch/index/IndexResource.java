@@ -12,6 +12,8 @@ public class IndexResource extends IndexBase {
     private Map<String, String> note;
     private String identifier;
     private String namespace;
+    private String domain;
+    private String range;
 
     public ResourceType getResourceType() {
         return resourceType;
@@ -59,5 +61,21 @@ public class IndexResource extends IndexBase {
 
     public void setNamespace(String namespace) {
         this.namespace = namespace;
+    }
+
+    public String getDomain() {
+        return domain;
+    }
+
+    public void setDomain(String domain) {
+        this.domain = domain;
+    }
+
+    public String getRange() {
+        return range;
+    }
+
+    public void setRange(String range) {
+        this.range = range;
     }
 }

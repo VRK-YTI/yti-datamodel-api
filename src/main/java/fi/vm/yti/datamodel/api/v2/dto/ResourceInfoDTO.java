@@ -17,6 +17,8 @@ public class ResourceInfoDTO extends ResourceInfoBaseDTO {
     private String contact;
     private Set<OrganizationDTO> contributor;
     private String uri;
+    private String domain;
+    private String range;
 
     public ResourceType getType() {
         return type;
@@ -112,5 +114,21 @@ public class ResourceInfoDTO extends ResourceInfoBaseDTO {
 
     public void setUri(String uri) {
         this.uri = uri;
+    }
+
+    public String getDomain() {
+        return domain;
+    }
+
+    public void setDomain(String domain) {
+        this.domain = domain;
+    }
+
+    public String getRange() {
+        return range;
+    }
+
+    public void setRange(String range) {
+        this.range = range;
     }
 }
