@@ -4,7 +4,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import fi.vm.yti.datamodel.api.v2.dto.TerminologyNodeDTO;
 import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
 import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.vocabulary.RDFS;
+import org.apache.jena.vocabulary.SKOS;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -48,7 +50,8 @@ class TerminologyServiceTest {
     @Autowired
     private TerminologyService service;
 
-    static final String GRAPH = "http://uri.suomi.fi/terminology/test";
+    static final String GRAPH = "http://uri.suomi.fi/terminology/test/";
+    static final String CONCEPT_URI = "http://uri.suomi.fi/terminology/test/concept-1";
 
     @Test
     void testResolveTerminology() throws IOException {
@@ -71,6 +74,25 @@ class TerminologyServiceTest {
         mockWebClient(null);
         service.resolveTerminology(Set.of(GRAPH));
         verifyNoInteractions(jenaService);
+    }
+
+    @Test
+    void resolveConcept() throws Exception {
+        var stream = getClass().getResourceAsStream("/concept_response.json");
+        assertNotNull(stream);
+        var terminologyData = Arrays.asList(mapper.readValue(stream, TerminologyNodeDTO[].class));
+        mockWebClient(terminologyData);
+
+        when(jenaService.getTerminology(GRAPH)).thenReturn(ModelFactory.createDefaultModel());
+
+        service.resolveConcept(CONCEPT_URI);
+        verify(jenaService).putTerminologyToConcepts(stringCaptor.capture(), modelCaptor.capture());
+
+        var model = modelCaptor.getValue();
+        var conceptResource = model.getResource(CONCEPT_URI);
+
+        assertEquals(GRAPH, stringCaptor.getValue());
+        assertEquals("Test label", MapperUtils.localizedPropertyToMap(conceptResource, SKOS.prefLabel).get("fi"));
     }
 
     private void mockWebClient(List<TerminologyNodeDTO> result) {

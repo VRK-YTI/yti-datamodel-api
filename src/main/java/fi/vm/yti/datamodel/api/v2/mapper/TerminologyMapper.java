@@ -1,25 +1,37 @@
 package fi.vm.yti.datamodel.api.v2.mapper;
 
+import fi.vm.yti.datamodel.api.v2.dto.ConceptDTO;
+import fi.vm.yti.datamodel.api.v2.dto.Status;
 import fi.vm.yti.datamodel.api.v2.dto.TerminologyDTO;
 import fi.vm.yti.datamodel.api.v2.dto.TerminologyNodeDTO;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
-import org.apache.jena.vocabulary.RDF;
-import org.apache.jena.vocabulary.RDFS;
-import org.apache.jena.vocabulary.SKOS;
+import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.rdf.model.ResourceFactory;
+import org.apache.jena.vocabulary.*;
+
+import java.util.List;
 
 public class TerminologyMapper {
 
     private TerminologyMapper() {
     }
 
-    public static Model mapToJenaModel(String graph, TerminologyNodeDTO terminologyDTO) {
-        Model model = ModelFactory.createDefaultModel();
-        var resource = model.createResource(graph);
+    public static Model mapTerminologyToJenaModel(String graph, TerminologyNodeDTO terminologyDTO, Model model) {
+        Resource resource;
+        if (model == null) {
+            model = ModelFactory.createDefaultModel();
+            resource = model.createResource(graph);
+            resource.addProperty(RDF.type, SKOS.ConceptScheme);
+        } else {
+            resource = model.getResource(graph);
+            resource.removeAll(RDFS.label);
+        }
 
-        resource.addProperty(RDF.type, SKOS.ConceptScheme);
-        terminologyDTO.getProperties().getPrefLabel().forEach(label ->
-                resource.addProperty(RDFS.label, model.createLiteral(label.getValue(), label.getLang())));
+        var prefLabels = terminologyDTO.getProperties().getPrefLabel();
+        for (var label : prefLabels) {
+            resource.addProperty(RDFS.label, model.createLiteral(label.getValue(), label.getLang()));
+        }
 
         return model;
     }
@@ -29,5 +41,62 @@ public class TerminologyMapper {
         var label = MapperUtils.localizedPropertyToMap(model.getResource(graph), RDFS.label);
         dto.setLabel(label);
         return dto;
+    }
+
+    public static void mapConceptToTerminologyModel(Model terminologyModel, String terminologyURI, String conceptURI, TerminologyNodeDTO nodeDTO) {
+        var resource = terminologyModel.getResource(conceptURI);
+        resource.removeAll(SKOS.definition);
+        resource.removeAll(SKOS.prefLabel);
+        resource.removeAll(OWL.versionInfo);
+
+        resource.addProperty(RDF.type, SKOS.Concept);
+        resource.addProperty(SKOS.inScheme, ResourceFactory.createResource(terminologyURI));
+        resource.addProperty(OWL.versionInfo,
+                getProperty(nodeDTO.getProperties().getStatus(), Status.DRAFT.name()));
+
+        for (var def : nodeDTO.getProperties().getDefinition()) {
+            if (def.getValue() == null || def.getValue().isEmpty()) {
+                continue;
+            }
+            resource.addProperty(SKOS.definition,
+                    terminologyModel.createLiteral(def.getValue(), def.getLang()));
+        }
+
+        nodeDTO.getReferences().getPrefLabelXl().forEach(label -> {
+            var prefLabel = label.getProperties().getPrefLabel();
+            var prefLabelValue = getProperty(prefLabel, null);
+            if (prefLabelValue != null) {
+                var lang = prefLabel.get(0).getLang();
+                resource.addProperty(SKOS.prefLabel,
+                        terminologyModel.createLiteral(prefLabelValue, lang));
+            }
+        });
+    }
+
+    public static ConceptDTO mapToConceptDTO(Model model, String conceptURI) {
+        var resource = model.getResource(conceptURI);
+
+        var dto = new ConceptDTO();
+        dto.setConceptURI(conceptURI);
+        dto.setTerminologyURI(MapperUtils.propertyToString(resource, SKOS.inScheme));
+
+        var status = Status.DRAFT;
+        try {
+            status = Status.valueOf(MapperUtils.propertyToString(resource, OWL.versionInfo));
+        } catch (Exception e) {
+            // use default status in case of status is missing or invalid
+        }
+        dto.setStatus(status);
+        dto.setLabel(MapperUtils.localizedPropertyToMap(resource, SKOS.prefLabel));
+        dto.setDefinition(MapperUtils.localizedPropertyToMap(resource, SKOS.definition));
+        dto.setTerminologyLabel(MapperUtils.localizedPropertyToMap(resource, RDFS.label));
+        return dto;
+    }
+
+    private static String getProperty(List<TerminologyNodeDTO.LocalizedValue> value, String defaultValue) {
+        if (value != null && !value.isEmpty()) {
+            return value.get(0).getValue();
+        }
+        return defaultValue;
     }
 }

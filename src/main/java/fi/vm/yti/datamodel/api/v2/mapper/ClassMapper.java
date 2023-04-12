@@ -134,7 +134,12 @@ public class ClassMapper {
         dto.setStatus(Status.valueOf(MapperUtils.propertyToString(classResource, OWL.versionInfo)));
         dto.setSubClassOf(MapperUtils.arrayPropertyToSet(classResource, RDFS.subClassOf));
         dto.setEquivalentClass(MapperUtils.arrayPropertyToSet(classResource, OWL.equivalentClass));
-        dto.setSubject(MapperUtils.propertyToString(classResource, DCTerms.subject));
+        var subject = MapperUtils.propertyToString(classResource, DCTerms.subject);
+        if (subject != null) {
+            var conceptDTO = new ConceptDTO();
+            conceptDTO.setConceptURI(subject);
+            dto.setSubject(conceptDTO);
+        }
         dto.setIdentifier(classResource.getLocalName());
         dto.setNote(MapperUtils.localizedPropertyToMap(classResource, SKOS.note));
         if (hasRightToModel) {

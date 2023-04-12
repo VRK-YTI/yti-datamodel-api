@@ -2,6 +2,7 @@ package fi.vm.yti.datamodel.api.v2.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -9,6 +10,7 @@ public class TerminologyNodeDTO {
     private String uri;
     private Type type;
     private TerminologyProperties properties;
+    private TerminologyReferences references;
 
     public Type getType() {
         return type;
@@ -34,9 +36,19 @@ public class TerminologyNodeDTO {
         this.properties = properties;
     }
 
+    public TerminologyReferences getReferences() {
+        return references;
+    }
+
+    public void setReferences(TerminologyReferences references) {
+        this.references = references;
+    }
+
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class TerminologyProperties {
-        private List<LocalizedValue> prefLabel;
+        private List<LocalizedValue> prefLabel = new ArrayList<>();
+        private List<LocalizedValue> status = new ArrayList<>();
+        private List<LocalizedValue> definition = new ArrayList<>();
 
         public List<LocalizedValue> getPrefLabel() {
             return prefLabel;
@@ -44,6 +56,22 @@ public class TerminologyNodeDTO {
 
         public void setPrefLabel(List<LocalizedValue> prefLabel) {
             this.prefLabel = prefLabel;
+        }
+
+        public List<LocalizedValue> getStatus() {
+            return status;
+        }
+
+        public void setStatus(List<LocalizedValue> status) {
+            this.status = status;
+        }
+
+        public List<LocalizedValue> getDefinition() {
+            return definition;
+        }
+
+        public void setDefinition(List<LocalizedValue> definition) {
+            this.definition = definition;
         }
     }
 
@@ -79,6 +107,19 @@ public class TerminologyNodeDTO {
 
         public void setValue(String value) {
             this.value = value;
+        }
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class TerminologyReferences {
+        private List<TerminologyNodeDTO> prefLabelXl = new ArrayList<>();
+
+        public List<TerminologyNodeDTO> getPrefLabelXl() {
+            return prefLabelXl;
+        }
+
+        public void setPrefLabelXl(List<TerminologyNodeDTO> prefLabelXl) {
+            this.prefLabelXl = prefLabelXl;
         }
     }
 }

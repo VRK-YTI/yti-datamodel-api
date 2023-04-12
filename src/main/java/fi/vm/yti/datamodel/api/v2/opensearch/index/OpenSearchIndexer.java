@@ -184,6 +184,8 @@ public class OpenSearchIndexer {
         SparqlUtils.addConstructOptional(GRAPH_VARIABLE, constructBuilder, RDFS.subPropertyOf, "?subPropertyOf");
         SparqlUtils.addConstructOptional(GRAPH_VARIABLE, constructBuilder, OWL.equivalentClass, "?equivalentClass");
         SparqlUtils.addConstructOptional(GRAPH_VARIABLE, constructBuilder, OWL.equivalentProperty, "?equivalentProperty");
+        SparqlUtils.addConstructOptional(GRAPH_VARIABLE, constructBuilder, DCTerms.subject, "?subject");
+
         var indexClasses = jenaService.constructWithQuery(constructBuilder.build());
         var list = new ArrayList<IndexResource>();
         indexClasses.listSubjects().forEach(next -> {

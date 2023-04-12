@@ -7,6 +7,7 @@ import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexResource;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
 import fi.vm.yti.datamodel.api.v2.service.GroupManagementService;
 import fi.vm.yti.datamodel.api.v2.service.JenaService;
+import fi.vm.yti.datamodel.api.v2.service.TerminologyService;
 import fi.vm.yti.datamodel.api.v2.validator.ExceptionHandlerAdvice;
 import fi.vm.yti.datamodel.api.v2.validator.ValidationConstants;
 import fi.vm.yti.security.AuthenticatedUserProvider;
@@ -65,10 +66,14 @@ class ResourceControllerTest {
     @MockBean
     private GroupManagementService groupManagementService;
 
+    @MockBean
+    private TerminologyService terminologyService;
+
     @Autowired
     private ResourceController resourceController;
 
     private final Consumer<ResourceInfoBaseDTO> userMapper = (var dto) -> {};
+    private final Consumer<ResourceInfoDTO> conceptMapper = (var dto) -> {};
 
     private static final YtiUser USER = EndpointUtils.mockUser;
 
@@ -83,6 +88,7 @@ class ResourceControllerTest {
         when(authorizationManager.hasRightToModel(any(), any())).thenReturn(true);
         when(userProvider.getUser()).thenReturn(USER);
         when(groupManagementService.mapUser()).thenReturn(userMapper);
+        when(terminologyService.mapConceptToResource()).thenReturn(conceptMapper);
     }
 
     @Test
@@ -105,6 +111,7 @@ class ResourceControllerTest {
             verify(this.jenaService).doesResourceExistInGraph(anyString(), anyString());
             verify(this.jenaService).getDataModel(anyString());
             verify(jenaService, times(2)).checkIfResourceIsOneOfTypes(eq("http://uri.suomi.fi/datamodel/ns/int#FakeClass"), anyList(), anyBoolean());
+            verify(terminologyService).resolveConcept(resourceDTO.getSubject());
             mapper.verify(() -> ResourceMapper.mapToResource(anyString(), any(Model.class), any(ResourceDTO.class), any(YtiUser.class)));
             verify(this.jenaService).putDataModelToCore(anyString(), any(Model.class));
             verifyNoMoreInteractions(this.jenaService);

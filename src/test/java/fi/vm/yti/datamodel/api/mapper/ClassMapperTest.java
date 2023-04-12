@@ -119,7 +119,7 @@ class ClassMapperTest {
         assertEquals("http://uri.suomi.fi/datamodel/ns/test#SubClass", dto.getSubClassOf().stream().findFirst().orElse(null));
         assertEquals(1, dto.getLabel().size());
         assertEquals("test label", dto.getLabel().get("fi"));
-        assertEquals("http://uri.suomi.fi/terminology/test/test1", dto.getSubject());
+        assertEquals("http://uri.suomi.fi/terminology/test/test1", dto.getSubject().getConceptURI());
         assertEquals(2, dto.getNote().size());
         assertEquals("test note fi", dto.getNote().get("fi"));
         assertEquals("test note en", dto.getNote().get("en"));

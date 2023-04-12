@@ -132,7 +132,7 @@ public class ResourceMapper {
         indexResource.setNamespace(resource.getNameSpace());
         indexResource.setModified(resource.getProperty(DCTerms.modified).getString());
         indexResource.setCreated(resource.getProperty(DCTerms.created).getString());
-
+        indexResource.setSubject(MapperUtils.propertyToString(resource, DCTerms.subject));
         var note = MapperUtils.localizedPropertyToMap(resource, SKOS.note);
         if(!note.isEmpty()){
             indexResource.setNote(note);
@@ -178,7 +178,12 @@ public class ResourceMapper {
         dto.setStatus(status);
         dto.setSubResourceOf(MapperUtils.arrayPropertyToSet(resourceResource, RDFS.subPropertyOf));
         dto.setEquivalentResource(MapperUtils.arrayPropertyToSet(resourceResource, OWL.equivalentProperty));
-        dto.setSubject(MapperUtils.propertyToString(resourceResource, DCTerms.subject));
+        String subject = MapperUtils.propertyToString(resourceResource, DCTerms.subject);
+        if (subject != null) {
+            var conceptDTO = new ConceptDTO();
+            conceptDTO.setConceptURI(subject);
+            dto.setSubject(conceptDTO);
+        }
         dto.setIdentifier(resourceResource.getLocalName());
         dto.setNote(MapperUtils.localizedPropertyToMap(resourceResource, SKOS.note));
         if (hasRightToModel) {

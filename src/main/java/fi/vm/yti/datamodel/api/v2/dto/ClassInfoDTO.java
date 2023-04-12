@@ -11,7 +11,7 @@ public class ClassInfoDTO extends ResourceInfoBaseDTO {
     private Status status;
     private Set<String> equivalentClass;
     private Set<String> subClassOf;
-    private String subject;
+    private ConceptDTO subject;
     private String identifier;
     private Map<String, String> note;
     private String uri;
@@ -60,11 +60,11 @@ public class ClassInfoDTO extends ResourceInfoBaseDTO {
         this.subClassOf = subClassOf;
     }
 
-    public String getSubject() {
+    public ConceptDTO getSubject() {
         return subject;
     }
 
-    public void setSubject(String subject) {
+    public void setSubject(ConceptDTO subject) {
         this.subject = subject;
     }
 
