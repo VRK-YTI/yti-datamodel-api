@@ -1,9 +1,15 @@
 package fi.vm.yti.datamodel.api.v2.mapper;
 
 import fi.vm.yti.datamodel.api.v2.dto.*;
+import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
+import fi.vm.yti.datamodel.api.v2.utils.SparqlUtils;
 import fi.vm.yti.security.YtiUser;
+import org.apache.jena.arq.querybuilder.ConstructBuilder;
+import org.apache.jena.arq.querybuilder.WhereBuilder;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.datatypes.xsd.XSDDateTime;
+import org.apache.jena.graph.NodeFactory;
+import org.apache.jena.query.Query;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.ResourceFactory;
@@ -11,6 +17,7 @@ import org.apache.jena.vocabulary.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.function.Consumer;
 
@@ -149,6 +156,48 @@ public class ClassMapper {
             userMapper.accept(dto);
         }
         return dto;
+    }
+
+    public static Query getClassResourcesQuery(String classUri){
+        var constructBuilder = new ConstructBuilder();
+        var resourceName = "?resource";
+        var uri = NodeFactory.createURI(classUri);
+        SparqlUtils.addConstructProperty(resourceName, constructBuilder, RDF.type, "?type");
+        SparqlUtils.addConstructProperty(resourceName, constructBuilder, RDFS.label, "?label");
+        SparqlUtils.addConstructProperty(resourceName, constructBuilder, DCTerms.identifier, "?identifier");
+        SparqlUtils.addConstructProperty(resourceName, constructBuilder, RDFS.isDefinedBy, "?isDefinedBy");
+        var domainQuery = new WhereBuilder().addWhere(resourceName, RDFS.domain, uri)
+                .addWhere(resourceName, RDFS.domain, "?domain");
+        var rangeQuery = new WhereBuilder().addWhere(resourceName, RDFS.range, uri)
+                .addWhere(resourceName, RDFS.range, "?range");
+        constructBuilder.addWhere(domainQuery.addUnion(rangeQuery))
+                .addConstruct(resourceName, RDFS.range, "?range")
+                .addConstruct(resourceName, RDFS.domain, "?domain");
+        return constructBuilder.build();
+    }
+
+    public static void addClassResourcesToDTO(Model classResources, ClassInfoDTO dto){
+        var associations = new ArrayList<SimpleResourceDTO>();
+        var attributes = new ArrayList<SimpleResourceDTO>();
+        classResources.listSubjects().forEach(res -> {
+            var resDTO = new SimpleResourceDTO();
+            resDTO.setUri(res.getURI());
+            resDTO.setIdentifier(res.getProperty(DCTerms.identifier).getString());
+            resDTO.setLabel(MapperUtils.localizedPropertyToMap(res, RDFS.label));
+            var modelUri = MapperUtils.propertyToString(res, RDFS.isDefinedBy);
+            if(modelUri == null){
+                throw new MappingError("ModelUri null for resource");
+            }
+            resDTO.setModelId(MapperUtils.getModelIdFromNamespace(modelUri));
+            var type = res.getProperty(RDF.type).getResource();
+            if(type.equals(OWL.ObjectProperty)){
+                associations.add(resDTO);
+            }else if(type.equals(OWL.DatatypeProperty)){
+                attributes.add(resDTO);
+            }
+            dto.setAssociation(associations);
+            dto.setAttribute(attributes);
+        });
     }
 
 }

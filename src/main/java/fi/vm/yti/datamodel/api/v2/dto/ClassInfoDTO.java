@@ -1,5 +1,6 @@
 package fi.vm.yti.datamodel.api.v2.dto;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -16,6 +17,8 @@ public class ClassInfoDTO extends ResourceInfoBaseDTO {
     private String uri;
     private Set<OrganizationDTO> contributor;
     private String contact;
+    private List<SimpleResourceDTO> attribute;
+    private List<SimpleResourceDTO> association;
 
     public Map<String, String> getLabel() {
         return label;
@@ -103,5 +106,21 @@ public class ClassInfoDTO extends ResourceInfoBaseDTO {
 
     public void setContact(String contact) {
         this.contact = contact;
+    }
+
+    public List<SimpleResourceDTO> getAttribute() {
+        return attribute;
+    }
+
+    public void setAttribute(List<SimpleResourceDTO> attribute) {
+        this.attribute = attribute;
+    }
+
+    public List<SimpleResourceDTO> getAssociation() {
+        return association;
+    }
+
+    public void setAssociation(List<SimpleResourceDTO> association) {
+        this.association = association;
     }
 }

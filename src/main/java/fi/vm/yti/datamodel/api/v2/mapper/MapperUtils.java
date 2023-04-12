@@ -5,6 +5,7 @@ import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.shared.JenaException;
 
 import java.util.*;
@@ -27,6 +28,10 @@ public class MapperUtils {
         } catch (Exception e) {
             return null;
         }
+    }
+
+    public static String getModelIdFromNamespace(String namespace){
+        return namespace.substring(namespace.lastIndexOf("/") + 1);
     }
 
     /**
@@ -170,6 +175,22 @@ public class MapperUtils {
     }
 
     /**
+     * Update Uri property
+     * If string is empty|blank value is removed
+     * @param resource Resource
+     * @param property Property
+     * @param value Value
+     */
+    public static void updateUriProperty(Resource resource, Property property, String value){
+        if(value != null){
+            resource.removeAll(property);
+            if(!value.isBlank()){
+                resource.addProperty(property, ResourceFactory.createResource(value));
+            }
+        }
+    }
+
+    /**
      * Adds an optional string property
      * This has a null check, so it does not need to be separately added
      * @param resource Resource
@@ -179,6 +200,12 @@ public class MapperUtils {
     public static void addOptionalStringProperty(Resource resource, Property property, String value){
         if(value != null && !value.isBlank()){
             resource.addProperty(property, value);
+        }
+    }
+
+    public static void addOptionalUriProperty(Resource resource, Property property, String value){
+        if(value != null && !value.isBlank()){
+            resource.addProperty(property, ResourceFactory.createResource(value));
         }
     }
 
@@ -197,7 +224,7 @@ public class MapperUtils {
         if(!ownNamespace.equals(namespace) &&!owlImports.contains(namespace) && !dcTermsRequires.contains(namespace)){
             throw new MappingError("Resource namespace not in owl:imports or dcterms:requires");
         }
-        resource.addProperty(property, resourceUri);
+        resource.addProperty(property, ResourceFactory.createResource(resourceUri));
     }
 
 }

@@ -29,10 +29,10 @@ public class ResourceMapper {
                 .addProperty(OWL.versionInfo, dto.getStatus().name())
                 .addProperty(DCTerms.modified, ResourceFactory.createTypedLiteral(creationDate))
                 .addProperty(DCTerms.created, ResourceFactory.createTypedLiteral(creationDate))
-                .addProperty(RDFS.isDefinedBy, graphUri)
                 .addProperty(Iow.creator, user.getId().toString())
                 .addProperty(Iow.modifier, user.getId().toString());
 
+        resourceResource.addProperty(RDFS.isDefinedBy, ResourceFactory.createResource(graphUri));
         resourceResource.addProperty(DCTerms.identifier, ResourceFactory.createTypedLiteral(dto.getIdentifier(), XSDDatatype.XSDNCName));
         //Labels
         var modelResource = model.getResource(graphUri);
@@ -41,7 +41,7 @@ public class ResourceMapper {
         //Note
         MapperUtils.addLocalizedProperty(langs, dto.getNote(), resourceResource, SKOS.note, model);
         MapperUtils.addOptionalStringProperty(resourceResource, SKOS.editorialNote, dto.getEditorialNote());
-        MapperUtils.addOptionalStringProperty(resourceResource, DCTerms.subject, dto.getSubject());
+        MapperUtils.addOptionalUriProperty(resourceResource, DCTerms.subject, dto.getSubject());
 
         var owlImports = MapperUtils.arrayPropertyToSet(modelResource, OWL.imports);
         var dcTermsRequires = MapperUtils.arrayPropertyToSet(modelResource, DCTerms.requires);
@@ -60,10 +60,10 @@ public class ResourceMapper {
             dto.getSubResourceOf().forEach(sub -> MapperUtils.addResourceRelationship(owlImports, dcTermsRequires, resourceResource, RDFS.subPropertyOf, sub));
         }
 
-        MapperUtils.addOptionalStringProperty(resourceResource, RDFS.domain, dto.getDomain());
-        MapperUtils.addOptionalStringProperty(resourceResource, RDFS.range, dto.getRange());
+        MapperUtils.addOptionalUriProperty(resourceResource, RDFS.domain, dto.getDomain());
+        MapperUtils.addOptionalUriProperty(resourceResource, RDFS.range, dto.getRange());
 
-        modelResource.addProperty(DCTerms.hasPart, resourceUri);
+        modelResource.addProperty(DCTerms.hasPart, ResourceFactory.createResource(resourceUri));
         return resourceUri;
     }
 
@@ -81,7 +81,7 @@ public class ResourceMapper {
         MapperUtils.updateLocalizedProperty(languages, dto.getLabel(), resource, RDFS.label, model);
         MapperUtils.updateLocalizedProperty(languages, dto.getNote(), resource, SKOS.note, model);
         MapperUtils.updateStringProperty(resource, SKOS.editorialNote, dto.getEditorialNote());
-        MapperUtils.updateStringProperty(resource, DCTerms.subject, dto.getSubject());
+        MapperUtils.updateUriProperty(resource, DCTerms.subject, dto.getSubject());
 
         var status = dto.getStatus();
         if (status != null) {
@@ -111,8 +111,8 @@ public class ResourceMapper {
             }
         }
 
-        MapperUtils.updateStringProperty(resource, RDFS.domain, dto.getDomain());
-        MapperUtils.updateStringProperty(resource, RDFS.range, dto.getRange());
+        MapperUtils.updateUriProperty(resource, RDFS.domain, dto.getDomain());
+        MapperUtils.updateUriProperty(resource, RDFS.range, dto.getRange());
 
         resource.removeAll(DCTerms.modified);
         resource.addProperty(DCTerms.modified, ResourceFactory.createTypedLiteral(updateDate));

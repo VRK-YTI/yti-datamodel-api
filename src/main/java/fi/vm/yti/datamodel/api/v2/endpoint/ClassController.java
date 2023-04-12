@@ -1,9 +1,7 @@
 package fi.vm.yti.datamodel.api.v2.endpoint;
 
 import fi.vm.yti.datamodel.api.security.AuthorizationManager;
-import fi.vm.yti.datamodel.api.v2.dto.ClassDTO;
-import fi.vm.yti.datamodel.api.v2.dto.ClassInfoDTO;
-import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
+import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
 import fi.vm.yti.datamodel.api.v2.mapper.ClassMapper;
@@ -99,8 +97,9 @@ public class ClassController {
     @GetMapping(value = "/{prefix}/{classIdentifier}", produces = APPLICATION_JSON_VALUE)
     public ClassInfoDTO getClass(@PathVariable String prefix, @PathVariable String classIdentifier){
         var modelURI = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
-        if(!jenaService.doesResourceExistInGraph(modelURI , modelURI + "#" + classIdentifier)){
-            throw new ResourceNotFoundException(modelURI + "#" + classIdentifier);
+        var classURI = modelURI + "#" + classIdentifier;
+        if(!jenaService.doesResourceExistInGraph(modelURI , classURI)){
+            throw new ResourceNotFoundException(classURI);
         }
         var model = jenaService.getDataModel(modelURI);
         if(model == null){
@@ -111,8 +110,11 @@ public class ClassController {
         var orgModel = jenaService.getOrganizations();
 
         var userMapper = hasRightToModel ? groupManagementService.mapUser() : null;
-        return ClassMapper.mapToClassDTO(model, modelURI, classIdentifier, orgModel,
+        var dto =  ClassMapper.mapToClassDTO(model, modelURI, classIdentifier, orgModel,
                 hasRightToModel, userMapper);
+        var classResources = jenaService.constructWithQuery(ClassMapper.getClassResourcesQuery(classURI));
+        ClassMapper.addClassResourcesToDTO(classResources, dto);
+        return dto;
     }
 
     @Operation(summary = "Delete a class from a data model")

@@ -148,7 +148,7 @@ public class DataModelValidator extends BaseValidator implements
     private void checkOrganizations(ConstraintValidatorContext context, DataModelDTO dataModel){
         var organizations = dataModel.getOrganizations();
         var existingOrgs = jenaService.getOrganizations();
-        if(organizations == null || organizations.isEmpty()){
+        if(!updateModel && (organizations == null || organizations.isEmpty())){
             addConstraintViolation(context, ValidationConstants.MSG_VALUE_MISSING, "organization");
             return;
         }
@@ -168,7 +168,7 @@ public class DataModelValidator extends BaseValidator implements
     private void checkGroups(ConstraintValidatorContext context, DataModelDTO dataModel){
         var groups = dataModel.getGroups();
         var existingGroups = jenaService.getServiceCategories();
-        if(groups == null || groups.isEmpty()){
+        if(!updateModel && (groups == null || groups.isEmpty())){
             addConstraintViolation(context, ValidationConstants.MSG_VALUE_MISSING, "groups");
             return;
         }
