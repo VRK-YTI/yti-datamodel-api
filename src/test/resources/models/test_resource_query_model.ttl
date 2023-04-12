@@ -10,15 +10,7 @@
 
 <http://uri.suomi.fi/datamodel/ns/test#rangetest2>
         a                    owl:DatatypeProperty ;
-        rdfs:label           "test"@fi ;
+        rdfs:label           "test label"@fi ;
         rdfs:range           <http://uri.suomi.fi/datamodel/ns/testkirj#NewNewId> ;
-        rdfs:subPropertyOf   owl:topDataProperty ;
-        dcterms:contributor  <urn:uuid:7d3a3c00-5a6b-489b-a3ed-63bb58c26a63> ;
-        dcterms:created      "2023-04-06T05:45:48.662Z"^^xsd:dateTime ;
-        dcterms:modified     "2023-04-06T05:45:48.662Z"^^xsd:dateTime ;
-        iow:contact          "local@localhost" ;
-        iow:creator          "9c872f32-6c45-4108-a443-bb2b0dad216d" ;
-        iow:modifier         "9c872f32-6c45-4108-a443-bb2b0dad216d" ;
-        owl:versionInfo      "DRAFT" ;
-        skos:editorialNote   "editorial note" ;
-        skos:note            "note"@fi .
+        dcterms:identifier   "test"^^xsd:NCName ;
+        rdfs:isDefinedBy     <http://uri.suomi.fi/datamodel/ns/test> .

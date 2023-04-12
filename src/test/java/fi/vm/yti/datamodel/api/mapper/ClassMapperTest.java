@@ -298,6 +298,26 @@ class ClassMapperTest {
         assertNull(resource.getProperty(SKOS.note));
     }
 
+    @Test
+    void testAddDomainAndRangeToClassDTO(){
+        Model m = ModelFactory.createDefaultModel();
+        var stream = getClass().getResourceAsStream("/models/test_resource_query_model.ttl");
+        assertNotNull(stream);
+        RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
+
+        var dto = new ClassInfoDTO();
+        ClassMapper.addClassResourcesToDTO(m, dto);
+
+        assertEquals(1, dto.getAttribute().size());
+
+        var attribute = dto.getAttribute().get(0);
+
+        assertEquals("test label", attribute.getLabel().get("fi"));
+        assertEquals("test", attribute.getIdentifier());
+        assertEquals("http://uri.suomi.fi/datamodel/ns/test#rangetest2", attribute.getUri());
+        assertEquals("test", attribute.getModelId());
+    }
+
     private Model getOrgModel(){
         var model = ModelFactory.createDefaultModel();
         model.createResource("urn:uuid:7d3a3c00-5a6b-489b-a3ed-63bb58c26a63")
