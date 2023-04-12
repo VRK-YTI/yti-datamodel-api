@@ -30,6 +30,10 @@ public class MapperUtils {
         }
     }
 
+    public static String getModelIdFromNamespace(String namespace){
+        return namespace.substring(namespace.lastIndexOf("/") + 1);
+    }
+
     /**
      * Localized property to Map of (language, value)
      * @param resource Resource to get property from
