@@ -13,6 +13,7 @@ import fi.vm.yti.datamodel.api.v2.validator.ValidationConstants;
 import fi.vm.yti.security.AuthenticatedUserProvider;
 import fi.vm.yti.security.YtiUser;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.jena.query.Query;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Resource;
@@ -342,6 +343,19 @@ class ClassControllerTest {
         verifyNoMoreInteractions(jenaService);
         verify(authorizationManager).hasRightToModel(anyString(), any(Model.class));
         verifyNoInteractions(openSearchIndexer);
+    }
+
+    @Test
+    void shouldListClassResources() throws Exception {
+        when(jenaService.constructWithQuery(any(Query.class))).thenReturn(ModelFactory.createDefaultModel());
+
+        mvc.perform(get("/v2/class/test/class/resources"))
+                .andExpect(status().isOk());
+
+        verify(jenaService).constructWithQuery(any(Query.class));
+        verify(jenaService).getOrganizations();
+
+        verifyNoMoreInteractions(jenaService);
     }
 
     private static ClassDTO createClassDTO(boolean update){

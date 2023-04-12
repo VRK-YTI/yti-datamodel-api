@@ -18,6 +18,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -57,7 +58,7 @@ class ResourceMapperTest {
         assertNotNull(resourceResource);
 
         assertEquals(1, modelResource.listProperties(DCTerms.hasPart).toList().size());
-        assertEquals("http://uri.suomi.fi/datamodel/ns/test#Resource", modelResource.getProperty(DCTerms.hasPart).getString());
+        assertEquals("http://uri.suomi.fi/datamodel/ns/test#Resource", modelResource.getProperty(DCTerms.hasPart).getObject().toString());
 
         assertEquals(OWL.ObjectProperty, resourceResource.getProperty(RDF.type).getResource());
 
@@ -111,7 +112,7 @@ class ResourceMapperTest {
         assertNotNull(resourceResource);
 
         assertEquals(1, modelResource.listProperties(DCTerms.hasPart).toList().size());
-        assertEquals("http://uri.suomi.fi/datamodel/ns/test#Resource", modelResource.getProperty(DCTerms.hasPart).getString());
+        assertEquals("http://uri.suomi.fi/datamodel/ns/test#Resource", modelResource.getProperty(DCTerms.hasPart).getObject().toString());
 
         assertEquals(OWL.ObjectProperty, resourceResource.getProperty(RDF.type).getResource());
 
@@ -160,7 +161,7 @@ class ResourceMapperTest {
         assertNotNull(resourceResource);
 
         assertEquals(1, modelResource.listProperties(DCTerms.hasPart).toList().size());
-        assertEquals("http://uri.suomi.fi/datamodel/ns/test#Resource", modelResource.getProperty(DCTerms.hasPart).getString());
+        assertEquals("http://uri.suomi.fi/datamodel/ns/test#Resource", modelResource.getProperty(DCTerms.hasPart).getObject().toString());
 
         assertEquals(OWL.DatatypeProperty, resourceResource.getProperty(RDF.type).getResource());
 
@@ -212,7 +213,7 @@ class ResourceMapperTest {
         assertNotNull(resourceResource);
 
         assertEquals(1, modelResource.listProperties(DCTerms.hasPart).toList().size());
-        assertEquals("http://uri.suomi.fi/datamodel/ns/test#Resource", modelResource.getProperty(DCTerms.hasPart).getString());
+        assertEquals("http://uri.suomi.fi/datamodel/ns/test#Resource", modelResource.getProperty(DCTerms.hasPart).getObject().toString());
 
         assertEquals(OWL.DatatypeProperty, resourceResource.getProperty(RDF.type).getResource());
 
@@ -564,7 +565,7 @@ class ResourceMapperTest {
         assertEquals("new label", resource.getProperty(RDFS.label).getLiteral().getString());
         assertEquals("fi", resource.getProperty(RDFS.label).getLiteral().getLanguage());
         assertEquals("TestAttribute", resource.getProperty(DCTerms.identifier).getLiteral().getString());
-        assertEquals("http://uri.suomi.fi/terminology/qwe", resource.getProperty(DCTerms.subject).getLiteral().getString());
+        assertEquals("http://uri.suomi.fi/terminology/qwe", resource.getProperty(DCTerms.subject).getObject().toString());
         assertEquals("http://uri.suomi.fi/datamodel/ns/int#NewEq", resource.getProperty(OWL.equivalentProperty).getObject().toString());
         assertEquals("https://www.example.com/ns/ext#NewSub", resource.getProperty(RDFS.subPropertyOf).getObject().toString());
         assertEquals(Status.INVALID.name(), resource.getProperty(OWL.versionInfo).getObject().toString());
@@ -618,7 +619,7 @@ class ResourceMapperTest {
         assertEquals("new label", resource.getProperty(RDFS.label).getLiteral().getString());
         assertEquals("fi", resource.getProperty(RDFS.label).getLiteral().getLanguage());
         assertEquals("TestAssociation", resource.getProperty(DCTerms.identifier).getLiteral().getString());
-        assertEquals("http://uri.suomi.fi/terminology/qwe", resource.getProperty(DCTerms.subject).getLiteral().getString());
+        assertEquals("http://uri.suomi.fi/terminology/qwe", resource.getProperty(DCTerms.subject).getObject().toString());
         assertEquals("http://uri.suomi.fi/datamodel/ns/int#NewEq", resource.getProperty(OWL.equivalentProperty).getObject().toString());
         assertEquals("https://www.example.com/ns/ext#NewSub", resource.getProperty(RDFS.subPropertyOf).getObject().toString());
         assertEquals(Status.INVALID.name(), resource.getProperty(OWL.versionInfo).getObject().toString());
@@ -678,7 +679,37 @@ class ResourceMapperTest {
         RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
 
         assertThrowsExactly(MappingError.class, () -> ResourceMapper.mapToUpdateResource("http://uri.suomi.fi/datamodel/ns/test", m, "TestClass", new ResourceDTO(), EndpointUtils.mockUser));
+    }
 
+    @Test
+    void mapFromConstructQuery(){
+        Model m = ModelFactory.createDefaultModel();
+        var stream = getClass().getResourceAsStream("/models/test_resource_query_model.ttl");
+        assertNotNull(stream);
+        RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
+        var list = new ArrayList<ResourceInfoDTO>();
+        m.listSubjects().forEach(next -> {
+            var dto = ResourceMapper.mapToResourceInfoDtoFromConstruct(next, false, null, getOrgModel());
+            list.add(dto);
+        });
+
+        assertEquals(1, list.size());
+        var dto = list.get(0);
+        assertEquals(ResourceType.ATTRIBUTE, dto.getType());
+        assertEquals(1, dto.getLabel().size());
+        assertEquals("test", dto.getLabel().get("fi"));
+        assertNull(dto.getEditorialNote());
+        assertEquals(Status.DRAFT, dto.getStatus());
+        assertEquals("http://www.w3.org/2002/07/owl#topDataProperty", dto.getSubResourceOf().stream().findFirst().orElse(null));
+        assertNull(dto.getSubject());
+        assertEquals("rangetest2", dto.getIdentifier());
+        assertEquals(1, dto.getNote().size());
+        assertEquals("2023-04-06T05:45:48.662Z", dto.getModified());
+        assertEquals("2023-04-06T05:45:48.662Z", dto.getCreated());
+        assertEquals("test org", dto.getContributor().stream().findFirst().orElseThrow().getLabel().get("fi"));
+        assertEquals("7d3a3c00-5a6b-489b-a3ed-63bb58c26a63", dto.getContributor().stream().findFirst().orElseThrow().getId());
+        assertEquals("http://uri.suomi.fi/datamodel/ns/test#rangetest2", dto.getUri());
+        assertEquals("local@localhost", dto.getContact());
     }
 
     private Model getOrgModel(){

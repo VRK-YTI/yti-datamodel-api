@@ -7,9 +7,9 @@ import fi.vm.yti.datamodel.api.v2.mapper.ModelMapper;
 import fi.vm.yti.datamodel.api.v2.mapper.ResourceMapper;
 import fi.vm.yti.datamodel.api.v2.service.JenaService;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelUtils;
+import fi.vm.yti.datamodel.api.v2.utils.SparqlUtils;
 import org.apache.jena.arq.querybuilder.ConstructBuilder;
 import org.apache.jena.rdf.model.ModelFactory;
-import org.apache.jena.rdf.model.Property;
 import org.apache.jena.vocabulary.*;
 import org.opensearch.client.opensearch.OpenSearchClient;
 import org.opensearch.client.opensearch._types.mapping.*;
@@ -141,31 +141,29 @@ public class OpenSearchIndexer {
     public void initModelIndex() throws IOException {
         var constructBuilder = new ConstructBuilder()
                 .addPrefixes(ModelConstants.PREFIXES);
-        addProperty(constructBuilder, RDFS.label, "?prefLabel");
-        addOptional(constructBuilder, RDFS.comment, "?comment");
-        addProperty(constructBuilder, RDF.type, "?modelType");
-        addProperty(constructBuilder, OWL.versionInfo, "?versionInfo");
-        addProperty(constructBuilder, DCTerms.modified, "?modified");
-        addProperty(constructBuilder, DCTerms.created, "?created");
-        addProperty(constructBuilder, DCTerms.contributor, "?contributor");
-        addProperty(constructBuilder, DCTerms.isPartOf, "?isPartOf");
-        addOptional(constructBuilder, Iow.contentModified, "?contentModified");
-        addOptional(constructBuilder, Iow.documentation, "?documentation");
+        SparqlUtils.addConstructProperty(GRAPH_VARIABLE, constructBuilder, RDFS.label, "?prefLabel");
+        SparqlUtils.addConstructOptional(GRAPH_VARIABLE, constructBuilder, RDFS.comment, "?comment");
+        SparqlUtils.addConstructProperty(GRAPH_VARIABLE, constructBuilder, RDF.type, "?modelType");
+        SparqlUtils.addConstructProperty(GRAPH_VARIABLE, constructBuilder, OWL.versionInfo, "?versionInfo");
+        SparqlUtils.addConstructProperty(GRAPH_VARIABLE, constructBuilder, DCTerms.modified, "?modified");
+        SparqlUtils.addConstructProperty(GRAPH_VARIABLE, constructBuilder, DCTerms.created, "?created");
+        SparqlUtils.addConstructProperty(GRAPH_VARIABLE, constructBuilder, DCTerms.contributor, "?contributor");
+        SparqlUtils.addConstructProperty(GRAPH_VARIABLE, constructBuilder, DCTerms.isPartOf, "?isPartOf");
+        SparqlUtils.addConstructOptional(GRAPH_VARIABLE, constructBuilder, Iow.contentModified, "?contentModified");
+        SparqlUtils.addConstructOptional(GRAPH_VARIABLE, constructBuilder, Iow.documentation, "?documentation");
         //TODO swap to commented text once older migration is ready
         //addProperty(constructBuilder, DCTerms.language, "?language");
         constructBuilder.addConstruct(GRAPH_VARIABLE, DCTerms.language, "?language")
                 .addOptional(GRAPH_VARIABLE, "dcterms:language/rdf:rest*/rdf:first", "?language")
                 .addOptional(GRAPH_VARIABLE, DCTerms.language, "?language");
         var indexModels = jenaService.constructWithQuery(constructBuilder.build());
-        var it = indexModels.listSubjects();
         var list = new ArrayList<IndexModel>();
-        while (it.hasNext()) {
-            var resource = it.next();
+        indexModels.listSubjects().forEach(next -> {
             var newModel = ModelFactory.createDefaultModel()
-                    .add(resource.listProperties());
-            var indexModel = modelMapper.mapToIndexModel(resource.getLocalName(), newModel);
+                    .add(next.listProperties());
+            var indexModel = modelMapper.mapToIndexModel(next.getLocalName(), newModel);
             list.add(indexModel);
-        }
+        });
         bulkInsert(OPEN_SEARCH_INDEX_MODEL, list);
     }
 
@@ -175,39 +173,27 @@ public class OpenSearchIndexer {
                 .addConstruct(GRAPH_VARIABLE, RDF.type, "?resourceType")
                 .addWhere(GRAPH_VARIABLE, RDF.type, "?resourceType")
                 .addWhereValueVar("?resourceType", OWL.Class, OWL.ObjectProperty, OWL.DatatypeProperty);
-        addProperty(constructBuilder, RDFS.label, "?label");
-        addProperty(constructBuilder, OWL.versionInfo, "?versionInfo");
-        addProperty(constructBuilder, DCTerms.modified, "?modified");
-        addProperty(constructBuilder, DCTerms.created, "?created");
-        addOptional(constructBuilder, Iow.contentModified, "?contentModified");
-        addProperty(constructBuilder, RDFS.isDefinedBy, "?isDefinedBy");
-        addOptional(constructBuilder, SKOS.note, "?note");
-        addOptional(constructBuilder, RDFS.subClassOf, "?subClassOf");
-        addOptional(constructBuilder, RDFS.subPropertyOf, "?subPropertyOf");
-        addOptional(constructBuilder, OWL.equivalentClass, "?equivalentClass");
-        addOptional(constructBuilder, OWL.equivalentProperty, "?equivalentProperty");
+        SparqlUtils.addConstructProperty(GRAPH_VARIABLE, constructBuilder, RDFS.label, "?label");
+        SparqlUtils.addConstructProperty(GRAPH_VARIABLE, constructBuilder, OWL.versionInfo, "?versionInfo");
+        SparqlUtils.addConstructProperty(GRAPH_VARIABLE, constructBuilder, DCTerms.modified, "?modified");
+        SparqlUtils.addConstructProperty(GRAPH_VARIABLE, constructBuilder, DCTerms.created, "?created");
+        SparqlUtils.addConstructOptional(GRAPH_VARIABLE, constructBuilder, Iow.contentModified, "?contentModified");
+        SparqlUtils.addConstructProperty(GRAPH_VARIABLE, constructBuilder, RDFS.isDefinedBy, "?isDefinedBy");
+        SparqlUtils.addConstructOptional(GRAPH_VARIABLE, constructBuilder, SKOS.note, "?note");
+        SparqlUtils.addConstructOptional(GRAPH_VARIABLE, constructBuilder, RDFS.subClassOf, "?subClassOf");
+        SparqlUtils.addConstructOptional(GRAPH_VARIABLE, constructBuilder, RDFS.subPropertyOf, "?subPropertyOf");
+        SparqlUtils.addConstructOptional(GRAPH_VARIABLE, constructBuilder, OWL.equivalentClass, "?equivalentClass");
+        SparqlUtils.addConstructOptional(GRAPH_VARIABLE, constructBuilder, OWL.equivalentProperty, "?equivalentProperty");
         var indexClasses = jenaService.constructWithQuery(constructBuilder.build());
-        var it = indexClasses.listSubjects();
         var list = new ArrayList<IndexResource>();
-        while (it.hasNext()) {
-            var resource = it.next();
+        indexClasses.listSubjects().forEach(next -> {
             var newClass = ModelFactory.createDefaultModel()
                     .setNsPrefixes(indexClasses.getNsPrefixMap())
-                    .add(resource.listProperties());
-            var indexClass = ResourceMapper.mapToIndexResource(newClass, resource.getURI());
+                    .add(next.listProperties());
+            var indexClass = ResourceMapper.mapToIndexResource(newClass, next.getURI());
             list.add(indexClass);
-        }
+        });
         bulkInsert(OPEN_SEARCH_INDEX_RESOURCE, list);
-    }
-
-    private void addProperty(ConstructBuilder builder, Property property, String propertyName) {
-        builder.addConstruct(GRAPH_VARIABLE, property, propertyName)
-                .addWhere(GRAPH_VARIABLE, property, propertyName);
-    }
-
-    private void addOptional(ConstructBuilder builder, Property property, String propertyName) {
-        builder.addConstruct(GRAPH_VARIABLE, property, propertyName)
-                .addOptional(GRAPH_VARIABLE, property, propertyName);
     }
 
     public <T extends IndexBase> void bulkInsert(String indexName,

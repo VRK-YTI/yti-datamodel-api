@@ -1,12 +1,11 @@
 package fi.vm.yti.datamodel.api.v2.endpoint;
 
 import fi.vm.yti.datamodel.api.security.AuthorizationManager;
-import fi.vm.yti.datamodel.api.v2.dto.ClassDTO;
-import fi.vm.yti.datamodel.api.v2.dto.ClassInfoDTO;
-import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
+import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
 import fi.vm.yti.datamodel.api.v2.mapper.ClassMapper;
+import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.mapper.ResourceMapper;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
 import fi.vm.yti.datamodel.api.v2.service.GroupManagementService;
@@ -16,10 +15,14 @@ import fi.vm.yti.security.AuthenticatedUserProvider;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.apache.jena.vocabulary.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static fi.vm.yti.security.AuthorizationException.check;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
@@ -131,5 +134,22 @@ public class ClassController {
         check(authorizationManager.hasRightToModel(prefix, model));
         jenaService.deleteResource(classURI);
         openSearchIndexer.deleteResourceFromIndex(classURI);
+    }
+
+    @Operation(summary = "Get resources with specified class as domain or range")
+    @ApiResponse(responseCode =  "200", description = "Resources found successfully")
+    @GetMapping(value = "/{prefix}/{classIdentifier}/resources")
+    public List<ResourceInfoDTO> getClassResources(@PathVariable String prefix, @PathVariable String classIdentifier) {
+        var classUri = ModelConstants.SUOMI_FI_NAMESPACE  + prefix + "#" + classIdentifier;
+        var model = jenaService.constructWithQuery(ResourceMapper.buildDomainAndRangeResourceQuery(classUri));
+        var list = new ArrayList<ResourceInfoDTO>();
+        var orgModel = jenaService.getOrganizations();
+        model.listSubjects().forEach(next -> {
+            var orgs = MapperUtils.arrayPropertyToList(next, DCTerms.contributor).stream().map(MapperUtils::getUUID).toList();
+            var hasRightToModel = authorizationManager.hasRightToAnyOrganization(orgs);
+            var dto = ResourceMapper.mapToResourceInfoDtoFromConstruct(next, hasRightToModel, groupManagementService.mapUser(), orgModel);
+            list.add(dto);
+        });
+        return list;
     }
 }
