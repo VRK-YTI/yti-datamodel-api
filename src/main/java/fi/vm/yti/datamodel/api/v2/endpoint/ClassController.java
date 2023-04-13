@@ -9,6 +9,7 @@ import fi.vm.yti.datamodel.api.v2.mapper.ResourceMapper;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
 import fi.vm.yti.datamodel.api.v2.service.GroupManagementService;
 import fi.vm.yti.datamodel.api.v2.service.JenaService;
+import fi.vm.yti.datamodel.api.v2.service.TerminologyService;
 import fi.vm.yti.datamodel.api.v2.validator.ValidClass;
 import fi.vm.yti.security.AuthenticatedUserProvider;
 import io.swagger.v3.oas.annotations.Operation;
@@ -35,17 +36,20 @@ public class ClassController {
     private final OpenSearchIndexer openSearchIndexer;
     private final GroupManagementService groupManagementService;
     private final AuthenticatedUserProvider userProvider;
+    private final TerminologyService terminologyService;
 
     public ClassController(AuthorizationManager authorizationManager,
                            JenaService jenaService,
                            OpenSearchIndexer openSearchIndexer,
                            GroupManagementService groupManagementService,
-                           AuthenticatedUserProvider userProvider){
+                           AuthenticatedUserProvider userProvider,
+                           TerminologyService terminologyService){
         this.authorizationManager = authorizationManager;
         this.jenaService = jenaService;
         this.openSearchIndexer = openSearchIndexer;
         this.groupManagementService = groupManagementService;
         this.userProvider = userProvider;
+        this.terminologyService = terminologyService;
     }
 
     @Operation(summary = "Add a class to a model")
@@ -62,6 +66,7 @@ public class ClassController {
         }
         check(authorizationManager.hasRightToModel(prefix, model));
 
+        terminologyService.resolveConcept(classDTO.getSubject());
         var classURi = ClassMapper.createClassAndMapToModel(modelURI, model, classDTO, userProvider.getUser());
         jenaService.putDataModelToCore(modelURI, model);
         var indexClass = ResourceMapper.mapToIndexResource(model, classURi);
@@ -85,6 +90,7 @@ public class ClassController {
 
         var classResource = model.getResource(classURI);
 
+        terminologyService.resolveConcept(classDTO.getSubject());
         ClassMapper.mapToUpdateClass(model, graph, classResource, classDTO, userProvider.getUser());
         jenaService.putDataModelToCore(graph, model);
 
@@ -108,12 +114,12 @@ public class ClassController {
         var hasRightToModel = authorizationManager.hasRightToModel(prefix, model);
 
         var orgModel = jenaService.getOrganizations();
-
         var userMapper = hasRightToModel ? groupManagementService.mapUser() : null;
         var dto =  ClassMapper.mapToClassDTO(model, modelURI, classIdentifier, orgModel,
                 hasRightToModel, userMapper);
         var classResources = jenaService.constructWithQuery(ClassMapper.getClassResourcesQuery(classURI));
         ClassMapper.addClassResourcesToDTO(classResources, dto);
+        terminologyService.mapConceptToClass().accept(dto);
         return dto;
     }
 

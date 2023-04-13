@@ -380,7 +380,7 @@ class ResourceMapperTest {
         assertEquals("http://uri.suomi.fi/datamodel/ns/test#SubResource", dto.getSubResourceOf().stream().findFirst().orElse(""));
         assertEquals(1, dto.getEquivalentResource().size());
         assertEquals("http://uri.suomi.fi/datamodel/ns/test#EqResource", dto.getEquivalentResource().stream().findFirst().orElse(""));
-        assertEquals("http://uri.suomi.fi/terminology/test/test1", dto.getSubject());
+        assertEquals("http://uri.suomi.fi/terminology/test/test1", dto.getSubject().getConceptURI());
         assertEquals("TestAttribute", dto.getIdentifier());
         assertEquals(2, dto.getNote().size());
         assertEquals("test note fi", dto.getNote().get("fi"));
@@ -412,7 +412,7 @@ class ResourceMapperTest {
         assertEquals("http://uri.suomi.fi/datamodel/ns/test#SubResource", dto.getSubResourceOf().stream().findFirst().orElse(""));
         assertEquals(1, dto.getEquivalentResource().size());
         assertEquals("http://uri.suomi.fi/datamodel/ns/test#EqResource", dto.getEquivalentResource().stream().findFirst().orElse(""));
-        assertEquals("http://uri.suomi.fi/terminology/test/test1", dto.getSubject());
+        assertEquals("http://uri.suomi.fi/terminology/test/test1", dto.getSubject().getConceptURI());
         assertEquals("TestAssociation", dto.getIdentifier());
         assertEquals(2, dto.getNote().size());
         assertEquals("test note fi", dto.getNote().get("fi"));

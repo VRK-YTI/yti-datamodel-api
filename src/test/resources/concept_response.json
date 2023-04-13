@@ -1,0 +1,100 @@
+[
+  {
+    "id": "a1e658f6-f9ab-4bc9-92f1-4b9a0af70de9",
+    "code": "concept-3",
+    "uri": "http://uri.suomi.fi/terminology/dd0e10ed/concept-3",
+    "number": 3,
+    "createdBy": "ebe948a6-42da-7c4b-421e-de9ff0ddc0ba",
+    "createdDate": "2023-04-12T10:00:03Z",
+    "lastModifiedBy": "ebe948a6-42da-7c4b-421e-de9ff0ddc0ba",
+    "lastModifiedDate": "2023-04-12T10:00:03Z",
+    "type": {
+      "id": "Concept",
+      "graph": {
+        "id": "f53ab70b-be2d-41a0-9ace-c22c1dcd3096"
+      }
+    },
+    "properties": {
+      "status": [
+        {
+          "lang": "",
+          "value": "DRAFT",
+          "regex": "(?s)^.*$"
+        }
+      ]
+    },
+    "references": {
+      "prefLabelXl": [
+        {
+          "id": "56de6a23-bc5a-46f1-bd46-adc1889056d7",
+          "code": "term-6",
+          "uri": "http://uri.suomi.fi/terminology/dd0e10ed/term-6",
+          "number": 6,
+          "createdBy": "ebe948a6-42da-7c4b-421e-de9ff0ddc0ba",
+          "createdDate": "2023-04-12T10:00:03Z",
+          "lastModifiedBy": "ebe948a6-42da-7c4b-421e-de9ff0ddc0ba",
+          "lastModifiedDate": "2023-04-12T10:00:03Z",
+          "type": {
+            "id": "Term",
+            "graph": {
+              "id": "f53ab70b-be2d-41a0-9ace-c22c1dcd3096"
+            }
+          },
+          "properties": {
+            "status": [
+              {
+                "lang": "",
+                "value": "DRAFT",
+                "regex": "(?s)^.*$"
+              }
+            ],
+            "prefLabel": [
+              {
+                "lang": "fi",
+                "value": "Test label",
+                "regex": "(?s)^.*$"
+              }
+            ]
+          },
+          "references": {},
+          "referrers": {}
+        },
+        {
+          "id": "13e0ef38-8538-4b57-b45c-fac5c094c399",
+          "code": "term-7",
+          "uri": "http://uri.suomi.fi/terminology/dd0e10ed/term-7",
+          "number": 7,
+          "createdBy": "ebe948a6-42da-7c4b-421e-de9ff0ddc0ba",
+          "createdDate": "2023-04-12T10:00:03Z",
+          "lastModifiedBy": "ebe948a6-42da-7c4b-421e-de9ff0ddc0ba",
+          "lastModifiedDate": "2023-04-12T10:00:03Z",
+          "type": {
+            "id": "Term",
+            "graph": {
+              "id": "f53ab70b-be2d-41a0-9ace-c22c1dcd3096"
+            }
+          },
+          "properties": {
+            "status": [
+              {
+                "lang": "",
+                "value": "DRAFT",
+                "regex": "(?s)^.*$"
+              }
+            ],
+            "prefLabel": [
+              {
+                "lang": "en",
+                "value": "No definition",
+                "regex": "(?s)^.*$"
+              }
+            ]
+          },
+          "references": {},
+          "referrers": {}
+        }
+      ]
+    },
+    "referrers": {}
+  }
+]

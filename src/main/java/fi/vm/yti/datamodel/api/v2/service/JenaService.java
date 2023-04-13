@@ -10,9 +10,11 @@ import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.query.Query;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.rdfconnection.RDFConnection;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.sparql.vocabulary.FOAF;
+import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
 import org.apache.jena.vocabulary.SKOS;
@@ -40,6 +42,7 @@ public class JenaService {
     private final RDFConnection importSparql;
     private final RDFConnection conceptRead;
     private final RDFConnection conceptWrite;
+    private final RDFConnection conceptSparql;
 
     private final Cache<String, Model> modelCache;
 
@@ -54,6 +57,7 @@ public class JenaService {
         this.importSparql = RDFConnection.connect(endpoint + "/imports/sparql");
         this.conceptWrite = RDFConnection.connect(endpoint + "/concept/data");
         this.conceptRead = RDFConnection.connect(endpoint + "/concept/get");
+        this.conceptSparql = RDFConnection.connect(endpoint + "/concept/sparql");
 
         this.modelCache = CacheBuilder.newBuilder()
                 .expireAfterWrite(cacheExpireTime, TimeUnit.SECONDS)
@@ -187,7 +191,6 @@ public class JenaService {
         var serviceCategories = modelCache.getIfPresent("serviceCategories");
 
         if(serviceCategories != null){
-            logger.info("Used cache for servicecategories");
             return serviceCategories;
         }
 
@@ -216,7 +219,6 @@ public class JenaService {
         var organizations = modelCache.getIfPresent("organizations");
 
         if(organizations != null){
-            logger.info("Used cache for organizations");
             return organizations;
         }
 
@@ -279,6 +281,31 @@ public class JenaService {
             logger.warn("Error fetching terminology information {}", e.getMessage());
             return null;
         }
+    }
+
+    public Model getConcept(String conceptURI) {
+        ConstructBuilder builder = new ConstructBuilder();
+        var res = ResourceFactory.createResource(conceptURI);
+
+        var label = "?label";
+        var inScheme = "?inScheme";
+        var definition = "?definition";
+        var terminologyLabel = "?terminologyLabel";
+        var status = "?status";
+
+        builder.addPrefixes(ModelConstants.PREFIXES)
+            .addConstruct(res, SKOS.prefLabel, label)
+            .addConstruct(res, SKOS.inScheme, inScheme)
+            .addConstruct(res, SKOS.definition, definition)
+            .addConstruct(res, OWL.versionInfo, status)
+            .addConstruct(res, RDFS.label, terminologyLabel)
+            .addWhere(res, SKOS.prefLabel, label)
+            .addWhere(res, SKOS.inScheme, inScheme)
+            .addOptional(res, SKOS.definition, definition)
+            .addWhere(res, OWL.versionInfo, status)
+            .addWhere(inScheme, RDFS.label, terminologyLabel);
+
+        return conceptSparql.queryConstruct(builder.build());
     }
 
     public int getVersionNumber() {

@@ -8,6 +8,7 @@ import fi.vm.yti.datamodel.api.v2.mapper.ClassMapper;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
 import fi.vm.yti.datamodel.api.v2.service.GroupManagementService;
 import fi.vm.yti.datamodel.api.v2.service.JenaService;
+import fi.vm.yti.datamodel.api.v2.service.TerminologyService;
 import fi.vm.yti.datamodel.api.v2.validator.ExceptionHandlerAdvice;
 import fi.vm.yti.datamodel.api.v2.validator.ValidationConstants;
 import fi.vm.yti.security.AuthenticatedUserProvider;
@@ -65,7 +66,12 @@ class ClassControllerTest {
     @MockBean
     private AuthenticatedUserProvider userProvider;
 
-    private final Consumer<ResourceInfoBaseDTO> userMapper = (var dto) -> {} ;
+    @MockBean
+    private TerminologyService terminologyService;
+
+    private final Consumer<ResourceInfoBaseDTO> userMapper = (var dto) -> {};
+
+    private final Consumer<ClassInfoDTO> conceptMapper = (var dto) -> {};
 
     private static final YtiUser USER = EndpointUtils.mockUser;
 
@@ -83,6 +89,7 @@ class ClassControllerTest {
         when(authorizationManager.hasRightToAnyOrganization(anyCollection())).thenReturn(true);
         when(authorizationManager.hasRightToModel(any(), any())).thenReturn(true);
         when(userProvider.getUser()).thenReturn(USER);
+        when(terminologyService.mapConceptToClass()).thenReturn(conceptMapper);
     }
 
     @Test
@@ -105,6 +112,7 @@ class ClassControllerTest {
             verify(this.jenaService, times(2)).doesResolvedNamespaceExist(anyString());
             verify(jenaService).doesResourceExistInGraph(anyString(), anyString());
             verify(this.jenaService).getDataModel(anyString());
+            verify(terminologyService).resolveConcept(anyString());
             classMapper.verify(() -> ClassMapper.createClassAndMapToModel(anyString(), any(Model.class), any(ClassDTO.class), any(YtiUser.class)));
             verify(this.jenaService).putDataModelToCore(anyString(), any(Model.class));
             verifyNoMoreInteractions(this.jenaService);

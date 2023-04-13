@@ -10,6 +10,7 @@ import fi.vm.yti.datamodel.api.v2.mapper.ResourceMapper;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
 import fi.vm.yti.datamodel.api.v2.service.GroupManagementService;
 import fi.vm.yti.datamodel.api.v2.service.JenaService;
+import fi.vm.yti.datamodel.api.v2.service.TerminologyService;
 import fi.vm.yti.datamodel.api.v2.validator.ValidResource;
 import fi.vm.yti.security.AuthenticatedUserProvider;
 import io.swagger.v3.oas.annotations.Operation;
@@ -32,17 +33,20 @@ public class ResourceController {
     private final OpenSearchIndexer openSearchIndexer;
     private final AuthenticatedUserProvider userProvider;
     private final GroupManagementService groupManagementService;
+    private final TerminologyService terminologyService;
 
     public ResourceController(JenaService jenaService,
                               AuthorizationManager authorizationManager,
                               OpenSearchIndexer openSearchIndexer,
                               AuthenticatedUserProvider userProvider,
-                              GroupManagementService groupManagementService) {
+                              GroupManagementService groupManagementService,
+                              TerminologyService terminologyService) {
         this.jenaService = jenaService;
         this.authorizationManager = authorizationManager;
         this.openSearchIndexer = openSearchIndexer;
         this.userProvider = userProvider;
         this.groupManagementService = groupManagementService;
+        this.terminologyService = terminologyService;
     }
 
     @Operation(summary = "Add a class to a model")
@@ -60,6 +64,7 @@ public class ResourceController {
         }
         check(authorizationManager.hasRightToModel(prefix, model));
 
+        terminologyService.resolveConcept(dto.getSubject());
         var resourceUri = ResourceMapper.mapToResource(graphUri, model, dto, userProvider.getUser());
         jenaService.putDataModelToCore(graphUri, model);
         var indexClass = ResourceMapper.mapToIndexResource(model, resourceUri);
@@ -85,6 +90,7 @@ public class ResourceController {
         }
         check(authorizationManager.hasRightToModel(prefix, model));
 
+        terminologyService.resolveConcept(dto.getSubject());
         ResourceMapper.mapToUpdateResource(graphUri, model, resourceIdentifier, dto, userProvider.getUser());
         jenaService.putDataModelToCore(graphUri, model);
         var indexResource = ResourceMapper.mapToIndexResource(model, graphUri + "#" + resourceIdentifier);
@@ -108,7 +114,9 @@ public class ResourceController {
         var orgModel = jenaService.getOrganizations();
         var hasRightToModel = authorizationManager.hasRightToModel(prefix, model);
 
-        return ResourceMapper.mapToResourceInfoDTO(model, graphUri, resourceIdentifier, orgModel, hasRightToModel, groupManagementService.mapUser());
+        var resourceInfoDTO = ResourceMapper.mapToResourceInfoDTO(model, graphUri, resourceIdentifier, orgModel, hasRightToModel, groupManagementService.mapUser());
+        terminologyService.mapConceptToResource().accept(resourceInfoDTO);
+        return resourceInfoDTO;
     }
 
     @Operation(summary = "Delete a resource from a data model")

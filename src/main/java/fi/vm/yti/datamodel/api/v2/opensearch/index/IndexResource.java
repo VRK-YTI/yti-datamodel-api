@@ -14,6 +14,7 @@ public class IndexResource extends IndexBase {
     private String namespace;
     private String domain;
     private String range;
+    private String subject;
 
     public ResourceType getResourceType() {
         return resourceType;
@@ -77,5 +78,13 @@ public class IndexResource extends IndexBase {
 
     public void setRange(String range) {
         this.range = range;
+    }
+
+    public String getSubject() {
+        return subject;
+    }
+
+    public void setSubject(String subject) {
+        this.subject = subject;
     }
 }
