@@ -136,8 +136,9 @@ public class Resolve {
             }
         }
 
-        logger.debug("Strange accept header. Redirecting to " + htmlRedirectUrl.toString());
-        return Response.seeOther(htmlRedirectUrl).build();
+        logger.debug("Unknown accept header, redirecting to ld+json export");
+        final URI rdfUrl = URI.create(uriInfo.getBaseUri().toString() + "v1/exportModel?graph=" + graphName + "&content-type=" + Lang.JSONLD.getHeaderString() + "&raw=" + raw);
+        return Response.seeOther(rdfUrl).build();
 
     }
 
