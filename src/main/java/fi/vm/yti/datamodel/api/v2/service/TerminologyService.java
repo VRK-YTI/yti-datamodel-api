@@ -92,18 +92,19 @@ public class TerminologyService {
         var uri = URI.create(conceptURI);
         LOG.debug("Fetching concept {}", uri);
 
-        var result = client.get().uri(uriBuilder -> uriBuilder
-                        .path(uri.getPath())
-                        .queryParam("env", awsEnv)
-                        .build()
-                )
-                .accept(MediaType.APPLICATION_JSON)
-                .retrieve()
-                .bodyToMono(new ParameterizedTypeReference<List<TerminologyNodeDTO>>() {
-                })
-                .block();
-
-        if (result == null || result.isEmpty()) {
+        List<TerminologyNodeDTO> result;
+        try {
+            result = client.get().uri(uriBuilder -> uriBuilder
+                            .path(uri.getPath())
+                            .queryParam("env", awsEnv)
+                            .build()
+                    )
+                    .accept(MediaType.APPLICATION_JSON)
+                    .retrieve()
+                    .bodyToMono(new ParameterizedTypeReference<List<TerminologyNodeDTO>>() {
+                    })
+                    .block();
+        } catch(Exception e) {
             LOG.warn("Could not resolve concept uri {}", uri);
             throw new ResolvingException("Concept not found", String.format("Concept %s not found", conceptURI));
         }
