@@ -78,7 +78,6 @@ public class TerminologyMapper {
 
         var dto = new ConceptDTO();
         dto.setConceptURI(conceptURI);
-        dto.setTerminologyURI(MapperUtils.propertyToString(resource, SKOS.inScheme));
 
         var status = Status.DRAFT;
         try {
@@ -89,7 +88,10 @@ public class TerminologyMapper {
         dto.setStatus(status);
         dto.setLabel(MapperUtils.localizedPropertyToMap(resource, SKOS.prefLabel));
         dto.setDefinition(MapperUtils.localizedPropertyToMap(resource, SKOS.definition));
-        dto.setTerminologyLabel(MapperUtils.localizedPropertyToMap(resource, RDFS.label));
+
+        var terminology = new TerminologyDTO(MapperUtils.propertyToString(resource, SKOS.inScheme));
+        terminology.setLabel(MapperUtils.localizedPropertyToMap(resource, RDFS.label));
+        dto.setTerminology(terminology);
         return dto;
     }
 

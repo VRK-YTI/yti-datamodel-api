@@ -6,8 +6,7 @@ public class ConceptDTO {
     private String conceptURI;
     private Map<String, String> label = Map.of();
     private Map<String, String> definition = Map.of();
-    private String terminologyURI;
-    private Map<String, String> terminologyLabel = Map.of();
+    private TerminologyDTO terminology;
     private Status status;
 
     public Map<String, String> getLabel() {
@@ -34,14 +33,6 @@ public class ConceptDTO {
         this.conceptURI = conceptURI;
     }
 
-    public String getTerminologyURI() {
-        return terminologyURI;
-    }
-
-    public void setTerminologyURI(String terminologyURI) {
-        this.terminologyURI = terminologyURI;
-    }
-
     public Status getStatus() {
         return status;
     }
@@ -50,10 +41,11 @@ public class ConceptDTO {
         this.status = status;
     }
 
-    public Map<String, String> getTerminologyLabel() {
-        return terminologyLabel;
+    public TerminologyDTO getTerminology() {
+        return terminology;
     }
-    public void setTerminologyLabel(Map<String, String> terminologyLabel) {
-        this.terminologyLabel = terminologyLabel;
+
+    public void setTerminology(TerminologyDTO terminology) {
+        this.terminology = terminology;
     }
 }

@@ -117,9 +117,9 @@ class TerminologyMapperTest {
         assertEquals("määritelmä", conceptDTO.getDefinition().get("fi"));
         assertEquals("definition", conceptDTO.getDefinition().get("en"));
         assertEquals(conceptURI, conceptDTO.getConceptURI());
-        assertEquals(conceptURI.replace("concept-1", ""), conceptDTO.getTerminologyURI());
-        assertEquals("Testisanasto", conceptDTO.getTerminologyLabel().get("fi"));
-        assertEquals("Test terminology", conceptDTO.getTerminologyLabel().get("en"));
+        assertEquals(conceptURI.replace("concept-1", ""), conceptDTO.getTerminology().getUri());
+        assertEquals("Testisanasto", conceptDTO.getTerminology().getLabel().get("fi"));
+        assertEquals("Test terminology", conceptDTO.getTerminology().getLabel().get("en"));
     }
 
     private static TerminologyNodeDTO.LocalizedValue getLocalizedValue(String lang, String value) {
