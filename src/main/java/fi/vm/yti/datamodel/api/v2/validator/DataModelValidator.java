@@ -28,6 +28,7 @@ public class DataModelValidator extends BaseValidator implements
         setConstraintViolationAdded(false);
         checkModelType(context, dataModel);
         checkPrefix(context, dataModel);
+        checkStatus(context, dataModel);
         checkLanguages(context, dataModel);
         checkLabels(context, dataModel);
         checkDescription(context, dataModel);
@@ -79,6 +80,13 @@ public class DataModelValidator extends BaseValidator implements
             addConstraintViolation(context, ValidationConstants.MSG_NOT_ALLOWED_UPDATE, "type");
         }else if(!updateModel && modelType == null){
             addConstraintViolation(context, ValidationConstants.MSG_VALUE_MISSING, "type");
+        }
+    }
+
+    private void checkStatus(ConstraintValidatorContext context, DataModelDTO dataModel) {
+        var status = dataModel.getStatus();
+        if(!updateModel && status == null){
+            addConstraintViolation(context, ValidationConstants.MSG_VALUE_MISSING, "status");
         }
     }
 

@@ -57,14 +57,11 @@ class ModelMapperTest {
 
     @Test
     void testMapToJenaModel() {
-        var mockModel = mock(Model.class);
+        var mockModel = ModelFactory.createDefaultModel();
+        mockModel.createResource("http://uri.suomi.fi/datamodel/ns/newint")
+                        .addProperty(RDF.type, DCAP.DCAP)
+                        .addProperty(DCAP.preferredXMLNamespacePrefix, "test");
         when(jenaService.getDataModel(anyString())).thenReturn(mockModel);
-        var mockRes = mock(Resource.class);
-        when(mockModel.getResource(anyString())).thenReturn(mockRes);
-        var mockStm = mock(Statement.class);
-        when(mockRes.getProperty(any())).thenReturn(mockStm);
-        when(mockStm.getObject()).thenReturn(ResourceFactory.createPlainLiteral("test"));
-        when(mockStm.getResource()).thenReturn(RDFS.Resource);
 
         UUID organizationId = UUID.randomUUID();
         YtiUser mockUser = EndpointUtils.mockUser;
@@ -123,14 +120,11 @@ class ModelMapperTest {
         RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
 
         when(jenaService.getDataModel("test")).thenReturn(m);
-        var mockModel = mock(Model.class);
+        var mockModel = ModelFactory.createDefaultModel();
+        mockModel.createResource("http://uri.suomi.fi/datamodel/ns/newint")
+                .addProperty(RDF.type, DCAP.DCAP)
+                .addProperty(DCAP.preferredXMLNamespacePrefix, "test");
         when(jenaService.getDataModel(anyString())).thenReturn(mockModel);
-        var mockRes = mock(Resource.class);
-        when(mockModel.getResource(anyString())).thenReturn(mockRes);
-        var mockStm = mock(Statement.class);
-        when(mockRes.getProperty(any())).thenReturn(mockStm);
-        when(mockStm.getObject()).thenReturn(ResourceFactory.createPlainLiteral("test"));
-        when(mockStm.getResource()).thenReturn(RDFS.Resource);
 
         UUID organizationId = UUID.randomUUID();
         YtiUser mockUser = EndpointUtils.mockUser;
@@ -165,10 +159,10 @@ class ModelMapperTest {
         assertEquals(Status.VALID, Status.valueOf(modelResource.getProperty(OWL.versionInfo).getString()));
 
         assertEquals(1, modelResource.listProperties(OWL.imports).toList().size());
-        assertEquals("http://uri.suomi.fi/datamodel/ns/int", modelResource.listProperties(OWL.imports).next().getString());
+        assertEquals("http://uri.suomi.fi/datamodel/ns/int", modelResource.listProperties(OWL.imports).next().getObject().toString());
 
         assertEquals(1, modelResource.listProperties(DCTerms.requires).toList().size());
-        assertEquals("https://www.example.com/ns/ext", modelResource.listProperties(DCTerms.requires).next().getString());
+        assertEquals("https://www.example.com/ns/ext", modelResource.listProperties(DCTerms.requires).next().getObject().toString());
 
         assertEquals("test@localhost", MapperUtils.propertyToString(modelResource, Iow.contact));
 
@@ -189,10 +183,10 @@ class ModelMapperTest {
         assertEquals(Status.DRAFT, Status.valueOf(modelResource.getProperty(OWL.versionInfo).getString()));
 
         assertEquals(1, modelResource.listProperties(DCTerms.requires).toList().size());
-        assertEquals("http://uri.suomi.fi/datamodel/ns/newint", modelResource.listProperties(DCTerms.requires).next().getString());
+        assertEquals("http://uri.suomi.fi/datamodel/ns/newint", modelResource.listProperties(DCTerms.requires).next().getObject().toString());
 
         assertEquals(1, modelResource.listProperties(OWL.imports).toList().size());
-        assertEquals("http://www.w3.org/2000/01/rdf-schema#", modelResource.listProperties(OWL.imports).next().getString());
+        assertEquals("http://www.w3.org/2000/01/rdf-schema#", modelResource.listProperties(OWL.imports).next().getObject().toString());
         assertEquals(mockUser.getId().toString(), modelResource.getProperty(Iow.modifier).getString());
         assertEquals("2a5c075f-0d0e-4688-90e0-29af1eebbf6d", modelResource.getProperty(Iow.creator).getObject().toString());
 

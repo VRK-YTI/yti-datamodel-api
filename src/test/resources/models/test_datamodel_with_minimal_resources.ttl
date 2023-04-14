@@ -19,8 +19,8 @@
         dcterms:identifier              "d2edb497-ba0b-49c9-aeb7-49749d836434" ;
         dcterms:isPartOf                <http://urn.fi/URN:NBN:fi:au:ptvl:v1105> ;
         dcterms:language                "fi" ;
-        owl:imports                     "http://uri.suomi.fi/datamodel/ns/int" ;
-        dcterms:requires                "https://www.example.com/ns/ext" ;
+        owl:imports                     <http://uri.suomi.fi/datamodel/ns/int> ;
+        dcterms:requires                <https://www.example.com/ns/ext> ;
         dcterms:modified                "2023-01-03T12:44:45.799Z"^^xsd:dateTime ;
         dcap:preferredXMLNamespaceName  "http://uri.suomi.fi/datamodel/ns/test" ;
         dcap:preferredXMLNamespacePrefix
@@ -34,7 +34,7 @@
         dcap:preferredXMLNamespacePrefix    "extres" .
 
 test:TestClass  rdf:type     owl:Class ;
-        rdfs:isDefinedBy     "http://uri.suomi.fi/datamodel/ns/test" ;
+        rdfs:isDefinedBy     <http://uri.suomi.fi/datamodel/ns/test> ;
         rdfs:label           "test label"@fi ;
         dcterms:created      "2023-02-03T11:46:36.404Z"^^xsd:dateTime ;
         dcterms:identifier   "TestClass"^^xsd:NCName ;
@@ -42,7 +42,7 @@ test:TestClass  rdf:type     owl:Class ;
         owl:versionInfo      "VALID" .
 
 test:TestAttribute  rdf:type     owl:DatatypeProperty ;
-        rdfs:isDefinedBy     "http://uri.suomi.fi/datamodel/ns/test" ;
+        rdfs:isDefinedBy     <http://uri.suomi.fi/datamodel/ns/test> ;
         rdfs:label           "test attribute"@fi ;
         dcterms:created      "2023-02-03T11:46:36.404Z"^^xsd:dateTime ;
         dcterms:identifier   "TestAttribute"^^xsd:NCName ;
@@ -50,7 +50,7 @@ test:TestAttribute  rdf:type     owl:DatatypeProperty ;
         owl:versionInfo      "VALID" .
 
 test:TestAssociation  rdf:type     owl:ObjectProperty ;
-        rdfs:isDefinedBy     "http://uri.suomi.fi/datamodel/ns/test" ;
+        rdfs:isDefinedBy     <http://uri.suomi.fi/datamodel/ns/test> ;
         rdfs:label           "test association"@fi ;
         dcterms:created      "2023-02-03T11:46:36.404Z"^^xsd:dateTime ;
         dcterms:identifier   "TestAssociation"^^xsd:NCName ;
