@@ -80,7 +80,7 @@ public class ModelMapper {
         addInternalNamespaceToDatamodel(modelDTO, modelResource, model);
         addExternalNamespaceToDatamodel(modelDTO, model, modelResource);
 
-        modelDTO.getTerminologies().forEach(terminology -> modelResource.addProperty(DCTerms.references, terminology));
+        modelDTO.getTerminologies().forEach(terminology -> modelResource.addProperty(DCTerms.references, ResourceFactory.createResource(terminology)));
 
         model.setNsPrefix(modelDTO.getPrefix(), modelUri + "#");
 
@@ -125,23 +125,22 @@ public class ModelMapper {
             addOrgsToModel(dataModelDTO, modelResource);
         }
 
-        //TODO remove namespace and remove linked resource to namepsace
         if(dataModelDTO.getInternalNamespaces() != null){
-            removeNamespacesFromModel(modelResource.listProperties(DCTerms.requires), true);
-            removeNamespacesFromModel(modelResource.listProperties(OWL.imports), true);
+            removeNamespacesFromModel(model, modelResource.listProperties(DCTerms.requires), true);
+            removeNamespacesFromModel(model, modelResource.listProperties(OWL.imports), true);
             addInternalNamespaceToDatamodel(dataModelDTO, modelResource, model);
         }
 
         if(dataModelDTO.getExternalNamespaces() != null){
-            removeNamespacesFromModel(modelResource.listProperties(DCTerms.requires), false);
-            removeNamespacesFromModel(modelResource.listProperties(OWL.imports), false);
+            removeNamespacesFromModel(model, modelResource.listProperties(DCTerms.requires), false);
+            removeNamespacesFromModel(model, modelResource.listProperties(OWL.imports), false);
             addExternalNamespaceToDatamodel(dataModelDTO, model, modelResource);
         }
 
         if (dataModelDTO.getTerminologies() != null) {
             modelResource.removeAll(DCTerms.references);
             dataModelDTO.getTerminologies().forEach(terminology ->
-                    modelResource.addProperty(DCTerms.references, terminology)
+                    modelResource.addProperty(DCTerms.references, ResourceFactory.createResource(terminology))
             );
         }
 
@@ -157,17 +156,19 @@ public class ModelMapper {
      * @param statements Iterator of property values
      * @param internal if true remove internal namespaces, if false remove external namespaces
      */
-    private void removeNamespacesFromModel(StmtIterator statements, boolean internal){
+    private void removeNamespacesFromModel(Model model, StmtIterator statements, boolean internal){
         while(statements.hasNext()){
             var next = statements.next();
             var namespace = next.getObject().toString();
             if(internal) {
                 if(namespace.startsWith(ModelConstants.SUOMI_FI_NAMESPACE)){
                     statements.remove();
+                    model.removeNsPrefix(model.getNsURIPrefix(namespace));
                 }
             }else{
                 if(!namespace.startsWith(ModelConstants.SUOMI_FI_NAMESPACE)){
                     statements.remove();
+                    model.removeNsPrefix(model.getNsURIPrefix(namespace));
                 }
             }
         }
@@ -300,10 +301,10 @@ public class ModelMapper {
     private void addOrgsToModel(DataModelDTO modelDTO, Resource modelResource) {
         var organizationsModel = jenaService.getOrganizations();
         modelDTO.getOrganizations().forEach(org -> {
-            var queryRes = ResourceFactory.createResource(ModelConstants.URN_UUID + org.toString());
-            var resource = organizationsModel.containsResource(queryRes);
-            if(resource){
-                modelResource.addProperty(DCTerms.contributor, organizationsModel.getResource(ModelConstants.URN_UUID + org));
+            var orgUri = ModelConstants.URN_UUID + org;
+            var queryRes = ResourceFactory.createResource(orgUri);
+            if(organizationsModel.containsResource(queryRes)){
+                modelResource.addProperty(DCTerms.contributor, organizationsModel.getResource(orgUri));
             }
         });
     }
@@ -345,9 +346,9 @@ public class ModelMapper {
                 var prefix = MapperUtils.propertyToString(nsRes, DCAP.preferredXMLNamespacePrefix);
                 var nsType = nsRes.getProperty(RDF.type).getResource();
                 if(nsType.equals(OWL.Ontology)){
-                    resource.addProperty(OWL.imports, namespace);
+                    resource.addProperty(OWL.imports, nsRes);
                 }else{
-                    resource.addProperty(DCTerms.requires, namespace);
+                    resource.addProperty(DCTerms.requires, nsRes);
                 }
                 model.setNsPrefix(prefix, namespace);
             }
@@ -374,9 +375,9 @@ public class ModelMapper {
                     nsRes.addProperty(DCAP.preferredXMLNamespacePrefix, namespace.getPrefix());
                     nsRes.addProperty(DCTerms.type, resType);
                     if(resType.equals(OWL.Ontology)){
-                        resource.addProperty(OWL.imports, nsUri);
+                        resource.addProperty(OWL.imports, extRes);
                     }else{
-                        resource.addProperty(DCTerms.requires, nsUri);
+                        resource.addProperty(DCTerms.requires, extRes);
                     }
                     model.setNsPrefix(namespace.getPrefix(), nsUri);
                 }catch (HttpException ex){

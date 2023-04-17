@@ -63,7 +63,7 @@ public class ResourceMapper {
         MapperUtils.addOptionalUriProperty(resourceResource, RDFS.domain, dto.getDomain());
         MapperUtils.addOptionalUriProperty(resourceResource, RDFS.range, dto.getRange());
 
-        modelResource.addProperty(DCTerms.hasPart, ResourceFactory.createResource(resourceUri));
+        modelResource.addProperty(DCTerms.hasPart, resourceResource);
         return resourceUri;
     }
 

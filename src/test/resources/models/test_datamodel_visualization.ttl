@@ -10,26 +10,26 @@
 
 <http://uri.suomi.fi/datamodel/ns/test>
         a                     dcap:DCAP ;
-        dcterms:requires      "https://www.example.com/ns/external" ;
-        owl:imports           "http://uri.suomi.fi/datamodel/ns/testmodel" .
+        dcterms:requires      <https://www.example.com/ns/external> ;
+        owl:imports           <http://uri.suomi.fi/datamodel/ns/testmodel> .
 
 test:TestClass1  rdf:type     owl:Class ;
-        rdfs:isDefinedBy     "http://uri.suomi.fi/datamodel/ns/test" ;
+        rdfs:isDefinedBy     <http://uri.suomi.fi/datamodel/ns/test> ;
         dcterms:identifier   "testclass1"^^xsd:NCName ;
         rdfs:label           "Label 1"@fi ;
-        rdfs:subClassOf      "http://uri.suomi.fi/datamodel/ns/testmodel#TestClass" .
+        rdfs:subClassOf      <http://uri.suomi.fi/datamodel/ns/testmodel#TestClass> .
 
 test:TestClass2  rdf:type     owl:Class ;
-        rdfs:isDefinedBy     "http://uri.suomi.fi/datamodel/ns/test" ;
+        rdfs:isDefinedBy     <http://uri.suomi.fi/datamodel/ns/test> ;
         dcterms:identifier   "testclass2"^^xsd:NCName ;
         rdfs:label           "Label 2"@fi ;
-        rdfs:subClassOf      "http://uri.suomi.fi/datamodel/ns/test#testclass1" .
+        rdfs:subClassOf      <http://uri.suomi.fi/datamodel/ns/test#testclass1> .
 
 test:TestClass3  rdf:type     owl:Class ;
-        rdfs:isDefinedBy     "http://uri.suomi.fi/datamodel/ns/test" ;
+        rdfs:isDefinedBy     <http://uri.suomi.fi/datamodel/ns/test> ;
         dcterms:identifier   "testclass3"^^xsd:NCName ;
         rdfs:label           "Label 3"@fi ;
-        rdfs:subClassOf      "https://www.example.com/ns/external#ExternalClass" .
+        rdfs:subClassOf      <https://www.example.com/ns/external#ExternalClass> .
 
 <https://www.example.com/ns/external>
         dcterms:type                        rdfs:Resource ;

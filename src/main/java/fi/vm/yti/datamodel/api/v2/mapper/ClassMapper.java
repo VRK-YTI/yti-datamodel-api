@@ -39,10 +39,11 @@ public class ClassMapper {
                 .addProperty(OWL.versionInfo, dto.getStatus().name())
                 .addProperty(DCTerms.modified, ResourceFactory.createTypedLiteral(creationDate))
                 .addProperty(DCTerms.created, ResourceFactory.createTypedLiteral(creationDate))
-                .addProperty(RDFS.isDefinedBy, modelURI)
                 .addProperty(Iow.creator, user.getId().toString())
                 .addProperty(Iow.modifier, user.getId().toString());
 
+
+        classResource.addProperty(RDFS.isDefinedBy, ResourceFactory.createResource(modelURI));
         classResource.addProperty(DCTerms.identifier, ResourceFactory.createTypedLiteral(dto.getIdentifier(), XSDDatatype.XSDNCName));
         //Labels
         var modelResource = model.getResource(modelURI);
@@ -51,7 +52,7 @@ public class ClassMapper {
         //Note
         MapperUtils.addLocalizedProperty(langs, dto.getNote(), classResource, SKOS.note, model);
         MapperUtils.addOptionalStringProperty(classResource, SKOS.editorialNote, dto.getEditorialNote());
-        MapperUtils.addOptionalStringProperty(classResource, DCTerms.subject, dto.getSubject());
+        MapperUtils.addOptionalUriProperty(classResource, DCTerms.subject, dto.getSubject());
 
         var owlImports = MapperUtils.arrayPropertyToSet(modelResource, OWL.imports);
         var dcTermsRequires = MapperUtils.arrayPropertyToSet(modelResource, DCTerms.requires);
@@ -66,7 +67,7 @@ public class ClassMapper {
             dto.getSubClassOf().forEach(sub -> MapperUtils.addResourceRelationship(owlImports, dcTermsRequires, classResource, RDFS.subClassOf, sub));
         }
 
-        modelResource.addProperty(DCTerms.hasPart, classUri);
+        modelResource.addProperty(DCTerms.hasPart, classResource);
 
         return classUri;
     }
@@ -80,7 +81,7 @@ public class ClassMapper {
         MapperUtils.updateLocalizedProperty(languages, classDTO.getLabel(), classResource, RDFS.label, model);
         MapperUtils.updateLocalizedProperty(languages, classDTO.getNote(), classResource, SKOS.note, model);
         MapperUtils.updateStringProperty(classResource, SKOS.editorialNote, classDTO.getEditorialNote());
-        MapperUtils.updateStringProperty(classResource, DCTerms.subject, classDTO.getSubject());
+        MapperUtils.updateUriProperty(classResource, DCTerms.subject, classDTO.getSubject());
 
         var status = classDTO.getStatus();
         if (status != null) {
