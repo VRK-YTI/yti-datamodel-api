@@ -85,7 +85,7 @@ public class TerminologyService {
     }
 
     public void resolveConcept(String conceptURI) {
-        if (conceptURI == null) {
+        if (conceptURI == null || conceptURI.isBlank()) {
             return;
         }
 
