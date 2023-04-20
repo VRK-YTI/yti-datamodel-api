@@ -1,23 +1,15 @@
 package fi.vm.yti.datamodel.api.mapper;
 
 import fi.vm.yti.datamodel.api.v2.mapper.ServiceCategoryMapper;
-import org.apache.jena.rdf.model.ModelFactory;
-import org.apache.jena.riot.Lang;
-import org.apache.jena.riot.RDFDataMgr;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 class ServiceCategoryMapperTest {
 
     @Test
     void testMapServiceCategoriesToDTO() {
-        var model = ModelFactory.createDefaultModel();
-        var stream = getClass().getResourceAsStream("/service-categories.ttl");
-        assertNotNull(stream);
-        RDFDataMgr.read(model, stream, Lang.TURTLE);
-
+        var model = MapperTestUtils.getModelFromFile("/service-categories.ttl");
         var serviceCategories = ServiceCategoryMapper.mapToListServiceCategoryDTO(model);
 
         assertEquals(3, serviceCategories.size());

@@ -4,9 +4,6 @@ import fi.vm.yti.datamodel.api.v2.dto.Status;
 import fi.vm.yti.datamodel.api.v2.dto.TerminologyNodeDTO;
 import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.mapper.TerminologyMapper;
-import org.apache.jena.rdf.model.ModelFactory;
-import org.apache.jena.riot.Lang;
-import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
 import org.apache.jena.vocabulary.SKOS;
@@ -42,11 +39,7 @@ class TerminologyMapperTest {
 
     @Test
     void mapTerminologyDTO() {
-        var model = ModelFactory.createDefaultModel();
-        var stream = getClass().getResourceAsStream("/terminology.ttl");
-        assertNotNull(stream);
-
-        RDFDataMgr.read(model, stream, Lang.TURTLE);
+        var model = MapperTestUtils.getModelFromFile("/terminology.ttl");
 
         var terminologyDTO = TerminologyMapper.mapToTerminologyDTO(
                 "http://uri.suomi.fi/terminology/test/terminological-vocabulary-0", model);
@@ -56,11 +49,7 @@ class TerminologyMapperTest {
 
     @Test
     void mapConceptToTerminologyModel() {
-        var model = ModelFactory.createDefaultModel();
-        var stream = getClass().getResourceAsStream("/terminology.ttl");
-        assertNotNull(stream);
-
-        RDFDataMgr.read(model, stream, Lang.TURTLE);
+        var model = MapperTestUtils.getModelFromFile("/terminology.ttl");
 
         String terminologyURI = "http://uri.suomi.fi/terminology/test/";
         String conceptURI = "http://uri.suomi.fi/terminology/test/concept-0";
@@ -105,11 +94,8 @@ class TerminologyMapperTest {
     @Test
     void mapToConceptDTO() {
         var conceptURI = "http://uri.suomi.fi/terminology/dd0e10ed/concept-1";
-        var model = ModelFactory.createDefaultModel();
-        var stream = getClass().getResourceAsStream("/terminology_with_concept.ttl");
-        assertNotNull(stream);
+        var model = MapperTestUtils.getModelFromFile("/terminology_with_concept.ttl");
 
-        RDFDataMgr.read(model, stream, Lang.TURTLE);
         var conceptDTO = TerminologyMapper.mapToConceptDTO(model, conceptURI);
 
         assertEquals("käsite", conceptDTO.getLabel().get("fi"));

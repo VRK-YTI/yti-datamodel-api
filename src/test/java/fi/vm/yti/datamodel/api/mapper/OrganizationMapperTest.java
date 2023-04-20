@@ -4,9 +4,6 @@ import fi.vm.yti.datamodel.api.v2.dto.GroupManagementOrganizationDTO;
 import fi.vm.yti.datamodel.api.v2.dto.Iow;
 import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.mapper.OrganizationMapper;
-import org.apache.jena.rdf.model.ModelFactory;
-import org.apache.jena.riot.Lang;
-import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.sparql.vocabulary.FOAF;
 import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.RDF;
@@ -24,11 +21,7 @@ class OrganizationMapperTest {
 
     @Test
     void testMapOrganizationsToDTO() {
-        var model = ModelFactory.createDefaultModel();
-        var stream = getClass().getResourceAsStream("/organizations.ttl");
-        assertNotNull(stream);
-        RDFDataMgr.read(model, stream, Lang.TURTLE);
-
+        var model = MapperTestUtils.getModelFromFile("/organizations.ttl");
         var organizations = OrganizationMapper.mapToListOrganizationDTO(model);
 
         assertEquals(3, organizations.size());

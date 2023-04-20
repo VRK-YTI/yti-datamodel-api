@@ -1,5 +1,6 @@
 package fi.vm.yti.datamodel.api.v2.endpoint;
 
+import fi.vm.yti.datamodel.api.mapper.MapperTestUtils;
 import fi.vm.yti.datamodel.api.security.AuthorizationManager;
 import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.mapper.ResourceMapper;
@@ -15,10 +16,7 @@ import fi.vm.yti.security.AuthenticatedUserProvider;
 import fi.vm.yti.security.YtiUser;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Resource;
-import org.apache.jena.riot.RDFDataMgr;
-import org.apache.jena.riot.RDFLanguages;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -36,7 +34,6 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -277,10 +274,7 @@ class ClassControllerTest {
 
     @Test
     void shouldGetClass() throws Exception {
-        Model m = ModelFactory.createDefaultModel();
-        var stream = getClass().getResourceAsStream("/models/test_datamodel_library_with_resources.ttl");
-        assertNotNull(stream);
-        RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
+        var m = MapperTestUtils.getModelFromFile("/models/test_datamodel_library_with_resources.ttl");
 
         when(jenaService.doesResourceExistInGraph(anyString(), anyString())).thenReturn(true);
         when(jenaService.getDataModel(anyString())).thenReturn(m);

@@ -15,7 +15,7 @@ public class MapperTestUtils {
     }
 
     public static Model getModelFromFile(String filepath) {
-        Model m = ModelFactory.createDefaultModel();
+        var m = ModelFactory.createDefaultModel();
         var stream = MapperTestUtils.class.getResourceAsStream(filepath);
         assertNotNull(stream);
         RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
