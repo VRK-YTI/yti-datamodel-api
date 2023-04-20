@@ -15,6 +15,7 @@ public class ClassDTO {
     private String subject;
     private String identifier;
     private Map<String, String> note;
+    private String targetClass; //Only allowed in Application profile classes
 
     public Map<String, String> getLabel() {
         return label;
@@ -78,6 +79,14 @@ public class ClassDTO {
 
     public void setNote(Map<String, String> note) {
         this.note = note;
+    }
+
+    public String getTargetClass() {
+        return targetClass;
+    }
+
+    public void setTargetClass(String targetClass) {
+        this.targetClass = targetClass;
     }
 
     @Override

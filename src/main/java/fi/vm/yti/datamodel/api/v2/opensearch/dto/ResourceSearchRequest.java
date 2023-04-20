@@ -1,5 +1,6 @@
 package fi.vm.yti.datamodel.api.v2.opensearch.dto;
 
+import fi.vm.yti.datamodel.api.v2.dto.ModelType;
 import fi.vm.yti.datamodel.api.v2.dto.ResourceType;
 
 import java.util.Set;
@@ -10,6 +11,7 @@ public class ResourceSearchRequest extends BaseSearchRequest{
     private boolean fromAddedNamespaces;
     private Set<String> groups;
     private Set<ResourceType> resourceTypes;
+    private ModelType limitToModelType;
 
     public String getLimitToDataModel() {
         return limitToDataModel;
@@ -41,5 +43,13 @@ public class ResourceSearchRequest extends BaseSearchRequest{
 
     public void setResourceTypes(Set<ResourceType> resourceTypes) {
         this.resourceTypes = resourceTypes;
+    }
+
+    public ModelType getLimitToModelType() {
+        return limitToModelType;
+    }
+
+    public void setLimitToModelType(ModelType limitToModelType) {
+        this.limitToModelType = limitToModelType;
     }
 }

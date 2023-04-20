@@ -278,7 +278,7 @@ class ClassControllerTest {
     @Test
     void shouldGetClass() throws Exception {
         Model m = ModelFactory.createDefaultModel();
-        var stream = getClass().getResourceAsStream("/models/test_datamodel_with_resources.ttl");
+        var stream = getClass().getResourceAsStream("/models/test_datamodel_library_with_resources.ttl");
         assertNotNull(stream);
         RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
 

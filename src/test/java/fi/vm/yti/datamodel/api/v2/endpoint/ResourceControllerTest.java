@@ -37,7 +37,6 @@ import java.util.stream.Stream;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -261,7 +260,7 @@ class ResourceControllerTest {
     void shouldValidateAndUpdate() throws Exception {
         var resourceDTO = createResourceDTO(true);
         Model m = ModelFactory.createDefaultModel();
-        var stream = getClass().getResourceAsStream("/models/test_datamodel_with_resources.ttl");
+        var stream = getClass().getResourceAsStream("/models/test_datamodel_library_with_resources.ttl");
         when(jenaService.checkIfResourceIsOneOfTypes(eq("http://uri.suomi.fi/datamodel/ns/int#FakeClass"), anyList(), anyBoolean())).thenReturn(true);
         assertNotNull(stream);
         RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);

@@ -15,11 +15,7 @@ import fi.vm.yti.security.YtiUser;
 import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.OWL;
 import org.opensearch.client.opensearch.OpenSearchClient;
-import org.opensearch.client.opensearch.core.SearchRequest;
-import org.opensearch.client.opensearch.core.SearchResponse;
 import org.opensearch.client.opensearch.core.search.Hit;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -29,7 +25,6 @@ import java.util.stream.Collectors;
 @Service
 public class SearchIndexService {
 
-    private static final Logger LOG = LoggerFactory.getLogger(SearchIndexService.class);
     private final CountQueryFactory countQueryFactory;
     private final OpenSearchClient client;
     private final GroupManagementService groupManagementService;
@@ -49,27 +44,23 @@ public class SearchIndexService {
      * @return response containing counts for data models
      */
     public CountSearchResponse getCounts() {
-        SearchRequest query = countQueryFactory.createModelQuery();
+        var query = countQueryFactory.createModelQuery();
         try {
-            SearchResponse<IndexModel> response = client.search(query, IndexModel.class);
+            var response = client.search(query, IndexModel.class);
             return countQueryFactory.parseResponse(response);
         } catch (IOException e) {
             throw new OpenSearchException(e.getMessage(), OpenSearchIndexer.OPEN_SEARCH_INDEX_MODEL);
         }
     }
 
-    public SearchResponseDTO<IndexModel> searchModels(ModelSearchRequest request,
-                                                      YtiUser user) {
-        if (!user.isSuperuser()) {
-            request.setIncludeIncompleteFrom(getOrganizationsForUser(user));
-        }
-        return searchModels(request);
-    }
-
-    private SearchResponseDTO<IndexModel> searchModels(ModelSearchRequest request) {
+    public SearchResponseDTO<IndexModel> searchModels(ModelSearchRequest request, YtiUser user) {
         try {
-            SearchRequest build = ModelQueryFactory.createModelQuery(request);
-            SearchResponse<IndexModel> response = client.search(build, IndexModel.class);
+            if (!user.isSuperuser()) {
+                request.setIncludeIncompleteFrom(getOrganizationsForUser(user));
+            }
+
+            var build = ModelQueryFactory.createModelQuery(request);
+            var response = client.search(build, IndexModel.class);
 
             var modelSearchResponse = new SearchResponseDTO<IndexModel>();
             modelSearchResponse.setResponseObjects(response.hits().hits().stream()
@@ -82,7 +73,6 @@ public class SearchIndexService {
 
             return modelSearchResponse;
         } catch (IOException e) {
-            LOG.error(e.getMessage(), e);
             throw new OpenSearchException(e.getMessage(), OpenSearchIndexer.OPEN_SEARCH_INDEX_MODEL);
         }
     }
@@ -103,8 +93,28 @@ public class SearchIndexService {
         return searchInternalResources(request, allowedDatamodels);
     }
 
-       public SearchResponseDTO<IndexResource> searchInternalResources(ResourceSearchRequest request, Set<String> allowedDatamodels) throws IOException {
-        Set<String> namespaces = new HashSet<>();
+    private List<String> getModelSpecificRestrictions(ResourceSearchRequest request){
+        var modelRequest = new ModelSearchRequest();
+        if(request.getLimitToModelType() != null){
+            modelRequest.setType(Set.of(request.getLimitToModelType()));
+        }
+        var groups = request.getGroups();
+        if(groups != null && !groups.isEmpty()){
+            modelRequest.setGroups(groups);
+        }
+        var build = ModelQueryFactory.createModelQuery(modelRequest);
+        try {
+            var response = client.search(build, IndexModel.class);
+            return response.hits().hits().stream()
+                    .filter(hit -> hit.source() != null)
+                    .map(hit -> hit.source().getId()).toList();
+        } catch (IOException e) {
+            throw new OpenSearchException(e.getMessage(), OpenSearchIndexer.OPEN_SEARCH_INDEX_MODEL);
+        }
+    }
+
+   public SearchResponseDTO<IndexResource> searchInternalResources(ResourceSearchRequest request, Set<String> allowedDatamodels) throws IOException {
+        var namespaces = new ArrayList<String>();
         if(request.getLimitToDataModel() != null && !request.getLimitToDataModel().isBlank()){
             namespaces.add(request.getLimitToDataModel());
         }
@@ -116,19 +126,9 @@ public class SearchIndexService {
             getNamespacesFromModel(request.getLimitToDataModel(), namespaces);
         }
 
-        Set<String> groupRestrictedNamespaces = null;
-        if(request.getGroups() != null){
-            var modelSearchRequest = new ModelSearchRequest();
-            modelSearchRequest.setGroups(request.getGroups());
-            SearchRequest fromModel = ModelQueryFactory.createModelQuery(modelSearchRequest);
-            SearchResponse<IndexModel> modelResponse = client.search(fromModel, IndexModel.class);
-            groupRestrictedNamespaces = modelResponse.hits().hits().stream()
-                    .filter(hit -> hit.source() != null)
-                    .map(hit -> hit.source().getId()).collect(Collectors.toSet());
-        }
-
-        SearchRequest build = ResourceQueryFactory.createInternalResourceQuery(request, namespaces, groupRestrictedNamespaces, allowedDatamodels);
-        SearchResponse<IndexResource> response = client.search(build, IndexResource.class);
+        List<String> restrictedDataModels = getModelSpecificRestrictions(request);
+        var build = ResourceQueryFactory.createInternalResourceQuery(request, namespaces, restrictedDataModels, allowedDatamodels);
+        var response = client.search(build, IndexResource.class);
 
         var result = new SearchResponseDTO<IndexResource>();
         result.setResponseObjects(response.hits().hits().stream()
@@ -142,12 +142,12 @@ public class SearchIndexService {
         return result;
     }
 
-    private void getNamespacesFromModel(String modelUri, Set<String> namespaces){
+    private void getNamespacesFromModel(String modelUri, List<String> namespaces){
         var model = jenaService.getDataModel(modelUri);
         if(model != null){
             var resource = model.getResource(modelUri);
-            namespaces.addAll(MapperUtils.arrayPropertyToSet(resource, OWL.imports));
-            namespaces.addAll(MapperUtils.arrayPropertyToSet(resource, DCTerms.requires));
+            namespaces.addAll(MapperUtils.arrayPropertyToList(resource, OWL.imports));
+            namespaces.addAll(MapperUtils.arrayPropertyToList(resource, DCTerms.requires));
         }
     }
 

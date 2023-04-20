@@ -114,7 +114,7 @@ class ModelMapperTest {
     void testMapToUpdateJenaModel() {
         Model m = ModelFactory.createDefaultModel();
         //TODO: should we have 2 separate tests for ModelType.LIBRARY and ModelType.PROFILE?
-        var stream = getClass().getResourceAsStream("/test_datamodel.ttl");
+        var stream = getClass().getResourceAsStream("/test_datamodel_library.ttl");
         assertNotNull(stream);
         RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
 
@@ -196,14 +196,14 @@ class ModelMapperTest {
     void testMapToDatamodelDTO() {
         Model m = ModelFactory.createDefaultModel();
 
-        var stream = getClass().getResourceAsStream("/test_datamodel.ttl");
+        var stream = getClass().getResourceAsStream("/test_datamodel_library.ttl");
         assertNotNull(stream);
         RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
 
         var result = mapper.mapToDataModelDTO("test", m, null);
 
         assertEquals("test", result.getPrefix());
-        assertEquals(ModelType.PROFILE, result.getType());
+        assertEquals(ModelType.LIBRARY, result.getType());
         assertEquals(Status.VALID, result.getStatus());
 
         assertEquals(1, result.getLabel().size());
@@ -263,7 +263,7 @@ class ModelMapperTest {
     void testMapToIndexModel() {
         Model m = ModelFactory.createDefaultModel();
 
-        var stream = getClass().getResourceAsStream("/test_datamodel.ttl");
+        var stream = getClass().getResourceAsStream("/test_datamodel_library.ttl");
         assertNotNull(stream);
         RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
 
@@ -271,7 +271,7 @@ class ModelMapperTest {
 
         assertEquals("test", result.getPrefix());
         assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "test", result.getId());
-        assertEquals(ModelType.PROFILE, result.getType());
+        assertEquals(ModelType.LIBRARY, result.getType());
         assertEquals(Status.VALID, result.getStatus());
         assertEquals("2023-01-03T12:44:45.799Z", result.getModified());
         assertEquals("2023-01-03T12:44:45.799Z", result.getCreated());

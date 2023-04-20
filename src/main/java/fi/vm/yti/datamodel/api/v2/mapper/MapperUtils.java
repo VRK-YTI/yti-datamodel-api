@@ -1,5 +1,6 @@
 package fi.vm.yti.datamodel.api.v2.mapper;
 
+import fi.vm.yti.datamodel.api.v2.dto.ModelType;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
 import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.rdf.model.Model;
@@ -7,6 +8,8 @@ import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.shared.JenaException;
+import org.apache.jena.vocabulary.OWL;
+import org.apache.jena.vocabulary.RDF;
 
 import java.util.*;
 
@@ -32,6 +35,15 @@ public class MapperUtils {
 
     public static String getModelIdFromNamespace(String namespace){
         return namespace.substring(namespace.lastIndexOf("/") + 1);
+    }
+
+    public static ModelType getModelTypeFromResource(Resource resource){
+        var modelType = resource.getProperty(RDF.type).getResource();
+        if(modelType.equals(OWL.Ontology)){
+            return ModelType.LIBRARY;
+        }else{
+            return ModelType.PROFILE;
+        }
     }
 
     /**
