@@ -41,7 +41,6 @@ import java.util.stream.Stream;
 import static org.hamcrest.Matchers.containsString;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @TestPropertySource(properties = {
@@ -318,6 +317,10 @@ class DatamodelTest {
         args.add(dataModelDTO);
 
         dataModelDTO = createDatamodelDTO(false);
+        dataModelDTO.setStatus(null);
+        args.add(dataModelDTO);
+
+        dataModelDTO = createDatamodelDTO(false);
         dataModelDTO.setPrefix("123");
         args.add(dataModelDTO);
 
@@ -375,6 +378,30 @@ class DatamodelTest {
 
         dataModelDTO = createDatamodelDTO(false);
         var invalidExtRes = new ExternalNamespaceDTO();
+        invalidExtRes.setName(null); // no null name
+        invalidExtRes.setPrefix("test");
+        invalidExtRes.setNamespace("http:://example.com/ns/test");
+        dataModelDTO.setExternalNamespaces(Set.of(invalidExtRes));
+        args.add(dataModelDTO);
+
+        dataModelDTO = createDatamodelDTO(false);
+        invalidExtRes = new ExternalNamespaceDTO();
+        invalidExtRes.setName("test name");
+        invalidExtRes.setPrefix(null); //no null prefix
+        invalidExtRes.setNamespace("http:://example.com/ns/test");
+        dataModelDTO.setExternalNamespaces(Set.of(invalidExtRes));
+        args.add(dataModelDTO);
+
+        dataModelDTO = createDatamodelDTO(false);
+        invalidExtRes = new ExternalNamespaceDTO();
+        invalidExtRes.setName("test name");
+        invalidExtRes.setPrefix("test");
+        invalidExtRes.setNamespace(null); //no null namespace
+        dataModelDTO.setExternalNamespaces(Set.of(invalidExtRes));
+        args.add(dataModelDTO);
+
+        dataModelDTO = createDatamodelDTO(false);
+        invalidExtRes = new ExternalNamespaceDTO();
         invalidExtRes.setName("this is invalid");
         //Reserved namespace, see ValidationConstants.RESERVED_NAMESPACES
         invalidExtRes.setPrefix("dcterms");

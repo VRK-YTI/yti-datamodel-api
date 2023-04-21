@@ -16,6 +16,7 @@ import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.vocabulary.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.topbraid.shacl.vocabulary.SH;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -31,27 +32,35 @@ public class ClassMapper {
 
     public static String createClassAndMapToModel(String modelURI, Model model, ClassDTO dto, YtiUser user){
         logger.info("Adding class to {}", modelURI);
-
+        var modelResource = model.getResource(modelURI);
         var creationDate = new XSDDateTime(Calendar.getInstance());
         var classUri = modelURI + "#" + dto.getIdentifier();
         var classResource = model.createResource(classUri)
-                .addProperty(RDF.type, OWL.Class)
                 .addProperty(OWL.versionInfo, dto.getStatus().name())
                 .addProperty(DCTerms.modified, ResourceFactory.createTypedLiteral(creationDate))
                 .addProperty(DCTerms.created, ResourceFactory.createTypedLiteral(creationDate))
                 .addProperty(Iow.creator, user.getId().toString())
                 .addProperty(Iow.modifier, user.getId().toString());
 
+        var langs = MapperUtils.arrayPropertyToSet(modelResource, DCTerms.language);
 
-        classResource.addProperty(RDFS.isDefinedBy, ResourceFactory.createResource(modelURI));
+        var modelType = MapperUtils.getModelTypeFromResource(modelResource);
+        if(modelType.equals(ModelType.LIBRARY)){
+            classResource.addProperty(RDF.type, OWL.Class);
+            MapperUtils.addLocalizedProperty(langs, dto.getNote(), classResource, SKOS.note, model);
+            MapperUtils.addOptionalStringProperty(classResource, SKOS.editorialNote, dto.getEditorialNote());
+        }else{
+            classResource.addProperty(RDF.type, SH.NodeShape);
+            classResource.addProperty(SH.targetClass, ResourceFactory.createResource(dto.getTargetClass()));
+            MapperUtils.addLocalizedProperty(langs, dto.getNote(), classResource, SH.description, model);
+            MapperUtils.addOptionalStringProperty(classResource, DCTerms.description, dto.getEditorialNote());
+        }
+
+        classResource.addProperty(RDFS.isDefinedBy, modelResource);
         classResource.addProperty(DCTerms.identifier, ResourceFactory.createTypedLiteral(dto.getIdentifier(), XSDDatatype.XSDNCName));
         //Labels
-        var modelResource = model.getResource(modelURI);
-        var langs = MapperUtils.arrayPropertyToSet(modelResource, DCTerms.language);
         MapperUtils.addLocalizedProperty(langs, dto.getLabel(), classResource, RDFS.label, model);
         //Note
-        MapperUtils.addLocalizedProperty(langs, dto.getNote(), classResource, SKOS.note, model);
-        MapperUtils.addOptionalStringProperty(classResource, SKOS.editorialNote, dto.getEditorialNote());
         MapperUtils.addOptionalUriProperty(classResource, DCTerms.subject, dto.getSubject());
 
         var owlImports = MapperUtils.arrayPropertyToSet(modelResource, OWL.imports);
@@ -78,9 +87,16 @@ public class ClassMapper {
         var modelResource = model.getResource(graph);
         var languages = MapperUtils.arrayPropertyToSet(modelResource, DCTerms.language);
 
+        var modelType = MapperUtils.getModelTypeFromResource(modelResource);
+        if(modelType.equals(ModelType.LIBRARY)){
+            MapperUtils.updateLocalizedProperty(languages, classDTO.getNote(), classResource, SKOS.note, model);
+            MapperUtils.updateStringProperty(classResource, SKOS.editorialNote, classDTO.getEditorialNote());
+        }else{
+            MapperUtils.updateUriProperty(classResource, SH.targetClass, classDTO.getTargetClass());
+            MapperUtils.updateLocalizedProperty(languages, classDTO.getNote(), classResource, SH.description, model);
+            MapperUtils.updateStringProperty(classResource, DCTerms.description, classDTO.getEditorialNote());
+        }
         MapperUtils.updateLocalizedProperty(languages, classDTO.getLabel(), classResource, RDFS.label, model);
-        MapperUtils.updateLocalizedProperty(languages, classDTO.getNote(), classResource, SKOS.note, model);
-        MapperUtils.updateStringProperty(classResource, SKOS.editorialNote, classDTO.getEditorialNote());
         MapperUtils.updateUriProperty(classResource, DCTerms.subject, classDTO.getSubject());
 
         var status = classDTO.getStatus();
@@ -142,16 +158,24 @@ public class ClassMapper {
             dto.setSubject(conceptDTO);
         }
         dto.setIdentifier(classResource.getLocalName());
-        dto.setNote(MapperUtils.localizedPropertyToMap(classResource, SKOS.note));
         if (hasRightToModel) {
             dto.setEditorialNote(MapperUtils.propertyToString(classResource, SKOS.editorialNote));
         }
+        dto.setTargetClass(MapperUtils.propertyToString(classResource, SH.targetClass));
 
         var created = classResource.getProperty(DCTerms.created).getLiteral().getString();
         var modified = classResource.getProperty(DCTerms.modified).getLiteral().getString();
         dto.setCreated(created);
         dto.setModified(modified);
         var modelResource = model.getResource(modelUri);
+        var modelType = MapperUtils.getModelTypeFromResource(modelResource);
+        if(modelType.equals(ModelType.LIBRARY)){
+            dto.setNote(MapperUtils.localizedPropertyToMap(classResource, SKOS.note));
+            MapperUtils.addOptionalStringProperty(classResource, SKOS.editorialNote, dto.getEditorialNote());
+        }else{
+            dto.setNote(MapperUtils.localizedPropertyToMap(classResource, SH.description));
+            MapperUtils.addOptionalStringProperty(classResource, DCTerms.description, dto.getEditorialNote());
+        }
         var contributors = MapperUtils.arrayPropertyToSet(modelResource, DCTerms.contributor);
         dto.setContributor(OrganizationMapper.mapOrganizationsToDTO(contributors, orgModel));
         dto.setContact(MapperUtils.propertyToString(modelResource, Iow.contact));

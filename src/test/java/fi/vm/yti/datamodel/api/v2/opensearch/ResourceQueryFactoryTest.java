@@ -11,13 +11,14 @@ import org.skyscreamer.jsonassert.JSONAssert;
 import org.skyscreamer.jsonassert.JSONCompareMode;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 
 import static org.springframework.test.util.AssertionErrors.assertEquals;
 
 
 class ResourceQueryFactoryTest {
-    
+
     @Test
     void createInternalClassQueryValues() throws Exception {
         var request = new ResourceSearchRequest();
@@ -31,8 +32,8 @@ class ResourceQueryFactoryTest {
         request.setSortLang("en");
         request.setResourceTypes(Set.of(ResourceType.ATTRIBUTE, ResourceType.ASSOCIATION));
 
-        var groupNamespaces = Set.of("http://uri.suomi.fi/datamodel/ns/groupNs");
-        var addedNamespaces = Set.of("http://uri.suomi.fi/datamodel/ns/addedNs");
+        var groupNamespaces = List.of("http://uri.suomi.fi/datamodel/ns/groupNs");
+        var addedNamespaces = List.of("http://uri.suomi.fi/datamodel/ns/addedNs");
 
         var allowedIncompleteDatamodels = Set.of("http://uri.suomi.fi/datamodel/ns/test");
 
@@ -49,7 +50,7 @@ class ResourceQueryFactoryTest {
     void createInternalClassQueryDefaults() {
         var request = new ResourceSearchRequest();
 
-        var classQuery = ResourceQueryFactory.createInternalResourceQuery(request, Collections.emptySet(), Collections.emptySet(), Collections.emptySet());
+        var classQuery = ResourceQueryFactory.createInternalResourceQuery(request, Collections.emptyList(), Collections.emptyList(), Collections.emptySet());
 
         assertEquals("Page from value not matching", QueryFactoryUtils.DEFAULT_PAGE_FROM, classQuery.from());
         assertEquals("Page size value not matching", QueryFactoryUtils.DEFAULT_PAGE_SIZE, classQuery.size());

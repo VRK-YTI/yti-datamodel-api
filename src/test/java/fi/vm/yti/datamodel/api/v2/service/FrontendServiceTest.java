@@ -1,10 +1,7 @@
 package fi.vm.yti.datamodel.api.v2.service;
 
+import fi.vm.yti.datamodel.api.mapper.MapperTestUtils;
 import fi.vm.yti.datamodel.api.v2.mapper.ModelMapper;
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.ModelFactory;
-import org.apache.jena.riot.Lang;
-import org.apache.jena.riot.RDFDataMgr;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,7 +30,7 @@ class FrontendServiceTest {
 
     @Test
     void testOrganizations() {
-        var model = getModel("/organizations.ttl");
+        var model = MapperTestUtils.getModelFromFile("/organizations.ttl");
         String sortLanguage = "en";
 
         when(jenaService.getOrganizations()).thenReturn(model);
@@ -49,7 +46,7 @@ class FrontendServiceTest {
 
     @Test
     void testOrganizationsWithChildren() {
-        var model = getModel("/organizations.ttl");
+        var model = MapperTestUtils.getModelFromFile("/organizations.ttl");
         String sortLanguage = "en";
 
         when(jenaService.getOrganizations()).thenReturn(model);
@@ -62,7 +59,7 @@ class FrontendServiceTest {
 
     @Test
     void testServiceCategories() {
-        var model = getModel("/service-categories.ttl");
+        var model = MapperTestUtils.getModelFromFile("/service-categories.ttl");
         String sortLanguage = "en";
 
         when(jenaService.getServiceCategories()).thenReturn(model);
@@ -75,11 +72,4 @@ class FrontendServiceTest {
         assertEquals(List.of("Consumer matters", "Industries", "Tourism"), names);
     }
 
-    private Model getModel(String data) {
-        var model = ModelFactory.createDefaultModel();
-        var stream = getClass().getResourceAsStream(data);
-        assertNotNull(stream);
-        RDFDataMgr.read(model, stream, Lang.TURTLE);
-        return model;
-    }
 }

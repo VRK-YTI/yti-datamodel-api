@@ -10,8 +10,6 @@ import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.ResourceFactory;
-import org.apache.jena.riot.RDFDataMgr;
-import org.apache.jena.riot.RDFLanguages;
 import org.apache.jena.sparql.vocabulary.FOAF;
 import org.apache.jena.vocabulary.*;
 import org.junit.jupiter.api.Test;
@@ -29,10 +27,7 @@ class ResourceMapperTest {
 
     @Test
     void mapToResourceAssociation() {
-        Model m = ModelFactory.createDefaultModel();
-        var stream = getClass().getResourceAsStream("/test_datamodel.ttl");
-        assertNotNull(stream);
-        RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
+        var m = MapperTestUtils.getModelFromFile("/test_datamodel_library.ttl");
         var mockUser = EndpointUtils.mockUser;
 
         var dto = new ResourceDTO();
@@ -87,10 +82,7 @@ class ResourceMapperTest {
 
     @Test
     void mapToResourceAssociationEmptySubResourceOf() {
-        Model m = ModelFactory.createDefaultModel();
-        var stream = getClass().getResourceAsStream("/test_datamodel.ttl");
-        assertNotNull(stream);
-        RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
+        var m = MapperTestUtils.getModelFromFile("/test_datamodel_library.ttl");
 
         var dto = new ResourceDTO();
         dto.setIdentifier("Resource");
@@ -136,10 +128,7 @@ class ResourceMapperTest {
 
     @Test
     void mapToResourceAttributeEmptySubResourceOf() {
-        Model m = ModelFactory.createDefaultModel();
-        var stream = getClass().getResourceAsStream("/test_datamodel.ttl");
-        assertNotNull(stream);
-        RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
+        var m = MapperTestUtils.getModelFromFile("/test_datamodel_library.ttl");
 
         var dto = new ResourceDTO();
         dto.setIdentifier("Resource");
@@ -185,10 +174,7 @@ class ResourceMapperTest {
 
     @Test
     void mapToResourceAttribute() {
-        Model m = ModelFactory.createDefaultModel();
-        var stream = getClass().getResourceAsStream("/test_datamodel.ttl");
-        assertNotNull(stream);
-        RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
+        var m = MapperTestUtils.getModelFromFile("/test_datamodel_library.ttl");
 
         var dto = new ResourceDTO();
         dto.setIdentifier("Resource");
@@ -240,10 +226,7 @@ class ResourceMapperTest {
 
     @Test
     void testMapToIndexResourceClass(){
-        Model m = ModelFactory.createDefaultModel();
-        var stream = getClass().getResourceAsStream("/models/test_datamodel_with_resources.ttl");
-        assertNotNull(stream);
-        RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
+        var m = MapperTestUtils.getModelFromFile("/models/test_datamodel_library_with_resources.ttl");
 
         var indexClass = ResourceMapper.mapToIndexResource(m, "http://uri.suomi.fi/datamodel/ns/test#TestClass");
 
@@ -260,10 +243,8 @@ class ResourceMapperTest {
 
     @Test
     void testMapToIndexResourceAttribute(){
-        Model m = ModelFactory.createDefaultModel();
-        var stream = getClass().getResourceAsStream("/models/test_datamodel_with_resources.ttl");
-        assertNotNull(stream);
-        RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
+        var m = MapperTestUtils.getModelFromFile("/models/test_datamodel_library_with_resources.ttl");
+
 
         var indexClass = ResourceMapper.mapToIndexResource(m, "http://uri.suomi.fi/datamodel/ns/test#TestAttribute");
 
@@ -282,10 +263,8 @@ class ResourceMapperTest {
 
     @Test
     void testMapToIndexResourceAssociation(){
-        Model m = ModelFactory.createDefaultModel();
-        var stream = getClass().getResourceAsStream("/models/test_datamodel_with_resources.ttl");
-        assertNotNull(stream);
-        RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
+        var m = MapperTestUtils.getModelFromFile("/models/test_datamodel_library_with_resources.ttl");
+
 
         var indexClass = ResourceMapper.mapToIndexResource(m, "http://uri.suomi.fi/datamodel/ns/test#TestAssociation");
 
@@ -304,10 +283,7 @@ class ResourceMapperTest {
 
     @Test
     void testMapToIndexResourceMinimalClass(){
-        Model m = ModelFactory.createDefaultModel();
-        var stream = getClass().getResourceAsStream("/models/test_datamodel_with_minimal_resources.ttl");
-        assertNotNull(stream);
-        RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
+        var m = MapperTestUtils.getModelFromFile("/models/test_datamodel_with_minimal_resources.ttl");
 
         var indexClass = ResourceMapper.mapToIndexResource(m, "http://uri.suomi.fi/datamodel/ns/test#TestClass");
 
@@ -324,10 +300,7 @@ class ResourceMapperTest {
 
     @Test
     void testMapToIndexResourceMinimalAttribute(){
-        Model m = ModelFactory.createDefaultModel();
-        var stream = getClass().getResourceAsStream("/models/test_datamodel_with_minimal_resources.ttl");
-        assertNotNull(stream);
-        RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
+        var m = MapperTestUtils.getModelFromFile("/models/test_datamodel_with_minimal_resources.ttl");
 
         var indexResource = ResourceMapper.mapToIndexResource(m, "http://uri.suomi.fi/datamodel/ns/test#TestAttribute");
 
@@ -344,10 +317,7 @@ class ResourceMapperTest {
 
     @Test
     void testMapToIndexResourceMinimalAssociation(){
-        Model m = ModelFactory.createDefaultModel();
-        var stream = getClass().getResourceAsStream("/models/test_datamodel_with_minimal_resources.ttl");
-        assertNotNull(stream);
-        RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
+        var m = MapperTestUtils.getModelFromFile("/models/test_datamodel_with_minimal_resources.ttl");
 
         var indexResource = ResourceMapper.mapToIndexResource(m, "http://uri.suomi.fi/datamodel/ns/test#TestAssociation");
 
@@ -364,10 +334,7 @@ class ResourceMapperTest {
 
     @Test
     void mapToResourceInfoDTOAttribute() {
-        Model m = ModelFactory.createDefaultModel();
-        var stream = getClass().getResourceAsStream("/models/test_datamodel_with_resources.ttl");
-        assertNotNull(stream);
-        RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
+        var m = MapperTestUtils.getModelFromFile("/models/test_datamodel_library_with_resources.ttl");
 
         var dto = ResourceMapper.mapToResourceInfoDTO(m, "http://uri.suomi.fi/datamodel/ns/test", "TestAttribute", getOrgModel(), true, null);
 
@@ -396,10 +363,7 @@ class ResourceMapperTest {
 
     @Test
     void mapToResourceInfoDTOAssociation() {
-        Model m = ModelFactory.createDefaultModel();
-        var stream = getClass().getResourceAsStream("/models/test_datamodel_with_resources.ttl");
-        assertNotNull(stream);
-        RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
+        var m = MapperTestUtils.getModelFromFile("/models/test_datamodel_library_with_resources.ttl");
 
         var dto = ResourceMapper.mapToResourceInfoDTO(m, "http://uri.suomi.fi/datamodel/ns/test", "TestAssociation", getOrgModel(), true, null);
 
@@ -428,10 +392,7 @@ class ResourceMapperTest {
 
     @Test
     void mapToResourceInfoDTOAttributeMinimal() {
-        Model m = ModelFactory.createDefaultModel();
-        var stream = getClass().getResourceAsStream("/models/test_datamodel_with_minimal_resources.ttl");
-        assertNotNull(stream);
-        RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
+        var m = MapperTestUtils.getModelFromFile("/models/test_datamodel_with_minimal_resources.ttl");
 
         var dto = ResourceMapper.mapToResourceInfoDTO(m, "http://uri.suomi.fi/datamodel/ns/test", "TestAttribute", getOrgModel(), true, null);
 
@@ -454,10 +415,8 @@ class ResourceMapperTest {
 
     @Test
     void mapToResourceInfoDTOAssociationMinimal() {
-        Model m = ModelFactory.createDefaultModel();
-        var stream = getClass().getResourceAsStream("/models/test_datamodel_with_minimal_resources.ttl");
-        assertNotNull(stream);
-        RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
+        var m = MapperTestUtils.getModelFromFile("/models/test_datamodel_with_minimal_resources.ttl");
+
 
         var dto = ResourceMapper.mapToResourceInfoDTO(m, "http://uri.suomi.fi/datamodel/ns/test", "TestAssociation", getOrgModel(), true, null);
 
@@ -482,31 +441,19 @@ class ResourceMapperTest {
 
     @Test
     void failMapToResourceInfoDTOClass(){
-        Model m = ModelFactory.createDefaultModel();
-        var stream = getClass().getResourceAsStream("/models/test_datamodel_with_resources.ttl");
-        assertNotNull(stream);
-        RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
-
-
+        var m = MapperTestUtils.getModelFromFile("/models/test_datamodel_library_with_resources.ttl");
         assertThrowsExactly(MappingError.class, () -> ResourceMapper.mapToResourceInfoDTO(m, "http://uri.suomi.fi/datamodel/ns/test", "TestClass", getOrgModel(), true, null));
     }
 
     @Test
     void failMapToResourceInfoDTOClassMinimal(){
-        Model m = ModelFactory.createDefaultModel();
-        var stream = getClass().getResourceAsStream("/models/test_datamodel_with_minimal_resources.ttl");
-        assertNotNull(stream);
-        RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
-
+        var m = MapperTestUtils.getModelFromFile("/models/test_datamodel_with_minimal_resources.ttl");
         assertThrowsExactly(MappingError.class, () -> ResourceMapper.mapToResourceInfoDTO(m, "http://uri.suomi.fi/datamodel/ns/test", "TestClass", getOrgModel(), true, null));
     }
 
     @Test
     void mapToResourceInfoAuthenticatedUser() {
-        Model m = ModelFactory.createDefaultModel();
-        var stream = getClass().getResourceAsStream("/models/test_datamodel_with_resources.ttl");
-        assertNotNull(stream);
-        RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
+        var m = MapperTestUtils.getModelFromFile("/models/test_datamodel_library_with_resources.ttl");
 
         Consumer<ResourceInfoBaseDTO> userMapper = (var dto) -> {
             var creator = new UserDTO("123");
@@ -524,10 +471,8 @@ class ResourceMapperTest {
 
     @Test
     void mapToUpdateModelAttribute() {
-        Model m = ModelFactory.createDefaultModel();
-        var stream = getClass().getResourceAsStream("/models/test_datamodel_with_resources.ttl");
-        assertNotNull(stream);
-        RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
+        var m = MapperTestUtils.getModelFromFile("/models/test_datamodel_library_with_resources.ttl");
+
         var resource = m.getResource("http://uri.suomi.fi/datamodel/ns/test#TestAttribute");
         var mockUser = EndpointUtils.mockUser;
 
@@ -580,10 +525,7 @@ class ResourceMapperTest {
 
     @Test
     void mapToUpdateModelAssociation() {
-        Model m = ModelFactory.createDefaultModel();
-        var stream = getClass().getResourceAsStream("/models/test_datamodel_with_resources.ttl");
-        assertNotNull(stream);
-        RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
+        var m = MapperTestUtils.getModelFromFile("/models/test_datamodel_library_with_resources.ttl");
         var resource = m.getResource("http://uri.suomi.fi/datamodel/ns/test#TestAssociation");
 
         var dto = new ResourceDTO();
@@ -632,10 +574,7 @@ class ResourceMapperTest {
 
     @Test
     void mapToUpdateAttributeEmptySubResource(){
-        Model m = ModelFactory.createDefaultModel();
-        var stream = getClass().getResourceAsStream("/models/test_datamodel_with_resources.ttl");
-        assertNotNull(stream);
-        RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
+        var m = MapperTestUtils.getModelFromFile("/models/test_datamodel_library_with_resources.ttl");
         var resource = m.getResource("http://uri.suomi.fi/datamodel/ns/test#TestAttribute");
 
         //Shouldn't change if null
@@ -652,10 +591,7 @@ class ResourceMapperTest {
 
     @Test
     void mapToUpdateAssociationEmptySubResource(){
-        Model m = ModelFactory.createDefaultModel();
-        var stream = getClass().getResourceAsStream("/models/test_datamodel_with_resources.ttl");
-        assertNotNull(stream);
-        RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
+        var m = MapperTestUtils.getModelFromFile("/models/test_datamodel_library_with_resources.ttl");
         var resource = m.getResource("http://uri.suomi.fi/datamodel/ns/test#TestAssociation");
 
         //Shouldn't change if null
@@ -672,11 +608,7 @@ class ResourceMapperTest {
 
     @Test
     void failToMapUpdateModelClass() {
-        Model m = ModelFactory.createDefaultModel();
-        var stream = getClass().getResourceAsStream("/models/test_datamodel_with_resources.ttl");
-        assertNotNull(stream);
-        RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
-
+        var m = MapperTestUtils.getModelFromFile("/models/test_datamodel_library_with_resources.ttl");
         assertThrowsExactly(MappingError.class, () -> ResourceMapper.mapToUpdateResource("http://uri.suomi.fi/datamodel/ns/test", m, "TestClass", new ResourceDTO(), EndpointUtils.mockUser));
     }
 

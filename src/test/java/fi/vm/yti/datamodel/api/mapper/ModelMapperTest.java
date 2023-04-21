@@ -8,8 +8,6 @@ import fi.vm.yti.datamodel.api.v2.mapper.ModelMapper;
 import fi.vm.yti.datamodel.api.v2.service.JenaService;
 import fi.vm.yti.security.YtiUser;
 import org.apache.jena.rdf.model.*;
-import org.apache.jena.riot.RDFDataMgr;
-import org.apache.jena.riot.RDFLanguages;
 import org.apache.jena.sparql.vocabulary.FOAF;
 import org.apache.jena.vocabulary.*;
 import org.junit.jupiter.api.BeforeEach;
@@ -112,11 +110,8 @@ class ModelMapperTest {
 
     @Test
     void testMapToUpdateJenaModel() {
-        Model m = ModelFactory.createDefaultModel();
         //TODO: should we have 2 separate tests for ModelType.LIBRARY and ModelType.PROFILE?
-        var stream = getClass().getResourceAsStream("/test_datamodel.ttl");
-        assertNotNull(stream);
-        RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
+        var m = MapperTestUtils.getModelFromFile("/test_datamodel_library.ttl");
 
         when(jenaService.getDataModel("test")).thenReturn(m);
         var mockModel = ModelFactory.createDefaultModel();
@@ -194,16 +189,12 @@ class ModelMapperTest {
 
     @Test
     void testMapToDatamodelDTO() {
-        Model m = ModelFactory.createDefaultModel();
-
-        var stream = getClass().getResourceAsStream("/test_datamodel.ttl");
-        assertNotNull(stream);
-        RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
+        var m = MapperTestUtils.getModelFromFile("/test_datamodel_library.ttl");
 
         var result = mapper.mapToDataModelDTO("test", m, null);
 
         assertEquals("test", result.getPrefix());
-        assertEquals(ModelType.PROFILE, result.getType());
+        assertEquals(ModelType.LIBRARY, result.getType());
         assertEquals(Status.VALID, result.getStatus());
 
         assertEquals(1, result.getLabel().size());
@@ -229,10 +220,8 @@ class ModelMapperTest {
 
     @Test
     void testMapToDatamodelDtoOld(){
-        Model mOld = ModelFactory.createDefaultModel();
-        var streamOld = getClass().getResourceAsStream("/test_datamodel_v1.ttl");
-        assertNotNull(streamOld);
-        RDFDataMgr.read(mOld, streamOld, RDFLanguages.TURTLE);
+        var mOld = MapperTestUtils.getModelFromFile("/test_datamodel_v1.ttl");
+
         var resultOld = mapper.mapToDataModelDTO("testaa", mOld, null);
 
         assertEquals("testaa", resultOld.getPrefix());
@@ -261,17 +250,13 @@ class ModelMapperTest {
 
     @Test
     void testMapToIndexModel() {
-        Model m = ModelFactory.createDefaultModel();
-
-        var stream = getClass().getResourceAsStream("/test_datamodel.ttl");
-        assertNotNull(stream);
-        RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
+        var m = MapperTestUtils.getModelFromFile("/test_datamodel_library.ttl");
 
         var result = mapper.mapToIndexModel("test", m);
 
         assertEquals("test", result.getPrefix());
         assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "test", result.getId());
-        assertEquals(ModelType.PROFILE, result.getType());
+        assertEquals(ModelType.LIBRARY, result.getType());
         assertEquals(Status.VALID, result.getStatus());
         assertEquals("2023-01-03T12:44:45.799Z", result.getModified());
         assertEquals("2023-01-03T12:44:45.799Z", result.getCreated());
@@ -299,11 +284,7 @@ class ModelMapperTest {
 
     @Test
     void testMapToIndexModelOld(){
-        Model mOld = ModelFactory.createDefaultModel();
-
-        var streamOld = getClass().getResourceAsStream("/test_datamodel_v1.ttl");
-        assertNotNull(streamOld);
-        RDFDataMgr.read(mOld, streamOld, RDFLanguages.TURTLE);
+        var mOld = MapperTestUtils.getModelFromFile("/test_datamodel_v1.ttl");
 
         var resultOld = mapper.mapToIndexModel("testaa", mOld);
 

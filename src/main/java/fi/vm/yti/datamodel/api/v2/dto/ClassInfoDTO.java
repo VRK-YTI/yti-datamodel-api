@@ -19,6 +19,7 @@ public class ClassInfoDTO extends ResourceInfoBaseDTO {
     private String contact;
     private List<SimpleResourceDTO> attribute;
     private List<SimpleResourceDTO> association;
+    private String targetClass;
 
     public Map<String, String> getLabel() {
         return label;
@@ -122,5 +123,13 @@ public class ClassInfoDTO extends ResourceInfoBaseDTO {
 
     public void setAssociation(List<SimpleResourceDTO> association) {
         this.association = association;
+    }
+
+    public String getTargetClass() {
+        return targetClass;
+    }
+
+    public void setTargetClass(String targetClass) {
+        this.targetClass = targetClass;
     }
 }

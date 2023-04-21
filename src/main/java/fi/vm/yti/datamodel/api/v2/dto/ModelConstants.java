@@ -23,6 +23,7 @@ public class ModelConstants {
             "dcap", "http://purl.org/ws-mmi-dc/terms/",
             "xsd", "http://www.w3.org/2001/XMLSchema#",
             "iow", "http://uri.suomi.fi/datamodel/ns/iow#",
-            "skos", "http://www.w3.org/2004/02/skos/core#"
+            "skos", "http://www.w3.org/2004/02/skos/core#",
+            "sh", "http://www.w3.org/ns/shacl#"
     );
 }

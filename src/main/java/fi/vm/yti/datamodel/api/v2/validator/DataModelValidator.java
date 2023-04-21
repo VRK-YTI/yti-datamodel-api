@@ -226,11 +226,12 @@ public class DataModelValidator extends BaseValidator implements
             namespaces.forEach(namespace -> {
                 if(namespace.getPrefix() == null || namespace.getName() == null || namespace.getNamespace() == null){
                     addConstraintViolation(context, "namespace-missing-value", externalNamespace);
+                }else {
+                    if(namespace.getNamespace().startsWith(ModelConstants.SUOMI_FI_NAMESPACE)){
+                        addConstraintViolation(context, "namespace-not-external", externalNamespace);
+                    }
+                    checkPrefixContent(context, namespace.getPrefix(), externalNamespace);
                 }
-                if(namespace.getNamespace().startsWith(ModelConstants.SUOMI_FI_NAMESPACE)){
-                    addConstraintViolation(context, "namespace-not-external", externalNamespace);
-                }
-                checkPrefixContent(context, namespace.getPrefix(), externalNamespace);
             });
         }
     }

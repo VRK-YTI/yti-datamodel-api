@@ -1,10 +1,7 @@
 package fi.vm.yti.datamodel.api.mapper;
 
 import fi.vm.yti.datamodel.api.v2.mapper.VisualizationMapper;
-import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
-import org.apache.jena.riot.RDFDataMgr;
-import org.apache.jena.riot.RDFLanguages;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -13,11 +10,8 @@ class VisualizationDataMapperTest {
 
     @Test
     void mapVisualizationData() {
-        Model model = ModelFactory.createDefaultModel();
-        Model positions = ModelFactory.createDefaultModel();
-        var stream = getClass().getResourceAsStream("/models/test_datamodel_visualization.ttl");
-        assertNotNull(stream);
-        RDFDataMgr.read(model, stream, RDFLanguages.TURTLE);
+        var positions = ModelFactory.createDefaultModel();
+        var model = MapperTestUtils.getModelFromFile("/models/test_datamodel_visualization.ttl");
 
         var result = VisualizationMapper.mapVisualizationData("test", model, positions);
 

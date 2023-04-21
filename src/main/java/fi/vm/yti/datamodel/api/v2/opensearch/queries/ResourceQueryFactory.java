@@ -23,7 +23,7 @@ public class ResourceQueryFactory {
     private ResourceQueryFactory(){
         //only provides static methods
     }
-    public static SearchRequest createInternalResourceQuery(ResourceSearchRequest request, Set<String> fromNamespaces, Set<String> groupRestrictedNamespaces, Set<String> allowedDatamodels) {
+    public static SearchRequest createInternalResourceQuery(ResourceSearchRequest request, List<String> fromNamespaces, List<String> restrictedDataModels, Set<String> allowedDatamodels) {
         List<Query> must = new ArrayList<>();
         List<Query> should = new ArrayList<>();
 
@@ -49,12 +49,13 @@ public class ResourceQueryFactory {
         }
 
         if(fromNamespaces != null && !fromNamespaces.isEmpty()){
-            var fromNamespacesQuery = QueryFactoryUtils.termsQuery("isDefinedBy", fromNamespaces.stream().toList());
+            var fromNamespacesQuery = QueryFactoryUtils.termsQuery("isDefinedBy", fromNamespaces);
             must.add(fromNamespacesQuery);
         }
-
-        if(groupRestrictedNamespaces != null && !groupRestrictedNamespaces.isEmpty()){
-            var groupRestrictedNamespacesQuery = QueryFactoryUtils.termsQuery("isDefinedBy", groupRestrictedNamespaces.stream().toList());
+        //TODO it would be great if we could combine these 2 terms queries.
+        //Basically just need to combine the list so that it contains the intersecting strings
+        if(restrictedDataModels != null && !restrictedDataModels.isEmpty()){
+            var groupRestrictedNamespacesQuery = QueryFactoryUtils.termsQuery("isDefinedBy", restrictedDataModels);
             must.add(groupRestrictedNamespacesQuery);
         }
 
