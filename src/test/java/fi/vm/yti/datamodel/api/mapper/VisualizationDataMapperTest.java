@@ -4,6 +4,8 @@ import fi.vm.yti.datamodel.api.v2.mapper.VisualizationMapper;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.junit.jupiter.api.Test;
 
+import java.util.LinkedList;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class VisualizationDataMapperTest {
@@ -30,7 +32,7 @@ class VisualizationDataMapperTest {
         assertTrue(class3.isPresent());
 
         assertEquals("Label 1", class1.get().getLabel().get("fi"));
-        assertEquals("testmodel:TestClass", class1.get().getParentClasses().iterator().next());
+        assertEquals("yti-model:TestClass", class1.get().getParentClasses().iterator().next());
 
         var parent2 = class2.get().getParentClasses().iterator().next();
         assertEquals("testclass1", parent2);
@@ -38,5 +40,23 @@ class VisualizationDataMapperTest {
         var parent3 = class3.get().getParentClasses().iterator().next();
         assertEquals("ext:ExternalClass", parent3);
 
+        var attributes = class1.get().getAttributes();
+        var associations = class1.get().getAssociations();
+        assertEquals(1, attributes.size());
+        assertEquals(1, associations.size());
+
+        var attribute = attributes.get(0);
+        var association = associations.get(0);
+
+        var externalAssociation1 = class2.get().getAssociations().get(0);
+        var externalAssociation2 = class3.get().getAssociations().get(0);
+
+        assertEquals("testiattribuutti", attribute.getLabel().get("fi"));
+        assertEquals("attribute-1", attribute.getIdentifier());
+        assertEquals("testiassosiaatio", association.getLabel().get("fi"));
+        assertEquals("association-1", association.getIdentifier());
+        assertEquals("testclass2", ((LinkedList<String>)association.getPath()).getLast());
+        assertEquals("yti-model:SomeClass", ((LinkedList<String>)externalAssociation1.getPath()).getLast());
+        assertEquals("ext:ExternalClass", ((LinkedList<String>)externalAssociation2.getPath()).getLast());
     }
 }

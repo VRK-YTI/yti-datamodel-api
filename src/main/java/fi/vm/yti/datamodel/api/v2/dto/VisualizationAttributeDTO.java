@@ -2,7 +2,7 @@ package fi.vm.yti.datamodel.api.v2.dto;
 
 import java.util.Map;
 
-public class VisualizationResourceDTO {
+public class VisualizationAttributeDTO {
     private String identifier;
     private Map<String, String> label;
 
