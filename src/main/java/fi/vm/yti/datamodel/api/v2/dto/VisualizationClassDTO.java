@@ -2,18 +2,15 @@ package fi.vm.yti.datamodel.api.v2.dto;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class VisualizationClassDTO {
     private String identifier;
     private Map<String, String> label = Map.of();
     private Set<String> parentClasses = new HashSet<>();
     private PositionDTO position = new PositionDTO(0.0, 0.0);
-    private List<VisualizationResourceDTO> attributes = List.of();
-    private List<VisualizationResourceDTO> associations = List.of();
+    private List<VisualizationAttributeDTO> attributes = new ArrayList<>();
+    private List<VisualizationAssociationDTO> associations = new ArrayList<>();
 
     public String getIdentifier() {
         return identifier;
@@ -39,19 +36,19 @@ public class VisualizationClassDTO {
         this.position = position;
     }
 
-    public List<VisualizationResourceDTO> getAttributes() {
+    public List<VisualizationAttributeDTO> getAttributes() {
         return attributes;
     }
 
-    public void setAttributes(List<VisualizationResourceDTO> attributes) {
+    public void setAttributes(List<VisualizationAttributeDTO> attributes) {
         this.attributes = attributes;
     }
 
-    public List<VisualizationResourceDTO> getAssociations() {
+    public List<VisualizationAssociationDTO> getAssociations() {
         return associations;
     }
 
-    public void setAssociations(List<VisualizationResourceDTO> associations) {
+    public void setAssociations(List<VisualizationAssociationDTO> associations) {
         this.associations = associations;
     }
 

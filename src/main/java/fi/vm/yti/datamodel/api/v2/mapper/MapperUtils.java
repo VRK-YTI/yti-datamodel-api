@@ -239,4 +239,15 @@ public class MapperUtils {
         resource.addProperty(property, ResourceFactory.createResource(resourceUri));
     }
 
+    /**
+     * Checks if the type property (RDF:type) of the resource is particular type
+     * @param resource Resource to check
+     * @param type Type to check
+     * @return if resource has given type
+     */
+    public static boolean hasType(Resource resource, Resource... type) {
+        return Arrays.stream(type)
+                .anyMatch(t -> t.equals(resource.getProperty(RDF.type).getResource()));
+    }
+
 }
