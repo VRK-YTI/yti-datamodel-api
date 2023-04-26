@@ -48,8 +48,6 @@ public class TerminologyService {
     public void resolveTerminology(Set<String> terminologyUris) {
 
         for (String u : terminologyUris) {
-            // use uris without terminological-vocabulary-0 suffix
-            u = u.replaceAll("terminological-vocabulary-\\d+$", "");
             var uri = URI.create(u);
             LOG.debug("Fetching terminology {}", uri);
             try {
