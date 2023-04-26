@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.MimeTypeUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -55,7 +56,7 @@ public class ResolveController {
                 .append(currentUrl.getHost())
                 .append(currentUrl.getHost().equals("localhost") ? ":3000" : "");
 
-        if ("text/html".equals(accept)) {
+        if (accept != null && accept.contains(MimeTypeUtils.TEXT_HTML_VALUE)) {
             // redirect to the site
             redirectURL
                 .append("/model/")
