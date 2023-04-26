@@ -23,7 +23,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -497,23 +496,4 @@ class DatamodelTest {
         verifyNoInteractions(openSearchIndexer);
     }
 
-    @Test
-    void shouldGetModelAsFileNotSupportedType() throws Exception {
-        mvc.perform(get("/v2/model/test/file")
-                        .header("Accept", "application/pdf"))
-                .andExpect(status().isNotAcceptable());
-    }
-
-    @ParameterizedTest
-    @ValueSource(strings = {"application/ld+json", "text/turtle", "application/rdf+xml"})
-    void shouldGetModelWithAcceptHeader(String accept) throws Exception {
-        when(jenaService.getDataModel(anyString())).thenReturn(ModelFactory.createDefaultModel());
-
-        mvc.perform(get("/v2/model/test/file")
-                        .header("Accept", accept))
-                .andExpect(status().isOk())
-                .andExpect(content().contentTypeCompatibleWith(accept));
-        verify(jenaService).getDataModel(anyString());
-        verifyNoMoreInteractions(jenaService);
-    }
 }

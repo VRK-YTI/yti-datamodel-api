@@ -16,16 +16,10 @@ import fi.vm.yti.security.AuthenticatedUserProvider;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.apache.jena.riot.Lang;
-import org.apache.jena.riot.RDFDataMgr;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
-import java.io.StringWriter;
 
 import static fi.vm.yti.security.AuthorizationException.check;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
@@ -148,31 +142,5 @@ public class Datamodel {
 
         jenaService.deleteDataModel(modelUri);
         openSearchIndexer.deleteModelFromIndex(modelUri);
-    }
-
-    @Operation(summary = "Get a datamodel as file")
-    @ApiResponse(responseCode = "200", description = "")
-    @GetMapping(value = "/{prefix}/file", produces = {"application/ld+json;charset=utf-8", "text/turtle;charset=utf-8", "application/rdf+xml;charset=utf-8"})
-    public ResponseEntity<String> getDataModelAsFile(@PathVariable String prefix, @RequestHeader(value = HttpHeaders.ACCEPT) String accept){
-        var modelURI = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
-        var model = jenaService.getDataModel(modelURI);
-
-        if(model == null){
-            throw new ResourceNotFoundException(modelURI);
-        }
-        model.setNsPrefixes(ModelConstants.PREFIXES);
-        var stringWriter = new StringWriter();
-        switch (accept) {
-            case "text/turtle":
-                RDFDataMgr.write(stringWriter, model, Lang.TURTLE);
-                break;
-            case "application/rdf+xml":
-                RDFDataMgr.write(stringWriter, model, Lang.RDFXML);
-                break;
-            case "application/ld+json":
-            default:
-                RDFDataMgr.write(stringWriter, model, Lang.JSONLD);
-        }
-        return ResponseEntity.ok().body(stringWriter.toString());
     }
 }
