@@ -246,6 +246,9 @@ public class MapperUtils {
      * @return if resource has given type
      */
     public static boolean hasType(Resource resource, Resource... type) {
+        if (!resource.hasProperty(RDF.type)) {
+            return false;
+        }
         return Arrays.stream(type)
                 .anyMatch(t -> t.equals(resource.getProperty(RDF.type).getResource()));
     }
