@@ -11,18 +11,22 @@ import org.apache.jena.rdf.model.*;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.vocabulary.SKOS;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.StringWriter;
+
 @RestController
 @RequestMapping("v2/export")
 @Tag(name = "Export" )
 @Validated
 public class ExportController {
 
+    private static final Logger LOG = LoggerFactory.getLogger(ExportController.class);
     private final JenaService jenaService;
     private final AuthorizationManager authorizationManager;
 
@@ -40,19 +44,27 @@ public class ExportController {
     public ResponseEntity<String> export(@PathVariable String prefix,
                                          @PathVariable(required = false) String resource,
                                          @RequestHeader(value = HttpHeaders.ACCEPT) String accept){
-        Model exportedModel;
         var modelURI = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
-        var model = jenaService.getDataModel(modelURI);
+        LOG.info("Exporting datamodel {}, {}", modelURI, accept);
 
-        if(model == null){
-            throw new ResourceNotFoundException(modelURI);
+        Model exportedModel;
+        Model model;
+
+        try {
+            model = jenaService.getDataModel(modelURI);
+        } catch (ResourceNotFoundException e) {
+            // cannot throw ResourceNotFoundException because accept header is not application/json
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            LOG.error("Error exporting datamodel", e);
+            return ResponseEntity.internalServerError().build();
         }
 
         if (resource != null) {
             var res = model.getResource(modelURI + "#" + resource);
             var properties = res.listProperties();
             if (!properties.hasNext()) {
-                throw new ResourceNotFoundException(res.getURI());
+                return ResponseEntity.notFound().build();
             }
             exportedModel = properties.toModel();
         } else {
