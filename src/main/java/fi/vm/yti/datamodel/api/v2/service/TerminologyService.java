@@ -107,7 +107,7 @@ public class TerminologyService {
             throw new ResolvingException("Concept not found", String.format("Concept %s not found", conceptURI));
         }
 
-        String terminologyURI = conceptURI.substring(0, conceptURI.lastIndexOf("/") + 1);
+        String terminologyURI = conceptURI.substring(0, conceptURI.lastIndexOf("/") + 1) + "terminological-vocabulary-0";
         var terminologyModel = jenaService.getTerminology(terminologyURI);
         if (terminologyModel == null) {
             LOG.warn("Terminology {} not added to model", terminologyURI);

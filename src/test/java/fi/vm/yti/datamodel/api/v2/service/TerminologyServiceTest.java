@@ -50,7 +50,7 @@ class TerminologyServiceTest {
     @Autowired
     private TerminologyService service;
 
-    static final String GRAPH = "http://uri.suomi.fi/terminology/test/";
+    static final String GRAPH = "http://uri.suomi.fi/terminology/test/terminological-vocabulary-0";
     static final String CONCEPT_URI = "http://uri.suomi.fi/terminology/test/concept-1";
 
     @Test
