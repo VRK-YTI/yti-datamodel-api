@@ -70,6 +70,7 @@ dependencies {
     implementation "org.springframework.security:spring-security-config"
     implementation "org.springframework.security:spring-security-web"
     implementation "org.springframework.boot:spring-boot-starter-webflux"
+    implementation "org.springframework.boot:spring-boot-starter-jdbc"
 
     implementation "fi.vm.yti:yti-spring-security:0.4.0"
     implementation "fi.vm.yti:yti-spring-migration:0.2.0"
@@ -90,6 +91,9 @@ dependencies {
     implementation "org.apache.jena:jena-rdfconnection:4.6.1"
     implementation "org.apache.jena:jena-querybuilder:4.6.1"
     implementation "com.google.guava:guava:31.1-jre"
+    
+    implementation "org.flywaydb:flyway-core"
+    implementation "org.postgresql:postgresql"
 
     compileOnly "org.springframework.boot:spring-boot-configuration-processor"
     compileOnly "org.jetbrains:annotations:23.0.0"
@@ -98,6 +102,8 @@ dependencies {
     testImplementation "com.jayway.jsonpath:json-path-assert:2.7.0"
     testImplementation "org.mockito:mockito-core:4.8.0"
     testImplementation "net.bytebuddy:byte-buddy:1.12.22"
+
+    developmentOnly("org.springframework.boot:spring-boot-devtools")
 }
 
 sonarqube {
