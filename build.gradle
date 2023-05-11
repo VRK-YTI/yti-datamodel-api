@@ -39,7 +39,20 @@ repositories {
     jcenter {
         content { excludeGroupByRegex "fi\\.vm\\.yti.*" }
     }
-
+    maven {
+        url = uri("https://maven.pkg.github.com/CSCfi/yti-spring-security")
+        credentials {
+            username = project.findProperty("gpr.user") ?: System.getenv("GPR_USERNAME")
+            password = project.findProperty("gpr.key") ?: System.getenv("GRP_TOKEN")
+        }        
+    }
+    maven {
+        url = uri("https://maven.pkg.github.com/CSCfi/yti-spring-migration")
+        credentials {
+            username = project.findProperty("gpr.user") ?: System.getenv("GPR_USERNAME")
+            password = project.findProperty("gpr.key") ?: System.getenv("GPR_TOKEN")
+        }        
+    }
     // put your artifactory parameters to $HOME/.gradle/gradle.properties
     if (project.hasProperty('artifactoryUrl')) {
         maven {
