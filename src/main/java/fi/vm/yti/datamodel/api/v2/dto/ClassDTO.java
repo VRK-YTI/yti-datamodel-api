@@ -2,6 +2,7 @@ package fi.vm.yti.datamodel.api.v2.dto;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -16,6 +17,8 @@ public class ClassDTO {
     private String identifier;
     private Map<String, String> note;
     private String targetClass; //Only allowed in Application profile classes
+    private String targetNode;
+    private List<String> properties;
 
     public Map<String, String> getLabel() {
         return label;
@@ -87,6 +90,22 @@ public class ClassDTO {
 
     public void setTargetClass(String targetClass) {
         this.targetClass = targetClass;
+    }
+
+    public String getTargetNode() {
+        return targetNode;
+    }
+
+    public void setTargetNode(String targetNode) {
+        this.targetNode = targetNode;
+    }
+
+    public List<String> getProperties() {
+        return properties;
+    }
+
+    public void setProperties(List<String> properties) {
+        this.properties = properties;
     }
 
     @Override

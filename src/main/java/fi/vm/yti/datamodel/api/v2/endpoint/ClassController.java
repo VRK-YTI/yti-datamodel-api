@@ -5,20 +5,30 @@ import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
 import fi.vm.yti.datamodel.api.v2.mapper.ClassMapper;
+import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.mapper.ResourceMapper;
+import fi.vm.yti.datamodel.api.v2.opensearch.dto.ResourceSearchRequest;
+import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexResource;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
 import fi.vm.yti.datamodel.api.v2.service.GroupManagementService;
 import fi.vm.yti.datamodel.api.v2.service.JenaService;
+import fi.vm.yti.datamodel.api.v2.service.SearchIndexService;
 import fi.vm.yti.datamodel.api.v2.service.TerminologyService;
 import fi.vm.yti.datamodel.api.v2.validator.ValidClass;
 import fi.vm.yti.security.AuthenticatedUserProvider;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.apache.jena.graph.NodeFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 
 import static fi.vm.yti.security.AuthorizationException.check;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
@@ -37,19 +47,22 @@ public class ClassController {
     private final GroupManagementService groupManagementService;
     private final AuthenticatedUserProvider userProvider;
     private final TerminologyService terminologyService;
+    private final SearchIndexService searchIndexService;
 
     public ClassController(AuthorizationManager authorizationManager,
                            JenaService jenaService,
                            OpenSearchIndexer openSearchIndexer,
                            GroupManagementService groupManagementService,
                            AuthenticatedUserProvider userProvider,
-                           TerminologyService terminologyService){
+                           TerminologyService terminologyService,
+                           SearchIndexService searchIndexService){
         this.authorizationManager = authorizationManager;
         this.jenaService = jenaService;
         this.openSearchIndexer = openSearchIndexer;
         this.groupManagementService = groupManagementService;
         this.userProvider = userProvider;
         this.terminologyService = terminologyService;
+        this.searchIndexService = searchIndexService;
     }
 
     @Operation(summary = "Add a class to a model")
@@ -67,10 +80,22 @@ public class ClassController {
         check(authorizationManager.hasRightToModel(prefix, model));
 
         terminologyService.resolveConcept(classDTO.getSubject());
-        var classURi = ClassMapper.createClassAndMapToModel(modelURI, model, classDTO, userProvider.getUser());
+
+        var indexedResources = new ArrayList<String>();
+        var classURI = ClassMapper.createClassAndMapToModel(modelURI, model, classDTO, userProvider.getUser());
+        indexedResources.add(classURI);
+
+        if (MapperUtils.isApplicationProfile(model.getResource(modelURI))) {
+            var propertiesModel = jenaService.findResources(classDTO.getProperties());
+            var properties = ClassMapper.mapPlaceholderPropertyShapes(model, classURI, propertiesModel, userProvider.getUser());
+            indexedResources.addAll(properties);
+        }
         jenaService.putDataModelToCore(modelURI, model);
-        var indexClass = ResourceMapper.mapToIndexResource(model, classURi);
-        openSearchIndexer.createResourceToIndex(indexClass);
+
+        openSearchIndexer.bulkInsert(OpenSearchIndexer.OPEN_SEARCH_INDEX_RESOURCE,
+                indexedResources.stream()
+                .map(p -> ResourceMapper.mapToIndexResource(model, p))
+                .toList());
     }
 
     @Operation(summary = "Update a class in a model")
@@ -115,10 +140,15 @@ public class ClassController {
 
         var orgModel = jenaService.getOrganizations();
         var userMapper = hasRightToModel ? groupManagementService.mapUser() : null;
-        var dto =  ClassMapper.mapToClassDTO(model, modelURI, classIdentifier, orgModel,
+        var dto = ClassMapper.mapToClassDTO(model, modelURI, classIdentifier, orgModel,
                 hasRightToModel, userMapper);
-        var classResources = jenaService.constructWithQuery(ClassMapper.getClassResourcesQuery(classURI));
-        ClassMapper.addClassResourcesToDTO(classResources, dto);
+
+        if (MapperUtils.isOntology(model.getResource(modelURI))) {
+            var classResources = jenaService.constructWithQuery(ClassMapper.getClassResourcesQuery(classURI, false));
+            ClassMapper.addClassResourcesToDTO(classResources, dto);
+        } else {
+            ClassMapper.addNodeShapeResourcesToDTO(model, dto);
+        }
         terminologyService.mapConceptToClass().accept(dto);
         return dto;
     }
@@ -139,5 +169,33 @@ public class ClassController {
         check(authorizationManager.hasRightToModel(prefix, model));
         jenaService.deleteResource(classURI);
         openSearchIndexer.deleteResourceFromIndex(classURI);
+    }
+
+    @Operation(summary = "Get an external class from imports")
+    @ApiResponse(responseCode = "200", description = "External class found successfully")
+    @GetMapping(value = "/external", produces = APPLICATION_JSON_VALUE)
+    public ExternalClassDTO getExternalClass(@RequestParam String uri) {
+        var namespace = NodeFactory.createURI(uri).getNameSpace();
+        var model = jenaService.getNamespaceFromImports(namespace);
+
+        var dto = ClassMapper.mapExternalClassToDTO(model, uri);
+        var resources = jenaService.constructWithQueryImports(
+                ClassMapper.getClassResourcesQuery(uri, true));
+
+        ClassMapper.addExternalClassResourcesToDTO(resources, dto);
+
+        return dto;
+    }
+
+    @Operation(summary = "Get all node shapes with given targetClass")
+    @ApiResponse(responseCode = "200", description = "List of node shapes fetched successfully")
+    @GetMapping(value = "/nodeshapes", produces = APPLICATION_JSON_VALUE)
+    public List<IndexResource> getNodeShapes(@RequestParam String targetClass) throws IOException {
+        var request = new ResourceSearchRequest();
+        request.setStatus(Set.of(Status.VALID, Status.DRAFT));
+        request.setTargetClass(targetClass);
+        return searchIndexService
+                .searchInternalResources(request, userProvider.getUser())
+                .getResponseObjects();
     }
 }

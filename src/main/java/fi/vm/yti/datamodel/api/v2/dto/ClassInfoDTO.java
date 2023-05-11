@@ -1,5 +1,6 @@
 package fi.vm.yti.datamodel.api.v2.dto;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -17,8 +18,8 @@ public class ClassInfoDTO extends ResourceInfoBaseDTO {
     private String uri;
     private Set<OrganizationDTO> contributor;
     private String contact;
-    private List<SimpleResourceDTO> attribute;
-    private List<SimpleResourceDTO> association;
+    private List<SimpleResourceDTO> attribute = new ArrayList<>();
+    private List<SimpleResourceDTO> association = new ArrayList<>();
     private String targetClass;
 
     public Map<String, String> getLabel() {

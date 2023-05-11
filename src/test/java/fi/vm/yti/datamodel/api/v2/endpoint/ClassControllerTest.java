@@ -9,6 +9,7 @@ import fi.vm.yti.datamodel.api.v2.mapper.ClassMapper;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
 import fi.vm.yti.datamodel.api.v2.service.GroupManagementService;
 import fi.vm.yti.datamodel.api.v2.service.JenaService;
+import fi.vm.yti.datamodel.api.v2.service.SearchIndexService;
 import fi.vm.yti.datamodel.api.v2.service.TerminologyService;
 import fi.vm.yti.datamodel.api.v2.validator.ExceptionHandlerAdvice;
 import fi.vm.yti.datamodel.api.v2.validator.ValidationConstants;
@@ -16,7 +17,10 @@ import fi.vm.yti.security.AuthenticatedUserProvider;
 import fi.vm.yti.security.YtiUser;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.vocabulary.OWL;
+import org.apache.jena.vocabulary.RDF;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -66,6 +70,9 @@ class ClassControllerTest {
     @MockBean
     private TerminologyService terminologyService;
 
+    @MockBean
+    private SearchIndexService searchIndexService;
+
     private final Consumer<ResourceInfoBaseDTO> userMapper = (var dto) -> {};
 
     private final Consumer<ClassInfoDTO> conceptMapper = (var dto) -> {};
@@ -90,9 +97,9 @@ class ClassControllerTest {
     }
 
     @Test
-    void shouldValidateAndCreate() throws Exception {
+    void shouldValidateAndCreateClass() throws Exception {
         var classDTO = createClassDTO(false);
-        var mockModel = mock(Model.class);
+        Model mockModel = getMockModel(OWL.Ontology);
 
         when(jenaService.getDataModel(anyString())).thenReturn(mockModel);
         try(var resourceMapper = mockStatic(ResourceMapper.class);
@@ -115,18 +122,54 @@ class ClassControllerTest {
             verifyNoMoreInteractions(this.jenaService);
             resourceMapper.verify(() -> ResourceMapper.mapToIndexResource(any(Model.class), anyString()));
             verify(this.openSearchIndexer)
-                    .createResourceToIndex(any(IndexResource.class));
+                    .bulkInsert(anyString(), anyList());
             verifyNoMoreInteractions(this.openSearchIndexer);
         }
     }
 
     @Test
-    void shouldValidateAndCreateMininalClass() throws Exception {
+    void shouldValidateAndCreateNodeShape() throws Exception {
+        var classDTO = createClassDTO(false);
+        classDTO.setProperties(List.of("test"));
+        Model mockModel = getMockModel(DCAP.DCAP);
+
+        when(jenaService.getDataModel(anyString())).thenReturn(mockModel);
+        when(jenaService.findResources(anyList())).thenReturn(ModelFactory.createDefaultModel());
+        try(var resourceMapper = mockStatic(ResourceMapper.class);
+            var classMapper = mockStatic(ClassMapper.class)) {
+                resourceMapper.when(() -> ResourceMapper.mapToIndexResource(any(Model.class), anyString())).thenReturn(new IndexResource());
+                classMapper.when(() -> ClassMapper.createClassAndMapToModel(anyString(), any(Model.class), any(ClassDTO.class), any(YtiUser.class))).thenReturn("test");
+                classMapper.when(() -> ClassMapper.mapPlaceholderPropertyShapes(any(Model.class), anyString(), any(Model.class), any(YtiUser.class)))
+                        .thenReturn(new ArrayList<>());
+                this.mvc
+                        .perform(put("/v2/class/test")
+                                .contentType("application/json")
+                                .content(EndpointUtils.convertObjectToJsonString(classDTO)))
+                        .andExpect(status().isOk());
+
+                verify(this.jenaService, times(2)).doesResolvedNamespaceExist(anyString());
+                verify(jenaService).doesResourceExistInGraph(anyString(), anyString());
+                verify(this.jenaService).getDataModel(anyString());
+                verify(terminologyService).resolveConcept(anyString());
+                classMapper.verify(() -> ClassMapper.createClassAndMapToModel(anyString(), any(Model.class), any(ClassDTO.class), any(YtiUser.class)));
+                classMapper.verify(() -> ClassMapper.mapPlaceholderPropertyShapes(any(Model.class), anyString(), any(Model.class), any(YtiUser.class)));
+                verify(this.jenaService).findResources(anyList());
+                verify(this.jenaService).putDataModelToCore(anyString(), any(Model.class));
+                verifyNoMoreInteractions(this.jenaService);
+                resourceMapper.verify(() -> ResourceMapper.mapToIndexResource(any(Model.class), anyString()));
+                verify(this.openSearchIndexer)
+                        .bulkInsert(anyString(), anyList());
+                verifyNoMoreInteractions(this.openSearchIndexer);
+        }
+    }
+
+    @Test
+    void shouldValidateAndCreateMinimalClass() throws Exception {
         var classDTO = new ClassDTO();
         classDTO.setIdentifier("Identifier");
         classDTO.setStatus(Status.DRAFT);
         classDTO.setLabel(Map.of("fi", "test"));
-        var mockModel = mock(Model.class);
+        Model mockModel = getMockModel(OWL.Ontology);
 
         when(jenaService.getDataModel(anyString())).thenReturn(mockModel);
         try(var resourceMapper = mockStatic(ResourceMapper.class);
@@ -147,7 +190,7 @@ class ClassControllerTest {
             verifyNoMoreInteractions(this.jenaService);
             resourceMapper.verify(() -> ResourceMapper.mapToIndexResource(any(Model.class), anyString()));
             verify(this.openSearchIndexer)
-                    .createResourceToIndex(any(IndexResource.class));
+                    .bulkInsert(anyString(), anyList());
             verifyNoMoreInteractions(this.openSearchIndexer);
         }
     }
@@ -361,5 +404,10 @@ class ClassControllerTest {
         return dto;
     }
 
-
+    private static Model getMockModel(Resource type) {
+        var mockModel = ModelFactory.createDefaultModel();
+        mockModel.createResource("http://uri.suomi.fi/datamodel/ns/test")
+                .addProperty(RDF.type, type);
+        return mockModel;
+    }
 }
