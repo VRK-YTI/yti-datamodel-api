@@ -82,6 +82,10 @@ public class ModelMapper {
 
         modelDTO.getTerminologies().forEach(terminology -> modelResource.addProperty(DCTerms.references, ResourceFactory.createResource(terminology)));
 
+        if(modelDTO.getType().equals(ModelType.PROFILE)) {
+            modelDTO.getCodeLists().forEach(codeList -> modelResource.addProperty(Iow.codeLists, ResourceFactory.createResource(codeList)));
+        }
+
         model.setNsPrefix(modelDTO.getPrefix(), modelUri + "#");
 
         return model;
@@ -91,6 +95,7 @@ public class ModelMapper {
     public Model mapToUpdateJenaModel(String prefix, DataModelDTO dataModelDTO, Model model, YtiUser user){
         var updateDate = new XSDDateTime(Calendar.getInstance());
         var modelResource = model.getResource(ModelConstants.SUOMI_FI_NAMESPACE + prefix);
+        var modelType = MapperUtils.getModelTypeFromResource(modelResource);
 
         //update languages before getting and using the languages for localized properties
         if(dataModelDTO.getLanguages() != null){
@@ -141,6 +146,13 @@ public class ModelMapper {
             modelResource.removeAll(DCTerms.references);
             dataModelDTO.getTerminologies().forEach(terminology ->
                     modelResource.addProperty(DCTerms.references, ResourceFactory.createResource(terminology))
+            );
+        }
+
+        if(dataModelDTO.getCodeLists() != null && modelType.equals(ModelType.PROFILE)){
+            modelResource.removeAll(Iow.codeLists);
+            dataModelDTO.getCodeLists().forEach(codeList ->
+                    modelResource.addProperty(Iow.codeLists, ResourceFactory.createResource(codeList))
             );
         }
 
@@ -238,8 +250,18 @@ public class ModelMapper {
             }
             return TerminologyMapper.mapToTerminologyDTO(graph, terminologyModel);
         }).collect(Collectors.toSet());
-
         datamodelDTO.setTerminologies(terminologies);
+
+        Set<CodeListDTO> codeLists = MapperUtils.arrayPropertyToSet(modelResource, Iow.codeLists).stream().map(codeList -> {
+            var codeListModel = jenaService.getCodelistScheme(codeList);
+            if(codeListModel == null){
+                var codeListDTO = new CodeListDTO();
+                codeListDTO.setId(codeList);
+                return codeListDTO;
+            }
+            return CodeListMapper.mapToCodeListDTO(codeList, codeListModel);
+        }).collect(Collectors.toSet());
+        datamodelDTO.setCodeLists(codeLists);
 
         if (userMapper != null) {
             userMapper.accept(datamodelDTO);

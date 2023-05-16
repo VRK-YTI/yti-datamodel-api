@@ -15,6 +15,7 @@ public class DataModelInfoDTO extends ResourceInfoBaseDTO {
     private Set<String> internalNamespaces = Set.of();
     private Set<ExternalNamespaceDTO> externalNamespaces = Set.of();
     private Set<TerminologyDTO> terminologies = Set.of();
+    private Set<CodeListDTO> codeLists = Set.of();
 
     private String contact;
 
@@ -112,5 +113,13 @@ public class DataModelInfoDTO extends ResourceInfoBaseDTO {
 
     public void setContact(String contact) {
         this.contact = contact;
+    }
+
+    public Set<CodeListDTO> getCodeLists() {
+        return codeLists;
+    }
+
+    public void setCodeLists(Set<CodeListDTO> codeLists) {
+        this.codeLists = codeLists;
     }
 }

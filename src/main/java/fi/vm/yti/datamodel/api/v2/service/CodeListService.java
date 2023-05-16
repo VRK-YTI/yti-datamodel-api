@@ -1,0 +1,66 @@
+package fi.vm.yti.datamodel.api.v2.service;
+
+import fi.vm.yti.datamodel.api.v2.dto.CodeListDTO;
+import fi.vm.yti.datamodel.api.v2.mapper.CodeListMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
+
+import java.net.URI;
+import java.util.Set;
+
+@Service
+public class CodeListService {
+
+    private static final Logger LOG = LoggerFactory.getLogger(CodeListService.class);
+
+    /**
+     * Control which environment is used for resolving terminology uris.
+     * Possible values: awsdev, awstest and awslocal. Resolve from prod if empty
+     */
+    @Value("${env:}")
+    private String awsEnv;
+    private final WebClient client;
+    private final JenaService jenaService;
+
+    public CodeListService(
+            @Qualifier("uriResolveClient") WebClient webClient,
+            JenaService jenaService) {
+        this.jenaService = jenaService;
+        this.client = webClient;
+    }
+
+    /**
+     * Fetch CodeList information and persist to Fuseki
+     * @param codeLists set of uris
+     */
+    public void resolveCodelistScheme(Set<String> codeLists) {
+        codeLists.forEach(codeList -> {
+            var uri = URI.create(codeList);
+            LOG.debug("Fetching codelist {}", uri);
+            try {
+                var result = client.get().uri(builder -> builder
+                                .path(uri.getPath())
+                                .queryParam("env", awsEnv)
+                                .build())
+                        .accept(MediaType.APPLICATION_JSON)
+                        .retrieve()
+                        .bodyToMono(new ParameterizedTypeReference<CodeListDTO>() {})
+                        .block();
+
+                if (result != null) {
+                    var model = CodeListMapper.mapToJenaModel(codeList, result);
+                    jenaService.putCodelistSchemeToSchemes(codeList, model);
+                }
+            } catch (Exception e) {
+                LOG.warn("Could not resolve codelist scheme {}, {}", uri, e.getMessage());
+            }
+        });
+    }
+
+}

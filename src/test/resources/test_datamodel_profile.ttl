@@ -26,7 +26,9 @@
         owl:versionInfo                 "VALID" ;
         iow:creator                     "2a5c075f-0d0e-4688-90e0-29af1eebbf6d" ;
         iow:modifier                    "2a5c075f-0d0e-4688-90e0-29af1eebbf6d" ;
-        iow:contact                     "test@localhost"                       .
+        iow:contact                     "test@localhost"                       ;
+        iow:codeLists                   "http://uri.suomi.fi/codelist/test/testcodelist" .
+
 
 <https://www.example.com/ns/ext>
         dcterms:type                        rdfs:Resource ;

@@ -79,6 +79,8 @@ class ModelMapperTest {
         dto.setType(ModelType.PROFILE);
         dto.setInternalNamespaces(Set.of("http://uri.suomi.fi/datamodel/ns/newint"));
         dto.setContact("test@localhost");
+        dto.setCodeLists(Set.of("http://uri.suomi.fi/codelist/test/testcodelist"));
+        dto.setTerminologies(Set.of("http://uri.suomi.fi/terminology/test"));
         var externalDTO = new ExternalNamespaceDTO();
         externalDTO.setName("test dto");
         externalDTO.setNamespace("http://www.w3.org/2000/01/rdf-schema#");
@@ -104,6 +106,8 @@ class ModelMapperTest {
 
         assertEquals(mockUser.getId().toString(), MapperUtils.propertyToString(modelResource, Iow.creator));
         assertEquals(mockUser.getId().toString(), MapperUtils.propertyToString(modelResource, Iow.modifier));
+        assertEquals("http://uri.suomi.fi/codelist/test/testcodelist", MapperUtils.propertyToString(modelResource, Iow.codeLists));
+        assertEquals("http://uri.suomi.fi/terminology/test", MapperUtils.propertyToString(modelResource, DCTerms.references));
 
         assertEquals("test@localhost", MapperUtils.propertyToString(modelResource, Iow.contact));
     }
@@ -133,6 +137,7 @@ class ModelMapperTest {
         dto.setLanguages(Set.of("fi", "sv"));
         dto.setOrganizations(Set.of(organizationId));
         dto.setContact("new@localhost");
+        dto.setTerminologies(Set.of("http://uri.suomi.fi/terminology/newtest"));
 
         dto.setInternalNamespaces(Set.of("http://uri.suomi.fi/datamodel/ns/newint"));
         var externalDTO = new ExternalNamespaceDTO();
@@ -160,6 +165,8 @@ class ModelMapperTest {
 
         assertEquals("test@localhost", MapperUtils.propertyToString(modelResource, Iow.contact));
 
+        assertEquals("http://uri.suomi.fi/terminology/test", MapperUtils.propertyToString(modelResource, DCTerms.references));
+
         Model model = mapper.mapToUpdateJenaModel("test", dto, m, mockUser);
 
         //changed values
@@ -184,7 +191,38 @@ class ModelMapperTest {
         assertEquals(mockUser.getId().toString(), modelResource.getProperty(Iow.modifier).getString());
         assertEquals("2a5c075f-0d0e-4688-90e0-29af1eebbf6d", modelResource.getProperty(Iow.creator).getObject().toString());
 
+        assertEquals("http://uri.suomi.fi/terminology/newtest", MapperUtils.propertyToString(modelResource, DCTerms.references));
+
         assertEquals("new@localhost", MapperUtils.propertyToString(modelResource, Iow.contact));
+    }
+
+    @Test
+    void testMapToUpdateModelProfile(){
+        //Testing profile specific properties
+        var m = MapperTestUtils.getModelFromFile("/test_datamodel_profile.ttl");
+        when(jenaService.getDataModel("test")).thenReturn(m);
+        var mockModel = ModelFactory.createDefaultModel();
+        mockModel.createResource("http://uri.suomi.fi/datamodel/ns/newint")
+                .addProperty(RDF.type, DCAP.DCAP)
+                .addProperty(DCAP.preferredXMLNamespacePrefix, "test");
+        when(jenaService.getDataModel(anyString())).thenReturn(mockModel);
+
+        YtiUser mockUser = EndpointUtils.mockUser;
+
+        DataModelDTO dto = new DataModelDTO();
+        dto.setCodeLists(Set.of("http://uri.suomi.fi/codelist/test/newcodelist"));
+
+        Resource modelResource = m.getResource("http://uri.suomi.fi/datamodel/ns/test");
+        assertEquals("http://uri.suomi.fi/codelist/test/testcodelist", MapperUtils.propertyToString(modelResource, Iow.codeLists));
+
+        Model model = mapper.mapToUpdateJenaModel("test", dto, m, mockUser);
+
+
+        //changed values
+        modelResource = model.getResource("http://uri.suomi.fi/datamodel/ns/test");
+        assertEquals("http://uri.suomi.fi/codelist/test/newcodelist", MapperUtils.propertyToString(modelResource, Iow.codeLists));
+
+
     }
 
     @Test
