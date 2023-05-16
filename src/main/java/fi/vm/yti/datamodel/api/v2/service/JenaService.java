@@ -9,6 +9,7 @@ import org.apache.jena.atlas.web.HttpException;
 import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.query.Query;
 import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.rdfconnection.RDFConnection;
@@ -128,6 +129,14 @@ public class JenaService {
     public Model constructWithQuery(Query query){
         try{
             return coreSparql.queryConstruct(query);
+        }catch(HttpException ex){
+            return null;
+        }
+    }
+
+    public Model constructWithQueryImports(Query query){
+        try{
+            return importSparql.queryConstruct(query);
         }catch(HttpException ex){
             return null;
         }
@@ -306,6 +315,35 @@ public class JenaService {
             .addWhere(inScheme, RDFS.label, terminologyLabel);
 
         return conceptSparql.queryConstruct(builder.build());
+    }
+
+    public Model findResources(List<String> resourceURIs) {
+        if (resourceURIs == null || resourceURIs.isEmpty()) {
+            return ModelFactory.createDefaultModel();
+        }
+        ConstructBuilder coreBuilder = new ConstructBuilder();
+        coreBuilder.addPrefixes(ModelConstants.PREFIXES);
+        ConstructBuilder importsBuilder = new ConstructBuilder();
+        importsBuilder.addPrefixes(ModelConstants.PREFIXES);
+        for (var i = 0; i < resourceURIs.size(); i++) {
+            var pred = "?p" + i;
+            var obj = "?o" + i;
+            String uri = resourceURIs.get(i);
+            var resource = ResourceFactory.createResource(uri);
+            if (uri.startsWith(ModelConstants.SUOMI_FI_NAMESPACE)) {
+                coreBuilder.addConstruct(resource, pred, obj);
+                coreBuilder.addOptional(resource, pred, obj);
+            } else {
+                importsBuilder.addConstruct(resource, pred, obj);
+                importsBuilder.addOptional(resource, pred, obj);
+            }
+        }
+
+        var resultModel = coreSparql.queryConstruct(coreBuilder.build());
+        var importsModel = importSparql.queryConstruct(importsBuilder.build());
+
+        resultModel.add(importsModel);
+        return resultModel;
     }
 
     public int getVersionNumber() {
