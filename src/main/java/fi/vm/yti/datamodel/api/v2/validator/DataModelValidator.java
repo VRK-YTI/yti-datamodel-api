@@ -2,6 +2,7 @@ package fi.vm.yti.datamodel.api.v2.validator;
 
 import fi.vm.yti.datamodel.api.v2.dto.DataModelDTO;
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
+import fi.vm.yti.datamodel.api.v2.dto.ModelType;
 import fi.vm.yti.datamodel.api.v2.service.JenaService;
 import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.vocabulary.SKOS;
@@ -39,7 +40,9 @@ public class DataModelValidator extends BaseValidator implements
         checkInternalNamespaces(context, dataModel);
         checkExternalNamespaces(context, dataModel);
 
+
         checkTerminologies(context, dataModel);
+        checkCodeLists(context, dataModel);
         return !isConstraintViolationAdded();
     }
 
@@ -264,6 +267,20 @@ public class DataModelValidator extends BaseValidator implements
 
         if (!dataModel.getTerminologies().stream().allMatch(uri -> uri.matches("^https?://uri.suomi.fi/terminology/(.*)"))) {
             addConstraintViolation(context, "invalid-terminology-uri", "terminologies");
+        }
+    }
+
+    private void checkCodeLists(ConstraintValidatorContext context, DataModelDTO dataModel) {
+        if (dataModel.getCodeLists() == null) {
+            return;
+        }
+
+        if(!updateModel && dataModel.getType().equals(ModelType.LIBRARY)){
+            addConstraintViolation(context, "library-not-supported", "codeLists");
+        }
+
+        if (!dataModel.getCodeLists().stream().allMatch(uri -> uri.matches("^https?://uri.suomi.fi/codelist/(.*)"))) {
+            addConstraintViolation(context, "invalid-codelist-uri", "codeLists");
         }
     }
 }
