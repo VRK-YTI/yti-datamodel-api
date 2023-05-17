@@ -193,7 +193,7 @@ public class ModelMapper {
      * @param model  Model
      * @return Data Model DTO
      */
-    public DataModelInfoDTO mapToDataModelDTO(String prefix, Model model, Consumer<ResourceInfoBaseDTO> userMapper) {
+    public DataModelInfoDTO mapToDataModelDTO(String prefix, Model model, Consumer<ResourceCommonDTO> userMapper) {
 
         var datamodelDTO = new DataModelInfoDTO();
         datamodelDTO.setPrefix(prefix);

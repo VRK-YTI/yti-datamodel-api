@@ -68,8 +68,8 @@ class ResourceControllerTest {
     @Autowired
     private ResourceController resourceController;
 
-    private final Consumer<ResourceInfoBaseDTO> userMapper = (var dto) -> {};
-    private final Consumer<ResourceInfoDTO> conceptMapper = (var dto) -> {};
+    private final Consumer<ResourceCommonDTO> userMapper = (var dto) -> {};
+    private final Consumer<ResourceInfoBaseDTO> conceptMapper = (var dto) -> {};
 
     private static final YtiUser USER = EndpointUtils.mockUser;
 
@@ -84,7 +84,7 @@ class ResourceControllerTest {
         when(authorizationManager.hasRightToModel(any(), any())).thenReturn(true);
         when(userProvider.getUser()).thenReturn(USER);
         when(groupManagementService.mapUser()).thenReturn(userMapper);
-        when(terminologyService.mapConceptToResource()).thenReturn(conceptMapper);
+        when(terminologyService.mapConcept()).thenReturn(conceptMapper);
     }
 
     @Test

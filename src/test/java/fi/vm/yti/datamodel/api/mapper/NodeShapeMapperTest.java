@@ -1,6 +1,6 @@
 package fi.vm.yti.datamodel.api.mapper;
 
-import fi.vm.yti.datamodel.api.v2.dto.ClassDTO;
+import fi.vm.yti.datamodel.api.v2.dto.NodeShapeDTO;
 import fi.vm.yti.datamodel.api.v2.endpoint.EndpointUtils;
 import fi.vm.yti.datamodel.api.v2.mapper.ClassMapper;
 import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
@@ -27,7 +27,7 @@ class NodeShapeMapperTest {
         var propertiesQueryResult = MapperTestUtils.getModelFromFile("/properties_result.ttl");
         var mockUser = EndpointUtils.mockUser;
 
-        ClassDTO dto = new ClassDTO();
+        var dto = new NodeShapeDTO();
         dto.setIdentifier("TestClass");
         dto.setSubject("http://uri.suomi.fi/terminology/test/test1");
         dto.setEditorialNote("comment");
@@ -36,7 +36,7 @@ class NodeShapeMapperTest {
         dto.setNote(Map.of("fi", "test note"));
         dto.setTargetClass("http://uri.suomi.fi/datamodel/ns/target#Class");
 
-        ClassMapper.createClassAndMapToModel("http://uri.suomi.fi/datamodel/ns/test", model, dto, mockUser);
+        ClassMapper.createNodeShapeAndMapToModel("http://uri.suomi.fi/datamodel/ns/test", model, dto, mockUser);
         ClassMapper.mapPlaceholderPropertyShapes(model, "http://uri.suomi.fi/datamodel/ns/test#TestClass",
                 propertiesQueryResult, mockUser);
 
@@ -45,9 +45,6 @@ class NodeShapeMapperTest {
 
         assertNotNull(modelResource);
         assertNotNull(classResource);
-
-        assertEquals(1, modelResource.listProperties(DCTerms.hasPart).toList().size());
-        assertEquals("http://uri.suomi.fi/datamodel/ns/test#TestClass", modelResource.getProperty(DCTerms.hasPart).getObject().toString());
 
         assertEquals(1, classResource.listProperties(RDFS.label).toList().size());
         assertEquals("test label", classResource.getProperty(RDFS.label).getLiteral().getString());
@@ -61,7 +58,7 @@ class NodeShapeMapperTest {
         assertEquals("TestClass", classResource.getProperty(DCTerms.identifier).getLiteral().getString());
 
         assertEquals("comment", MapperUtils.propertyToString(classResource, SKOS.editorialNote));
-        assertEquals("test note", classResource.getProperty(SH.description).getLiteral().getString());
+        assertEquals("test note", classResource.getProperty(RDFS.comment).getLiteral().getString());
         assertEquals(mockUser.getId().toString(), classResource.getProperty(Iow.creator).getString());
         assertEquals(mockUser.getId().toString(), classResource.getProperty(Iow.modifier).getString());
         assertEquals("http://uri.suomi.fi/datamodel/ns/target#Class", classResource.getProperty(SH.targetClass).getObject().toString());
@@ -90,7 +87,7 @@ class NodeShapeMapperTest {
     void testMapNodeShapeToClassDTO(){
         var m = MapperTestUtils.getModelFromFile("/models/test_datamodel_profile_with_resources.ttl");
 
-        var dto = ClassMapper.mapToClassDTO(m, "http://uri.suomi.fi/datamodel/ns/test", "TestClass", MapperTestUtils.getOrgModel(), false, null);
+        var dto = ClassMapper.mapToNodeShapeDTO(m, "http://uri.suomi.fi/datamodel/ns/test", "TestClass", MapperTestUtils.getOrgModel(), false, null);
 
         // not authenticated
         assertNull(dto.getEditorialNote());
@@ -111,12 +108,34 @@ class NodeShapeMapperTest {
     }
 
     @Test
+    void testMapReferencePropertyShapes() {
+        var model = MapperTestUtils.getModelFromFile("/models/test_datamodel_profile_with_resources.ttl");
+        var propertiesQueryResult = MapperTestUtils.getModelFromFile("/properties_result.ttl");
+        ClassMapper.mapReferencePropertyShapes(model, "http://uri.suomi.fi/datamodel/ns/test#TestClass",
+                propertiesQueryResult);
+
+        var classRes = model.getResource("http://uri.suomi.fi/datamodel/ns/test#TestClass");
+
+        var propertyShapes = classRes.listProperties(SH.property).toList();
+        var propertyShapeResource = model.getResource("http://uri.suomi.fi/datamodel/ns/test_lib#attribute-1");
+
+        assertEquals(2, propertyShapes.size());
+        assertTrue(propertyShapes.stream().anyMatch(
+                shape -> shape.getObject().toString().equals("http://uri.suomi.fi/datamodel/ns/test_lib#attribute-1")));
+        assertTrue(propertyShapes.stream().anyMatch(
+                shape -> shape.getObject().toString().equals("http://uri.suomi.fi/datamodel/ns/test_lib#association-1")));
+
+        assertEquals("http://uri.suomi.fi/datamodel/ns/test_lib#attribute-1", propertyShapeResource.getURI());
+        assertEquals(OWL.DatatypeProperty, propertyShapeResource.getProperty(RDF.type).getObject());
+    }
+
+    @Test
     void testMapToUpdateClassProfile(){
         var m = MapperTestUtils.getModelFromFile("/models/test_datamodel_profile_with_resources.ttl");
         var resource = m.getResource("http://uri.suomi.fi/datamodel/ns/test#TestClass");
         var mockUser = EndpointUtils.mockUser;
 
-        var dto = new ClassDTO();
+        var dto = new NodeShapeDTO();
         dto.setLabel(Map.of("fi", "new label"));
         dto.setStatus(Status.INVALID);
         dto.setNote(Map.of("fi", "new note"));
@@ -132,10 +151,10 @@ class NodeShapeMapperTest {
         assertEquals("http://uri.suomi.fi/terminology/test/test1", resource.getProperty(DCTerms.subject).getObject().toString());
         assertEquals(Status.VALID.name(), resource.getProperty(OWL.versionInfo).getObject().toString());
         assertEquals("comment visible for admin", resource.getProperty(SKOS.editorialNote).getObject().toString());
-        assertEquals(2, resource.listProperties(SH.description).toList().size());
+        assertEquals(2, resource.listProperties(RDFS.comment).toList().size());
         assertEquals("http://uri.suomi.fi/datamodel/ns/target#Class", resource.getProperty(SH.targetClass).getObject().toString());
 
-        ClassMapper.mapToUpdateClass(m, "http://uri.suomi.fi/datamodel/ns/test", resource, dto, mockUser);
+        ClassMapper.mapToUpdateNodeShape(m, "http://uri.suomi.fi/datamodel/ns/test", resource, dto, mockUser);
 
         assertEquals(SH.NodeShape, resource.getProperty(RDF.type).getResource());
         assertEquals("http://uri.suomi.fi/datamodel/ns/test", resource.getProperty(RDFS.isDefinedBy).getObject().toString());
@@ -145,9 +164,9 @@ class NodeShapeMapperTest {
         assertEquals("http://uri.suomi.fi/terminology/qwe", resource.getProperty(DCTerms.subject).getObject().toString());
         assertEquals(Status.INVALID.name(), resource.getProperty(OWL.versionInfo).getObject().toString());
         assertEquals("new editorial note", resource.getProperty(SKOS.editorialNote).getObject().toString());
-        assertEquals(1, resource.listProperties(SH.description).toList().size());
-        assertEquals("new note", resource.getProperty(SH.description).getLiteral().getString());
-        assertEquals("fi", resource.getProperty(SH.description).getLiteral().getLanguage());
+        assertEquals(1, resource.listProperties(RDFS.comment).toList().size());
+        assertEquals("new note", resource.getProperty(RDFS.comment).getLiteral().getString());
+        assertEquals("fi", resource.getProperty(RDFS.comment).getLiteral().getLanguage());
         assertEquals(mockUser.getId().toString(), resource.getProperty(Iow.modifier).getObject().toString());
         assertEquals("2a5c075f-0d0e-4688-90e0-29af1eebbf6d", resource.getProperty(Iow.creator).getObject().toString());
     }

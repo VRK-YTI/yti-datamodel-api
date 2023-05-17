@@ -40,7 +40,7 @@ public class ResourceMapper {
         var langs = MapperUtils.arrayPropertyToSet(modelResource, DCTerms.language);
         MapperUtils.addLocalizedProperty(langs, dto.getLabel(), resourceResource, RDFS.label, model);
         //Note
-        MapperUtils.addLocalizedProperty(langs, dto.getNote(), resourceResource, SKOS.note, model);
+        MapperUtils.addLocalizedProperty(langs, dto.getNote(), resourceResource, RDFS.comment, model);
         MapperUtils.addOptionalStringProperty(resourceResource, SKOS.editorialNote, dto.getEditorialNote());
         MapperUtils.addOptionalUriProperty(resourceResource, DCTerms.subject, dto.getSubject());
 
@@ -80,7 +80,7 @@ public class ResourceMapper {
         }
 
         MapperUtils.updateLocalizedProperty(languages, dto.getLabel(), resource, RDFS.label, model);
-        MapperUtils.updateLocalizedProperty(languages, dto.getNote(), resource, SKOS.note, model);
+        MapperUtils.updateLocalizedProperty(languages, dto.getNote(), resource, RDFS.comment, model);
         MapperUtils.updateStringProperty(resource, SKOS.editorialNote, dto.getEditorialNote());
         MapperUtils.updateUriProperty(resource, DCTerms.subject, dto.getSubject());
 
@@ -134,7 +134,7 @@ public class ResourceMapper {
         indexResource.setModified(resource.getProperty(DCTerms.modified).getString());
         indexResource.setCreated(resource.getProperty(DCTerms.created).getString());
         indexResource.setSubject(MapperUtils.propertyToString(resource, DCTerms.subject));
-        var note = MapperUtils.localizedPropertyToMap(resource, SKOS.note);
+        var note = MapperUtils.localizedPropertyToMap(resource, RDFS.comment);
         if(!note.isEmpty()){
             indexResource.setNote(note);
         }
@@ -162,7 +162,7 @@ public class ResourceMapper {
 
     public static ResourceInfoDTO mapToResourceInfoDTO(Model model, String modelUri,
                                                        String resourceIdentifier, Model orgModel,
-                                                       boolean hasRightToModel, Consumer<ResourceInfoBaseDTO> userMapper) {
+                                                       boolean hasRightToModel, Consumer<ResourceCommonDTO> userMapper) {
         var dto = new ResourceInfoDTO();
         var resourceUri = modelUri + "#" + resourceIdentifier;
         var resourceResource = model.getResource(resourceUri);
@@ -187,7 +187,7 @@ public class ResourceMapper {
             dto.setSubject(conceptDTO);
         }
         dto.setIdentifier(resourceResource.getLocalName());
-        dto.setNote(MapperUtils.localizedPropertyToMap(resourceResource, SKOS.note));
+        dto.setNote(MapperUtils.localizedPropertyToMap(resourceResource, RDFS.comment));
         if (hasRightToModel) {
             dto.setEditorialNote(MapperUtils.propertyToString(resourceResource, SKOS.editorialNote));
         }

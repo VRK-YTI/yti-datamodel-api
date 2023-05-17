@@ -73,9 +73,9 @@ class ClassControllerTest {
     @MockBean
     private SearchIndexService searchIndexService;
 
-    private final Consumer<ResourceInfoBaseDTO> userMapper = (var dto) -> {};
+    private final Consumer<ResourceCommonDTO> userMapper = (var dto) -> {};
 
-    private final Consumer<ClassInfoDTO> conceptMapper = (var dto) -> {};
+    private final Consumer<ResourceInfoBaseDTO> conceptMapper = (var dto) -> {};
 
     private static final YtiUser USER = EndpointUtils.mockUser;
 
@@ -93,7 +93,7 @@ class ClassControllerTest {
         when(authorizationManager.hasRightToAnyOrganization(anyCollection())).thenReturn(true);
         when(authorizationManager.hasRightToModel(any(), any())).thenReturn(true);
         when(userProvider.getUser()).thenReturn(USER);
-        when(terminologyService.mapConceptToClass()).thenReturn(conceptMapper);
+        when(terminologyService.mapConcept()).thenReturn(conceptMapper);
     }
 
     @Test
@@ -105,9 +105,9 @@ class ClassControllerTest {
         try(var resourceMapper = mockStatic(ResourceMapper.class);
             var classMapper = mockStatic(ClassMapper.class)) {
             resourceMapper.when(() -> ResourceMapper.mapToIndexResource(any(Model.class), anyString())).thenReturn(new IndexResource());
-            classMapper.when(() -> ClassMapper.createClassAndMapToModel(anyString(), any(Model.class), any(ClassDTO.class), any(YtiUser.class))).thenReturn("test");
+            classMapper.when(() -> ClassMapper.createOntologyClassAndMapToModel(anyString(), any(Model.class), any(ClassDTO.class), any(YtiUser.class))).thenReturn("test");
             this.mvc
-                    .perform(put("/v2/class/test")
+                    .perform(put("/v2/class/ontology/test")
                             .contentType("application/json")
                             .content(EndpointUtils.convertObjectToJsonString(classDTO)))
                     .andExpect(status().isOk());
@@ -117,49 +117,12 @@ class ClassControllerTest {
             verify(jenaService).doesResourceExistInGraph(anyString(), anyString());
             verify(this.jenaService).getDataModel(anyString());
             verify(terminologyService).resolveConcept(anyString());
-            classMapper.verify(() -> ClassMapper.createClassAndMapToModel(anyString(), any(Model.class), any(ClassDTO.class), any(YtiUser.class)));
+            classMapper.verify(() -> ClassMapper.createOntologyClassAndMapToModel(anyString(), any(Model.class), any(ClassDTO.class), any(YtiUser.class)));
             verify(this.jenaService).putDataModelToCore(anyString(), any(Model.class));
             verifyNoMoreInteractions(this.jenaService);
             resourceMapper.verify(() -> ResourceMapper.mapToIndexResource(any(Model.class), anyString()));
-            verify(this.openSearchIndexer)
-                    .bulkInsert(anyString(), anyList());
+            verify(this.openSearchIndexer).createResourceToIndex(any(IndexResource.class));
             verifyNoMoreInteractions(this.openSearchIndexer);
-        }
-    }
-
-    @Test
-    void shouldValidateAndCreateNodeShape() throws Exception {
-        var classDTO = createClassDTO(false);
-        classDTO.setProperties(List.of("test"));
-        Model mockModel = getMockModel(DCAP.DCAP);
-
-        when(jenaService.getDataModel(anyString())).thenReturn(mockModel);
-        when(jenaService.findResources(anyList())).thenReturn(ModelFactory.createDefaultModel());
-        try(var resourceMapper = mockStatic(ResourceMapper.class);
-            var classMapper = mockStatic(ClassMapper.class)) {
-                resourceMapper.when(() -> ResourceMapper.mapToIndexResource(any(Model.class), anyString())).thenReturn(new IndexResource());
-                classMapper.when(() -> ClassMapper.createClassAndMapToModel(anyString(), any(Model.class), any(ClassDTO.class), any(YtiUser.class))).thenReturn("test");
-                classMapper.when(() -> ClassMapper.mapPlaceholderPropertyShapes(any(Model.class), anyString(), any(Model.class), any(YtiUser.class)))
-                        .thenReturn(new ArrayList<>());
-                this.mvc
-                        .perform(put("/v2/class/test")
-                                .contentType("application/json")
-                                .content(EndpointUtils.convertObjectToJsonString(classDTO)))
-                        .andExpect(status().isOk());
-
-                verify(this.jenaService, times(2)).doesResolvedNamespaceExist(anyString());
-                verify(jenaService).doesResourceExistInGraph(anyString(), anyString());
-                verify(this.jenaService).getDataModel(anyString());
-                verify(terminologyService).resolveConcept(anyString());
-                classMapper.verify(() -> ClassMapper.createClassAndMapToModel(anyString(), any(Model.class), any(ClassDTO.class), any(YtiUser.class)));
-                classMapper.verify(() -> ClassMapper.mapPlaceholderPropertyShapes(any(Model.class), anyString(), any(Model.class), any(YtiUser.class)));
-                verify(this.jenaService).findResources(anyList());
-                verify(this.jenaService).putDataModelToCore(anyString(), any(Model.class));
-                verifyNoMoreInteractions(this.jenaService);
-                resourceMapper.verify(() -> ResourceMapper.mapToIndexResource(any(Model.class), anyString()));
-                verify(this.openSearchIndexer)
-                        .bulkInsert(anyString(), anyList());
-                verifyNoMoreInteractions(this.openSearchIndexer);
         }
     }
 
@@ -175,9 +138,9 @@ class ClassControllerTest {
         try(var resourceMapper = mockStatic(ResourceMapper.class);
             var classMapper = mockStatic(ClassMapper.class)) {
             resourceMapper.when(() -> ResourceMapper.mapToIndexResource(any(Model.class), anyString())).thenReturn(new IndexResource());
-            classMapper.when(() -> ClassMapper.createClassAndMapToModel(anyString(), any(Model.class), any(ClassDTO.class), any(YtiUser.class))).thenReturn("test");
+            classMapper.when(() -> ClassMapper.createOntologyClassAndMapToModel(anyString(), any(Model.class), any(ClassDTO.class), any(YtiUser.class))).thenReturn("test");
             this.mvc
-                    .perform(put("/v2/class/test")
+                    .perform(put("/v2/class/ontology/test")
                             .contentType("application/json")
                             .content(EndpointUtils.convertObjectToJsonString(classDTO)))
                     .andExpect(status().isOk());
@@ -185,12 +148,11 @@ class ClassControllerTest {
             //Check that functions are called
             verify(jenaService).doesResourceExistInGraph(anyString(), anyString());
             verify(jenaService).getDataModel(anyString());
-            classMapper.verify(() -> ClassMapper.createClassAndMapToModel(anyString(), any(Model.class), any(ClassDTO.class), any(YtiUser.class)));
+            classMapper.verify(() -> ClassMapper.createOntologyClassAndMapToModel(anyString(), any(Model.class), any(ClassDTO.class), any(YtiUser.class)));
             verify(this.jenaService).putDataModelToCore(anyString(), any(Model.class));
             verifyNoMoreInteractions(this.jenaService);
             resourceMapper.verify(() -> ResourceMapper.mapToIndexResource(any(Model.class), anyString()));
-            verify(this.openSearchIndexer)
-                    .bulkInsert(anyString(), anyList());
+            verify(this.openSearchIndexer).createResourceToIndex(any(IndexResource.class));
             verifyNoMoreInteractions(this.openSearchIndexer);
         }
     }
@@ -201,7 +163,7 @@ class ClassControllerTest {
 
         //finding models from jena is not mocked so it should return null and return 404 not found
         this.mvc
-                .perform(put("/v2/class/test")
+                .perform(put("/v2/class/ontology/test")
                         .contentType("application/json")
                         .content(EndpointUtils.convertObjectToJsonString(classDTO)))
                 .andExpect(status().isNotFound());
@@ -211,7 +173,7 @@ class ClassControllerTest {
     @MethodSource("provideCreateClassDTOInvalidData")
     void shouldInvalidate(ClassDTO classDTO) throws Exception {
         this.mvc
-                .perform(put("/v2/class/test")
+                .perform(put("/v2/class/ontology/test")
                         .contentType("application/json")
                         .content(EndpointUtils.convertObjectToJsonString(classDTO)))
                 .andExpect(status().isBadRequest());
@@ -252,10 +214,9 @@ class ClassControllerTest {
     @Test
     void shouldValidateAndUpdate() throws Exception {
         var classDTO = createClassDTO(true);
-        var mockModel = mock(Model.class);
+        var mockModel = getMockModel(OWL.Ontology);
 
         when(jenaService.getDataModel(anyString())).thenReturn(mockModel);
-        when(mockModel.getResource(anyString())).thenReturn(mock(Resource.class));
         when(jenaService.doesResourceExistInGraph(anyString(), anyString())).thenReturn(true);
 
         try(var resourceMapper = mockStatic(ResourceMapper.class);
@@ -264,7 +225,7 @@ class ClassControllerTest {
             //mockito will use our mocked static even though we do not call when(). so nothing is needed here
 
             this.mvc
-                    .perform(put("/v2/class/test/class")
+                    .perform(put("/v2/class/ontology/test/class")
                             .contentType("application/json")
                             .content(EndpointUtils.convertObjectToJsonString(classDTO)))
                     .andExpect(status().isOk());
@@ -273,7 +234,7 @@ class ClassControllerTest {
             verify(this.jenaService, times(2)).doesResolvedNamespaceExist(anyString());
             verify(this.jenaService).doesResourceExistInGraph(anyString(), anyString());
             verify(this.jenaService).getDataModel(anyString());
-            classMapper.verify(() -> ClassMapper.mapToUpdateClass(any(Model.class), anyString(), any(Resource.class), any(ClassDTO.class), any(YtiUser.class)));
+            classMapper.verify(() -> ClassMapper.mapToUpdateOntologyClass(any(Model.class), anyString(), any(Resource.class), any(ClassDTO.class), any(YtiUser.class)));
             verify(this.jenaService).putDataModelToCore(anyString(), any(Model.class));
             verifyNoMoreInteractions(this.jenaService);
             resourceMapper.verify(() -> ResourceMapper.mapToIndexResource(any(Model.class), anyString()));
@@ -289,7 +250,7 @@ class ClassControllerTest {
         when(jenaService.doesResourceExistInGraph(anyString(), anyString())).thenReturn(false);
 
         this.mvc
-                .perform(put("/v2/class/test/class")
+                .perform(put("/v2/class/ontology/test/class")
                         .contentType("application/json")
                         .content(EndpointUtils.convertObjectToJsonString(classDTO)))
                 .andExpect(status().isNotFound());
@@ -299,7 +260,7 @@ class ClassControllerTest {
     @MethodSource("provideUpdateClassDTOInvalidData")
     void shouldInvalidateUpdate(ClassDTO classDTO) throws Exception{
         this.mvc
-                .perform(put("/v2/class/test/class")
+                .perform(put("/v2/class/ontology/test/class")
                         .contentType("application/json")
                         .content(EndpointUtils.convertObjectToJsonString(classDTO)))
                 .andExpect(status().isBadRequest());
@@ -327,14 +288,14 @@ class ClassControllerTest {
         try(var mapper = mockStatic(ClassMapper.class)) {
             mapper.when(() -> ClassMapper.mapToClassDTO(any(Model.class), anyString(), anyString(), any(Model.class), anyBoolean(), eq(userMapper)))
                     .thenReturn(new ClassInfoDTO());
-            mvc.perform(get("/v2/class/test/TestClass"))
+            mvc.perform(get("/v2/class/ontology/test/TestClass"))
                     .andExpect(status().isOk());
         }
     }
 
     @Test
     void shouldResourceNotExistGet() throws Exception {
-        mvc.perform(get("/v2/class/test/class"))
+        mvc.perform(get("/v2/class/ontology/test/class"))
                 .andExpect(status().isNotFound());
     }
 
@@ -342,7 +303,7 @@ class ClassControllerTest {
     void shouldModelNotExistGet() throws Exception {
         when(jenaService.doesResourceExistInGraph(anyString(), anyString())).thenReturn(true);
 
-        mvc.perform(get("/v2/class/test/class"))
+        mvc.perform(get("/v2/class/ontology/test/class"))
                 .andExpect(status().isNotFound());
     }
 
@@ -353,7 +314,7 @@ class ClassControllerTest {
         when(authorizationManager.hasRightToModel(anyString(), any(Model.class))).thenReturn(true);
 
 
-        mvc.perform(delete("/v2/class/test/class"))
+        mvc.perform(delete("/v2/class/ontology/test/class"))
                 .andExpect(status().isOk());
 
         verify(jenaService).doesResourceExistInGraph(anyString(), anyString());
@@ -365,7 +326,7 @@ class ClassControllerTest {
 
     @Test
     void shouldFailToFindClassDelete() throws Exception {
-        mvc.perform(delete("/v2/class/test/class"))
+        mvc.perform(delete("/v2/class/ontology/test/class"))
                 .andExpect(status().isNotFound());
 
         verify(jenaService).doesResourceExistInGraph(anyString(), anyString());
@@ -379,7 +340,7 @@ class ClassControllerTest {
         when(jenaService.getDataModel(anyString())).thenReturn(mock(Model.class));
         when(authorizationManager.hasRightToModel(anyString(), any(Model.class))).thenReturn(false);
 
-        mvc.perform(delete("/v2/class/test/class"))
+        mvc.perform(delete("/v2/class/ontology/test/class"))
                 .andExpect(status().isUnauthorized());
 
         verify(jenaService).doesResourceExistInGraph(anyString(), anyString());
@@ -387,6 +348,41 @@ class ClassControllerTest {
         verifyNoMoreInteractions(jenaService);
         verify(authorizationManager).hasRightToModel(anyString(), any(Model.class));
         verifyNoInteractions(openSearchIndexer);
+    }
+
+    @Test
+    void shouldValidateAndCreateNodeShape() throws Exception {
+        var nodeShapeDTO = createNodeShapeDTO();
+        nodeShapeDTO.setProperties(List.of("test"));
+        Model mockModel = getMockModel(DCAP.DCAP);
+
+        when(jenaService.getDataModel(anyString())).thenReturn(mockModel);
+        when(jenaService.findResources(anyList())).thenReturn(ModelFactory.createDefaultModel());
+        try(var resourceMapper = mockStatic(ResourceMapper.class);
+            var classMapper = mockStatic(ClassMapper.class)) {
+            resourceMapper.when(() -> ResourceMapper.mapToIndexResource(any(Model.class), anyString())).thenReturn(new IndexResource());
+            classMapper.when(() -> ClassMapper.createNodeShapeAndMapToModel(anyString(), any(Model.class), any(NodeShapeDTO.class), any(YtiUser.class))).thenReturn("test");
+            classMapper.when(() -> ClassMapper.mapPlaceholderPropertyShapes(any(Model.class), anyString(), any(Model.class), any(YtiUser.class)))
+                    .thenReturn(new ArrayList<>());
+            this.mvc
+                    .perform(put("/v2/class/profile/test")
+                            .contentType("application/json")
+                            .content(EndpointUtils.convertObjectToJsonString(nodeShapeDTO)))
+                    .andExpect(status().isOk());
+
+            verify(jenaService).doesResourceExistInGraph(anyString(), anyString());
+            verify(this.jenaService).getDataModel(anyString());
+            verify(terminologyService).resolveConcept(anyString());
+            classMapper.verify(() -> ClassMapper.createNodeShapeAndMapToModel(anyString(), any(Model.class), any(NodeShapeDTO.class), any(YtiUser.class)));
+            classMapper.verify(() -> ClassMapper.mapPlaceholderPropertyShapes(any(Model.class), anyString(), any(Model.class), any(YtiUser.class)));
+            verify(this.jenaService, times(2)).findResources(anyList());
+            verify(this.jenaService).putDataModelToCore(anyString(), any(Model.class));
+            verifyNoMoreInteractions(this.jenaService);
+            resourceMapper.verify(() -> ResourceMapper.mapToIndexResource(any(Model.class), anyString()));
+            verify(this.openSearchIndexer)
+                    .bulkInsert(anyString(), anyList());
+            verifyNoMoreInteractions(this.openSearchIndexer);
+        }
     }
 
     private static ClassDTO createClassDTO(boolean update){
@@ -401,6 +397,16 @@ class ClassControllerTest {
         dto.setEquivalentClass(Set.of("tietomallit.suomi.fi/ns/notrealns/FakeClass"));
         dto.setSubClassOf(Set.of("tietomallit.suomi.fi/ns/notrealns/FakeClass"));
         dto.setNote(Map.of("fi", "test note"));
+        return dto;
+    }
+
+    private static NodeShapeDTO createNodeShapeDTO() {
+        var dto = new NodeShapeDTO();
+        dto.setLabel(Map.of("fi", "node label"));
+        dto.setIdentifier("node-shape-1");
+        dto.setStatus(Status.DRAFT);
+        dto.setSubject("http://uri.suomi.fi/terminology/concept-123");
+
         return dto;
     }
 

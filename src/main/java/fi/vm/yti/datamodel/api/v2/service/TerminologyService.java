@@ -1,9 +1,6 @@
 package fi.vm.yti.datamodel.api.v2.service;
 
-import fi.vm.yti.datamodel.api.v2.dto.ClassInfoDTO;
-import fi.vm.yti.datamodel.api.v2.dto.ConceptDTO;
-import fi.vm.yti.datamodel.api.v2.dto.ResourceInfoDTO;
-import fi.vm.yti.datamodel.api.v2.dto.TerminologyNodeDTO;
+import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.ResolvingException;
 import fi.vm.yti.datamodel.api.v2.mapper.TerminologyMapper;
 import org.slf4j.Logger;
@@ -119,11 +116,7 @@ public class TerminologyService {
         jenaService.putTerminologyToConcepts(terminologyURI, terminologyModel);
     }
 
-    public Consumer<ClassInfoDTO> mapConceptToClass() {
-        return (var dto) -> dto.setSubject(getMappedConceptDTO(dto.getSubject()));
-    }
-
-    public Consumer<ResourceInfoDTO> mapConceptToResource() {
+    public Consumer<ResourceInfoBaseDTO> mapConcept() {
         return (var dto) -> dto.setSubject(getMappedConceptDTO(dto.getSubject()));
     }
 

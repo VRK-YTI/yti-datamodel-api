@@ -44,7 +44,7 @@ test:TestClass  rdf:type     owl:Class ;
         owl:equivalentClass  <http://uri.suomi.fi/datamodel/ns/test#EqClass> ;
         owl:versionInfo      "VALID" ;
         skos:editorialNote   "comment visible for admin" ;
-        skos:note         "test note fi"@fi, "test note en"@en ;
+        rdfs:comment         "test note fi"@fi, "test note en"@en ;
         iow:creator           "2a5c075f-0d0e-4688-90e0-29af1eebbf6d" ;
         iow:modifier          "2a5c075f-0d0e-4688-90e0-29af1eebbf6d" .
 
@@ -59,7 +59,7 @@ test:TestAttribute  rdf:type     owl:DatatypeProperty ;
         owl:equivalentProperty  <http://uri.suomi.fi/datamodel/ns/test#EqResource> ;
         owl:versionInfo         "VALID" ;
         skos:editorialNote      "comment visible for admin" ;
-        skos:note               "test note fi"@fi, "test note en"@en ;
+        rdfs:comment            "test note fi"@fi, "test note en"@en ;
         iow:creator             "2a5c075f-0d0e-4688-90e0-29af1eebbf6d" ;
         iow:modifier            "2a5c075f-0d0e-4688-90e0-29af1eebbf6d" ;
         rdfs:domain             <http://uri.suomi.fi/datamodel/ns/test#DomainClass> ;
@@ -76,7 +76,7 @@ test:TestAssociation  rdf:type     owl:ObjectProperty ;
         owl:equivalentProperty  <http://uri.suomi.fi/datamodel/ns/test#EqResource> ;
         owl:versionInfo         "VALID" ;
         skos:editorialNote      "comment visible for admin" ;
-        skos:note               "test note fi"@fi, "test note en"@en ;
+        rdfs:comment            "test note fi"@fi, "test note en"@en ;
         iow:creator             "2a5c075f-0d0e-4688-90e0-29af1eebbf6d" ;
         iow:modifier            "2a5c075f-0d0e-4688-90e0-29af1eebbf6d" ;
         rdfs:domain             <http://uri.suomi.fi/datamodel/ns/test#DomainClass> ;

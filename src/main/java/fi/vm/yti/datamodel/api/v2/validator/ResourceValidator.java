@@ -27,13 +27,13 @@ public class ResourceValidator extends BaseValidator implements ConstraintValida
     public boolean isValid(ResourceDTO value, ConstraintValidatorContext context) {
         setConstraintViolationAdded(false);
 
-        checkLabel(context, value);
+        checkLabel(context, value, updateProperty);
         checkEditorialNote(context, value);
-        checkStatus(context, value);
+        checkStatus(context, value, updateProperty);
         checkNote(context, value);
         checkEquivalentProperty(context, value);
         checkSubPropertyOf(context, value);
-        checkIdentifier(context, value);
+        checkIdentifier(context, value, updateProperty);
         checkType(context, value);
         checkDomain(context, value);
         checkRange(context, value);
@@ -46,46 +46,6 @@ public class ResourceValidator extends BaseValidator implements ConstraintValida
             addConstraintViolation(context, ValidationConstants.MSG_VALUE_MISSING, "type");
         }else if (updateProperty && resourceDTO.getType() != null){
             addConstraintViolation(context, ValidationConstants.MSG_NOT_ALLOWED_UPDATE, "type");
-        }
-    }
-
-    private void checkLabel(ConstraintValidatorContext context, ResourceDTO resourceDTO){
-        var labels = resourceDTO.getLabel();
-        if(!updateProperty && (labels == null || labels.isEmpty() || labels.values().stream().allMatch(String::isBlank))){
-            addConstraintViolation(context, ValidationConstants.MSG_VALUE_MISSING, "label");
-        }else if(labels != null){
-            labels.forEach((lang, value) -> {
-                if(value.length() > ValidationConstants.TEXT_FIELD_MAX_LENGTH){
-                    addConstraintViolation(context, ValidationConstants.MSG_OVER_CHARACTER_LIMIT + ValidationConstants.TEXT_FIELD_MAX_LENGTH, "label");
-                }
-            });
-        }
-    }
-
-    private void checkEditorialNote(ConstraintValidatorContext context, ResourceDTO resourceDTO){
-        var editorialNote = resourceDTO.getEditorialNote();
-        if(editorialNote != null && editorialNote.length() > ValidationConstants.TEXT_AREA_MAX_LENGTH){
-            addConstraintViolation(context, ValidationConstants.MSG_OVER_CHARACTER_LIMIT + ValidationConstants.TEXT_AREA_MAX_LENGTH, "editorialNote");
-        }
-    }
-
-
-    private void checkStatus(ConstraintValidatorContext context, ResourceDTO resourceDTO){
-        var status = resourceDTO.getStatus();
-        //Status has to be defined when creating
-        if(!updateProperty && status == null){
-            addConstraintViolation(context, ValidationConstants.MSG_VALUE_MISSING, "status");
-        }
-    }
-
-    private void checkNote(ConstraintValidatorContext context, ResourceDTO resourceDTO) {
-        var notes = resourceDTO.getNote();
-        if(notes != null){
-            notes.forEach((lang, value) -> {
-                if(value.length() > ValidationConstants.TEXT_FIELD_MAX_LENGTH){
-                    addConstraintViolation(context, ValidationConstants.MSG_OVER_CHARACTER_LIMIT + ValidationConstants.TEXT_FIELD_MAX_LENGTH, "note");
-                }
-            });
         }
     }
 
@@ -114,15 +74,6 @@ public class ResourceValidator extends BaseValidator implements ConstraintValida
                     addConstraintViolation(context, "resource-not-found-in-resolved-namespace", "subClassOf");
                 }
             });
-        }
-    }
-
-    private void checkIdentifier(ConstraintValidatorContext context, ResourceDTO resourceDTO){
-        var identifier = resourceDTO.getIdentifier();
-        if(!updateProperty && (identifier == null || identifier.isBlank())){
-            addConstraintViolation(context, ValidationConstants.MSG_VALUE_MISSING, "identifier");
-        }else if(updateProperty && identifier != null){
-            addConstraintViolation(context, ValidationConstants.MSG_NOT_ALLOWED_UPDATE, "identifier");
         }
     }
 

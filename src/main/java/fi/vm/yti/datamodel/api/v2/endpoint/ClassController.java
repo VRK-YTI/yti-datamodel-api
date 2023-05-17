@@ -15,18 +15,23 @@ import fi.vm.yti.datamodel.api.v2.service.JenaService;
 import fi.vm.yti.datamodel.api.v2.service.SearchIndexService;
 import fi.vm.yti.datamodel.api.v2.service.TerminologyService;
 import fi.vm.yti.datamodel.api.v2.validator.ValidClass;
+import fi.vm.yti.datamodel.api.v2.validator.ValidNodeShape;
 import fi.vm.yti.security.AuthenticatedUserProvider;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.apache.jena.graph.NodeFactory;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.topbraid.shacl.vocabulary.SH;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -67,10 +72,46 @@ public class ClassController {
 
     @Operation(summary = "Add a class to a model")
     @ApiResponse(responseCode = "200", description = "Class added to model successfully")
-    @PutMapping(value = "/{prefix}", consumes = APPLICATION_JSON_VALUE)
+    @PutMapping(value = "/ontology/{prefix}", consumes = APPLICATION_JSON_VALUE)
     public void createClass(@PathVariable String prefix, @RequestBody @ValidClass ClassDTO classDTO){
         var modelURI = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
-        if(jenaService.doesResourceExistInGraph(modelURI, modelURI + "#" + classDTO.getIdentifier())){
+        var model = handleCreateClassOrNodeShape(modelURI, prefix, classDTO);
+        var classURI = ClassMapper.createOntologyClassAndMapToModel(modelURI, model, classDTO, userProvider.getUser());
+        jenaService.putDataModelToCore(modelURI, model);
+        openSearchIndexer.createResourceToIndex(ResourceMapper.mapToIndexResource(model, classURI));
+    }
+
+    @Operation(summary = "Add a node shape to a model")
+    @ApiResponse(responseCode = "200", description = "Class added to model successfully")
+    @PutMapping(value = "/profile/{prefix}", consumes = APPLICATION_JSON_VALUE)
+    public void createNodeShape(@PathVariable String prefix, @RequestBody @ValidNodeShape NodeShapeDTO nodeShapeDTO){
+        var modelURI = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
+        var model = handleCreateClassOrNodeShape(modelURI, prefix, nodeShapeDTO);
+
+        var indexedResources = new ArrayList<String>();
+        var classURI = ClassMapper.createNodeShapeAndMapToModel(modelURI, model, nodeShapeDTO, userProvider.getUser());
+        indexedResources.add(classURI);
+
+        var propertiesModel = jenaService.findResources(nodeShapeDTO.getProperties());
+        var properties = ClassMapper.mapPlaceholderPropertyShapes(model, classURI, propertiesModel, userProvider.getUser());
+        indexedResources.addAll(properties);
+
+        // Node shape based on an existing node shape
+        var propertyURIs = handleTargetNodeProperties(nodeShapeDTO.getTargetNode());
+        var referencePropertiesModel = jenaService.findResources(new ArrayList<>(propertyURIs));
+        ClassMapper.mapReferencePropertyShapes(model, classURI,
+                referencePropertiesModel);
+
+        jenaService.putDataModelToCore(modelURI, model);
+
+        openSearchIndexer.bulkInsert(OpenSearchIndexer.OPEN_SEARCH_INDEX_RESOURCE,
+                indexedResources.stream()
+                        .map(p -> ResourceMapper.mapToIndexResource(model, p))
+                        .toList());
+    }
+
+    Model handleCreateClassOrNodeShape(String modelURI, String prefix, BaseDTO dto) {
+        if(jenaService.doesResourceExistInGraph(modelURI, modelURI + "#" + dto.getIdentifier())){
             throw new MappingError("Class already exists");
         }
         var model = jenaService.getDataModel(modelURI);
@@ -78,30 +119,29 @@ public class ClassController {
             throw new ResourceNotFoundException(modelURI);
         }
         check(authorizationManager.hasRightToModel(prefix, model));
+        checkDataModelType(model.getResource(modelURI), dto);
 
-        terminologyService.resolveConcept(classDTO.getSubject());
-
-        var indexedResources = new ArrayList<String>();
-        var classURI = ClassMapper.createClassAndMapToModel(modelURI, model, classDTO, userProvider.getUser());
-        indexedResources.add(classURI);
-
-        if (MapperUtils.isApplicationProfile(model.getResource(modelURI))) {
-            var propertiesModel = jenaService.findResources(classDTO.getProperties());
-            var properties = ClassMapper.mapPlaceholderPropertyShapes(model, classURI, propertiesModel, userProvider.getUser());
-            indexedResources.addAll(properties);
-        }
-        jenaService.putDataModelToCore(modelURI, model);
-
-        openSearchIndexer.bulkInsert(OpenSearchIndexer.OPEN_SEARCH_INDEX_RESOURCE,
-                indexedResources.stream()
-                .map(p -> ResourceMapper.mapToIndexResource(model, p))
-                .toList());
+        terminologyService.resolveConcept(dto.getSubject());
+        return model;
     }
+
 
     @Operation(summary = "Update a class in a model")
     @ApiResponse(responseCode =  "200", description = "Class updated in model successfully")
-    @PutMapping(value = "/{prefix}/{classIdentifier}", consumes = APPLICATION_JSON_VALUE)
+    @PutMapping(value = "/ontology/{prefix}/{classIdentifier}", consumes = APPLICATION_JSON_VALUE)
     public void updateClass(@PathVariable String prefix, @PathVariable String classIdentifier, @RequestBody @ValidClass(updateClass = true) ClassDTO classDTO){
+        handleUpdateClassOrNodeShape(prefix, classIdentifier, classDTO);
+    }
+
+    @Operation(summary = "Update a node shape in a model")
+    @ApiResponse(responseCode =  "200", description = "Class updated in model successfully")
+    @PutMapping(value = "/profile/{prefix}/{nodeShapeIdentifier}", consumes = APPLICATION_JSON_VALUE)
+    public void updateNodeShape(@PathVariable String prefix, @PathVariable String nodeShapeIdentifier,
+                                @RequestBody @ValidNodeShape(updateNodeShape = true) NodeShapeDTO nodeShapeDTO){
+        handleUpdateClassOrNodeShape(prefix, nodeShapeIdentifier, nodeShapeDTO);
+    }
+
+    void handleUpdateClassOrNodeShape(String prefix, String classIdentifier, BaseDTO dto) {
         logger.info("Updating class {}", classIdentifier);
 
         var graph = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
@@ -111,12 +151,19 @@ public class ClassController {
         }
 
         var model = jenaService.getDataModel(graph);
+
+        checkDataModelType(model.getResource(graph), dto);
         check(authorizationManager.hasRightToModel(prefix, model));
 
         var classResource = model.getResource(classURI);
 
-        terminologyService.resolveConcept(classDTO.getSubject());
-        ClassMapper.mapToUpdateClass(model, graph, classResource, classDTO, userProvider.getUser());
+        terminologyService.resolveConcept(dto.getSubject());
+
+        if (MapperUtils.isOntology(model.getResource(graph))) {
+            ClassMapper.mapToUpdateOntologyClass(model, graph, classResource, (ClassDTO) dto, userProvider.getUser());
+        } else {
+            ClassMapper.mapToUpdateNodeShape(model, graph, classResource, (NodeShapeDTO) dto, userProvider.getUser());
+        }
         jenaService.putDataModelToCore(graph, model);
 
         var indexClass = ResourceMapper.mapToIndexResource(model, classURI);
@@ -125,8 +172,19 @@ public class ClassController {
 
     @Operation(summary = "Get a class from a data model")
     @ApiResponse(responseCode = "200", description = "Class found successfully")
-    @GetMapping(value = "/{prefix}/{classIdentifier}", produces = APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/ontology/{prefix}/{classIdentifier}", produces = APPLICATION_JSON_VALUE)
     public ClassInfoDTO getClass(@PathVariable String prefix, @PathVariable String classIdentifier){
+        return (ClassInfoDTO) handleGetClassOrNodeShape(prefix, classIdentifier);
+    }
+
+    @Operation(summary = "Add a class to a model")
+    @ApiResponse(responseCode = "200", description = "Node shape found successfully")
+    @GetMapping(value = "/profile/{prefix}/{shapeIdentifier}", produces = APPLICATION_JSON_VALUE)
+    public NodeShapeInfoDTO getNodeShape(@PathVariable String prefix, @PathVariable String shapeIdentifier){
+        return (NodeShapeInfoDTO) handleGetClassOrNodeShape(prefix, shapeIdentifier);
+    }
+
+    private ResourceInfoBaseDTO handleGetClassOrNodeShape(String prefix, String classIdentifier) {
         var modelURI = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
         var classURI = modelURI + "#" + classIdentifier;
         if(!jenaService.doesResourceExistInGraph(modelURI , classURI)){
@@ -140,25 +198,40 @@ public class ClassController {
 
         var orgModel = jenaService.getOrganizations();
         var userMapper = hasRightToModel ? groupManagementService.mapUser() : null;
-        var dto = ClassMapper.mapToClassDTO(model, modelURI, classIdentifier, orgModel,
-                hasRightToModel, userMapper);
 
+        ResourceInfoBaseDTO dto;
         if (MapperUtils.isOntology(model.getResource(modelURI))) {
             var classResources = jenaService.constructWithQuery(ClassMapper.getClassResourcesQuery(classURI, false));
-            ClassMapper.addClassResourcesToDTO(classResources, dto);
+            dto = ClassMapper.mapToClassDTO(model, modelURI, classIdentifier, orgModel,
+                hasRightToModel, userMapper);
+            ClassMapper.addClassResourcesToDTO(classResources, (ClassInfoDTO) dto);
         } else {
-            ClassMapper.addNodeShapeResourcesToDTO(model, dto);
+            dto = ClassMapper.mapToNodeShapeDTO(model, modelURI, classIdentifier, orgModel,
+                    hasRightToModel, userMapper);
+            ClassMapper.addNodeShapeResourcesToDTO(model, (NodeShapeInfoDTO) dto);
         }
-        terminologyService.mapConceptToClass().accept(dto);
+
+        terminologyService.mapConcept().accept(dto);
         return dto;
     }
 
     @Operation(summary = "Delete a class from a data model")
     @ApiResponse(responseCode = "200", description = "Class deleted successfully")
-    @DeleteMapping(value = "/{prefix}/{classIdentifier}")
+    @DeleteMapping(value = "/ontology/{prefix}/{classIdentifier}")
     public void deleteClass(@PathVariable String prefix, @PathVariable String classIdentifier){
+        handleDeleteClassOrNodeShape(prefix, classIdentifier);
+    }
+
+    @Operation(summary = "Delete a class from a data model")
+    @ApiResponse(responseCode = "200", description = "Class deleted successfully")
+    @DeleteMapping(value = "/profile/{prefix}/{classIdentifier}")
+    public void deleteNodeShape(@PathVariable String prefix, @PathVariable String classIdentifier){
+        handleDeleteClassOrNodeShape(prefix, classIdentifier);
+    }
+
+    void handleDeleteClassOrNodeShape(String prefix, String identifier) {
         var modelURI = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
-        var classURI  = modelURI + "#" + classIdentifier;
+        var classURI  = modelURI + "#" + identifier;
         if(!jenaService.doesResourceExistInGraph(modelURI , classURI)){
             throw new ResourceNotFoundException(classURI);
         }
@@ -187,7 +260,7 @@ public class ClassController {
         return dto;
     }
 
-    @Operation(summary = "Get all node shapes with given targetClass")
+    @Operation(summary = "Get all node shapes based on given targetClass")
     @ApiResponse(responseCode = "200", description = "List of node shapes fetched successfully")
     @GetMapping(value = "/nodeshapes", produces = APPLICATION_JSON_VALUE)
     public List<IndexResource> getNodeShapes(@RequestParam String targetClass) throws IOException {
@@ -197,5 +270,39 @@ public class ClassController {
         return searchIndexService
                 .searchInternalResources(request, userProvider.getUser())
                 .getResponseObjects();
+    }
+
+    private Set<String> handleTargetNodeProperties(String targetNode) {
+        var propertyShapes = new HashSet<String>();
+        var handledNodeShapes = new HashSet<String>();
+
+        // collect recursively all property shape uris from target node
+        while (targetNode != null) {
+            if (handledNodeShapes.contains(targetNode)) {
+                throw new MappingError("Circular dependency, cannot add sh:node reference");
+            }
+            handledNodeShapes.add(targetNode);
+
+            var nodeModel = jenaService.findResources(List.of(targetNode));
+            var nodeResource = nodeModel.getResource(targetNode);
+
+            propertyShapes.addAll(nodeResource.listProperties(SH.property)
+                    .mapWith((var stmt) -> stmt.getResource().getURI())
+                    .toList());
+
+            if (!nodeResource.hasProperty(SH.node)) {
+                break;
+            }
+            targetNode = nodeResource.getProperty(SH.node).getObject().toString();
+        }
+        return propertyShapes;
+    }
+
+    private void checkDataModelType(Resource modelResource, BaseDTO dto) {
+        if (dto instanceof NodeShapeDTO && MapperUtils.isOntology(modelResource)) {
+            throw new MappingError("Cannot add node shape to ontology");
+        } else if (dto instanceof ClassDTO && MapperUtils.isApplicationProfile(modelResource)) {
+            throw new MappingError("Cannot add ontology class to application profile");
+        }
     }
 }
