@@ -65,6 +65,11 @@ public class ResourceQueryFactory {
             must.add(typeQuery);
         }
 
+        if (request.getTargetClass() != null) {
+            var targetClassQuery = QueryFactoryUtils.termQuery("targetClass", request.getTargetClass());
+            must.add(targetClassQuery);
+        }
+
         var finalQuery = QueryBuilders.bool()
                 .must(must)
                 .should(should)

@@ -1,5 +1,6 @@
 package fi.vm.yti.datamodel.api.v2.opensearch.index;
 
+import com.google.common.collect.Iterables;
 import fi.vm.yti.datamodel.api.index.OpenSearchConnector;
 import fi.vm.yti.datamodel.api.v2.dto.Iow;
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
@@ -19,6 +20,7 @@ import org.opensearch.client.opensearch.core.bulk.IndexOperation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.topbraid.shacl.vocabulary.SH;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -130,7 +132,7 @@ public class OpenSearchIndexer {
     /**
      * Init search indexes
      */
-    private void initSearchIndexes() throws IOException {
+    private void initSearchIndexes() {
         initModelIndex();
         initResourceIndex();
     }
@@ -138,7 +140,7 @@ public class OpenSearchIndexer {
     /**
      * Init model index
      */
-    public void initModelIndex() throws IOException {
+    public void initModelIndex() {
         var constructBuilder = new ConstructBuilder()
                 .addPrefixes(ModelConstants.PREFIXES);
         SparqlUtils.addConstructProperty(GRAPH_VARIABLE, constructBuilder, RDFS.label, "?prefLabel");
@@ -167,12 +169,12 @@ public class OpenSearchIndexer {
         bulkInsert(OPEN_SEARCH_INDEX_MODEL, list);
     }
 
-    public void initResourceIndex() throws IOException {
+    public void initResourceIndex() {
         var constructBuilder = new ConstructBuilder()
                 .addPrefixes(ModelConstants.PREFIXES)
                 .addConstruct(GRAPH_VARIABLE, RDF.type, "?resourceType")
                 .addWhere(GRAPH_VARIABLE, RDF.type, "?resourceType")
-                .addWhereValueVar("?resourceType", OWL.Class, OWL.ObjectProperty, OWL.DatatypeProperty);
+                .addWhereValueVar("?resourceType", OWL.Class, OWL.ObjectProperty, OWL.DatatypeProperty, SH.NodeShape);
         SparqlUtils.addConstructProperty(GRAPH_VARIABLE, constructBuilder, RDFS.label, "?label");
         SparqlUtils.addConstructProperty(GRAPH_VARIABLE, constructBuilder, OWL.versionInfo, "?versionInfo");
         SparqlUtils.addConstructProperty(GRAPH_VARIABLE, constructBuilder, DCTerms.modified, "?modified");
@@ -185,6 +187,7 @@ public class OpenSearchIndexer {
         SparqlUtils.addConstructOptional(GRAPH_VARIABLE, constructBuilder, OWL.equivalentClass, "?equivalentClass");
         SparqlUtils.addConstructOptional(GRAPH_VARIABLE, constructBuilder, OWL.equivalentProperty, "?equivalentProperty");
         SparqlUtils.addConstructOptional(GRAPH_VARIABLE, constructBuilder, DCTerms.subject, "?subject");
+        SparqlUtils.addConstructOptional(GRAPH_VARIABLE, constructBuilder, SH.targetClass, "?targetClass");
 
         var indexClasses = jenaService.constructWithQuery(constructBuilder.build());
         var list = new ArrayList<IndexResource>();
@@ -199,7 +202,7 @@ public class OpenSearchIndexer {
     }
 
     public <T extends IndexBase> void bulkInsert(String indexName,
-                                                 List<T> documents) throws IOException {
+                                                 List<T> documents) {
         List<BulkOperation> bulkOperations = new ArrayList<>();
         documents.forEach(doc ->
                 bulkOperations.add(new IndexOperation.Builder<IndexBase>()
@@ -213,10 +216,25 @@ public class OpenSearchIndexer {
             logger.info("No data to index");
             return;
         }
-        var bulkRequest = new BulkRequest.Builder()
-                                .operations(bulkOperations);
-        var response = client.bulk(bulkRequest.build());
-        logger.debug("Bulk insert status for {}: errors: {}, items: {}, took: {}", indexName, response.errors(), response.items().size(), response.took());
+
+        Iterables.partition(bulkOperations, 300).forEach(batch -> {
+            var bulkRequest = new BulkRequest.Builder()
+                    .operations(batch);
+            try {
+                var response = client.bulk(bulkRequest.build());
+
+                if (response.errors()) {
+                    logger.warn("Errors occurred in bulk operation");
+                    response.items().stream()
+                            .filter(i -> i.error() != null)
+                            .forEach(i -> logger.warn("Error in document {}, caused by {}", i.id(), i.error().reason()));
+                }
+                logger.debug("Bulk insert status for {}: errors: {}, items: {}, took: {}",
+                        indexName, response.errors(), response.items().size(), response.took());
+            } catch (IOException e) {
+                logger.warn("Error in bulk operation", e);
+            }
+        });
     }
 
     private List<Map<String, DynamicTemplate>> getModelDynamicTemplates() {
@@ -255,8 +273,9 @@ public class OpenSearchIndexer {
                 "identifier", getKeywordProperty(),
                 "created", getDateProperty(),
                 "modified", getDateProperty(),
-                "contentModified", getDateProperty(),
-                "resourceType", getKeywordProperty());
+                // "contentModified", getDateProperty(),
+                "resourceType", getKeywordProperty(),
+                "targetClass", getKeywordProperty());
     }
 
     private static Map<String, DynamicTemplate> getDynamicTemplate(String name, String pathMatch) {

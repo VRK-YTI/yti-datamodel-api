@@ -9,6 +9,7 @@ import org.apache.jena.datatypes.xsd.XSDDateTime;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.vocabulary.*;
+import org.topbraid.shacl.vocabulary.SH;
 
 import java.util.Calendar;
 import java.util.function.Consumer;
@@ -143,17 +144,18 @@ public class ResourceMapper {
             indexResource.setContentModified(contentModified.getString());
         }
 
-        var typeProperty = resource.getProperty(RDF.type).getResource();
-        if(typeProperty.equals(OWL.ObjectProperty)){
+        if (MapperUtils.hasType(resource, OWL.ObjectProperty)) {
             indexResource.setResourceType(ResourceType.ASSOCIATION);
-        }else if(typeProperty.equals(OWL.DatatypeProperty)){
+        } else if (MapperUtils.hasType(resource, OWL.DatatypeProperty)) {
             indexResource.setResourceType(ResourceType.ATTRIBUTE);
-        }else{
+        } else {
             indexResource.setResourceType(ResourceType.CLASS);
         }
 
         indexResource.setDomain(MapperUtils.propertyToString(resource, RDFS.domain));
         indexResource.setRange(MapperUtils.propertyToString(resource, RDFS.range));
+
+        indexResource.setTargetClass(MapperUtils.propertyToString(resource, SH.targetClass));
 
         return indexResource;
     }
@@ -164,14 +166,14 @@ public class ResourceMapper {
         var dto = new ResourceInfoDTO();
         var resourceUri = modelUri + "#" + resourceIdentifier;
         var resourceResource = model.getResource(resourceUri);
-        var type = resourceResource.getProperty(RDF.type).getResource();
-        if(type.equals(OWL.ObjectProperty)){
+        if(MapperUtils.hasType(resourceResource, OWL.ObjectProperty)){
             dto.setType(ResourceType.ASSOCIATION);
-        }else if(type.equals(OWL.DatatypeProperty)){
+        }else if(MapperUtils.hasType(resourceResource, OWL.DatatypeProperty)){
             dto.setType(ResourceType.ATTRIBUTE);
         }else{
             throw new MappingError("Unsupported rdf:type");
         }
+
         dto.setUri(resourceUri);
         dto.setLabel(MapperUtils.localizedPropertyToMap(resourceResource, RDFS.label));
         var status = Status.valueOf(resourceResource.getProperty(OWL.versionInfo).getObject().toString().toUpperCase());
