@@ -1,0 +1,54 @@
+{
+  "id": "1239d128-5560-4574-8d98-6dc38d8ed1ce",
+  "codeValue": "CODEVALUE",
+  "uri": "http://uri.suomi.fi/codelist/test/testcodelist",
+  "url": "https://koodistot.suomi.fi/codelist-api/api/v1/coderegistries/test/codeschemes/testcodelist",
+  "codesUrl": "https://koodistot.suomi.fi/codelist-api/api/v1/coderegistries/test/codeschemes/testcodelist/codes/",
+  "extensionsUrl": "https://koodistot.suomi.fi/codelist-api/api/v1/coderegistries/test/codeschemes/testcodelist/extensions/",
+  "prefLabel": {
+    "fi": "testcodelist"
+  },
+  "definition": {
+    "fi": "testcodelist definition"
+  },
+  "description": {
+    "fi": "testcodelist description"
+  },
+  "created": "2023-05-15T13:44:34.635Z",
+  "modified": "2023-05-15T13:44:34.635Z",
+  "contentModified": "2023-05-15T13:44:34.635Z",
+  "statusModified": "2023-05-15T13:44:34.635Z",
+  "status": "DRAFT",
+  "infoDomains": [
+    {
+      "uri": "http://uri.suomi.fi/codelist/jupo/serviceclassification/code/P4",
+      "url": "https://koodistot.suomi.fi/codelist-api/api/v1/coderegistries/jupo/codeschemes/serviceclassification/codes/P4"
+    }
+  ],
+  "languageCodes": [
+    {
+      "uri": "http://uri.suomi.fi/codelist/interoperabilityplatform/languagecodes/code/fi",
+      "url": "https://koodistot.suomi.fi/codelist-api/api/v1/coderegistries/interoperabilityplatform/codeschemes/languagecodes/codes/fi"
+    },
+    {
+      "uri": "http://uri.suomi.fi/codelist/interoperabilityplatform/languagecodes/code/sv",
+      "url": "https://koodistot.suomi.fi/codelist-api/api/v1/coderegistries/interoperabilityplatform/codeschemes/languagecodes/codes/sv"
+    },
+    {
+      "uri": "http://uri.suomi.fi/codelist/interoperabilityplatform/languagecodes/code/en",
+      "url": "https://koodistot.suomi.fi/codelist-api/api/v1/coderegistries/interoperabilityplatform/codeschemes/languagecodes/codes/en"
+    }
+  ],
+  "organizations": [
+    {
+      "id": "7d3a3c00-5a6b-489b-a3ed-63bb58c26a63"
+    }
+  ],
+  "cumulative": false,
+  "codeRegistry": {
+    "uri": "http://uri.suomi.fi/codelist/test",
+    "url": "https://koodistot.suomi.fi/codelist-api/api/v1/coderegistries/test"
+  },
+  "totalNrOfSearchHitsCodes": 0,
+  "totalNrOfSearchHitsExtensions": 0
+}

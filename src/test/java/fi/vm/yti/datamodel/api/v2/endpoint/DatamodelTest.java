@@ -6,6 +6,7 @@ import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexModel;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
 import fi.vm.yti.datamodel.api.v2.mapper.ModelMapper;
+import fi.vm.yti.datamodel.api.v2.service.CodeListService;
 import fi.vm.yti.datamodel.api.v2.service.GroupManagementService;
 import fi.vm.yti.datamodel.api.v2.service.JenaService;
 import fi.vm.yti.datamodel.api.v2.service.TerminologyService;
@@ -66,6 +67,9 @@ class DatamodelTest {
 
     @MockBean
     private TerminologyService terminologyService;
+
+    @MockBean
+    private CodeListService codeListService;
 
     @MockBean
     private GroupManagementService groupManagementService;
@@ -428,6 +432,10 @@ class DatamodelTest {
 
         dataModelDTO = createDatamodelDTO(false);
         dataModelDTO.setTerminologies(Set.of("http://invalid.url"));
+        args.add(dataModelDTO);
+
+        dataModelDTO = createDatamodelDTO(false);
+        dataModelDTO.setCodeLists(Set.of("http://invalid.url"));
         args.add(dataModelDTO);
 
         dataModelDTO = createDatamodelDTO(false);

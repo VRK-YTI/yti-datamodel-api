@@ -6,7 +6,6 @@ import fi.vm.yti.datamodel.api.v2.dto.ResourceInfoDTO;
 import fi.vm.yti.datamodel.api.v2.dto.TerminologyNodeDTO;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.ResolvingException;
 import fi.vm.yti.datamodel.api.v2.mapper.TerminologyMapper;
-import org.apache.jena.rdf.model.Model;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -70,8 +69,7 @@ public class TerminologyService {
                         .findFirst();
 
                 if (node.isPresent()) {
-                    var terminologyModel = jenaService.getTerminology(uri.toString());
-                    Model model = TerminologyMapper.mapTerminologyToJenaModel(u, node.get(), terminologyModel);
+                    var model = TerminologyMapper.mapTerminologyToJenaModel(u, node.get());
                     jenaService.putTerminologyToConcepts(uri.toString(), model);
                 } else {
                     LOG.warn("Could not find node with type TerminologicalVocabulary from {}", uri);

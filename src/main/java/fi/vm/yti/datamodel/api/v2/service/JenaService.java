@@ -45,6 +45,9 @@ public class JenaService {
     private final RDFConnection conceptWrite;
     private final RDFConnection conceptSparql;
 
+    private final RDFConnection schemesWrite;
+    private final RDFConnection schemesRead;
+
     private final Cache<String, Model> modelCache;
 
     public JenaService(@Value("${model.cache.expiration:1800}") Long cacheExpireTime,
@@ -59,6 +62,8 @@ public class JenaService {
         this.conceptWrite = RDFConnection.connect(endpoint + "/concept/data");
         this.conceptRead = RDFConnection.connect(endpoint + "/concept/get");
         this.conceptSparql = RDFConnection.connect(endpoint + "/concept/sparql");
+        this.schemesWrite = RDFConnection.connect(endpoint + "/scheme/data");
+        this.schemesRead = RDFConnection.connect(endpoint + "/scheme/get");
 
         this.modelCache = CacheBuilder.newBuilder()
                 .expireAfterWrite(cacheExpireTime, TimeUnit.SECONDS)
@@ -293,7 +298,7 @@ public class JenaService {
     }
 
     public Model getConcept(String conceptURI) {
-        ConstructBuilder builder = new ConstructBuilder();
+        var builder = new ConstructBuilder();
         var res = ResourceFactory.createResource(conceptURI);
 
         var label = "?label";
@@ -344,6 +349,22 @@ public class JenaService {
 
         resultModel.add(importsModel);
         return resultModel;
+    }
+
+    public void putCodelistSchemeToSchemes(String graph, Model model){
+        schemesWrite.put(graph, model);
+    }
+
+    public Model getCodelistScheme(String graph){
+        try {
+            return modelCache.get(graph, () -> {
+                logger.debug("Fetch codelist from Fuseki {}", graph);
+                return schemesRead.fetch(graph);
+            });
+        } catch (Exception e) {
+            logger.warn("Error fetching codelist information {}", e.getMessage());
+            return null;
+        }
     }
 
     public int getVersionNumber() {
