@@ -43,7 +43,7 @@ test:TestClass  rdf:type     sh:NodeShape ;
         dcterms:subject      <http://uri.suomi.fi/terminology/test/test1> ;
         owl:versionInfo      "VALID" ;
         skos:editorialNote   "comment visible for admin" ;
-        sh:description       "test technical description fi"@fi, "test technical description en"@en ;
+        rdfs:comment         "test technical description fi"@fi, "test technical description en"@en ;
         iow:creator          "2a5c075f-0d0e-4688-90e0-29af1eebbf6d" ;
         iow:modifier         "2a5c075f-0d0e-4688-90e0-29af1eebbf6d" ;
         sh:targetClass       <http://uri.suomi.fi/datamodel/ns/target#Class> .

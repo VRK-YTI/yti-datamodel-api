@@ -67,7 +67,7 @@ class ResourceMapperTest {
         assertEquals("Resource", resourceResource.getProperty(DCTerms.identifier).getLiteral().getString());
 
         assertEquals("comment", resourceResource.getProperty(SKOS.editorialNote).getObject().toString());
-        assertEquals("test note", resourceResource.getProperty(SKOS.note).getLiteral().getString());
+        assertEquals("test note", resourceResource.getProperty(RDFS.comment).getLiteral().getString());
 
         assertEquals(1, resourceResource.listProperties(RDFS.subPropertyOf).toList().size());
         assertEquals("https://www.example.com/ns/ext#SubRes", resourceResource.getProperty(RDFS.subPropertyOf).getObject().toString());
@@ -118,7 +118,7 @@ class ResourceMapperTest {
         assertEquals("Resource", resourceResource.getProperty(DCTerms.identifier).getLiteral().getString());
 
         assertEquals("comment", resourceResource.getProperty(SKOS.editorialNote).getObject().toString());
-        assertEquals("test note", resourceResource.getProperty(SKOS.note).getLiteral().getString());
+        assertEquals("test note", resourceResource.getProperty(RDFS.comment).getLiteral().getString());
 
         assertEquals(1, resourceResource.listProperties(RDFS.subPropertyOf).toList().size());
         assertEquals(OWL2.topObjectProperty, resourceResource.getProperty(RDFS.subPropertyOf).getResource());
@@ -164,7 +164,7 @@ class ResourceMapperTest {
         assertEquals("Resource", resourceResource.getProperty(DCTerms.identifier).getLiteral().getString());
 
         assertEquals("comment", resourceResource.getProperty(SKOS.editorialNote).getObject().toString());
-        assertEquals("test note", resourceResource.getProperty(SKOS.note).getLiteral().getString());
+        assertEquals("test note", resourceResource.getProperty(RDFS.comment).getLiteral().getString());
 
         assertEquals(1, resourceResource.listProperties(RDFS.subPropertyOf).toList().size());
         assertEquals(OWL2.topDataProperty, resourceResource.getProperty(RDFS.subPropertyOf).getResource());
@@ -213,7 +213,7 @@ class ResourceMapperTest {
         assertEquals("Resource", resourceResource.getProperty(DCTerms.identifier).getLiteral().getString());
 
         assertEquals("comment", resourceResource.getProperty(SKOS.editorialNote).getObject().toString());
-        assertEquals("test note", resourceResource.getProperty(SKOS.note).getLiteral().getString());
+        assertEquals("test note", resourceResource.getProperty(RDFS.comment).getLiteral().getString());
 
         assertEquals(1, resourceResource.listProperties(RDFS.subPropertyOf).toList().size());
         assertEquals("https://www.example.com/ns/ext#SubRes", resourceResource.getProperty(RDFS.subPropertyOf).getObject().toString());
@@ -455,7 +455,7 @@ class ResourceMapperTest {
     void mapToResourceInfoAuthenticatedUser() {
         var m = MapperTestUtils.getModelFromFile("/models/test_datamodel_library_with_resources.ttl");
 
-        Consumer<ResourceInfoBaseDTO> userMapper = (var dto) -> {
+        Consumer<ResourceCommonDTO> userMapper = (var dto) -> {
             var creator = new UserDTO("123");
             var modifier = new UserDTO("123");
             creator.setName("creator fake-user");
@@ -497,7 +497,7 @@ class ResourceMapperTest {
         assertEquals("http://uri.suomi.fi/datamodel/ns/test#SubResource", resource.getProperty(RDFS.subPropertyOf).getObject().toString());
         assertEquals(Status.VALID.name(), resource.getProperty(OWL.versionInfo).getObject().toString());
         assertEquals("comment visible for admin", resource.getProperty(SKOS.editorialNote).getObject().toString());
-        assertEquals(2, resource.listProperties(SKOS.note).toList().size());
+        assertEquals(2, resource.listProperties(RDFS.comment).toList().size());
         assertEquals("http://uri.suomi.fi/datamodel/ns/test#DomainClass", MapperUtils.propertyToString(resource, RDFS.domain));
         assertEquals("http://uri.suomi.fi/datamodel/ns/test#RangeClass", MapperUtils.propertyToString(resource, RDFS.range));
 
@@ -514,9 +514,9 @@ class ResourceMapperTest {
         assertEquals("https://www.example.com/ns/ext#NewSub", resource.getProperty(RDFS.subPropertyOf).getObject().toString());
         assertEquals(Status.INVALID.name(), resource.getProperty(OWL.versionInfo).getObject().toString());
         assertEquals("new editorial note", resource.getProperty(SKOS.editorialNote).getObject().toString());
-        assertEquals(1, resource.listProperties(SKOS.note).toList().size());
-        assertEquals("new note", resource.getProperty(SKOS.note).getLiteral().getString());
-        assertEquals("fi", resource.getProperty(SKOS.note).getLiteral().getLanguage());
+        assertEquals(1, resource.listProperties(RDFS.comment).toList().size());
+        assertEquals("new note", resource.getProperty(RDFS.comment).getLiteral().getString());
+        assertEquals("fi", resource.getProperty(RDFS.comment).getLiteral().getLanguage());
         assertEquals(mockUser.getId().toString(), resource.getProperty(Iow.modifier).getObject().toString());
         assertEquals("2a5c075f-0d0e-4688-90e0-29af1eebbf6d", resource.getProperty(Iow.creator).getObject().toString());
         assertEquals("http://uri.suomi.fi/datamodel/ns/test#NewDomainClass", MapperUtils.propertyToString(resource, RDFS.domain));
@@ -549,7 +549,7 @@ class ResourceMapperTest {
         assertEquals("http://uri.suomi.fi/datamodel/ns/test#SubResource", resource.getProperty(RDFS.subPropertyOf).getObject().toString());
         assertEquals(Status.VALID.name(), resource.getProperty(OWL.versionInfo).getObject().toString());
         assertEquals("comment visible for admin", resource.getProperty(SKOS.editorialNote).getObject().toString());
-        assertEquals(2, resource.listProperties(SKOS.note).toList().size());
+        assertEquals(2, resource.listProperties(RDFS.comment).toList().size());
         assertEquals("http://uri.suomi.fi/datamodel/ns/test#DomainClass", MapperUtils.propertyToString(resource, RDFS.domain));
         assertEquals("http://uri.suomi.fi/datamodel/ns/test#RangeClass", MapperUtils.propertyToString(resource, RDFS.range));
 
@@ -565,9 +565,9 @@ class ResourceMapperTest {
         assertEquals("https://www.example.com/ns/ext#NewSub", resource.getProperty(RDFS.subPropertyOf).getObject().toString());
         assertEquals(Status.INVALID.name(), resource.getProperty(OWL.versionInfo).getObject().toString());
         assertEquals("new editorial note", resource.getProperty(SKOS.editorialNote).getObject().toString());
-        assertEquals(1, resource.listProperties(SKOS.note).toList().size());
-        assertEquals("new note", resource.getProperty(SKOS.note).getLiteral().getString());
-        assertEquals("fi", resource.getProperty(SKOS.note).getLiteral().getLanguage());
+        assertEquals(1, resource.listProperties(RDFS.comment).toList().size());
+        assertEquals("new note", resource.getProperty(RDFS.comment).getLiteral().getString());
+        assertEquals("fi", resource.getProperty(RDFS.comment).getLiteral().getLanguage());
         assertEquals("http://uri.suomi.fi/datamodel/ns/test#NewDomainClass", MapperUtils.propertyToString(resource, RDFS.domain));
         assertEquals("http://uri.suomi.fi/datamodel/ns/test#NewRangeClass", MapperUtils.propertyToString(resource, RDFS.range));
     }

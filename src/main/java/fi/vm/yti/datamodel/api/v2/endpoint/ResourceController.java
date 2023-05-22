@@ -115,7 +115,7 @@ public class ResourceController {
         var hasRightToModel = authorizationManager.hasRightToModel(prefix, model);
 
         var resourceInfoDTO = ResourceMapper.mapToResourceInfoDTO(model, graphUri, resourceIdentifier, orgModel, hasRightToModel, groupManagementService.mapUser());
-        terminologyService.mapConceptToResource().accept(resourceInfoDTO);
+        terminologyService.mapConcept().accept(resourceInfoDTO);
         return resourceInfoDTO;
     }
 

@@ -181,7 +181,7 @@ public class OpenSearchIndexer {
         SparqlUtils.addConstructProperty(GRAPH_VARIABLE, constructBuilder, DCTerms.created, "?created");
         SparqlUtils.addConstructOptional(GRAPH_VARIABLE, constructBuilder, Iow.contentModified, "?contentModified");
         SparqlUtils.addConstructProperty(GRAPH_VARIABLE, constructBuilder, RDFS.isDefinedBy, "?isDefinedBy");
-        SparqlUtils.addConstructOptional(GRAPH_VARIABLE, constructBuilder, SKOS.note, "?note");
+        SparqlUtils.addConstructOptional(GRAPH_VARIABLE, constructBuilder, RDFS.comment, "?note");
         SparqlUtils.addConstructOptional(GRAPH_VARIABLE, constructBuilder, RDFS.subClassOf, "?subClassOf");
         SparqlUtils.addConstructOptional(GRAPH_VARIABLE, constructBuilder, RDFS.subPropertyOf, "?subPropertyOf");
         SparqlUtils.addConstructOptional(GRAPH_VARIABLE, constructBuilder, OWL.equivalentClass, "?equivalentClass");

@@ -78,7 +78,7 @@ class DatamodelTest {
     private AuthenticatedUserProvider userProvider;
 
     @Mock
-    Consumer<ResourceInfoBaseDTO> consumer;
+    Consumer<ResourceCommonDTO> consumer;
 
     @Autowired
     private Datamodel datamodel;

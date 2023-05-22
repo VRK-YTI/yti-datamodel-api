@@ -3,7 +3,7 @@ package fi.vm.yti.datamodel.api.v2.dto;
 import java.util.Map;
 import java.util.Set;
 
-public class DataModelInfoDTO extends ResourceInfoBaseDTO {
+public class DataModelInfoDTO extends ResourceCommonDTO {
     private ModelType type;
     private String prefix;
     private Status status;

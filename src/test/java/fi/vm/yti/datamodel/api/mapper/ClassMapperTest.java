@@ -36,7 +36,7 @@ class ClassMapperTest {
         dto.setStatus(Status.DRAFT);
         dto.setNote(Map.of("fi", "test note"));
 
-        ClassMapper.createClassAndMapToModel("http://uri.suomi.fi/datamodel/ns/test", m, dto, mockUser);
+        ClassMapper.createOntologyClassAndMapToModel("http://uri.suomi.fi/datamodel/ns/test", m, dto, mockUser);
 
         Resource modelResource = m.getResource("http://uri.suomi.fi/datamodel/ns/test");
         Resource classResource = m.getResource("http://uri.suomi.fi/datamodel/ns/test#TestClass");
@@ -59,7 +59,7 @@ class ClassMapperTest {
         assertEquals("TestClass", classResource.getProperty(DCTerms.identifier).getLiteral().getString());
 
         assertEquals("comment", classResource.getProperty(SKOS.editorialNote).getObject().toString());
-        assertEquals("test note", classResource.getProperty(SKOS.note).getLiteral().getString());
+        assertEquals("test note", classResource.getProperty(RDFS.comment).getLiteral().getString());
 
         assertEquals(1, classResource.listProperties(RDFS.subClassOf).toList().size());
         assertEquals("https://www.example.com/ns/ext#SubClass", classResource.getProperty(RDFS.subClassOf).getObject().toString());
@@ -79,7 +79,7 @@ class ClassMapperTest {
         dto.setStatus(Status.VALID);
         dto.setIdentifier("Identifier");
 
-        ClassMapper.createClassAndMapToModel("http://uri.suomi.fi/datamodel/ns/test", m, dto, mockUser);
+        ClassMapper.createOntologyClassAndMapToModel("http://uri.suomi.fi/datamodel/ns/test", m, dto, mockUser);
 
         Resource modelResource = m.getResource("http://uri.suomi.fi/datamodel/ns/test");
         Resource classResource = m.getResource("http://uri.suomi.fi/datamodel/ns/test#Identifier");
@@ -145,7 +145,7 @@ class ClassMapperTest {
     void testMapToClassDTOAuthenticatedUser() {
         var m = MapperTestUtils.getModelFromFile("/models/test_datamodel_library_with_resources.ttl");
 
-        Consumer<ResourceInfoBaseDTO> userMapper = (ResourceInfoBaseDTO dto) -> {
+        Consumer<ResourceCommonDTO> userMapper = (var dto) -> {
             var creator = new UserDTO("123");
             var modifier = new UserDTO("123");
             creator.setName("creator fake-user");
@@ -186,9 +186,9 @@ class ClassMapperTest {
         assertEquals("http://uri.suomi.fi/datamodel/ns/test#SubClass", resource.getProperty(RDFS.subClassOf).getObject().toString());
         assertEquals(Status.VALID.name(), resource.getProperty(OWL.versionInfo).getObject().toString());
         assertEquals("comment visible for admin", resource.getProperty(SKOS.editorialNote).getObject().toString());
-        assertEquals(2, resource.listProperties(SKOS.note).toList().size());
+        assertEquals(2, resource.listProperties(RDFS.comment).toList().size());
 
-        ClassMapper.mapToUpdateClass(m, "http://uri.suomi.fi/datamodel/ns/test", resource, dto, mockUser);
+        ClassMapper.mapToUpdateOntologyClass(m, "http://uri.suomi.fi/datamodel/ns/test", resource, dto, mockUser);
 
         assertEquals(OWL.Class, resource.getProperty(RDF.type).getResource());
         assertEquals("http://uri.suomi.fi/datamodel/ns/test", resource.getProperty(RDFS.isDefinedBy).getObject().toString());
@@ -200,9 +200,9 @@ class ClassMapperTest {
         assertEquals("https://www.example.com/ns/ext#NewSub", resource.getProperty(RDFS.subClassOf).getObject().toString());
         assertEquals(Status.INVALID.name(), resource.getProperty(OWL.versionInfo).getObject().toString());
         assertEquals("new editorial note", resource.getProperty(SKOS.editorialNote).getObject().toString());
-        assertEquals(1, resource.listProperties(SKOS.note).toList().size());
-        assertEquals("new note", resource.getProperty(SKOS.note).getLiteral().getString());
-        assertEquals("fi", resource.getProperty(SKOS.note).getLiteral().getLanguage());
+        assertEquals(1, resource.listProperties(RDFS.comment).toList().size());
+        assertEquals("new note", resource.getProperty(RDFS.comment).getLiteral().getString());
+        assertEquals("fi", resource.getProperty(RDFS.comment).getLiteral().getLanguage());
         assertEquals(mockUser.getId().toString(), resource.getProperty(Iow.modifier).getObject().toString());
         assertEquals("2a5c075f-0d0e-4688-90e0-29af1eebbf6d", resource.getProperty(Iow.creator).getObject().toString());
     }
@@ -225,9 +225,9 @@ class ClassMapperTest {
         assertEquals("http://uri.suomi.fi/datamodel/ns/test#SubClass", resource.getProperty(RDFS.subClassOf).getObject().toString());
         assertEquals(Status.VALID.name(), resource.getProperty(OWL.versionInfo).getObject().toString());
         assertEquals("comment visible for admin", resource.getProperty(SKOS.editorialNote).getObject().toString());
-        assertEquals(2, resource.listProperties(SKOS.note).toList().size());
+        assertEquals(2, resource.listProperties(RDFS.comment).toList().size());
 
-        ClassMapper.mapToUpdateClass(m, "http://uri.suomi.fi/datamodel/ns/test", resource, dto, mockUser);
+        ClassMapper.mapToUpdateOntologyClass(m, "http://uri.suomi.fi/datamodel/ns/test", resource, dto, mockUser);
 
         assertEquals(OWL.Class, resource.getProperty(RDF.type).getResource());
         assertEquals("http://uri.suomi.fi/datamodel/ns/test", resource.getProperty(RDFS.isDefinedBy).getObject().toString());
@@ -239,7 +239,7 @@ class ClassMapperTest {
         assertEquals("http://uri.suomi.fi/datamodel/ns/test#SubClass", resource.getProperty(RDFS.subClassOf).getObject().toString());
         assertEquals(Status.VALID.name(), resource.getProperty(OWL.versionInfo).getObject().toString());
         assertEquals("comment visible for admin", resource.getProperty(SKOS.editorialNote).getObject().toString());
-        assertEquals(2, resource.listProperties(SKOS.note).toList().size());
+        assertEquals(2, resource.listProperties(RDFS.comment).toList().size());
     }
 
     @Test
@@ -259,16 +259,16 @@ class ClassMapperTest {
         assertEquals("http://uri.suomi.fi/datamodel/ns/test#EqClass", resource.getProperty(OWL.equivalentClass).getObject().toString());
         assertEquals("http://uri.suomi.fi/datamodel/ns/test#SubClass", resource.getProperty(RDFS.subClassOf).getObject().toString());
         assertEquals("comment visible for admin", resource.getProperty(SKOS.editorialNote).getObject().toString());
-        assertEquals(2, resource.listProperties(SKOS.note).toList().size());
+        assertEquals(2, resource.listProperties(RDFS.comment).toList().size());
 
-        ClassMapper.mapToUpdateClass(m, "http://uri.suomi.fi/datamodel/ns/test", resource, dto, mockUser);
+        ClassMapper.mapToUpdateOntologyClass(m, "http://uri.suomi.fi/datamodel/ns/test", resource, dto, mockUser);
 
         assertNull(resource.getProperty(DCTerms.subject));
         assertNull(resource.getProperty(OWL.equivalentClass));
         //OWl thing is default value if all subClassOf is emptied
         assertEquals(OWL.Thing, resource.getProperty(RDFS.subClassOf).getResource());
         assertNull(resource.getProperty(SKOS.editorialNote));
-        assertNull(resource.getProperty(SKOS.note));
+        assertNull(resource.getProperty(RDFS.comment));
     }
 
     @Test
