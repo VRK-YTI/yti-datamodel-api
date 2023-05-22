@@ -33,7 +33,7 @@ public class ClassMapper {
 
     private static Resource createResourceAndMapCommonInfo(Model model, String modelURI, BaseDTO dto) {
         var modelResource = model.getResource(modelURI);
-        var classUri = modelURI + "#" + dto.getIdentifier();
+        var classUri = modelURI + ModelConstants.RESOURCE_SEPARATOR + dto.getIdentifier();
         var resource = model.createResource(classUri)
                 .addProperty(OWL.versionInfo, dto.getStatus().name())
                 .addProperty(RDFS.isDefinedBy, modelResource)
@@ -256,7 +256,7 @@ public class ClassMapper {
                                              boolean hasRightToModel,
                                              Consumer<ResourceCommonDTO> userMapper){
         var dto = new ClassInfoDTO();
-        var classUri = modelUri + "#" + classIdentifier;
+        var classUri = modelUri + ModelConstants.RESOURCE_SEPARATOR + classIdentifier;
         var classResource = model.getResource(classUri);
         var modelResource = model.getResource(modelUri);
 
@@ -275,7 +275,7 @@ public class ClassMapper {
                                                      boolean hasRightToModel,
                                                      Consumer<ResourceCommonDTO> userMapper) {
         var dto = new NodeShapeInfoDTO();
-        var nodeShapeURI = modelUri + "#" + identifier;
+        var nodeShapeURI = modelUri + ModelConstants.RESOURCE_SEPARATOR + identifier;
         var nodeShapeResource = model.getResource(nodeShapeURI);
         var modelResource = model.getResource(modelUri);
 

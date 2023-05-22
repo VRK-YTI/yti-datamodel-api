@@ -54,7 +54,7 @@ public class ResourceController {
     @PutMapping(value = "/{prefix}", consumes = APPLICATION_JSON_VALUE)
     public void createResource(@PathVariable String prefix, @RequestBody @ValidResource ResourceDTO dto){
         var graphUri = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
-        if(jenaService.doesResourceExistInGraph(graphUri, graphUri + prefix + "#" + dto.getIdentifier())){
+        if(jenaService.doesResourceExistInGraph(graphUri, graphUri + prefix + ModelConstants.RESOURCE_SEPARATOR + dto.getIdentifier())){
             throw new MappingError("Already exists");
         }
 
@@ -77,7 +77,7 @@ public class ResourceController {
     public void updateResource(@PathVariable String prefix, @PathVariable String resourceIdentifier, @RequestBody @ValidResource(updateProperty = true) ResourceDTO dto){
         var graphUri = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
 
-        if(!jenaService.doesResourceExistInGraph(graphUri, graphUri + "#" + resourceIdentifier)){
+        if(!jenaService.doesResourceExistInGraph(graphUri, graphUri + ModelConstants.RESOURCE_SEPARATOR + resourceIdentifier)){
             throw new ResourceNotFoundException("Resource does not exist");
         }
 
@@ -93,7 +93,7 @@ public class ResourceController {
         terminologyService.resolveConcept(dto.getSubject());
         ResourceMapper.mapToUpdateResource(graphUri, model, resourceIdentifier, dto, userProvider.getUser());
         jenaService.putDataModelToCore(graphUri, model);
-        var indexResource = ResourceMapper.mapToIndexResource(model, graphUri + "#" + resourceIdentifier);
+        var indexResource = ResourceMapper.mapToIndexResource(model, graphUri + ModelConstants.RESOURCE_SEPARATOR + resourceIdentifier);
         openSearchIndexer.updateResourceToIndex(indexResource);
     }
 
@@ -102,7 +102,7 @@ public class ResourceController {
     @GetMapping(value = "/{prefix}/{resourceIdentifier}", produces = APPLICATION_JSON_VALUE)
     public ResourceInfoDTO getResource(@PathVariable String prefix, @PathVariable String resourceIdentifier){
         var graphUri = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
-        if(!jenaService.doesResourceExistInGraph(graphUri,graphUri + "#" + resourceIdentifier)){
+        if(!jenaService.doesResourceExistInGraph(graphUri,graphUri + ModelConstants.RESOURCE_SEPARATOR + resourceIdentifier)){
             throw new ResourceNotFoundException("Resource does not exist");
         }
 
@@ -124,7 +124,7 @@ public class ResourceController {
     @DeleteMapping(value = "/{prefix}/{resourceIdentifier}")
     public void deleteResource(@PathVariable String prefix, @PathVariable String resourceIdentifier){
         var modelURI = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
-        var resourceUri  = modelURI + "#" + resourceIdentifier;
+        var resourceUri  = modelURI + ModelConstants.RESOURCE_SEPARATOR + resourceIdentifier;
         if(!jenaService.doesResourceExistInGraph(modelURI , resourceUri)){
             throw new ResourceNotFoundException(resourceUri);
         }

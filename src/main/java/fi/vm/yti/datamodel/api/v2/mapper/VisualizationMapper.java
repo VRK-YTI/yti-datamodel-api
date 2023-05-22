@@ -1,7 +1,10 @@
 package fi.vm.yti.datamodel.api.v2.mapper;
 
 import fi.vm.yti.datamodel.api.v2.dto.*;
-import org.apache.jena.rdf.model.*;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.rdf.model.SimpleSelector;
+import org.apache.jena.rdf.model.StmtIterator;
 import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDF;
@@ -122,15 +125,9 @@ public class VisualizationMapper {
 
     private static String getReferenceIdentifier(String uri, Map<String, String> namespaces) {
         try {
-            var u = new URI(uri);
-            String fragment = u.getFragment();
-
-            if (fragment == null) {
-                LOG.warn("No fragment found from URI {}", uri);
-                return null;
-            }
-
-            String prefix = namespaces.get(uri.substring(0, uri.lastIndexOf("#")));
+            var uriPath = URI.create(uri).getPath();
+            var fragment = uriPath.substring(uriPath.lastIndexOf("/") + 1);
+            String prefix = namespaces.get(uri.substring(0, uri.lastIndexOf("/")));
 
             if (prefix == null) {
                 // referenced class in the external namespace or other model in Interoperability platform
