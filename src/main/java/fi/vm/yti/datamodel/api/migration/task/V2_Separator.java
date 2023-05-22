@@ -60,5 +60,23 @@ public class V2_Separator implements MigrationTask {
         """;
         jenaService.sendUpdateStringQuery(xmlNamespaceUpdateQuery);
 
+        var updateSubjectQuery = """
+            DELETE{
+             GRAPH ?g {
+              ?subject ?predicate ?object
+             }
+            }INSERT{
+             GRAPH ?g {
+              ?replaced ?predicate ?object
+             }
+            }WHERE{
+              GRAPH ?g {
+               ?subject ?predicate ?object
+               FILTER(REGEX(STR(?subject), "http://uri.suomi.fi/datamodel/ns/[a-zA-Z0-9]+#", "i"))
+                BIND(IRI(REPLACE(str(?subject), "#", "/", "i")) as ?replaced)
+              }
+            }
+        """;
+        jenaService.sendUpdateStringQuery(updateSubjectQuery);
     }
 }
