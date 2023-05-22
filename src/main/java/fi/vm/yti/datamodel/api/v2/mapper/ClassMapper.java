@@ -384,7 +384,7 @@ public class ClassMapper {
         dto.setAssociations(associations);
     }
 
-    public static void mapDeactivatedProperty(Model model, String propertyURI) {
+    public static void toggleAndMapDeactivatedProperty(Model model, String propertyURI) {
         var resource = model.getResource(propertyURI);
         if (resource.hasProperty(SH.deactivated)) {
             resource.removeAll(SH.deactivated);

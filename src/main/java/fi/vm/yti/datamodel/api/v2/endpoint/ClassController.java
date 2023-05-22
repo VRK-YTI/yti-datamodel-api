@@ -272,8 +272,8 @@ public class ClassController {
                 .getResponseObjects();
     }
 
-    @Operation(summary = "Get all node shapes based on given targetClass")
-    @ApiResponse(responseCode = "200", description = "List of node shapes fetched successfully")
+    @Operation(summary = "Toggles deactivation of a single property shape")
+    @ApiResponse(responseCode = "200", description = "Deactivation has changes successfully")
     @PutMapping(value = "/toggleDeactivate/{prefix}", produces = APPLICATION_JSON_VALUE)
     public void deactivatePropertyShape(@PathVariable String prefix, @RequestParam String propertyUri) {
         var modelURI = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
@@ -282,7 +282,7 @@ public class ClassController {
             throw new ResourceNotFoundException(modelURI);
         }
         check(authorizationManager.hasRightToModel(prefix, model));
-        ClassMapper.mapDeactivatedProperty(model, propertyUri);
+        ClassMapper.toggleAndMapDeactivatedProperty(model, propertyUri);
         jenaService.putDataModelToCore(modelURI, model);
     }
 
