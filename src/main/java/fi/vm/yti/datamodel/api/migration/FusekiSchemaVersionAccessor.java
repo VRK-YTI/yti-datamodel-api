@@ -1,12 +1,11 @@
 package fi.vm.yti.datamodel.api.migration;
 
 import fi.vm.yti.datamodel.api.v2.service.JenaService;
+import fi.vm.yti.migration.InitializationException;
+import fi.vm.yti.migration.SchemaVersionAccessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-
-import fi.vm.yti.migration.InitializationException;
-import fi.vm.yti.migration.SchemaVersionAccessor;
 
 @Service
 public class FusekiSchemaVersionAccessor implements SchemaVersionAccessor {
@@ -20,7 +19,7 @@ public class FusekiSchemaVersionAccessor implements SchemaVersionAccessor {
 
     @Override
     public boolean isInitialized() throws InitializationException {
-        return true; // graphManager.isVersionGraphInitialized();
+        return jenaService.isVersionGraphInitialized();
     }
 
     @Override

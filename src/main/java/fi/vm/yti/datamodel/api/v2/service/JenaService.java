@@ -2,8 +2,8 @@ package fi.vm.yti.datamodel.api.v2.service;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
+import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
 import org.apache.jena.arq.querybuilder.*;
 import org.apache.jena.atlas.web.HttpException;
 import org.apache.jena.graph.NodeFactory;
@@ -49,6 +49,8 @@ public class JenaService {
     private final RDFConnection schemesRead;
 
     private final Cache<String, Model> modelCache;
+
+    private static final String VERSION_NUMBER_GRAPH = "urn:yti:metamodel:version";
 
     public JenaService(@Value("${model.cache.expiration:1800}") Long cacheExpireTime,
                        @Value(("${endpoint}")) String endpoint) {
@@ -144,6 +146,14 @@ public class JenaService {
             return importSparql.queryConstruct(query);
         }catch(HttpException ex){
             return null;
+        }
+    }
+
+    public void sendUpdateStringQuery(String query){
+        try{
+            coreUpdate.update(query);
+        }catch(HttpException ex){
+            throw new JenaQueryException("Failed to update with string query");
         }
     }
 
@@ -326,9 +336,9 @@ public class JenaService {
         if (resourceURIs == null || resourceURIs.isEmpty()) {
             return ModelFactory.createDefaultModel();
         }
-        ConstructBuilder coreBuilder = new ConstructBuilder();
+        var coreBuilder = new ConstructBuilder();
         coreBuilder.addPrefixes(ModelConstants.PREFIXES);
-        ConstructBuilder importsBuilder = new ConstructBuilder();
+        var importsBuilder = new ConstructBuilder();
         importsBuilder.addPrefixes(ModelConstants.PREFIXES);
         for (var i = 0; i < resourceURIs.size(); i++) {
             var pred = "?p" + i;
@@ -368,11 +378,17 @@ public class JenaService {
     }
 
     public int getVersionNumber() {
-        // TODO: migrations
-        return 1;
+        var versionModel = coreRead.fetch(VERSION_NUMBER_GRAPH);
+        return versionModel.getResource(VERSION_NUMBER_GRAPH).getRequiredProperty(OWL.versionInfo).getInt();
     }
 
     public void setVersionNumber(int version) {
-        // TODO: migrations
+        var versionModel = ModelFactory.createDefaultModel().addLiteral(ResourceFactory.createResource(VERSION_NUMBER_GRAPH), OWL.versionInfo, version);
+        versionModel.setNsPrefix("owl", "http://www.w3.org/2002/07/owl#");
+        coreWrite.put(VERSION_NUMBER_GRAPH, versionModel);
+    }
+
+    public boolean isVersionGraphInitialized(){
+        return doesDataModelExist(VERSION_NUMBER_GRAPH);
     }
 }
