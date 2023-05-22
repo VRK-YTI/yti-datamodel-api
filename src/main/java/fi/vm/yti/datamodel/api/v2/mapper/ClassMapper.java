@@ -158,6 +158,8 @@ public class ClassMapper {
             } else {
                 placeHolderResource.addProperty(RDF.type, OWL.ObjectProperty);
             }
+            placeHolderResource.addProperty(RDFS.isDefinedBy,
+                    propertyResource.getProperty(RDFS.isDefinedBy).getObject());
             classRes.addProperty(SH.property, ResourceFactory.createResource(resource.getURI()));
         });
     }
@@ -341,27 +343,35 @@ public class ClassMapper {
         });
     }
 
-    public static void addNodeShapeResourcesToDTO(Model model, NodeShapeInfoDTO classDto) {
-        var propertyShapeURIs = model.getResource(classDto.getUri())
+    public static void addNodeShapeResourcesToDTO(Model model, NodeShapeInfoDTO nodeShapeDTO) {
+        var propertyShapeURIs = model.getResource(nodeShapeDTO.getUri())
                 .listProperties(SH.property).toList().stream()
                 .map(p -> p.getObject().toString())
                 .toList();
-        propertyShapeURIs.forEach(uri -> {
-            var resource = model.getResource(uri);
-            var resDTO = new SimpleResourceDTO();
-            resDTO.setLabel(MapperUtils.localizedPropertyToMap(resource, RDFS.label));
+        propertyShapeURIs.forEach(propertyURI -> {
+            var resource = model.getResource(propertyURI);
+            var dto = new SimplePropertyShapeDTO();
+            var uri = NodeFactory.createURI(propertyURI);
 
-            if (resource.hasProperty(DCTerms.identifier)) {
-                resDTO.setIdentifier(resource.getProperty(DCTerms.identifier).getString());
-            } else {
-                resDTO.setIdentifier(NodeFactory.createURI(uri).getLocalName());
+            var modelUri = MapperUtils.propertyToString(resource, RDFS.isDefinedBy);
+            if(modelUri == null){
+                throw new MappingError("ModelUri null for resource");
             }
-            resDTO.setUri(resource.getURI());
+            dto.setUri(propertyURI);
+            dto.setModelId(MapperUtils.getModelIdFromNamespace(modelUri));
+            dto.setLabel(MapperUtils.localizedPropertyToMap(resource, RDFS.label));
+            dto.setIdentifier(uri.getLocalName());
+
+            if (resource.hasProperty(SH.deactivated)) {
+                dto.setDeactivated(resource.getProperty(SH.deactivated).getObject().asLiteral().getBoolean());
+            } else {
+                dto.setDeactivated(false);
+            }
 
             if (MapperUtils.hasType(resource, OWL.DatatypeProperty)) {
-                classDto.getAttribute().add(resDTO);
+                nodeShapeDTO.getAttribute().add(dto);
             } else if (MapperUtils.hasType(resource, OWL.ObjectProperty)) {
-                classDto.getAssociation().add(resDTO);
+                nodeShapeDTO.getAssociation().add(dto);
             }
         });
     }
