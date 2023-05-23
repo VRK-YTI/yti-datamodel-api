@@ -1,11 +1,10 @@
 package fi.vm.yti.datamodel.api.migration.task;
 
 import fi.vm.yti.datamodel.api.v2.service.JenaService;
+import fi.vm.yti.migration.MigrationTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
-
-import fi.vm.yti.migration.MigrationTask;
 
 @Component
 public class V1_Initial implements MigrationTask {
@@ -19,8 +18,9 @@ public class V1_Initial implements MigrationTask {
 
     @Override
     public void migrate() {
-        /* TODO: migrations
-        logger.debug("Creating default graph and service categories");
+
+        logger.info("v1");
+        /*
         graphManager.createDefaultGraph();
         graphManager.initServiceCategories();
 
