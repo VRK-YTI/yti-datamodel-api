@@ -1,15 +1,20 @@
 package fi.vm.yti.datamodel.api.v2.service;
 
 import fi.vm.yti.datamodel.api.index.OpenSearchConnector;
+import fi.vm.yti.datamodel.api.v2.dto.ModelType;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.OpenSearchException;
 import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
-import fi.vm.yti.datamodel.api.v2.opensearch.dto.*;
-import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexResource;
+import fi.vm.yti.datamodel.api.v2.opensearch.dto.CountSearchResponse;
+import fi.vm.yti.datamodel.api.v2.opensearch.dto.ModelSearchRequest;
+import fi.vm.yti.datamodel.api.v2.opensearch.dto.ResourceSearchRequest;
+import fi.vm.yti.datamodel.api.v2.opensearch.dto.SearchResponseDTO;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexModel;
+import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexResource;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
-import fi.vm.yti.datamodel.api.v2.opensearch.queries.ResourceQueryFactory;
 import fi.vm.yti.datamodel.api.v2.opensearch.queries.CountQueryFactory;
 import fi.vm.yti.datamodel.api.v2.opensearch.queries.ModelQueryFactory;
+import fi.vm.yti.datamodel.api.v2.opensearch.queries.QueryFactoryUtils;
+import fi.vm.yti.datamodel.api.v2.opensearch.queries.ResourceQueryFactory;
 import fi.vm.yti.security.Role;
 import fi.vm.yti.security.YtiUser;
 import org.apache.jena.vocabulary.DCTerms;
@@ -25,15 +30,12 @@ import java.util.stream.Collectors;
 @Service
 public class SearchIndexService {
 
-    private final CountQueryFactory countQueryFactory;
     private final OpenSearchClient client;
     private final GroupManagementService groupManagementService;
     private final JenaService jenaService;
 
     public SearchIndexService(OpenSearchConnector openSearchConnector,
-                              CountQueryFactory countQueryFactory,
                               GroupManagementService groupManagementService, JenaService jenaService) {
-        this.countQueryFactory = countQueryFactory;
         this.client = openSearchConnector.getClient();
         this.groupManagementService = groupManagementService;
         this.jenaService = jenaService;
@@ -44,10 +46,10 @@ public class SearchIndexService {
      * @return response containing counts for data models
      */
     public CountSearchResponse getCounts() {
-        var query = countQueryFactory.createModelQuery();
+        var query = CountQueryFactory.createModelQuery();
         try {
             var response = client.search(query, IndexModel.class);
-            return countQueryFactory.parseResponse(response);
+            return CountQueryFactory.parseResponse(response);
         } catch (IOException e) {
             throw new OpenSearchException(e.getMessage(), OpenSearchIndexer.OPEN_SEARCH_INDEX_MODEL);
         }
@@ -82,6 +84,7 @@ public class SearchIndexService {
         if(!user.isSuperuser()){
                 var organizations = getOrganizationsForUser(user);
                 var modelRequest = new ModelSearchRequest();
+                modelRequest.setPageSize(QueryFactoryUtils.INTERNAL_SEARCH_PAGE_SIZE);
                 modelRequest.setOrganizations(organizations);
                 modelRequest.setIncludeIncompleteFrom(organizations);
                 var build = ModelQueryFactory.createModelQuery(modelRequest);
@@ -93,12 +96,22 @@ public class SearchIndexService {
         return searchInternalResources(request, allowedDatamodels);
     }
 
-    private List<String> getModelSpecificRestrictions(ResourceSearchRequest request){
-        var modelRequest = new ModelSearchRequest();
-        if(request.getLimitToModelType() != null){
-            modelRequest.setType(Set.of(request.getLimitToModelType()));
+    /**
+     * Get model specific restrictions for a resource search
+     * @param modelType Model type
+     * @param groups Service category groups
+     * @return List of DataModel URIs
+     */
+    private List<String> getModelSpecificRestrictions(ModelType modelType, Set<String> groups){
+        if(modelType == null && (groups == null || groups.isEmpty())){
+            //Skip the search all together if no extra filtering needs to be done
+            return Collections.emptyList();
         }
-        var groups = request.getGroups();
+        var modelRequest = new ModelSearchRequest();
+        modelRequest.setPageSize(QueryFactoryUtils.INTERNAL_SEARCH_PAGE_SIZE);
+        if(modelType != null){
+            modelRequest.setType(Set.of(modelType));
+        }
         if(groups != null && !groups.isEmpty()){
             modelRequest.setGroups(groups);
         }
@@ -126,7 +139,7 @@ public class SearchIndexService {
             getNamespacesFromModel(request.getLimitToDataModel(), namespaces);
         }
 
-        List<String> restrictedDataModels = getModelSpecificRestrictions(request);
+        var restrictedDataModels = getModelSpecificRestrictions(request.getLimitToModelType(), request.getGroups());
         var build = ResourceQueryFactory.createInternalResourceQuery(request, namespaces, restrictedDataModels, allowedDatamodels);
         var response = client.search(build, IndexResource.class);
 
