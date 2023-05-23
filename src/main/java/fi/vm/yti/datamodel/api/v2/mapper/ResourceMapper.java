@@ -121,6 +121,38 @@ public class ResourceMapper {
         resource.addProperty(Iow.modifier, user.getId().toString());
     }
 
+    public static String mapToPropertyShapeResource(String graphUri, Model model, PropertyShapeDTO dto, YtiUser user) {
+
+        var resource = model.createResource(graphUri + "#" + dto.getIdentifier());
+        var modelResource = model.getResource(graphUri);
+        var languages = MapperUtils.arrayPropertyToSet(modelResource, DCTerms.language);
+
+        resource.addProperty(RDF.type, SH.PropertyShape);
+        resource.addProperty(RDF.type, dto.getType().equals(ResourceType.ASSOCIATION)
+                ? OWL.ObjectProperty
+                : OWL.DatatypeProperty);
+        resource.addProperty(OWL.versionInfo, dto.getStatus().name());
+        resource.addProperty(RDFS.isDefinedBy, ResourceFactory.createResource(modelResource.getURI()));
+        MapperUtils.addLocalizedProperty(languages, dto.getLabel(), resource, RDFS.label, model);
+        MapperUtils.addLocalizedProperty(languages, dto.getNote(), resource, RDFS.comment, model);
+        MapperUtils.addOptionalStringProperty(resource, SKOS.editorialNote, dto.getEditorialNote());
+        MapperUtils.addOptionalUriProperty(resource, DCTerms.subject, dto.getSubject());
+
+        MapperUtils.addOptionalUriProperty(resource, SH.path, dto.getPath());
+        dto.getAllowedValues().forEach(value -> resource.addProperty(SH.in, value));
+        MapperUtils.addOptionalStringProperty(resource, SH.defaultValue, dto.getDefaultValue());
+        MapperUtils.addOptionalStringProperty(resource, SH.hasValue, dto.getHasValue());
+        MapperUtils.addOptionalStringProperty(resource, SH.datatype, dto.getDataType());
+        resource.addLiteral(SH.minCount, dto.getMinCount());
+        resource.addLiteral(SH.maxCount, dto.getMaxCount());
+        resource.addLiteral(SH.minLength, dto.getMinLength());
+        resource.addLiteral(SH.maxLength, dto.getMaxLength());
+
+        MapperUtils.addCreationMetadata(resource, user);
+
+        return resource.getURI();
+    }
+
     public static IndexResource mapToIndexResource(Model model, String resourceUri){
         var indexResource = new IndexResource();
         var resource = model.getResource(resourceUri);
