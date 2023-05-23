@@ -3,9 +3,9 @@ package fi.vm.yti.datamodel.api.v2.opensearch;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import fi.vm.yti.datamodel.api.index.OpenSearchConnector;
+import fi.vm.yti.datamodel.api.v2.mapper.ModelMapper;
 import fi.vm.yti.datamodel.api.v2.mapper.ResourceMapper;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
-import fi.vm.yti.datamodel.api.v2.mapper.ModelMapper;
 import fi.vm.yti.datamodel.api.v2.service.JenaService;
 import org.apache.jena.query.Query;
 import org.apache.jena.rdf.model.Model;
@@ -17,8 +17,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-
-import java.io.IOException;
 
 import static org.mockito.Mockito.*;
 
@@ -51,7 +49,7 @@ class OpenSearchIndexerTest {
 
 
     @Test
-    void initModelIndexTest() throws IOException {
+    void initModelIndexTest() {
         var model = mock(Model.class);
         var subjects = mock(ResIterator.class);
         when(jenaService.constructWithQuery(any(Query.class))).thenReturn(model);
@@ -64,7 +62,7 @@ class OpenSearchIndexerTest {
     }
 
     @Test
-    void initResourceIndexTest() throws IOException {
+    void initResourceIndexTest() {
         var model = mock(Model.class);
         var subjects = mock(ResIterator.class);
         when(jenaService.constructWithQuery(any(Query.class))).thenReturn(model);

@@ -16,10 +16,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static fi.vm.yti.datamodel.api.v2.opensearch.OpenSearchUtil.logPayload;
-
+//TODO this can be made static
 @Service
 public class CountQueryFactory {
-
     public SearchRequest createModelQuery() {
         var status = QueryBuilders.bool()
                 .mustNot(QueryBuilders.term()

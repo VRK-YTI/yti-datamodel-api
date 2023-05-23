@@ -22,7 +22,7 @@ public class ResourceMapper {
 
     public static String mapToResource(String graphUri, Model model, ResourceDTO dto, YtiUser user){
         var creationDate = new XSDDateTime(Calendar.getInstance());
-        var resourceUri = graphUri + "#" + dto.getIdentifier();
+        var resourceUri = graphUri + ModelConstants.RESOURCE_SEPARATOR + dto.getIdentifier();
         var resourceType = dto.getType().equals(ResourceType.ASSOCIATION) ? OWL.ObjectProperty : OWL.DatatypeProperty;
 
         var resourceResource = model.createResource(resourceUri)
@@ -72,7 +72,7 @@ public class ResourceMapper {
         var updateDate = new XSDDateTime(Calendar.getInstance());
         var modelResource = model.getResource(graphUri);
         var languages = MapperUtils.arrayPropertyToSet(modelResource, DCTerms.language);
-        var resource = model.getResource(graphUri + "#" + resourceIdentifier);
+        var resource = model.getResource(graphUri + ModelConstants.RESOURCE_SEPARATOR + resourceIdentifier);
 
         var type = resource.getProperty(RDF.type).getResource();
         if(type.equals(OWL.Class)){
@@ -164,7 +164,7 @@ public class ResourceMapper {
                                                        String resourceIdentifier, Model orgModel,
                                                        boolean hasRightToModel, Consumer<ResourceCommonDTO> userMapper) {
         var dto = new ResourceInfoDTO();
-        var resourceUri = modelUri + "#" + resourceIdentifier;
+        var resourceUri = modelUri + ModelConstants.RESOURCE_SEPARATOR + resourceIdentifier;
         var resourceResource = model.getResource(resourceUri);
         if(MapperUtils.hasType(resourceResource, OWL.ObjectProperty)){
             dto.setType(ResourceType.ASSOCIATION);

@@ -111,7 +111,7 @@ public class ClassController {
     }
 
     Model handleCreateClassOrNodeShape(String modelURI, String prefix, BaseDTO dto) {
-        if(jenaService.doesResourceExistInGraph(modelURI, modelURI + "#" + dto.getIdentifier())){
+        if(jenaService.doesResourceExistInGraph(modelURI, modelURI + ModelConstants.RESOURCE_SEPARATOR + dto.getIdentifier())){
             throw new MappingError("Class already exists");
         }
         var model = jenaService.getDataModel(modelURI);
@@ -145,8 +145,8 @@ public class ClassController {
         logger.info("Updating class {}", classIdentifier);
 
         var graph = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
-        var classURI = graph + "#" + classIdentifier;
-        if(!jenaService.doesResourceExistInGraph(graph, graph + "#" + classIdentifier)){
+        var classURI = graph + ModelConstants.RESOURCE_SEPARATOR + classIdentifier;
+        if(!jenaService.doesResourceExistInGraph(graph, graph + ModelConstants.RESOURCE_SEPARATOR + classIdentifier)){
             throw new ResourceNotFoundException(classIdentifier);
         }
 
@@ -186,7 +186,7 @@ public class ClassController {
 
     private ResourceInfoBaseDTO handleGetClassOrNodeShape(String prefix, String classIdentifier) {
         var modelURI = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
-        var classURI = modelURI + "#" + classIdentifier;
+        var classURI = modelURI + ModelConstants.RESOURCE_SEPARATOR + classIdentifier;
         if(!jenaService.doesResourceExistInGraph(modelURI , classURI)){
             throw new ResourceNotFoundException(classURI);
         }
@@ -231,7 +231,7 @@ public class ClassController {
 
     void handleDeleteClassOrNodeShape(String prefix, String identifier) {
         var modelURI = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
-        var classURI  = modelURI + "#" + identifier;
+        var classURI  = modelURI + ModelConstants.RESOURCE_SEPARATOR + identifier;
         if(!jenaService.doesResourceExistInGraph(modelURI , classURI)){
             throw new ResourceNotFoundException(classURI);
         }

@@ -2,8 +2,8 @@ package fi.vm.yti.datamodel.api.v2.mapper;
 
 import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
-import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexModel;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
+import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexModel;
 import fi.vm.yti.datamodel.api.v2.service.JenaQueryException;
 import fi.vm.yti.datamodel.api.v2.service.JenaService;
 import fi.vm.yti.security.YtiUser;
@@ -86,7 +86,7 @@ public class ModelMapper {
             modelDTO.getCodeLists().forEach(codeList -> modelResource.addProperty(Iow.codeLists, ResourceFactory.createResource(codeList)));
         }
 
-        model.setNsPrefix(modelDTO.getPrefix(), modelUri + "#");
+        model.setNsPrefix(modelDTO.getPrefix(), modelUri + "/");
 
         return model;
     }

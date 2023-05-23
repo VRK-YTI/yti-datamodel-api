@@ -7,7 +7,8 @@ import fi.vm.yti.datamodel.api.v2.service.JenaService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.apache.jena.rdf.model.*;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.SimpleSelector;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.vocabulary.SKOS;
@@ -61,7 +62,7 @@ public class ExportController {
         }
 
         if (resource != null) {
-            var res = model.getResource(modelURI + "#" + resource);
+            var res = model.getResource(modelURI + ModelConstants.RESOURCE_SEPARATOR + resource);
             var properties = res.listProperties();
             if (!properties.hasNext()) {
                 return ResponseEntity.notFound().build();

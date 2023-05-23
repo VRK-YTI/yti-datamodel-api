@@ -4,7 +4,7 @@ import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.endpoint.EndpointUtils;
 import fi.vm.yti.datamodel.api.v2.mapper.ClassMapper;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
-import org.apache.jena.rdf.model.*;
+import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.vocabulary.*;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -29,8 +29,8 @@ class ClassMapperTest {
         ClassDTO dto = new ClassDTO();
         dto.setIdentifier("TestClass");
         dto.setSubject("http://uri.suomi.fi/terminology/test/test1");
-        dto.setEquivalentClass(Set.of("http://uri.suomi.fi/datamodel/ns/int#EqClass"));
-        dto.setSubClassOf(Set.of("https://www.example.com/ns/ext#SubClass"));
+        dto.setEquivalentClass(Set.of("http://uri.suomi.fi/datamodel/ns/int/EqClass"));
+        dto.setSubClassOf(Set.of("https://www.example.com/ns/ext/SubClass"));
         dto.setEditorialNote("comment");
         dto.setLabel(Map.of("fi", "test label"));
         dto.setStatus(Status.DRAFT);
@@ -39,13 +39,13 @@ class ClassMapperTest {
         ClassMapper.createOntologyClassAndMapToModel("http://uri.suomi.fi/datamodel/ns/test", m, dto, mockUser);
 
         Resource modelResource = m.getResource("http://uri.suomi.fi/datamodel/ns/test");
-        Resource classResource = m.getResource("http://uri.suomi.fi/datamodel/ns/test#TestClass");
+        Resource classResource = m.getResource("http://uri.suomi.fi/datamodel/ns/test/TestClass");
 
         assertNotNull(modelResource);
         assertNotNull(classResource);
 
         assertEquals(1, modelResource.listProperties(DCTerms.hasPart).toList().size());
-        assertEquals("http://uri.suomi.fi/datamodel/ns/test#TestClass", modelResource.getProperty(DCTerms.hasPart).getObject().toString());
+        assertEquals("http://uri.suomi.fi/datamodel/ns/test/TestClass", modelResource.getProperty(DCTerms.hasPart).getObject().toString());
 
         assertEquals(1, classResource.listProperties(RDFS.label).toList().size());
         assertEquals("test label", classResource.getProperty(RDFS.label).getLiteral().getString());
@@ -62,9 +62,9 @@ class ClassMapperTest {
         assertEquals("test note", classResource.getProperty(RDFS.comment).getLiteral().getString());
 
         assertEquals(1, classResource.listProperties(RDFS.subClassOf).toList().size());
-        assertEquals("https://www.example.com/ns/ext#SubClass", classResource.getProperty(RDFS.subClassOf).getObject().toString());
+        assertEquals("https://www.example.com/ns/ext/SubClass", classResource.getProperty(RDFS.subClassOf).getObject().toString());
         assertEquals(1, classResource.listProperties(OWL.equivalentClass).toList().size());
-        assertEquals("http://uri.suomi.fi/datamodel/ns/int#EqClass", classResource.getProperty(OWL.equivalentClass).getObject().toString());
+        assertEquals("http://uri.suomi.fi/datamodel/ns/int/EqClass", classResource.getProperty(OWL.equivalentClass).getObject().toString());
         assertEquals(mockUser.getId().toString(), classResource.getProperty(Iow.creator).getString());
         assertEquals(mockUser.getId().toString(), classResource.getProperty(Iow.modifier).getString());
     }
@@ -82,7 +82,7 @@ class ClassMapperTest {
         ClassMapper.createOntologyClassAndMapToModel("http://uri.suomi.fi/datamodel/ns/test", m, dto, mockUser);
 
         Resource modelResource = m.getResource("http://uri.suomi.fi/datamodel/ns/test");
-        Resource classResource = m.getResource("http://uri.suomi.fi/datamodel/ns/test#Identifier");
+        Resource classResource = m.getResource("http://uri.suomi.fi/datamodel/ns/test/Identifier");
 
         assertNotNull(modelResource);
         assertNotNull(classResource);
@@ -102,9 +102,9 @@ class ClassMapperTest {
         assertEquals(Status.VALID, dto.getStatus());
         assertEquals("TestClass", dto.getIdentifier());
         assertEquals(1, dto.getEquivalentClass().size());
-        assertEquals("http://uri.suomi.fi/datamodel/ns/test#EqClass", dto.getEquivalentClass().stream().findFirst().orElse(null));
+        assertEquals("http://uri.suomi.fi/datamodel/ns/test/EqClass", dto.getEquivalentClass().stream().findFirst().orElse(null));
         assertEquals(1, dto.getSubClassOf().size());
-        assertEquals("http://uri.suomi.fi/datamodel/ns/test#SubClass", dto.getSubClassOf().stream().findFirst().orElse(null));
+        assertEquals("http://uri.suomi.fi/datamodel/ns/test/SubClass", dto.getSubClassOf().stream().findFirst().orElse(null));
         assertEquals(1, dto.getLabel().size());
         assertEquals("test label", dto.getLabel().get("fi"));
         assertEquals("http://uri.suomi.fi/terminology/test/test1", dto.getSubject().getConceptURI());
@@ -115,7 +115,7 @@ class ClassMapperTest {
         assertEquals("2023-02-03T11:46:36.404Z", dto.getCreated());
         assertEquals("test org", dto.getContributor().stream().findFirst().orElseThrow().getLabel().get("fi"));
         assertEquals("7d3a3c00-5a6b-489b-a3ed-63bb58c26a63", dto.getContributor().stream().findFirst().orElseThrow().getId());
-        assertEquals("http://uri.suomi.fi/datamodel/ns/test#TestClass", dto.getUri());
+        assertEquals("http://uri.suomi.fi/datamodel/ns/test/TestClass", dto.getUri());
     }
 
     @Test
@@ -138,7 +138,7 @@ class ClassMapperTest {
         assertEquals("2023-02-03T11:46:36.404Z", dto.getCreated());
         assertEquals("test org", dto.getContributor().stream().findFirst().orElseThrow().getLabel().get("fi"));
         assertEquals("7d3a3c00-5a6b-489b-a3ed-63bb58c26a63", dto.getContributor().stream().findFirst().orElseThrow().getId());
-        assertEquals("http://uri.suomi.fi/datamodel/ns/test#TestClass", dto.getUri());
+        assertEquals("http://uri.suomi.fi/datamodel/ns/test/TestClass", dto.getUri());
     }
 
     @Test
@@ -164,15 +164,15 @@ class ClassMapperTest {
     @Test
     void testMapToUpdateClassLibrary(){
         var m = MapperTestUtils.getModelFromFile("/models/test_datamodel_library_with_resources.ttl");
-        var resource = m.getResource("http://uri.suomi.fi/datamodel/ns/test#TestClass");
+        var resource = m.getResource("http://uri.suomi.fi/datamodel/ns/test/TestClass");
         var mockUser = EndpointUtils.mockUser;
 
         var dto = new ClassDTO();
         dto.setLabel(Map.of("fi", "new label"));
         dto.setStatus(Status.INVALID);
         dto.setNote(Map.of("fi", "new note"));
-        dto.setEquivalentClass(Set.of("http://uri.suomi.fi/datamodel/ns/int#NewEq"));
-        dto.setSubClassOf(Set.of("https://www.example.com/ns/ext#NewSub"));
+        dto.setEquivalentClass(Set.of("http://uri.suomi.fi/datamodel/ns/int/NewEq"));
+        dto.setSubClassOf(Set.of("https://www.example.com/ns/ext/NewSub"));
         dto.setSubject("http://uri.suomi.fi/terminology/qwe");
         dto.setEditorialNote("new editorial note");
 
@@ -182,8 +182,8 @@ class ClassMapperTest {
         assertEquals("fi", resource.getProperty(RDFS.label).getLiteral().getLanguage());
         assertEquals("TestClass", resource.getProperty(DCTerms.identifier).getLiteral().getString());
         assertEquals("http://uri.suomi.fi/terminology/test/test1", resource.getProperty(DCTerms.subject).getObject().toString());
-        assertEquals("http://uri.suomi.fi/datamodel/ns/test#EqClass", resource.getProperty(OWL.equivalentClass).getObject().toString());
-        assertEquals("http://uri.suomi.fi/datamodel/ns/test#SubClass", resource.getProperty(RDFS.subClassOf).getObject().toString());
+        assertEquals("http://uri.suomi.fi/datamodel/ns/test/EqClass", resource.getProperty(OWL.equivalentClass).getObject().toString());
+        assertEquals("http://uri.suomi.fi/datamodel/ns/test/SubClass", resource.getProperty(RDFS.subClassOf).getObject().toString());
         assertEquals(Status.VALID.name(), resource.getProperty(OWL.versionInfo).getObject().toString());
         assertEquals("comment visible for admin", resource.getProperty(SKOS.editorialNote).getObject().toString());
         assertEquals(2, resource.listProperties(RDFS.comment).toList().size());
@@ -196,8 +196,8 @@ class ClassMapperTest {
         assertEquals("fi", resource.getProperty(RDFS.label).getLiteral().getLanguage());
         assertEquals("TestClass", resource.getProperty(DCTerms.identifier).getLiteral().getString());
         assertEquals("http://uri.suomi.fi/terminology/qwe", resource.getProperty(DCTerms.subject).getObject().toString());
-        assertEquals("http://uri.suomi.fi/datamodel/ns/int#NewEq", resource.getProperty(OWL.equivalentClass).getObject().toString());
-        assertEquals("https://www.example.com/ns/ext#NewSub", resource.getProperty(RDFS.subClassOf).getObject().toString());
+        assertEquals("http://uri.suomi.fi/datamodel/ns/int/NewEq", resource.getProperty(OWL.equivalentClass).getObject().toString());
+        assertEquals("https://www.example.com/ns/ext/NewSub", resource.getProperty(RDFS.subClassOf).getObject().toString());
         assertEquals(Status.INVALID.name(), resource.getProperty(OWL.versionInfo).getObject().toString());
         assertEquals("new editorial note", resource.getProperty(SKOS.editorialNote).getObject().toString());
         assertEquals(1, resource.listProperties(RDFS.comment).toList().size());
@@ -210,7 +210,7 @@ class ClassMapperTest {
     @Test
     void testMapToUpdateClassNullValuesDTO(){
         var m = MapperTestUtils.getModelFromFile("/models/test_datamodel_library_with_resources.ttl");
-        var resource = m.getResource("http://uri.suomi.fi/datamodel/ns/test#TestClass");
+        var resource = m.getResource("http://uri.suomi.fi/datamodel/ns/test/TestClass");
         var mockUser = EndpointUtils.mockUser;
 
         var dto = new ClassDTO();
@@ -221,8 +221,8 @@ class ClassMapperTest {
         assertEquals("fi", resource.getProperty(RDFS.label).getLiteral().getLanguage());
         assertEquals("TestClass", resource.getProperty(DCTerms.identifier).getLiteral().getString());
         assertEquals("http://uri.suomi.fi/terminology/test/test1", resource.getProperty(DCTerms.subject).getObject().toString());
-        assertEquals("http://uri.suomi.fi/datamodel/ns/test#EqClass", resource.getProperty(OWL.equivalentClass).getObject().toString());
-        assertEquals("http://uri.suomi.fi/datamodel/ns/test#SubClass", resource.getProperty(RDFS.subClassOf).getObject().toString());
+        assertEquals("http://uri.suomi.fi/datamodel/ns/test/EqClass", resource.getProperty(OWL.equivalentClass).getObject().toString());
+        assertEquals("http://uri.suomi.fi/datamodel/ns/test/SubClass", resource.getProperty(RDFS.subClassOf).getObject().toString());
         assertEquals(Status.VALID.name(), resource.getProperty(OWL.versionInfo).getObject().toString());
         assertEquals("comment visible for admin", resource.getProperty(SKOS.editorialNote).getObject().toString());
         assertEquals(2, resource.listProperties(RDFS.comment).toList().size());
@@ -235,8 +235,8 @@ class ClassMapperTest {
         assertEquals("fi", resource.getProperty(RDFS.label).getLiteral().getLanguage());
         assertEquals("TestClass", resource.getProperty(DCTerms.identifier).getLiteral().getString());
         assertEquals("http://uri.suomi.fi/terminology/test/test1", resource.getProperty(DCTerms.subject).getObject().toString());
-        assertEquals("http://uri.suomi.fi/datamodel/ns/test#EqClass", resource.getProperty(OWL.equivalentClass).getObject().toString());
-        assertEquals("http://uri.suomi.fi/datamodel/ns/test#SubClass", resource.getProperty(RDFS.subClassOf).getObject().toString());
+        assertEquals("http://uri.suomi.fi/datamodel/ns/test/EqClass", resource.getProperty(OWL.equivalentClass).getObject().toString());
+        assertEquals("http://uri.suomi.fi/datamodel/ns/test/SubClass", resource.getProperty(RDFS.subClassOf).getObject().toString());
         assertEquals(Status.VALID.name(), resource.getProperty(OWL.versionInfo).getObject().toString());
         assertEquals("comment visible for admin", resource.getProperty(SKOS.editorialNote).getObject().toString());
         assertEquals(2, resource.listProperties(RDFS.comment).toList().size());
@@ -245,7 +245,7 @@ class ClassMapperTest {
     @Test
     void testMapToUpdateClassEmptyValuesDTO(){
         var m = MapperTestUtils.getModelFromFile("/models/test_datamodel_library_with_resources.ttl");
-        var resource = m.getResource("http://uri.suomi.fi/datamodel/ns/test#TestClass");
+        var resource = m.getResource("http://uri.suomi.fi/datamodel/ns/test/TestClass");
         var mockUser = EndpointUtils.mockUser;
 
         var dto = new ClassDTO();
@@ -256,8 +256,8 @@ class ClassMapperTest {
         dto.setNote(Collections.emptyMap());
 
         assertEquals("http://uri.suomi.fi/terminology/test/test1", resource.getProperty(DCTerms.subject).getObject().toString());
-        assertEquals("http://uri.suomi.fi/datamodel/ns/test#EqClass", resource.getProperty(OWL.equivalentClass).getObject().toString());
-        assertEquals("http://uri.suomi.fi/datamodel/ns/test#SubClass", resource.getProperty(RDFS.subClassOf).getObject().toString());
+        assertEquals("http://uri.suomi.fi/datamodel/ns/test/EqClass", resource.getProperty(OWL.equivalentClass).getObject().toString());
+        assertEquals("http://uri.suomi.fi/datamodel/ns/test/SubClass", resource.getProperty(RDFS.subClassOf).getObject().toString());
         assertEquals("comment visible for admin", resource.getProperty(SKOS.editorialNote).getObject().toString());
         assertEquals(2, resource.listProperties(RDFS.comment).toList().size());
 
@@ -284,7 +284,7 @@ class ClassMapperTest {
 
         assertEquals("test label", attribute.getLabel().get("fi"));
         assertEquals("test", attribute.getIdentifier());
-        assertEquals("http://uri.suomi.fi/datamodel/ns/test#rangetest2", attribute.getUri());
+        assertEquals("http://uri.suomi.fi/datamodel/ns/test/rangetest2", attribute.getUri());
         assertEquals("test", attribute.getModelId());
     }
 
