@@ -118,7 +118,7 @@ class NodeShapeMapperTest {
         var propertyShapes = classRes.listProperties(SH.property).toList();
         var propertyShapeResource = model.getResource("http://uri.suomi.fi/datamodel/ns/test_lib/attribute-1");
 
-        assertEquals(2, propertyShapes.size());
+        assertEquals(4, propertyShapes.size());
         assertTrue(propertyShapes.stream().anyMatch(
                 shape -> shape.getObject().toString().equals("http://uri.suomi.fi/datamodel/ns/test_lib/attribute-1")));
         assertTrue(propertyShapes.stream().anyMatch(
@@ -174,7 +174,7 @@ class NodeShapeMapperTest {
     void testMapNodeShapeResources() {
         var m = MapperTestUtils.getModelFromFile("/models/test_datamodel_profile_with_resources.ttl");
 
-        var resource = m.getResource("http://uri.suomi.fi/datamodel/ns/test#TestClass");
+        var resource = m.getResource("http://uri.suomi.fi/datamodel/ns/test/TestClass");
         var dto = new NodeShapeInfoDTO();
         dto.setUri(resource.getURI());
 
