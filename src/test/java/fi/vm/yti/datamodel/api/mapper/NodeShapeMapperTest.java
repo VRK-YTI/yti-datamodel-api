@@ -1,8 +1,6 @@
 package fi.vm.yti.datamodel.api.mapper;
 
-import fi.vm.yti.datamodel.api.v2.dto.Iow;
-import fi.vm.yti.datamodel.api.v2.dto.NodeShapeDTO;
-import fi.vm.yti.datamodel.api.v2.dto.Status;
+import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.endpoint.EndpointUtils;
 import fi.vm.yti.datamodel.api.v2.mapper.ClassMapper;
 import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
@@ -15,6 +13,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.topbraid.shacl.vocabulary.SH;
 
 import java.util.Map;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -119,7 +118,7 @@ class NodeShapeMapperTest {
         var propertyShapes = classRes.listProperties(SH.property).toList();
         var propertyShapeResource = model.getResource("http://uri.suomi.fi/datamodel/ns/test_lib/attribute-1");
 
-        assertEquals(2, propertyShapes.size());
+        assertEquals(4, propertyShapes.size());
         assertTrue(propertyShapes.stream().anyMatch(
                 shape -> shape.getObject().toString().equals("http://uri.suomi.fi/datamodel/ns/test_lib/attribute-1")));
         assertTrue(propertyShapes.stream().anyMatch(
@@ -172,17 +171,42 @@ class NodeShapeMapperTest {
     }
 
     @Test
+    void testMapNodeShapeResources() {
+        var m = MapperTestUtils.getModelFromFile("/models/test_datamodel_profile_with_resources.ttl");
+
+        var resource = m.getResource("http://uri.suomi.fi/datamodel/ns/test/TestClass");
+        var dto = new NodeShapeInfoDTO();
+        dto.setUri(resource.getURI());
+
+        ClassMapper.addNodeShapeResourcesToDTO(m, dto);
+
+        var attributes = dto.getAttribute();
+        Optional<SimplePropertyShapeDTO> result = attributes.stream()
+                .filter(SimplePropertyShapeDTO::isDeactivated).findFirst();
+
+        if (result.isPresent()) {
+            var deactivated = result.get();
+            assertEquals(2, attributes.size());
+            assertEquals("DeactivatedPropertyShape", deactivated.getIdentifier());
+            assertEquals("test", deactivated.getModelId());
+            assertTrue(deactivated.isDeactivated());
+        } else {
+            fail("No deactivated property shape found");
+        }
+    }
+
+    @Test
     void testMapDeactivatedPropertyShape() {
         var m = MapperTestUtils.getModelFromFile("/models/test_datamodel_profile_with_resources.ttl");
 
-        var propertyShape1 = m.getResource("http://uri.suomi.fi/datamodel/ns/test#TestPropertyShape");
-        var propertyShape2 = m.getResource("http://uri.suomi.fi/datamodel/ns/test#DeactivatedPropertyShape");
+        var propertyShape1 = m.getResource("http://uri.suomi.fi/datamodel/ns/test/TestPropertyShape");
+        var propertyShape2 = m.getResource("http://uri.suomi.fi/datamodel/ns/test/DeactivatedPropertyShape");
 
         assertFalse(propertyShape1.hasProperty(SH.deactivated));
         assertTrue(propertyShape2.getProperty(SH.deactivated).getObject().asLiteral().getBoolean());
 
-        ClassMapper.toggleAndMapDeactivatedProperty(m, "http://uri.suomi.fi/datamodel/ns/test#TestPropertyShape");
-        ClassMapper.toggleAndMapDeactivatedProperty(m, "http://uri.suomi.fi/datamodel/ns/test#DeactivatedPropertyShape");
+        ClassMapper.toggleAndMapDeactivatedProperty(m, "http://uri.suomi.fi/datamodel/ns/test/TestPropertyShape");
+        ClassMapper.toggleAndMapDeactivatedProperty(m, "http://uri.suomi.fi/datamodel/ns/test/DeactivatedPropertyShape");
 
         assertTrue(propertyShape1.getProperty(SH.deactivated).getObject().asLiteral().getBoolean());
         assertFalse(propertyShape2.hasProperty(SH.deactivated));

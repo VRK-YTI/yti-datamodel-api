@@ -1,7 +1,5 @@
 package fi.vm.yti.datamodel.api.v2.dto;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -15,8 +13,6 @@ public class ResourceInfoBaseDTO extends ResourceCommonDTO {
     private String uri;
     private Set<OrganizationDTO> contributor;
     private String contact;
-    private List<SimpleResourceDTO> attribute = new ArrayList<>();
-    private List<SimpleResourceDTO> association = new ArrayList<>();
 
     public Map<String, String> getLabel() {
         return label;
@@ -88,22 +84,6 @@ public class ResourceInfoBaseDTO extends ResourceCommonDTO {
 
     public void setContact(String contact) {
         this.contact = contact;
-    }
-
-    public List<SimpleResourceDTO> getAttribute() {
-        return attribute;
-    }
-
-    public void setAttribute(List<SimpleResourceDTO> attribute) {
-        this.attribute = attribute;
-    }
-
-    public List<SimpleResourceDTO> getAssociation() {
-        return association;
-    }
-
-    public void setAssociation(List<SimpleResourceDTO> association) {
-        this.association = association;
     }
 
 }
