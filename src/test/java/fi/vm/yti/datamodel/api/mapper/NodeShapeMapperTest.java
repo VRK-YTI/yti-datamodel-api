@@ -171,4 +171,21 @@ class NodeShapeMapperTest {
         assertEquals("2a5c075f-0d0e-4688-90e0-29af1eebbf6d", resource.getProperty(Iow.creator).getObject().toString());
     }
 
+    @Test
+    void testMapDeactivatedPropertyShape() {
+        var m = MapperTestUtils.getModelFromFile("/models/test_datamodel_profile_with_resources.ttl");
+
+        var propertyShape1 = m.getResource("http://uri.suomi.fi/datamodel/ns/test#TestPropertyShape");
+        var propertyShape2 = m.getResource("http://uri.suomi.fi/datamodel/ns/test#DeactivatedPropertyShape");
+
+        assertFalse(propertyShape1.hasProperty(SH.deactivated));
+        assertTrue(propertyShape2.getProperty(SH.deactivated).getObject().asLiteral().getBoolean());
+
+        ClassMapper.toggleAndMapDeactivatedProperty(m, "http://uri.suomi.fi/datamodel/ns/test#TestPropertyShape");
+        ClassMapper.toggleAndMapDeactivatedProperty(m, "http://uri.suomi.fi/datamodel/ns/test#DeactivatedPropertyShape");
+
+        assertTrue(propertyShape1.getProperty(SH.deactivated).getObject().asLiteral().getBoolean());
+        assertFalse(propertyShape2.hasProperty(SH.deactivated));
+    }
+
 }

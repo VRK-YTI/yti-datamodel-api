@@ -272,6 +272,20 @@ public class ClassController {
                 .getResponseObjects();
     }
 
+    @Operation(summary = "Toggles deactivation of a single property shape")
+    @ApiResponse(responseCode = "200", description = "Deactivation has changes successfully")
+    @PutMapping(value = "/toggleDeactivate/{prefix}", produces = APPLICATION_JSON_VALUE)
+    public void deactivatePropertyShape(@PathVariable String prefix, @RequestParam String propertyUri) {
+        var modelURI = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
+        var model = jenaService.getDataModel(modelURI);
+        if(model == null) {
+            throw new ResourceNotFoundException(modelURI);
+        }
+        check(authorizationManager.hasRightToModel(prefix, model));
+        ClassMapper.toggleAndMapDeactivatedProperty(model, propertyUri);
+        jenaService.putDataModelToCore(modelURI, model);
+    }
+
     private Set<String> handleTargetNodeProperties(String targetNode) {
         var propertyShapes = new HashSet<String>();
         var handledNodeShapes = new HashSet<String>();
