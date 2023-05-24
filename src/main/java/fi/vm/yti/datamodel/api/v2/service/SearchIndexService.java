@@ -144,11 +144,9 @@ public class SearchIndexService {
 
     private void getNamespacesFromModel(String modelUri, List<String> namespaces){
         var model = jenaService.getDataModel(modelUri);
-        if(model != null){
-            var resource = model.getResource(modelUri);
-            namespaces.addAll(MapperUtils.arrayPropertyToList(resource, OWL.imports));
-            namespaces.addAll(MapperUtils.arrayPropertyToList(resource, DCTerms.requires));
-        }
+        var resource = model.getResource(modelUri);
+        namespaces.addAll(MapperUtils.arrayPropertyToList(resource, OWL.imports));
+        namespaces.addAll(MapperUtils.arrayPropertyToList(resource, DCTerms.requires));
     }
 
     private Set<UUID> getOrganizationsForUser(YtiUser user){

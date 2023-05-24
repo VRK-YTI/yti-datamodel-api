@@ -3,10 +3,11 @@ package fi.vm.yti.datamodel.api.v2.dto;
 import java.util.ArrayList;
 import java.util.List;
 
-public class PropertyShapeDTO extends BaseDTO {
+public class PropertyShapeInfoDTO extends ResourceInfoBaseDTO {
+
+    private ResourceType type;
     private String path;
     private String classType;
-    private ResourceType type;
     private String dataType;
     private List<String> allowedValues = new ArrayList<>();
     private String defaultValue;
@@ -15,6 +16,14 @@ public class PropertyShapeDTO extends BaseDTO {
     private Integer minLength;
     private Integer maxCount;
     private Integer minCount;
+
+    public ResourceType getType() {
+        return type;
+    }
+
+    public void setType(ResourceType type) {
+        this.type = type;
+    }
 
     public String getPath() {
         return path;
@@ -30,14 +39,6 @@ public class PropertyShapeDTO extends BaseDTO {
 
     public void setClassType(String classType) {
         this.classType = classType;
-    }
-
-    public ResourceType getType() {
-        return type;
-    }
-
-    public void setType(ResourceType type) {
-        this.type = type;
     }
 
     public String getDataType() {

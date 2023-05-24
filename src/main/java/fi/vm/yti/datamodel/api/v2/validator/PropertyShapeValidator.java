@@ -5,11 +5,12 @@ import fi.vm.yti.datamodel.api.v2.service.JenaService;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import org.apache.jena.vocabulary.OWL;
+import org.apache.jena.vocabulary.RDFS;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
 
-public class PropertyShapeValidator extends BaseValidator implements ConstraintValidator<ValidResource, PropertyShapeDTO> {
+public class PropertyShapeValidator extends BaseValidator implements ConstraintValidator<ValidPropertyShape, PropertyShapeDTO> {
 
     boolean updateProperty;
 
@@ -17,7 +18,7 @@ public class PropertyShapeValidator extends BaseValidator implements ConstraintV
     private JenaService jenaService;
 
     @Override
-    public void initialize(ValidResource constraintAnnotation) {
+    public void initialize(ValidPropertyShape constraintAnnotation) {
         this.updateProperty = constraintAnnotation.updateProperty();
     }
 
@@ -32,7 +33,13 @@ public class PropertyShapeValidator extends BaseValidator implements ConstraintV
         checkIdentifier(context, value, updateProperty);
         checkType(context, value);
         checkPath(context, value);
-
+        checkClassType(context, value);
+        checkDataType(context, value);
+        checkCommonTextField(context, value.getDefaultValue(), "defaultValue");
+        checkCommonTextField(context, value.getHasValue(), "hasValue");
+        if (value.getAllowedValues() != null) {
+            value.getAllowedValues().forEach(v -> checkCommonTextField(context, v, "allowedValues"));
+        }
         return !isConstraintViolationAdded();
     }
 
@@ -48,12 +55,28 @@ public class PropertyShapeValidator extends BaseValidator implements ConstraintV
         var path = dto.getPath();
         if(path != null && !path.isBlank()){
             var checkImports = !path.startsWith(ModelConstants.SUOMI_FI_NAMESPACE);
-            var allowedType = dto.getType().equals(ResourceType.ASSOCIATION)
-                    ? OWL.ObjectProperty
-                    : OWL.DatatypeProperty;
-            if(!jenaService.checkIfResourceIsOneOfTypes(path, List.of(allowedType), checkImports)){
+            if(!jenaService.checkIfResourceIsOneOfTypes(path, List.of(OWL.ObjectProperty, OWL.DatatypeProperty), checkImports)){
                 addConstraintViolation(context, "not-property-or-doesnt-exist", "path");
             }
+        }
+    }
+
+    private void checkClassType(ConstraintValidatorContext context, PropertyShapeDTO dto) {
+        var classType = dto.getClassType();
+        if (classType != null && !dto.getType().equals(ResourceType.ASSOCIATION)) {
+            // only allowed for associations
+            addConstraintViolation(context, "sh-class-not-allowed", "classType");
+        } else if (classType != null) {
+            var checkImports = !classType.startsWith(ModelConstants.SUOMI_FI_NAMESPACE);
+            if(!jenaService.checkIfResourceIsOneOfTypes(classType, List.of(RDFS.Class, OWL.Class), checkImports)){
+                addConstraintViolation(context, "not-class-or-doesnt-exist", "path");
+            }
+        }
+    }
+
+    private void checkDataType(ConstraintValidatorContext context, PropertyShapeDTO dto) {
+        if (dto.getDataType() != null && !ModelConstants.SUPPORTED_DATA_TYPES.contains(dto.getDataType())) {
+            addConstraintViolation(context, "unsupported-datatype", "dataType");
         }
     }
 }

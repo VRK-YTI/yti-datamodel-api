@@ -1,8 +1,6 @@
 package fi.vm.yti.datamodel.api.v2.mapper;
 
-import fi.vm.yti.datamodel.api.v2.dto.DCAP;
-import fi.vm.yti.datamodel.api.v2.dto.Iow;
-import fi.vm.yti.datamodel.api.v2.dto.ModelType;
+import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
 import fi.vm.yti.security.YtiUser;
 import org.apache.jena.datatypes.xsd.XSDDateTime;
@@ -17,6 +15,7 @@ import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDF;
 
 import java.util.*;
+import java.util.function.Consumer;
 
 public class MapperUtils {
 
@@ -180,6 +179,21 @@ public class MapperUtils {
         return object == null ? null : object.toString();
     }
 
+    public static <T> T getLiteral(Resource resource, Property property, Class<T> type) {
+        var prop = resource.getProperty(property);
+        if (prop == null){
+            return null;
+        }
+        var literal = prop.getLiteral();
+
+        if (type.equals(Integer.class)) {
+            return type.cast(literal.getInt());
+        } else if (type.equals(Boolean.class)) {
+            return type.cast(literal.getBoolean());
+        }
+        return null;
+    }
+
     /**
      * Update string property
      * If string is empty|blank value is removed
@@ -193,6 +207,13 @@ public class MapperUtils {
             if(!value.isBlank()){
                 resource.addProperty(property, value);
             }
+        }
+    }
+
+    public static void updateLiteral(Resource resource, Property property, Object value){
+        if (value != null) {
+            resource.removeAll(property);
+            resource.addLiteral(property, value);
         }
     }
 
@@ -286,5 +307,20 @@ public class MapperUtils {
         resource.addProperty(DCTerms.modified, ResourceFactory.createTypedLiteral(updateDate));
         resource.removeAll(Iow.modifier);
         resource.addProperty(Iow.modifier, user.getId().toString());
+    }
+
+    public static void mapCreationInfo(ResourceInfoBaseDTO dto,
+                                        Resource resource,
+                                        Consumer<ResourceCommonDTO> userMapper) {
+        var created = resource.getProperty(DCTerms.created).getLiteral().getString();
+        var modified = resource.getProperty(DCTerms.modified).getLiteral().getString();
+        dto.setCreated(created);
+        dto.setModified(modified);
+        dto.setCreator(new UserDTO(MapperUtils.propertyToString(resource, Iow.creator)));
+        dto.setModifier(new UserDTO(MapperUtils.propertyToString(resource, Iow.modifier)));
+
+        if (userMapper != null) {
+            userMapper.accept(dto);
+        }
     }
 }

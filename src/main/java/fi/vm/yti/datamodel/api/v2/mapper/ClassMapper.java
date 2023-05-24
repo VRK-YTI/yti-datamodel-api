@@ -227,21 +227,6 @@ public class ClassMapper {
         dto.setNote(MapperUtils.localizedPropertyToMap(resource, RDFS.comment));
     }
 
-    private static void mapCreationInfo(ResourceInfoBaseDTO dto,
-                                        Resource resource,
-                                        Consumer<ResourceCommonDTO> userMapper) {
-        var created = resource.getProperty(DCTerms.created).getLiteral().getString();
-        var modified = resource.getProperty(DCTerms.modified).getLiteral().getString();
-        dto.setCreated(created);
-        dto.setModified(modified);
-        dto.setCreator(new UserDTO(MapperUtils.propertyToString(resource, Iow.creator)));
-        dto.setModifier(new UserDTO(MapperUtils.propertyToString(resource, Iow.modifier)));
-
-        if (userMapper != null) {
-            userMapper.accept(dto);
-        }
-    }
-
     /**
      * Map model with given prefix and class identifier
      *
@@ -263,7 +248,7 @@ public class ClassMapper {
         var modelResource = model.getResource(modelUri);
 
         mapCommonInfoDTO(dto, classResource, modelResource, orgModel, hasRightToModel);
-        mapCreationInfo(dto, classResource, userMapper);
+        MapperUtils.mapCreationInfo(dto, classResource, userMapper);
 
         dto.setSubClassOf(MapperUtils.arrayPropertyToSet(classResource, RDFS.subClassOf));
         dto.setEquivalentClass(MapperUtils.arrayPropertyToSet(classResource, OWL.equivalentClass));
@@ -282,7 +267,7 @@ public class ClassMapper {
         var modelResource = model.getResource(modelUri);
 
         mapCommonInfoDTO(dto, nodeShapeResource, modelResource, orgModel, hasRightToModel);
-        mapCreationInfo(dto, nodeShapeResource, userMapper);
+        MapperUtils.mapCreationInfo(dto, nodeShapeResource, userMapper);
 
         dto.setTargetClass(MapperUtils.propertyToString(nodeShapeResource, SH.targetClass));
         dto.setTargetNode(MapperUtils.propertyToString(nodeShapeResource, SH.targetNode));

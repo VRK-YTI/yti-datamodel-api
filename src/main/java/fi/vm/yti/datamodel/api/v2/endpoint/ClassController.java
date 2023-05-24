@@ -115,9 +115,6 @@ public class ClassController {
             throw new MappingError("Class already exists");
         }
         var model = jenaService.getDataModel(modelURI);
-        if(model == null){
-            throw new ResourceNotFoundException(modelURI);
-        }
         check(authorizationManager.hasRightToModel(prefix, model));
         checkDataModelType(model.getResource(modelURI), dto);
 
@@ -191,9 +188,6 @@ public class ClassController {
             throw new ResourceNotFoundException(classURI);
         }
         var model = jenaService.getDataModel(modelURI);
-        if(model == null){
-            throw new ResourceNotFoundException(modelURI);
-        }
         var hasRightToModel = authorizationManager.hasRightToModel(prefix, model);
 
         var orgModel = jenaService.getOrganizations();
@@ -236,9 +230,6 @@ public class ClassController {
             throw new ResourceNotFoundException(classURI);
         }
         var model = jenaService.getDataModel(modelURI);
-        if(model == null){
-            throw new ResourceNotFoundException(modelURI);
-        }
         check(authorizationManager.hasRightToModel(prefix, model));
         jenaService.deleteResource(classURI);
         openSearchIndexer.deleteResourceFromIndex(classURI);
@@ -278,8 +269,9 @@ public class ClassController {
     public void deactivatePropertyShape(@PathVariable String prefix, @RequestParam String propertyUri) {
         var modelURI = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
         var model = jenaService.getDataModel(modelURI);
-        if(model == null) {
-            throw new ResourceNotFoundException(modelURI);
+
+        if(!jenaService.doesResourceExistInGraph(modelURI, propertyUri)){
+            throw new ResourceNotFoundException(propertyUri);
         }
         check(authorizationManager.hasRightToModel(prefix, model));
         ClassMapper.toggleAndMapDeactivatedProperty(model, propertyUri);

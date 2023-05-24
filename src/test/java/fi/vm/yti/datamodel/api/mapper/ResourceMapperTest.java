@@ -612,6 +612,15 @@ class ResourceMapperTest {
         assertThrowsExactly(MappingError.class, () -> ResourceMapper.mapToUpdateResource("http://uri.suomi.fi/datamodel/ns/test", m, "TestClass", new ResourceDTO(), EndpointUtils.mockUser));
     }
 
+    @Test
+    void mapExternalResource() {
+        var m = MapperTestUtils.getModelFromFile("/external_class.ttl");
+        var dto = ResourceMapper.mapToExternalResource(m.getResource("http://purl.org/ontology/mo/encoding"));
+
+        assertEquals("encoding", dto.getLabel().get("en"));
+        assertEquals("http://purl.org/ontology/mo/encoding", dto.getUri());
+    }
+
     private Model getOrgModel(){
         var model = ModelFactory.createDefaultModel();
               model.createResource("urn:uuid:7d3a3c00-5a6b-489b-a3ed-63bb58c26a63")
