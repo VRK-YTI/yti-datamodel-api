@@ -29,45 +29,37 @@ public class ResourceQueryFactory {
 
 
         if(allowedDatamodels != null && !allowedDatamodels.isEmpty()){
-            var allowedDatamodelsQuery = QueryFactoryUtils.termsQuery("isDefinedBy", allowedDatamodels.stream().toList());
-            should.add(allowedDatamodelsQuery);
+            should.add(QueryFactoryUtils.termsQuery("isDefinedBy", allowedDatamodels));
         }
 
-        var removeIncompleteStatus = QueryFactoryUtils.hideIncompleteStatusQuery();
-        should.add(removeIncompleteStatus);
+        should.add(QueryFactoryUtils.hideIncompleteStatusQuery());
 
-
-        if(request.getQuery() != null){
-            var labelQuery = QueryFactoryUtils.labelQuery(request.getQuery());
-            must.add(labelQuery);
+        var query = request.getQuery();
+        if(query != null && !query.isBlank()){
+            must.add(QueryFactoryUtils.labelQuery(query));
         }
 
         var statuses = request.getStatus();
         if(statuses != null && !statuses.isEmpty()){
-            var statusQuery = QueryFactoryUtils.termsQuery("status", statuses.stream().map(Status::name).toList());
-            must.add(statusQuery);
+            must.add(QueryFactoryUtils.termsQuery("status", statuses.stream().map(Status::name).toList()));
         }
 
         if(fromNamespaces != null && !fromNamespaces.isEmpty()){
-            var fromNamespacesQuery = QueryFactoryUtils.termsQuery("isDefinedBy", fromNamespaces);
-            must.add(fromNamespacesQuery);
+            must.add(QueryFactoryUtils.termsQuery("isDefinedBy", fromNamespaces));
         }
         //TODO it would be great if we could combine these 2 terms queries.
         //Basically just need to combine the list so that it contains the intersecting strings
         if(restrictedDataModels != null && !restrictedDataModels.isEmpty()){
-            var groupRestrictedNamespacesQuery = QueryFactoryUtils.termsQuery("isDefinedBy", restrictedDataModels);
-            must.add(groupRestrictedNamespacesQuery);
+            must.add(QueryFactoryUtils.termsQuery("isDefinedBy", restrictedDataModels));
         }
 
         var types = request.getResourceTypes();
         if(types != null && !types.isEmpty()){
-            var typeQuery = QueryFactoryUtils.termsQuery("resourceType", types.stream().map(ResourceType::name).toList());
-            must.add(typeQuery);
+            must.add(QueryFactoryUtils.termsQuery("resourceType", types.stream().map(ResourceType::name).toList()));
         }
 
         if (request.getTargetClass() != null) {
-            var targetClassQuery = QueryFactoryUtils.termQuery("targetClass", request.getTargetClass());
-            must.add(targetClassQuery);
+            must.add(QueryFactoryUtils.termQuery("targetClass", request.getTargetClass()));
         }
 
         var finalQuery = QueryBuilders.bool()
