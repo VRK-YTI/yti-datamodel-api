@@ -12,7 +12,7 @@ public class ModelConstants {
     public static final String SUOMI_FI_NAMESPACE = "http://uri.suomi.fi/datamodel/ns/";
     public static final String URN_UUID = "urn:uuid:";
     public static final String DEFAULT_LANGUAGE = "fi";
-    public static final List<String> USED_LANGUAGES = List.of("fi", "sv", "en");
+    public static final List<String> USED_LANGUAGES = List.of("fi", "sv", "en"); 
     public static final String ORGANIZATION_GRAPH = "urn:yti:organizations";
     public static final String SERVICE_CATEGORY_GRAPH = "urn:yti:servicecategories";
     public static final Map<String, String> PREFIXES = Map.of(

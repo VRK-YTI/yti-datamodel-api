@@ -4,6 +4,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 public class SchemaDTO {
@@ -15,6 +16,7 @@ public class SchemaDTO {
 	private Map<String, String> description = Map.of();
 	private Set<String> languages = Set.of();
 	private UUID organization;
+	private Set<MetadataFile> metadataFiles = Set.of();
 	
 	public SchemaFormat getFormat() {
 		return format;

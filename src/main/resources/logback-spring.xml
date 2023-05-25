@@ -4,7 +4,7 @@
         <logger name="org.apache" level="WARN"/>
         <logger name="org.springframework" level="INFO"/>
         <logger name="fi.vm" level="INFO"/>
-        <logger name="fi.vm.yti.security" level="INFO"/>
+        <logger name="fi.vm.yti.security" level="DEBUG"/>
         <property name="SERVICE_NAME" value="yti-datamodel-api"/>
         <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
             <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
@@ -41,5 +41,6 @@
         <logger name="org.apache" level="WARN"/>
         <logger name="org.springframework" level="INFO"/>
         <logger name="fi.vm.yti.datamodel" level="DEBUG"/>
+        <logger name="fi.vm.yti.security" level="DEBUG"/>
     </springProfile>
 </configuration>

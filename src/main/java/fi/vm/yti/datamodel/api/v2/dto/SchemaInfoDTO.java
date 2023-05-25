@@ -16,6 +16,7 @@ public class SchemaInfoDTO extends ResourceInfoBaseDTO {
 	private Map<String, String> description = Map.of();
 	private Set<String> languages = Set.of();
 	private UUID organization;
+	private Set<MetadataFile> metadataFiles = Set.of();
 	
 	private String PID;
 
@@ -65,6 +66,15 @@ public class SchemaInfoDTO extends ResourceInfoBaseDTO {
 	public void setLanguages(Set<String> languages) {
 		this.languages = languages;
 	}
+	
+	public Set<MetadataFile> getMetadataFiles() {
+		return metadataFiles;
+	}
+
+	public void setMetadataFiles(Set<MetadataFile> metadataFiles) {
+		this.metadataFiles = metadataFiles;
+	}
+
 
 	public UUID getOrganization() {
 		return organization;

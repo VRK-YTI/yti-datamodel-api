@@ -28,6 +28,7 @@ public class OrganizationMapper {
 
     public static Model mapGroupManagementOrganizationToModel(List<GroupManagementOrganizationDTO> organizations) {
         var orgModel = ModelFactory.createDefaultModel();
+        
 
         for (var organization : organizations) {
             var resource = orgModel.createResource(URN_UUID + organization.getUuid());
@@ -52,6 +53,7 @@ public class OrganizationMapper {
                 resource.addLiteral(FOAF.homepage, organization.getUrl());
             }
         }
+
         return orgModel;
     }
 
