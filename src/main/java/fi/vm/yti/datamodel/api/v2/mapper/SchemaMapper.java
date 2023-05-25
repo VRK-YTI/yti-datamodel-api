@@ -46,10 +46,12 @@ public class SchemaMapper {
 
 	private final Logger log = LoggerFactory.getLogger(SchemaMapper.class);
 
+	// remove jenaService
 	private final JenaService jenaService;
 	
 	public SchemaMapper(JenaService jenaService) {
 		this.jenaService = jenaService;
+//		 Add storageServie here
 	}
 	
 	
@@ -104,6 +106,7 @@ public class SchemaMapper {
 	}
 
 	public SchemaInfoDTO mapToSchemaDTO(String PID, Model model) {
+//		Change the naming to eg schemaInfoDTO or just DTO
 		var schemaDTO = new SchemaInfoDTO();
 		schemaDTO.setPID(PID);
 

@@ -57,6 +57,14 @@ public class SchemaDTO {
 	public void setLanguages(Set<String> languages) {
 		this.languages = languages;
 	}
+	
+	public Set<MetadataFile> getMetadataFiles() {
+		return metadataFiles;
+	}
+
+	public void setMetadataFiles(Set<MetadataFile> metadataFiles) {
+		this.metadataFiles = metadataFiles;
+	}
 
 	public UUID getOrganization() {
 		return organization;
