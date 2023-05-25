@@ -40,18 +40,19 @@ import fi.vm.yti.datamodel.api.v2.dto.SchemaFormat;
 import fi.vm.yti.datamodel.api.v2.dto.SchemaInfoDTO;
 import fi.vm.yti.datamodel.api.v2.dto.Status;
 import fi.vm.yti.datamodel.api.v2.service.JenaService;
+import fi.vm.yti.datamodel.api.v2.service.impl.PostgresStorageService;
+import fi.vm.yti.datamodel.api.v2.service.StorageService;
+
+
 
 @Service
 public class SchemaMapper {
 
 	private final Logger log = LoggerFactory.getLogger(SchemaMapper.class);
-
-	// remove jenaService
-	private final JenaService jenaService;
+	private final StorageService storageService;
 	
-	public SchemaMapper(JenaService jenaService) {
-		this.jenaService = jenaService;
-//		 Add storageServie here
+	public SchemaMapper(PostgresStorageService storageService) {
+		this.storageService = storageService;
 	}
 	
 	
