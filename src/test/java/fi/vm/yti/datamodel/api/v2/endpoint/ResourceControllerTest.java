@@ -36,7 +36,6 @@ import java.util.stream.Stream;
 
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -268,7 +267,6 @@ class ResourceControllerTest {
                 .perform(put("/v2/resource/test/TestAttribute")
                         .contentType("application/json")
                         .content(EndpointUtils.convertObjectToJsonString(resourceDTO)))
-                .andDo(print())
                 .andExpect(status().isOk());
 
         verify(jenaService).doesResourceExistInGraph(anyString(), anyString());
