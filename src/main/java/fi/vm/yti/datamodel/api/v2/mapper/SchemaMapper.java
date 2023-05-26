@@ -2,11 +2,15 @@ package fi.vm.yti.datamodel.api.v2.mapper;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Set;
+import java.util.HashSet;
 import java.util.UUID;
 import fi.vm.yti.datamodel.api.v2.service.StorageService;
+import fi.vm.yti.datamodel.api.v2.service.StorageService.StoredFile;
 
 import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.datatypes.xsd.XSDDateTime;
@@ -42,6 +46,7 @@ import fi.vm.yti.datamodel.api.v2.dto.Status;
 import fi.vm.yti.datamodel.api.v2.service.JenaService;
 import fi.vm.yti.datamodel.api.v2.service.impl.PostgresStorageService;
 import fi.vm.yti.datamodel.api.v2.service.StorageService;
+import fi.vm.yti.datamodel.api.v2.dto.FileMetadata;
 
 
 
@@ -107,35 +112,42 @@ public class SchemaMapper {
 	}
 
 	public SchemaInfoDTO mapToSchemaDTO(String PID, Model model) {
-//		Change the naming to eg schemaInfoDTO or just DTO
-		var schemaDTO = new SchemaInfoDTO();
-		schemaDTO.setPID(PID);
+
+		var schemaInfoDTO = new SchemaInfoDTO();
+		schemaInfoDTO.setPID(PID);
 
 		var modelResource = model.getResource(PID);
 
 		var status = Status.valueOf(MapperUtils.propertyToString(modelResource, OWL.versionInfo));
-		schemaDTO.setStatus(status);
+		schemaInfoDTO.setStatus(status);
 
 		// Language
-		schemaDTO.setLanguages(MapperUtils.arrayPropertyToSet(modelResource, DCTerms.language));
+		schemaInfoDTO.setLanguages(MapperUtils.arrayPropertyToSet(modelResource, DCTerms.language));
 
 		// Label
-		schemaDTO.setLabel(MapperUtils.localizedPropertyToMap(modelResource, RDFS.label));
+		schemaInfoDTO.setLabel(MapperUtils.localizedPropertyToMap(modelResource, RDFS.label));
 
 		// Description
-		schemaDTO.setDescription(MapperUtils.localizedPropertyToMap(modelResource, RDFS.comment));
+		schemaInfoDTO.setDescription(MapperUtils.localizedPropertyToMap(modelResource, RDFS.comment));
 
-		schemaDTO.setOrganization(MapperUtils.getUUID(MapperUtils.propertyToString(modelResource, DCTerms.contributor)));
+		schemaInfoDTO.setOrganization(MapperUtils.getUUID(MapperUtils.propertyToString(modelResource, DCTerms.contributor)));
 
 		var created = modelResource.getProperty(DCTerms.created).getLiteral().getString();
 		var modified = modelResource.getProperty(DCTerms.modified).getLiteral().getString();
-		schemaDTO.setCreated(created);
-		schemaDTO.setModified(modified);
-
-		schemaDTO.setPID(PID);
-		schemaDTO.setFormat(SchemaFormat.valueOf(MapperUtils.propertyToString(modelResource, MSCR.format)));
+		schemaInfoDTO.setCreated(created);
+		schemaInfoDTO.setModified(modified);
+		
+		List<StoredFile> retrievedSchemaFiles = storageService.retrieveAllSchemaFiles(PID);
+		Set<FileMetadata> fileMetadatas = new HashSet<>();
+		retrievedSchemaFiles.forEach(file -> {
+			fileMetadatas.add(new FileMetadata(file.contentType(), file.data().length));
+		});
+		schemaInfoDTO.setMetadataFiles(fileMetadatas);
+		
+		schemaInfoDTO.setPID(PID);
+		schemaInfoDTO.setFormat(SchemaFormat.valueOf(MapperUtils.propertyToString(modelResource, MSCR.format)));
 				
-		return schemaDTO;
+		return schemaInfoDTO;
 	}
 
 	/**

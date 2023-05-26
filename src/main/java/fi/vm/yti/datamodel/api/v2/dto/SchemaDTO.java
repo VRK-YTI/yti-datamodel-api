@@ -16,7 +16,7 @@ public class SchemaDTO {
 	private Map<String, String> description = Map.of();
 	private Set<String> languages = Set.of();
 	private UUID organization;
-	private Set<MetadataFile> metadataFiles = Set.of();
+	private Set<FileMetadata> fileMetadatas = Set.of();
 	
 	public SchemaFormat getFormat() {
 		return format;
@@ -58,12 +58,12 @@ public class SchemaDTO {
 		this.languages = languages;
 	}
 	
-	public Set<MetadataFile> getMetadataFiles() {
-		return metadataFiles;
+	public Set<FileMetadata> getMetadataFiles() {
+		return fileMetadatas;
 	}
 
-	public void setMetadataFiles(Set<MetadataFile> metadataFiles) {
-		this.metadataFiles = metadataFiles;
+	public void setMetadataFiles(Set<FileMetadata> fileMetadatas) {
+		this.fileMetadatas = fileMetadatas;
 	}
 
 	public UUID getOrganization() {
