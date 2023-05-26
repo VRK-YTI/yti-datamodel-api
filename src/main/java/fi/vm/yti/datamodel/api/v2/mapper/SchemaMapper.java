@@ -117,7 +117,7 @@ public class SchemaMapper {
 		schemaInfoDTO.setPID(PID);
 
 		var modelResource = model.getResource(PID);
-
+		
 		var status = Status.valueOf(MapperUtils.propertyToString(modelResource, OWL.versionInfo));
 		schemaInfoDTO.setStatus(status);
 
@@ -137,10 +137,10 @@ public class SchemaMapper {
 		schemaInfoDTO.setCreated(created);
 		schemaInfoDTO.setModified(modified);
 		
-		List<StoredFile> retrievedSchemaFiles = storageService.retrieveAllSchemaFiles(PID);
+		List<StoredFile> retrievedSchemaFiles = storageService.retrieveAllSchemaFiles(PID);		
 		Set<FileMetadata> fileMetadatas = new HashSet<>();
 		retrievedSchemaFiles.forEach(file -> {
-			fileMetadatas.add(new FileMetadata(file.contentType(), file.data().length));
+			fileMetadatas.add(new FileMetadata(file.contentType(), file.data().length, file.fileID()));
 		});
 		schemaInfoDTO.setMetadataFiles(fileMetadatas);
 		

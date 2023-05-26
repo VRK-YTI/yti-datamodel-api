@@ -10,6 +10,6 @@ public interface StorageService {
 	public List<StoredFile> retrieveAllSchemaFiles(String schemaPID);
 	
 
-	public record StoredFile(String contentType, byte[] data) {}
+	public record StoredFile(String contentType, byte[] data, long fileID) {}
 	
 }

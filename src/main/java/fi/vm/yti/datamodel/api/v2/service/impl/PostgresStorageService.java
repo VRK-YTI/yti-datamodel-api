@@ -40,7 +40,7 @@ public class PostgresStorageService implements StorageService {
 			ps.setBytes(3, data);
 			return ps;
 			}, keyHolder);
-		
+				
 		return (int)keyHolder.getKeys().get("id");
 	}
 
@@ -51,7 +51,7 @@ public class PostgresStorageService implements StorageService {
 				
 				@Override
 				public PreparedStatement createPreparedStatement(Connection con) throws SQLException {
-					PreparedStatement ps = con.prepareStatement("select content_type, data from schema_files where id = ?");
+					PreparedStatement ps = con.prepareStatement("select content_type, data, id from schema_files where id = ?");
 					ps.setLong(1, fileID);
 					return ps;
 				}
@@ -63,7 +63,8 @@ public class PostgresStorageService implements StorageService {
 					rs.next();
 					String contentType = rs.getString(1);
 					byte[] data = rs.getBytes(2);
-					return new StoredFile(contentType, data);
+					long fileID = rs.getLong(3);
+					return new StoredFile(contentType, data, fileID);
 				}
 			}
 		);
@@ -76,7 +77,7 @@ public class PostgresStorageService implements StorageService {
 					
 					@Override
 					public PreparedStatement createPreparedStatement(Connection con) throws SQLException {
-						PreparedStatement ps = con.prepareStatement("select content_type, data from schema_files where schema_pid = ?");
+						PreparedStatement ps = con.prepareStatement("select content_type, data, id from schema_files where schema_pid = ?");
 						ps.setString(1, schemaPID);
 						return ps;
 					}
@@ -89,8 +90,8 @@ public class PostgresStorageService implements StorageService {
 						while(rs.next()) {
 							String contentType = rs.getString(1);
 							byte[] data = rs.getBytes(2);
-							files.add(new StoredFile(contentType, data));
-							
+							long fileID = rs.getLong(3);
+							files.add(new StoredFile(contentType, data, fileID));							
 						}
 						return files;
 					}
