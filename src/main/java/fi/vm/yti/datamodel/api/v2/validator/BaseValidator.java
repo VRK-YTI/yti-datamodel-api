@@ -93,4 +93,11 @@ public abstract class BaseValidator implements Annotation{
         }
     }
 
+    public void checkCommonTextField(ConstraintValidatorContext context, String value, String property) {
+        if(value != null && value.length() > ValidationConstants.TEXT_AREA_MAX_LENGTH){
+            addConstraintViolation(context, ValidationConstants.MSG_OVER_CHARACTER_LIMIT
+                    + ValidationConstants.TEXT_AREA_MAX_LENGTH, property);
+        }
+    }
+
 }

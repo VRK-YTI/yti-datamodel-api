@@ -2,7 +2,6 @@ package fi.vm.yti.datamodel.api.v2.endpoint;
 
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
 import fi.vm.yti.datamodel.api.v2.dto.VisualizationClassDTO;
-import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
 import fi.vm.yti.datamodel.api.v2.mapper.VisualizationMapper;
 import fi.vm.yti.datamodel.api.v2.service.JenaService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -36,11 +35,6 @@ public class VisualizationController {
         var graph = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
         var model = jenaService.getDataModel(graph);
         var positions = ModelFactory.createDefaultModel();
-
-        if(model == null) {
-            throw new ResourceNotFoundException(graph);
-        }
-
         return VisualizationMapper.mapVisualizationData(prefix, model, positions);
     }
 }

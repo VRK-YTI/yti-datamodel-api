@@ -81,4 +81,11 @@ public class FrontendController {
     public SearchResponseDTO<IndexResource> getInternalResources(ResourceSearchRequest request) throws IOException {
         return searchIndexService.searchInternalResources(request, userProvider.getUser());
     }
+
+    @Operation(summary = "Get supported data types")
+    @ApiResponse(responseCode = "200", description = "List of supported data types")
+    @GetMapping(path = "/dataTypes", produces = APPLICATION_JSON_VALUE)
+    public List<String> getSupportedDataTypes() {
+        return ModelConstants.SUPPORTED_DATA_TYPES;
+    }
 }

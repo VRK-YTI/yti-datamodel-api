@@ -3,6 +3,7 @@ package fi.vm.yti.datamodel.api.v2.endpoint;
 import fi.vm.yti.datamodel.api.mapper.MapperTestUtils;
 import fi.vm.yti.datamodel.api.security.AuthorizationManager;
 import fi.vm.yti.datamodel.api.v2.dto.*;
+import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
 import fi.vm.yti.datamodel.api.v2.mapper.ResourceMapper;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexResource;
 import fi.vm.yti.datamodel.api.v2.mapper.ClassMapper;
@@ -20,7 +21,6 @@ import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.vocabulary.OWL;
-import org.apache.jena.vocabulary.RDF;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -99,7 +99,7 @@ class ClassControllerTest {
     @Test
     void shouldValidateAndCreateClass() throws Exception {
         var classDTO = createClassDTO(false);
-        Model mockModel = getMockModel(OWL.Ontology);
+        Model mockModel = EndpointUtils.getMockModel(OWL.Ontology);
 
         when(jenaService.getDataModel(anyString())).thenReturn(mockModel);
         try(var resourceMapper = mockStatic(ResourceMapper.class);
@@ -132,7 +132,7 @@ class ClassControllerTest {
         classDTO.setIdentifier("Identifier");
         classDTO.setStatus(Status.DRAFT);
         classDTO.setLabel(Map.of("fi", "test"));
-        Model mockModel = getMockModel(OWL.Ontology);
+        Model mockModel = EndpointUtils.getMockModel(OWL.Ontology);
 
         when(jenaService.getDataModel(anyString())).thenReturn(mockModel);
         try(var resourceMapper = mockStatic(ResourceMapper.class);
@@ -160,8 +160,8 @@ class ClassControllerTest {
     @Test
     void shouldNotFindModel() throws Exception {
         var classDTO = createClassDTO(false);
+        doThrow(ResourceNotFoundException.class).when(jenaService).getDataModel(anyString());
 
-        //finding models from jena is not mocked so it should return null and return 404 not found
         this.mvc
                 .perform(put("/v2/class/ontology/test")
                         .contentType("application/json")
@@ -214,7 +214,7 @@ class ClassControllerTest {
     @Test
     void shouldValidateAndUpdate() throws Exception {
         var classDTO = createClassDTO(true);
-        var mockModel = getMockModel(OWL.Ontology);
+        var mockModel = EndpointUtils.getMockModel(OWL.Ontology);
 
         when(jenaService.getDataModel(anyString())).thenReturn(mockModel);
         when(jenaService.doesResourceExistInGraph(anyString(), anyString())).thenReturn(true);
@@ -302,7 +302,7 @@ class ClassControllerTest {
     @Test
     void shouldModelNotExistGet() throws Exception {
         when(jenaService.doesResourceExistInGraph(anyString(), anyString())).thenReturn(true);
-
+        doThrow(ResourceNotFoundException.class).when(jenaService).getDataModel(anyString());
         mvc.perform(get("/v2/class/ontology/test/class"))
                 .andExpect(status().isNotFound());
     }
@@ -354,7 +354,7 @@ class ClassControllerTest {
     void shouldValidateAndCreateNodeShape() throws Exception {
         var nodeShapeDTO = createNodeShapeDTO();
         nodeShapeDTO.setProperties(List.of("test"));
-        Model mockModel = getMockModel(DCAP.DCAP);
+        Model mockModel = EndpointUtils.getMockModel(DCAP.DCAP);
 
         when(jenaService.getDataModel(anyString())).thenReturn(mockModel);
         when(jenaService.findResources(anyList())).thenReturn(ModelFactory.createDefaultModel());
@@ -408,12 +408,5 @@ class ClassControllerTest {
         dto.setSubject("http://uri.suomi.fi/terminology/concept-123");
 
         return dto;
-    }
-
-    private static Model getMockModel(Resource type) {
-        var mockModel = ModelFactory.createDefaultModel();
-        mockModel.createResource("http://uri.suomi.fi/datamodel/ns/test")
-                .addProperty(RDF.type, type);
-        return mockModel;
     }
 }

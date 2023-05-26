@@ -363,17 +363,15 @@ public class ModelMapper {
     private void addInternalNamespaceToDatamodel(DataModelDTO modelDTO, Resource resource, Model model){
         modelDTO.getInternalNamespaces().forEach(namespace -> {
             var ns = jenaService.getDataModel(namespace);
-            if(ns != null){
-                var nsRes = ns.getResource(namespace);
-                var prefix = MapperUtils.propertyToString(nsRes, DCAP.preferredXMLNamespacePrefix);
-                var nsType = nsRes.getProperty(RDF.type).getResource();
-                if(nsType.equals(OWL.Ontology)){
-                    resource.addProperty(OWL.imports, nsRes);
-                }else{
-                    resource.addProperty(DCTerms.requires, nsRes);
-                }
-                model.setNsPrefix(prefix, namespace);
+            var nsRes = ns.getResource(namespace);
+            var prefix = MapperUtils.propertyToString(nsRes, DCAP.preferredXMLNamespacePrefix);
+            var nsType = nsRes.getProperty(RDF.type).getResource();
+            if(nsType.equals(OWL.Ontology)){
+                resource.addProperty(OWL.imports, nsRes);
+            }else{
+                resource.addProperty(DCTerms.requires, nsRes);
             }
+            model.setNsPrefix(prefix, namespace);
         });
     }
 

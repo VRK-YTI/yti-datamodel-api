@@ -4,6 +4,10 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import fi.vm.yti.security.Role;
 import fi.vm.yti.security.YtiUser;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.vocabulary.RDF;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -29,4 +33,11 @@ public class EndpointUtils {
             new HashMap<>(Map.of(UUID.randomUUID(), Set.of(Role.ADMIN))),
             "",
             "");
+
+    public static Model getMockModel(Resource type) {
+        var mockModel = ModelFactory.createDefaultModel();
+        mockModel.createResource("http://uri.suomi.fi/datamodel/ns/test")
+                .addProperty(RDF.type, type);
+        return mockModel;
+    }
 }

@@ -94,9 +94,6 @@ public class Datamodel {
         logger.info("Updating model {}", modelDTO);
 
         var oldModel = jenaService.getDataModel(ModelConstants.SUOMI_FI_NAMESPACE + prefix);
-        if(oldModel == null){
-            throw new ResourceNotFoundException(prefix);
-        }
 
         check(authorizationManager.hasRightToModel(prefix, oldModel));
 
@@ -142,9 +139,6 @@ public class Datamodel {
             throw new ResourceNotFoundException(modelUri);
         }
         var model = jenaService.getDataModel(modelUri);
-        if(model == null){
-            throw new ResourceNotFoundException(modelUri);
-        }
         check(authorizationManager.hasRightToModel(prefix, model));
 
         jenaService.deleteDataModel(modelUri);
