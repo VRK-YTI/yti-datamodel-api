@@ -86,4 +86,15 @@ public class ResourceQueryFactory {
         return sr;
     }
 
+    public static SearchRequest createFindResourcesByURIQuery(Set<String> resourceURIs) {
+        return new SearchRequest.Builder()
+                .index(OpenSearchIndexer.OPEN_SEARCH_INDEX_RESOURCE)
+                .query(QueryBuilders
+                        .bool()
+                        .must(QueryFactoryUtils.termsQuery("id", resourceURIs))
+                        .build()
+                        ._toQuery())
+                .build();
+    }
+
 }

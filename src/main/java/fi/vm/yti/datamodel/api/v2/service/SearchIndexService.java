@@ -155,6 +155,17 @@ public class SearchIndexService {
         return result;
     }
 
+    public SearchResponseDTO<IndexResource> findResourcesByURI(Set<String> resourceURIs) throws IOException {
+        var response = client.search(ResourceQueryFactory.createFindResourcesByURIQuery(resourceURIs), IndexResource.class);
+        var result = new SearchResponseDTO<IndexResource>();
+        result.setResponseObjects(response.hits().hits().stream()
+                .map(Hit::source)
+                .toList()
+        );
+        result.setTotalHitCount(response.hits().total().value());
+        return result;
+    }
+
     private void getNamespacesFromModel(String modelUri, List<String> namespaces){
         var model = jenaService.getDataModel(modelUri);
         var resource = model.getResource(modelUri);

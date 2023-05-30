@@ -210,6 +210,11 @@ public class MapperUtils {
         }
     }
 
+    public static void addLiteral(Resource resource, Property property, Object value) {
+        if (value != null) {
+            resource.addLiteral(property, value);
+        }
+    }
     public static void updateLiteral(Resource resource, Property property, Object value){
         if (value != null) {
             resource.removeAll(property);

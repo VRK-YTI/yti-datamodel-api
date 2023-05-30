@@ -66,10 +66,10 @@ public class ResourceMapper {
         MapperUtils.addOptionalStringProperty(resource, SH.defaultValue, dto.getDefaultValue());
         MapperUtils.addOptionalStringProperty(resource, SH.hasValue, dto.getHasValue());
         MapperUtils.addOptionalStringProperty(resource, SH.datatype, dto.getDataType());
-        resource.addLiteral(SH.minCount, dto.getMinCount());
-        resource.addLiteral(SH.maxCount, dto.getMaxCount());
-        resource.addLiteral(SH.minLength, dto.getMinLength());
-        resource.addLiteral(SH.maxLength, dto.getMaxLength());
+        MapperUtils.addLiteral(resource, SH.minCount, dto.getMinCount());
+        MapperUtils.addLiteral(resource, SH.maxCount, dto.getMaxCount());
+        MapperUtils.addLiteral(resource, SH.minLength, dto.getMinLength());
+        MapperUtils.addLiteral(resource, SH.maxLength, dto.getMaxLength());
 
         MapperUtils.addCreationMetadata(resource, user);
 

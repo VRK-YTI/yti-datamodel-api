@@ -1,0 +1,39 @@
+@prefix owl:     <http://www.w3.org/2002/07/owl#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sh:      <http://www.w3.org/ns/shacl#> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+
+<http://uri.suomi.fi/datamodel/ns/test_profile/ps-1>
+        rdf:type            sh:PropertyShape , owl:DatatypeProperty ;
+        rdfs:isDefinedBy    <http://uri.suomi.fi/datamodel/ns/test_profile> ;
+        rdfs:label          "Property shape attribute"@fi ;
+        dcterms:identifier  "ps-1"^^xsd:NCName ;
+        owl:versionInfo     "VALID" .
+
+<http://uri.suomi.fi/datamodel/ns/TestPropertyShape>
+        rdf:type             sh:PropertyShape , owl:DatatypeProperty ;
+        rdfs:isDefinedBy     <http://uri.suomi.fi/datamodel/ns/test> ;
+        dcterms:subject      <http://uri.suomi.fi/terminology/test/test1> ;
+        dcterms:identifier   "TestPropertyShape"^^xsd:NCName ;
+        dcterms:created      "2023-02-03T11:46:36.404Z"^^xsd:dateTime ;
+        dcterms:modified     "2023-02-03T11:46:36.404Z"^^xsd:dateTime ;
+        rdfs:label           "test property shape"@fi ;
+        owl:versionInfo      "DRAFT" ;
+        sh:defaultValue      "foo" ;
+        sh:hasValue          "hasValue" ;
+        sh:datatype          "xsd:integer" ;
+        sh:in                "bar" , "foo" ;
+        sh:maxCount          10 ;
+        sh:maxLength         100 ;
+        sh:minCount          1 ;
+        sh:minLength         2 ;
+        sh:path              <http://uri.suomi.fi/datamodel/ns/ytm/some-attribute> .
+
+<http://uri.suomi.fi/datamodel/ns/test/DeactivatedPropertyShape>
+        rdf:type             sh:PropertyShape , owl:DatatypeProperty ;
+        rdfs:isDefinedBy     <http://uri.suomi.fi/datamodel/ns/test> ;
+        dcterms:identifier   "DeactivatedPropertyShape"^^xsd:NCName ;
+        sh:deactivated       true ;
+        rdfs:label           "deactivated property shape"@fi .
