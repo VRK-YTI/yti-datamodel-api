@@ -27,11 +27,11 @@ public class ClassValidator extends BaseValidator implements
         checkLabel(context, classDTO, updateClass);
         checkEditorialNote(context, classDTO);
         checkNote(context, classDTO);
-        checkStatus(context, classDTO, updateClass);
+        checkStatus(context, classDTO.getStatus(), updateClass);
         checkEquivalentClass(context, classDTO);
         checkSubClassOf(context, classDTO);
         checkSubject(context, classDTO);
-        checkIdentifier(context, classDTO, updateClass);
+        checkPrefixOrIdentifier(context, classDTO.getIdentifier(), "identifier", ValidationConstants.RESOURCE_IDENTIFIER_MAX_LENGTH, updateClass);
 
         return !isConstraintViolationAdded();
     }

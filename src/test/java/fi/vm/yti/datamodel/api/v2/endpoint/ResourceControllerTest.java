@@ -37,6 +37,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -417,6 +418,31 @@ class ResourceControllerTest {
                         .content(EndpointUtils.convertObjectToJsonString(dto)))
                 .andExpect(status().isBadRequest());
     }
+
+
+    @Test
+    void shouldCheckFreeIdentifierWhenExists() throws Exception {
+        var graphUri = ModelConstants.SUOMI_FI_NAMESPACE + "test";
+        when(jenaService.doesResourceExistInGraph(graphUri, graphUri + ModelConstants.RESOURCE_SEPARATOR + "Resource")).thenReturn(true);
+
+        this.mvc
+                .perform(get("/v2/resource/test/freeIdentifier/Resource")
+                        .contentType("application/json"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("false")));
+    }
+
+    @Test
+    void shouldCheckFreeIdentifierWhenNotExist() throws Exception {
+        when(jenaService.doesDataModelExist(anyString())).thenReturn(false);
+
+        this.mvc
+                .perform(get("/v2/resource/test/freeIdentifier/Resource")
+                        .contentType("application/json"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("true")));
+    }
+
 
     private static Stream<Arguments> provideCreatePropertyShapeDTOInvalidData() {
         var args = new ArrayList<PropertyShapeDTO>();

@@ -4,9 +4,9 @@ import fi.vm.yti.datamodel.api.mapper.MapperTestUtils;
 import fi.vm.yti.datamodel.api.security.AuthorizationManager;
 import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
+import fi.vm.yti.datamodel.api.v2.mapper.ClassMapper;
 import fi.vm.yti.datamodel.api.v2.mapper.ResourceMapper;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexResource;
-import fi.vm.yti.datamodel.api.v2.mapper.ClassMapper;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
 import fi.vm.yti.datamodel.api.v2.service.GroupManagementService;
 import fi.vm.yti.datamodel.api.v2.service.JenaService;
@@ -34,12 +34,17 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @TestPropertySource(properties = {
@@ -384,6 +389,30 @@ class ClassControllerTest {
             verifyNoMoreInteractions(this.openSearchIndexer);
         }
     }
+
+    @Test
+    void shouldCheckFreeIdentifierWhenExists() throws Exception {
+        var graphUri = ModelConstants.SUOMI_FI_NAMESPACE + "test";
+        when(jenaService.doesResourceExistInGraph(graphUri, graphUri + ModelConstants.RESOURCE_SEPARATOR + "Resource")).thenReturn(true);
+
+        this.mvc
+                .perform(get("/v2/class/test/freeIdentifier/Resource")
+                        .contentType("application/json"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("false")));
+    }
+
+    @Test
+    void shouldCheckFreeIdentifierWhenNotExist() throws Exception {
+        when(jenaService.doesDataModelExist(anyString())).thenReturn(false);
+
+        this.mvc
+                .perform(get("/v2/class/test/freeIdentifier/Resource")
+                        .contentType("application/json"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("true")));
+    }
+
 
     private static ClassDTO createClassDTO(boolean update){
         var dto = new ClassDTO();
