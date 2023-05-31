@@ -4,9 +4,9 @@ import fi.vm.yti.datamodel.api.security.AuthorizationManager;
 import fi.vm.yti.datamodel.api.v2.dto.DataModelDTO;
 import fi.vm.yti.datamodel.api.v2.dto.DataModelInfoDTO;
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
-import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
 import fi.vm.yti.datamodel.api.v2.mapper.ModelMapper;
+import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
 import fi.vm.yti.datamodel.api.v2.service.CodeListService;
 import fi.vm.yti.datamodel.api.v2.service.GroupManagementService;
 import fi.vm.yti.datamodel.api.v2.service.JenaService;
@@ -122,7 +122,7 @@ public class Datamodel {
 
     @Operation(summary = "Check if prefix already exists")
     @ApiResponse(responseCode = "200", description = "Boolean value indicating whether prefix")
-    @GetMapping(value = "/freePrefix/{prefix}", produces = APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/free-prefix/{prefix}", produces = APPLICATION_JSON_VALUE)
     public Boolean freePrefix(@PathVariable String prefix) {
         if (ValidationConstants.RESERVED_WORDS.contains(prefix)) {
             return false;

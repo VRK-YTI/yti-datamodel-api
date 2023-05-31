@@ -426,7 +426,7 @@ class ResourceControllerTest {
         when(jenaService.doesResourceExistInGraph(graphUri, graphUri + ModelConstants.RESOURCE_SEPARATOR + "Resource")).thenReturn(true);
 
         this.mvc
-                .perform(get("/v2/resource/test/freeIdentifier/Resource")
+                .perform(get("/v2/resource/test/free-identifier/Resource")
                         .contentType("application/json"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("false")));
@@ -437,7 +437,7 @@ class ResourceControllerTest {
         when(jenaService.doesDataModelExist(anyString())).thenReturn(false);
 
         this.mvc
-                .perform(get("/v2/resource/test/freeIdentifier/Resource")
+                .perform(get("/v2/resource/test/free-identifier/Resource")
                         .contentType("application/json"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("true")));
