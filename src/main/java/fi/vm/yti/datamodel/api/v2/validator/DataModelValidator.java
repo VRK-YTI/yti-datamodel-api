@@ -35,6 +35,7 @@ public class DataModelValidator extends BaseValidator implements
         checkOrganizations(context, dataModel);
         checkGroups(context, dataModel);
         checkContact(context, dataModel);
+        checkDocumentation(context, dataModel);
 
         checkInternalNamespaces(context, dataModel);
         checkExternalNamespaces(context, dataModel);
@@ -252,5 +253,9 @@ public class DataModelValidator extends BaseValidator implements
         if (!dataModel.getCodeLists().stream().allMatch(uri -> uri.matches("^https?://uri.suomi.fi/codelist/(.*)"))) {
             addConstraintViolation(context, "invalid-codelist-uri", "codeLists");
         }
+    }
+
+    private void checkDocumentation(ConstraintValidatorContext context, DataModelDTO dataModel) {
+        dataModel.getDocumentation().forEach((lang, value) -> checkCommonTextArea(context, value, "documentation"));
     }
 }

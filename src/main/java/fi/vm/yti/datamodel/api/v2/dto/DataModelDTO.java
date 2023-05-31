@@ -22,6 +22,7 @@ public class DataModelDTO {
     private Set<String> terminologies = Set.of();
     private Set<String> codeLists = Set.of();
     private String contact;
+    private Map<String, String> documentation = Map.of();
 
     public ModelType getType() {
         return type;
@@ -130,5 +131,13 @@ public class DataModelDTO {
 
     public void setContact(String contact) {
         this.contact = contact;
+    }
+
+    public Map<String, String> getDocumentation() {
+        return documentation;
+    }
+
+    public void setDocumentation(Map<String, String> documentation) {
+        this.documentation = documentation;
     }
 }

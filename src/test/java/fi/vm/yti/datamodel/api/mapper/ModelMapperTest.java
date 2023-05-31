@@ -7,7 +7,10 @@ import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.mapper.ModelMapper;
 import fi.vm.yti.datamodel.api.v2.service.JenaService;
 import fi.vm.yti.security.YtiUser;
-import org.apache.jena.rdf.model.*;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.sparql.vocabulary.FOAF;
 import org.apache.jena.vocabulary.*;
 import org.junit.jupiter.api.BeforeEach;
@@ -23,7 +26,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(SpringExtension.class)
@@ -81,6 +84,11 @@ class ModelMapperTest {
         dto.setContact("test@localhost");
         dto.setCodeLists(Set.of("http://uri.suomi.fi/codelist/test/testcodelist"));
         dto.setTerminologies(Set.of("http://uri.suomi.fi/terminology/test"));
+        dto.setDocumentation(Map.of("fi","""
+                test documentation
+                # Header
+                **bold**
+                """));
         var externalDTO = new ExternalNamespaceDTO();
         externalDTO.setName("test dto");
         externalDTO.setNamespace("http://www.w3.org/2000/01/rdf-schema#");
@@ -108,6 +116,11 @@ class ModelMapperTest {
         assertEquals(mockUser.getId().toString(), MapperUtils.propertyToString(modelResource, Iow.modifier));
         assertEquals("http://uri.suomi.fi/codelist/test/testcodelist", MapperUtils.propertyToString(modelResource, Iow.codeLists));
         assertEquals("http://uri.suomi.fi/terminology/test", MapperUtils.propertyToString(modelResource, DCTerms.references));
+        assertEquals("""
+                test documentation
+                # Header
+                **bold**
+                """, MapperUtils.localizedPropertyToMap(modelResource, Iow.documentation).get("fi"));
 
         assertEquals("test@localhost", MapperUtils.propertyToString(modelResource, Iow.contact));
     }
@@ -138,6 +151,10 @@ class ModelMapperTest {
         dto.setOrganizations(Set.of(organizationId));
         dto.setContact("new@localhost");
         dto.setTerminologies(Set.of("http://uri.suomi.fi/terminology/newtest"));
+        dto.setDocumentation(Map.of("fi", """
+                hello
+                
+                new test"""));
 
         dto.setInternalNamespaces(Set.of("http://uri.suomi.fi/datamodel/ns/newint"));
         var externalDTO = new ExternalNamespaceDTO();
@@ -166,6 +183,9 @@ class ModelMapperTest {
         assertEquals("test@localhost", MapperUtils.propertyToString(modelResource, Iow.contact));
 
         assertEquals("http://uri.suomi.fi/terminology/test", MapperUtils.propertyToString(modelResource, DCTerms.references));
+        assertEquals("""
+                hello
+                test""", MapperUtils.localizedPropertyToMap(modelResource, Iow.documentation).get("fi"));
 
         Model model = mapper.mapToUpdateJenaModel("test", dto, m, mockUser);
 
@@ -194,6 +214,10 @@ class ModelMapperTest {
         assertEquals("http://uri.suomi.fi/terminology/newtest", MapperUtils.propertyToString(modelResource, DCTerms.references));
 
         assertEquals("new@localhost", MapperUtils.propertyToString(modelResource, Iow.contact));
+        assertEquals("""
+                hello
+                
+                new test""", MapperUtils.localizedPropertyToMap(modelResource, Iow.documentation).get("fi"));
     }
 
     @Test
@@ -254,6 +278,10 @@ class ModelMapperTest {
         assertEquals("P11", result.getGroups().stream().findFirst().orElseThrow().getIdentifier());
 
         assertEquals("test@localhost", result.getContact());
+
+        assertEquals("""
+                hello
+                test""", result.getDocumentation().get("fi"));
     }
 
     @Test
@@ -300,8 +328,6 @@ class ModelMapperTest {
         assertEquals("2023-01-03T12:44:45.799Z", result.getCreated());
         assertEquals("2023-01-03T12:44:45.799Z", result.getContentModified());
 
-        assertEquals(0, result.getDocumentation().size());
-
         assertEquals(1, result.getLabel().size());
         assertTrue(result.getLabel().containsValue("testlabel"));
         assertTrue(result.getLabel().containsKey("fi"));
@@ -332,8 +358,6 @@ class ModelMapperTest {
         assertEquals(Status.DRAFT, resultOld.getStatus());
         assertEquals("2018-03-20T16:21:07.067Z", resultOld.getModified());
         assertEquals("2018-03-20T17:59:44", resultOld.getCreated());
-
-        assertEquals(0, resultOld.getDocumentation().size());
 
         assertEquals(1, resultOld.getLabel().size());
         assertTrue(resultOld.getLabel().containsValue("Testaa"));

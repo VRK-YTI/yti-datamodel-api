@@ -27,7 +27,8 @@
         iow:creator                     "2a5c075f-0d0e-4688-90e0-29af1eebbf6d" ;
         iow:modifier                    "2a5c075f-0d0e-4688-90e0-29af1eebbf6d" ;
         iow:contact                     "test@localhost"                       ;
-        dcterms:references              "http://uri.suomi.fi/terminology/test" .
+        dcterms:references              "http://uri.suomi.fi/terminology/test" ;
+        iow:documentation               "hello\ntest"@fi .
 
 <https://www.example.com/ns/ext>
         dcterms:type                        rdfs:Resource ;
