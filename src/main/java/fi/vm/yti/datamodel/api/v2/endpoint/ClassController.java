@@ -97,7 +97,7 @@ public class ClassController {
         indexedResources.addAll(properties);
 
         // Node shape based on an existing node shape
-        var propertyURIs = handleTargetNodeProperties(nodeShapeDTO.getTargetNode());
+        var propertyURIs = getTargetNodeProperties(nodeShapeDTO.getTargetNode());
         var referencePropertiesModel = jenaService.findResources(new ArrayList<>(propertyURIs));
         ClassMapper.mapReferencePropertyShapes(model, classURI,
                 referencePropertiesModel);
@@ -121,7 +121,6 @@ public class ClassController {
         terminologyService.resolveConcept(dto.getSubject());
         return model;
     }
-
 
     @Operation(summary = "Update a class in a model")
     @ApiResponse(responseCode =  "200", description = "Class updated in model successfully")
@@ -202,7 +201,8 @@ public class ClassController {
         } else {
             dto = ClassMapper.mapToNodeShapeDTO(model, modelURI, classIdentifier, orgModel,
                     hasRightToModel, userMapper);
-            ClassMapper.addNodeShapeResourcesToDTO(model, (NodeShapeInfoDTO) dto);
+            var nodeShapeResources = jenaService.constructWithQuery(ClassMapper.getNodeShapeResourcesQuery(classURI));
+            ClassMapper.addNodeShapeResourcesToDTO(model, nodeShapeResources, (NodeShapeInfoDTO) dto);
         }
 
         terminologyService.mapConcept().accept(dto);
@@ -231,9 +231,41 @@ public class ClassController {
         handleDeleteClassOrNodeShape(prefix, classIdentifier);
     }
 
+    @Operation(summary = "Add property reference to node shape")
+    @ApiResponse(responseCode = "200", description = "Property reference deleted successfully")
+    @PutMapping(value = "/profile/{prefix}/{identifier}/add-property")
+    public void addNodeShapePropertyReference(@PathVariable String prefix, @PathVariable String identifier,
+                                                 @RequestParam String uri) {
+        var modelURI = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
+        var model = jenaService.getDataModel(modelURI);
+        var classURI = modelURI + ModelConstants.RESOURCE_SEPARATOR + identifier;
+        check(authorizationManager.hasRightToModel(prefix, model));
+
+        var classResource = model.getResource(classURI);
+        var existingProperties = getTargetNodeProperties(MapperUtils.propertyToString(classResource, SH.node));
+        ClassMapper.mapAppendNodeShapeProperty(classResource, uri, existingProperties);
+        jenaService.putDataModelToCore(modelURI, model);
+    }
+
+    @Operation(summary = "Delete property reference from node shape")
+    @ApiResponse(responseCode = "200", description = "Property reference deleted successfully")
+    @DeleteMapping(value = "/profile/{prefix}/{identifier}/delete-property")
+    public void deleteNodeShapePropertyReference(@PathVariable String prefix, @PathVariable String identifier,
+                                                 @RequestParam String uri) {
+        var modelURI = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
+        var model = jenaService.getDataModel(modelURI);
+        var classURI = modelURI + ModelConstants.RESOURCE_SEPARATOR + identifier;
+        check(authorizationManager.hasRightToModel(prefix, model));
+
+        var classResource = model.getResource(classURI);
+        var existingProperties = getTargetNodeProperties(MapperUtils.propertyToString(classResource, SH.node));
+        ClassMapper.mapRemoveNodeShapeProperty(model, classResource, uri, existingProperties);
+        jenaService.putDataModelToCore(modelURI, model);
+    }
+
     void handleDeleteClassOrNodeShape(String prefix, String identifier) {
         var modelURI = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
-        var classURI  = modelURI + ModelConstants.RESOURCE_SEPARATOR + identifier;
+        var classURI = modelURI + ModelConstants.RESOURCE_SEPARATOR + identifier;
         if(!jenaService.doesResourceExistInGraph(modelURI , classURI)){
             throw new ResourceNotFoundException(classURI);
         }
@@ -271,9 +303,19 @@ public class ClassController {
                 .getResponseObjects();
     }
 
+    @Operation(summary = "Get all node shapes properties based on sh:node reference")
+    @ApiResponse(responseCode = "200", description = "List of node shape's properties fetched successfully")
+    @GetMapping(value = "/nodeshape/properties", produces = APPLICATION_JSON_VALUE)
+    public List<IndexResource> getNodeShapeProperties(@RequestParam String nodeURI) throws IOException {
+        var propertyURIs = getTargetNodeProperties(nodeURI);
+        return searchIndexService
+                .findResourcesByURI(propertyURIs)
+                .getResponseObjects();
+    }
+
     @Operation(summary = "Toggles deactivation of a single property shape")
     @ApiResponse(responseCode = "200", description = "Deactivation has changes successfully")
-    @PutMapping(value = "/toggleDeactivate/{prefix}", produces = APPLICATION_JSON_VALUE)
+    @PutMapping(value = "/toggle-deactivate/{prefix}", produces = APPLICATION_JSON_VALUE)
     public void deactivatePropertyShape(@PathVariable String prefix, @RequestParam String propertyUri) {
         var modelURI = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
         var model = jenaService.getDataModel(modelURI);
@@ -286,7 +328,7 @@ public class ClassController {
         jenaService.putDataModelToCore(modelURI, model);
     }
 
-    private Set<String> handleTargetNodeProperties(String targetNode) {
+    private Set<String> getTargetNodeProperties(String targetNode) {
         var propertyShapes = new HashSet<String>();
         var handledNodeShapes = new HashSet<String>();
 

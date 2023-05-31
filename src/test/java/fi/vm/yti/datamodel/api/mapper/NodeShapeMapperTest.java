@@ -2,6 +2,7 @@ package fi.vm.yti.datamodel.api.mapper;
 
 import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.endpoint.EndpointUtils;
+import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
 import fi.vm.yti.datamodel.api.v2.mapper.ClassMapper;
 import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
@@ -12,8 +13,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.topbraid.shacl.vocabulary.SH;
 
+import java.util.List;
 import java.util.Map;
-import java.util.Optional;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -115,17 +117,16 @@ class NodeShapeMapperTest {
 
         var classRes = model.getResource("http://uri.suomi.fi/datamodel/ns/test/TestClass");
 
-        var propertyShapes = classRes.listProperties(SH.property).toList();
-        var propertyShapeResource = model.getResource("http://uri.suomi.fi/datamodel/ns/test_lib/attribute-1");
+        var propertyShapes = classRes.listProperties(SH.property).mapWith(p -> p.getObject().toString()).toList();
 
+        // should contain both existing in the model and those found from with query
         assertEquals(4, propertyShapes.size());
-        assertTrue(propertyShapes.stream().anyMatch(
-                shape -> shape.getObject().toString().equals("http://uri.suomi.fi/datamodel/ns/test_lib/attribute-1")));
-        assertTrue(propertyShapes.stream().anyMatch(
-                shape -> shape.getObject().toString().equals("http://uri.suomi.fi/datamodel/ns/test_lib/association-1")));
-
-        assertEquals("http://uri.suomi.fi/datamodel/ns/test_lib/attribute-1", propertyShapeResource.getURI());
-        assertEquals(OWL.DatatypeProperty, propertyShapeResource.getProperty(RDF.type).getObject());
+        assertTrue(propertyShapes.containsAll(List.of(
+                "http://uri.suomi.fi/datamodel/ns/test_lib/attribute-1",
+                "http://uri.suomi.fi/datamodel/ns/test_lib/association-1",
+                "http://uri.suomi.fi/datamodel/ns/test/TestPropertyShape",
+                "http://uri.suomi.fi/datamodel/ns/test/DeactivatedPropertyShape"))
+        );
     }
 
     @Test
@@ -172,26 +173,40 @@ class NodeShapeMapperTest {
 
     @Test
     void testMapNodeShapeResources() {
-        var m = MapperTestUtils.getModelFromFile("/models/test_datamodel_profile_with_resources.ttl");
+        var model = MapperTestUtils.getModelFromFile("/models/test_datamodel_profile_with_resources.ttl");
+        var propertyShapeResult = MapperTestUtils.getModelFromFile("/property_shapes_result.ttl");
 
-        var resource = m.getResource("http://uri.suomi.fi/datamodel/ns/test/TestClass");
+        var resource = model.getResource("http://uri.suomi.fi/datamodel/ns/test/TestClass");
         var dto = new NodeShapeInfoDTO();
         dto.setUri(resource.getURI());
 
-        ClassMapper.addNodeShapeResourcesToDTO(m, dto);
+        ClassMapper.addNodeShapeResourcesToDTO(model, propertyShapeResult, dto);
 
         var attributes = dto.getAttribute();
-        Optional<SimplePropertyShapeDTO> result = attributes.stream()
-                .filter(SimplePropertyShapeDTO::isDeactivated).findFirst();
+        assertEquals(3, attributes.size());
 
-        if (result.isPresent()) {
-            var deactivated = result.get();
-            assertEquals(2, attributes.size());
+        // deactivated property shape
+        var result1 = attributes.stream()
+                .filter(SimplePropertyShapeDTO::isDeactivated).findFirst();
+        if (result1.isPresent()) {
+            var deactivated = result1.get();
             assertEquals("DeactivatedPropertyShape", deactivated.getIdentifier());
             assertEquals("test", deactivated.getModelId());
+            assertEquals("deactivated property shape", deactivated.getLabel().get("fi"));
             assertTrue(deactivated.isDeactivated());
         } else {
             fail("No deactivated property shape found");
+        }
+
+        // external property shape
+        var result2 = attributes.stream().filter(a -> a.getModelId().equals("test_profile")).findFirst();
+        if (result2.isPresent()) {
+            var ext = result2.get();
+            assertEquals("ps-1", ext.getIdentifier());
+            assertEquals("test_profile", ext.getModelId());
+            assertFalse(ext.isDeactivated());
+        } else {
+            fail("No external property shape found");
         }
     }
 
@@ -210,6 +225,46 @@ class NodeShapeMapperTest {
 
         assertTrue(propertyShape1.getProperty(SH.deactivated).getObject().asLiteral().getBoolean());
         assertFalse(propertyShape2.hasProperty(SH.deactivated));
+    }
+
+    @Test
+    void testAppendNodeShapeProperty() {
+        var model = MapperTestUtils.getModelFromFile("/models/test_datamodel_profile_with_resources.ttl");
+        var classResource = model.getResource("http://uri.suomi.fi/datamodel/ns/test/TestClass");
+        var propertyURI = "http://uri.suomi.fi/datamodel/ns/foo";
+
+        assertEquals(2, classResource.listProperties(SH.property).toList().size());
+
+        ClassMapper.mapAppendNodeShapeProperty(classResource, propertyURI, Set.of());
+
+        var properties = classResource.listProperties(SH.property).mapWith(p -> p.getObject().toString()).toList();
+        assertEquals(3, properties.size());
+        assertTrue(properties.contains(propertyURI));
+    }
+
+    @Test
+    void testAppendExistingNodeShapeProperty() {
+        var model = MapperTestUtils.getModelFromFile("/models/test_datamodel_profile_with_resources.ttl");
+        var classResource = model.getResource("http://uri.suomi.fi/datamodel/ns/test/TestClass");
+
+        var propertyURI = "http://uri.suomi.fi/datamodel/ns/test/TestPropertyShape";
+        assertThrowsExactly(MappingError.class,
+                () -> ClassMapper.mapAppendNodeShapeProperty(classResource, propertyURI, Set.of(propertyURI)));
+    }
+
+    @Test
+    void testRemoveNodeShapeProperty() {
+        var model = MapperTestUtils.getModelFromFile("/models/test_datamodel_profile_with_resources.ttl");
+        var classResource = model.getResource("http://uri.suomi.fi/datamodel/ns/test/TestClass");
+        var propertyURI = "http://uri.suomi.fi/datamodel/ns/test/TestPropertyShape";
+
+        assertEquals(2, classResource.listProperties(SH.property).toList().size());
+
+        ClassMapper.mapRemoveNodeShapeProperty(model, classResource, propertyURI, Set.of());
+
+        var properties = classResource.listProperties(SH.property).mapWith(p -> p.getObject().toString()).toList();
+        assertEquals(1, properties.size());
+        assertFalse(properties.contains(propertyURI));
     }
 
 }

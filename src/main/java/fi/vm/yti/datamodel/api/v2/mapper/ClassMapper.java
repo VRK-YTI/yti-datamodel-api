@@ -145,23 +145,9 @@ public class ClassMapper {
     public static void mapReferencePropertyShapes(Model model, String classURI, Model referencePropertyModel) {
         var classRes = model.getResource(classURI);
 
-        referencePropertyModel.listSubjects().forEach((var resource) -> {
-            var propertyResource = referencePropertyModel.getResource(resource.getURI());
-
-            // create a dummy resource
-            var placeHolderResource = model.createResource(resource.getURI());
-
-            placeHolderResource.addProperty(RDF.type, SH.PropertyShape);
-            placeHolderResource.addProperty(RDFS.label, propertyResource.getProperty(RDFS.label).getObject());
-            if (MapperUtils.hasType(propertyResource, OWL.DatatypeProperty)) {
-                placeHolderResource.addProperty(RDF.type, OWL.DatatypeProperty);
-            } else {
-                placeHolderResource.addProperty(RDF.type, OWL.ObjectProperty);
-            }
-            placeHolderResource.addProperty(RDFS.isDefinedBy,
-                    propertyResource.getProperty(RDFS.isDefinedBy).getObject());
-            classRes.addProperty(SH.property, ResourceFactory.createResource(resource.getURI()));
-        });
+        referencePropertyModel.listSubjects().forEach(
+                (var resource) -> classRes.addProperty(SH.property, ResourceFactory.createResource(resource.getURI()))
+        );
     }
 
     public static void mapToUpdateOntologyClass(Model model, String graph, Resource classResource, ClassDTO classDTO, YtiUser user) {
@@ -197,6 +183,10 @@ public class ClassMapper {
         updateResourceAndMapCommon(model, graph, classResource, nodeShapeDTO);
         MapperUtils.updateUriProperty(classResource, SH.targetClass, nodeShapeDTO.getTargetClass());
         MapperUtils.updateUriProperty(classResource, SH.node, nodeShapeDTO.getTargetNode());
+        if (nodeShapeDTO.getProperties() != null) {
+            classResource.removeAll(SH.property);
+            nodeShapeDTO.getProperties().forEach(property -> classResource.addProperty(SH.property, ResourceFactory.createResource(property)));
+        }
         MapperUtils.addUpdateMetadata(classResource, user);
     }
 
@@ -270,7 +260,7 @@ public class ClassMapper {
         MapperUtils.mapCreationInfo(dto, nodeShapeResource, userMapper);
 
         dto.setTargetClass(MapperUtils.propertyToString(nodeShapeResource, SH.targetClass));
-        dto.setTargetNode(MapperUtils.propertyToString(nodeShapeResource, SH.targetNode));
+        dto.setTargetNode(MapperUtils.propertyToString(nodeShapeResource, SH.node));
 
         return dto;
     }
@@ -304,6 +294,19 @@ public class ClassMapper {
         return constructBuilder.build();
     }
 
+    public static Query getNodeShapeResourcesQuery(String nodeShapeURI) {
+        var constructBuilder = new ConstructBuilder();
+        var resourceName = "?resource";
+        var uri = NodeFactory.createURI(nodeShapeURI);
+        SparqlUtils.addConstructProperty(resourceName, constructBuilder, RDF.type, "?type");
+        SparqlUtils.addConstructProperty(resourceName, constructBuilder, RDFS.label, "?label");
+        SparqlUtils.addConstructOptional(resourceName, constructBuilder, DCTerms.identifier, "?identifier");
+        SparqlUtils.addConstructProperty(resourceName, constructBuilder, RDFS.isDefinedBy, "?isDefinedBy");
+        constructBuilder.addWhere(uri, SH.property, resourceName);
+
+        return constructBuilder.build();
+    }
+
     public static void addClassResourcesToDTO(Model classResources, ClassInfoDTO dto){
         var associations = new ArrayList<SimpleResourceDTO>();
         var attributes = new ArrayList<SimpleResourceDTO>();
@@ -328,31 +331,23 @@ public class ClassMapper {
         });
     }
 
-    public static void addNodeShapeResourcesToDTO(Model model, NodeShapeInfoDTO nodeShapeDTO) {
-        var propertyShapeURIs = model.getResource(nodeShapeDTO.getUri())
-                .listProperties(SH.property).toList().stream()
-                .map(p -> p.getObject().toString())
-                .toList();
-        propertyShapeURIs.forEach(propertyURI -> {
-            var resource = model.getResource(propertyURI);
+    public static void addNodeShapeResourcesToDTO(Model model, Model propertyShapeResources, NodeShapeInfoDTO nodeShapeDTO) {
+        var deactivatedURIs = model.listSubjectsWithProperty(SH.deactivated)
+                .mapWith(Resource::getURI).toList();
+
+        propertyShapeResources.listSubjects().forEach(resource -> {
             var dto = new SimplePropertyShapeDTO();
-            var uri = NodeFactory.createURI(propertyURI);
+            var uri = NodeFactory.createURI(resource.getURI());
 
             var modelUri = MapperUtils.propertyToString(resource, RDFS.isDefinedBy);
-            if(modelUri == null){
+            if (modelUri == null) {
                 throw new MappingError("ModelUri null for resource");
             }
-            dto.setUri(propertyURI);
+            dto.setUri(resource.getURI());
             dto.setModelId(MapperUtils.getModelIdFromNamespace(modelUri));
             dto.setLabel(MapperUtils.localizedPropertyToMap(resource, RDFS.label));
             dto.setIdentifier(uri.getLocalName());
-
-            if (resource.hasProperty(SH.deactivated)) {
-                dto.setDeactivated(resource.getProperty(SH.deactivated).getObject().asLiteral().getBoolean());
-            } else {
-                dto.setDeactivated(false);
-            }
-
+            dto.setDeactivated(deactivatedURIs.contains(resource.getURI()));
             if (MapperUtils.hasType(resource, OWL.DatatypeProperty)) {
                 nodeShapeDTO.getAttribute().add(dto);
             } else if (MapperUtils.hasType(resource, OWL.ObjectProperty)) {
@@ -381,6 +376,9 @@ public class ClassMapper {
 
     public static void toggleAndMapDeactivatedProperty(Model model, String propertyURI) {
         var resource = model.getResource(propertyURI);
+        if (!MapperUtils.hasType(resource, SH.PropertyShape, SH.NodeShape)) {
+            throw new MappingError("Resource must be NodeShape or PropertyShape");
+        }
         if (resource.hasProperty(SH.deactivated)) {
             resource.removeAll(SH.deactivated);
         } else {
@@ -388,4 +386,19 @@ public class ClassMapper {
         }
     }
 
+    public static void mapAppendNodeShapeProperty(Resource classResource, String propertyURI,
+                                                  Set<String> restrictedProperties) {
+        if (restrictedProperties.contains(propertyURI) || !MapperUtils.hasType(classResource, SH.NodeShape)) {
+            throw new MappingError("Resource is not sh:PropertyShape or property already exists");
+        }
+        classResource.addProperty(SH.property, ResourceFactory.createResource(propertyURI));
+    }
+
+    public static void mapRemoveNodeShapeProperty(Model model, Resource classResource, String propertyURI,
+                                                  Set<String> restrictedProperties) {
+        if (restrictedProperties.contains(propertyURI) || !MapperUtils.hasType(classResource, SH.NodeShape)) {
+            throw new MappingError("Resource is not sh:PropertyShape or property is added from sh:node reference");
+        }
+        model.remove(ResourceFactory.createStatement(classResource, SH.property, ResourceFactory.createResource(propertyURI)));
+    }
 }
