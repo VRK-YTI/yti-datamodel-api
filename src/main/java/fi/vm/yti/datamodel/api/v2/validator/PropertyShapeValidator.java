@@ -1,6 +1,8 @@
 package fi.vm.yti.datamodel.api.v2.validator;
 
-import fi.vm.yti.datamodel.api.v2.dto.*;
+import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
+import fi.vm.yti.datamodel.api.v2.dto.PropertyShapeDTO;
+import fi.vm.yti.datamodel.api.v2.dto.ResourceType;
 import fi.vm.yti.datamodel.api.v2.service.JenaService;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
@@ -28,17 +30,17 @@ public class PropertyShapeValidator extends BaseValidator implements ConstraintV
 
         checkLabel(context, value, updateProperty);
         checkEditorialNote(context, value);
-        checkStatus(context, value, updateProperty);
+        checkStatus(context, value.getStatus(), updateProperty);
         checkNote(context, value);
-        checkIdentifier(context, value, updateProperty);
+        checkPrefixOrIdentifier(context, value.getIdentifier(), "identifier", ValidationConstants.RESOURCE_IDENTIFIER_MAX_LENGTH, updateProperty);
         checkType(context, value);
         checkPath(context, value);
         checkClassType(context, value);
         checkDataType(context, value);
-        checkCommonTextField(context, value.getDefaultValue(), "defaultValue");
-        checkCommonTextField(context, value.getHasValue(), "hasValue");
+        checkCommonTextArea(context, value.getDefaultValue(), "defaultValue");
+        checkCommonTextArea(context, value.getHasValue(), "hasValue");
         if (value.getAllowedValues() != null) {
-            value.getAllowedValues().forEach(v -> checkCommonTextField(context, v, "allowedValues"));
+            value.getAllowedValues().forEach(v -> checkCommonTextArea(context, v, "allowedValues"));
         }
         return !isConstraintViolationAdded();
     }

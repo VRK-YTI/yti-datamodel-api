@@ -28,7 +28,7 @@ public class DataModelValidator extends BaseValidator implements
         setConstraintViolationAdded(false);
         checkModelType(context, dataModel);
         checkPrefix(context, dataModel);
-        checkStatus(context, dataModel);
+        checkStatus(context, dataModel.getStatus(), updateModel);
         checkLanguages(context, dataModel);
         checkLabels(context, dataModel);
         checkDescription(context, dataModel);
@@ -53,15 +53,7 @@ public class DataModelValidator extends BaseValidator implements
     private void checkPrefix(ConstraintValidatorContext context, DataModelDTO dataModel){
         final var prefixPropertyLabel = "prefix";
         var prefix = dataModel.getPrefix();
-        if(updateModel){
-            if(prefix != null){
-                addConstraintViolation(context, ValidationConstants.MSG_NOT_ALLOWED_UPDATE, prefixPropertyLabel);
-            }
-            return;
-        }else if(prefix == null){
-            addConstraintViolation(context, ValidationConstants.MSG_VALUE_MISSING, prefixPropertyLabel);
-            return;
-        }
+        checkPrefixOrIdentifier(context, prefix, prefixPropertyLabel, ValidationConstants.PREFIX_MAX_LENGTH, updateModel);
         //Check prefix text content
         checkPrefixContent(context, prefix, prefixPropertyLabel);
         //Checking if in use is different for datamodels and its resources so it is not in the above function
@@ -82,13 +74,6 @@ public class DataModelValidator extends BaseValidator implements
             addConstraintViolation(context, ValidationConstants.MSG_NOT_ALLOWED_UPDATE, "type");
         }else if(!updateModel && modelType == null){
             addConstraintViolation(context, ValidationConstants.MSG_VALUE_MISSING, "type");
-        }
-    }
-
-    private void checkStatus(ConstraintValidatorContext context, DataModelDTO dataModel) {
-        var status = dataModel.getStatus();
-        if(!updateModel && status == null){
-            addConstraintViolation(context, ValidationConstants.MSG_VALUE_MISSING, "status");
         }
     }
 
@@ -123,9 +108,7 @@ public class DataModelValidator extends BaseValidator implements
             if (!languages.contains(key)) {
                 addConstraintViolation(context, "language-not-in-language-list." + key, labelPropertyLabel);
             }
-            if(value.length() > ValidationConstants.TEXT_FIELD_MAX_LENGTH){
-                addConstraintViolation(context, ValidationConstants.MSG_OVER_CHARACTER_LIMIT + ValidationConstants.TEXT_FIELD_MAX_LENGTH, labelPropertyLabel);
-            }
+            checkCommonTextField(context, value, labelPropertyLabel);
         });
     }
 
@@ -225,6 +208,7 @@ public class DataModelValidator extends BaseValidator implements
             if(namespace.getPrefix() == null || namespace.getName() == null || namespace.getNamespace() == null){
                 addConstraintViolation(context, "namespace-missing-value", externalNamespace);
             }else {
+                checkPrefixOrIdentifier(context, namespace.getPrefix(), externalNamespace, ValidationConstants.PREFIX_MAX_LENGTH, false);
                 if(namespace.getNamespace().startsWith(ModelConstants.SUOMI_FI_NAMESPACE)){
                     addConstraintViolation(context, "namespace-not-external", externalNamespace);
                 }
@@ -240,15 +224,15 @@ public class DataModelValidator extends BaseValidator implements
      * @param property Property name if violation happens
      */
     private void checkPrefixContent(ConstraintValidatorContext context, String prefix, String property){
+        if(prefix == null){
+            return;
+        }
         //Checking for reserved words and reserved namespaces. This error won't distinguish which one it was
         if(ValidationConstants.RESERVED_WORDS.contains(prefix)
                 || ValidationConstants.RESERVED_NAMESPACES.containsKey(prefix)){
             addConstraintViolation(context, "prefix-is-reserved", property);
         }
 
-        if(prefix.length() < 3 || prefix.length() > ValidationConstants.PREFIX_MAX_LENGTH){
-            addConstraintViolation(context, "prefix-character-count-mismatch", property);
-        }
         if(!prefix.matches(ValidationConstants.PREFIX_REGEX)){
             addConstraintViolation(context, "prefix-not-matching-pattern", property);
         }

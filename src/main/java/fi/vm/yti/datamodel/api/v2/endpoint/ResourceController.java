@@ -122,6 +122,14 @@ public class ResourceController {
         return ResourceMapper.mapToExternalResource(resource);
     }
 
+    @Operation(summary = "Check if identifier for resource already exists")
+    @ApiResponse(responseCode = "200", description = "Boolean value indicating whether prefix")
+    @GetMapping(value = "/{prefix}/free-identifier/{identifier}", produces = APPLICATION_JSON_VALUE)
+    public Boolean freeIdentifier(@PathVariable String prefix, @PathVariable String identifier) {
+        var graphUri = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
+        return !jenaService.doesResourceExistInGraph(graphUri, graphUri + ModelConstants.RESOURCE_SEPARATOR + identifier);
+    }
+
     @Operation(summary = "Delete a resource from a data model")
     @ApiResponse(responseCode = "200", description = "Resource deleted successfully")
     @DeleteMapping(value = "/ontology/{prefix}/{resourceIdentifier}")
