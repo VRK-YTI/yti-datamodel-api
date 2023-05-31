@@ -51,19 +51,18 @@ public class ModelMapper {
                 .addProperty(RDF.type, type)
                 .addProperty(OWL.versionInfo, modelDTO.getStatus().name())
                 .addProperty(DCTerms.identifier, UUID.randomUUID().toString())
+                .addProperty(Iow.contentModified, ResourceFactory.createTypedLiteral(creationDate))
                 .addProperty(DCTerms.modified, ResourceFactory.createTypedLiteral(creationDate))
                 .addProperty(DCTerms.created, ResourceFactory.createTypedLiteral(creationDate))
                 .addProperty(Iow.creator, user.getId().toString())
-                .addProperty(Iow.modifier, user.getId().toString());
+                .addProperty(Iow.modifier, user.getId().toString())
+                .addProperty(DCAP.preferredXMLNamespacePrefix, modelDTO.getPrefix())
+                .addProperty(DCAP.preferredXMLNamespace, modelUri);
 
         modelDTO.getLanguages().forEach(lang -> modelResource.addProperty(DCTerms.language, lang));
 
-        modelResource.addProperty(Iow.contentModified, ResourceFactory.createTypedLiteral(creationDate));
         MapperUtils.addOptionalStringProperty(modelResource, Iow.contact, modelDTO.getContact());
-
-        modelResource.addProperty(DCAP.preferredXMLNamespacePrefix, modelDTO.getPrefix());
-        modelResource.addProperty(DCAP.preferredXMLNamespace, modelUri);
-
+        MapperUtils.addLocalizedProperty(modelDTO.getLanguages(), modelDTO.getDocumentation(), modelResource, Iow.documentation, model);
         MapperUtils.addLocalizedProperty(modelDTO.getLanguages(), modelDTO.getLabel(), modelResource, RDFS.label, model);
         MapperUtils.addLocalizedProperty(modelDTO.getLanguages(), modelDTO.getDescription(), modelResource, RDFS.comment, model);
 
@@ -80,13 +79,13 @@ public class ModelMapper {
         addInternalNamespaceToDatamodel(modelDTO, modelResource, model);
         addExternalNamespaceToDatamodel(modelDTO, model, modelResource);
 
-        modelDTO.getTerminologies().forEach(terminology -> modelResource.addProperty(DCTerms.references, ResourceFactory.createResource(terminology)));
+        modelDTO.getTerminologies().forEach(terminology -> MapperUtils.addOptionalUriProperty(modelResource, DCTerms.references, terminology));
 
         if(modelDTO.getType().equals(ModelType.PROFILE)) {
-            modelDTO.getCodeLists().forEach(codeList -> modelResource.addProperty(Iow.codeLists, ResourceFactory.createResource(codeList)));
+            modelDTO.getCodeLists().forEach(codeList -> MapperUtils.addOptionalUriProperty(modelResource, Iow.codeLists, codeList));
         }
 
-        model.setNsPrefix(modelDTO.getPrefix(), modelUri + "/");
+        model.setNsPrefix(modelDTO.getPrefix(), modelUri + ModelConstants.RESOURCE_SEPARATOR);
 
         return model;
     }
@@ -113,6 +112,7 @@ public class ModelMapper {
         MapperUtils.updateLocalizedProperty(langs, dataModelDTO.getLabel(), modelResource, RDFS.label, model);
         MapperUtils.updateLocalizedProperty(langs, dataModelDTO.getDescription(), modelResource, RDFS.comment, model);
         MapperUtils.updateStringProperty(modelResource, Iow.contact, dataModelDTO.getContact());
+        MapperUtils.updateLocalizedProperty(langs, dataModelDTO.getDocumentation(), modelResource, Iow.documentation, model);
 
         if(dataModelDTO.getGroups() != null){
             modelResource.removeAll(DCTerms.isPartOf);
@@ -268,6 +268,7 @@ public class ModelMapper {
         }
 
         datamodelDTO.setContact(MapperUtils.propertyToString(modelResource, Iow.contact));
+        datamodelDTO.setDocumentation(MapperUtils.localizedPropertyToMap(modelResource, Iow.documentation));
         return datamodelDTO;
     }
 
@@ -311,7 +312,6 @@ public class ModelMapper {
         indexModel.setIsPartOf(groups);
         indexModel.setLanguage(MapperUtils.arrayPropertyToList(resource, DCTerms.language));
 
-        indexModel.setDocumentation(MapperUtils.localizedPropertyToMap(resource, Iow.documentation));
         return indexModel;
     }
 

@@ -16,8 +16,8 @@ public class DataModelInfoDTO extends ResourceCommonDTO {
     private Set<ExternalNamespaceDTO> externalNamespaces = Set.of();
     private Set<TerminologyDTO> terminologies = Set.of();
     private Set<CodeListDTO> codeLists = Set.of();
-
     private String contact;
+    private Map<String, String> documentation = Map.of();
 
     public ModelType getType() {
         return type;
@@ -121,5 +121,13 @@ public class DataModelInfoDTO extends ResourceCommonDTO {
 
     public void setCodeLists(Set<CodeListDTO> codeLists) {
         this.codeLists = codeLists;
+    }
+
+    public Map<String, String> getDocumentation() {
+        return documentation;
+    }
+
+    public void setDocumentation(Map<String, String> documentation) {
+        this.documentation = documentation;
     }
 }

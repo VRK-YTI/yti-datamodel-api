@@ -443,6 +443,10 @@ class DatamodelTest {
         dataModelDTO.setContact(RandomStringUtils.random(emailAreaMaxPlus));
         args.add(dataModelDTO);
 
+        dataModelDTO = createDatamodelDTO(false);
+        dataModelDTO.setDocumentation(Map.of("en", RandomStringUtils.random(textAreaMaxPlus)));
+        args.add(dataModelDTO);
+
         return args.stream().map(Arguments::of);
     }
 
