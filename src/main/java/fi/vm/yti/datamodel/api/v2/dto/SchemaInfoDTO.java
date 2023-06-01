@@ -8,7 +8,6 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 
 public class SchemaInfoDTO extends ResourceInfoBaseDTO {
 	
-	
 	private SchemaFormat format;
 	private String aggregationKey;
 	private Status status;	
