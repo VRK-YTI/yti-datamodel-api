@@ -24,10 +24,10 @@ public class ClassValidator extends BaseValidator implements
     public boolean isValid(ClassDTO classDTO, ConstraintValidatorContext context) {
         setConstraintViolationAdded(false);
 
-        checkLabel(context, classDTO, updateClass);
+        checkLabel(context, classDTO);
         checkEditorialNote(context, classDTO);
         checkNote(context, classDTO);
-        checkStatus(context, classDTO.getStatus(), updateClass);
+        checkStatus(context, classDTO.getStatus());
         checkEquivalentClass(context, classDTO);
         checkSubClassOf(context, classDTO);
         checkSubject(context, classDTO);

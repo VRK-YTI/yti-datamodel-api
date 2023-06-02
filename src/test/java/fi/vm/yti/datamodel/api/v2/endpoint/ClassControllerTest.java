@@ -421,7 +421,7 @@ class ClassControllerTest {
             dto.setIdentifier("Identifier");
         }
         dto.setStatus(Status.DRAFT);
-        dto.setSubject("sanastot.suomi.fi/notrealurl");
+        dto.setSubject("http://uri.suomi.fi/terminology/notrealurl");
         dto.setLabel(Map.of("fi", "test label"));
         dto.setEquivalentClass(Set.of("tietomallit.suomi.fi/ns/notrealns/FakeClass"));
         dto.setSubClassOf(Set.of("tietomallit.suomi.fi/ns/notrealns/FakeClass"));
