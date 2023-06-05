@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.File;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.UUID;
@@ -26,6 +27,10 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import fi.vm.yti.datamodel.api.v2.dto.MSCR;
+
+import fi.vm.yti.datamodel.api.v2.service.JSONValidationService;
+
+
 
 @Service
 public class SchemaService {
@@ -68,7 +73,16 @@ public class SchemaService {
 		
 	}		
 	
+
+	/**
 	
+	Handles an object property and creates the corresponding SHACL (Node)Shape.
+	
+	@param propID The property ID.
+	@param node The JSON node containing the property details.
+	@param schemaPID The schema PID.
+	@param model The RDF model.
+	*/
 	private void handleObject(String propID, JsonNode node, String schemaPID, Model model) {
 
 		Resource nodeShapeResource = model.createResource(schemaPID + "#" + propID);
@@ -110,75 +124,33 @@ public class SchemaService {
 	}
 	public Model transformJSONSchemaToInternal(String schemaPID, byte[] data) throws Exception, IOException {
 		
-		// add error handling
-		
-		
-		// add validaiton
-		// I have json file content and (meta)schema - schema of json schema.
-		// you need to validate against that schema – json-schema draft 4.
-		//
-		
-		
 		Model model = ModelFactory.createDefaultModel();
-		System.out.println("MODEL: " + model.toString());
 		
 		ObjectMapper mapper = new ObjectMapper();
-		System.out.println("MAPPER: " + mapper);
-		
-		System.out.println("DATA: " + data);
-		
-		// The root is a json object containing information that appears to have data about json model\s schema, 
-		// and doesn't include data from the uploaded schema file.
-		
-		// where does it get it from? from json-schema.org reference? what happens with the uploaded data then?
-		
-		// From method description:
-		/* Returns root of the resulting tree (where root can consist
-	     * of just a single node if the current event is a
-	     * value event, not container).
-	     */
 		JsonNode root = mapper.readTree(data);
-		System.out.println("ROOT: " + root);
-		var rootIter = root.fieldNames();
-		while (rootIter.hasNext()) {
-			var nextThing = rootIter.next();
-			System.out.println(nextThing);
-		}
-//		mapper.
-		
-		String schemaVersion  =root.get("$schema").asText();
-		System.out.println("SCHEMA VERSION: " + schemaVersion);
-		
-		JsonSchemaFactory schemaFactory = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V4);
-		
-		String metaSchemaPath = "test_jsonschema_b2share.json";
-//		String metaSchemaPath = "/mscr-datamodel-api/src/test/resources/test_jsonschema_b2share.json";
-//		String metaSchemaPath = "/mscr-datamodel-api/src/main/resources/schema_v4";
-		
-
-		// close stream later?
-		InputStream metaSchemaInputStream = getClass().getResourceAsStream(metaSchemaPath);
-		
-//		JsonNode metaSchemaNode = mapper.readTree(new File(metaSchemaPath));
-		JsonNode metaSchemaNode = mapper.readTree(metaSchemaInputStream);
-		
-        JsonSchema schema = schemaFactory.getSchema(metaSchemaNode);
-        Set<ValidationMessage> validationResult = schema.validate(root);
-        
-        if (validationResult.isEmpty()) {
-            System.out.println("no validation errors :-)");
-        } else {
-            validationResult.forEach(vm -> System.out.println(vm.getMessage()));
-        }
-		var modelResource = model.createResource(schemaPID);
-		System.out.println("Model Resource: " + modelResource);
-		modelResource.addProperty(DCTerms.language, "en");
-		
-		
-		handleObject("root", root, schemaPID, model);
 			
+		String metaSchemaPath = "test_jsonschema_b2share.json";
+
+		InputStream metaSchemaInputStream = getClass().getClassLoader().getResourceAsStream(metaSchemaPath);
+		ValidationRecord validationRecord = JSONValidationService.validateJSON(metaSchemaInputStream, data);
+		metaSchemaInputStream.close();
 		
-		return model;
+		boolean validationStatus = validationRecord.status();
+		List<String> validationMessages = validationRecord.messages();
+
+		validationMessages.forEach(x -> System.out.println(x));
+		
+		if (validationStatus) {
+			
+			var modelResource = model.createResource(schemaPID);
+			modelResource.addProperty(DCTerms.language, "en");
+			
+			handleObject("root", root, schemaPID, model);
+			return model;
+		} else {
+			String exceptionOutput = String.join("\n", validationMessages);
+			throw new Exception(exceptionOutput);
+		}
 		
 	}
 	
