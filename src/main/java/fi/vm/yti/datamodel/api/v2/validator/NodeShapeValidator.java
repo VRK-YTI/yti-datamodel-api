@@ -29,10 +29,10 @@ public class NodeShapeValidator extends BaseValidator implements
     public boolean isValid(NodeShapeDTO nodeShapeDTO, ConstraintValidatorContext context) {
         setConstraintViolationAdded(false);
 
-        checkLabel(context, nodeShapeDTO, updateNodeShape);
+        checkLabel(context, nodeShapeDTO);
         checkEditorialNote(context, nodeShapeDTO);
         checkNote(context, nodeShapeDTO);
-        checkStatus(context, nodeShapeDTO.getStatus(), updateNodeShape);
+        checkStatus(context, nodeShapeDTO.getStatus());
         checkSubject(context, nodeShapeDTO);
         checkPrefixOrIdentifier(context, nodeShapeDTO.getIdentifier(), "identifier", ValidationConstants.RESOURCE_IDENTIFIER_MAX_LENGTH, updateNodeShape);
         checkTargetClass(context, nodeShapeDTO);

@@ -28,9 +28,9 @@ public class PropertyShapeValidator extends BaseValidator implements ConstraintV
     public boolean isValid(PropertyShapeDTO value, ConstraintValidatorContext context) {
         setConstraintViolationAdded(false);
 
-        checkLabel(context, value, updateProperty);
+        checkLabel(context, value);
         checkEditorialNote(context, value);
-        checkStatus(context, value.getStatus(), updateProperty);
+        checkStatus(context, value.getStatus());
         checkNote(context, value);
         checkPrefixOrIdentifier(context, value.getIdentifier(), "identifier", ValidationConstants.RESOURCE_IDENTIFIER_MAX_LENGTH, updateProperty);
         checkType(context, value);

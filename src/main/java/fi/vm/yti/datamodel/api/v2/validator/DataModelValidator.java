@@ -28,7 +28,7 @@ public class DataModelValidator extends BaseValidator implements
         setConstraintViolationAdded(false);
         checkModelType(context, dataModel);
         checkPrefix(context, dataModel);
-        checkStatus(context, dataModel.getStatus(), updateModel);
+        checkStatus(context, dataModel.getStatus());
         checkLanguages(context, dataModel);
         checkLabels(context, dataModel);
         checkDescription(context, dataModel);
@@ -102,15 +102,19 @@ public class DataModelValidator extends BaseValidator implements
         final var labelPropertyLabel = "label";
         var labels = dataModel.getLabel();
         var languages = dataModel.getLanguages();
-        if(labels.size() != languages.size()){
+
+        if (labels == null || labels.isEmpty() || labels.values().stream().anyMatch(label -> label == null || label.isBlank())) {
+            addConstraintViolation(context, ValidationConstants.MSG_VALUE_MISSING, "label");
+        } else if(labels.size() != languages.size()){
             addConstraintViolation(context, "label-language-count-mismatch", labelPropertyLabel);
+        } else {
+            labels.forEach((key, value) -> {
+                if (!languages.contains(key)) {
+                    addConstraintViolation(context, "language-not-in-language-list." + key, labelPropertyLabel);
+                }
+                checkCommonTextField(context, value, labelPropertyLabel);
+            });
         }
-        labels.forEach((key, value) -> {
-            if (!languages.contains(key)) {
-                addConstraintViolation(context, "language-not-in-language-list." + key, labelPropertyLabel);
-            }
-            checkCommonTextField(context, value, labelPropertyLabel);
-        });
     }
 
     /**

@@ -42,11 +42,11 @@ public abstract class BaseValidator implements Annotation{
     }
 
 
-    public void checkLabel(ConstraintValidatorContext context, BaseDTO dto, boolean updateClass){
+    public void checkLabel(ConstraintValidatorContext context, BaseDTO dto){
         var labels = dto.getLabel();
-        if(!updateClass && (labels == null || labels.isEmpty() || labels.values().stream().allMatch(String::isBlank))){
+        if (labels == null || labels.isEmpty() || labels.values().stream().anyMatch(label -> label == null || label.isBlank())){
             addConstraintViolation(context, ValidationConstants.MSG_VALUE_MISSING, "label");
-        }else if(labels != null){
+        }else {
             labels.forEach((lang, value) -> checkCommonTextField(context, value, "label"));
         }
     }
@@ -63,16 +63,18 @@ public abstract class BaseValidator implements Annotation{
         }
     }
 
-    public void checkStatus(ConstraintValidatorContext context, Status status, boolean update){
+    public void checkStatus(ConstraintValidatorContext context, Status status){
         //Status has to be defined when creating
-        if(!update && status == null){
+        if(status == null){
             addConstraintViolation(context, ValidationConstants.MSG_VALUE_MISSING, "status");
         }
     }
 
     public void checkSubject(ConstraintValidatorContext context, BaseDTO dto){
         var subject = dto.getSubject();
-        //TODO check if subject is found in one of the terminologies added to datamodel
+        if (subject != null && !subject.matches("^https?://uri.suomi.fi/terminology/(.*)")) {
+            addConstraintViolation(context, "invalid-terminology-uri", "subject");
+        }
     }
 
     public void checkPrefixOrIdentifier(ConstraintValidatorContext context, final String value, String propertyName, final int maxLength, boolean update){

@@ -27,9 +27,9 @@ public class ResourceValidator extends BaseValidator implements ConstraintValida
     public boolean isValid(ResourceDTO value, ConstraintValidatorContext context) {
         setConstraintViolationAdded(false);
 
-        checkLabel(context, value, updateProperty);
+        checkLabel(context, value);
         checkEditorialNote(context, value);
-        checkStatus(context, value.getStatus(), updateProperty);
+        checkStatus(context, value.getStatus());
         checkNote(context, value);
         checkEquivalentProperty(context, value);
         checkSubPropertyOf(context, value);
