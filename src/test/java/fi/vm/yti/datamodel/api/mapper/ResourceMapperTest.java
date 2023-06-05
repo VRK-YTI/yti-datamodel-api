@@ -5,6 +5,8 @@ import fi.vm.yti.datamodel.api.v2.endpoint.EndpointUtils;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
 import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.mapper.ResourceMapper;
+import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexModel;
+import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexResource;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
@@ -16,6 +18,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -619,6 +622,49 @@ class ResourceMapperTest {
 
         assertEquals("encoding", dto.getLabel().get("en"));
         assertEquals("http://purl.org/ontology/mo/encoding", dto.getUri());
+    }
+
+    @Test
+    void mapIndexResourceInfo() {
+        var modelURI = "http://uri.suomi.fi/datamodel/ns/test";
+        var indexResource = new IndexResource();
+        indexResource.setId(modelURI + "/class-1");
+        indexResource.setNamespace("test");
+        indexResource.setLabel(Map.of("fi", "Test resource"));
+        indexResource.setResourceType(ResourceType.CLASS);
+        indexResource.setIsDefinedBy(modelURI);
+        indexResource.setNote(Map.of("fi", "Test description"));
+        indexResource.setStatus(Status.VALID);
+        indexResource.setSubject("http://uri.suomi.fi/terminology/dd0e10ed/concept-1");
+
+        var indexModel = new IndexModel();
+        indexModel.setLabel(Map.of("fi", "Data model"));
+        indexModel.setStatus(Status.VALID);
+        indexModel.setIsPartOf(List.of("P1", "P2"));
+        indexModel.setType(ModelType.LIBRARY);
+
+        var dataModels = Map.of(modelURI, indexModel);
+
+        var conceptsModel = MapperTestUtils.getModelFromFile("/all_concepts.ttl");
+        var result = ResourceMapper.mapIndexResourceInfo(indexResource, dataModels, conceptsModel);
+
+        assertEquals("Test resource", result.getLabel().get("fi"));
+        assertEquals("Test description", result.getNote().get("fi"));
+        assertEquals(Status.VALID, result.getStatus());
+        assertEquals(modelURI + "/class-1", result.getId());
+        assertEquals(ResourceType.CLASS, result.getResourceType());
+        assertEquals("test", result.getNamespace());
+
+        var dataModel = result.getDataModelInfo();
+        assertEquals("Data model", dataModel.getLabel().get("fi"));
+        assertEquals(ModelType.LIBRARY, dataModel.getModelType());
+        assertEquals(Status.VALID, dataModel.getStatus());
+        assertTrue(dataModel.getGroups().containsAll(List.of("P1", "P2")));
+
+        var concept = result.getConceptInfo();
+        assertEquals("käsite", concept.getConceptLabel().get("fi"));
+        assertEquals("http://uri.suomi.fi/terminology/dd0e10ed/concept-1", concept.getConceptURI());
+        assertEquals("Testisanasto", concept.getTerminologyLabel().get("fi"));
     }
 
     private Model getOrgModel(){

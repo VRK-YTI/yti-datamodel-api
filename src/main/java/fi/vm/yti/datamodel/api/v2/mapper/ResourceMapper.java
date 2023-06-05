@@ -2,7 +2,7 @@ package fi.vm.yti.datamodel.api.v2.mapper;
 
 import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
-import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexResource;
+import fi.vm.yti.datamodel.api.v2.opensearch.index.*;
 import fi.vm.yti.security.YtiUser;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.rdf.model.Model;
@@ -11,6 +11,7 @@ import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.vocabulary.*;
 import org.topbraid.shacl.vocabulary.SH;
 
+import java.util.Map;
 import java.util.function.Consumer;
 
 public class ResourceMapper {
@@ -171,6 +172,44 @@ public class ResourceMapper {
 
         indexResource.setTargetClass(MapperUtils.propertyToString(resource, SH.targetClass));
 
+        return indexResource;
+    }
+
+    /**
+     * Map data model and concept information to search result
+     * @param resource data from index
+     * @param dataModels all data models
+     * @param concepts all concepts
+     * @return enriched data
+     */
+    public static IndexResourceInfo mapIndexResourceInfo(IndexResource resource, Map<String, IndexModel> dataModels, Model concepts) {
+        var indexResource = new IndexResourceInfo();
+        indexResource.setId(resource.getId());
+        indexResource.setLabel(resource.getLabel());
+        indexResource.setStatus(resource.getStatus());
+        indexResource.setNote(resource.getNote());
+        indexResource.setResourceType(resource.getResourceType());
+        indexResource.setNamespace(resource.getNamespace());
+        indexResource.setIdentifier(resource.getIdentifier());
+
+        var dataModel = dataModels.get(resource.getIsDefinedBy());
+        var dataModelInfo = new DatamodelInfo();
+        dataModelInfo.setModelType(dataModel.getType());
+        dataModelInfo.setStatus(dataModel.getStatus());
+        dataModelInfo.setLabel(dataModel.getLabel());
+        dataModelInfo.setGroups(dataModel.getIsPartOf());
+        indexResource.setDataModelInfo(dataModelInfo);
+
+        if (resource.getSubject() != null) {
+            var conceptResource = concepts.getResource(resource.getSubject());
+            var terminologyResource = concepts.getResource(MapperUtils.propertyToString(conceptResource, SKOS.inScheme));
+
+            var conceptInfo = new ConceptInfo();
+            conceptInfo.setConceptURI(conceptResource.getURI());
+            conceptInfo.setTerminologyLabel(MapperUtils.localizedPropertyToMap(terminologyResource, RDFS.label));
+            conceptInfo.setConceptLabel(MapperUtils.localizedPropertyToMap(conceptResource, SKOS.prefLabel));
+            indexResource.setConceptInfo(conceptInfo);
+        }
         return indexResource;
     }
 

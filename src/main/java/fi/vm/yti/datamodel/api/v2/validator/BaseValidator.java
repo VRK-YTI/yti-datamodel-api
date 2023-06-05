@@ -59,7 +59,7 @@ public abstract class BaseValidator implements Annotation{
     public void checkNote(ConstraintValidatorContext context, BaseDTO dto) {
         var notes = dto.getNote();
         if(notes != null){
-            notes.forEach((lang, value) -> checkCommonTextField(context, value, "note"));
+            notes.forEach((lang, value) -> checkCommonTextArea(context, value, "note"));
         }
     }
 

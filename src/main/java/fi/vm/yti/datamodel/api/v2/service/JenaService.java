@@ -4,6 +4,7 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
+import fi.vm.yti.datamodel.api.v2.utils.SparqlUtils;
 import org.apache.jena.arq.querybuilder.*;
 import org.apache.jena.atlas.web.HttpException;
 import org.apache.jena.graph.NodeFactory;
@@ -329,6 +330,14 @@ public class JenaService {
             .addWhere(res, OWL.versionInfo, status)
             .addWhere(inScheme, RDFS.label, terminologyLabel);
 
+        return conceptSparql.queryConstruct(builder.build());
+    }
+
+    public Model getAllConcepts() {
+        var builder = new ConstructBuilder().addPrefixes(ModelConstants.PREFIXES);
+        SparqlUtils.addConstructProperty("?concept", builder, SKOS.prefLabel, "?label");
+        SparqlUtils.addConstructProperty("?concept", builder, SKOS.inScheme, "?terminology");
+        SparqlUtils.addConstructProperty("?terminology", builder, RDFS.label, "?terminologyLabel");
         return conceptSparql.queryConstruct(builder.build());
     }
 

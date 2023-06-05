@@ -4,13 +4,12 @@ import fi.vm.yti.datamodel.api.index.OpenSearchConnector;
 import fi.vm.yti.datamodel.api.v2.dto.ModelType;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.OpenSearchException;
 import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
+import fi.vm.yti.datamodel.api.v2.mapper.ResourceMapper;
 import fi.vm.yti.datamodel.api.v2.opensearch.dto.CountSearchResponse;
 import fi.vm.yti.datamodel.api.v2.opensearch.dto.ModelSearchRequest;
 import fi.vm.yti.datamodel.api.v2.opensearch.dto.ResourceSearchRequest;
 import fi.vm.yti.datamodel.api.v2.opensearch.dto.SearchResponseDTO;
-import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexModel;
-import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexResource;
-import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
+import fi.vm.yti.datamodel.api.v2.opensearch.index.*;
 import fi.vm.yti.datamodel.api.v2.opensearch.queries.CountQueryFactory;
 import fi.vm.yti.datamodel.api.v2.opensearch.queries.ModelQueryFactory;
 import fi.vm.yti.datamodel.api.v2.opensearch.queries.QueryFactoryUtils;
@@ -67,7 +66,7 @@ public class SearchIndexService {
             var modelSearchResponse = new SearchResponseDTO<IndexModel>();
             modelSearchResponse.setResponseObjects(response.hits().hits().stream()
                     .map(Hit::source)
-                    .collect(Collectors.toList())
+                    .toList()
             );
             modelSearchResponse.setTotalHitCount(response.hits().total().value());
             modelSearchResponse.setPageFrom(request.getPageFrom());
@@ -94,6 +93,27 @@ public class SearchIndexService {
                         .map(hit -> hit.source().getId()).collect(Collectors.toSet());
         }
         return searchInternalResources(request, allowedDatamodels);
+    }
+
+    public SearchResponseDTO<IndexResourceInfo> searchInternalResourcesWithInfo(ResourceSearchRequest request, YtiUser user) throws IOException {
+        var dto = searchInternalResources(request, user);
+        var dataModels = new HashMap<String, IndexModel>();
+
+        var modelRequest = new ModelSearchRequest();
+        modelRequest.setPageSize(1000);
+
+        searchModels(modelRequest, user).getResponseObjects()
+                .forEach(o -> dataModels.put(o.getId(), o));
+        var concepts = jenaService.getAllConcepts();
+
+        var response = new SearchResponseDTO<IndexResourceInfo>();
+        response.setTotalHitCount(dto.getTotalHitCount());
+        response.setPageSize(dto.getPageSize());
+        response.setPageFrom(dto.getPageFrom());
+        response.setResponseObjects(dto.getResponseObjects().stream()
+                .map(obj -> ResourceMapper.mapIndexResourceInfo(obj, dataModels, concepts))
+                .toList());
+        return response;
     }
 
     /**
