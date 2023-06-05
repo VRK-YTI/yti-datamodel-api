@@ -1,5 +1,6 @@
 package fi.vm.yti.datamodel.api.v2.opensearch.queries;
 
+import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
 import fi.vm.yti.datamodel.api.v2.dto.ResourceType;
 import fi.vm.yti.datamodel.api.v2.dto.Status;
 import fi.vm.yti.datamodel.api.v2.opensearch.dto.ResourceSearchRequest;
@@ -13,8 +14,10 @@ import org.opensearch.client.opensearch._types.query_dsl.QueryBuilders;
 import org.opensearch.client.opensearch.core.SearchRequest;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static fi.vm.yti.datamodel.api.v2.opensearch.OpenSearchUtil.logPayload;
 
@@ -44,14 +47,16 @@ public class ResourceQueryFactory {
             must.add(QueryFactoryUtils.termsQuery("status", statuses.stream().map(Status::name).toList()));
         }
 
-        if(fromNamespaces != null && !fromNamespaces.isEmpty()){
-            must.add(QueryFactoryUtils.termsQuery("isDefinedBy", fromNamespaces));
+        Set<String> isDefinedByCondition;
+        if(fromNamespaces != null && !fromNamespaces.isEmpty()) {
+            isDefinedByCondition = fromNamespaces.stream()
+                    .filter(ns -> !ns.startsWith(ModelConstants.SUOMI_FI_NAMESPACE) || restrictedDataModels.contains(ns))
+                    .collect(Collectors.toSet());
+        } else {
+            isDefinedByCondition = new HashSet<>(restrictedDataModels);
         }
-        //TODO it would be great if we could combine these 2 terms queries.
-        //Basically just need to combine the list so that it contains the intersecting strings
-        if(restrictedDataModels != null && !restrictedDataModels.isEmpty()){
-            must.add(QueryFactoryUtils.termsQuery("isDefinedBy", restrictedDataModels));
-        }
+
+        must.add(QueryFactoryUtils.termsQuery("isDefinedBy", isDefinedByCondition));
 
         var types = request.getResourceTypes();
         if(types != null && !types.isEmpty()){
@@ -75,10 +80,18 @@ public class ResourceQueryFactory {
                 .unmappedType(FieldType.Keyword)
                 .build();
 
+        var indices = new ArrayList<String>();
+        var hasExternalNamespaces = isDefinedByCondition.stream()
+                .anyMatch(ns -> !ns.startsWith(ModelConstants.SUOMI_FI_NAMESPACE));
+        indices.add(OpenSearchIndexer.OPEN_SEARCH_INDEX_RESOURCE);
+        if (hasExternalNamespaces) {
+            indices.add(OpenSearchIndexer.OPEN_SEARCH_INDEX_EXTERNAL);
+        }
+
         SearchRequest sr = new SearchRequest.Builder()
                 .from(QueryFactoryUtils.pageFrom(request.getPageFrom()))
                 .size(QueryFactoryUtils.pageSize(request.getPageSize()))
-                .index(OpenSearchIndexer.OPEN_SEARCH_INDEX_RESOURCE)
+                .index(indices)
                 .query(finalQuery)
                 .sort(SortOptions.of(sortOptions -> sortOptions.field(sort)))
                 .build();

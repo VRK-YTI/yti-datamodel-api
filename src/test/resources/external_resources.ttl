@@ -1,0 +1,29 @@
+@prefix oa: <http://www.w3.org/ns/oa#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+
+oa:exact a rdf:Property ;
+    rdfs:label "exact" ;
+    rdfs:comment "Test comment exact" ;
+    rdfs:isDefinedBy oa: ;
+    rdfs:range xsd:string .
+
+oa:hasEndSelector a rdf:Property ;
+    rdfs:label "hasEndSelector" ;
+    rdfs:comment "Test comment hasEndSelector" ;
+    rdfs:domain oa:RangeSelector ;
+    rdfs:isDefinedBy oa: ;
+    rdfs:range oa:Selector .
+
+oa:describing a oa:Motivation ;
+    rdfs:label "Label describing" ;
+    rdfs:comment "Test comment describing" ;
+    rdfs:isDefinedBy oa: .
+
+oa:Motivation a rdfs:Class ;
+    rdfs:label "Motivation" ;
+    rdfs:comment "Test comment Motivation" ;
+    rdfs:isDefinedBy oa: ;
+    rdfs:subClassOf skos:Concept .

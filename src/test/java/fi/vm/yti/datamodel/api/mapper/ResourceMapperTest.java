@@ -667,6 +667,46 @@ class ResourceMapperTest {
         assertEquals("Testisanasto", concept.getTerminologyLabel().get("fi"));
     }
 
+    @Test
+    void testMapExternalIndexClasses() {
+        var model = MapperTestUtils.getModelFromFile("/external_resources.ttl");
+
+        var resource1 = model.getResource("http://www.w3.org/ns/oa#describing");
+        var resource2 = model.getResource("http://www.w3.org/ns/oa#Motivation");
+
+        var indexResource1 = ResourceMapper.mapExternalToIndexResource(model, resource1);
+        var indexResource2 = ResourceMapper.mapExternalToIndexResource(model, resource2);
+
+        assertNotNull(indexResource1);
+        assertNotNull(indexResource2);
+
+        assertEquals(ResourceType.CLASS, indexResource1.getResourceType());
+        assertEquals(ResourceType.CLASS, indexResource2.getResourceType());
+
+        assertEquals("http://www.w3.org/ns/oa#describing", indexResource1.getId());
+        assertEquals("describing", indexResource1.getIdentifier());
+        assertEquals("http://www.w3.org/ns/oa#", indexResource1.getNamespace());
+        assertEquals("http://www.w3.org/ns/oa#", indexResource1.getIsDefinedBy());
+        assertEquals("Label describing", indexResource1.getLabel().get("en"));
+        assertEquals("Test comment describing", indexResource1.getNote().get("en"));
+    }
+
+    @Test
+    void testMapExternalIndexResources() {
+        var model = MapperTestUtils.getModelFromFile("/external_resources.ttl");
+        var resource1 = model.getResource("http://www.w3.org/ns/oa#exact");
+        var resource2 = model.getResource("http://www.w3.org/ns/oa#hasEndSelector");
+
+        var indexResource1 = ResourceMapper.mapExternalToIndexResource(model, resource1);
+        var indexResource2 = ResourceMapper.mapExternalToIndexResource(model, resource2);
+
+        assertNotNull(indexResource1);
+        assertNotNull(indexResource2);
+
+        assertEquals(ResourceType.ATTRIBUTE, indexResource1.getResourceType());
+        assertEquals(ResourceType.ASSOCIATION, indexResource2.getResourceType());
+    }
+
     private Model getOrgModel(){
         var model = ModelFactory.createDefaultModel();
               model.createResource("urn:uuid:7d3a3c00-5a6b-489b-a3ed-63bb58c26a63")
