@@ -46,7 +46,9 @@ public class ResourceQueryFactory {
 
         // intersect allowed data model lists
         List<String> isDefinedByCondition = getIsDefinedByCondition(fromNamespaces, restrictedDataModels);
-        must.add(QueryFactoryUtils.termsQuery("isDefinedBy", isDefinedByCondition));
+        if (!isDefinedByCondition.isEmpty()) {
+            must.add(QueryFactoryUtils.termsQuery("isDefinedBy", isDefinedByCondition));
+        }
 
         var types = request.getResourceTypes();
         if(types != null && !types.isEmpty()){
