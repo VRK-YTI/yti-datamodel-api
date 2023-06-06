@@ -1,0 +1,105 @@
+{
+  "id": "http://json-schema.org/draft-04/schema#",
+  "$schema": "http://json-fsdfs.org/draft-04/schema#",
+  "type" : "integer",
+  "properties" : {
+    "creators" : {
+      "type" : "string"
+    },
+    "titles" : {
+      "title" : "Titles",
+      "type" : "array",
+      "items" : {
+        "type" : "object",
+        "properties" : {
+          "title" : {
+            "type" : "integer"
+          }
+        },
+        "additionalProperties" : false,
+        "required" : [ "title" ]
+      },
+      "minItems" : 1,
+      "uniqueItems" : true
+    },
+    "publication_date" : {
+      "type" : "string",
+      "format" : "date"
+    },
+    "disciplines" : {
+      "type" : "array",
+      "items" : {
+        "type" : "string"
+      },
+      "uniqueItems" : true
+    },
+    "language" : {
+      "type" : "string"
+    },
+    "descriptions" : {
+      "type" : "array",
+      "items" : {
+        "type" : "object",
+        "properties" : {
+          "description" : {
+            "type" : "string"
+          },
+          "description_type" : {
+            "title" : "Type",
+            "enum" : [ "Abstract", "Methods", "SeriesInformation", "TableOfContents", "TechnicalInfo", "Other" ]
+          }
+        },
+        "additionalProperties" : false,
+        "required" : [ "description", "description_type" ]
+      },
+      "uniqueItems" : true
+    },
+    "contact_email" : {
+      "type" : "string",
+      "format" : "email"
+    },
+    "open_access" : {
+      "type" : "boolean"
+    },
+    "embargo_date" : {
+      "type" : "string",
+      "format" : "date-time"
+    },
+    "license" : {
+      "type" : "object",
+      "properties" : {
+        "license" : {
+          "type" : "string"
+        },
+        "license_uri" : {
+          "title" : "License URL",
+          "type" : "string",
+          "format" : "uri"
+        }
+      },
+      "additionalProperties" : false,
+      "required" : [ "license" ]
+    },
+    "publication_state" : {
+      "title" : "Publication State",
+      "description" : "State of the publication workflow.",
+      "type" : "string",
+      "enum" : [ "draft", "submitted", "published" ]
+    },
+    "_pid" : {
+      "title" : "Persistent Identifiers",
+      "description" : "Array of persistent identifiers pointing to this record."
+    },
+    "_files" : {
+      "type" : "array"
+    }
+  },
+  "required" : [ "community", "titles", "open_access", "publication_state", "community_specific" ],
+  "additionalProperties" : false,
+  "b2share" : {
+    "presentation" : {
+      "major" : [ "community", "titles", "descriptions", "creators", "open_access", "embargo_date", "license", "disciplines", "keywords", "contact_email" ],
+      "minor" : [ "contributors", "resource_types", "alternate_identifiers", "version", "publisher", "language" ]
+    }
+  }
+}

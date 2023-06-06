@@ -147,7 +147,6 @@ public class SchemaService {
      */
 	public Model transformJSONSchemaToInternal(String schemaPID, byte[] data) throws Exception, IOException {
 		
-		// RDF model
 		Model model = ModelFactory.createDefaultModel();
 		
 		// ObjectMapper is required to parse the JSON data
@@ -155,15 +154,16 @@ public class SchemaService {
 		
 		JsonNode root = mapper.readTree(data);
 			
-		String metaSchemaPath = "schema_v4";
-//		String metaSchemaPath = "test_jsonschema_b2share.json";
+		String metaSchemaPath = "schema_v4"; // - our meta schema, validate against it.
+		// 										target schema === metaSchema. then we are changing input files – our schema
+		// String metaSchemaPath = "test_jsonschema_b2share.json";
 
 		InputStream metaSchemaInputStream = getClass().getClassLoader().getResourceAsStream(metaSchemaPath);
 		ValidationRecord validationRecord = JSONValidationService.validateJSON(metaSchemaInputStream, data);
 		metaSchemaInputStream.close();
 		
-		boolean validationStatus = validationRecord.status();
-		List<String> validationMessages = validationRecord.messages();
+		boolean validationStatus = validationRecord.isValid();
+		List<String> validationMessages = validationRecord.validationOutput();
 		
 		if (validationStatus) {
 			var modelResource = model.createResource(schemaPID);

@@ -24,13 +24,18 @@ public class JSONValidationService {
 		JsonNode validationSchemaNode = mapper.readTree(validationSchemaFile);
 		JsonNode metaSchemaNode = mapper.readTree(metaSchemaFile);
 		
+		boolean doSchemaVersionsMatch = metaSchemaNode.get("$schema").asText().equals(validationSchemaNode.get("$schema").asText());
+		
 		JsonSchema schema = schemaFactory.getSchema(metaSchemaNode);
 	    Set<ValidationMessage> validationResult = schema.validate(validationSchemaNode);
 	    
-	    if (validationResult.isEmpty()) {
-	        return new ValidationRecord(true, Arrays.asList("no validation errors :-)"));
+	    if (validationResult.isEmpty() & doSchemaVersionsMatch) {
+	        return new ValidationRecord(true, Arrays.asList());
 	    } else {	    	
 	    	List<String> errorMessages = new ArrayList<String> ();
+	    	
+	    	if (!doSchemaVersionsMatch) errorMessages.add("Schema versions don't match!");
+	    	
 	    	validationResult.forEach(vm -> errorMessages.add(vm.getMessage()));
 	    	return new ValidationRecord(false, errorMessages);
 	    }
