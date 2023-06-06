@@ -14,10 +14,8 @@ import org.opensearch.client.opensearch._types.query_dsl.QueryBuilders;
 import org.opensearch.client.opensearch.core.SearchRequest;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import static fi.vm.yti.datamodel.api.v2.opensearch.OpenSearchUtil.logPayload;
 
@@ -29,7 +27,6 @@ public class ResourceQueryFactory {
     public static SearchRequest createInternalResourceQuery(ResourceSearchRequest request, List<String> fromNamespaces, List<String> restrictedDataModels, Set<String> allowedDatamodels) {
         List<Query> must = new ArrayList<>();
         List<Query> should = new ArrayList<>();
-
 
         if(allowedDatamodels != null && !allowedDatamodels.isEmpty()){
             should.add(QueryFactoryUtils.termsQuery("isDefinedBy", allowedDatamodels));
@@ -47,15 +44,8 @@ public class ResourceQueryFactory {
             must.add(QueryFactoryUtils.termsQuery("status", statuses.stream().map(Status::name).toList()));
         }
 
-        Set<String> isDefinedByCondition;
-        if(fromNamespaces != null && !fromNamespaces.isEmpty()) {
-            isDefinedByCondition = fromNamespaces.stream()
-                    .filter(ns -> !ns.startsWith(ModelConstants.SUOMI_FI_NAMESPACE) || restrictedDataModels.contains(ns))
-                    .collect(Collectors.toSet());
-        } else {
-            isDefinedByCondition = new HashSet<>(restrictedDataModels);
-        }
-
+        // intersect allowed data model lists
+        List<String> isDefinedByCondition = getIsDefinedByCondition(fromNamespaces, restrictedDataModels);
         must.add(QueryFactoryUtils.termsQuery("isDefinedBy", isDefinedByCondition));
 
         var types = request.getResourceTypes();
@@ -108,6 +98,28 @@ public class ResourceQueryFactory {
                         .build()
                         ._toQuery())
                 .build();
+    }
+
+    /**
+     * Intersect allowed data model lists. Only checks models from Interoperability platform,
+     * external namespaces are always included.
+     * @param fromNamespaces namespaces added to current model
+     * @param restrictedDataModels models to include based on query by model type, status, group etc
+     * @return intersection of restricted models
+     */
+    private static List<String> getIsDefinedByCondition(List<String> fromNamespaces, List<String> restrictedDataModels) {
+        List<String> isDefinedByCondition;
+        if(fromNamespaces != null && !fromNamespaces.isEmpty()) {
+            isDefinedByCondition = restrictedDataModels.isEmpty()
+                    ? fromNamespaces
+                    : fromNamespaces.stream()
+                    .filter(ns -> !ns.startsWith(ModelConstants.SUOMI_FI_NAMESPACE)
+                            || restrictedDataModels.contains(ns))
+                    .toList();
+        } else {
+            isDefinedByCondition = restrictedDataModels;
+        }
+        return isDefinedByCondition;
     }
 
 }

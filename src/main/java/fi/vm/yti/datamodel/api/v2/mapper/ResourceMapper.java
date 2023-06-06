@@ -195,10 +195,15 @@ public class ResourceMapper {
 
         var dataModel = dataModels.get(resource.getIsDefinedBy());
         var dataModelInfo = new DatamodelInfo();
-        dataModelInfo.setModelType(dataModel.getType());
-        dataModelInfo.setStatus(dataModel.getStatus());
-        dataModelInfo.setLabel(dataModel.getLabel());
-        dataModelInfo.setGroups(dataModel.getIsPartOf());
+        if (dataModel != null) {
+            dataModelInfo.setModelType(dataModel.getType());
+            dataModelInfo.setStatus(dataModel.getStatus());
+            dataModelInfo.setLabel(dataModel.getLabel());
+            dataModelInfo.setGroups(dataModel.getIsPartOf());
+            dataModelInfo.setUri(resource.getIsDefinedBy());
+        } else {
+            dataModelInfo.setUri(resource.getIsDefinedBy());
+        }
         indexResource.setDataModelInfo(dataModelInfo);
 
         if (resource.getSubject() != null) {
