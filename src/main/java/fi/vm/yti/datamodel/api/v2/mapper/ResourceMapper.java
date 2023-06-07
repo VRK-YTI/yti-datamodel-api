@@ -6,6 +6,7 @@ import fi.vm.yti.datamodel.api.v2.opensearch.index.*;
 import fi.vm.yti.security.YtiUser;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.vocabulary.*;
@@ -194,10 +195,15 @@ public class ResourceMapper {
 
         var dataModel = dataModels.get(resource.getIsDefinedBy());
         var dataModelInfo = new DatamodelInfo();
-        dataModelInfo.setModelType(dataModel.getType());
-        dataModelInfo.setStatus(dataModel.getStatus());
-        dataModelInfo.setLabel(dataModel.getLabel());
-        dataModelInfo.setGroups(dataModel.getIsPartOf());
+        if (dataModel != null) {
+            dataModelInfo.setModelType(dataModel.getType());
+            dataModelInfo.setStatus(dataModel.getStatus());
+            dataModelInfo.setLabel(dataModel.getLabel());
+            dataModelInfo.setGroups(dataModel.getIsPartOf());
+            dataModelInfo.setUri(resource.getIsDefinedBy());
+        } else {
+            dataModelInfo.setUri(resource.getIsDefinedBy());
+        }
         indexResource.setDataModelInfo(dataModelInfo);
 
         if (resource.getSubject() != null) {
@@ -210,6 +216,38 @@ public class ResourceMapper {
             conceptInfo.setConceptLabel(MapperUtils.localizedPropertyToMap(conceptResource, SKOS.prefLabel));
             indexResource.setConceptInfo(conceptInfo);
         }
+        return indexResource;
+    }
+
+    public static IndexResource mapExternalToIndexResource(Model model, Resource resource) {
+        var indexResource = new IndexResource();
+
+        indexResource.setId(resource.getURI());
+        indexResource.setIdentifier(resource.getLocalName());
+        indexResource.setNamespace(resource.getNameSpace());
+        indexResource.setIsDefinedBy(MapperUtils.propertyToString(resource, RDFS.isDefinedBy));
+        indexResource.setStatus(Status.VALID);
+
+        if (resource.hasProperty(RDFS.comment)) {
+            indexResource.setNote(MapperUtils.localizedPropertyToMap(resource, RDFS.comment));
+        } else if (resource.hasProperty(SKOS.definition)) {
+            indexResource.setNote(MapperUtils.localizedPropertyToMap(resource, SKOS.definition));
+        }
+
+        if (resource.hasProperty(RDFS.label)) {
+            indexResource.setLabel(MapperUtils.localizedPropertyToMap(resource, RDFS.label));
+        } else if (resource.hasProperty(SKOS.prefLabel)) {
+            indexResource.setLabel(MapperUtils.localizedPropertyToMap(resource, SKOS.prefLabel));
+        } else {
+            return null;
+        }
+
+        var resourceType = getExternalResourceType(model, resource);
+        if (resourceType == null) {
+            return null;
+        }
+
+        indexResource.setResourceType(resourceType);
         return indexResource;
     }
 
@@ -337,4 +375,30 @@ public class ResourceMapper {
         }
     }
 
+    private static boolean hasLiteralRange(Resource resource) {
+        var range = resource.getProperty(RDFS.range);
+        if (range == null) {
+            return false;
+        }
+        var xsdNs = ModelConstants.PREFIXES.get("xsd");
+        return range.getObject().asResource().getNameSpace().equals(xsdNs);
+    }
+
+    private static ResourceType getExternalResourceType(Model model, Resource resource) {
+        if (MapperUtils.hasType(resource, OWL.DatatypeProperty, OWL.AnnotationProperty) || hasLiteralRange(resource)) {
+            // DatatypeProperties, AnnotationProperties and range with literal value (e.g. xsd:string)
+            return ResourceType.ATTRIBUTE;
+        } else if (MapperUtils.hasType(resource, OWL.ObjectProperty, RDF.Property)) {
+            // ObjectProperties and RDF properties if not matched in previous block
+            return ResourceType.ASSOCIATION;
+        } else if (MapperUtils.hasType(resource, OWL.Class, RDFS.Class, RDFS.Resource)) {
+            // OWL and RDFS classes and resources
+            return ResourceType.CLASS;
+        } else if (model.contains(resource.getProperty(RDF.type).getResource(), null, (RDFNode) null)) {
+            // Try to find type from current ontology
+            var typeResource = model.getResource(resource.getProperty(RDF.type).getResource().getURI());
+            return getExternalResourceType(model, typeResource);
+        }
+        return null;
+    }
 }
