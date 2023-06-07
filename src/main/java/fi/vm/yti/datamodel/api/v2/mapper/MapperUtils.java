@@ -1,17 +1,21 @@
 package fi.vm.yti.datamodel.api.v2.mapper;
 
-import fi.vm.yti.datamodel.api.v2.dto.ModelType;
+import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
+import fi.vm.yti.security.YtiUser;
+import org.apache.jena.datatypes.xsd.XSDDateTime;
 import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.shared.JenaException;
+import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDF;
 
 import java.util.*;
+import java.util.function.Consumer;
 
 public class MapperUtils {
 
@@ -47,7 +51,8 @@ public class MapperUtils {
     }
 
     /**
-     * Localized property to Map of (language, value)
+     * Localized property to Map of (language, value). If no language specified for property
+     * (e.g. external classes), handle that value as an english content
      * @param resource Resource to get property from
      * @param property Property type
      * @return Map of (language, value)
@@ -57,7 +62,11 @@ public class MapperUtils {
         resource.listProperties(property).forEach(prop -> {
             var lang = prop.getLanguage();
             var value = prop.getString();
-            map.put(lang, value);
+            if (lang == null || lang.trim().equals("")) {
+                map.put("en", value);
+            } else {
+                map.put(lang, value);
+            }
         });
         return map;
     }
@@ -170,6 +179,21 @@ public class MapperUtils {
         return object == null ? null : object.toString();
     }
 
+    public static <T> T getLiteral(Resource resource, Property property, Class<T> type) {
+        var prop = resource.getProperty(property);
+        if (prop == null){
+            return null;
+        }
+        var literal = prop.getLiteral();
+
+        if (type.equals(Integer.class)) {
+            return type.cast(literal.getInt());
+        } else if (type.equals(Boolean.class)) {
+            return type.cast(literal.getBoolean());
+        }
+        return null;
+    }
+
     /**
      * Update string property
      * If string is empty|blank value is removed
@@ -183,6 +207,18 @@ public class MapperUtils {
             if(!value.isBlank()){
                 resource.addProperty(property, value);
             }
+        }
+    }
+
+    public static void addLiteral(Resource resource, Property property, Object value) {
+        if (value != null) {
+            resource.addLiteral(property, value);
+        }
+    }
+    public static void updateLiteral(Resource resource, Property property, Object value){
+        if (value != null) {
+            resource.removeAll(property);
+            resource.addLiteral(property, value);
         }
     }
 
@@ -231,8 +267,8 @@ public class MapperUtils {
      * @param resourceUri Resource URI
      */
     public static void addResourceRelationship(Set<String> owlImports, Set<String> dcTermsRequires, Resource resource, Property property, String resourceUri){
-        var namespace = NodeFactory.createURI(resourceUri).getNameSpace().replace("#", "");
-        var ownNamespace = resource.getNameSpace().replace("#", "");
+        var namespace = NodeFactory.createURI(resourceUri).getNameSpace().replaceAll("/$", "");
+        var ownNamespace = resource.getNameSpace().replaceAll("/$", "");
         if(!ownNamespace.equals(namespace) &&!owlImports.contains(namespace) && !dcTermsRequires.contains(namespace)){
             throw new MappingError("Resource namespace not in owl:imports or dcterms:requires");
         }
@@ -249,8 +285,33 @@ public class MapperUtils {
         if (!resource.hasProperty(RDF.type)) {
             return false;
         }
+        var typeList = resource.listProperties(RDF.type).toList();
         return Arrays.stream(type)
-                .anyMatch(t -> t.equals(resource.getProperty(RDF.type).getResource()));
+                .anyMatch(t -> typeList.stream().anyMatch(r -> r.getResource().equals(t)));
+    }
+
+    public static boolean isApplicationProfile(Resource resource) {
+        return hasType(resource, DCAP.DCAP, ResourceFactory.createProperty("http://www.w3.org/2002/07/dcap#DCAP"));
+    }
+
+    public static boolean isOntology(Resource resource) {
+        return hasType(resource, OWL.Ontology);
+    }
+
+    public static void addCreationMetadata(Resource resource, YtiUser user) {
+        var creationDate = new XSDDateTime(Calendar.getInstance());
+        resource.addProperty(DCTerms.modified, ResourceFactory.createTypedLiteral(creationDate))
+                .addProperty(DCTerms.created, ResourceFactory.createTypedLiteral(creationDate))
+                .addProperty(Iow.creator, user.getId().toString())
+                .addProperty(Iow.modifier, user.getId().toString());
+    }
+
+    public static void addUpdateMetadata(Resource resource, YtiUser user) {
+        var updateDate = new XSDDateTime(Calendar.getInstance());
+        resource.removeAll(DCTerms.modified);
+        resource.addProperty(DCTerms.modified, ResourceFactory.createTypedLiteral(updateDate));
+        resource.removeAll(Iow.modifier);
+        resource.addProperty(Iow.modifier, user.getId().toString());
     }
     
     public static String getMSCRPrefix(String PID) {
@@ -269,4 +330,18 @@ public class MapperUtils {
     	return map;
     }
 
+    public static void mapCreationInfo(ResourceInfoBaseDTO dto,
+                                        Resource resource,
+                                        Consumer<ResourceCommonDTO> userMapper) {
+        var created = resource.getProperty(DCTerms.created).getLiteral().getString();
+        var modified = resource.getProperty(DCTerms.modified).getLiteral().getString();
+        dto.setCreated(created);
+        dto.setModified(modified);
+        dto.setCreator(new UserDTO(MapperUtils.propertyToString(resource, Iow.creator)));
+        dto.setModifier(new UserDTO(MapperUtils.propertyToString(resource, Iow.modifier)));
+
+        if (userMapper != null) {
+            userMapper.accept(dto);
+        }
+    }
 }

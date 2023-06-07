@@ -2,7 +2,6 @@ package fi.vm.yti.datamodel.api.v2.service;
 
 import static fi.vm.yti.datamodel.api.v2.dto.ModelConstants.*;
 
-import fi.vm.yti.datamodel.api.v2.dto.BaseDTO;
 import fi.vm.yti.datamodel.api.v2.dto.OrganizationDTO;
 import fi.vm.yti.datamodel.api.v2.dto.ServiceCategoryDTO;
 import fi.vm.yti.datamodel.api.v2.mapper.OrganizationMapper;
@@ -24,7 +23,11 @@ public class FrontendService {
         var organizations = jenaService.getOrganizations();
         var dtos = OrganizationMapper.mapToListOrganizationDTO(organizations);
 
-        sortByLabel(sortLanguage, dtos);
+        dtos.sort((a, b) -> {
+            var labelA = a.getLabel().getOrDefault(sortLanguage, a.getLabel().get(DEFAULT_LANGUAGE));
+            var labelB = b.getLabel().getOrDefault(sortLanguage, b.getLabel().get(DEFAULT_LANGUAGE));
+            return labelA.compareTo(labelB);
+        });
 
         return includeChildOrganizations ? dtos : dtos.stream()
                 .filter(dto -> dto.getParentOrganization() == null)
@@ -35,16 +38,12 @@ public class FrontendService {
         var serviceCategories = jenaService.getServiceCategories();
         var dtos = ServiceCategoryMapper.mapToListServiceCategoryDTO(serviceCategories);
 
-        sortByLabel(sortLanguage, dtos);
-
-        return dtos;
-    }
-
-    private void sortByLabel(@NotNull String sortLanguage, List<? extends BaseDTO> dtos) {
         dtos.sort((a, b) -> {
             var labelA = a.getLabel().getOrDefault(sortLanguage, a.getLabel().get(DEFAULT_LANGUAGE));
             var labelB = b.getLabel().getOrDefault(sortLanguage, b.getLabel().get(DEFAULT_LANGUAGE));
             return labelA.compareTo(labelB);
         });
+
+        return dtos;
     }
 }

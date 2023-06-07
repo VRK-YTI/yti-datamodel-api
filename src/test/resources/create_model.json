@@ -7,7 +7,7 @@
       "dcterms:language": {
         "@list": ["fi", "en", "sv"]
       },
-      "preferredXMLNamespaceName": "http://uri.suomi.fi/datamodel-v2/ns/test#",
+      "preferredXMLNamespaceName": "http://uri.suomi.fi/datamodel-v2/ns/test/",
       "preferredXMLNamespacePrefix": "test",
       "label": {
         "@language": "fi",
@@ -36,7 +36,7 @@
       "@id": "http://www.w3.org/2004/02/skos/core#prefLabel"
     },
     "parentOrganization": {
-      "@id": "http://uri.suomi.fi/datamodel/ns/iow#parentOrganization"
+      "@id": "http://uri.suomi.fi/datamodel/ns/iow/parentOrganization"
     },
     "versionInfo": {
       "@id": "http://www.w3.org/2002/07/owl#versionInfo"
@@ -81,7 +81,7 @@
     "xsd": "http://www.w3.org/2001/XMLSchema#",
     "skos": "http://www.w3.org/2004/02/skos/core#",
     "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
-    "iow": "http://uri.suomi.fi/datamodel/ns/iow#",
+    "iow": "http://uri.suomi.fi/datamodel/ns/iow/",
     "sd": "http://www.w3.org/ns/sparql-service-description#",
     "sh": "http://www.w3.org/ns/shacl#",
     "dcterms": "http://purl.org/dc/terms/",

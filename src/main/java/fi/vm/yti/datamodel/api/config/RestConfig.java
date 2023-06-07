@@ -44,7 +44,7 @@ public class RestConfig {
     }
 
     @Bean("uriResolveClient")
-    WebClient terminologyWebClient() {
+    WebClient uriResolveClient() {
         return WebClient.builder()
                 .defaultHeaders(headers -> headers.addAll(defaultHttpHeaders))
                 .baseUrl(resolveBase)

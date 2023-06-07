@@ -7,7 +7,6 @@ import fi.vm.yti.security.YtiUser;
 import org.apache.jena.arq.querybuilder.ConstructBuilder;
 import org.apache.jena.arq.querybuilder.WhereBuilder;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
-import org.apache.jena.datatypes.xsd.XSDDateTime;
 import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.query.Query;
 import org.apache.jena.rdf.model.Model;
@@ -19,7 +18,9 @@ import org.slf4j.LoggerFactory;
 import org.topbraid.shacl.vocabulary.SH;
 
 import java.util.ArrayList;
-import java.util.Calendar;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.Consumer;
 
 public class ClassMapper {
@@ -30,38 +31,47 @@ public class ClassMapper {
 
     private static final Logger logger = LoggerFactory.getLogger(ClassMapper.class);
 
-    public static String createClassAndMapToModel(String modelURI, Model model, ClassDTO dto, YtiUser user){
-        logger.info("Adding class to {}", modelURI);
+    private static Resource createResourceAndMapCommonInfo(Model model, String modelURI, BaseDTO dto) {
         var modelResource = model.getResource(modelURI);
-        var creationDate = new XSDDateTime(Calendar.getInstance());
-        var classUri = modelURI + "#" + dto.getIdentifier();
-        var classResource = model.createResource(classUri)
+        var classUri = modelURI + ModelConstants.RESOURCE_SEPARATOR + dto.getIdentifier();
+        var resource = model.createResource(classUri)
                 .addProperty(OWL.versionInfo, dto.getStatus().name())
-                .addProperty(DCTerms.modified, ResourceFactory.createTypedLiteral(creationDate))
-                .addProperty(DCTerms.created, ResourceFactory.createTypedLiteral(creationDate))
-                .addProperty(Iow.creator, user.getId().toString())
-                .addProperty(Iow.modifier, user.getId().toString());
+                .addProperty(RDFS.isDefinedBy, modelResource)
+                .addProperty(DCTerms.identifier, ResourceFactory.createTypedLiteral(dto.getIdentifier(), XSDDatatype.XSDNCName));
 
         var langs = MapperUtils.arrayPropertyToSet(modelResource, DCTerms.language);
-
-        var modelType = MapperUtils.getModelTypeFromResource(modelResource);
-        if(modelType.equals(ModelType.LIBRARY)){
-            classResource.addProperty(RDF.type, OWL.Class);
-            MapperUtils.addLocalizedProperty(langs, dto.getNote(), classResource, SKOS.note, model);
-            MapperUtils.addOptionalStringProperty(classResource, SKOS.editorialNote, dto.getEditorialNote());
-        }else{
-            classResource.addProperty(RDF.type, SH.NodeShape);
-            classResource.addProperty(SH.targetClass, ResourceFactory.createResource(dto.getTargetClass()));
-            MapperUtils.addLocalizedProperty(langs, dto.getNote(), classResource, SH.description, model);
-            MapperUtils.addOptionalStringProperty(classResource, DCTerms.description, dto.getEditorialNote());
-        }
-
-        classResource.addProperty(RDFS.isDefinedBy, modelResource);
-        classResource.addProperty(DCTerms.identifier, ResourceFactory.createTypedLiteral(dto.getIdentifier(), XSDDatatype.XSDNCName));
         //Labels
-        MapperUtils.addLocalizedProperty(langs, dto.getLabel(), classResource, RDFS.label, model);
-        //Note
-        MapperUtils.addOptionalUriProperty(classResource, DCTerms.subject, dto.getSubject());
+        MapperUtils.addLocalizedProperty(langs, dto.getLabel(), resource, RDFS.label, model);
+        //Concept from terminology
+        MapperUtils.addOptionalUriProperty(resource, DCTerms.subject, dto.getSubject());
+        MapperUtils.addLocalizedProperty(langs, dto.getNote(), resource, RDFS.comment, model);
+        MapperUtils.addOptionalStringProperty(resource, SKOS.editorialNote, dto.getEditorialNote());
+
+        return resource;
+    }
+
+    private static void updateResourceAndMapCommon(Model model, String graph, Resource classResource, BaseDTO dto) {
+        var modelResource = model.getResource(graph);
+        var languages = MapperUtils.arrayPropertyToSet(modelResource, DCTerms.language);
+
+        MapperUtils.updateLocalizedProperty(languages, dto.getLabel(), classResource, RDFS.label, model);
+        MapperUtils.updateLocalizedProperty(languages, dto.getNote(), classResource, RDFS.comment, model);
+        MapperUtils.updateUriProperty(classResource, DCTerms.subject, dto.getSubject());
+        MapperUtils.updateStringProperty(classResource, SKOS.editorialNote, dto.getEditorialNote());
+        var status = dto.getStatus();
+        if (status != null) {
+            MapperUtils.updateStringProperty(classResource, OWL.versionInfo, status.name());
+        }
+    }
+
+    public static String createOntologyClassAndMapToModel(String modelURI, Model model, ClassDTO dto, YtiUser user) {
+        logger.info("Adding class to {}", modelURI);
+        var modelResource = model.getResource(modelURI);
+
+        var classResource = createResourceAndMapCommonInfo(model, modelURI, dto);
+        MapperUtils.addCreationMetadata(classResource, user);
+
+        classResource.addProperty(RDF.type, OWL.Class);
 
         var owlImports = MapperUtils.arrayPropertyToSet(modelResource, OWL.imports);
         var dcTermsRequires = MapperUtils.arrayPropertyToSet(modelResource, DCTerms.requires);
@@ -75,34 +85,76 @@ public class ClassMapper {
         }else{
             dto.getSubClassOf().forEach(sub -> MapperUtils.addResourceRelationship(owlImports, dcTermsRequires, classResource, RDFS.subClassOf, sub));
         }
-
         modelResource.addProperty(DCTerms.hasPart, classResource);
-
-        return classUri;
+        return classResource.getURI();
     }
 
-    public static void mapToUpdateClass(Model model, String graph, Resource classResource, ClassDTO classDTO, YtiUser user) {
+    public static String createNodeShapeAndMapToModel(String modelURI, Model model, NodeShapeDTO dto, YtiUser user) {
+        logger.info("Adding node shape to {}", modelURI);
+
+        var nodeShapeResource = createResourceAndMapCommonInfo(model, modelURI, dto);
+        MapperUtils.addCreationMetadata(nodeShapeResource, user);
+
+        nodeShapeResource.addProperty(RDF.type, SH.NodeShape);
+        MapperUtils.addOptionalUriProperty(nodeShapeResource, SH.targetClass, dto.getTargetClass());
+        MapperUtils.addOptionalUriProperty(nodeShapeResource, SH.node, dto.getTargetNode());
+
+        return nodeShapeResource.getURI();
+    }
+
+    public static List<String> mapPlaceholderPropertyShapes(Model applicationProfileModel, String classURI,
+                                                            Model propertiesModel, YtiUser user) {
+        var iterator = propertiesModel.listSubjects();
+        var classResource = applicationProfileModel.getResource(classURI);
+        var propertyResourceURIs = new ArrayList<String>();
+        while (iterator.hasNext()) {
+            var uri = iterator.next().getURI();
+            var identifier = NodeFactory.createURI(uri).getLocalName();
+            var targetResource = propertiesModel.getResource(uri);
+            var propertyShapeResource = applicationProfileModel.createResource(classResource.getNameSpace() + identifier);
+            var label = targetResource.getProperty(RDFS.label);
+
+            if (label != null) {
+                // external class labels are defined often in only one language
+                if (label.getLanguage().equals("")) {
+                    MapperUtils.addLocalizedProperty(Set.of("en"),
+                            Map.of("en", label.getObject().toString()),
+                            propertyShapeResource,
+                            RDFS.label,
+                            applicationProfileModel);
+                } else {
+                    propertyShapeResource.addProperty(RDFS.label, label.getObject());
+                }
+            }
+
+            propertyShapeResource.addProperty(SH.path, ResourceFactory.createResource(uri))
+                    .addProperty(DCTerms.identifier, ResourceFactory.createTypedLiteral(identifier, XSDDatatype.XSDNCName))
+                    .addProperty(RDF.type, SH.PropertyShape)
+                    .addProperty(RDF.type, targetResource.getProperty(RDF.type).getObject())
+                    .addProperty(RDFS.isDefinedBy, classResource.getProperty(RDFS.isDefinedBy).getObject())
+                    .addProperty(OWL.versionInfo, Status.DRAFT.name());
+
+            MapperUtils.addCreationMetadata(propertyShapeResource, user);
+
+            classResource.addProperty(SH.property, propertyShapeResource);
+            propertyResourceURIs.add(propertyShapeResource.getURI());
+        }
+        return propertyResourceURIs;
+    }
+
+    public static void mapReferencePropertyShapes(Model model, String classURI, Model referencePropertyModel) {
+        var classRes = model.getResource(classURI);
+
+        referencePropertyModel.listSubjects().forEach(
+                (var resource) -> classRes.addProperty(SH.property, ResourceFactory.createResource(resource.getURI()))
+        );
+    }
+
+    public static void mapToUpdateOntologyClass(Model model, String graph, Resource classResource, ClassDTO classDTO, YtiUser user) {
         logger.info("Updating class in graph {}", graph);
-        var updateDate = new XSDDateTime(Calendar.getInstance());
         var modelResource = model.getResource(graph);
-        var languages = MapperUtils.arrayPropertyToSet(modelResource, DCTerms.language);
 
-        var modelType = MapperUtils.getModelTypeFromResource(modelResource);
-        if(modelType.equals(ModelType.LIBRARY)){
-            MapperUtils.updateLocalizedProperty(languages, classDTO.getNote(), classResource, SKOS.note, model);
-            MapperUtils.updateStringProperty(classResource, SKOS.editorialNote, classDTO.getEditorialNote());
-        }else{
-            MapperUtils.updateUriProperty(classResource, SH.targetClass, classDTO.getTargetClass());
-            MapperUtils.updateLocalizedProperty(languages, classDTO.getNote(), classResource, SH.description, model);
-            MapperUtils.updateStringProperty(classResource, DCTerms.description, classDTO.getEditorialNote());
-        }
-        MapperUtils.updateLocalizedProperty(languages, classDTO.getLabel(), classResource, RDFS.label, model);
-        MapperUtils.updateUriProperty(classResource, DCTerms.subject, classDTO.getSubject());
-
-        var status = classDTO.getStatus();
-        if (status != null) {
-            MapperUtils.updateStringProperty(classResource, OWL.versionInfo, status.name());
-        }
+        updateResourceAndMapCommon(model, graph, classResource, classDTO);
 
         var owlImports = MapperUtils.arrayPropertyToSet(modelResource, OWL.imports);
         var dcTermsRequires = MapperUtils.arrayPropertyToSet(modelResource, DCTerms.requires);
@@ -122,10 +174,47 @@ public class ClassMapper {
                 subClassOf.forEach(sub -> MapperUtils.addResourceRelationship(owlImports, dcTermsRequires, classResource, RDFS.subClassOf, sub));
             }
         }
-        classResource.removeAll(DCTerms.modified);
-        classResource.addProperty(DCTerms.modified, ResourceFactory.createTypedLiteral(updateDate));
-        classResource.removeAll(Iow.modifier);
-        classResource.addProperty(Iow.modifier, user.getId().toString());
+        MapperUtils.addUpdateMetadata(classResource, user);
+    }
+
+    public static void mapToUpdateNodeShape(Model model, String graph, Resource classResource, NodeShapeDTO nodeShapeDTO, YtiUser user) {
+        logger.info("Updating node shape in graph {}", graph);
+
+        updateResourceAndMapCommon(model, graph, classResource, nodeShapeDTO);
+        MapperUtils.updateUriProperty(classResource, SH.targetClass, nodeShapeDTO.getTargetClass());
+        MapperUtils.updateUriProperty(classResource, SH.node, nodeShapeDTO.getTargetNode());
+        if (nodeShapeDTO.getProperties() != null) {
+            classResource.removeAll(SH.property);
+            nodeShapeDTO.getProperties().forEach(property -> classResource.addProperty(SH.property, ResourceFactory.createResource(property)));
+        }
+        MapperUtils.addUpdateMetadata(classResource, user);
+    }
+
+    private static void mapCommonInfoDTO(ResourceInfoBaseDTO dto,
+                                            Resource resource,
+                                            Resource modelResource,
+                                            Model orgModel,
+                                            boolean hasRightToModel) {
+
+        dto.setUri(resource.getURI());
+        dto.setLabel(MapperUtils.localizedPropertyToMap(resource, RDFS.label));
+        dto.setStatus(Status.valueOf(MapperUtils.propertyToString(resource, OWL.versionInfo)));
+
+        var subject = MapperUtils.propertyToString(resource, DCTerms.subject);
+        if (subject != null) {
+            var conceptDTO = new ConceptDTO();
+            conceptDTO.setConceptURI(subject);
+            dto.setSubject(conceptDTO);
+        }
+        dto.setIdentifier(resource.getLocalName());
+        if (hasRightToModel) {
+            dto.setEditorialNote(MapperUtils.propertyToString(resource, SKOS.editorialNote));
+        }
+
+        var contributors = MapperUtils.arrayPropertyToSet(modelResource, DCTerms.contributor);
+        dto.setContributor(OrganizationMapper.mapOrganizationsToDTO(contributors, orgModel));
+        dto.setContact(MapperUtils.propertyToString(modelResource, Iow.contact));
+        dto.setNote(MapperUtils.localizedPropertyToMap(resource, RDFS.comment));
     }
 
     /**
@@ -142,59 +231,58 @@ public class ClassMapper {
                                              String classIdentifier,
                                              Model orgModel,
                                              boolean hasRightToModel,
-                                             Consumer<ResourceInfoBaseDTO> userMapper){
+                                             Consumer<ResourceCommonDTO> userMapper){
         var dto = new ClassInfoDTO();
-        var classUri = modelUri + "#" + classIdentifier;
+        var classUri = modelUri + ModelConstants.RESOURCE_SEPARATOR + classIdentifier;
         var classResource = model.getResource(classUri);
-        dto.setUri(classUri);
-        dto.setLabel(MapperUtils.localizedPropertyToMap(classResource, RDFS.label));
-        dto.setStatus(Status.valueOf(MapperUtils.propertyToString(classResource, OWL.versionInfo)));
+        var modelResource = model.getResource(modelUri);
+
+        mapCommonInfoDTO(dto, classResource, modelResource, orgModel, hasRightToModel);
+        MapperUtils.mapCreationInfo(dto, classResource, userMapper);
+
         dto.setSubClassOf(MapperUtils.arrayPropertyToSet(classResource, RDFS.subClassOf));
         dto.setEquivalentClass(MapperUtils.arrayPropertyToSet(classResource, OWL.equivalentClass));
-        var subject = MapperUtils.propertyToString(classResource, DCTerms.subject);
-        if (subject != null) {
-            var conceptDTO = new ConceptDTO();
-            conceptDTO.setConceptURI(subject);
-            dto.setSubject(conceptDTO);
-        }
-        dto.setIdentifier(classResource.getLocalName());
-        if (hasRightToModel) {
-            dto.setEditorialNote(MapperUtils.propertyToString(classResource, SKOS.editorialNote));
-        }
-        dto.setTargetClass(MapperUtils.propertyToString(classResource, SH.targetClass));
 
-        var created = classResource.getProperty(DCTerms.created).getLiteral().getString();
-        var modified = classResource.getProperty(DCTerms.modified).getLiteral().getString();
-        dto.setCreated(created);
-        dto.setModified(modified);
-        var modelResource = model.getResource(modelUri);
-        var modelType = MapperUtils.getModelTypeFromResource(modelResource);
-        if(modelType.equals(ModelType.LIBRARY)){
-            dto.setNote(MapperUtils.localizedPropertyToMap(classResource, SKOS.note));
-            MapperUtils.addOptionalStringProperty(classResource, SKOS.editorialNote, dto.getEditorialNote());
-        }else{
-            dto.setNote(MapperUtils.localizedPropertyToMap(classResource, SH.description));
-            MapperUtils.addOptionalStringProperty(classResource, DCTerms.description, dto.getEditorialNote());
-        }
-        var contributors = MapperUtils.arrayPropertyToSet(modelResource, DCTerms.contributor);
-        dto.setContributor(OrganizationMapper.mapOrganizationsToDTO(contributors, orgModel));
-        dto.setContact(MapperUtils.propertyToString(modelResource, Iow.contact));
-        dto.setCreator(new UserDTO(MapperUtils.propertyToString(modelResource, Iow.creator)));
-        dto.setModifier(new UserDTO(MapperUtils.propertyToString(modelResource, Iow.modifier)));
-
-        if (userMapper != null) {
-            userMapper.accept(dto);
-        }
         return dto;
     }
 
-    public static Query getClassResourcesQuery(String classUri){
+    public static NodeShapeInfoDTO mapToNodeShapeDTO(Model model, String modelUri,
+                                                     String identifier,
+                                                     Model orgModel,
+                                                     boolean hasRightToModel,
+                                                     Consumer<ResourceCommonDTO> userMapper) {
+        var dto = new NodeShapeInfoDTO();
+        var nodeShapeURI = modelUri + ModelConstants.RESOURCE_SEPARATOR + identifier;
+        var nodeShapeResource = model.getResource(nodeShapeURI);
+        var modelResource = model.getResource(modelUri);
+
+        mapCommonInfoDTO(dto, nodeShapeResource, modelResource, orgModel, hasRightToModel);
+        MapperUtils.mapCreationInfo(dto, nodeShapeResource, userMapper);
+
+        dto.setTargetClass(MapperUtils.propertyToString(nodeShapeResource, SH.targetClass));
+        dto.setTargetNode(MapperUtils.propertyToString(nodeShapeResource, SH.node));
+
+        return dto;
+    }
+
+    public static ExternalClassDTO mapExternalClassToDTO(Model model, String uri) {
+        var resource = model.getResource(uri);
+
+        var dto = new ExternalClassDTO();
+        dto.setUri(uri);
+        dto.setLabel(MapperUtils.localizedPropertyToMap(resource, RDFS.label));
+        return dto;
+    }
+
+    public static Query getClassResourcesQuery(String classUri, boolean isExternal){
         var constructBuilder = new ConstructBuilder();
         var resourceName = "?resource";
         var uri = NodeFactory.createURI(classUri);
         SparqlUtils.addConstructProperty(resourceName, constructBuilder, RDF.type, "?type");
         SparqlUtils.addConstructProperty(resourceName, constructBuilder, RDFS.label, "?label");
-        SparqlUtils.addConstructProperty(resourceName, constructBuilder, DCTerms.identifier, "?identifier");
+        if (!isExternal) {
+            SparqlUtils.addConstructProperty(resourceName, constructBuilder, DCTerms.identifier, "?identifier");
+        }
         SparqlUtils.addConstructProperty(resourceName, constructBuilder, RDFS.isDefinedBy, "?isDefinedBy");
         var domainQuery = new WhereBuilder().addWhere(resourceName, RDFS.domain, uri)
                 .addWhere(resourceName, RDFS.domain, "?domain");
@@ -203,6 +291,19 @@ public class ClassMapper {
         constructBuilder.addWhere(domainQuery.addUnion(rangeQuery))
                 .addConstruct(resourceName, RDFS.range, "?range")
                 .addConstruct(resourceName, RDFS.domain, "?domain");
+        return constructBuilder.build();
+    }
+
+    public static Query getNodeShapeResourcesQuery(String nodeShapeURI) {
+        var constructBuilder = new ConstructBuilder();
+        var resourceName = "?resource";
+        var uri = NodeFactory.createURI(nodeShapeURI);
+        SparqlUtils.addConstructProperty(resourceName, constructBuilder, RDF.type, "?type");
+        SparqlUtils.addConstructProperty(resourceName, constructBuilder, RDFS.label, "?label");
+        SparqlUtils.addConstructOptional(resourceName, constructBuilder, DCTerms.identifier, "?identifier");
+        SparqlUtils.addConstructProperty(resourceName, constructBuilder, RDFS.isDefinedBy, "?isDefinedBy");
+        constructBuilder.addWhere(uri, SH.property, resourceName);
+
         return constructBuilder.build();
     }
 
@@ -230,4 +331,74 @@ public class ClassMapper {
         });
     }
 
+    public static void addNodeShapeResourcesToDTO(Model model, Model propertyShapeResources, NodeShapeInfoDTO nodeShapeDTO) {
+        var deactivatedURIs = model.listSubjectsWithProperty(SH.deactivated)
+                .mapWith(Resource::getURI).toList();
+
+        propertyShapeResources.listSubjects().forEach(resource -> {
+            var dto = new SimplePropertyShapeDTO();
+            var uri = NodeFactory.createURI(resource.getURI());
+
+            var modelUri = MapperUtils.propertyToString(resource, RDFS.isDefinedBy);
+            if (modelUri == null) {
+                throw new MappingError("ModelUri null for resource");
+            }
+            dto.setUri(resource.getURI());
+            dto.setModelId(MapperUtils.getModelIdFromNamespace(modelUri));
+            dto.setLabel(MapperUtils.localizedPropertyToMap(resource, RDFS.label));
+            dto.setIdentifier(uri.getLocalName());
+            dto.setDeactivated(deactivatedURIs.contains(resource.getURI()));
+            if (MapperUtils.hasType(resource, OWL.DatatypeProperty)) {
+                nodeShapeDTO.getAttribute().add(dto);
+            } else if (MapperUtils.hasType(resource, OWL.ObjectProperty)) {
+                nodeShapeDTO.getAssociation().add(dto);
+            }
+        });
+    }
+
+    public static void addExternalClassResourcesToDTO(Model classResources, ExternalClassDTO dto) {
+        var associations = new ArrayList<ExternalResourceDTO>();
+        var attributes = new ArrayList<ExternalResourceDTO>();
+
+        classResources.listSubjects().forEach(res -> {
+            var resourceDTO = new ExternalResourceDTO();
+            resourceDTO.setUri(res.getURI());
+            resourceDTO.setLabel(MapperUtils.localizedPropertyToMap(res, RDFS.label));
+            if (MapperUtils.hasType(res, OWL.ObjectProperty)) {
+                associations.add(resourceDTO);
+            } else if (MapperUtils.hasType(res, OWL.DatatypeProperty)) {
+                attributes.add(resourceDTO);
+            }
+        });
+        dto.setAttributes(attributes);
+        dto.setAssociations(associations);
+    }
+
+    public static void toggleAndMapDeactivatedProperty(Model model, String propertyURI) {
+        var resource = model.getResource(propertyURI);
+        if (!MapperUtils.hasType(resource, SH.PropertyShape, SH.NodeShape)) {
+            throw new MappingError("Resource must be NodeShape or PropertyShape");
+        }
+        if (resource.hasProperty(SH.deactivated)) {
+            resource.removeAll(SH.deactivated);
+        } else {
+            resource.addLiteral(SH.deactivated, true);
+        }
+    }
+
+    public static void mapAppendNodeShapeProperty(Resource classResource, String propertyURI,
+                                                  Set<String> restrictedProperties) {
+        if (restrictedProperties.contains(propertyURI) || !MapperUtils.hasType(classResource, SH.NodeShape)) {
+            throw new MappingError("Resource is not sh:PropertyShape or property already exists");
+        }
+        classResource.addProperty(SH.property, ResourceFactory.createResource(propertyURI));
+    }
+
+    public static void mapRemoveNodeShapeProperty(Model model, Resource classResource, String propertyURI,
+                                                  Set<String> restrictedProperties) {
+        if (restrictedProperties.contains(propertyURI) || !MapperUtils.hasType(classResource, SH.NodeShape)) {
+            throw new MappingError("Resource is not sh:PropertyShape or property is added from sh:node reference");
+        }
+        model.remove(ResourceFactory.createStatement(classResource, SH.property, ResourceFactory.createResource(propertyURI)));
+    }
 }

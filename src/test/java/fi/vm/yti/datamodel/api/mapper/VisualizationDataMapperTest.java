@@ -27,7 +27,7 @@ class VisualizationDataMapperTest {
     @Autowired
     VisualizationMapper mapper;
     
-    String defaultNamespace = "http://custom.resolver.fi/datamodel/ns/";
+    String defaultNamespace = "http://uri.suomi.fi/datamodel/ns/";
 
     @BeforeEach
     public void init(){    	

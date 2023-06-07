@@ -2,10 +2,11 @@ package fi.vm.yti.datamodel.api.v2.endpoint;
 
 import fi.vm.yti.datamodel.api.security.AuthorizationManager;
 import fi.vm.yti.datamodel.api.v2.dto.*;
-import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
-import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexModel;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
 import fi.vm.yti.datamodel.api.v2.mapper.ModelMapper;
+import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexModel;
+import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
+import fi.vm.yti.datamodel.api.v2.service.CodeListService;
 import fi.vm.yti.datamodel.api.v2.service.GroupManagementService;
 import fi.vm.yti.datamodel.api.v2.service.JenaService;
 import fi.vm.yti.datamodel.api.v2.service.TerminologyService;
@@ -41,7 +42,8 @@ import java.util.stream.Stream;
 import static org.hamcrest.Matchers.containsString;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @TestPropertySource(properties = {
         "spring.cloud.config.import-check.enabled=false",
@@ -72,13 +74,16 @@ class DatamodelTest {
     private TerminologyService terminologyService;
 
     @MockBean
+    private CodeListService codeListService;
+
+    @MockBean
     private GroupManagementService groupManagementService;
 
     @MockBean
     private AuthenticatedUserProvider userProvider;
 
     @Mock
-    Consumer<ResourceInfoBaseDTO> consumer;
+    Consumer<ResourceCommonDTO> consumer;
 
     @Autowired
     private Datamodel datamodel;
@@ -268,7 +273,7 @@ class DatamodelTest {
         when(jenaService.doesDataModelExist(defaultNamespace + prefix)).thenReturn(true);
 
         this.mvc
-                .perform(get("/v2/model/freePrefix/" + prefix)
+                .perform(get("/v2/model/free-prefix/" + prefix)
                     .contentType("application/json"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("false")));
@@ -279,7 +284,7 @@ class DatamodelTest {
         when(jenaService.doesDataModelExist(anyString())).thenReturn(false);
 
         this.mvc
-                .perform(get("/v2/model/freePrefix/xyz")
+                .perform(get("/v2/model/free-prefix/xyz")
                         .contentType("application/json"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("true")));
@@ -439,7 +444,15 @@ class DatamodelTest {
         args.add(dataModelDTO);
 
         dataModelDTO = createDatamodelDTO(false);
+        dataModelDTO.setCodeLists(Set.of("http://invalid.url"));
+        args.add(dataModelDTO);
+
+        dataModelDTO = createDatamodelDTO(false);
         dataModelDTO.setContact(RandomStringUtils.random(emailAreaMaxPlus));
+        args.add(dataModelDTO);
+
+        dataModelDTO = createDatamodelDTO(false);
+        dataModelDTO.setDocumentation(Map.of("en", RandomStringUtils.random(textAreaMaxPlus)));
         args.add(dataModelDTO);
 
         return args.stream().map(Arguments::of);

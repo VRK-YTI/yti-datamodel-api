@@ -71,6 +71,16 @@ class FrontendControllerTest {
     }
 
     @Test
+    void searchInternalResourcesInfoTest() throws Exception {
+        this.mvc.perform(get("/v2/frontend/searchInternalResourcesInfo")
+                        .contentType("application/json")
+                        .content(EndpointUtils.convertObjectToJsonString(new ResourceSearchRequest())))
+                .andExpect(status().isOk());
+        verify(searchIndexService).searchInternalResourcesWithInfo(any(ResourceSearchRequest.class), any(YtiUser.class));
+    }
+
+
+    @Test
     void searchModelsTest() throws Exception {
         this.mvc.perform(get("/v2/frontend/searchModels")
                         .contentType("application/json")

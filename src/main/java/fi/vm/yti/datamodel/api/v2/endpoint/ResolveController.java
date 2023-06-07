@@ -105,7 +105,7 @@ public class ResolveController {
                 return;
             }
 
-            var dataModelResource = dataModel.getResource(modelURI + "#" + resource);
+            var dataModelResource = dataModel.getResource(modelURI + ModelConstants.RESOURCE_SEPARATOR + resource);
 
             if (MapperUtils.hasType(dataModelResource, OWL.Class, SH.NodeShape)) {
                 redirectURL.append("/class/");

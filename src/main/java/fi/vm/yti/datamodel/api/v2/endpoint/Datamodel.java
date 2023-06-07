@@ -4,9 +4,10 @@ import fi.vm.yti.datamodel.api.security.AuthorizationManager;
 import fi.vm.yti.datamodel.api.v2.dto.DataModelDTO;
 import fi.vm.yti.datamodel.api.v2.dto.DataModelInfoDTO;
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
-import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
 import fi.vm.yti.datamodel.api.v2.mapper.ModelMapper;
+import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
+import fi.vm.yti.datamodel.api.v2.service.CodeListService;
 import fi.vm.yti.datamodel.api.v2.service.GroupManagementService;
 import fi.vm.yti.datamodel.api.v2.service.JenaService;
 import fi.vm.yti.datamodel.api.v2.service.TerminologyService;
@@ -43,6 +44,8 @@ public class Datamodel {
 
     private final TerminologyService terminologyService;
 
+    private final CodeListService codelistService;
+
     private final AuthenticatedUserProvider userProvider;
 
     private final GroupManagementService groupManagementService;
@@ -54,6 +57,7 @@ public class Datamodel {
                      OpenSearchIndexer openSearchIndexer,
                      ModelMapper modelMapper,
                      TerminologyService terminologyService,
+                     CodeListService codelistService,
                      AuthenticatedUserProvider userProvider,
                      GroupManagementService groupManagementService,
                      @Value("${defaultNamespace}") String defaultNamespace) {
@@ -62,6 +66,7 @@ public class Datamodel {
         this.openSearchIndexer = openSearchIndexer;
         this.jenaService = jenaService;
         this.terminologyService = terminologyService;
+        this.codelistService = codelistService;
         this.userProvider = userProvider;
         this.groupManagementService = groupManagementService;
         this.defaultNamespace = defaultNamespace;
@@ -76,6 +81,7 @@ public class Datamodel {
         check(authorizationManager.hasRightToAnyOrganization(modelDTO.getOrganizations()));
 
         terminologyService.resolveTerminology(modelDTO.getTerminologies());
+        codelistService.resolveCodelistScheme(modelDTO.getCodeLists());
         var jenaModel = mapper.mapToJenaModel(modelDTO, userProvider.getUser());
 
         jenaService.putDataModelToCore(this.defaultNamespace + modelDTO.getPrefix(), jenaModel);
@@ -100,6 +106,7 @@ public class Datamodel {
         check(authorizationManager.hasRightToModel(prefix, oldModel));
 
         terminologyService.resolveTerminology(modelDTO.getTerminologies());
+        codelistService.resolveCodelistScheme(modelDTO.getCodeLists());
 
         var jenaModel = mapper.mapToUpdateJenaModel(prefix, modelDTO, oldModel, userProvider.getUser());
 
@@ -123,7 +130,7 @@ public class Datamodel {
 
     @Operation(summary = "Check if prefix already exists")
     @ApiResponse(responseCode = "200", description = "Boolean value indicating whether prefix")
-    @GetMapping(value = "/freePrefix/{prefix}", produces = APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/free-prefix/{prefix}", produces = APPLICATION_JSON_VALUE)
     public Boolean freePrefix(@PathVariable String prefix) {
         if (ValidationConstants.RESERVED_WORDS.contains(prefix)) {
             return false;
@@ -140,9 +147,6 @@ public class Datamodel {
             throw new ResourceNotFoundException(modelUri);
         }
         var model = jenaService.getDataModel(modelUri);
-        if(model == null){
-            throw new ResourceNotFoundException(modelUri);
-        }
         check(authorizationManager.hasRightToModel(prefix, model));
 
         jenaService.deleteDataModel(modelUri);
