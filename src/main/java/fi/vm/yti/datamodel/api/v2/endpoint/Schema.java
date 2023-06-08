@@ -13,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,10 +23,12 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import fi.vm.yti.datamodel.api.security.AuthorizationManager;
+import fi.vm.yti.datamodel.api.v2.dto.DataModelDTO;
 import fi.vm.yti.datamodel.api.v2.dto.PIDType;
 import fi.vm.yti.datamodel.api.v2.dto.SchemaDTO;
 import fi.vm.yti.datamodel.api.v2.dto.SchemaFormat;
 import fi.vm.yti.datamodel.api.v2.dto.SchemaInfoDTO;
+import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
 import fi.vm.yti.datamodel.api.v2.mapper.SchemaMapper;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
 import fi.vm.yti.datamodel.api.v2.service.JenaService;
@@ -34,6 +37,7 @@ import fi.vm.yti.datamodel.api.v2.service.SchemaService;
 import fi.vm.yti.datamodel.api.v2.service.StorageService;
 import fi.vm.yti.datamodel.api.v2.service.StorageService.StoredFile;
 import fi.vm.yti.datamodel.api.v2.service.impl.PostgresStorageService;
+import fi.vm.yti.security.AuthenticatedUserProvider;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -61,13 +65,16 @@ public class Schema {
 	
 	private final StorageService storageService;	
 	
+    private final AuthenticatedUserProvider userProvider;
+
 	public Schema(JenaService jenaService,
             AuthorizationManager authorizationManager,
             OpenSearchIndexer openSearchIndexer,
             SchemaMapper schemaMapper,
             SchemaService schemaService,
             PIDService PIDService,
-            PostgresStorageService storageService) {
+            PostgresStorageService storageService,
+            AuthenticatedUserProvider userProvider) {
 		
 		this.jenaService = jenaService;
 		this.openSearchIndexer = openSearchIndexer;
@@ -76,6 +83,7 @@ public class Schema {
 		this.schemaService = schemaService;
 		this.PIDService = PIDService;
 		this.storageService = storageService;
+		this.userProvider = userProvider;
 		
 	}
 
@@ -85,19 +93,44 @@ public class Schema {
 	@PutMapping(path="/schema", produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
 	public SchemaInfoDTO createSchema(@RequestBody SchemaDTO schemaDTO) {
 		logger.info("Create Schema {}", schemaDTO);
-		check(authorizationManager.hasRightToAnyOrganization(Set.of(schemaDTO.getOrganization())));		
+		check(authorizationManager.hasRightToAnyOrganization(schemaDTO.getOrganizations()));		
 		final String PID = PIDService.mint(PIDType.HANDLE);
 
 		var jenaModel = mapper.mapToJenaModel(PID, schemaDTO);
 		jenaService.putToSchema(PID, jenaModel);
 		
-		//  TODO: add to opensearch indexing for schemas
-		
-		return mapper.mapToSchemaDTO(PID, jenaService.getSchema(PID));
+		var indexModel = mapper.mapToIndexModel(PID, jenaModel);
+        openSearchIndexer.createModelToIndex(indexModel);
+
+        return mapper.mapToSchemaDTO(PID, jenaService.getSchema(PID));
 		
 	}
 
+    @Operation(summary = "Modify schema")
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "The JSON data for the new schema node")
+    @ApiResponse(responseCode = "200", description = "The JSON of the update model, basically the same as the request body.")
+    @PostMapping(path = "/schema/{pid}", produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
+    public void updateModel(@RequestBody SchemaDTO schemaDTO,
+                            @PathVariable String pid) {
+        logger.info("Updating schema {}", schemaDTO);
 
+        var oldModel = jenaService.getSchema(pid);
+        if(oldModel == null){
+            throw new ResourceNotFoundException(pid);
+        }
+
+        check(authorizationManager.hasRightToSchema(pid, oldModel));
+
+        var jenaModel = mapper.mapToUpdateJenaModel(pid, schemaDTO, oldModel, userProvider.getUser());
+
+        jenaService.putToSchema(pid, jenaModel);
+
+
+        var indexModel = mapper.mapToIndexModel(pid, jenaModel);
+        openSearchIndexer.updateModelToIndex(indexModel);
+    }
+
+    
     
     @Operation(summary = "Get a schema metadata")
     @ApiResponse(responseCode = "200", description = "")
@@ -114,7 +147,7 @@ public class Schema {
     public SchemaInfoDTO uploadSchemaFile(@PathVariable String pid, @RequestParam("contentType") String contentType, @RequestParam("file") MultipartFile file) {
     	var metadataModel = jenaService.getSchema(pid);
     	SchemaInfoDTO schemaDTO = mapper.mapToSchemaDTO(pid, metadataModel);    	
-		check(authorizationManager.hasRightToAnyOrganization(Set.of(schemaDTO.getOrganization())));		
+		check(authorizationManager.hasRightToSchema(pid, metadataModel));		
     	
     	try {
     		// transform to the internal format
