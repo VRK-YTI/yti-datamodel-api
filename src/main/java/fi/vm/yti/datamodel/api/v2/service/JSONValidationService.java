@@ -19,7 +19,7 @@ public class JSONValidationService {
 	private static Map<String, String> schemaURIandPathMap = Map.of("http://json-schema.org/draft-04/schema#",
 			"schema_v4");
 
-	public static ValidationRecord validateJSON(byte[] inputSchemaFile) throws Exception, IOException {
+	public static ValidationRecord validateJSONSchema(byte[] inputSchemaFile) throws Exception, IOException {
 		ObjectMapper mapper = new ObjectMapper();
 
 		JsonNode inputSchemaNode = mapper.readTree(inputSchemaFile);

@@ -120,7 +120,7 @@ public class Schema {
 		try {
 			byte[] fileInBytes = file.getBytes();
 			if (schemaDTO.getFormat() == SchemaFormat.JSONSCHEMA) {
-				ValidationRecord validationRecord = JSONValidationService.validateJSON(fileInBytes);
+				ValidationRecord validationRecord = JSONValidationService.validateJSONSchema(fileInBytes);
 
 				boolean validationStatus = validationRecord.isValid();
 				List<String> validationMessages = validationRecord.validationOutput();
