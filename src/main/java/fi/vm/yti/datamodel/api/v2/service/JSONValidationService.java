@@ -1,10 +1,10 @@
 package fi.vm.yti.datamodel.api.v2.service;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -14,39 +14,39 @@ import com.networknt.schema.JsonSchemaFactory;
 import com.networknt.schema.SpecVersionDetector;
 import com.networknt.schema.ValidationMessage;
 
-
 public class JSONValidationService {
-	public static ValidationRecord validateJSON(InputStream metaSchemaFile, byte[] validationSchemaFile) throws Exception, IOException {
+
+	private static Map<String, String> schemaURIandPathMap = Map.of("http://json-schema.org/draft-04/schema#",
+			"schema_v4");
+
+	public static ValidationRecord validateJSON(byte[] inputSchemaFile) throws Exception, IOException {
 		ObjectMapper mapper = new ObjectMapper();
-		
-		JsonNode validationSchemaNode = mapper.readTree(validationSchemaFile);
-		JsonNode metaSchemaNode = mapper.readTree(metaSchemaFile);
-		
-		JsonSchemaFactory schemaFactory = JsonSchemaFactory.getInstance(SpecVersionDetector.detect(metaSchemaNode));
-		
-		boolean doSchemaVersionsMatch = metaSchemaNode.get("$schema").asText().equals(validationSchemaNode.get("$schema").asText());
-		
-		JsonSchema schema = schemaFactory.getSchema(metaSchemaNode);
-	    Set<ValidationMessage> validationResult = schema.validate(validationSchemaNode);
-	    
-	    if (validationResult.isEmpty() & doSchemaVersionsMatch) {
-	        return new ValidationRecord(true, Arrays.asList());
-	    } else {	    	
-	    	List<String> errorMessages = new ArrayList<String> ();
-	    	
-	    	if (!doSchemaVersionsMatch) errorMessages.add("Schema versions don't match!");
-	    	
-	    	validationResult.forEach(vm -> errorMessages.add(vm.getMessage()));
-	    	return new ValidationRecord(false, errorMessages);
-	    }
-	    
+
+		JsonNode inputSchemaNode = mapper.readTree(inputSchemaFile);
+
+		String inputSchemaVersion = inputSchemaNode.get("$schema").asText();
+
+		if (schemaURIandPathMap.containsKey(inputSchemaVersion)) {
+
+			JsonNode metaSchemaNode = mapper.readTree(schemaURIandPathMap.get(inputSchemaVersion));
+			JsonSchemaFactory schemaFactory = JsonSchemaFactory.getInstance(SpecVersionDetector.detect(metaSchemaNode));
+
+			JsonSchema schema = schemaFactory.getSchema(metaSchemaNode);
+			Set<ValidationMessage> validationResult = schema.validate(inputSchemaNode);
+
+			if (validationResult.isEmpty()) {
+				return new ValidationRecord(true, Arrays.asList());
+			} else {
+				List<String> errorMessages = new ArrayList<String>();
+				validationResult.forEach(vm -> errorMessages.add(vm.getMessage()));
+				return new ValidationRecord(false, errorMessages);
+			}
+
+		} else {
+			throw new Exception(
+					String.format("Validation failed. JSON schema %s is not supported. Supported schemas are: %s",
+							inputSchemaVersion, String.join("\n", schemaURIandPathMap.keySet())));
+		}
 	}
-	
-	// dictionary URI -> location of a metaschema file
-	// in the optimized version - it would be a validator, parsed schema content ...
-//	// ... for that version so that it can be stored
-//	public static void SupportedSchemaVersions() {
-//		return void;
-//	}
 
 }
