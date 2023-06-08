@@ -42,7 +42,7 @@ public class JSONValidationServiceTest {
 		String validInputSchemaPath = "test_jsonschema_b2share.json";
 		// *** validate format (eg email, date etc) with regex? ***
 		
-		assertEquals(JSONValidationService.validateJSON(metaSchemaInputStream, byteStreamFromPath(validInputSchemaPath)), new ValidationRecord(true, Arrays.asList()));
+		assertEquals(JSONValidationService.validateJSON(byteStreamFromPath(validInputSchemaPath)), new ValidationRecord(true, Arrays.asList()));
 		
 		
 	}
@@ -50,7 +50,7 @@ public class JSONValidationServiceTest {
 	@Test
 	void testInvalidJSONSchema() throws Exception, IOException {
 		String firstInvalidInputSchemaPath = "test_jsonschema_invalid_types.json";
-		assertFalse(JSONValidationService.validateJSON(metaSchemaInputStream, byteStreamFromPath(firstInvalidInputSchemaPath)).isValid());
+		assertFalse(JSONValidationService.validateJSON(byteStreamFromPath(firstInvalidInputSchemaPath)).isValid());
 	}
 	
 	@Test
@@ -58,7 +58,7 @@ public class JSONValidationServiceTest {
 		String firstInvalidInputSchemaPath = "test_jsonschema_invalid_types.json";
 		List<String> expectedErrorMessages = Arrays.asList("$.properties.creators.type: does not have a value in the enumeration [array, boolean, integer, null, number, object, string]",
 														   "$.properties.creators.type: string found, array expected");
-		assertLinesMatch(JSONValidationService.validateJSON(metaSchemaInputStream, byteStreamFromPath(firstInvalidInputSchemaPath)).validationOutput(),
+		assertLinesMatch(JSONValidationService.validateJSON(byteStreamFromPath(firstInvalidInputSchemaPath)).validationOutput(),
 															expectedErrorMessages);
 	}
 	
@@ -66,7 +66,7 @@ public class JSONValidationServiceTest {
 	void testInvalidJSONSchemaDetailsSchema() throws Exception, IOException {
 		String secondInvalidInputSchemaPath = "test_jsonschema_invalid_schema.json";
 		List<String> expectedErrorMessages = Arrays.asList("Schema versions don't match!");
-		assertLinesMatch(JSONValidationService.validateJSON(metaSchemaInputStream, byteStreamFromPath(secondInvalidInputSchemaPath)).validationOutput(),
+		assertLinesMatch(JSONValidationService.validateJSON(byteStreamFromPath(secondInvalidInputSchemaPath)).validationOutput(),
 															expectedErrorMessages);
 	}
 	}
