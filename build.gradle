@@ -117,10 +117,7 @@ dependencies {
     testImplementation "net.bytebuddy:byte-buddy:1.12.22"
 
     developmentOnly("org.springframework.boot:spring-boot-devtools")
- 
-    
 }
-
 
 sonarqube {
     properties {
