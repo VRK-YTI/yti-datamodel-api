@@ -44,9 +44,9 @@ public class JSONValidationService {
 	
 	// dictionary URI -> location of a metaschema file
 	// in the optimized version - it would be a validator, parsed schema content ...
-	// ... for that version so that it can be stored
-	public static void SupportedSchemaVersions() {
-		return void;
-	}
+//	// ... for that version so that it can be stored
+//	public static void SupportedSchemaVersions() {
+//		return void;
+//	}
 
 }
