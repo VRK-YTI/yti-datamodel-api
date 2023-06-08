@@ -4,20 +4,19 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 public class SchemaDTO {
 
 	private SchemaFormat format;
 	private String aggregationKey;
-	private Status status;	
+	private Status status;
 	private Map<String, String> label = Map.of();
 	private Map<String, String> description = Map.of();
 	private Set<String> languages = Set.of();
 	private UUID organization;
 	private Set<FileMetadata> fileMetadatas = Set.of();
-	
+
 	public SchemaFormat getFormat() {
 		return format;
 	}
@@ -57,7 +56,7 @@ public class SchemaDTO {
 	public void setLanguages(Set<String> languages) {
 		this.languages = languages;
 	}
-	
+
 	public Set<FileMetadata> getMetadataFiles() {
 		return fileMetadatas;
 	}
@@ -73,8 +72,8 @@ public class SchemaDTO {
 	public void setOrganization(UUID organization) {
 		this.organization = organization;
 	}
-	
-    public String getAggregationKey() {
+
+	public String getAggregationKey() {
 		return aggregationKey;
 	}
 
@@ -83,7 +82,7 @@ public class SchemaDTO {
 	}
 
 	@Override
-    public String toString() {
-        return ToStringBuilder.reflectionToString(this);
-    }
+	public String toString() {
+		return ToStringBuilder.reflectionToString(this);
+	}
 }
