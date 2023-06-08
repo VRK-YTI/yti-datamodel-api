@@ -1,9 +1,7 @@
 package fi.vm.yti.datamodel.api.v2.service;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map.Entry;
 
 import org.apache.jena.rdf.model.Model;
@@ -153,28 +151,11 @@ public class SchemaService {
 		ObjectMapper mapper = new ObjectMapper();
 		
 		JsonNode root = mapper.readTree(data);
-			
-		String metaSchemaPath = "schema_v4"; // - our meta schema, validate against it.
-		// 										target schema === metaSchema. then we are changing input files – our schema
-		// String metaSchemaPath = "test_jsonschema_b2share.json";
-
-		InputStream metaSchemaInputStream = getClass().getClassLoader().getResourceAsStream(metaSchemaPath);
-		ValidationRecord validationRecord = JSONValidationService.validateJSON(metaSchemaInputStream, data);
-		metaSchemaInputStream.close();
+		var modelResource = model.createResource(schemaPID);
+		modelResource.addProperty(DCTerms.language, "en");
 		
-		boolean validationStatus = validationRecord.isValid();
-		List<String> validationMessages = validationRecord.validationOutput();
-		
-		if (validationStatus) {
-			var modelResource = model.createResource(schemaPID);
-			modelResource.addProperty(DCTerms.language, "en");
-			
-			// Adding the schema to a corresponding internal model 
-			handleObject("root", root, schemaPID, model);
-			return model;
-		} else {
-			String exceptionOutput = String.join("\n", validationMessages);
-			throw new Exception(exceptionOutput);
-		}
+		// Adding the schema to a corresponding internal model 
+		handleObject("root", root, schemaPID, model);
+		return model;
 	}
 }
