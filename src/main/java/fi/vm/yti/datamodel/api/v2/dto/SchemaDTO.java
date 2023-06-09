@@ -1,5 +1,7 @@
 package fi.vm.yti.datamodel.api.v2.dto;
 
+import java.util.Set;
+
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 public class SchemaDTO extends DataModelDTO {

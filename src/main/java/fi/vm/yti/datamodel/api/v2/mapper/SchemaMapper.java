@@ -1,5 +1,6 @@
 package fi.vm.yti.datamodel.api.v2.mapper;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashSet;
 import java.util.List;
@@ -46,8 +47,12 @@ public class SchemaMapper {
 
 	private final Logger log = LoggerFactory.getLogger(SchemaMapper.class);
 	private final StorageService storageService;
+	private final JenaService jenaService;
 
-	public SchemaMapper(PostgresStorageService storageService) {
+	public SchemaMapper(
+			JenaService jenaService,
+			PostgresStorageService storageService) {
+		this.jenaService = jenaService;
 		this.storageService = storageService;
 	}
 
@@ -158,8 +163,8 @@ public class SchemaMapper {
 		// Description
 		schemaInfoDTO.setDescription(MapperUtils.localizedPropertyToMap(modelResource, RDFS.comment));
 
-    var organizations = MapperUtils.arrayPropertyToSet(modelResource, DCTerms.contributor);
-    schemaDTO.setOrganizations(OrganizationMapper.mapOrganizationsToDTO(organizations, jenaService.getOrganizations()));
+		var organizations = MapperUtils.arrayPropertyToSet(modelResource, DCTerms.contributor);
+		schemaInfoDTO.setOrganizations(OrganizationMapper.mapOrganizationsToDTO(organizations, jenaService.getOrganizations()));
 
 		var created = modelResource.getProperty(DCTerms.created).getLiteral().getString();
 		var modified = modelResource.getProperty(DCTerms.modified).getLiteral().getString();
@@ -171,7 +176,7 @@ public class SchemaMapper {
 		retrievedSchemaFiles.forEach(file -> {
 			fileMetadatas.add(new FileMetadata(file.contentType(), file.data().length, file.fileID()));
 		});
-		schemaInfoDTO.setMetadataFiles(fileMetadatas);
+		schemaInfoDTO.setFileMetadata(fileMetadatas);
 
 		schemaInfoDTO.setPID(PID);
 		schemaInfoDTO.setFormat(SchemaFormat.valueOf(MapperUtils.propertyToString(modelResource, MSCR.format)));
@@ -206,8 +211,6 @@ public class SchemaMapper {
         var resource = model.getResource(pid);
         var indexModel = new IndexModel();
         indexModel.setId(pid);
-        var temp = resource.getProperty(OWL.versionInfo);
-        var temp2 = model.getProperty(resource, OWL.versionInfo);
         indexModel.setStatus(Status.valueOf(resource.getProperty(OWL.versionInfo).getString()));
         indexModel.setModified(resource.getProperty(DCTerms.modified).getString());
         indexModel.setCreated(resource.getProperty(DCTerms.created).getString());
