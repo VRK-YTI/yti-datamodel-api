@@ -131,14 +131,14 @@ public class ModelMapper {
         }
 
         if(dataModelDTO.getInternalNamespaces() != null){
-            removeNamespacesFromModel(model, modelResource.listProperties(DCTerms.requires), true);
-            removeNamespacesFromModel(model, modelResource.listProperties(OWL.imports), true);
+            removeNamespacesFromModel(modelResource.listProperties(DCTerms.requires), true);
+            removeNamespacesFromModel(modelResource.listProperties(OWL.imports), true);
             addInternalNamespaceToDatamodel(dataModelDTO, modelResource, model);
         }
 
         if(dataModelDTO.getExternalNamespaces() != null){
-            removeNamespacesFromModel(model, modelResource.listProperties(DCTerms.requires), false);
-            removeNamespacesFromModel(model, modelResource.listProperties(OWL.imports), false);
+            removeNamespacesFromModel(modelResource.listProperties(DCTerms.requires), false);
+            removeNamespacesFromModel(modelResource.listProperties(OWL.imports), false);
             addExternalNamespaceToDatamodel(dataModelDTO, model, modelResource);
         }
 
@@ -168,19 +168,17 @@ public class ModelMapper {
      * @param statements Iterator of property values
      * @param internal if true remove internal namespaces, if false remove external namespaces
      */
-    private void removeNamespacesFromModel(Model model, StmtIterator statements, boolean internal){
+    private void removeNamespacesFromModel(StmtIterator statements, boolean internal){
         while(statements.hasNext()){
             var next = statements.next();
             var namespace = next.getObject().toString();
             if(internal) {
                 if(namespace.startsWith(ModelConstants.SUOMI_FI_NAMESPACE)){
                     statements.remove();
-                    model.removeNsPrefix(model.getNsURIPrefix(namespace));
                 }
             }else{
                 if(!namespace.startsWith(ModelConstants.SUOMI_FI_NAMESPACE)){
                     statements.remove();
-                    model.removeNsPrefix(model.getNsURIPrefix(namespace));
                 }
             }
         }
