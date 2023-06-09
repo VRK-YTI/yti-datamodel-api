@@ -1,11 +1,14 @@
 package fi.vm.yti.datamodel.api.v2.dto;
 
+import java.util.Set;
+
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 public class SchemaInfoDTO extends DataModelInfoDTO {
 		
 	private SchemaFormat format;
-	private String aggregationKey;	
+	private String aggregationKey;
+	private Set<FileMetadata> fileMetadata = Set.of();
 	private String PID;
 
 	public String getPID() {
@@ -23,13 +26,21 @@ public class SchemaInfoDTO extends DataModelInfoDTO {
 		this.format = type;
 	}
 
-    public String getAggregationKey() {
+  public String getAggregationKey() {
 		return aggregationKey;
 	}
 
 	public void setAggregationKey(String aggregationKey) {
 		this.aggregationKey = aggregationKey;
 	}
+  
+	public Set<FileMetadata> getFileMetadata() {
+		return fileMetadata;
+	}
+
+	public void setFileMetadata(Set<FileMetadata> fileMetadata) {
+		this.fileMetadata = fileMetadata;
+	}  
 
 	@Override
     public String toString() {

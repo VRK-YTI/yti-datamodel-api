@@ -2,6 +2,9 @@ package fi.vm.yti.datamodel.api.v2.mapper;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -16,11 +19,13 @@ import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
 import org.apache.jena.vocabulary.SKOS;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import fi.vm.yti.datamodel.api.v2.dto.DCAP;
+import fi.vm.yti.datamodel.api.v2.dto.FileMetadata;
 import fi.vm.yti.datamodel.api.v2.dto.Iow;
 import fi.vm.yti.datamodel.api.v2.dto.MSCR;
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
@@ -29,6 +34,9 @@ import fi.vm.yti.datamodel.api.v2.dto.SchemaDTO;
 import fi.vm.yti.datamodel.api.v2.dto.SchemaFormat;
 import fi.vm.yti.datamodel.api.v2.dto.SchemaInfoDTO;
 import fi.vm.yti.datamodel.api.v2.dto.Status;
+import fi.vm.yti.datamodel.api.v2.service.StorageService;
+import fi.vm.yti.datamodel.api.v2.service.StorageService.StoredFile;
+import fi.vm.yti.datamodel.api.v2.service.impl.PostgresStorageService;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexModel;
 import fi.vm.yti.datamodel.api.v2.service.JenaService;
@@ -38,15 +46,16 @@ import fi.vm.yti.security.YtiUser;
 public class SchemaMapper {
 
 	private final Logger log = LoggerFactory.getLogger(SchemaMapper.class);
-
+	private final StorageService storageService;
 	private final JenaService jenaService;
-	
-	public SchemaMapper(JenaService jenaService) {
+
+	public SchemaMapper(
+			JenaService jenaService,
+			PostgresStorageService storageService) {
 		this.jenaService = jenaService;
+		this.storageService = storageService;
 	}
-	
-	
-	
+
 	public Model mapToJenaModel(String PID, SchemaDTO schemaDTO) {
 		log.info("Mapping SchemaDTO to Jena Model");
 		var model = ModelFactory.createDefaultModel();
@@ -79,9 +88,8 @@ public class SchemaMapper {
 
 		String prefix = MapperUtils.getMSCRPrefix(PID);
 		model.setNsPrefix(prefix, modelUri + "#");
-		
+
 		modelResource.addProperty(MSCR.format, schemaDTO.getFormat().toString());
-		
 
 		return model;
 	}
@@ -133,42 +141,51 @@ public class SchemaMapper {
         modelResource.addProperty(Iow.modifier, user.getId().toString());
         return model;
 		
+
 	}
 
 	public SchemaInfoDTO mapToSchemaDTO(String PID, Model model) {
-		var schemaDTO = new SchemaInfoDTO();
-		schemaDTO.setPID(PID);
+
+		var schemaInfoDTO = new SchemaInfoDTO();
+		schemaInfoDTO.setPID(PID);
 
 		var modelResource = model.getResource(PID);
 
 		var status = Status.valueOf(MapperUtils.propertyToString(modelResource, OWL.versionInfo));
-		schemaDTO.setStatus(status);
+		schemaInfoDTO.setStatus(status);
 
 		// Language
-		schemaDTO.setLanguages(MapperUtils.arrayPropertyToSet(modelResource, DCTerms.language));
+		schemaInfoDTO.setLanguages(MapperUtils.arrayPropertyToSet(modelResource, DCTerms.language));
 
 		// Label
-		schemaDTO.setLabel(MapperUtils.localizedPropertyToMap(modelResource, RDFS.label));
+		schemaInfoDTO.setLabel(MapperUtils.localizedPropertyToMap(modelResource, RDFS.label));
 
 		// Description
-		schemaDTO.setDescription(MapperUtils.localizedPropertyToMap(modelResource, RDFS.comment));
+		schemaInfoDTO.setDescription(MapperUtils.localizedPropertyToMap(modelResource, RDFS.comment));
 
-        var organizations = MapperUtils.arrayPropertyToSet(modelResource, DCTerms.contributor);
-        schemaDTO.setOrganizations(OrganizationMapper.mapOrganizationsToDTO(organizations, jenaService.getOrganizations()));
+		var organizations = MapperUtils.arrayPropertyToSet(modelResource, DCTerms.contributor);
+		schemaInfoDTO.setOrganizations(OrganizationMapper.mapOrganizationsToDTO(organizations, jenaService.getOrganizations()));
 
 		var created = modelResource.getProperty(DCTerms.created).getLiteral().getString();
 		var modified = modelResource.getProperty(DCTerms.modified).getLiteral().getString();
-		schemaDTO.setCreated(created);
-		schemaDTO.setModified(modified);
+		schemaInfoDTO.setCreated(created);
+		schemaInfoDTO.setModified(modified);
 
-		schemaDTO.setPID(PID);
-		schemaDTO.setFormat(SchemaFormat.valueOf(MapperUtils.propertyToString(modelResource, MSCR.format)));
-				
-		return schemaDTO;
+		List<StoredFile> retrievedSchemaFiles = storageService.retrieveAllSchemaFiles(PID);
+		Set<FileMetadata> fileMetadatas = new HashSet<>();
+		retrievedSchemaFiles.forEach(file -> {
+			fileMetadatas.add(new FileMetadata(file.contentType(), file.data().length, file.fileID()));
+		});
+		schemaInfoDTO.setFileMetadata(fileMetadatas);
+
+		schemaInfoDTO.setPID(PID);
+		schemaInfoDTO.setFormat(SchemaFormat.valueOf(MapperUtils.propertyToString(modelResource, MSCR.format)));
+
+		return schemaInfoDTO;
 	}
 
 	/**
-	 * Add organization to a schema 
+	 * Add organization to a schema
 	 * 
 	 * @param modelDTO      Payload to get organizations from
 	 * @param modelResource Model resource to add orgs to
@@ -194,8 +211,6 @@ public class SchemaMapper {
         var resource = model.getResource(pid);
         var indexModel = new IndexModel();
         indexModel.setId(pid);
-        var temp = resource.getProperty(OWL.versionInfo);
-        var temp2 = model.getProperty(resource, OWL.versionInfo);
         indexModel.setStatus(Status.valueOf(resource.getProperty(OWL.versionInfo).getString()));
         indexModel.setModified(resource.getProperty(DCTerms.modified).getString());
         indexModel.setCreated(resource.getProperty(DCTerms.created).getString());
@@ -230,5 +245,5 @@ public class SchemaMapper {
 
         return indexModel;
     }
-	
+
 }
