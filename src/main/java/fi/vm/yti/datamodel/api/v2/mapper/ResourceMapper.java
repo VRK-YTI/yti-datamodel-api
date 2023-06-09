@@ -6,7 +6,6 @@ import fi.vm.yti.datamodel.api.v2.opensearch.index.*;
 import fi.vm.yti.security.YtiUser;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.vocabulary.*;
@@ -325,7 +324,7 @@ public class ResourceMapper {
         dto.setLabel(MapperUtils.localizedPropertyToMap(resourceResource, RDFS.label));
         var status = Status.valueOf(resourceResource.getProperty(OWL.versionInfo).getObject().toString().toUpperCase());
         dto.setStatus(status);
-        String subject = MapperUtils.propertyToString(resourceResource, DCTerms.subject);
+        var subject = MapperUtils.propertyToString(resourceResource, DCTerms.subject);
         if (subject != null) {
             var conceptDTO = new ConceptDTO();
             conceptDTO.setConceptURI(subject);
@@ -381,10 +380,27 @@ public class ResourceMapper {
             return false;
         }
         var xsdNs = ModelConstants.PREFIXES.get("xsd");
-        return range.getObject().asResource().getNameSpace().equals(xsdNs);
+        var rangeResource = range.getResource();
+        if(rangeResource.hasProperty(OWL.unionOf)){
+            return MapperUtils.arrayPropertyToList(rangeResource, OWL.unionOf).stream().anyMatch(item -> ResourceFactory.createResource(item).getNameSpace().equals(xsdNs));
+        }
+        return rangeResource.getNameSpace().equals(xsdNs);
+    }
+
+    private static ResourceType getInverseOfResource(Resource resource){
+        var uri = resource.getProperty(OWL.inverseOf).getResource();
+        if(MapperUtils.hasType(uri, OWL.DatatypeProperty, OWL.AnnotationProperty)){
+            return ResourceType.ATTRIBUTE;
+        }else if(MapperUtils.hasType(uri, OWL.ObjectProperty, RDF.Property)){
+            return ResourceType.ASSOCIATION;
+        }else if(MapperUtils.hasType(uri, OWL.Class, RDFS.Class, RDFS.Resource)){
+            return ResourceType.CLASS;
+        }
+        return null;
     }
 
     private static ResourceType getExternalResourceType(Model model, Resource resource) {
+
         if (MapperUtils.hasType(resource, OWL.DatatypeProperty, OWL.AnnotationProperty) || hasLiteralRange(resource)) {
             // DatatypeProperties, AnnotationProperties and range with literal value (e.g. xsd:string)
             return ResourceType.ATTRIBUTE;
@@ -394,10 +410,12 @@ public class ResourceMapper {
         } else if (MapperUtils.hasType(resource, OWL.Class, RDFS.Class, RDFS.Resource)) {
             // OWL and RDFS classes and resources
             return ResourceType.CLASS;
-        } else if (model.contains(resource.getProperty(RDF.type).getResource(), null, (RDFNode) null)) {
+        } else if (resource.hasProperty(RDF.type)) {
             // Try to find type from current ontology
             var typeResource = model.getResource(resource.getProperty(RDF.type).getResource().getURI());
             return getExternalResourceType(model, typeResource);
+        }else if(resource.hasProperty(OWL.inverseOf)){
+            return getInverseOfResource(resource);
         }
         return null;
     }

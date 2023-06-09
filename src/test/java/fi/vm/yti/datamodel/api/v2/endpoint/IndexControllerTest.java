@@ -58,4 +58,34 @@ class IndexControllerTest {
 
         verify(this.openSearchIndexer).reindex();
     }
+
+    @Test
+    void shouldReIndexParameter() throws Exception {
+        this.mvc
+                .perform(get("/v2/index/reindex")
+                        .param("index", "models_v2"))
+                .andExpect(status().isOk());
+        verify(openSearchIndexer).initModelIndex();
+
+        this.mvc
+                .perform(get("/v2/index/reindex")
+                        .param("index", "resources_v2"))
+                .andExpect(status().isOk());
+        verify(openSearchIndexer).initResourceIndex();
+
+        this.mvc
+                .perform(get("/v2/index/reindex")
+                        .param("index", "external_v2"))
+                .andExpect(status().isOk());
+        verify(openSearchIndexer).initExternalResourceIndex();
+    }
+
+    @Test
+    void reindexThrowOnInvalidParamater() throws Exception{
+        this.mvc
+                .perform(get("/v2/index/reindex")
+                        .param("index", "invalid"))
+                .andExpect(status().isBadRequest());
+        verifyNoInteractions(openSearchIndexer);
+    }
 }

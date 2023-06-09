@@ -10,8 +10,12 @@ import fi.vm.yti.datamodel.api.v2.service.JenaService;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelUtils;
 import fi.vm.yti.datamodel.api.v2.utils.SparqlUtils;
 import org.apache.jena.arq.querybuilder.ConstructBuilder;
+import org.apache.jena.arq.querybuilder.ExprFactory;
 import org.apache.jena.rdf.model.ModelFactory;
-import org.apache.jena.vocabulary.*;
+import org.apache.jena.vocabulary.DCTerms;
+import org.apache.jena.vocabulary.OWL;
+import org.apache.jena.vocabulary.RDF;
+import org.apache.jena.vocabulary.RDFS;
 import org.opensearch.client.opensearch.OpenSearchClient;
 import org.opensearch.client.opensearch._types.mapping.*;
 import org.opensearch.client.opensearch.core.BulkRequest;
@@ -52,6 +56,22 @@ public class OpenSearchIndexer {
         this.client = client;
     }
 
+    public void initIndexes(){
+        try {
+            openSearchConnector.cleanIndex(OPEN_SEARCH_INDEX_MODEL);
+            openSearchConnector.cleanIndex(OPEN_SEARCH_INDEX_RESOURCE);
+            logger.info("v2 Indexes cleaned");
+            openSearchConnector.createIndex(OPEN_SEARCH_INDEX_MODEL, getModelMappings());
+            openSearchConnector.createIndex(OPEN_SEARCH_INDEX_RESOURCE, getResourceMappings());
+            initModelIndex();
+            initResourceIndex();
+
+            logger.info("Indexes initialized");
+        } catch (IOException ex) {
+            logger.warn("Index initialization failed!", ex);
+        }
+    }
+
     public void reindex() {
         try {
             openSearchConnector.cleanIndex(OPEN_SEARCH_INDEX_MODEL);
@@ -61,7 +81,9 @@ public class OpenSearchIndexer {
             openSearchConnector.createIndex(OPEN_SEARCH_INDEX_MODEL, getModelMappings());
             openSearchConnector.createIndex(OPEN_SEARCH_INDEX_RESOURCE, getResourceMappings());
             openSearchConnector.createIndex(OPEN_SEARCH_INDEX_EXTERNAL, getExternalResourceMappings());
-            initSearchIndexes();
+            initModelIndex();
+            initResourceIndex();
+            initExternalResourceIndex();
 
             logger.info("Indexes initialized");
         } catch (IOException ex) {
@@ -139,16 +161,6 @@ public class OpenSearchIndexer {
         openSearchConnector.removeFromIndex(OPEN_SEARCH_INDEX_RESOURCE, id);
     }
 
-
-    /**
-     * Init search indexes
-     */
-    private void initSearchIndexes() {
-        initModelIndex();
-        initResourceIndex();
-        initExternalResourceIndex();
-    }
-
     /**
      * Init model index
      */
@@ -218,10 +230,14 @@ public class OpenSearchIndexer {
                 .addPrefixes(ModelConstants.PREFIXES);
 
         SparqlUtils.addConstructOptional("?s", builder, RDFS.label, "?label");
-        SparqlUtils.addConstructOptional("?s", builder, RDF.type, "?type");
         SparqlUtils.addConstructOptional("?s", builder, RDFS.isDefinedBy, "?isDefinedBy");
         SparqlUtils.addConstructOptional("?s", builder, RDFS.comment, "?comment");
-
+        builder
+                .addOptional("?s", RDF.type, "?primaryType")
+                .addOptional("?s", OWL.inverseOf, "?inverseOf")
+                .addOptional("?inverseOf", RDF.type, "?inverseType")
+                .addBind(new ExprFactory().coalesce("?primaryType", "?inverseType"), "?type")
+                .addConstruct("?s", RDF.type, "?type");
         var result = jenaService.constructWithQueryImports(builder.build());
         var list = new ArrayList<IndexBase>();
         result.listSubjects().forEach(resource -> {
