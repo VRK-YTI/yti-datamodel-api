@@ -2,13 +2,15 @@ package fi.vm.yti.datamodel.api.v2.service;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
+import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
+import fi.vm.yti.datamodel.api.v2.utils.SparqlUtils;
 import org.apache.jena.arq.querybuilder.*;
 import org.apache.jena.atlas.web.HttpException;
 import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.query.Query;
 import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.rdfconnection.RDFConnection;
@@ -47,12 +49,27 @@ public class JenaService {
     private final RDFConnection schemaRead;
     private final RDFConnection schemaWrite;
     private final RDFConnection schemaSparql;
-       
+
+    private final RDFConnection crosswalkRead;
+    private final RDFConnection crosswalkWrite;
+    private final RDFConnection crosswalkSparql;
+
+
+    private final RDFConnection schemesWrite;
+    private final RDFConnection schemesRead;
 
     private final Cache<String, Model> modelCache;
+        
+    private final String defaultNamespace;
+
+    private static final String VERSION_NUMBER_GRAPH = "urn:yti:metamodel:version";
 
     public JenaService(@Value("${model.cache.expiration:1800}") Long cacheExpireTime,
-                       @Value(("${endpoint}")) String endpoint) {
+                       @Value(("${endpoint}")) String endpoint,
+                       @Value("${defaultNamespace}") String defaultNamespace) {
+    	
+    	this.defaultNamespace = defaultNamespace;
+    	
         this.coreWrite = RDFConnection.connect(endpoint + "/core/data");
         this.coreRead = RDFConnection.connect(endpoint + "/core/get");
         this.coreSparql = RDFConnection.connect( endpoint + "/core/sparql");
@@ -63,11 +80,19 @@ public class JenaService {
         this.conceptWrite = RDFConnection.connect(endpoint + "/concept/data");
         this.conceptRead = RDFConnection.connect(endpoint + "/concept/get");
         this.conceptSparql = RDFConnection.connect(endpoint + "/concept/sparql");
-   
+
         this.schemaWrite = RDFConnection.connect(endpoint + "/schema/data");
         this.schemaRead = RDFConnection.connect(endpoint + "/schema/get");
         this.schemaSparql = RDFConnection.connect(endpoint + "/schema/sparql");
-   
+
+        this.crosswalkWrite = RDFConnection.connect(endpoint + "/schema/data");
+        this.crosswalkRead = RDFConnection.connect(endpoint + "/schema/get");
+        this.crosswalkSparql = RDFConnection.connect(endpoint + "/schema/sparql");
+
+        this.schemesWrite = RDFConnection.connect(endpoint + "/scheme/data");
+        this.schemesRead = RDFConnection.connect(endpoint + "/scheme/get");
+
+        
         this.modelCache = CacheBuilder.newBuilder()
                 .expireAfterWrite(cacheExpireTime, TimeUnit.SECONDS)
                 .maximumSize(1000)
@@ -139,6 +164,22 @@ public class JenaService {
             return coreSparql.queryConstruct(query);
         }catch(HttpException ex){
             return null;
+        }
+    }
+
+    public Model constructWithQueryImports(Query query){
+        try{
+            return importSparql.queryConstruct(query);
+        }catch(HttpException ex){
+            return null;
+        }
+    }
+
+    public void sendUpdateStringQuery(String query){
+        try{
+            coreUpdate.update(query);
+        }catch(HttpException ex){
+            throw new JenaQueryException("Failed to update with string query");
         }
     }
 
@@ -293,7 +334,7 @@ public class JenaService {
     }
 
     public Model getConcept(String conceptURI) {
-        ConstructBuilder builder = new ConstructBuilder();
+        var builder = new ConstructBuilder();
         var res = ResourceFactory.createResource(conceptURI);
 
         var label = "?label";
@@ -317,13 +358,72 @@ public class JenaService {
         return conceptSparql.queryConstruct(builder.build());
     }
 
+    public Model getAllConcepts() {
+        var builder = new ConstructBuilder().addPrefixes(ModelConstants.PREFIXES);
+        SparqlUtils.addConstructProperty("?concept", builder, SKOS.prefLabel, "?label");
+        SparqlUtils.addConstructProperty("?concept", builder, SKOS.inScheme, "?terminology");
+        SparqlUtils.addConstructProperty("?terminology", builder, RDFS.label, "?terminologyLabel");
+        return conceptSparql.queryConstruct(builder.build());
+    }
+
+    public Model findResources(List<String> resourceURIs) {
+        if (resourceURIs == null || resourceURIs.isEmpty()) {
+            return ModelFactory.createDefaultModel();
+        }
+        var coreBuilder = new ConstructBuilder();
+        coreBuilder.addPrefixes(ModelConstants.PREFIXES);
+        var importsBuilder = new ConstructBuilder();
+        importsBuilder.addPrefixes(ModelConstants.PREFIXES);
+        for (var i = 0; i < resourceURIs.size(); i++) {
+            var pred = "?p" + i;
+            var obj = "?o" + i;
+            String uri = resourceURIs.get(i);
+            var resource = ResourceFactory.createResource(uri);
+            if (uri.startsWith(defaultNamespace)) {
+                coreBuilder.addConstruct(resource, pred, obj);
+                coreBuilder.addOptional(resource, pred, obj);
+            } else {
+                importsBuilder.addConstruct(resource, pred, obj);
+                importsBuilder.addOptional(resource, pred, obj);
+            }
+        }
+
+        var resultModel = coreSparql.queryConstruct(coreBuilder.build());
+        var importsModel = importSparql.queryConstruct(importsBuilder.build());
+
+        resultModel.add(importsModel);
+        return resultModel;
+    }
+
+    public void putCodelistSchemeToSchemes(String graph, Model model){
+        schemesWrite.put(graph, model);
+    }
+
+    public Model getCodelistScheme(String graph){
+        try {
+            return modelCache.get(graph, () -> {
+                logger.debug("Fetch codelist from Fuseki {}", graph);
+                return schemesRead.fetch(graph);
+            });
+        } catch (Exception e) {
+            logger.warn("Error fetching codelist information {}", e.getMessage());
+            return null;
+        }
+    }
+
     public int getVersionNumber() {
-        // TODO: migrations
-        return 1;
+        var versionModel = coreRead.fetch(VERSION_NUMBER_GRAPH);
+        return versionModel.getResource(VERSION_NUMBER_GRAPH).getRequiredProperty(OWL.versionInfo).getInt();
     }
 
     public void setVersionNumber(int version) {
-        // TODO: migrations
+        var versionModel = ModelFactory.createDefaultModel().addLiteral(ResourceFactory.createResource(VERSION_NUMBER_GRAPH), OWL.versionInfo, version);
+        versionModel.setNsPrefix("owl", "http://www.w3.org/2002/07/owl#");
+        coreWrite.put(VERSION_NUMBER_GRAPH, versionModel);
+    }
+
+    public boolean isVersionGraphInitialized(){
+        return doesDataModelExist(VERSION_NUMBER_GRAPH);
     }
     
     public void putToSchema(String graphName, Model model) {
@@ -362,5 +462,24 @@ public class JenaService {
         }catch(HttpException ex){
             throw new JenaQueryException();
         }
-    }	    
+    }
+
+	public void putToCrosswalk(String graph, Model model) {
+		crosswalkWrite.put(graph, model);
+		
+	}	  
+	
+	public Model getCrosswalk(String graph) {
+        logger.debug("Getting crosswalk {}", graph);
+        try {
+            return crosswalkRead.fetch(graph);
+        } catch (HttpException ex) {
+            if (ex.getStatusCode() == HttpStatus.NOT_FOUND.value()) {
+                logger.warn("Crosswalk not found with PID {}", graph);
+                throw new ResourceNotFoundException(graph);
+            } else {
+                throw new JenaQueryException();
+            }
+        }
+	}	
 }

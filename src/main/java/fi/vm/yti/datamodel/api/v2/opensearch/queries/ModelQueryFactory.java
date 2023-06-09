@@ -33,8 +33,7 @@ public class ModelQueryFactory {
             should.add(incompleteFromQuery);
         }
 
-        var incompleteStatusQuery = QueryFactoryUtils.hideIncompleteStatusQuery();
-        should.add(incompleteStatusQuery);
+        should.add(QueryFactoryUtils.hideIncompleteStatusQuery());
 
         var queryString = request.getQuery();
         if(queryString != null && !queryString.isBlank()){
@@ -49,7 +48,7 @@ public class ModelQueryFactory {
 
         var groups = request.getGroups();
         if(groups != null && !groups.isEmpty()){
-            var groupsQuery = QueryFactoryUtils.termsQuery("isPartOf", groups.stream().toList());
+            var groupsQuery = QueryFactoryUtils.termsQuery("isPartOf", groups);
             must.add(groupsQuery);
         }
 

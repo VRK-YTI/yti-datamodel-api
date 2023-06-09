@@ -4,7 +4,7 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import fi.vm.yti.datamodel.api.v2.dto.GroupManagementOrganizationDTO;
 import fi.vm.yti.datamodel.api.v2.dto.GroupManagementUserDTO;
-import fi.vm.yti.datamodel.api.v2.dto.ResourceInfoBaseDTO;
+import fi.vm.yti.datamodel.api.v2.dto.ResourceCommonDTO;
 import fi.vm.yti.security.YtiUser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,7 +64,7 @@ public class GroupManagementService {
         // TODO:
     }
 
-    public Consumer<ResourceInfoBaseDTO> mapUser() {
+    public Consumer<ResourceCommonDTO> mapUser() {
         // TODO: fetch users and set them to cache
         return (var dto) -> {
             if (dto.getCreator().getId() == null || dto.getModifier().getId() == null) {

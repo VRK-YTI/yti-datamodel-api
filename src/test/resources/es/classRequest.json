@@ -18,6 +18,13 @@
           }
         },
         {
+          "term": {
+            "targetClass": {
+              "value": "http://uri.suomi.fi/datamodel/ns/test/TestClass"
+            }
+          }
+        },
+        {
           "terms": {
             "resourceType": ["ATTRIBUTE", "ASSOCIATION"]
           }

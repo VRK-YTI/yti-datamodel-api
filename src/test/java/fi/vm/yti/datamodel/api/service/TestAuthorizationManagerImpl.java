@@ -81,4 +81,9 @@ public class TestAuthorizationManagerImpl implements AuthorizationManager {
     public boolean hasRightToDropDatabase() {
         return true;
     }
+
+	@Override
+	public boolean hasRightToSchema(String pid, Model model) {
+		return true;
+	}
 }

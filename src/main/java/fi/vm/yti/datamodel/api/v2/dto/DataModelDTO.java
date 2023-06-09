@@ -20,7 +20,9 @@ public class DataModelDTO {
     private Set<String> internalNamespaces = Set.of();
     private Set<ExternalNamespaceDTO> externalNamespaces = Set.of();
     private Set<String> terminologies = Set.of();
+    private Set<String> codeLists = Set.of();
     private String contact;
+    private Map<String, String> documentation = Map.of();
 
     public ModelType getType() {
         return type;
@@ -115,11 +117,27 @@ public class DataModelDTO {
         this.terminologies = terminologies;
     }
 
+    public Set<String> getCodeLists() {
+        return codeLists;
+    }
+
+    public void setCodeLists(Set<String> codeLists) {
+        this.codeLists = codeLists;
+    }
+
     public String getContact() {
         return contact;
     }
 
     public void setContact(String contact) {
         this.contact = contact;
+    }
+
+    public Map<String, String> getDocumentation() {
+        return documentation;
+    }
+
+    public void setDocumentation(Map<String, String> documentation) {
+        this.documentation = documentation;
     }
 }

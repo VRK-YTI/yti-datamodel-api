@@ -3,13 +3,24 @@ package fi.vm.yti.datamodel.api.v2.dto;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
+@Component
 public class ModelConstants {
 
-    private ModelConstants(){
-        //utility class
-    }
-
-    public static final String SUOMI_FI_NAMESPACE = "http://uri.suomi.fi/datamodel/ns/";
+	
+	private final String defaultNamespace;
+	
+	public ModelConstants(@Value("${defaultNamespace}") String defaultNamespace) {
+		this.defaultNamespace = defaultNamespace;
+	}
+	
+	public String getDefaultNamespace() {
+		return this.defaultNamespace;
+	}
+	
+    public static final String RESOURCE_SEPARATOR = "/";
     public static final String URN_UUID = "urn:uuid:";
     public static final String DEFAULT_LANGUAGE = "fi";
     public static final List<String> USED_LANGUAGES = List.of("fi", "sv", "en");
@@ -22,8 +33,44 @@ public class ModelConstants {
             "owl", "http://www.w3.org/2002/07/owl#",
             "dcap", "http://purl.org/ws-mmi-dc/terms/",
             "xsd", "http://www.w3.org/2001/XMLSchema#",
-            "iow", "http://uri.suomi.fi/datamodel/ns/iow#",
+            "iow", "http://uri.suomi.fi/datamodel/ns/iow/",
             "skos", "http://www.w3.org/2004/02/skos/core#",
             "sh", "http://www.w3.org/ns/shacl#"
+    );
+    public static final List<String> SUPPORTED_DATA_TYPES = List.of(
+            "owl:rational",
+            "owl:real",
+            "rdf:PlainLiteral",
+            "rdf:XMLLiteral",
+            "rdfs:Literal",
+            "xsd:anyURI",
+            "xsd:base64Binary",
+            "xsd:boolean",
+            "xsd:byte",
+            "xsd:dateTime",
+            "xsd:dateTimeStamp",
+            "xsd:decimal",
+            "xsd:double",
+            "xsd:float",
+            "xsd:hexBinary",
+            "xsd:int",
+            "xsd:integer",
+            "xsd:language",
+            "xsd:long",
+            "xsd:Name",
+            "xsd:NCName",
+            "xsd:negativeInteger",
+            "xsd:NMTOKEN",
+            "xsd:nonNegativeInteger",
+            "xsd:nonPositiveInteger",
+            "xsd:normalizedString",
+            "xsd:positiveInteger",
+            "xsd:short",
+            "xsd:string",
+            "xsd:token",
+            "xsd:unsignedByte",
+            "xsd:unsignedInt",
+            "xsd:unsignedLong",
+            "xsd:unsignedShort"
     );
 }

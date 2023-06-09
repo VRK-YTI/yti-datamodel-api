@@ -17,7 +17,6 @@ public class IndexModel extends IndexBase {
     @JsonFormat(with = JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY)
     private List<String> isPartOf;
     private List<String> language;
-    private Map<String, String> documentation;
 
     public String getContentModified() {
         return contentModified;
@@ -74,14 +73,5 @@ public class IndexModel extends IndexBase {
     public void setLanguage(List<String> language) {
         this.language = language;
     }
-
-    public Map<String, String> getDocumentation() {
-        return documentation;
-    }
-
-    public void setDocumentation(Map<String, String> documentation) {
-        this.documentation = documentation;
-    }
-
 
 }

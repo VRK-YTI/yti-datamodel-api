@@ -4,8 +4,8 @@ import fi.vm.yti.datamodel.api.index.OpenSearchUtils;
 import fi.vm.yti.datamodel.api.v2.dto.ResourceType;
 import fi.vm.yti.datamodel.api.v2.dto.Status;
 import fi.vm.yti.datamodel.api.v2.opensearch.dto.ResourceSearchRequest;
-import fi.vm.yti.datamodel.api.v2.opensearch.queries.ResourceQueryFactory;
 import fi.vm.yti.datamodel.api.v2.opensearch.queries.QueryFactoryUtils;
+import fi.vm.yti.datamodel.api.v2.opensearch.queries.ResourceQueryFactory;
 import org.junit.jupiter.api.Test;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.skyscreamer.jsonassert.JSONCompareMode;
@@ -30,6 +30,7 @@ class ResourceQueryFactoryTest {
         request.setPageSize(100);
         request.setStatus(Set.of(Status.DRAFT, Status.VALID));
         request.setSortLang("en");
+        request.setTargetClass("http://uri.suomi.fi/datamodel/ns/test/TestClass");
         request.setResourceTypes(Set.of(ResourceType.ATTRIBUTE, ResourceType.ASSOCIATION));
 
         var groupNamespaces = List.of("http://uri.suomi.fi/datamodel/ns/groupNs");
