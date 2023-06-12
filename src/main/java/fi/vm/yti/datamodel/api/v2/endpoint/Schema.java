@@ -3,7 +3,6 @@ package fi.vm.yti.datamodel.api.v2.endpoint;
 import static fi.vm.yti.security.AuthorizationException.check;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
-import java.io.InputStream;
 import java.util.List;
 import java.util.Set;
 
@@ -20,10 +19,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
-
-import com.networknt.schema.JsonSchemaFactory;
-import com.networknt.schema.SpecVersionDetector;
 
 import fi.vm.yti.datamodel.api.security.AuthorizationManager;
 import fi.vm.yti.datamodel.api.v2.dto.PIDType;
@@ -37,8 +34,8 @@ import fi.vm.yti.datamodel.api.v2.service.JenaService;
 import fi.vm.yti.datamodel.api.v2.service.PIDService;
 import fi.vm.yti.datamodel.api.v2.service.SchemaService;
 import fi.vm.yti.datamodel.api.v2.service.StorageService;
-import fi.vm.yti.datamodel.api.v2.service.ValidationRecord;
 import fi.vm.yti.datamodel.api.v2.service.StorageService.StoredFile;
+import fi.vm.yti.datamodel.api.v2.service.ValidationRecord;
 import fi.vm.yti.datamodel.api.v2.service.impl.PostgresStorageService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -112,20 +109,21 @@ public class Schema {
 	@SecurityRequirement(name = "Bearer Authentication")
 	@PutMapping(path = "/schema/{pid}/upload", produces = APPLICATION_JSON_VALUE, consumes = "multipart/form-data")
 	public SchemaInfoDTO uploadSchemaFile(@PathVariable String pid, @RequestParam("contentType") String contentType,
-			@RequestParam("file") MultipartFile file) {
+			@RequestParam("file") MultipartFile file) throws Exception {
 		Model metadataModel = jenaService.getSchema(pid);
 		SchemaInfoDTO schemaDTO = mapper.mapToSchemaDTO(pid, metadataModel);
 		check(authorizationManager.hasRightToAnyOrganization(Set.of(schemaDTO.getOrganization())));
+		ValidationRecord validationRecord;
 
 		try {
 			byte[] fileInBytes = file.getBytes();
 			if (schemaDTO.getFormat() == SchemaFormat.JSONSCHEMA) {
-				ValidationRecord validationRecord = JSONValidationService.validateJSONSchema(fileInBytes);
+				validationRecord = JSONValidationService.validateJSONSchema(fileInBytes);
 
-				boolean validationStatus = validationRecord.isValid();
+				boolean isValidJSONSchema = validationRecord.isValid();
 				List<String> validationMessages = validationRecord.validationOutput();
 
-				if (validationStatus) {
+				if (isValidJSONSchema) {
 					Model schemaModel = schemaService.transformJSONSchemaToInternal(pid, fileInBytes);
 					schemaModel.add(metadataModel);
 					jenaService.updateSchema(pid, schemaModel);
@@ -136,7 +134,8 @@ public class Schema {
 				}
 
 			} else {
-				throw new RuntimeException(String.format("Unsupported schema description format: %s not supported", schemaDTO.getFormat()));
+				throw new RuntimeException(String.format("Unsupported schema description format: %s not supported",
+						schemaDTO.getFormat()));
 			}
 
 		} catch (Exception ex) {

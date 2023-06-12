@@ -1,6 +1,7 @@
 package fi.vm.yti.datamodel.api.v2.service;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -17,7 +18,7 @@ import com.networknt.schema.ValidationMessage;
 public class JSONValidationService {
 
 	private static Map<String, String> schemaURIandPathMap = Map.of("http://json-schema.org/draft-04/schema#",
-			"schema_v4");
+			"/schema_v4");
 
 	public static ValidationRecord validateJSONSchema(byte[] inputSchemaFile) throws Exception, IOException {
 		ObjectMapper mapper = new ObjectMapper();
@@ -28,7 +29,9 @@ public class JSONValidationService {
 
 		if (schemaURIandPathMap.containsKey(inputSchemaVersion)) {
 
-			JsonNode metaSchemaNode = mapper.readTree(schemaURIandPathMap.get(inputSchemaVersion));
+			InputStream metaSchemaFile = JSONValidationService.class
+					.getResourceAsStream(schemaURIandPathMap.get(inputSchemaVersion));
+			JsonNode metaSchemaNode = mapper.readTree(metaSchemaFile);
 			JsonSchemaFactory schemaFactory = JsonSchemaFactory.getInstance(SpecVersionDetector.detect(metaSchemaNode));
 
 			JsonSchema schema = schemaFactory.getSchema(metaSchemaNode);
