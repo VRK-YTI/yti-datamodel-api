@@ -2,7 +2,6 @@ package fi.vm.yti.datamodel.api.v2.endpoint;
 
 import fi.vm.yti.datamodel.api.security.AuthorizationManager;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
-import fi.vm.yti.datamodel.api.v2.service.JenaService;
 import fi.vm.yti.datamodel.api.v2.validator.ExceptionHandlerAdvice;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -37,9 +36,6 @@ class IndexControllerTest {
     @Autowired
     private IndexController indexController;
 
-    @MockBean
-    private JenaService jenaService;
-
     @BeforeEach
     public void setup() {
         this.mvc = MockMvcBuilders
@@ -57,5 +53,35 @@ class IndexControllerTest {
             .andExpect(status().isOk());
 
         verify(this.openSearchIndexer).reindex();
+    }
+
+    @Test
+    void shouldReIndexParameter() throws Exception {
+        this.mvc
+                .perform(get("/v2/index/reindex")
+                        .param("index", "models_v2"))
+                .andExpect(status().isOk());
+        verify(openSearchIndexer).initModelIndex();
+
+        this.mvc
+                .perform(get("/v2/index/reindex")
+                        .param("index", "resources_v2"))
+                .andExpect(status().isOk());
+        verify(openSearchIndexer).initResourceIndex();
+
+        this.mvc
+                .perform(get("/v2/index/reindex")
+                        .param("index", "external_v2"))
+                .andExpect(status().isOk());
+        verify(openSearchIndexer).initExternalResourceIndex();
+    }
+
+    @Test
+    void reindexThrowOnInvalidParamater() throws Exception{
+        this.mvc
+                .perform(get("/v2/index/reindex")
+                        .param("index", "invalid"))
+                .andExpect(status().isBadRequest());
+        verifyNoInteractions(openSearchIndexer);
     }
 }
