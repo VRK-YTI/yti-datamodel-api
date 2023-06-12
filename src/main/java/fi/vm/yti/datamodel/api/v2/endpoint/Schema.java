@@ -113,12 +113,11 @@ public class Schema {
 		Model metadataModel = jenaService.getSchema(pid);
 		SchemaInfoDTO schemaDTO = mapper.mapToSchemaDTO(pid, metadataModel);
 		check(authorizationManager.hasRightToAnyOrganization(Set.of(schemaDTO.getOrganization())));
-		ValidationRecord validationRecord;
 
 		try {
 			byte[] fileInBytes = file.getBytes();
 			if (schemaDTO.getFormat() == SchemaFormat.JSONSCHEMA) {
-				validationRecord = JSONValidationService.validateJSONSchema(fileInBytes);
+				ValidationRecord validationRecord = JSONValidationService.validateJSONSchema(fileInBytes);
 
 				boolean isValidJSONSchema = validationRecord.isValid();
 				List<String> validationMessages = validationRecord.validationOutput();
