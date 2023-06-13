@@ -24,8 +24,6 @@ public class JSONValidationServiceTest {
 	String metaSchemaPath = "schema_v4";
 	InputStream metaSchemaInputStream = getClass().getClassLoader().getResourceAsStream(metaSchemaPath);
 
-	// have to restart the below one (comment - save - uncomment - save) each time
-	// the file is modified
 	private byte[] byteStreamFromPath(String schemaPath) throws Exception, IOException {
 		InputStream inputSchemaInputStream = getClass().getClassLoader().getResourceAsStream(schemaPath);
 		byte[] inputSchemaInByte = inputSchemaInputStream.readAllBytes();
@@ -37,7 +35,6 @@ public class JSONValidationServiceTest {
 	@Test
 	void testValidJSONSchema() throws Exception, IOException {
 		String validInputSchemaPath = "test_jsonschema_b2share.json";
-		// *** validate format (eg email, date etc) with regex? ***
 
 		assertEquals(JSONValidationService.validateJSONSchema(byteStreamFromPath(validInputSchemaPath)),
 				new ValidationRecord(true, Arrays.asList()));
