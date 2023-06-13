@@ -12,5 +12,6 @@ public enum ModelType {
      * EN: Core vocabulary
      */
     LIBRARY,
-    SCHEMA
+    SCHEMA,
+    CROSSWALK
 }

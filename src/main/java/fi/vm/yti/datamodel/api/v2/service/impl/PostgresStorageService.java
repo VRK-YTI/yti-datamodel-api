@@ -19,6 +19,7 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Service;
 
+import fi.vm.yti.datamodel.api.v2.dto.ModelType;
 import fi.vm.yti.datamodel.api.v2.service.StorageService;
 
 @Service
@@ -31,15 +32,25 @@ public class PostgresStorageService implements StorageService {
 
 	@Override
 	public int storeSchemaFile(String schemaPID, String contentType, byte[] data) {
+		return storeFile(schemaPID, contentType, data, ModelType.SCHEMA);
+	}
+
+	@Override
+	public int storeCrosswalkFile(String crosswalkPID, String contentType, byte[] data) {
+		return storeFile(crosswalkPID, contentType, data, ModelType.CROSSWALK);
+	}
+
+	private int storeFile(String pid, String contentType, byte[] data, ModelType type) {
 		KeyHolder keyHolder = new GeneratedKeyHolder();
 
 		jdbcTemplate.update(con -> {
 			PreparedStatement ps = con.prepareStatement(
-					"insert into schema_files(schema_pid, content_type, data) values(?, ?, ?)",
+					"insert into mscr_files(pid, content_type, data, type) values(?, ?, ?, ?)",
 					Statement.RETURN_GENERATED_KEYS);
-			ps.setString(1, schemaPID);
+			ps.setString(1, pid);
 			ps.setString(2, contentType);
 			ps.setBytes(3, data);
+			ps.setString(4, ModelType.SCHEMA.name());
 			return ps;
 		}, keyHolder);
 
@@ -53,7 +64,7 @@ public class PostgresStorageService implements StorageService {
 			@Override
 			public PreparedStatement createPreparedStatement(Connection con) throws SQLException {
 				PreparedStatement ps = con
-						.prepareStatement("select content_type, data, id from schema_files where id = ?");
+						.prepareStatement("select content_type, data, id from mscr_files where id = ?");
 				ps.setLong(1, fileID);
 				return ps;
 			}
@@ -65,7 +76,7 @@ public class PostgresStorageService implements StorageService {
 				String contentType = rs.getString(1);
 				byte[] data = rs.getBytes(2);
 				long fileID = rs.getLong(3);
-				return new StoredFile(contentType, data, fileID);
+				return new StoredFile(contentType, data, fileID, ModelType.SCHEMA);
 			}
 		});
 	}
@@ -77,7 +88,7 @@ public class PostgresStorageService implements StorageService {
 			@Override
 			public PreparedStatement createPreparedStatement(Connection con) throws SQLException {
 				PreparedStatement ps = con
-						.prepareStatement("select content_type, data, id from schema_files where schema_pid = ?");
+						.prepareStatement("select content_type, data, id, type from mscr_files where pid = ?");
 				ps.setString(1, schemaPID);
 				return ps;
 			}
@@ -90,7 +101,8 @@ public class PostgresStorageService implements StorageService {
 					String contentType = rs.getString(1);
 					byte[] data = rs.getBytes(2);
 					long fileID = rs.getLong(3);
-					files.add(new StoredFile(contentType, data, fileID));
+					ModelType type = ModelType.valueOf(rs.getString(4));
+					files.add(new StoredFile(contentType, data, fileID, type));
 				}
 				return files;
 			}
