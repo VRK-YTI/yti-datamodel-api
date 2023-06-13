@@ -31,11 +31,13 @@ import fi.vm.yti.datamodel.api.v2.dto.SchemaInfoDTO;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
 import fi.vm.yti.datamodel.api.v2.mapper.SchemaMapper;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
+import fi.vm.yti.datamodel.api.v2.service.JSONValidationService;
 import fi.vm.yti.datamodel.api.v2.service.JenaService;
 import fi.vm.yti.datamodel.api.v2.service.PIDService;
 import fi.vm.yti.datamodel.api.v2.service.SchemaService;
 import fi.vm.yti.datamodel.api.v2.service.StorageService;
 import fi.vm.yti.datamodel.api.v2.service.StorageService.StoredFile;
+import fi.vm.yti.datamodel.api.v2.service.ValidationRecord;
 import fi.vm.yti.datamodel.api.v2.service.impl.PostgresStorageService;
 import fi.vm.yti.security.AuthenticatedUserProvider;
 import io.swagger.v3.oas.annotations.Operation;
@@ -45,27 +47,27 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
 @RequestMapping("v2")
-@Tag(name="Schema")
+@Tag(name = "Schema")
 //@Validated
 public class Schema {
 
 	private static final Logger logger = LoggerFactory.getLogger(Schema.class);
 
-    private final AuthorizationManager authorizationManager;
+	private final AuthorizationManager authorizationManager;
 
-    private final OpenSearchIndexer openSearchIndexer;
+	private final OpenSearchIndexer openSearchIndexer;
 
-    private final JenaService jenaService;
+	private final JenaService jenaService;
 
-    private final SchemaMapper mapper;
+	private final SchemaMapper mapper;
 
 	private final SchemaService schemaService;
-	
+
 	private final PIDService PIDService;
 	
 	private final StorageService storageService;	
 	
-    private final AuthenticatedUserProvider userProvider;
+  private final AuthenticatedUserProvider userProvider;
 
 	public Schema(JenaService jenaService,
             AuthorizationManager authorizationManager,
@@ -84,13 +86,12 @@ public class Schema {
 		this.PIDService = PIDService;
 		this.storageService = storageService;
 		this.userProvider = userProvider;
-		
 	}
 
-    @Operation(summary = "Create schema")
-    @ApiResponse(responseCode = "200", description = "")
-    @SecurityRequirement(name ="Bearer Authentication")
-	@PutMapping(path="/schema", produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
+	@Operation(summary = "Create schema")
+	@ApiResponse(responseCode = "200", description = "")
+	@SecurityRequirement(name = "Bearer Authentication")
+	@PutMapping(path = "/schema", produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
 	public SchemaInfoDTO createSchema(@RequestBody SchemaDTO schemaDTO) {
 		logger.info("Create Schema {}", schemaDTO);
 		check(authorizationManager.hasRightToAnyOrganization(schemaDTO.getOrganizations()));		
@@ -105,7 +106,46 @@ public class Schema {
         return mapper.mapToSchemaDTO(PID, jenaService.getSchema(PID));
 		
 	}
+    
+	@Operation(summary = "Upload and associate a schema description file to an existing schema")
+	@ApiResponse(responseCode = "200", description = "")
+	@SecurityRequirement(name = "Bearer Authentication")
+	@PutMapping(path = "/schema/{pid}/upload", produces = APPLICATION_JSON_VALUE, consumes = "multipart/form-data")
+	public SchemaInfoDTO uploadSchemaFile(@PathVariable String pid, @RequestParam("contentType") String contentType,
+			@RequestParam("file") MultipartFile file) throws Exception {
+		Model metadataModel = jenaService.getSchema(pid);
+		SchemaInfoDTO schemaDTO = mapper.mapToSchemaDTO(pid, metadataModel);
+		check(authorizationManager.hasRightToSchema(pid, metadataModel));
 
+		try {
+			byte[] fileInBytes = file.getBytes();
+			if (schemaDTO.getFormat() == SchemaFormat.JSONSCHEMA) {
+				ValidationRecord validationRecord = JSONValidationService.validateJSONSchema(fileInBytes);
+
+				boolean isValidJSONSchema = validationRecord.isValid();
+				List<String> validationMessages = validationRecord.validationOutput();
+
+				if (isValidJSONSchema) {
+					Model schemaModel = schemaService.transformJSONSchemaToInternal(pid, fileInBytes);
+					schemaModel.add(metadataModel);
+					jenaService.updateSchema(pid, schemaModel);
+					storageService.storeSchemaFile(pid, contentType, file.getBytes());
+				} else {
+					String exceptionOutput = String.join("\n", validationMessages);
+					throw new Exception(exceptionOutput);
+				}
+
+			} else {
+				throw new RuntimeException(String.format("Unsupported schema description format: %s not supported",
+						schemaDTO.getFormat()));
+			}
+
+		} catch (Exception ex) {
+			throw new RuntimeException("Error occured while ingesting file based schema description", ex);
+		}
+		return mapper.mapToSchemaDTO(pid, metadataModel);
+	}
+  
     @Operation(summary = "Modify schema")
     @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "The JSON data for the new schema node")
     @ApiResponse(responseCode = "200", description = "The JSON of the update model, basically the same as the request body.")
@@ -140,32 +180,7 @@ public class Schema {
     	return mapper.mapToSchemaDTO(pid, jenaModel);
     }
     
-    @Operation(summary = "Upload and associate a schema description file to an existing schema")
-    @ApiResponse(responseCode = "200", description = "")
-    @SecurityRequirement(name ="Bearer Authentication")
-    @PutMapping(path="/schema/{pid}/upload", produces = APPLICATION_JSON_VALUE, consumes = "multipart/form-data")
-    public SchemaInfoDTO uploadSchemaFile(@PathVariable String pid, @RequestParam("contentType") String contentType, @RequestParam("file") MultipartFile file) {
-    	var metadataModel = jenaService.getSchema(pid);
-    	SchemaInfoDTO schemaDTO = mapper.mapToSchemaDTO(pid, metadataModel);    	
-		check(authorizationManager.hasRightToSchema(pid, metadataModel));		
-    	
-    	try {
-    		// transform to the internal format
-    		if(schemaDTO.getFormat() != SchemaFormat.JSONSCHEMA) {
-    			throw new RuntimeException("Unsupported schema description format");
-    		}
-    		Model schemaModel = schemaService.transformJSONSchemaToInternal(pid, file.getBytes());
-    		schemaModel.add(metadataModel);
-    		jenaService.updateSchema(pid, schemaModel);
-    		// store the original file    		
-    		storageService.storeSchemaFile(pid, contentType, file.getBytes());
-    		
-    		
-    	}catch(Exception ex) {
-    		throw new RuntimeException("Error occured while ingesting file based schema description", ex);
-    	}
-    	return mapper.mapToSchemaDTO(pid, metadataModel);
-    }
+
     
     
     @Operation(summary = "Get original file version of the schema (if available)", description = "If the result is only one file it is returned as is, but if the content includes multiple files they a returned as a zip file.")
@@ -182,18 +197,17 @@ public class Schema {
     	else {
     		return null;
     	}
-    }    
-    
-    @Operation(summary = "Get SHACL version of the schema")
-    @ApiResponse(responseCode = "200", description = "")
-    @GetMapping(path = "/schema/{pid}/internal", produces = "text/turtle")
-    public ResponseEntity<StreamingResponseBody> exportRawModel(@PathVariable String pid) {    	
-        var model = jenaService.getSchema(pid);        
-        StreamingResponseBody responseBody = httpResponseOutputStream -> {
-        	model.write(httpResponseOutputStream, "TURTLE");
-        };
-        return ResponseEntity.status(HttpStatus.OK).body(responseBody);
-    }
-    
-    
+	}
+
+	@Operation(summary = "Get SHACL version of the schema")
+	@ApiResponse(responseCode = "200", description = "")
+	@GetMapping(path = "/schema/{pid}/internal", produces = "text/turtle")
+	public ResponseEntity<StreamingResponseBody> exportRawModel(@PathVariable String pid) {
+		var model = jenaService.getSchema(pid);
+		StreamingResponseBody responseBody = httpResponseOutputStream -> {
+			model.write(httpResponseOutputStream, "TURTLE");
+		};
+		return ResponseEntity.status(HttpStatus.OK).body(responseBody);
+	}
+
 }

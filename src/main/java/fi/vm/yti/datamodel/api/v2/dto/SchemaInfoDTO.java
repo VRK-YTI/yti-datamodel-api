@@ -5,7 +5,7 @@ import java.util.Set;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 public class SchemaInfoDTO extends DataModelInfoDTO {
-		
+  
 	private SchemaFormat format;
 	private String aggregationKey;
 	private Set<FileMetadata> fileMetadata = Set.of();

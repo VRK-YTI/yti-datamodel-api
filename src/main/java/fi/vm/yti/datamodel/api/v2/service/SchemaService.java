@@ -3,7 +3,6 @@ package fi.vm.yti.datamodel.api.v2.service;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map.Entry;
-import java.util.UUID;
 
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
@@ -20,9 +19,20 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import fi.vm.yti.datamodel.api.v2.dto.MSCR;
 
+
+
 @Service
 public class SchemaService {
+	
 
+	/**
+	Adds a datatype property to the RDF model.
+	@param propID The property ID.
+	@param node The JSON node containing the property details.
+	@param model The RDF model.
+	@param schemaPID The schema PID.
+	@return The created resource representing the datatype property.
+	*/
 	private Resource addDatatypeProperty(String propID, JsonNode node, Model model, String schemaPID) {
 		Resource propertyResource = model.createResource(schemaPID + "#" + propID);
 		propertyResource.addProperty(RDF.type, model.getResource(SHACL.PropertyShape.getURI()));
@@ -36,7 +46,16 @@ public class SchemaService {
 		
 	}
 	
-	
+	/**
+
+	Adds an object property to the RDF model.
+	@param propID The property ID.
+	@param node The JSON node containing the property details.
+	@param model The RDF model.
+	@param schemaPID The schema PID.
+	@param targetShape The target shape for the object property.
+	@return The created resource representing the object property.
+	*/
 	private Resource addObjectProperty(String propID, JsonNode node, Model model, String schemaPID, String targetShape) {
 		Resource propertyResource = model.createResource(schemaPID + "#" + propID);
 		propertyResource.addProperty(RDF.type, model.getResource(SHACL.PropertyShape.getURI()));
@@ -61,7 +80,16 @@ public class SchemaService {
 		
 	}		
 	
+
+	/**
 	
+	Handles an object property and creates the corresponding SHACL (Node)Shape.
+	
+	@param propID The property ID.
+	@param node The JSON node containing the property details.
+	@param schemaPID The schema PID.
+	@param model The RDF model.
+	*/
 	private void handleObject(String propID, JsonNode node, String schemaPID, Model model) {
 
 		Resource nodeShapeResource = model.createResource(schemaPID + "#" + propID);
@@ -74,6 +102,11 @@ public class SchemaService {
 		if(node == null || node.get("properties") == null) {
 			return;
 		}
+		
+		/* Iterate over properties
+		 * If a property is an array or object – add and recursively iterate over them
+		 * If a property is a datatype / literal – it's just added.
+		 */
 		Iterator<Entry<String, JsonNode>> propertiesIterator = node.get("properties").fields();
 		while(propertiesIterator.hasNext()) {
 			Entry<String, JsonNode> entry = propertiesIterator.next();
@@ -99,30 +132,30 @@ public class SchemaService {
 			}
 			
 		}	
-
 	}
+	
+    /**
+     * Transforms a JSON schema into an internal RDF model.
+     *
+     * @param schemaPID The schema PID.
+     * @param data      The byte array containing the JSON schema data that comes in request
+     * @return The transformed RDF model.
+     * @throws Exception If an error occurs during the transformation process.
+     * @throws IOException If an I/O error occurs while reading the JSON schema data.
+     */
 	public Model transformJSONSchemaToInternal(String schemaPID, byte[] data) throws Exception, IOException {
-		
 		
 		Model model = ModelFactory.createDefaultModel();
 		
+		// ObjectMapper is required to parse the JSON data
 		ObjectMapper mapper = new ObjectMapper();
+		
 		JsonNode root = mapper.readTree(data);
-		
-		String schemaVersion  =root.get("$schema").asText();
-		if(!schemaVersion.equals("http://json-schema.org/draft-04/schema#")) {
-			throw new Exception("Unsupported JSON schema version");
-		}
-		
 		var modelResource = model.createResource(schemaPID);
 		modelResource.addProperty(DCTerms.language, "en");
 		
-		
+		// Adding the schema to a corresponding internal model 
 		handleObject("root", root, schemaPID, model);
-			
-		
 		return model;
-		
 	}
-	
 }
