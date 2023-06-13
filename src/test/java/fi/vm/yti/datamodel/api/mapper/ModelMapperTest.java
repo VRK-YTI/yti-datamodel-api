@@ -7,15 +7,14 @@ import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.mapper.ModelMapper;
 import fi.vm.yti.datamodel.api.v2.service.JenaService;
 import fi.vm.yti.security.YtiUser;
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.ModelFactory;
-import org.apache.jena.rdf.model.Resource;
-import org.apache.jena.rdf.model.ResourceFactory;
+import org.apache.jena.rdf.model.*;
 import org.apache.jena.sparql.vocabulary.FOAF;
 import org.apache.jena.vocabulary.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
@@ -55,8 +54,9 @@ class ModelMapperTest {
         when(jenaService.getOrganizations()).thenReturn(mockOrgs);
     }
 
-    @Test
-    void testMapToJenaModel() {
+    @ParameterizedTest
+    @EnumSource(ModelType.class)
+    void testMapToJenaModel(ModelType modelType) {
         var mockModel = ModelFactory.createDefaultModel();
         mockModel.createResource("http://uri.suomi.fi/datamodel/ns/newint")
                         .addProperty(RDF.type, DCAP.DCAP)
@@ -66,7 +66,6 @@ class ModelMapperTest {
         UUID organizationId = UUID.randomUUID();
         YtiUser mockUser = EndpointUtils.mockUser;
 
-        //TODO: should we have 2 separate tests for ModelType.LIBRARY and ModelType.PROFILE?
         DataModelDTO dto = new DataModelDTO();
         dto.setPrefix("test");
         dto.setLabel(Map.of(
@@ -79,10 +78,11 @@ class ModelMapperTest {
         dto.setGroups(Set.of("P11"));
         dto.setLanguages(Set.of("fi", "sv"));
         dto.setOrganizations(Set.of(organizationId));
-        dto.setType(ModelType.PROFILE);
         dto.setInternalNamespaces(Set.of("http://uri.suomi.fi/datamodel/ns/newint"));
         dto.setContact("test@localhost");
-        dto.setCodeLists(Set.of("http://uri.suomi.fi/codelist/test/testcodelist"));
+        if (modelType.equals(ModelType.PROFILE)) {
+            dto.setCodeLists(Set.of("http://uri.suomi.fi/codelist/test/testcodelist"));
+        }
         dto.setTerminologies(Set.of("http://uri.suomi.fi/terminology/test"));
         dto.setDocumentation(Map.of("fi","""
                 test documentation
@@ -95,7 +95,7 @@ class ModelMapperTest {
         externalDTO.setPrefix("ext");
         dto.setExternalNamespaces(Set.of(externalDTO));
 
-        Model model = mapper.mapToJenaModel(dto, mockUser);
+        Model model = mapper.mapToJenaModel(dto, modelType, mockUser);
 
         Resource modelResource = model.getResource("http://uri.suomi.fi/datamodel/ns/test");
         Resource groupResource = model.getResource("http://urn.fi/URN:NBN:fi:uuid:au:ptvl:v1105");
@@ -114,7 +114,12 @@ class ModelMapperTest {
 
         assertEquals(mockUser.getId().toString(), MapperUtils.propertyToString(modelResource, Iow.creator));
         assertEquals(mockUser.getId().toString(), MapperUtils.propertyToString(modelResource, Iow.modifier));
-        assertEquals("http://uri.suomi.fi/codelist/test/testcodelist", MapperUtils.propertyToString(modelResource, Iow.codeLists));
+
+        if (modelType.equals(ModelType.PROFILE)) {
+            assertEquals("http://uri.suomi.fi/codelist/test/testcodelist", MapperUtils.propertyToString(modelResource, Iow.codeLists));
+        } else {
+            assertNull(MapperUtils.propertyToString(modelResource, Iow.codeLists));
+        }
         assertEquals("http://uri.suomi.fi/terminology/test", MapperUtils.propertyToString(modelResource, DCTerms.references));
         assertEquals("""
                 test documentation
@@ -125,9 +130,9 @@ class ModelMapperTest {
         assertEquals("test@localhost", MapperUtils.propertyToString(modelResource, Iow.contact));
     }
 
-    @Test
-    void testMapToUpdateJenaModel() {
-        //TODO: should we have 2 separate tests for ModelType.LIBRARY and ModelType.PROFILE?
+    @ParameterizedTest
+    @EnumSource(ModelType.class)
+    void testMapToUpdateJenaModel(ModelType modelType) {
         var m = MapperTestUtils.getModelFromFile("/test_datamodel_library.ttl");
 
         when(jenaService.getDataModel("test")).thenReturn(m);
@@ -163,6 +168,10 @@ class ModelMapperTest {
         externalDTO.setPrefix("ext");
 
         dto.setExternalNamespaces(Set.of(externalDTO));
+
+        if (modelType.equals(ModelType.PROFILE)) {
+            dto.setCodeLists(Set.of("http://uri.suomi.fi/codelist/test"));
+        }
 
         //unchanged values
         Resource modelResource = m.getResource("http://uri.suomi.fi/datamodel/ns/test");
@@ -218,6 +227,12 @@ class ModelMapperTest {
                 hello
                 
                 new test""", MapperUtils.localizedPropertyToMap(modelResource, Iow.documentation).get("fi"));
+
+        if (modelType.equals(ModelType.PROFILE)) {
+            assertEquals("http://uri.suomi.fi/codelist/test", MapperUtils.propertyToString(modelResource, Iow.codeLists));
+        } else {
+            assertNull(MapperUtils.propertyToString(modelResource, Iow.codeLists));
+        }
     }
 
     @Test
