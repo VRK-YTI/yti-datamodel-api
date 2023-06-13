@@ -5,7 +5,7 @@ import fi.vm.yti.datamodel.api.v2.dto.Status;
 import org.opensearch.client.opensearch._types.FieldValue;
 import org.opensearch.client.opensearch._types.query_dsl.*;
 
-import java.util.List;
+import java.util.Collection;
 
 public class QueryFactoryUtils {
 
@@ -15,6 +15,7 @@ public class QueryFactoryUtils {
 
     public static final int DEFAULT_PAGE_FROM = 0;
     public static final int DEFAULT_PAGE_SIZE = 10;
+    public static final int INTERNAL_SEARCH_PAGE_SIZE = 10000;
     public static final String DEFAULT_SORT_LANG = "fi";
 
     public static int pageFrom(Integer pageFrom){
@@ -43,7 +44,7 @@ public class QueryFactoryUtils {
         return BoolQuery.of(q -> q.mustNot(termQuery))._toQuery();
     }
 
-    public static Query termsQuery(String field, List<String> values){
+    public static Query termsQuery(String field, Collection<String> values){
         return TermsQuery.of(q -> q
                 .field(field)
                 .terms(t -> t

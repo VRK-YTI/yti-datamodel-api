@@ -6,7 +6,6 @@ import fi.vm.yti.datamodel.api.v2.dto.TerminologyDTO;
 import fi.vm.yti.datamodel.api.v2.dto.TerminologyNodeDTO;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
-import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.vocabulary.*;
 
@@ -17,22 +16,13 @@ public class TerminologyMapper {
     private TerminologyMapper() {
     }
 
-    public static Model mapTerminologyToJenaModel(String graph, TerminologyNodeDTO terminologyDTO, Model model) {
-        Resource resource;
-        if (model == null) {
-            model = ModelFactory.createDefaultModel();
-            resource = model.createResource(graph);
-            resource.addProperty(RDF.type, SKOS.ConceptScheme);
-        } else {
-            resource = model.getResource(graph);
-            resource.removeAll(RDFS.label);
-        }
+    public static Model mapTerminologyToJenaModel(String graph, TerminologyNodeDTO terminologyDTO) {
+        var model = ModelFactory.createDefaultModel();
+        var resource = model.createResource(graph)
+                        .addProperty(RDF.type, SKOS.ConceptScheme);
 
         var prefLabels = terminologyDTO.getProperties().getPrefLabel();
-        for (var label : prefLabels) {
-            resource.addProperty(RDFS.label, model.createLiteral(label.getValue(), label.getLang()));
-        }
-
+        prefLabels.forEach(label -> resource.addProperty(RDFS.label, model.createLiteral(label.getValue(), label.getLang())));
         return model;
     }
 

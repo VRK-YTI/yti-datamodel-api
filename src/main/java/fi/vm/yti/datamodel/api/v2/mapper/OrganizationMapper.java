@@ -23,69 +23,70 @@ import static fi.vm.yti.datamodel.api.v2.mapper.MapperUtils.localizedPropertyToM
 
 public class OrganizationMapper {
 
-    private OrganizationMapper() {
-    }
+	private OrganizationMapper() {
+	}
 
-    public static Model mapGroupManagementOrganizationToModel(List<GroupManagementOrganizationDTO> organizations) {
-        var orgModel = ModelFactory.createDefaultModel();
+	public static Model mapGroupManagementOrganizationToModel(List<GroupManagementOrganizationDTO> organizations) {
+		var orgModel = ModelFactory.createDefaultModel();
 
-        for (var organization : organizations) {
-            var resource = orgModel.createResource(URN_UUID + organization.getUuid());
-            resource.addProperty(RDF.type, FOAF.Organization);
+		for (var organization : organizations) {
+			var resource = orgModel.createResource(URN_UUID + organization.getUuid());
+			resource.addProperty(RDF.type, FOAF.Organization);
 
-            USED_LANGUAGES.forEach(lang -> {
-                var label = organization.getPrefLabel().get(lang);
-                var description = organization.getDescription().get(lang);
+			USED_LANGUAGES.forEach(lang -> {
+				var label = organization.getPrefLabel().get(lang);
+				var description = organization.getDescription().get(lang);
 
-                if (StringUtils.isNotBlank(label)) {
-                    resource.addLiteral(SKOS.prefLabel, ResourceFactory.createLangLiteral(label, lang));
-                }
-                if (StringUtils.isNotBlank(description)) {
-                    resource.addLiteral(DCTerms.description, ResourceFactory.createLangLiteral(description, lang));
-                }
-            });
+				if (StringUtils.isNotBlank(label)) {
+					resource.addLiteral(SKOS.prefLabel, ResourceFactory.createLangLiteral(label, lang));
+				}
+				if (StringUtils.isNotBlank(description)) {
+					resource.addLiteral(DCTerms.description, ResourceFactory.createLangLiteral(description, lang));
+				}
+			});
 
-            if (StringUtils.isNotBlank(organization.getParentId())) {
-                resource.addProperty(Iow.parentOrganization, URN_UUID + organization.getParentId());
-            }
-            if (StringUtils.isNotBlank(organization.getUrl())) {
-                resource.addLiteral(FOAF.homepage, organization.getUrl());
-            }
-        }
-        return orgModel;
-    }
+			if (StringUtils.isNotBlank(organization.getParentId())) {
+				resource.addProperty(Iow.parentOrganization, URN_UUID + organization.getParentId());
+			}
+			if (StringUtils.isNotBlank(organization.getUrl())) {
+				resource.addLiteral(FOAF.homepage, organization.getUrl());
+			}
+		}
 
-    public static Set<OrganizationDTO> mapOrganizationsToDTO(Set<String> organizations, Model organizationModel) {
-        return organizations.stream().map(org -> {
-            var orgRes = organizationModel.getResource(org);
-            var labels = localizedPropertyToMap(orgRes, SKOS.prefLabel);
-            var id = getUUID(orgRes.getURI());
+		return orgModel;
+	}
 
-            var parentId = getUUID(MapperUtils.propertyToString(orgRes, Iow.parentOrganization));
-            if(id == null){
-                throw new MappingError("Could not map organization");
-            }
-            return new OrganizationDTO(id.toString(), labels, parentId);
-        }).collect(Collectors.toSet());
-    }
+	public static Set<OrganizationDTO> mapOrganizationsToDTO(Set<String> organizations, Model organizationModel) {
+		return organizations.stream().map(org -> {
+			var orgRes = organizationModel.getResource(org);
+			var labels = localizedPropertyToMap(orgRes, SKOS.prefLabel);
+			var id = getUUID(orgRes.getURI());
 
-    public static List<OrganizationDTO> mapToListOrganizationDTO(Model organizationModel) {
-        var iterator = organizationModel.listResourcesWithProperty(RDF.type, FOAF.Organization);
-        List<OrganizationDTO> result = new ArrayList<>();
+			var parentId = getUUID(MapperUtils.propertyToString(orgRes, Iow.parentOrganization));
+			if (id == null) {
+				throw new MappingError("Could not map organization");
+			}
+			return new OrganizationDTO(id.toString(), labels, parentId);
+		}).collect(Collectors.toSet());
+	}
 
-        while (iterator.hasNext()) {
-            var resource = iterator.next().asResource();
+	public static List<OrganizationDTO> mapToListOrganizationDTO(Model organizationModel) {
+		var iterator = organizationModel.listResourcesWithProperty(RDF.type, FOAF.Organization);
+		List<OrganizationDTO> result = new ArrayList<>();
 
-            var labels = localizedPropertyToMap(resource, SKOS.prefLabel);
-            var id = getUUID(resource.getURI());
+		while (iterator.hasNext()) {
+			var resource = iterator.next().asResource();
 
-            var parentId = getUUID(MapperUtils.propertyToString(resource, Iow.parentOrganization));
+			var labels = localizedPropertyToMap(resource, SKOS.prefLabel);
+			var id = getUUID(resource.getURI());
 
-            if (id != null) {
-                result.add(new OrganizationDTO(id.toString(), labels, parentId));
-            }
-        }
-        return result;
-    }
+			var parentId = getUUID(MapperUtils.propertyToString(resource, Iow.parentOrganization));
+
+			if (id != null) {
+				result.add(new OrganizationDTO(id.toString(), labels, parentId));
+			}
+		}
+		return result;
+	}
 
 }

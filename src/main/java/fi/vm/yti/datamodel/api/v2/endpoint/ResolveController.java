@@ -14,6 +14,7 @@ import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDF;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -31,9 +32,14 @@ public class ResolveController {
     static final IRIFactory iriFactory = IRIFactory.iriImplementation();
 
     private final JenaService jenaService;
+    private final String defaultNamespace;
+    private static String _defaultNamespace;
 
-    public ResolveController(JenaService jenaService) {
+    public ResolveController(JenaService jenaService,
+    		@Value("${defaultNamespace}") String defaultNamespace) {
         this.jenaService = jenaService;
+        this.defaultNamespace = defaultNamespace;
+        _defaultNamespace = defaultNamespace;
     }
 
     @Operation(summary = "Resolve content by its IRI")
@@ -48,7 +54,7 @@ public class ResolveController {
             return ResponseEntity.badRequest().build();
         }
 
-        String resourcePath = iri.substring(ModelConstants.SUOMI_FI_NAMESPACE.length());
+        String resourcePath = iri.substring(defaultNamespace.length());
         var parts = resourcePath.split("\\W");
         String resource = null;
 
@@ -91,7 +97,7 @@ public class ResolveController {
 
     private void appendResource(StringBuilder redirectURL, String modelPrefix, String resource) {
         if (resource != null) {
-            var modelURI = ModelConstants.SUOMI_FI_NAMESPACE + modelPrefix;
+            var modelURI = defaultNamespace + modelPrefix;
             Model dataModel;
             try {
                 dataModel = jenaService.getDataModel(modelURI);
@@ -99,7 +105,7 @@ public class ResolveController {
                 return;
             }
 
-            var dataModelResource = dataModel.getResource(modelURI + "#" + resource);
+            var dataModelResource = dataModel.getResource(modelURI + ModelConstants.RESOURCE_SEPARATOR + resource);
 
             if (MapperUtils.hasType(dataModelResource, OWL.Class, SH.NodeShape)) {
                 redirectURL.append("/class/");
@@ -118,6 +124,6 @@ public class ResolveController {
 
     private static boolean checkIRI(IRI iri) {
         return !iri.hasViolation(false)
-                && iri.toString().startsWith(ModelConstants.SUOMI_FI_NAMESPACE);
+                && iri.toString().startsWith(_defaultNamespace);
     }
 }

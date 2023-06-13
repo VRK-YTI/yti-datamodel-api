@@ -12,6 +12,7 @@ public class ResourceSearchRequest extends BaseSearchRequest{
     private Set<String> groups;
     private Set<ResourceType> resourceTypes;
     private ModelType limitToModelType;
+    private String targetClass;
 
     public String getLimitToDataModel() {
         return limitToDataModel;
@@ -51,5 +52,13 @@ public class ResourceSearchRequest extends BaseSearchRequest{
 
     public void setLimitToModelType(ModelType limitToModelType) {
         this.limitToModelType = limitToModelType;
+    }
+
+    public String getTargetClass() {
+        return targetClass;
+    }
+
+    public void setTargetClass(String targetClass) {
+        this.targetClass = targetClass;
     }
 }

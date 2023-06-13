@@ -16,12 +16,12 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.util.Map;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-
+import static org.hamcrest.Matchers.endsWith;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
-import static org.hamcrest.Matchers.endsWith;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @TestPropertySource(properties = {
         "spring.cloud.config.import-check.enabled=false"
@@ -63,9 +63,9 @@ class ResolveControllerTest {
         when(jenaService.getDataModel(anyString())).thenReturn(model);
 
         var pathMap = Map.of(
-                "http://uri.suomi.fi/datamodel/ns/test#TestClass", "/model/test/class/TestClass",
-                "http://uri.suomi.fi/datamodel/ns/test#TestAttribute", "/model/test/attribute/TestAttribute",
-                "http://uri.suomi.fi/datamodel/ns/test#TestAssociation", "/model/test/association/TestAssociation"
+                "http://uri.suomi.fi/datamodel/ns/test/TestClass", "/model/test/class/TestClass",
+                "http://uri.suomi.fi/datamodel/ns/test/TestAttribute", "/model/test/attribute/TestAttribute",
+                "http://uri.suomi.fi/datamodel/ns/test/TestAssociation", "/model/test/association/TestAssociation"
         );
         var accept = "text/html";
         for (var key : pathMap.keySet()) {
@@ -84,7 +84,7 @@ class ResolveControllerTest {
 
         var accept = "text/turtle";
         mvc.perform(get("/v2/resolve")
-                        .param("iri", "http://uri.suomi.fi/datamodel/ns/test#TestClass")
+                        .param("iri", "http://uri.suomi.fi/datamodel/ns/test/TestClass")
                         .header(HttpHeaders.ACCEPT, accept))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(header().string(HttpHeaders.LOCATION, endsWith("/datamodel-api/v2/export/test/TestClass")));

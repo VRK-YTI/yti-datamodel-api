@@ -5,15 +5,18 @@ import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
 import fi.vm.yti.datamodel.api.v2.service.GroupManagementService;
 import fi.vm.yti.datamodel.api.v2.service.JenaService;
 import fi.vm.yti.datamodel.api.v2.service.NamespaceService;
+import fi.vm.yti.migration.MigrationConfig;
+import fi.vm.yti.migration.MigrationInitializer;
+import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import jakarta.annotation.PostConstruct;
-
 @Component
+@ImportAutoConfiguration(MigrationConfig.class)
 public class StartUpListener {
 
     private static final Logger logger = LoggerFactory.getLogger(StartUpListener.class);
@@ -29,7 +32,8 @@ public class StartUpListener {
                     OpenSearchConnector openSearchConnector,
                     OpenSearchIndexer openSearchIndexer,
                     JenaService jenaService,
-                    NamespaceService namespaceService) {
+                    NamespaceService namespaceService,
+                    MigrationInitializer migrationInitializer) {
         this.groupManagementService = groupManagementService;
         this.openSearchConnector = openSearchConnector;
         this.openSearchIndexer = openSearchIndexer;

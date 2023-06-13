@@ -10,6 +10,8 @@ public interface AuthorizationManager {
     boolean hasRightToAnyOrganization(Collection<UUID> organizations);
 
     boolean hasRightToModel(String prefix, Model model);
+    
+    boolean hasRightToSchema(String pid, Model model);
 
     boolean isAdminOfAnyOrganization(Collection<UUID> organizations);
 

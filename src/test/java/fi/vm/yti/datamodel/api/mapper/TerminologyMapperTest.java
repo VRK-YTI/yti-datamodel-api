@@ -30,7 +30,7 @@ class TerminologyMapperTest {
         dto.setUri(graph);
         dto.setProperties(properties);
 
-        var model = TerminologyMapper.mapTerminologyToJenaModel(graph, dto, null);
+        var model = TerminologyMapper.mapTerminologyToJenaModel(graph, dto);
         var resource = model.getResource(graph);
 
         assertEquals(graph, resource.getURI());
