@@ -115,7 +115,7 @@ public class Schema {
 			@RequestParam("file") MultipartFile file) throws Exception {
 		Model metadataModel = jenaService.getSchema(pid);
 		SchemaInfoDTO schemaDTO = mapper.mapToSchemaDTO(pid, metadataModel);
-		check(authorizationManager.hasRightToAnyOrganization(Set.of(schemaDTO.getOrganization())));
+		check(authorizationManager.hasRightToSchema(pid, metadataModel));
 
 		try {
 			byte[] fileInBytes = file.getBytes();
