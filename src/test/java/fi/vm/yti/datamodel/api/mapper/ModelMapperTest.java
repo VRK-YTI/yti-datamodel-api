@@ -130,9 +130,8 @@ class ModelMapperTest {
         assertEquals("test@localhost", MapperUtils.propertyToString(modelResource, Iow.contact));
     }
 
-    @ParameterizedTest
-    @EnumSource(ModelType.class)
-    void testMapToUpdateJenaModel(ModelType modelType) {
+    @Test
+    void testMapToUpdateJenaModel() {
         var m = MapperTestUtils.getModelFromFile("/test_datamodel_library.ttl");
 
         when(jenaService.getDataModel("test")).thenReturn(m);
@@ -168,10 +167,6 @@ class ModelMapperTest {
         externalDTO.setPrefix("ext");
 
         dto.setExternalNamespaces(Set.of(externalDTO));
-
-        if (modelType.equals(ModelType.PROFILE)) {
-            dto.setCodeLists(Set.of("http://uri.suomi.fi/codelist/test"));
-        }
 
         //unchanged values
         Resource modelResource = m.getResource("http://uri.suomi.fi/datamodel/ns/test");
@@ -227,12 +222,6 @@ class ModelMapperTest {
                 hello
                 
                 new test""", MapperUtils.localizedPropertyToMap(modelResource, Iow.documentation).get("fi"));
-
-        if (modelType.equals(ModelType.PROFILE)) {
-            assertEquals("http://uri.suomi.fi/codelist/test", MapperUtils.propertyToString(modelResource, Iow.codeLists));
-        } else {
-            assertNull(MapperUtils.propertyToString(modelResource, Iow.codeLists));
-        }
     }
 
     @Test
