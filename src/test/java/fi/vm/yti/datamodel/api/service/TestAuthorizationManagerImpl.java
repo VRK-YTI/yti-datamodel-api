@@ -82,8 +82,4 @@ public class TestAuthorizationManagerImpl implements AuthorizationManager {
         return true;
     }
 
-	@Override
-	public boolean hasRightToSchema(String pid, Model model) {
-		return true;
-	}
 }

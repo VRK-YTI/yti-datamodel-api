@@ -115,7 +115,7 @@ public class Schema {
 			@RequestParam("file") MultipartFile file) throws Exception {
 		Model metadataModel = jenaService.getSchema(pid);
 		SchemaInfoDTO schemaDTO = mapper.mapToSchemaDTO(pid, metadataModel);
-		check(authorizationManager.hasRightToSchema(pid, metadataModel));
+		check(authorizationManager.hasRightToModel(pid, metadataModel));
 
 		try {
 			byte[] fileInBytes = file.getBytes();
@@ -159,7 +159,7 @@ public class Schema {
             throw new ResourceNotFoundException(pid);
         }
 
-        check(authorizationManager.hasRightToSchema(pid, oldModel));
+        check(authorizationManager.hasRightToModel(pid, oldModel));
 
         var jenaModel = mapper.mapToUpdateJenaModel(pid, schemaDTO, oldModel, userProvider.getUser());
 

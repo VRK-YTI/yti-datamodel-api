@@ -50,7 +50,7 @@ public class PostgresStorageService implements StorageService {
 			ps.setString(1, pid);
 			ps.setString(2, contentType);
 			ps.setBytes(3, data);
-			ps.setString(4, ModelType.SCHEMA.name());
+			ps.setString(4, type.name());
 			return ps;
 		}, keyHolder);
 
@@ -64,8 +64,9 @@ public class PostgresStorageService implements StorageService {
 			@Override
 			public PreparedStatement createPreparedStatement(Connection con) throws SQLException {
 				PreparedStatement ps = con
-						.prepareStatement("select content_type, data, id from mscr_files where id = ?");
+						.prepareStatement("select content_type, data, id from mscr_files where id = ? and type = ?");
 				ps.setLong(1, fileID);
+				ps.setString(2, ModelType.SCHEMA.name());
 				return ps;
 			}
 		}, new ResultSetExtractor<StoredFile>() {
@@ -88,8 +89,9 @@ public class PostgresStorageService implements StorageService {
 			@Override
 			public PreparedStatement createPreparedStatement(Connection con) throws SQLException {
 				PreparedStatement ps = con
-						.prepareStatement("select content_type, data, id, type from mscr_files where pid = ?");
+						.prepareStatement("select content_type, data, id, type from mscr_files where pid = ? and type = ?");
 				ps.setString(1, schemaPID);
+				ps.setString(2, ModelType.SCHEMA.name());
 				return ps;
 			}
 		}, new ResultSetExtractor<List<StoredFile>>() {
@@ -109,4 +111,32 @@ public class PostgresStorageService implements StorageService {
 		});
 	}
 
+	@Override
+	public List<StoredFile> retrieveAllCrosswalkFiles(String pid) {
+		return jdbcTemplate.query(new PreparedStatementCreator() {
+
+			@Override
+			public PreparedStatement createPreparedStatement(Connection con) throws SQLException {
+				PreparedStatement ps = con
+						.prepareStatement("select content_type, data, id, type from mscr_files where pid = ? and type = ?");
+				ps.setString(1, pid);
+				ps.setString(2, ModelType.CROSSWALK.name());
+				return ps;
+			}
+		}, new ResultSetExtractor<List<StoredFile>>() {
+
+			@Override
+			public List<StoredFile> extractData(ResultSet rs) throws SQLException, DataAccessException {
+				List<StoredFile> files = new ArrayList<StoredFile>();
+				while (rs.next()) {
+					String contentType = rs.getString(1);
+					byte[] data = rs.getBytes(2);
+					long fileID = rs.getLong(3);
+					ModelType type = ModelType.valueOf(rs.getString(4));
+					files.add(new StoredFile(contentType, data, fileID, type));
+				}
+				return files;
+			}
+		});
+	}
 }

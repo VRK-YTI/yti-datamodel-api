@@ -1,6 +1,9 @@
 package fi.vm.yti.datamodel.api.v2.mapper;
 
 import java.util.Calendar;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import org.apache.jena.datatypes.xsd.XSDDateTime;
 import org.apache.jena.rdf.model.Model;
@@ -19,14 +22,25 @@ import fi.vm.yti.datamodel.api.v2.dto.CrosswalkDTO;
 import fi.vm.yti.datamodel.api.v2.dto.CrosswalkFormat;
 import fi.vm.yti.datamodel.api.v2.dto.CrosswalkInfoDTO;
 import fi.vm.yti.datamodel.api.v2.dto.DCAP;
+import fi.vm.yti.datamodel.api.v2.dto.FileMetadata;
 import fi.vm.yti.datamodel.api.v2.dto.Iow;
 import fi.vm.yti.datamodel.api.v2.dto.MSCR;
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
 import fi.vm.yti.datamodel.api.v2.dto.Status;
+import fi.vm.yti.datamodel.api.v2.service.StorageService;
+import fi.vm.yti.datamodel.api.v2.service.StorageService.StoredFile;
+import fi.vm.yti.datamodel.api.v2.service.impl.PostgresStorageService;
 
 @Service
 public class CrosswalkMapper {
 	private final Logger log = LoggerFactory.getLogger(CrosswalkMapper.class);
+	private final StorageService storageService;
+	
+	public CrosswalkMapper(
+			PostgresStorageService storageService) {
+		this.storageService = storageService;
+	}
+	
 	
 	public Model mapToJenaModel(String PID, CrosswalkDTO dto) {
 		log.info("Mapping CrosswalkDTO to Jena Model");
@@ -100,7 +114,15 @@ public class CrosswalkMapper {
 
 		
 		dto.setFormat(CrosswalkFormat.valueOf(MapperUtils.propertyToString(modelResource, MSCR.format)));
-				
+		
+		List<StoredFile> retrievedSchemaFiles = storageService.retrieveAllCrosswalkFiles(PID);
+		Set<FileMetadata> fileMetadatas = new HashSet<>();
+		retrievedSchemaFiles.forEach(file -> {
+			fileMetadatas.add(new FileMetadata(file.contentType(), file.data().length, file.fileID()));
+		});
+		dto.setFileMetadata(fileMetadatas);
+
+		
 		return dto;
 	}
 	

@@ -35,17 +35,6 @@ public class AuthorizationManagerImpl implements AuthorizationManager {
         YtiUser user = getUser();
         return user.isSuperuser() || user.isInAnyRole(EnumSet.of(ADMIN, DATA_MODEL_EDITOR), organizations);
     }
-
-    public boolean hasRightToSchema(String pid, Model model){
-        var oldRes = model.getResource(pid);
-        var organizations = oldRes.listProperties(DCTerms.contributor).toList().stream().map(prop -> {
-            var orgUri = prop.getObject().toString();
-            return UUID.fromString(
-                    orgUri.substring(
-                            orgUri.lastIndexOf(":")+ 1));
-        }).collect(Collectors.toSet());
-        return hasRightToAnyOrganization(organizations);
-    }
     
     public boolean hasRightToModel(String prefix, Model model){
         var oldRes = model.getResource(modelConstants.getDefaultNamespace() + prefix);
