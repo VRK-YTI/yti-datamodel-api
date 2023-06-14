@@ -11,8 +11,6 @@ public interface AuthorizationManager {
 
     boolean hasRightToModel(String prefix, Model model);
     
-    boolean hasRightToSchema(String pid, Model model);
-
     boolean isAdminOfAnyOrganization(Collection<UUID> organizations);
 
     boolean hasRightToRemoveClassReference(IRI modelIRI,

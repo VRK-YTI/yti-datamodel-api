@@ -16,6 +16,7 @@ public class CrosswalkInfoDTO extends ResourceInfoBaseDTO {
 	private Map<String, String> description = Map.of();
 	private Set<String> languages = Set.of();
 	private UUID organization;
+	private Set<FileMetadata> fileMetadata = Set.of();	
 	
 	private String PID;
 
@@ -81,6 +82,14 @@ public class CrosswalkInfoDTO extends ResourceInfoBaseDTO {
 	public void setAggregationKey(String aggregationKey) {
 		this.aggregationKey = aggregationKey;
 	}
+	
+	public Set<FileMetadata> getFileMetadata() {
+		return fileMetadata;
+	}
+
+	public void setFileMetadata(Set<FileMetadata> fileMetadata) {
+		this.fileMetadata = fileMetadata;
+	}		
 
 	@Override
     public String toString() {

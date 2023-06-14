@@ -17,4 +17,6 @@ public interface StorageService {
 	public record StoredFile(String contentType, byte[] data, long fileID, ModelType type) {
 	}
 
+	public List<StoredFile> retrieveAllCrosswalkFiles(String pid);
+
 }
