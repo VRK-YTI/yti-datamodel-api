@@ -155,7 +155,7 @@ public class ClassController {
 
         terminologyService.resolveConcept(dto.getSubject());
 
-        if (MapperUtils.isOntology(model.getResource(graph))) {
+        if (MapperUtils.isLibrary(model.getResource(graph))) {
             ClassMapper.mapToUpdateOntologyClass(model, graph, classResource, (ClassDTO) dto, userProvider.getUser());
         } else {
             ClassMapper.mapToUpdateNodeShape(model, graph, classResource, (NodeShapeDTO) dto, userProvider.getUser());
@@ -193,7 +193,7 @@ public class ClassController {
         var userMapper = hasRightToModel ? groupManagementService.mapUser() : null;
 
         ResourceInfoBaseDTO dto;
-        if (MapperUtils.isOntology(model.getResource(modelURI))) {
+        if (MapperUtils.isLibrary(model.getResource(modelURI))) {
             var classResources = jenaService.constructWithQuery(ClassMapper.getClassResourcesQuery(classURI, false));
             dto = ClassMapper.mapToClassDTO(model, modelURI, classIdentifier, orgModel,
                 hasRightToModel, userMapper);
@@ -355,7 +355,7 @@ public class ClassController {
     }
 
     private void checkDataModelType(Resource modelResource, BaseDTO dto) {
-        if (dto instanceof NodeShapeDTO && MapperUtils.isOntology(modelResource)) {
+        if (dto instanceof NodeShapeDTO && MapperUtils.isLibrary(modelResource)) {
             throw new MappingError("Cannot add node shape to ontology");
         } else if (dto instanceof ClassDTO && MapperUtils.isApplicationProfile(modelResource)) {
             throw new MappingError("Cannot add ontology class to application profile");

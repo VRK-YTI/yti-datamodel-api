@@ -1,6 +1,7 @@
 package fi.vm.yti.datamodel.api.v2.mapper;
 
 import fi.vm.yti.datamodel.api.v2.dto.*;
+import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexModel;
 import fi.vm.yti.datamodel.api.v2.service.JenaService;
 import fi.vm.yti.security.YtiUser;
@@ -40,20 +41,23 @@ public class ModelMapper {
         log.info("Mapping DatamodelDTO to Jena Model");
         var model = ModelFactory.createDefaultModel();
         var modelUri = ModelConstants.SUOMI_FI_NAMESPACE + modelDTO.getPrefix();
-        // TODO: type of application profile?
+
         model.setNsPrefixes(ModelConstants.PREFIXES);
-        Resource type = modelType.equals(ModelType.LIBRARY)
-                ? OWL.Ontology
-                : DCAP.DCAP;
 
         var creationDate = new XSDDateTime(Calendar.getInstance());
         var modelResource = model.createResource(modelUri)
-                .addProperty(RDF.type, type)
+                .addProperty(RDF.type, OWL.Ontology)
                 .addProperty(OWL.versionInfo, modelDTO.getStatus().name())
                 .addProperty(DCTerms.identifier, UUID.randomUUID().toString())
                 .addProperty(Iow.contentModified, ResourceFactory.createTypedLiteral(creationDate))
                 .addProperty(DCAP.preferredXMLNamespacePrefix, modelDTO.getPrefix())
                 .addProperty(DCAP.preferredXMLNamespace, modelUri);
+
+        MapperUtils.addCreationMetadata(modelResource, user);
+
+        if (modelType.equals(ModelType.PROFILE)) {
+            modelResource.addProperty(RDF.type, Iow.ApplicationProfile);
+        }
 
         modelDTO.getLanguages().forEach(lang -> modelResource.addProperty(DCTerms.language, lang));
 
@@ -90,7 +94,6 @@ public class ModelMapper {
 
     public Model mapToUpdateJenaModel(String prefix, DataModelDTO dataModelDTO, Model model, YtiUser user){
         var modelResource = model.getResource(ModelConstants.SUOMI_FI_NAMESPACE + prefix);
-        var modelType = MapperUtils.getModelTypeFromResource(modelResource);
 
         //update languages before getting and using the languages for localized properties
         modelResource.removeAll(DCTerms.language);
@@ -133,7 +136,7 @@ public class ModelMapper {
                 val.startsWith(ModelConstants.TERMINOLOGY_NAMESPACE));
         dataModelDTO.getTerminologies().forEach(terminology -> MapperUtils.addOptionalUriProperty(modelResource, DCTerms.requires, terminology));
 
-        if(modelType.equals(ModelType.PROFILE)){
+        if(MapperUtils.isApplicationProfile(modelResource)){
             removeFromIterator(modelResource.listProperties(DCTerms.requires), val -> val.startsWith(ModelConstants.CODELIST_NAMESPACE));
             dataModelDTO.getCodeLists().forEach(codeList -> MapperUtils.addOptionalUriProperty(modelResource, DCTerms.requires, codeList));
         }
@@ -166,8 +169,17 @@ public class ModelMapper {
         datamodelDTO.setPrefix(prefix);
 
         var modelResource = model.getResource(ModelConstants.SUOMI_FI_NAMESPACE + prefix);
-        datamodelDTO.setType(MapperUtils.getModelTypeFromResource(modelResource));
         datamodelDTO.setStatus(Status.valueOf(MapperUtils.propertyToString(modelResource, OWL.versionInfo)));
+
+        if(MapperUtils.isApplicationProfile(modelResource)){
+            datamodelDTO.setType(ModelType.PROFILE);
+        }else if(MapperUtils.isLibrary(modelResource)){
+            datamodelDTO.setType(ModelType.LIBRARY);
+        }else{
+            throw new MappingError("RDF:type not supported for data model");
+        }
+
+        //Language
         datamodelDTO.setLanguages(MapperUtils.arrayPropertyToSet(modelResource, DCTerms.language));
         datamodelDTO.setLabel(MapperUtils.localizedPropertyToMap(modelResource, RDFS.label));
         datamodelDTO.setDescription(MapperUtils.localizedPropertyToMap(modelResource, RDFS.comment));
@@ -237,7 +249,15 @@ public class ModelMapper {
         if(contentModified != null) {
             indexModel.setContentModified(contentModified.getString());
         }
-        indexModel.setType(MapperUtils.getModelTypeFromResource(resource));
+
+        if(MapperUtils.isApplicationProfile(resource)){
+            indexModel.setType(ModelType.PROFILE);
+        }else if(MapperUtils.isLibrary(resource)){
+            indexModel.setType(ModelType.LIBRARY);
+        }else{
+            throw new MappingError("RDF:type not supported for data model");
+        }
+
         indexModel.setPrefix(prefix);
         indexModel.setLabel(MapperUtils.localizedPropertyToMap(resource, RDFS.label));
         indexModel.setComment(MapperUtils.localizedPropertyToMap(resource, RDFS.comment));

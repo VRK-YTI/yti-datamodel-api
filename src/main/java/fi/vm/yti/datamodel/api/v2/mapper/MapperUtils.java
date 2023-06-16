@@ -292,11 +292,11 @@ public class MapperUtils {
     }
 
     public static boolean isApplicationProfile(Resource resource) {
-        return hasType(resource, DCAP.DCAP, ResourceFactory.createProperty("http://www.w3.org/2002/07/dcap#DCAP"));
+        return hasType(resource, Iow.ApplicationProfile);
     }
 
-    public static boolean isOntology(Resource resource) {
-        return hasType(resource, OWL.Ontology);
+    public static boolean isLibrary(Resource resource) {
+        return hasType(resource, OWL.Ontology) && !hasType(resource, Iow.ApplicationProfile);
     }
 
     public static void addCreationMetadata(Resource resource, YtiUser user) {

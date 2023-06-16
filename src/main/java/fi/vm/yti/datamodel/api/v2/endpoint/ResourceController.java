@@ -207,7 +207,7 @@ public class ResourceController {
         var modelResource = model.getResource(graphUri);
 
         ResourceInfoBaseDTO dto;
-        if (MapperUtils.isOntology(modelResource)) {
+        if (MapperUtils.isLibrary(modelResource)) {
             dto = ResourceMapper.mapToResourceInfoDTO(model, graphUri, identifier, orgModel, hasRightToModel, groupManagementService.mapUser());
         } else if (MapperUtils.isApplicationProfile(modelResource)) {
             dto = ResourceMapper.mapToPropertyShapeInfoDTO(model, graphUri, identifier, orgModel, hasRightToModel, groupManagementService.mapUser());
@@ -220,7 +220,7 @@ public class ResourceController {
     }
 
     private void checkDataModelType(Resource modelResource, BaseDTO dto) {
-        if (dto instanceof PropertyShapeDTO && MapperUtils.isOntology(modelResource)) {
+        if (dto instanceof PropertyShapeDTO && MapperUtils.isLibrary(modelResource)) {
             throw new MappingError("Cannot add property shape to ontology");
         } else if (dto instanceof ResourceDTO && MapperUtils.isApplicationProfile(modelResource)) {
             throw new MappingError("Cannot add resource to application profile");
