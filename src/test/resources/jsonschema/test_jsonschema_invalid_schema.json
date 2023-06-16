@@ -6,6 +6,12 @@
     "creators" : {
       "type" : "string"
     },
+    "numbers" : {
+      "type": "number"
+    },
+    "integers" : {
+      "type": "integer"
+    },
     "titles" : {
       "title" : "Titles",
       "type" : "array",

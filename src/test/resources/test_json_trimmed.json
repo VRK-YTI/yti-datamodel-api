@@ -1,0 +1,46 @@
+{
+  "$schema" : "http://json-schema.org/draft-04/schema#",
+  "type" : "object",
+  "properties" : {
+    "$schema" : {
+      "type" : "string"
+    },
+    "string_type" : {
+      "type": "string"
+    },
+    "number_type" : {
+      "type": "number"
+    },
+    "integer_type" : {
+      "type": "integer"
+    },
+    "boolean_type" : {
+      "type": "boolean"
+    },
+    "null_type" : {
+      "type": "null"
+    },
+    "object_type" : {
+      "type": "object",
+      "properties" : {
+        "string_property" : {
+          "title" : "string_prop",
+          "type" : "string"
+        }
+     }
+   },
+    "array_string_type" : {
+      "type": "array",
+      "items" : {
+        "type" : "string"
+      }
+    }
+  },
+  "additionalProperties" : false,
+  "b2share" : {
+    "presentation" : {
+      "major" : [ "community", "titles", "descriptions", "creators", "open_access", "embargo_date", "license", "disciplines", "keywords", "contact_email" ],
+      "minor" : [ "contributors", "resource_types", "alternate_identifiers", "version", "publisher", "language" ]
+    }
+  }
+}

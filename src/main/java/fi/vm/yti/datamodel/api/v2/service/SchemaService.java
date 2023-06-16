@@ -2,6 +2,7 @@ package fi.vm.yti.datamodel.api.v2.service;
 
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Map.Entry;
 
 import org.apache.jena.rdf.model.Model;
@@ -24,6 +25,15 @@ import fi.vm.yti.datamodel.api.v2.dto.MSCR;
 @Service
 public class SchemaService {
 	
+	// null -> blank node
+	 private Map<String, Resource> XSDTypesMap = Map.ofEntries(
+			Map.entry("string", XSD.xstring),
+			Map.entry("number", XSD.xfloat),
+			Map.entry("integer", XSD.integer),
+			Map.entry("boolean", XSD.xboolean),
+			Map.entry("null", MSCR.NULL) 
+			);
+	
 
 	/**
 	Adds a datatype property to the RDF model.
@@ -33,14 +43,21 @@ public class SchemaService {
 	@param schemaPID The schema PID.
 	@return The created resource representing the datatype property.
 	*/
-	private Resource addDatatypeProperty(String propID, JsonNode node, Model model, String schemaPID) {
+	private Resource addDatatypeProperty(String propID, JsonNode node, Model model, String schemaPID, String type) {
 		Resource propertyResource = model.createResource(schemaPID + "#" + propID);
 		propertyResource.addProperty(RDF.type, model.getResource(SHACL.PropertyShape.getURI()));
 		propertyResource.addProperty(DCTerms.type, OWL.DatatypeProperty);		
-		propertyResource.addProperty(model.getProperty(SHACL.maxCount.getURI()), model.createTypedLiteral(1));
-		propertyResource.addProperty(model.getProperty(SHACL.minCount.getURI()), model.createTypedLiteral(1));
+		
+		// either remove or fix minAndMaxCounts
+//		propertyResource.addProperty(model.getProperty(SHACL.maxCount.getURI()), model.createTypedLiteral(1));
+//		propertyResource.addProperty(model.getProperty(SHACL.minCount.getURI()), model.createTypedLiteral(1));
 		propertyResource.addProperty(model.getProperty(SHACL.name.getURI()), propID);
-		propertyResource.addProperty(model.getProperty(SHACL.datatype.getURI()), XSD.xstring);
+		
+// 		this is where *default string* added? -- yes!
+//		propertyResource.addProperty(model.getProperty(SHACL.datatype.getURI()), XSD.xstring);
+		propertyResource.addProperty(model.getProperty(SHACL.datatype.getURI()), XSDTypesMap.get(type));
+		
+//		propertyResource.addProperty(model.getProperty(SHACL.datatype.getURI()), XSD.decimal);
 		propertyResource.addProperty(model.getProperty(SHACL.path.getURI()), propID);		
 		return propertyResource;
 		
@@ -93,7 +110,7 @@ public class SchemaService {
 	private void handleObject(String propID, JsonNode node, String schemaPID, Model model) {
 
 		Resource nodeShapeResource = model.createResource(schemaPID + "#" + propID);
-		
+		System.out.println("BEGINNING");
 		nodeShapeResource.addProperty(RDF.type, model.getResource(SHACL.NodeShape.getURI()));
 		nodeShapeResource.addProperty(MSCR.localName, propID);
 		if(node.has("description"))
@@ -107,18 +124,27 @@ public class SchemaService {
 		 * If a property is an array or object – add and recursively iterate over them
 		 * If a property is a datatype / literal – it's just added.
 		 */
+		
 		Iterator<Entry<String, JsonNode>> propertiesIterator = node.get("properties").fields();
 		while(propertiesIterator.hasNext()) {
+			System.out.println("NODE PROPERTIES" + node.get("properties"));
 			Entry<String, JsonNode> entry = propertiesIterator.next();
 			if(entry.getKey().startsWith("_") || entry.getKey().startsWith("$"))
 				continue;
-			//System.out.println(entry.getValue());
+			
+			System.out.println("\n\nVALUE: " + entry.getValue() + "||" + " KEY: " + entry.getKey());
+			
+			// THROW ERR OR STH – ENFORCE NON NULL
+			if(entry.getValue().get("type") == null) {
+				System.out.println("NULL?????" + entry.getValue());
+			}
 			if(entry.getValue().get("type") != null && entry.getValue().get("type").asText().equals("object")) {
 				// add object property 
 				Resource propertyShape = addObjectProperty(entry.getKey(), entry.getValue(), model, schemaPID, schemaPID + "#" + propID + "/" + entry.getKey());
 				nodeShapeResource.addProperty(model.getProperty(SHACL.property.getURI()), propertyShape);
 				handleObject(propID + "/" + entry.getKey(), entry.getValue(), schemaPID, model);
 			}
+			// handles array with "object" items. doesn't handle any other, eg arrays with strings etc
 			else if(entry.getValue().get("type") != null && entry.getValue().get("type").asText().equals("array") && entry.getValue().get("items").has("type") && entry.getValue().get("items").get("type").asText().equals("object")) {
 				
 				Resource propertyShape = addObjectProperty(entry.getKey(), entry.getValue(), model, schemaPID, schemaPID + "#" + propID + "/" + entry.getKey());
@@ -126,8 +152,19 @@ public class SchemaService {
 				handleObject(propID + "/" + entry.getKey(), entry.getValue().get("items"), schemaPID, model);	
 				
 			}
+			// DOUBLE CHECK THAT. ROUGHT IMPLEMENTATION
+			// array === one resource (parent) connected to multiple resources (array elements) in SHACL???
+			else if(entry.getValue().get("type") != null && entry.getValue().get("type").asText().equals("array")) {
+				System.out.println("I AM HERE");
+				Resource propertyShape = addObjectProperty(entry.getKey(), entry.getValue(), model, schemaPID, schemaPID + "#" + propID + "/" + entry.getKey());
+				nodeShapeResource.addProperty(model.getProperty(SHACL.property.getURI()), propertyShape);	
+				System.out.println("GET ITEMS VALUE" + entry.getValue().get("items"));
+				handleObject(propID + "/" + entry.getKey(), entry.getValue().get("items"), schemaPID, model);	
+				
+			}
 			else {
-				Resource propertyShape = addDatatypeProperty(propID + "/" + entry.getKey(), entry.getValue(), model, schemaPID);
+				System.out.println("AS TEXT: " + entry.getValue().get("type").asText());
+				Resource propertyShape = addDatatypeProperty(propID + "/" + entry.getKey(), entry.getValue(), model, schemaPID, entry.getValue().get("type").asText());
 				nodeShapeResource.addProperty(model.getProperty(SHACL.property.getURI()), propertyShape);
 			}
 			
@@ -157,5 +194,6 @@ public class SchemaService {
 		// Adding the schema to a corresponding internal model 
 		handleObject("root", root, schemaPID, model);
 		return model;
+		
 	}
 }

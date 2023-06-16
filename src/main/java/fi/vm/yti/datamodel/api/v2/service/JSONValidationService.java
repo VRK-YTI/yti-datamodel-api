@@ -36,7 +36,7 @@ public class JSONValidationService {
 
 			JsonSchema schema = schemaFactory.getSchema(metaSchemaNode);
 			Set<ValidationMessage> validationResult = schema.validate(inputSchemaNode);
-
+			
 			if (validationResult.isEmpty()) {
 				return new ValidationRecord(true, Arrays.asList());
 			} else {

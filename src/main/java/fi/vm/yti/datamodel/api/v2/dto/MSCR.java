@@ -17,6 +17,8 @@ public class MSCR {
     public static final Property versions = ResourceFactory.createProperty(URI, "versions");
     public static final Resource SCHEMAGROUP = ResourceFactory.createResource(URI + "SchemaGroup");
     public static final Resource SCHEMA = ResourceFactory.createResource(URI + "Schema");
+    // use it when generating rdf
+    public static final Resource NULL = ResourceFactory.createResource(URI + "null");
 
     public static final Property localName = ResourceFactory.createProperty(URI, "localName");
     

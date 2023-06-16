@@ -26,6 +26,17 @@
         }
     },
     "type": "object",
+    "required": [
+        "type"
+    ],
+    "anyOf":[
+        {    "required": [
+            "type"
+        ]},
+        {"not": {    "required": [
+            "type"
+        ]}}
+    ],
     "properties": {
         "id": {
             "type": "string"
@@ -103,8 +114,9 @@
                 }
             ]
         },
+        "anyOf": { "$ref": "#/definitions/schemaArray" },
         "format": { "type": "string" },
-        "not": { "$ref": "#" }
+        "not": { "$ref": "#" } 
     },
     "dependencies": {
         "exclusiveMaximum": [ "maximum" ],
