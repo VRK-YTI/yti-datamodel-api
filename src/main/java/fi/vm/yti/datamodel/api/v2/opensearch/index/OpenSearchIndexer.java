@@ -8,6 +8,7 @@ import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
 import fi.vm.yti.datamodel.api.v2.mapper.CrosswalkMapper;
 import fi.vm.yti.datamodel.api.v2.mapper.ModelMapper;
 import fi.vm.yti.datamodel.api.v2.mapper.ResourceMapper;
+import fi.vm.yti.datamodel.api.v2.mapper.SchemaMapper;
 import fi.vm.yti.datamodel.api.v2.service.JenaService;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelUtils;
 import fi.vm.yti.datamodel.api.v2.utils.SparqlUtils;
@@ -42,17 +43,20 @@ public class OpenSearchIndexer {
     private final OpenSearchConnector openSearchConnector;
     private final JenaService jenaService;
     private final ModelMapper modelMapper;
+    private final SchemaMapper schemaMapper;
     private final CrosswalkMapper crosswalkMapper;
     private final OpenSearchClient client;
 
     public OpenSearchIndexer(OpenSearchConnector openSearchConnector,
                              JenaService jenaService,
                              ModelMapper modelMapper,
+                             SchemaMapper schemaMapper,
                              CrosswalkMapper crosswalkMapper,
                              OpenSearchClient client) {
         this.openSearchConnector = openSearchConnector;
         this.jenaService = jenaService;
         this.modelMapper = modelMapper;
+        this.schemaMapper = schemaMapper;
         this.crosswalkMapper = crosswalkMapper;
         this.client = client;
     }
@@ -221,7 +225,7 @@ public class OpenSearchIndexer {
         indexModels.listSubjects().forEach(next -> {
             var newModel = ModelFactory.createDefaultModel()
                     .add(next.listProperties());
-            var indexModel = modelMapper.mapToIndexModel(next.getURI(), newModel);
+            var indexModel = schemaMapper.mapToIndexModel(next.getURI(), newModel);
             list.add(indexModel);
         });
         bulkInsert(OPEN_SEARCH_INDEX_MODEL, list);

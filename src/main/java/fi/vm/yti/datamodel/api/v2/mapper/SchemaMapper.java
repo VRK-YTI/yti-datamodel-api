@@ -218,14 +218,10 @@ public class SchemaMapper {
             indexModel.setContentModified(contentModified.getString());
         }
         var types = resource.listProperties(RDF.type).mapWith(Statement::getResource).toList();
-        if(types.contains(DCAP.DCAP) || types.contains(ResourceFactory.createProperty("http://www.w3.org/2002/07/dcap#DCAP"))){
-            indexModel.setType(ModelType.PROFILE);
-        }else if(types.contains(OWL.Ontology)){
-            indexModel.setType(ModelType.LIBRARY);
-        }else if(types.contains(MSCR.SCHEMA)){
+        if(types.contains(MSCR.SCHEMA)){
             indexModel.setType(ModelType.SCHEMA);
         }else{
-            throw new MappingError("RDF:type not supported for data model");
+            throw new MappingError("RDF:type not supported for schema model");
         }
         indexModel.setPrefix(pid);
         indexModel.setLabel(MapperUtils.localizedPropertyToMap(resource, RDFS.label));
