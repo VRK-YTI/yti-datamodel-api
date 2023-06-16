@@ -4,7 +4,6 @@ import static fi.vm.yti.security.AuthorizationException.check;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 import java.util.List;
-import java.util.Set;
 
 import org.apache.jena.rdf.model.Model;
 import org.slf4j.Logger;
@@ -23,7 +22,6 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import fi.vm.yti.datamodel.api.security.AuthorizationManager;
-import fi.vm.yti.datamodel.api.v2.dto.DataModelDTO;
 import fi.vm.yti.datamodel.api.v2.dto.PIDType;
 import fi.vm.yti.datamodel.api.v2.dto.SchemaDTO;
 import fi.vm.yti.datamodel.api.v2.dto.SchemaFormat;
@@ -67,7 +65,7 @@ public class Schema {
 	
 	private final StorageService storageService;	
 	
-  private final AuthenticatedUserProvider userProvider;
+	private final AuthenticatedUserProvider userProvider;
 
 	public Schema(JenaService jenaService,
             AuthorizationManager authorizationManager,

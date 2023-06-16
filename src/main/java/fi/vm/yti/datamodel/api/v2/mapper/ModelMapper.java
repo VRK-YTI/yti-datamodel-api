@@ -297,7 +297,7 @@ public class ModelMapper {
         if(types.contains(DCAP.DCAP) || types.contains(ResourceFactory.createProperty("http://www.w3.org/2002/07/dcap#DCAP"))){
             indexModel.setType(ModelType.PROFILE);
         }else if(types.contains(OWL.Ontology)){
-            indexModel.setType(ModelType.LIBRARY);
+            indexModel.setType(ModelType.LIBRARY);       
         }else{
             throw new MappingError("RDF:type not supported for data model");
         }

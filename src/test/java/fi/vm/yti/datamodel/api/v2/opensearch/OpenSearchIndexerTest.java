@@ -3,8 +3,10 @@ package fi.vm.yti.datamodel.api.v2.opensearch;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import fi.vm.yti.datamodel.api.index.OpenSearchConnector;
+import fi.vm.yti.datamodel.api.v2.mapper.CrosswalkMapper;
 import fi.vm.yti.datamodel.api.v2.mapper.ModelMapper;
 import fi.vm.yti.datamodel.api.v2.mapper.ResourceMapper;
+import fi.vm.yti.datamodel.api.v2.mapper.SchemaMapper;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
 import fi.vm.yti.datamodel.api.v2.service.JenaService;
 import org.apache.jena.query.Query;
@@ -37,6 +39,12 @@ class OpenSearchIndexerTest {
 
     @MockBean
     ModelMapper modelMapper;
+    
+    @MockBean
+    SchemaMapper schemaMapper;
+    
+    @MockBean
+    CrosswalkMapper crosswalkMapper;
 
     @MockBean
     ResourceMapper resourceMapper;
