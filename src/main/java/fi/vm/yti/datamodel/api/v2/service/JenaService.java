@@ -85,9 +85,9 @@ public class JenaService {
         this.schemaRead = RDFConnection.connect(endpoint + "/schema/get");
         this.schemaSparql = RDFConnection.connect(endpoint + "/schema/sparql");
 
-        this.crosswalkWrite = RDFConnection.connect(endpoint + "/schema/data");
-        this.crosswalkRead = RDFConnection.connect(endpoint + "/schema/get");
-        this.crosswalkSparql = RDFConnection.connect(endpoint + "/schema/sparql");
+        this.crosswalkWrite = RDFConnection.connect(endpoint + "/crosswalk/data");
+        this.crosswalkRead = RDFConnection.connect(endpoint + "/crosswalk/get");
+        this.crosswalkSparql = RDFConnection.connect(endpoint + "/crosswalk/sparql");
 
         this.schemesWrite = RDFConnection.connect(endpoint + "/scheme/data");
         this.schemesRead = RDFConnection.connect(endpoint + "/scheme/get");
@@ -165,7 +165,7 @@ public class JenaService {
         }catch(HttpException ex){
             return null;
         }
-    }
+    }    
 
     public Model constructWithQueryImports(Query query){
         try{
@@ -175,6 +175,22 @@ public class JenaService {
         }
     }
 
+    public Model constructWithQuerySchemas(Query query){
+        try{
+            return schemaSparql.queryConstruct(query);
+        }catch(HttpException ex){
+            return null;
+        }
+    }
+    
+    public Model constructWithQueryCrosswalks(Query query){
+        try{
+            return crosswalkSparql.queryConstruct(query);
+        }catch(HttpException ex){
+            return null;
+        }
+    }
+    
     public void sendUpdateStringQuery(String query){
         try{
             coreUpdate.update(query);

@@ -282,10 +282,10 @@ public class ModelMapper {
      * @param model Model
      * @return Index model
      */
-    public IndexModel mapToIndexModel(String prefix, Model model){
-        var resource = model.getResource(defaultNamespace + prefix);
+    public IndexModel mapToIndexModel(String pid, Model model){
+        var resource = model.getResource(pid);
         var indexModel = new IndexModel();
-        indexModel.setId(defaultNamespace + prefix);
+        indexModel.setId(pid);
         indexModel.setStatus(Status.valueOf(resource.getProperty(OWL.versionInfo).getString()));
         indexModel.setModified(resource.getProperty(DCTerms.modified).getString());
         indexModel.setCreated(resource.getProperty(DCTerms.created).getString());
@@ -298,10 +298,13 @@ public class ModelMapper {
             indexModel.setType(ModelType.PROFILE);
         }else if(types.contains(OWL.Ontology)){
             indexModel.setType(ModelType.LIBRARY);
+        }else if(types.contains(MSCR.SCHEMA)){
+            indexModel.setType(ModelType.SCHEMA);
+            
         }else{
             throw new MappingError("RDF:type not supported for data model");
         }
-        indexModel.setPrefix(prefix);
+        indexModel.setPrefix(pid);
         indexModel.setLabel(MapperUtils.localizedPropertyToMap(resource, RDFS.label));
         indexModel.setComment(MapperUtils.localizedPropertyToMap(resource, RDFS.comment));
         var contributors = new ArrayList<UUID>();
