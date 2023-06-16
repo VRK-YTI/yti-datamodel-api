@@ -6,7 +6,8 @@
       "type" : "string"
     },
     "string_type" : {
-      "type": "string"
+      "type": "string",
+      "description": "01_string_description"
     },
     "number_type" : {
       "type": "number"

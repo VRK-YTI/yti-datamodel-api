@@ -1,7 +1,9 @@
 package fi.vm.yti.datamodel.api.v2.service;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -24,10 +26,35 @@ import fi.vm.yti.datamodel.api.v2.dto.MSCR;
 public class SchemaService {
 
 	// null -> blank node
-	private Map<String, Resource> XSDTypesMap = Map.ofEntries(Map.entry("string", XSD.xstring),
+	private final Map<String, Resource> XSDTypesMap = Map.ofEntries(Map.entry("string", XSD.xstring),
 			Map.entry("number", XSD.xfloat), Map.entry("integer", XSD.integer), Map.entry("boolean", XSD.xboolean),
 			Map.entry("null", MSCR.NULL));
-
+	
+	private final Map<String, String> JSONSchemaFeaturesToSHACL = Map.ofEntries(
+			Map.entry("description", SHACL.description.getURI()),
+//			Map.entry("title", SHACL.title??.getURI()), -- ??? how would we call it in shacl?
+//			Map.entry("pattern", SHACL.enum??.getURI()), -- does it even belong here? move to objectsHandler? No SHACL type - look into it
+//			Map.entry("format", SHACL.format.getURI()), -- no SHACL type - look into it
+			Map.entry("maximum", SHACL.maxInclusive.getURI()),
+			Map.entry("exclusiveMaximum", SHACL.maxExclusive.getURI()),
+			Map.entry("minimum", SHACL.minInclusive.getURI()),
+			Map.entry("inclusiveMaximum", SHACL.minExclusive.getURI()),
+			Map.entry("maxLength", SHACL.maxLength.getURI()),
+			Map.entry("minLength", SHACL.minLength.getURI()),
+			Map.entry("pattern", SHACL.pattern.getURI()) // Does it belong here? --> should this map be shared between DataTypeProperty and ..Object, or each have their own?
+														 // eg for iteration over 
+			
+			);
+	
+	
+	private void checkAndAddPropertyFeature(JsonNode node, Model model, Resource propertyResource, String property) {
+		JsonNode propertyFeature = node.findValue(property);
+		System.out.println("PROPERTY FEATURE " + propertyFeature);
+		if (propertyFeature != null) {
+			propertyResource.addProperty(model.getProperty(SHACL.description.getURI()), propertyFeature.asText());
+		}
+	}
+	
 	/**
 	 * Adds a datatype property to the RDF model.
 	 * 
@@ -41,20 +68,30 @@ public class SchemaService {
 		Resource propertyResource = model.createResource(schemaPID + "#" + propID);
 		System.out.println("propdID: " + propID);
 		System.out.println("PROPERTY RESOURCE: " + propertyResource);
+		System.out.println("DATATYPE_P NODE: " + node);
+//		System.out.println(node.get("description"));
+		System.out.println(node.findValue("description"));
+		
 		propertyResource.addProperty(RDF.type, model.getResource(SHACL.PropertyShape.getURI()));
 		propertyResource.addProperty(DCTerms.type, OWL.DatatypeProperty);
 
-		// either remove or fix minAndMaxCounts
-//		propertyResource.addProperty(model.getProperty(SHACL.maxCount.getURI()), model.createTypedLiteral(1));
-//		propertyResource.addProperty(model.getProperty(SHACL.minCount.getURI()), model.createTypedLiteral(1));
 		propertyResource.addProperty(model.getProperty(SHACL.name.getURI()), propID);
 
-// 		this is where *default string* added? -- yes!
-//		propertyResource.addProperty(model.getProperty(SHACL.datatype.getURI()), XSD.xstring);
 		propertyResource.addProperty(model.getProperty(SHACL.datatype.getURI()), XSDTypesMap.get(type));
 
 //		propertyResource.addProperty(model.getProperty(SHACL.datatype.getURI()), XSD.decimal);
 		propertyResource.addProperty(model.getProperty(SHACL.path.getURI()), propID);
+		
+//		JsonNode propertyDescription = node.findValue("description");
+//		if (propertyDescription != null) {
+//			propertyResource.addProperty(model.getProperty(SHACL.description.getURI()), propertyDescription.asText());
+//		}
+		checkAndAddPropertyFeature(node, model, propertyResource, "description");
+		
+	
+		
+		
+		
 		return propertyResource;
 
 	}
@@ -84,6 +121,7 @@ public class SchemaService {
 						model.createTypedLiteral(node.get("minItems").asInt()));
 
 		} else {
+			// ?? Do not remove - default values for objects and arrays??
 			propertyResource.addProperty(model.getProperty(SHACL.maxCount.getURI()), model.createTypedLiteral(1));
 			propertyResource.addProperty(model.getProperty(SHACL.minCount.getURI()), model.createTypedLiteral(1));
 
@@ -96,6 +134,7 @@ public class SchemaService {
 
 	}
 
+	// ONLY HANDLES TYPE !!! ---> NO! even though type is explicitly requested here (because it will be required/enforced), but other properties are handled within the method
 	private void handleDatatypeProperty(String propID, Entry<String, JsonNode> entry, Model model, String schemaPID,
 			Resource nodeShapeResource) {
 		Resource propertyShape = addDatatypeProperty(propID + "/" + entry.getKey(), entry.getValue(), model, schemaPID,
@@ -115,7 +154,7 @@ public class SchemaService {
 	private void handleObject(String propID, JsonNode node, String schemaPID, Model model) {
 		
 		System.out.println("\n propdID: " + propID);
-		System.out.println("\n node: " + node);
+//		System.out.println("\n node: " + node);
 		System.out.println("\n schemaPID: " + schemaPID);
 		System.out.println("\n model: " + model);
 
@@ -182,7 +221,7 @@ public class SchemaService {
 				System.out.println("\nentry.getValue().get(\"items\"):" + (entry.getValue().get("items")));
 				System.out.println("\nentry.getKey()" + (entry.getKey()));
 				
-				handleObject(propID + "/" + entry.getKey(), entry.getValue().get("items"), schemaPID, model);
+//				handleObject(propID + "/" + entry.getKey(), entry.getValue().get("items"), schemaPID, model);
 				Entry<String, JsonNode> ArrayItem = Map.entry(entry.getKey() + "/items", entry.getValue().get("items"));
 				
 				handleDatatypeProperty(propID, ArrayItem, model, schemaPID, nodeShapeResource);
