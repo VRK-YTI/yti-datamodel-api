@@ -42,12 +42,13 @@ public class MapperUtils {
     }
 
     public static ModelType getModelTypeFromResource(Resource resource){
-        var modelType = resource.getProperty(RDF.type).getResource();
-        if(modelType.equals(OWL.Ontology)){
-            return ModelType.LIBRARY;
-        }else{
+        var modelTypes = resource.listProperties(RDF.type).toList();
+        if(modelTypes.stream().anyMatch(stm -> stm.getResource().equals(DCAP.DCAP))){
             return ModelType.PROFILE;
+        }else if(modelTypes.stream().anyMatch(stm -> stm.getResource().equals(OWL.Ontology))){
+            return ModelType.LIBRARY;
         }
+        return ModelType.PROFILE;
     }
 
     /**
@@ -314,7 +315,7 @@ public class MapperUtils {
         resource.addProperty(Iow.modifier, user.getId().toString());
     }
 
-    public static void mapCreationInfo(ResourceInfoBaseDTO dto,
+    public static void mapCreationInfo(ResourceCommonDTO dto,
                                         Resource resource,
                                         Consumer<ResourceCommonDTO> userMapper) {
         var created = resource.getProperty(DCTerms.created).getLiteral().getString();
