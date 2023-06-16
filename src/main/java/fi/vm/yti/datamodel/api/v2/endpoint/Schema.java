@@ -198,7 +198,7 @@ public class Schema {
     		return ResponseEntity.notFound().build();   				
     	}
     	
-    	if(files.size() == 1) {
+    	if (files.size() == 1) {
     		StoredFile file = files.get(0);
     		return ResponseEntity.ok()
     				.contentType(MediaType.parseMediaTypes(file.contentType()).get(0))
