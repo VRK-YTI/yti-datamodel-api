@@ -32,13 +32,6 @@ public class SchemaServiceTest {
 	@Test
 	void testTransforJSONSchemaToInternal() throws Exception, IOException {
 		InputStream inputStream = SchemaServiceTest.class.getResourceAsStream("/test_json_trimmed.json");
-//		var inputStream = getClass().getResourceAsStream("test_json_trimmed.json");
-//		var inputStream = getClass().getResourceAsStream("test_jsonschema_b2share.json");
-//		InputStream inputStream = getClass().getResourceAsStream("test_jsonschema_b2share.json");
-//		InputStream inputStream = new FileInputStream("src/test/resources/test_jsonschema_b2share.json");
-//		InputStream inputStream = new FileInputStream("src/test/resources/test_json_trimmed.json");
-//		var inputStream = getClass().getResourceAsStream("/test_jsonschema_invalid_schema.json");
-//		var inputStream = getClass().getResourceAsStream("/test_jsonschema_invalid_schema_no_enum.json");
 		assertNotNull(inputStream);
 		
 		String schemaPID = "urn:test:" + UUID.randomUUID().toString();
