@@ -1,23 +1,22 @@
 package fi.vm.yti.datamodel.api.v2.mapper;
 
 import fi.vm.yti.datamodel.api.v2.dto.*;
-import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
-import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexModel;
-import fi.vm.yti.datamodel.api.v2.service.JenaQueryException;
 import fi.vm.yti.datamodel.api.v2.service.JenaService;
 import fi.vm.yti.security.YtiUser;
-import org.apache.jena.atlas.web.HttpException;
 import org.apache.jena.datatypes.xsd.XSDDateTime;
 import org.apache.jena.rdf.model.*;
 import org.apache.jena.vocabulary.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.Calendar;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 @Service
@@ -26,6 +25,7 @@ public class ModelMapper {
     private final Logger log = LoggerFactory.getLogger(ModelMapper.class);
 
     private final JenaService jenaService;
+
 
     public ModelMapper (JenaService jenaService){
         this.jenaService = jenaService;
@@ -52,10 +52,6 @@ public class ModelMapper {
                 .addProperty(OWL.versionInfo, modelDTO.getStatus().name())
                 .addProperty(DCTerms.identifier, UUID.randomUUID().toString())
                 .addProperty(Iow.contentModified, ResourceFactory.createTypedLiteral(creationDate))
-                .addProperty(DCTerms.modified, ResourceFactory.createTypedLiteral(creationDate))
-                .addProperty(DCTerms.created, ResourceFactory.createTypedLiteral(creationDate))
-                .addProperty(Iow.creator, user.getId().toString())
-                .addProperty(Iow.modifier, user.getId().toString())
                 .addProperty(DCAP.preferredXMLNamespacePrefix, modelDTO.getPrefix())
                 .addProperty(DCAP.preferredXMLNamespace, modelUri);
 
@@ -79,107 +75,80 @@ public class ModelMapper {
         addInternalNamespaceToDatamodel(modelDTO, modelResource, model);
         addExternalNamespaceToDatamodel(modelDTO, model, modelResource);
 
-        modelDTO.getTerminologies().forEach(terminology -> MapperUtils.addOptionalUriProperty(modelResource, DCTerms.references, terminology));
+        modelDTO.getTerminologies().forEach(terminology -> MapperUtils.addOptionalUriProperty(modelResource, DCTerms.requires, terminology));
 
         if(modelType.equals(ModelType.PROFILE)) {
-            modelDTO.getCodeLists().forEach(codeList -> MapperUtils.addOptionalUriProperty(modelResource, Iow.codeLists, codeList));
+            modelDTO.getCodeLists().forEach(codeList -> MapperUtils.addOptionalUriProperty(modelResource, DCTerms.requires, codeList));
         }
 
         model.setNsPrefix(modelDTO.getPrefix(), modelUri + ModelConstants.RESOURCE_SEPARATOR);
+        MapperUtils.addCreationMetadata(modelResource, user);
 
         return model;
     }
 
 
     public Model mapToUpdateJenaModel(String prefix, DataModelDTO dataModelDTO, Model model, YtiUser user){
-        var updateDate = new XSDDateTime(Calendar.getInstance());
         var modelResource = model.getResource(ModelConstants.SUOMI_FI_NAMESPACE + prefix);
         var modelType = MapperUtils.getModelTypeFromResource(modelResource);
 
         //update languages before getting and using the languages for localized properties
-        if(dataModelDTO.getLanguages() != null){
-            modelResource.removeAll(DCTerms.language);
-            dataModelDTO.getLanguages().forEach(lang -> modelResource.addProperty(DCTerms.language, lang));
-        }
+        modelResource.removeAll(DCTerms.language);
+        dataModelDTO.getLanguages().forEach(lang -> modelResource.addProperty(DCTerms.language, lang));
 
         var langs = MapperUtils.arrayPropertyToSet(modelResource, DCTerms.language);
 
-        var status = dataModelDTO.getStatus();
-        if (status != null) {
-            MapperUtils.updateStringProperty(modelResource, OWL.versionInfo, status.name());
-        }
+        MapperUtils.updateStringProperty(modelResource, OWL.versionInfo, dataModelDTO.getStatus().name());
 
         MapperUtils.updateLocalizedProperty(langs, dataModelDTO.getLabel(), modelResource, RDFS.label, model);
         MapperUtils.updateLocalizedProperty(langs, dataModelDTO.getDescription(), modelResource, RDFS.comment, model);
         MapperUtils.updateStringProperty(modelResource, Iow.contact, dataModelDTO.getContact());
         MapperUtils.updateLocalizedProperty(langs, dataModelDTO.getDocumentation(), modelResource, Iow.documentation, model);
 
-        if(dataModelDTO.getGroups() != null){
-            modelResource.removeAll(DCTerms.isPartOf);
-            var groupModel = jenaService.getServiceCategories();
-            dataModelDTO.getGroups().forEach(group -> {
-                var groups = groupModel.listResourcesWithProperty(SKOS.notation, group);
-                if (groups.hasNext()) {
-                    modelResource.addProperty(DCTerms.isPartOf, groups.next());
-                }
-            });
+        modelResource.removeAll(DCTerms.isPartOf);
+        var groupModel = jenaService.getServiceCategories();
+        dataModelDTO.getGroups().forEach(group -> {
+            var groups = groupModel.listResourcesWithProperty(SKOS.notation, group);
+            if (groups.hasNext()) {
+                modelResource.addProperty(DCTerms.isPartOf, groups.next());
+            }
+        });
+
+
+        modelResource.removeAll(DCTerms.contributor);
+        addOrgsToModel(dataModelDTO, modelResource);
+
+        removeFromIterator(modelResource.listProperties(DCTerms.requires), val -> val.startsWith(ModelConstants.SUOMI_FI_NAMESPACE));
+        removeFromIterator(modelResource.listProperties(OWL.imports), val -> val.startsWith(ModelConstants.SUOMI_FI_NAMESPACE));
+        addInternalNamespaceToDatamodel(dataModelDTO, modelResource, model);
+
+        removeFromIterator(modelResource.listProperties(DCTerms.requires), val -> !val.startsWith(ModelConstants.SUOMI_FI_NAMESPACE)
+                && !val.startsWith(ModelConstants.CODELIST_NAMESPACE) && !val.startsWith(ModelConstants.TERMINOLOGY_NAMESPACE));
+        removeFromIterator(modelResource.listProperties(OWL.imports), val -> !val.startsWith(ModelConstants.SUOMI_FI_NAMESPACE)
+                && !val.startsWith(ModelConstants.CODELIST_NAMESPACE) && !val.startsWith(ModelConstants.TERMINOLOGY_NAMESPACE));
+        addExternalNamespaceToDatamodel(dataModelDTO, model, modelResource);
+
+
+        removeFromIterator(modelResource.listProperties(DCTerms.requires), val ->
+                val.startsWith(ModelConstants.TERMINOLOGY_NAMESPACE));
+        dataModelDTO.getTerminologies().forEach(terminology -> MapperUtils.addOptionalUriProperty(modelResource, DCTerms.requires, terminology));
+
+        if(modelType.equals(ModelType.PROFILE)){
+            removeFromIterator(modelResource.listProperties(DCTerms.requires), val -> val.startsWith(ModelConstants.CODELIST_NAMESPACE));
+            dataModelDTO.getCodeLists().forEach(codeList -> MapperUtils.addOptionalUriProperty(modelResource, DCTerms.requires, codeList));
         }
 
-        if(dataModelDTO.getOrganizations() != null){
-            modelResource.removeAll(DCTerms.contributor);
-            addOrgsToModel(dataModelDTO, modelResource);
-        }
-
-        if(dataModelDTO.getInternalNamespaces() != null){
-            removeNamespacesFromModel(modelResource.listProperties(DCTerms.requires), true);
-            removeNamespacesFromModel(modelResource.listProperties(OWL.imports), true);
-            addInternalNamespaceToDatamodel(dataModelDTO, modelResource, model);
-        }
-
-        if(dataModelDTO.getExternalNamespaces() != null){
-            removeNamespacesFromModel(modelResource.listProperties(DCTerms.requires), false);
-            removeNamespacesFromModel(modelResource.listProperties(OWL.imports), false);
-            addExternalNamespaceToDatamodel(dataModelDTO, model, modelResource);
-        }
-
-        if (dataModelDTO.getTerminologies() != null) {
-            modelResource.removeAll(DCTerms.references);
-            dataModelDTO.getTerminologies().forEach(terminology ->
-                    modelResource.addProperty(DCTerms.references, ResourceFactory.createResource(terminology))
-            );
-        }
-
-        if(dataModelDTO.getCodeLists() != null && modelType.equals(ModelType.PROFILE)){
-            modelResource.removeAll(Iow.codeLists);
-            dataModelDTO.getCodeLists().forEach(codeList ->
-                    modelResource.addProperty(Iow.codeLists, ResourceFactory.createResource(codeList))
-            );
-        }
-
-        modelResource.removeAll(DCTerms.modified);
-        modelResource.addProperty(DCTerms.modified, ResourceFactory.createTypedLiteral(updateDate));
-        modelResource.removeAll(Iow.modifier);
-        modelResource.addProperty(Iow.modifier, user.getId().toString());
+        MapperUtils.addUpdateMetadata(modelResource, user);
         return model;
     }
 
-    /**
-     * Remove internal of external namespaces from model
-     * @param statements Iterator of property values
-     * @param internal if true remove internal namespaces, if false remove external namespaces
-     */
-    private void removeNamespacesFromModel(StmtIterator statements, boolean internal){
+
+    private void removeFromIterator(StmtIterator statements, Predicate<String> predicate){
         while(statements.hasNext()){
             var next = statements.next();
-            var namespace = next.getObject().toString();
-            if(internal) {
-                if(namespace.startsWith(ModelConstants.SUOMI_FI_NAMESPACE)){
-                    statements.remove();
-                }
-            }else{
-                if(!namespace.startsWith(ModelConstants.SUOMI_FI_NAMESPACE)){
-                    statements.remove();
-                }
+            var value = next.getObject().toString();
+            if(predicate.test(value)){
+                statements.remove();
             }
         }
     }
@@ -197,41 +166,19 @@ public class ModelMapper {
         datamodelDTO.setPrefix(prefix);
 
         var modelResource = model.getResource(ModelConstants.SUOMI_FI_NAMESPACE + prefix);
-
-        var types = modelResource.listProperties(RDF.type).mapWith(Statement::getResource).toList();
-        if(types.contains(DCAP.DCAP) || types.contains(ResourceFactory.createProperty("http://www.w3.org/2002/07/dcap#DCAP"))){
-            datamodelDTO.setType(ModelType.PROFILE);
-        }else if(types.contains(OWL.Ontology)){
-            datamodelDTO.setType(ModelType.LIBRARY);
-        }else{
-            throw new MappingError("RDF:type not supported for data model");
-        }
-
-        var status = Status.valueOf(MapperUtils.propertyToString(modelResource, OWL.versionInfo));
-        datamodelDTO.setStatus(status);
-
-        //Language
+        datamodelDTO.setType(MapperUtils.getModelTypeFromResource(modelResource));
+        datamodelDTO.setStatus(Status.valueOf(MapperUtils.propertyToString(modelResource, OWL.versionInfo)));
         datamodelDTO.setLanguages(MapperUtils.arrayPropertyToSet(modelResource, DCTerms.language));
-
-        //Label
         datamodelDTO.setLabel(MapperUtils.localizedPropertyToMap(modelResource, RDFS.label));
-
-        //Description
         datamodelDTO.setDescription(MapperUtils.localizedPropertyToMap(modelResource, RDFS.comment));
 
-        var existingGroups = jenaService.getServiceCategories();
         var groups = MapperUtils.arrayPropertyToSet(modelResource, DCTerms.isPartOf);
-        datamodelDTO.setGroups(ServiceCategoryMapper.mapServiceCategoriesToDTO(groups, existingGroups));
+        datamodelDTO.setGroups(ServiceCategoryMapper.mapServiceCategoriesToDTO(groups, jenaService.getServiceCategories()));
 
         var organizations = MapperUtils.arrayPropertyToSet(modelResource, DCTerms.contributor);
         datamodelDTO.setOrganizations(OrganizationMapper.mapOrganizationsToDTO(organizations, jenaService.getOrganizations()));
 
-        var created = modelResource.getProperty(DCTerms.created).getLiteral().getString();
-        var modified = modelResource.getProperty(DCTerms.modified).getLiteral().getString();
-        datamodelDTO.setCreated(created);
-        datamodelDTO.setModified(modified);
-        datamodelDTO.setCreator(new UserDTO(MapperUtils.propertyToString(modelResource, Iow.creator)));
-        datamodelDTO.setModifier(new UserDTO(MapperUtils.propertyToString(modelResource, Iow.modifier)));
+        MapperUtils.mapCreationInfo(datamodelDTO, modelResource, userMapper);
 
         var internalNamespaces = new HashSet<String>();
         var externalNamespaces = new HashSet<ExternalNamespaceDTO>();
@@ -240,25 +187,28 @@ public class ModelMapper {
         datamodelDTO.setInternalNamespaces(internalNamespaces);
         datamodelDTO.setExternalNamespaces(externalNamespaces);
 
-        Set<TerminologyDTO> terminologies = modelResource.listProperties(DCTerms.references).toList().stream().map(ref -> {
-            var graph = ref.getObject().toString();
-            var terminologyModel = jenaService.getTerminology(graph);
-            if (terminologyModel == null) {
-                return new TerminologyDTO(graph);
-            }
-            return TerminologyMapper.mapToTerminologyDTO(graph, terminologyModel);
-        }).collect(Collectors.toSet());
+        var terminologies = MapperUtils.arrayPropertyToSet(modelResource, DCTerms.requires)
+                .stream().filter(val -> val.startsWith(ModelConstants.TERMINOLOGY_NAMESPACE))
+                .map(ref -> {
+                    var terminologyModel = jenaService.getTerminology(ref);
+                    if (terminologyModel == null) {
+                        return new TerminologyDTO(ref);
+                    }
+                    return TerminologyMapper.mapToTerminologyDTO(ref, terminologyModel);
+                }).collect(Collectors.toSet());
         datamodelDTO.setTerminologies(terminologies);
 
-        Set<CodeListDTO> codeLists = MapperUtils.arrayPropertyToSet(modelResource, Iow.codeLists).stream().map(codeList -> {
-            var codeListModel = jenaService.getCodelistScheme(codeList);
-            if(codeListModel == null){
-                var codeListDTO = new CodeListDTO();
-                codeListDTO.setId(codeList);
-                return codeListDTO;
-            }
-            return CodeListMapper.mapToCodeListDTO(codeList, codeListModel);
-        }).collect(Collectors.toSet());
+        var codeLists = MapperUtils.arrayPropertyToSet(modelResource, DCTerms.requires)
+                .stream().filter(val -> val.startsWith(ModelConstants.CODELIST_NAMESPACE))
+                .map(codeList -> {
+                    var codeListModel = jenaService.getCodelistScheme(codeList);
+                    if(codeListModel == null){
+                        var codeListDTO = new CodeListDTO();
+                        codeListDTO.setId(codeList);
+                        return codeListDTO;
+                    }
+                    return CodeListMapper.mapToCodeListDTO(codeList, codeListModel);
+                }).collect(Collectors.toSet());
         datamodelDTO.setCodeLists(codeLists);
 
         if (userMapper != null) {
@@ -287,22 +237,12 @@ public class ModelMapper {
         if(contentModified != null) {
             indexModel.setContentModified(contentModified.getString());
         }
-        var types = resource.listProperties(RDF.type).mapWith(Statement::getResource).toList();
-        if(types.contains(DCAP.DCAP) || types.contains(ResourceFactory.createProperty("http://www.w3.org/2002/07/dcap#DCAP"))){
-            indexModel.setType(ModelType.PROFILE);
-        }else if(types.contains(OWL.Ontology)){
-            indexModel.setType(ModelType.LIBRARY);
-        }else{
-            throw new MappingError("RDF:type not supported for data model");
-        }
+        indexModel.setType(MapperUtils.getModelTypeFromResource(resource));
         indexModel.setPrefix(prefix);
         indexModel.setLabel(MapperUtils.localizedPropertyToMap(resource, RDFS.label));
         indexModel.setComment(MapperUtils.localizedPropertyToMap(resource, RDFS.comment));
-        var contributors = new ArrayList<UUID>();
-        resource.listProperties(DCTerms.contributor).forEach(contributor -> {
-            var value = contributor.getObject().toString();
-            contributors.add(MapperUtils.getUUID(value));
-        });
+        var contributors = MapperUtils.arrayPropertyToList(resource, DCTerms.contributor)
+                .stream().map(MapperUtils::getUUID).toList();
         indexModel.setContributor(contributors);
         var isPartOf = MapperUtils.arrayPropertyToList(resource, DCTerms.isPartOf);
         var serviceCategories = jenaService.getServiceCategories();
@@ -331,14 +271,19 @@ public class ModelMapper {
 
     /**
      * Add namespaces from model to two sets
-     * @param intNs Internal namespaces set - Defined by having http://uri.suomi.fi/ as the namespace
+     * @param intNs Internal namespaces set - Defined by having http://uri.suomi.fi/datamodel/ns as the namespace
      * @param extNs External namespaces set - Everything not internal
      * @param model Model to get external namespace information from
      * @param resource Model resource where the given property lies
      * @param property Property to get namespace reference from
      */
     private void addNamespacesToList(Set<String> intNs, Set<ExternalNamespaceDTO> extNs, Model model, Resource resource, Property property){
-        resource.listProperties(property).forEach(prop -> {
+        resource.listProperties(property)
+                .filterDrop(prop -> {
+                    var string = prop.getObject().toString();
+                    return string.startsWith(ModelConstants.CODELIST_NAMESPACE) || string.startsWith(ModelConstants.TERMINOLOGY_NAMESPACE);
+                })
+                .forEach(prop -> {
             var ns = prop.getObject().toString();
             if(ns.startsWith(ModelConstants.SUOMI_FI_NAMESPACE)){
                 intNs.add(ns);
@@ -363,14 +308,23 @@ public class ModelMapper {
             var ns = jenaService.getDataModel(namespace);
             var nsRes = ns.getResource(namespace);
             var prefix = MapperUtils.propertyToString(nsRes, DCAP.preferredXMLNamespacePrefix);
-            var nsType = nsRes.getProperty(RDF.type).getResource();
-            if(nsType.equals(OWL.Ontology)){
-                resource.addProperty(OWL.imports, nsRes);
-            }else{
-                resource.addProperty(DCTerms.requires, nsRes);
-            }
+            var nsType = MapperUtils.getModelTypeFromResource(nsRes);
+            var modelType = MapperUtils.getModelTypeFromResource(resource);
+            resource.addProperty(getNamespacePropertyFromType(modelType, nsType), nsRes);
             model.setNsPrefix(prefix, namespace);
         });
+    }
+
+    private Property getNamespacePropertyFromType(ModelType modelType, ModelType nsType){
+        if(modelType.equals(ModelType.LIBRARY) && nsType.equals(ModelType.LIBRARY)){
+            return OWL.imports;
+        }else if(modelType.equals(ModelType.PROFILE) && nsType.equals(ModelType.LIBRARY)){
+            return DCTerms.requires;
+        }else if(modelType.equals(ModelType.PROFILE) && nsType.equals(ModelType.PROFILE)){
+            return OWL.imports;
+        }else{
+            return DCTerms.requires;
+        }
     }
 
     /**
@@ -382,30 +336,21 @@ public class ModelMapper {
     private void addExternalNamespaceToDatamodel(DataModelDTO modelDTO, Model model, Resource resource){
             modelDTO.getExternalNamespaces().forEach(namespace -> {
                 var nsUri = namespace.getNamespace();
-                var resolvedNamespace = ModelFactory.createDefaultModel();
-                try{
-                    resolvedNamespace.read(nsUri);
-                    var extRes = resolvedNamespace.getResource(nsUri);
-                    var resType = extRes.getProperty(RDF.type).getResource();
+                var nsRes = model.createResource(nsUri);
+                nsRes.addProperty(RDFS.label, namespace.getName());
+                nsRes.addProperty(DCAP.preferredXMLNamespacePrefix, namespace.getPrefix());
 
-                    var nsRes = model.createResource(nsUri);
-                    nsRes.addProperty(RDFS.label, namespace.getName());
-                    nsRes.addProperty(DCAP.preferredXMLNamespacePrefix, namespace.getPrefix());
-                    nsRes.addProperty(DCTerms.type, resType);
-                    if(resType.equals(OWL.Ontology)){
-                        resource.addProperty(OWL.imports, extRes);
-                    }else{
-                        resource.addProperty(DCTerms.requires, extRes);
-                    }
-                    model.setNsPrefix(namespace.getPrefix(), nsUri);
-                }catch (HttpException ex){
-                    if (ex.getStatusCode() == HttpStatus.NOT_FOUND.value()) {
-                        log.warn("Model not found with prefix {}", nsUri);
-                        throw new ResourceNotFoundException(nsUri);
-                    } else {
-                        throw new JenaQueryException("Error fetching external namespace");
-                    }
+                try{
+                    var resolvedNs = jenaService.getNamespaceFromImports(nsUri);
+                    var extRes = resolvedNs.getResource(nsUri);
+                    var nsType = MapperUtils.getModelTypeFromResource(extRes);
+                    var modelType = MapperUtils.getModelTypeFromResource(resource);
+                    resource.addProperty(getNamespacePropertyFromType(modelType, nsType), nsRes);
+                }catch(Exception e){
+                    //If namespace wasn't resolved just add it as dcterms:requires
+                    resource.addProperty(DCTerms.requires, nsRes);
                 }
-            });
+                model.setNsPrefix(namespace.getPrefix(), nsUri);
+        });
     }
 }

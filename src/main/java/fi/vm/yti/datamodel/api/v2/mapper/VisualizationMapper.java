@@ -101,7 +101,7 @@ public class VisualizationMapper {
                     var uri = ns.getObject().toString();
                     if (uri.startsWith(ModelConstants.SUOMI_FI_NAMESPACE)) {
                         namespaces.put(uri, uri.replace(ModelConstants.SUOMI_FI_NAMESPACE, ""));
-                    } else {
+                    } else if(!uri.startsWith(ModelConstants.TERMINOLOGY_NAMESPACE) && !uri.startsWith(ModelConstants.CODELIST_NAMESPACE)) {
                         namespaces.put(uri, model.getResource(uri).getProperty(DCAP.preferredXMLNamespacePrefix).getString());
                     }
                 }));
