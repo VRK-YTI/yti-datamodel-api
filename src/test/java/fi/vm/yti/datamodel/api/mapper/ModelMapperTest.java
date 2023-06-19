@@ -7,7 +7,10 @@ import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.mapper.ModelMapper;
 import fi.vm.yti.datamodel.api.v2.service.JenaService;
 import fi.vm.yti.security.YtiUser;
-import org.apache.jena.rdf.model.*;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.sparql.vocabulary.FOAF;
 import org.apache.jena.vocabulary.*;
 import org.junit.jupiter.api.BeforeEach;
@@ -109,27 +112,38 @@ class ModelMapperTest {
         assertEquals(2, modelResource.listProperties(RDFS.label).toList().size());
         assertEquals(Status.DRAFT, Status.valueOf(modelResource.getProperty(OWL.versionInfo).getString()));
 
-        assertEquals(1, modelResource.listProperties(OWL.imports).toList().size());
 
         var requires = MapperUtils.arrayPropertyToList(modelResource, DCTerms.requires);
         assertEquals(3, requires.size());
+        
+        if(modelType.equals(ModelType.PROFILE)){
+            assertEquals(1, modelResource.listProperties(OWL.imports).toList().size());
+            assertTrue(requires.containsAll(
+                    List.of("http://www.w3.org/2000/01/rdf-schema#",
+                            "http://uri.suomi.fi/terminology/test",
+                            "http://uri.suomi.fi/codelist/test/testcodelist"
+                    )));
+        }else{
+            assertEquals(0, modelResource.listProperties(OWL.imports).toList().size());
+            assertTrue(requires.containsAll(
+                    List.of("http://www.w3.org/2000/01/rdf-schema#",
+                            "http://uri.suomi.fi/terminology/test",
+                            "http://uri.suomi.fi/datamodel/ns/newint"
+                    )));
+        }
 
-        assertTrue(requires.containsAll(
-                List.of("http://www.w3.org/2000/01/rdf-schema#",
-                        "http://uri.suomi.fi/terminology/test",
-                        "http://uri.suomi.fi/codelist/test/testcodelist"
-                )));
         assertNotNull(model.getResource("http://example.com/ns/ext"));
 
         assertEquals(mockUser.getId().toString(), MapperUtils.propertyToString(modelResource, Iow.creator));
         assertEquals(mockUser.getId().toString(), MapperUtils.propertyToString(modelResource, Iow.modifier));
 
         if (modelType.equals(ModelType.PROFILE)) {
-            assertEquals("http://uri.suomi.fi/codelist/test/testcodelist", MapperUtils.propertyToString(modelResource, Iow.codeLists));
+            assertTrue(MapperUtils.arrayPropertyToList(modelResource, DCTerms.requires).contains("http://uri.suomi.fi/codelist/test/testcodelist"));
         } else {
-            assertNull(MapperUtils.propertyToString(modelResource, Iow.codeLists));
+            assertFalse(MapperUtils.arrayPropertyToList(modelResource, DCTerms.requires).contains("http://uri.suomi.fi/codelist/test/testcodelist"));
         }
-        assertEquals("http://uri.suomi.fi/terminology/test", MapperUtils.propertyToString(modelResource, DCTerms.references));
+        assertTrue(MapperUtils.arrayPropertyToList(modelResource, DCTerms.requires).contains("http://uri.suomi.fi/terminology/test"));
+
         assertEquals("""
                 test documentation
                 # Header
