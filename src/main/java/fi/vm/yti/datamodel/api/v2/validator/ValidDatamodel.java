@@ -1,5 +1,6 @@
 package fi.vm.yti.datamodel.api.v2.validator;
 
+import fi.vm.yti.datamodel.api.v2.dto.ModelType;
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
 import java.lang.annotation.ElementType;
@@ -23,5 +24,6 @@ public @interface ValidDatamodel {
     Class<?>[] groups() default {};
 
     boolean updateModel() default false;
+    ModelType modelType();
     Class<? extends Payload>[] payload() default {};
 }

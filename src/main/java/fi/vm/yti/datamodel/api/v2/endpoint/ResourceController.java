@@ -55,7 +55,7 @@ public class ResourceController {
 
     @Operation(summary = "Add a resource (attribute or association) to a model")
     @ApiResponse(responseCode = "200", description = "Resource added to model successfully")
-    @PutMapping(value = "/ontology/{prefix}", consumes = APPLICATION_JSON_VALUE)
+    @PutMapping(value = "/library/{prefix}", consumes = APPLICATION_JSON_VALUE)
     public void createResource(@PathVariable String prefix, @RequestBody @ValidResource ResourceDTO dto){
         var graphUri = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
         var model = handleCreateResourceOrPropertyShape(prefix, dto);
@@ -81,7 +81,7 @@ public class ResourceController {
 
     @Operation(summary = "Update a resource in a model")
     @ApiResponse(responseCode = "200", description = "Resource updated to model successfully")
-    @PutMapping(value = "/ontology/{prefix}/{resourceIdentifier}", consumes = APPLICATION_JSON_VALUE)
+    @PutMapping(value = "/library/{prefix}/{resourceIdentifier}", consumes = APPLICATION_JSON_VALUE)
     public void updateResource(@PathVariable String prefix, @PathVariable String resourceIdentifier,
                                @RequestBody @ValidResource(updateProperty = true) ResourceDTO dto){
         handleUpdateResourceOrPropertyShape(prefix, resourceIdentifier, dto);
@@ -97,7 +97,7 @@ public class ResourceController {
 
     @Operation(summary = "Find an attribute or association from a model")
     @ApiResponse(responseCode = "200", description = "Attribute or association found")
-    @GetMapping(value = "/ontology/{prefix}/{resourceIdentifier}", produces = APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/library/{prefix}/{resourceIdentifier}", produces = APPLICATION_JSON_VALUE)
     public ResourceInfoDTO getResource(@PathVariable String prefix, @PathVariable String resourceIdentifier){
         return (ResourceInfoDTO) handleGetResourceOrPropertyShape(prefix, resourceIdentifier);
     }
@@ -132,7 +132,7 @@ public class ResourceController {
 
     @Operation(summary = "Delete a resource from a data model")
     @ApiResponse(responseCode = "200", description = "Resource deleted successfully")
-    @DeleteMapping(value = "/ontology/{prefix}/{resourceIdentifier}")
+    @DeleteMapping(value = "/library/{prefix}/{resourceIdentifier}")
     public void deleteResource(@PathVariable String prefix, @PathVariable String resourceIdentifier){
         handleDeleteResourceOrPropertyShape(prefix, resourceIdentifier);
     }

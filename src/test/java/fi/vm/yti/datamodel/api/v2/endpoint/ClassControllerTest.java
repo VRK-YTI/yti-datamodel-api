@@ -112,7 +112,7 @@ class ClassControllerTest {
             resourceMapper.when(() -> ResourceMapper.mapToIndexResource(any(Model.class), anyString())).thenReturn(new IndexResource());
             classMapper.when(() -> ClassMapper.createOntologyClassAndMapToModel(anyString(), any(Model.class), any(ClassDTO.class), any(YtiUser.class))).thenReturn("test");
             this.mvc
-                    .perform(put("/v2/class/ontology/test")
+                    .perform(put("/v2/class/library/test")
                             .contentType("application/json")
                             .content(EndpointUtils.convertObjectToJsonString(classDTO)))
                     .andExpect(status().isOk());
@@ -145,7 +145,7 @@ class ClassControllerTest {
             resourceMapper.when(() -> ResourceMapper.mapToIndexResource(any(Model.class), anyString())).thenReturn(new IndexResource());
             classMapper.when(() -> ClassMapper.createOntologyClassAndMapToModel(anyString(), any(Model.class), any(ClassDTO.class), any(YtiUser.class))).thenReturn("test");
             this.mvc
-                    .perform(put("/v2/class/ontology/test")
+                    .perform(put("/v2/class/library/test")
                             .contentType("application/json")
                             .content(EndpointUtils.convertObjectToJsonString(classDTO)))
                     .andExpect(status().isOk());
@@ -168,7 +168,7 @@ class ClassControllerTest {
         doThrow(ResourceNotFoundException.class).when(jenaService).getDataModel(anyString());
 
         this.mvc
-                .perform(put("/v2/class/ontology/test")
+                .perform(put("/v2/class/library/test")
                         .contentType("application/json")
                         .content(EndpointUtils.convertObjectToJsonString(classDTO)))
                 .andExpect(status().isNotFound());
@@ -178,7 +178,7 @@ class ClassControllerTest {
     @MethodSource("provideCreateClassDTOInvalidData")
     void shouldInvalidate(ClassDTO classDTO) throws Exception {
         this.mvc
-                .perform(put("/v2/class/ontology/test")
+                .perform(put("/v2/class/library/test")
                         .contentType("application/json")
                         .content(EndpointUtils.convertObjectToJsonString(classDTO)))
                 .andExpect(status().isBadRequest());
@@ -230,7 +230,7 @@ class ClassControllerTest {
             //mockito will use our mocked static even though we do not call when(). so nothing is needed here
 
             this.mvc
-                    .perform(put("/v2/class/ontology/test/class")
+                    .perform(put("/v2/class/library/test/class")
                             .contentType("application/json")
                             .content(EndpointUtils.convertObjectToJsonString(classDTO)))
                     .andExpect(status().isOk());
@@ -255,7 +255,7 @@ class ClassControllerTest {
         when(jenaService.doesResourceExistInGraph(anyString(), anyString())).thenReturn(false);
 
         this.mvc
-                .perform(put("/v2/class/ontology/test/class")
+                .perform(put("/v2/class/library/test/class")
                         .contentType("application/json")
                         .content(EndpointUtils.convertObjectToJsonString(classDTO)))
                 .andExpect(status().isNotFound());
@@ -265,7 +265,7 @@ class ClassControllerTest {
     @MethodSource("provideUpdateClassDTOInvalidData")
     void shouldInvalidateUpdate(ClassDTO classDTO) throws Exception{
         this.mvc
-                .perform(put("/v2/class/ontology/test/class")
+                .perform(put("/v2/class/library/test/class")
                         .contentType("application/json")
                         .content(EndpointUtils.convertObjectToJsonString(classDTO)))
                 .andExpect(status().isBadRequest());
@@ -293,14 +293,14 @@ class ClassControllerTest {
         try(var mapper = mockStatic(ClassMapper.class)) {
             mapper.when(() -> ClassMapper.mapToClassDTO(any(Model.class), anyString(), anyString(), any(Model.class), anyBoolean(), eq(userMapper)))
                     .thenReturn(new ClassInfoDTO());
-            mvc.perform(get("/v2/class/ontology/test/TestClass"))
+            mvc.perform(get("/v2/class/library/test/TestClass"))
                     .andExpect(status().isOk());
         }
     }
 
     @Test
     void shouldResourceNotExistGet() throws Exception {
-        mvc.perform(get("/v2/class/ontology/test/class"))
+        mvc.perform(get("/v2/class/library/test/class"))
                 .andExpect(status().isNotFound());
     }
 
@@ -308,7 +308,7 @@ class ClassControllerTest {
     void shouldModelNotExistGet() throws Exception {
         when(jenaService.doesResourceExistInGraph(anyString(), anyString())).thenReturn(true);
         doThrow(ResourceNotFoundException.class).when(jenaService).getDataModel(anyString());
-        mvc.perform(get("/v2/class/ontology/test/class"))
+        mvc.perform(get("/v2/class/library/test/class"))
                 .andExpect(status().isNotFound());
     }
 
@@ -319,7 +319,7 @@ class ClassControllerTest {
         when(authorizationManager.hasRightToModel(anyString(), any(Model.class))).thenReturn(true);
 
 
-        mvc.perform(delete("/v2/class/ontology/test/class"))
+        mvc.perform(delete("/v2/class/library/test/class"))
                 .andExpect(status().isOk());
 
         verify(jenaService).doesResourceExistInGraph(anyString(), anyString());
@@ -331,7 +331,7 @@ class ClassControllerTest {
 
     @Test
     void shouldFailToFindClassDelete() throws Exception {
-        mvc.perform(delete("/v2/class/ontology/test/class"))
+        mvc.perform(delete("/v2/class/library/test/class"))
                 .andExpect(status().isNotFound());
 
         verify(jenaService).doesResourceExistInGraph(anyString(), anyString());
@@ -345,7 +345,7 @@ class ClassControllerTest {
         when(jenaService.getDataModel(anyString())).thenReturn(mock(Model.class));
         when(authorizationManager.hasRightToModel(anyString(), any(Model.class))).thenReturn(false);
 
-        mvc.perform(delete("/v2/class/ontology/test/class"))
+        mvc.perform(delete("/v2/class/library/test/class"))
                 .andExpect(status().isUnauthorized());
 
         verify(jenaService).doesResourceExistInGraph(anyString(), anyString());

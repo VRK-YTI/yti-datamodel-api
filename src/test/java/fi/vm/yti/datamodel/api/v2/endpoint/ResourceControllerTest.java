@@ -105,7 +105,7 @@ class ResourceControllerTest {
             mapper.when(() -> ResourceMapper.mapToResource(anyString(), any(Model.class), any(ResourceDTO.class), any(YtiUser.class))).thenReturn("test");
             mapper.when(() -> ResourceMapper.mapToIndexResource(any(Model.class), anyString())).thenReturn(new IndexResource());
             this.mvc
-                    .perform(put("/v2/resource/ontology/test")
+                    .perform(put("/v2/resource/library/test")
                             .contentType("application/json")
                             .content(EndpointUtils.convertObjectToJsonString(resourceDTO)))
                     .andExpect(status().isOk());
@@ -139,7 +139,7 @@ class ResourceControllerTest {
             mapper.when(() -> ResourceMapper.mapToResource(anyString(), any(Model.class), any(ResourceDTO.class), any(YtiUser.class))).thenReturn("test");
             mapper.when(() -> ResourceMapper.mapToIndexResource(any(Model.class), anyString())).thenReturn(new IndexResource());
             this.mvc
-                    .perform(put("/v2/resource/ontology/test")
+                    .perform(put("/v2/resource/library/test")
                             .contentType("application/json")
                             .content(EndpointUtils.convertObjectToJsonString(resourceDTO)))
                     .andExpect(status().isOk());
@@ -170,7 +170,7 @@ class ResourceControllerTest {
 
         //finding models from jena is not mocked so it should return null and return 404 not found
         this.mvc
-                .perform(put("/v2/resource/ontology/test")
+                .perform(put("/v2/resource/library/test")
                         .contentType("application/json")
                         .content(EndpointUtils.convertObjectToJsonString(resourceDTO)))
                 .andExpect(status().isNotFound());
@@ -178,13 +178,13 @@ class ResourceControllerTest {
         when(jenaService.doesResourceExistInGraph(anyString(), anyString())).thenReturn(true);
 
         this.mvc
-                .perform(put("/v2/resource/ontology/test/resource")
+                .perform(put("/v2/resource/library/test/resource")
                         .contentType("application/json")
                         .content(EndpointUtils.convertObjectToJsonString(updateDTO)))
                 .andExpect(status().isNotFound());
 
         this.mvc
-                .perform(get("/v2/resource/ontology/test/resource")
+                .perform(get("/v2/resource/library/test/resource")
                         .contentType("application/json")
                         .content(EndpointUtils.convertObjectToJsonString(resourceDTO)))
                 .andExpect(status().isNotFound());
@@ -198,7 +198,7 @@ class ResourceControllerTest {
 
         //finding models from jena is not mocked so it should return null and return 404 not found
         this.mvc
-                .perform(put("/v2/resource/ontology/test")
+                .perform(put("/v2/resource/library/test")
                         .contentType("application/json")
                         .content(EndpointUtils.convertObjectToJsonString(resourceDTO)))
                 .andExpect(status().isBadRequest())
@@ -209,7 +209,7 @@ class ResourceControllerTest {
     @MethodSource("provideCreateResourceDTOInvalidData")
     void shouldInvalidate(ResourceDTO resourceDTO) throws Exception {
         this.mvc
-                .perform(put("/v2/resource/ontology/test")
+                .perform(put("/v2/resource/library/test")
                         .contentType("application/json")
                         .content(EndpointUtils.convertObjectToJsonString(resourceDTO)))
                 .andExpect(status().isBadRequest());
@@ -268,7 +268,7 @@ class ResourceControllerTest {
         when(jenaService.getDataModel(anyString())).thenReturn(m);
         when(jenaService.doesResourceExistInGraph(anyString(), anyString())).thenReturn(true);
         this.mvc
-                .perform(put("/v2/resource/ontology/test/TestAttribute")
+                .perform(put("/v2/resource/library/test/TestAttribute")
                         .contentType("application/json")
                         .content(EndpointUtils.convertObjectToJsonString(resourceDTO)))
                 .andExpect(status().isOk());
@@ -287,7 +287,7 @@ class ResourceControllerTest {
         when(jenaService.checkIfResourceIsOneOfTypes(eq("http://uri.suomi.fi/datamodel/ns/int/FakeClass"), anyList(), anyBoolean())).thenReturn(true);
 
         this.mvc
-                .perform(put("/v2/resource/ontology/test/resource")
+                .perform(put("/v2/resource/library/test/resource")
                         .contentType("application/json")
                         .content(EndpointUtils.convertObjectToJsonString(resourceDTO)))
                 .andExpect(status().isNotFound());
@@ -297,7 +297,7 @@ class ResourceControllerTest {
     @MethodSource("provideUpdateResourceDTOInvalidData")
     void shouldInvalidateUpdate(ResourceDTO resourceDTO) throws Exception{
         this.mvc
-                .perform(put("/v2/resource/ontology/test/resource")
+                .perform(put("/v2/resource/library/test/resource")
                         .contentType("application/json")
                         .content(EndpointUtils.convertObjectToJsonString(resourceDTO)))
                 .andExpect(status().isBadRequest());
@@ -314,7 +314,7 @@ class ResourceControllerTest {
         try(var mapper = mockStatic(ResourceMapper.class)) {
             mapper.when(() -> ResourceMapper.mapToResourceInfoDTO(any(Model.class), anyString(), anyString(), any(Model.class), anyBoolean(), eq(userMapper)))
                     .thenReturn(new ResourceInfoDTO());
-            mvc.perform(get("/v2/resource/ontology/test/TestAttribute"))
+            mvc.perform(get("/v2/resource/library/test/TestAttribute"))
                     .andExpect(status().isOk());
             verify(jenaService).doesResourceExistInGraph(anyString(), anyString());
             verify(jenaService).getDataModel(anyString());
@@ -326,7 +326,7 @@ class ResourceControllerTest {
 
     @Test
     void shouldNotFindResourceGet() throws Exception {
-        mvc.perform(get("/v2/resource/ontology/test/resource"))
+        mvc.perform(get("/v2/resource/library/test/resource"))
                 .andExpect(status().isNotFound());
 
         verify(jenaService).doesResourceExistInGraph(anyString(), anyString());
@@ -339,7 +339,7 @@ class ResourceControllerTest {
         when(authorizationManager.hasRightToModel(anyString(), any(Model.class))).thenReturn(true);
 
 
-        mvc.perform(delete("/v2/resource/ontology/test/resource"))
+        mvc.perform(delete("/v2/resource/library/test/resource"))
                 .andExpect(status().isOk());
 
         verify(jenaService).doesResourceExistInGraph(anyString(), anyString());
@@ -351,7 +351,7 @@ class ResourceControllerTest {
 
     @Test
     void shouldFailToFindResourceDelete() throws Exception {
-        mvc.perform(delete("/v2/resource/ontology/test/resource"))
+        mvc.perform(delete("/v2/resource/library/test/resource"))
                 .andExpect(status().isNotFound());
 
         verify(jenaService).doesResourceExistInGraph(anyString(), anyString());
@@ -365,7 +365,7 @@ class ResourceControllerTest {
         when(jenaService.getDataModel(anyString())).thenReturn(mock(Model.class));
         when(authorizationManager.hasRightToModel(anyString(), any(Model.class))).thenReturn(false);
 
-        mvc.perform(delete("/v2/resource/ontology/test/resource"))
+        mvc.perform(delete("/v2/resource/library/test/resource"))
                 .andExpect(status().isUnauthorized());
 
         verify(jenaService).doesResourceExistInGraph(anyString(), anyString());
