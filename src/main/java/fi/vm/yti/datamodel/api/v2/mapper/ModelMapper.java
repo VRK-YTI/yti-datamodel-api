@@ -188,7 +188,7 @@ public class ModelMapper {
         datamodelDTO.setExternalNamespaces(externalNamespaces);
 
         var terminologies = MapperUtils.arrayPropertyToSet(modelResource, DCTerms.requires)
-                .stream().filter(val -> val.startsWith("http://uri.suomi.fi/terminology"))
+                .stream().filter(val -> val.startsWith(ModelConstants.TERMINOLOGY_NAMESPACE))
                 .map(ref -> {
                     var terminologyModel = jenaService.getTerminology(ref);
                     if (terminologyModel == null) {
@@ -199,7 +199,7 @@ public class ModelMapper {
         datamodelDTO.setTerminologies(terminologies);
 
         var codeLists = MapperUtils.arrayPropertyToSet(modelResource, DCTerms.requires)
-                .stream().filter(val -> val.startsWith("http://uri.suomi.fi/codelist"))
+                .stream().filter(val -> val.startsWith(ModelConstants.CODELIST_NAMESPACE))
                 .map(codeList -> {
                     var codeListModel = jenaService.getCodelistScheme(codeList);
                     if(codeListModel == null){
