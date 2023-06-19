@@ -8,7 +8,6 @@ import java.util.UUID;
 
 public class DataModelDTO {
 
-    private ModelType type;
     private String prefix;
     private Status status;
     private Map<String, String> label = Map.of();
@@ -23,14 +22,6 @@ public class DataModelDTO {
     private Set<String> codeLists = Set.of();
     private String contact;
     private Map<String, String> documentation = Map.of();
-
-    public ModelType getType() {
-        return type;
-    }
-
-    public void setType(ModelType type) {
-        this.type = type;
-    }
 
     public String getPrefix() {
         return prefix;

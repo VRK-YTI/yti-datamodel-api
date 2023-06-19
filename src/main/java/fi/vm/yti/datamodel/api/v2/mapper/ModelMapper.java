@@ -36,13 +36,13 @@ public class ModelMapper {
      * @param modelDTO Data Model DTO
      * @return Model
      */
-    public Model mapToJenaModel(DataModelDTO modelDTO, YtiUser user) {
+    public Model mapToJenaModel(DataModelDTO modelDTO, ModelType modelType, YtiUser user) {
         log.info("Mapping DatamodelDTO to Jena Model");
         var model = ModelFactory.createDefaultModel();
         var modelUri = ModelConstants.SUOMI_FI_NAMESPACE + modelDTO.getPrefix();
         // TODO: type of application profile?
         model.setNsPrefixes(ModelConstants.PREFIXES);
-        Resource type = modelDTO.getType().equals(ModelType.LIBRARY)
+        Resource type = modelType.equals(ModelType.LIBRARY)
                 ? OWL.Ontology
                 : DCAP.DCAP;
 
@@ -81,7 +81,7 @@ public class ModelMapper {
 
         modelDTO.getTerminologies().forEach(terminology -> MapperUtils.addOptionalUriProperty(modelResource, DCTerms.references, terminology));
 
-        if(modelDTO.getType().equals(ModelType.PROFILE)) {
+        if(modelType.equals(ModelType.PROFILE)) {
             modelDTO.getCodeLists().forEach(codeList -> MapperUtils.addOptionalUriProperty(modelResource, Iow.codeLists, codeList));
         }
 
