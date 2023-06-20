@@ -20,10 +20,10 @@ public class ResourceMapper {
         //Static class
     }
 
-    public static String mapToResource(String graphUri, Model model, ResourceDTO dto, YtiUser user){
+    public static String mapToResource(String graphUri, Model model, ResourceDTO dto, ResourceType resourceType, YtiUser user){
         var resourceResource = createAndMapCommonInfo(graphUri, model, dto);
 
-        resourceResource.addProperty(RDF.type, dto.getType().equals(ResourceType.ASSOCIATION)
+        resourceResource.addProperty(RDF.type, resourceType.equals(ResourceType.ASSOCIATION)
                 ? OWL.ObjectProperty
                 : OWL.DatatypeProperty);
 
@@ -36,7 +36,7 @@ public class ResourceMapper {
         }
         //Sub Class
         if(dto.getSubResourceOf() == null || dto.getSubResourceOf().isEmpty()){
-            if(dto.getType().equals(ResourceType.ASSOCIATION)){
+            if(resourceType.equals(ResourceType.ASSOCIATION)){
                 resourceResource.addProperty(RDFS.subPropertyOf, OWL2.topObjectProperty); //Add OWL:TopObjectProperty if nothing else is specified
             }else{
                 resourceResource.addProperty(RDFS.subPropertyOf, OWL2.topDataProperty); //Add OWL:TopDataProperty if nothing else is specified

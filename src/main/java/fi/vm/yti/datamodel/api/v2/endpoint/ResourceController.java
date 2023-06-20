@@ -53,13 +53,26 @@ public class ResourceController {
         this.terminologyService = terminologyService;
     }
 
-    @Operation(summary = "Add a resource (attribute or association) to a model")
-    @ApiResponse(responseCode = "200", description = "Resource added to model successfully")
-    @PutMapping(value = "/library/{prefix}", consumes = APPLICATION_JSON_VALUE)
-    public void createResource(@PathVariable String prefix, @RequestBody @ValidResource ResourceDTO dto){
+    @Operation(summary = "Add a attribute to a model")
+    @ApiResponse(responseCode = "200", description = "Attribute added to model successfully")
+    @PutMapping(value = "/library/attribute/{prefix}", consumes = APPLICATION_JSON_VALUE)
+    public void createAttribute(@PathVariable String prefix, @RequestBody @ValidResource(resourceType = ResourceType.ATTRIBUTE) ResourceDTO dto){
         var graphUri = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
         var model = handleCreateResourceOrPropertyShape(prefix, dto);
-        var resourceUri = ResourceMapper.mapToResource(graphUri, model, dto, userProvider.getUser());
+        var resourceUri = ResourceMapper.mapToResource(graphUri, model, dto, ResourceType.ATTRIBUTE, userProvider.getUser());
+
+        jenaService.putDataModelToCore(graphUri, model);
+        var indexClass = ResourceMapper.mapToIndexResource(model, resourceUri);
+        openSearchIndexer.createResourceToIndex(indexClass);
+    }
+
+    @Operation(summary = "Add a association to a model")
+    @ApiResponse(responseCode = "200", description = "Association added to model successfully")
+    @PutMapping(value = "/library/association/{prefix}", consumes = APPLICATION_JSON_VALUE)
+    public void createAssociation(@PathVariable String prefix, @RequestBody @ValidResource(resourceType = ResourceType.ASSOCIATION) ResourceDTO dto){
+        var graphUri = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
+        var model = handleCreateResourceOrPropertyShape(prefix, dto);
+        var resourceUri = ResourceMapper.mapToResource(graphUri, model, dto, ResourceType.ASSOCIATION, userProvider.getUser());
 
         jenaService.putDataModelToCore(graphUri, model);
         var indexClass = ResourceMapper.mapToIndexResource(model, resourceUri);
@@ -81,9 +94,17 @@ public class ResourceController {
 
     @Operation(summary = "Update a resource in a model")
     @ApiResponse(responseCode = "200", description = "Resource updated to model successfully")
-    @PutMapping(value = "/library/{prefix}/{resourceIdentifier}", consumes = APPLICATION_JSON_VALUE)
-    public void updateResource(@PathVariable String prefix, @PathVariable String resourceIdentifier,
-                               @RequestBody @ValidResource(updateProperty = true) ResourceDTO dto){
+    @PutMapping(value = "/library/{prefix}/attribute/{resourceIdentifier}", consumes = APPLICATION_JSON_VALUE)
+    public void updateAttribute(@PathVariable String prefix, @PathVariable String resourceIdentifier,
+                               @RequestBody @ValidResource(resourceType = ResourceType.ATTRIBUTE, updateProperty = true) ResourceDTO dto){
+        handleUpdateResourceOrPropertyShape(prefix, resourceIdentifier, dto);
+    }
+
+    @Operation(summary = "Update a resource in a model")
+    @ApiResponse(responseCode = "200", description = "Resource updated to model successfully")
+    @PutMapping(value = "/library/{prefix}/association/{resourceIdentifier}", consumes = APPLICATION_JSON_VALUE)
+    public void updateAssociation(@PathVariable String prefix, @PathVariable String resourceIdentifier,
+                               @RequestBody @ValidResource(resourceType = ResourceType.ASSOCIATION, updateProperty = true) ResourceDTO dto){
         handleUpdateResourceOrPropertyShape(prefix, resourceIdentifier, dto);
     }
 
