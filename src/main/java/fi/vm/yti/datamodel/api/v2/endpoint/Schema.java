@@ -191,7 +191,7 @@ public class Schema {
     @Operation(summary = "Get original file version of the schema (if available)", description = "If the result is only one file it is returned as is, but if the content includes multiple files they a returned as a zip file.")
     @ApiResponse(responseCode = "200", description = "")
     @GetMapping(path = "/schema/{pid}/original")
-    public ResponseEntity<byte[]> exportOriginalFile(@PathVariable String pid) throws IOException {
+    public ResponseEntity<byte[]> exportOriginalFile(@PathVariable("pid") String pid) throws IOException {
     	List<StoredFile> files = storageService.retrieveAllSchemaFiles(pid);
     	
     	if (files.isEmpty()) {
@@ -205,7 +205,6 @@ public class Schema {
     				.body(file.data());		
     	}
     	else {
-
     		ByteArrayOutputStream baos = new ByteArrayOutputStream();
     		ZipOutputStream zipOut = new ZipOutputStream(baos);
 
@@ -224,8 +223,7 @@ public class Schema {
     				.header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=files.zip")
     				.contentType(MediaType.parseMediaType("application/zip"))
     				.contentLength(zip.length)
-    				.body(zip);
-    										
+    				.body(zip); 										
     	}
 	}
 

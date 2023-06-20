@@ -17,22 +17,12 @@ public class MimeTypes {
 				}
 			}
 			{
-				// CSV
 				put1("text/csv", "csv");
-				// CSV Schema
 				put1("text/schema+csv", "csvs");
-				// DDL
-				// 	XSD
 				put1("application/xml", "xsd");
 				put1("text/xml", "xsd");
-				// JSON Schema
 				put1("application/schema+json", "schema.json");
 				put1("application/schema-instance+json", "schema.json");
-				// RDFS
-				//put1("application/rdf+xml", "rdf");
-				// SKOS
-				// OWL
-
 			}
 		};
 	}
