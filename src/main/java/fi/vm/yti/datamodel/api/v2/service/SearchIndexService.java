@@ -2,6 +2,7 @@ package fi.vm.yti.datamodel.api.v2.service;
 
 import fi.vm.yti.datamodel.api.index.OpenSearchConnector;
 import fi.vm.yti.datamodel.api.v2.dto.ModelType;
+import fi.vm.yti.datamodel.api.v2.dto.ResourceType;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.OpenSearchException;
 import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.mapper.ResourceMapper;
@@ -16,11 +17,16 @@ import fi.vm.yti.datamodel.api.v2.opensearch.queries.QueryFactoryUtils;
 import fi.vm.yti.datamodel.api.v2.opensearch.queries.ResourceQueryFactory;
 import fi.vm.yti.security.Role;
 import fi.vm.yti.security.YtiUser;
+import org.apache.jena.arq.querybuilder.ExprFactory;
+import org.apache.jena.arq.querybuilder.SelectBuilder;
+import org.apache.jena.arq.querybuilder.WhereBuilder;
+import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.OWL;
 import org.opensearch.client.opensearch.OpenSearchClient;
 import org.opensearch.client.opensearch.core.search.Hit;
 import org.springframework.stereotype.Service;
+import org.topbraid.shacl.vocabulary.SH;
 
 import java.io.IOException;
 import java.util.*;
@@ -91,6 +97,30 @@ public class SearchIndexService {
                 allowedDatamodels = response.hits().hits().stream()
                         .filter(hit -> hit.source() != null)
                         .map(hit -> hit.source().getId()).collect(Collectors.toSet());
+        }
+        if (ModelType.PROFILE.equals(request.getLimitToModelType())
+                && request.getLimitToDataModel() != null
+                && request.getResourceTypes() != null
+                && !request.getResourceTypes().contains(ResourceType.CLASS)) {
+            ExprFactory exprFactory = new ExprFactory();
+            var graph = request.getLimitToDataModel();
+            var resourceType = request.getResourceTypes().contains(ResourceType.ATTRIBUTE)
+                    ? OWL.DatatypeProperty
+                    : OWL.ObjectProperty;
+            var propertyVar = "?property";
+            var select = new SelectBuilder()
+                    .addVar(propertyVar)
+                    .addWhere(new WhereBuilder()
+                            .addGraph(NodeFactory.createURI(graph), new WhereBuilder()
+                                    .addWhere("?subj", SH.property, propertyVar))
+                            .addFilter(exprFactory
+                                    .not(exprFactory.strstarts(exprFactory.str(propertyVar), graph))))
+                    .addWhere(new WhereBuilder()
+                            .addWhere(propertyVar, "a", resourceType))
+                    .build();
+            var externalResources = new HashSet<String>();
+            jenaService.selectWithQuery(select, (var row) -> externalResources.add(row.get("property").toString()));
+            request.setAdditionalResources(externalResources);
         }
         return searchInternalResources(request, allowedDatamodels);
     }

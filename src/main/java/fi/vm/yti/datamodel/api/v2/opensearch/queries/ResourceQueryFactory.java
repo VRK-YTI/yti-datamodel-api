@@ -9,11 +9,13 @@ import org.opensearch.client.opensearch._types.SortOptions;
 import org.opensearch.client.opensearch._types.SortOptionsBuilders;
 import org.opensearch.client.opensearch._types.SortOrder;
 import org.opensearch.client.opensearch._types.mapping.FieldType;
+import org.opensearch.client.opensearch._types.query_dsl.BoolQuery;
 import org.opensearch.client.opensearch._types.query_dsl.Query;
 import org.opensearch.client.opensearch._types.query_dsl.QueryBuilders;
 import org.opensearch.client.opensearch.core.SearchRequest;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -44,10 +46,17 @@ public class ResourceQueryFactory {
             must.add(QueryFactoryUtils.termsQuery("status", statuses.stream().map(Status::name).toList()));
         }
 
-        // intersect allowed data model lists
+        // intersect allowed data model lists and include possible additional resources (references from other models)
         List<String> isDefinedByCondition = getIsDefinedByCondition(fromNamespaces, restrictedDataModels);
         if (!isDefinedByCondition.isEmpty()) {
-            must.add(QueryFactoryUtils.termsQuery("isDefinedBy", isDefinedByCondition));
+            must.add(new BoolQuery.Builder()
+                    .should(QueryFactoryUtils.termsQuery("isDefinedBy", isDefinedByCondition))
+                    .should(QueryFactoryUtils.termsQuery("id", request.getAdditionalResources() != null
+                            ? request.getAdditionalResources()
+                            : Collections.emptySet()))
+                    .build().
+                    _toQuery()
+            );
         }
 
         var types = request.getResourceTypes();
