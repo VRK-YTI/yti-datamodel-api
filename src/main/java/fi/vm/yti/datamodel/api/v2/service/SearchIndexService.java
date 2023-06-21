@@ -21,6 +21,7 @@ import org.apache.jena.arq.querybuilder.ExprFactory;
 import org.apache.jena.arq.querybuilder.SelectBuilder;
 import org.apache.jena.arq.querybuilder.WhereBuilder;
 import org.apache.jena.graph.NodeFactory;
+import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.OWL;
 import org.opensearch.client.opensearch.OpenSearchClient;
@@ -98,15 +99,21 @@ public class SearchIndexService {
                         .filter(hit -> hit.source() != null)
                         .map(hit -> hit.source().getId()).collect(Collectors.toSet());
         }
-        if (ModelType.PROFILE.equals(request.getLimitToModelType())
-                && request.getLimitToDataModel() != null
+
+        // Add resources from other models to the search request. Used in attribute / association lists
+        if (request.getLimitToDataModel() != null
+                && !request.isFromAddedNamespaces()
                 && request.getResourceTypes() != null
                 && !request.getResourceTypes().contains(ResourceType.CLASS)) {
             ExprFactory exprFactory = new ExprFactory();
             var graph = request.getLimitToDataModel();
-            var resourceType = request.getResourceTypes().contains(ResourceType.ATTRIBUTE)
-                    ? OWL.DatatypeProperty
-                    : OWL.ObjectProperty;
+
+            Resource resourceType = null;
+            if (request.getResourceTypes().contains(ResourceType.ATTRIBUTE)) {
+                resourceType = OWL.DatatypeProperty;
+            } else if (request.getResourceTypes().contains(ResourceType.ASSOCIATION)) {
+                resourceType = OWL.ObjectProperty;
+            }
             var propertyVar = "?property";
             var select = new SelectBuilder()
                     .addVar(propertyVar)
@@ -114,12 +121,14 @@ public class SearchIndexService {
                             .addGraph(NodeFactory.createURI(graph), new WhereBuilder()
                                     .addWhere("?subj", SH.property, propertyVar))
                             .addFilter(exprFactory
-                                    .not(exprFactory.strstarts(exprFactory.str(propertyVar), graph))))
-                    .addWhere(new WhereBuilder()
-                            .addWhere(propertyVar, "a", resourceType))
-                    .build();
+                                    .not(exprFactory.strstarts(exprFactory.str(propertyVar), graph))));
+
+            if (resourceType != null) {
+                select.addWhere(new WhereBuilder()
+                        .addWhere(propertyVar, "a", resourceType));
+            }
             var externalResources = new HashSet<String>();
-            jenaService.selectWithQuery(select, (var row) -> externalResources.add(row.get("property").toString()));
+            jenaService.selectWithQuery(select.build(), (var row) -> externalResources.add(row.get("property").toString()));
             request.setAdditionalResources(externalResources);
         }
         return searchInternalResources(request, allowedDatamodels);
