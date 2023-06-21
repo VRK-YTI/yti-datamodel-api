@@ -18,6 +18,7 @@ public class DataModelValidator extends BaseValidator implements
     private JenaService jenaService;
 
     boolean updateModel;
+    ModelType modelType;
 
     @Value("${defaultResolveBaseDomain:uri.suomi.fi}")
     private String resolveBaseDomain;
@@ -29,12 +30,12 @@ public class DataModelValidator extends BaseValidator implements
     @Override
     public void initialize(ValidDatamodel constraintAnnotation    		) {
         updateModel = constraintAnnotation.updateModel();
+        modelType = constraintAnnotation.modelType();
     }
 
     @Override
     public boolean isValid(DataModelDTO dataModel, ConstraintValidatorContext context) {
         setConstraintViolationAdded(false);
-        checkModelType(context, dataModel);
         checkPrefix(context, dataModel);
         checkStatus(context, dataModel.getStatus());
         checkLanguages(context, dataModel);
@@ -50,7 +51,7 @@ public class DataModelValidator extends BaseValidator implements
 
 
         checkTerminologies(context, dataModel);
-        checkCodeLists(context, dataModel);
+        checkCodeLists(context, dataModel, modelType);
         return !isConstraintViolationAdded();
     }
 
@@ -71,21 +72,6 @@ public class DataModelValidator extends BaseValidator implements
         }
     }
 
-
-    /**
-     * Check if model type is valid, if updating ModelType cannot be set
-     * @param context Constraint validator context
-     * @param dataModel DataModel
-     */
-    private void checkModelType(ConstraintValidatorContext context, DataModelDTO dataModel) {
-        var modelType = dataModel.getType();
-        if(updateModel && modelType != null){
-            addConstraintViolation(context, ValidationConstants.MSG_NOT_ALLOWED_UPDATE, "type");
-        }else if(!updateModel && modelType == null){
-            addConstraintViolation(context, ValidationConstants.MSG_VALUE_MISSING, "type");
-        }
-    }
-
     /**
      * Check if languages are valid
      * @param context Constraint validator context
@@ -93,6 +79,12 @@ public class DataModelValidator extends BaseValidator implements
      */
     private void checkLanguages(ConstraintValidatorContext context, DataModelDTO dataModel){
         var languages = dataModel.getLanguages();
+
+        if (languages.isEmpty()) {
+            addConstraintViolation(context, ValidationConstants.MSG_VALUE_MISSING, "languages");
+            return;
+        }
+
         languages.forEach(language -> {
             //Matches RFC-4646
             if(!language.matches("^[a-z]{2,3}(?:-[A-Z]{2,3}(?:-[a-zA-Z]{4})?)?$")){
@@ -151,7 +143,7 @@ public class DataModelValidator extends BaseValidator implements
     private void checkOrganizations(ConstraintValidatorContext context, DataModelDTO dataModel){
         var organizations = dataModel.getOrganizations();
         var existingOrgs = jenaService.getOrganizations();
-        if(!updateModel && organizations.isEmpty()){
+        if(organizations.isEmpty()){
             addConstraintViolation(context, ValidationConstants.MSG_VALUE_MISSING, "organization");
             return;
         }
@@ -171,7 +163,7 @@ public class DataModelValidator extends BaseValidator implements
     private void checkGroups(ConstraintValidatorContext context, DataModelDTO dataModel){
         var groups = dataModel.getGroups();
         var existingGroups = jenaService.getServiceCategories();
-        if(!updateModel && groups.isEmpty()){
+        if(groups.isEmpty()){
             addConstraintViolation(context, ValidationConstants.MSG_VALUE_MISSING, "groups");
             return;
         }
@@ -258,8 +250,8 @@ public class DataModelValidator extends BaseValidator implements
         }
     }
 
-    private void checkCodeLists(ConstraintValidatorContext context, DataModelDTO dataModel) {
-        if(!updateModel && (dataModel.getType() != null && dataModel.getType().equals(ModelType.LIBRARY)) && !dataModel.getCodeLists().isEmpty()){
+    private void checkCodeLists(ConstraintValidatorContext context, DataModelDTO dataModel, ModelType modelType) {
+        if(modelType.equals(ModelType.LIBRARY) && !dataModel.getCodeLists().isEmpty()){
             addConstraintViolation(context, "library-not-supported", "codeLists");
         }
 

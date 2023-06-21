@@ -99,7 +99,7 @@ public class Schema {
 		jenaService.putToSchema(PID, jenaModel);
 		
 		var indexModel = mapper.mapToIndexModel(PID, jenaModel);
-        openSearchIndexer.createModelToIndex(indexModel);
+        openSearchIndexer.createSchemaToIndex(indexModel);
 
         return mapper.mapToSchemaDTO(PID, jenaService.getSchema(PID));
 		
@@ -165,7 +165,7 @@ public class Schema {
 
 
         var indexModel = mapper.mapToIndexModel(pid, jenaModel);
-        openSearchIndexer.updateModelToIndex(indexModel);
+        openSearchIndexer.updateSchemaToIndex(indexModel);
     }
 
     

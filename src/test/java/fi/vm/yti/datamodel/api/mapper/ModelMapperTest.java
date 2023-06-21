@@ -16,6 +16,8 @@ import org.apache.jena.vocabulary.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -24,6 +26,7 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -34,7 +37,8 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(SpringExtension.class)
 @Import({
-        ModelMapper.class
+        ModelMapper.class,
+        ModelConstants.class
 })
 
 class ModelMapperTest {
@@ -43,9 +47,12 @@ class ModelMapperTest {
     JenaService jenaService;
     @Autowired
     ModelMapper mapper;
+    @Autowired
+    ModelConstants modelConstants;
     
 
     String defaultNamespace = "http://uri.suomi.fi/datamodel/ns/";
+    String defaultResolveBase = "http://uri.suomi.fi";
 
     @BeforeEach
     public void init(){
@@ -62,10 +69,13 @@ class ModelMapperTest {
         when(jenaService.getOrganizations()).thenReturn(mockOrgs);
         
         ReflectionTestUtils.setField(mapper, "defaultNamespace", defaultNamespace);
+        ReflectionTestUtils.setField(modelConstants, "defaultNamespace", defaultNamespace);
+        ReflectionTestUtils.setField(modelConstants, "defaultResolveBase", defaultResolveBase);
     }
 
-    @Test
-    void testMapToJenaModel() {
+    @ParameterizedTest
+    @EnumSource(ModelType.class)
+    void testMapToJenaModel(ModelType modelType) {
         var mockModel = ModelFactory.createDefaultModel();
         mockModel.createResource(defaultNamespace + "newint")
                         .addProperty(RDF.type, DCAP.DCAP)
@@ -75,7 +85,6 @@ class ModelMapperTest {
         UUID organizationId = UUID.randomUUID();
         YtiUser mockUser = EndpointUtils.mockUser;
 
-        //TODO: should we have 2 separate tests for ModelType.LIBRARY and ModelType.PROFILE?
         DataModelDTO dto = new DataModelDTO();
         dto.setPrefix("test");
         dto.setLabel(Map.of(
@@ -88,10 +97,11 @@ class ModelMapperTest {
         dto.setGroups(Set.of("P11"));
         dto.setLanguages(Set.of("fi", "sv"));
         dto.setOrganizations(Set.of(organizationId));
-        dto.setType(ModelType.PROFILE);
         dto.setInternalNamespaces(Set.of(defaultNamespace + "newint"));
         dto.setContact("test@localhost");
-        dto.setCodeLists(Set.of("http://uri.suomi.fi/codelist/test/testcodelist"));
+        if (modelType.equals(ModelType.PROFILE)) {
+            dto.setCodeLists(Set.of("http://uri.suomi.fi/codelist/test/testcodelist"));
+        }
         dto.setTerminologies(Set.of("http://uri.suomi.fi/terminology/test"));
         dto.setDocumentation(Map.of("fi","""
                 test documentation
@@ -104,7 +114,7 @@ class ModelMapperTest {
         externalDTO.setPrefix("ext");
         dto.setExternalNamespaces(Set.of(externalDTO));
 
-        Model model = mapper.mapToJenaModel(dto, mockUser);
+        Model model = mapper.mapToJenaModel(dto, modelType, mockUser);
 
         Resource modelResource = model.getResource(defaultNamespace + "test");
         Resource groupResource = model.getResource("http://urn.fi/URN:NBN:fi:uuid:au:ptvl:v1105");
@@ -117,14 +127,38 @@ class ModelMapperTest {
         assertEquals(2, modelResource.listProperties(RDFS.label).toList().size());
         assertEquals(Status.DRAFT, Status.valueOf(modelResource.getProperty(OWL.versionInfo).getString()));
 
-        assertEquals(1, modelResource.listProperties(OWL.imports).toList().size());
-        assertEquals(1, modelResource.listProperties(DCTerms.requires).toList().size());
+
+        var requires = MapperUtils.arrayPropertyToList(modelResource, DCTerms.requires);
+        assertEquals(3, requires.size());
+        
+        if(modelType.equals(ModelType.PROFILE)){
+            assertEquals(1, modelResource.listProperties(OWL.imports).toList().size());
+            assertTrue(requires.containsAll(
+                    List.of("http://www.w3.org/2000/01/rdf-schema#",
+                            "http://uri.suomi.fi/terminology/test",
+                            "http://uri.suomi.fi/codelist/test/testcodelist"
+                    )));
+        }else{
+            assertEquals(0, modelResource.listProperties(OWL.imports).toList().size());
+            assertTrue(requires.containsAll(
+                    List.of("http://www.w3.org/2000/01/rdf-schema#",
+                            "http://uri.suomi.fi/terminology/test",
+                            "http://uri.suomi.fi/datamodel/ns/newint"
+                    )));
+        }
+
         assertNotNull(model.getResource("http://example.com/ns/ext"));
 
         assertEquals(mockUser.getId().toString(), MapperUtils.propertyToString(modelResource, Iow.creator));
         assertEquals(mockUser.getId().toString(), MapperUtils.propertyToString(modelResource, Iow.modifier));
-        assertEquals("http://uri.suomi.fi/codelist/test/testcodelist", MapperUtils.propertyToString(modelResource, Iow.codeLists));
-        assertEquals("http://uri.suomi.fi/terminology/test", MapperUtils.propertyToString(modelResource, DCTerms.references));
+
+        if (modelType.equals(ModelType.PROFILE)) {
+            assertTrue(MapperUtils.arrayPropertyToList(modelResource, DCTerms.requires).contains("http://uri.suomi.fi/codelist/test/testcodelist"));
+        } else {
+            assertFalse(MapperUtils.arrayPropertyToList(modelResource, DCTerms.requires).contains("http://uri.suomi.fi/codelist/test/testcodelist"));
+        }
+        assertTrue(MapperUtils.arrayPropertyToList(modelResource, DCTerms.requires).contains("http://uri.suomi.fi/terminology/test"));
+
         assertEquals("""
                 test documentation
                 # Header
@@ -136,13 +170,12 @@ class ModelMapperTest {
 
     @Test
     void testMapToUpdateJenaModel() {
-        //TODO: should we have 2 separate tests for ModelType.LIBRARY and ModelType.PROFILE?
         var m = MapperTestUtils.getModelFromFile("/test_datamodel_library.ttl");
 
         when(jenaService.getDataModel("test")).thenReturn(m);
         var mockModel = ModelFactory.createDefaultModel();
         mockModel.createResource(defaultNamespace + "newint")
-                .addProperty(RDF.type, DCAP.DCAP)
+        		.addProperty(RDF.type, OWL.Ontology)
                 .addProperty(DCAP.preferredXMLNamespacePrefix, "test");
         when(jenaService.getDataModel(anyString())).thenReturn(mockModel);
 
@@ -186,12 +219,12 @@ class ModelMapperTest {
         assertEquals(1, modelResource.listProperties(OWL.imports).toList().size());
         assertEquals(defaultNamespace + "int", modelResource.listProperties(OWL.imports).next().getObject().toString());
 
-        assertEquals(1, modelResource.listProperties(DCTerms.requires).toList().size());
-        assertEquals("https://www.example.com/ns/ext", modelResource.listProperties(DCTerms.requires).next().getObject().toString());
+        var requires = MapperUtils.arrayPropertyToList(modelResource, DCTerms.requires);
+        assertEquals(2, requires.size());
+        assertTrue(requires.containsAll(List.of("https://www.example.com/ns/ext", "http://uri.suomi.fi/terminology/test")));
 
         assertEquals("test@localhost", MapperUtils.propertyToString(modelResource, Iow.contact));
 
-        assertEquals("http://uri.suomi.fi/terminology/test", MapperUtils.propertyToString(modelResource, DCTerms.references));
         assertEquals("""
                 hello
                 test""", MapperUtils.localizedPropertyToMap(modelResource, Iow.documentation).get("fi"));
@@ -212,15 +245,14 @@ class ModelMapperTest {
 
         assertEquals(Status.DRAFT, Status.valueOf(modelResource.getProperty(OWL.versionInfo).getString()));
 
-        assertEquals(1, modelResource.listProperties(DCTerms.requires).toList().size());
-        assertEquals(defaultNamespace + "newint", modelResource.listProperties(DCTerms.requires).next().getObject().toString());
+        requires = MapperUtils.arrayPropertyToList(modelResource, DCTerms.requires);
+        //assertEquals(2, requires.size());
+        assertTrue(requires.containsAll(List.of("http://www.w3.org/2000/01/rdf-schema#", "http://uri.suomi.fi/terminology/newtest")));
 
         assertEquals(1, modelResource.listProperties(OWL.imports).toList().size());
-        assertEquals("http://www.w3.org/2000/01/rdf-schema#", modelResource.listProperties(OWL.imports).next().getObject().toString());
+        assertEquals("http://uri.suomi.fi/datamodel/ns/newint", modelResource.listProperties(OWL.imports).next().getObject().toString());
         assertEquals(mockUser.getId().toString(), modelResource.getProperty(Iow.modifier).getString());
         assertEquals("2a5c075f-0d0e-4688-90e0-29af1eebbf6d", modelResource.getProperty(Iow.creator).getObject().toString());
-
-        assertEquals("http://uri.suomi.fi/terminology/newtest", MapperUtils.propertyToString(modelResource, DCTerms.references));
 
         assertEquals("new@localhost", MapperUtils.propertyToString(modelResource, Iow.contact));
         assertEquals("""
@@ -243,17 +275,18 @@ class ModelMapperTest {
         YtiUser mockUser = EndpointUtils.mockUser;
 
         DataModelDTO dto = new DataModelDTO();
+        dto.setStatus(Status.DRAFT);
         dto.setCodeLists(Set.of("http://uri.suomi.fi/codelist/test/newcodelist"));
 
         Resource modelResource = m.getResource("http://uri.suomi.fi/datamodel/ns/test");
-        assertEquals("http://uri.suomi.fi/codelist/test/testcodelist", MapperUtils.propertyToString(modelResource, Iow.codeLists));
+        assertEquals("http://uri.suomi.fi/codelist/test/testcodelist", MapperUtils.propertyToString(modelResource, DCTerms.requires));
 
         Model model = mapper.mapToUpdateJenaModel("test", dto, m, mockUser);
 
 
         //changed values
         modelResource = model.getResource("http://uri.suomi.fi/datamodel/ns/test");
-        assertEquals("http://uri.suomi.fi/codelist/test/newcodelist", MapperUtils.propertyToString(modelResource, Iow.codeLists));
+        assertEquals("http://uri.suomi.fi/codelist/test/newcodelist", MapperUtils.propertyToString(modelResource, DCTerms.requires));
 
 
     }

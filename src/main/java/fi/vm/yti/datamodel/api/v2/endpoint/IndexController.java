@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import static fi.vm.yti.security.AuthorizationException.check;
@@ -29,9 +30,18 @@ public class IndexController {
 
     @Operation(summary = "Reindex all datamodels")
     @GetMapping(value = "/reindex")
-    public void reIndex() {
+    public void reIndex(@RequestParam(required = false) String index) {
         check(authorizationManager.hasRightToDropDatabase());
-
-        indexer.reindex();
+        if(index == null){
+            indexer.reindex();
+            return;
+        }
+        switch (index){
+            case OpenSearchIndexer.OPEN_SEARCH_INDEX_EXTERNAL -> indexer.initExternalResourceIndex();
+            case OpenSearchIndexer.OPEN_SEARCH_INDEX_MODEL -> indexer.initModelIndex();
+            case OpenSearchIndexer.OPEN_SEARCH_INDEX_RESOURCE -> indexer.initResourceIndex();
+            case OpenSearchIndexer.OPEN_SEARCH_INDEX_CROSSWALK -> indexer.initCrosswalkIndex();
+            default -> throw new IllegalArgumentException("Given value not allowed");
+        }
     }
 }

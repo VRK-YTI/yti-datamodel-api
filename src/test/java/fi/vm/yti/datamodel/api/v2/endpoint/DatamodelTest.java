@@ -119,18 +119,18 @@ class DatamodelTest {
         //Mock mapping
         var model = mock(Model.class);
         var indexmodel = mock(IndexModel.class);
-        when(modelMapper.mapToJenaModel(any(DataModelDTO.class), any(YtiUser.class))).thenReturn(model);
+        when(modelMapper.mapToJenaModel(any(DataModelDTO.class), any(ModelType.class), any(YtiUser.class))).thenReturn(model);
         when(modelMapper.mapToIndexModel("test", model)).thenReturn(indexmodel);
 
         this.mvc
-                .perform(put("/v2/model")
+                .perform(put("/v2/model/library")
                         .contentType("application/json")
                         .content(EndpointUtils.convertObjectToJsonString(dataModelDTO)))
                 .andExpect(status().isOk());
 
         //Check that functions are called
         verify(this.modelMapper)
-                .mapToJenaModel(any(DataModelDTO.class), any(YtiUser.class));
+                .mapToJenaModel(any(DataModelDTO.class), any(ModelType.class), any(YtiUser.class));
         verify(this.modelMapper)
                 .mapToIndexModel(anyString(), any(Model.class));
         verifyNoMoreInteractions(this.modelMapper);
@@ -158,7 +158,7 @@ class DatamodelTest {
         when(modelMapper.mapToIndexModel("test", model)).thenReturn(indexmodel);
 
         this.mvc
-                .perform(post("/v2/model/test")
+                .perform(post("/v2/model/library/test")
                         .contentType("application/json")
                         .content(EndpointUtils.convertObjectToJsonString(dataModelDTO)))
                 .andExpect(status().isOk());
@@ -219,7 +219,26 @@ class DatamodelTest {
         when(jenaService.getServiceCategories()).thenReturn(mockModel);
 
         this.mvc
-                .perform(put("/v2/model")
+                .perform(put("/v2/model/profile")
+                        .contentType("application/json")
+                        .content(EndpointUtils.convertObjectToJsonString(dataModelDTO)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void shouldInValidateLibrary() throws Exception {
+        var mockModel = ModelFactory.createDefaultModel();
+        var res = mockModel.createResource(ModelConstants.URN_UUID + RANDOM_ORG);
+        res.addProperty(SKOS.notation, "P11");
+        when(jenaService.getOrganizations()).thenReturn(mockModel);
+        when(jenaService.getServiceCategories()).thenReturn(mockModel);
+
+        DataModelDTO dataModelDTO = createDatamodelDTO(false);
+
+        // code lists are not allowed in libraries
+        dataModelDTO.setCodeLists(Set.of("http://uri.suomi.fi/codelist/test"));
+        this.mvc
+                .perform(put("/v2/model/library")
                         .contentType("application/json")
                         .content(EndpointUtils.convertObjectToJsonString(dataModelDTO)))
                 .andExpect(status().isBadRequest());
@@ -235,7 +254,7 @@ class DatamodelTest {
         when(jenaService.getServiceCategories()).thenReturn(mockModel);
 
         this.mvc
-                .perform(put("/v2/model")
+                .perform(put("/v2/model/library")
                         .contentType("application/json")
                         .content(EndpointUtils.convertObjectToJsonString(createDatamodelDTO(false))))
                 .andExpect(status().isOk());
@@ -243,7 +262,7 @@ class DatamodelTest {
         when(jenaService.doesDataModelExist(anyString())).thenReturn(true);
 
         this.mvc
-                .perform(put("/v2/model")
+                .perform(put("/v2/model/library")
                         .contentType("application/json")
                         .content(EndpointUtils.convertObjectToJsonString(createDatamodelDTO(false))))
                 .andExpect(status().isBadRequest())
@@ -261,7 +280,7 @@ class DatamodelTest {
         when(jenaService.getServiceCategories()).thenReturn(mockModel);
 
         this.mvc
-                .perform(post("/v2/model/test")
+                .perform(post("/v2/model/library/test")
                         .contentType("application/json")
                         .content(EndpointUtils.convertObjectToJsonString(dataModelDTO)))
                 .andExpect(status().isBadRequest());
@@ -310,7 +329,6 @@ class DatamodelTest {
         dataModelDTO.setExternalNamespaces(Set.of(extNs));
         if(!updateModel){
             dataModelDTO.setPrefix("test");
-            dataModelDTO.setType(ModelType.LIBRARY);
         }
         dataModelDTO.setStatus(Status.DRAFT);
         dataModelDTO.setTerminologies(Set.of("http://uri.suomi.fi/terminology/test"));
@@ -325,8 +343,6 @@ class DatamodelTest {
         var args = new ArrayList<DataModelDTO>();
 
         var dataModelDTO = createDatamodelDTO(false);
-        dataModelDTO.setType(null);
-        args.add(dataModelDTO);
 
         dataModelDTO = createDatamodelDTO(false);
         dataModelDTO.setStatus(null);
@@ -464,11 +480,6 @@ class DatamodelTest {
         //prefix should not be allowed
         var dataModelDTO = createDatamodelDTO(true);
         dataModelDTO.setPrefix("test");
-        args.add(dataModelDTO);
-
-        //changing type should not be allowed
-        dataModelDTO = createDatamodelDTO(false);
-        dataModelDTO.setType(ModelType.PROFILE);
         args.add(dataModelDTO);
 
         return args.stream().map(Arguments::of);

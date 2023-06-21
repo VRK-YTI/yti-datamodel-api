@@ -19,6 +19,7 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Service;
 
+import fi.vm.yti.datamodel.api.v2.dto.MSCRType;
 import fi.vm.yti.datamodel.api.v2.dto.ModelType;
 import fi.vm.yti.datamodel.api.v2.service.StorageService;
 
@@ -32,15 +33,15 @@ public class PostgresStorageService implements StorageService {
 
 	@Override
 	public int storeSchemaFile(String schemaPID, String contentType, byte[] data) {
-		return storeFile(schemaPID, contentType, data, ModelType.SCHEMA);
+		return storeFile(schemaPID, contentType, data, MSCRType.SCHEMA);
 	}
 
 	@Override
 	public int storeCrosswalkFile(String crosswalkPID, String contentType, byte[] data) {
-		return storeFile(crosswalkPID, contentType, data, ModelType.CROSSWALK);
+		return storeFile(crosswalkPID, contentType, data, MSCRType.CROSSWALK);
 	}
 
-	private int storeFile(String pid, String contentType, byte[] data, ModelType type) {
+	private int storeFile(String pid, String contentType, byte[] data, MSCRType type) {
 		KeyHolder keyHolder = new GeneratedKeyHolder();
 
 		jdbcTemplate.update(con -> {
@@ -66,7 +67,7 @@ public class PostgresStorageService implements StorageService {
 				PreparedStatement ps = con
 						.prepareStatement("select content_type, data, id from mscr_files where id = ? and type = ?");
 				ps.setLong(1, fileID);
-				ps.setString(2, ModelType.SCHEMA.name());
+				ps.setString(2, MSCRType.SCHEMA.name());
 				return ps;
 			}
 		}, new ResultSetExtractor<StoredFile>() {
@@ -77,7 +78,7 @@ public class PostgresStorageService implements StorageService {
 				String contentType = rs.getString(1);
 				byte[] data = rs.getBytes(2);
 				long fileID = rs.getLong(3);
-				return new StoredFile(contentType, data, fileID, ModelType.SCHEMA);
+				return new StoredFile(contentType, data, fileID, MSCRType.SCHEMA);
 			}
 		});
 	}
@@ -91,7 +92,7 @@ public class PostgresStorageService implements StorageService {
 				PreparedStatement ps = con
 						.prepareStatement("select content_type, data, id, type from mscr_files where pid = ? and type = ?");
 				ps.setString(1, schemaPID);
-				ps.setString(2, ModelType.SCHEMA.name());
+				ps.setString(2, MSCRType.SCHEMA.name());
 				return ps;
 			}
 		}, new ResultSetExtractor<List<StoredFile>>() {
@@ -103,7 +104,7 @@ public class PostgresStorageService implements StorageService {
 					String contentType = rs.getString(1);
 					byte[] data = rs.getBytes(2);
 					long fileID = rs.getLong(3);
-					ModelType type = ModelType.valueOf(rs.getString(4));
+					MSCRType type = MSCRType.valueOf(rs.getString(4));
 					files.add(new StoredFile(contentType, data, fileID, type));
 				}
 				return files;
@@ -120,7 +121,7 @@ public class PostgresStorageService implements StorageService {
 				PreparedStatement ps = con
 						.prepareStatement("select content_type, data, id, type from mscr_files where pid = ? and type = ?");
 				ps.setString(1, pid);
-				ps.setString(2, ModelType.CROSSWALK.name());
+				ps.setString(2, MSCRType.CROSSWALK.name());
 				return ps;
 			}
 		}, new ResultSetExtractor<List<StoredFile>>() {
@@ -132,7 +133,7 @@ public class PostgresStorageService implements StorageService {
 					String contentType = rs.getString(1);
 					byte[] data = rs.getBytes(2);
 					long fileID = rs.getLong(3);
-					ModelType type = ModelType.valueOf(rs.getString(4));
+					MSCRType type = MSCRType.valueOf(rs.getString(4));
 					files.add(new StoredFile(contentType, data, fileID, type));
 				}
 				return files;

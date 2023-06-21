@@ -33,8 +33,8 @@ class ResourceQueryFactoryTest {
         request.setTargetClass("http://uri.suomi.fi/datamodel/ns/test/TestClass");
         request.setResourceTypes(Set.of(ResourceType.ATTRIBUTE, ResourceType.ASSOCIATION));
 
-        var groupNamespaces = List.of("http://uri.suomi.fi/datamodel/ns/groupNs");
-        var addedNamespaces = List.of("http://uri.suomi.fi/datamodel/ns/addedNs");
+        var groupNamespaces = List.of("http://uri.suomi.fi/datamodel/ns/groupNs", "http://uri.suomi.fi/datamodel/ns/addedNs");
+        var addedNamespaces = List.of("http://uri.suomi.fi/datamodel/ns/addedNs", "http://external-data.com/test");
 
         var allowedIncompleteDatamodels = Set.of("http://uri.suomi.fi/datamodel/ns/test");
 

@@ -6,19 +6,10 @@ import java.util.Set;
 
 public class ResourceDTO extends BaseDTO {
 
-    private ResourceType type;
     private Set<String> subResourceOf;
     private Set<String> equivalentResource;
     private String domain;
     private String range;
-
-    public ResourceType getType() {
-        return type;
-    }
-
-    public void setType(ResourceType type) {
-        this.type = type;
-    }
 
     public Set<String> getSubResourceOf() {
         return subResourceOf;

@@ -13,8 +13,12 @@ import fi.vm.yti.datamodel.api.v2.service.JenaService;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelUtils;
 import fi.vm.yti.datamodel.api.v2.utils.SparqlUtils;
 import org.apache.jena.arq.querybuilder.ConstructBuilder;
+import org.apache.jena.arq.querybuilder.ExprFactory;
 import org.apache.jena.rdf.model.ModelFactory;
-import org.apache.jena.vocabulary.*;
+import org.apache.jena.vocabulary.DCTerms;
+import org.apache.jena.vocabulary.OWL;
+import org.apache.jena.vocabulary.RDF;
+import org.apache.jena.vocabulary.RDFS;
 import org.opensearch.client.opensearch.OpenSearchClient;
 import org.opensearch.client.opensearch._types.mapping.*;
 import org.opensearch.client.opensearch.core.BulkRequest;
@@ -37,6 +41,7 @@ public class OpenSearchIndexer {
     public static final String OPEN_SEARCH_INDEX_MODEL = "models_v2";
     public static final String OPEN_SEARCH_INDEX_RESOURCE = "resources_v2";
     public static final String OPEN_SEARCH_INDEX_CROSSWALK = "crosswalks_v2";
+    public static final String OPEN_SEARCH_INDEX_EXTERNAL = "external_v2";
 
     private final Logger logger = LoggerFactory.getLogger(OpenSearchIndexer.class);
     private static final String GRAPH_VARIABLE = "?model";
@@ -61,16 +66,36 @@ public class OpenSearchIndexer {
         this.client = client;
     }
 
+    public void initIndexes(){
+        try {
+            openSearchConnector.cleanIndex(OPEN_SEARCH_INDEX_MODEL);
+            openSearchConnector.cleanIndex(OPEN_SEARCH_INDEX_RESOURCE);
+            logger.info("v2 Indexes cleaned");
+            openSearchConnector.createIndex(OPEN_SEARCH_INDEX_MODEL, getModelMappings());
+            openSearchConnector.createIndex(OPEN_SEARCH_INDEX_RESOURCE, getResourceMappings());
+            initModelIndex();
+            initResourceIndex();
+
+            logger.info("Indexes initialized");
+        } catch (IOException ex) {
+            logger.warn("Index initialization failed!", ex);
+        }
+    }
+
     public void reindex() {
         try {
             openSearchConnector.cleanIndex(OPEN_SEARCH_INDEX_MODEL);
             openSearchConnector.cleanIndex(OPEN_SEARCH_INDEX_RESOURCE);
-            openSearchConnector.cleanIndex(OPEN_SEARCH_INDEX_CROSSWALK);
+			openSearchConnector.cleanIndex(OPEN_SEARCH_INDEX_CROSSWALK);
+			openSearchConnector.cleanIndex(OPEN_SEARCH_INDEX_EXTERNAL);
             logger.info("v2 Indexes cleaned");
             openSearchConnector.createIndex(OPEN_SEARCH_INDEX_MODEL, getModelMappings());
             openSearchConnector.createIndex(OPEN_SEARCH_INDEX_RESOURCE, getResourceMappings());
-            openSearchConnector.createIndex(OPEN_SEARCH_INDEX_CROSSWALK, getCrosswalkMappings());
-            initSearchIndexes();
+            openSearchConnector.createIndex(OPEN_SEARCH_INDEX_EXTERNAL, getExternalResourceMappings());
+            initModelIndex();
+            initResourceIndex();
+            initCrosswalkIndex();
+            initExternalResourceIndex();
 
             logger.info("Indexes initialized");
         } catch (IOException ex) {
@@ -99,6 +124,14 @@ public class OpenSearchIndexer {
                 .build();
     }
 
+    private TypeMapping getExternalResourceMappings() {
+        return new TypeMapping.Builder()
+                .dynamicTemplates(geExternalResourcesDynamicTemplates())
+                .properties(getExternalResourcesProperties())
+                .build();
+    }
+
+
     /**
      * A new model to index
      *
@@ -108,6 +141,11 @@ public class OpenSearchIndexer {
         logger.info("Indexing: {}", model.getId());
         openSearchConnector.putToIndex(OPEN_SEARCH_INDEX_MODEL, model.getId(), model);
     }
+    
+    public void createSchemaToIndex(IndexSchema model) { 
+        logger.info("Indexing: {}", model.getId());
+        openSearchConnector.putToIndex(OPEN_SEARCH_INDEX_MODEL, model.getId(), model);
+    }    
 
     public void createCrosswalkToIndex(IndexCrosswalk model) {
         logger.info("Indexing: {}", model.getId());
@@ -121,7 +159,11 @@ public class OpenSearchIndexer {
     public void updateModelToIndex(IndexModel model) {
         openSearchConnector.updateToIndex(OPEN_SEARCH_INDEX_MODEL, model.getId(), model);
     }
-
+    
+    public void updateSchemaToIndex(IndexSchema model) {
+        openSearchConnector.updateToIndex(OPEN_SEARCH_INDEX_MODEL, model.getId(), model);
+    }
+    
     public void deleteModelFromIndex(String graph) {
         openSearchConnector.removeFromIndex(OPEN_SEARCH_INDEX_MODEL, graph);
     }
@@ -159,16 +201,6 @@ public class OpenSearchIndexer {
         openSearchConnector.removeFromIndex(OPEN_SEARCH_INDEX_CROSSWALK, graph);
     }
 
-    
-    /**
-     * Init search indexes
-     */
-    private void initSearchIndexes() {
-        initModelIndex();
-        initResourceIndex();
-        initSchemaIndex();
-        initCrosswalkIndex();
-    }
 
     /**
      * Init model index
@@ -221,7 +253,7 @@ public class OpenSearchIndexer {
                 .addOptional(GRAPH_VARIABLE, "dcterms:language/rdf:rest*/rdf:first", "?language")
                 .addOptional(GRAPH_VARIABLE, DCTerms.language, "?language");
         var indexModels = jenaService.constructWithQuerySchemas(constructBuilder.build());
-        var list = new ArrayList<IndexModel>();
+        var list = new ArrayList<IndexSchema>();
         indexModels.listSubjects().forEach(next -> {
             var newModel = ModelFactory.createDefaultModel()
                     .add(next.listProperties());
@@ -293,6 +325,33 @@ public class OpenSearchIndexer {
         bulkInsert(OPEN_SEARCH_INDEX_CROSSWALK, list);
     }
     
+    public void initExternalResourceIndex() {
+        var builder = new ConstructBuilder()
+                .addPrefixes(ModelConstants.PREFIXES);
+
+        SparqlUtils.addConstructOptional("?s", builder, RDFS.label, "?label");
+        SparqlUtils.addConstructOptional("?s", builder, RDFS.isDefinedBy, "?isDefinedBy");
+        SparqlUtils.addConstructOptional("?s", builder, RDFS.comment, "?comment");
+        builder
+                .addOptional("?s", RDF.type, "?primaryType")
+                .addOptional("?s", OWL.inverseOf, "?inverseOf")
+                .addOptional("?inverseOf", RDF.type, "?inverseType")
+                .addBind(new ExprFactory().coalesce("?primaryType", "?inverseType"), "?type")
+                .addConstruct("?s", RDF.type, "?type");
+        var result = jenaService.constructWithQueryImports(builder.build());
+        var list = new ArrayList<IndexBase>();
+        result.listSubjects().forEach(resource -> {
+            var indexClass = ResourceMapper.mapExternalToIndexResource(result, resource);
+            if (indexClass == null) {
+                logger.info("Could not determine required properties for resource {}", resource.getURI());
+                return;
+            }
+            list.add(indexClass);
+        });
+        logger.info("Indexing {} items to index {},", list.size(), OPEN_SEARCH_INDEX_EXTERNAL);
+        bulkInsert(OPEN_SEARCH_INDEX_EXTERNAL, list);
+    }
+
     public <T extends IndexBase> void bulkInsert(String indexName,
                                                  List<T> documents) {
         List<BulkOperation> bulkOperations = new ArrayList<>();
@@ -352,7 +411,12 @@ public class OpenSearchIndexer {
         );
     }
 
-    
+    private List<Map<String, DynamicTemplate>> geExternalResourcesDynamicTemplates() {
+        return List.of(
+                getDynamicTemplate("label", "label.*")
+        );
+    }
+
     private Map<String, org.opensearch.client.opensearch._types.mapping.Property> getModelProperties() {
         return Map.of("id", getKeywordProperty(),
                 "status", getKeywordProperty(),
@@ -374,7 +438,6 @@ public class OpenSearchIndexer {
                 "identifier", getKeywordProperty(),
                 "created", getDateProperty(),
                 "modified", getDateProperty(),
-                // "contentModified", getDateProperty(),
                 "resourceType", getKeywordProperty(),
                 "targetClass", getKeywordProperty());
     }
@@ -394,6 +457,15 @@ public class OpenSearchIndexer {
 				Map.entry("targetSchema", getKeywordProperty())
         );              
     }    
+
+    private Map<String, org.opensearch.client.opensearch._types.mapping.Property> getExternalResourcesProperties() {
+        return Map.of("id", getKeywordProperty(),
+                "status", getKeywordProperty(),
+                "isDefinedBy", getKeywordProperty(),
+                "namespace", getKeywordProperty(),
+                "identifier", getKeywordProperty(),
+                "resourceType", getKeywordProperty());
+    }
 
     private static Map<String, DynamicTemplate> getDynamicTemplate(String name, String pathMatch) {
         return Map.of(name, new DynamicTemplate.Builder()

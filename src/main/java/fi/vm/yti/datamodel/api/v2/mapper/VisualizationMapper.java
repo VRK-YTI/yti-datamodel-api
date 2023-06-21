@@ -24,9 +24,11 @@ public class VisualizationMapper {
     private final Logger LOG = LoggerFactory.getLogger(VisualizationMapper.class);
 
     private String defaultNamespace;
+    private ModelConstants modelConstants;
     
-    public VisualizationMapper(@Value("${defaultNamespace}") String defaultNamespace) {
+    public VisualizationMapper(@Value("${defaultNamespace}") String defaultNamespace, ModelConstants modelConstants) {
     	this.defaultNamespace = defaultNamespace;
+    	this.modelConstants = modelConstants;
     }
 
     public List<VisualizationClassDTO> mapVisualizationData(String prefix, Model model, Model positions) {
@@ -107,7 +109,7 @@ public class VisualizationMapper {
                     var uri = ns.getObject().toString();
                     if (uri.startsWith(defaultNamespace)) {
                         namespaces.put(uri, uri.replace(defaultNamespace, ""));
-                    } else {
+                    } else if(!uri.startsWith(modelConstants.getTerminologyNamespace()) && !uri.startsWith(modelConstants.getCodelistNamespace())) {
                         namespaces.put(uri, model.getResource(uri).getProperty(DCAP.preferredXMLNamespacePrefix).getString());
                     }
                 }));

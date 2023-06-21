@@ -1,5 +1,6 @@
 package fi.vm.yti.datamodel.api.mapper;
 
+import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
 import fi.vm.yti.datamodel.api.v2.mapper.ModelMapper;
 import fi.vm.yti.datamodel.api.v2.mapper.VisualizationMapper;
 import org.apache.jena.rdf.model.ModelFactory;
@@ -20,12 +21,15 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(SpringExtension.class)
 @Import({
-    VisualizationMapper.class
+    VisualizationMapper.class,
+    ModelConstants.class
 })
 class VisualizationDataMapperTest {
 
     @Autowired
     VisualizationMapper mapper;
+    @Autowired
+    ModelConstants modelConstants;
     
     String defaultNamespace = "http://uri.suomi.fi/datamodel/ns/";
 

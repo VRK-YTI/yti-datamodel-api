@@ -1,6 +1,7 @@
 package fi.vm.yti.datamodel.api.v2.service;
 
 import fi.vm.yti.datamodel.api.mapper.MapperTestUtils;
+import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
 import fi.vm.yti.datamodel.api.v2.mapper.ModelMapper;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -18,7 +19,8 @@ import static org.mockito.Mockito.when;
 @ExtendWith(SpringExtension.class)
 @Import({
         FrontendService.class,
-        ModelMapper.class
+        ModelMapper.class,
+        ModelConstants.class
 })
 class FrontendServiceTest {
 
@@ -27,6 +29,8 @@ class FrontendServiceTest {
 
     @Autowired
     FrontendService service;
+    @Autowired
+    ModelConstants modelConstants;
 
     @Test
     void testOrganizations() {
