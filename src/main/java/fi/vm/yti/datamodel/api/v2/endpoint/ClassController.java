@@ -9,6 +9,7 @@ import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.mapper.ResourceMapper;
 import fi.vm.yti.datamodel.api.v2.opensearch.dto.ResourceSearchRequest;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexResource;
+import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexResourceInfo;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
 import fi.vm.yti.datamodel.api.v2.service.GroupManagementService;
 import fi.vm.yti.datamodel.api.v2.service.JenaService;
@@ -294,12 +295,12 @@ public class ClassController {
     @Operation(summary = "Get all node shapes based on given targetClass")
     @ApiResponse(responseCode = "200", description = "List of node shapes fetched successfully")
     @GetMapping(value = "/nodeshapes", produces = APPLICATION_JSON_VALUE)
-    public List<IndexResource> getNodeShapes(@RequestParam String targetClass) throws IOException {
+    public List<IndexResourceInfo> getNodeShapes(@RequestParam String targetClass) throws IOException {
         var request = new ResourceSearchRequest();
         request.setStatus(Set.of(Status.VALID, Status.DRAFT));
         request.setTargetClass(targetClass);
         return searchIndexService
-                .searchInternalResources(request, userProvider.getUser())
+                .searchInternalResourcesWithInfo(request, userProvider.getUser())
                 .getResponseObjects();
     }
 
