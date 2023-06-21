@@ -55,7 +55,7 @@ public class ResourceController {
 
     @Operation(summary = "Add a attribute to a model")
     @ApiResponse(responseCode = "200", description = "Attribute added to model successfully")
-    @PutMapping(value = "/library/attribute/{prefix}", consumes = APPLICATION_JSON_VALUE)
+    @PutMapping(value = "/library/{prefix}/attribute", consumes = APPLICATION_JSON_VALUE)
     public void createAttribute(@PathVariable String prefix, @RequestBody @ValidResource(resourceType = ResourceType.ATTRIBUTE) ResourceDTO dto){
         var graphUri = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
         var model = handleCreateResourceOrPropertyShape(prefix, dto);
@@ -68,7 +68,7 @@ public class ResourceController {
 
     @Operation(summary = "Add a association to a model")
     @ApiResponse(responseCode = "200", description = "Association added to model successfully")
-    @PutMapping(value = "/library/association/{prefix}", consumes = APPLICATION_JSON_VALUE)
+    @PutMapping(value = "/library/{prefix}/association", consumes = APPLICATION_JSON_VALUE)
     public void createAssociation(@PathVariable String prefix, @RequestBody @ValidResource(resourceType = ResourceType.ASSOCIATION) ResourceDTO dto){
         var graphUri = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
         var model = handleCreateResourceOrPropertyShape(prefix, dto);
