@@ -42,10 +42,9 @@ public class MapperUtils {
     }
 
     public static ModelType getModelTypeFromResource(Resource resource){
-        var modelTypes = resource.listProperties(RDF.type).toList();
-        if(modelTypes.stream().anyMatch(stm -> stm.getResource().equals(DCAP.DCAP))){
+        if(isApplicationProfile(resource)) {
             return ModelType.PROFILE;
-        }else if(modelTypes.stream().anyMatch(stm -> stm.getResource().equals(OWL.Ontology))){
+        }else if(isLibrary(resource)) {
             return ModelType.LIBRARY;
         }
         return ModelType.PROFILE;
@@ -292,11 +291,11 @@ public class MapperUtils {
     }
 
     public static boolean isApplicationProfile(Resource resource) {
-        return hasType(resource, DCAP.DCAP, ResourceFactory.createProperty("http://www.w3.org/2002/07/dcap#DCAP"));
+        return hasType(resource, Iow.ApplicationProfile);
     }
 
-    public static boolean isOntology(Resource resource) {
-        return hasType(resource, OWL.Ontology);
+    public static boolean isLibrary(Resource resource) {
+        return hasType(resource, OWL.Ontology) && !hasType(resource, Iow.ApplicationProfile);
     }
 
     public static void addCreationMetadata(Resource resource, YtiUser user) {

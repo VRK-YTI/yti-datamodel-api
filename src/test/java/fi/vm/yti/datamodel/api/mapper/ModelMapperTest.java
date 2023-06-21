@@ -63,7 +63,7 @@ class ModelMapperTest {
     void testMapToJenaModel(ModelType modelType) {
         var mockModel = ModelFactory.createDefaultModel();
         mockModel.createResource("http://uri.suomi.fi/datamodel/ns/newint")
-                        .addProperty(RDF.type, DCAP.DCAP)
+                        .addProperty(RDF.type, Iow.ApplicationProfile)
                         .addProperty(DCAP.preferredXMLNamespacePrefix, "test");
         when(jenaService.getDataModel(anyString())).thenReturn(mockModel);
 
@@ -253,7 +253,8 @@ class ModelMapperTest {
         when(jenaService.getDataModel("test")).thenReturn(m);
         var mockModel = ModelFactory.createDefaultModel();
         mockModel.createResource("http://uri.suomi.fi/datamodel/ns/newint")
-                .addProperty(RDF.type, DCAP.DCAP)
+                .addProperty(RDF.type, Iow.ApplicationProfile)
+                .addProperty(RDF.type, OWL.Ontology)
                 .addProperty(DCAP.preferredXMLNamespacePrefix, "test");
         when(jenaService.getDataModel(anyString())).thenReturn(mockModel);
 
