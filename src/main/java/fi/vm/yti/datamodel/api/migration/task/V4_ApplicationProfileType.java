@@ -7,13 +7,13 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 @Component
-public class V3_ApplicationProfileType implements MigrationTask {
+public class V4_ApplicationProfileType implements MigrationTask {
 
-    private static final Logger LOG = LoggerFactory.getLogger(V3_ApplicationProfileType.class);
+    private static final Logger LOG = LoggerFactory.getLogger(V4_ApplicationProfileType.class);
 
     private final JenaService jenaService;
 
-    public V3_ApplicationProfileType(JenaService jenaService) {
+    public V4_ApplicationProfileType(JenaService jenaService) {
         this.jenaService = jenaService;
     }
 
