@@ -2,6 +2,7 @@ package fi.vm.yti.datamodel.api.v2.validator;
 
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
 import fi.vm.yti.datamodel.api.v2.dto.ResourceDTO;
+import fi.vm.yti.datamodel.api.v2.dto.ResourceType;
 import fi.vm.yti.datamodel.api.v2.service.JenaService;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
@@ -16,11 +17,14 @@ public class ResourceValidator extends BaseValidator implements ConstraintValida
 
     private boolean updateProperty;
 
+    private ResourceType resourceType;
+
     @Autowired
     private JenaService jenaService;
     @Override
     public void initialize(ValidResource constraintAnnotation) {
         this.updateProperty = constraintAnnotation.updateProperty();
+        this.resourceType = constraintAnnotation.resourceType();
     }
 
     @Override
@@ -34,19 +38,10 @@ public class ResourceValidator extends BaseValidator implements ConstraintValida
         checkEquivalentProperty(context, value);
         checkSubPropertyOf(context, value);
         checkPrefixOrIdentifier(context, value.getIdentifier(), "identifier", ValidationConstants.RESOURCE_IDENTIFIER_MAX_LENGTH, updateProperty);
-        checkType(context, value);
         checkDomain(context, value);
         checkRange(context, value);
 
         return !isConstraintViolationAdded();
-    }
-
-    private void checkType(ConstraintValidatorContext context, ResourceDTO resourceDTO){
-        if(!updateProperty && resourceDTO.getType() == null){
-            addConstraintViolation(context, ValidationConstants.MSG_VALUE_MISSING, "type");
-        }else if (updateProperty && resourceDTO.getType() != null){
-            addConstraintViolation(context, ValidationConstants.MSG_NOT_ALLOWED_UPDATE, "type");
-        }
     }
 
     private void checkEquivalentProperty(ConstraintValidatorContext context, ResourceDTO resourceDTO){
@@ -91,10 +86,17 @@ public class ResourceValidator extends BaseValidator implements ConstraintValida
     private void checkRange(ConstraintValidatorContext context, ResourceDTO resourceDTO){
         var range = resourceDTO.getRange();
         if(range != null && !range.isBlank()){
-            var checkImports = !range.startsWith(ModelConstants.SUOMI_FI_NAMESPACE);
-            if(!jenaService.checkIfResourceIsOneOfTypes(range, List.of(RDFS.Class, OWL.Class), checkImports)){
-                addConstraintViolation(context, "not-class-or-doesnt-exist", "range");
+            if(resourceType.equals(ResourceType.ASSOCIATION)){
+                var checkImports = !range.startsWith(ModelConstants.SUOMI_FI_NAMESPACE);
+                if(!jenaService.checkIfResourceIsOneOfTypes(range, List.of(RDFS.Class, OWL.Class), checkImports)){
+                    addConstraintViolation(context, "not-class-or-doesnt-exist", "range");
+                }
+            }else{
+                if(!ModelConstants.SUPPORTED_DATA_TYPES.contains(range)){
+                    addConstraintViolation(context, "value-not-allowed", "range");
+                }
             }
+
         }
     }
 }

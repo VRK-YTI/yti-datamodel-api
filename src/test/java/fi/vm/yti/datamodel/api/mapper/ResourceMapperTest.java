@@ -35,7 +35,6 @@ class ResourceMapperTest {
 
         var dto = new ResourceDTO();
         dto.setIdentifier("Resource");
-        dto.setType(ResourceType.ASSOCIATION);
         dto.setSubject("http://uri.suomi.fi/terminology/test/test1");
         dto.setEquivalentResource(Set.of("http://uri.suomi.fi/datamodel/ns/int/EqRes"));
         dto.setSubResourceOf(Set.of("https://www.example.com/ns/ext/SubRes"));
@@ -46,7 +45,7 @@ class ResourceMapperTest {
         dto.setDomain("http://www.w3.org/2002/07/owl#Class");
         dto.setRange("http://uri.suomi.fi/datamodel/ns/test/RangeClass");
 
-        ResourceMapper.mapToResource("http://uri.suomi.fi/datamodel/ns/test", m, dto, mockUser);
+        ResourceMapper.mapToResource("http://uri.suomi.fi/datamodel/ns/test", m, dto, ResourceType.ASSOCIATION, mockUser);
 
         Resource modelResource = m.getResource("http://uri.suomi.fi/datamodel/ns/test");
         Resource resourceResource = m.getResource("http://uri.suomi.fi/datamodel/ns/test/Resource");
@@ -89,7 +88,6 @@ class ResourceMapperTest {
 
         var dto = new ResourceDTO();
         dto.setIdentifier("Resource");
-        dto.setType(ResourceType.ASSOCIATION);
         dto.setSubject("http://uri.suomi.fi/terminology/test/test1");
         dto.setEquivalentResource(Set.of("http://uri.suomi.fi/datamodel/ns/int/EqRes"));
         dto.setEditorialNote("comment");
@@ -97,7 +95,7 @@ class ResourceMapperTest {
         dto.setStatus(Status.DRAFT);
         dto.setNote(Map.of("fi", "test note"));
 
-        ResourceMapper.mapToResource("http://uri.suomi.fi/datamodel/ns/test", m, dto, EndpointUtils.mockUser);
+        ResourceMapper.mapToResource("http://uri.suomi.fi/datamodel/ns/test", m, dto, ResourceType.ASSOCIATION, EndpointUtils.mockUser);
 
         Resource modelResource = m.getResource("http://uri.suomi.fi/datamodel/ns/test");
         Resource resourceResource = m.getResource("http://uri.suomi.fi/datamodel/ns/test/Resource");
@@ -135,7 +133,6 @@ class ResourceMapperTest {
 
         var dto = new ResourceDTO();
         dto.setIdentifier("Resource");
-        dto.setType(ResourceType.ATTRIBUTE);
         dto.setSubject("http://uri.suomi.fi/terminology/test/test1");
         dto.setEquivalentResource(Set.of("http://uri.suomi.fi/datamodel/ns/int/EqRes"));
         dto.setEditorialNote("comment");
@@ -143,7 +140,7 @@ class ResourceMapperTest {
         dto.setStatus(Status.DRAFT);
         dto.setNote(Map.of("fi", "test note"));
 
-        ResourceMapper.mapToResource("http://uri.suomi.fi/datamodel/ns/test", m, dto, EndpointUtils.mockUser);
+        ResourceMapper.mapToResource("http://uri.suomi.fi/datamodel/ns/test", m, dto, ResourceType.ATTRIBUTE, EndpointUtils.mockUser);
 
         Resource modelResource = m.getResource("http://uri.suomi.fi/datamodel/ns/test");
         Resource resourceResource = m.getResource("http://uri.suomi.fi/datamodel/ns/test/Resource");
@@ -181,7 +178,6 @@ class ResourceMapperTest {
 
         var dto = new ResourceDTO();
         dto.setIdentifier("Resource");
-        dto.setType(ResourceType.ATTRIBUTE);
         dto.setSubject("http://uri.suomi.fi/terminology/test/test1");
         dto.setEquivalentResource(Set.of("http://uri.suomi.fi/datamodel/ns/int/EqRes"));
         dto.setSubResourceOf(Set.of("https://www.example.com/ns/ext/SubRes"));
@@ -192,7 +188,7 @@ class ResourceMapperTest {
         dto.setDomain("http://www.w3.org/2002/07/owl#Class");
         dto.setRange("http://uri.suomi.fi/datamodel/ns/test/RangeClass");
 
-        ResourceMapper.mapToResource("http://uri.suomi.fi/datamodel/ns/test", m, dto, EndpointUtils.mockUser);
+        ResourceMapper.mapToResource("http://uri.suomi.fi/datamodel/ns/test", m, dto, ResourceType.ATTRIBUTE, EndpointUtils.mockUser);
 
         Resource modelResource = m.getResource("http://uri.suomi.fi/datamodel/ns/test");
         Resource resourceResource = m.getResource("http://uri.suomi.fi/datamodel/ns/test/Resource");
