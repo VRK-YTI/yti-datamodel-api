@@ -6,11 +6,13 @@ import fi.vm.yti.datamodel.api.v2.endpoint.error.OpenSearchException;
 import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.mapper.ResourceMapper;
 import fi.vm.yti.datamodel.api.v2.opensearch.dto.CountSearchResponse;
+import fi.vm.yti.datamodel.api.v2.opensearch.dto.CrosswalkSearchRequest;
 import fi.vm.yti.datamodel.api.v2.opensearch.dto.ModelSearchRequest;
 import fi.vm.yti.datamodel.api.v2.opensearch.dto.ResourceSearchRequest;
 import fi.vm.yti.datamodel.api.v2.opensearch.dto.SearchResponseDTO;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.*;
 import fi.vm.yti.datamodel.api.v2.opensearch.queries.CountQueryFactory;
+import fi.vm.yti.datamodel.api.v2.opensearch.queries.CrosswalkQueryFactory;
 import fi.vm.yti.datamodel.api.v2.opensearch.queries.ModelQueryFactory;
 import fi.vm.yti.datamodel.api.v2.opensearch.queries.QueryFactoryUtils;
 import fi.vm.yti.datamodel.api.v2.opensearch.queries.ResourceQueryFactory;
@@ -18,6 +20,7 @@ import fi.vm.yti.security.Role;
 import fi.vm.yti.security.YtiUser;
 import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.OWL;
+import org.jetbrains.annotations.NotNull;
 import org.opensearch.client.opensearch.OpenSearchClient;
 import org.opensearch.client.opensearch.core.search.Hit;
 import org.springframework.stereotype.Service;
@@ -207,4 +210,28 @@ public class SearchIndexService {
         orgIds.addAll(childOrganizationIds);
         return orgIds;
     }
+
+	public SearchResponseDTO<IndexCrosswalk> searchCrosswalks(CrosswalkSearchRequest request, @NotNull YtiUser user) {
+        try {
+            if (!user.isSuperuser()) {
+                request.setIncludeIncompleteFrom(getOrganizationsForUser(user));
+            }
+
+            var build = CrosswalkQueryFactory.createCrosswalkQuery(request);            
+            var response = client.search(build, IndexCrosswalk.class);
+
+            var searchResponse = new SearchResponseDTO<IndexCrosswalk>();
+            searchResponse.setResponseObjects(response.hits().hits().stream()
+                    .map(Hit::source)
+                    .toList()
+            );
+            searchResponse.setTotalHitCount(response.hits().total().value());
+            searchResponse.setPageFrom(request.getPageFrom());
+            searchResponse.setPageSize(request.getPageSize());
+
+            return searchResponse;
+        } catch (IOException e) {
+            throw new OpenSearchException(e.getMessage(), OpenSearchIndexer.OPEN_SEARCH_INDEX_MODEL);
+        }
+	}
 }

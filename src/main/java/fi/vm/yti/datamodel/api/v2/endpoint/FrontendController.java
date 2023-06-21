@@ -5,6 +5,7 @@ import fi.vm.yti.datamodel.api.v2.dto.OrganizationDTO;
 import fi.vm.yti.datamodel.api.v2.dto.ServiceCategoryDTO;
 import fi.vm.yti.datamodel.api.v2.opensearch.dto.*;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexResource;
+import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexCrosswalk;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexModel;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexResourceInfo;
 import fi.vm.yti.datamodel.api.v2.service.FrontendService;
@@ -96,4 +97,12 @@ public class FrontendController {
     public List<String> getSupportedDataTypes() {
         return ModelConstants.SUPPORTED_DATA_TYPES;
     }
+    
+    @Operation(summary = "Search crosswalks")
+    @ApiResponse(responseCode = "200", description = "List of crosswalk objects")
+    @GetMapping(value = "/searchCrosswalks", produces = APPLICATION_JSON_VALUE)
+    public SearchResponseDTO<IndexCrosswalk> getCrosswalkss(CrosswalkSearchRequest request) {
+        return searchIndexService.searchCrosswalks(request, userProvider.getUser());
+    }
+
 }
