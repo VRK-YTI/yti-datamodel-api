@@ -1,6 +1,6 @@
 package fi.vm.yti.datamodel.api.v2.opensearch.index;
 
-public class IndexCrosswalk extends IndexModel {
+public class IndexCrosswalk extends IndexSchema {
 	
 	private String sourceSchema;
 	private String targetSchema;

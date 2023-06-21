@@ -68,7 +68,7 @@ public class StartUpListener {
     private void initOpenSearchIndices() {
         try {
             openSearchConnector.waitForESNodes();
-            openSearchIndexer.reindex();
+            openSearchIndexer.initIndexes();
         } catch (Exception e) {
             logger.warn("OpenSearch initialization failed!", e);
         }

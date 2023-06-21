@@ -27,6 +27,7 @@ import fi.vm.yti.datamodel.api.v2.dto.DCAP;
 import fi.vm.yti.datamodel.api.v2.dto.FileMetadata;
 import fi.vm.yti.datamodel.api.v2.dto.Iow;
 import fi.vm.yti.datamodel.api.v2.dto.MSCR;
+import fi.vm.yti.datamodel.api.v2.dto.MSCRType;
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
 import fi.vm.yti.datamodel.api.v2.dto.ModelType;
 import fi.vm.yti.datamodel.api.v2.dto.SchemaDTO;
@@ -38,6 +39,7 @@ import fi.vm.yti.datamodel.api.v2.service.StorageService.StoredFile;
 import fi.vm.yti.datamodel.api.v2.service.impl.PostgresStorageService;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexModel;
+import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexSchema;
 import fi.vm.yti.datamodel.api.v2.service.JenaService;
 import fi.vm.yti.security.YtiUser;
 
@@ -206,9 +208,9 @@ public class SchemaMapper {
      * @param model Model
      * @return Index model
      */
-    public IndexModel mapToIndexModel(String pid, Model model){
+    public IndexSchema mapToIndexModel(String pid, Model model){
         var resource = model.getResource(pid);
-        var indexModel = new IndexModel();
+        var indexModel = new IndexSchema();
         indexModel.setId(pid);
         indexModel.setStatus(Status.valueOf(resource.getProperty(OWL.versionInfo).getString()));
         indexModel.setModified(resource.getProperty(DCTerms.modified).getString());
@@ -219,7 +221,7 @@ public class SchemaMapper {
         }
         var types = resource.listProperties(RDF.type).mapWith(Statement::getResource).toList();
         if(types.contains(MSCR.SCHEMA)){
-            indexModel.setType(ModelType.SCHEMA);
+            indexModel.setType(MSCRType.SCHEMA);
         }else{
             throw new MappingError("RDF:type not supported for schema model");
         }

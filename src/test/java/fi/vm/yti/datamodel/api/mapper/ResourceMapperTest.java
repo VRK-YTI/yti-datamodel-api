@@ -37,7 +37,6 @@ class ResourceMapperTest {
 
         var dto = new ResourceDTO();
         dto.setIdentifier("Resource");
-        dto.setType(ResourceType.ASSOCIATION);
         dto.setSubject("http://uri.suomi.fi/terminology/test/test1");
         dto.setEquivalentResource(Set.of(defaultNamespace + "int/EqRes"));
         dto.setSubResourceOf(Set.of("https://www.example.com/ns/ext/SubRes"));
@@ -48,7 +47,7 @@ class ResourceMapperTest {
         dto.setDomain("http://www.w3.org/2002/07/owl#Class");
         dto.setRange(defaultNamespace + "test/RangeClass");
 
-        ResourceMapper.mapToResource(defaultNamespace + "test", m, dto, mockUser);
+        ResourceMapper.mapToResource(defaultNamespace +"test", m, dto, ResourceType.ASSOCIATION, mockUser);
 
         Resource modelResource = m.getResource(defaultNamespace + "test");
         Resource resourceResource = m.getResource(defaultNamespace + "test/Resource");
@@ -91,7 +90,6 @@ class ResourceMapperTest {
 
         var dto = new ResourceDTO();
         dto.setIdentifier("Resource");
-        dto.setType(ResourceType.ASSOCIATION);
         dto.setSubject(defaultNamespace + "test1");
         dto.setEquivalentResource(Set.of(defaultNamespace + "int/EqRes"));
         dto.setEditorialNote("comment");
@@ -99,7 +97,7 @@ class ResourceMapperTest {
         dto.setStatus(Status.DRAFT);
         dto.setNote(Map.of("fi", "test note"));
 
-        ResourceMapper.mapToResource(defaultNamespace + "test", m, dto, EndpointUtils.mockUser);
+        ResourceMapper.mapToResource(defaultNamespace + "test", m, dto, ResourceType.ASSOCIATION, EndpointUtils.mockUser);
 
         Resource modelResource = m.getResource(defaultNamespace + "test");
         Resource resourceResource = m.getResource(defaultNamespace + "test/Resource");
@@ -137,7 +135,6 @@ class ResourceMapperTest {
 
         var dto = new ResourceDTO();
         dto.setIdentifier("Resource");
-        dto.setType(ResourceType.ATTRIBUTE);
         dto.setSubject("http://uri.suomi.fi/terminology/test/test1");
         dto.setEquivalentResource(Set.of(defaultNamespace + "int/EqRes"));
         dto.setEditorialNote("comment");
@@ -145,7 +142,7 @@ class ResourceMapperTest {
         dto.setStatus(Status.DRAFT);
         dto.setNote(Map.of("fi", "test note"));
 
-        ResourceMapper.mapToResource(defaultNamespace + "test", m, dto, EndpointUtils.mockUser);
+        ResourceMapper.mapToResource(defaultNamespace + "test", m, dto, ResourceType.ATTRIBUTE, EndpointUtils.mockUser);
 
         Resource modelResource = m.getResource(defaultNamespace + "test");
         Resource resourceResource = m.getResource(defaultNamespace + "test/Resource");
@@ -183,7 +180,6 @@ class ResourceMapperTest {
 
         var dto = new ResourceDTO();
         dto.setIdentifier("Resource");
-        dto.setType(ResourceType.ATTRIBUTE);
         dto.setSubject("http://uri.suomi.fi/terminology/test/test1");
         dto.setEquivalentResource(Set.of(defaultNamespace + "int/EqRes"));
         dto.setSubResourceOf(Set.of("https://www.example.com/ns/ext/SubRes"));
@@ -194,7 +190,7 @@ class ResourceMapperTest {
         dto.setDomain("http://www.w3.org/2002/07/owl#Class");
         dto.setRange(defaultNamespace + "test/RangeClass");
 
-        ResourceMapper.mapToResource(defaultNamespace + "test", m, dto, EndpointUtils.mockUser);
+        ResourceMapper.mapToResource(defaultNamespace + "test", m, dto, ResourceType.ATTRIBUTE, EndpointUtils.mockUser);
 
         Resource modelResource = m.getResource(defaultNamespace + "test");
         Resource resourceResource = m.getResource(defaultNamespace + "test/Resource");
@@ -667,6 +663,46 @@ class ResourceMapperTest {
         assertEquals("käsite", concept.getConceptLabel().get("fi"));
         assertEquals("http://uri.suomi.fi/terminology/dd0e10ed/concept-1", concept.getConceptURI());
         assertEquals("Testisanasto", concept.getTerminologyLabel().get("fi"));
+    }
+
+    @Test
+    void testMapExternalIndexClasses() {
+        var model = MapperTestUtils.getModelFromFile("/external_resources.ttl");
+
+        var resource1 = model.getResource("http://www.w3.org/ns/oa#describing");
+        var resource2 = model.getResource("http://www.w3.org/ns/oa#Motivation");
+
+        var indexResource1 = ResourceMapper.mapExternalToIndexResource(model, resource1);
+        var indexResource2 = ResourceMapper.mapExternalToIndexResource(model, resource2);
+
+        assertNotNull(indexResource1);
+        assertNotNull(indexResource2);
+
+        assertEquals(ResourceType.CLASS, indexResource1.getResourceType());
+        assertEquals(ResourceType.CLASS, indexResource2.getResourceType());
+
+        assertEquals("http://www.w3.org/ns/oa#describing", indexResource1.getId());
+        assertEquals("describing", indexResource1.getIdentifier());
+        assertEquals("http://www.w3.org/ns/oa#", indexResource1.getNamespace());
+        assertEquals("http://www.w3.org/ns/oa#", indexResource1.getIsDefinedBy());
+        assertEquals("Label describing", indexResource1.getLabel().get("en"));
+        assertEquals("Test comment describing", indexResource1.getNote().get("en"));
+    }
+
+    @Test
+    void testMapExternalIndexResources() {
+        var model = MapperTestUtils.getModelFromFile("/external_resources.ttl");
+        var resource1 = model.getResource("http://www.w3.org/ns/oa#exact");
+        var resource2 = model.getResource("http://www.w3.org/ns/oa#hasEndSelector");
+
+        var indexResource1 = ResourceMapper.mapExternalToIndexResource(model, resource1);
+        var indexResource2 = ResourceMapper.mapExternalToIndexResource(model, resource2);
+
+        assertNotNull(indexResource1);
+        assertNotNull(indexResource2);
+
+        assertEquals(ResourceType.ATTRIBUTE, indexResource1.getResourceType());
+        assertEquals(ResourceType.ASSOCIATION, indexResource2.getResourceType());
     }
 
     private Model getOrgModel(){

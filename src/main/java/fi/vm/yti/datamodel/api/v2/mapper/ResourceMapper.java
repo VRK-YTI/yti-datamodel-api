@@ -20,10 +20,10 @@ public class ResourceMapper {
         //Static class
     }
 
-    public static String mapToResource(String graphUri, Model model, ResourceDTO dto, YtiUser user){
+    public static String mapToResource(String graphUri, Model model, ResourceDTO dto, ResourceType resourceType, YtiUser user){
         var resourceResource = createAndMapCommonInfo(graphUri, model, dto);
 
-        resourceResource.addProperty(RDF.type, dto.getType().equals(ResourceType.ASSOCIATION)
+        resourceResource.addProperty(RDF.type, resourceType.equals(ResourceType.ASSOCIATION)
                 ? OWL.ObjectProperty
                 : OWL.DatatypeProperty);
 
@@ -36,7 +36,7 @@ public class ResourceMapper {
         }
         //Sub Class
         if(dto.getSubResourceOf() == null || dto.getSubResourceOf().isEmpty()){
-            if(dto.getType().equals(ResourceType.ASSOCIATION)){
+            if(resourceType.equals(ResourceType.ASSOCIATION)){
                 resourceResource.addProperty(RDFS.subPropertyOf, OWL2.topObjectProperty); //Add OWL:TopObjectProperty if nothing else is specified
             }else{
                 resourceResource.addProperty(RDFS.subPropertyOf, OWL2.topDataProperty); //Add OWL:TopDataProperty if nothing else is specified
@@ -194,10 +194,15 @@ public class ResourceMapper {
 
         var dataModel = dataModels.get(resource.getIsDefinedBy());
         var dataModelInfo = new DatamodelInfo();
-        dataModelInfo.setModelType(dataModel.getType());
-        dataModelInfo.setStatus(dataModel.getStatus());
-        dataModelInfo.setLabel(dataModel.getLabel());
-        dataModelInfo.setGroups(dataModel.getIsPartOf());
+        if (dataModel != null) {
+            dataModelInfo.setModelType(dataModel.getType());
+            dataModelInfo.setStatus(dataModel.getStatus());
+            dataModelInfo.setLabel(dataModel.getLabel());
+            dataModelInfo.setGroups(dataModel.getIsPartOf());
+            dataModelInfo.setUri(resource.getIsDefinedBy());
+        } else {
+            dataModelInfo.setUri(resource.getIsDefinedBy());
+        }
         indexResource.setDataModelInfo(dataModelInfo);
 
         if (resource.getSubject() != null) {
@@ -210,6 +215,38 @@ public class ResourceMapper {
             conceptInfo.setConceptLabel(MapperUtils.localizedPropertyToMap(conceptResource, SKOS.prefLabel));
             indexResource.setConceptInfo(conceptInfo);
         }
+        return indexResource;
+    }
+
+    public static IndexResource mapExternalToIndexResource(Model model, Resource resource) {
+        var indexResource = new IndexResource();
+
+        indexResource.setId(resource.getURI());
+        indexResource.setIdentifier(resource.getLocalName());
+        indexResource.setNamespace(resource.getNameSpace());
+        indexResource.setIsDefinedBy(MapperUtils.propertyToString(resource, RDFS.isDefinedBy));
+        indexResource.setStatus(Status.VALID);
+
+        if (resource.hasProperty(RDFS.comment)) {
+            indexResource.setNote(MapperUtils.localizedPropertyToMap(resource, RDFS.comment));
+        } else if (resource.hasProperty(SKOS.definition)) {
+            indexResource.setNote(MapperUtils.localizedPropertyToMap(resource, SKOS.definition));
+        }
+
+        if (resource.hasProperty(RDFS.label)) {
+            indexResource.setLabel(MapperUtils.localizedPropertyToMap(resource, RDFS.label));
+        } else if (resource.hasProperty(SKOS.prefLabel)) {
+            indexResource.setLabel(MapperUtils.localizedPropertyToMap(resource, SKOS.prefLabel));
+        } else {
+            return null;
+        }
+
+        var resourceType = getExternalResourceType(model, resource);
+        if (resourceType == null) {
+            return null;
+        }
+
+        indexResource.setResourceType(resourceType);
         return indexResource;
     }
 
@@ -287,7 +324,7 @@ public class ResourceMapper {
         dto.setLabel(MapperUtils.localizedPropertyToMap(resourceResource, RDFS.label));
         var status = Status.valueOf(resourceResource.getProperty(OWL.versionInfo).getObject().toString().toUpperCase());
         dto.setStatus(status);
-        String subject = MapperUtils.propertyToString(resourceResource, DCTerms.subject);
+        var subject = MapperUtils.propertyToString(resourceResource, DCTerms.subject);
         if (subject != null) {
             var conceptDTO = new ConceptDTO();
             conceptDTO.setConceptURI(subject);
@@ -337,4 +374,49 @@ public class ResourceMapper {
         }
     }
 
+    private static boolean hasLiteralRange(Resource resource) {
+        var range = resource.getProperty(RDFS.range);
+        if (range == null) {
+            return false;
+        }
+        var xsdNs = ModelConstants.PREFIXES.get("xsd");
+        var rangeResource = range.getResource();
+        if(rangeResource.hasProperty(OWL.unionOf)){
+            return MapperUtils.arrayPropertyToList(rangeResource, OWL.unionOf).stream().anyMatch(item -> ResourceFactory.createResource(item).getNameSpace().equals(xsdNs));
+        }
+        return rangeResource.getNameSpace().equals(xsdNs);
+    }
+
+    private static ResourceType getInverseOfResource(Resource resource){
+        var uri = resource.getProperty(OWL.inverseOf).getResource();
+        if(MapperUtils.hasType(uri, OWL.DatatypeProperty, OWL.AnnotationProperty)){
+            return ResourceType.ATTRIBUTE;
+        }else if(MapperUtils.hasType(uri, OWL.ObjectProperty, RDF.Property)){
+            return ResourceType.ASSOCIATION;
+        }else if(MapperUtils.hasType(uri, OWL.Class, RDFS.Class, RDFS.Resource)){
+            return ResourceType.CLASS;
+        }
+        return null;
+    }
+
+    private static ResourceType getExternalResourceType(Model model, Resource resource) {
+
+        if (MapperUtils.hasType(resource, OWL.DatatypeProperty, OWL.AnnotationProperty) || hasLiteralRange(resource)) {
+            // DatatypeProperties, AnnotationProperties and range with literal value (e.g. xsd:string)
+            return ResourceType.ATTRIBUTE;
+        } else if (MapperUtils.hasType(resource, OWL.ObjectProperty, RDF.Property)) {
+            // ObjectProperties and RDF properties if not matched in previous block
+            return ResourceType.ASSOCIATION;
+        } else if (MapperUtils.hasType(resource, OWL.Class, RDFS.Class, RDFS.Resource)) {
+            // OWL and RDFS classes and resources
+            return ResourceType.CLASS;
+        } else if (resource.hasProperty(RDF.type)) {
+            // Try to find type from current ontology
+            var typeResource = model.getResource(resource.getProperty(RDF.type).getResource().getURI());
+            return getExternalResourceType(model, typeResource);
+        }else if(resource.hasProperty(OWL.inverseOf)){
+            return getInverseOfResource(resource);
+        }
+        return null;
+    }
 }

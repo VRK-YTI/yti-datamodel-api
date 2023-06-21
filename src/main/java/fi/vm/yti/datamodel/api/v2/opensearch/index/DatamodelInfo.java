@@ -11,6 +11,7 @@ public class DatamodelInfo {
     private List<String> groups;
     private Status status;
     private ModelType modelType;
+    private String uri;
 
     public Map<String, String> getLabel() {
         return label;
@@ -42,5 +43,13 @@ public class DatamodelInfo {
 
     public void setModelType(ModelType modelType) {
         this.modelType = modelType;
+    }
+
+    public String getUri() {
+        return uri;
+    }
+
+    public void setUri(String uri) {
+        this.uri = uri;
     }
 }

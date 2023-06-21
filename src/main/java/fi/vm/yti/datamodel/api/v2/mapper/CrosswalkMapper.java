@@ -30,6 +30,7 @@ import fi.vm.yti.datamodel.api.v2.dto.DCAP;
 import fi.vm.yti.datamodel.api.v2.dto.FileMetadata;
 import fi.vm.yti.datamodel.api.v2.dto.Iow;
 import fi.vm.yti.datamodel.api.v2.dto.MSCR;
+import fi.vm.yti.datamodel.api.v2.dto.MSCRType;
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
 import fi.vm.yti.datamodel.api.v2.dto.ModelType;
 import fi.vm.yti.datamodel.api.v2.dto.Status;
@@ -210,7 +211,7 @@ public class CrosswalkMapper {
         if(contentModified != null) {
             indexModel.setContentModified(contentModified.getString());
         }
-        indexModel.setType(ModelType.CROSSWALK);
+        indexModel.setType(MSCRType.CROSSWALK);
 
         indexModel.setPrefix(pid);
         indexModel.setLabel(MapperUtils.localizedPropertyToMap(resource, RDFS.label));

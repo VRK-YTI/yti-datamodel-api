@@ -1,6 +1,8 @@
 package fi.vm.yti.datamodel.api.v2.service;
 
-import fi.vm.yti.datamodel.api.v2.dto.*;
+import fi.vm.yti.datamodel.api.v2.dto.ConceptDTO;
+import fi.vm.yti.datamodel.api.v2.dto.ResourceInfoBaseDTO;
+import fi.vm.yti.datamodel.api.v2.dto.TerminologyNodeDTO;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.ResolvingException;
 import fi.vm.yti.datamodel.api.v2.mapper.TerminologyMapper;
 import org.slf4j.Logger;
@@ -102,7 +104,7 @@ public class TerminologyService {
             throw new ResolvingException("Concept not found", String.format("Concept %s not found", conceptURI));
         }
 
-        String terminologyURI = conceptURI.substring(0, conceptURI.lastIndexOf("/") + 1) + "terminological-vocabulary-0";
+        var terminologyURI = conceptURI.substring(0, conceptURI.lastIndexOf("/"));
         var terminologyModel = jenaService.getTerminology(terminologyURI);
         if (terminologyModel == null) {
             LOG.warn("Terminology {} not added to model", terminologyURI);

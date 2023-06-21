@@ -76,7 +76,7 @@ public class ClassController {
 
     @Operation(summary = "Add a class to a model")
     @ApiResponse(responseCode = "200", description = "Class added to model successfully")
-    @PutMapping(value = "/ontology/{prefix}", consumes = APPLICATION_JSON_VALUE)
+    @PutMapping(value = "/library/{prefix}", consumes = APPLICATION_JSON_VALUE)
     public void createClass(@PathVariable String prefix, @RequestBody @ValidClass ClassDTO classDTO){
         var modelURI = this.defaultNamespace + prefix;
         var model = handleCreateClassOrNodeShape(modelURI, prefix, classDTO);
@@ -128,7 +128,7 @@ public class ClassController {
 
     @Operation(summary = "Update a class in a model")
     @ApiResponse(responseCode =  "200", description = "Class updated in model successfully")
-    @PutMapping(value = "/ontology/{prefix}/{classIdentifier}", consumes = APPLICATION_JSON_VALUE)
+    @PutMapping(value = "/library/{prefix}/{classIdentifier}", consumes = APPLICATION_JSON_VALUE)
     public void updateClass(@PathVariable String prefix, @PathVariable String classIdentifier, @RequestBody @ValidClass(updateClass = true) ClassDTO classDTO){
         handleUpdateClassOrNodeShape(prefix, classIdentifier, classDTO);
     }
@@ -171,7 +171,7 @@ public class ClassController {
 
     @Operation(summary = "Get a class from a data model")
     @ApiResponse(responseCode = "200", description = "Class found successfully")
-    @GetMapping(value = "/ontology/{prefix}/{classIdentifier}", produces = APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/library/{prefix}/{classIdentifier}", produces = APPLICATION_JSON_VALUE)
     public ClassInfoDTO getClass(@PathVariable String prefix, @PathVariable String classIdentifier){
         return (ClassInfoDTO) handleGetClassOrNodeShape(prefix, classIdentifier);
     }
@@ -223,7 +223,7 @@ public class ClassController {
 
     @Operation(summary = "Delete a class from a data model")
     @ApiResponse(responseCode = "200", description = "Class deleted successfully")
-    @DeleteMapping(value = "/ontology/{prefix}/{classIdentifier}")
+    @DeleteMapping(value = "/library/{prefix}/{classIdentifier}")
     public void deleteClass(@PathVariable String prefix, @PathVariable String classIdentifier){
         handleDeleteClassOrNodeShape(prefix, classIdentifier);
     }

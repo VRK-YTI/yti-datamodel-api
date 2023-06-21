@@ -4,6 +4,7 @@ import fi.vm.yti.datamodel.api.security.AuthorizationManager;
 import fi.vm.yti.datamodel.api.v2.dto.DataModelDTO;
 import fi.vm.yti.datamodel.api.v2.dto.DataModelInfoDTO;
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
+import fi.vm.yti.datamodel.api.v2.dto.ModelType;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
 import fi.vm.yti.datamodel.api.v2.mapper.ModelMapper;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
@@ -72,17 +73,13 @@ public class Datamodel {
         this.defaultNamespace = defaultNamespace;
     }
 
-    @Operation(summary = "Create a new model")
-    @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "The JSON data for the new model node")
-    @ApiResponse(responseCode = "200", description = "The ID for the newly created model")
-    @PutMapping(produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
-    public void createModel(@ValidDatamodel @RequestBody DataModelDTO modelDTO) {
+    private void createModel(DataModelDTO modelDTO, ModelType modelType) {
         logger.info("Create model {}", modelDTO);
         check(authorizationManager.hasRightToAnyOrganization(modelDTO.getOrganizations()));
 
         terminologyService.resolveTerminology(modelDTO.getTerminologies());
         codelistService.resolveCodelistScheme(modelDTO.getCodeLists());
-        var jenaModel = mapper.mapToJenaModel(modelDTO, userProvider.getUser());
+        var jenaModel = mapper.mapToJenaModel(modelDTO, modelType, userProvider.getUser());
 
         jenaService.putDataModelToCore(this.defaultNamespace + modelDTO.getPrefix(), jenaModel);
 
@@ -90,12 +87,41 @@ public class Datamodel {
         openSearchIndexer.createModelToIndex(indexModel);
     }
 
-    @Operation(summary = "Modify model")
+    @Operation(summary = "Create a new library")
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "The JSON data for the new core model")
+    @ApiResponse(responseCode = "200", description = "The ID for the newly created model")
+    @PutMapping(path = "/library", produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
+    public void createLibrary(@ValidDatamodel(modelType = ModelType.LIBRARY) @RequestBody DataModelDTO modelDTO) {
+        createModel(modelDTO, ModelType.LIBRARY);
+    }
+
+    @Operation(summary = "Create a new application profile")
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "The JSON data for the new application profile")
+    @ApiResponse(responseCode = "200", description = "The ID for the newly created model")
+    @PutMapping(path = "/profile", produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
+    public void createProfile(@ValidDatamodel(modelType = ModelType.PROFILE) @RequestBody DataModelDTO modelDTO) {
+        createModel(modelDTO, ModelType.PROFILE);
+    }
+
+    @Operation(summary = "Modify library")
     @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "The JSON data for the new model node")
     @ApiResponse(responseCode = "200", description = "The ID for the newly created model")
-    @PostMapping(path = "/{prefix}", produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
-    public void updateModel(@ValidDatamodel(updateModel = true) @RequestBody DataModelDTO modelDTO,
-                            @PathVariable String prefix) {
+    @PostMapping(path = "/library/{prefix}", produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
+    public void updateLibrary(@ValidDatamodel(modelType = ModelType.LIBRARY, updateModel = true) @RequestBody DataModelDTO modelDTO,
+                              @PathVariable String prefix) {
+        updateModel(modelDTO, prefix);
+    }
+
+    @Operation(summary = "Modify application profile")
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "The JSON data for the new model node")
+    @ApiResponse(responseCode = "200", description = "The ID for the newly created model")
+    @PostMapping(path = "/profile/{prefix}", produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
+    public void updateProfile(@ValidDatamodel(modelType = ModelType.PROFILE, updateModel = true) @RequestBody DataModelDTO modelDTO,
+                              @PathVariable String prefix) {
+        updateModel(modelDTO, prefix);
+    }
+
+    public void updateModel(DataModelDTO modelDTO, String prefix) {
         logger.info("Updating model {}", modelDTO);
 
         var oldModel = jenaService.getDataModel(this.defaultNamespace + prefix);
