@@ -34,7 +34,10 @@
             "type": "string"
         },
         "title": {
-            "type": "string"
+            "allOf": [
+                { "type": "string" },
+                { "maxLength": 5 }
+              ]
         },
         "description": {
             "type": "string"
@@ -104,6 +107,7 @@
             ]
         },
         "anyOf": { "$ref": "#/definitions/schemaArray" },
+        "allOf": { "$ref": "#/definitions/schemaArray" },
         "format": { "type": "string" },
         "not": { "$ref": "#" } 
     },

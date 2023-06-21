@@ -32,7 +32,9 @@ public class JSONValidationServiceTest {
 
 	@Test
 	void testValidJSONSchema() throws Exception, IOException {
-		String validInputSchemaPath = "jsonschema/test_jsonschema_b2share.json";
+//		String validInputSchemaPath = "jsonschema/test_jsonschema_b2share.json";
+//		String validInputSchemaPath = "test_jsonschema_b2share.json";
+		String validInputSchemaPath = "test_json_trimmed.json";
 //		String validInputSchemaPath = "src/test/resources/test_jsonschema_b2share.json";
 //		String validInputSchemaPath = "/src/test/resources/test_jsonschema_b2share.json";
 //		String validInputSchemaPath = "/Users/nekrasov/Desktop/mscr-cloned/mscr-datamodel-api/src/test/resources/test_jsonschema_b2share.json";

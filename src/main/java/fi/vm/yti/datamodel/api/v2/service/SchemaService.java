@@ -6,6 +6,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
@@ -25,36 +26,52 @@ import fi.vm.yti.datamodel.api.v2.dto.MSCR;
 @Service
 public class SchemaService {
 
-	// null -> blank node
 	private final Map<String, Resource> XSDTypesMap = Map.ofEntries(Map.entry("string", XSD.xstring),
 			Map.entry("number", XSD.xfloat), Map.entry("integer", XSD.integer), Map.entry("boolean", XSD.xboolean),
 			Map.entry("null", MSCR.NULL));
-	
-	private final Map<String, String> JSONSchemaFeaturesToSHACL = Map.ofEntries(
-			Map.entry("description", SHACL.description.getURI()),
-//			Map.entry("title", SHACL.title??.getURI()), -- ??? how would we call it in shacl?
-//			Map.entry("pattern", SHACL.enum??.getURI()), -- does it even belong here? move to objectsHandler? No SHACL type - look into it
+
+	//
+	private final Map<String, String> JSONSchemaToSHACLMap = Map.ofEntries(
+			Map.entry("description", SHACL.description.getURI()), Map.entry("default", SHACL.defaultValue.getURI()),
+			Map.entry("title", SHACL.name.getURI()), Map.entry("additionalProperties", SHACL.closed.getURI()),
+			Map.entry("enum", SHACL.in.getURI()),
 //			Map.entry("format", SHACL.format.getURI()), -- no SHACL type - look into it
-			Map.entry("maximum", SHACL.maxInclusive.getURI()),
+			Map.entry("maximum", SHACL.maxInclusive.getURI()), Map.entry("minimum", SHACL.minInclusive.getURI()),
 			Map.entry("exclusiveMaximum", SHACL.maxExclusive.getURI()),
-			Map.entry("minimum", SHACL.minInclusive.getURI()),
-			Map.entry("inclusiveMaximum", SHACL.minExclusive.getURI()),
-			Map.entry("maxLength", SHACL.maxLength.getURI()),
-			Map.entry("minLength", SHACL.minLength.getURI()),
-			Map.entry("pattern", SHACL.pattern.getURI()) // Does it belong here? --> should this map be shared between DataTypeProperty and ..Object, or each have their own?
-														 // eg for iteration over 
-			
-			);
-	
-	
-	private void checkAndAddPropertyFeature(JsonNode node, Model model, Resource propertyResource, String property) {
-		JsonNode propertyFeature = node.findValue(property);
-		System.out.println("PROPERTY FEATURE " + propertyFeature);
-		if (propertyFeature != null) {
-			propertyResource.addProperty(model.getProperty(SHACL.description.getURI()), propertyFeature.asText());
+			Map.entry("exclusiveMinimum", SHACL.minExclusive.getURI()), Map.entry("maxItems", SHACL.maxCount.getURI()),
+			Map.entry("minItmes", SHACL.minCount.getURI()), Map.entry("maxLength", SHACL.maxLength.getURI()),
+			Map.entry("minLength", SHACL.minLength.getURI()), Map.entry("not", SHACL.not.getURI()),
+			Map.entry("pattern", SHACL.pattern.getURI()) // Does it belong here? --> should this map be shared
+															// between DataTypeProperty and ..Object, or each
+															// have their own?
+															// eg for iteration over. Yes? As in it doesn't
+															// matter, either a node has the property or not
+
+	);
+
+	private final Set<String> JSONSchemaNumericalProperties = Set.of("maximum", "minimum", "exclusiveMaximum",
+			"exclusiveMinimum", "maxItems", "minItems");
+
+	private void checkAndAddPropertyFeature(JsonNode node, Model model, Resource propertyResource) {
+		for (var key : JSONSchemaToSHACLMap.keySet()) {
+			JsonNode propertyNode = node.findValue(key);
+			if (propertyNode != null) {
+				if (JSONSchemaNumericalProperties.contains(key)) {
+					propertyResource.addProperty(model.getProperty(JSONSchemaToSHACLMap.get(key)),
+							model.createTypedLiteral(propertyNode.asInt()));
+				} else {
+					propertyResource.addProperty(model.getProperty(JSONSchemaToSHACLMap.get(key)),
+							propertyNode.asText());
+				}
+			}
 		}
 	}
-	
+
+//	private boolean hasTypeProperty(JsonNode node) {
+//		System.out.println(node.findValue("type"));
+//		return (node.findValue("type") != null);
+//	};
+
 	/**
 	 * Adds a datatype property to the RDF model.
 	 * 
@@ -65,37 +82,27 @@ public class SchemaService {
 	 * @return The created resource representing the datatype property.
 	 */
 	private Resource addDatatypeProperty(String propID, JsonNode node, Model model, String schemaPID, String type) {
+
 		Resource propertyResource = model.createResource(schemaPID + "#" + propID);
-		System.out.println("propdID: " + propID);
-		System.out.println("PROPERTY RESOURCE: " + propertyResource);
-		System.out.println("DATATYPE_P NODE: " + node);
-//		System.out.println(node.get("description"));
-		System.out.println(node.findValue("description"));
-		
 		propertyResource.addProperty(RDF.type, model.getResource(SHACL.PropertyShape.getURI()));
 		propertyResource.addProperty(DCTerms.type, OWL.DatatypeProperty);
 
-		propertyResource.addProperty(model.getProperty(SHACL.name.getURI()), propID);
-
 		propertyResource.addProperty(model.getProperty(SHACL.datatype.getURI()), XSDTypesMap.get(type));
 
-//		propertyResource.addProperty(model.getProperty(SHACL.datatype.getURI()), XSD.decimal);
 		propertyResource.addProperty(model.getProperty(SHACL.path.getURI()), propID);
-		
-//		JsonNode propertyDescription = node.findValue("description");
-//		if (propertyDescription != null) {
-//			propertyResource.addProperty(model.getProperty(SHACL.description.getURI()), propertyDescription.asText());
-//		}
-		checkAndAddPropertyFeature(node, model, propertyResource, "description");
-		
-	
-		
-		
-		
+
+		checkAndAddPropertyFeature(node, model, propertyResource);
+
 		return propertyResource;
 
 	}
 
+	// 1. HANDLE REQUIRED property of OBJECTS
+
+	// 2. Add maxCount = 1. on datatype and object properties. If there's a
+	// required, then also min = 1
+
+	//
 	/**
 	 * 
 	 * Adds an object property to the RDF model.
@@ -112,21 +119,8 @@ public class SchemaService {
 		Resource propertyResource = model.createResource(schemaPID + "#" + propID);
 		propertyResource.addProperty(RDF.type, model.getResource(SHACL.PropertyShape.getURI()));
 		propertyResource.addProperty(DCTerms.type, OWL.ObjectProperty);
-		if (node.get("type").asText().equals("array")) {
-			if (node.has("maxItems"))
-				propertyResource.addProperty(model.getProperty(SHACL.maxCount.getURI()),
-						model.createTypedLiteral(node.get("maxItems").asInt()));
-			if (node.has("minItems"))
-				propertyResource.addProperty(model.getProperty(SHACL.minCount.getURI()),
-						model.createTypedLiteral(node.get("minItems").asInt()));
 
-		} else {
-			// ?? Do not remove - default values for objects and arrays??
-			propertyResource.addProperty(model.getProperty(SHACL.maxCount.getURI()), model.createTypedLiteral(1));
-			propertyResource.addProperty(model.getProperty(SHACL.minCount.getURI()), model.createTypedLiteral(1));
-
-		}
-		propertyResource.addProperty(model.getProperty(SHACL.name.getURI()), propID);
+		checkAndAddPropertyFeature(node, model, propertyResource);
 		propertyResource.addProperty(model.getProperty(SHACL.path.getURI()), propID);
 		propertyResource.addProperty(model.getProperty(SHACL.node.getURI()), model.createResource(targetShape));
 
@@ -134,7 +128,9 @@ public class SchemaService {
 
 	}
 
-	// ONLY HANDLES TYPE !!! ---> NO! even though type is explicitly requested here (because it will be required/enforced), but other properties are handled within the method
+	// ONLY HANDLES TYPE !!! ---> NO! even though type is explicitly requested here
+	// (because it will be required/enforced), but other properties are handled
+	// within the method
 	private void handleDatatypeProperty(String propID, Entry<String, JsonNode> entry, Model model, String schemaPID,
 			Resource nodeShapeResource) {
 		Resource propertyShape = addDatatypeProperty(propID + "/" + entry.getKey(), entry.getValue(), model, schemaPID,
@@ -152,11 +148,6 @@ public class SchemaService {
 	 * @param model     The RDF model.
 	 */
 	private void handleObject(String propID, JsonNode node, String schemaPID, Model model) {
-		
-		System.out.println("\n propdID: " + propID);
-//		System.out.println("\n node: " + node);
-		System.out.println("\n schemaPID: " + schemaPID);
-		System.out.println("\n model: " + model);
 
 		Resource nodeShapeResource = model.createResource(schemaPID + "#" + propID);
 		nodeShapeResource.addProperty(RDF.type, model.getResource(SHACL.NodeShape.getURI()));
@@ -165,9 +156,6 @@ public class SchemaService {
 			nodeShapeResource.addProperty(DCTerms.description, node.get("description").asText());
 		nodeShapeResource.addProperty(model.getProperty(SHACL.name.getURI()), propID);
 		if (node == null || node.get("properties") == null) {
-//		if(node == null) {
-			System.out.println("is node == null ?? " + (node == null));
-			System.out.println("is node.get(\"properties\") == null ?? " + (node.get("properties") == null));
 			System.out.println("RETURNING");
 			return;
 		}
@@ -179,29 +167,27 @@ public class SchemaService {
 		 */
 
 		Iterator<Entry<String, JsonNode>> propertiesIterator = node.get("properties").fields();
-//		System.out.println(propertiesIterator.hasNext() + " NODE PROPS " + node.get("properties"));
 		while (propertiesIterator.hasNext()) {
-//			System.out.println("NODE PROPERTIES" + node.get("properties"));
 			Entry<String, JsonNode> entry = propertiesIterator.next();
 			if (entry.getKey().startsWith("_") || entry.getKey().startsWith("$"))
 				continue;
 
-			System.out.println("\n\nVALUE: " + entry.getValue() + "||" + " KEY: " + entry.getKey());
-
-			// THROW ERR OR STH – ENFORCE NON NULL
 			if (entry.getValue().get("type") == null) {
-				System.out.println("NULL?????" + entry.getValue());
+				System.out.println("NULL?????" + entry.getValue() + "/n" + entry);
+				throw new RuntimeException("One of the entries is missing 'type' property");
 			}
+			
 			if (entry.getValue().get("type") != null && entry.getValue().get("type").asText().equals("object")) {
-				// add object property
 				Resource propertyShape = addObjectProperty(entry.getKey(), entry.getValue(), model, schemaPID,
 						schemaPID + "#" + propID + "/" + entry.getKey());
 				nodeShapeResource.addProperty(model.getProperty(SHACL.property.getURI()), propertyShape);
+				System.out.println("NODE_OBJ: " + node);
+				if (node.get("required") != null) {
+					System.out.println("REQUIRED: " + node.get("required").asText());
+				}
 				handleObject(propID + "/" + entry.getKey(), entry.getValue(), schemaPID, model);
-			}
-			// handles array with "object" items. doesn't handle any other, eg arrays with
-			// strings etc
-			else if (entry.getValue().get("type") != null && entry.getValue().get("type").asText().equals("array")
+
+			} else if (entry.getValue().get("type") != null && entry.getValue().get("type").asText().equals("array")
 					&& entry.getValue().get("items").has("type")
 					&& entry.getValue().get("items").get("type").asText().equals("object")) {
 
@@ -212,23 +198,18 @@ public class SchemaService {
 
 			}
 			// DOUBLE CHECK THAT. ROUGHT IMPLEMENTATION
-			// array === one resource (parent) connected to multiple resources (array
-			// elements) in SHACL???
+			// array === one resource (parent) connected to multiple resources (array elements) in SHACL???
+			// test nested arrays
 			else if (entry.getValue().get("type") != null && entry.getValue().get("type").asText().equals("array")) {
 				Resource propertyShape = addObjectProperty(entry.getKey(), entry.getValue(), model, schemaPID,
 						schemaPID + "#" + propID + "/" + entry.getKey());
 				nodeShapeResource.addProperty(model.getProperty(SHACL.property.getURI()), propertyShape);
-				System.out.println("\nentry.getValue().get(\"items\"):" + (entry.getValue().get("items")));
-				System.out.println("\nentry.getKey()" + (entry.getKey()));
-				
-//				handleObject(propID + "/" + entry.getKey(), entry.getValue().get("items"), schemaPID, model);
-				Entry<String, JsonNode> ArrayItem = Map.entry(entry.getKey() + "/items", entry.getValue().get("items"));
-				
-				handleDatatypeProperty(propID, ArrayItem, model, schemaPID, nodeShapeResource);
-				
+
+				Entry<String, JsonNode> arrayItem = Map.entry(entry.getKey() + "/items", entry.getValue().get("items"));
+
+				handleDatatypeProperty(propID, arrayItem, model, schemaPID, nodeShapeResource);
+
 			} else {
-				System.out.println("PRIMITIVE, KEY: " + entry.getKey());
-				System.out.println("PRIMITIVE, VALUE: " + entry.getValue());
 				handleDatatypeProperty(propID, entry, model, schemaPID, nodeShapeResource);
 			}
 
