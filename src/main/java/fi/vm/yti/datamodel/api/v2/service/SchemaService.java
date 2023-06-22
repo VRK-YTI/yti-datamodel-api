@@ -185,6 +185,9 @@ public class SchemaService {
 		 * recursively iterate over them If a property is a datatype / literal – it's
 		 * just added.
 		 */
+		
+		// The problem is that if we store names of required properties and later on compare datatype props to them, it can be that
+		// object property has the same name as a datatype property
 
 		Iterator<Entry<String, JsonNode>> propertiesIterator = node.get("properties").fields();
 		while (propertiesIterator.hasNext()) {
@@ -199,6 +202,8 @@ public class SchemaService {
 			
 			if (entry.getValue().get("type").asText().equals("object")) {
 				System.out.println("HANDLING THE FOLLOWING: " + entry.getKey());
+				System.out.println("FINDING VALUES: " + entry.getValue().findValue("required"));
+				System.out.println("HANDLING THE FOLLOWING (VALUES): " + entry.getValue().get("properties"));
 //				List<String> newRequiredProperties = requiredProperties.isEmpty() ? new ArrayList<String>() :;
 				ArrayList<String> updatedRequiredProperties = new ArrayList<>(requiredProperties);
 				
@@ -243,12 +248,13 @@ public class SchemaService {
 //				boolean isRequired = requiredProperties.contains(propertyShape);
 
 				handleDatatypeProperty(propID, arrayItem, model, schemaPID, nodeShapeResource, false, true);
+//				handleObject(arrayItem.getKey(), arrayItem.getValue(),  schemaPID,  model, nodeShapeResource, requiredProperties);
 
 			} else {
 				boolean isRequired = requiredProperties.contains(entry.getKey());
-				System.out.println("is required? " + isRequired);
-				System.out.println("HANDLING THE FOLLOWING PRIMITIVE: " + entry.getKey());
-				System.out.println("HANDLING THE FOLLOWING TYPE: " + entry.getValue().get("type"));
+//				System.out.println("is required? " + isRequired);
+//				System.out.println("HANDLING THE FOLLOWING PRIMITIVE: " + entry.getKey());
+//				System.out.println("HANDLING THE FOLLOWING TYPE: " + entry.getValue().get("type"));
 				handleDatatypeProperty(propID, entry, model, schemaPID, nodeShapeResource, isRequired, false);
 			}
 

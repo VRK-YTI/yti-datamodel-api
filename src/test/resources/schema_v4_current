@@ -34,10 +34,7 @@
             "type": "string"
         },
         "title": {
-            "allOf": [
-                { "type": "string" },
-                { "maxLength": 5 }
-              ]
+            "type": "string"
         },
         "description": {
             "type": "string"
