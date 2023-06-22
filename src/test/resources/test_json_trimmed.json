@@ -41,6 +41,18 @@
       "items" : {
         "type" : "string"
       }
+    },
+    "object_arrays_type" : {
+      "type": "object",
+      "properties" : {
+        "array_property" : {
+          "title" : "array_prop",
+          "type" : "array",
+          "items": {
+            "type": "number"
+          }
+        }
+     }
     }
   },
   "additionalProperties" : false,
