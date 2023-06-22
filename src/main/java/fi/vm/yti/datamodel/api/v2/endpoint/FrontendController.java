@@ -8,6 +8,7 @@ import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexResource;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexCrosswalk;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexModel;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexResourceInfo;
+import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexSchema;
 import fi.vm.yti.datamodel.api.v2.service.FrontendService;
 import fi.vm.yti.datamodel.api.v2.service.SearchIndexService;
 import fi.vm.yti.security.AuthenticatedUserProvider;
@@ -96,6 +97,13 @@ public class FrontendController {
     @GetMapping(path = "/dataTypes", produces = APPLICATION_JSON_VALUE)
     public List<String> getSupportedDataTypes() {
         return ModelConstants.SUPPORTED_DATA_TYPES;
+    }
+    
+    @Operation(summary = "Search schemas")
+    @ApiResponse(responseCode = "200", description = "List of schema objects")
+    @GetMapping(value = "/searchSchemas", produces = APPLICATION_JSON_VALUE)
+    public SearchResponseDTO<IndexSchema> getSchemas(ModelSearchRequest request) {
+        return searchIndexService.searchSchemas(request, userProvider.getUser());
     }
     
     @Operation(summary = "Search crosswalks")

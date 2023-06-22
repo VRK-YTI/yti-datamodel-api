@@ -70,11 +70,15 @@ public class OpenSearchIndexer {
         try {
             openSearchConnector.cleanIndex(OPEN_SEARCH_INDEX_MODEL);
             openSearchConnector.cleanIndex(OPEN_SEARCH_INDEX_RESOURCE);
+			openSearchConnector.cleanIndex(OPEN_SEARCH_INDEX_CROSSWALK);
             logger.info("v2 Indexes cleaned");
             openSearchConnector.createIndex(OPEN_SEARCH_INDEX_MODEL, getModelMappings());
             openSearchConnector.createIndex(OPEN_SEARCH_INDEX_RESOURCE, getResourceMappings());
+            openSearchConnector.createIndex(OPEN_SEARCH_INDEX_CROSSWALK, getCrosswalkMappings());
             initModelIndex();
             initResourceIndex();
+            initSchemaIndex();
+            initCrosswalkIndex();
 
             logger.info("Indexes initialized");
         } catch (IOException ex) {
@@ -91,9 +95,11 @@ public class OpenSearchIndexer {
             logger.info("v2 Indexes cleaned");
             openSearchConnector.createIndex(OPEN_SEARCH_INDEX_MODEL, getModelMappings());
             openSearchConnector.createIndex(OPEN_SEARCH_INDEX_RESOURCE, getResourceMappings());
+            openSearchConnector.createIndex(OPEN_SEARCH_INDEX_CROSSWALK, getCrosswalkMappings());
             openSearchConnector.createIndex(OPEN_SEARCH_INDEX_EXTERNAL, getExternalResourceMappings());
             initModelIndex();
             initResourceIndex();
+            initSchemaIndex();
             initCrosswalkIndex();
             initExternalResourceIndex();
 

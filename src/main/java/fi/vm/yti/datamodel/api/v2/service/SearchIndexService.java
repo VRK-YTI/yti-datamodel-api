@@ -234,4 +234,28 @@ public class SearchIndexService {
             throw new OpenSearchException(e.getMessage(), OpenSearchIndexer.OPEN_SEARCH_INDEX_CROSSWALK);
         }
 	}
+
+	public SearchResponseDTO<IndexSchema> searchSchemas(ModelSearchRequest request, @NotNull YtiUser user) {
+	     try {
+	            if (!user.isSuperuser()) {
+	                request.setIncludeIncompleteFrom(getOrganizationsForUser(user));
+	            }
+
+	            var build = ModelQueryFactory.createSchemaQuery(request);	            
+	            var response = client.search(build, IndexSchema.class);
+
+	            var modelSearchResponse = new SearchResponseDTO<IndexSchema>();
+	            modelSearchResponse.setResponseObjects(response.hits().hits().stream()
+	                    .map(Hit::source)
+	                    .toList()
+	            );
+	            modelSearchResponse.setTotalHitCount(response.hits().total().value());
+	            modelSearchResponse.setPageFrom(request.getPageFrom());
+	            modelSearchResponse.setPageSize(request.getPageSize());
+
+	            return modelSearchResponse;
+	        } catch (IOException e) {
+	            throw new OpenSearchException(e.getMessage(), OpenSearchIndexer.OPEN_SEARCH_INDEX_MODEL);
+	        }
+	}
 }
