@@ -11,6 +11,6 @@ public enum ModelType {
      * FI: Ydintietomalli,
      * EN: Core vocabulary
      */
-    LIBRARY
-
+    LIBRARY,
+    SCHEMA
 }

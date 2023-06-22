@@ -231,7 +231,7 @@ public class SearchIndexService {
 
             return searchResponse;
         } catch (IOException e) {
-            throw new OpenSearchException(e.getMessage(), OpenSearchIndexer.OPEN_SEARCH_INDEX_MODEL);
+            throw new OpenSearchException(e.getMessage(), OpenSearchIndexer.OPEN_SEARCH_INDEX_CROSSWALK);
         }
 	}
 }
