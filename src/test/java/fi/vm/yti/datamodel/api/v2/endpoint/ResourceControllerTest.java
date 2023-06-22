@@ -107,7 +107,7 @@ class ResourceControllerTest {
             mapper.when(() -> ResourceMapper.mapToResource(anyString(), any(Model.class), any(ResourceDTO.class), any(ResourceType.class), any(YtiUser.class))).thenReturn("test");
             mapper.when(() -> ResourceMapper.mapToIndexResource(any(Model.class), anyString())).thenReturn(new IndexResource());
             this.mvc
-                    .perform(put("/v2/resource/library/{resourceType}/test", resourceType)
+                    .perform(put("/v2/resource/library/test/{resourceType}", resourceType)
                             .contentType("application/json")
                             .content(EndpointUtils.convertObjectToJsonString(resourceDTO)))
                     .andExpect(status().isOk());
@@ -145,7 +145,7 @@ class ResourceControllerTest {
             mapper.when(() -> ResourceMapper.mapToResource(anyString(), any(Model.class), any(ResourceDTO.class), any(ResourceType.class), any(YtiUser.class))).thenReturn("test");
             mapper.when(() -> ResourceMapper.mapToIndexResource(any(Model.class), anyString())).thenReturn(new IndexResource());
             this.mvc
-                    .perform(put("/v2/resource/library/{resourceType}/test", resourceType)
+                    .perform(put("/v2/resource/library/test/{resourceType}", resourceType)
                             .contentType("application/json")
                             .content(EndpointUtils.convertObjectToJsonString(resourceDTO)))
                     .andExpect(status().isOk());
@@ -177,7 +177,7 @@ class ResourceControllerTest {
 
         //finding models from jena is not mocked so it should return null and return 404 not found
         this.mvc
-                .perform(put("/v2/resource/library/{resourceType}/test", resourceType)
+                .perform(put("/v2/resource/library/test/{resourceType}", resourceType)
                         .contentType("application/json")
                         .content(EndpointUtils.convertObjectToJsonString(resourceDTO)))
                 .andExpect(status().isNotFound());
@@ -206,7 +206,7 @@ class ResourceControllerTest {
 
         //finding models from jena is not mocked so it should return null and return 404 not found
         this.mvc
-                .perform(put("/v2/resource/library/{resourceType}/test", resourceType)
+                .perform(put("/v2/resource/library/test/{resourceType}", resourceType)
                         .contentType("application/json")
                         .content(EndpointUtils.convertObjectToJsonString(resourceDTO)))
                 .andExpect(status().isBadRequest())
@@ -217,7 +217,7 @@ class ResourceControllerTest {
     @MethodSource("provideCreateResourceDTOInvalidData")
     void shouldInvalidate(String resourceType, ResourceDTO resourceDTO) throws Exception {
         this.mvc
-                .perform(put("/v2/resource/library/{resourceType}/test", resourceType)
+                .perform(put("/v2/resource/library/test/{resourceType}", resourceType)
                         .contentType("application/json")
                         .content(EndpointUtils.convertObjectToJsonString(resourceDTO)))
                 .andExpect(status().isBadRequest());
