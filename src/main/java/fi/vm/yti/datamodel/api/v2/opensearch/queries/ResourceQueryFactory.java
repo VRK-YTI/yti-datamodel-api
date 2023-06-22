@@ -9,13 +9,12 @@ import org.opensearch.client.opensearch._types.SortOptions;
 import org.opensearch.client.opensearch._types.SortOptionsBuilders;
 import org.opensearch.client.opensearch._types.SortOrder;
 import org.opensearch.client.opensearch._types.mapping.FieldType;
+import org.opensearch.client.opensearch._types.query_dsl.BoolQuery;
 import org.opensearch.client.opensearch._types.query_dsl.Query;
 import org.opensearch.client.opensearch._types.query_dsl.QueryBuilders;
 import org.opensearch.client.opensearch.core.SearchRequest;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import static fi.vm.yti.datamodel.api.v2.opensearch.OpenSearchUtil.logPayload;
 
@@ -44,10 +43,17 @@ public class ResourceQueryFactory {
             must.add(QueryFactoryUtils.termsQuery("status", statuses.stream().map(Status::name).toList()));
         }
 
-        // intersect allowed data model lists
-        List<String> isDefinedByCondition = getIsDefinedByCondition(fromNamespaces, restrictedDataModels);
+        // intersect allowed data model lists and include possible additional resources (references from other models)
+        var isDefinedByCondition = getIsDefinedByCondition(fromNamespaces, restrictedDataModels, request.getLimitToDataModel());
         if (!isDefinedByCondition.isEmpty()) {
-            must.add(QueryFactoryUtils.termsQuery("isDefinedBy", isDefinedByCondition));
+            must.add(new BoolQuery.Builder()
+                    .should(QueryFactoryUtils.termsQuery("isDefinedBy", isDefinedByCondition))
+                    .should(QueryFactoryUtils.termsQuery("id", request.getAdditionalResources() != null
+                            ? request.getAdditionalResources()
+                            : Collections.emptySet()))
+                    .build().
+                    _toQuery()
+            );
         }
 
         var types = request.getResourceTypes();
@@ -109,17 +115,25 @@ public class ResourceQueryFactory {
      * @param restrictedDataModels models to include based on query by model type, status, group etc
      * @return intersection of restricted models
      */
-    private static List<String> getIsDefinedByCondition(List<String> fromNamespaces, List<String> restrictedDataModels) {
-        List<String> isDefinedByCondition;
+    private static List<String> getIsDefinedByCondition(List<String> fromNamespaces, List<String> restrictedDataModels, String limitToDataModel) {
+        List<String> isDefinedByCondition = new ArrayList<>();
         if(fromNamespaces != null && !fromNamespaces.isEmpty()) {
-            isDefinedByCondition = restrictedDataModels.isEmpty()
-                    ? fromNamespaces
-                    : fromNamespaces.stream()
-                    .filter(ns -> !ns.startsWith(ModelConstants.SUOMI_FI_NAMESPACE)
-                            || restrictedDataModels.contains(ns))
-                    .toList();
+            if (restrictedDataModels.isEmpty()) {
+                isDefinedByCondition.addAll(fromNamespaces);
+            } else {
+                isDefinedByCondition.addAll(
+                        fromNamespaces.stream()
+                            .filter(ns -> !ns.startsWith(ModelConstants.SUOMI_FI_NAMESPACE)
+                                    || restrictedDataModels.contains(ns))
+                            .toList()
+                );
+            }
         } else {
-            isDefinedByCondition = restrictedDataModels;
+            isDefinedByCondition.addAll(restrictedDataModels);
+        }
+
+        if (limitToDataModel != null) {
+            isDefinedByCondition.add(limitToDataModel);
         }
         return isDefinedByCondition;
     }

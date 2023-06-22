@@ -5,47 +5,29 @@
     "bool": {
       "must": [
         {
-          "query_string": {
-            "fields": [
-              "label.*"
-            ],
-            "fuzziness": "2"
-          }
-        },
-        {
-          "terms": {
-            "status": ["VALID", "DRAFT"]
-          }
-        },
-        {
-          "term": {
-            "targetClass": {
-              "value": "http://uri.suomi.fi/datamodel/ns/test/TestClass"
-            }
-          }
-        },
-        {
-          "terms": {
-            "resourceType": ["ATTRIBUTE", "ASSOCIATION"]
-          }
-        },
-        {
           "bool": {
             "should": [
               {
                 "terms": {
                   "isDefinedBy": [
-                    "http://uri.suomi.fi/datamodel/ns/addedNs",
-                    "http://external-data.com/test",
                     "http://uri.suomi.fi/datamodel/ns/test"
                   ]
                 }
               },
               {
                 "terms": {
-                  "id": []
+                  "id": [
+                    "http://uri.suomi.fi/datamodel/ns/ext/some-property"
+                  ]
                 }
               }
+            ]
+          }
+        },
+        {
+          "terms": {
+            "resourceType": [
+              "ATTRIBUTE"
             ]
           }
         }
@@ -63,18 +45,13 @@
               }
             ]
           }
-        },
-        {
-          "terms": {
-            "isDefinedBy": ["http://uri.suomi.fi/datamodel/ns/test"]
-          }
         }
       ]
     }
   },
   "sort": [
     {
-      "label.en.keyword": {
+      "label.fi.keyword": {
         "order": "asc",
         "unmapped_type": "keyword"
       }

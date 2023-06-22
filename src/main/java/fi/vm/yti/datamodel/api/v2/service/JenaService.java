@@ -9,6 +9,7 @@ import org.apache.jena.arq.querybuilder.*;
 import org.apache.jena.atlas.web.HttpException;
 import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.query.Query;
+import org.apache.jena.query.QuerySolution;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Resource;
@@ -28,6 +29,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 @Service
 public class JenaService {
@@ -139,6 +141,14 @@ public class JenaService {
             return coreSparql.queryConstruct(query);
         }catch(HttpException ex){
             return null;
+        }
+    }
+
+    public void selectWithQuery(Query query, Consumer<QuerySolution> consumer){
+        try{
+            coreSparql.querySelect(query, consumer);
+        } catch(Exception ex) {
+            logger.error("Error with select query", ex);
         }
     }
 
