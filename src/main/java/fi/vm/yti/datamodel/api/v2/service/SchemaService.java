@@ -57,11 +57,7 @@ public class SchemaService {
 			Map.entry("exclusiveMinimum", SHACL.minExclusive.getURI()), Map.entry("maxItems", SHACL.maxCount.getURI()),
 			Map.entry("minItmes", SHACL.minCount.getURI()), Map.entry("maxLength", SHACL.maxLength.getURI()),
 			Map.entry("minLength", SHACL.minLength.getURI()), Map.entry("not", SHACL.not.getURI()),
-			Map.entry("pattern", SHACL.pattern.getURI()) // Does it belong here? --> should this map be shared
-															// between DataTypeProperty and ..Object, or each
-															// have their own?
-															// eg for iteration over. Yes? As in it doesn't
-															// matter, either a node has the property or not
+			Map.entry("pattern", SHACL.pattern.getURI()) 
 
 	);
 
