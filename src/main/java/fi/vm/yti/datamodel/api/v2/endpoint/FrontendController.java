@@ -4,8 +4,8 @@ import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
 import fi.vm.yti.datamodel.api.v2.dto.OrganizationDTO;
 import fi.vm.yti.datamodel.api.v2.dto.ServiceCategoryDTO;
 import fi.vm.yti.datamodel.api.v2.opensearch.dto.*;
-import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexResource;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexModel;
+import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexResource;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexResourceInfo;
 import fi.vm.yti.datamodel.api.v2.service.FrontendService;
 import fi.vm.yti.datamodel.api.v2.service.SearchIndexService;
@@ -17,7 +17,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
 import java.util.List;
@@ -46,9 +49,9 @@ public class FrontendController {
     @Operation(summary = "Get counts", description = "List counts of data model grouped by different search results")
     @ApiResponse(responseCode = "200", description = "Counts response container object as JSON")
     @GetMapping(path = "/counts", produces = MediaType.APPLICATION_JSON_VALUE)
-    public CountSearchResponse getCounts() {
+    public CountSearchResponse getCounts(CountRequest request) {
         logger.info("GET /counts requested");
-        return searchIndexService.getCounts();
+        return searchIndexService.getCounts(request);
     }
 
     @Operation(summary = "Get organizations", description = "List of organizations sorted by name")
