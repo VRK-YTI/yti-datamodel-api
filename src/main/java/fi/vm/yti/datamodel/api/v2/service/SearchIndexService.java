@@ -6,11 +6,11 @@ import fi.vm.yti.datamodel.api.v2.dto.ResourceType;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.OpenSearchException;
 import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.mapper.ResourceMapper;
-import fi.vm.yti.datamodel.api.v2.opensearch.dto.CountSearchResponse;
-import fi.vm.yti.datamodel.api.v2.opensearch.dto.ModelSearchRequest;
-import fi.vm.yti.datamodel.api.v2.opensearch.dto.ResourceSearchRequest;
-import fi.vm.yti.datamodel.api.v2.opensearch.dto.SearchResponseDTO;
-import fi.vm.yti.datamodel.api.v2.opensearch.index.*;
+import fi.vm.yti.datamodel.api.v2.opensearch.dto.*;
+import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexModel;
+import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexResource;
+import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexResourceInfo;
+import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
 import fi.vm.yti.datamodel.api.v2.opensearch.queries.CountQueryFactory;
 import fi.vm.yti.datamodel.api.v2.opensearch.queries.ModelQueryFactory;
 import fi.vm.yti.datamodel.api.v2.opensearch.queries.QueryFactoryUtils;
@@ -51,8 +51,8 @@ public class SearchIndexService {
      * List counts of data model grouped by different search results
      * @return response containing counts for data models
      */
-    public CountSearchResponse getCounts() {
-        var query = CountQueryFactory.createModelQuery();
+    public CountSearchResponse getCounts(CountRequest searchRequest) {
+        var query = CountQueryFactory.createModelQuery(searchRequest);
         try {
             var response = client.search(query, IndexModel.class);
             return CountQueryFactory.parseResponse(response);

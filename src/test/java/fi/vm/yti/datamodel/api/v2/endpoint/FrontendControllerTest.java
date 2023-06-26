@@ -1,7 +1,8 @@
 package fi.vm.yti.datamodel.api.v2.endpoint;
 
-import fi.vm.yti.datamodel.api.v2.opensearch.dto.ResourceSearchRequest;
+import fi.vm.yti.datamodel.api.v2.opensearch.dto.CountRequest;
 import fi.vm.yti.datamodel.api.v2.opensearch.dto.ModelSearchRequest;
+import fi.vm.yti.datamodel.api.v2.opensearch.dto.ResourceSearchRequest;
 import fi.vm.yti.datamodel.api.v2.service.FrontendService;
 import fi.vm.yti.datamodel.api.v2.service.SearchIndexService;
 import fi.vm.yti.datamodel.api.v2.validator.ExceptionHandlerAdvice;
@@ -18,7 +19,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @TestPropertySource(properties = {
@@ -57,7 +58,7 @@ class FrontendControllerTest {
         this.mvc.perform(get("/v2/frontend/counts")
                         .contentType("application/json"))
                 .andExpect(status().isOk());
-        verify(searchIndexService).getCounts();
+        verify(searchIndexService).getCounts(any(CountRequest.class));
     }
 
     @Test
