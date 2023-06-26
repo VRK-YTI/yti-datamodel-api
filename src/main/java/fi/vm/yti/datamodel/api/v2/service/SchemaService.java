@@ -33,6 +33,8 @@ import fi.vm.yti.datamodel.api.v2.dto.MSCR;
  * 1. Can't figure out how to assign default maxCount = 1 to object properties only
  * 2. Nested array gave an error - need to check
  * 3. There are two nodes with object type, one ending in #root/object_type, the other in just #object_type. What is wrong
+ * 3. ANSWERED: they are nodeShape and propertyShape. propertyShape describes nodeShape and depends on it, so it contains reference
+ * ... to nodeShape
  * 
  * TO DOs
  * 1. allOf, anyOf properties. format property - for that one a separate ticket is planned
@@ -45,7 +47,6 @@ public class SchemaService {
 			Map.entry("number", XSD.xfloat), Map.entry("integer", XSD.integer), Map.entry("boolean", XSD.xboolean),
 			Map.entry("null", MSCR.NULL));
 
-	//
 	private final Map<String, String> JSONSchemaToSHACLMap = Map.ofEntries(
 			Map.entry("description", SHACL.description.getURI()), Map.entry("default", SHACL.defaultValue.getURI()),
 			Map.entry("title", SHACL.name.getURI()), Map.entry("additionalProperties", SHACL.closed.getURI()),
@@ -81,18 +82,13 @@ public class SchemaService {
 			}
 		}
 	}
-	
+
 	private void handleRequiredProperty(JsonNode node, Model model, Resource propertyResource, boolean isRequired) {
 		propertyResource.addProperty(model.getProperty(SHACL.maxCount.getURI()), model.createTypedLiteral(1));
 		if (isRequired) {
 			propertyResource.addProperty(model.getProperty(SHACL.minCount.getURI()), model.createTypedLiteral(1));
 		}
 	}
-
-//	private boolean hasTypeProperty(JsonNode node) {
-//		System.out.println(node.findValue("type"));
-//		return (node.findValue("type") != null);
-//	};
 
 	/**
 	 * Adds a datatype property to the RDF model.
@@ -104,9 +100,6 @@ public class SchemaService {
 	 * @return The created resource representing the datatype property.
 	 */
 	private Resource addDatatypeProperty(String propID, JsonNode node, Model model, String schemaPID, String type) {
-		
-		System.out.println("DATATYPE PROP NODE: " + node);
-
 		Resource propertyResource = model.createResource(schemaPID + "#" + propID);
 		propertyResource.addProperty(RDF.type, model.getResource(SHACL.PropertyShape.getURI()));
 		propertyResource.addProperty(DCTerms.type, OWL.DatatypeProperty);
@@ -121,12 +114,6 @@ public class SchemaService {
 
 	}
 
-	// 1. HANDLE REQUIRED property of OBJECTS
-
-	// 2. Add maxCount = 1. on datatype and object properties. If there's a
-	// required, then also min = 1
-
-	//
 	/**
 	 * 
 	 * Adds an object property to the RDF model.
@@ -143,13 +130,6 @@ public class SchemaService {
 		Resource propertyResource = model.createResource(schemaPID + "#" + propID);
 		propertyResource.addProperty(RDF.type, model.getResource(SHACL.PropertyShape.getURI()));
 		propertyResource.addProperty(DCTerms.type, OWL.ObjectProperty);
-		
-		System.out.println("OBJECT PROP NODE: " + node.get("type").asText());
-		
-//		if (node.get("type").asText().equals("object")) {
-//			System.out.println("FOUND OBJECT");
-//			handleRequiredProperty(node, model, propertyResource, isRequired);
-//		}
 
 		checkAndAddPropertyFeature(node, model, propertyResource);
 		propertyResource.addProperty(model.getProperty(SHACL.path.getURI()), propID);
@@ -164,8 +144,8 @@ public class SchemaService {
 	// within the method
 	private void handleDatatypeProperty(String propID, Entry<String, JsonNode> entry, Model model, String schemaPID,
 			Resource nodeShapeResource, boolean isRequired, boolean isArrayItem) {
-		Resource propertyResource = addDatatypeProperty(propID + "/" + entry.getKey(), entry.getValue(), model, schemaPID,
-				entry.getValue().get("type").asText());
+		Resource propertyResource = addDatatypeProperty(propID + "/" + entry.getKey(), entry.getValue(), model,
+				schemaPID, entry.getValue().get("type").asText());
 		nodeShapeResource.addProperty(model.getProperty(SHACL.property.getURI()), propertyResource);
 		if (!isArrayItem) {
 			handleRequiredProperty(entry.getValue(), model, propertyResource, isRequired);
@@ -181,7 +161,8 @@ public class SchemaService {
 	 * @param schemaPID The schema PID.
 	 * @param model     The RDF model.
 	 */
-	private void handleObject(String propID, JsonNode node, String schemaPID, Model model, ArrayList<String> requiredProperties) {
+	private void handleObject(String propID, JsonNode node, String schemaPID, Model model,
+			ArrayList<String> requiredProperties) {
 
 		Resource nodeShapeResource = model.createResource(schemaPID + "#" + propID);
 		nodeShapeResource.addProperty(RDF.type, model.getResource(SHACL.NodeShape.getURI()));
@@ -190,7 +171,6 @@ public class SchemaService {
 			nodeShapeResource.addProperty(DCTerms.description, node.get("description").asText());
 		nodeShapeResource.addProperty(model.getProperty(SHACL.name.getURI()), propID);
 		if (node == null || node.get("properties") == null) {
-			System.out.println("RETURNING");
 			return;
 		}
 
@@ -199,9 +179,6 @@ public class SchemaService {
 		 * recursively iterate over them If a property is a datatype / literal – it's
 		 * just added.
 		 */
-		
-		// The problem is that if we store names of required properties and later on compare datatype props to them, it can be that
-		// object property has the same name as a datatype property
 
 		Iterator<Entry<String, JsonNode>> propertiesIterator = node.get("properties").fields();
 		while (propertiesIterator.hasNext()) {
@@ -210,33 +187,23 @@ public class SchemaService {
 				continue;
 
 			if (entry.getValue().get("type") == null) {
-				System.out.println("NULL?????" + entry.getValue() + "/n" + entry);
 				throw new RuntimeException("One of the entries is missing 'type' property");
 			}
-			
+
 			if (entry.getValue().get("type").asText().equals("object")) {
-				System.out.println("HANDLING THE FOLLOWING: " + entry.getKey());
-				System.out.println("FINDING VALUES: " + entry.getValue().findValue("required"));
-				System.out.println("HANDLING THE FOLLOWING (VALUES): " + entry.getValue().get("properties"));
-//				List<String> newRequiredProperties = requiredProperties.isEmpty() ? new ArrayList<String>() :;
 				ArrayList<String> updatedRequiredProperties = new ArrayList<>(requiredProperties);
-				
+
 				if (entry.getValue().get("required") != null) {
-//					System.out.println("REQUIRED: " + entry.getValue().get("required").elements().forEachRemaining(el -> arra.add(el)));
-					entry.getValue().get("required").elements().forEachRemaining(el -> updatedRequiredProperties.add(el.asText()));
-//					String[] arra = entry.getValue().get("required");
-//					entry.getValue().get("required").elements();
-					System.out.println("REQUIRED VALUES: " + updatedRequiredProperties.get(0));
+					entry.getValue().get("required").elements()
+							.forEachRemaining(el -> updatedRequiredProperties.add(el.asText()));
 				}
-				
-//				boolean isRequired = updatedRequiredProperties.contains(entry.getKey());
-				
-				
+
 				Resource propertyShape = addObjectProperty(entry.getKey(), entry.getValue(), model, schemaPID,
 						schemaPID + "#" + propID + "/" + entry.getKey());
 				nodeShapeResource.addProperty(model.getProperty(SHACL.property.getURI()), propertyShape);
-				
-				handleObject(propID + "/" + entry.getKey(), entry.getValue(), schemaPID, model, updatedRequiredProperties);
+
+				handleObject(propID + "/" + entry.getKey(), entry.getValue(), schemaPID, model,
+						updatedRequiredProperties);
 
 			} else if (entry.getValue().get("type").asText().equals("array")
 					&& entry.getValue().get("items").has("type")
@@ -245,30 +212,20 @@ public class SchemaService {
 				Resource propertyShape = addObjectProperty(entry.getKey(), entry.getValue(), model, schemaPID,
 						schemaPID + "#" + propID + "/" + entry.getKey());
 				nodeShapeResource.addProperty(model.getProperty(SHACL.property.getURI()), propertyShape);
-				handleObject(propID + "/" + entry.getKey(), entry.getValue().get("items"), schemaPID, model, requiredProperties);
+				handleObject(propID + "/" + entry.getKey(), entry.getValue().get("items"), schemaPID, model,
+						requiredProperties);
 
-			}
-			// DOUBLE CHECK THAT. ROUGHT IMPLEMENTATION
-			// array === one resource (parent) connected to multiple resources (array elements) in SHACL???
-			// test nested arrays
-			else if (entry.getValue().get("type").asText().equals("array")) {
+			} else if (entry.getValue().get("type").asText().equals("array")) {
 				Resource propertyShape = addObjectProperty(entry.getKey(), entry.getValue(), model, schemaPID,
 						schemaPID + "#" + propID + "/" + entry.getKey());
 				nodeShapeResource.addProperty(model.getProperty(SHACL.property.getURI()), propertyShape);
 
 				Entry<String, JsonNode> arrayItem = Map.entry(entry.getKey() + "/items", entry.getValue().get("items"));
-//				System.out.println("ARRAYITEM KEY: " + arrayItem.getKey() + " ARRAYITEM VALUE: " + arrayItem.getValue());
-				
-//				boolean isRequired = requiredProperties.contains(propertyShape);
 
 				handleDatatypeProperty(propID, arrayItem, model, schemaPID, nodeShapeResource, false, true);
-//				handleObject(arrayItem.getKey(), arrayItem.getValue(),  schemaPID,  model, nodeShapeResource, requiredProperties);
 
 			} else {
 				boolean isRequired = requiredProperties.contains(entry.getKey());
-//				System.out.println("is required? " + isRequired);
-//				System.out.println("HANDLING THE FOLLOWING PRIMITIVE: " + entry.getKey());
-//				System.out.println("HANDLING THE FOLLOWING TYPE: " + entry.getValue().get("type"));
 				handleDatatypeProperty(propID, entry, model, schemaPID, nodeShapeResource, isRequired, false);
 			}
 
@@ -296,7 +253,7 @@ public class SchemaService {
 		JsonNode root = mapper.readTree(data);
 		var modelResource = model.createResource(schemaPID);
 		modelResource.addProperty(DCTerms.language, "en");
-		
+
 		ArrayList<String> requiredProperties = new ArrayList<String>();
 
 		// Adding the schema to a corresponding internal model
