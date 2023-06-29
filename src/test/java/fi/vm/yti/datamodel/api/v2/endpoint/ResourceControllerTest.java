@@ -16,6 +16,7 @@ import fi.vm.yti.security.AuthenticatedUserProvider;
 import fi.vm.yti.security.YtiUser;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.vocabulary.OWL;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -418,6 +419,47 @@ class ResourceControllerTest {
             verifyNoMoreInteractions(this.openSearchIndexer);
         }
     }
+
+    @Test
+    void shouldCopy() throws Exception {
+        when(jenaService.doesResourceExistInGraph("http://uri.suomi.fi/datamodel/ns/test", "http://uri.suomi.fi/datamodel/ns/test/PropertyShape")).thenReturn(true);
+        when(jenaService.getDataModel(anyString())).thenReturn(ModelFactory.createDefaultModel());
+
+        this.mvc
+                .perform(post("/v2/resource/profile/test/PropertyShape")
+                        .contentType("application/json")
+                        .param("targetPrefix", "newtest")
+                        .param("newIdentifier", "newid"))
+                .andExpect(status().isOk());
+
+        verify(jenaService, times(2)).doesResourceExistInGraph(anyString(), anyString());
+        verify(jenaService, times(2)).getDataModel(anyString());
+        verify(authorizationManager, times(2)).hasRightToModel(anyString(), any(Model.class));
+    }
+
+    @Test
+    void shouldCopyResourceNotFound() throws Exception {
+        this.mvc
+                .perform(post("/v2/resource/profile/test/PropertyShape")
+                        .contentType("application/json")
+                        .param("targetPrefix", "newtest")
+                        .param("newIdentifier", "newid"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void shouldCopyIdentifierInUse() throws Exception {
+        when(jenaService.doesResourceExistInGraph(anyString(), anyString())).thenReturn(true);
+
+        this.mvc
+                .perform(post("/v2/resource/profile/test/PropertyShape")
+                        .contentType("application/json")
+                        .param("targetPrefix", "newtest")
+                        .param("newIdentifier", "newid"))
+                .andExpect(status().isBadRequest());
+    }
+
+
 
     @ParameterizedTest
     @MethodSource("provideCreatePropertyShapeDTOInvalidData")

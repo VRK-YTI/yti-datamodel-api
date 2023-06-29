@@ -116,6 +116,33 @@ public class ResourceController {
         handleUpdateResourceOrPropertyShape(prefix, resourceIdentifier, dto);
     }
 
+    @Operation(summary = "Create a local copy of a property shape")
+    @ApiResponse(responseCode = "200", description = "Property shape copied successfully")
+    @PostMapping(value ="/profile/{prefix}/{resourceIdentifier}")
+    public void copyPropertyShape(@PathVariable String prefix, @PathVariable String resourceIdentifier, @RequestParam String targetPrefix, @RequestParam String newIdentifier) {
+        var graphUri = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
+        var targetGraph = ModelConstants.SUOMI_FI_NAMESPACE + targetPrefix;
+
+        if(!jenaService.doesResourceExistInGraph(graphUri, graphUri + ModelConstants.RESOURCE_SEPARATOR + resourceIdentifier)){
+            throw new ResourceNotFoundException("Resource does not exist");
+        }
+        if(jenaService.doesResourceExistInGraph(targetGraph, targetGraph + ModelConstants.RESOURCE_SEPARATOR + newIdentifier)){
+            throw new MappingError("Identifier in use");
+        }
+
+
+        var model = jenaService.getDataModel(graphUri);
+        check(authorizationManager.hasRightToModel(prefix, model));
+        var targetModel = jenaService.getDataModel(targetGraph);
+        check(authorizationManager.hasRightToModel(targetPrefix, targetModel));
+
+        ResourceMapper.mapToCopyToLocalPropertyShape(graphUri, model, resourceIdentifier, targetModel, targetGraph, newIdentifier, userProvider.getUser());
+
+        jenaService.putDataModelToCore(targetGraph, targetModel);
+        var indexResource = ResourceMapper.mapToIndexResource(targetModel, targetGraph + ModelConstants.RESOURCE_SEPARATOR + newIdentifier);
+        openSearchIndexer.createResourceToIndex(indexResource);
+    }
+
     @Operation(summary = "Find an attribute or association from a model")
     @ApiResponse(responseCode = "200", description = "Attribute or association found")
     @GetMapping(value = "/library/{prefix}/{resourceIdentifier}", produces = APPLICATION_JSON_VALUE)
