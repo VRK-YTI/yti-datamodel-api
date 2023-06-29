@@ -131,9 +131,14 @@ public class ResourceController {
         }
 
 
+
         var model = jenaService.getDataModel(graphUri);
-        check(authorizationManager.hasRightToModel(prefix, model));
         var targetModel = jenaService.getDataModel(targetGraph);
+
+        if(!MapperUtils.isApplicationProfile(model.getResource(graphUri)) && !MapperUtils.isApplicationProfile(targetModel.getResource(targetGraph))){
+            throw new MappingError("Both data models have to be application profiles");
+        }
+        check(authorizationManager.hasRightToModel(prefix, model));
         check(authorizationManager.hasRightToModel(targetPrefix, targetModel));
 
         ResourceMapper.mapToCopyToLocalPropertyShape(graphUri, model, resourceIdentifier, targetModel, targetGraph, newIdentifier, userProvider.getUser());

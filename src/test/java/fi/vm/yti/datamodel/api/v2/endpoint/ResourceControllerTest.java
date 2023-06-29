@@ -18,6 +18,7 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.vocabulary.OWL;
+import org.apache.jena.vocabulary.RDF;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -423,22 +424,34 @@ class ResourceControllerTest {
     @Test
     void shouldCopy() throws Exception {
         when(jenaService.doesResourceExistInGraph("http://uri.suomi.fi/datamodel/ns/test", "http://uri.suomi.fi/datamodel/ns/test/PropertyShape")).thenReturn(true);
-        when(jenaService.getDataModel(anyString())).thenReturn(ModelFactory.createDefaultModel());
+        var m = ModelFactory.createDefaultModel();
+        m.createResource("http://uri.suomi.fi/datamodel/ns/test")
+                .addProperty(RDF.type, OWL.Ontology)
+                .addProperty(RDF.type, Iow.ApplicationProfile);
+        m.createResource("http://uri.suomi.fi/datamodel/ns/newtest")
+                .addProperty(RDF.type, OWL.Ontology)
+                .addProperty(RDF.type, Iow.ApplicationProfile);
+        when(jenaService.getDataModel(anyString())).thenReturn(m);
 
-        this.mvc
-                .perform(post("/v2/resource/profile/test/PropertyShape")
-                        .contentType("application/json")
-                        .param("targetPrefix", "newtest")
-                        .param("newIdentifier", "newid"))
-                .andExpect(status().isOk());
+        try(var mapper = mockStatic(ResourceMapper.class)) {
+            mapper.when(() -> ResourceMapper.mapToIndexResource(any(Model.class),
+                    anyString())).thenReturn(new IndexResource());
 
-        verify(jenaService, times(2)).doesResourceExistInGraph(anyString(), anyString());
-        verify(jenaService, times(2)).getDataModel(anyString());
-        verify(authorizationManager, times(2)).hasRightToModel(anyString(), any(Model.class));
+            this.mvc
+                    .perform(post("/v2/resource/profile/test/PropertyShape")
+                            .contentType("application/json")
+                            .param("targetPrefix", "newtest")
+                            .param("newIdentifier", "newid"))
+                    .andExpect(status().isOk());
+
+            verify(jenaService, times(2)).doesResourceExistInGraph(anyString(), anyString());
+            verify(jenaService, times(2)).getDataModel(anyString());
+            verify(authorizationManager, times(2)).hasRightToModel(anyString(), any(Model.class));
+        }
     }
 
     @Test
-    void shouldCopyResourceNotFound() throws Exception {
+    void shouldNotCopyResourceNotFound() throws Exception {
         this.mvc
                 .perform(post("/v2/resource/profile/test/PropertyShape")
                         .contentType("application/json")
@@ -448,8 +461,49 @@ class ResourceControllerTest {
     }
 
     @Test
-    void shouldCopyIdentifierInUse() throws Exception {
+    void shouldNotCopyIdentifierInUse() throws Exception {
         when(jenaService.doesResourceExistInGraph(anyString(), anyString())).thenReturn(true);
+
+        this.mvc
+                .perform(post("/v2/resource/profile/test/PropertyShape")
+                        .contentType("application/json")
+                        .param("targetPrefix", "newtest")
+                        .param("newIdentifier", "newid"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void shouldNotCopyModelNotApplicationProfileOne() throws Exception {
+        when(jenaService.doesResourceExistInGraph("http://uri.suomi.fi/datamodel/ns/test", "http://uri.suomi.fi/datamodel/ns/test/PropertyShape")).thenReturn(true);
+        var modelLibrary = ModelFactory.createDefaultModel();
+        modelLibrary.createResource("http://uri.suomi.fi/datamodel/ns/test")
+                        .addProperty(RDF.type, OWL.Ontology);
+        var modelProfile = ModelFactory.createDefaultModel();
+        modelLibrary.createResource("http://uri.suomi.fi/dtamodel/ns/newtest")
+                .addProperty(RDF.type, OWL.Ontology)
+                .addProperty(RDF.type, Iow.ApplicationProfile);
+        when(jenaService.getDataModel("http://uri.suomi.fi/datamodel/ns/test")).thenReturn(modelLibrary);
+        when(jenaService.getDataModel("http://uri.suomi.fi/datamodel/ns/newtest")).thenReturn(modelProfile);
+
+        this.mvc
+                .perform(post("/v2/resource/profile/test/PropertyShape")
+                        .contentType("application/json")
+                        .param("targetPrefix", "newtest")
+                        .param("newIdentifier", "newid"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void shouldNotCopyModelNotApplicationProfileBoth() throws Exception {
+        when(jenaService.doesResourceExistInGraph("http://uri.suomi.fi/datamodel/ns/test", "http://uri.suomi.fi/datamodel/ns/test/PropertyShape")).thenReturn(true);
+        var test = ModelFactory.createDefaultModel();
+        test.createResource("http://uri.suomi.fi/test")
+                .addProperty(RDF.type, OWL.Ontology);
+        var newtest = ModelFactory.createDefaultModel();
+        newtest.createResource("http://uri.suomi.fi/newtest")
+                .addProperty(RDF.type, OWL.Ontology);
+        when(jenaService.getDataModel("http://uri.suomi.fi/datamodel/ns/test")).thenReturn(test);
+        when(jenaService.getDataModel("http://uri.suomi.fi/datamodel/ns/newtest")).thenReturn(newtest);
 
         this.mvc
                 .perform(post("/v2/resource/profile/test/PropertyShape")
