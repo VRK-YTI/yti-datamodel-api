@@ -6,6 +6,8 @@ import fi.vm.yti.datamodel.api.v2.dto.Status;
 import fi.vm.yti.datamodel.api.v2.endpoint.EndpointUtils;
 import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.mapper.ResourceMapper;
+import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
@@ -15,7 +17,8 @@ import org.topbraid.shacl.vocabulary.SH;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class PropertyShapeMapperTest {
 
@@ -118,5 +121,22 @@ class PropertyShapeMapperTest {
         assertEquals(2, MapperUtils.getLiteral(resource, SH.minCount, Integer.class));
         assertEquals(200, MapperUtils.getLiteral(resource, SH.maxLength, Integer.class));
         assertEquals(5, MapperUtils.getLiteral(resource, SH.minLength, Integer.class));
+    }
+
+    @Test
+    void testMapToCopyToLocalPropertyShape(){
+        var model = MapperTestUtils.getModelFromFile("/models/test_datamodel_profile_with_resources.ttl");
+        var newModel = ModelFactory.createDefaultModel();
+
+        ResourceMapper.mapToCopyToLocalPropertyShape("http://uri.suomi.fi/datamodel/ns/test", model, "DeactivatedPropertyShape", newModel, "http://uri.suomi.fi/datamodel/ns/new", "NewShape", EndpointUtils.mockUser);
+
+        var resource = newModel.getResource("http://uri.suomi.fi/datamodel/ns/new/NewShape");
+        var types = resource.listProperties(RDF.type).mapWith((var s) -> s.getObject().asResource()).toList();
+
+        assertEquals("NewShape", resource.getProperty(DCTerms.identifier).getLiteral().getString());
+        assertEquals("http://uri.suomi.fi/datamodel/ns/new", MapperUtils.propertyToString(resource, RDFS.isDefinedBy));
+        assertTrue(types.contains(OWL.DatatypeProperty));
+        assertTrue(types.contains(SH.PropertyShape));
+        assertEquals("deactivated property shape", MapperUtils.localizedPropertyToMap(resource, RDFS.label).get("fi"));
     }
 }

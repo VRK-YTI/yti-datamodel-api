@@ -136,6 +136,26 @@ public class ResourceMapper {
         MapperUtils.addUpdateMetadata(resource, user);
     }
 
+    public static void mapToCopyToLocalPropertyShape(String graphUri, Model model, String resourceIdentifier, Model targetModel, String targetGraph, String targetIdentifier, YtiUser user){
+        var resource = model.getResource(graphUri + ModelConstants.RESOURCE_SEPARATOR + resourceIdentifier);
+        var newResource = targetModel.createResource(targetGraph + ModelConstants.RESOURCE_SEPARATOR + targetIdentifier);
+        resource.listProperties().forEach(prop -> {
+            var pred = prop.getPredicate();
+            var obj = prop.getObject();
+            newResource.addProperty(pred, obj);
+        }
+        );
+
+        MapperUtils.updateUriProperty(newResource, RDFS.isDefinedBy, targetGraph);
+        MapperUtils.updateLiteral(newResource, DCTerms.identifier, XSDDatatype.XSDNCName.parse(targetIdentifier));
+
+        newResource.removeAll(DCTerms.modified);
+        newResource.removeAll(DCTerms.created);
+        newResource.removeAll(Iow.modifier);
+        newResource.removeAll(Iow.creator);
+        MapperUtils.addCreationMetadata(newResource, user);
+    }
+
     public static IndexResource mapToIndexResource(Model model, String resourceUri){
         var indexResource = new IndexResource();
         var resource = model.getResource(resourceUri);
