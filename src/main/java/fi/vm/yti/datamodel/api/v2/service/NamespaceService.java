@@ -10,8 +10,8 @@ import java.util.Map;
 public class NamespaceService {
 
     private final NamespaceResolver namespaceResolver;
-    @Value("${namespaces.skipResolveDefault:true}")
-    private boolean skipResolving;
+    @Value("${namespaces.resolveDefault:false}")
+    private boolean resolveDefault;
 
     @Autowired
     public NamespaceService(NamespaceResolver namespaceResolver) {
@@ -38,7 +38,7 @@ public class NamespaceService {
     );
 
     public void resolveDefaultNamespaces() {
-        if(!skipResolving){
+        if(resolveDefault){
             DEFAULT_NAMESPACES.forEach((prefix, uri) -> namespaceResolver.resolveNamespace(uri));
         }
     }
