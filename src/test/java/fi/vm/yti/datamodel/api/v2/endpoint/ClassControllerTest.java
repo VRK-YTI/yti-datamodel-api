@@ -35,10 +35,10 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import static org.hamcrest.Matchers.containsString;
@@ -358,16 +358,17 @@ class ClassControllerTest {
     @Test
     void shouldValidateAndCreateNodeShape() throws Exception {
         var nodeShapeDTO = createNodeShapeDTO();
-        nodeShapeDTO.setProperties(List.of("test"));
+        nodeShapeDTO.setProperties(Set.of("test"));
         Model mockModel = EndpointUtils.getMockModel(DCAP.DCAP);
 
         when(jenaService.getDataModel(anyString())).thenReturn(mockModel);
-        when(jenaService.findResources(anyList())).thenReturn(ModelFactory.createDefaultModel());
+        when(jenaService.findResources(anySet())).thenReturn(ModelFactory.createDefaultModel());
         try(var resourceMapper = mockStatic(ResourceMapper.class);
             var classMapper = mockStatic(ClassMapper.class)) {
+            // Predicate<String> predicate = any();
             resourceMapper.when(() -> ResourceMapper.mapToIndexResource(any(Model.class), anyString())).thenReturn(new IndexResource());
             classMapper.when(() -> ClassMapper.createNodeShapeAndMapToModel(anyString(), any(Model.class), any(NodeShapeDTO.class), any(YtiUser.class))).thenReturn("test");
-            classMapper.when(() -> ClassMapper.mapPlaceholderPropertyShapes(any(Model.class), anyString(), any(Model.class), any(YtiUser.class)))
+            classMapper.when(() -> ClassMapper.mapPlaceholderPropertyShapes(any(Model.class), anyString(), any(Model.class), any(YtiUser.class), any(Predicate.class)))
                     .thenReturn(new ArrayList<>());
             this.mvc
                     .perform(put("/v2/class/profile/test")
@@ -379,13 +380,14 @@ class ClassControllerTest {
             verify(this.jenaService).getDataModel(anyString());
             verify(terminologyService).resolveConcept(anyString());
             classMapper.verify(() -> ClassMapper.createNodeShapeAndMapToModel(anyString(), any(Model.class), any(NodeShapeDTO.class), any(YtiUser.class)));
-            classMapper.verify(() -> ClassMapper.mapPlaceholderPropertyShapes(any(Model.class), anyString(), any(Model.class), any(YtiUser.class)));
-            verify(this.jenaService, times(2)).findResources(anyList());
+            classMapper.verify(() -> ClassMapper.mapPlaceholderPropertyShapes(any(Model.class), anyString(), any(Model.class), any(YtiUser.class), any(Predicate.class)));
+            verify(this.jenaService).findResources(anySet());
             verify(this.jenaService).putDataModelToCore(anyString(), any(Model.class));
             verifyNoMoreInteractions(this.jenaService);
             resourceMapper.verify(() -> ResourceMapper.mapToIndexResource(any(Model.class), anyString()));
             verify(this.openSearchIndexer)
                     .bulkInsert(anyString(), anyList());
+            verify(this.openSearchIndexer).createResourceToIndex(any(IndexResource.class));
             verifyNoMoreInteractions(this.openSearchIndexer);
         }
     }
