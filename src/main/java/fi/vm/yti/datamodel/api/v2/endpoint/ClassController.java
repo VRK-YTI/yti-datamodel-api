@@ -377,7 +377,7 @@ public class ClassController {
     private Set<String> getNodeShapeTargetClassProperties(NodeShapeDTO nodeShapeDTO, Model model, String classURI) {
         var allProperties = new HashSet<String>();
 
-        // skip creating new resource, if there is already resource with sh:path reference to the property
+        // skip creating new resource if there is already resource with sh:path reference to the property
         var existingProperties = nodeShapeDTO.getProperties().stream()
                 .map(p -> {
                     var iter = model.listStatements(new SimpleSelector(null, SH.path, ResourceFactory.createResource(p)));

@@ -16,6 +16,7 @@ import org.topbraid.shacl.vocabulary.SH;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Predicate;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -28,6 +29,10 @@ class NodeShapeMapperTest {
         var propertiesQueryResult = MapperTestUtils.getModelFromFile("/properties_result.ttl");
         var mockUser = EndpointUtils.mockUser;
 
+        // assume there is a resource with identifier association-1 defined in the model
+        // suffix -1 should be added when creating new property shape resource
+        Predicate<String> freePrefixCheck = s -> s.equals("http://uri.suomi.fi/datamodel/ns/test/association-1");
+
         var dto = new NodeShapeDTO();
         dto.setIdentifier("TestClass");
         dto.setSubject("http://uri.suomi.fi/terminology/test/test1");
@@ -39,7 +44,7 @@ class NodeShapeMapperTest {
 
         ClassMapper.createNodeShapeAndMapToModel("http://uri.suomi.fi/datamodel/ns/test", model, dto, mockUser);
         ClassMapper.mapPlaceholderPropertyShapes(model, "http://uri.suomi.fi/datamodel/ns/test/TestClass",
-                propertiesQueryResult, mockUser, s -> false);
+                propertiesQueryResult, mockUser, freePrefixCheck);
 
         Resource modelResource = model.getResource("http://uri.suomi.fi/datamodel/ns/test");
         Resource classResource = model.getResource("http://uri.suomi.fi/datamodel/ns/test/TestClass");
@@ -66,7 +71,7 @@ class NodeShapeMapperTest {
 
         assertEquals(2, classResource.listProperties(SH.property).toList().size());
         var propertyShapeAttribute = model.getResource("http://uri.suomi.fi/datamodel/ns/test/attribute-1");
-        var propertyShapeAssociation = model.getResource("http://uri.suomi.fi/datamodel/ns/test/association-1");
+        var propertyShapeAssociation = model.getResource("http://uri.suomi.fi/datamodel/ns/test/association-1-1");
 
         assertNotNull(propertyShapeAttribute);
         assertNotNull(propertyShapeAssociation);
