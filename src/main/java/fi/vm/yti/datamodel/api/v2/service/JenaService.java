@@ -28,6 +28,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
@@ -351,7 +352,7 @@ public class JenaService {
         return conceptSparql.queryConstruct(builder.build());
     }
 
-    public Model findResources(List<String> resourceURIs) {
+    public Model findResources(Set<String> resourceURIs) {
         if (resourceURIs == null || resourceURIs.isEmpty()) {
             return ModelFactory.createDefaultModel();
         }
@@ -359,10 +360,13 @@ public class JenaService {
         coreBuilder.addPrefixes(ModelConstants.PREFIXES);
         var importsBuilder = new ConstructBuilder();
         importsBuilder.addPrefixes(ModelConstants.PREFIXES);
-        for (var i = 0; i < resourceURIs.size(); i++) {
-            var pred = "?p" + i;
-            var obj = "?o" + i;
-            String uri = resourceURIs.get(i);
+
+        var iterator = resourceURIs.iterator();
+        var count = 0;
+        while (iterator.hasNext()) {
+            var pred = "?p" + count;
+            var obj = "?o" + count;
+            String uri = iterator.next();
             var resource = ResourceFactory.createResource(uri);
             if (uri.startsWith(ModelConstants.SUOMI_FI_NAMESPACE)) {
                 coreBuilder.addConstruct(resource, pred, obj);
@@ -371,6 +375,7 @@ public class JenaService {
                 importsBuilder.addConstruct(resource, pred, obj);
                 importsBuilder.addOptional(resource, pred, obj);
             }
+            count++;
         }
 
         var resultModel = coreSparql.queryConstruct(coreBuilder.build());
