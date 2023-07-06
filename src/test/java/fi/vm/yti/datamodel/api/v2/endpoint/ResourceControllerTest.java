@@ -479,7 +479,7 @@ class ResourceControllerTest {
         modelLibrary.createResource("http://uri.suomi.fi/datamodel/ns/test")
                         .addProperty(RDF.type, OWL.Ontology);
         var modelProfile = ModelFactory.createDefaultModel();
-        modelLibrary.createResource("http://uri.suomi.fi/dtamodel/ns/newtest")
+        modelProfile.createResource("http://uri.suomi.fi/datamodel/ns/newtest")
                 .addProperty(RDF.type, OWL.Ontology)
                 .addProperty(RDF.type, Iow.ApplicationProfile);
         when(jenaService.getDataModel("http://uri.suomi.fi/datamodel/ns/test")).thenReturn(modelLibrary);
