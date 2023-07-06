@@ -135,7 +135,7 @@ public class ResourceController {
         var model = jenaService.getDataModel(graphUri);
         var targetModel = jenaService.getDataModel(targetGraph);
 
-        if(!MapperUtils.isApplicationProfile(model.getResource(graphUri)) && !MapperUtils.isApplicationProfile(targetModel.getResource(targetGraph))){
+        if(!MapperUtils.isApplicationProfile(model.getResource(graphUri)) || !MapperUtils.isApplicationProfile(targetModel.getResource(targetGraph))){
             throw new MappingError("Both data models have to be application profiles");
         }
         check(authorizationManager.hasRightToModel(prefix, model));
