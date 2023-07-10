@@ -10,7 +10,7 @@ import org.apache.jena.update.UpdateRequest;
 
 import java.util.function.Consumer;
 
-public class BaseRepository {
+public abstract class BaseRepository {
 
     RDFConnection read;
     RDFConnection write;
