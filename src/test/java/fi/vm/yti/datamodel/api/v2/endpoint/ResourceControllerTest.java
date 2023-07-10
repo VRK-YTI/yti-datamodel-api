@@ -513,8 +513,6 @@ class ResourceControllerTest {
                 .andExpect(status().isBadRequest());
     }
 
-
-
     @ParameterizedTest
     @MethodSource("provideCreatePropertyShapeDTOInvalidData")
     void shouldInvalidatePropertyShape(PropertyShapeDTO dto) throws Exception {
@@ -574,9 +572,13 @@ class ResourceControllerTest {
         dto.setAllowedValues(List.of(RandomStringUtils.random(length + 1)));
         args.add(dto);
 
+        dto = createPropertyShapeDTO();
+        dto.setCodeList("http://uri.suomi.fi/invalid");
+        args.add(dto);
+
         return args.stream().map(Arguments::of);
     }
-        private static Stream<Arguments> provideUpdateResourceDTOInvalidData() {
+    private static Stream<Arguments> provideUpdateResourceDTOInvalidData() {
         var args = new ArrayList<ResourceDTO>();
 
         //this has identifier so it should fail automatically

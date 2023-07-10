@@ -1,5 +1,6 @@
 package fi.vm.yti.datamodel.api.mapper;
 
+import fi.vm.yti.datamodel.api.v2.dto.Iow;
 import fi.vm.yti.datamodel.api.v2.dto.PropertyShapeDTO;
 import fi.vm.yti.datamodel.api.v2.dto.ResourceType;
 import fi.vm.yti.datamodel.api.v2.dto.Status;
@@ -41,6 +42,11 @@ class PropertyShapeMapperTest {
         dto.setMinCount(1);
         dto.setMaxLength(100);
         dto.setMinLength(3);
+        dto.setMinInclusive(5);
+        dto.setMaxInclusive(7);
+        dto.setMinExclusive(6);
+        dto.setMaxExclusive(8);
+        dto.setCodeList("http://uri.suomi.fi/codelist/test");
         ResourceMapper.mapToPropertyShapeResource("http://uri.suomi.fi/datamodel/ns/test", model, dto, mockUser);
 
         var resource = model.getResource("http://uri.suomi.fi/datamodel/ns/test/ps-1");
@@ -60,6 +66,11 @@ class PropertyShapeMapperTest {
         assertEquals(1, MapperUtils.getLiteral(resource, SH.minCount, Integer.class));
         assertEquals(100, MapperUtils.getLiteral(resource, SH.maxLength, Integer.class));
         assertEquals(3, MapperUtils.getLiteral(resource, SH.minLength, Integer.class));
+        assertEquals(5, MapperUtils.getLiteral(resource, SH.minInclusive, Integer.class));
+        assertEquals(7, MapperUtils.getLiteral(resource, SH.maxInclusive, Integer.class));
+        assertEquals(6, MapperUtils.getLiteral(resource, SH.minExclusive, Integer.class));
+        assertEquals(8, MapperUtils.getLiteral(resource, SH.maxExclusive, Integer.class));
+        assertEquals("http://uri.suomi.fi/codelist/test", MapperUtils.propertyToString(resource, Iow.codeList));
     }
 
     @Test
@@ -80,6 +91,11 @@ class PropertyShapeMapperTest {
         assertEquals(10, dto.getMaxCount());
         assertEquals(2, dto.getMinLength());
         assertEquals(100, dto.getMaxLength());
+        assertEquals(5, dto.getMinInclusive());
+        assertEquals(7, dto.getMaxInclusive());
+        assertEquals(6, dto.getMinExclusive());
+        assertEquals(8, dto.getMaxExclusive());
+        assertEquals("http://uri.suomi.fi/codelist/Test", dto.getCodeList());
         assertEquals("hasValue", dto.getHasValue());
         assertEquals("foo", dto.getDefaultValue());
         assertEquals("xsd:integer", dto.getDataType());
