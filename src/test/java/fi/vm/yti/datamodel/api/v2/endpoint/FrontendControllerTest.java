@@ -4,6 +4,7 @@ import fi.vm.yti.datamodel.api.v2.opensearch.dto.CountRequest;
 import fi.vm.yti.datamodel.api.v2.opensearch.dto.ModelSearchRequest;
 import fi.vm.yti.datamodel.api.v2.opensearch.dto.ResourceSearchRequest;
 import fi.vm.yti.datamodel.api.v2.service.FrontendService;
+import fi.vm.yti.datamodel.api.v2.service.NamespaceService;
 import fi.vm.yti.datamodel.api.v2.service.SearchIndexService;
 import fi.vm.yti.datamodel.api.v2.validator.ExceptionHandlerAdvice;
 import fi.vm.yti.security.AuthenticatedUserProvider;
@@ -41,7 +42,8 @@ class FrontendControllerTest {
     FrontendService frontendService;
     @MockBean
     AuthenticatedUserProvider userProvider;
-
+    @MockBean
+    NamespaceService namespaceService;
 
     @BeforeEach
     void init () {
@@ -122,6 +124,14 @@ class FrontendControllerTest {
                         .contentType("application/json"))
                 .andExpect(status().isOk());
         verify(frontendService).getOrganizations(anyString(), eq(true));
+    }
+
+    @Test
+    void getNamespacesTest() throws Exception {
+        this.mvc.perform(get("/v2/frontend/namespaces")
+                        .contentType("application/json"))
+                .andExpect(status().isOk());
+        verify(namespaceService).getResolvedNamespaces();
     }
 
 }

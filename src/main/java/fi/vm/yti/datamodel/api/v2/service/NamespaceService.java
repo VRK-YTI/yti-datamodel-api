@@ -1,21 +1,27 @@
 package fi.vm.yti.datamodel.api.v2.service;
 
+import fi.vm.yti.datamodel.api.v2.repository.ImportsRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 @Service
 public class NamespaceService {
 
     private final NamespaceResolver namespaceResolver;
+    private final ImportsRepository importsRepository;
+
     @Value("${namespaces.resolveDefault:false}")
     private boolean resolveDefault;
 
     @Autowired
-    public NamespaceService(NamespaceResolver namespaceResolver) {
+    public NamespaceService(NamespaceResolver namespaceResolver, ImportsRepository importsRepository) {
         this.namespaceResolver = namespaceResolver;
+        this.importsRepository = importsRepository;
     }
 
     private static final Map<String, String> DEFAULT_NAMESPACES = Map.ofEntries(
@@ -41,5 +47,17 @@ public class NamespaceService {
         if(resolveDefault){
             DEFAULT_NAMESPACES.forEach((prefix, uri) -> namespaceResolver.resolveNamespace(uri));
         }
+    }
+
+    public Set<String> getResolvedNamespaces() {
+        String query = """
+                SELECT ?g WHERE {
+                  GRAPH ?g {}
+                }
+                """;
+        var result = new HashSet<String>();
+        importsRepository.querySelect(query, (var row) -> result.add(row.get("g").toString()));
+
+        return result;
     }
 }
