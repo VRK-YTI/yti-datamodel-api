@@ -66,6 +66,11 @@ test:TestPropertyShape  rdf:type  sh:PropertyShape ;
         sh:maxLength         100 ;
         sh:minCount          1 ;
         sh:minLength         2 ;
+        sh:minInclusive      5 ;
+        sh:maxInclusive      7 ;
+        sh:minExclusive      6 ;
+        sh:maxExclusive      8 ;
+        iow:codeList         <http://uri.suomi.fi/codelist/Test> ;
         sh:path              <http://uri.suomi.fi/datamodel/ns/ytm/some-attribute> .
 
 test:DeactivatedPropertyShape  rdf:type  sh:PropertyShape ;

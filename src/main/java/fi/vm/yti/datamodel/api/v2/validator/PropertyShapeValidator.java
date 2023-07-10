@@ -37,6 +37,7 @@ public class PropertyShapeValidator extends BaseValidator implements ConstraintV
         checkPath(context, value);
         checkClassType(context, value);
         checkDataType(context, value);
+        checkCodeList(context, value);
         checkCommonTextArea(context, value.getDefaultValue(), "defaultValue");
         checkCommonTextArea(context, value.getHasValue(), "hasValue");
         if (value.getAllowedValues() != null) {
@@ -79,6 +80,12 @@ public class PropertyShapeValidator extends BaseValidator implements ConstraintV
     private void checkDataType(ConstraintValidatorContext context, PropertyShapeDTO dto) {
         if (dto.getDataType() != null && !ModelConstants.SUPPORTED_DATA_TYPES.contains(dto.getDataType())) {
             addConstraintViolation(context, "unsupported-datatype", "dataType");
+        }
+    }
+
+    private void checkCodeList(ConstraintValidatorContext context, PropertyShapeDTO dto) {
+        if(dto.getCodeList() != null && !dto.getCodeList().startsWith(ModelConstants.CODELIST_NAMESPACE)){
+            addConstraintViolation(context, "invalid-codelist-uri", "codelist");
         }
     }
 }

@@ -71,6 +71,12 @@ public class ResourceMapper {
         MapperUtils.addLiteral(resource, SH.maxCount, dto.getMaxCount());
         MapperUtils.addLiteral(resource, SH.minLength, dto.getMinLength());
         MapperUtils.addLiteral(resource, SH.maxLength, dto.getMaxLength());
+        MapperUtils.addLiteral(resource, SH.minInclusive, dto.getMinInclusive());
+        MapperUtils.addLiteral(resource, SH.maxInclusive, dto.getMaxInclusive());
+        MapperUtils.addLiteral(resource, SH.minExclusive, dto.getMinExclusive());
+        MapperUtils.addLiteral(resource, SH.maxExclusive, dto.getMaxExclusive());
+
+        MapperUtils.addOptionalUriProperty(resource, Iow.codeList, dto.getCodeList());
 
         MapperUtils.addCreationMetadata(resource, user);
 
@@ -132,6 +138,12 @@ public class ResourceMapper {
         MapperUtils.updateLiteral(resource, SH.maxCount, dto.getMaxCount());
         MapperUtils.updateLiteral(resource, SH.minLength, dto.getMinLength());
         MapperUtils.updateLiteral(resource, SH.maxLength, dto.getMaxLength());
+        MapperUtils.updateLiteral(resource, SH.minInclusive, dto.getMinInclusive());
+        MapperUtils.updateLiteral(resource, SH.maxInclusive, dto.getMaxInclusive());
+        MapperUtils.updateLiteral(resource, SH.minExclusive, dto.getMinExclusive());
+        MapperUtils.updateLiteral(resource, SH.maxExclusive, dto.getMaxExclusive());
+
+        MapperUtils.updateUriProperty(resource, Iow.codeList, dto.getCodeList());
 
         MapperUtils.addUpdateMetadata(resource, user);
     }
@@ -323,6 +335,11 @@ public class ResourceMapper {
         dto.setMinCount(MapperUtils.getLiteral(resource, SH.minCount, Integer.class));
         dto.setMaxLength(MapperUtils.getLiteral(resource, SH.maxLength, Integer.class));
         dto.setMinLength(MapperUtils.getLiteral(resource, SH.minLength, Integer.class));
+        dto.setMinInclusive(MapperUtils.getLiteral(resource, SH.minInclusive, Integer.class));
+        dto.setMaxInclusive(MapperUtils.getLiteral(resource, SH.maxInclusive, Integer.class));
+        dto.setMinExclusive(MapperUtils.getLiteral(resource, SH.minExclusive, Integer.class));
+        dto.setMaxExclusive(MapperUtils.getLiteral(resource, SH.maxExclusive, Integer.class));
+        dto.setCodeList(MapperUtils.propertyToString(resource, Iow.codeList));
         MapperUtils.mapCreationInfo(dto, resource, userMapper);
 
         return dto;
