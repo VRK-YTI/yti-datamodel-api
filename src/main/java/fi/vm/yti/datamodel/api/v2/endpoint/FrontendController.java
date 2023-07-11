@@ -8,6 +8,7 @@ import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexModel;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexResource;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexResourceInfo;
 import fi.vm.yti.datamodel.api.v2.service.FrontendService;
+import fi.vm.yti.datamodel.api.v2.service.NamespaceService;
 import fi.vm.yti.datamodel.api.v2.service.SearchIndexService;
 import fi.vm.yti.security.AuthenticatedUserProvider;
 import io.swagger.v3.oas.annotations.Operation;
@@ -24,6 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Set;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
@@ -36,14 +38,17 @@ public class FrontendController {
     private final SearchIndexService searchIndexService;
     private final FrontendService frontendService;
     private final AuthenticatedUserProvider userProvider;
+    private final NamespaceService namespaceService;
 
     @Autowired
     public FrontendController(SearchIndexService searchIndexService,
                               FrontendService frontendService,
-                              AuthenticatedUserProvider userProvider) {
+                              AuthenticatedUserProvider userProvider,
+                              NamespaceService namespaceService) {
         this.searchIndexService = searchIndexService;
         this.frontendService = frontendService;
         this.userProvider = userProvider;
+        this.namespaceService = namespaceService;
     }
 
     @Operation(summary = "Get counts", description = "List counts of data model grouped by different search results")
@@ -98,5 +103,12 @@ public class FrontendController {
     @GetMapping(path = "/dataTypes", produces = APPLICATION_JSON_VALUE)
     public List<String> getSupportedDataTypes() {
         return ModelConstants.SUPPORTED_DATA_TYPES;
+    }
+
+    @Operation(summary = "Get resolved external namespaces")
+    @ApiResponse(responseCode = "200", description = "List of resolved namespaces")
+    @GetMapping(path = "/namespaces", produces = APPLICATION_JSON_VALUE)
+    public Set<String> getResolvedNamespaces() {
+        return namespaceService.getResolvedNamespaces();
     }
 }
