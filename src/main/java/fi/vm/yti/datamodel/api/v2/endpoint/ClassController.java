@@ -22,14 +22,20 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.apache.jena.graph.NodeFactory;
-import org.apache.jena.rdf.model.*;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.rdf.model.ResourceFactory;
+import org.apache.jena.rdf.model.SimpleSelector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.topbraid.shacl.vocabulary.SH;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
@@ -73,20 +79,21 @@ public class ClassController {
     }
 
     @Operation(summary = "Add a class to a model")
-    @ApiResponse(responseCode = "200", description = "Class added to model successfully")
-    @PutMapping(value = "/library/{prefix}", consumes = APPLICATION_JSON_VALUE)
-    public void createClass(@PathVariable String prefix, @RequestBody @ValidClass ClassDTO classDTO){
+    @ApiResponse(responseCode = "201", description = "Class added to model successfully")
+    @PostMapping(value = "/library/{prefix}", consumes = APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> createClass(@PathVariable String prefix, @RequestBody @ValidClass ClassDTO classDTO) throws URISyntaxException {
         var modelURI = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
         var model = handleCreateClassOrNodeShape(modelURI, prefix, classDTO);
         var classURI = ClassMapper.createOntologyClassAndMapToModel(modelURI, model, classDTO, userProvider.getUser());
         jenaService.putDataModelToCore(modelURI, model);
         openSearchIndexer.createResourceToIndex(ResourceMapper.mapToIndexResource(model, classURI));
+        return ResponseEntity.created(new URI(classURI)).build();
     }
 
     @Operation(summary = "Add a node shape to a model")
-    @ApiResponse(responseCode = "200", description = "Class added to model successfully")
-    @PutMapping(value = "/profile/{prefix}", consumes = APPLICATION_JSON_VALUE)
-    public void createNodeShape(@PathVariable String prefix, @RequestBody @ValidNodeShape NodeShapeDTO nodeShapeDTO){
+    @ApiResponse(responseCode = "201", description = "Class added to model successfully")
+    @PostMapping(value = "/profile/{prefix}", consumes = APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> createNodeShape(@PathVariable String prefix, @RequestBody @ValidNodeShape NodeShapeDTO nodeShapeDTO) throws URISyntaxException {
         var modelURI = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
         var model = handleCreateClassOrNodeShape(modelURI, prefix, nodeShapeDTO);
         var classURI = ClassMapper.createNodeShapeAndMapToModel(modelURI, model, nodeShapeDTO, userProvider.getUser());
@@ -102,6 +109,7 @@ public class ClassController {
         jenaService.putDataModelToCore(modelURI, model);
 
         openSearchIndexer.createResourceToIndex(ResourceMapper.mapToIndexResource(model, classURI));
+        return ResponseEntity.created(new URI(classURI)).build();
     }
 
     Model handleCreateClassOrNodeShape(String modelURI, String prefix, BaseDTO dto) {
@@ -117,18 +125,20 @@ public class ClassController {
     }
 
     @Operation(summary = "Update a class in a model")
-    @ApiResponse(responseCode =  "200", description = "Class updated in model successfully")
+    @ApiResponse(responseCode =  "204", description = "Class updated in model successfully")
     @PutMapping(value = "/library/{prefix}/{classIdentifier}", consumes = APPLICATION_JSON_VALUE)
-    public void updateClass(@PathVariable String prefix, @PathVariable String classIdentifier, @RequestBody @ValidClass(updateClass = true) ClassDTO classDTO){
+    public ResponseEntity<Void> updateClass(@PathVariable String prefix, @PathVariable String classIdentifier, @RequestBody @ValidClass(updateClass = true) ClassDTO classDTO){
         handleUpdateClassOrNodeShape(prefix, classIdentifier, classDTO);
+        return ResponseEntity.noContent().build();
     }
 
     @Operation(summary = "Update a node shape in a model")
-    @ApiResponse(responseCode =  "200", description = "Class updated in model successfully")
+    @ApiResponse(responseCode =  "204", description = "Class updated in model successfully")
     @PutMapping(value = "/profile/{prefix}/{nodeShapeIdentifier}", consumes = APPLICATION_JSON_VALUE)
-    public void updateNodeShape(@PathVariable String prefix, @PathVariable String nodeShapeIdentifier,
+    public ResponseEntity<Void> updateNodeShape(@PathVariable String prefix, @PathVariable String nodeShapeIdentifier,
                                 @RequestBody @ValidNodeShape(updateNodeShape = true) NodeShapeDTO nodeShapeDTO){
         handleUpdateClassOrNodeShape(prefix, nodeShapeIdentifier, nodeShapeDTO);
+        return ResponseEntity.noContent().build();
     }
 
     void handleUpdateClassOrNodeShape(String prefix, String classIdentifier, BaseDTO dto) {
@@ -195,9 +205,9 @@ public class ClassController {
 
     @Operation(summary = "Add a class to a model")
     @ApiResponse(responseCode = "200", description = "Node shape found successfully")
-    @GetMapping(value = "/profile/{prefix}/{shapeIdentifier}", produces = APPLICATION_JSON_VALUE)
-    public NodeShapeInfoDTO getNodeShape(@PathVariable String prefix, @PathVariable String shapeIdentifier){
-        return (NodeShapeInfoDTO) handleGetClassOrNodeShape(prefix, shapeIdentifier);
+    @GetMapping(value = "/profile/{prefix}/{nodeShapeIdentifier}", produces = APPLICATION_JSON_VALUE)
+    public NodeShapeInfoDTO getNodeShape(@PathVariable String prefix, @PathVariable String nodeShapeIdentifier){
+        return (NodeShapeInfoDTO) handleGetClassOrNodeShape(prefix, nodeShapeIdentifier);
     }
 
     private ResourceInfoBaseDTO handleGetClassOrNodeShape(String prefix, String classIdentifier) {
@@ -231,10 +241,10 @@ public class ClassController {
 
     @Operation(summary = "Check if identifier for resource already exists")
     @ApiResponse(responseCode = "200", description = "Boolean value indicating whether prefix")
-    @GetMapping(value = "/{prefix}/free-identifier/{identifier}", produces = APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/{prefix}/{identifier}/exists", produces = APPLICATION_JSON_VALUE)
     public Boolean freeIdentifier(@PathVariable String prefix, @PathVariable String identifier) {
         var graphUri = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
-        return !jenaService.doesResourceExistInGraph(graphUri, graphUri + ModelConstants.RESOURCE_SEPARATOR + identifier);
+        return jenaService.doesResourceExistInGraph(graphUri, graphUri + ModelConstants.RESOURCE_SEPARATOR + identifier);
     }
 
     @Operation(summary = "Delete a class from a data model")
@@ -253,12 +263,12 @@ public class ClassController {
 
     @Operation(summary = "Add property reference to node shape")
     @ApiResponse(responseCode = "200", description = "Property reference deleted successfully")
-    @PutMapping(value = "/profile/{prefix}/{identifier}/add-property")
-    public void addNodeShapePropertyReference(@PathVariable String prefix, @PathVariable String identifier,
+    @PutMapping(value = "/profile/{prefix}/{nodeShapeIdentifier}/properties")
+    public void addNodeShapePropertyReference(@PathVariable String prefix, @PathVariable String nodeShapeIdentifier,
                                                  @RequestParam String uri) {
         var modelURI = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
         var model = jenaService.getDataModel(modelURI);
-        var classURI = modelURI + ModelConstants.RESOURCE_SEPARATOR + identifier;
+        var classURI = modelURI + ModelConstants.RESOURCE_SEPARATOR + nodeShapeIdentifier;
         check(authorizationManager.hasRightToModel(prefix, model));
 
         var classResource = model.getResource(classURI);
@@ -269,12 +279,12 @@ public class ClassController {
 
     @Operation(summary = "Delete property reference from node shape")
     @ApiResponse(responseCode = "200", description = "Property reference deleted successfully")
-    @DeleteMapping(value = "/profile/{prefix}/{identifier}/delete-property")
-    public void deleteNodeShapePropertyReference(@PathVariable String prefix, @PathVariable String identifier,
+    @DeleteMapping(value = "/profile/{prefix}/{nodeShapeIdentifier}/properties")
+    public void deleteNodeShapePropertyReference(@PathVariable String prefix, @PathVariable String nodeShapeIdentifier,
                                                  @RequestParam String uri) {
         var modelURI = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
         var model = jenaService.getDataModel(modelURI);
-        var classURI = modelURI + ModelConstants.RESOURCE_SEPARATOR + identifier;
+        var classURI = modelURI + ModelConstants.RESOURCE_SEPARATOR + nodeShapeIdentifier;
         check(authorizationManager.hasRightToModel(prefix, model));
 
         var classResource = model.getResource(classURI);

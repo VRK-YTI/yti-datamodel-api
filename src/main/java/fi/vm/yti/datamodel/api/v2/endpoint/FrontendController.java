@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
@@ -62,7 +63,7 @@ public class FrontendController {
     @Operation(summary = "Get organizations", description = "List of organizations sorted by name")
     @ApiResponse(responseCode = "200", description = "Organization list as JSON")
     @GetMapping(path = "/organizations", produces = MediaType.APPLICATION_JSON_VALUE)
-    public List<OrganizationDTO> getOrganizations(
+    public Collection<OrganizationDTO> getOrganizations(
             @RequestParam(value = "sortLang", required = false, defaultValue = ModelConstants.DEFAULT_LANGUAGE) String sortLang,
             @RequestParam(value = "includeChildOrganizations", required = false) boolean includeChildOrganizations) {
         logger.info("GET /organizations requested");
@@ -71,36 +72,36 @@ public class FrontendController {
 
     @Operation(summary = "Get service categories", description = "List of service categories sorted by name")
     @ApiResponse(responseCode = "200", description = "Service categories as JSON")
-    @GetMapping(path = "/serviceCategories", produces = MediaType.APPLICATION_JSON_VALUE)
-    public List<ServiceCategoryDTO> getServiceCategories(@RequestParam(value = "sortLang", required = false, defaultValue = ModelConstants.DEFAULT_LANGUAGE) String sortLang) {
+    @GetMapping(path = "/service-categories", produces = MediaType.APPLICATION_JSON_VALUE)
+    public Collection<ServiceCategoryDTO> getServiceCategories(@RequestParam(value = "sortLang", required = false, defaultValue = ModelConstants.DEFAULT_LANGUAGE) String sortLang) {
         logger.info("GET /serviceCategories requested");
         return frontendService.getServiceCategories(sortLang);
     }
 
     @Operation(summary = "Search models")
     @ApiResponse(responseCode = "200", description = "List of data model objects")
-    @GetMapping(value = "/searchModels", produces = APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/search-models", produces = APPLICATION_JSON_VALUE)
     public SearchResponseDTO<IndexModel> getModels(ModelSearchRequest request) {
         return searchIndexService.searchModels(request, userProvider.getUser());
     }
 
     @Operation(summary = "Search resources", description = "List of resources")
     @ApiResponse(responseCode = "200", description = "List of resources as JSON")
-    @GetMapping(path = "/searchInternalResources", produces = APPLICATION_JSON_VALUE)
+    @GetMapping(path = "/search-internal-resources", produces = APPLICATION_JSON_VALUE)
     public SearchResponseDTO<IndexResource> getInternalResources(ResourceSearchRequest request) throws IOException {
         return searchIndexService.searchInternalResources(request, userProvider.getUser());
     }
 
     @Operation(summary = "Search resources", description = "List of resources")
     @ApiResponse(responseCode = "200", description = "List of resources as JSON")
-    @GetMapping(path = "/searchInternalResourcesInfo", produces = APPLICATION_JSON_VALUE)
+    @GetMapping(path = "/search-internal-resources-info", produces = APPLICATION_JSON_VALUE)
     public SearchResponseDTO<IndexResourceInfo> getInternalResourcesInfo(ResourceSearchRequest request) throws IOException {
         return searchIndexService.searchInternalResourcesWithInfo(request, userProvider.getUser());
     }
 
     @Operation(summary = "Get supported data types")
     @ApiResponse(responseCode = "200", description = "List of supported data types")
-    @GetMapping(path = "/dataTypes", produces = APPLICATION_JSON_VALUE)
+    @GetMapping(path = "/data-types", produces = APPLICATION_JSON_VALUE)
     public List<String> getSupportedDataTypes() {
         return ModelConstants.SUPPORTED_DATA_TYPES;
     }

@@ -65,7 +65,7 @@ class FrontendControllerTest {
 
     @Test
     void searchInternalResourcesTest() throws Exception {
-        this.mvc.perform(get("/v2/frontend/searchInternalResources")
+        this.mvc.perform(get("/v2/frontend/search-internal-resources")
                             .contentType("application/json")
                         .content(EndpointUtils.convertObjectToJsonString(new ResourceSearchRequest())))
                         .andExpect(status().isOk());
@@ -75,7 +75,7 @@ class FrontendControllerTest {
 
     @Test
     void searchInternalResourcesInfoTest() throws Exception {
-        this.mvc.perform(get("/v2/frontend/searchInternalResourcesInfo")
+        this.mvc.perform(get("/v2/frontend/search-internal-resources-info")
                         .contentType("application/json")
                         .content(EndpointUtils.convertObjectToJsonString(new ResourceSearchRequest())))
                 .andExpect(status().isOk());
@@ -85,7 +85,7 @@ class FrontendControllerTest {
 
     @Test
     void searchModelsTest() throws Exception {
-        this.mvc.perform(get("/v2/frontend/searchModels")
+        this.mvc.perform(get("/v2/frontend/search-models")
                         .contentType("application/json")
                         .content(EndpointUtils.convertObjectToJsonString(new ModelSearchRequest())))
                 .andExpect(status().isOk());
@@ -94,12 +94,12 @@ class FrontendControllerTest {
 
     @Test
     void getServiceCategories() throws Exception {
-        this.mvc.perform(get("/v2/frontend/serviceCategories")
+        this.mvc.perform(get("/v2/frontend/service-categories")
                         .contentType("application/json"))
                 .andExpect(status().isOk());
         verify(frontendService).getServiceCategories("fi");
 
-        this.mvc.perform(get("/v2/frontend/serviceCategories")
+        this.mvc.perform(get("/v2/frontend/service-categories")
                         .param("sortLang", "en")
                         .contentType("application/json"))
                 .andExpect(status().isOk());
