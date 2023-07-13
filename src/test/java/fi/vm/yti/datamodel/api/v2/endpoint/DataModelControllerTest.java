@@ -288,7 +288,7 @@ class DataModelControllerTest {
                 .perform(get("/v2/model/{prefix}/exists", prefix)
                     .contentType("application/json"))
                 .andExpect(status().isOk())
-                .andExpect(content().string(containsString("false")));
+                .andExpect(content().string(containsString("true")));
     }
 
     @Test
@@ -299,7 +299,7 @@ class DataModelControllerTest {
                 .perform(get("/v2/model/xyz/exists")
                         .contentType("application/json"))
                 .andExpect(status().isOk())
-                .andExpect(content().string(containsString("true")));
+                .andExpect(content().string(containsString("false")));
     }
 
     /**
