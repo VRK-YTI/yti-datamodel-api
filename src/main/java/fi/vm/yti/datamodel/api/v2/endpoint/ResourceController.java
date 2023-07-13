@@ -203,9 +203,9 @@ public class ResourceController {
     @Operation(summary = "Delete a resource from a data model")
     @ApiResponse(responseCode = "200", description = "Resource deleted successfully")
     @DeleteMapping(value = "/profile/{prefix}/{propertyShapeIdentifier}")
-    public void deletePropertyShape(@PathVariable String prefix, @PathVariable String resourceIdentifier) {
+    public void deletePropertyShape(@PathVariable String prefix, @PathVariable String propertyShapeIdentifier) {
         // TODO: need to check node shapes' sh:property if resource is added there
-        handleDeleteResourceOrPropertyShape(prefix, resourceIdentifier);
+        handleDeleteResourceOrPropertyShape(prefix, propertyShapeIdentifier);
     }
 
     private void handleDeleteResourceOrPropertyShape(String prefix, String resourceIdentifier) {
