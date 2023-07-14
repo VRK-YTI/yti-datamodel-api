@@ -1,39 +1,24 @@
 package fi.vm.yti.datamodel.api.v2.mapper;
 
-import java.util.HashMap;
+import java.util.*;
 
 
-@SuppressWarnings("serial")
 public class MimeTypes {
 
-
-	public static HashMap<String, String> mimeTypeMapping;
-
-	static {
-		mimeTypeMapping = new HashMap<String, String>() {
-			private void put1(String key, String value) {
-				if (put(key, value) != null) {
-					throw new IllegalArgumentException("Duplicated extension: " + key);
-				}
-			}
-			{
-				put1("text/csv", "csv");
-				put1("text/schema+csv", "csvs");
-				put1("application/xml", "xsd");
-				put1("text/xml", "xsd");
-				put1("application/schema+json", "schema.json");
-				put1("application/schema-instance+json", "schema.json");
-			}
-		};
-	}
 	
-	public static void main(String[] args) {
-		System.out.println(mimeTypeMapping.size());
-	}
+	private static HashMap<String, String> mimeTypes;
 	
-	public static void registerExtension(String mimeType, String ext) {
-		mimeTypeMapping.put(mimeType, ext);
+	static {	
+		mimeTypes = new HashMap<String, String>();	
+		mimeTypes.put("text/csv", "csv");
+		mimeTypes.put("text/schema+csv", "csvs");
+		mimeTypes.put("application/xml", "xsd");
+		mimeTypes.put("text/xml", "xsd");
+		mimeTypes.put("application/schema+json", "schema.json");
+		mimeTypes.put("application/schema-instance+json", "schema.json");
 	}
+		
+	public static Map<String, String> mimeTypeMapping = Collections.unmodifiableMap(mimeTypes);
 	
 	public static String getExtension(String mime) {
 		String ext = lookupExtension(mime);
@@ -46,6 +31,6 @@ public class MimeTypes {
 	public static String lookupExtension(String mime) {
 		return mimeTypeMapping.get(mime.toLowerCase());
 	}
-
+	
 
 }
