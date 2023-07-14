@@ -2,34 +2,17 @@ package fi.vm.yti.datamodel.api.v2.dto;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
-public class VisualizationAssociationDTO {
-    private String identifier;
-    private Map<String, String> label;
-    private List<String> path = new LinkedList<>();
+public class VisualizationAssociationDTO extends VisualizationItemDTO {
 
-    public Map<String, String> getLabel() {
-        return label;
+    private List<String> route = new LinkedList<>();
+
+    public List<String> getRoute() {
+        return route;
     }
 
-    public void setLabel(Map<String, String> label) {
-        this.label = label;
+    public void setRoute(List<String> route) {
+        this.route = route;
     }
 
-    public List<String> getPath() {
-        return path;
-    }
-
-    public void setPath(List<String> path) {
-        this.path = path;
-    }
-
-    public String getIdentifier() {
-        return identifier;
-    }
-
-    public void setIdentifier(String identifier) {
-        this.identifier = identifier;
-    }
 }

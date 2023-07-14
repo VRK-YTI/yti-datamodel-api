@@ -1,62 +1,117 @@
 package fi.vm.yti.datamodel.api.mapper;
 
+import fi.vm.yti.datamodel.api.v2.dto.VisualizationNodeShapeDTO;
+import fi.vm.yti.datamodel.api.v2.dto.VisualizationPropertyShapeAssociationDTO;
+import fi.vm.yti.datamodel.api.v2.dto.VisualizationPropertyShapeAttributeDTO;
 import fi.vm.yti.datamodel.api.v2.mapper.VisualizationMapper;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.junit.jupiter.api.Test;
 
 import java.util.LinkedList;
+import java.util.Map;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class VisualizationDataMapperTest {
 
+    private final Map<String, String> libraryNamespaces = Map.of(
+            "http://uri.suomi.fi/datamodel/ns/yti-model", "yti-model",
+            "https://www.example.com/ns/external", "ext");
+
+    private final Map<String, String> profileNamespaces = Map.of(
+            "http://uri.suomi.fi/datamodel/ns/personprof", "personprof",
+            "http://uri.suomi.fi/datamodel/ns/ytm", "ytm"
+    );
+
     @Test
-    void mapVisualizationData() {
+    void mapLibraryClassWithAttributes() {
         var positions = ModelFactory.createDefaultModel();
         var model = MapperTestUtils.getModelFromFile("/models/test_datamodel_visualization.ttl");
 
-        var result = VisualizationMapper.mapVisualizationData("test", model, positions);
+        var classDTO = VisualizationMapper.mapClass("http://uri.suomi.fi/datamodel/ns/test/testclass1", model, positions, libraryNamespaces);
+        assertEquals("Label 1", classDTO.getLabel().get("fi"));
+        assertEquals("testclass1", classDTO.getIdentifier());
+        assertEquals("yti-model:TestClass", classDTO.getParentClasses().iterator().next());
 
-        assertEquals(3, result.size());
+        var attribute = model.getResource("http://uri.suomi.fi/datamodel/ns/test/attribute-1");
+        var association = model.getResource("http://uri.suomi.fi/datamodel/ns/test/association-1");
 
-        var class1 = result.stream().filter(r -> r.getIdentifier().equals("testclass1"))
-                .findFirst();
-        assertTrue(class1.isPresent());
+        VisualizationMapper.mapResource(classDTO, attribute, model, positions, libraryNamespaces);
+        VisualizationMapper.mapResource(classDTO, association, model, positions, libraryNamespaces);
 
-        var class2 = result.stream().filter(r -> r.getIdentifier().equals("testclass2"))
-                .findFirst();
-        assertTrue(class2.isPresent());
+        assertEquals(1, classDTO.getAttributes().size());
+        assertEquals(1, classDTO.getAssociations().size());
 
-        var class3 = result.stream().filter(r -> r.getIdentifier().equals("testclass3"))
-                .findFirst();
-        assertTrue(class3.isPresent());
+        assertEquals("testiattribuutti", classDTO.getAttributes().get(0).getLabel().get("fi"));
+        assertEquals("testiassosiaatio", classDTO.getAssociations().get(0).getLabel().get("fi"));
+        assertEquals("attribute-1", classDTO.getAttributes().get(0).getIdentifier());
+        assertEquals("association-1", classDTO.getAssociations().get(0).getIdentifier());
+        assertEquals("testclass2", classDTO.getAssociations().get(0).getRoute().get(0));
+    }
 
-        assertEquals("Label 1", class1.get().getLabel().get("fi"));
-        assertEquals("yti-model:TestClass", class1.get().getParentClasses().iterator().next());
+    @Test
+    void mapLibraryClassWithExternalResources() {
+        var positions = ModelFactory.createDefaultModel();
+        var model = MapperTestUtils.getModelFromFile("/models/test_datamodel_visualization.ttl");
 
-        var parent2 = class2.get().getParentClasses().iterator().next();
-        assertEquals("testclass1", parent2);
+        var classDTO = VisualizationMapper.mapClass("http://uri.suomi.fi/datamodel/ns/test/testclass3", model, positions, libraryNamespaces);
 
-        var parent3 = class3.get().getParentClasses().iterator().next();
-        assertEquals("ext:ExternalClass", parent3);
+        var association = model.getResource("http://uri.suomi.fi/datamodel/ns/test/association-3");
 
-        var attributes = class1.get().getAttributes();
-        var associations = class1.get().getAssociations();
-        assertEquals(1, attributes.size());
-        assertEquals(1, associations.size());
+        VisualizationMapper.mapResource(classDTO, association, model, positions, libraryNamespaces);
 
-        var attribute = attributes.get(0);
-        var association = associations.get(0);
+        assertEquals("ext:ExternalClass", classDTO.getParentClasses().iterator().next());
+        assertEquals("ext:ExternalClass", classDTO.getAssociations().get(0).getRoute().get(0));
+    }
 
-        var externalAssociation1 = class2.get().getAssociations().get(0);
-        var externalAssociation2 = class3.get().getAssociations().get(0);
+    @Test
+    void mapExternalClass() {
+        var positions = ModelFactory.createDefaultModel();
+        String identifier = "ext:TestClass";
 
-        assertEquals("testiattribuutti", attribute.getLabel().get("fi"));
-        assertEquals("attribute-1", attribute.getIdentifier());
-        assertEquals("testiassosiaatio", association.getLabel().get("fi"));
-        assertEquals("association-1", association.getIdentifier());
-        assertEquals("testclass2", ((LinkedList<String>)association.getPath()).getLast());
-        assertEquals("yti-model:SomeClass", ((LinkedList<String>)externalAssociation1.getPath()).getLast());
-        assertEquals("ext:ExternalClass", ((LinkedList<String>)externalAssociation2.getPath()).getLast());
+        var external = VisualizationMapper.mapExternalClass(identifier, Set.of("fi", "en"), positions);
+
+        assertEquals(identifier, external.getIdentifier());
+        assertEquals(Map.of("fi", identifier, "en", identifier), external.getLabel());
+    }
+
+    @Test
+    void mapApplicationProfileClass() {
+        var positions = ModelFactory.createDefaultModel();
+        var model = MapperTestUtils.getModelFromFile("/models/test_application_profile_visualization.ttl");
+
+        var classDTO = (VisualizationNodeShapeDTO) VisualizationMapper
+                .mapClass("http://uri.suomi.fi/datamodel/ns/visuprof/person", model, positions, profileNamespaces);
+
+        assertEquals("person", classDTO.getIdentifier());
+        assertEquals("Henkilö", classDTO.getLabel().get("fi"));
+        assertEquals("ytm:person", classDTO.getTargetClass());
+
+        var attribute = model.getResource("http://uri.suomi.fi/datamodel/ns/visuprof/age");
+        var association = model.getResource("http://uri.suomi.fi/datamodel/ns/visuprof/is-address");
+
+        VisualizationMapper.mapResource(classDTO, attribute, model, positions, profileNamespaces);
+        VisualizationMapper.mapResource(classDTO, association, model, positions, profileNamespaces);
+
+        var mappedAttribute = (VisualizationPropertyShapeAttributeDTO) classDTO.getAttributes().get(0);
+        var mappedAssociation = (VisualizationPropertyShapeAssociationDTO) classDTO.getAssociations().get(0);
+
+        assertNotNull(mappedAttribute);
+        assertNotNull(mappedAssociation);
+
+        assertEquals("Ikä", mappedAttribute.getLabel().get("fi"));
+        assertEquals("age", mappedAttribute.getIdentifier());
+        assertEquals("xsd:integer", mappedAttribute.getDataType());
+        assertEquals("ytm:age", mappedAttribute.getPath());
+        assertEquals(1, mappedAttribute.getMinCount());
+        assertEquals(1, mappedAttribute.getMaxCount());
+
+        assertEquals("onOsoite", mappedAssociation.getLabel().get("fi"));
+        assertEquals("is-address", mappedAssociation.getIdentifier());
+        assertEquals("ytm:is-address", mappedAssociation.getPath());
+        assertEquals(1, mappedAssociation.getMinCount());
+        assertEquals(2, mappedAssociation.getMaxCount());
+        assertEquals("address", ((LinkedList<String>)mappedAssociation.getRoute()).getLast());
     }
 }
