@@ -14,7 +14,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @TestPropertySource(properties = {
@@ -49,7 +49,7 @@ class IndexControllerTest {
     @Test
     void shouldReIndex() throws Exception {
         this.mvc
-            .perform(get("/v2/index/reindex"))
+            .perform(post("/v2/index/reindex"))
             .andExpect(status().isOk());
 
         verify(this.openSearchIndexer).reindex();
@@ -58,19 +58,19 @@ class IndexControllerTest {
     @Test
     void shouldReIndexParameter() throws Exception {
         this.mvc
-                .perform(get("/v2/index/reindex")
+                .perform(post("/v2/index/reindex")
                         .param("index", "models_v2"))
                 .andExpect(status().isOk());
         verify(openSearchIndexer).initModelIndex();
 
         this.mvc
-                .perform(get("/v2/index/reindex")
+                .perform(post("/v2/index/reindex")
                         .param("index", "resources_v2"))
                 .andExpect(status().isOk());
         verify(openSearchIndexer).initResourceIndex();
 
         this.mvc
-                .perform(get("/v2/index/reindex")
+                .perform(post("/v2/index/reindex")
                         .param("index", "external_v2"))
                 .andExpect(status().isOk());
         verify(openSearchIndexer).initExternalResourceIndex();
@@ -79,7 +79,7 @@ class IndexControllerTest {
     @Test
     void reindexThrowOnInvalidParamater() throws Exception{
         this.mvc
-                .perform(get("/v2/index/reindex")
+                .perform(post("/v2/index/reindex")
                         .param("index", "invalid"))
                 .andExpect(status().isBadRequest());
         verifyNoInteractions(openSearchIndexer);

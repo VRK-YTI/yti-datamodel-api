@@ -112,10 +112,10 @@ class ClassControllerTest {
             resourceMapper.when(() -> ResourceMapper.mapToIndexResource(any(Model.class), anyString())).thenReturn(new IndexResource());
             classMapper.when(() -> ClassMapper.createOntologyClassAndMapToModel(anyString(), any(Model.class), any(ClassDTO.class), any(YtiUser.class))).thenReturn("test");
             this.mvc
-                    .perform(put("/v2/class/library/test")
+                    .perform(post("/v2/class/library/test")
                             .contentType("application/json")
                             .content(EndpointUtils.convertObjectToJsonString(classDTO)))
-                    .andExpect(status().isOk());
+                    .andExpect(status().isCreated());
 
             //Check that functions are called
             verify(this.jenaService, times(2)).doesResolvedNamespaceExist(anyString());
@@ -145,10 +145,10 @@ class ClassControllerTest {
             resourceMapper.when(() -> ResourceMapper.mapToIndexResource(any(Model.class), anyString())).thenReturn(new IndexResource());
             classMapper.when(() -> ClassMapper.createOntologyClassAndMapToModel(anyString(), any(Model.class), any(ClassDTO.class), any(YtiUser.class))).thenReturn("test");
             this.mvc
-                    .perform(put("/v2/class/library/test")
+                    .perform(post("/v2/class/library/test")
                             .contentType("application/json")
                             .content(EndpointUtils.convertObjectToJsonString(classDTO)))
-                    .andExpect(status().isOk());
+                    .andExpect(status().isCreated());
 
             //Check that functions are called
             verify(jenaService).doesResourceExistInGraph(anyString(), anyString());
@@ -168,7 +168,7 @@ class ClassControllerTest {
         doThrow(ResourceNotFoundException.class).when(jenaService).getDataModel(anyString());
 
         this.mvc
-                .perform(put("/v2/class/library/test")
+                .perform(post("/v2/class/library/test")
                         .contentType("application/json")
                         .content(EndpointUtils.convertObjectToJsonString(classDTO)))
                 .andExpect(status().isNotFound());
@@ -178,7 +178,7 @@ class ClassControllerTest {
     @MethodSource("provideCreateClassDTOInvalidData")
     void shouldInvalidate(ClassDTO classDTO) throws Exception {
         this.mvc
-                .perform(put("/v2/class/library/test")
+                .perform(post("/v2/class/library/test")
                         .contentType("application/json")
                         .content(EndpointUtils.convertObjectToJsonString(classDTO)))
                 .andExpect(status().isBadRequest());
@@ -233,7 +233,7 @@ class ClassControllerTest {
                     .perform(put("/v2/class/library/test/class")
                             .contentType("application/json")
                             .content(EndpointUtils.convertObjectToJsonString(classDTO)))
-                    .andExpect(status().isOk());
+                    .andExpect(status().isNoContent());
 
             //Check that functions are called
             verify(this.jenaService, times(2)).doesResolvedNamespaceExist(anyString());
@@ -371,10 +371,10 @@ class ClassControllerTest {
             classMapper.when(() -> ClassMapper.mapPlaceholderPropertyShapes(any(Model.class), anyString(), any(Model.class), any(YtiUser.class), any(Predicate.class)))
                     .thenReturn(new ArrayList<>());
             this.mvc
-                    .perform(put("/v2/class/profile/test")
+                    .perform(post("/v2/class/profile/test")
                             .contentType("application/json")
                             .content(EndpointUtils.convertObjectToJsonString(nodeShapeDTO)))
-                    .andExpect(status().isOk());
+                    .andExpect(status().isCreated());
 
             verify(jenaService).doesResourceExistInGraph(anyString(), anyString());
             verify(this.jenaService).getDataModel(anyString());
@@ -398,10 +398,10 @@ class ClassControllerTest {
         when(jenaService.doesResourceExistInGraph(graphUri, graphUri + ModelConstants.RESOURCE_SEPARATOR + "Resource")).thenReturn(true);
 
         this.mvc
-                .perform(get("/v2/class/test/free-identifier/Resource")
+                .perform(get("/v2/class/test/Resource/exists")
                         .contentType("application/json"))
                 .andExpect(status().isOk())
-                .andExpect(content().string(containsString("false")));
+                .andExpect(content().string(containsString("true")));
     }
 
     @Test
@@ -409,10 +409,10 @@ class ClassControllerTest {
         when(jenaService.doesDataModelExist(anyString())).thenReturn(false);
 
         this.mvc
-                .perform(get("/v2/class/test/free-identifier/Resource")
+                .perform(get("/v2/class/test/Resource/exists")
                         .contentType("application/json"))
                 .andExpect(status().isOk())
-                .andExpect(content().string(containsString("true")));
+                .andExpect(content().string(containsString("false")));
     }
 
 

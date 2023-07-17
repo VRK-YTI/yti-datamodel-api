@@ -20,8 +20,12 @@ import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
+import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+
+import java.net.URI;
+import java.net.URISyntaxException;
 
 import static fi.vm.yti.security.AuthorizationException.check;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
@@ -54,9 +58,9 @@ public class ResourceController {
     }
 
     @Operation(summary = "Add a attribute to a model")
-    @ApiResponse(responseCode = "200", description = "Attribute added to model successfully")
-    @PutMapping(value = "/library/{prefix}/attribute", consumes = APPLICATION_JSON_VALUE)
-    public void createAttribute(@PathVariable String prefix, @RequestBody @ValidResource(resourceType = ResourceType.ATTRIBUTE) ResourceDTO dto){
+    @ApiResponse(responseCode = "201", description = "Attribute added to model successfully")
+    @PostMapping(value = "/library/{prefix}/attribute", consumes = APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> createAttribute(@PathVariable String prefix, @RequestBody @ValidResource(resourceType = ResourceType.ATTRIBUTE) ResourceDTO dto) throws URISyntaxException {
         var graphUri = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
         var model = handleCreateResourceOrPropertyShape(prefix, dto);
         var resourceUri = ResourceMapper.mapToResource(graphUri, model, dto, ResourceType.ATTRIBUTE, userProvider.getUser());
@@ -64,12 +68,13 @@ public class ResourceController {
         jenaService.putDataModelToCore(graphUri, model);
         var indexClass = ResourceMapper.mapToIndexResource(model, resourceUri);
         openSearchIndexer.createResourceToIndex(indexClass);
+        return ResponseEntity.created(new URI(resourceUri)).build();
     }
 
     @Operation(summary = "Add a association to a model")
-    @ApiResponse(responseCode = "200", description = "Association added to model successfully")
-    @PutMapping(value = "/library/{prefix}/association", consumes = APPLICATION_JSON_VALUE)
-    public void createAssociation(@PathVariable String prefix, @RequestBody @ValidResource(resourceType = ResourceType.ASSOCIATION) ResourceDTO dto){
+    @ApiResponse(responseCode = "201", description = "Association added to model successfully")
+    @PostMapping(value = "/library/{prefix}/association", consumes = APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> createAssociation(@PathVariable String prefix, @RequestBody @ValidResource(resourceType = ResourceType.ASSOCIATION) ResourceDTO dto) throws URISyntaxException {
         var graphUri = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
         var model = handleCreateResourceOrPropertyShape(prefix, dto);
         var resourceUri = ResourceMapper.mapToResource(graphUri, model, dto, ResourceType.ASSOCIATION, userProvider.getUser());
@@ -77,12 +82,13 @@ public class ResourceController {
         jenaService.putDataModelToCore(graphUri, model);
         var indexClass = ResourceMapper.mapToIndexResource(model, resourceUri);
         openSearchIndexer.createResourceToIndex(indexClass);
+        return ResponseEntity.created(new URI(resourceUri)).build();
     }
 
     @Operation(summary = "Add a property shape to a profile")
-    @ApiResponse(responseCode = "200", description = "Property shape added to profile successfully")
-    @PutMapping(value = "/profile/{prefix}", consumes = APPLICATION_JSON_VALUE)
-    public void createPropertyShape(@PathVariable String prefix, @ValidPropertyShape @RequestBody PropertyShapeDTO dto) {
+    @ApiResponse(responseCode = "201", description = "Property shape added to profile successfully")
+    @PostMapping(value = "/profile/{prefix}", consumes = APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> createPropertyShape(@PathVariable String prefix, @ValidPropertyShape @RequestBody PropertyShapeDTO dto) throws URISyntaxException {
         var modelURI = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
         var model = handleCreateResourceOrPropertyShape(prefix, dto);
         var resourceURI = ResourceMapper.mapToPropertyShapeResource(modelURI, model, dto, userProvider.getUser());
@@ -90,47 +96,50 @@ public class ResourceController {
         jenaService.putDataModelToCore(modelURI, model);
         var indexClass = ResourceMapper.mapToIndexResource(model, resourceURI);
         openSearchIndexer.createResourceToIndex(indexClass);
+        return ResponseEntity.created(new URI(resourceURI)).build();
     }
 
     @Operation(summary = "Update a resource in a model")
-    @ApiResponse(responseCode = "200", description = "Resource updated to model successfully")
+    @ApiResponse(responseCode = "204", description = "Resource updated to model successfully")
     @PutMapping(value = "/library/{prefix}/attribute/{resourceIdentifier}", consumes = APPLICATION_JSON_VALUE)
-    public void updateAttribute(@PathVariable String prefix, @PathVariable String resourceIdentifier,
+    public ResponseEntity<Void> updateAttribute(@PathVariable String prefix, @PathVariable String resourceIdentifier,
                                @RequestBody @ValidResource(resourceType = ResourceType.ATTRIBUTE, updateProperty = true) ResourceDTO dto){
         handleUpdateResourceOrPropertyShape(prefix, resourceIdentifier, dto);
+        return ResponseEntity.noContent().build();
     }
 
     @Operation(summary = "Update a resource in a model")
-    @ApiResponse(responseCode = "200", description = "Resource updated to model successfully")
+    @ApiResponse(responseCode = "204", description = "Resource updated to model successfully")
     @PutMapping(value = "/library/{prefix}/association/{resourceIdentifier}", consumes = APPLICATION_JSON_VALUE)
-    public void updateAssociation(@PathVariable String prefix, @PathVariable String resourceIdentifier,
+    public ResponseEntity<Void> updateAssociation(@PathVariable String prefix, @PathVariable String resourceIdentifier,
                                @RequestBody @ValidResource(resourceType = ResourceType.ASSOCIATION, updateProperty = true) ResourceDTO dto){
         handleUpdateResourceOrPropertyShape(prefix, resourceIdentifier, dto);
+        return ResponseEntity.noContent().build();
     }
 
     @Operation(summary = "Update a property shape in a model")
-    @ApiResponse(responseCode = "200", description = "Resource updated to model successfully")
-    @PutMapping(value = "/profile/{prefix}/{resourceIdentifier}", consumes = APPLICATION_JSON_VALUE)
-    public void updatePropertyShape(@PathVariable String prefix, @PathVariable String resourceIdentifier,
+    @ApiResponse(responseCode = "204", description = "Resource updated to model successfully")
+    @PutMapping(value = "/profile/{prefix}/{propertyShapeIdentifier}", consumes = APPLICATION_JSON_VALUE)
+    public ResponseEntity<Void> updatePropertyShape(@PathVariable String prefix, @PathVariable String propertyShapeIdentifier,
                                     @RequestBody @ValidPropertyShape(updateProperty = true) PropertyShapeDTO dto){
-        handleUpdateResourceOrPropertyShape(prefix, resourceIdentifier, dto);
+        handleUpdateResourceOrPropertyShape(prefix, propertyShapeIdentifier, dto);
+        return ResponseEntity.noContent().build();
     }
 
     @Operation(summary = "Create a local copy of a property shape")
-    @ApiResponse(responseCode = "200", description = "Property shape copied successfully")
-    @PostMapping(value ="/profile/{prefix}/{resourceIdentifier}")
-    public void copyPropertyShape(@PathVariable String prefix, @PathVariable String resourceIdentifier, @RequestParam String targetPrefix, @RequestParam String newIdentifier) {
+    @ApiResponse(responseCode = "204", description = "Property shape copied successfully")
+    @PostMapping(value ="/profile/{prefix}/{propertyShapeIdentifier}")
+    public ResponseEntity<String> copyPropertyShape(@PathVariable String prefix, @PathVariable String propertyShapeIdentifier, @RequestParam String targetPrefix, @RequestParam String newIdentifier) throws URISyntaxException {
         var graphUri = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
         var targetGraph = ModelConstants.SUOMI_FI_NAMESPACE + targetPrefix;
+        var targetResource = targetGraph + ModelConstants.RESOURCE_SEPARATOR + newIdentifier;
 
-        if(!jenaService.doesResourceExistInGraph(graphUri, graphUri + ModelConstants.RESOURCE_SEPARATOR + resourceIdentifier)){
-            throw new ResourceNotFoundException("Resource does not exist");
+        if(!jenaService.doesResourceExistInGraph(graphUri, graphUri + ModelConstants.RESOURCE_SEPARATOR + propertyShapeIdentifier)){
+            throw new ResourceNotFoundException(propertyShapeIdentifier);
         }
-        if(jenaService.doesResourceExistInGraph(targetGraph, targetGraph + ModelConstants.RESOURCE_SEPARATOR + newIdentifier)){
+        if(jenaService.doesResourceExistInGraph(targetGraph, targetResource)){
             throw new MappingError("Identifier in use");
         }
-
-
 
         var model = jenaService.getDataModel(graphUri);
         var targetModel = jenaService.getDataModel(targetGraph);
@@ -141,11 +150,12 @@ public class ResourceController {
         check(authorizationManager.hasRightToModel(prefix, model));
         check(authorizationManager.hasRightToModel(targetPrefix, targetModel));
 
-        ResourceMapper.mapToCopyToLocalPropertyShape(graphUri, model, resourceIdentifier, targetModel, targetGraph, newIdentifier, userProvider.getUser());
+        ResourceMapper.mapToCopyToLocalPropertyShape(graphUri, model, propertyShapeIdentifier, targetModel, targetGraph, newIdentifier, userProvider.getUser());
 
         jenaService.putDataModelToCore(targetGraph, targetModel);
         var indexResource = ResourceMapper.mapToIndexResource(targetModel, targetGraph + ModelConstants.RESOURCE_SEPARATOR + newIdentifier);
         openSearchIndexer.createResourceToIndex(indexResource);
+        return ResponseEntity.created(new URI(targetResource)).build();
     }
 
     @Operation(summary = "Find an attribute or association from a model")
@@ -157,9 +167,9 @@ public class ResourceController {
 
     @Operation(summary = "Find a property shape from a profile")
     @ApiResponse(responseCode = "200", description = "Property shape found")
-    @GetMapping(value = "/profile/{prefix}/{identifier}", produces = APPLICATION_JSON_VALUE)
-    public PropertyShapeInfoDTO getPropertyShape(@PathVariable String prefix, @PathVariable String identifier){
-        return (PropertyShapeInfoDTO) handleGetResourceOrPropertyShape(prefix, identifier);
+    @GetMapping(value = "/profile/{prefix}/{propertyShapeIdentifier}", produces = APPLICATION_JSON_VALUE)
+    public PropertyShapeInfoDTO getPropertyShape(@PathVariable String prefix, @PathVariable String propertyShapeIdentifier){
+        return (PropertyShapeInfoDTO) handleGetResourceOrPropertyShape(prefix, propertyShapeIdentifier);
     }
 
     @Operation(summary = "Get an external resource from imports")
@@ -177,10 +187,10 @@ public class ResourceController {
 
     @Operation(summary = "Check if identifier for resource already exists")
     @ApiResponse(responseCode = "200", description = "Boolean value indicating whether prefix")
-    @GetMapping(value = "/{prefix}/free-identifier/{identifier}", produces = APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/{prefix}/{identifier}/exists", produces = APPLICATION_JSON_VALUE)
     public Boolean freeIdentifier(@PathVariable String prefix, @PathVariable String identifier) {
         var graphUri = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
-        return !jenaService.doesResourceExistInGraph(graphUri, graphUri + ModelConstants.RESOURCE_SEPARATOR + identifier);
+        return jenaService.doesResourceExistInGraph(graphUri, graphUri + ModelConstants.RESOURCE_SEPARATOR + identifier);
     }
 
     @Operation(summary = "Delete a resource from a data model")
@@ -192,10 +202,10 @@ public class ResourceController {
 
     @Operation(summary = "Delete a resource from a data model")
     @ApiResponse(responseCode = "200", description = "Resource deleted successfully")
-    @DeleteMapping(value = "/profile/{prefix}/{resourceIdentifier}")
-    public void deletePropertyShape(@PathVariable String prefix, @PathVariable String resourceIdentifier) {
+    @DeleteMapping(value = "/profile/{prefix}/{propertyShapeIdentifier}")
+    public void deletePropertyShape(@PathVariable String prefix, @PathVariable String propertyShapeIdentifier) {
         // TODO: need to check node shapes' sh:property if resource is added there
-        handleDeleteResourceOrPropertyShape(prefix, resourceIdentifier);
+        handleDeleteResourceOrPropertyShape(prefix, propertyShapeIdentifier);
     }
 
     private void handleDeleteResourceOrPropertyShape(String prefix, String resourceIdentifier) {
@@ -227,7 +237,7 @@ public class ResourceController {
         var graphUri = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
 
         if(!jenaService.doesResourceExistInGraph(graphUri, graphUri + ModelConstants.RESOURCE_SEPARATOR + identifier)){
-            throw new ResourceNotFoundException("Resource does not exist");
+            throw new ResourceNotFoundException(identifier);
         }
 
         var model = jenaService.getDataModel(graphUri);
@@ -251,7 +261,7 @@ public class ResourceController {
     private ResourceInfoBaseDTO handleGetResourceOrPropertyShape(String prefix, String identifier) {
         var graphUri = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
         if(!jenaService.doesResourceExistInGraph(graphUri,graphUri + ModelConstants.RESOURCE_SEPARATOR + identifier)){
-            throw new ResourceNotFoundException("Resource does not exist");
+            throw new ResourceNotFoundException(identifier);
         }
 
         var model = jenaService.getDataModel(graphUri);

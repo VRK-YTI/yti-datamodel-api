@@ -109,10 +109,10 @@ class ResourceControllerTest {
             mapper.when(() -> ResourceMapper.mapToResource(anyString(), any(Model.class), any(ResourceDTO.class), any(ResourceType.class), any(YtiUser.class))).thenReturn("test");
             mapper.when(() -> ResourceMapper.mapToIndexResource(any(Model.class), anyString())).thenReturn(new IndexResource());
             this.mvc
-                    .perform(put("/v2/resource/library/test/{resourceType}", resourceType)
+                    .perform(post("/v2/resource/library/test/{resourceType}", resourceType)
                             .contentType("application/json")
                             .content(EndpointUtils.convertObjectToJsonString(resourceDTO)))
-                    .andExpect(status().isOk());
+                    .andExpect(status().isCreated());
             verify(this.jenaService, times(2)).doesResolvedNamespaceExist(anyString());
             verify(this.jenaService).doesResourceExistInGraph(anyString(), anyString());
             verify(this.jenaService).getDataModel(anyString());
@@ -147,10 +147,10 @@ class ResourceControllerTest {
             mapper.when(() -> ResourceMapper.mapToResource(anyString(), any(Model.class), any(ResourceDTO.class), any(ResourceType.class), any(YtiUser.class))).thenReturn("test");
             mapper.when(() -> ResourceMapper.mapToIndexResource(any(Model.class), anyString())).thenReturn(new IndexResource());
             this.mvc
-                    .perform(put("/v2/resource/library/test/{resourceType}", resourceType)
+                    .perform(post("/v2/resource/library/test/{resourceType}", resourceType)
                             .contentType("application/json")
                             .content(EndpointUtils.convertObjectToJsonString(resourceDTO)))
-                    .andExpect(status().isOk());
+                    .andExpect(status().isCreated());
 
             //Check that functions are called
             verify(this.jenaService).doesResourceExistInGraph(anyString(), anyString());
@@ -179,7 +179,7 @@ class ResourceControllerTest {
 
         //finding models from jena is not mocked so it should return null and return 404 not found
         this.mvc
-                .perform(put("/v2/resource/library/test/{resourceType}", resourceType)
+                .perform(post("/v2/resource/library/test/{resourceType}", resourceType)
                         .contentType("application/json")
                         .content(EndpointUtils.convertObjectToJsonString(resourceDTO)))
                 .andExpect(status().isNotFound());
@@ -208,7 +208,7 @@ class ResourceControllerTest {
 
         //finding models from jena is not mocked so it should return null and return 404 not found
         this.mvc
-                .perform(put("/v2/resource/library/test/{resourceType}", resourceType)
+                .perform(post("/v2/resource/library/test/{resourceType}", resourceType)
                         .contentType("application/json")
                         .content(EndpointUtils.convertObjectToJsonString(resourceDTO)))
                 .andExpect(status().isBadRequest())
@@ -219,7 +219,7 @@ class ResourceControllerTest {
     @MethodSource("provideCreateResourceDTOInvalidData")
     void shouldInvalidate(String resourceType, ResourceDTO resourceDTO) throws Exception {
         this.mvc
-                .perform(put("/v2/resource/library/test/{resourceType}", resourceType)
+                .perform(post("/v2/resource/library/test/{resourceType}", resourceType)
                         .contentType("application/json")
                         .content(EndpointUtils.convertObjectToJsonString(resourceDTO)))
                 .andExpect(status().isBadRequest());
@@ -282,7 +282,7 @@ class ResourceControllerTest {
                 .perform(put("/v2/resource/library/test/{resourceType}/TestA{resourceType}", resourceType, resourceType.substring(1))
                         .contentType("application/json")
                         .content(EndpointUtils.convertObjectToJsonString(resourceDTO)))
-                .andExpect(status().isOk());
+                .andExpect(status().isNoContent());
 
         verify(jenaService).doesResourceExistInGraph(anyString(), anyString());
         verify(jenaService).getDataModel(anyString());
@@ -402,10 +402,10 @@ class ResourceControllerTest {
             mapper.when(() -> ResourceMapper.mapToIndexResource(any(Model.class),
                     anyString())).thenReturn(new IndexResource());
             this.mvc
-                    .perform(put("/v2/resource/profile/test")
+                    .perform(post("/v2/resource/profile/test")
                             .contentType("application/json")
                             .content(EndpointUtils.convertObjectToJsonString(dto)))
-                    .andExpect(status().isOk());
+                    .andExpect(status().isCreated());
             verify(this.jenaService).doesResourceExistInGraph(anyString(), anyString());
             verify(this.jenaService).getDataModel(anyString());
             verify(jenaService, times(2)).checkIfResourceIsOneOfTypes(eq("http://uri.suomi.fi/datamodel/ns/int/FakeClass"),
@@ -442,7 +442,7 @@ class ResourceControllerTest {
                             .contentType("application/json")
                             .param("targetPrefix", "newtest")
                             .param("newIdentifier", "newid"))
-                    .andExpect(status().isOk());
+                    .andExpect(status().isCreated());
 
             verify(jenaService, times(2)).doesResourceExistInGraph(anyString(), anyString());
             verify(jenaService, times(2)).getDataModel(anyString());
@@ -517,7 +517,7 @@ class ResourceControllerTest {
     @MethodSource("provideCreatePropertyShapeDTOInvalidData")
     void shouldInvalidatePropertyShape(PropertyShapeDTO dto) throws Exception {
         this.mvc
-                .perform(put("/v2/resource/profile/test")
+                .perform(post("/v2/resource/profile/test")
                         .contentType("application/json")
                         .content(EndpointUtils.convertObjectToJsonString(dto)))
                 .andExpect(status().isBadRequest());
@@ -530,10 +530,10 @@ class ResourceControllerTest {
         when(jenaService.doesResourceExistInGraph(graphUri, graphUri + ModelConstants.RESOURCE_SEPARATOR + "Resource")).thenReturn(true);
 
         this.mvc
-                .perform(get("/v2/resource/test/free-identifier/Resource")
+                .perform(get("/v2/resource/test/Resource/exists")
                         .contentType("application/json"))
                 .andExpect(status().isOk())
-                .andExpect(content().string(containsString("false")));
+                .andExpect(content().string(containsString("true")));
     }
 
     @Test
@@ -541,10 +541,10 @@ class ResourceControllerTest {
         when(jenaService.doesDataModelExist(anyString())).thenReturn(false);
 
         this.mvc
-                .perform(get("/v2/resource/test/free-identifier/Resource")
+                .perform(get("/v2/resource/test/Resource/exists")
                         .contentType("application/json"))
                 .andExpect(status().isOk())
-                .andExpect(content().string(containsString("true")));
+                .andExpect(content().string(containsString("false")));
     }
 
 

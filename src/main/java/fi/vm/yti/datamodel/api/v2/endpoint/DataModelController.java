@@ -20,8 +20,12 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+
+import java.net.URI;
+import java.net.URISyntaxException;
 
 import static fi.vm.yti.security.AuthorizationException.check;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
@@ -30,9 +34,9 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 @RequestMapping("v2/model")
 @Tag(name = "Model" )
 @Validated
-public class Datamodel {
+public class DataModelController {
 
-    private static final Logger logger = LoggerFactory.getLogger(Datamodel.class);
+    private static final Logger logger = LoggerFactory.getLogger(DataModelController.class);
 
     private final AuthorizationManager authorizationManager;
 
@@ -50,14 +54,14 @@ public class Datamodel {
 
     private final GroupManagementService groupManagementService;
 
-    public Datamodel(JenaService jenaService,
-                     AuthorizationManager authorizationManager,
-                     OpenSearchIndexer openSearchIndexer,
-                     ModelMapper modelMapper,
-                     TerminologyService terminologyService,
-                     CodeListService codelistService,
-                     AuthenticatedUserProvider userProvider,
-                     GroupManagementService groupManagementService) {
+    public DataModelController(JenaService jenaService,
+                               AuthorizationManager authorizationManager,
+                               OpenSearchIndexer openSearchIndexer,
+                               ModelMapper modelMapper,
+                               TerminologyService terminologyService,
+                               CodeListService codelistService,
+                               AuthenticatedUserProvider userProvider,
+                               GroupManagementService groupManagementService) {
         this.authorizationManager = authorizationManager;
         this.mapper = modelMapper;
         this.openSearchIndexer = openSearchIndexer;
@@ -68,52 +72,58 @@ public class Datamodel {
         this.groupManagementService = groupManagementService;
     }
 
-    private void createModel(DataModelDTO modelDTO, ModelType modelType) {
+    private String createModel(DataModelDTO modelDTO, ModelType modelType) {
         logger.info("Create model {}", modelDTO);
         check(authorizationManager.hasRightToAnyOrganization(modelDTO.getOrganizations()));
+        var graphUri = ModelConstants.SUOMI_FI_NAMESPACE + modelDTO.getPrefix();
 
         terminologyService.resolveTerminology(modelDTO.getTerminologies());
         codelistService.resolveCodelistScheme(modelDTO.getCodeLists());
         var jenaModel = mapper.mapToJenaModel(modelDTO, modelType, userProvider.getUser());
 
-        jenaService.putDataModelToCore(ModelConstants.SUOMI_FI_NAMESPACE + modelDTO.getPrefix(), jenaModel);
+        jenaService.putDataModelToCore(graphUri, jenaModel);
 
         var indexModel = mapper.mapToIndexModel(modelDTO.getPrefix(), jenaModel);
         openSearchIndexer.createModelToIndex(indexModel);
+        return graphUri;
     }
 
     @Operation(summary = "Create a new library")
     @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "The JSON data for the new core model")
-    @ApiResponse(responseCode = "200", description = "The ID for the newly created model")
-    @PutMapping(path = "/library", produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
-    public void createLibrary(@ValidDatamodel(modelType = ModelType.LIBRARY) @RequestBody DataModelDTO modelDTO) {
-        createModel(modelDTO, ModelType.LIBRARY);
+    @ApiResponse(responseCode = "201", description = "The ID for the newly created model")
+    @PostMapping(path = "/library", produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> createLibrary(@ValidDatamodel(modelType = ModelType.LIBRARY) @RequestBody DataModelDTO modelDTO) throws URISyntaxException {
+        var uri = createModel(modelDTO, ModelType.LIBRARY);
+        return ResponseEntity.created(new URI(uri)).build();
     }
 
     @Operation(summary = "Create a new application profile")
     @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "The JSON data for the new application profile")
-    @ApiResponse(responseCode = "200", description = "The ID for the newly created model")
-    @PutMapping(path = "/profile", produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
-    public void createProfile(@ValidDatamodel(modelType = ModelType.PROFILE) @RequestBody DataModelDTO modelDTO) {
-        createModel(modelDTO, ModelType.PROFILE);
+    @ApiResponse(responseCode = "201", description = "The ID for the newly created model")
+    @PostMapping(path = "/profile", produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> createProfile(@ValidDatamodel(modelType = ModelType.PROFILE) @RequestBody DataModelDTO modelDTO) throws URISyntaxException {
+        var uri = createModel(modelDTO, ModelType.PROFILE);
+        return ResponseEntity.created(new URI(uri)).build();
     }
 
     @Operation(summary = "Modify library")
     @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "The JSON data for the new model node")
-    @ApiResponse(responseCode = "200", description = "The ID for the newly created model")
-    @PostMapping(path = "/library/{prefix}", produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
-    public void updateLibrary(@ValidDatamodel(modelType = ModelType.LIBRARY, updateModel = true) @RequestBody DataModelDTO modelDTO,
-                              @PathVariable String prefix) {
+    @ApiResponse(responseCode = "204", description = "The ID for the newly created model")
+    @PutMapping(path = "/library/{prefix}", produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
+    public ResponseEntity<Void> updateLibrary(@ValidDatamodel(modelType = ModelType.LIBRARY, updateModel = true) @RequestBody DataModelDTO modelDTO,
+                                           @PathVariable String prefix) {
         updateModel(modelDTO, prefix);
+        return ResponseEntity.noContent().build();
     }
 
     @Operation(summary = "Modify application profile")
     @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "The JSON data for the new model node")
-    @ApiResponse(responseCode = "200", description = "The ID for the newly created model")
-    @PostMapping(path = "/profile/{prefix}", produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
-    public void updateProfile(@ValidDatamodel(modelType = ModelType.PROFILE, updateModel = true) @RequestBody DataModelDTO modelDTO,
+    @ApiResponse(responseCode = "204", description = "The ID for the newly created model")
+    @PutMapping(path = "/profile/{prefix}", produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
+    public ResponseEntity<Void> updateProfile(@ValidDatamodel(modelType = ModelType.PROFILE, updateModel = true) @RequestBody DataModelDTO modelDTO,
                               @PathVariable String prefix) {
         updateModel(modelDTO, prefix);
+        return ResponseEntity.noContent().build();
     }
 
     public void updateModel(DataModelDTO modelDTO, String prefix) {
@@ -148,12 +158,12 @@ public class Datamodel {
 
     @Operation(summary = "Check if prefix already exists")
     @ApiResponse(responseCode = "200", description = "Boolean value indicating whether prefix")
-    @GetMapping(value = "/free-prefix/{prefix}", produces = APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/{prefix}/exists", produces = APPLICATION_JSON_VALUE)
     public Boolean freePrefix(@PathVariable String prefix) {
         if (ValidationConstants.RESERVED_WORDS.contains(prefix)) {
-            return false;
+            return true;
         }
-        return !jenaService.doesDataModelExist(ModelConstants.SUOMI_FI_NAMESPACE + prefix);
+        return jenaService.doesDataModelExist(ModelConstants.SUOMI_FI_NAMESPACE + prefix);
     }
 
     @Operation(summary = "Delete a model from fuseki")
