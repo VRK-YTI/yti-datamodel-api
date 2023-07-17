@@ -99,7 +99,7 @@ public class DataModelController {
 
     @Operation(summary = "Create a new application profile")
     @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "The JSON data for the new application profile")
-    @ApiResponse(responseCode = "200", description = "The ID for the newly created model")
+    @ApiResponse(responseCode = "201", description = "The ID for the newly created model")
     @PostMapping(path = "/profile", produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
     public ResponseEntity<String> createProfile(@ValidDatamodel(modelType = ModelType.PROFILE) @RequestBody DataModelDTO modelDTO) throws URISyntaxException {
         var uri = createModel(modelDTO, ModelType.PROFILE);
@@ -108,7 +108,7 @@ public class DataModelController {
 
     @Operation(summary = "Modify library")
     @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "The JSON data for the new model node")
-    @ApiResponse(responseCode = "200", description = "The ID for the newly created model")
+    @ApiResponse(responseCode = "204", description = "The ID for the newly created model")
     @PutMapping(path = "/library/{prefix}", produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
     public ResponseEntity<Void> updateLibrary(@ValidDatamodel(modelType = ModelType.LIBRARY, updateModel = true) @RequestBody DataModelDTO modelDTO,
                                            @PathVariable String prefix) {
@@ -118,7 +118,7 @@ public class DataModelController {
 
     @Operation(summary = "Modify application profile")
     @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "The JSON data for the new model node")
-    @ApiResponse(responseCode = "200", description = "The ID for the newly created model")
+    @ApiResponse(responseCode = "204", description = "The ID for the newly created model")
     @PutMapping(path = "/profile/{prefix}", produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
     public ResponseEntity<Void> updateProfile(@ValidDatamodel(modelType = ModelType.PROFILE, updateModel = true) @RequestBody DataModelDTO modelDTO,
                               @PathVariable String prefix) {

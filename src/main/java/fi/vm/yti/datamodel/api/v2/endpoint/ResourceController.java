@@ -118,7 +118,7 @@ public class ResourceController {
     }
 
     @Operation(summary = "Update a property shape in a model")
-    @ApiResponse(responseCode = "200", description = "Resource updated to model successfully")
+    @ApiResponse(responseCode = "204", description = "Resource updated to model successfully")
     @PutMapping(value = "/profile/{prefix}/{propertyShapeIdentifier}", consumes = APPLICATION_JSON_VALUE)
     public ResponseEntity<Void> updatePropertyShape(@PathVariable String prefix, @PathVariable String propertyShapeIdentifier,
                                     @RequestBody @ValidPropertyShape(updateProperty = true) PropertyShapeDTO dto){
