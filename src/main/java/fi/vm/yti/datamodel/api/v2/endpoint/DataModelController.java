@@ -161,7 +161,7 @@ public class DataModelController {
     @GetMapping(value = "/{prefix}/exists", produces = APPLICATION_JSON_VALUE)
     public Boolean freePrefix(@PathVariable String prefix) {
         if (ValidationConstants.RESERVED_WORDS.contains(prefix)) {
-            return false;
+            return true;
         }
         return jenaService.doesDataModelExist(ModelConstants.SUOMI_FI_NAMESPACE + prefix);
     }
