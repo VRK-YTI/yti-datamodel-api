@@ -1,15 +1,11 @@
 package fi.vm.yti.datamodel.api.mapper;
 
-import fi.vm.yti.datamodel.api.v2.dto.VisualizationNodeShapeDTO;
-import fi.vm.yti.datamodel.api.v2.dto.VisualizationPropertyShapeAssociationDTO;
-import fi.vm.yti.datamodel.api.v2.dto.VisualizationPropertyShapeAttributeDTO;
+import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.mapper.VisualizationMapper;
-import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.vocabulary.DCTerms;
 import org.junit.jupiter.api.Test;
 
-import java.util.LinkedList;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -26,10 +22,9 @@ class VisualizationDataMapperTest {
 
     @Test
     void mapLibraryClassWithAttributes() {
-        var positions = ModelFactory.createDefaultModel();
         var model = MapperTestUtils.getModelFromFile("/models/test_datamodel_visualization.ttl");
 
-        var classDTO = VisualizationMapper.mapClass("http://uri.suomi.fi/datamodel/ns/test/testclass1", model, positions, libraryNamespaces);
+        var classDTO = VisualizationMapper.mapClass("http://uri.suomi.fi/datamodel/ns/test/testclass1", model, libraryNamespaces);
         assertEquals("Label 1", classDTO.getLabel().get("fi"));
         assertEquals("testclass1", classDTO.getIdentifier());
         assertEquals("yti-model:TestClass", classDTO.getParentClasses().iterator().next());
@@ -37,8 +32,8 @@ class VisualizationDataMapperTest {
         var attribute = model.getResource("http://uri.suomi.fi/datamodel/ns/test/attribute-1");
         var association = model.getResource("http://uri.suomi.fi/datamodel/ns/test/association-1");
 
-        VisualizationMapper.mapResource(classDTO, attribute, model, positions, libraryNamespaces);
-        VisualizationMapper.mapResource(classDTO, association, model, positions, libraryNamespaces);
+        VisualizationMapper.mapResource(classDTO, attribute, model, libraryNamespaces);
+        VisualizationMapper.mapResource(classDTO, association, model, libraryNamespaces);
 
         assertEquals(1, classDTO.getAttributes().size());
         assertEquals(1, classDTO.getAssociations().size());
@@ -47,30 +42,28 @@ class VisualizationDataMapperTest {
         assertEquals("testiassosiaatio", classDTO.getAssociations().get(0).getLabel().get("fi"));
         assertEquals("attribute-1", classDTO.getAttributes().get(0).getIdentifier());
         assertEquals("association-1", classDTO.getAssociations().get(0).getIdentifier());
-        assertEquals("testclass2", classDTO.getAssociations().get(0).getRoute().get(0));
+        assertEquals("testclass2", classDTO.getAssociations().get(0).getReferenceTarget());
     }
 
     @Test
     void mapLibraryClassWithExternalResources() {
-        var positions = ModelFactory.createDefaultModel();
         var model = MapperTestUtils.getModelFromFile("/models/test_datamodel_visualization.ttl");
 
-        var classDTO = VisualizationMapper.mapClass("http://uri.suomi.fi/datamodel/ns/test/testclass3", model, positions, libraryNamespaces);
+        var classDTO = VisualizationMapper.mapClass("http://uri.suomi.fi/datamodel/ns/test/testclass3", model, libraryNamespaces);
 
         var association = model.getResource("http://uri.suomi.fi/datamodel/ns/test/association-3");
 
-        VisualizationMapper.mapResource(classDTO, association, model, positions, libraryNamespaces);
+        VisualizationMapper.mapResource(classDTO, association, model, libraryNamespaces);
 
         assertEquals("ext:ExternalClass", classDTO.getParentClasses().iterator().next());
-        assertEquals("ext:ExternalClass", classDTO.getAssociations().get(0).getRoute().get(0));
+        assertEquals("ext:ExternalClass", classDTO.getAssociations().get(0).getReferenceTarget());
     }
 
     @Test
     void mapExternalClass() {
-        var positions = ModelFactory.createDefaultModel();
         String identifier = "ext:TestClass";
 
-        var external = VisualizationMapper.mapExternalClass(identifier, Set.of("fi", "en"), positions);
+        var external = VisualizationMapper.mapExternalClass(identifier, Set.of("fi", "en"));
 
         assertEquals(identifier, external.getIdentifier());
         assertEquals(Map.of("fi", identifier, "en", identifier), external.getLabel());
@@ -78,11 +71,10 @@ class VisualizationDataMapperTest {
 
     @Test
     void mapApplicationProfileClass() {
-        var positions = ModelFactory.createDefaultModel();
         var model = MapperTestUtils.getModelFromFile("/models/test_application_profile_visualization.ttl");
 
         var classDTO = (VisualizationNodeShapeDTO) VisualizationMapper
-                .mapClass("http://uri.suomi.fi/datamodel/ns/visuprof/person", model, positions, profileNamespaces);
+                .mapClass("http://uri.suomi.fi/datamodel/ns/visuprof/person", model,profileNamespaces);
 
         assertEquals("person", classDTO.getIdentifier());
         assertEquals("Henkilö", classDTO.getLabel().get("fi"));
@@ -91,8 +83,8 @@ class VisualizationDataMapperTest {
         var attribute = model.getResource("http://uri.suomi.fi/datamodel/ns/visuprof/age");
         var association = model.getResource("http://uri.suomi.fi/datamodel/ns/visuprof/is-address");
 
-        VisualizationMapper.mapResource(classDTO, attribute, model, positions, profileNamespaces);
-        VisualizationMapper.mapResource(classDTO, association, model, positions, profileNamespaces);
+        VisualizationMapper.mapResource(classDTO, attribute, model, profileNamespaces);
+        VisualizationMapper.mapResource(classDTO, association, model, profileNamespaces);
 
         var mappedAttribute = (VisualizationPropertyShapeAttributeDTO) classDTO.getAttributes().get(0);
         var mappedAssociation = (VisualizationPropertyShapeAssociationDTO) classDTO.getAssociations().get(0);
@@ -112,6 +104,219 @@ class VisualizationDataMapperTest {
         assertEquals("ytm:is-address", mappedAssociation.getPath());
         assertEquals(1, mappedAssociation.getMinCount());
         assertEquals(2, mappedAssociation.getMaxCount());
-        assertEquals("address", ((LinkedList<String>)mappedAssociation.getRoute()).getLast());
+        assertEquals("address", mappedAssociation.getReferenceTarget());
+    }
+
+    @Test
+    void mapPositionDataToGraph() {
+        var positionGraphURI = ModelConstants.MODEL_POSITIONS_NAMESPACE + "test-model";
+
+        var position = new PositionDataDTO();
+        position.setIdentifier("class-1");
+        position.setX(3.0);
+        position.setY(5.0);
+        position.setReferenceTargets(Set.of("class-2"));
+
+        var positionModel = VisualizationMapper.mapPositionDataToModel(positionGraphURI, List.of(position));
+
+        var resource = positionModel.getResource(positionGraphURI + ModelConstants.RESOURCE_SEPARATOR + position.getIdentifier());
+
+        assertEquals("class-1", resource.getProperty(DCTerms.identifier).getString());
+        assertEquals(3.0, resource.getProperty(Iow.posX).getLiteral().getDouble());
+        assertEquals(5.0, resource.getProperty(Iow.posY).getLiteral().getDouble());
+        assertEquals("class-2", resource.listProperties(Iow.referenceTarget).toList().get(0).getString());
+    }
+
+    @Test
+    void mapPositionDataWithParentClasses() {
+        var modelPrefix = "test-model";
+        var positionGraphURI = ModelConstants.MODEL_POSITIONS_NAMESPACE + modelPrefix;
+
+        var node1 = new PositionDataDTO();
+        node1.setIdentifier("class-1");
+        node1.setX(1.0);
+        node1.setY(2.0);
+        node1.setReferenceTargets(Set.of("class-2"));
+
+        var node2 = new PositionDataDTO();
+        node2.setIdentifier("class-2");
+        node2.setX(0.0);
+        node2.setY(10.0);
+
+        var postionModel = VisualizationMapper.mapPositionDataToModel(positionGraphURI,
+                List.of(node1, node2));
+
+        var classDTO1 = new VisualizationClassDTO();
+        classDTO1.setIdentifier("class-1");
+        classDTO1.setParentClasses(Set.of("class-2"));
+
+        var classDTO2 = new VisualizationClassDTO();
+        classDTO2.setIdentifier("class-2");
+
+        var classes = new HashSet<VisualizationClassDTO>();
+        classes.add(classDTO1);
+        classes.add(classDTO2);
+
+        VisualizationMapper.mapPositionsDataToDTOs(postionModel, modelPrefix, classes);
+
+        var c1 = findClass(classes, "class-1");
+        assertNotNull(c1);
+
+        assertEquals(2, classes.size());
+        assertEquals("class-2", c1.getParentClasses().iterator().next());
+    }
+
+    @Test
+    void mapPositionDataWithParentClassesAndHiddenNode() {
+        var modelPrefix = "test-model";
+        var positionGraphURI = ModelConstants.MODEL_POSITIONS_NAMESPACE + modelPrefix;
+
+        var node1 = new PositionDataDTO();
+        node1.setIdentifier("class-1");
+        node1.setX(1.0);
+        node1.setY(2.0);
+        node1.setReferenceTargets(Set.of("corner-1"));
+
+        var node2 = new PositionDataDTO();
+        node2.setIdentifier("class-2");
+        node2.setX(0.0);
+        node2.setY(10.0);
+
+        var corner1 = new PositionDataDTO();
+        corner1.setIdentifier("corner-1");
+        corner1.setX(0.0);
+        corner1.setY(0.0);
+        corner1.setReferenceTargets(Set.of("class-2"));
+
+        var postionModel = VisualizationMapper.mapPositionDataToModel(positionGraphURI,
+                List.of(node1, node2, corner1));
+
+        var classDTO1 = new VisualizationClassDTO();
+        classDTO1.setIdentifier("class-1");
+        classDTO1.setParentClasses(Set.of("class-2"));
+
+        var classDTO2 = new VisualizationClassDTO();
+        classDTO2.setIdentifier("class-2");
+
+        var classes = new HashSet<VisualizationClassDTO>();
+        classes.add(classDTO1);
+        classes.add(classDTO2);
+
+        VisualizationMapper.mapPositionsDataToDTOs(postionModel, modelPrefix, classes);
+
+        var c1 = findClass(classes, "class-1");
+        var hidden = findClass(classes, "corner-1");
+        assertNotNull(c1);
+        assertNotNull(hidden);
+
+        assertEquals(3, classes.size());
+        assertEquals("corner-1", c1.getParentClasses().iterator().next());
+
+        assertEquals("class-2", hidden.getParentClasses().iterator().next());
+    }
+
+    @Test
+    void mapPositionDataWithParentClassesAndAssociationsAndHiddenNodes() {
+        var modelPrefix = "test-model";
+        var positionGraphURI = ModelConstants.MODEL_POSITIONS_NAMESPACE + modelPrefix;
+
+        // class-1 has parent class reference to class-2 via corner-1 and corner-2
+        // class-1 has association to class-3 via corner-3
+        // class-2 has parent class reference to class-3 directly
+        var node1 = new PositionDataDTO();
+        node1.setIdentifier("class-1");
+        node1.setX(1.0);
+        node1.setY(2.0);
+        node1.setReferenceTargets(Set.of("corner-1", "corner-3"));
+
+        var node2 = new PositionDataDTO();
+        node2.setIdentifier("class-2");
+        node2.setX(0.0);
+        node2.setY(10.0);
+        node2.setReferenceTargets(Set.of("class-3"));
+
+        var node3 = new PositionDataDTO();
+        node3.setIdentifier("class-3");
+        node3.setX(20.0);
+        node3.setY(15.0);
+
+        var corner1 = new PositionDataDTO();
+        corner1.setX(6.0);
+        corner1.setY(7.0);
+        corner1.setIdentifier("corner-1");
+        corner1.setReferenceTargets(Set.of("corner-2"));
+
+        var corner2 = new PositionDataDTO();
+        corner2.setX(3.0);
+        corner2.setY(6.0);
+        corner2.setIdentifier("corner-2");
+        corner2.setReferenceTargets(Set.of("class-2"));
+
+        var corner3 = new PositionDataDTO();
+        corner3.setX(3.0);
+        corner3.setY(6.0);
+        corner3.setIdentifier("corner-3");
+        corner3.setReferenceTargets(Set.of("class-3"));
+
+        var postionModel = VisualizationMapper.mapPositionDataToModel(positionGraphURI,
+                List.of(node1, node2, node3, corner1, corner2, corner3));
+
+        var association = new VisualizationAssociationDTO();
+        association.setReferenceTarget("class-3");
+        association.setIdentifier("assoc-1");
+
+        var classDTO1 = new VisualizationClassDTO();
+        classDTO1.setIdentifier("class-1");
+        classDTO1.setParentClasses(Set.of("class-2"));
+        classDTO1.setAssociations(List.of(association));
+
+        var classDTO2 = new VisualizationClassDTO();
+        classDTO2.setIdentifier("class-2");
+        classDTO2.setParentClasses(Set.of("class-3"));
+
+        var classDTO3 = new VisualizationClassDTO();
+        classDTO3.setIdentifier("class-3");
+
+        var classes = new HashSet<VisualizationClassDTO>();
+        classes.add(classDTO1);
+        classes.add(classDTO2);
+        classes.add(classDTO3);
+
+        VisualizationMapper.mapPositionsDataToDTOs(postionModel, modelPrefix, classes);
+
+        // should contain three classes and three hidden nodes
+        assertEquals(6, classes.size());
+
+        var identifiers = classes.stream().map(VisualizationItemDTO::getIdentifier).toList();
+        assertTrue(identifiers.containsAll(List.of("class-1", "class-2", "class-3", "corner-1", "corner-2", "corner-3")));
+
+        var classItem = findClass(classes, "class-1");
+        assertNotNull(classItem);
+
+        var classItem2 = findClass(classes, "class-2");
+        assertNotNull(classItem2);
+        assertEquals("class-3", classItem2.getParentClasses().iterator().next());
+
+        assertEquals("corner-1", classItem.getParentClasses().iterator().next());
+        assertEquals(1.0, classItem.getPosition().getX());
+        assertEquals(2.0, classItem.getPosition().getY());
+
+        var cornerItem1 = findClass(classes, "corner-1");
+        assertNotNull(cornerItem1);
+        assertEquals(6.0, cornerItem1.getPosition().getX());
+        assertEquals(7.0, cornerItem1.getPosition().getY());
+        assertEquals("corner-2", cornerItem1.getParentClasses().iterator().next());
+
+        var cornerItem2 = findClass(classes, "corner-2");
+        assertNotNull(cornerItem2);
+        assertEquals("class-2", cornerItem2.getParentClasses().iterator().next());
+
+        var cornerItem3 = findClass(classes, "corner-3");
+        assertNotNull(cornerItem3);
+        assertEquals("class-3", cornerItem3.getParentClasses().iterator().next());
+    }
+
+    private static VisualizationClassDTO findClass(Set<VisualizationClassDTO> classes, String identifier) {
+        return classes.stream().filter(c -> c.getIdentifier().equals(identifier)).findFirst().orElse(null);
     }
 }

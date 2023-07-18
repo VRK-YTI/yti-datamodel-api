@@ -190,6 +190,8 @@ public class MapperUtils {
             return type.cast(literal.getInt());
         } else if (type.equals(Boolean.class)) {
             return type.cast(literal.getBoolean());
+        } else if (type.equals(Double.class)) {
+            return type.cast(literal.getDouble());
         }
         return null;
     }

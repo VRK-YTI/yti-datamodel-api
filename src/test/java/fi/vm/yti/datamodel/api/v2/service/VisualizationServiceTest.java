@@ -1,6 +1,8 @@
 package fi.vm.yti.datamodel.api.v2.service;
 
 import fi.vm.yti.datamodel.api.mapper.MapperTestUtils;
+import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
+import fi.vm.yti.datamodel.api.v2.dto.PositionDataDTO;
 import fi.vm.yti.datamodel.api.v2.dto.VisualizationClassDTO;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
@@ -9,12 +11,15 @@ import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDF;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.topbraid.shacl.vocabulary.SH;
 
+import java.util.List;
 import java.util.Set;
 
 import static org.mockito.Mockito.*;
@@ -28,6 +33,9 @@ class VisualizationServiceTest {
 
     @MockBean
     private JenaService jenaService;
+
+    @Captor
+    private ArgumentCaptor<Model> modelCaptor;
 
     @Autowired
     private VisualizationService visualizationService;
@@ -56,6 +64,26 @@ class VisualizationServiceTest {
 
         var ext = findClass(visualizationData, "personprof:address");
         assertNotNull(ext);
+    }
+
+    @Test
+    void savePositions() {
+        var graphURI = ModelConstants.MODEL_POSITIONS_NAMESPACE + "test-model";
+        when(jenaService.doesDataModelExist(graphURI)).thenReturn(true);
+
+        var positionData = new PositionDataDTO();
+        positionData.setX(1.0);
+        positionData.setY(2.0);
+        positionData.setIdentifier("pos-1");
+
+        visualizationService.savePositionData("test-model", List.of(positionData));
+
+        verify(jenaService).deleteDataModel(graphURI);
+        verify(jenaService).putDataModelToCore(eq(graphURI), modelCaptor.capture());
+
+        var resourceURI = graphURI + ModelConstants.RESOURCE_SEPARATOR + positionData.getIdentifier();
+        var resource = modelCaptor.getValue().getResource(resourceURI);
+        assertEquals("pos-1", resource.getProperty(DCTerms.identifier).getString());
     }
 
     private static Model getExternalPropertiesResult() {

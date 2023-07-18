@@ -2,6 +2,7 @@ package fi.vm.yti.datamodel.api.v2.mapper;
 
 import fi.vm.yti.datamodel.api.v2.dto.*;
 import org.apache.jena.rdf.model.*;
+import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDFS;
 import org.jetbrains.annotations.NotNull;
@@ -18,7 +19,7 @@ public class VisualizationMapper {
     private VisualizationMapper() {
     }
 
-    public static VisualizationClassDTO mapClass(String classURI, Model model, Model positions, Map<String, String> namespaces) {
+    public static VisualizationClassDTO mapClass(String classURI, Model model, Map<String, String> namespaces) {
         var classResource = model.getResource(classURI);
         VisualizationClassDTO classDTO;
 
@@ -35,14 +36,12 @@ public class VisualizationMapper {
 
         classDTO.setParentClasses(getParentClasses(classResource, namespaces));
 
-        mapPositions(classURI, positions, classDTO);
         return classDTO;
     }
 
-    public static VisualizationClassDTO mapExternalClass(String identifier, Set<String> languages, Model positions) {
+    public static VisualizationClassDTO mapExternalClass(String identifier, Set<String> languages) {
         var dto = new VisualizationClassDTO();
         dto.setIdentifier(identifier);
-        mapPositions(identifier, positions, dto);
 
         var label = new HashMap<String, String>();
         languages.forEach(key -> label.put(key, identifier));
@@ -50,12 +49,117 @@ public class VisualizationMapper {
 
         return dto;
     }
-    public static void mapResource(VisualizationClassDTO dto, Resource resource, Model model, Model positions, Map<String, String> namespaces) {
+
+    public static void mapResource(VisualizationClassDTO dto, Resource resource, Model model, Map<String, String> namespaces) {
         if (MapperUtils.hasType(resource, OWL.DatatypeProperty)) {
             dto.addAttribute(mapAttribute(resource, namespaces));
         } else if (MapperUtils.hasType(resource, OWL.ObjectProperty)) {
-            dto.addAssociation(mapAssociation(resource, model, positions,namespaces));
+            dto.addAssociation(mapAssociation(resource, model, namespaces));
         }
+    }
+
+    public static Model mapPositionDataToModel(String positionGraphURI, List<PositionDataDTO> positions) {
+        var positionModel = ModelFactory.createDefaultModel();
+        positions.forEach(node -> {
+            var resource = positionModel.createResource(positionGraphURI + ModelConstants.RESOURCE_SEPARATOR + node.getIdentifier());
+            resource.addLiteral(Iow.posX, node.getX());
+            resource.addLiteral(Iow.posY, node.getY());
+            resource.addProperty(DCTerms.identifier, node.getIdentifier());
+            if (node.getReferenceTargets() != null) {
+                node.getReferenceTargets().forEach(target -> resource.addProperty(Iow.referenceTarget, target));
+            }
+        });
+        return positionModel;
+    }
+
+    public static void mapPositionsDataToDTOs(Model positions, String modelPrefix, Set<VisualizationClassDTO> classes) {
+        var hiddenElements = new HashSet<VisualizationClassDTO>();
+
+        classes.forEach(dto -> {
+            var positionResource = positions.getResource(ModelConstants.MODEL_POSITIONS_NAMESPACE + modelPrefix
+                    + ModelConstants.RESOURCE_SEPARATOR
+                    + dto.getIdentifier());
+            dto.setPosition(getPositionFromResource(positionResource));
+
+            if (dto.getParentClasses() != null) {
+                var parentsWithRoute = new HashSet<String>();
+                dto.getParentClasses().forEach(parent -> {
+                    var path = handlePath(positions, dto.getIdentifier(), parent, hiddenElements);
+                    parentsWithRoute.add(path.get(0));
+                });
+                dto.setParentClasses(parentsWithRoute);
+            }
+
+            dto.getAssociations().forEach(association -> {
+                var target = association.getReferenceTarget();
+                if (target != null) {
+                    var path = handlePath(positions, dto.getIdentifier(), target, hiddenElements);
+                    association.setReferenceTarget(path.get(0));
+                }
+            });
+        });
+        classes.addAll(hiddenElements);
+    }
+
+    private static List<String> handlePath(Model positions, String sourceIdentifier, String target,
+                                           Set<VisualizationClassDTO> hiddenElements) {
+
+        var positionResources = positions.listSubjectsWithProperty(Iow.referenceTarget, target).toList();
+
+        for (Resource positionResource : positionResources) {
+            var path = new LinkedList<String>();
+            while (positionResource.hasProperty(Iow.referenceTarget)) {
+                var identifier = MapperUtils.propertyToString(positionResource, DCTerms.identifier);
+
+                if (identifier != null && !identifier.startsWith("corner-") && !identifier.equals(sourceIdentifier)) {
+                    // if there is an element in the path, that is not a hidden node and not the same as source node,
+                    // this is the wrong path. Jump to the next resource
+                    break;
+                } else if (sourceIdentifier.equals(identifier)) {
+                    // reached the source node
+                    if (path.isEmpty()) {
+                        path.add(target);
+                    }
+                    return path;
+                }
+
+                path.addFirst(positionResource.getLocalName());
+                hiddenElements.add(mapHiddenNode(positionResource));
+
+                var references = positions.listSubjectsWithProperty(Iow.referenceTarget, positionResource.getLocalName()).toList();
+
+                // no more references found, return path
+                // should not happen as each hidden node should have references
+                // and otherwise should have returned earlier
+                if (references.isEmpty()) {
+                    return path;
+                }
+
+                // assume, that there is only one reference for hidden nodes
+                positionResource = references.get(0);
+            }
+        }
+        // no hidden nodes between source and target
+        return List.of(target);
+    }
+
+    private static VisualizationClassDTO mapHiddenNode(Resource position) {
+        var dto = new VisualizationClassDTO();
+
+        dto.setIdentifier(MapperUtils.propertyToString(position, DCTerms.identifier));
+        dto.setPosition(getPositionFromResource(position));
+        dto.setParentClasses(MapperUtils.arrayPropertyToSet(position, Iow.referenceTarget));
+
+        return dto;
+    }
+
+    private static PositionDTO getPositionFromResource(Resource positionResource) {
+        var x = MapperUtils.getLiteral(positionResource, Iow.posX, Double.class);
+        var y = MapperUtils.getLiteral(positionResource, Iow.posY, Double.class);
+        return new PositionDTO(
+                x != null ? x : 0.0,
+                y != null ? y : 0.0
+        );
     }
 
     private static VisualizationAttributeDTO mapAttribute(Resource resource, Map<String, String> namespaces) {
@@ -75,20 +179,20 @@ public class VisualizationMapper {
         }
     }
 
-    private static VisualizationAssociationDTO mapAssociation(Resource resource, Model model, Model positions, Map<String, String> namespaces) {
+    private static VisualizationAssociationDTO mapAssociation(Resource resource, Model model, Map<String, String> namespaces) {
         if (MapperUtils.hasType(resource, SH.PropertyShape)) {
             var dto = new VisualizationPropertyShapeAssociationDTO();
             mapCommon(dto, resource, namespaces);
             dto.setPath(getReferenceIdentifier(MapperUtils.propertyToString(resource, SH.path), namespaces));
             dto.setMaxCount(MapperUtils.getLiteral(resource, SH.maxCount, Integer.class));
             dto.setMinCount(MapperUtils.getLiteral(resource, SH.minCount, Integer.class));
-            dto.setRoute(getPropertyShapeRoute(model, resource, positions, namespaces));
+            dto.setReferenceTarget(getPropertyShapeAssociationTarget(model, resource, namespaces));
             return dto;
         } else {
             var dto = new VisualizationAssociationDTO();
             var target = MapperUtils.propertyToString(resource, RDFS.range);
             mapCommon(dto, resource, namespaces);
-            dto.setRoute(getRoute(positions, target, namespaces));
+            dto.setReferenceTarget(getReferenceIdentifier(target, namespaces));
             return dto;
         }
     }
@@ -98,27 +202,18 @@ public class VisualizationMapper {
         item.setIdentifier(getReferenceIdentifier(resource.getURI(), namespaces));
     }
 
-    private static LinkedList<String> getRoute(Model positions, String target, Map<String, String> namespaces) {
-        // TODO: store route from source to target via possible invisible nodes (with id #corner-12345678)
-        var route = new LinkedList<String>();
-        route.add(getReferenceIdentifier(target, namespaces));
-        return route;
-    }
-
-    private static LinkedList<String> getPropertyShapeRoute(Model model, Resource resource,
-                                                      Model positions, Map<String, String> namespaces) {
+    private static String getPropertyShapeAssociationTarget(Model model, Resource resource, Map<String, String> namespaces) {
         var target = MapperUtils.propertyToString(resource, SH.class_);
         if (target != null) {
-            // is it possible to have multiple routes per association?
             var iterator = model.listSubjectsWithProperty(SH.targetClass,
                     ResourceFactory.createResource(target));
             if (iterator.hasNext()) {
-                return getRoute(positions, iterator.next().getURI(), namespaces);
+                return getReferenceIdentifier(iterator.next().getURI(), namespaces);
             } else {
-                return getRoute(positions, target, namespaces);
+                return getReferenceIdentifier(target, namespaces);
             }
         }
-        return new LinkedList<>();
+        return null;
     }
 
     @NotNull
@@ -163,11 +258,5 @@ public class VisualizationMapper {
         }
     }
 
-    private static void mapPositions(String classURI, Model positions, VisualizationClassDTO classDTO) {
-        // TODO save and map positions
-        var positionResource = positions.getResource(classURI);
-        if (positionResource == null) {
-            classDTO.setPosition(new PositionDTO(0.0, 0.0));
-        }
-    }
+
 }

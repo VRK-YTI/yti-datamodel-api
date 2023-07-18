@@ -12,6 +12,8 @@ public class ModelConstants {
     public static final String SUOMI_FI_NAMESPACE = "http://uri.suomi.fi/datamodel/ns/";
     public static final String CODELIST_NAMESPACE = "http://uri.suomi.fi/codelist/";
     public static final String TERMINOLOGY_NAMESPACE = "http://uri.suomi.fi/terminology/";
+    public static final String MODEL_POSITIONS_NAMESPACE = "http://uri.suomi.fi/datamodel/positions/";
+
     public static final String RESOURCE_SEPARATOR = "/";
     public static final String URN_UUID = "urn:uuid:";
     public static final String DEFAULT_LANGUAGE = "fi";
