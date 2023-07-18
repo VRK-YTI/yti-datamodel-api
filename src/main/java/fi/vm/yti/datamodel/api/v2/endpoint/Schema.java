@@ -8,7 +8,9 @@ import java.util.List;
 import org.apache.jena.rdf.model.Model;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -27,6 +29,7 @@ import fi.vm.yti.datamodel.api.v2.dto.SchemaDTO;
 import fi.vm.yti.datamodel.api.v2.dto.SchemaFormat;
 import fi.vm.yti.datamodel.api.v2.dto.SchemaInfoDTO;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
+import fi.vm.yti.datamodel.api.v2.mapper.MimeTypes;
 import fi.vm.yti.datamodel.api.v2.mapper.SchemaMapper;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
 import fi.vm.yti.datamodel.api.v2.service.JSONValidationService;
@@ -42,6 +45,11 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.zip.ZipOutputStream;
+import java.util.zip.ZipEntry;
 
 @RestController
 @RequestMapping("v2")
@@ -179,21 +187,43 @@ public class Schema {
     }
     
 
-    
-    
+     
     @Operation(summary = "Get original file version of the schema (if available)", description = "If the result is only one file it is returned as is, but if the content includes multiple files they a returned as a zip file.")
     @ApiResponse(responseCode = "200", description = "")
     @GetMapping(path = "/schema/{pid}/original")
-    public ResponseEntity<byte[]> exportOriginalFile(@PathVariable String pid) {
+    public ResponseEntity<byte[]> exportOriginalFile(@PathVariable("pid") String pid) throws IOException {
     	List<StoredFile> files = storageService.retrieveAllSchemaFiles(pid);
-    	if(files.size() == 1) {
+    	
+    	if (files.isEmpty()) {
+    		return ResponseEntity.notFound().build();   				
+    	}
+    	
+    	if (files.size() == 1) {
     		StoredFile file = files.get(0);
-			return ResponseEntity.ok()
-					.contentType(org.springframework.http.MediaType.parseMediaTypes(file.contentType()).get(0))
-					.body(file.data());					
+    		return ResponseEntity.ok()
+    				.contentType(MediaType.parseMediaTypes(file.contentType()).get(0))
+    				.body(file.data());		
     	}
     	else {
-    		return null;
+    		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    		ZipOutputStream zipOut = new ZipOutputStream(baos);
+
+    		for (StoredFile file : files) {
+    			ZipEntry zipEntry = new ZipEntry(file.fileID() + MimeTypes.getExtension(file.contentType()));
+    			zipOut.putNextEntry(zipEntry);
+    			zipOut.write(file.data(), 0, file.data().length);
+    		}
+      
+    		zipOut.close();           
+    		//baos.close();               
+    		
+    		byte [] zip = baos.toByteArray();    
+    				  
+    		return ResponseEntity.ok()
+    				.header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=files.zip")
+    				.contentType(MediaType.parseMediaType("application/zip"))
+    				.contentLength(zip.length)
+    				.body(zip); 										
     	}
 	}
 
