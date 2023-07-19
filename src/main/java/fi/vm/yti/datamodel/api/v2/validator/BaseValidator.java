@@ -95,7 +95,7 @@ public abstract class BaseValidator implements Annotation{
     }
 
     public void checkReservedIdentifier(ConstraintValidatorContext context, BaseDTO dto) {
-        if (dto.getIdentifier().startsWith("corner-")) {
+        if (dto.getIdentifier() != null && dto.getIdentifier().startsWith("corner-")) {
             addConstraintViolation(context, "reserved-identifier", "identifier");
         }
     }
