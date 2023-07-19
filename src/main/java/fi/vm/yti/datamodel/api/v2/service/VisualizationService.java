@@ -1,8 +1,7 @@
 package fi.vm.yti.datamodel.api.v2.service;
 
-import fi.vm.yti.datamodel.api.v2.dto.DCAP;
-import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
-import fi.vm.yti.datamodel.api.v2.dto.VisualizationClassDTO;
+import fi.vm.yti.datamodel.api.v2.dto.*;
+import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
 import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.mapper.VisualizationMapper;
 import org.apache.jena.rdf.model.*;
@@ -24,24 +23,28 @@ public class VisualizationService {
         this.jenaService = jenaService;
     }
 
-    public Set<VisualizationClassDTO> getVisualizationData(String prefix) {
+    public VisualizationResultDTO getVisualizationData(String prefix) {
         var graph = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
         var model = jenaService.getDataModel(graph);
-        var positions = ModelFactory.createDefaultModel();
+        Model positions;
+        try {
+            positions = jenaService.getDataModelPositions(ModelConstants.MODEL_POSITIONS_NAMESPACE + prefix);
+        } catch(ResourceNotFoundException e) {
+            positions = ModelFactory.createDefaultModel();
+        }
 
         var modelResource = model.getResource(graph);
         var classURIs = getClassURIs(model, graph);
         var namespaces = getNamespaces(model, graph);
         var languages = MapperUtils.arrayPropertyToSet(modelResource, DCTerms.language);
 
-        var result = new HashSet<VisualizationClassDTO>();
+        var visualizationClasses = new HashSet<VisualizationClassDTO>();
 
         while (classURIs.hasNext()) {
-            String classURI = classURIs.next().getSubject().getURI();
+            var classURI = classURIs.next().getSubject().getURI();
             var classResource = model.getResource(classURI);
 
-            var classDTO = VisualizationMapper.mapClass(classURI, model,
-                    positions, namespaces);
+            var classDTO = VisualizationMapper.mapClass(classURI, model, namespaces);
 
             var attributesAndAssociations = getAttributesAndAssociations(model, classResource, modelResource);
             var externalPropertyURIs = new HashSet<String>();
@@ -49,34 +52,52 @@ public class VisualizationService {
                 if (!model.contains(resource, null)) {
                     externalPropertyURIs.add(resource.getURI());
                 } else {
-                    VisualizationMapper.mapResource(classDTO, resource, model, positions, namespaces);
+                    VisualizationMapper.mapResource(classDTO, resource, model, namespaces);
                 }
             }
 
             if (!externalPropertyURIs.isEmpty()) {
                 var externalResources = jenaService.findResources(externalPropertyURIs);
                 externalPropertyURIs.forEach(uri -> VisualizationMapper
-                        .mapResource(classDTO, externalResources.getResource(uri), model, positions, namespaces));
+                        .mapResource(classDTO, externalResources.getResource(uri), model, namespaces));
             }
 
             // add dummy classes for external classes
-            addExternalClasses(classDTO, positions, languages, result);
+            addExternalClasses(classDTO, languages, visualizationClasses);
 
-            result.add(classDTO);
+            visualizationClasses.add(classDTO);
         }
-        return result;
+        var hiddenNodes = VisualizationMapper.mapPositionsDataToDTOsAndCreateHiddenNodes(positions, prefix, visualizationClasses);
+
+        var visualizationResult = new VisualizationResultDTO();
+        visualizationResult.setNodes(visualizationClasses);
+        visualizationResult.setHiddenNodes(hiddenNodes);
+
+        return visualizationResult;
     }
 
-    private static void addExternalClasses(VisualizationClassDTO classDTO, Model positions, Set<String> languages, HashSet<VisualizationClassDTO> result) {
+    public void savePositionData(String modelPrefix, List<PositionDataDTO> positions) {
+        String positionGraphURI = ModelConstants.MODEL_POSITIONS_NAMESPACE + modelPrefix;
+
+        // remove old positions if exists
+        if (jenaService.doesDataModelExist(positionGraphURI)) {
+            jenaService.deleteDataModel(positionGraphURI);
+        }
+
+        var positionModel = VisualizationMapper.mapPositionDataToModel(positionGraphURI, positions);
+        jenaService.putDataModelToCore(positionGraphURI, positionModel);
+    }
+
+    private static void addExternalClasses(VisualizationClassDTO classDTO, Set<String> languages, HashSet<VisualizationClassDTO> result) {
         classDTO.getParentClasses().forEach(parent -> {
             if (parent.contains(":")) {
-                result.add(VisualizationMapper.mapExternalClass(parent, languages, positions));
+                result.add(VisualizationMapper.mapExternalClass(parent, languages));
             }
         });
         classDTO.getAssociations().forEach(association -> {
-            var target = ((LinkedList<String>)association.getRoute()).getLast();
+            var target = association.getReferenceTarget();
             if (target != null && target.contains(":")) {
-                result.add(VisualizationMapper.mapExternalClass(target, languages, positions));
+                result.add(VisualizationMapper.mapExternalClass(target, languages));
             }
         });
     }

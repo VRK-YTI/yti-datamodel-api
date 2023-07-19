@@ -243,6 +243,10 @@ public class ClassController {
     @ApiResponse(responseCode = "200", description = "Boolean value indicating whether prefix")
     @GetMapping(value = "/{prefix}/{identifier}/exists", produces = APPLICATION_JSON_VALUE)
     public Boolean freeIdentifier(@PathVariable String prefix, @PathVariable String identifier) {
+        // identifiers e.g. corner-abcd1234 are reserved for visualization
+        if (identifier.startsWith("corner-")) {
+            return true;
+        }
         var graphUri = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
         return jenaService.doesResourceExistInGraph(graphUri, graphUri + ModelConstants.RESOURCE_SEPARATOR + identifier);
     }

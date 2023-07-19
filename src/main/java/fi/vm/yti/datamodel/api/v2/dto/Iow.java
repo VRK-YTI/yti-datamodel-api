@@ -20,4 +20,8 @@ public class Iow {
     public static final Property codeList = ResourceFactory.createProperty(URI, "codeList");
     public static final Property CodeScheme = ResourceFactory.createProperty(URI, "CodeScheme");
     public static final Property ApplicationProfile = ResourceFactory.createProperty(URI, "ApplicationProfile");
+
+    public static final Property posX = ResourceFactory.createProperty(URI, "posX");
+    public static final Property posY = ResourceFactory.createProperty(URI, "posY");
+    public static final Property referenceTarget = ResourceFactory.createProperty(URI, "referenceTarget");
 }

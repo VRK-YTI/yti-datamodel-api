@@ -104,6 +104,19 @@ public class JenaService {
         }
     }
 
+    public Model getDataModelPositions(String prefix) {
+        var positionGraphRI = ModelConstants.MODEL_POSITIONS_NAMESPACE + prefix;
+        try {
+            return coreRead.fetch(positionGraphRI);
+        } catch (HttpException ex) {
+            if (ex.getStatusCode() == HttpStatus.NOT_FOUND.value()) {
+                throw new ResourceNotFoundException(prefix);
+            } else {
+                throw new JenaQueryException();
+            }
+        }
+    }
+
     public void deleteDataModel(String graph) {
         logger.debug("Deleting model from core {}", graph);
         try{

@@ -1,18 +1,14 @@
 package fi.vm.yti.datamodel.api.v2.dto;
 
-import java.util.LinkedList;
-import java.util.List;
-
 public class VisualizationAssociationDTO extends VisualizationItemDTO {
 
-    private List<String> route = new LinkedList<>();
+    private String referenceTarget;
 
-    public List<String> getRoute() {
-        return route;
+    public String getReferenceTarget() {
+        return referenceTarget;
     }
 
-    public void setRoute(List<String> route) {
-        this.route = route;
+    public void setReferenceTarget(String referenceTarget) {
+        this.referenceTarget = referenceTarget;
     }
-
 }
