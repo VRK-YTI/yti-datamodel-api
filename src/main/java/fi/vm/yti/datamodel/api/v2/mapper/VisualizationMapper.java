@@ -72,8 +72,9 @@ public class VisualizationMapper {
         return positionModel;
     }
 
-    public static void mapPositionsDataToDTOs(Model positions, String modelPrefix, Set<VisualizationClassDTO> classes) {
-        var hiddenElements = new HashSet<VisualizationClassDTO>();
+    public static Set<VisualizationHiddenNodeDTO> mapPositionsDataToDTOsAndCreateHiddenNodes(
+            Model positions, String modelPrefix, Set<VisualizationClassDTO> classes) {
+        var hiddenElements = new HashSet<VisualizationHiddenNodeDTO>();
 
         classes.forEach(dto -> {
             var positionResource = positions.getResource(ModelConstants.MODEL_POSITIONS_NAMESPACE + modelPrefix
@@ -81,15 +82,17 @@ public class VisualizationMapper {
                     + dto.getIdentifier());
             dto.setPosition(getPositionFromResource(positionResource));
 
-            if (dto.getParentClasses() != null) {
-                var parentsWithRoute = new HashSet<String>();
+            // check if there are hidden nodes between parent relations
+            if (dto.getParentClasses() != null && !dto.getParentClasses().isEmpty()) {
+                var parentsWithTarget = new HashSet<String>();
                 dto.getParentClasses().forEach(parent -> {
                     var path = handlePath(positions, dto.getIdentifier(), parent, hiddenElements);
-                    parentsWithRoute.add(path.get(0));
+                    parentsWithTarget.add(path.get(0));
                 });
-                dto.setParentClasses(parentsWithRoute);
+                dto.setParentClasses(parentsWithTarget);
             }
 
+            // check if there are hidden nodes between association relations
             dto.getAssociations().forEach(association -> {
                 var target = association.getReferenceTarget();
                 if (target != null) {
@@ -98,11 +101,47 @@ public class VisualizationMapper {
                 }
             });
         });
-        classes.addAll(hiddenElements);
+        return hiddenElements;
+    }
+
+
+    private static VisualizationAttributeDTO mapAttribute(Resource resource, Map<String, String> namespaces) {
+        if (MapperUtils.hasType(resource, SH.PropertyShape)) {
+            var dto = new VisualizationPropertyShapeAttributeDTO();
+            mapCommon(dto, resource, namespaces);
+            dto.setPath(getReferenceIdentifier(MapperUtils.propertyToString(resource, SH.path), namespaces));
+            dto.setDataType(MapperUtils.propertyToString(resource, SH.datatype));
+            dto.setMaxCount(MapperUtils.getLiteral(resource, SH.maxCount, Integer.class));
+            dto.setMinCount(MapperUtils.getLiteral(resource, SH.minCount, Integer.class));
+            dto.setCodeLists(MapperUtils.arrayPropertyToSet(resource, Iow.codeList));
+            return dto;
+        } else {
+            var dto = new VisualizationAttributeDTO();
+            mapCommon(dto, resource, namespaces);
+            return dto;
+        }
+    }
+
+    private static VisualizationAssociationDTO mapAssociation(Resource resource, Model model, Map<String, String> namespaces) {
+        if (MapperUtils.hasType(resource, SH.PropertyShape)) {
+            var dto = new VisualizationPropertyShapeAssociationDTO();
+            mapCommon(dto, resource, namespaces);
+            dto.setPath(getReferenceIdentifier(MapperUtils.propertyToString(resource, SH.path), namespaces));
+            dto.setMaxCount(MapperUtils.getLiteral(resource, SH.maxCount, Integer.class));
+            dto.setMinCount(MapperUtils.getLiteral(resource, SH.minCount, Integer.class));
+            dto.setReferenceTarget(getPropertyShapeAssociationTarget(model, resource, namespaces));
+            return dto;
+        } else {
+            var dto = new VisualizationAssociationDTO();
+            var target = MapperUtils.propertyToString(resource, RDFS.range);
+            mapCommon(dto, resource, namespaces);
+            dto.setReferenceTarget(getReferenceIdentifier(target, namespaces));
+            return dto;
+        }
     }
 
     private static List<String> handlePath(Model positions, String sourceIdentifier, String target,
-                                           Set<VisualizationClassDTO> hiddenElements) {
+                                           Set<VisualizationHiddenNodeDTO> hiddenElements) {
 
         var positionResources = positions.listSubjectsWithProperty(Iow.referenceTarget, target).toList();
 
@@ -143,12 +182,12 @@ public class VisualizationMapper {
         return List.of(target);
     }
 
-    private static VisualizationClassDTO mapHiddenNode(Resource position) {
-        var dto = new VisualizationClassDTO();
+    private static VisualizationHiddenNodeDTO mapHiddenNode(Resource position) {
+        var dto = new VisualizationHiddenNodeDTO();
 
         dto.setIdentifier(MapperUtils.propertyToString(position, DCTerms.identifier));
         dto.setPosition(getPositionFromResource(position));
-        dto.setParentClasses(MapperUtils.arrayPropertyToSet(position, Iow.referenceTarget));
+        dto.setReferenceTarget(MapperUtils.propertyToString(position, Iow.referenceTarget));
 
         return dto;
     }
@@ -160,41 +199,6 @@ public class VisualizationMapper {
                 x != null ? x : 0.0,
                 y != null ? y : 0.0
         );
-    }
-
-    private static VisualizationAttributeDTO mapAttribute(Resource resource, Map<String, String> namespaces) {
-        if (MapperUtils.hasType(resource, SH.PropertyShape)) {
-            var dto = new VisualizationPropertyShapeAttributeDTO();
-            mapCommon(dto, resource, namespaces);
-            dto.setPath(getReferenceIdentifier(MapperUtils.propertyToString(resource, SH.path), namespaces));
-            dto.setDataType(MapperUtils.propertyToString(resource, SH.datatype));
-            dto.setMaxCount(MapperUtils.getLiteral(resource, SH.maxCount, Integer.class));
-            dto.setMinCount(MapperUtils.getLiteral(resource, SH.minCount, Integer.class));
-            dto.setCodeLists(MapperUtils.arrayPropertyToSet(resource, Iow.codeList));
-            return dto;
-        } else {
-            var dto = new VisualizationAttributeDTO();
-            mapCommon(dto, resource, namespaces);
-            return dto;
-        }
-    }
-
-    private static VisualizationAssociationDTO mapAssociation(Resource resource, Model model, Map<String, String> namespaces) {
-        if (MapperUtils.hasType(resource, SH.PropertyShape)) {
-            var dto = new VisualizationPropertyShapeAssociationDTO();
-            mapCommon(dto, resource, namespaces);
-            dto.setPath(getReferenceIdentifier(MapperUtils.propertyToString(resource, SH.path), namespaces));
-            dto.setMaxCount(MapperUtils.getLiteral(resource, SH.maxCount, Integer.class));
-            dto.setMinCount(MapperUtils.getLiteral(resource, SH.minCount, Integer.class));
-            dto.setReferenceTarget(getPropertyShapeAssociationTarget(model, resource, namespaces));
-            return dto;
-        } else {
-            var dto = new VisualizationAssociationDTO();
-            var target = MapperUtils.propertyToString(resource, RDFS.range);
-            mapCommon(dto, resource, namespaces);
-            dto.setReferenceTarget(getReferenceIdentifier(target, namespaces));
-            return dto;
-        }
     }
 
     private static void mapCommon(VisualizationItemDTO item, Resource resource, Map<String, String> namespaces) {
@@ -257,6 +261,4 @@ public class VisualizationMapper {
             return null;
         }
     }
-
-
 }

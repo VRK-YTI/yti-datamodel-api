@@ -43,27 +43,31 @@ class VisualizationServiceTest {
     @Test
     void testMapVisualizationData() {
         var model = MapperTestUtils.getModelFromFile("/models/test_application_profile_visualization.ttl");
+        var positionModel = MapperTestUtils.getModelFromFile("/positions.ttl");
         var externalPropertiesModel = getExternalPropertiesResult();
 
         when(jenaService.getDataModel(anyString())).thenReturn(model);
+        when(jenaService.getDataModelPositions(anyString())).thenReturn(positionModel);
         when(jenaService.findResources(anySet())).thenReturn(externalPropertiesModel);
 
         var visualizationData = visualizationService.getVisualizationData("visuprof");
 
-        assertEquals(3, visualizationData.size());
+        assertEquals(3, visualizationData.getNodes().size());
 
-        var person = findClass(visualizationData, "person");
+        var person = findClass(visualizationData.getNodes(), "person");
         assertNotNull(person);
         assertEquals(1, person.getAssociations().size());
         assertEquals(2, person.getAttributes().size());
 
-        var address = findClass(visualizationData, "address");
+        var address = findClass(visualizationData.getNodes(), "address");
         assertNotNull(address);
         assertEquals(0, address.getAssociations().size());
         assertEquals(2, address.getAttributes().size());
 
-        var ext = findClass(visualizationData, "personprof:address");
+        var ext = findClass(visualizationData.getNodes(), "personprof:address");
         assertNotNull(ext);
+
+        assertEquals(1, visualizationData.getHiddenNodes().size());
     }
 
     @Test

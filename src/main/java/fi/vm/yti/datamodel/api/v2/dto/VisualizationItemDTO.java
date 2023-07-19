@@ -38,6 +38,6 @@ public class VisualizationItemDTO {
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(identifier, label);
+        return Objects.hashCode(identifier);
     }
 }

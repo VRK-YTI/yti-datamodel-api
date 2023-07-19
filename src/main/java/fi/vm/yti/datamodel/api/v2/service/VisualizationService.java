@@ -23,12 +23,12 @@ public class VisualizationService {
         this.jenaService = jenaService;
     }
 
-    public Set<VisualizationClassDTO> getVisualizationData(String prefix) {
+    public VisualizationResultDTO getVisualizationData(String prefix) {
         var graph = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
         var model = jenaService.getDataModel(graph);
         Model positions;
         try {
-            positions = jenaService.getDataModel(ModelConstants.MODEL_POSITIONS_NAMESPACE + prefix);
+            positions = jenaService.getDataModelPositions(ModelConstants.MODEL_POSITIONS_NAMESPACE + prefix);
         } catch(ResourceNotFoundException e) {
             positions = ModelFactory.createDefaultModel();
         }
@@ -38,10 +38,10 @@ public class VisualizationService {
         var namespaces = getNamespaces(model, graph);
         var languages = MapperUtils.arrayPropertyToSet(modelResource, DCTerms.language);
 
-        var result = new HashSet<VisualizationClassDTO>();
+        var visualizationClasses = new HashSet<VisualizationClassDTO>();
 
         while (classURIs.hasNext()) {
-            String classURI = classURIs.next().getSubject().getURI();
+            var classURI = classURIs.next().getSubject().getURI();
             var classResource = model.getResource(classURI);
 
             var classDTO = VisualizationMapper.mapClass(classURI, model, namespaces);
@@ -63,17 +63,23 @@ public class VisualizationService {
             }
 
             // add dummy classes for external classes
-            addExternalClasses(classDTO, languages, result);
+            addExternalClasses(classDTO, languages, visualizationClasses);
 
-            result.add(classDTO);
+            visualizationClasses.add(classDTO);
         }
-        VisualizationMapper.mapPositionsDataToDTOs(positions, prefix, result);
-        return result;
+        var hiddenNodes = VisualizationMapper.mapPositionsDataToDTOsAndCreateHiddenNodes(positions, prefix, visualizationClasses);
+
+        var visualizationResult = new VisualizationResultDTO();
+        visualizationResult.setNodes(visualizationClasses);
+        visualizationResult.setHiddenNodes(hiddenNodes);
+
+        return visualizationResult;
     }
 
     public void savePositionData(String modelPrefix, List<PositionDataDTO> positions) {
         String positionGraphURI = ModelConstants.MODEL_POSITIONS_NAMESPACE + modelPrefix;
 
+        // remove old positions if exists
         if (jenaService.doesDataModelExist(positionGraphURI)) {
             jenaService.deleteDataModel(positionGraphURI);
         }

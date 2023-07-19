@@ -157,10 +157,13 @@ class VisualizationDataMapperTest {
         classes.add(classDTO1);
         classes.add(classDTO2);
 
-        VisualizationMapper.mapPositionsDataToDTOs(postionModel, modelPrefix, classes);
+        var hiddenNodes = VisualizationMapper.mapPositionsDataToDTOsAndCreateHiddenNodes(postionModel, modelPrefix, classes);
+        assertEquals(0, hiddenNodes.size());
 
         var c1 = findClass(classes, "class-1");
         assertNotNull(c1);
+        assertEquals(1.0, c1.getPosition().getX());
+        assertEquals(2.0, c1.getPosition().getY());
 
         assertEquals(2, classes.size());
         assertEquals("class-2", c1.getParentClasses().iterator().next());
@@ -202,17 +205,17 @@ class VisualizationDataMapperTest {
         classes.add(classDTO1);
         classes.add(classDTO2);
 
-        VisualizationMapper.mapPositionsDataToDTOs(postionModel, modelPrefix, classes);
+        var hiddenNodes = VisualizationMapper.mapPositionsDataToDTOsAndCreateHiddenNodes(postionModel, modelPrefix, classes);
 
         var c1 = findClass(classes, "class-1");
-        var hidden = findClass(classes, "corner-1");
+        var hidden = findHiddenNode(hiddenNodes, "corner-1");
         assertNotNull(c1);
         assertNotNull(hidden);
 
-        assertEquals(3, classes.size());
+        assertEquals(2, classes.size());
+        assertEquals(1, hiddenNodes.size());
         assertEquals("corner-1", c1.getParentClasses().iterator().next());
-
-        assertEquals("class-2", hidden.getParentClasses().iterator().next());
+        assertEquals("class-2", hidden.getReferenceTarget());
     }
 
     @Test
@@ -282,13 +285,14 @@ class VisualizationDataMapperTest {
         classes.add(classDTO2);
         classes.add(classDTO3);
 
-        VisualizationMapper.mapPositionsDataToDTOs(postionModel, modelPrefix, classes);
+        var hiddenNodes = VisualizationMapper.mapPositionsDataToDTOsAndCreateHiddenNodes(postionModel, modelPrefix, classes);
 
         // should contain three classes and three hidden nodes
-        assertEquals(6, classes.size());
+        assertEquals(3, classes.size());
+        assertEquals(3, hiddenNodes.size());
 
-        var identifiers = classes.stream().map(VisualizationItemDTO::getIdentifier).toList();
-        assertTrue(identifiers.containsAll(List.of("class-1", "class-2", "class-3", "corner-1", "corner-2", "corner-3")));
+        var identifiers = hiddenNodes.stream().map(VisualizationHiddenNodeDTO::getIdentifier).toList();
+        assertTrue(identifiers.containsAll(List.of("corner-1", "corner-2", "corner-3")));
 
         var classItem = findClass(classes, "class-1");
         assertNotNull(classItem);
@@ -301,22 +305,69 @@ class VisualizationDataMapperTest {
         assertEquals(1.0, classItem.getPosition().getX());
         assertEquals(2.0, classItem.getPosition().getY());
 
-        var cornerItem1 = findClass(classes, "corner-1");
+        var cornerItem1 = findHiddenNode(hiddenNodes, "corner-1");
         assertNotNull(cornerItem1);
         assertEquals(6.0, cornerItem1.getPosition().getX());
         assertEquals(7.0, cornerItem1.getPosition().getY());
-        assertEquals("corner-2", cornerItem1.getParentClasses().iterator().next());
+        assertEquals("corner-2", cornerItem1.getReferenceTarget());
 
-        var cornerItem2 = findClass(classes, "corner-2");
+        var cornerItem2 = findHiddenNode(hiddenNodes, "corner-2");
         assertNotNull(cornerItem2);
-        assertEquals("class-2", cornerItem2.getParentClasses().iterator().next());
+        assertEquals("class-2", cornerItem2.getReferenceTarget());
 
-        var cornerItem3 = findClass(classes, "corner-3");
+        var cornerItem3 = findHiddenNode(hiddenNodes, "corner-3");
         assertNotNull(cornerItem3);
-        assertEquals("class-3", cornerItem3.getParentClasses().iterator().next());
+        assertEquals("class-3", cornerItem3.getReferenceTarget());
+    }
+
+    @Test
+    void mapPositionDataAssociationRecursive() {
+        var modelPrefix = "test-model";
+        var positionGraphURI = ModelConstants.MODEL_POSITIONS_NAMESPACE + modelPrefix;
+
+        var association = new VisualizationAssociationDTO();
+        association.setReferenceTarget("class-1");
+        association.setIdentifier("assoc-1");
+
+        var node1 = new PositionDataDTO();
+        node1.setIdentifier("class-1");
+        node1.setX(1.0);
+        node1.setY(2.0);
+        node1.setReferenceTargets(Set.of("corner-1"));
+
+        var corner1 = new PositionDataDTO();
+        corner1.setX(6.0);
+        corner1.setY(7.0);
+        corner1.setIdentifier("corner-1");
+        corner1.setReferenceTargets(Set.of("corner-2"));
+
+        var corner2 = new PositionDataDTO();
+        corner2.setX(6.0);
+        corner2.setY(7.0);
+        corner2.setIdentifier("corner-2");
+        corner2.setReferenceTargets(Set.of("class-1"));
+
+        var positionModel = VisualizationMapper.mapPositionDataToModel(positionGraphURI,
+                List.of(node1, corner1, corner2));
+
+        var classDTO1 = new VisualizationClassDTO();
+        classDTO1.setIdentifier("class-1");
+        classDTO1.setAssociations(List.of(association));
+
+        var classes = new HashSet<VisualizationClassDTO>();
+        classes.add(classDTO1);
+
+        var hiddenNodes = VisualizationMapper.mapPositionsDataToDTOsAndCreateHiddenNodes(positionModel, modelPrefix, classes);
+
+        assertEquals(1, classes.size());
+        assertEquals(2, hiddenNodes.size());
     }
 
     private static VisualizationClassDTO findClass(Set<VisualizationClassDTO> classes, String identifier) {
         return classes.stream().filter(c -> c.getIdentifier().equals(identifier)).findFirst().orElse(null);
+    }
+
+    private static VisualizationHiddenNodeDTO findHiddenNode(Set<VisualizationHiddenNodeDTO> hiddenNodes, String identifier) {
+        return hiddenNodes.stream().filter(c -> c.getIdentifier().equals(identifier)).findFirst().orElse(null);
     }
 }
