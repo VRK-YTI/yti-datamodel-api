@@ -32,6 +32,7 @@ public class ClassValidator extends BaseValidator implements
         checkSubClassOf(context, classDTO);
         checkSubject(context, classDTO);
         checkPrefixOrIdentifier(context, classDTO.getIdentifier(), "identifier", ValidationConstants.RESOURCE_IDENTIFIER_MAX_LENGTH, updateClass);
+        checkReservedIdentifier(context, classDTO);
 
         return !isConstraintViolationAdded();
     }
