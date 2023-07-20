@@ -231,8 +231,9 @@ public class ClassController {
         } else {
             dto = ClassMapper.mapToNodeShapeDTO(model, modelURI, classIdentifier, orgModel,
                     hasRightToModel, userMapper);
+            var existingProperties = getTargetNodeProperties(MapperUtils.propertyToString(model.getResource(classURI), SH.node));
             var nodeShapeResources = jenaService.constructWithQuery(ClassMapper.getNodeShapeResourcesQuery(classURI));
-            ClassMapper.addNodeShapeResourcesToDTO(model, nodeShapeResources, (NodeShapeInfoDTO) dto);
+            ClassMapper.addNodeShapeResourcesToDTO(model, nodeShapeResources, (NodeShapeInfoDTO) dto, existingProperties);
         }
 
         terminologyService.mapConcept().accept(dto);

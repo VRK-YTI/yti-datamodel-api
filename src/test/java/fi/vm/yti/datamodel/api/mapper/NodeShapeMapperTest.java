@@ -13,6 +13,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.topbraid.shacl.vocabulary.SH;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -186,7 +187,7 @@ class NodeShapeMapperTest {
         var dto = new NodeShapeInfoDTO();
         dto.setUri(resource.getURI());
 
-        ClassMapper.addNodeShapeResourcesToDTO(model, propertyShapeResult, dto);
+        ClassMapper.addNodeShapeResourcesToDTO(model, propertyShapeResult, dto, Collections.emptySet());
 
         var attributes = dto.getAttribute();
         assertEquals(3, attributes.size());
