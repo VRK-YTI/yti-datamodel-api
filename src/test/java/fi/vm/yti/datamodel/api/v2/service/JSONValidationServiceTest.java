@@ -32,19 +32,10 @@ public class JSONValidationServiceTest {
 
 	@Test
 	void testValidJSONSchema() throws Exception, IOException {
-//		String validInputSchemaPath = "jsonschema/test_jsonschema_b2share.json";
-//		String validInputSchemaPath = "test_jsonschema_b2share.json";
-		String validInputSchemaPath = "test_json_trimmed.json";
-//		String validInputSchemaPath = "src/test/resources/test_jsonschema_b2share.json";
-//		String validInputSchemaPath = "/src/test/resources/test_jsonschema_b2share.json";
-//		String validInputSchemaPath = "/Users/nekrasov/Desktop/mscr-cloned/mscr-datamodel-api/src/test/resources/test_jsonschema_b2share.json";
-//		String validInputSchemaPath = "Users/nekrasov/Desktop/mscr-cloned/mscr-datamodel-api/src/test/resources/test_jsonschema_b2share.json";
-//		String validInputSchemaPath = "./../resources/test_jsonschema_b2share.json";
-
-//		assertEquals(JSONValidationService.validateJSONSchema(byteStreamFromPath(validInputSchemaPath)),
-//				new ValidationRecord(true, Arrays.asList()));
+		String validInputSchemaPath = "jsonschema/test_jsonschema_valid_schema.json";
+		ValidationRecord vr = JSONValidationService.validateJSONSchema(byteStreamFromPath(validInputSchemaPath));
 		
-		assertTrue(JSONValidationService.validateJSONSchema(byteStreamFromPath(validInputSchemaPath)).isValid());
+		assertTrue(vr.isValid());
 
 	}
 
@@ -61,8 +52,11 @@ public class JSONValidationServiceTest {
 		List<String> expectedErrorMessages = Arrays.asList(
 				"$.properties.creators.type: does not have a value in the enumeration [array, boolean, integer, null, number, object, string]",
 				"$.properties.creators.type: string found, array expected");
-		assertLinesMatch(JSONValidationService.validateJSONSchema(byteStreamFromPath(firstInvalidInputSchemaPath))
-				.validationOutput(), expectedErrorMessages);
+		ValidationRecord vr = JSONValidationService.validateJSONSchema(byteStreamFromPath(firstInvalidInputSchemaPath)); 
+		assertLinesMatch(
+				expectedErrorMessages,
+				vr.validationOutput()
+				);
 	}
 
 	@Test
@@ -76,4 +70,31 @@ public class JSONValidationServiceTest {
 
 		assertEquals(expectedErrorMessage, exception.getMessage());
 	}
+	
+	@Test
+	void testMissingSchema() {
+		String inputSchemaPath = "jsonschema/test_jsonschema_missing_schema.json";
+		
+		Throwable exception = Assertions.assertThrows(Exception.class, () -> {
+			JSONValidationService.validateJSONSchema(byteStreamFromPath(inputSchemaPath));
+		});
+		assertTrue(exception.getMessage().contains("Missing"));		
+
+	}
+	
+	@Test
+	void testUnsupportedFeature() throws Exception {
+		String inputSchemaPath = "jsonschema/test_jsonschema_unsupported_features.json";
+		ValidationRecord vr = JSONValidationService.validateJSONSchema(byteStreamFromPath(inputSchemaPath));
+		assertFalse(vr.isValid());
+		
+	}
+	
+	@Test
+	void testInvalidDatatype() throws Exception {
+		String inputSchemaPath = "jsonschema/test_jsonschema_invalid_datatype.json";
+		ValidationRecord vr = JSONValidationService.validateJSONSchema(byteStreamFromPath(inputSchemaPath));
+		assertFalse(vr.isValid());
+		
+	}	
 }
