@@ -1,6 +1,7 @@
 package fi.vm.yti.datamodel.api.v2.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -20,6 +21,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.topbraid.shacl.vocabulary.SH;
 
+import fi.vm.yti.datamodel.api.v2.dto.MSCR;
 import fi.vm.yti.datamodel.api.v2.mapper.ClassMapper;
 import fi.vm.yti.datamodel.api.v2.mapper.ResourceMapper;
 
@@ -91,7 +93,8 @@ public class SchemaServiceTest {
 		assertEquals(XSD.integer, model.getRequiredProperty(model.createResource(schemaPID + "#root/address/city/population"), SH.datatype).getObject());
 		assertEquals(XSD.xfloat, model.getRequiredProperty(model.createResource(schemaPID + "#root/height"), SH.datatype).getObject());
 		assertEquals(XSD.xboolean, model.getRequiredProperty(model.createResource(schemaPID + "#root/has_cats"), SH.datatype).getObject());
-		
+		assertEquals("common", model.getRequiredProperty(model.createResource(schemaPID + "#root/lastName"), SH.defaultValue).getString());
+		assertEquals(MSCR.NULL, model.getRequiredProperty(model.createResource(schemaPID + "#root/address"), SH.defaultValue).getObject());
 	}
 	
 	@Test
@@ -101,8 +104,34 @@ public class SchemaServiceTest {
 		
 		String schemaPID = "urn:test:" + UUID.randomUUID().toString();
 		Model model = service.transformJSONSchemaToInternal(schemaPID, data);
-		assertEquals(1, model.getRequiredProperty(model.createResource(schemaPID + "#root/lastName"), SH.minCount).getObject());
-		assertEquals(1, model.getRequiredProperty(model.createResource(schemaPID + "#root/lastName"), SH.maxCount).getObject());
+		assertEquals(1, model.getRequiredProperty(model.createResource(schemaPID + "#root/lastName"), SH.minCount).getInt());
+		assertEquals(1, model.getRequiredProperty(model.createResource(schemaPID + "#root/lastName"), SH.maxCount).getInt());
+		
+	}
+	
+	@Test
+	void testValidArrays() throws Exception {
+		byte[] data = getByteStreamFromPath("jsonschema/test_jsonschema_valid_arrays.json");
+		assertNotNull(data);
+		
+		String schemaPID = "urn:test:" + UUID.randomUUID().toString();
+		Model model = service.transformJSONSchemaToInternal(schemaPID, data);
+
+		assertEquals(XSD.xstring, model.getRequiredProperty(model.createResource(schemaPID + "#root/firstName"), SH.datatype).getObject());
+		// lastName is functional property -> must have maxCount = 1
+		assertEquals(1, model.getRequiredProperty(model.createResource(schemaPID + "#root/firstName"), SH.maxCount).getInt());
+		// lastName is not required -> should not have minCount
+		assertFalse(model.contains(model.createResource(schemaPID + "#root/firstName"), SH.minCount));
+
+		// not restrictions on number of items in an array -> no maxCount
+		assertFalse(model.contains(model.createResource(schemaPID + "#root/lastNames"), SH.maxCount));
+
+		assertEquals(2, model.getRequiredProperty(model.createResource(schemaPID + "#root/addresses/numbers"), SH.minCount).getInt());
+		assertFalse(model.contains(model.createResource(schemaPID + "#root/addresses/numbers"), SH.maxCount));
+
+		assertEquals(10, model.getRequiredProperty(model.createResource(schemaPID + "#root/addresses/city/area_codes"), SH.maxCount).getInt());
+		assertEquals(1, model.getRequiredProperty(model.createResource(schemaPID + "#root/addresses/city/area_codes"), SH.minCount).getInt());
+
 		
 	}
 	

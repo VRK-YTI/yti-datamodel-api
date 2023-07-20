@@ -7,7 +7,8 @@
       "type" : "string"
     },
     "lastName" : {
-      "type" : "string"
+      "type" : "string",
+      "default": "common"
     },
     "address" : {
       "type" : "object",
