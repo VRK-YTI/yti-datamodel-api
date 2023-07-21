@@ -347,22 +347,26 @@ public class ClassMapper {
         });
     }
 
-    public static void addNodeShapeResourcesToDTO(Model model, Model propertyShapeResources, NodeShapeInfoDTO nodeShapeDTO) {
+    public static void addNodeShapeResourcesToDTO(Model model, Model propertyShapeResources, NodeShapeInfoDTO nodeShapeDTO, Set<String> restrictedProperties) {
         var deactivatedURIs = model.listSubjectsWithProperty(SH.deactivated)
                 .mapWith(Resource::getURI).toList();
 
         propertyShapeResources.listSubjects().forEach(resource -> {
             var dto = new SimplePropertyShapeDTO();
-            var uri = NodeFactory.createURI(resource.getURI());
 
             var modelUri = MapperUtils.propertyToString(resource, RDFS.isDefinedBy);
             if (modelUri == null) {
                 throw new MappingError("ModelUri null for resource");
             }
+
+            if(restrictedProperties.contains(resource.getURI())){
+                dto.setFromShNode(true);
+            }
+
             dto.setUri(resource.getURI());
             dto.setModelId(MapperUtils.getModelIdFromNamespace(modelUri));
             dto.setLabel(MapperUtils.localizedPropertyToMap(resource, RDFS.label));
-            dto.setIdentifier(uri.getLocalName());
+            dto.setIdentifier(resource.getLocalName());
             dto.setDeactivated(deactivatedURIs.contains(resource.getURI()));
             if (MapperUtils.hasType(resource, OWL.DatatypeProperty)) {
                 nodeShapeDTO.getAttribute().add(dto);
