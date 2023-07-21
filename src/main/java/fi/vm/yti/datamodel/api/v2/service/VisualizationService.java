@@ -28,7 +28,7 @@ public class VisualizationService {
         var model = jenaService.getDataModel(graph);
         Model positions;
         try {
-            positions = jenaService.getDataModelPositions(ModelConstants.MODEL_POSITIONS_NAMESPACE + prefix);
+            positions = jenaService.getDataModelPositions(prefix);
         } catch(ResourceNotFoundException e) {
             positions = ModelFactory.createDefaultModel();
         }
