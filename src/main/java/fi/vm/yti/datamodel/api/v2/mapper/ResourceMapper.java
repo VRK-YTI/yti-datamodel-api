@@ -3,6 +3,7 @@ package fi.vm.yti.datamodel.api.v2.mapper;
 import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.*;
+import fi.vm.yti.datamodel.api.v2.utils.DataModelUtils;
 import fi.vm.yti.security.YtiUser;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.rdf.model.Model;
@@ -173,6 +174,7 @@ public class ResourceMapper {
         var resource = model.getResource(resourceUri);
 
         indexResource.setId(resourceUri);
+        indexResource.setCurie(MapperUtils.uriToURIDTO(resourceUri, model).getCurie());
         indexResource.setLabel(MapperUtils.localizedPropertyToMap(resource, RDFS.label));
         indexResource.setStatus(Status.valueOf(MapperUtils.propertyToString(resource, OWL.versionInfo)));
         indexResource.setIsDefinedBy(MapperUtils.propertyToString(resource, RDFS.isDefinedBy));
@@ -217,6 +219,7 @@ public class ResourceMapper {
     public static IndexResourceInfo mapIndexResourceInfo(IndexResource resource, Map<String, IndexModel> dataModels, Model concepts) {
         var indexResource = new IndexResourceInfo();
         indexResource.setId(resource.getId());
+        indexResource.setCurie(resource.getCurie());
         indexResource.setLabel(resource.getLabel());
         indexResource.setStatus(resource.getStatus());
         indexResource.setNote(resource.getNote());
@@ -289,6 +292,8 @@ public class ResourceMapper {
         var resourceUri = modelUri + ModelConstants.RESOURCE_SEPARATOR + resourceIdentifier;
         var resourceResource = model.getResource(resourceUri);
 
+        DataModelUtils.addPrefixesToModel(modelUri, model);
+
         mapResourceBasicInfoDTO(dto, resourceResource, model.getResource(modelUri), orgModel, hasRightToModel);
 
         if(MapperUtils.hasType(resourceResource, OWL.ObjectProperty)){
@@ -299,11 +304,22 @@ public class ResourceMapper {
             throw new MappingError("Unsupported rdf:type");
         }
 
-        dto.setSubResourceOf(MapperUtils.arrayPropertyToSet(resourceResource, RDFS.subPropertyOf));
-        dto.setEquivalentResource(MapperUtils.arrayPropertyToSet(resourceResource, OWL.equivalentProperty));
+        var subProperties = MapperUtils.arrayPropertyToSet(resourceResource, RDFS.subPropertyOf);
+        var equivalentProperties = MapperUtils.arrayPropertyToSet(resourceResource, OWL.equivalentProperty);
+        var domain = MapperUtils.propertyToString(resourceResource, RDFS.domain);
+        var range = MapperUtils.propertyToString(resourceResource, RDFS.range);
 
-        dto.setDomain(MapperUtils.propertyToString(resourceResource, RDFS.domain));
-        dto.setRange(MapperUtils.propertyToString(resourceResource, RDFS.range));
+        dto.setSubResourceOf(MapperUtils.uriToURIDTOs(subProperties, model));
+        dto.setEquivalentResource(MapperUtils.uriToURIDTOs(equivalentProperties, model));
+        dto.setDomain(MapperUtils.uriToURIDTO(domain, model));
+
+        // attribute's range is data type, e.g. rdfs:Literal
+        // association's range is URI
+        if (dto.getType().equals(ResourceType.ATTRIBUTE)) {
+            dto.setRange(new UriDTO(range, range));
+        } else {
+            dto.setRange(MapperUtils.uriToURIDTO(range, model));
+        }
 
         MapperUtils.mapCreationInfo(dto, resourceResource, userMapper);
         return dto;
@@ -316,6 +332,8 @@ public class ResourceMapper {
         var resourceUri = modelUri + ModelConstants.RESOURCE_SEPARATOR + identifier;
         var resource = model.getResource(resourceUri);
 
+        DataModelUtils.addPrefixesToModel(modelUri, model);
+
         mapResourceBasicInfoDTO(dto, resource, model.getResource(modelUri), orgModel, hasRightToModel);
 
         if(MapperUtils.hasType(resource, OWL.ObjectProperty)){
@@ -326,11 +344,15 @@ public class ResourceMapper {
             throw new MappingError("Unsupported rdf:type");
         }
         dto.setAllowedValues(MapperUtils.arrayPropertyToList(resource, SH.in));
-        dto.setClassType(MapperUtils.propertyToString(resource, SH.class_));
+        dto.setClassType(MapperUtils.uriToURIDTO(
+                MapperUtils.propertyToString(resource, SH.class_), model)
+        );
         dto.setDataType(MapperUtils.propertyToString(resource, SH.datatype));
         dto.setDefaultValue(MapperUtils.propertyToString(resource, SH.defaultValue));
         dto.setHasValue(MapperUtils.propertyToString(resource, SH.hasValue));
-        dto.setPath(MapperUtils.propertyToString(resource, SH.path));
+        dto.setPath(MapperUtils.uriToURIDTO(
+                MapperUtils.propertyToString(resource, SH.path), model)
+        );
         dto.setMaxCount(MapperUtils.getLiteral(resource, SH.maxCount, Integer.class));
         dto.setMinCount(MapperUtils.getLiteral(resource, SH.minCount, Integer.class));
         dto.setMaxLength(MapperUtils.getLiteral(resource, SH.maxLength, Integer.class));
@@ -357,7 +379,9 @@ public class ResourceMapper {
                                                 Resource modelResource,
                                                 Model orgModel,
                                                 boolean hasRightToModel) {
-        dto.setUri(resourceResource.getURI());
+        var uriDTO = MapperUtils.uriToURIDTO(resourceResource.getURI(), resourceResource.getModel());
+        dto.setUri(uriDTO.getUri());
+        dto.setCurie(uriDTO.getCurie());
         dto.setLabel(MapperUtils.localizedPropertyToMap(resourceResource, RDFS.label));
         var status = Status.valueOf(resourceResource.getProperty(OWL.versionInfo).getObject().toString().toUpperCase());
         dto.setStatus(status);

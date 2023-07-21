@@ -1,11 +1,10 @@
 package fi.vm.yti.datamodel.api.v2.endpoint;
 
 import fi.vm.yti.datamodel.api.security.AuthorizationManager;
-import fi.vm.yti.datamodel.api.v2.dto.DCAP;
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
-import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.service.JenaService;
+import fi.vm.yti.datamodel.api.v2.utils.DataModelUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -13,8 +12,6 @@ import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.SimpleSelector;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFDataMgr;
-import org.apache.jena.vocabulary.DCTerms;
-import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.SKOS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,7 +21,6 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.StringWriter;
-import java.util.List;
 
 @RestController
 @RequestMapping("v2/export")
@@ -77,7 +73,7 @@ public class ExportController {
             exportedModel = model;
         }
 
-        addNsPrefixes(modelURI, exportedModel);
+        DataModelUtils.addPrefixesToModel(modelURI, exportedModel);
 
         // remove editorial notes from resources
         if (!authorizationManager.hasRightToModel(prefix, model)) {
@@ -99,29 +95,5 @@ public class ExportController {
                 RDFDataMgr.write(stringWriter, exportedModel, Lang.JSONLD);
         }
         return ResponseEntity.ok().body(stringWriter.toString());
-    }
-
-    private static void addNsPrefixes(String modelURI, Model model) {
-        model.setNsPrefixes(ModelConstants.PREFIXES);
-        model.setNsPrefix(MapperUtils.getModelIdFromNamespace(modelURI), modelURI + ModelConstants.RESOURCE_SEPARATOR);
-
-        var modelResource = model.getResource(modelURI);
-
-        List.of(OWL.imports, DCTerms.requires).forEach(property ->
-            modelResource.listProperties(property).forEach(res -> {
-                var uri = res.getObject().toString();
-                if (uri.startsWith(ModelConstants.SUOMI_FI_NAMESPACE)) {
-                    var prefix = MapperUtils.getModelIdFromNamespace(uri);
-                    model.setNsPrefix(prefix, uri + ModelConstants.RESOURCE_SEPARATOR);
-                } else if (!uri.contains("uri.suomi.fi")) {
-                    // handle external namespaces, skip for now terminologies and code lists
-                    var extResource = model.getResource(uri);
-                    var extPrefix = MapperUtils.propertyToString(extResource, DCAP.preferredXMLNamespacePrefix);
-                    if (extPrefix != null) {
-                        model.setNsPrefix(extPrefix, uri);
-                    }
-                }
-            })
-        );
     }
 }

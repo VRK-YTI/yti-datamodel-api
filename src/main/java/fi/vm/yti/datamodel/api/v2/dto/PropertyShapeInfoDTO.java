@@ -6,8 +6,8 @@ import java.util.List;
 public class PropertyShapeInfoDTO extends ResourceInfoBaseDTO {
 
     private ResourceType type;
-    private String path;
-    private String classType;
+    private UriDTO path;
+    private UriDTO classType;
     private String dataType;
     private List<String> allowedValues = new ArrayList<>();
     private String defaultValue;
@@ -30,19 +30,19 @@ public class PropertyShapeInfoDTO extends ResourceInfoBaseDTO {
         this.type = type;
     }
 
-    public String getPath() {
+    public UriDTO getPath() {
         return path;
     }
 
-    public void setPath(String path) {
+    public void setPath(UriDTO path) {
         this.path = path;
     }
 
-    public String getClassType() {
+    public UriDTO getClassType() {
         return classType;
     }
 
-    public void setClassType(String classType) {
+    public void setClassType(UriDTO classType) {
         this.classType = classType;
     }
 

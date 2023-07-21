@@ -110,7 +110,7 @@ class NodeShapeMapperTest {
         assertEquals("test org", dto.getContributor().stream().findFirst().orElseThrow().getLabel().get("fi"));
         assertEquals("7d3a3c00-5a6b-489b-a3ed-63bb58c26a63", dto.getContributor().stream().findFirst().orElseThrow().getId());
         assertEquals("http://uri.suomi.fi/datamodel/ns/test/TestClass", dto.getUri());
-        assertEquals("http://uri.suomi.fi/datamodel/ns/target/Class", dto.getTargetClass());
+        assertEquals(new UriDTO("http://uri.suomi.fi/datamodel/ns/target/Class"), dto.getTargetClass());
     }
 
     @Test
