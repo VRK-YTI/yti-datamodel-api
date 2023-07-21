@@ -55,7 +55,7 @@ public class SchemaService {
 			Map.entry("maximum", SHACL.maxInclusive.getURI()), Map.entry("minimum", SHACL.minInclusive.getURI()),
 			Map.entry("exclusiveMaximum", SHACL.maxExclusive.getURI()),
 			Map.entry("exclusiveMinimum", SHACL.minExclusive.getURI()), Map.entry("maxItems", SHACL.maxCount.getURI()),
-			Map.entry("minItmes", SHACL.minCount.getURI()), Map.entry("maxLength", SHACL.maxLength.getURI()),
+			Map.entry("minItems", SHACL.minCount.getURI()), Map.entry("maxLength", SHACL.maxLength.getURI()),
 			Map.entry("minLength", SHACL.minLength.getURI()), Map.entry("not", SHACL.not.getURI()),
 			Map.entry("pattern", SHACL.pattern.getURI()) 
 
@@ -63,6 +63,8 @@ public class SchemaService {
 
 	private final Set<String> JSONSchemaNumericalProperties = Set.of("maximum", "minimum", "exclusiveMaximum",
 			"exclusiveMinimum", "maxItems", "minItems");
+	
+	private final Set<String> JSONSchemaBooleanProperties = Set.of("additionalProperties");
 
 	private void checkAndAddPropertyFeature(JsonNode node, Model model, Resource propertyResource) {
 		for (var key : JSONSchemaToSHACLMap.keySet()) {
@@ -71,6 +73,9 @@ public class SchemaService {
 				if (JSONSchemaNumericalProperties.contains(key)) {
 					propertyResource.addProperty(model.getProperty(JSONSchemaToSHACLMap.get(key)),
 							model.createTypedLiteral(propertyNode.asInt()));
+				} else if (JSONSchemaBooleanProperties.contains(key)) {
+					propertyResource.addProperty(model.getProperty(JSONSchemaToSHACLMap.get(key)),
+							model.createTypedLiteral(propertyNode.asBoolean()));
 				} else {
 					propertyResource.addProperty(model.getProperty(JSONSchemaToSHACLMap.get(key)),
 							propertyNode.asText());
@@ -187,6 +192,7 @@ public class SchemaService {
 			}
 
 			if (entry.getValue().get("type").asText().equals("object")) {
+				System.out.println("EQUAL OBJ");
 				ArrayList<String> updatedRequiredProperties = new ArrayList<>(requiredProperties);
 
 				if (entry.getValue().get("required") != null) {
@@ -198,12 +204,14 @@ public class SchemaService {
 						schemaPID + "#" + propID + "/" + entry.getKey());
 				nodeShapeResource.addProperty(model.getProperty(SHACL.property.getURI()), propertyShape);
 
+				System.out.println("UPDATED PROPS:" + updatedRequiredProperties);
 				handleObject(propID + "/" + entry.getKey(), entry.getValue(), schemaPID, model,
 						updatedRequiredProperties);
 
 			} else if (entry.getValue().get("type").asText().equals("array")
 					&& entry.getValue().get("items").has("type")
 					&& entry.getValue().get("items").get("type").asText().equals("object")) {
+				System.out.println("EQUAL ARRAY WITH OBJ");
 
 				Resource propertyShape = addObjectProperty(entry.getKey(), entry.getValue(), model, schemaPID,
 						schemaPID + "#" + propID + "/" + entry.getKey());
@@ -214,6 +222,7 @@ public class SchemaService {
 			} else if (entry.getValue().get("type").asText().equals("array")) {
 				Resource propertyShape = addObjectProperty(entry.getKey(), entry.getValue(), model, schemaPID,
 						schemaPID + "#" + propID + "/" + entry.getKey());
+				System.out.println("EQUAL ONLY ARRAY");
 				nodeShapeResource.addProperty(model.getProperty(SHACL.property.getURI()), propertyShape);
 
 				Entry<String, JsonNode> arrayItem = Map.entry(entry.getKey() + "/items", entry.getValue().get("items"));
@@ -221,7 +230,10 @@ public class SchemaService {
 				handleDatatypeProperty(propID, arrayItem, model, schemaPID, nodeShapeResource, false, true);
 
 			} else {
-				boolean isRequired = requiredProperties.contains(entry.getKey());
+				System.out.println("EQUAL SIMPLE PROPERTY " + entry.getKey() + " || " + entry.getValue().has("required"));
+				
+				// need to check later if requiredProperties do anything at all in this clause
+				boolean isRequired = requiredProperties.contains(entry.getKey()) || (entry.getValue().has("required") && (entry.getValue().get("required").asBoolean() == true));
 				handleDatatypeProperty(propID, entry, model, schemaPID, nodeShapeResource, isRequired, false);
 			}
 
