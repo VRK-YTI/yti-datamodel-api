@@ -257,7 +257,7 @@ class ResourceMapperTest {
         assertEquals(1, indexClass.getLabel().size());
         assertEquals("test attribute", indexClass.getLabel().get("fi"));
         assertEquals("http://uri.suomi.fi/datamodel/ns/test/DomainClass", indexClass.getDomain());
-        assertEquals("http://uri.suomi.fi/datamodel/ns/test/RangeClass", indexClass.getRange());
+        assertEquals("rdf:Literal", indexClass.getRange());
     }
 
     @Test
@@ -343,9 +343,9 @@ class ResourceMapperTest {
         assertEquals("comment visible for admin", dto.getEditorialNote());
         assertEquals(Status.VALID, dto.getStatus());
         assertEquals(1, dto.getSubResourceOf().size());
-        assertEquals("http://uri.suomi.fi/datamodel/ns/test/SubResource", dto.getSubResourceOf().stream().findFirst().orElse(""));
+        assertEquals(new UriDTO("http://uri.suomi.fi/datamodel/ns/test/SubResource"), dto.getSubResourceOf().stream().findFirst().orElse(null));
         assertEquals(1, dto.getEquivalentResource().size());
-        assertEquals("http://uri.suomi.fi/datamodel/ns/test/EqResource", dto.getEquivalentResource().stream().findFirst().orElse(""));
+        assertEquals(new UriDTO("http://uri.suomi.fi/datamodel/ns/test/EqResource"), dto.getEquivalentResource().stream().findFirst().orElse(null));
         assertEquals("http://uri.suomi.fi/terminology/test/test1", dto.getSubject().getConceptURI());
         assertEquals("TestAttribute", dto.getIdentifier());
         assertEquals(2, dto.getNote().size());
@@ -356,8 +356,10 @@ class ResourceMapperTest {
         assertEquals("test org", dto.getContributor().stream().findFirst().orElseThrow().getLabel().get("fi"));
         assertEquals("7d3a3c00-5a6b-489b-a3ed-63bb58c26a63", dto.getContributor().stream().findFirst().orElseThrow().getId());
         assertEquals("http://uri.suomi.fi/datamodel/ns/test/TestAttribute", dto.getUri());
-        assertEquals("http://uri.suomi.fi/datamodel/ns/test/DomainClass", dto.getDomain());
-        assertEquals("http://uri.suomi.fi/datamodel/ns/test/RangeClass", dto.getRange());
+        assertEquals("http://uri.suomi.fi/datamodel/ns/test/DomainClass", dto.getDomain().getUri());
+        assertEquals("test:DomainClass", dto.getDomain().getCurie());
+        assertEquals("rdf:Literal", dto.getRange().getUri());
+        assertEquals("rdf:Literal", dto.getRange().getCurie());
     }
 
     @Test
@@ -372,9 +374,9 @@ class ResourceMapperTest {
         assertEquals("comment visible for admin", dto.getEditorialNote());
         assertEquals(Status.VALID, dto.getStatus());
         assertEquals(1, dto.getSubResourceOf().size());
-        assertEquals("http://uri.suomi.fi/datamodel/ns/test/SubResource", dto.getSubResourceOf().stream().findFirst().orElse(""));
+        assertEquals(new UriDTO("http://uri.suomi.fi/datamodel/ns/test/SubResource"), dto.getSubResourceOf().stream().findFirst().orElse(null));
         assertEquals(1, dto.getEquivalentResource().size());
-        assertEquals("http://uri.suomi.fi/datamodel/ns/test/EqResource", dto.getEquivalentResource().stream().findFirst().orElse(""));
+        assertEquals(new UriDTO("http://uri.suomi.fi/datamodel/ns/test/EqResource"), dto.getEquivalentResource().stream().findFirst().orElse(null));
         assertEquals("http://uri.suomi.fi/terminology/test/test1", dto.getSubject().getConceptURI());
         assertEquals("TestAssociation", dto.getIdentifier());
         assertEquals(2, dto.getNote().size());
@@ -385,8 +387,8 @@ class ResourceMapperTest {
         assertEquals("test org", dto.getContributor().stream().findFirst().orElseThrow().getLabel().get("fi"));
         assertEquals("7d3a3c00-5a6b-489b-a3ed-63bb58c26a63", dto.getContributor().stream().findFirst().orElseThrow().getId());
         assertEquals("http://uri.suomi.fi/datamodel/ns/test/TestAssociation", dto.getUri());
-        assertEquals("http://uri.suomi.fi/datamodel/ns/test/DomainClass", dto.getDomain());
-        assertEquals("http://uri.suomi.fi/datamodel/ns/test/RangeClass", dto.getRange());
+        assertEquals("http://uri.suomi.fi/datamodel/ns/test/DomainClass", dto.getDomain().getUri());
+        assertEquals("http://uri.suomi.fi/datamodel/ns/test/RangeClass", dto.getRange().getUri());
     }
 
     @Test
@@ -484,7 +486,7 @@ class ResourceMapperTest {
         dto.setSubject("http://uri.suomi.fi/terminology/qwe");
         dto.setEditorialNote("new editorial note");
         dto.setDomain("http://uri.suomi.fi/datamodel/ns/test/NewDomainClass");
-        dto.setRange("http://uri.suomi.fi/datamodel/ns/test/NewRangeClass");
+        dto.setRange("xsd:integer");
 
         assertEquals(OWL.DatatypeProperty, resource.getProperty(RDF.type).getResource());
         assertEquals("http://uri.suomi.fi/datamodel/ns/test", resource.getProperty(RDFS.isDefinedBy).getObject().toString());
@@ -498,7 +500,7 @@ class ResourceMapperTest {
         assertEquals("comment visible for admin", resource.getProperty(SKOS.editorialNote).getObject().toString());
         assertEquals(2, resource.listProperties(RDFS.comment).toList().size());
         assertEquals("http://uri.suomi.fi/datamodel/ns/test/DomainClass", MapperUtils.propertyToString(resource, RDFS.domain));
-        assertEquals("http://uri.suomi.fi/datamodel/ns/test/RangeClass", MapperUtils.propertyToString(resource, RDFS.range));
+        assertEquals("rdf:Literal", MapperUtils.propertyToString(resource, RDFS.range));
 
 
         ResourceMapper.mapToUpdateResource("http://uri.suomi.fi/datamodel/ns/test", m, "TestAttribute", dto, mockUser);
@@ -519,7 +521,7 @@ class ResourceMapperTest {
         assertEquals(mockUser.getId().toString(), resource.getProperty(Iow.modifier).getObject().toString());
         assertEquals("2a5c075f-0d0e-4688-90e0-29af1eebbf6d", resource.getProperty(Iow.creator).getObject().toString());
         assertEquals("http://uri.suomi.fi/datamodel/ns/test/NewDomainClass", MapperUtils.propertyToString(resource, RDFS.domain));
-        assertEquals("http://uri.suomi.fi/datamodel/ns/test/NewRangeClass", MapperUtils.propertyToString(resource, RDFS.range));
+        assertEquals("xsd:integer", MapperUtils.propertyToString(resource, RDFS.range));
     }
 
     @Test

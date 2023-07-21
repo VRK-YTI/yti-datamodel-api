@@ -71,7 +71,8 @@ test:TestPropertyShape  rdf:type  sh:PropertyShape ;
         sh:minExclusive      6 ;
         sh:maxExclusive      8 ;
         iow:codeList         <http://uri.suomi.fi/codelist/Test> ;
-        sh:path              <http://uri.suomi.fi/datamodel/ns/ytm/some-attribute> .
+        sh:path              <http://uri.suomi.fi/datamodel/ns/ytm/some-attribute> ;
+        sh:class             <http://uri.suomi.fi/datamodel/ns/ytm/some-class> .
 
 test:DeactivatedPropertyShape  rdf:type  sh:PropertyShape ;
         rdf:type             owl:DatatypeProperty ;

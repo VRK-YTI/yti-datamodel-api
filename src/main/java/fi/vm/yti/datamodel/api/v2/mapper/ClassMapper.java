@@ -2,6 +2,7 @@ package fi.vm.yti.datamodel.api.v2.mapper;
 
 import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
+import fi.vm.yti.datamodel.api.v2.utils.DataModelUtils;
 import fi.vm.yti.datamodel.api.v2.utils.SparqlUtils;
 import fi.vm.yti.security.YtiUser;
 import org.apache.jena.arq.querybuilder.ConstructBuilder;
@@ -212,7 +213,10 @@ public class ClassMapper {
                                             Model orgModel,
                                             boolean hasRightToModel) {
 
-        dto.setUri(resource.getURI());
+        var uriDTO = MapperUtils.uriToURIDTO(resource.getURI(), resource.getModel());
+        dto.setUri(uriDTO.getUri());
+        dto.setCurie(uriDTO.getCurie());
+
         dto.setLabel(MapperUtils.localizedPropertyToMap(resource, RDFS.label));
         dto.setStatus(Status.valueOf(MapperUtils.propertyToString(resource, OWL.versionInfo)));
 
@@ -253,11 +257,16 @@ public class ClassMapper {
         var classResource = model.getResource(classUri);
         var modelResource = model.getResource(modelUri);
 
+        DataModelUtils.addPrefixesToModel(modelResource.getURI(), model);
+
         mapCommonInfoDTO(dto, classResource, modelResource, orgModel, hasRightToModel);
         MapperUtils.mapCreationInfo(dto, classResource, userMapper);
 
-        dto.setSubClassOf(MapperUtils.arrayPropertyToSet(classResource, RDFS.subClassOf));
-        dto.setEquivalentClass(MapperUtils.arrayPropertyToSet(classResource, OWL.equivalentClass));
+        var subClasses = MapperUtils.arrayPropertyToSet(classResource, RDFS.subClassOf);
+        var equivalentClasses = MapperUtils.arrayPropertyToSet(classResource, OWL.equivalentClass);
+
+        dto.setSubClassOf(MapperUtils.uriToURIDTOs(subClasses, model));
+        dto.setEquivalentClass(MapperUtils.uriToURIDTOs(equivalentClasses, model));
 
         return dto;
     }
@@ -272,11 +281,15 @@ public class ClassMapper {
         var nodeShapeResource = model.getResource(nodeShapeURI);
         var modelResource = model.getResource(modelUri);
 
+        DataModelUtils.addPrefixesToModel(modelUri, model);
+
         mapCommonInfoDTO(dto, nodeShapeResource, modelResource, orgModel, hasRightToModel);
         MapperUtils.mapCreationInfo(dto, nodeShapeResource, userMapper);
 
-        dto.setTargetClass(MapperUtils.propertyToString(nodeShapeResource, SH.targetClass));
-        dto.setTargetNode(MapperUtils.propertyToString(nodeShapeResource, SH.node));
+        dto.setTargetClass(MapperUtils.uriToURIDTO(
+                MapperUtils.propertyToString(nodeShapeResource, SH.targetClass), model));
+        dto.setTargetNode(MapperUtils.uriToURIDTO(
+                MapperUtils.propertyToString(nodeShapeResource, SH.node), model));
 
         return dto;
     }

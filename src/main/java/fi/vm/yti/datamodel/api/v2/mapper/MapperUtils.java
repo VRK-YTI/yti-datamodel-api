@@ -16,6 +16,7 @@ import org.apache.jena.vocabulary.RDF;
 
 import java.util.*;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 public class MapperUtils {
 
@@ -329,5 +330,31 @@ public class MapperUtils {
         if (userMapper != null) {
             userMapper.accept(dto);
         }
+    }
+
+    public static UriDTO uriToURIDTO(String uri, Model model) {
+        if (uri == null) {
+            return null;
+        }
+        var u = NodeFactory.createURI(uri);
+        var prefix = model.getNsURIPrefix(u.getNameSpace());
+        if (prefix != null) {
+            return new UriDTO(uri, String.format("%s:%s", prefix, u.getLocalName()));
+        } else if (uri.startsWith(ModelConstants.SUOMI_FI_NAMESPACE)) {
+            return new UriDTO(uri, uri
+                    .replace(ModelConstants.SUOMI_FI_NAMESPACE, "")
+                    .replace(ModelConstants.RESOURCE_SEPARATOR, ":")
+            );
+        } else {
+            // use last element of the path as a prefix, if it could not determine
+            var parts = u.getNameSpace().split("\\W");
+            return new UriDTO(uri, String.format("%s:%s", parts[parts.length - 1], u.getLocalName()));
+        }
+    }
+
+    public static Set<UriDTO> uriToURIDTOs(Collection<String> uris, Model model) {
+        return uris.stream()
+                .map(s -> uriToURIDTO(s, model))
+                .collect(Collectors.toSet());
     }
 }

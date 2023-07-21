@@ -1,9 +1,6 @@
 package fi.vm.yti.datamodel.api.mapper;
 
-import fi.vm.yti.datamodel.api.v2.dto.Iow;
-import fi.vm.yti.datamodel.api.v2.dto.PropertyShapeDTO;
-import fi.vm.yti.datamodel.api.v2.dto.ResourceType;
-import fi.vm.yti.datamodel.api.v2.dto.Status;
+import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.endpoint.EndpointUtils;
 import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.mapper.ResourceMapper;
@@ -83,7 +80,8 @@ class PropertyShapeMapperTest {
         assertEquals("test property shape", dto.getLabel().get("fi"));
         assertEquals(Status.DRAFT, dto.getStatus());
         assertEquals("TestPropertyShape", dto.getIdentifier());
-        assertEquals("http://uri.suomi.fi/datamodel/ns/ytm/some-attribute", dto.getPath());
+        assertEquals(new UriDTO("http://uri.suomi.fi/datamodel/ns/ytm/some-attribute"), dto.getPath());
+        assertEquals(new UriDTO("http://uri.suomi.fi/datamodel/ns/ytm/some-class"), dto.getClassType());
         assertEquals("http://uri.suomi.fi/terminology/test/test1", dto.getSubject().getConceptURI());
         assertEquals("foo", dto.getDefaultValue());
         assertTrue(dto.getAllowedValues().containsAll(List.of("foo", "bar")));
