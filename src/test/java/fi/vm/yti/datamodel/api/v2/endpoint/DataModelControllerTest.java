@@ -1,21 +1,11 @@
 package fi.vm.yti.datamodel.api.v2.endpoint;
 
-import fi.vm.yti.datamodel.api.security.AuthorizationManager;
 import fi.vm.yti.datamodel.api.v2.dto.*;
-import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
-import fi.vm.yti.datamodel.api.v2.mapper.ModelMapper;
-import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexModel;
-import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
-import fi.vm.yti.datamodel.api.v2.service.CodeListService;
-import fi.vm.yti.datamodel.api.v2.service.GroupManagementService;
-import fi.vm.yti.datamodel.api.v2.service.JenaService;
-import fi.vm.yti.datamodel.api.v2.service.TerminologyService;
+import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
+import fi.vm.yti.datamodel.api.v2.service.DataModelService;
 import fi.vm.yti.datamodel.api.v2.validator.ExceptionHandlerAdvice;
 import fi.vm.yti.datamodel.api.v2.validator.ValidationConstants;
-import fi.vm.yti.security.AuthenticatedUserProvider;
-import fi.vm.yti.security.YtiUser;
 import org.apache.commons.lang3.RandomStringUtils;
-import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.vocabulary.SKOS;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,7 +14,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -35,7 +24,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.util.*;
-import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import static org.hamcrest.Matchers.containsString;
@@ -55,37 +43,15 @@ class DataModelControllerTest {
     private MockMvc mvc;
 
     @MockBean
-    private JenaService jenaService;
+    private DataModelService dataModelService;
 
     @MockBean
-    private AuthorizationManager authorizationManager;
-
-    @MockBean
-    private OpenSearchIndexer openSearchIndexer;
-
-    @MockBean
-    private ModelMapper modelMapper;
-
-    @MockBean
-    private TerminologyService terminologyService;
-
-    @MockBean
-    private CodeListService codeListService;
-
-    @MockBean
-    private GroupManagementService groupManagementService;
-
-    @MockBean
-    private AuthenticatedUserProvider userProvider;
-
-    @Mock
-    Consumer<ResourceCommonDTO> consumer;
+    private CoreRepository coreRepository;
 
     @Autowired
     private DataModelController dataModelController;
 
     private static final UUID RANDOM_ORG = UUID.randomUUID();
-    private static final YtiUser USER = EndpointUtils.mockUser;
 
     @BeforeEach
     public void setup() {
@@ -93,10 +59,6 @@ class DataModelControllerTest {
                 .standaloneSetup(this.dataModelController)
                 .setControllerAdvice(new ExceptionHandlerAdvice())
                 .build();
-
-        when(authorizationManager.hasRightToAnyOrganization(anyCollection())).thenReturn(true);
-        when(authorizationManager.hasRightToModel(any(), any())).thenReturn(true);
-        when(userProvider.getUser()).thenReturn(USER);
     }
 
     @Test
@@ -106,14 +68,8 @@ class DataModelControllerTest {
         var mockModel = ModelFactory.createDefaultModel();
         var res = mockModel.createResource(ModelConstants.URN_UUID + RANDOM_ORG);
         res.addProperty(SKOS.notation, "P11");
-        when(jenaService.getOrganizations()).thenReturn(mockModel);
-        when(jenaService.getServiceCategories()).thenReturn(mockModel);
-
-        //Mock mapping
-        var model = mock(Model.class);
-        var indexmodel = mock(IndexModel.class);
-        when(modelMapper.mapToJenaModel(any(DataModelDTO.class), any(ModelType.class), any(YtiUser.class))).thenReturn(model);
-        when(modelMapper.mapToIndexModel("test", model)).thenReturn(indexmodel);
+        when(coreRepository.getOrganizations()).thenReturn(mockModel);
+        when(coreRepository.getServiceCategories()).thenReturn(mockModel);
 
         this.mvc
                 .perform(post("/v2/model/library")
@@ -122,14 +78,8 @@ class DataModelControllerTest {
                 .andExpect(status().isCreated());
 
         //Check that functions are called
-        verify(this.modelMapper)
-                .mapToJenaModel(any(DataModelDTO.class), any(ModelType.class), any(YtiUser.class));
-        verify(this.modelMapper)
-                .mapToIndexModel(anyString(), any(Model.class));
-        verifyNoMoreInteractions(this.modelMapper);
-        verify(this.openSearchIndexer)
-                .createModelToIndex(any(IndexModel.class));
-        verifyNoMoreInteractions(this.openSearchIndexer);
+        verify(dataModelService).create(any(DataModelDTO.class), any(ModelType.class));
+        verifyNoMoreInteractions(this.dataModelService);
     }
 
     @Test
@@ -140,15 +90,8 @@ class DataModelControllerTest {
         var mockModel = ModelFactory.createDefaultModel();
         var res = mockModel.createResource(ModelConstants.URN_UUID + RANDOM_ORG);
         res.addProperty(SKOS.notation, "P11");
-        when(jenaService.getOrganizations()).thenReturn(mockModel);
-        when(jenaService.getServiceCategories()).thenReturn(mockModel);
-
-        //Mock mapping
-        var model = mock(Model.class);
-        var indexmodel = mock(IndexModel.class);
-        when(jenaService.getDataModel(anyString())).thenReturn(mock(Model.class));
-        when(modelMapper.mapToUpdateJenaModel(anyString(), any(DataModelDTO.class), any(Model.class), any(YtiUser.class))).thenReturn(model);
-        when(modelMapper.mapToIndexModel("test", model)).thenReturn(indexmodel);
+        when(coreRepository.getOrganizations()).thenReturn(mockModel);
+        when(coreRepository.getServiceCategories()).thenReturn(mockModel);
 
         this.mvc
                 .perform(put("/v2/model/library/test")
@@ -157,23 +100,13 @@ class DataModelControllerTest {
                 .andExpect(status().isNoContent());
 
         //Check that functions are called
-        verify(this.modelMapper)
-                .mapToUpdateJenaModel(anyString(), any(DataModelDTO.class), any(Model.class), any(YtiUser.class));
-        verify(this.modelMapper)
-                .mapToIndexModel(anyString(), any(Model.class));
-        verifyNoMoreInteractions(this.modelMapper);
-        verify(this.openSearchIndexer)
-                .updateModelToIndex(any(IndexModel.class));
-        verifyNoMoreInteractions(this.openSearchIndexer);
+        verify(dataModelService).update(anyString(), any(DataModelDTO.class));
+        verifyNoMoreInteractions(dataModelService);
     }
 
     @Test
     void shouldReturnModel() throws Exception {
-        var mockModel = mock(Model.class);
-        when(groupManagementService.mapUser()).thenReturn(consumer);
-        when(jenaService.getDataModel(anyString())).thenReturn(mockModel);
-        when(modelMapper.mapToDataModelDTO(anyString(), any(Model.class), eq(consumer))).thenReturn(new DataModelInfoDTO());
-
+        when(dataModelService.get(anyString())).thenReturn(new DataModelInfoDTO());
         this.mvc
                 .perform(get("/v2/model/test")
                         .accept(MediaType.APPLICATION_JSON_VALUE)
@@ -181,24 +114,8 @@ class DataModelControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE));
 
-        verify(this.jenaService)
-                .getDataModel(ModelConstants.SUOMI_FI_NAMESPACE + "test");
-        verifyNoMoreInteractions(this.jenaService);
-        verify(modelMapper)
-                .mapToDataModelDTO(eq("test"), any(Model.class), eq(consumer));
-        verifyNoMoreInteractions(this.modelMapper);
-    }
-
-    @Test
-    void shouldReturnNotFound() throws Exception {
-        when(jenaService.getDataModel(anyString())).thenThrow(ResourceNotFoundException.class);
-
-        this.mvc
-                .perform(get("/v2/model/not-found")
-                        .accept(MediaType.APPLICATION_JSON_VALUE)
-                        .contentType(MediaType.APPLICATION_JSON_VALUE))
-                .andExpect(status().isNotFound())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE));
+        verify(dataModelService).get(anyString());
+        verifyNoMoreInteractions(dataModelService);
     }
 
     @ParameterizedTest
@@ -208,8 +125,8 @@ class DataModelControllerTest {
         var mockModel = ModelFactory.createDefaultModel();
         var res = mockModel.createResource(ModelConstants.URN_UUID + RANDOM_ORG);
         res.addProperty(SKOS.notation, "P11");
-        when(jenaService.getOrganizations()).thenReturn(mockModel);
-        when(jenaService.getServiceCategories()).thenReturn(mockModel);
+        when(coreRepository.getOrganizations()).thenReturn(mockModel);
+        when(coreRepository.getServiceCategories()).thenReturn(mockModel);
 
         this.mvc
                 .perform(post("/v2/model/profile")
@@ -223,8 +140,8 @@ class DataModelControllerTest {
         var mockModel = ModelFactory.createDefaultModel();
         var res = mockModel.createResource(ModelConstants.URN_UUID + RANDOM_ORG);
         res.addProperty(SKOS.notation, "P11");
-        when(jenaService.getOrganizations()).thenReturn(mockModel);
-        when(jenaService.getServiceCategories()).thenReturn(mockModel);
+        when(coreRepository.getOrganizations()).thenReturn(mockModel);
+        when(coreRepository.getServiceCategories()).thenReturn(mockModel);
 
         DataModelDTO dataModelDTO = createDatamodelDTO(false);
 
@@ -237,31 +154,6 @@ class DataModelControllerTest {
                 .andExpect(status().isBadRequest());
     }
 
-    @Test
-    void shouldInvalidateSamePrefix() throws Exception {
-        //Mock validation stuff
-        var mockModel = ModelFactory.createDefaultModel();
-        var res = mockModel.createResource(ModelConstants.URN_UUID + RANDOM_ORG);
-        res.addProperty(SKOS.notation, "P11");
-        when(jenaService.getOrganizations()).thenReturn(mockModel);
-        when(jenaService.getServiceCategories()).thenReturn(mockModel);
-
-        this.mvc
-                .perform(post("/v2/model/library")
-                        .contentType("application/json")
-                        .content(EndpointUtils.convertObjectToJsonString(createDatamodelDTO(false))))
-                .andExpect(status().isCreated());
-
-        when(jenaService.doesDataModelExist(anyString())).thenReturn(true);
-
-        this.mvc
-                .perform(post("/v2/model/library")
-                        .contentType("application/json")
-                        .content(EndpointUtils.convertObjectToJsonString(createDatamodelDTO(false))))
-                .andExpect(status().isBadRequest())
-                .andExpect(content().string(containsString("prefix-in-use")));
-    }
-
     @ParameterizedTest
     @MethodSource("provideDataModelUpdateInvalidData")
     void shouldInValidateUpdate(DataModelDTO dataModelDTO) throws Exception {
@@ -269,8 +161,8 @@ class DataModelControllerTest {
         var mockModel = ModelFactory.createDefaultModel();
         var res = mockModel.createResource(ModelConstants.URN_UUID + RANDOM_ORG);
         res.addProperty(SKOS.notation, "P11");
-        when(jenaService.getOrganizations()).thenReturn(mockModel);
-        when(jenaService.getServiceCategories()).thenReturn(mockModel);
+        when(coreRepository.getOrganizations()).thenReturn(mockModel);
+        when(coreRepository.getServiceCategories()).thenReturn(mockModel);
 
         this.mvc
                 .perform(put("/v2/model/library/test")
@@ -282,7 +174,7 @@ class DataModelControllerTest {
     @ParameterizedTest
     @CsvSource({"http","test"})
     void shouldCheckFreePrefixWhenExists(String prefix) throws Exception {
-        when(jenaService.doesDataModelExist(ModelConstants.SUOMI_FI_NAMESPACE + "test")).thenReturn(true);
+        when(dataModelService.exists(anyString())).thenReturn(true);
 
         this.mvc
                 .perform(get("/v2/model/{prefix}/exists", prefix)
@@ -293,8 +185,6 @@ class DataModelControllerTest {
 
     @Test
     void shouldCheckFreePrefixWhenNotExist() throws Exception {
-        when(jenaService.doesDataModelExist(anyString())).thenReturn(false);
-
         this.mvc
                 .perform(get("/v2/model/xyz/exists")
                         .contentType("application/json"))
@@ -479,45 +369,11 @@ class DataModelControllerTest {
 
     @Test
     void shouldDeleteDataModel() throws Exception {
-        when(jenaService.doesDataModelExist(anyString())).thenReturn(true);
-        when(jenaService.getDataModel(anyString())).thenReturn(mock(Model.class));
-        when(authorizationManager.hasRightToModel(anyString(), any(Model.class))).thenReturn(true);
-
-
         mvc.perform(delete("/v2/model/test/"))
                 .andExpect(status().isOk());
 
-        verify(jenaService).doesDataModelExist(anyString());
-        verify(jenaService).getDataModel(anyString());
-        verify(authorizationManager).hasRightToModel(anyString(), any(Model.class));
-        verify(jenaService).deleteDataModel(anyString());
-        verify(openSearchIndexer).deleteModelFromIndex(anyString());
-    }
-
-    @Test
-    void shouldFailToFindDataModelDelete() throws Exception {
-        mvc.perform(delete("/v2/model/test"))
-                .andExpect(status().isNotFound());
-
-        verify(jenaService).doesDataModelExist(anyString());
-        verifyNoMoreInteractions(jenaService);
-        verifyNoInteractions(authorizationManager, openSearchIndexer);
-    }
-
-    @Test
-    void shouldFailAuthorisationDelete() throws Exception {
-        when(jenaService.doesDataModelExist(anyString())).thenReturn(true);
-        when(jenaService.getDataModel(anyString())).thenReturn(mock(Model.class));
-        when(authorizationManager.hasRightToModel(anyString(), any(Model.class))).thenReturn(false);
-
-        mvc.perform(delete("/v2/model/test"))
-                .andExpect(status().isUnauthorized());
-
-        verify(jenaService).doesDataModelExist(anyString());
-        verify(jenaService).getDataModel(anyString());
-        verifyNoMoreInteractions(jenaService);
-        verify(authorizationManager).hasRightToModel(anyString(), any(Model.class));
-        verifyNoInteractions(openSearchIndexer);
+        verify(dataModelService).delete(anyString());
+        verifyNoMoreInteractions(dataModelService);
     }
 
 }

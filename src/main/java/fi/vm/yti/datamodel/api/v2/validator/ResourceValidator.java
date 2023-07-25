@@ -4,6 +4,7 @@ import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
 import fi.vm.yti.datamodel.api.v2.dto.ResourceDTO;
 import fi.vm.yti.datamodel.api.v2.dto.ResourceType;
 import fi.vm.yti.datamodel.api.v2.service.JenaService;
+import fi.vm.yti.datamodel.api.v2.service.NamespaceService;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import org.apache.jena.graph.NodeFactory;
@@ -21,6 +22,9 @@ public class ResourceValidator extends BaseValidator implements ConstraintValida
 
     @Autowired
     private JenaService jenaService;
+    @Autowired
+    private NamespaceService namespaceService;
+
     @Override
     public void initialize(ValidResource constraintAnnotation) {
         this.updateProperty = constraintAnnotation.updateProperty();
@@ -50,8 +54,8 @@ public class ResourceValidator extends BaseValidator implements ConstraintValida
             equivalentResource.forEach(eq -> {
                 var asUri = NodeFactory.createURI(eq);
                 //if namespace is resolvable make sure class can be found in resolved namespace
-                if(jenaService.doesResolvedNamespaceExist(asUri.getNameSpace())
-                        && !jenaService.doesResourceExistInImportedNamespace(asUri.getNameSpace(), asUri.getURI())){
+                if(namespaceService.doesResolvedNamespaceExist(asUri.getNameSpace())
+                        && !namespaceService.doesResourceExistInImportedNamespace(asUri.getNameSpace(), asUri.getURI())){
                     addConstraintViolation(context, "resource-not-found-in-resolved-namespace", "eqClass");
                 }
             });
@@ -64,8 +68,8 @@ public class ResourceValidator extends BaseValidator implements ConstraintValida
             getSubResourceOf.forEach(sub -> {
                 var asUri = NodeFactory.createURI(sub);
                 //if namespace is resolvable make sure class can be found in resolved namespace
-                if(jenaService.doesResolvedNamespaceExist(asUri.getNameSpace())
-                        && !jenaService.doesResourceExistInImportedNamespace(asUri.getNameSpace(), asUri.getURI())){
+                if(namespaceService.doesResolvedNamespaceExist(asUri.getNameSpace())
+                        && !namespaceService.doesResourceExistInImportedNamespace(asUri.getNameSpace(), asUri.getURI())){
                     addConstraintViolation(context, "resource-not-found-in-resolved-namespace", "subClassOf");
                 }
             });

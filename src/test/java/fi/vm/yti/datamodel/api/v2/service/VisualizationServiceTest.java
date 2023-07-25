@@ -4,6 +4,7 @@ import fi.vm.yti.datamodel.api.mapper.MapperTestUtils;
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
 import fi.vm.yti.datamodel.api.v2.dto.PositionDataDTO;
 import fi.vm.yti.datamodel.api.v2.dto.VisualizationClassDTO;
+import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.vocabulary.DCTerms;
@@ -22,8 +23,9 @@ import org.topbraid.shacl.vocabulary.SH;
 import java.util.List;
 import java.util.Set;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.*;
-import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(SpringExtension.class)
 @Import({
@@ -34,6 +36,8 @@ class VisualizationServiceTest {
     @MockBean
     private JenaService jenaService;
 
+    @MockBean
+    private CoreRepository coreRepository;
     @Captor
     private ArgumentCaptor<Model> modelCaptor;
 
@@ -46,8 +50,8 @@ class VisualizationServiceTest {
         var positionModel = MapperTestUtils.getModelFromFile("/positions.ttl");
         var externalPropertiesModel = getExternalPropertiesResult();
 
-        when(jenaService.getDataModel(anyString())).thenReturn(model);
-        when(jenaService.getDataModelPositions(anyString())).thenReturn(positionModel);
+        when(coreRepository.fetch(anyString())).thenReturn(model);
+        when(coreRepository.fetch(ModelConstants.MODEL_POSITIONS_NAMESPACE + "visuprof")).thenReturn(positionModel);
         when(jenaService.findResources(anySet())).thenReturn(externalPropertiesModel);
 
         var visualizationData = visualizationService.getVisualizationData("visuprof");
@@ -73,7 +77,7 @@ class VisualizationServiceTest {
     @Test
     void savePositions() {
         var graphURI = ModelConstants.MODEL_POSITIONS_NAMESPACE + "test-model";
-        when(jenaService.doesDataModelExist(graphURI)).thenReturn(true);
+        when(coreRepository.graphExists(graphURI)).thenReturn(true);
 
         var positionData = new PositionDataDTO();
         positionData.setX(1.0);
@@ -82,8 +86,8 @@ class VisualizationServiceTest {
 
         visualizationService.savePositionData("test-model", List.of(positionData));
 
-        verify(jenaService).deleteDataModel(graphURI);
-        verify(jenaService).putDataModelToCore(eq(graphURI), modelCaptor.capture());
+        verify(coreRepository).delete(graphURI);
+        verify(coreRepository).put(eq(graphURI), modelCaptor.capture());
 
         var resourceURI = graphURI + ModelConstants.RESOURCE_SEPARATOR + positionData.getIdentifier();
         var resource = modelCaptor.getValue().getResource(resourceURI);

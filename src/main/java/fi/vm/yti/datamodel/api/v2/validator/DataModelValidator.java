@@ -3,7 +3,7 @@ package fi.vm.yti.datamodel.api.v2.validator;
 import fi.vm.yti.datamodel.api.v2.dto.DataModelDTO;
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
 import fi.vm.yti.datamodel.api.v2.dto.ModelType;
-import fi.vm.yti.datamodel.api.v2.service.JenaService;
+import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import org.apache.jena.rdf.model.ResourceFactory;
@@ -14,7 +14,7 @@ public class DataModelValidator extends BaseValidator implements
         ConstraintValidator<ValidDatamodel, DataModelDTO> {
 
     @Autowired
-    private JenaService jenaService;
+    private CoreRepository coreRepository;
 
     boolean updateModel;
     ModelType modelType;
@@ -59,7 +59,7 @@ public class DataModelValidator extends BaseValidator implements
         //Check prefix text content
         checkPrefixContent(context, prefix, prefixPropertyLabel);
         //Checking if in use is different for datamodels and its resources so it is not in the above function
-        if(jenaService.doesDataModelExist(ModelConstants.SUOMI_FI_NAMESPACE + prefix)){
+        if(coreRepository.graphExists(ModelConstants.SUOMI_FI_NAMESPACE + prefix)){
             addConstraintViolation(context, "prefix-in-use", prefixPropertyLabel);
         }
     }
@@ -134,7 +134,7 @@ public class DataModelValidator extends BaseValidator implements
      */
     private void checkOrganizations(ConstraintValidatorContext context, DataModelDTO dataModel){
         var organizations = dataModel.getOrganizations();
-        var existingOrgs = jenaService.getOrganizations();
+        var existingOrgs = coreRepository.getOrganizations();
         if(organizations.isEmpty()){
             addConstraintViolation(context, ValidationConstants.MSG_VALUE_MISSING, "organization");
             return;
@@ -154,7 +154,7 @@ public class DataModelValidator extends BaseValidator implements
     */
     private void checkGroups(ConstraintValidatorContext context, DataModelDTO dataModel){
         var groups = dataModel.getGroups();
-        var existingGroups = jenaService.getServiceCategories();
+        var existingGroups = coreRepository.getServiceCategories();
         if(groups.isEmpty()){
             addConstraintViolation(context, ValidationConstants.MSG_VALUE_MISSING, "groups");
             return;

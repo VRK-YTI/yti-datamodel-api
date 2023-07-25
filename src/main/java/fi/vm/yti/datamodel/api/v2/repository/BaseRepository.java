@@ -112,7 +112,11 @@ public abstract class BaseRepository {
     }
 
     public boolean queryAsk(Query query) {
-        return sparql.queryAsk(query);
+        try {
+            return sparql.queryAsk(query);
+        }catch(HttpException ex){
+            throw new JenaQueryException();
+        }
     }
 
     public void queryUpdate(String query) {

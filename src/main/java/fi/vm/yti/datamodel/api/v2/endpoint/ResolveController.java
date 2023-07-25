@@ -2,7 +2,7 @@ package fi.vm.yti.datamodel.api.v2.endpoint;
 
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
 import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
-import fi.vm.yti.datamodel.api.v2.service.JenaService;
+import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -30,10 +30,10 @@ public class ResolveController {
 
     static final IRIFactory iriFactory = IRIFactory.iriImplementation();
 
-    private final JenaService jenaService;
+    private final CoreRepository coreRepository;
 
-    public ResolveController(JenaService jenaService) {
-        this.jenaService = jenaService;
+    public ResolveController(CoreRepository coreRepository) {
+        this.coreRepository = coreRepository;
     }
 
     @Operation(summary = "Resolve content by its IRI")
@@ -94,7 +94,7 @@ public class ResolveController {
             var modelURI = ModelConstants.SUOMI_FI_NAMESPACE + modelPrefix;
             Model dataModel;
             try {
-                dataModel = jenaService.getDataModel(modelURI);
+                dataModel = coreRepository.fetch(modelURI);
             } catch (Exception e) {
                 return;
             }

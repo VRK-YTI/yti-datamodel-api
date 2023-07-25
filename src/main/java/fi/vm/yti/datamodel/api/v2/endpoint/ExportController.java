@@ -3,7 +3,7 @@ package fi.vm.yti.datamodel.api.v2.endpoint;
 import fi.vm.yti.datamodel.api.security.AuthorizationManager;
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
-import fi.vm.yti.datamodel.api.v2.service.JenaService;
+import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -29,12 +29,12 @@ import java.io.StringWriter;
 public class ExportController {
 
     private static final Logger LOG = LoggerFactory.getLogger(ExportController.class);
-    private final JenaService jenaService;
+    private final CoreRepository coreRepository;
     private final AuthorizationManager authorizationManager;
 
-    public ExportController(JenaService jenaService,
+    public ExportController(CoreRepository coreRepository,
                             AuthorizationManager authorizationManager) {
-        this.jenaService = jenaService;
+        this.coreRepository = coreRepository;
         this.authorizationManager = authorizationManager;
     }
 
@@ -53,7 +53,7 @@ public class ExportController {
         Model model;
 
         try {
-            model = jenaService.getDataModel(modelURI);
+            model = coreRepository.fetch(modelURI);
         } catch (ResourceNotFoundException e) {
             // cannot throw ResourceNotFoundException because accept header is not application/json
             return ResponseEntity.notFound().build();
