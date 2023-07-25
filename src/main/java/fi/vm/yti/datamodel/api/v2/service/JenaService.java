@@ -4,6 +4,8 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
+import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
+import fi.vm.yti.datamodel.api.v2.repository.ImportsRepository;
 import fi.vm.yti.datamodel.api.v2.utils.SparqlUtils;
 import org.apache.jena.arq.querybuilder.*;
 import org.apache.jena.atlas.web.HttpException;
@@ -15,7 +17,6 @@ import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.rdfconnection.RDFConnection;
-import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.sparql.vocabulary.FOAF;
 import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDF;
@@ -42,6 +43,9 @@ public class JenaService {
     private final RDFConnection coreSparql;
     private final RDFConnection coreUpdate;
 
+    private final CoreRepository coreRepository;
+    private final ImportsRepository importsRepository;
+
     private final RDFConnection importWrite;
     private final RDFConnection importRead;
     private final RDFConnection importSparql;
@@ -57,7 +61,7 @@ public class JenaService {
     private static final String VERSION_NUMBER_GRAPH = "urn:yti:metamodel:version";
 
     public JenaService(@Value("${model.cache.expiration:1800}") Long cacheExpireTime,
-                       @Value(("${endpoint}")) String endpoint) {
+                       @Value(("${endpoint}")) String endpoint, CoreRepository coreRepository, ImportsRepository importsRepository) {
         this.coreWrite = RDFConnection.connect(endpoint + "/core/data");
         this.coreRead = RDFConnection.connect(endpoint + "/core/get");
         this.coreSparql = RDFConnection.connect( endpoint + "/core/sparql");
@@ -75,19 +79,12 @@ public class JenaService {
                 .expireAfterWrite(cacheExpireTime, TimeUnit.SECONDS)
                 .maximumSize(1000)
                 .build();
+        this.coreRepository = coreRepository;
+        this.importsRepository = importsRepository;
     }
 
     public void putDataModelToCore(String graphName, Model model) {
         coreWrite.put(graphName, model);
-    }
-
-    public void initServiceCategories() {
-        var model = RDFDataMgr.loadModel("ptvl-skos.rdf");
-        coreWrite.put(ModelConstants.SERVICE_CATEGORY_GRAPH, model);
-    }
-
-    public void saveOrganizations(Model model) {
-        coreWrite.put(ModelConstants.ORGANIZATION_GRAPH, model);
     }
 
     public Model getDataModel(String graph) {
@@ -264,18 +261,7 @@ public class JenaService {
         return serviceCategories;
     }
 
-    public Model getOrganizations(){
-        var organizations = modelCache.getIfPresent("organizations");
 
-        if(organizations != null){
-            return organizations;
-        }
-
-        organizations = getDataModel("urn:yti:organizations");
-
-        modelCache.put("organizations", organizations);
-        return organizations;
-    }
 
     public void putNamespaceToImports(String graphName, Model model){
         importWrite.put(graphName, model);
@@ -369,10 +355,10 @@ public class JenaService {
         if (resourceURIs == null || resourceURIs.isEmpty()) {
             return ModelFactory.createDefaultModel();
         }
-        var coreBuilder = new ConstructBuilder();
-        coreBuilder.addPrefixes(ModelConstants.PREFIXES);
-        var importsBuilder = new ConstructBuilder();
-        importsBuilder.addPrefixes(ModelConstants.PREFIXES);
+        var coreBuilder = new ConstructBuilder()
+                .addPrefixes(ModelConstants.PREFIXES);
+        var importsBuilder = new ConstructBuilder()
+                .addPrefixes(ModelConstants.PREFIXES);
 
         var iterator = resourceURIs.iterator();
         var count = 0;
@@ -391,8 +377,8 @@ public class JenaService {
             count++;
         }
 
-        var resultModel = coreSparql.queryConstruct(coreBuilder.build());
-        var importsModel = importSparql.queryConstruct(importsBuilder.build());
+        var resultModel = coreRepository.queryConstruct(coreBuilder.build());
+        var importsModel = importsRepository.queryConstruct(importsBuilder.build());
 
         resultModel.add(importsModel);
         return resultModel;

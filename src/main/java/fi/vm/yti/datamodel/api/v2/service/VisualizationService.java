@@ -4,6 +4,7 @@ import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
 import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.mapper.VisualizationMapper;
+import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import org.apache.jena.rdf.model.*;
 import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.OWL;
@@ -18,17 +19,19 @@ import java.util.*;
 public class VisualizationService {
 
     private final JenaService jenaService;
+    private final CoreRepository coreRepository;
 
-    public VisualizationService(JenaService jenaService) {
+    public VisualizationService(JenaService jenaService, CoreRepository coreRepository) {
         this.jenaService = jenaService;
+        this.coreRepository = coreRepository;
     }
 
     public VisualizationResultDTO getVisualizationData(String prefix) {
         var graph = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
-        var model = jenaService.getDataModel(graph);
+        var model = coreRepository.fetch(graph);
         Model positions;
         try {
-            positions = jenaService.getDataModelPositions(prefix);
+            positions = coreRepository.fetch(ModelConstants.MODEL_POSITIONS_NAMESPACE + prefix);
         } catch(ResourceNotFoundException e) {
             positions = ModelFactory.createDefaultModel();
         }
@@ -80,12 +83,12 @@ public class VisualizationService {
         String positionGraphURI = ModelConstants.MODEL_POSITIONS_NAMESPACE + modelPrefix;
 
         // remove old positions if exists
-        if (jenaService.doesDataModelExist(positionGraphURI)) {
-            jenaService.deleteDataModel(positionGraphURI);
+        if (coreRepository.graphExists(positionGraphURI)) {
+            coreRepository.delete(positionGraphURI);
         }
 
         var positionModel = VisualizationMapper.mapPositionDataToModel(positionGraphURI, positions);
-        jenaService.putDataModelToCore(positionGraphURI, positionModel);
+        coreRepository.put(positionGraphURI, positionModel);
     }
 
     private static void addExternalClasses(VisualizationClassDTO classDTO, Set<String> languages, HashSet<VisualizationClassDTO> result) {

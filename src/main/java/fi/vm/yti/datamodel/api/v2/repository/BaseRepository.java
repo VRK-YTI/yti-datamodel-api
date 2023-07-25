@@ -1,12 +1,18 @@
 package fi.vm.yti.datamodel.api.v2.repository;
 
+import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
+import fi.vm.yti.datamodel.api.v2.service.JenaQueryException;
 import org.apache.jena.arq.querybuilder.AskBuilder;
+import org.apache.jena.arq.querybuilder.UpdateBuilder;
+import org.apache.jena.arq.querybuilder.WhereBuilder;
+import org.apache.jena.atlas.web.HttpException;
 import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.query.Query;
 import org.apache.jena.query.QuerySolution;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdfconnection.RDFConnection;
 import org.apache.jena.update.UpdateRequest;
+import org.springframework.http.HttpStatus;
 
 import java.util.function.Consumer;
 
@@ -36,11 +42,48 @@ public abstract class BaseRepository {
     }
 
     public Model fetch(String graph) {
-        return read.fetch(graph);
+        try {
+            return read.fetch(graph);
+        } catch (HttpException ex) {
+            if (ex.getStatusCode() == HttpStatus.NOT_FOUND.value()) {
+                throw new ResourceNotFoundException(graph);
+            } else {
+                throw new JenaQueryException();
+            }
+        }
     }
 
     public void put(String graph, Model model) {
         write.put(graph, model);
+    }
+
+    public void delete(String graph) {
+        try{
+            write.delete(graph);
+        } catch (HttpException ex) {
+            if (ex.getStatusCode() == HttpStatus.NOT_FOUND.value()) {
+                throw new ResourceNotFoundException(graph);
+            } else {
+                throw new JenaQueryException();
+            }
+        }
+    }
+
+    public void deleteResource(String resource) {
+        var deleteBuilder = new UpdateBuilder();
+        var expr = deleteBuilder.getExprFactory();
+        var filter = expr.or(expr.eq("?s", NodeFactory.createURI(resource)), expr.eq("?o", NodeFactory.createURI(resource)));
+        deleteBuilder.addDelete("?g", "?s", "?p", "?o")
+                .addGraph("?g", new WhereBuilder().addWhere("?s", "?p", "?o").addFilter(filter));
+        try{
+            update.update(deleteBuilder.buildRequest());
+        } catch (HttpException ex) {
+            if (ex.getStatusCode() == HttpStatus.NOT_FOUND.value()) {
+                throw new ResourceNotFoundException(resource);
+            } else {
+                throw new JenaQueryException();
+            }
+        }
     }
 
     public boolean graphExists(String graph) {
