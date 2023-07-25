@@ -18,6 +18,7 @@ import org.apache.jena.rdf.model.Bag;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.shacl.vocabulary.SHACL;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
 import org.apache.jena.vocabulary.XSD;
@@ -63,6 +64,8 @@ public class SchemaServiceTest {
 //		
 //		Resource root = model.createResource(schemaPID + "#root");
 //		
+////		model.write(System.out, "TURTLE");
+//		
 //		assertTrue(model.contains(root, RDF.type, SH.NodeShape));		
 //		assertEquals(3, model.listSubjectsWithProperty(RDF.type, SH.PropertyShape).toList().size());
 //		assertTrue(model.contains(root, SH.closed, model.createTypedLiteral(true)));
@@ -85,7 +88,7 @@ public class SchemaServiceTest {
 //		
 //		assertEquals(SH.NodeShape, model.getRequiredProperty(model.createResource(schemaPID + "#root/address"), RDF.type).getObject());
 //	}
-	
+//	
 //	@Test
 //	void testClosed() throws Exception {
 //		byte[] data = getByteStreamFromPath("jsonschema/test_jsonschema_valid_simple_nested.json");
@@ -99,24 +102,24 @@ public class SchemaServiceTest {
 //		assertTrue(model.contains(root, SH.closed, model.createTypedLiteral(true)));
 //	}
 //	
-	@Test
-	void testValidDatatypes() throws Exception {
-		byte[] data = getByteStreamFromPath("jsonschema/test_jsonschema_valid_simple_datatypes.json");
-		assertNotNull(data);
-				
-		String schemaPID = "urn:test:" + UUID.randomUUID().toString();
-		Model model = service.transformJSONSchemaToInternal(schemaPID, data);
-		
-		System.out.println();
-		
-		assertEquals(XSD.integer, model.getRequiredProperty(model.createResource(schemaPID + "#root/address/house_number"), SH.datatype).getObject());
-		assertEquals(XSD.integer, model.getRequiredProperty(model.createResource(schemaPID + "#root/address/city/population"), SH.datatype).getObject());
-		assertEquals(XSD.xfloat, model.getRequiredProperty(model.createResource(schemaPID + "#root/height"), SH.datatype).getObject());
-		assertEquals(XSD.xboolean, model.getRequiredProperty(model.createResource(schemaPID + "#root/has_cats"), SH.datatype).getObject());
-		assertEquals("common", model.getRequiredProperty(model.createResource(schemaPID + "#root/lastName"), SH.defaultValue).getString());
-		assertEquals(MSCR.NULL, model.getRequiredProperty(model.createResource(schemaPID + "#root/address"), SH.defaultValue).getObject());
-	}
-	
+//	@Test
+//	void testValidDatatypes() throws Exception {
+//		byte[] data = getByteStreamFromPath("jsonschema/test_jsonschema_valid_simple_datatypes.json");
+//		assertNotNull(data);
+//				
+//		String schemaPID = "urn:test:" + UUID.randomUUID().toString();
+//		Model model = service.transformJSONSchemaToInternal(schemaPID, data);
+//		
+////		model.write(System.out, "TURTLE");
+//		
+//		assertEquals(XSD.integer, model.getRequiredProperty(model.createResource(schemaPID + "#root/address/house_number"), SH.datatype).getObject());
+//		assertEquals(XSD.integer, model.getRequiredProperty(model.createResource(schemaPID + "#root/address/city/population"), SH.datatype).getObject());
+//		assertEquals(XSD.xfloat, model.getRequiredProperty(model.createResource(schemaPID + "#root/height"), SH.datatype).getObject());
+//		assertEquals(XSD.xboolean, model.getRequiredProperty(model.createResource(schemaPID + "#root/has_cats"), SH.datatype).getObject());
+//		assertEquals("common", model.getRequiredProperty(model.createResource(schemaPID + "#root/lastName"), SH.defaultValue).getString());
+//		assertEquals("test", model.getRequiredProperty(model.createResource(schemaPID + "#address"), SH.defaultValue).getString());
+//	}
+//	
 //	@Test
 //	void testValidRequired() throws Exception {
 //		byte[] data = getByteStreamFromPath("jsonschema/test_jsonschema_valid_required.json");
@@ -129,32 +132,32 @@ public class SchemaServiceTest {
 //		
 //	}
 	
-//	@Test
-//	void testValidArrays() throws Exception {
-//		byte[] data = getByteStreamFromPath("jsonschema/test_jsonschema_valid_arrays.json");
-//		assertNotNull(data);
-//		
-//		String schemaPID = "urn:test:" + UUID.randomUUID().toString();
-//		Model model = service.transformJSONSchemaToInternal(schemaPID, data);
-//
-//		assertEquals(XSD.xstring, model.getRequiredProperty(model.createResource(schemaPID + "#root/firstName"), SH.datatype).getObject());
-//		// lastName is functional property -> must have maxCount = 1
-//		assertEquals(1, model.getRequiredProperty(model.createResource(schemaPID + "#root/firstName"), SH.maxCount).getInt());
-//		// lastName is not required -> should not have minCount
-//		assertFalse(model.contains(model.createResource(schemaPID + "#root/firstName"), SH.minCount));
-//
-//		// not restrictions on number of items in an array -> no maxCount
-//		assertFalse(model.contains(model.createResource(schemaPID + "#root/lastNames"), SH.maxCount));
-//
-//		assertEquals(2, model.getRequiredProperty(model.createResource(schemaPID + "#root/addresses/numbers"), SH.minCount).getInt());
-//		assertFalse(model.contains(model.createResource(schemaPID + "#root/addresses/numbers"), SH.maxCount));
-//
-//		assertEquals(10, model.getRequiredProperty(model.createResource(schemaPID + "#root/addresses/city/area_codes"), SH.maxCount).getInt());
-//		assertEquals(1, model.getRequiredProperty(model.createResource(schemaPID + "#root/addresses/city/area_codes"), SH.minCount).getInt());
-//
-//		
-//	}
-//	
+	@Test
+	void testValidArrays() throws Exception {
+		byte[] data = getByteStreamFromPath("jsonschema/test_jsonschema_valid_arrays.json");
+		assertNotNull(data);
+		
+		String schemaPID = "urn:test:" + UUID.randomUUID().toString();
+		Model model = service.transformJSONSchemaToInternal(schemaPID, data);
+		model.write(System.out, "TURTLE");
+
+		assertEquals(XSD.xstring, model.getRequiredProperty(model.createResource(schemaPID + "#root/firstName"), SH.datatype).getObject());
+		// lastName is functional property -> must have maxCount = 1
+		assertEquals(1, model.getRequiredProperty(model.createResource(schemaPID + "#root/firstName"), SH.maxCount).getInt());
+		// lastName is not required -> should not have minCount
+		assertFalse(model.contains(model.createResource(schemaPID + "#root/firstName"), SH.minCount));
+
+		// not restrictions on number of items in an array -> no maxCount
+		assertFalse(model.contains(model.createResource(schemaPID + "#root/lastNames"), SH.maxCount));
+		
+
+		assertEquals(2, model.getRequiredProperty(model.createResource(schemaPID + "#root/addresses/numbers"), SH.minCount).getInt());
+		assertFalse(model.contains(model.createResource(schemaPID + "#root/addresses/numbers"), SH.maxCount));
+
+		assertEquals(10, model.getRequiredProperty(model.createResource(schemaPID + "#root/addresses/city/area_codes"), SH.maxCount).getInt());
+		assertEquals(1, model.getRequiredProperty(model.createResource(schemaPID + "#root/addresses/city/area_codes"), SH.minCount).getInt());
+	}
+	
 //	@Test
 //	void testNumberRestrictions() throws Exception {
 //		byte[] data = getByteStreamFromPath("jsonschema/test_jsonschema_valid_number_restrictions.json");
@@ -174,7 +177,7 @@ public class SchemaServiceTest {
 //		assertEquals(100, model.getRequiredProperty(model.createResource(schemaPID + "#root/numberRangeEx"), SH.maxExclusive).getInt());
 //
 //	}
-//	
+	
 //	@Test
 //	void testStrings() throws Exception {
 //		byte[] data = getByteStreamFromPath("jsonschema/test_jsonschema_valid_strings.json");

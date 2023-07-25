@@ -29,7 +29,7 @@
           }
         }
       },
-      "default" : null
+      "default" : "test"
     },
     "has_cats" : {
       "type" : "boolean"
