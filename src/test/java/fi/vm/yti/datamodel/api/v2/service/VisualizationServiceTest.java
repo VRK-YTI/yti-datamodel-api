@@ -34,7 +34,7 @@ import static org.mockito.Mockito.*;
 class VisualizationServiceTest {
 
     @MockBean
-    private JenaService jenaService;
+    private ResourceService resourceService;
 
     @MockBean
     private CoreRepository coreRepository;
@@ -52,7 +52,7 @@ class VisualizationServiceTest {
 
         when(coreRepository.fetch(anyString())).thenReturn(model);
         when(coreRepository.fetch(ModelConstants.MODEL_POSITIONS_NAMESPACE + "visuprof")).thenReturn(positionModel);
-        when(jenaService.findResources(anySet())).thenReturn(externalPropertiesModel);
+        when(resourceService.findResources(anySet())).thenReturn(externalPropertiesModel);
 
         var visualizationData = visualizationService.getVisualizationData("visuprof");
 

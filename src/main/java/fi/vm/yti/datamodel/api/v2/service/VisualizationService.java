@@ -18,11 +18,13 @@ import java.util.*;
 @Service
 public class VisualizationService {
 
-    private final JenaService jenaService;
+
+    private final ResourceService resourceService;
     private final CoreRepository coreRepository;
 
-    public VisualizationService(JenaService jenaService, CoreRepository coreRepository) {
-        this.jenaService = jenaService;
+    public VisualizationService(ResourceService resourceService,
+                                CoreRepository coreRepository) {
+        this.resourceService = resourceService;
         this.coreRepository = coreRepository;
     }
 
@@ -60,7 +62,7 @@ public class VisualizationService {
             }
 
             if (!externalPropertyURIs.isEmpty()) {
-                var externalResources = jenaService.findResources(externalPropertyURIs);
+                var externalResources = resourceService.findResources(externalPropertyURIs);
                 externalPropertyURIs.forEach(uri -> VisualizationMapper
                         .mapResource(classDTO, externalResources.getResource(uri), model, namespaces));
             }

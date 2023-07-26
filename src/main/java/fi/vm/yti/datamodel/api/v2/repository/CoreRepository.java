@@ -40,7 +40,7 @@ public class CoreRepository extends BaseRepository{
 
     public void initServiceCategories() {
         var model = RDFDataMgr.loadModel("ptvl-skos.rdf");
-        write.put(ModelConstants.SERVICE_CATEGORY_GRAPH, model);
+        put(ModelConstants.SERVICE_CATEGORY_GRAPH, model);
     }
 
     public Model getOrganizations(){

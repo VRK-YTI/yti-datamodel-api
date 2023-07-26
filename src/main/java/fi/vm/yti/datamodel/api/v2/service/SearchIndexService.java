@@ -40,18 +40,15 @@ public class SearchIndexService {
     private final OpenSearchClient client;
     private final GroupManagementService groupManagementService;
     private final TerminologyService terminologyService;
-    private final JenaService jenaService;
-
     private final CoreRepository coreRepository;
 
     public SearchIndexService(OpenSearchConnector openSearchConnector,
                               GroupManagementService groupManagementService,
                               TerminologyService terminologyService,
-                              JenaService jenaService, CoreRepository coreRepository) {
+                              CoreRepository coreRepository) {
         this.client = openSearchConnector.getClient();
         this.groupManagementService = groupManagementService;
         this.terminologyService = terminologyService;
-        this.jenaService = jenaService;
         this.coreRepository = coreRepository;
     }
 

@@ -4,8 +4,8 @@ import fi.vm.yti.datamodel.api.v2.dto.ClassDTO;
 import fi.vm.yti.datamodel.api.v2.dto.NodeShapeDTO;
 import fi.vm.yti.datamodel.api.v2.dto.Status;
 import fi.vm.yti.datamodel.api.v2.service.ClassService;
-import fi.vm.yti.datamodel.api.v2.service.JenaService;
 import fi.vm.yti.datamodel.api.v2.service.NamespaceService;
+import fi.vm.yti.datamodel.api.v2.service.ResourceService;
 import fi.vm.yti.datamodel.api.v2.validator.ExceptionHandlerAdvice;
 import fi.vm.yti.datamodel.api.v2.validator.ValidationConstants;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -46,14 +46,12 @@ class ClassControllerTest {
     @MockBean
     private ClassService classService;
     @MockBean
+    ResourceService resourceService;
+    @MockBean
     private NamespaceService namespaceService;
 
     @Autowired
     private ClassController classController;
-
-    @MockBean
-    private JenaService jenaService;
-
 
     @BeforeEach
     public void setup() {

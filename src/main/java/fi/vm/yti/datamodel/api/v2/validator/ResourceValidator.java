@@ -3,8 +3,8 @@ package fi.vm.yti.datamodel.api.v2.validator;
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
 import fi.vm.yti.datamodel.api.v2.dto.ResourceDTO;
 import fi.vm.yti.datamodel.api.v2.dto.ResourceType;
-import fi.vm.yti.datamodel.api.v2.service.JenaService;
 import fi.vm.yti.datamodel.api.v2.service.NamespaceService;
+import fi.vm.yti.datamodel.api.v2.service.ResourceService;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import org.apache.jena.graph.NodeFactory;
@@ -21,7 +21,7 @@ public class ResourceValidator extends BaseValidator implements ConstraintValida
     private ResourceType resourceType;
 
     @Autowired
-    private JenaService jenaService;
+    private ResourceService resourceService;
     @Autowired
     private NamespaceService namespaceService;
 
@@ -81,7 +81,7 @@ public class ResourceValidator extends BaseValidator implements ConstraintValida
         var domain = resourceDTO.getDomain();
         if(domain != null && !domain.isBlank()){
             var checkImports = !domain.startsWith(ModelConstants.SUOMI_FI_NAMESPACE);
-            if(!jenaService.checkIfResourceIsOneOfTypes(domain, List.of(RDFS.Class, OWL.Class), checkImports)){
+            if(!resourceService.checkIfResourceIsOneOfTypes(domain, List.of(RDFS.Class, OWL.Class), checkImports)){
                 addConstraintViolation(context, "not-class-or-doesnt-exist", "domain");
             }
         }
@@ -92,7 +92,7 @@ public class ResourceValidator extends BaseValidator implements ConstraintValida
         if(range != null && !range.isBlank()){
             if(resourceType.equals(ResourceType.ASSOCIATION)){
                 var checkImports = !range.startsWith(ModelConstants.SUOMI_FI_NAMESPACE);
-                if(!jenaService.checkIfResourceIsOneOfTypes(range, List.of(RDFS.Class, OWL.Class), checkImports)){
+                if(!resourceService.checkIfResourceIsOneOfTypes(range, List.of(RDFS.Class, OWL.Class), checkImports)){
                     addConstraintViolation(context, "not-class-or-doesnt-exist", "range");
                 }
             }else{

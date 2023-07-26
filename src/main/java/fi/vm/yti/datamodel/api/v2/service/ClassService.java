@@ -42,7 +42,7 @@ public class ClassService {
 
     private final Logger logger = LoggerFactory.getLogger(ClassService.class);
 
-    private final JenaService jenaService;
+    private final ResourceService resourceService;
     private final CoreRepository coreRepository;
     private final ImportsRepository importsRepository;
 
@@ -54,8 +54,16 @@ public class ClassService {
     private final SearchIndexService searchIndexService;
 
     @Autowired
-    public ClassService(JenaService jenaService, CoreRepository coreRepository, ImportsRepository importsRepository, AuthorizationManager authorizationManager, AuthenticatedUserProvider userProvider, TerminologyService terminologyService, GroupManagementService groupManagementService, OpenSearchIndexer openSearchIndexer, SearchIndexService searchIndexService) {
-        this.jenaService = jenaService;
+    public ClassService(ResourceService resourceService,
+                        CoreRepository coreRepository,
+                        ImportsRepository importsRepository,
+                        AuthorizationManager authorizationManager,
+                        AuthenticatedUserProvider userProvider,
+                        TerminologyService terminologyService,
+                        GroupManagementService groupManagementService,
+                        OpenSearchIndexer openSearchIndexer,
+                        SearchIndexService searchIndexService) {
+        this.resourceService = resourceService;
         this.coreRepository = coreRepository;
         this.importsRepository = importsRepository;
         this.authorizationManager = authorizationManager;
@@ -244,7 +252,7 @@ public class ClassService {
             }
             handledNodeShapes.add(targetNode);
 
-            var nodeModel = jenaService.findResources(Set.of(targetNode));
+            var nodeModel = resourceService.findResources(Set.of(targetNode));
             var nodeResource = nodeModel.getResource(targetNode);
 
             propertyShapes.addAll(nodeResource.listProperties(SH.property)
@@ -271,7 +279,7 @@ public class ClassService {
                 .filter(Objects::nonNull)
                 .toList();
 
-        var newProperties = jenaService.findResources(nodeShapeDTO.getProperties().stream()
+        var newProperties = resourceService.findResources(nodeShapeDTO.getProperties().stream()
                 .filter(p -> !existingProperties.contains(p))
                 .collect(Collectors.toSet()));
 

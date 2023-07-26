@@ -32,7 +32,14 @@ public class DataModelService {
     private final AuthenticatedUserProvider userProvider;
 
     @Autowired
-    public DataModelService(CoreRepository coreRepository, AuthorizationManager authorizationManager, GroupManagementService groupManagementService, ModelMapper modelMapper, TerminologyService terminologyService, CodeListService codeListService, OpenSearchIndexer openSearchIndexer, AuthenticatedUserProvider userProvider) {
+    public DataModelService(CoreRepository coreRepository,
+                            AuthorizationManager authorizationManager,
+                            GroupManagementService groupManagementService,
+                            ModelMapper modelMapper,
+                            TerminologyService terminologyService,
+                            CodeListService codeListService,
+                            OpenSearchIndexer openSearchIndexer,
+                            AuthenticatedUserProvider userProvider) {
         this.coreRepository = coreRepository;
         this.authorizationManager = authorizationManager;
         this.groupManagementService = groupManagementService;

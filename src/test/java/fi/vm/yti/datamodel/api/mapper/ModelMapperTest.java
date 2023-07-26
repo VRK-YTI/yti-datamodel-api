@@ -8,7 +8,7 @@ import fi.vm.yti.datamodel.api.v2.mapper.ModelMapper;
 import fi.vm.yti.datamodel.api.v2.repository.ConceptRepository;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import fi.vm.yti.datamodel.api.v2.repository.ImportsRepository;
-import fi.vm.yti.datamodel.api.v2.service.JenaService;
+import fi.vm.yti.datamodel.api.v2.service.DataModelService;
 import fi.vm.yti.security.YtiUser;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
@@ -42,9 +42,9 @@ import static org.mockito.Mockito.when;
 class ModelMapperTest {
 
     @MockBean
-    JenaService jenaService;
-    @MockBean
     CoreRepository coreRepository;
+    @MockBean
+    DataModelService dataModelService;
     @MockBean
     ConceptRepository conceptRepository;
     @MockBean

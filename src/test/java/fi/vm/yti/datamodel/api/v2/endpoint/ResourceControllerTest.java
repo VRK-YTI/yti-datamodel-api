@@ -4,7 +4,6 @@ import fi.vm.yti.datamodel.api.v2.dto.PropertyShapeDTO;
 import fi.vm.yti.datamodel.api.v2.dto.ResourceDTO;
 import fi.vm.yti.datamodel.api.v2.dto.ResourceType;
 import fi.vm.yti.datamodel.api.v2.dto.Status;
-import fi.vm.yti.datamodel.api.v2.service.JenaService;
 import fi.vm.yti.datamodel.api.v2.service.NamespaceService;
 import fi.vm.yti.datamodel.api.v2.service.ResourceService;
 import fi.vm.yti.datamodel.api.v2.validator.ExceptionHandlerAdvice;
@@ -48,10 +47,7 @@ class ResourceControllerTest {
     private MockMvc mvc;
 
     @MockBean
-    private JenaService jenaService;
-
-    @MockBean
-    ResourceService resourceService;
+    private ResourceService resourceService;
 
     @MockBean
     NamespaceService namespaceService;
@@ -72,7 +68,7 @@ class ResourceControllerTest {
     @CsvSource({"attribute", "association"})
     void shouldValidateAndCreate(String resourceType) throws Exception {
         var resourceDTO = createResourceDTO(false, resourceType);
-        when(jenaService.checkIfResourceIsOneOfTypes(eq("http://uri.suomi.fi/datamodel/ns/int/FakeClass"), anyList(), anyBoolean())).thenReturn(true);
+        when(resourceService.checkIfResourceIsOneOfTypes(eq("http://uri.suomi.fi/datamodel/ns/int/FakeClass"), anyList(), anyBoolean())).thenReturn(true);
 
         this.mvc
                 .perform(post("/v2/resource/library/test/{resourceType}", resourceType)
@@ -80,7 +76,13 @@ class ResourceControllerTest {
                         .content(EndpointUtils.convertObjectToJsonString(resourceDTO)))
                 .andDo(print())
                 .andExpect(status().isCreated());
-
+        //validator
+        if(resourceType.equals("attribute")){
+            verify(resourceService, times(1)).checkIfResourceIsOneOfTypes(anyString(), anyList(), anyBoolean());
+        }else{
+            verify(resourceService, times(2)).checkIfResourceIsOneOfTypes(anyString(), anyList(), anyBoolean());
+        }
+        //controller
         verify(resourceService).create(anyString(), any(ResourceDTO.class), any(ResourceType.class), eq(false));
         verifyNoMoreInteractions(resourceService);
     }
@@ -161,7 +163,7 @@ class ResourceControllerTest {
     @CsvSource({"attribute", "association"})
     void shouldValidateAndUpdate(String resourceType) throws Exception {
         var resourceDTO = createResourceDTO(true, resourceType);
-        when(jenaService.checkIfResourceIsOneOfTypes(eq("http://uri.suomi.fi/datamodel/ns/int/FakeClass"), anyList(), anyBoolean())).thenReturn(true);
+        when(resourceService.checkIfResourceIsOneOfTypes(eq("http://uri.suomi.fi/datamodel/ns/int/FakeClass"), anyList(), anyBoolean())).thenReturn(true);
 
         this.mvc
                 .perform(put("/v2/resource/library/test/{resourceType}/TestA{resourceType}", resourceType, resourceType.substring(1))
@@ -169,6 +171,12 @@ class ResourceControllerTest {
                         .content(EndpointUtils.convertObjectToJsonString(resourceDTO)))
                 .andExpect(status().isNoContent());
 
+        //validator
+        if(resourceType.equals("attribute")){
+            verify(resourceService, times(1)).checkIfResourceIsOneOfTypes(anyString(), anyList(), anyBoolean());
+        }else{
+            verify(resourceService, times(2)).checkIfResourceIsOneOfTypes(anyString(), anyList(), anyBoolean());
+        }
         verify(resourceService).update(anyString(), anyString(), any(ResourceDTO.class));
         verifyNoMoreInteractions(resourceService);
     }
@@ -206,7 +214,7 @@ class ResourceControllerTest {
     void shouldValidateAndCreatePropertyShape() throws Exception {
         var dto = createPropertyShapeDTO();
 
-        when(jenaService.checkIfResourceIsOneOfTypes(eq("http://uri.suomi.fi/datamodel/ns/int/FakeClass"), anyList(),
+        when(resourceService.checkIfResourceIsOneOfTypes(eq("http://uri.suomi.fi/datamodel/ns/int/FakeClass"), anyList(),
                 anyBoolean())).thenReturn(true);
 
         this.mvc
@@ -214,6 +222,8 @@ class ResourceControllerTest {
                         .contentType("application/json")
                         .content(EndpointUtils.convertObjectToJsonString(dto)))
                 .andExpect(status().isCreated());
+
+        verify(resourceService, times(2)).checkIfResourceIsOneOfTypes(anyString(), anyList(), anyBoolean());
         verify(resourceService).create(anyString(), any(PropertyShapeDTO.class), eq(null), eq(true));
         verifyNoMoreInteractions(resourceService);
     }

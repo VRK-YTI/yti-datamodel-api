@@ -2,7 +2,7 @@ package fi.vm.yti.datamodel.api.v2.validator;
 
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
 import fi.vm.yti.datamodel.api.v2.dto.NodeShapeDTO;
-import fi.vm.yti.datamodel.api.v2.service.JenaService;
+import fi.vm.yti.datamodel.api.v2.service.ResourceService;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import org.apache.jena.vocabulary.OWL;
@@ -16,7 +16,7 @@ public class NodeShapeValidator extends BaseValidator implements
         ConstraintValidator<ValidNodeShape, NodeShapeDTO> {
 
     @Autowired
-    private JenaService jenaService;
+    private ResourceService resourceService;
 
     boolean updateNodeShape;
 
@@ -46,7 +46,7 @@ public class NodeShapeValidator extends BaseValidator implements
         var targetClass = nodeShapeDTO.getTargetClass();
         if(targetClass != null && !targetClass.isBlank()){
             var checkImports = !targetClass.startsWith(ModelConstants.SUOMI_FI_NAMESPACE);
-            if(!jenaService.checkIfResourceIsOneOfTypes(targetClass, List.of(RDFS.Class, OWL.Class), checkImports)){
+            if(!resourceService.checkIfResourceIsOneOfTypes(targetClass, List.of(RDFS.Class, OWL.Class), checkImports)){
                 addConstraintViolation(context, "not-class-or-doesnt-exist", "targetClass");
             }
         }
@@ -56,7 +56,7 @@ public class NodeShapeValidator extends BaseValidator implements
         var targetNode = nodeShapeDTO.getTargetNode();
         if(targetNode != null && !targetNode.isBlank()){
             var checkImports = !targetNode.startsWith(ModelConstants.SUOMI_FI_NAMESPACE);
-            if(!jenaService.checkIfResourceIsOneOfTypes(targetNode, List.of(SH.NodeShape), checkImports)){
+            if(!resourceService.checkIfResourceIsOneOfTypes(targetNode, List.of(SH.NodeShape), checkImports)){
                 addConstraintViolation(context, "not-node-shape-or-doesnt-exist", "targetNode");
             }
         }
