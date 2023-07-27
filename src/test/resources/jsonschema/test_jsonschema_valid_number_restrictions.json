@@ -16,17 +16,17 @@
       "minimum" : 10.2,
       "maximum" : 100.1
     },
-    "minNumbeEx" : {
+    "minNumberEx" : {
       "type" : "number",
-      "exclusiveMaximum" : 10
+      "exclusiveMinimum" : 10
     },
     "maxNumberEx" : {
       "type" : "number",
-      "exclusiveMaximum" : 10
+      "exclusiveMaximum" : 100
     },
     "numberRangeEx" : {
       "type" : "number",
-      "exclusiveMaximum" : 10,
+      "exclusiveMinimum" : 10,
       "exclusiveMaximum" : 100
     }    
   }

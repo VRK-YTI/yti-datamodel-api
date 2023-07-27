@@ -74,9 +74,10 @@ public class SchemaService {
 		for (var key : JSONSchemaToSHACLMap.keySet()) {
 			JsonNode propertyNode = node.findValue(key);
 			if (propertyNode != null) {
+				System.out.println("KEY: " + key + " VALUE: " + propertyNode + " Number Val: " + propertyNode.numberValue()  + " LONG? " + propertyNode.isLong() + " DOUBLE? " + propertyNode.isDouble() + " INT? " + propertyNode.isDouble());
 				if (JSONSchemaNumericalProperties.contains(key)) {
 					propertyResource.addProperty(model.getProperty(JSONSchemaToSHACLMap.get(key)),
-							model.createTypedLiteral(propertyNode.asLong()));
+							model.createTypedLiteral(propertyNode.numberValue()));
 				} else if (JSONSchemaBooleanProperties.contains(key)) {
 					propertyResource.addProperty(model.getProperty(JSONSchemaToSHACLMap.get(key)),
 							model.createTypedLiteral(propertyNode.asBoolean()));

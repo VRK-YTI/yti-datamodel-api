@@ -131,52 +131,53 @@ public class SchemaServiceTest {
 //		assertEquals(1, model.getRequiredProperty(model.createResource(schemaPID + "#root/lastName"), SH.maxCount).getInt());
 //		
 //	}
+//	
+//	@Test
+//	void testValidArrays() throws Exception {
+//		byte[] data = getByteStreamFromPath("jsonschema/test_jsonschema_valid_arrays.json");
+//		assertNotNull(data);
+//		
+//		String schemaPID = "urn:test:" + UUID.randomUUID().toString();
+//		Model model = service.transformJSONSchemaToInternal(schemaPID, data);
+//		model.write(System.out, "TURTLE");
+//
+//		assertEquals(XSD.xstring, model.getRequiredProperty(model.createResource(schemaPID + "#root/Root/firstName"), SH.datatype).getObject());
+//		// lastName is functional property -> must have maxCount = 1
+//		assertEquals(1, model.getRequiredProperty(model.createResource(schemaPID + "#root/Root/firstName"), SH.maxCount).getInt());
+//		// lastName is not required -> should not have minCount
+//		assertFalse(model.contains(model.createResource(schemaPID + "#root/Root/firstName"), SH.minCount));
+//
+//		// not restrictions on number of items in an array -> no maxCount
+//		assertFalse(model.contains(model.createResource(schemaPID + "#root/Root/lastNames"), SH.maxCount));
+//		
+//
+//		assertEquals(2, model.getRequiredProperty(model.createResource(schemaPID + "#root/Root/addresses/Addresses/numbers"), SH.minCount).getInt());
+//		assertFalse(model.contains(model.createResource(schemaPID + "#root/Root/addresses/Addresses/numbers"), SH.maxCount));
+//
+//		assertEquals(10, model.getRequiredProperty(model.createResource(schemaPID + "#root/Root/addresses/Addresses/city/City/area_codes"), SH.maxCount).getInt());
+//		assertEquals(1, model.getRequiredProperty(model.createResource(schemaPID + "#root/Root/addresses/Addresses/city/City/area_codes"), SH.minCount).getInt());
+//	}
 	
 	@Test
-	void testValidArrays() throws Exception {
-		byte[] data = getByteStreamFromPath("jsonschema/test_jsonschema_valid_arrays.json");
+	void testNumberRestrictions() throws Exception {
+		byte[] data = getByteStreamFromPath("jsonschema/test_jsonschema_valid_number_restrictions.json");
 		assertNotNull(data);
 		
 		String schemaPID = "urn:test:" + UUID.randomUUID().toString();
 		Model model = service.transformJSONSchemaToInternal(schemaPID, data);
 		model.write(System.out, "TURTLE");
 
-		assertEquals(XSD.xstring, model.getRequiredProperty(model.createResource(schemaPID + "#root/Root/firstName"), SH.datatype).getObject());
-		// lastName is functional property -> must have maxCount = 1
-		assertEquals(1, model.getRequiredProperty(model.createResource(schemaPID + "#root/Root/firstName"), SH.maxCount).getInt());
-		// lastName is not required -> should not have minCount
-		assertFalse(model.contains(model.createResource(schemaPID + "#root/Root/firstName"), SH.minCount));
+		assertEquals(10, model.getRequiredProperty(model.createResource(schemaPID + "#root/Root/minNumber"), SH.minInclusive).getInt());		
+		assertEquals(100, model.getRequiredProperty(model.createResource(schemaPID + "#root/Root/maxNumber"), SH.maxInclusive).getInt());
+		assertEquals(10.2, model.getRequiredProperty(model.createResource(schemaPID + "#root/Root/numberRange"), SH.minInclusive).getDouble());
+		assertEquals(100.1, model.getRequiredProperty(model.createResource(schemaPID + "#root/Root/numberRange"), SH.maxInclusive).getDouble());
 
-		// not restrictions on number of items in an array -> no maxCount
-		assertFalse(model.contains(model.createResource(schemaPID + "#root/Root/lastNames"), SH.maxCount));
-		
+		assertEquals(10, model.getRequiredProperty(model.createResource(schemaPID + "#root/Root/minNumberEx"), SH.minExclusive).getInt());
+		assertEquals(100, model.getRequiredProperty(model.createResource(schemaPID + "#root/Root/maxNumberEx"), SH.maxExclusive).getInt());
+		assertEquals(10, model.getRequiredProperty(model.createResource(schemaPID + "#root/Root/numberRangeEx"), SH.minExclusive).getInt());
+		assertEquals(100, model.getRequiredProperty(model.createResource(schemaPID + "#root/Root/numberRangeEx"), SH.maxExclusive).getInt());
 
-		assertEquals(2, model.getRequiredProperty(model.createResource(schemaPID + "#root/Root/addresses/Addresses/numbers"), SH.minCount).getInt());
-		assertFalse(model.contains(model.createResource(schemaPID + "#root/Root/addresses/Addresses/numbers"), SH.maxCount));
-
-		assertEquals(10, model.getRequiredProperty(model.createResource(schemaPID + "#root/Root/addresses/Addresses/city/City/area_codes"), SH.maxCount).getInt());
-		assertEquals(1, model.getRequiredProperty(model.createResource(schemaPID + "#root/Root/addresses/Addresses/city/City/area_codes"), SH.minCount).getInt());
 	}
-	
-//	@Test
-//	void testNumberRestrictions() throws Exception {
-//		byte[] data = getByteStreamFromPath("jsonschema/test_jsonschema_valid_number_restrictions.json");
-//		assertNotNull(data);
-//		
-//		String schemaPID = "urn:test:" + UUID.randomUUID().toString();
-//		Model model = service.transformJSONSchemaToInternal(schemaPID, data);
-//
-//		assertEquals(10, model.getRequiredProperty(model.createResource(schemaPID + "#root/minNumber"), SH.minInclusive).getInt());		
-//		assertEquals(100, model.getRequiredProperty(model.createResource(schemaPID + "#root/maxNumber"), SH.maxInclusive).getInt());
-//		assertEquals(10.2, model.getRequiredProperty(model.createResource(schemaPID + "#root/numberRange"), SH.minInclusive).getFloat());
-//		assertEquals(100.1, model.getRequiredProperty(model.createResource(schemaPID + "#root/numberRange"), SH.maxInclusive).getFloat());
-//
-//		assertEquals(10, model.getRequiredProperty(model.createResource(schemaPID + "#root/minNumberEx"), SH.minExclusive).getInt());
-//		assertEquals(100, model.getRequiredProperty(model.createResource(schemaPID + "#root/maxNumberEx"), SH.maxExclusive).getInt());
-//		assertEquals(10, model.getRequiredProperty(model.createResource(schemaPID + "#root/numberRangeEx"), SH.minExclusive).getInt());
-//		assertEquals(100, model.getRequiredProperty(model.createResource(schemaPID + "#root/numberRangeEx"), SH.maxExclusive).getInt());
-//
-//	}
 	
 //	@Test
 //	void testStrings() throws Exception {
