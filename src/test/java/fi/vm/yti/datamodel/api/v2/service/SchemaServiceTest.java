@@ -54,109 +54,109 @@ public class SchemaServiceTest {
 		return inputSchemaInByte;
 	}	
 	
-//	@Test
-//	void testSimple1Transformation() throws Exception {
-//		byte[] data = getByteStreamFromPath("jsonschema/test_jsonschema_valid_simple1.json");
-//		assertNotNull(data);
-//		
-//		String schemaPID = "urn:test:" + UUID.randomUUID().toString();
-//		Model model = service.transformJSONSchemaToInternal(schemaPID, data);
-//		
-//		Resource root = model.createResource(schemaPID + "#root");
-//		
-////		model.write(System.out, "TURTLE");
-//		
-//		assertTrue(model.contains(root, RDF.type, SH.NodeShape));		
-//		assertEquals(3, model.listSubjectsWithProperty(RDF.type, SH.PropertyShape).toList().size());
-//		assertTrue(model.contains(root, SH.closed, model.createTypedLiteral(true)));
-//
-//	}
-//	
-//	@Test
-//	void testSimpleNested() throws Exception {
-//		byte[] data = getByteStreamFromPath("jsonschema/test_jsonschema_valid_simple_nested.json");
-//		assertNotNull(data);
-//		
-//		String schemaPID = "urn:test:" + UUID.randomUUID().toString();
-//		Model model = service.transformJSONSchemaToInternal(schemaPID, data);
-//		
-//		Resource root = model.createResource(schemaPID + "#root");
-//		
-//		assertTrue(model.contains(root, RDF.type, SH.NodeShape));		
-//		assertEquals(3, model.listSubjectsWithProperty(RDF.type, SH.NodeShape).toList().size());
-//		assertEquals(7, model.listSubjectsWithProperty(RDF.type, SH.PropertyShape).toList().size());
-//		
-//		assertEquals(SH.NodeShape, model.getRequiredProperty(model.createResource(schemaPID + "#root/address"), RDF.type).getObject());
-//	}
-//	
-//	@Test
-//	void testClosed() throws Exception {
-//		byte[] data = getByteStreamFromPath("jsonschema/test_jsonschema_valid_simple_nested.json");
-//		assertNotNull(data);
-//		
-//		String schemaPID = "urn:test:" + UUID.randomUUID().toString();
-//		Model model = service.transformJSONSchemaToInternal(schemaPID, data);
-//		
-//		Resource root = model.createResource(schemaPID + "#root");
-//		
-//		assertTrue(model.contains(root, SH.closed, model.createTypedLiteral(true)));
-//	}
-//	
-//	@Test
-//	void testValidDatatypes() throws Exception {
-//		byte[] data = getByteStreamFromPath("jsonschema/test_jsonschema_valid_simple_datatypes.json");
-//		assertNotNull(data);
-//				
-//		String schemaPID = "urn:test:" + UUID.randomUUID().toString();
-//		Model model = service.transformJSONSchemaToInternal(schemaPID, data);
-//		
-////		model.write(System.out, "TURTLE");
-//		
-//		assertEquals(XSD.integer, model.getRequiredProperty(model.createResource(schemaPID + "#root/address/house_number"), SH.datatype).getObject());
-//		assertEquals(XSD.integer, model.getRequiredProperty(model.createResource(schemaPID + "#root/address/city/population"), SH.datatype).getObject());
-//		assertEquals(XSD.xfloat, model.getRequiredProperty(model.createResource(schemaPID + "#root/height"), SH.datatype).getObject());
-//		assertEquals(XSD.xboolean, model.getRequiredProperty(model.createResource(schemaPID + "#root/has_cats"), SH.datatype).getObject());
-//		assertEquals("common", model.getRequiredProperty(model.createResource(schemaPID + "#root/lastName"), SH.defaultValue).getString());
-//		assertEquals("test", model.getRequiredProperty(model.createResource(schemaPID + "#address"), SH.defaultValue).getString());
-//	}
-//	
-//	@Test
-//	void testValidRequired() throws Exception {
-//		byte[] data = getByteStreamFromPath("jsonschema/test_jsonschema_valid_required.json");
-//		assertNotNull(data);
-//		
-//		String schemaPID = "urn:test:" + UUID.randomUUID().toString();
-//		Model model = service.transformJSONSchemaToInternal(schemaPID, data);
-//		assertEquals(1, model.getRequiredProperty(model.createResource(schemaPID + "#root/lastName"), SH.minCount).getInt());
-//		assertEquals(1, model.getRequiredProperty(model.createResource(schemaPID + "#root/lastName"), SH.maxCount).getInt());
-//		
-//	}
-//	
-//	@Test
-//	void testValidArrays() throws Exception {
-//		byte[] data = getByteStreamFromPath("jsonschema/test_jsonschema_valid_arrays.json");
-//		assertNotNull(data);
-//		
-//		String schemaPID = "urn:test:" + UUID.randomUUID().toString();
-//		Model model = service.transformJSONSchemaToInternal(schemaPID, data);
+	@Test
+	void testSimple1Transformation() throws Exception {
+		byte[] data = getByteStreamFromPath("jsonschema/test_jsonschema_valid_simple1.json");
+		assertNotNull(data);
+		
+		String schemaPID = "urn:test:" + UUID.randomUUID().toString();
+		Model model = service.transformJSONSchemaToInternal(schemaPID, data);
+		
+		Resource root = model.createResource(schemaPID + "#root/Root");
+		
 //		model.write(System.out, "TURTLE");
-//
-//		assertEquals(XSD.xstring, model.getRequiredProperty(model.createResource(schemaPID + "#root/Root/firstName"), SH.datatype).getObject());
-//		// lastName is functional property -> must have maxCount = 1
-//		assertEquals(1, model.getRequiredProperty(model.createResource(schemaPID + "#root/Root/firstName"), SH.maxCount).getInt());
-//		// lastName is not required -> should not have minCount
-//		assertFalse(model.contains(model.createResource(schemaPID + "#root/Root/firstName"), SH.minCount));
-//
-//		// not restrictions on number of items in an array -> no maxCount
-//		assertFalse(model.contains(model.createResource(schemaPID + "#root/Root/lastNames"), SH.maxCount));
-//		
-//
-//		assertEquals(2, model.getRequiredProperty(model.createResource(schemaPID + "#root/Root/addresses/Addresses/numbers"), SH.minCount).getInt());
-//		assertFalse(model.contains(model.createResource(schemaPID + "#root/Root/addresses/Addresses/numbers"), SH.maxCount));
-//
-//		assertEquals(10, model.getRequiredProperty(model.createResource(schemaPID + "#root/Root/addresses/Addresses/city/City/area_codes"), SH.maxCount).getInt());
-//		assertEquals(1, model.getRequiredProperty(model.createResource(schemaPID + "#root/Root/addresses/Addresses/city/City/area_codes"), SH.minCount).getInt());
-//	}
+		
+		assertTrue(model.contains(root, RDF.type, SH.NodeShape));		
+		assertEquals(3, model.listSubjectsWithProperty(RDF.type, SH.PropertyShape).toList().size());
+		assertTrue(model.contains(root, SH.closed, model.createTypedLiteral(true)));
+
+	}
+	
+	@Test
+	void testSimpleNested() throws Exception {
+		byte[] data = getByteStreamFromPath("jsonschema/test_jsonschema_valid_simple_nested.json");
+		assertNotNull(data);
+		
+		String schemaPID = "urn:test:" + UUID.randomUUID().toString();
+		Model model = service.transformJSONSchemaToInternal(schemaPID, data);
+		
+		Resource root = model.createResource(schemaPID + "#root/Root");
+		
+		assertTrue(model.contains(root, RDF.type, SH.NodeShape));		
+		assertEquals(3, model.listSubjectsWithProperty(RDF.type, SH.NodeShape).toList().size());
+		assertEquals(7, model.listSubjectsWithProperty(RDF.type, SH.PropertyShape).toList().size());
+		
+		assertEquals(SH.NodeShape, model.getRequiredProperty(model.createResource(schemaPID + "#root/Root/address/Address"), RDF.type).getObject());
+	}
+	
+	@Test
+	void testClosed() throws Exception {
+		byte[] data = getByteStreamFromPath("jsonschema/test_jsonschema_valid_simple_nested.json");
+		assertNotNull(data);
+		
+		String schemaPID = "urn:test:" + UUID.randomUUID().toString();
+		Model model = service.transformJSONSchemaToInternal(schemaPID, data);
+		
+		Resource root = model.createResource(schemaPID + "#root/Root");
+		
+		assertTrue(model.contains(root, SH.closed, model.createTypedLiteral(true)));
+	}
+	
+	@Test
+	void testValidDatatypes() throws Exception {
+		byte[] data = getByteStreamFromPath("jsonschema/test_jsonschema_valid_simple_datatypes.json");
+		assertNotNull(data);
+				
+		String schemaPID = "urn:test:" + UUID.randomUUID().toString();
+		Model model = service.transformJSONSchemaToInternal(schemaPID, data);
+		
+//		model.write(System.out, "TURTLE");
+		
+		assertEquals(XSD.integer, model.getRequiredProperty(model.createResource(schemaPID + "#root/Root/address/Address/house_number"), SH.datatype).getObject());
+		assertEquals(XSD.integer, model.getRequiredProperty(model.createResource(schemaPID + "#root/Root/address/Address/city/City/population"), SH.datatype).getObject());
+		assertEquals(XSD.xfloat, model.getRequiredProperty(model.createResource(schemaPID + "#root/Root/height"), SH.datatype).getObject());
+		assertEquals(XSD.xboolean, model.getRequiredProperty(model.createResource(schemaPID + "#root/Root/has_cats"), SH.datatype).getObject());
+		assertEquals("common", model.getRequiredProperty(model.createResource(schemaPID + "#root/Root/lastName"), SH.defaultValue).getString());
+		assertEquals("test", model.getRequiredProperty(model.createResource(schemaPID + "#root/Root/address"), SH.defaultValue).getString());
+	}
+	
+	@Test
+	void testValidRequired() throws Exception {
+		byte[] data = getByteStreamFromPath("jsonschema/test_jsonschema_valid_required.json");
+		assertNotNull(data);
+		
+		String schemaPID = "urn:test:" + UUID.randomUUID().toString();
+		Model model = service.transformJSONSchemaToInternal(schemaPID, data);
+		assertEquals(1, model.getRequiredProperty(model.createResource(schemaPID + "#root/Root/lastName"), SH.minCount).getInt());
+		assertEquals(1, model.getRequiredProperty(model.createResource(schemaPID + "#root/Root/lastName"), SH.maxCount).getInt());
+		
+	}
+	
+	@Test
+	void testValidArrays() throws Exception {
+		byte[] data = getByteStreamFromPath("jsonschema/test_jsonschema_valid_arrays.json");
+		assertNotNull(data);
+		
+		String schemaPID = "urn:test:" + UUID.randomUUID().toString();
+		Model model = service.transformJSONSchemaToInternal(schemaPID, data);
+		model.write(System.out, "TURTLE");
+
+		assertEquals(XSD.xstring, model.getRequiredProperty(model.createResource(schemaPID + "#root/Root/firstName"), SH.datatype).getObject());
+		// lastName is functional property -> must have maxCount = 1
+		assertEquals(1, model.getRequiredProperty(model.createResource(schemaPID + "#root/Root/firstName"), SH.maxCount).getInt());
+		// lastName is not required -> should not have minCount
+		assertFalse(model.contains(model.createResource(schemaPID + "#root/Root/firstName"), SH.minCount));
+
+		// not restrictions on number of items in an array -> no maxCount
+		assertFalse(model.contains(model.createResource(schemaPID + "#root/Root/lastNames"), SH.maxCount));
+		
+
+		assertEquals(2, model.getRequiredProperty(model.createResource(schemaPID + "#root/Root/addresses/Addresses/numbers"), SH.minCount).getInt());
+		assertFalse(model.contains(model.createResource(schemaPID + "#root/Root/addresses/Addresses/numbers"), SH.maxCount));
+
+		assertEquals(10, model.getRequiredProperty(model.createResource(schemaPID + "#root/Root/addresses/Addresses/city/City/area_codes"), SH.maxCount).getInt());
+		assertEquals(1, model.getRequiredProperty(model.createResource(schemaPID + "#root/Root/addresses/Addresses/city/City/area_codes"), SH.minCount).getInt());
+	}
 	
 	@Test
 	void testNumberRestrictions() throws Exception {
@@ -187,13 +187,13 @@ public class SchemaServiceTest {
 //		String schemaPID = "urn:test:" + UUID.randomUUID().toString();
 //		Model model = service.transformJSONSchemaToInternal(schemaPID, data);
 //		
-//		assertEquals(10, model.getRequiredProperty(model.createResource(schemaPID + "#root/minString"), SH.minLength).getInt());
-//		assertEquals(100, model.getRequiredProperty(model.createResource(schemaPID + "#root/maxString"), SH.maxLength).getInt());
+//		assertEquals(10, model.getRequiredProperty(model.createResource(schemaPID + "#root/Root/minString"), SH.minLength).getInt());
+//		assertEquals(100, model.getRequiredProperty(model.createResource(schemaPID + "#root/Root/maxString"), SH.maxLength).getInt());
 //
-//		assertEquals(10, model.getRequiredProperty(model.createResource(schemaPID + "#root/stringLengthRange"), SH.minLength).getInt());
-//		assertEquals(100, model.getRequiredProperty(model.createResource(schemaPID + "#root/stringLengthRange"), SH.maxLength).getInt());
+//		assertEquals(10, model.getRequiredProperty(model.createResource(schemaPID + "#root/Root/stringLengthRange"), SH.minLength).getInt());
+//		assertEquals(100, model.getRequiredProperty(model.createResource(schemaPID + "#root/Root/stringLengthRange"), SH.maxLength).getInt());
 //
-//		assertEquals("^(\\([0-9]{3}\\))?[0-9]{3}-[0-9]{4}$", model.getRequiredProperty(model.createResource(schemaPID + "#root/stringPattern"), SH.pattern).getString());
+//		assertEquals("^(\\([0-9]{3}\\))?[0-9]{3}-[0-9]{4}$", model.getRequiredProperty(model.createResource(schemaPID + "#root/Root/stringPattern"), SH.pattern).getString());
 //	}
 //	
 //	@Test
@@ -214,8 +214,8 @@ public class SchemaServiceTest {
 //		model.add(model.createResource(schemaPID + "#root/string"), SH.in, b);
 //		*/
 //		
-//		assertTrue(model.contains(model.createResource(schemaPID + "#root/string"), SH.in));		
-//		Bag strings = model.getRequiredProperty(model.createResource(schemaPID + "#root/string"), SH.in).getBag();
+//		assertTrue(model.contains(model.createResource(schemaPID + "#root/Root/string"), SH.in));		
+//		Bag strings = model.getRequiredProperty(model.createResource(schemaPID + "#root/Root/string"), SH.in).getBag();
 //		assertEquals(2, strings.size());
 //
 //		List<String> stringList = new ArrayList<String>();
@@ -232,8 +232,8 @@ public class SchemaServiceTest {
 //		model.add(model.createResource(schemaPID + "#root/integer"), SH.in, b2);
 //		*/
 //
-//		assertTrue(model.contains(model.createResource(schemaPID + "#root/integer"), SH.in));
-//		Bag integers = model.getRequiredProperty(model.createResource(schemaPID + "#root/integer"), SH.in).getBag();
+//		assertTrue(model.contains(model.createResource(schemaPID + "#root/Root/integer"), SH.in));
+//		Bag integers = model.getRequiredProperty(model.createResource(schemaPID + "#root/Root/integer"), SH.in).getBag();
 //		assertEquals(3, integers.size());
 //		
 //		
@@ -244,7 +244,7 @@ public class SchemaServiceTest {
 //		}
 //		assertArrayEquals(new Integer[] {1,2,3}, integerList.toArray());
 //	}
-	
+//	
 	/* 
 	 * 
 	 *  
