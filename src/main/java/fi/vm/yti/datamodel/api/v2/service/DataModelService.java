@@ -74,10 +74,9 @@ public class DataModelService {
     }
 
     public void update(String prefix, DataModelDTO dto) {
-        var graphUri = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
         var oldModel = coreRepository.fetch(ModelConstants.SUOMI_FI_NAMESPACE + prefix);
 
-        check(authorizationManager.hasRightToModel(graphUri, oldModel));
+        check(authorizationManager.hasRightToModel(prefix, oldModel));
 
         terminologyService.resolveTerminology(dto.getTerminologies());
         codeListService.resolveCodelistScheme(dto.getCodeLists());
