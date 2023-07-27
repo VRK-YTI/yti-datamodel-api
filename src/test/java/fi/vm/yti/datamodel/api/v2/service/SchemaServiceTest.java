@@ -141,21 +141,21 @@ public class SchemaServiceTest {
 		Model model = service.transformJSONSchemaToInternal(schemaPID, data);
 		model.write(System.out, "TURTLE");
 
-		assertEquals(XSD.xstring, model.getRequiredProperty(model.createResource(schemaPID + "#root/firstName"), SH.datatype).getObject());
+		assertEquals(XSD.xstring, model.getRequiredProperty(model.createResource(schemaPID + "#root/Root/firstName"), SH.datatype).getObject());
 		// lastName is functional property -> must have maxCount = 1
-		assertEquals(1, model.getRequiredProperty(model.createResource(schemaPID + "#root/firstName"), SH.maxCount).getInt());
+		assertEquals(1, model.getRequiredProperty(model.createResource(schemaPID + "#root/Root/firstName"), SH.maxCount).getInt());
 		// lastName is not required -> should not have minCount
-		assertFalse(model.contains(model.createResource(schemaPID + "#root/firstName"), SH.minCount));
+		assertFalse(model.contains(model.createResource(schemaPID + "#root/Root/firstName"), SH.minCount));
 
 		// not restrictions on number of items in an array -> no maxCount
-		assertFalse(model.contains(model.createResource(schemaPID + "#root/lastNames"), SH.maxCount));
+		assertFalse(model.contains(model.createResource(schemaPID + "#root/Root/lastNames"), SH.maxCount));
 		
 
-		assertEquals(2, model.getRequiredProperty(model.createResource(schemaPID + "#root/addresses/numbers"), SH.minCount).getInt());
-		assertFalse(model.contains(model.createResource(schemaPID + "#root/addresses/numbers"), SH.maxCount));
+		assertEquals(2, model.getRequiredProperty(model.createResource(schemaPID + "#root/Root/addresses/Addresses/numbers"), SH.minCount).getInt());
+		assertFalse(model.contains(model.createResource(schemaPID + "#root/Root/addresses/Addresses/numbers"), SH.maxCount));
 
-		assertEquals(10, model.getRequiredProperty(model.createResource(schemaPID + "#root/addresses/city/area_codes"), SH.maxCount).getInt());
-		assertEquals(1, model.getRequiredProperty(model.createResource(schemaPID + "#root/addresses/city/area_codes"), SH.minCount).getInt());
+		assertEquals(10, model.getRequiredProperty(model.createResource(schemaPID + "#root/Root/addresses/Addresses/city/City/area_codes"), SH.maxCount).getInt());
+		assertEquals(1, model.getRequiredProperty(model.createResource(schemaPID + "#root/Root/addresses/Addresses/city/City/area_codes"), SH.minCount).getInt());
 	}
 	
 //	@Test

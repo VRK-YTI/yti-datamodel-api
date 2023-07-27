@@ -180,14 +180,16 @@ public class SchemaService {
 			ArrayList<String> requiredProperties) {
 
 		String propIDCapitalised = capitaliseNodeIdentifier(propID);
-//		Resource nodeShapeResource = model.createResource(schemaPID + "#" + propID);
+		String nameProperty = propID.substring(propID.lastIndexOf("/") + 1);
 		Resource nodeShapeResource = model.createResource(schemaPID + "#" + propIDCapitalised);
 		
 		nodeShapeResource.addProperty(RDF.type, model.getResource(SHACL.NodeShape.getURI()));
-		nodeShapeResource.addProperty(MSCR.localName, propID);
+		
+		
+		nodeShapeResource.addProperty(MSCR.localName, nameProperty);
+		nodeShapeResource.addProperty(model.getProperty(SHACL.name.getURI()), nameProperty);
 		if (node.has("description"))
 			nodeShapeResource.addProperty(DCTerms.description, node.get("description").asText());
-		nodeShapeResource.addProperty(model.getProperty(SHACL.name.getURI()), propID);
 		if (node == null || node.get("properties") == null) {
 			return;
 		}
