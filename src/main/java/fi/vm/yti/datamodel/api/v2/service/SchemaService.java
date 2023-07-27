@@ -2,10 +2,13 @@ package fi.vm.yti.datamodel.api.v2.service;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.LinkedList;
 
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
@@ -108,7 +111,6 @@ public class SchemaService {
 	 */
 	private Resource addDatatypeProperty(String propID, JsonNode node, Model model, String schemaPID, String type) {
 		Resource propertyResource = model.createResource(schemaPID + "#" + propID);
-		System.out.println("ADD DATATYPE PROPERTY: " + propID);
 		propertyResource.addProperty(RDF.type, model.getResource(SHACL.PropertyShape.getURI()));
 		propertyResource.addProperty(DCTerms.type, OWL.DatatypeProperty);
 
@@ -135,7 +137,6 @@ public class SchemaService {
 	 */
 	private Resource addObjectProperty(String propID, JsonNode node, Model model, String schemaPID,
 			String targetShape) {
-		System.out.println("ADD OBJ PROPERTY: " + propID);
 		Resource propertyResource = model.createResource(schemaPID + "#" + propID);
 		propertyResource.addProperty(RDF.type, model.getResource(SHACL.PropertyShape.getURI()));
 		propertyResource.addProperty(DCTerms.type, OWL.ObjectProperty);
@@ -145,7 +146,6 @@ public class SchemaService {
 		propertyResource.addProperty(model.getProperty(SHACL.node.getURI()), model.createResource(targetShape));
 
 		return propertyResource;
-
 	}
 
 	// ONLY HANDLES TYPE !!! ---> NO! even though type is explicitly requested here
@@ -153,18 +153,18 @@ public class SchemaService {
 	// within the method
 	private void handleDatatypeProperty(String propID, Entry<String, JsonNode> entry, Model model, String schemaPID,
 			Resource nodeShapeResource, boolean isRequired, boolean isArrayItem) {
-		System.out.println("HANDLING DT PROPERTY " + "key: " + entry.getKey() + " || value: " + entry.getValue());
-		System.out.println("propID: " + propID);
 		Resource propertyResource = addDatatypeProperty(propID + "/" + entry.getKey(), entry.getValue(), model,
 				schemaPID, entry.getValue().get("type").asText());
 		nodeShapeResource.addProperty(model.getProperty(SHACL.property.getURI()), propertyResource);
 		if (!isArrayItem) {
-			System.out.println(entry.getKey() + " NOT AN ARRAY ITEM");
 			handleRequiredProperty(entry.getValue(), model, propertyResource, isRequired);
-		} else {
-			System.out.println(entry.getKey() + " +++ IS AN ARRAY ITEM:");
-			System.out.println(entry.getKey() + " || " + entry.getValue());
-		}
+		} 
+	}
+	
+	private String capitaliseNodeIdentifier(String propID) {
+		List<String> propIDSplit = new LinkedList<String>(Arrays.asList(propID.split("/")));
+		String partToCapitalise = propIDSplit.get(propIDSplit.size() - 1);
+		return ((String.join("/", propIDSplit)) + "/" + partToCapitalise.substring(0, 1).toUpperCase() + partToCapitalise.substring(1));
 	}
 	
 	/**
@@ -179,8 +179,10 @@ public class SchemaService {
 	private void handleObject(String propID, JsonNode node, String schemaPID, Model model,
 			ArrayList<String> requiredProperties) {
 
-		Resource nodeShapeResource = model.createResource(schemaPID + "#" + propID);
-		System.out.println("NODESHAPRE: " + nodeShapeResource);
+		String propIDCapitalised = capitaliseNodeIdentifier(propID);
+//		Resource nodeShapeResource = model.createResource(schemaPID + "#" + propID);
+		Resource nodeShapeResource = model.createResource(schemaPID + "#" + propIDCapitalised);
+		
 		nodeShapeResource.addProperty(RDF.type, model.getResource(SHACL.NodeShape.getURI()));
 		nodeShapeResource.addProperty(MSCR.localName, propID);
 		if (node.has("description"))
@@ -218,44 +220,36 @@ public class SchemaService {
 							.forEachRemaining(el -> updatedRequiredProperties.add(el.asText()));
 				}
 
-				Resource propertyShape = addObjectProperty(entry.getKey(), entry.getValue(), model, schemaPID,
-						schemaPID + "#" + propID + "/" + entry.getKey());
+				Resource propertyShape = addObjectProperty(propIDCapitalised + "/" + entry.getKey(), entry.getValue(), model, schemaPID,
+						schemaPID + "#" + propIDCapitalised + "/" + entry.getKey());
 				nodeShapeResource.addProperty(model.getProperty(SHACL.property.getURI()), propertyShape);
 				
-				String capitalisedKey = entry.getKey().substring(0, 1).toUpperCase() + entry.getKey().substring(1);
-
-				handleObject(propID + "/" + entry.getKey() + "/" + capitalisedKey, entry.getValue(), schemaPID, model,
+				handleObject(propIDCapitalised + "/" + entry.getKey(), entry.getValue(), schemaPID, model,
 						updatedRequiredProperties);
 
 			} else if (entry.getValue().get("type").asText().equals("array")
 					&& entry.getValue().get("items").has("type")
 					&& entry.getValue().get("items").get("type").asText().equals("object")) {
-				System.out.println("ARRAY + OBJ CURRENT PROPID: " + propID + " || NEXT PROPID: " + (propID + "/" + entry.getKey()));
-
-				String capitalisedKey = entry.getKey().substring(0, 1).toUpperCase() + entry.getKey().substring(1);
+				Resource propertyShape = addObjectProperty(propIDCapitalised + "/" + entry.getKey(), entry.getValue(), model, schemaPID,
+						schemaPID + "#" + propIDCapitalised + "/" + entry.getKey());
 				
-				Resource propertyShape = addObjectProperty(entry.getKey(), entry.getValue(), model, schemaPID,
-						schemaPID + "#" + propID + "/" + entry.getKey());
 				nodeShapeResource.addProperty(model.getProperty(SHACL.property.getURI()), propertyShape);
-				handleObject(propID + "/" + entry.getKey() + "/" + capitalisedKey, entry.getValue().get("items"), schemaPID, model,
+				handleObject(propIDCapitalised + "/" + entry.getKey(), entry.getValue().get("items"), schemaPID, model,
 						requiredProperties);
 
 			} else if (entry.getValue().get("type").asText().equals("array")) {
-				Resource propertyShape = addObjectProperty(propID + "/" + entry.getKey(), entry.getValue(), model, schemaPID,
-						schemaPID + "#" + propID + "/" + entry.getKey());
-				System.out.println("ARRAY CURRENT PROPID: " + propID + " || NEXT PROPID: " + (propID + "/" + entry.getKey()));
+				Resource propertyShape = addObjectProperty(propIDCapitalised + "/" + entry.getKey(), entry.getValue(), model, schemaPID,
+						schemaPID + "#" + propIDCapitalised + "/" + entry.getKey());
 				nodeShapeResource.addProperty(model.getProperty(SHACL.property.getURI()), propertyShape);
 
 				Entry<String, JsonNode> arrayItem = Map.entry(entry.getKey(), entry.getValue().get("items"));
 
-				handleDatatypeProperty(propID, arrayItem, model, schemaPID, nodeShapeResource, false, true);
+				handleDatatypeProperty(propIDCapitalised, arrayItem, model, schemaPID, nodeShapeResource, false, true);
 				
 			} else {
-				System.out.println("SIMPLE PROPERTY " + entry.getKey() + " || " + entry.getValue().has("required"));
-				
 				// need to check later if requiredProperties do anything at all in this clause
 				boolean isRequired = requiredProperties.contains(entry.getKey()) || (entry.getValue().has("required") && (entry.getValue().get("required").asBoolean() == true));
-				handleDatatypeProperty(propID, entry, model, schemaPID, nodeShapeResource, isRequired, false);
+				handleDatatypeProperty(propIDCapitalised, entry, model, schemaPID, nodeShapeResource, isRequired, false);
 			}
 
 		}
