@@ -6,6 +6,7 @@ import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexModel;
 import fi.vm.yti.datamodel.api.v2.repository.ConceptRepository;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import fi.vm.yti.datamodel.api.v2.repository.ImportsRepository;
+import fi.vm.yti.datamodel.api.v2.repository.SchemesRepository;
 import fi.vm.yti.security.YtiUser;
 import org.apache.jena.datatypes.xsd.XSDDateTime;
 import org.apache.jena.rdf.model.*;
@@ -30,14 +31,17 @@ public class ModelMapper {
     private final CoreRepository coreRepository;
     private final ConceptRepository conceptRepository;
     private final ImportsRepository importsRepository;
+    private final SchemesRepository schemesRepository;
 
 
     public ModelMapper (CoreRepository coreRepository,
                         ConceptRepository conceptRepository,
-                        ImportsRepository importsRepository){
+                        ImportsRepository importsRepository,
+                        SchemesRepository schemesRepository){
         this.coreRepository = coreRepository;
         this.conceptRepository = conceptRepository;
         this.importsRepository = importsRepository;
+        this.schemesRepository = schemesRepository;
     }
 
     /**
@@ -221,7 +225,7 @@ public class ModelMapper {
         var codeLists = MapperUtils.arrayPropertyToSet(modelResource, DCTerms.requires)
                 .stream().filter(val -> val.startsWith(ModelConstants.CODELIST_NAMESPACE))
                 .map(codeList -> {
-                    var codeListModel = coreRepository.fetch(codeList);
+                    var codeListModel = schemesRepository.fetch(codeList);
                     if(codeListModel == null){
                         var codeListDTO = new CodeListDTO();
                         codeListDTO.setId(codeList);
