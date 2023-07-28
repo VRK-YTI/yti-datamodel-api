@@ -36,7 +36,7 @@ class UriResolveServiceTest {
         RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
     }
     @Test
-    void testRedirectSiteModel() throws Exception {
+    void testRedirectSiteModel() {
         var accept = "text/html";
         var response = service.resolve("http://uri.suomi.fi/datamodel/ns/test", accept);
         assertTrue(response.getStatusCode().is3xxRedirection());
@@ -45,7 +45,7 @@ class UriResolveServiceTest {
     }
 
     @Test
-    void testRedirectSiteResource() throws Exception {
+    void testRedirectSiteResource() {
         var model = MapperTestUtils.getModelFromFile("/models/test_datamodel_library_with_resources.ttl");
         when(coreRepository.fetch(anyString())).thenReturn(model);
 
@@ -65,7 +65,7 @@ class UriResolveServiceTest {
     }
 
     @Test
-    void testRedirectSerializedResource() throws Exception {
+    void testRedirectSerializedResource() {
         var model = MapperTestUtils.getModelFromFile("/models/test_datamodel_library_with_resources.ttl");
         when(coreRepository.fetch(anyString())).thenReturn(model);
 
@@ -77,7 +77,7 @@ class UriResolveServiceTest {
     }
 
     @Test
-    void testInvalidIRI() throws Exception {
+    void testInvalidIRI() {
         var accept = "text/turtle";
         var response = service.resolve("http://invalid.com", accept);
         assertEquals("400 BAD_REQUEST", response.getStatusCode().toString());

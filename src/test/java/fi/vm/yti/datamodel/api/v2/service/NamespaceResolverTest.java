@@ -57,7 +57,7 @@ class NamespaceResolverTest {
 
     @ParameterizedTest
     @MethodSource("reservedNamespaceProvider")
-    void shouldFailToResolveReserved(String namespace) throws Exception {
+    void shouldFailToResolveReserved(String namespace) {
         var error = assertThrows(ResolvingException.class, () -> namespaceResolver.resolve(namespace, false));
         assertEquals("Error during resolution: Reserved namespace", error.getMessage());
     }
@@ -67,7 +67,7 @@ class NamespaceResolverTest {
     }
 
     @Test
-    void testForceResolution() throws Exception {
+    void testForceResolution() {
         when(namespaceResolver.namespaceAlreadyResolved(anyString())).thenReturn(true);
 
         var error = assertThrows(ResolvingException.class, () -> namespaceResolver.resolve("notrealaddress", false));
