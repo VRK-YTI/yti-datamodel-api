@@ -2,7 +2,7 @@ package fi.vm.yti.datamodel.api.v2.endpoint;
 
 import fi.vm.yti.datamodel.api.mapper.MapperTestUtils;
 import fi.vm.yti.datamodel.api.security.AuthorizationManager;
-import fi.vm.yti.datamodel.api.v2.service.JenaService;
+import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import fi.vm.yti.datamodel.api.v2.validator.ExceptionHandlerAdvice;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
@@ -19,7 +19,6 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -36,7 +35,7 @@ class ExportControllerTest {
     private MockMvc mvc;
 
     @MockBean
-    private JenaService jenaService;
+    private CoreRepository coreRepository;
 
     @MockBean
     private AuthorizationManager authorizationManager;
@@ -62,20 +61,20 @@ class ExportControllerTest {
     @ParameterizedTest
     @ValueSource(strings = {"application/ld+json", "text/turtle", "application/rdf+xml"})
     void shouldGetModelWithAcceptHeader(String accept) throws Exception {
-        when(jenaService.getDataModel(anyString())).thenReturn(ModelFactory.createDefaultModel());
+        when(coreRepository.fetch(anyString())).thenReturn(ModelFactory.createDefaultModel());
 
         mvc.perform(get("/v2/export/test")
                         .header("Accept", accept))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(accept));
-        verify(jenaService).getDataModel(anyString());
-        verifyNoMoreInteractions(jenaService);
+        verify(coreRepository).fetch(anyString());
+        verifyNoMoreInteractions(coreRepository);
     }
 
     @Test
     void shouldRemoveTriplesHiddenFromUnauthenticatedUser() throws Exception {
         var model = MapperTestUtils.getModelFromFile("/models/test_datamodel_library_with_resources.ttl");
-        when(jenaService.getDataModel(anyString())).thenReturn(model);
+        when(coreRepository.fetch(anyString())).thenReturn(model);
         when(authorizationManager.hasRightToModel(anyString(), any(Model.class))).thenReturn(false);
 
         mvc.perform(get("/v2/export/test")

@@ -15,6 +15,7 @@ import fi.vm.yti.datamodel.api.v2.opensearch.queries.CountQueryFactory;
 import fi.vm.yti.datamodel.api.v2.opensearch.queries.ModelQueryFactory;
 import fi.vm.yti.datamodel.api.v2.opensearch.queries.QueryFactoryUtils;
 import fi.vm.yti.datamodel.api.v2.opensearch.queries.ResourceQueryFactory;
+import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import fi.vm.yti.security.Role;
 import fi.vm.yti.security.YtiUser;
 import org.apache.jena.arq.querybuilder.ExprFactory;
@@ -38,13 +39,17 @@ public class SearchIndexService {
 
     private final OpenSearchClient client;
     private final GroupManagementService groupManagementService;
-    private final JenaService jenaService;
+    private final TerminologyService terminologyService;
+    private final CoreRepository coreRepository;
 
     public SearchIndexService(OpenSearchConnector openSearchConnector,
-                              GroupManagementService groupManagementService, JenaService jenaService) {
+                              GroupManagementService groupManagementService,
+                              TerminologyService terminologyService,
+                              CoreRepository coreRepository) {
         this.client = openSearchConnector.getClient();
         this.groupManagementService = groupManagementService;
-        this.jenaService = jenaService;
+        this.terminologyService = terminologyService;
+        this.coreRepository = coreRepository;
     }
 
     /**
@@ -128,7 +133,7 @@ public class SearchIndexService {
                         .addWhere(propertyVar, "a", resourceType));
             }
             var externalResources = new HashSet<String>();
-            jenaService.selectWithQuery(select.build(), (var row) -> externalResources.add(row.get("property").toString()));
+            coreRepository.querySelect(select.build(), (var row) -> externalResources.add(row.get("property").toString()));
             request.setAdditionalResources(externalResources);
         }
         return searchInternalResources(request, allowedDatamodels);
@@ -143,7 +148,7 @@ public class SearchIndexService {
 
         searchModels(modelRequest, user).getResponseObjects()
                 .forEach(o -> dataModels.put(o.getId(), o));
-        var concepts = jenaService.getAllConcepts();
+        var concepts = terminologyService.getAllConcepts();
 
         var response = new SearchResponseDTO<IndexResourceInfo>();
         response.setTotalHitCount(dto.getTotalHitCount());
@@ -226,7 +231,7 @@ public class SearchIndexService {
     }
 
     private void getNamespacesFromModel(String modelUri, List<String> namespaces){
-        var model = jenaService.getDataModel(modelUri);
+        var model = coreRepository.fetch(modelUri);
         var resource = model.getResource(modelUri);
         namespaces.addAll(MapperUtils.arrayPropertyToList(resource, OWL.imports));
         namespaces.addAll(MapperUtils.arrayPropertyToList(resource, DCTerms.requires));

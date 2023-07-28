@@ -1,6 +1,9 @@
 package fi.vm.yti.datamodel.api.v2.service;
 
 import fi.vm.yti.datamodel.api.v2.repository.ImportsRepository;
+import org.apache.jena.arq.querybuilder.AskBuilder;
+import org.apache.jena.atlas.web.HttpException;
+import org.apache.jena.graph.NodeFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -60,4 +63,26 @@ public class NamespaceService {
 
         return result;
     }
+
+    public boolean doesResolvedNamespaceExist(String namespace){
+        var askBuilder = new AskBuilder()
+                .addGraph(NodeFactory.createURI(namespace), "?s", "?p", "?o");
+        try {
+            return importsRepository.queryAsk(askBuilder.build());
+        }catch(HttpException ex){
+            throw new JenaQueryException();
+        }
+    }
+
+    public boolean doesResourceExistInImportedNamespace(String namespace, String resourceUri){
+        var askBuilder = new AskBuilder()
+                .addGraph(NodeFactory.createURI(namespace),
+                        NodeFactory.createURI(resourceUri), "?p", "?o");
+        try{
+            return importsRepository.queryAsk(askBuilder.build());
+        }catch(HttpException ex){
+            throw new JenaQueryException();
+        }
+    }
+
 }

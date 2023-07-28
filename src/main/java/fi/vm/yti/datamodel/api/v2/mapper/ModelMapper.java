@@ -3,7 +3,9 @@ package fi.vm.yti.datamodel.api.v2.mapper;
 import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexModel;
-import fi.vm.yti.datamodel.api.v2.service.JenaService;
+import fi.vm.yti.datamodel.api.v2.repository.ConceptRepository;
+import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
+import fi.vm.yti.datamodel.api.v2.repository.ImportsRepository;
 import fi.vm.yti.security.YtiUser;
 import org.apache.jena.datatypes.xsd.XSDDateTime;
 import org.apache.jena.rdf.model.*;
@@ -25,11 +27,17 @@ public class ModelMapper {
 
     private final Logger log = LoggerFactory.getLogger(ModelMapper.class);
 
-    private final JenaService jenaService;
+    private final CoreRepository coreRepository;
+    private final ConceptRepository conceptRepository;
+    private final ImportsRepository importsRepository;
 
 
-    public ModelMapper (JenaService jenaService){
-        this.jenaService = jenaService;
+    public ModelMapper (CoreRepository coreRepository,
+                        ConceptRepository conceptRepository,
+                        ImportsRepository importsRepository){
+        this.coreRepository = coreRepository;
+        this.conceptRepository = conceptRepository;
+        this.importsRepository = importsRepository;
     }
 
     /**
@@ -66,7 +74,7 @@ public class ModelMapper {
         MapperUtils.addLocalizedProperty(modelDTO.getLanguages(), modelDTO.getLabel(), modelResource, RDFS.label, model);
         MapperUtils.addLocalizedProperty(modelDTO.getLanguages(), modelDTO.getDescription(), modelResource, RDFS.comment, model);
 
-        var groupModel = jenaService.getServiceCategories();
+        var groupModel = coreRepository.getServiceCategories();
         modelDTO.getGroups().forEach(group -> {
             var groups = groupModel.listResourcesWithProperty(SKOS.notation, group);
             if (groups.hasNext()) {
@@ -109,7 +117,7 @@ public class ModelMapper {
         MapperUtils.updateLocalizedProperty(langs, dataModelDTO.getDocumentation(), modelResource, Iow.documentation, model);
 
         modelResource.removeAll(DCTerms.isPartOf);
-        var groupModel = jenaService.getServiceCategories();
+        var groupModel = coreRepository.getServiceCategories();
         dataModelDTO.getGroups().forEach(group -> {
             var groups = groupModel.listResourcesWithProperty(SKOS.notation, group);
             if (groups.hasNext()) {
@@ -185,10 +193,10 @@ public class ModelMapper {
         datamodelDTO.setDescription(MapperUtils.localizedPropertyToMap(modelResource, RDFS.comment));
 
         var groups = MapperUtils.arrayPropertyToSet(modelResource, DCTerms.isPartOf);
-        datamodelDTO.setGroups(ServiceCategoryMapper.mapServiceCategoriesToDTO(groups, jenaService.getServiceCategories()));
+        datamodelDTO.setGroups(ServiceCategoryMapper.mapServiceCategoriesToDTO(groups, coreRepository.getServiceCategories()));
 
         var organizations = MapperUtils.arrayPropertyToSet(modelResource, DCTerms.contributor);
-        datamodelDTO.setOrganizations(OrganizationMapper.mapOrganizationsToDTO(organizations, jenaService.getOrganizations()));
+        datamodelDTO.setOrganizations(OrganizationMapper.mapOrganizationsToDTO(organizations, coreRepository.getOrganizations()));
 
         MapperUtils.mapCreationInfo(datamodelDTO, modelResource, userMapper);
 
@@ -202,7 +210,7 @@ public class ModelMapper {
         var terminologies = MapperUtils.arrayPropertyToSet(modelResource, DCTerms.requires)
                 .stream().filter(val -> val.startsWith(ModelConstants.TERMINOLOGY_NAMESPACE))
                 .map(ref -> {
-                    var terminologyModel = jenaService.getTerminology(ref);
+                    var terminologyModel = conceptRepository.fetch(ref);
                     if (terminologyModel == null) {
                         return new TerminologyDTO(ref);
                     }
@@ -213,7 +221,7 @@ public class ModelMapper {
         var codeLists = MapperUtils.arrayPropertyToSet(modelResource, DCTerms.requires)
                 .stream().filter(val -> val.startsWith(ModelConstants.CODELIST_NAMESPACE))
                 .map(codeList -> {
-                    var codeListModel = jenaService.getCodelistScheme(codeList);
+                    var codeListModel = coreRepository.fetch(codeList);
                     if(codeListModel == null){
                         var codeListDTO = new CodeListDTO();
                         codeListDTO.setId(codeList);
@@ -265,8 +273,8 @@ public class ModelMapper {
                 .stream().map(MapperUtils::getUUID).toList();
         indexModel.setContributor(contributors);
         var isPartOf = MapperUtils.arrayPropertyToList(resource, DCTerms.isPartOf);
-        var serviceCategories = jenaService.getServiceCategories();
-        var groups = isPartOf.stream().map(serviceCat -> MapperUtils.propertyToString(serviceCategories.getResource(serviceCat), SKOS.notation)).collect(Collectors.toList());
+        var serviceCategories = coreRepository.getServiceCategories();
+        var groups = isPartOf.stream().map(serviceCat -> MapperUtils.propertyToString(serviceCategories.getResource(serviceCat), SKOS.notation)).toList();
         indexModel.setIsPartOf(groups);
         indexModel.setLanguage(MapperUtils.arrayPropertyToList(resource, DCTerms.language));
 
@@ -279,7 +287,7 @@ public class ModelMapper {
      * @param modelResource Model resource to add orgs to
      */
     private void addOrgsToModel(DataModelDTO modelDTO, Resource modelResource) {
-        var organizationsModel = jenaService.getOrganizations();
+        var organizationsModel = coreRepository.getOrganizations();
         modelDTO.getOrganizations().forEach(org -> {
             var orgUri = ModelConstants.URN_UUID + org;
             var queryRes = ResourceFactory.createResource(orgUri);
@@ -325,7 +333,7 @@ public class ModelMapper {
      */
     private void addInternalNamespaceToDatamodel(DataModelDTO modelDTO, Resource resource, Model model){
         modelDTO.getInternalNamespaces().forEach(namespace -> {
-            var ns = jenaService.getDataModel(namespace);
+            var ns = coreRepository.fetch(namespace);
             var nsRes = ns.getResource(namespace);
             var prefix = MapperUtils.propertyToString(nsRes, DCAP.preferredXMLNamespacePrefix);
             var nsType = MapperUtils.getModelTypeFromResource(nsRes);
@@ -361,7 +369,7 @@ public class ModelMapper {
                 nsRes.addProperty(DCAP.preferredXMLNamespacePrefix, namespace.getPrefix());
 
                 try{
-                    var resolvedNs = jenaService.getNamespaceFromImports(nsUri);
+                    var resolvedNs = importsRepository.fetch(nsUri);
                     var extRes = resolvedNs.getResource(nsUri);
                     var nsType = MapperUtils.getModelTypeFromResource(extRes);
                     var modelType = MapperUtils.getModelTypeFromResource(resource);

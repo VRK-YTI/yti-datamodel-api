@@ -1,7 +1,7 @@
 package fi.vm.yti.datamodel.api.v2.endpoint;
 
 import fi.vm.yti.datamodel.api.mapper.MapperTestUtils;
-import fi.vm.yti.datamodel.api.v2.service.JenaService;
+import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import fi.vm.yti.datamodel.api.v2.validator.ExceptionHandlerAdvice;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -34,7 +34,7 @@ class ResolveControllerTest {
     private MockMvc mvc;
 
     @MockBean
-    private JenaService jenaService;
+    private CoreRepository coreRepository;
 
     @Autowired
     private ResolveController resolveController;
@@ -60,7 +60,7 @@ class ResolveControllerTest {
     @Test
     void testRedirectSiteResource() throws Exception {
         var model = MapperTestUtils.getModelFromFile("/models/test_datamodel_library_with_resources.ttl");
-        when(jenaService.getDataModel(anyString())).thenReturn(model);
+        when(coreRepository.fetch(anyString())).thenReturn(model);
 
         var pathMap = Map.of(
                 "http://uri.suomi.fi/datamodel/ns/test/TestClass", "/model/test/class/TestClass",
@@ -80,7 +80,7 @@ class ResolveControllerTest {
     @Test
     void testRedirectSerializedResource() throws Exception {
         var model = MapperTestUtils.getModelFromFile("/models/test_datamodel_library_with_resources.ttl");
-        when(jenaService.getDataModel(anyString())).thenReturn(model);
+        when(coreRepository.fetch(anyString())).thenReturn(model);
 
         var accept = "text/turtle";
         mvc.perform(get("/v2/resolve")

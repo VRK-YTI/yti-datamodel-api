@@ -6,7 +6,8 @@ import fi.vm.yti.datamodel.api.index.OpenSearchConnector;
 import fi.vm.yti.datamodel.api.v2.mapper.ModelMapper;
 import fi.vm.yti.datamodel.api.v2.mapper.ResourceMapper;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
-import fi.vm.yti.datamodel.api.v2.service.JenaService;
+import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
+import fi.vm.yti.datamodel.api.v2.repository.ImportsRepository;
 import org.apache.jena.query.Query;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ResIterator;
@@ -27,7 +28,10 @@ import static org.mockito.Mockito.*;
 class OpenSearchIndexerTest {
 
     @MockBean
-    JenaService jenaService;
+    CoreRepository coreRepository;
+
+    @MockBean
+    ImportsRepository importsRepository;
 
     @MockBean
     OpenSearchConnector openSearchConnector;
@@ -52,25 +56,25 @@ class OpenSearchIndexerTest {
     void initModelIndexTest() {
         var model = mock(Model.class);
         var subjects = mock(ResIterator.class);
-        when(jenaService.constructWithQuery(any(Query.class))).thenReturn(model);
+        when(coreRepository.queryConstruct(any(Query.class))).thenReturn(model);
         when(model.listSubjects()).thenReturn(subjects);
         when(objectMapper.valueToTree(any())).thenReturn(mock(JsonNode.class));
 
         openSearchIndexer.initModelIndex();
 
-        verify(this.jenaService).constructWithQuery(any(Query.class));
+        verify(coreRepository).queryConstruct(any(Query.class));
     }
 
     @Test
     void initResourceIndexTest() {
         var model = mock(Model.class);
         var subjects = mock(ResIterator.class);
-        when(jenaService.constructWithQuery(any(Query.class))).thenReturn(model);
+        when(coreRepository.queryConstruct(any(Query.class))).thenReturn(model);
         when(model.listSubjects()).thenReturn(subjects);
         when(objectMapper.valueToTree(any())).thenReturn(mock(JsonNode.class));
 
         openSearchIndexer.initResourceIndex();
 
-        verify(this.jenaService).constructWithQuery(any(Query.class));
+        verify(coreRepository).queryConstruct(any(Query.class));
     }
 }

@@ -4,7 +4,7 @@ import fi.vm.yti.datamodel.api.security.AuthorizationManager;
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
 import fi.vm.yti.datamodel.api.v2.dto.PositionDataDTO;
 import fi.vm.yti.datamodel.api.v2.dto.VisualizationResultDTO;
-import fi.vm.yti.datamodel.api.v2.service.JenaService;
+import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import fi.vm.yti.datamodel.api.v2.service.VisualizationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -25,13 +25,15 @@ public class VisualizationController {
     private final VisualizationService visualizationService;
     private final AuthorizationManager authorizationManager;
 
-    private final JenaService jenaService;
+
+    private final CoreRepository coreRepository;
 
     public VisualizationController(VisualizationService visualizationService,
-                                   AuthorizationManager authorizationManager, JenaService jenaService) {
+                                   AuthorizationManager authorizationManager,
+                                   CoreRepository coreRepository) {
         this.visualizationService = visualizationService;
         this.authorizationManager = authorizationManager;
-        this.jenaService = jenaService;
+        this.coreRepository = coreRepository;
     }
 
     @Operation(summary = "Get data for model visualization")
@@ -46,7 +48,7 @@ public class VisualizationController {
     @PutMapping(value = "/{prefix}/positions")
     public ResponseEntity<Void> savePositions(@PathVariable String prefix, @RequestBody List<PositionDataDTO> positions) {
         var modelURI = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
-        var dataModel = jenaService.getDataModel(modelURI);
+        var dataModel = coreRepository.fetch(modelURI);
         check(authorizationManager.hasRightToModel(prefix, dataModel));
 
         visualizationService.savePositionData(prefix, positions);

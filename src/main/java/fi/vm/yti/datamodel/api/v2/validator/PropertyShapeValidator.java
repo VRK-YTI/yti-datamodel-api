@@ -3,7 +3,7 @@ package fi.vm.yti.datamodel.api.v2.validator;
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
 import fi.vm.yti.datamodel.api.v2.dto.PropertyShapeDTO;
 import fi.vm.yti.datamodel.api.v2.dto.ResourceType;
-import fi.vm.yti.datamodel.api.v2.service.JenaService;
+import fi.vm.yti.datamodel.api.v2.service.ResourceService;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import org.apache.jena.vocabulary.OWL;
@@ -17,7 +17,8 @@ public class PropertyShapeValidator extends BaseValidator implements ConstraintV
     boolean updateProperty;
 
     @Autowired
-    private JenaService jenaService;
+    private ResourceService resourceService;
+
 
     @Override
     public void initialize(ValidPropertyShape constraintAnnotation) {
@@ -58,7 +59,7 @@ public class PropertyShapeValidator extends BaseValidator implements ConstraintV
         var path = dto.getPath();
         if(path != null && !path.isBlank()){
             var checkImports = !path.startsWith(ModelConstants.SUOMI_FI_NAMESPACE);
-            if(!jenaService.checkIfResourceIsOneOfTypes(path, List.of(OWL.ObjectProperty, OWL.DatatypeProperty), checkImports)){
+            if(!resourceService.checkIfResourceIsOneOfTypes(path, List.of(OWL.ObjectProperty, OWL.DatatypeProperty), checkImports)){
                 addConstraintViolation(context, "not-property-or-doesnt-exist", "path");
             }
         }
@@ -71,7 +72,7 @@ public class PropertyShapeValidator extends BaseValidator implements ConstraintV
             addConstraintViolation(context, "sh-class-not-allowed", "classType");
         } else if (classType != null) {
             var checkImports = !classType.startsWith(ModelConstants.SUOMI_FI_NAMESPACE);
-            if(!jenaService.checkIfResourceIsOneOfTypes(classType, List.of(RDFS.Class, OWL.Class), checkImports)){
+            if(!resourceService.checkIfResourceIsOneOfTypes(classType, List.of(RDFS.Class, OWL.Class), checkImports)){
                 addConstraintViolation(context, "not-class-or-doesnt-exist", "path");
             }
         }
