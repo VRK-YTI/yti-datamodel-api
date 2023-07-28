@@ -241,7 +241,7 @@ public class ClassService {
         openSearchIndexer.deleteResourceFromIndex(classURI);
     }
 
-    public Set<String> getTargetNodeProperties(String targetNode) {
+    private Set<String> getTargetNodeProperties(String targetNode) {
         var propertyShapes = new HashSet<String>();
         var handledNodeShapes = new HashSet<String>();
 
@@ -267,7 +267,7 @@ public class ClassService {
         return propertyShapes;
     }
 
-    public Set<String> getNodeShapeTargetClassProperties(NodeShapeDTO nodeShapeDTO, Model model, String classURI) {
+    private Set<String> getNodeShapeTargetClassProperties(NodeShapeDTO nodeShapeDTO, Model model, String classURI) {
         // skip creating new resource if there is already resource with sh:path reference to the property
         var existingProperties = nodeShapeDTO.getProperties().stream()
                 .map(p -> {
@@ -303,7 +303,7 @@ public class ClassService {
         return allProperties;
     }
 
-    public boolean freeIdentifier(String prefix, String identifier) {
+    public boolean exists(String prefix, String identifier) {
         // identifiers e.g. corner-abcd1234 are reserved for visualization
         if (identifier.startsWith("corner-")) {
             return true;
@@ -331,11 +331,11 @@ public class ClassService {
 
     public void togglePropertyShape(String prefix, String propertyUri) {
         var modelURI = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
-        var model = coreRepository.fetch(modelURI);
 
         if(!coreRepository.resourceExistsInGraph(modelURI, propertyUri)){
             throw new ResourceNotFoundException(propertyUri);
         }
+        var model = coreRepository.fetch(modelURI);
         check(authorizationManager.hasRightToModel(prefix, model));
         ClassMapper.toggleAndMapDeactivatedProperty(model, propertyUri);
         coreRepository.put(modelURI, model);

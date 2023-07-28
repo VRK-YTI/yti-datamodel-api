@@ -1,5 +1,6 @@
 package fi.vm.yti.datamodel.api.v2.service;
 
+import fi.vm.yti.datamodel.api.security.AuthorizationManager;
 import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
 import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
@@ -15,17 +16,21 @@ import org.topbraid.shacl.vocabulary.SH;
 
 import java.util.*;
 
+import static fi.vm.yti.security.AuthorizationException.check;
+
 @Service
 public class VisualizationService {
 
 
     private final ResourceService resourceService;
     private final CoreRepository coreRepository;
-
+    private final AuthorizationManager authorizationManager;
     public VisualizationService(ResourceService resourceService,
-                                CoreRepository coreRepository) {
+                                CoreRepository coreRepository,
+                                AuthorizationManager authorizationManager) {
         this.resourceService = resourceService;
         this.coreRepository = coreRepository;
+        this.authorizationManager = authorizationManager;
     }
 
     public VisualizationResultDTO getVisualizationData(String prefix) {
@@ -81,8 +86,12 @@ public class VisualizationService {
         return visualizationResult;
     }
 
-    public void savePositionData(String modelPrefix, List<PositionDataDTO> positions) {
-        String positionGraphURI = ModelConstants.MODEL_POSITIONS_NAMESPACE + modelPrefix;
+    public void savePositionData(String prefix, List<PositionDataDTO> positions) {
+        var modelURI = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
+        var dataModel = coreRepository.fetch(modelURI);
+        check(authorizationManager.hasRightToModel(prefix, dataModel));
+
+        var positionGraphURI = ModelConstants.MODEL_POSITIONS_NAMESPACE + prefix;
 
         // remove old positions if exists
         if (coreRepository.graphExists(positionGraphURI)) {

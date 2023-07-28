@@ -179,7 +179,7 @@ public class ResourceService {
         return new URI(targetResource);
     }
 
-    public boolean freeIdentifier(String prefix, String identifier) {
+    public boolean exists(String prefix, String identifier) {
         // identifiers e.g. corner-abcd1234 are reserved for visualization
         if (identifier.startsWith("corner-")) {
             return true;

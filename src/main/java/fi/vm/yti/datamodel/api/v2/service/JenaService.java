@@ -17,8 +17,6 @@ public class JenaService {
         this.coreRepository = coreRepository;
     }
 
-
-
     public int getVersionNumber() {
         var versionModel = coreRepository.fetch(VERSION_NUMBER_GRAPH);
         return versionModel.getResource(VERSION_NUMBER_GRAPH).getRequiredProperty(OWL.versionInfo).getInt();

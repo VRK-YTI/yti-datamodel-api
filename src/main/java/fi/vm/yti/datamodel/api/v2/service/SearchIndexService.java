@@ -16,7 +16,6 @@ import fi.vm.yti.datamodel.api.v2.opensearch.queries.ModelQueryFactory;
 import fi.vm.yti.datamodel.api.v2.opensearch.queries.QueryFactoryUtils;
 import fi.vm.yti.datamodel.api.v2.opensearch.queries.ResourceQueryFactory;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
-import fi.vm.yti.security.Role;
 import fi.vm.yti.security.YtiUser;
 import org.apache.jena.arq.querybuilder.ExprFactory;
 import org.apache.jena.arq.querybuilder.SelectBuilder;
@@ -92,7 +91,7 @@ public class SearchIndexService {
 
     public SearchResponseDTO<IndexResource> searchInternalResources(ResourceSearchRequest request, YtiUser user) throws IOException {
         Set<String> allowedDatamodels = new HashSet<>();
-        if(!user.isSuperuser()){
+        if(!user.isSuperuser()) {
                 var organizations = getOrganizationsForUser(user);
                 var modelRequest = new ModelSearchRequest();
                 modelRequest.setPageSize(QueryFactoryUtils.INTERNAL_SEARCH_PAGE_SIZE);
@@ -238,7 +237,7 @@ public class SearchIndexService {
     }
 
     private Set<UUID> getOrganizationsForUser(YtiUser user){
-        final Map<UUID, Set<Role>> rolesInOrganizations = user.getRolesInOrganizations();
+        final var rolesInOrganizations = user.getRolesInOrganizations();
 
         var orgIds = new HashSet<>(rolesInOrganizations.keySet());
 

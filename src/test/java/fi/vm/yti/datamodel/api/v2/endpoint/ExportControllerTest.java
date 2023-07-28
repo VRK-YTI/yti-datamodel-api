@@ -1,16 +1,9 @@
 package fi.vm.yti.datamodel.api.v2.endpoint;
 
-import fi.vm.yti.datamodel.api.mapper.MapperTestUtils;
-import fi.vm.yti.datamodel.api.security.AuthorizationManager;
-import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
+import fi.vm.yti.datamodel.api.v2.service.DataModelService;
 import fi.vm.yti.datamodel.api.v2.validator.ExceptionHandlerAdvice;
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.ModelFactory;
-import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -19,9 +12,8 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @TestPropertySource(properties = {
@@ -35,10 +27,7 @@ class ExportControllerTest {
     private MockMvc mvc;
 
     @MockBean
-    private CoreRepository coreRepository;
-
-    @MockBean
-    private AuthorizationManager authorizationManager;
+    private DataModelService dataModelService;
 
     @Autowired
     private ExportController exportController;
@@ -52,34 +41,17 @@ class ExportControllerTest {
     }
 
     @Test
+    void shouldCallDataModelService() throws Exception {
+        mvc.perform(get("/v2/export/test")
+                .header("Accept", "application/ld+json"))
+                .andExpect(status().isOk());
+        verify(dataModelService).export("test", null, "application/ld+json");
+    }
+
+    @Test
     void shouldGetModelAsFileNotSupportedType() throws Exception {
         mvc.perform(get("/v2/export/test")
                         .header("Accept", "application/pdf"))
                 .andExpect(status().isNotAcceptable());
-    }
-
-    @ParameterizedTest
-    @ValueSource(strings = {"application/ld+json", "text/turtle", "application/rdf+xml"})
-    void shouldGetModelWithAcceptHeader(String accept) throws Exception {
-        when(coreRepository.fetch(anyString())).thenReturn(ModelFactory.createDefaultModel());
-
-        mvc.perform(get("/v2/export/test")
-                        .header("Accept", accept))
-                .andExpect(status().isOk())
-                .andExpect(content().contentTypeCompatibleWith(accept));
-        verify(coreRepository).fetch(anyString());
-        verifyNoMoreInteractions(coreRepository);
-    }
-
-    @Test
-    void shouldRemoveTriplesHiddenFromUnauthenticatedUser() throws Exception {
-        var model = MapperTestUtils.getModelFromFile("/models/test_datamodel_library_with_resources.ttl");
-        when(coreRepository.fetch(anyString())).thenReturn(model);
-        when(authorizationManager.hasRightToModel(anyString(), any(Model.class))).thenReturn(false);
-
-        mvc.perform(get("/v2/export/test")
-                        .header("Accept", "text/turtle"))
-                .andExpect(status().isOk())
-                .andExpect(content().string(Matchers.not(Matchers.containsString("skos:editorialNote"))));
     }
 }

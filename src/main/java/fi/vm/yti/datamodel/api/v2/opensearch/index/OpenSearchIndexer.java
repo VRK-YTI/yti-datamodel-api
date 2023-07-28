@@ -2,6 +2,7 @@ package fi.vm.yti.datamodel.api.v2.opensearch.index;
 
 import com.google.common.collect.Iterables;
 import fi.vm.yti.datamodel.api.index.OpenSearchConnector;
+import fi.vm.yti.datamodel.api.security.AuthorizationManager;
 import fi.vm.yti.datamodel.api.v2.dto.Iow;
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
 import fi.vm.yti.datamodel.api.v2.mapper.ModelMapper;
@@ -32,6 +33,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import static fi.vm.yti.security.AuthorizationException.check;
+
 
 @Service
 public class OpenSearchIndexer {
@@ -45,17 +48,20 @@ public class OpenSearchIndexer {
     private final OpenSearchConnector openSearchConnector;
     private final CoreRepository coreRepository;
     private final ImportsRepository importsRepository;
+    private final AuthorizationManager authorizationManager;
     private final ModelMapper modelMapper;
     private final OpenSearchClient client;
 
     public OpenSearchIndexer(OpenSearchConnector openSearchConnector,
                              CoreRepository coreRepository,
                              ImportsRepository importsRepository,
+                             AuthorizationManager authorizationManager,
                              ModelMapper modelMapper,
                              OpenSearchClient client) {
         this.openSearchConnector = openSearchConnector;
         this.coreRepository = coreRepository;
         this.importsRepository = importsRepository;
+        this.authorizationManager = authorizationManager;
         this.modelMapper = modelMapper;
         this.client = client;
     }
@@ -76,7 +82,21 @@ public class OpenSearchIndexer {
         }
     }
 
-    public void reindex() {
+    public void reindex(String index){
+        check(authorizationManager.hasRightToDropDatabase());
+        if(index == null){
+            reindexAll();
+            return;
+        }
+        switch (index){
+            case OpenSearchIndexer.OPEN_SEARCH_INDEX_EXTERNAL -> initExternalResourceIndex();
+            case OpenSearchIndexer.OPEN_SEARCH_INDEX_MODEL -> initModelIndex();
+            case OpenSearchIndexer.OPEN_SEARCH_INDEX_RESOURCE -> initResourceIndex();
+            default -> throw new IllegalArgumentException("Given value not allowed");
+        }
+    }
+
+    public void reindexAll() {
         try {
             openSearchConnector.cleanIndex(OPEN_SEARCH_INDEX_MODEL);
             openSearchConnector.cleanIndex(OPEN_SEARCH_INDEX_RESOURCE);
