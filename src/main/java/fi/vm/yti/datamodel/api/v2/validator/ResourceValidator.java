@@ -3,7 +3,7 @@ package fi.vm.yti.datamodel.api.v2.validator;
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
 import fi.vm.yti.datamodel.api.v2.dto.ResourceDTO;
 import fi.vm.yti.datamodel.api.v2.dto.ResourceType;
-import fi.vm.yti.datamodel.api.v2.service.NamespaceService;
+import fi.vm.yti.datamodel.api.v2.repository.ImportsRepository;
 import fi.vm.yti.datamodel.api.v2.service.ResourceService;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
@@ -23,7 +23,7 @@ public class ResourceValidator extends BaseValidator implements ConstraintValida
     @Autowired
     private ResourceService resourceService;
     @Autowired
-    private NamespaceService namespaceService;
+    private ImportsRepository importsRepository;
 
     @Override
     public void initialize(ValidResource constraintAnnotation) {
@@ -54,8 +54,8 @@ public class ResourceValidator extends BaseValidator implements ConstraintValida
             equivalentResource.forEach(eq -> {
                 var asUri = NodeFactory.createURI(eq);
                 //if namespace is resolvable make sure class can be found in resolved namespace
-                if(namespaceService.doesResolvedNamespaceExist(asUri.getNameSpace())
-                        && !namespaceService.doesResourceExistInImportedNamespace(asUri.getNameSpace(), asUri.getURI())){
+                if(importsRepository.graphExists(asUri.getNameSpace())
+                        && !importsRepository.resourceExistsInGraph(asUri.getNameSpace(), asUri.getURI())){
                     addConstraintViolation(context, "resource-not-found-in-resolved-namespace", "eqClass");
                 }
             });
@@ -68,8 +68,8 @@ public class ResourceValidator extends BaseValidator implements ConstraintValida
             getSubResourceOf.forEach(sub -> {
                 var asUri = NodeFactory.createURI(sub);
                 //if namespace is resolvable make sure class can be found in resolved namespace
-                if(namespaceService.doesResolvedNamespaceExist(asUri.getNameSpace())
-                        && !namespaceService.doesResourceExistInImportedNamespace(asUri.getNameSpace(), asUri.getURI())){
+                if(importsRepository.graphExists(asUri.getNameSpace())
+                        && !importsRepository.resourceExistsInGraph(asUri.getNameSpace(), asUri.getURI())){
                     addConstraintViolation(context, "resource-not-found-in-resolved-namespace", "subClassOf");
                 }
             });

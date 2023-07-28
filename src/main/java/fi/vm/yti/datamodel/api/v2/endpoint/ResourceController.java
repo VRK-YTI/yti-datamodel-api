@@ -112,7 +112,7 @@ public class ResourceController {
     @ApiResponse(responseCode = "200", description = "Boolean value indicating whether prefix")
     @GetMapping(value = "/{prefix}/{identifier}/exists", produces = APPLICATION_JSON_VALUE)
     public Boolean freeIdentifier(@PathVariable String prefix, @PathVariable String identifier) {
-        return resourceService.freeIdentifier(prefix, identifier);
+        return resourceService.exists(prefix, identifier);
     }
 
     @Operation(summary = "Delete a resource from a data model")

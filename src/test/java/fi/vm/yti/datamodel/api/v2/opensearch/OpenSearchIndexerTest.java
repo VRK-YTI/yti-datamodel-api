@@ -3,8 +3,8 @@ package fi.vm.yti.datamodel.api.v2.opensearch;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import fi.vm.yti.datamodel.api.index.OpenSearchConnector;
+import fi.vm.yti.datamodel.api.security.AuthorizationManager;
 import fi.vm.yti.datamodel.api.v2.mapper.ModelMapper;
-import fi.vm.yti.datamodel.api.v2.mapper.ResourceMapper;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import fi.vm.yti.datamodel.api.v2.repository.ImportsRepository;
@@ -43,7 +43,7 @@ class OpenSearchIndexerTest {
     ModelMapper modelMapper;
 
     @MockBean
-    ResourceMapper resourceMapper;
+    AuthorizationManager authorizationManager;
 
     @MockBean
     OpenSearchClient client;

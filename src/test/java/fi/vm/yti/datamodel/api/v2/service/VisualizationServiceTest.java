@@ -1,10 +1,12 @@
 package fi.vm.yti.datamodel.api.v2.service;
 
 import fi.vm.yti.datamodel.api.mapper.MapperTestUtils;
+import fi.vm.yti.datamodel.api.security.AuthorizationManager;
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
 import fi.vm.yti.datamodel.api.v2.dto.PositionDataDTO;
 import fi.vm.yti.datamodel.api.v2.dto.VisualizationClassDTO;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
+import fi.vm.yti.security.AuthorizationException;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.vocabulary.DCTerms;
@@ -23,8 +25,7 @@ import org.topbraid.shacl.vocabulary.SH;
 import java.util.List;
 import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(SpringExtension.class)
@@ -38,6 +39,8 @@ class VisualizationServiceTest {
 
     @MockBean
     private CoreRepository coreRepository;
+    @MockBean
+    private AuthorizationManager authorizationManager;
     @Captor
     private ArgumentCaptor<Model> modelCaptor;
 
@@ -75,9 +78,18 @@ class VisualizationServiceTest {
     }
 
     @Test
+    void savePositionsNoAuth(){
+        assertThrows(AuthorizationException.class,
+                () -> visualizationService.savePositionData("test-model", List.of()));
+
+    }
+
+    @Test
     void savePositions() {
         var graphURI = ModelConstants.MODEL_POSITIONS_NAMESPACE + "test-model";
         when(coreRepository.graphExists(graphURI)).thenReturn(true);
+        when(coreRepository.fetch(anyString())).thenReturn(ModelFactory.createDefaultModel());
+        when(authorizationManager.hasRightToModel(anyString(), any(Model.class))).thenReturn(true);
 
         var positionData = new PositionDataDTO();
         positionData.setX(1.0);

@@ -83,7 +83,7 @@ public class ClassController {
     @ApiResponse(responseCode = "200", description = "Boolean value indicating whether prefix")
     @GetMapping(value = "/{prefix}/{identifier}/exists", produces = APPLICATION_JSON_VALUE)
     public Boolean freeIdentifier(@PathVariable String prefix, @PathVariable String identifier) {
-        return classService.freeIdentifier(prefix, identifier);
+        return classService.exists(prefix, identifier);
     }
 
     @Operation(summary = "Delete a class from a data model")

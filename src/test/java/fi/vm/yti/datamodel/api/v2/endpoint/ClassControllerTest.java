@@ -3,8 +3,8 @@ package fi.vm.yti.datamodel.api.v2.endpoint;
 import fi.vm.yti.datamodel.api.v2.dto.ClassDTO;
 import fi.vm.yti.datamodel.api.v2.dto.NodeShapeDTO;
 import fi.vm.yti.datamodel.api.v2.dto.Status;
+import fi.vm.yti.datamodel.api.v2.repository.ImportsRepository;
 import fi.vm.yti.datamodel.api.v2.service.ClassService;
-import fi.vm.yti.datamodel.api.v2.service.NamespaceService;
 import fi.vm.yti.datamodel.api.v2.service.ResourceService;
 import fi.vm.yti.datamodel.api.v2.validator.ExceptionHandlerAdvice;
 import fi.vm.yti.datamodel.api.v2.validator.ValidationConstants;
@@ -48,7 +48,7 @@ class ClassControllerTest {
     @MockBean
     ResourceService resourceService;
     @MockBean
-    private NamespaceService namespaceService;
+    private ImportsRepository importsRepository;
 
     @Autowired
     private ClassController classController;
@@ -199,7 +199,7 @@ class ClassControllerTest {
 
     @Test
     void shouldCheckFreeIdentifierWhenExists() throws Exception {
-        when(classService.freeIdentifier(anyString(), anyString())).thenReturn(true);
+        when(classService.exists(anyString(), anyString())).thenReturn(true);
 
         this.mvc
                 .perform(get("/v2/class/test/Resource/exists")
