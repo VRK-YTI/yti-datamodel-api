@@ -4,14 +4,17 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.LinkedList;
 
+import org.apache.jena.rdf.model.Bag;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.rdf.model.RDFList;
+import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.shacl.vocabulary.SHACL;
 import org.apache.jena.vocabulary.DCTerms;
@@ -73,8 +76,8 @@ public class SchemaService {
 	private void checkAndAddPropertyFeature(JsonNode node, Model model, Resource propertyResource) {
 		for (var key : JSONSchemaToSHACLMap.keySet()) {
 			JsonNode propertyNode = node.findValue(key);
-			if (propertyNode != null) {
-				System.out.println("KEY: " + key + " VALUE: " + propertyNode + " Number Val: " + propertyNode.numberValue()  + " LONG? " + propertyNode.isLong() + " DOUBLE? " + propertyNode.isDouble() + " INT? " + propertyNode.isDouble());
+			// the second condition ensures that an object's children properties are not added to that object
+			if (propertyNode != null & node.has(key)) {
 				if (JSONSchemaNumericalProperties.contains(key)) {
 					propertyResource.addProperty(model.getProperty(JSONSchemaToSHACLMap.get(key)),
 							model.createTypedLiteral(propertyNode.numberValue()));
@@ -86,6 +89,24 @@ public class SchemaService {
 //					propertyResource.addProperty(model.getProperty(JSONSchemaToSHACLMap.get(key)),
 //							model.createTypedLiteral(propertyNode()));
 //				}
+				else if(key == "enum")
+					if (!propertyNode.isEmpty()) {
+						RDFNode[] elements = new RDFNode[propertyNode.size()];
+						Bag bag = model.createBag();
+						
+						for(int i = 0; i < propertyNode.size(); i++){
+							if (node.get("type").asText() == "boolean")
+								elements[i] = model.createTypedLiteral(propertyNode.get(i).asBoolean()); 
+							else if (node.get("type").asText() == "integer")
+								elements[i] = model.createTypedLiteral(propertyNode.get(i).numberValue());
+							else 
+								elements[i] = model.createLiteral(propertyNode.get(i).asText());
+							bag.add(elements[i]);
+						}	
+						
+						propertyResource.addProperty(model.getProperty(SHACL.in.getURI()),
+							bag);
+			} 
 				else {
 					propertyResource.addProperty(model.getProperty(JSONSchemaToSHACLMap.get(key)),
 							propertyNode.asText());

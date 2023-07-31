@@ -139,7 +139,7 @@ public class SchemaServiceTest {
 		
 		String schemaPID = "urn:test:" + UUID.randomUUID().toString();
 		Model model = service.transformJSONSchemaToInternal(schemaPID, data);
-		model.write(System.out, "TURTLE");
+//		model.write(System.out, "TURTLE");
 
 		assertEquals(XSD.xstring, model.getRequiredProperty(model.createResource(schemaPID + "#root/Root/firstName"), SH.datatype).getObject());
 		// lastName is functional property -> must have maxCount = 1
@@ -165,7 +165,7 @@ public class SchemaServiceTest {
 		
 		String schemaPID = "urn:test:" + UUID.randomUUID().toString();
 		Model model = service.transformJSONSchemaToInternal(schemaPID, data);
-		model.write(System.out, "TURTLE");
+//		model.write(System.out, "TURTLE");
 
 		assertEquals(10, model.getRequiredProperty(model.createResource(schemaPID + "#root/Root/minNumber"), SH.minInclusive).getInt());		
 		assertEquals(100, model.getRequiredProperty(model.createResource(schemaPID + "#root/Root/maxNumber"), SH.maxInclusive).getInt());
@@ -179,72 +179,75 @@ public class SchemaServiceTest {
 
 	}
 	
-//	@Test
-//	void testStrings() throws Exception {
-//		byte[] data = getByteStreamFromPath("jsonschema/test_jsonschema_valid_strings.json");
-//		assertNotNull(data);
-//		
-//		String schemaPID = "urn:test:" + UUID.randomUUID().toString();
-//		Model model = service.transformJSONSchemaToInternal(schemaPID, data);
-//		
-//		assertEquals(10, model.getRequiredProperty(model.createResource(schemaPID + "#root/Root/minString"), SH.minLength).getInt());
-//		assertEquals(100, model.getRequiredProperty(model.createResource(schemaPID + "#root/Root/maxString"), SH.maxLength).getInt());
-//
-//		assertEquals(10, model.getRequiredProperty(model.createResource(schemaPID + "#root/Root/stringLengthRange"), SH.minLength).getInt());
-//		assertEquals(100, model.getRequiredProperty(model.createResource(schemaPID + "#root/Root/stringLengthRange"), SH.maxLength).getInt());
-//
-//		assertEquals("^(\\([0-9]{3}\\))?[0-9]{3}-[0-9]{4}$", model.getRequiredProperty(model.createResource(schemaPID + "#root/Root/stringPattern"), SH.pattern).getString());
-//	}
-//	
-//	@Test
-//	void testEnums() throws Exception {
-//		byte[] data = getByteStreamFromPath("jsonschema/test_jsonschema_valid_enums.json");
-//		assertNotNull(data);
-//		
-//		String schemaPID = "urn:test:" + UUID.randomUUID().toString();
-//		Model model = service.transformJSONSchemaToInternal(schemaPID, data);
-//		
-//		// empty enum -> do not generate the property node at all?
-//		//assertFalse(model.contains(model.createResource(schemaPID + "#root/empty"), RDF.type));
-//		
-//		/*
-//		Bag b = model.createBag();
-//		b.add("one");
-//		b.add("two");
-//		model.add(model.createResource(schemaPID + "#root/string"), SH.in, b);
-//		*/
-//		
-//		assertTrue(model.contains(model.createResource(schemaPID + "#root/Root/string"), SH.in));		
-//		Bag strings = model.getRequiredProperty(model.createResource(schemaPID + "#root/Root/string"), SH.in).getBag();
-//		assertEquals(2, strings.size());
-//
-//		List<String> stringList = new ArrayList<String>();
-//		Iterator<RDFNode> i = strings.iterator();
-//		while (i.hasNext()) {
-//			stringList.add(i.next().asLiteral().getString());
-//		}
-//		assertArrayEquals(new String[] {"one","two"}, stringList.toArray());
-//		/*
-//		Bag b2 = model.createBag();
-//		b2.add(1);
-//		b2.add(2);
-//		b2.add(3);
-//		model.add(model.createResource(schemaPID + "#root/integer"), SH.in, b2);
-//		*/
-//
-//		assertTrue(model.contains(model.createResource(schemaPID + "#root/Root/integer"), SH.in));
-//		Bag integers = model.getRequiredProperty(model.createResource(schemaPID + "#root/Root/integer"), SH.in).getBag();
-//		assertEquals(3, integers.size());
-//		
-//		
-//		List<Integer> integerList = new ArrayList<Integer>();
-//		Iterator<RDFNode> i2 = integers.iterator();
-//		while (i2.hasNext()) {
-//			integerList.add(i2.next().asLiteral().getInt());
-//		}
-//		assertArrayEquals(new Integer[] {1,2,3}, integerList.toArray());
-//	}
-//	
+	@Test
+	void testStrings() throws Exception {
+		byte[] data = getByteStreamFromPath("jsonschema/test_jsonschema_valid_strings.json");
+		assertNotNull(data);
+		
+		String schemaPID = "urn:test:" + UUID.randomUUID().toString();
+		Model model = service.transformJSONSchemaToInternal(schemaPID, data);
+		
+		model.write(System.out, "TURTLE");
+		
+		assertEquals(10, model.getRequiredProperty(model.createResource(schemaPID + "#root/Root/minString"), SH.minLength).getInt());
+		assertEquals(100, model.getRequiredProperty(model.createResource(schemaPID + "#root/Root/maxString"), SH.maxLength).getInt());
+
+		assertEquals(10, model.getRequiredProperty(model.createResource(schemaPID + "#root/Root/stringLengthRange"), SH.minLength).getInt());
+		assertEquals(100, model.getRequiredProperty(model.createResource(schemaPID + "#root/Root/stringLengthRange"), SH.maxLength).getInt());
+
+		assertEquals("^(\\([0-9]{3}\\))?[0-9]{3}-[0-9]{4}$", model.getRequiredProperty(model.createResource(schemaPID + "#root/Root/stringPattern"), SH.pattern).getString());
+	}
+	
+	@Test
+	void testEnums() throws Exception {
+		byte[] data = getByteStreamFromPath("jsonschema/test_jsonschema_valid_enums.json");
+		assertNotNull(data);
+		
+		String schemaPID = "urn:test:" + UUID.randomUUID().toString();
+		Model model = service.transformJSONSchemaToInternal(schemaPID, data);
+		
+		// empty enum -> do not generate the property node at all?
+		//assertFalse(model.contains(model.createResource(schemaPID + "#root/empty"), RDF.type));
+		
+		/*
+		Bag b = model.createBag();
+		b.add("one");
+		b.add("two");
+		model.add(model.createResource(schemaPID + "#root/string"), SH.in, b);
+		*/
+//		model.write(System.out, "TURTLE");
+		
+		assertTrue(model.contains(model.createResource(schemaPID + "#root/Root/string"), SH.in));		
+		Bag strings = model.getRequiredProperty(model.createResource(schemaPID + "#root/Root/string"), SH.in).getBag();
+		assertEquals(2, strings.size());
+
+		List<String> stringList = new ArrayList<String>();
+		Iterator<RDFNode> i = strings.iterator();
+		while (i.hasNext()) {
+			stringList.add(i.next().asLiteral().getString());
+		}
+		assertArrayEquals(new String[] {"one","two"}, stringList.toArray());
+		/*
+		Bag b2 = model.createBag();
+		b2.add(1);
+		b2.add(2);
+		b2.add(3);
+		model.add(model.createResource(schemaPID + "#root/integer"), SH.in, b2);
+		*/
+
+		assertTrue(model.contains(model.createResource(schemaPID + "#root/Root/integer"), SH.in));
+		Bag integers = model.getRequiredProperty(model.createResource(schemaPID + "#root/Root/integer"), SH.in).getBag();
+		assertEquals(3, integers.size());
+		
+		
+		List<Integer> integerList = new ArrayList<Integer>();
+		Iterator<RDFNode> i2 = integers.iterator();
+		while (i2.hasNext()) {
+			integerList.add(i2.next().asLiteral().getInt());
+		}
+		assertArrayEquals(new Integer[] {1,2,3}, integerList.toArray());
+	}
+	
 	/* 
 	 * 
 	 *  
