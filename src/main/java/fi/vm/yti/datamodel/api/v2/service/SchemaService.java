@@ -8,15 +8,14 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Set;
 
 import org.apache.jena.rdf.model.Bag;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
-import org.apache.jena.rdf.model.RDFList;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
-import org.apache.jena.shacl.vocabulary.SHACL;
 import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDF;
@@ -55,21 +54,21 @@ public class SchemaService {
 			Map.entry("null", MSCR.NULL));
 
 	private final Map<String, String> JSONSchemaToSHACLMap = Map.ofEntries(
-			Map.entry("description", SHACL.description.getURI()), Map.entry("default", SHACL.defaultValue.getURI()),
-			Map.entry("title", SHACL.name.getURI()), Map.entry("additionalProperties", SHACL.closed.getURI()),
-			Map.entry("enum", SHACL.in.getURI()),
+			Map.entry("description", SH.description.getURI()), Map.entry("default", SH.defaultValue.getURI()),
+			Map.entry("title", SH.name.getURI()), Map.entry("additionalProperties", SH.closed.getURI()),
+			Map.entry("enum", SH.in.getURI()),
 //			Map.entry("format", SHACL.format.getURI()), -- no SHACL type - look into it
-			Map.entry("maximum", SHACL.maxInclusive.getURI()), Map.entry("minimum", SHACL.minInclusive.getURI()),
-			Map.entry("exclusiveMaximum", SHACL.maxExclusive.getURI()),
-			Map.entry("exclusiveMinimum", SHACL.minExclusive.getURI()), Map.entry("maxItems", SHACL.maxCount.getURI()),
-			Map.entry("minItems", SHACL.minCount.getURI()), Map.entry("maxLength", SHACL.maxLength.getURI()),
-			Map.entry("minLength", SHACL.minLength.getURI()), Map.entry("not", SHACL.not.getURI()),
-			Map.entry("pattern", SHACL.pattern.getURI()) 
+			Map.entry("maximum", SH.maxInclusive.getURI()), Map.entry("minimum", SH.minInclusive.getURI()),
+			Map.entry("exclusiveMaximum", SH.maxExclusive.getURI()),
+			Map.entry("exclusiveMinimum", SH.minExclusive.getURI()), Map.entry("maxItems", SH.maxCount.getURI()),
+			Map.entry("minItems", SH.minCount.getURI()), Map.entry("maxLength", SH.maxLength.getURI()),
+			Map.entry("minLength", SH.minLength.getURI()), Map.entry("not", SH.not.getURI()),
+			Map.entry("pattern", SH.pattern.getURI()) 
 
 	);
 
 	private final Set<String> JSONSchemaNumericalProperties = Set.of("maximum", "minimum", "exclusiveMaximum",
-			"exclusiveMinimum", "maxItems", "minItems");
+			"exclusiveMinimum", "maxItems", "minItems", "minLength", "maxLength");
 	
 	private final Set<String> JSONSchemaBooleanProperties = Set.of("additionalProperties");
 
@@ -104,9 +103,12 @@ public class SchemaService {
 							bag.add(elements[i]);
 						}	
 						
-						propertyResource.addProperty(model.getProperty(SHACL.in.getURI()),
+						propertyResource.addProperty(model.getProperty(SH.in.getURI()),
 							bag);
-			} 
+					} 
+				else if(key == "pattern") {
+					System.out.println("WE ARE HERE");
+				}
 				else {
 					propertyResource.addProperty(model.getProperty(JSONSchemaToSHACLMap.get(key)),
 							propertyNode.asText());
@@ -116,9 +118,9 @@ public class SchemaService {
 	}
 
 	private void handleRequiredProperty(JsonNode node, Model model, Resource propertyResource, boolean isRequired) {
-		propertyResource.addProperty(model.getProperty(SHACL.maxCount.getURI()), model.createTypedLiteral(1));
+		propertyResource.addProperty(model.getProperty(SH.maxCount.getURI()), model.createTypedLiteral(1));
 		if (isRequired) {
-			propertyResource.addProperty(model.getProperty(SHACL.minCount.getURI()), model.createTypedLiteral(1));
+			propertyResource.addProperty(model.getProperty(SH.minCount.getURI()), model.createTypedLiteral(1));
 		}
 	}
 
@@ -133,12 +135,12 @@ public class SchemaService {
 	 */
 	private Resource addDatatypeProperty(String propID, JsonNode node, Model model, String schemaPID, String type) {
 		Resource propertyResource = model.createResource(schemaPID + "#" + propID);
-		propertyResource.addProperty(RDF.type, model.getResource(SHACL.PropertyShape.getURI()));
+		propertyResource.addProperty(RDF.type, model.getResource(SH.PropertyShape.getURI()));
 		propertyResource.addProperty(DCTerms.type, OWL.DatatypeProperty);
 
-		propertyResource.addProperty(model.getProperty(SHACL.datatype.getURI()), XSDTypesMap.get(type));
+		propertyResource.addProperty(model.getProperty(SH.datatype.getURI()), XSDTypesMap.get(type));
 
-		propertyResource.addProperty(model.getProperty(SHACL.path.getURI()), propID);
+		propertyResource.addProperty(model.getProperty(SH.path.getURI()), propID);
 
 		checkAndAddPropertyFeature(node, model, propertyResource);
 
@@ -160,12 +162,12 @@ public class SchemaService {
 	private Resource addObjectProperty(String propID, JsonNode node, Model model, String schemaPID,
 			String targetShape) {
 		Resource propertyResource = model.createResource(schemaPID + "#" + propID);
-		propertyResource.addProperty(RDF.type, model.getResource(SHACL.PropertyShape.getURI()));
+		propertyResource.addProperty(RDF.type, model.getResource(SH.PropertyShape.getURI()));
 		propertyResource.addProperty(DCTerms.type, OWL.ObjectProperty);
 
 		checkAndAddPropertyFeature(node, model, propertyResource);
-		propertyResource.addProperty(model.getProperty(SHACL.path.getURI()), propID);
-		propertyResource.addProperty(model.getProperty(SHACL.node.getURI()), model.createResource(targetShape));
+		propertyResource.addProperty(model.getProperty(SH.path.getURI()), propID);
+		propertyResource.addProperty(model.getProperty(SH.node.getURI()), model.createResource(targetShape));
 
 		return propertyResource;
 	}
@@ -177,10 +179,13 @@ public class SchemaService {
 			Resource nodeShapeResource, boolean isRequired, boolean isArrayItem) {
 		Resource propertyResource = addDatatypeProperty(propID + "/" + entry.getKey(), entry.getValue(), model,
 				schemaPID, entry.getValue().get("type").asText());
-		nodeShapeResource.addProperty(model.getProperty(SHACL.property.getURI()), propertyResource);
+		nodeShapeResource.addProperty(model.getProperty(SH.property.getURI()), propertyResource);
 		if (!isArrayItem) {
 			handleRequiredProperty(entry.getValue(), model, propertyResource, isRequired);
 		} 
+		if (entry.getValue().get("type").asText().equals("string") & entry.getValue().has("pattern")) {
+			propertyResource.addProperty(model.getProperty(SH.pattern.getURI()), entry.getValue().get("pattern").asText());
+		}
 	}
 	
 	private String capitaliseNodeIdentifier(String propID) {
@@ -205,11 +210,11 @@ public class SchemaService {
 		String nameProperty = propID.substring(propID.lastIndexOf("/") + 1);
 		Resource nodeShapeResource = model.createResource(schemaPID + "#" + propIDCapitalised);
 		
-		nodeShapeResource.addProperty(RDF.type, model.getResource(SHACL.NodeShape.getURI()));
+		nodeShapeResource.addProperty(RDF.type, model.getResource(SH.NodeShape.getURI()));
 		
 		
 		nodeShapeResource.addProperty(MSCR.localName, nameProperty);
-		nodeShapeResource.addProperty(model.getProperty(SHACL.name.getURI()), nameProperty);
+		nodeShapeResource.addProperty(model.getProperty(SH.name.getURI()), nameProperty);
 		if (node.has("description"))
 			nodeShapeResource.addProperty(DCTerms.description, node.get("description").asText());
 		if (node == null || node.get("properties") == null) {
@@ -246,7 +251,7 @@ public class SchemaService {
 
 				Resource propertyShape = addObjectProperty(propIDCapitalised + "/" + entry.getKey(), entry.getValue(), model, schemaPID,
 						schemaPID + "#" + propIDCapitalised + "/" + entry.getKey());
-				nodeShapeResource.addProperty(model.getProperty(SHACL.property.getURI()), propertyShape);
+				nodeShapeResource.addProperty(model.getProperty(SH.property.getURI()), propertyShape);
 				
 				handleObject(propIDCapitalised + "/" + entry.getKey(), entry.getValue(), schemaPID, model,
 						updatedRequiredProperties);
@@ -257,14 +262,14 @@ public class SchemaService {
 				Resource propertyShape = addObjectProperty(propIDCapitalised + "/" + entry.getKey(), entry.getValue(), model, schemaPID,
 						schemaPID + "#" + propIDCapitalised + "/" + entry.getKey());
 				
-				nodeShapeResource.addProperty(model.getProperty(SHACL.property.getURI()), propertyShape);
+				nodeShapeResource.addProperty(model.getProperty(SH.property.getURI()), propertyShape);
 				handleObject(propIDCapitalised + "/" + entry.getKey(), entry.getValue().get("items"), schemaPID, model,
 						requiredProperties);
 
 			} else if (entry.getValue().get("type").asText().equals("array")) {
 				Resource propertyShape = addObjectProperty(propIDCapitalised + "/" + entry.getKey(), entry.getValue(), model, schemaPID,
 						schemaPID + "#" + propIDCapitalised + "/" + entry.getKey());
-				nodeShapeResource.addProperty(model.getProperty(SHACL.property.getURI()), propertyShape);
+				nodeShapeResource.addProperty(model.getProperty(SH.property.getURI()), propertyShape);
 
 				Entry<String, JsonNode> arrayItem = Map.entry(entry.getKey(), entry.getValue().get("items"));
 

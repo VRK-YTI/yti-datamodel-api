@@ -110,7 +110,7 @@ public class SchemaServiceTest {
 		String schemaPID = "urn:test:" + UUID.randomUUID().toString();
 		Model model = service.transformJSONSchemaToInternal(schemaPID, data);
 		
-//		model.write(System.out, "TURTLE");
+		model.write(System.out, "TURTLE");
 		
 		assertEquals(XSD.integer, model.getRequiredProperty(model.createResource(schemaPID + "#root/Root/address/Address/house_number"), SH.datatype).getObject());
 		assertEquals(XSD.integer, model.getRequiredProperty(model.createResource(schemaPID + "#root/Root/address/Address/city/City/population"), SH.datatype).getObject());
@@ -186,9 +186,7 @@ public class SchemaServiceTest {
 		
 		String schemaPID = "urn:test:" + UUID.randomUUID().toString();
 		Model model = service.transformJSONSchemaToInternal(schemaPID, data);
-		
-		model.write(System.out, "TURTLE");
-		
+				
 		assertEquals(10, model.getRequiredProperty(model.createResource(schemaPID + "#root/Root/minString"), SH.minLength).getInt());
 		assertEquals(100, model.getRequiredProperty(model.createResource(schemaPID + "#root/Root/maxString"), SH.maxLength).getInt());
 
