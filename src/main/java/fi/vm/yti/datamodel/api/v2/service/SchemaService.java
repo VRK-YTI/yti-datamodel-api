@@ -200,8 +200,7 @@ public class SchemaService {
 	 * @param schemaPID The schema PID.
 	 * @param model     The RDF model.
 	 */
-	private void handleObject(String propID, JsonNode node, String schemaPID, Model model,
-			ArrayList<String> requiredProperties) {
+	private void handleObject(String propID, JsonNode node, String schemaPID, Model model) {
 
 		String propIDCapitalised = capitaliseNodeIdentifier(propID);
 		String nameProperty = propID.substring(propID.lastIndexOf("/") + 1);
@@ -239,19 +238,11 @@ public class SchemaService {
 			}
 
 			if (entry.getValue().get("type").asText().equals("object")) {
-				ArrayList<String> updatedRequiredProperties = new ArrayList<>(requiredProperties);
-
-				if (entry.getValue().get("required") != null) {
-					entry.getValue().get("required").elements()
-							.forEachRemaining(el -> updatedRequiredProperties.add(el.asText()));
-				}
-
 				Resource propertyShape = addObjectProperty(propIDCapitalised + "/" + entry.getKey(), entry.getValue(), model, schemaPID,
 						schemaPID + "#" + propIDCapitalised + "/" + entry.getKey());
 				nodeShapeResource.addProperty(model.getProperty(SH.property.getURI()), propertyShape);
 				
-				handleObject(propIDCapitalised + "/" + entry.getKey(), entry.getValue(), schemaPID, model,
-						updatedRequiredProperties);
+				handleObject(propIDCapitalised + "/" + entry.getKey(), entry.getValue(), schemaPID, model);
 
 			} else if (entry.getValue().get("type").asText().equals("array")
 					&& entry.getValue().get("items").has("type")
@@ -260,8 +251,7 @@ public class SchemaService {
 						schemaPID + "#" + propIDCapitalised + "/" + entry.getKey());
 				
 				nodeShapeResource.addProperty(model.getProperty(SH.property.getURI()), propertyShape);
-				handleObject(propIDCapitalised + "/" + entry.getKey(), entry.getValue().get("items"), schemaPID, model,
-						requiredProperties);
+				handleObject(propIDCapitalised + "/" + entry.getKey(), entry.getValue().get("items"), schemaPID, model);
 
 			} else if (entry.getValue().get("type").asText().equals("array")) {
 				Resource propertyShape = addObjectProperty(propIDCapitalised + "/" + entry.getKey(), entry.getValue(), model, schemaPID,
@@ -274,7 +264,7 @@ public class SchemaService {
 				
 			} else {
 				// need to check later if requiredProperties do anything at all in this clause
-				boolean isRequired = requiredProperties.contains(entry.getKey()) || (entry.getValue().has("required") && (entry.getValue().get("required").asBoolean() == true));
+				boolean isRequired = (entry.getValue().has("required") && (entry.getValue().get("required").asBoolean() == true));
 				handleDatatypeProperty(propIDCapitalised, entry, model, schemaPID, nodeShapeResource, isRequired, false);
 			}
 
@@ -303,10 +293,9 @@ public class SchemaService {
 		var modelResource = model.createResource(schemaPID);
 		modelResource.addProperty(DCTerms.language, "en");
 
-		ArrayList<String> requiredProperties = new ArrayList<String>();
 
 		// Adding the schema to a corresponding internal model
-		handleObject("root", root, schemaPID, model, requiredProperties);
+		handleObject("root", root, schemaPID, model);
 		return model;
 
 	}
