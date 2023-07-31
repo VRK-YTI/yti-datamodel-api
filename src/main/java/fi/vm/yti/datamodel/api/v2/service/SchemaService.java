@@ -88,7 +88,7 @@ public class SchemaService {
 //					propertyResource.addProperty(model.getProperty(JSONSchemaToSHACLMap.get(key)),
 //							model.createTypedLiteral(propertyNode()));
 //				}
-				else if(key == "enum")
+				else if(key == "enum") {
 					if (!propertyNode.isEmpty()) {
 						RDFNode[] elements = new RDFNode[propertyNode.size()];
 						Bag bag = model.createBag();
@@ -106,8 +106,6 @@ public class SchemaService {
 						propertyResource.addProperty(model.getProperty(SH.in.getURI()),
 							bag);
 					} 
-				else if(key == "pattern") {
-					System.out.println("WE ARE HERE");
 				}
 				else {
 					propertyResource.addProperty(model.getProperty(JSONSchemaToSHACLMap.get(key)),
@@ -135,11 +133,10 @@ public class SchemaService {
 	 */
 	private Resource addDatatypeProperty(String propID, JsonNode node, Model model, String schemaPID, String type) {
 		Resource propertyResource = model.createResource(schemaPID + "#" + propID);
+		
 		propertyResource.addProperty(RDF.type, model.getResource(SH.PropertyShape.getURI()));
 		propertyResource.addProperty(DCTerms.type, OWL.DatatypeProperty);
-
 		propertyResource.addProperty(model.getProperty(SH.datatype.getURI()), XSDTypesMap.get(type));
-
 		propertyResource.addProperty(model.getProperty(SH.path.getURI()), propID);
 
 		checkAndAddPropertyFeature(node, model, propertyResource);
