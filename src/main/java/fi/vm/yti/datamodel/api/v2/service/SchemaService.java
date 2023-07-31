@@ -28,23 +28,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import fi.vm.yti.datamodel.api.v2.dto.MSCR;
 
-/* WHAT HAS TO BE DONE, QUESTIONS, PROBLEMS BY 22.06.2023
- * QUESTIONS
- * 1. Do we process arrays of arrays / nested arrays? If so, probably another else if needed. YES. double check that error
- * 2. Can object's properties be arrays? Currently the URI seems to be wrong at some point, which is similar to object_type: see p.3 or PROBLEMS
- * 3. Should datatypeProperties as eg boolean_type from test_json_trimmed have maxCount?
- * 
- * 
- * PROBLEMS
- * 1. Can't figure out how to assign default maxCount = 1 to object properties only
- * 2. Nested array gave an error - need to check
- * 3. There are two nodes with object type, one ending in #root/object_type, the other in just #object_type. What is wrong
- * 3. ANSWERED: they are nodeShape and propertyShape. propertyShape describes nodeShape and depends on it, so it contains reference
- * ... to nodeShape
- * 
- * TO DOs
- * 1. allOf, anyOf properties. format property - for that one a separate ticket is planned
- */
 
 @Service
 public class SchemaService {
@@ -84,10 +67,6 @@ public class SchemaService {
 					propertyResource.addProperty(model.getProperty(JSONSchemaToSHACLMap.get(key)),
 							model.createTypedLiteral(propertyNode.asBoolean()));
 				} 
-//				else if(key == "null") {
-//					propertyResource.addProperty(model.getProperty(JSONSchemaToSHACLMap.get(key)),
-//							model.createTypedLiteral(propertyNode()));
-//				}
 				else if(key == "enum") {
 					if (!propertyNode.isEmpty()) {
 						RDFNode[] elements = new RDFNode[propertyNode.size()];
@@ -169,7 +148,7 @@ public class SchemaService {
 		return propertyResource;
 	}
 
-	// ONLY HANDLES TYPE !!! ---> NO! even though type is explicitly requested here
+	// ONLY HANDLES TYPE? ---> NO! even though type is explicitly requested here
 	// (because it will be required/enforced), but other properties are handled
 	// within the method
 	private void handleDatatypeProperty(String propID, Entry<String, JsonNode> entry, Model model, String schemaPID,
@@ -207,16 +186,14 @@ public class SchemaService {
 		Resource nodeShapeResource = model.createResource(schemaPID + "#" + propIDCapitalised);
 		
 		nodeShapeResource.addProperty(RDF.type, model.getResource(SH.NodeShape.getURI()));
-		
-		
 		nodeShapeResource.addProperty(MSCR.localName, nameProperty);
 		nodeShapeResource.addProperty(model.getProperty(SH.name.getURI()), nameProperty);
+		
 		if (node.has("description"))
 			nodeShapeResource.addProperty(DCTerms.description, node.get("description").asText());
 		if (node == null || node.get("properties") == null) {
 			return;
 		}
-		
 		if (node.has("additionalProperties")) {
 			nodeShapeResource.addProperty(SH.closed, model.createTypedLiteral(!node.get("additionalProperties").asBoolean()));
 		}
@@ -263,7 +240,6 @@ public class SchemaService {
 				handleDatatypeProperty(propIDCapitalised, arrayItem, model, schemaPID, nodeShapeResource, false, true);
 				
 			} else {
-				// need to check later if requiredProperties do anything at all in this clause
 				boolean isRequired = (entry.getValue().has("required") && (entry.getValue().get("required").asBoolean() == true));
 				handleDatatypeProperty(propIDCapitalised, entry, model, schemaPID, nodeShapeResource, isRequired, false);
 			}
