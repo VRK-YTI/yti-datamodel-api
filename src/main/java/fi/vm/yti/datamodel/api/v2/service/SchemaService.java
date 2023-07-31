@@ -1,14 +1,12 @@
 package fi.vm.yti.datamodel.api.v2.service;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Objects;
 import java.util.Set;
 
 import org.apache.jena.rdf.model.Bag;
@@ -56,7 +54,7 @@ public class SchemaService {
 	private final Set<String> JSONSchemaBooleanProperties = Set.of("additionalProperties");
 
 	private void checkAndAddPropertyFeature(JsonNode node, Model model, Resource propertyResource) {
-		for (var key : JSONSchemaToSHACLMap.keySet()) {
+		for (String key : JSONSchemaToSHACLMap.keySet()) {
 			JsonNode propertyNode = node.findValue(key);
 			// the second condition ensures that an object's children properties are not added to that object
 			if (propertyNode != null & node.has(key)) {
@@ -121,7 +119,6 @@ public class SchemaService {
 		checkAndAddPropertyFeature(node, model, propertyResource);
 
 		return propertyResource;
-
 	}
 
 	/**
@@ -148,9 +145,6 @@ public class SchemaService {
 		return propertyResource;
 	}
 
-	// ONLY HANDLES TYPE? ---> NO! even though type is explicitly requested here
-	// (because it will be required/enforced), but other properties are handled
-	// within the method
 	private void handleDatatypeProperty(String propID, Entry<String, JsonNode> entry, Model model, String schemaPID,
 			Resource nodeShapeResource, boolean isRequired, boolean isArrayItem) {
 		Resource propertyResource = addDatatypeProperty(propID + "/" + entry.getKey(), entry.getValue(), model,
@@ -199,8 +193,7 @@ public class SchemaService {
 		}
 		/*
 		 * Iterate over properties If a property is an array or object – add and
-		 * recursively iterate over them If a property is a datatype / literal – it's
-		 * just added.
+		 * recursively iterate over them. If a property is a datatype or literal – it's just added.
 		 */
 
 		Iterator<Entry<String, JsonNode>> propertiesIterator = node.get("properties").fields();
@@ -266,9 +259,8 @@ public class SchemaService {
 		ObjectMapper mapper = new ObjectMapper();
 
 		JsonNode root = mapper.readTree(data);
-		var modelResource = model.createResource(schemaPID);
+		Resource modelResource = model.createResource(schemaPID);
 		modelResource.addProperty(DCTerms.language, "en");
-
 
 		// Adding the schema to a corresponding internal model
 		handleObject("root", root, schemaPID, model);
