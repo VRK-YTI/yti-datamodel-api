@@ -1,26 +1,19 @@
 package fi.vm.yti.datamodel.api.v2.endpoint;
 
-import fi.vm.yti.datamodel.api.mapper.MapperTestUtils;
-import fi.vm.yti.datamodel.api.security.AuthorizationManager;
-import fi.vm.yti.datamodel.api.v2.dto.*;
-import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
-import fi.vm.yti.datamodel.api.v2.mapper.ResourceMapper;
-import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexResource;
-import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
-import fi.vm.yti.datamodel.api.v2.service.GroupManagementService;
-import fi.vm.yti.datamodel.api.v2.service.JenaService;
-import fi.vm.yti.datamodel.api.v2.service.TerminologyService;
+import fi.vm.yti.datamodel.api.v2.dto.PropertyShapeDTO;
+import fi.vm.yti.datamodel.api.v2.dto.ResourceDTO;
+import fi.vm.yti.datamodel.api.v2.dto.ResourceType;
+import fi.vm.yti.datamodel.api.v2.dto.Status;
+import fi.vm.yti.datamodel.api.v2.repository.ImportsRepository;
+import fi.vm.yti.datamodel.api.v2.service.ResourceService;
 import fi.vm.yti.datamodel.api.v2.validator.ExceptionHandlerAdvice;
 import fi.vm.yti.datamodel.api.v2.validator.ValidationConstants;
-import fi.vm.yti.security.AuthenticatedUserProvider;
-import fi.vm.yti.security.YtiUser;
 import org.apache.commons.lang3.RandomStringUtils;
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.vocabulary.OWL;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -35,12 +28,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -55,30 +48,14 @@ class ResourceControllerTest {
     private MockMvc mvc;
 
     @MockBean
-    private JenaService jenaService;
+    private ResourceService resourceService;
 
     @MockBean
-    private AuthorizationManager authorizationManager;
-
-    @MockBean
-    private OpenSearchIndexer openSearchIndexer;
-
-    @MockBean
-    private AuthenticatedUserProvider userProvider;
-
-    @MockBean
-    private GroupManagementService groupManagementService;
-
-    @MockBean
-    private TerminologyService terminologyService;
+    ImportsRepository importsRepository;
 
     @Autowired
     private ResourceController resourceController;
 
-    private final Consumer<ResourceCommonDTO> userMapper = (var dto) -> {};
-    private final Consumer<ResourceInfoBaseDTO> conceptMapper = (var dto) -> {};
-
-    private static final YtiUser USER = EndpointUtils.mockUser;
     
     @Value("${defaultNamespace}")
     private String defaultNamespace;
@@ -89,219 +66,130 @@ class ResourceControllerTest {
                 .standaloneSetup(this.resourceController)
                 .setControllerAdvice(new ExceptionHandlerAdvice())
                 .build();
-
-        when(authorizationManager.hasRightToAnyOrganization(anyCollection())).thenReturn(true);
-        when(authorizationManager.hasRightToModel(any(), any())).thenReturn(true);
-        when(userProvider.getUser()).thenReturn(USER);
-        when(groupManagementService.mapUser()).thenReturn(userMapper);
-        when(terminologyService.mapConcept()).thenReturn(conceptMapper);
     }
 
-    @Test
-    void shouldValidateAndCreate() throws Exception {
-        var resourceDTO = createResourceDTO(false);
-        var model = EndpointUtils.getMockModel(OWL.Ontology);
+    @ParameterizedTest
+    @CsvSource({"attribute", "association"})
+    void shouldValidateAndCreate(String resourceType) throws Exception {
+        var resourceDTO = createResourceDTO(false, resourceType);
+        when(resourceService.checkIfResourceIsOneOfTypes(eq("http://uri.suomi.fi/datamodel/ns/int/FakeClass"), anyList(), anyBoolean())).thenReturn(true);
 
-        when(jenaService.getDataModel(anyString())).thenReturn(model);
-        when(jenaService.checkIfResourceIsOneOfTypes(eq("http://uri.suomi.fi/datamodel/ns/int/FakeClass"), anyList(), anyBoolean())).thenReturn(true);
-
-        try(var mapper = mockStatic(ResourceMapper.class)) {
-            mapper.when(() -> ResourceMapper.mapToResource(anyString(), any(Model.class), any(ResourceDTO.class), any(YtiUser.class))).thenReturn("test");
-            mapper.when(() -> ResourceMapper.mapToIndexResource(any(Model.class), anyString())).thenReturn(new IndexResource());
-            this.mvc
-                    .perform(put("/v2/resource/ontology/test")
-                            .contentType("application/json")
-                            .content(EndpointUtils.convertObjectToJsonString(resourceDTO)))
-                    .andExpect(status().isOk());
-            verify(this.jenaService, times(2)).doesResolvedNamespaceExist(anyString());
-            verify(this.jenaService).doesResourceExistInGraph(anyString(), anyString());
-            verify(this.jenaService).getDataModel(anyString());
-            verify(jenaService, times(2)).checkIfResourceIsOneOfTypes(eq("http://uri.suomi.fi/datamodel/ns/int/FakeClass"), anyList(), anyBoolean());
-            verify(terminologyService).resolveConcept(resourceDTO.getSubject());
-            mapper.verify(() -> ResourceMapper.mapToResource(anyString(), any(Model.class), any(ResourceDTO.class), any(YtiUser.class)));
-            verify(this.jenaService).putDataModelToCore(anyString(), any(Model.class));
-            verifyNoMoreInteractions(this.jenaService);
-            mapper.verify(() -> ResourceMapper.mapToIndexResource(any(Model.class), anyString()));
-            verify(this.openSearchIndexer).createResourceToIndex(any(IndexResource.class));
-            verifyNoMoreInteractions(this.openSearchIndexer);
+        this.mvc
+                .perform(post("/v2/resource/library/test/{resourceType}", resourceType)
+                        .contentType("application/json")
+                        .content(EndpointUtils.convertObjectToJsonString(resourceDTO)))
+                .andDo(print())
+                .andExpect(status().isCreated());
+        //validator
+        if(resourceType.equals("attribute")){
+            verify(resourceService, times(1)).checkIfResourceIsOneOfTypes(anyString(), anyList(), anyBoolean());
+        }else{
+            verify(resourceService, times(2)).checkIfResourceIsOneOfTypes(anyString(), anyList(), anyBoolean());
         }
+        //controller
+        verify(resourceService).create(anyString(), any(ResourceDTO.class), any(ResourceType.class), eq(false));
+        verifyNoMoreInteractions(resourceService);
     }
 
-    @Test
-    void shouldValidateAndCreateMinimalAssociation() throws Exception {
+    @ParameterizedTest
+    @CsvSource({"attribute", "association"})
+    void shouldValidateAndCreateMinimalResource(String resourceType) throws Exception {
         var resourceDTO = new ResourceDTO();
         resourceDTO.setIdentifier("Identifier");
         resourceDTO.setStatus(Status.DRAFT);
         resourceDTO.setLabel(Map.of("fi", "test"));
-        resourceDTO.setType(ResourceType.ASSOCIATION);
 
-        var model = EndpointUtils.getMockModel(OWL.Ontology);
-
-        when(jenaService.getDataModel(anyString())).thenReturn(model);
-
-        try(var mapper = mockStatic(ResourceMapper.class)) {
-            mapper.when(() -> ResourceMapper.mapToResource(anyString(), any(Model.class), any(ResourceDTO.class), any(YtiUser.class))).thenReturn("test");
-            mapper.when(() -> ResourceMapper.mapToIndexResource(any(Model.class), anyString())).thenReturn(new IndexResource());
-            this.mvc
-                    .perform(put("/v2/resource/ontology/test")
-                            .contentType("application/json")
-                            .content(EndpointUtils.convertObjectToJsonString(resourceDTO)))
-                    .andExpect(status().isOk());
-
-            //Check that functions are called
-            verify(this.jenaService).doesResourceExistInGraph(anyString(), anyString());
-            verify(this.jenaService).getDataModel(anyString());
-            mapper.verify(() -> ResourceMapper.mapToResource(anyString(), any(Model.class), any(ResourceDTO.class), any(YtiUser.class)));
-            verify(this.jenaService).putDataModelToCore(anyString(), any(Model.class));
-            verifyNoMoreInteractions(this.jenaService);
-            mapper.verify(() -> ResourceMapper.mapToIndexResource(any(Model.class), anyString()));
-            verify(this.openSearchIndexer).createResourceToIndex(any(IndexResource.class));
-            verifyNoMoreInteractions(this.openSearchIndexer);
-        }
-    }
-
-    @Test
-    void shouldNotFindModel() throws Exception {
-        var resourceDTO = createResourceDTO(false);
-        var updateDTO = createResourceDTO(true);
-        // var model = EndpointUtils.getMockModel(DCAP.DCAP);
-        when(jenaService.checkIfResourceIsOneOfTypes(eq("http://uri.suomi.fi/datamodel/ns/int/FakeClass"), anyList(), anyBoolean())).thenReturn(true);
-
-        doThrow(ResourceNotFoundException.class).when(jenaService).getDataModel(anyString());
-        //NOTE for this test. This should probably never happen in any kind of situation.
-        // but the controller can catch it if it happens
-
-
-        //finding models from jena is not mocked so it should return null and return 404 not found
         this.mvc
-                .perform(put("/v2/resource/ontology/test")
+                .perform(post("/v2/resource/library/test/{resourceType}", resourceType)
                         .contentType("application/json")
                         .content(EndpointUtils.convertObjectToJsonString(resourceDTO)))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isCreated());
 
-        when(jenaService.doesResourceExistInGraph(anyString(), anyString())).thenReturn(true);
-
-        this.mvc
-                .perform(put("/v2/resource/ontology/test/resource")
-                        .contentType("application/json")
-                        .content(EndpointUtils.convertObjectToJsonString(updateDTO)))
-                .andExpect(status().isNotFound());
-
-        this.mvc
-                .perform(get("/v2/resource/ontology/test/resource")
-                        .contentType("application/json")
-                        .content(EndpointUtils.convertObjectToJsonString(resourceDTO)))
-                .andExpect(status().isNotFound());
-    }
-
-    @Test
-    void resourceShouldAlreadyExist() throws Exception {
-        when(jenaService.doesResourceExistInGraph(anyString(), anyString())).thenReturn(true);
-        when(jenaService.checkIfResourceIsOneOfTypes(eq("http://uri.suomi.fi/datamodel/ns/int/FakeClass"), anyList(), anyBoolean())).thenReturn(true);
-        var resourceDTO = createResourceDTO(false);
-
-        //finding models from jena is not mocked so it should return null and return 404 not found
-        this.mvc
-                .perform(put("/v2/resource/ontology/test")
-                        .contentType("application/json")
-                        .content(EndpointUtils.convertObjectToJsonString(resourceDTO)))
-                .andExpect(status().isBadRequest())
-                .andExpect(content().json("{\"status\":\"BAD_REQUEST\",\"message\":\"Error during mapping: Already exists\"}"));
+        verify(resourceService).create(anyString(), any(ResourceDTO.class), any(ResourceType.class), eq(false));
+        verifyNoMoreInteractions(resourceService);
     }
 
     @ParameterizedTest
     @MethodSource("provideCreateResourceDTOInvalidData")
-    void shouldInvalidate(ResourceDTO resourceDTO) throws Exception {
+    void shouldInvalidate(String resourceType, ResourceDTO resourceDTO) throws Exception {
         this.mvc
-                .perform(put("/v2/resource/ontology/test")
+                .perform(post("/v2/resource/library/test/{resourceType}", resourceType)
                         .contentType("application/json")
                         .content(EndpointUtils.convertObjectToJsonString(resourceDTO)))
                 .andExpect(status().isBadRequest());
     }
 
     private static Stream<Arguments> provideCreateResourceDTOInvalidData() {
-        var args = new ArrayList<ResourceDTO>();
+        var args = new ArrayList<Arguments>();
         var textAreaMaxPlus = ValidationConstants.TEXT_AREA_MAX_LENGTH + 20;
 
-        var resourceDTO = createResourceDTO(false);
+        var testType = "association";
+        var resourceDTO = createResourceDTO(false, testType);
         resourceDTO.setStatus(null);
-        args.add(resourceDTO);
+        args.add(Arguments.of(testType, resourceDTO));
 
-        resourceDTO = createResourceDTO(false);
+        resourceDTO = createResourceDTO(false, testType);
         resourceDTO.setLabel(Map.of("fi", RandomStringUtils.random(textAreaMaxPlus)));
-        args.add(resourceDTO);
+        args.add(Arguments.of(testType, resourceDTO));
 
-        resourceDTO = createResourceDTO(false);
+        resourceDTO = createResourceDTO(false, testType);
         resourceDTO.setLabel(Map.of("fi", " "));
-        args.add(resourceDTO);
+        args.add(Arguments.of(testType, resourceDTO));
 
-        resourceDTO = createResourceDTO(false);
+        resourceDTO = createResourceDTO(false, testType);
         resourceDTO.setEditorialNote(RandomStringUtils.random(textAreaMaxPlus));
-        args.add(resourceDTO);
+        args.add(Arguments.of(testType, resourceDTO));
 
-
-        resourceDTO = createResourceDTO(false);
+        resourceDTO = createResourceDTO(false, testType);
         resourceDTO.setNote(Map.of("fi", RandomStringUtils.random(textAreaMaxPlus)));
-        args.add(resourceDTO);
+        args.add(Arguments.of(testType, resourceDTO));
 
-        resourceDTO = createResourceDTO(false);
+        resourceDTO = createResourceDTO(false, testType);
         resourceDTO.setIdentifier(null);
-        args.add(resourceDTO);
+        args.add(Arguments.of(testType, resourceDTO));
 
-        resourceDTO = createResourceDTO(false);
-        resourceDTO.setType(null);
-        args.add(resourceDTO);
-
-        resourceDTO = createResourceDTO(false);
+        resourceDTO = createResourceDTO(false, testType);
         resourceDTO.setDomain("http://uri.suomi.fi/datamodel/ns/int/InvalidClass");
-        args.add(resourceDTO);
+        args.add(Arguments.of(testType, resourceDTO));
 
-        resourceDTO = createResourceDTO(false);
+        resourceDTO = createResourceDTO(false, "attribute");
+        resourceDTO.setRange("notreal:type");
+        args.add(Arguments.of("attribute", resourceDTO));
+
+        resourceDTO = createResourceDTO(false, "association");
         resourceDTO.setRange("http://uri.suomi.fi/datamodel/ns/int/InvalidClass");
-        args.add(resourceDTO);
+        args.add(Arguments.of("association", resourceDTO));
 
-        return args.stream().map(Arguments::of);
+        return args.stream();
     }
 
-    @Test
-    void shouldValidateAndUpdate() throws Exception {
-        var resourceDTO = createResourceDTO(true);
-        var m = MapperTestUtils.getModelFromFile("/models/test_datamodel_library_with_resources.ttl");
-        when(jenaService.checkIfResourceIsOneOfTypes(eq("http://uri.suomi.fi/datamodel/ns/int/FakeClass"), anyList(), anyBoolean())).thenReturn(true);
-
-        when(jenaService.getDataModel(anyString())).thenReturn(m);
-        when(jenaService.doesResourceExistInGraph(anyString(), anyString())).thenReturn(true);
-        this.mvc
-                .perform(put("/v2/resource/ontology/test/TestAttribute")
-                        .contentType("application/json")
-                        .content(EndpointUtils.convertObjectToJsonString(resourceDTO)))
-                .andExpect(status().isOk());
-
-        verify(jenaService).doesResourceExistInGraph(anyString(), anyString());
-        verify(jenaService).getDataModel(anyString());
-        verify(authorizationManager).hasRightToModel(anyString(), any(Model.class));
-        verify(jenaService).putDataModelToCore(anyString(), any(Model.class));
-        verify(openSearchIndexer).updateResourceToIndex(any(IndexResource.class));
-    }
-
-    @Test
-    void shouldNotFindResource() throws Exception {
-        var resourceDTO = createResourceDTO(true);
-        when(jenaService.doesResourceExistInGraph(anyString(), anyString())).thenReturn(false);
-        when(jenaService.checkIfResourceIsOneOfTypes(eq("http://uri.suomi.fi/datamodel/ns/int/FakeClass"), anyList(), anyBoolean())).thenReturn(true);
+    @ParameterizedTest
+    @CsvSource({"attribute", "association"})
+    void shouldValidateAndUpdate(String resourceType) throws Exception {
+        var resourceDTO = createResourceDTO(true, resourceType);
+        when(resourceService.checkIfResourceIsOneOfTypes(eq("http://uri.suomi.fi/datamodel/ns/int/FakeClass"), anyList(), anyBoolean())).thenReturn(true);
 
         this.mvc
-                .perform(put("/v2/resource/ontology/test/resource")
+                .perform(put("/v2/resource/library/test/{resourceType}/TestA{resourceType}", resourceType, resourceType.substring(1))
                         .contentType("application/json")
                         .content(EndpointUtils.convertObjectToJsonString(resourceDTO)))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isNoContent());
+
+        //validator
+        if(resourceType.equals("attribute")){
+            verify(resourceService, times(1)).checkIfResourceIsOneOfTypes(anyString(), anyList(), anyBoolean());
+        }else{
+            verify(resourceService, times(2)).checkIfResourceIsOneOfTypes(anyString(), anyList(), anyBoolean());
+        }
+        verify(resourceService).update(anyString(), anyString(), any(ResourceDTO.class));
+        verifyNoMoreInteractions(resourceService);
     }
 
     @ParameterizedTest
     @MethodSource("provideUpdateResourceDTOInvalidData")
     void shouldInvalidateUpdate(ResourceDTO resourceDTO) throws Exception{
         this.mvc
-                .perform(put("/v2/resource/ontology/test/resource")
+                .perform(put("/v2/resource/library/test/association/resource")
                         .contentType("application/json")
                         .content(EndpointUtils.convertObjectToJsonString(resourceDTO)))
                 .andExpect(status().isBadRequest());
@@ -309,115 +197,58 @@ class ResourceControllerTest {
 
     @Test
     void shouldGetResource() throws Exception {
-        var model = EndpointUtils.getMockModel(OWL.Ontology);
-        when(jenaService.doesResourceExistInGraph(anyString(), anyString())).thenReturn(true);
-        when(jenaService.getDataModel(anyString())).thenReturn(model);
-        when(jenaService.getOrganizations()).thenReturn(mock(Model.class));
-        when(authorizationManager.hasRightToModel(anyString(), any(Model.class))).thenReturn(true);
-
-        try(var mapper = mockStatic(ResourceMapper.class)) {
-            mapper.when(() -> ResourceMapper.mapToResourceInfoDTO(any(Model.class), anyString(), anyString(), any(Model.class), anyBoolean(), eq(userMapper)))
-                    .thenReturn(new ResourceInfoDTO());
-            mvc.perform(get("/v2/resource/ontology/test/TestAttribute"))
-                    .andExpect(status().isOk());
-            verify(jenaService).doesResourceExistInGraph(anyString(), anyString());
-            verify(jenaService).getDataModel(anyString());
-            verify(jenaService).getOrganizations();
-            mapper.verify(() -> ResourceMapper.mapToResourceInfoDTO(any(Model.class), anyString(), anyString(), any(Model.class), anyBoolean(), eq(userMapper)));
-            verify(authorizationManager).hasRightToModel(anyString(), any(Model.class));
-        }
+        mvc.perform(get("/v2/resource/library/test/TestAttribute"))
+                .andExpect(status().isOk());
+        verify(resourceService).get(anyString(), anyString());
+        verifyNoMoreInteractions(resourceService);
     }
 
-    @Test
-    void shouldNotFindResourceGet() throws Exception {
-        mvc.perform(get("/v2/resource/ontology/test/resource"))
-                .andExpect(status().isNotFound());
-
-        verify(jenaService).doesResourceExistInGraph(anyString(), anyString());
-    }
 
     @Test
     void shouldDeleteResource() throws Exception {
-        when(jenaService.doesResourceExistInGraph(anyString(), anyString())).thenReturn(true);
-        when(jenaService.getDataModel(anyString())).thenReturn(mock(Model.class));
-        when(authorizationManager.hasRightToModel(anyString(), any(Model.class))).thenReturn(true);
-
-
-        mvc.perform(delete("/v2/resource/ontology/test/resource"))
+        mvc.perform(delete("/v2/resource/library/test/resource"))
                 .andExpect(status().isOk());
 
-        verify(jenaService).doesResourceExistInGraph(anyString(), anyString());
-        verify(jenaService).getDataModel(anyString());
-        verify(authorizationManager).hasRightToModel(anyString(), any(Model.class));
-        verify(jenaService).deleteResource(anyString());
-        verify(openSearchIndexer).deleteResourceFromIndex(anyString());
+        verify(resourceService).delete(anyString(), anyString());
     }
 
-    @Test
-    void shouldFailToFindResourceDelete() throws Exception {
-        mvc.perform(delete("/v2/resource/ontology/test/resource"))
-                .andExpect(status().isNotFound());
 
-        verify(jenaService).doesResourceExistInGraph(anyString(), anyString());
-        verifyNoMoreInteractions(jenaService);
-        verifyNoInteractions(authorizationManager, openSearchIndexer);
-    }
-
-    @Test
-    void shouldFailAuthorisationDelete() throws Exception {
-        when(jenaService.doesResourceExistInGraph(anyString(), anyString())).thenReturn(true);
-        when(jenaService.getDataModel(anyString())).thenReturn(mock(Model.class));
-        when(authorizationManager.hasRightToModel(anyString(), any(Model.class))).thenReturn(false);
-
-        mvc.perform(delete("/v2/resource/ontology/test/resource"))
-                .andExpect(status().isUnauthorized());
-
-        verify(jenaService).doesResourceExistInGraph(anyString(), anyString());
-        verify(jenaService).getDataModel(anyString());
-        verifyNoMoreInteractions(jenaService);
-        verify(authorizationManager).hasRightToModel(anyString(), any(Model.class));
-        verifyNoInteractions(openSearchIndexer);
-    }
 
     @Test
     void shouldValidateAndCreatePropertyShape() throws Exception {
         var dto = createPropertyShapeDTO();
-        var model = EndpointUtils.getMockModel(DCAP.DCAP);
 
-        when(jenaService.getDataModel(anyString())).thenReturn(model);
-        when(jenaService.checkIfResourceIsOneOfTypes(eq("http://uri.suomi.fi/datamodel/ns/int/FakeClass"), anyList(),
+        when(resourceService.checkIfResourceIsOneOfTypes(eq("http://uri.suomi.fi/datamodel/ns/int/FakeClass"), anyList(),
                 anyBoolean())).thenReturn(true);
 
-        try(var mapper = mockStatic(ResourceMapper.class)) {
-            mapper.when(() -> ResourceMapper.mapToPropertyShapeResource(anyString(), any(Model.class),
-                    any(PropertyShapeDTO.class), any(YtiUser.class))).thenReturn("test");
-            mapper.when(() -> ResourceMapper.mapToIndexResource(any(Model.class),
-                    anyString())).thenReturn(new IndexResource());
+        this.mvc
+                .perform(post("/v2/resource/profile/test")
+                        .contentType("application/json")
+                        .content(EndpointUtils.convertObjectToJsonString(dto)))
+                .andExpect(status().isCreated());
+
+        verify(resourceService, times(2)).checkIfResourceIsOneOfTypes(anyString(), anyList(), anyBoolean());
+        verify(resourceService).create(anyString(), any(PropertyShapeDTO.class), eq(null), eq(true));
+        verifyNoMoreInteractions(resourceService);
+    }
+
+    @Test
+    void shouldCopy() throws Exception {
             this.mvc
-                    .perform(put("/v2/resource/profile/test")
+                    .perform(post("/v2/resource/profile/test/PropertyShape")
                             .contentType("application/json")
-                            .content(EndpointUtils.convertObjectToJsonString(dto)))
-                    .andExpect(status().isOk());
-            verify(this.jenaService).doesResourceExistInGraph(anyString(), anyString());
-            verify(this.jenaService).getDataModel(anyString());
-            verify(jenaService, times(2)).checkIfResourceIsOneOfTypes(eq("http://uri.suomi.fi/datamodel/ns/int/FakeClass"),
-                    anyList(), anyBoolean());
-            verify(terminologyService).resolveConcept(dto.getSubject());
-            mapper.verify(() -> ResourceMapper.mapToPropertyShapeResource(anyString(), any(Model.class),
-                    any(PropertyShapeDTO.class), any(YtiUser.class)));
-            verify(this.jenaService).putDataModelToCore(anyString(), any(Model.class));
-            verifyNoMoreInteractions(this.jenaService);
-            mapper.verify(() -> ResourceMapper.mapToIndexResource(any(Model.class), anyString()));
-            verify(this.openSearchIndexer).createResourceToIndex(any(IndexResource.class));
-            verifyNoMoreInteractions(this.openSearchIndexer);
-        }
+                            .param("targetPrefix", "newtest")
+                            .param("newIdentifier", "newid"))
+                    .andExpect(status().isCreated());
+
+            verify(resourceService).copyPropertyShape(anyString(), anyString(), anyString(), anyString());
     }
 
     @ParameterizedTest
     @MethodSource("provideCreatePropertyShapeDTOInvalidData")
     void shouldInvalidatePropertyShape(PropertyShapeDTO dto) throws Exception {
         this.mvc
-                .perform(put("/v2/resource/profile/test")
+                .perform(post("/v2/resource/profile/test")
                         .contentType("application/json")
                         .content(EndpointUtils.convertObjectToJsonString(dto)))
                 .andExpect(status().isBadRequest());
@@ -426,25 +257,22 @@ class ResourceControllerTest {
 
     @Test
     void shouldCheckFreeIdentifierWhenExists() throws Exception {
-        var graphUri = defaultNamespace + "test";
-        when(jenaService.doesResourceExistInGraph(graphUri, graphUri + ModelConstants.RESOURCE_SEPARATOR + "Resource")).thenReturn(true);
+        when(resourceService.exists("test", "Resource")).thenReturn(true);
 
         this.mvc
-                .perform(get("/v2/resource/test/free-identifier/Resource")
+                .perform(get("/v2/resource/test/Resource/exists")
                         .contentType("application/json"))
                 .andExpect(status().isOk())
-                .andExpect(content().string(containsString("false")));
+                .andExpect(content().string(containsString("true")));
     }
 
     @Test
     void shouldCheckFreeIdentifierWhenNotExist() throws Exception {
-        when(jenaService.doesDataModelExist(anyString())).thenReturn(false);
-
         this.mvc
-                .perform(get("/v2/resource/test/free-identifier/Resource")
+                .perform(get("/v2/resource/test/Resource/exists")
                         .contentType("application/json"))
                 .andExpect(status().isOk())
-                .andExpect(content().string(containsString("true")));
+                .andExpect(content().string(containsString("false")));
     }
 
 
@@ -472,24 +300,27 @@ class ResourceControllerTest {
         dto.setAllowedValues(List.of(RandomStringUtils.random(length + 1)));
         args.add(dto);
 
+        dto = createPropertyShapeDTO();
+        dto.setCodeList("http://uri.suomi.fi/invalid");
+        args.add(dto);
+
         return args.stream().map(Arguments::of);
     }
-        private static Stream<Arguments> provideUpdateResourceDTOInvalidData() {
+    private static Stream<Arguments> provideUpdateResourceDTOInvalidData() {
         var args = new ArrayList<ResourceDTO>();
 
         //this has identifier so it should fail automatically
-        var resourceDTO = createResourceDTO(false);
+        var resourceDTO = createResourceDTO(false, "association");
         args.add(resourceDTO);
 
         return args.stream().map(Arguments::of);
     }
 
-    private static ResourceDTO createResourceDTO(boolean update){
+    private static ResourceDTO createResourceDTO(boolean update, String resourceType){
         var dto = new ResourceDTO();
         dto.setEditorialNote("test comment");
         if(!update){
             dto.setIdentifier("Identifier");
-            dto.setType(ResourceType.ASSOCIATION);
         }
         dto.setStatus(Status.DRAFT);
         dto.setSubject("sanastot.suomi.fi/notrealurl");
@@ -497,7 +328,11 @@ class ResourceControllerTest {
         dto.setEquivalentResource(Set.of("http://uri.suomi.fi/datamodel/ns/int/FakeResource"));
         dto.setSubResourceOf(Set.of("http://uri.suomi.fi/datamodel/ns/int/FakeResource"));
         dto.setDomain("http://uri.suomi.fi/datamodel/ns/int/FakeClass");
-        dto.setRange("http://uri.suomi.fi/datamodel/ns/int/FakeClass");
+        if(resourceType.equals("association")){
+            dto.setRange("http://uri.suomi.fi/datamodel/ns/int/FakeClass");
+        }else{
+            dto.setRange("owl:real");
+        }
         dto.setNote(Map.of("fi", "test note"));
         return dto;
     }

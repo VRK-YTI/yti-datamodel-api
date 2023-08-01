@@ -3,7 +3,6 @@ package fi.vm.yti.datamodel.api.v2.validator;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
-
 import org.hibernate.validator.internal.engine.path.PathImpl;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.core.Ordered;
@@ -85,6 +84,13 @@ public class ExceptionHandlerAdvice extends ResponseEntityExceptionHandler {
     @ExceptionHandler(ResourceNotFoundException.class)
     protected ResponseEntity<Object> handleNotFoundException(ResourceNotFoundException ex) {
         var apiError = new ApiError(NOT_FOUND);
+        apiError.setMessage(ex.getMessage());
+        return buildResponseEntity(apiError);
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    protected ResponseEntity<Object> handleIllegalArgumentException(IllegalArgumentException ex) {
+        var apiError = new ApiError(BAD_REQUEST);
         apiError.setMessage(ex.getMessage());
         return buildResponseEntity(apiError);
     }

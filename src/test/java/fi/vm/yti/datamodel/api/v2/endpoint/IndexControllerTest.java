@@ -2,7 +2,6 @@ package fi.vm.yti.datamodel.api.v2.endpoint;
 
 import fi.vm.yti.datamodel.api.security.AuthorizationManager;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
-import fi.vm.yti.datamodel.api.v2.service.JenaService;
 import fi.vm.yti.datamodel.api.v2.validator.ExceptionHandlerAdvice;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,7 +14,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @TestPropertySource(properties = {
@@ -37,9 +36,6 @@ class IndexControllerTest {
     @Autowired
     private IndexController indexController;
 
-    @MockBean
-    private JenaService jenaService;
-
     @BeforeEach
     public void setup() {
         this.mvc = MockMvcBuilders
@@ -51,11 +47,16 @@ class IndexControllerTest {
     }
 
     @Test
-    void shouldReIndex() throws Exception {
-        this.mvc
-            .perform(get("/v2/index/reindex"))
+    void shouldCallOpenSearchIndexer() throws Exception {
+        mvc.perform(post("/v2/index/reindex"))
             .andExpect(status().isOk());
 
-        verify(this.openSearchIndexer).reindex();
+        verify(openSearchIndexer).reindex(eq(null));
+
+        mvc.perform(post("/v2/index/reindex")
+                    .param("index", "models_v2"))
+            .andExpect(status().isOk());
+
+        verify(openSearchIndexer).reindex(eq("models_v2"));
     }
 }

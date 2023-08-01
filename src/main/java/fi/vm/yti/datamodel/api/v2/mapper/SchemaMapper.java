@@ -27,6 +27,7 @@ import fi.vm.yti.datamodel.api.v2.dto.DCAP;
 import fi.vm.yti.datamodel.api.v2.dto.FileMetadata;
 import fi.vm.yti.datamodel.api.v2.dto.Iow;
 import fi.vm.yti.datamodel.api.v2.dto.MSCR;
+import fi.vm.yti.datamodel.api.v2.dto.MSCRType;
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
 import fi.vm.yti.datamodel.api.v2.dto.ModelType;
 import fi.vm.yti.datamodel.api.v2.dto.SchemaDTO;
@@ -38,6 +39,8 @@ import fi.vm.yti.datamodel.api.v2.service.StorageService.StoredFile;
 import fi.vm.yti.datamodel.api.v2.service.impl.PostgresStorageService;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexModel;
+import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexSchema;
+import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import fi.vm.yti.datamodel.api.v2.service.JenaService;
 import fi.vm.yti.security.YtiUser;
 
@@ -46,12 +49,12 @@ public class SchemaMapper {
 
 	private final Logger log = LoggerFactory.getLogger(SchemaMapper.class);
 	private final StorageService storageService;
-	private final JenaService jenaService;
+	private final CoreRepository coreRepository;
 
 	public SchemaMapper(
-			JenaService jenaService,
+			CoreRepository coreRepository,
 			PostgresStorageService storageService) {
-		this.jenaService = jenaService;
+		this.coreRepository = coreRepository;
 		this.storageService = storageService;
 	}
 
@@ -118,7 +121,7 @@ public class SchemaMapper {
 
         if(dto.getGroups() != null){
             modelResource.removeAll(DCTerms.isPartOf);
-            var groupModel = jenaService.getServiceCategories();
+            var groupModel = coreRepository.getServiceCategories();
             dto.getGroups().forEach(group -> {
                 var groups = groupModel.listResourcesWithProperty(SKOS.notation, group);
                 if (groups.hasNext()) {
@@ -163,7 +166,7 @@ public class SchemaMapper {
 		schemaInfoDTO.setDescription(MapperUtils.localizedPropertyToMap(modelResource, RDFS.comment));
 
 		var organizations = MapperUtils.arrayPropertyToSet(modelResource, DCTerms.contributor);
-		schemaInfoDTO.setOrganizations(OrganizationMapper.mapOrganizationsToDTO(organizations, jenaService.getOrganizations()));
+		schemaInfoDTO.setOrganizations(OrganizationMapper.mapOrganizationsToDTO(organizations, coreRepository.getOrganizations()));
 
 		var created = modelResource.getProperty(DCTerms.created).getLiteral().getString();
 		var modified = modelResource.getProperty(DCTerms.modified).getLiteral().getString();
@@ -190,7 +193,7 @@ public class SchemaMapper {
 	 * @param modelResource Model resource to add orgs to
 	 */
     private void addOrgsToModel(SchemaDTO modelDTO, Resource modelResource) {
-        var organizationsModel = jenaService.getOrganizations();
+        var organizationsModel = coreRepository.getOrganizations();
         modelDTO.getOrganizations().forEach(org -> {
             var orgUri = ModelConstants.URN_UUID + org;
             var queryRes = ResourceFactory.createResource(orgUri);
@@ -206,9 +209,9 @@ public class SchemaMapper {
      * @param model Model
      * @return Index model
      */
-    public IndexModel mapToIndexModel(String pid, Model model){
+    public IndexSchema mapToIndexModel(String pid, Model model){
         var resource = model.getResource(pid);
-        var indexModel = new IndexModel();
+        var indexModel = new IndexSchema();
         indexModel.setId(pid);
         indexModel.setStatus(Status.valueOf(resource.getProperty(OWL.versionInfo).getString()));
         indexModel.setModified(resource.getProperty(DCTerms.modified).getString());
@@ -218,14 +221,10 @@ public class SchemaMapper {
             indexModel.setContentModified(contentModified.getString());
         }
         var types = resource.listProperties(RDF.type).mapWith(Statement::getResource).toList();
-        if(types.contains(DCAP.DCAP) || types.contains(ResourceFactory.createProperty("http://www.w3.org/2002/07/dcap#DCAP"))){
-            indexModel.setType(ModelType.PROFILE);
-        }else if(types.contains(OWL.Ontology)){
-            indexModel.setType(ModelType.LIBRARY);
-        }else if(types.contains(MSCR.SCHEMA)){
-            indexModel.setType(ModelType.SCHEMA);
+        if(types.contains(MSCR.SCHEMA)){
+            indexModel.setType(MSCRType.SCHEMA);
         }else{
-            throw new MappingError("RDF:type not supported for data model");
+            throw new MappingError("RDF:type not supported for schema model");
         }
         indexModel.setPrefix(pid);
         indexModel.setLabel(MapperUtils.localizedPropertyToMap(resource, RDFS.label));
@@ -237,7 +236,7 @@ public class SchemaMapper {
         });
         indexModel.setContributor(contributors);
         var isPartOf = MapperUtils.arrayPropertyToList(resource, DCTerms.isPartOf);
-        var serviceCategories = jenaService.getServiceCategories();
+        var serviceCategories = coreRepository.getServiceCategories();
         var groups = isPartOf.stream().map(serviceCat -> MapperUtils.propertyToString(serviceCategories.getResource(serviceCat), SKOS.notation)).collect(Collectors.toList());
         indexModel.setIsPartOf(groups);
         indexModel.setLanguage(MapperUtils.arrayPropertyToList(resource, DCTerms.language));

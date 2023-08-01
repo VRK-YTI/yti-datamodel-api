@@ -2,7 +2,9 @@ package fi.vm.yti.datamodel.api.v2.validator;
 
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
 import fi.vm.yti.datamodel.api.v2.dto.ResourceDTO;
-import fi.vm.yti.datamodel.api.v2.service.JenaService;
+import fi.vm.yti.datamodel.api.v2.dto.ResourceType;
+import fi.vm.yti.datamodel.api.v2.repository.ImportsRepository;
+import fi.vm.yti.datamodel.api.v2.service.ResourceService;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import org.apache.jena.graph.NodeFactory;
@@ -17,8 +19,13 @@ public class ResourceValidator extends BaseValidator implements ConstraintValida
 
     private boolean updateProperty;
 
+    private ResourceType resourceType;
+
     @Autowired
-    private JenaService jenaService;
+    private ResourceService resourceService;
+    @Autowired
+    private ImportsRepository importsRepository;
+
     
     @Value("${defaultNamespace}")
     private String defaultNamespace;
@@ -26,6 +33,7 @@ public class ResourceValidator extends BaseValidator implements ConstraintValida
     @Override
     public void initialize(ValidResource constraintAnnotation) {
         this.updateProperty = constraintAnnotation.updateProperty();
+        this.resourceType = constraintAnnotation.resourceType();
     }
 
     @Override
@@ -39,19 +47,10 @@ public class ResourceValidator extends BaseValidator implements ConstraintValida
         checkEquivalentProperty(context, value);
         checkSubPropertyOf(context, value);
         checkPrefixOrIdentifier(context, value.getIdentifier(), "identifier", ValidationConstants.RESOURCE_IDENTIFIER_MAX_LENGTH, updateProperty);
-        checkType(context, value);
         checkDomain(context, value);
         checkRange(context, value);
 
         return !isConstraintViolationAdded();
-    }
-
-    private void checkType(ConstraintValidatorContext context, ResourceDTO resourceDTO){
-        if(!updateProperty && resourceDTO.getType() == null){
-            addConstraintViolation(context, ValidationConstants.MSG_VALUE_MISSING, "type");
-        }else if (updateProperty && resourceDTO.getType() != null){
-            addConstraintViolation(context, ValidationConstants.MSG_NOT_ALLOWED_UPDATE, "type");
-        }
     }
 
     private void checkEquivalentProperty(ConstraintValidatorContext context, ResourceDTO resourceDTO){
@@ -60,8 +59,8 @@ public class ResourceValidator extends BaseValidator implements ConstraintValida
             equivalentResource.forEach(eq -> {
                 var asUri = NodeFactory.createURI(eq);
                 //if namespace is resolvable make sure class can be found in resolved namespace
-                if(jenaService.doesResolvedNamespaceExist(asUri.getNameSpace())
-                        && !jenaService.doesResourceExistInImportedNamespace(asUri.getNameSpace(), asUri.getURI())){
+                if(importsRepository.graphExists(asUri.getNameSpace())
+                        && !importsRepository.resourceExistsInGraph(asUri.getNameSpace(), asUri.getURI())){
                     addConstraintViolation(context, "resource-not-found-in-resolved-namespace", "eqClass");
                 }
             });
@@ -74,8 +73,8 @@ public class ResourceValidator extends BaseValidator implements ConstraintValida
             getSubResourceOf.forEach(sub -> {
                 var asUri = NodeFactory.createURI(sub);
                 //if namespace is resolvable make sure class can be found in resolved namespace
-                if(jenaService.doesResolvedNamespaceExist(asUri.getNameSpace())
-                        && !jenaService.doesResourceExistInImportedNamespace(asUri.getNameSpace(), asUri.getURI())){
+                if(importsRepository.graphExists(asUri.getNameSpace())
+                        && !importsRepository.resourceExistsInGraph(asUri.getNameSpace(), asUri.getURI())){
                     addConstraintViolation(context, "resource-not-found-in-resolved-namespace", "subClassOf");
                 }
             });
@@ -87,7 +86,7 @@ public class ResourceValidator extends BaseValidator implements ConstraintValida
         var domain = resourceDTO.getDomain();
         if(domain != null && !domain.isBlank()){
             var checkImports = !domain.startsWith(defaultNamespace);
-            if(!jenaService.checkIfResourceIsOneOfTypes(domain, List.of(RDFS.Class, OWL.Class), checkImports)){
+            if(!resourceService.checkIfResourceIsOneOfTypes(domain, List.of(RDFS.Class, OWL.Class), checkImports)){
                 addConstraintViolation(context, "not-class-or-doesnt-exist", "domain");
             }
         }
@@ -96,10 +95,17 @@ public class ResourceValidator extends BaseValidator implements ConstraintValida
     private void checkRange(ConstraintValidatorContext context, ResourceDTO resourceDTO){
         var range = resourceDTO.getRange();
         if(range != null && !range.isBlank()){
-            var checkImports = !range.startsWith(defaultNamespace);
-            if(!jenaService.checkIfResourceIsOneOfTypes(range, List.of(RDFS.Class, OWL.Class), checkImports)){
-                addConstraintViolation(context, "not-class-or-doesnt-exist", "range");
+            if(resourceType.equals(ResourceType.ASSOCIATION)){
+                var checkImports = !range.startsWith(defaultNamespace);
+                if(!resourceService.checkIfResourceIsOneOfTypes(range, List.of(RDFS.Class, OWL.Class), checkImports)){
+                    addConstraintViolation(context, "not-class-or-doesnt-exist", "range");
+                }
+            }else{
+                if(!ModelConstants.SUPPORTED_DATA_TYPES.contains(range)){
+                    addConstraintViolation(context, "value-not-allowed", "range");
+                }
             }
+
         }
     }
 }

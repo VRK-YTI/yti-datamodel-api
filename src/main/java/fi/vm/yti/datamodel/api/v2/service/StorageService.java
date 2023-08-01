@@ -2,7 +2,7 @@ package fi.vm.yti.datamodel.api.v2.service;
 
 import java.util.List;
 
-import fi.vm.yti.datamodel.api.v2.dto.ModelType;
+import fi.vm.yti.datamodel.api.v2.dto.MSCRType;
 
 public interface StorageService {
 
@@ -14,7 +14,7 @@ public interface StorageService {
 
 	public List<StoredFile> retrieveAllSchemaFiles(String schemaPID);
 
-	public record StoredFile(String contentType, byte[] data, long fileID, ModelType type) {
+	public record StoredFile(String contentType, byte[] data, long fileID, MSCRType type) {
 	}
 
 	public List<StoredFile> retrieveAllCrosswalkFiles(String pid);

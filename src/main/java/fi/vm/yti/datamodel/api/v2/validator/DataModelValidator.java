@@ -3,38 +3,31 @@ package fi.vm.yti.datamodel.api.v2.validator;
 import fi.vm.yti.datamodel.api.v2.dto.DataModelDTO;
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
 import fi.vm.yti.datamodel.api.v2.dto.ModelType;
-import fi.vm.yti.datamodel.api.v2.service.JenaService;
+import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.vocabulary.SKOS;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 
 public class DataModelValidator extends BaseValidator implements
         ConstraintValidator<ValidDatamodel, DataModelDTO> {
 
     @Autowired
-    private JenaService jenaService;
+    private CoreRepository coreRepository;
 
     boolean updateModel;
+    ModelType modelType;
 
-    @Value("${defaultResolveBaseDomain:uri.suomi.fi}")
-    private String resolveBaseDomain;
-    
-    @Value("${defaultNamespace}")
-    private String defaultNamespace;
-    
-    
     @Override
-    public void initialize(ValidDatamodel constraintAnnotation    		) {
+    public void initialize(ValidDatamodel constraintAnnotation) {
         updateModel = constraintAnnotation.updateModel();
+        modelType = constraintAnnotation.modelType();
     }
 
     @Override
     public boolean isValid(DataModelDTO dataModel, ConstraintValidatorContext context) {
         setConstraintViolationAdded(false);
-        checkModelType(context, dataModel);
         checkPrefix(context, dataModel);
         checkStatus(context, dataModel.getStatus());
         checkLanguages(context, dataModel);
@@ -50,7 +43,7 @@ public class DataModelValidator extends BaseValidator implements
 
 
         checkTerminologies(context, dataModel);
-        checkCodeLists(context, dataModel);
+        checkCodeLists(context, dataModel, modelType);
         return !isConstraintViolationAdded();
     }
 
@@ -66,23 +59,8 @@ public class DataModelValidator extends BaseValidator implements
         //Check prefix text content
         checkPrefixContent(context, prefix, prefixPropertyLabel);
         //Checking if in use is different for datamodels and its resources so it is not in the above function
-        if(jenaService.doesDataModelExist(defaultNamespace + prefix)){
+        if(coreRepository.graphExists(ModelConstants.SUOMI_FI_NAMESPACE + prefix)){
             addConstraintViolation(context, "prefix-in-use", prefixPropertyLabel);
-        }
-    }
-
-
-    /**
-     * Check if model type is valid, if updating ModelType cannot be set
-     * @param context Constraint validator context
-     * @param dataModel DataModel
-     */
-    private void checkModelType(ConstraintValidatorContext context, DataModelDTO dataModel) {
-        var modelType = dataModel.getType();
-        if(updateModel && modelType != null){
-            addConstraintViolation(context, ValidationConstants.MSG_NOT_ALLOWED_UPDATE, "type");
-        }else if(!updateModel && modelType == null){
-            addConstraintViolation(context, ValidationConstants.MSG_VALUE_MISSING, "type");
         }
     }
 
@@ -93,6 +71,12 @@ public class DataModelValidator extends BaseValidator implements
      */
     private void checkLanguages(ConstraintValidatorContext context, DataModelDTO dataModel){
         var languages = dataModel.getLanguages();
+
+        if (languages.isEmpty()) {
+            addConstraintViolation(context, ValidationConstants.MSG_VALUE_MISSING, "languages");
+            return;
+        }
+
         languages.forEach(language -> {
             //Matches RFC-4646
             if(!language.matches("^[a-z]{2,3}(?:-[A-Z]{2,3}(?:-[a-zA-Z]{4})?)?$")){
@@ -150,8 +134,8 @@ public class DataModelValidator extends BaseValidator implements
      */
     private void checkOrganizations(ConstraintValidatorContext context, DataModelDTO dataModel){
         var organizations = dataModel.getOrganizations();
-        var existingOrgs = jenaService.getOrganizations();
-        if(!updateModel && organizations.isEmpty()){
+        var existingOrgs = coreRepository.getOrganizations();
+        if(organizations.isEmpty()){
             addConstraintViolation(context, ValidationConstants.MSG_VALUE_MISSING, "organization");
             return;
         }
@@ -170,8 +154,8 @@ public class DataModelValidator extends BaseValidator implements
     */
     private void checkGroups(ConstraintValidatorContext context, DataModelDTO dataModel){
         var groups = dataModel.getGroups();
-        var existingGroups = jenaService.getServiceCategories();
-        if(!updateModel && groups.isEmpty()){
+        var existingGroups = coreRepository.getServiceCategories();
+        if(groups.isEmpty()){
             addConstraintViolation(context, ValidationConstants.MSG_VALUE_MISSING, "groups");
             return;
         }
@@ -203,7 +187,7 @@ public class DataModelValidator extends BaseValidator implements
      */
     private void checkInternalNamespaces(ConstraintValidatorContext context, DataModelDTO dataModel){
         var namespaces = dataModel.getInternalNamespaces();
-        if(namespaces != null && namespaces.stream().anyMatch(ns -> !ns.startsWith(defaultNamespace))){
+        if(namespaces.stream().anyMatch(ns -> !ns.startsWith(ModelConstants.SUOMI_FI_NAMESPACE))){
             addConstraintViolation(context, "namespace-not-internal", "internalNamespaces");
         }
     }
@@ -217,13 +201,12 @@ public class DataModelValidator extends BaseValidator implements
     private void checkExternalNamespaces(ConstraintValidatorContext context, DataModelDTO dataModel){
         var namespaces = dataModel.getExternalNamespaces();
         var externalNamespace = "externalNamespaces";
-
         namespaces.forEach(namespace -> {
             if(namespace.getPrefix() == null || namespace.getName() == null || namespace.getNamespace() == null){
                 addConstraintViolation(context, "namespace-missing-value", externalNamespace);
             }else {
                 checkPrefixOrIdentifier(context, namespace.getPrefix(), externalNamespace, ValidationConstants.PREFIX_MAX_LENGTH, false);
-                if(namespace.getNamespace().startsWith(defaultNamespace)){
+                if(namespace.getNamespace().startsWith(ModelConstants.SUOMI_FI_NAMESPACE)){
                     addConstraintViolation(context, "namespace-not-external", externalNamespace);
                 }
                 checkPrefixContent(context, namespace.getPrefix(), externalNamespace);
@@ -253,13 +236,13 @@ public class DataModelValidator extends BaseValidator implements
     }
 
     private void checkTerminologies(ConstraintValidatorContext context, DataModelDTO dataModel) {
-        if (!dataModel.getTerminologies().stream().allMatch(uri -> uri.matches("^https?://" + resolveBaseDomain + "/terminology/(.*)"))) {
+        if (!dataModel.getTerminologies().stream().allMatch(uri -> uri.matches("^https?://uri.suomi.fi/terminology/(.*)"))) {
             addConstraintViolation(context, "invalid-terminology-uri", "terminologies");
         }
     }
 
-    private void checkCodeLists(ConstraintValidatorContext context, DataModelDTO dataModel) {
-        if(!updateModel && (dataModel.getType() != null && dataModel.getType().equals(ModelType.LIBRARY)) && !dataModel.getCodeLists().isEmpty()){
+    private void checkCodeLists(ConstraintValidatorContext context, DataModelDTO dataModel, ModelType modelType) {
+        if(modelType.equals(ModelType.LIBRARY) && !dataModel.getCodeLists().isEmpty()){
             addConstraintViolation(context, "library-not-supported", "codeLists");
         }
 

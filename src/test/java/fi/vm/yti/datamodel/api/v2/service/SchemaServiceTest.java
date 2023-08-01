@@ -32,13 +32,14 @@ import org.topbraid.shacl.vocabulary.SH;
 import fi.vm.yti.datamodel.api.v2.dto.MSCR;
 import fi.vm.yti.datamodel.api.v2.mapper.ClassMapper;
 import fi.vm.yti.datamodel.api.v2.mapper.ResourceMapper;
+import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 
 @ExtendWith(SpringExtension.class)
 @Import({
 	SchemaService.class,
 	ClassMapper.class,
 	ResourceMapper.class,
-	JenaService.class
+	CoreRepository.class
 })
 public class SchemaServiceTest {
 
