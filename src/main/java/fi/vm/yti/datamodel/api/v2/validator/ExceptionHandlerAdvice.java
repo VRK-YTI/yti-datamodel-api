@@ -17,8 +17,6 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
-import java.util.stream.Collectors;
-
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 
@@ -52,7 +50,7 @@ public class ExceptionHandlerAdvice extends ResponseEntityExceptionHandler {
                         c.getMessage(),
                         ((PathImpl) c.getPropertyPath()).getLeafNode().getName(),
                         c.getInvalidValue().toString()))
-                .collect(Collectors.toList());
+                        .toList();
 
         apiError.setDetails(errors);
         return buildResponseEntity(apiError);
@@ -71,6 +69,7 @@ public class ExceptionHandlerAdvice extends ResponseEntityExceptionHandler {
         apiError.setMessage(exception.getMessage());
         apiError.setDetails("Index: " + exception.getIndex());
         return ResponseEntity.badRequest().body(apiError);
+        //TODO is this really a BAD request since its caused by IO exception to opensearch
     }
 
     @ExceptionHandler(ResolvingException.class)

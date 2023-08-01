@@ -121,10 +121,12 @@ public class TerminologyService {
                     String.format("Add %s to the model", terminologyURI));
         }
 
-        TerminologyMapper.mapConceptToTerminologyModel(terminologyModel, terminologyURI,
-                conceptURI, result.get(0));
+        if(result != null && !result.isEmpty()){
+            TerminologyMapper.mapConceptToTerminologyModel(terminologyModel, terminologyURI,
+                    conceptURI, result.get(0));
 
-        conceptRepository.put(terminologyURI, terminologyModel);
+            conceptRepository.put(terminologyURI, terminologyModel);
+        }
     }
 
     public Consumer<ResourceInfoBaseDTO> mapConcept() {
