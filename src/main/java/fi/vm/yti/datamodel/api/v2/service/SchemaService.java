@@ -67,17 +67,15 @@ public class SchemaService {
 				} 
 				else if(key == "enum") {
 					if (!propertyNode.isEmpty()) {
-						RDFNode[] elements = new RDFNode[propertyNode.size()];
 						Bag bag = model.createBag();
 						
 						for(int i = 0; i < propertyNode.size(); i++){
 							if (node.get("type").asText() == "boolean")
-								elements[i] = model.createTypedLiteral(propertyNode.get(i).asBoolean()); 
+								bag.add(model.createTypedLiteral(propertyNode.get(i).asBoolean())); 
 							else if (node.get("type").asText() == "integer")
-								elements[i] = model.createTypedLiteral(propertyNode.get(i).numberValue());
+								bag.add(model.createTypedLiteral(propertyNode.get(i).numberValue()));
 							else 
-								elements[i] = model.createLiteral(propertyNode.get(i).asText());
-							bag.add(elements[i]);
+								bag.add(model.createLiteral(propertyNode.get(i).asText()));
 						}	
 						
 						propertyResource.addProperty(model.getProperty(SH.in.getURI()),
@@ -185,12 +183,10 @@ public class SchemaService {
 		
 		if (node.has("description"))
 			nodeShapeResource.addProperty(DCTerms.description, node.get("description").asText());
-		if (node == null || node.get("properties") == null) {
+		if (node == null || node.get("properties") == null) 
 			return;
-		}
-		if (node.has("additionalProperties")) {
+		if (node.has("additionalProperties"))
 			nodeShapeResource.addProperty(SH.closed, model.createTypedLiteral(!node.get("additionalProperties").asBoolean()));
-		}
 		/*
 		 * Iterate over properties If a property is an array or object – add and
 		 * recursively iterate over them. If a property is a datatype or literal – it's just added.
@@ -202,10 +198,8 @@ public class SchemaService {
 			
 			if (entry.getKey().startsWith("_") || entry.getKey().startsWith("$"))
 				continue;
-
-			if (entry.getValue().get("type") == null) {
+			if (entry.getValue().get("type") == null) 
 				throw new RuntimeException("One of the entries is missing 'type' property");
-			}
 
 			if (entry.getValue().get("type").asText().equals("object")) {
 				Resource propertyShape = addObjectProperty(propIDCapitalised + "/" + entry.getKey(), entry.getValue(), model, schemaPID,
