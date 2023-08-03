@@ -39,7 +39,7 @@ public class ClassController {
     @Operation(summary = "Add a class to a model")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Class added to library successfully"),
-            @ApiResponse(responseCode = "400", description = "Invalid data supplied or resource with given identifier already exists"),
+            @ApiResponse(responseCode = "400", description = "Invalid data supplied or resource with given identifier already exists", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ApiError.class))}),
             @ApiResponse(responseCode = "401", description = "Current user does not have rights for this model"),
     })
     @PostMapping(value = "/library/{prefix}", consumes = APPLICATION_JSON_VALUE)
@@ -52,7 +52,7 @@ public class ClassController {
     @Operation(summary = "Add a node shape to a model")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Node shape added to profile successfully"),
-            @ApiResponse(responseCode = "400", description = "Invalid data supplied or resource with given identifier already exists"),
+            @ApiResponse(responseCode = "400", description = "Invalid data supplied or resource with given identifier already exists", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ApiError.class))}),
             @ApiResponse(responseCode = "401", description = "Current user does not have rights for this model"),
     })
     @PostMapping(value = "/profile/{prefix}", consumes = APPLICATION_JSON_VALUE)
@@ -66,7 +66,7 @@ public class ClassController {
     @ApiResponse(responseCode =  "204", description = "Class updated in model successfully")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Class updated to library successfully"),
-            @ApiResponse(responseCode = "400", description = "Invalid data supplied"),
+            @ApiResponse(responseCode = "400", description = "Invalid data supplied", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ApiError.class))}),
             @ApiResponse(responseCode = "401", description = "Current user does not have rights for this model"),
             @ApiResponse(responseCode = "404", description = "Class not found", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ApiError.class))})
     })
@@ -81,7 +81,7 @@ public class ClassController {
     @Operation(summary = "Update a node shape in a profile")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Node shape updated to profile successfully"),
-            @ApiResponse(responseCode = "400", description = "Invalid data supplied"),
+            @ApiResponse(responseCode = "400", description = "Invalid data supplied", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ApiError.class))}),
             @ApiResponse(responseCode = "401", description = "Current user does not have rights for this model"),
             @ApiResponse(responseCode = "404", description = "Property shape not found", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ApiError.class))})
     })

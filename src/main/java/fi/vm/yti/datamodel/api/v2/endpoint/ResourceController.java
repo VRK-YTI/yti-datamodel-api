@@ -35,7 +35,7 @@ public class ResourceController {
     @Operation(summary = "Add an attribute to a library")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Attribute added to library successfully"),
-            @ApiResponse(responseCode = "400", description = "Invalid data supplied or resource with given identifier already exists"),
+            @ApiResponse(responseCode = "400", description = "Invalid data supplied or resource with given identifier already exists", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ApiError.class))}),
             @ApiResponse(responseCode = "401", description = "Current user does not have rights for this model"),
     })
     @PostMapping(value = "/library/{prefix}/attribute", consumes = APPLICATION_JSON_VALUE)
@@ -48,7 +48,7 @@ public class ResourceController {
     @Operation(summary = "Add an association to a library")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Association added to library successfully"),
-            @ApiResponse(responseCode = "400", description = "Invalid data supplied or resource with given identifier already exists"),
+            @ApiResponse(responseCode = "400", description = "Invalid data supplied or resource with given identifier already exists", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ApiError.class))}),
             @ApiResponse(responseCode = "401", description = "Current user does not have rights for this model"),
     })
     @PostMapping(value = "/library/{prefix}/association", consumes = APPLICATION_JSON_VALUE)
@@ -61,7 +61,7 @@ public class ResourceController {
     @Operation(summary = "Add a property shape to a profile")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Property shape added to profile successfully"),
-            @ApiResponse(responseCode = "400", description = "Invalid data supplied or resource with given identifier already exists"),
+            @ApiResponse(responseCode = "400", description = "Invalid data supplied or resource with given identifier already exists", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ApiError.class))}),
             @ApiResponse(responseCode = "401", description = "Current user does not have rights for this model"),
     })
     @ApiResponse(responseCode = "201", description = "Property shape added to profile successfully")
@@ -75,7 +75,7 @@ public class ResourceController {
     @Operation(summary = "Update an attribute in a library")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Attribute updated to library successfully"),
-            @ApiResponse(responseCode = "400", description = "Invalid data supplied"),
+            @ApiResponse(responseCode = "400", description = "Invalid data supplied", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ApiError.class))}),
             @ApiResponse(responseCode = "401", description = "Current user does not have rights for this model"),
             @ApiResponse(responseCode = "404", description = "Attribute not found", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ApiError.class))})
     })
@@ -90,7 +90,7 @@ public class ResourceController {
     @Operation(summary = "Update an association in a library")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Association updated to library successfully"),
-            @ApiResponse(responseCode = "400", description = "Invalid data supplied"),
+            @ApiResponse(responseCode = "400", description = "Invalid data supplied", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ApiError.class))}),
             @ApiResponse(responseCode = "401", description = "Current user does not have rights for this model"),
             @ApiResponse(responseCode = "404", description = "Association not found", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ApiError.class))})
     })
@@ -105,7 +105,7 @@ public class ResourceController {
     @Operation(summary = "Update a property shape in a profile")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Property shape updated to profile successfully"),
-            @ApiResponse(responseCode = "400", description = "Invalid data supplied"),
+            @ApiResponse(responseCode = "400", description = "Invalid data supplied", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ApiError.class))}),
             @ApiResponse(responseCode = "401", description = "Current user does not have rights for this model"),
             @ApiResponse(responseCode = "404", description = "Property shape not found", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ApiError.class))})
     })
@@ -120,7 +120,7 @@ public class ResourceController {
     @Operation(summary = "Create a local copy of a property shape")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Property shape copied successfully"),
-            @ApiResponse(responseCode = "400", description = "Property shape with new identifier already exists"),
+            @ApiResponse(responseCode = "400", description = "Property shape with new identifier already exists", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ApiError.class))}),
             @ApiResponse(responseCode = "401", description = "Current user does not have rights for this model"),
             @ApiResponse(responseCode = "404", description = "Property shape not found", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ApiError.class))})
     })

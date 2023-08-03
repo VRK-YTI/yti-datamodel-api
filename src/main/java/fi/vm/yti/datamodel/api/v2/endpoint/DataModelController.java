@@ -37,7 +37,7 @@ public class DataModelController {
     @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "The JSON data for the new library")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "The URI for the newly created model"),
-            @ApiResponse(responseCode = "400", description = "One or more of the fields in the JSON data was invalid or malformed"),
+            @ApiResponse(responseCode = "400", description = "One or more of the fields in the JSON data was invalid or malformed", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ApiError.class))}),
             @ApiResponse(responseCode = "401", description = "Current user does not have rights for this model"),
     })
     @PostMapping(path = "/library", produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
@@ -50,7 +50,7 @@ public class DataModelController {
     @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "The JSON data for the new application profile")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "The URI for the newly created model"),
-            @ApiResponse(responseCode = "400", description = "One or more of the fields in the JSON data was invalid or malformed"),
+            @ApiResponse(responseCode = "400", description = "One or more of the fields in the JSON data was invalid or malformed", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ApiError.class))}),
             @ApiResponse(responseCode = "401", description = "Current user does not have rights for this model"),
     })
     @PostMapping(path = "/profile", produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
@@ -63,7 +63,7 @@ public class DataModelController {
     @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "The JSON data for the new model node")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Library updated successfully"),
-            @ApiResponse(responseCode = "400", description = "One or more of the fields in the JSON data was invalid or malformed"),
+            @ApiResponse(responseCode = "400", description = "One or more of the fields in the JSON data was invalid or malformed", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ApiError.class))}),
             @ApiResponse(responseCode = "401", description = "Current user does not have rights for this model"),
             @ApiResponse(responseCode = "404", description = "Library was not found", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ApiError.class))}),
     })
@@ -78,7 +78,7 @@ public class DataModelController {
     @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "The JSON data for the new model node")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Application profile updated successfully"),
-            @ApiResponse(responseCode = "400", description = "One or more of the fields in the JSON data was invalid or malformed"),
+            @ApiResponse(responseCode = "400", description = "One or more of the fields in the JSON data was invalid or malformed", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ApiError.class))}),
             @ApiResponse(responseCode = "401", description = "Current user does not have rights for this model"),
             @ApiResponse(responseCode = "404", description = "Application profile was not found", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ApiError.class))}),
     })
