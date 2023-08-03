@@ -3,10 +3,15 @@ package fi.vm.yti.datamodel.api.v2.endpoint;
 import fi.vm.yti.datamodel.api.v2.dto.DataModelDTO;
 import fi.vm.yti.datamodel.api.v2.dto.DataModelInfoDTO;
 import fi.vm.yti.datamodel.api.v2.dto.ModelType;
+import fi.vm.yti.datamodel.api.v2.endpoint.error.ApiError;
 import fi.vm.yti.datamodel.api.v2.service.DataModelService;
 import fi.vm.yti.datamodel.api.v2.validator.ValidDatamodel;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -29,8 +34,12 @@ public class DataModelController {
     }
 
     @Operation(summary = "Create a new library")
-    @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "The JSON data for the new core model")
-    @ApiResponse(responseCode = "201", description = "The ID for the newly created model")
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "The JSON data for the new library")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "The URI for the newly created model"),
+            @ApiResponse(responseCode = "400", description = "One or more of the fields in the JSON data was invalid or malformed", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ApiError.class))}),
+            @ApiResponse(responseCode = "401", description = "Current user does not have rights for this model"),
+    })
     @PostMapping(path = "/library", produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
     public ResponseEntity<String> createLibrary(@ValidDatamodel(modelType = ModelType.LIBRARY) @RequestBody DataModelDTO modelDTO) throws URISyntaxException {
         var uri = dataModelService.create(modelDTO, ModelType.LIBRARY);
@@ -39,7 +48,11 @@ public class DataModelController {
 
     @Operation(summary = "Create a new application profile")
     @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "The JSON data for the new application profile")
-    @ApiResponse(responseCode = "201", description = "The ID for the newly created model")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "The URI for the newly created model"),
+            @ApiResponse(responseCode = "400", description = "One or more of the fields in the JSON data was invalid or malformed", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ApiError.class))}),
+            @ApiResponse(responseCode = "401", description = "Current user does not have rights for this model"),
+    })
     @PostMapping(path = "/profile", produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
     public ResponseEntity<String> createProfile(@ValidDatamodel(modelType = ModelType.PROFILE) @RequestBody DataModelDTO modelDTO) throws URISyntaxException {
         var uri = dataModelService.create(modelDTO, ModelType.PROFILE);
@@ -48,42 +61,60 @@ public class DataModelController {
 
     @Operation(summary = "Modify library")
     @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "The JSON data for the new model node")
-    @ApiResponse(responseCode = "204", description = "The ID for the newly created model")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Library updated successfully"),
+            @ApiResponse(responseCode = "400", description = "One or more of the fields in the JSON data was invalid or malformed", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ApiError.class))}),
+            @ApiResponse(responseCode = "401", description = "Current user does not have rights for this model"),
+            @ApiResponse(responseCode = "404", description = "Library was not found", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ApiError.class))}),
+    })
     @PutMapping(path = "/library/{prefix}", produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
     public ResponseEntity<Void> updateLibrary(@ValidDatamodel(modelType = ModelType.LIBRARY, updateModel = true) @RequestBody DataModelDTO modelDTO,
-                                           @PathVariable String prefix) {
+                                           @PathVariable @Parameter(description = "Library prefix") String prefix) {
         dataModelService.update(prefix, modelDTO);
         return ResponseEntity.noContent().build();
     }
 
     @Operation(summary = "Modify application profile")
     @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "The JSON data for the new model node")
-    @ApiResponse(responseCode = "204", description = "The ID for the newly created model")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Application profile updated successfully"),
+            @ApiResponse(responseCode = "400", description = "One or more of the fields in the JSON data was invalid or malformed", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ApiError.class))}),
+            @ApiResponse(responseCode = "401", description = "Current user does not have rights for this model"),
+            @ApiResponse(responseCode = "404", description = "Application profile was not found", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ApiError.class))}),
+    })
     @PutMapping(path = "/profile/{prefix}", produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
     public ResponseEntity<Void> updateProfile(@ValidDatamodel(modelType = ModelType.PROFILE, updateModel = true) @RequestBody DataModelDTO modelDTO,
-                              @PathVariable String prefix) {
+                              @PathVariable @Parameter(description = "Application profile prefix") String prefix) {
         dataModelService.update(prefix, modelDTO);
         return ResponseEntity.noContent().build();
     }
 
     @Operation(summary = "Get a model from fuseki")
     @ApiResponse(responseCode = "200", description = "Datamodel object for the found model")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Data model found"),
+            @ApiResponse(responseCode = "404", description = "Data model was not found", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ApiError.class))}),
+    })
     @GetMapping(value = "/{prefix}", produces = APPLICATION_JSON_VALUE)
-    public DataModelInfoDTO getModel(@PathVariable String prefix){
+    public DataModelInfoDTO getModel(@PathVariable @Parameter(description = "Data model prefix") String prefix){
         return dataModelService.get(prefix);
     }
 
     @Operation(summary = "Check if prefix already exists")
     @ApiResponse(responseCode = "200", description = "Boolean value indicating whether prefix")
     @GetMapping(value = "/{prefix}/exists", produces = APPLICATION_JSON_VALUE)
-    public Boolean exists(@PathVariable String prefix) {
+    public Boolean exists(@PathVariable @Parameter(description = "Data model prefix") String prefix) {
         return dataModelService.exists(prefix);
     }
 
     @Operation(summary = "Delete a model from fuseki")
-    @ApiResponse(responseCode = "200", description = "Model deleted successfully")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Data model deleted successfully"),
+            @ApiResponse(responseCode = "401", description = "Current user does not have rights for this model"),
+            @ApiResponse(responseCode = "404", description = "Data model was not found", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ApiError.class))}),
+    })
     @DeleteMapping(value = "/{prefix}")
-    public void deleteModel(@PathVariable String prefix) {
+    public void deleteModel(@PathVariable @Parameter(description = "Data model prefix") String prefix) {
         dataModelService.delete(prefix);
     }
 }

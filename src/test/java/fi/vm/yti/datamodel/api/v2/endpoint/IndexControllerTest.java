@@ -13,7 +13,8 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -51,12 +52,12 @@ class IndexControllerTest {
         mvc.perform(post("/v2/index/reindex"))
             .andExpect(status().isOk());
 
-        verify(openSearchIndexer).reindex(eq(null));
+        verify(openSearchIndexer).reindex(null);
 
         mvc.perform(post("/v2/index/reindex")
                     .param("index", "models_v2"))
             .andExpect(status().isOk());
 
-        verify(openSearchIndexer).reindex(eq("models_v2"));
+        verify(openSearchIndexer).reindex("models_v2");
     }
 }

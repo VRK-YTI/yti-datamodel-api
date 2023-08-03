@@ -1,7 +1,11 @@
 package fi.vm.yti.datamodel.api.v2.endpoint;
 
 import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -19,9 +23,14 @@ public class IndexController {
         this.indexer = indexer;
     }
 
-    @Operation(summary = "Reindex all datamodels")
+    @Hidden
+    @Operation(summary = "Reindex all indexes or a certain index")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "401", description = "Reindexed successfully"),
+            @ApiResponse(responseCode = "401", description = "Current user does not have rights for this action"),
+    })
     @PostMapping(value = "/reindex")
-    public void reIndex(@RequestParam(required = false) String index) {
+    public void reIndex(@RequestParam(required = false) @Parameter(description = "OpenSearch index") String index) {
         indexer.reindex(index);
     }
 }

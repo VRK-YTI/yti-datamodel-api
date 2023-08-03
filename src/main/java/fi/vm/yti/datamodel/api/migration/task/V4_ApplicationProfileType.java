@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+@SuppressWarnings("java:S101")
 @Component
 public class V4_ApplicationProfileType implements MigrationTask {
 

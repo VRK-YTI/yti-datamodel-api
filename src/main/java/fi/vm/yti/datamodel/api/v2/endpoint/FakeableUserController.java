@@ -2,6 +2,7 @@ package fi.vm.yti.datamodel.api.v2.endpoint;
 
 import fi.vm.yti.datamodel.api.v2.dto.GroupManagementUserDTO;
 import fi.vm.yti.datamodel.api.v2.service.GroupManagementService;
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+@Hidden
 @RestController
 @RequestMapping("v2/fakeable-users")
 @Tag(name = "Admin")
