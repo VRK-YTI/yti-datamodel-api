@@ -5,20 +5,20 @@ import java.util.List;
 
 public class PropertyShapeDTO extends BaseDTO {
     private String path;
-    private String classType; //assoc
+    private String classType;
     private ResourceType type;
-    private String dataType; //attr
-    private List<String> allowedValues = new ArrayList<>(); //attr
-    private String defaultValue; //attr
-    private String hasValue; //attr
-    private Integer maxLength; //attr
-    private Integer minLength; //attr
-    private Integer maxCount; //molemmissa
-    private Integer minCount; //molemmissa
-    private Integer minInclusive; //attr
-    private Integer maxInclusive; //attr
-    private Integer minExclusive; //attr
-    private Integer maxExclusive; //attr
+    private String dataType;
+    private List<String> allowedValues = new ArrayList<>();
+    private String defaultValue;
+    private String hasValue;
+    private Integer maxLength;
+    private Integer minLength;
+    private Integer maxCount;
+    private Integer minCount;
+    private Integer minInclusive;
+    private Integer maxInclusive;
+    private Integer minExclusive;
+    private Integer maxExclusive;
 
     private String codeList;
 
