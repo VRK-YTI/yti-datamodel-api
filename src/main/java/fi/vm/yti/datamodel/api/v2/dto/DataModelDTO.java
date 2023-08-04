@@ -23,6 +23,8 @@ public class DataModelDTO {
     private String contact;
     private Map<String, String> documentation = Map.of();
 
+    private Set<LinkDTO> links = Set.of();
+
     public String getPrefix() {
         return prefix;
     }
@@ -130,5 +132,13 @@ public class DataModelDTO {
 
     public void setDocumentation(Map<String, String> documentation) {
         this.documentation = documentation;
+    }
+
+    public Set<LinkDTO> getLinks() {
+        return links;
+    }
+
+    public void setLinks(Set<LinkDTO> links) {
+        this.links = links;
     }
 }

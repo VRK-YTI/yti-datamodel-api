@@ -37,6 +37,7 @@ public class DataModelValidator extends BaseValidator implements
         checkGroups(context, dataModel);
         checkContact(context, dataModel);
         checkDocumentation(context, dataModel);
+        checkLinks(context, dataModel);
 
         checkInternalNamespaces(context, dataModel);
         checkExternalNamespaces(context, dataModel);
@@ -121,9 +122,7 @@ public class DataModelValidator extends BaseValidator implements
             if (!languages.contains(key)) {
                 addConstraintViolation(context, "language-not-in-language-list." + key, "description");
             }
-            if(value.length() > ValidationConstants.TEXT_AREA_MAX_LENGTH){
-                addConstraintViolation(context, ValidationConstants.MSG_OVER_CHARACTER_LIMIT + ValidationConstants.TEXT_AREA_MAX_LENGTH, "description");
-            }
+            checkCommonTextArea(context, value, "description");
         });
     }
 
@@ -134,11 +133,11 @@ public class DataModelValidator extends BaseValidator implements
      */
     private void checkOrganizations(ConstraintValidatorContext context, DataModelDTO dataModel){
         var organizations = dataModel.getOrganizations();
-        var existingOrgs = coreRepository.getOrganizations();
         if(organizations.isEmpty()){
             addConstraintViolation(context, ValidationConstants.MSG_VALUE_MISSING, "organization");
             return;
         }
+        var existingOrgs = coreRepository.getOrganizations();
         organizations.forEach(org -> {
             var queryRes = ResourceFactory.createResource(ModelConstants.URN_UUID + org.toString());
             if(!existingOrgs.containsResource(queryRes)){
@@ -154,11 +153,11 @@ public class DataModelValidator extends BaseValidator implements
     */
     private void checkGroups(ConstraintValidatorContext context, DataModelDTO dataModel){
         var groups = dataModel.getGroups();
-        var existingGroups = coreRepository.getServiceCategories();
         if(groups.isEmpty()){
             addConstraintViolation(context, ValidationConstants.MSG_VALUE_MISSING, "groups");
             return;
         }
+        var existingGroups = coreRepository.getServiceCategories();
         groups.forEach(group -> {
             var resources = existingGroups.listResourcesWithProperty(SKOS.notation, group);
             if (!resources.hasNext()) {
@@ -253,5 +252,16 @@ public class DataModelValidator extends BaseValidator implements
 
     private void checkDocumentation(ConstraintValidatorContext context, DataModelDTO dataModel) {
         dataModel.getDocumentation().forEach((lang, value) -> checkCommonTextArea(context, value, "documentation"));
+    }
+
+    private void checkLinks(ConstraintValidatorContext context, DataModelDTO dataModel) {
+        dataModel.getLinks().forEach(linkDTO -> {
+            checkNull(context, linkDTO.getName(), "links.name");
+            checkCommonTextField(context, linkDTO.getName(), "links.name");
+
+            checkNull(context, linkDTO.getUri(), "links.uri");
+
+            checkCommonTextArea(context, linkDTO.getDescription(), "links.description");
+        });
     }
 }

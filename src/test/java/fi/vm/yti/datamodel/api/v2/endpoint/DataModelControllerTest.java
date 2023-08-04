@@ -215,10 +215,16 @@ class DataModelControllerTest {
         }
         dataModelDTO.setStatus(Status.DRAFT);
         dataModelDTO.setTerminologies(Set.of("http://uri.suomi.fi/terminology/test"));
+        var linkDTO = new LinkDTO();
+        linkDTO.setName("test link");
+        linkDTO.setDescription("link description");
+        linkDTO.setUri("https://example.com");
+        dataModelDTO.setLinks(Set.of(linkDTO));
         return dataModelDTO;
     }
 
     private static Stream<Arguments> provideDataModelInvalidData() {
+        var textFieldMaxPlus = ValidationConstants.TEXT_FIELD_MAX_LENGTH + 20;
         var textAreaMaxPlus = ValidationConstants.TEXT_AREA_MAX_LENGTH + 20;
         var emailAreaMaxPlus = ValidationConstants.EMAIL_FIELD_MAX_LENGTH + 20;
 
@@ -351,6 +357,35 @@ class DataModelControllerTest {
 
         dataModelDTO = createDatamodelDTO(false);
         dataModelDTO.setDocumentation(Map.of("en", RandomStringUtils.random(textAreaMaxPlus)));
+        args.add(dataModelDTO);
+
+        dataModelDTO = createDatamodelDTO(false);
+        var linkDTO = new LinkDTO();
+        linkDTO.setName(null);
+        linkDTO.setUri("http://example.com");
+        dataModelDTO.setLinks(Set.of(linkDTO));
+        args.add(dataModelDTO);
+
+        dataModelDTO = createDatamodelDTO(false);
+        linkDTO = new LinkDTO();
+        linkDTO.setName("link");
+        linkDTO.setUri(null);
+        dataModelDTO.setLinks(Set.of(linkDTO));
+        args.add(dataModelDTO);
+
+        dataModelDTO = createDatamodelDTO(false);
+        linkDTO = new LinkDTO();
+        linkDTO.setName("link");
+        linkDTO.setUri("https://example.com");
+        linkDTO.setDescription(RandomStringUtils.random(textAreaMaxPlus));
+        dataModelDTO.setLinks(Set.of(linkDTO));
+        args.add(dataModelDTO);
+
+        dataModelDTO = createDatamodelDTO(false);
+        linkDTO = new LinkDTO();
+        linkDTO.setName(RandomStringUtils.random(textFieldMaxPlus));
+        linkDTO.setUri("https://example.com");
+        dataModelDTO.setLinks(Set.of(linkDTO));
         args.add(dataModelDTO);
 
         return args.stream().map(Arguments::of);
