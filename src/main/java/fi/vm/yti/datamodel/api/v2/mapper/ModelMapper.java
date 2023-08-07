@@ -10,6 +10,7 @@ import fi.vm.yti.datamodel.api.v2.repository.SchemesRepository;
 import fi.vm.yti.security.YtiUser;
 import org.apache.jena.datatypes.xsd.XSDDateTime;
 import org.apache.jena.rdf.model.*;
+import org.apache.jena.sparql.vocabulary.FOAF;
 import org.apache.jena.vocabulary.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -91,6 +92,14 @@ public class ModelMapper {
         addInternalNamespaceToDatamodel(modelDTO, modelResource, model);
         addExternalNamespaceToDatamodel(modelDTO, model, modelResource);
 
+        modelDTO.getLinks().forEach(linkDTO -> {
+            var blankNode = model.createResource();
+            blankNode.addProperty(DCTerms.title, linkDTO.getName());
+            MapperUtils.addOptionalStringProperty(blankNode, DCTerms.description, linkDTO.getDescription());
+            blankNode.addProperty(FOAF.homepage, linkDTO.getUri());
+            modelResource.addProperty(RDFS.seeAlso, blankNode);
+        });
+
         modelDTO.getTerminologies().forEach(terminology -> MapperUtils.addOptionalUriProperty(modelResource, DCTerms.requires, terminology));
 
         if(modelType.equals(ModelType.PROFILE)) {
@@ -129,7 +138,6 @@ public class ModelMapper {
             }
         });
 
-
         modelResource.removeAll(DCTerms.contributor);
         addOrgsToModel(dataModelDTO, modelResource);
 
@@ -152,6 +160,16 @@ public class ModelMapper {
             removeFromIterator(modelResource.listProperties(DCTerms.requires), val -> val.startsWith(ModelConstants.CODELIST_NAMESPACE));
             dataModelDTO.getCodeLists().forEach(codeList -> MapperUtils.addOptionalUriProperty(modelResource, DCTerms.requires, codeList));
         }
+
+        modelResource.removeAll(RDFS.seeAlso);
+        dataModelDTO.getLinks().forEach(linkDTO -> {
+            var blankNode = model.createResource();
+            blankNode.addProperty(DCTerms.title, linkDTO.getName());
+            MapperUtils.addOptionalStringProperty(blankNode, DCTerms.description, linkDTO.getDescription());
+            blankNode.addProperty(FOAF.homepage, linkDTO.getUri());
+            modelResource.addProperty(RDFS.seeAlso, blankNode);
+        });
+
 
         MapperUtils.addUpdateMetadata(modelResource, user);
         return model;
@@ -241,6 +259,17 @@ public class ModelMapper {
 
         datamodelDTO.setContact(MapperUtils.propertyToString(modelResource, Iow.contact));
         datamodelDTO.setDocumentation(MapperUtils.localizedPropertyToMap(modelResource, Iow.documentation));
+
+        var links = modelResource.listProperties(RDFS.seeAlso).toSet().stream().map(statement -> {
+            var linkRes = statement.getResource();
+            var linkDTO = new LinkDTO();
+            linkDTO.setName(MapperUtils.propertyToString(linkRes, DCTerms.title));
+            linkDTO.setDescription(MapperUtils.propertyToString(linkRes, DCTerms.description));
+            linkDTO.setUri(MapperUtils.propertyToString(linkRes, FOAF.homepage));
+            return linkDTO;
+        }).collect(Collectors.toSet());
+        datamodelDTO.setLinks(links);
+
         return datamodelDTO;
     }
 

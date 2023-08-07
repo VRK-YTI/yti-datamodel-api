@@ -111,6 +111,12 @@ class ModelMapperTest {
         externalDTO.setPrefix("ext");
         dto.setExternalNamespaces(Set.of(externalDTO));
 
+        var linkDTO = new LinkDTO();
+        linkDTO.setName("new link");
+        linkDTO.setUri("https://example.com");
+        linkDTO.setDescription("link description");
+        dto.setLinks(Set.of(linkDTO));
+
         Model model = mapper.mapToJenaModel(dto, modelType, mockUser);
 
         Resource modelResource = model.getResource("http://uri.suomi.fi/datamodel/ns/test");
@@ -163,6 +169,12 @@ class ModelMapperTest {
                 """, MapperUtils.localizedPropertyToMap(modelResource, Iow.documentation).get("fi"));
 
         assertEquals("test@localhost", MapperUtils.propertyToString(modelResource, Iow.contact));
+
+        var linkResource = modelResource.getProperty(RDFS.seeAlso);
+        var linkObject = linkResource.getResource();
+        assertEquals("new link", MapperUtils.propertyToString(linkObject, DCTerms.title));
+        assertEquals("link description", MapperUtils.propertyToString(linkObject, DCTerms.description));
+        assertEquals("https://example.com", MapperUtils.propertyToString(linkObject, FOAF.homepage));
     }
 
     @Test
@@ -203,6 +215,12 @@ class ModelMapperTest {
 
         dto.setExternalNamespaces(Set.of(externalDTO));
 
+        var linkDTO = new LinkDTO();
+        linkDTO.setName("new link");
+        linkDTO.setUri("https://test.com");
+        linkDTO.setDescription("new link description");
+        dto.setLinks(Set.of(linkDTO));
+
         //unchanged values
         Resource modelResource = m.getResource("http://uri.suomi.fi/datamodel/ns/test");
         assertEquals(1, modelResource.listProperties(RDFS.label).toList().size());
@@ -225,6 +243,12 @@ class ModelMapperTest {
         assertEquals("""
                 hello
                 test""", MapperUtils.localizedPropertyToMap(modelResource, Iow.documentation).get("fi"));
+
+        var linkResource = modelResource.getProperty(RDFS.seeAlso);
+        var linkObject = linkResource.getResource();
+        assertEquals("link title", MapperUtils.propertyToString(linkObject, DCTerms.title));
+        assertEquals("link description", MapperUtils.propertyToString(linkObject, DCTerms.description));
+        assertEquals("https://example.com", MapperUtils.propertyToString(linkObject, FOAF.homepage));
 
         Model model = mapper.mapToUpdateJenaModel("test", dto, m, mockUser);
 
@@ -256,6 +280,12 @@ class ModelMapperTest {
                 hello
                 
                 new test""", MapperUtils.localizedPropertyToMap(modelResource, Iow.documentation).get("fi"));
+
+        linkResource = modelResource.getProperty(RDFS.seeAlso);
+        linkObject = linkResource.getResource();
+        assertEquals("new link", MapperUtils.propertyToString(linkObject, DCTerms.title));
+        assertEquals("new link description", MapperUtils.propertyToString(linkObject, DCTerms.description));
+        assertEquals("https://test.com", MapperUtils.propertyToString(linkObject, FOAF.homepage));
     }
 
     @Test
@@ -322,6 +352,12 @@ class ModelMapperTest {
         assertEquals("""
                 hello
                 test""", result.getDocumentation().get("fi"));
+
+        assertEquals(1, result.getLinks().size());
+        var linkDTO = result.getLinks().stream().findFirst().orElseThrow();
+        assertEquals("link title", linkDTO.getName());
+        assertEquals("link description", linkDTO.getDescription());
+        assertEquals("https://example.com", linkDTO.getUri());
     }
 
     @Test

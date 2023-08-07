@@ -112,4 +112,12 @@ public abstract class BaseValidator implements Annotation{
             addConstraintViolation(context, ValidationConstants.MSG_OVER_CHARACTER_LIMIT
                     + ValidationConstants.TEXT_FIELD_MAX_LENGTH, property);
         }
-    }}
+    }
+
+    public void checkNull(ConstraintValidatorContext context, String value, String property) {
+        if(value == null){
+            addConstraintViolation(context, ValidationConstants.MSG_VALUE_MISSING, property);
+        }
+    }
+}
+
