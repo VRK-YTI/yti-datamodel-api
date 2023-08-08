@@ -58,17 +58,29 @@ public class ResourceController {
         return ResponseEntity.created(uri).build();
     }
 
-    @Operation(summary = "Add a property shape to a profile")
+    @Operation(summary = "Add a attribute restriction to a profile")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "Property shape added to profile successfully"),
+            @ApiResponse(responseCode = "201", description = "Attribute restriction added to profile successfully"),
             @ApiResponse(responseCode = "400", description = "Invalid data supplied or resource with given identifier already exists", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ApiError.class))}),
             @ApiResponse(responseCode = "401", description = "Current user does not have rights for this model"),
     })
-    @ApiResponse(responseCode = "201", description = "Property shape added to profile successfully")
-    @PostMapping(value = "/profile/{prefix}", consumes = APPLICATION_JSON_VALUE)
-    public ResponseEntity<String> createPropertyShape(@PathVariable @Parameter(description = "Data model prefix") String prefix,
-                                                      @ValidPropertyShape @RequestBody PropertyShapeDTO dto) throws URISyntaxException {
-        var uri = resourceService.create(prefix, dto, null, true);
+    @PostMapping(value = "/profile/{prefix}/attribute", consumes = APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> createAttributeRestriction(@PathVariable @Parameter(description = "Data model prefix") String prefix,
+                                                      @ValidPropertyShape(resourceType = ResourceType.ATTRIBUTE) @RequestBody AttributeRestriction dto) throws URISyntaxException {
+        var uri = resourceService.create(prefix, dto, ResourceType.ATTRIBUTE, true);
+        return ResponseEntity.created(uri).build();
+    }
+
+    @Operation(summary = "Add a association restriction to a profile")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Association restriction added to profile successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid data supplied or resource with given identifier already exists", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ApiError.class))}),
+            @ApiResponse(responseCode = "401", description = "Current user does not have rights for this model"),
+    })
+    @PostMapping(value = "/profile/{prefix}/association", consumes = APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> createAssociationRestriction(@PathVariable @Parameter(description = "Data model prefix") String prefix,
+                                                      @ValidPropertyShape(resourceType = ResourceType.ASSOCIATION) @RequestBody AssociationRestriction dto) throws URISyntaxException {
+        var uri = resourceService.create(prefix, dto, ResourceType.ASSOCIATION, true);
         return ResponseEntity.created(uri).build();
     }
 
@@ -102,17 +114,32 @@ public class ResourceController {
         return ResponseEntity.noContent().build();
     }
 
-    @Operation(summary = "Update a property shape in a profile")
+    @Operation(summary = "Update a attribute restriction in a profile")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Property shape updated to profile successfully"),
             @ApiResponse(responseCode = "400", description = "Invalid data supplied", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ApiError.class))}),
             @ApiResponse(responseCode = "401", description = "Current user does not have rights for this model"),
             @ApiResponse(responseCode = "404", description = "Property shape not found", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ApiError.class))})
     })
-    @PutMapping(value = "/profile/{prefix}/{propertyShapeIdentifier}", consumes = APPLICATION_JSON_VALUE)
-    public ResponseEntity<Void> updatePropertyShape(@PathVariable @Parameter(description = "Data model prefix") String prefix,
+    @PutMapping(value = "/profile/{prefix}/attribute/{propertyShapeIdentifier}", consumes = APPLICATION_JSON_VALUE)
+    public ResponseEntity<Void> updateAttributeRestriction(@PathVariable @Parameter(description = "Data model prefix") String prefix,
                                                     @PathVariable @Parameter(description = "Property shape identifier") String propertyShapeIdentifier,
-                                    @RequestBody @ValidPropertyShape(updateProperty = true) PropertyShapeDTO dto){
+                                    @RequestBody @ValidPropertyShape(resourceType = ResourceType.ATTRIBUTE, updateProperty = true) AttributeRestriction dto){
+        resourceService.update(prefix, propertyShapeIdentifier, dto);
+        return ResponseEntity.noContent().build();
+    }
+
+    @Operation(summary = "Update a association restriction in a profile")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Association restriction updated to profile successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid data supplied", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ApiError.class))}),
+            @ApiResponse(responseCode = "401", description = "Current user does not have rights for this model"),
+            @ApiResponse(responseCode = "404", description = "Association restriction not found", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ApiError.class))})
+    })
+    @PutMapping(value = "/profile/{prefix}/{propertyShapeIdentifier}", consumes = APPLICATION_JSON_VALUE)
+    public ResponseEntity<Void> updateAssociationRestriction(@PathVariable @Parameter(description = "Data model prefix") String prefix,
+                                                    @PathVariable @Parameter(description = "Property shape identifier") String propertyShapeIdentifier,
+                                                    @RequestBody @ValidPropertyShape(resourceType = ResourceType.ASSOCIATION, updateProperty = true) AssociationRestriction dto){
         resourceService.update(prefix, propertyShapeIdentifier, dto);
         return ResponseEntity.noContent().build();
     }
@@ -124,7 +151,7 @@ public class ResourceController {
             @ApiResponse(responseCode = "401", description = "Current user does not have rights for this model"),
             @ApiResponse(responseCode = "404", description = "Property shape not found", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ApiError.class))})
     })
-    @PostMapping(value ="/profile/{prefix}/{propertyShapeIdentifier}")
+    @PostMapping(value ="/profile/{prefix}/{propertyShapeIdentifier}/copy")
     public ResponseEntity<String> copyPropertyShape(@PathVariable @Parameter(description = "Data model prefix") String prefix,
                                                     @PathVariable @Parameter(description = "Property shape identifier") String propertyShapeIdentifier,
                                                     @RequestParam @Parameter(description = "Data model property shape will be copied to") String targetPrefix,

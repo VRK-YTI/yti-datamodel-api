@@ -1,9 +1,6 @@
 package fi.vm.yti.datamodel.api.v2.endpoint;
 
-import fi.vm.yti.datamodel.api.v2.dto.PropertyShapeDTO;
-import fi.vm.yti.datamodel.api.v2.dto.ResourceDTO;
-import fi.vm.yti.datamodel.api.v2.dto.ResourceType;
-import fi.vm.yti.datamodel.api.v2.dto.Status;
+import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.repository.ImportsRepository;
 import fi.vm.yti.datamodel.api.v2.service.ResourceService;
 import fi.vm.yti.datamodel.api.v2.validator.ExceptionHandlerAdvice;
@@ -212,26 +209,27 @@ class ResourceControllerTest {
 
     @Test
     void shouldValidateAndCreatePropertyShape() throws Exception {
-        var dto = createPropertyShapeDTO();
+        var dto = createAttributeRestriction();
 
         when(resourceService.checkIfResourceIsOneOfTypes(eq("http://uri.suomi.fi/datamodel/ns/int/FakeClass"), anyList(),
                 anyBoolean())).thenReturn(true);
 
         this.mvc
-                .perform(post("/v2/resource/profile/test")
+                .perform(post("/v2/resource/profile/test/attribute")
                         .contentType("application/json")
                         .content(EndpointUtils.convertObjectToJsonString(dto)))
+                .andDo(print())
                 .andExpect(status().isCreated());
 
-        verify(resourceService, times(2)).checkIfResourceIsOneOfTypes(anyString(), anyList(), anyBoolean());
-        verify(resourceService).create(anyString(), any(PropertyShapeDTO.class), eq(null), eq(true));
+        verify(resourceService).checkIfResourceIsOneOfTypes(anyString(), anyList(), anyBoolean());
+        verify(resourceService).create(anyString(), any(PropertyShapeDTO.class), eq(ResourceType.ATTRIBUTE), eq(true));
         verifyNoMoreInteractions(resourceService);
     }
 
     @Test
     void shouldCopy() throws Exception {
             this.mvc
-                    .perform(post("/v2/resource/profile/test/PropertyShape")
+                    .perform(post("/v2/resource/profile/test/PropertyShape/copy")
                             .contentType("application/json")
                             .param("targetPrefix", "newtest")
                             .param("newIdentifier", "newid"))
@@ -241,10 +239,10 @@ class ResourceControllerTest {
     }
 
     @ParameterizedTest
-    @MethodSource("provideCreatePropertyShapeDTOInvalidData")
-    void shouldInvalidatePropertyShape(PropertyShapeDTO dto) throws Exception {
+    @MethodSource("provideCreateAttributeRestrictionInvalidData")
+    void shouldInvalidateAttributeRestriction(AttributeRestriction dto) throws Exception {
         this.mvc
-                .perform(post("/v2/resource/profile/test")
+                .perform(post("/v2/resource/profile/test/attribute")
                         .contentType("application/json")
                         .content(EndpointUtils.convertObjectToJsonString(dto)))
                 .andExpect(status().isBadRequest());
@@ -272,31 +270,31 @@ class ResourceControllerTest {
     }
 
 
-    private static Stream<Arguments> provideCreatePropertyShapeDTOInvalidData() {
-        var args = new ArrayList<PropertyShapeDTO>();
+    private static Stream<Arguments> provideCreateAttributeRestrictionInvalidData() {
+        var args = new ArrayList<AttributeRestriction>();
         var length = ValidationConstants.TEXT_FIELD_MAX_LENGTH;
 
-        var dto = createPropertyShapeDTO();
+        var dto = createAttributeRestriction();
         dto.setPath("http://uri.suomi.fi/invalid");
         args.add(dto);
 
-        dto = createPropertyShapeDTO();
+        dto = createAttributeRestriction();
         dto.setDataType("invalid");
         args.add(dto);
 
-        dto = createPropertyShapeDTO();
+        dto = createAttributeRestriction();
         dto.setDefaultValue(RandomStringUtils.random(length + 1));
         args.add(dto);
 
-        dto = createPropertyShapeDTO();
+        dto = createAttributeRestriction();
         dto.setHasValue(RandomStringUtils.random(length + 1));
         args.add(dto);
 
-        dto = createPropertyShapeDTO();
+        dto = createAttributeRestriction();
         dto.setAllowedValues(List.of(RandomStringUtils.random(length + 1)));
         args.add(dto);
 
-        dto = createPropertyShapeDTO();
+        dto = createAttributeRestriction();
         dto.setCodeList("http://uri.suomi.fi/invalid");
         args.add(dto);
 
@@ -333,11 +331,20 @@ class ResourceControllerTest {
         return dto;
     }
 
-    private static PropertyShapeDTO createPropertyShapeDTO() {
-        var dto = new PropertyShapeDTO();
+    private static AttributeRestriction createAttributeRestriction() {
+        var dto = new AttributeRestriction();
         dto.setLabel(Map.of("fi", "test label"));
         dto.setIdentifier("Identifier");
-        dto.setType(ResourceType.ASSOCIATION);
+        dto.setStatus(Status.DRAFT);
+        dto.setSubject("sanastot.suomi.fi/notrealurl");
+        dto.setPath("http://uri.suomi.fi/datamodel/ns/int/FakeClass");
+        return dto;
+    }
+
+    private static AssociationRestriction createAssociationRestriction() {
+        var dto = new AssociationRestriction();
+        dto.setLabel(Map.of("fi", "test label"));
+        dto.setIdentifier("Identifier");
         dto.setStatus(Status.DRAFT);
         dto.setSubject("sanastot.suomi.fi/notrealurl");
         dto.setPath("http://uri.suomi.fi/datamodel/ns/int/FakeClass");

@@ -221,13 +221,13 @@ class NodeShapeMapperTest {
     void testMapDeactivatedPropertyShape() {
         var m = MapperTestUtils.getModelFromFile("/models/test_datamodel_profile_with_resources.ttl");
 
-        var propertyShape1 = m.getResource("http://uri.suomi.fi/datamodel/ns/test/TestPropertyShape");
+        var propertyShape1 = m.getResource("http://uri.suomi.fi/datamodel/ns/test/TestAttributeRestriction");
         var propertyShape2 = m.getResource("http://uri.suomi.fi/datamodel/ns/test/DeactivatedPropertyShape");
 
         assertFalse(propertyShape1.hasProperty(SH.deactivated));
         assertTrue(propertyShape2.getProperty(SH.deactivated).getObject().asLiteral().getBoolean());
 
-        ClassMapper.toggleAndMapDeactivatedProperty(m, "http://uri.suomi.fi/datamodel/ns/test/TestPropertyShape");
+        ClassMapper.toggleAndMapDeactivatedProperty(m, "http://uri.suomi.fi/datamodel/ns/test/TestAttributeRestriction");
         ClassMapper.toggleAndMapDeactivatedProperty(m, "http://uri.suomi.fi/datamodel/ns/test/DeactivatedPropertyShape");
 
         assertTrue(propertyShape1.getProperty(SH.deactivated).getObject().asLiteral().getBoolean());

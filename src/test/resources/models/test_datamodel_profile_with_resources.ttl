@@ -49,7 +49,7 @@ test:TestClass  rdf:type     sh:NodeShape ;
         sh:property          <http://uri.suomi.fi/datamodel/ns/test/TestPropertyShape> , <http://uri.suomi.fi/datamodel/ns/test/DeactivatedPropertyShape> ;
         sh:targetClass       <http://uri.suomi.fi/datamodel/ns/target/Class> .
 
-test:TestPropertyShape  rdf:type  sh:PropertyShape ;
+test:TestAttributeRestriction  rdf:type  sh:PropertyShape ;
         rdf:type             owl:DatatypeProperty ;
         rdfs:isDefinedBy     <http://uri.suomi.fi/datamodel/ns/test> ;
         dcterms:subject      <http://uri.suomi.fi/terminology/test/test1> ;
@@ -70,6 +70,20 @@ test:TestPropertyShape  rdf:type  sh:PropertyShape ;
         sh:maxInclusive      7 ;
         sh:minExclusive      6 ;
         sh:maxExclusive      8 ;
+        iow:codeList         <http://uri.suomi.fi/codelist/Test> ;
+        sh:path              <http://uri.suomi.fi/datamodel/ns/ytm/some-attribute> .
+
+test:TestAssociationRestriction  rdf:type  sh:PropertyShape ;
+        rdf:type             owl:ObjectProperty ;
+        rdfs:isDefinedBy     <http://uri.suomi.fi/datamodel/ns/test> ;
+        dcterms:subject      <http://uri.suomi.fi/terminology/test/test1> ;
+        dcterms:identifier   "TestPropertyShape"^^xsd:NCName ;
+        dcterms:created      "2023-02-03T11:46:36.404Z"^^xsd:dateTime ;
+        dcterms:modified     "2023-02-03T11:46:36.404Z"^^xsd:dateTime ;
+        rdfs:label           "test property shape"@fi ;
+        owl:versionInfo      "DRAFT" ;
+        sh:maxCount          10 ;
+        sh:minCount          1 ;
         iow:codeList         <http://uri.suomi.fi/codelist/Test> ;
         sh:path              <http://uri.suomi.fi/datamodel/ns/ytm/some-attribute> ;
         sh:class             <http://uri.suomi.fi/datamodel/ns/ytm/some-class> .
