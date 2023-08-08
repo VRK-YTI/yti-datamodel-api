@@ -12,13 +12,13 @@ import fi.vm.yti.datamodel.api.v2.repository.ImportsRepository;
 import fi.vm.yti.security.AuthenticatedUserProvider;
 import org.apache.jena.arq.querybuilder.AskBuilder;
 import org.apache.jena.arq.querybuilder.ConstructBuilder;
-import org.apache.jena.atlas.web.HttpException;
 import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.rdf.model.*;
 import org.apache.jena.vocabulary.RDF;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.Nonnull;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
@@ -88,9 +88,10 @@ public class ResourceService {
         return ResourceMapper.mapToExternalResource(resource);
     }
 
-    public URI create(String prefix, BaseDTO dto, ResourceType resourceType, boolean applicationProfile) throws URISyntaxException {
+    public URI create(String prefix, BaseDTO dto, @Nonnull ResourceType resourceType, boolean applicationProfile) throws URISyntaxException {
         var graphUri = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
-        if (coreRepository.resourceExistsInGraph(graphUri, graphUri + prefix + ModelConstants.RESOURCE_SEPARATOR + dto.getIdentifier())){
+        var resourceUri = graphUri + ModelConstants.RESOURCE_SEPARATOR + dto.getIdentifier();
+        if (coreRepository.resourceExistsInGraph(graphUri, resourceUri)){
             throw new MappingError("Already exists");
         }
         var model = coreRepository.fetch(graphUri);
@@ -99,9 +100,8 @@ public class ResourceService {
 
         terminologyService.resolveConcept(dto.getSubject());
 
-        String resourceUri;
         if(applicationProfile){
-            resourceUri = ResourceMapper.mapToPropertyShapeResource(graphUri, model, (PropertyShapeDTO) dto, userProvider.getUser());
+            resourceUri = ResourceMapper.mapToPropertyShapeResource(graphUri, model, (PropertyShapeDTO) dto, resourceType, userProvider.getUser());
         }else {
             resourceUri = ResourceMapper.mapToResource(graphUri, model, (ResourceDTO) dto, resourceType, userProvider.getUser());
         }
@@ -207,14 +207,11 @@ public class ResourceService {
         var askBuilder  =new AskBuilder()
                 .addWhere(NodeFactory.createURI(resourceUri), RDF.type, "?type")
                 .addValueVar("?type", types.toArray());
-        try{
-            if(checkImports){
-                return importsRepository.queryAsk(askBuilder.build());
-            }else {
-                return coreRepository.queryAsk(askBuilder.build());
-            }
-        }catch(HttpException ex){
-            throw new JenaQueryException();
+
+        if(checkImports){
+            return importsRepository.queryAsk(askBuilder.build());
+        }else {
+            return coreRepository.queryAsk(askBuilder.build());
         }
     }
 

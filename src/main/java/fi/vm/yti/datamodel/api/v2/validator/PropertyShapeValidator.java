@@ -1,8 +1,6 @@
 package fi.vm.yti.datamodel.api.v2.validator;
 
-import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
-import fi.vm.yti.datamodel.api.v2.dto.PropertyShapeDTO;
-import fi.vm.yti.datamodel.api.v2.dto.ResourceType;
+import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.service.ResourceService;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
@@ -16,6 +14,8 @@ public class PropertyShapeValidator extends BaseValidator implements ConstraintV
 
     boolean updateProperty;
 
+    ResourceType resourceType;
+
     @Autowired
     private ResourceService resourceService;
 
@@ -23,6 +23,7 @@ public class PropertyShapeValidator extends BaseValidator implements ConstraintV
     @Override
     public void initialize(ValidPropertyShape constraintAnnotation) {
         this.updateProperty = constraintAnnotation.updateProperty();
+        this.resourceType = constraintAnnotation.resourceType();
     }
 
     @Override
@@ -34,25 +35,21 @@ public class PropertyShapeValidator extends BaseValidator implements ConstraintV
         checkStatus(context, value.getStatus());
         checkNote(context, value);
         checkPrefixOrIdentifier(context, value.getIdentifier(), "identifier", ValidationConstants.RESOURCE_IDENTIFIER_MAX_LENGTH, updateProperty);
-        checkType(context, value);
         checkPath(context, value);
-        checkClassType(context, value);
-        checkDataType(context, value);
         checkCodeList(context, value);
-        checkCommonTextArea(context, value.getDefaultValue(), "defaultValue");
-        checkCommonTextArea(context, value.getHasValue(), "hasValue");
-        if (value.getAllowedValues() != null) {
-            value.getAllowedValues().forEach(v -> checkCommonTextArea(context, v, "allowedValues"));
+        if(resourceType.equals(ResourceType.ASSOCIATION)){
+            checkClassType(context, (AssociationRestriction) value);
+        }else {
+            var dto = (AttributeRestriction) value;
+            checkDataType(context, (AttributeRestriction) value);
+            checkCommonTextArea(context, dto.getDefaultValue(), "defaultValue");
+            checkCommonTextArea(context, dto.getHasValue(), "hasValue");
+            if (dto.getAllowedValues() != null) {
+                dto.getAllowedValues().forEach(v -> checkCommonTextArea(context, v, "allowedValues"));
+            }
         }
-        return !isConstraintViolationAdded();
-    }
 
-    private void checkType(ConstraintValidatorContext context, PropertyShapeDTO resourceDTO){
-        if(!updateProperty && resourceDTO.getType() == null){
-            addConstraintViolation(context, ValidationConstants.MSG_VALUE_MISSING, "type");
-        }else if (updateProperty && resourceDTO.getType() != null){
-            addConstraintViolation(context, ValidationConstants.MSG_NOT_ALLOWED_UPDATE, "type");
-        }
+        return !isConstraintViolationAdded();
     }
 
     private void checkPath(ConstraintValidatorContext context, PropertyShapeDTO dto) {
@@ -65,12 +62,9 @@ public class PropertyShapeValidator extends BaseValidator implements ConstraintV
         }
     }
 
-    private void checkClassType(ConstraintValidatorContext context, PropertyShapeDTO dto) {
+    private void checkClassType(ConstraintValidatorContext context, AssociationRestriction dto) {
         var classType = dto.getClassType();
-        if (classType != null && !dto.getType().equals(ResourceType.ASSOCIATION)) {
-            // only allowed for associations
-            addConstraintViolation(context, "sh-class-not-allowed", "classType");
-        } else if (classType != null) {
+        if (classType != null) {
             var checkImports = !classType.startsWith(ModelConstants.SUOMI_FI_NAMESPACE);
             if(!resourceService.checkIfResourceIsOneOfTypes(classType, List.of(RDFS.Class, OWL.Class), checkImports)){
                 addConstraintViolation(context, "not-class-or-doesnt-exist", "path");
@@ -78,7 +72,7 @@ public class PropertyShapeValidator extends BaseValidator implements ConstraintV
         }
     }
 
-    private void checkDataType(ConstraintValidatorContext context, PropertyShapeDTO dto) {
+    private void checkDataType(ConstraintValidatorContext context, AttributeRestriction dto) {
         if (dto.getDataType() != null && !ModelConstants.SUPPORTED_DATA_TYPES.contains(dto.getDataType())) {
             addConstraintViolation(context, "unsupported-datatype", "dataType");
         }

@@ -55,27 +55,22 @@ public class ResourceMapper {
         return resourceResource.getURI();
     }
 
-    public static String mapToPropertyShapeResource(String graphUri, Model model, PropertyShapeDTO dto, YtiUser user) {
+    public static String mapToPropertyShapeResource(String graphUri, Model model, PropertyShapeDTO dto, ResourceType resourceType, YtiUser user) {
         var resource = createAndMapCommonInfo(graphUri, model, dto);
 
         resource.addProperty(RDF.type, SH.PropertyShape);
-        resource.addProperty(RDF.type, dto.getType().equals(ResourceType.ASSOCIATION)
+        resource.addProperty(RDF.type, resourceType.equals(ResourceType.ASSOCIATION)
                 ? OWL.ObjectProperty
                 : OWL.DatatypeProperty);
         MapperUtils.addOptionalUriProperty(resource, SH.path, dto.getPath());
-        MapperUtils.addOptionalUriProperty(resource, SH.class_, dto.getClassType());
-        dto.getAllowedValues().forEach(value -> resource.addProperty(SH.in, value));
-        MapperUtils.addOptionalStringProperty(resource, SH.defaultValue, dto.getDefaultValue());
-        MapperUtils.addOptionalStringProperty(resource, SH.hasValue, dto.getHasValue());
-        MapperUtils.addOptionalStringProperty(resource, SH.datatype, dto.getDataType());
         MapperUtils.addLiteral(resource, SH.minCount, dto.getMinCount());
         MapperUtils.addLiteral(resource, SH.maxCount, dto.getMaxCount());
-        MapperUtils.addLiteral(resource, SH.minLength, dto.getMinLength());
-        MapperUtils.addLiteral(resource, SH.maxLength, dto.getMaxLength());
-        MapperUtils.addLiteral(resource, SH.minInclusive, dto.getMinInclusive());
-        MapperUtils.addLiteral(resource, SH.maxInclusive, dto.getMaxInclusive());
-        MapperUtils.addLiteral(resource, SH.minExclusive, dto.getMinExclusive());
-        MapperUtils.addLiteral(resource, SH.maxExclusive, dto.getMaxExclusive());
+
+        if(resourceType.equals(ResourceType.ASSOCIATION)){
+            addAssociationRestrictionProperties(resource, (AssociationRestriction) dto);
+        }else{
+            addAttributeRestrictionProperties(resource, (AttributeRestriction) dto);
+        }
 
         MapperUtils.addOptionalUriProperty(resource, Iow.codeList, dto.getCodeList());
 
@@ -84,13 +79,29 @@ public class ResourceMapper {
         return resource.getURI();
     }
 
+    public static void addAttributeRestrictionProperties(Resource resource, AttributeRestriction dto) {
+        dto.getAllowedValues().forEach(value -> resource.addProperty(SH.in, value));
+        MapperUtils.addOptionalStringProperty(resource, SH.defaultValue, dto.getDefaultValue());
+        MapperUtils.addOptionalStringProperty(resource, SH.hasValue, dto.getHasValue());
+        MapperUtils.addOptionalStringProperty(resource, SH.datatype, dto.getDataType());
+        MapperUtils.addLiteral(resource, SH.minLength, dto.getMinLength());
+        MapperUtils.addLiteral(resource, SH.maxLength, dto.getMaxLength());
+        MapperUtils.addLiteral(resource, SH.minInclusive, dto.getMinInclusive());
+        MapperUtils.addLiteral(resource, SH.maxInclusive, dto.getMaxInclusive());
+        MapperUtils.addLiteral(resource, SH.minExclusive, dto.getMinExclusive());
+        MapperUtils.addLiteral(resource, SH.maxExclusive, dto.getMaxExclusive());
+    }
+
+    public static void addAssociationRestrictionProperties(Resource resource, AssociationRestriction dto) {
+        MapperUtils.addOptionalUriProperty(resource, SH.class_, dto.getClassType());
+    }
+
     public static void mapToUpdateResource(String graphUri, Model model, String resourceIdentifier, ResourceDTO dto, YtiUser user) {
         var modelResource = model.getResource(graphUri);
         var resource = model.getResource(graphUri + ModelConstants.RESOURCE_SEPARATOR + resourceIdentifier);
 
         updateAndMapCommonInfo(model, resource, modelResource, dto);
 
-        var type = resource.getProperty(RDF.type).getResource();
         var owlImports = MapperUtils.arrayPropertyToSet(modelResource, OWL.imports);
         var dcTermsRequires = MapperUtils.arrayPropertyToSet(modelResource, DCTerms.requires);
 
@@ -104,7 +115,7 @@ public class ResourceMapper {
         if (getSubResourceOf != null){
             resource.removeAll(RDFS.subPropertyOf);
             if(getSubResourceOf.isEmpty()){
-                if(type.equals(OWL.ObjectProperty)){
+                if(MapperUtils.hasType(resource, OWL.ObjectProperty)){
                     resource.addProperty(RDFS.subPropertyOf, OWL2.topObjectProperty); //Add OWL:TopObjectProperty if nothing else is specified
                 }else{
                     resource.addProperty(RDFS.subPropertyOf, OWL2.topDataProperty); //Add OWL:TopDataProperty if nothing else is specified
@@ -127,7 +138,21 @@ public class ResourceMapper {
         updateAndMapCommonInfo(model, resource, modelResource, dto);
 
         MapperUtils.updateUriProperty(resource, SH.path, dto.getPath());
-        MapperUtils.updateUriProperty(resource, SH.class_, dto.getClassType());
+        MapperUtils.updateLiteral(resource, SH.minCount, dto.getMinCount());
+        MapperUtils.updateLiteral(resource, SH.maxCount, dto.getMaxCount());
+
+        if(MapperUtils.hasType(resource, OWL.ObjectProperty)) {
+            updateAssociationRestrictionProperties(resource, (AssociationRestriction) dto);
+        }else{
+            updateAttributeRestrictionProperties(resource, (AttributeRestriction) dto);
+        }
+
+        MapperUtils.updateUriProperty(resource, Iow.codeList, dto.getCodeList());
+
+        MapperUtils.addUpdateMetadata(resource, user);
+    }
+
+    public static void updateAttributeRestrictionProperties(Resource resource, AttributeRestriction dto) {
         if (dto.getAllowedValues() != null) {
             resource.removeAll(SH.in);
             dto.getAllowedValues().forEach(value -> resource.addProperty(SH.in, value));
@@ -135,18 +160,16 @@ public class ResourceMapper {
         MapperUtils.updateStringProperty(resource, SH.defaultValue, dto.getDefaultValue());
         MapperUtils.updateStringProperty(resource, SH.hasValue, dto.getHasValue());
         MapperUtils.updateStringProperty(resource, SH.datatype, dto.getDataType());
-        MapperUtils.updateLiteral(resource, SH.minCount, dto.getMinCount());
-        MapperUtils.updateLiteral(resource, SH.maxCount, dto.getMaxCount());
         MapperUtils.updateLiteral(resource, SH.minLength, dto.getMinLength());
         MapperUtils.updateLiteral(resource, SH.maxLength, dto.getMaxLength());
         MapperUtils.updateLiteral(resource, SH.minInclusive, dto.getMinInclusive());
         MapperUtils.updateLiteral(resource, SH.maxInclusive, dto.getMaxInclusive());
         MapperUtils.updateLiteral(resource, SH.minExclusive, dto.getMinExclusive());
         MapperUtils.updateLiteral(resource, SH.maxExclusive, dto.getMaxExclusive());
+    }
 
-        MapperUtils.updateUriProperty(resource, Iow.codeList, dto.getCodeList());
-
-        MapperUtils.addUpdateMetadata(resource, user);
+    public static void updateAssociationRestrictionProperties(Resource resource, AssociationRestriction dto){
+        MapperUtils.updateUriProperty(resource, SH.class_, dto.getClassType());
     }
 
     public static void mapToCopyToLocalPropertyShape(String graphUri, Model model, String resourceIdentifier, Model targetModel, String targetGraph, String targetIdentifier, YtiUser user){
@@ -234,10 +257,8 @@ public class ResourceMapper {
             dataModelInfo.setStatus(dataModel.getStatus());
             dataModelInfo.setLabel(dataModel.getLabel());
             dataModelInfo.setGroups(dataModel.getIsPartOf());
-            dataModelInfo.setUri(resource.getIsDefinedBy());
-        } else {
-            dataModelInfo.setUri(resource.getIsDefinedBy());
         }
+        dataModelInfo.setUri(resource.getIsDefinedBy());
         indexResource.setDataModelInfo(dataModelInfo);
 
         if (resource.getSubject() != null) {

@@ -117,12 +117,12 @@ class ResourceServiceTest {
         var model = EndpointUtils.getMockModel(DCAP.DCAP);
         when(coreRepository.fetch(anyString())).thenReturn(model);
 
-        var dto = createPropertyShapeDTO(true, ResourceType.ASSOCIATION);
+        var dto = createAssociationRestriction(true);
         try(var mapper = mockStatic(ResourceMapper.class)) {
-            mapper.when(() -> ResourceMapper.mapToPropertyShapeResource(anyString(), any(Model.class), any(PropertyShapeDTO.class), any(YtiUser.class)))
+            mapper.when(() -> ResourceMapper.mapToPropertyShapeResource(anyString(), any(Model.class), any(PropertyShapeDTO.class), any(ResourceType.class), any(YtiUser.class)))
                     .thenReturn("http://uri.suomi.fi/datamodel/ns/test/Identifier");
             mapper.when(() -> ResourceMapper.mapToIndexResource(any(Model.class), anyString())).thenReturn(new IndexResource());
-            var uri = resourceService.create("test", dto, null, true);
+            var uri = resourceService.create("test", dto, ResourceType.ASSOCIATION, true);
             assertEquals("http://uri.suomi.fi/datamodel/ns/test/Identifier", uri.toString());
         }
 
@@ -161,7 +161,7 @@ class ResourceServiceTest {
         when(coreRepository.fetch(anyString())).thenReturn(EndpointUtils.getMockModel(DCAP.DCAP));
         when(authorizationManager.hasRightToModel(anyString(), any(Model.class))).thenReturn(true);
         when(userProvider.getUser()).thenReturn(EndpointUtils.mockUser);
-        var dto = createPropertyShapeDTO(true, ResourceType.ASSOCIATION);
+        var dto = createAttributeRestriction(true);
         try(var mapper = mockStatic(ResourceMapper.class)) {
             mapper.when(() -> ResourceMapper.mapToIndexResource(any(Model.class), anyString())).thenReturn(new IndexResource());
             resourceService.update("test", "Identifier", dto);
@@ -174,6 +174,7 @@ class ResourceServiceTest {
         verify(coreRepository).put(anyString(), any(Model.class));
         verify(openSearchIndexer).updateResourceToIndex(any(IndexResource.class));
     }
+
 
     @Test
     void delete() {
@@ -284,12 +285,23 @@ class ResourceServiceTest {
         return dto;
     }
 
-    private static PropertyShapeDTO createPropertyShapeDTO(boolean update, ResourceType resourceType) {
-        var dto = new PropertyShapeDTO();
+    private static AttributeRestriction createAttributeRestriction(boolean update) {
+        var dto = new AttributeRestriction();
         dto.setLabel(Map.of("fi", "test label"));
         if(!update) {
             dto.setIdentifier("Identifier");
-            dto.setType(resourceType);
+        }
+        dto.setStatus(Status.DRAFT);
+        dto.setSubject("sanastot.suomi.fi/notrealurl");
+        dto.setPath("http://uri.suomi.fi/datamodel/ns/int/FakeClass");
+        return dto;
+    }
+
+    private static AssociationRestriction createAssociationRestriction(boolean update) {
+        var dto = new AssociationRestriction();
+        dto.setLabel(Map.of("fi", "test label"));
+        if(!update) {
+            dto.setIdentifier("Identifier");
         }
         dto.setStatus(Status.DRAFT);
         dto.setSubject("sanastot.suomi.fi/notrealurl");
@@ -297,5 +309,6 @@ class ResourceServiceTest {
         dto.setClassType("http://uri.suomi.fi/datamodel/ns/int/FakeClass");
         return dto;
     }
+
 
 }

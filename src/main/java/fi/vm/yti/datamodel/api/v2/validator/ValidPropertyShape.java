@@ -1,5 +1,6 @@
 package fi.vm.yti.datamodel.api.v2.validator;
 
+import fi.vm.yti.datamodel.api.v2.dto.ResourceType;
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
 
@@ -24,5 +25,7 @@ public @interface ValidPropertyShape {
     Class<?>[] groups() default {};
 
     boolean updateProperty() default false;
+
+    ResourceType resourceType();
     Class<? extends Payload>[] payload() default {};
 }
