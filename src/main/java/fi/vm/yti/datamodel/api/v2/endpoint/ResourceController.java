@@ -136,7 +136,7 @@ public class ResourceController {
             @ApiResponse(responseCode = "401", description = "Current user does not have rights for this model"),
             @ApiResponse(responseCode = "404", description = "Association restriction not found", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ApiError.class))})
     })
-    @PutMapping(value = "/profile/{prefix}/{propertyShapeIdentifier}", consumes = APPLICATION_JSON_VALUE)
+    @PutMapping(value = "/profile/{prefix}/association/{propertyShapeIdentifier}", consumes = APPLICATION_JSON_VALUE)
     public ResponseEntity<Void> updateAssociationRestriction(@PathVariable @Parameter(description = "Data model prefix") String prefix,
                                                     @PathVariable @Parameter(description = "Property shape identifier") String propertyShapeIdentifier,
                                                     @RequestBody @ValidPropertyShape(resourceType = ResourceType.ASSOCIATION, updateProperty = true) AssociationRestriction dto){
