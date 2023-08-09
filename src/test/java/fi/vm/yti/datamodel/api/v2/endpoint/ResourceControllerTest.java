@@ -295,7 +295,7 @@ class ResourceControllerTest {
         args.add(dto);
 
         dto = createAttributeRestriction();
-        dto.setCodeList("http://uri.suomi.fi/invalid");
+        dto.setCodeLists(List.of("http://uri.suomi.fi/invalid"));
         args.add(dto);
 
         return args.stream().map(Arguments::of);

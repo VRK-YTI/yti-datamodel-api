@@ -69,17 +69,15 @@ public class ResourceMapper {
         if(resourceType.equals(ResourceType.ASSOCIATION)){
             addAssociationRestrictionProperties(resource, (AssociationRestriction) dto);
         }else{
-            addAttributeRestrictionProperties(resource, (AttributeRestriction) dto);
+            addAttributeRestrictionProperties(resource, (AttributeRestriction) dto, model.getResource(graphUri));
         }
-
-        MapperUtils.addOptionalUriProperty(resource, Iow.codeList, dto.getCodeList());
 
         MapperUtils.addCreationMetadata(resource, user);
 
         return resource.getURI();
     }
 
-    public static void addAttributeRestrictionProperties(Resource resource, AttributeRestriction dto) {
+    public static void addAttributeRestrictionProperties(Resource resource, AttributeRestriction dto, Resource modelResource) {
         dto.getAllowedValues().forEach(value -> resource.addProperty(SH.in, value));
         MapperUtils.addOptionalStringProperty(resource, SH.defaultValue, dto.getDefaultValue());
         MapperUtils.addOptionalStringProperty(resource, SH.hasValue, dto.getHasValue());
@@ -90,6 +88,14 @@ public class ResourceMapper {
         MapperUtils.addLiteral(resource, SH.maxInclusive, dto.getMaxInclusive());
         MapperUtils.addLiteral(resource, SH.minExclusive, dto.getMinExclusive());
         MapperUtils.addLiteral(resource, SH.maxExclusive, dto.getMaxExclusive());
+
+        var modelCodeLists = MapperUtils.arrayPropertyToList(modelResource, DCTerms.requires);
+        dto.getCodeLists().forEach(codeList -> {
+            if(!modelCodeLists.contains(codeList)){
+                throw new MappingError("Model does not contain codelist");
+            }
+            MapperUtils.addOptionalUriProperty(resource, Iow.codeList, codeList);
+        });
     }
 
     public static void addAssociationRestrictionProperties(Resource resource, AssociationRestriction dto) {
@@ -144,19 +150,15 @@ public class ResourceMapper {
         if(MapperUtils.hasType(resource, OWL.ObjectProperty)) {
             updateAssociationRestrictionProperties(resource, (AssociationRestriction) dto);
         }else{
-            updateAttributeRestrictionProperties(resource, (AttributeRestriction) dto);
+            updateAttributeRestrictionProperties(resource, (AttributeRestriction) dto, modelResource);
         }
-
-        MapperUtils.updateUriProperty(resource, Iow.codeList, dto.getCodeList());
 
         MapperUtils.addUpdateMetadata(resource, user);
     }
 
-    public static void updateAttributeRestrictionProperties(Resource resource, AttributeRestriction dto) {
-        if (dto.getAllowedValues() != null) {
-            resource.removeAll(SH.in);
-            dto.getAllowedValues().forEach(value -> resource.addProperty(SH.in, value));
-        }
+    public static void updateAttributeRestrictionProperties(Resource resource, AttributeRestriction dto, Resource modelResource) {
+        resource.removeAll(SH.in);
+        dto.getAllowedValues().forEach(value -> resource.addProperty(SH.in, value));
         MapperUtils.updateStringProperty(resource, SH.defaultValue, dto.getDefaultValue());
         MapperUtils.updateStringProperty(resource, SH.hasValue, dto.getHasValue());
         MapperUtils.updateStringProperty(resource, SH.datatype, dto.getDataType());
@@ -166,6 +168,15 @@ public class ResourceMapper {
         MapperUtils.updateLiteral(resource, SH.maxInclusive, dto.getMaxInclusive());
         MapperUtils.updateLiteral(resource, SH.minExclusive, dto.getMinExclusive());
         MapperUtils.updateLiteral(resource, SH.maxExclusive, dto.getMaxExclusive());
+
+        var requires = MapperUtils.arrayPropertyToList(modelResource, DCTerms.requires);
+        resource.removeAll(Iow.codeList);
+        dto.getCodeLists().forEach(codeList -> {
+            if(!requires.contains(codeList)){
+                throw new MappingError("Model does not contain codelist");
+            }
+            MapperUtils.addOptionalUriProperty(resource, Iow.codeList, codeList);
+        });
     }
 
     public static void updateAssociationRestrictionProperties(Resource resource, AssociationRestriction dto){
@@ -382,7 +393,7 @@ public class ResourceMapper {
         dto.setMaxInclusive(MapperUtils.getLiteral(resource, SH.maxInclusive, Integer.class));
         dto.setMinExclusive(MapperUtils.getLiteral(resource, SH.minExclusive, Integer.class));
         dto.setMaxExclusive(MapperUtils.getLiteral(resource, SH.maxExclusive, Integer.class));
-        dto.setCodeList(MapperUtils.propertyToString(resource, Iow.codeList));
+        dto.setCodeList(MapperUtils.arrayPropertyToList(resource, Iow.codeList));
         MapperUtils.mapCreationInfo(dto, resource, userMapper);
 
         return dto;

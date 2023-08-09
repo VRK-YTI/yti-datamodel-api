@@ -14,6 +14,7 @@ public class AttributeRestriction extends PropertyShapeDTO {
     private Integer maxInclusive;
     private Integer minExclusive;
     private Integer maxExclusive;
+    private List<String> codeLists = new ArrayList<>();
 
     public String getDataType() {
         return dataType;
@@ -93,5 +94,13 @@ public class AttributeRestriction extends PropertyShapeDTO {
 
     public void setMaxExclusive(Integer maxExclusive) {
         this.maxExclusive = maxExclusive;
+    }
+
+    public List<String> getCodeLists() {
+        return codeLists;
+    }
+
+    public void setCodeLists(List<String> codeLists) {
+        this.codeLists = codeLists;
     }
 }

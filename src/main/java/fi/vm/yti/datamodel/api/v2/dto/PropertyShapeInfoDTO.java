@@ -20,7 +20,7 @@ public class PropertyShapeInfoDTO extends ResourceInfoBaseDTO {
     private Integer maxInclusive;
     private Integer minExclusive;
     private Integer maxExclusive;
-    private String codeList;
+    private List<String> codeLists = new ArrayList<>();
 
     public ResourceType getType() {
         return type;
@@ -142,11 +142,11 @@ public class PropertyShapeInfoDTO extends ResourceInfoBaseDTO {
         this.maxExclusive = maxExclusive;
     }
 
-    public String getCodeList() {
-        return codeList;
+    public List<String> getCodeLists() {
+        return codeLists;
     }
 
-    public void setCodeList(String codeList) {
-        this.codeList = codeList;
+    public void setCodeList(List<String> codeLists) {
+        this.codeLists = codeLists;
     }
 }

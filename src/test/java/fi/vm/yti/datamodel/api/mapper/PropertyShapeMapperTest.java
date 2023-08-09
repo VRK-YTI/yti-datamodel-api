@@ -40,7 +40,7 @@ class PropertyShapeMapperTest {
         dto.setMaxInclusive(7);
         dto.setMinExclusive(6);
         dto.setMaxExclusive(8);
-        dto.setCodeList("http://uri.suomi.fi/codelist/test");
+        dto.setCodeLists(List.of("http://uri.suomi.fi/codelist/test/testcodelist"));
         ResourceMapper.mapToPropertyShapeResource("http://uri.suomi.fi/datamodel/ns/test", model, dto, ResourceType.ATTRIBUTE, mockUser);
 
         var resource = model.getResource("http://uri.suomi.fi/datamodel/ns/test/ps-1");
@@ -62,7 +62,7 @@ class PropertyShapeMapperTest {
         assertEquals(7, MapperUtils.getLiteral(resource, SH.maxInclusive, Integer.class));
         assertEquals(6, MapperUtils.getLiteral(resource, SH.minExclusive, Integer.class));
         assertEquals(8, MapperUtils.getLiteral(resource, SH.maxExclusive, Integer.class));
-        assertEquals("http://uri.suomi.fi/codelist/test", MapperUtils.propertyToString(resource, Iow.codeList));
+        assertTrue(MapperUtils.arrayPropertyToList(resource, Iow.codeList).contains("http://uri.suomi.fi/codelist/test/testcodelist"));
     }
 
     @Test
@@ -78,7 +78,6 @@ class PropertyShapeMapperTest {
         dto.setMaxCount(10);
         dto.setMinCount(1);
         dto.setClassType("http://uri.suomi.fi/datamodel/ns/test/TestClass");
-        dto.setCodeList("http://uri.suomi.fi/codelist/test");
         ResourceMapper.mapToPropertyShapeResource("http://uri.suomi.fi/datamodel/ns/test", model, dto, ResourceType.ASSOCIATION, mockUser);
 
         var resource = model.getResource("http://uri.suomi.fi/datamodel/ns/test/ps-1");
@@ -90,7 +89,6 @@ class PropertyShapeMapperTest {
         assertEquals(10, MapperUtils.getLiteral(resource, SH.maxCount, Integer.class));
         assertEquals(1, MapperUtils.getLiteral(resource, SH.minCount, Integer.class));
         assertEquals("http://uri.suomi.fi/datamodel/ns/test/TestClass", MapperUtils.propertyToString(resource, SH.class_));
-        assertEquals("http://uri.suomi.fi/codelist/test", MapperUtils.propertyToString(resource, Iow.codeList));
     }
 
 
@@ -117,7 +115,7 @@ class PropertyShapeMapperTest {
         assertEquals(7, dto.getMaxInclusive());
         assertEquals(6, dto.getMinExclusive());
         assertEquals(8, dto.getMaxExclusive());
-        assertEquals("http://uri.suomi.fi/codelist/Test", dto.getCodeList());
+        assertTrue(dto.getCodeLists().contains("http://uri.suomi.fi/codelist/Test"));
         assertEquals("hasValue", dto.getHasValue());
         assertEquals("foo", dto.getDefaultValue());
         assertEquals("xsd:integer", dto.getDataType());
@@ -150,7 +148,6 @@ class PropertyShapeMapperTest {
         assertNull(dto.getDataType());
         assertEquals(1, dto.getMinCount());
         assertEquals(10, dto.getMaxCount());
-        assertEquals("http://uri.suomi.fi/codelist/Test", dto.getCodeList());
         assertEquals(ResourceType.ASSOCIATION, dto.getType());
     }
 

@@ -36,12 +36,12 @@ public class PropertyShapeValidator extends BaseValidator implements ConstraintV
         checkNote(context, value);
         checkPrefixOrIdentifier(context, value.getIdentifier(), "identifier", ValidationConstants.RESOURCE_IDENTIFIER_MAX_LENGTH, updateProperty);
         checkPath(context, value);
-        checkCodeList(context, value);
         if(resourceType.equals(ResourceType.ASSOCIATION)){
             checkClassType(context, (AssociationRestriction) value);
         }else {
             var dto = (AttributeRestriction) value;
-            checkDataType(context, (AttributeRestriction) value);
+            checkDataType(context, dto);
+            checkCodeList(context, dto);
             checkCommonTextArea(context, dto.getDefaultValue(), "defaultValue");
             checkCommonTextArea(context, dto.getHasValue(), "hasValue");
             if (dto.getAllowedValues() != null) {
@@ -78,9 +78,9 @@ public class PropertyShapeValidator extends BaseValidator implements ConstraintV
         }
     }
 
-    private void checkCodeList(ConstraintValidatorContext context, PropertyShapeDTO dto) {
-        if(dto.getCodeList() != null && !dto.getCodeList().startsWith(ModelConstants.CODELIST_NAMESPACE)){
-            addConstraintViolation(context, "invalid-codelist-uri", "codelist");
+    private void checkCodeList(ConstraintValidatorContext context, AttributeRestriction dto) {
+        if(dto.getCodeLists().stream().anyMatch(codeList -> !codeList.startsWith(ModelConstants.CODELIST_NAMESPACE))){
+            addConstraintViolation(context, "invalid-codelist-uri", "codelists");
         }
     }
 }
