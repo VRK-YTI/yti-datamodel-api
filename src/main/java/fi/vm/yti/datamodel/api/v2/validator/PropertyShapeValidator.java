@@ -44,6 +44,8 @@ public class PropertyShapeValidator extends BaseValidator implements ConstraintV
             checkCodeList(context, dto);
             checkCommonTextArea(context, dto.getDefaultValue(), "defaultValue");
             checkCommonTextArea(context, dto.getHasValue(), "hasValue");
+            checkCommonTextField(context, dto.getPattern(), "pattern");
+            checkLanguageTags(context, dto.getLanguageIn(), "languageIn");
             if (dto.getAllowedValues() != null) {
                 dto.getAllowedValues().forEach(v -> checkCommonTextArea(context, v, "allowedValues"));
             }

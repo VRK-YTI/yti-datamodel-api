@@ -88,6 +88,8 @@ public class ResourceMapper {
         MapperUtils.addLiteral(resource, SH.maxInclusive, dto.getMaxInclusive());
         MapperUtils.addLiteral(resource, SH.minExclusive, dto.getMinExclusive());
         MapperUtils.addLiteral(resource, SH.maxExclusive, dto.getMaxExclusive());
+        MapperUtils.addOptionalStringProperty(resource, SH.pattern, dto.getPattern());
+        dto.getLanguageIn().forEach(lang -> MapperUtils.addOptionalStringProperty(resource, SH.languageIn, lang));
 
         var modelCodeLists = MapperUtils.arrayPropertyToList(modelResource, DCTerms.requires);
         dto.getCodeLists().forEach(codeList -> {
@@ -177,6 +179,9 @@ public class ResourceMapper {
             }
             MapperUtils.addOptionalUriProperty(resource, Iow.codeList, codeList);
         });
+        MapperUtils.updateStringProperty(resource, SH.pattern, dto.getPattern());
+        resource.removeAll(SH.languageIn);
+        dto.getLanguageIn().forEach(lang -> MapperUtils.addOptionalStringProperty(resource, SH.languageIn, lang));
     }
 
     public static void updateAssociationRestrictionProperties(Resource resource, AssociationRestriction dto){
@@ -393,7 +398,9 @@ public class ResourceMapper {
         dto.setMaxInclusive(MapperUtils.getLiteral(resource, SH.maxInclusive, Integer.class));
         dto.setMinExclusive(MapperUtils.getLiteral(resource, SH.minExclusive, Integer.class));
         dto.setMaxExclusive(MapperUtils.getLiteral(resource, SH.maxExclusive, Integer.class));
-        dto.setCodeList(MapperUtils.arrayPropertyToList(resource, Iow.codeList));
+        dto.setPattern(MapperUtils.propertyToString(resource, SH.pattern));
+        dto.setLanguageIn(MapperUtils.arrayPropertyToSet(resource, SH.languageIn));
+        dto.setCodeLists(MapperUtils.arrayPropertyToList(resource, Iow.codeList));
         MapperUtils.mapCreationInfo(dto, resource, userMapper);
 
         return dto;

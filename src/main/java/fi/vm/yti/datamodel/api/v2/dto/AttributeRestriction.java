@@ -1,7 +1,9 @@
 package fi.vm.yti.datamodel.api.v2.dto;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class AttributeRestriction extends PropertyShapeDTO {
     private String dataType;
@@ -14,6 +16,8 @@ public class AttributeRestriction extends PropertyShapeDTO {
     private Integer maxInclusive;
     private Integer minExclusive;
     private Integer maxExclusive;
+    private String pattern;
+    private Set<String> languageIn = new HashSet<>();
     private List<String> codeLists = new ArrayList<>();
 
     public String getDataType() {
@@ -102,5 +106,21 @@ public class AttributeRestriction extends PropertyShapeDTO {
 
     public void setCodeLists(List<String> codeLists) {
         this.codeLists = codeLists;
+    }
+
+    public String getPattern() {
+        return pattern;
+    }
+
+    public void setPattern(String pattern) {
+        this.pattern = pattern;
+    }
+
+    public Set<String> getLanguageIn() {
+        return languageIn;
+    }
+
+    public void setLanguageIn(Set<String> languageIn) {
+        this.languageIn = languageIn;
     }
 }

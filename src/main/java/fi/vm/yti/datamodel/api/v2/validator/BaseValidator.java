@@ -5,6 +5,7 @@ import fi.vm.yti.datamodel.api.v2.dto.Status;
 import jakarta.validation.ConstraintValidatorContext;
 
 import java.lang.annotation.Annotation;
+import java.util.Collection;
 
 public abstract class BaseValidator implements Annotation{
 
@@ -118,6 +119,15 @@ public abstract class BaseValidator implements Annotation{
         if(value == null){
             addConstraintViolation(context, ValidationConstants.MSG_VALUE_MISSING, property);
         }
+    }
+
+    public void checkLanguageTags(ConstraintValidatorContext context, Collection<String> languages, String property) {
+        languages.forEach(language -> {
+            //Matches RFC-4646
+            if(!language.matches("^[a-z]{2,3}(?:-[A-Z]{2,3}(?:-[a-zA-Z]{4})?)?$")){
+                addConstraintViolation(context, "does-not-match-rfc-4646", property);
+            }
+        });
     }
 }
 
