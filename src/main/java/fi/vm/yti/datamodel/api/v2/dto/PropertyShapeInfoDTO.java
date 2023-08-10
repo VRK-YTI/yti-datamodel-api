@@ -1,7 +1,9 @@
 package fi.vm.yti.datamodel.api.v2.dto;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class PropertyShapeInfoDTO extends ResourceInfoBaseDTO {
 
@@ -20,6 +22,8 @@ public class PropertyShapeInfoDTO extends ResourceInfoBaseDTO {
     private Integer maxInclusive;
     private Integer minExclusive;
     private Integer maxExclusive;
+    private String pattern;
+    private Set<String> languageIn = new HashSet<>();
     private List<String> codeLists = new ArrayList<>();
 
     public ResourceType getType() {
@@ -142,11 +146,27 @@ public class PropertyShapeInfoDTO extends ResourceInfoBaseDTO {
         this.maxExclusive = maxExclusive;
     }
 
+    public String getPattern() {
+        return pattern;
+    }
+
+    public void setPattern(String pattern) {
+        this.pattern = pattern;
+    }
+
+    public Set<String> getLanguageIn() {
+        return languageIn;
+    }
+
+    public void setLanguageIn(Set<String> languageIn) {
+        this.languageIn = languageIn;
+    }
+
     public List<String> getCodeLists() {
         return codeLists;
     }
 
-    public void setCodeList(List<String> codeLists) {
+    public void setCodeLists(List<String> codeLists) {
         this.codeLists = codeLists;
     }
 }

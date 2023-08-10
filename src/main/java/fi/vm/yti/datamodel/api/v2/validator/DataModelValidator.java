@@ -78,12 +78,7 @@ public class DataModelValidator extends BaseValidator implements
             return;
         }
 
-        languages.forEach(language -> {
-            //Matches RFC-4646
-            if(!language.matches("^[a-z]{2,3}(?:-[A-Z]{2,3}(?:-[a-zA-Z]{4})?)?$")){
-                addConstraintViolation(context, "does-not-match-rfc-4646", "languages");
-            }
-        });
+        checkLanguageTags(context, languages, "languages");
     }
 
     /**
