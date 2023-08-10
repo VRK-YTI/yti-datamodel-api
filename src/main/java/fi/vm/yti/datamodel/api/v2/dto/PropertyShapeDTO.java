@@ -4,7 +4,6 @@ public class PropertyShapeDTO extends BaseDTO {
     private String path;
     private Integer maxCount;
     private Integer minCount;
-    private String codeList;
 
     public String getPath() {
         return path;
@@ -28,13 +27,5 @@ public class PropertyShapeDTO extends BaseDTO {
 
     public void setMinCount(Integer minCount) {
         this.minCount = minCount;
-    }
-
-    public String getCodeList() {
-        return codeList;
-    }
-
-    public void setCodeList(String codeList) {
-        this.codeList = codeList;
     }
 }
