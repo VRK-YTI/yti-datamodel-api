@@ -3,6 +3,7 @@ package fi.vm.yti.datamodel.api.v2.mapper;
 import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
 import fi.vm.yti.security.YtiUser;
+import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.datatypes.xsd.XSDDateTime;
 import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.rdf.model.Model;
@@ -10,9 +11,7 @@ import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.shared.JenaException;
-import org.apache.jena.vocabulary.DCTerms;
-import org.apache.jena.vocabulary.OWL;
-import org.apache.jena.vocabulary.RDF;
+import org.apache.jena.vocabulary.*;
 
 import java.util.*;
 import java.util.function.Consumer;
@@ -330,6 +329,60 @@ public class MapperUtils {
         if (userMapper != null) {
             userMapper.accept(dto);
         }
+    }
+
+    public static Resource addCommonResourceInfo(Model model, String graphUri, BaseDTO dto) {
+        var modelResource = model.getResource(graphUri);
+        var languages = MapperUtils.arrayPropertyToSet(modelResource, DCTerms.language);
+
+        var resource = model.createResource(graphUri + ModelConstants.RESOURCE_SEPARATOR + dto.getIdentifier())
+                .addProperty(OWL.versionInfo, dto.getStatus().name())
+                .addProperty(RDFS.isDefinedBy, modelResource)
+                .addProperty(DCTerms.identifier, ResourceFactory.createTypedLiteral(dto.getIdentifier(), XSDDatatype.XSDNCName));
+        MapperUtils.addLocalizedProperty(languages, dto.getLabel(), resource, RDFS.label, model);
+        MapperUtils.addLocalizedProperty(languages, dto.getNote(), resource, RDFS.comment, model);
+        MapperUtils.addOptionalStringProperty(resource, SKOS.editorialNote, dto.getEditorialNote());
+        MapperUtils.addOptionalUriProperty(resource, DCTerms.subject, dto.getSubject());
+        return resource;
+    }
+
+    public static void updateCommonResourceInfo(Model model, Resource resource, Resource modelResource, BaseDTO dto) {
+        var languages = MapperUtils.arrayPropertyToSet(modelResource, DCTerms.language);
+
+        MapperUtils.updateLocalizedProperty(languages, dto.getLabel(), resource, RDFS.label, model);
+        MapperUtils.updateLocalizedProperty(languages, dto.getNote(), resource, RDFS.comment, model);
+        MapperUtils.updateStringProperty(resource, SKOS.editorialNote, dto.getEditorialNote());
+        MapperUtils.updateUriProperty(resource, DCTerms.subject, dto.getSubject());
+
+        var status = dto.getStatus();
+        if (status != null) {
+            MapperUtils.updateStringProperty(resource, OWL.versionInfo, status.name());
+        }
+    }
+
+    public static void addCommonResourceDtoInfo(ResourceInfoBaseDTO dto,Resource resource, Resource modelResource, Model orgModel, boolean hasRightToModel) {
+        var uriDTO = MapperUtils.uriToURIDTO(resource.getURI(), resource.getModel());
+        dto.setUri(uriDTO.getUri());
+        dto.setCurie(uriDTO.getCurie());
+
+        dto.setLabel(MapperUtils.localizedPropertyToMap(resource, RDFS.label));
+        dto.setStatus(Status.valueOf(MapperUtils.propertyToString(resource, OWL.versionInfo)));
+
+        var subject = MapperUtils.propertyToString(resource, DCTerms.subject);
+        if (subject != null) {
+            var conceptDTO = new ConceptDTO();
+            conceptDTO.setConceptURI(subject);
+            dto.setSubject(conceptDTO);
+        }
+        dto.setIdentifier(resource.getLocalName());
+        if (hasRightToModel) {
+            dto.setEditorialNote(MapperUtils.propertyToString(resource, SKOS.editorialNote));
+        }
+
+        var contributors = MapperUtils.arrayPropertyToSet(modelResource, DCTerms.contributor);
+        dto.setContributor(OrganizationMapper.mapOrganizationsToDTO(contributors, orgModel));
+        dto.setContact(MapperUtils.propertyToString(modelResource, Iow.contact));
+        dto.setNote(MapperUtils.localizedPropertyToMap(resource, RDFS.comment));
     }
 
     public static UriDTO uriToURIDTO(String uri, Model model) {

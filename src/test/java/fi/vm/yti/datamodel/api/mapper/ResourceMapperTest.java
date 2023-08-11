@@ -608,12 +608,6 @@ class ResourceMapperTest {
     }
 
     @Test
-    void failToMapUpdateModelClass() {
-        var m = MapperTestUtils.getModelFromFile("/models/test_datamodel_library_with_resources.ttl");
-        assertThrowsExactly(MappingError.class, () -> ResourceMapper.mapToUpdateResource("http://uri.suomi.fi/datamodel/ns/test", m, "TestClass", new ResourceDTO(), EndpointUtils.mockUser));
-    }
-
-    @Test
     void mapExternalResource() {
         var m = MapperTestUtils.getModelFromFile("/external_class.ttl");
         var dto = ResourceMapper.mapToExternalResource(m.getResource("http://purl.org/ontology/mo/encoding"));
