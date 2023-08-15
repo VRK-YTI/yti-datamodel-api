@@ -1,9 +1,6 @@
 package fi.vm.yti.datamodel.api.v2.service;
 
-import fi.vm.yti.datamodel.api.v2.dto.ConceptDTO;
-import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
-import fi.vm.yti.datamodel.api.v2.dto.ResourceInfoBaseDTO;
-import fi.vm.yti.datamodel.api.v2.dto.TerminologyNodeDTO;
+import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.ResolvingException;
 import fi.vm.yti.datamodel.api.v2.mapper.TerminologyMapper;
 import fi.vm.yti.datamodel.api.v2.repository.ConceptRepository;
@@ -131,6 +128,10 @@ public class TerminologyService {
 
     public Consumer<ResourceInfoBaseDTO> mapConcept() {
         return (var dto) -> dto.setSubject(getMappedConceptDTO(dto.getSubject()));
+    }
+
+    public Consumer<SimpleResourceDTO> mapConceptToResource() {
+        return (var dto) -> dto.setConcept(getMappedConceptDTO(dto.getConcept()));
     }
 
     private ConceptDTO getMappedConceptDTO(ConceptDTO dto) {
