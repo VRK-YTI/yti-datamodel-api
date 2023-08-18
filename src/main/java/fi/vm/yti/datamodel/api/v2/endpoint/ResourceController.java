@@ -213,6 +213,12 @@ public class ResourceController {
         resourceService.delete(prefix, resourceIdentifier);
     }
 
+    @GetMapping(value = "/profile/{prefix}/active")
+    public Boolean getActiveStatus(@PathVariable @Parameter(description = "Data model prefix") String prefix,
+                                   @RequestParam @Parameter(description = "Property shape prefix") String uri){
+        return resourceService.checkActiveStatus(prefix, uri);
+    }
+
     @Operation(summary = "Delete a property shape from a profile")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Property shape deleted successfully"),
