@@ -17,6 +17,7 @@ import org.apache.jena.rdf.model.*;
 import org.apache.jena.vocabulary.RDF;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.topbraid.shacl.vocabulary.SH;
 
 import javax.annotation.Nonnull;
 import java.net.URI;
@@ -213,6 +214,19 @@ public class ResourceService {
         }else {
             return coreRepository.queryAsk(askBuilder.build());
         }
+    }
+
+    public boolean checkActiveStatus(String prefix, String uri) {
+        var modelUri = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
+        if(!coreRepository.resourceExistsInGraph(modelUri, uri)){
+            throw new ResourceNotFoundException(uri);
+        }
+
+        var askBuilder = new AskBuilder()
+                .addGraph(NodeFactory.createURI(ModelConstants.SUOMI_FI_NAMESPACE + prefix),
+                        NodeFactory.createURI(uri), SH.deactivated, "?o");
+
+        return !coreRepository.queryAsk(askBuilder.build());
     }
 
     public Model findResources(Set<String> resourceURIs) {
