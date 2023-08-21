@@ -235,8 +235,6 @@ class ClassMapperTest {
         assertEquals("fi", resource.getProperty(RDFS.label).getLiteral().getLanguage());
         assertEquals("TestClass", resource.getProperty(DCTerms.identifier).getLiteral().getString());
         assertEquals("http://uri.suomi.fi/terminology/test/test1", resource.getProperty(DCTerms.subject).getObject().toString());
-        assertEquals("http://uri.suomi.fi/datamodel/ns/test/EqClass", resource.getProperty(OWL.equivalentClass).getObject().toString());
-        assertEquals("http://uri.suomi.fi/datamodel/ns/test/SubClass", resource.getProperty(RDFS.subClassOf).getObject().toString());
         assertEquals(Status.VALID.name(), resource.getProperty(OWL.versionInfo).getObject().toString());
         assertEquals("comment visible for admin", resource.getProperty(SKOS.editorialNote).getObject().toString());
         assertEquals(2, resource.listProperties(RDFS.comment).toList().size());

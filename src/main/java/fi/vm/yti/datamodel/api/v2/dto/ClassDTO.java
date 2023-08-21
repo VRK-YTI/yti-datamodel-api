@@ -1,11 +1,13 @@
 package fi.vm.yti.datamodel.api.v2.dto;
 
+import java.util.HashSet;
 import java.util.Set;
 
 public class ClassDTO extends BaseDTO {
 
-    private Set<String> equivalentClass;
-    private Set<String> subClassOf;
+    private Set<String> equivalentClass = new HashSet<>();
+    private Set<String> subClassOf = new HashSet<>();
+    private Set<String> disjointWith = new HashSet<>();
 
     public Set<String> getEquivalentClass() {
         return equivalentClass;
@@ -23,4 +25,11 @@ public class ClassDTO extends BaseDTO {
         this.subClassOf = subClassOf;
     }
 
+    public Set<String> getDisjointWith() {
+        return disjointWith;
+    }
+
+    public void setDisjointWith(Set<String> disjointWith) {
+        this.disjointWith = disjointWith;
+    }
 }
