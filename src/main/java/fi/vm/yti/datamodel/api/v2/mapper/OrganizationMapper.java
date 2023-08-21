@@ -2,22 +2,23 @@ package fi.vm.yti.datamodel.api.v2.mapper;
 
 import fi.vm.yti.datamodel.api.v2.dto.GroupManagementOrganizationDTO;
 import fi.vm.yti.datamodel.api.v2.dto.Iow;
-
 import fi.vm.yti.datamodel.api.v2.dto.OrganizationDTO;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.sparql.vocabulary.FOAF;
 import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.SKOS;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
-import static fi.vm.yti.datamodel.api.v2.dto.ModelConstants.*;
+import static fi.vm.yti.datamodel.api.v2.dto.ModelConstants.URN_UUID;
+import static fi.vm.yti.datamodel.api.v2.dto.ModelConstants.USED_LANGUAGES;
 import static fi.vm.yti.datamodel.api.v2.mapper.MapperUtils.getUUID;
 import static fi.vm.yti.datamodel.api.v2.mapper.MapperUtils.localizedPropertyToMap;
 
@@ -26,11 +27,12 @@ public class OrganizationMapper {
     private OrganizationMapper() {
     }
 
-    public static Model mapGroupManagementOrganizationToModel(List<GroupManagementOrganizationDTO> organizations) {
-        var orgModel = ModelFactory.createDefaultModel();
-
-        for (var organization : organizations) {
+    public static void mapOrganizationsToModel(List<GroupManagementOrganizationDTO> organizations, Model orgModel) {
+        organizations.forEach(organization -> {
             var resource = orgModel.createResource(URN_UUID + organization.getUuid());
+            //remove all old properties before remapping them
+            resource.removeProperties();
+
             resource.addProperty(RDF.type, FOAF.Organization);
 
             USED_LANGUAGES.forEach(lang -> {
@@ -51,8 +53,7 @@ public class OrganizationMapper {
             if (StringUtils.isNotBlank(organization.getUrl())) {
                 resource.addLiteral(FOAF.homepage, organization.getUrl());
             }
-        }
-        return orgModel;
+        });
     }
 
     public static Set<OrganizationDTO> mapOrganizationsToDTO(Set<String> organizations, Model organizationModel) {
