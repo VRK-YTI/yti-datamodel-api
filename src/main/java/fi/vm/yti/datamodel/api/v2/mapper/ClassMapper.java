@@ -252,6 +252,8 @@ public class ClassMapper {
         var uri = NodeFactory.createURI(classUri);
         SparqlUtils.addConstructProperty(resourceName, constructBuilder, RDF.type, "?type");
         SparqlUtils.addConstructProperty(resourceName, constructBuilder, RDFS.label, "?label");
+        SparqlUtils.addConstructOptional(resourceName, constructBuilder, RDFS.comment, "?note");
+        SparqlUtils.addConstructOptional(resourceName, constructBuilder, DCTerms.subject, "?subject");
         if (!isExternal) {
             SparqlUtils.addConstructProperty(resourceName, constructBuilder, DCTerms.identifier, "?identifier");
         }
@@ -279,7 +281,7 @@ public class ClassMapper {
         return constructBuilder.build();
     }
 
-    public static void addClassResourcesToDTO(Model classResources, ClassInfoDTO dto){
+    public static void addClassResourcesToDTO(Model classResources, ClassInfoDTO dto, Consumer<SimpleResourceDTO> subjectMapper){
         var associations = new ArrayList<SimpleResourceDTO>();
         var attributes = new ArrayList<SimpleResourceDTO>();
         classResources.listSubjects().forEach(res -> {
@@ -287,6 +289,12 @@ public class ClassMapper {
             resDTO.setUri(res.getURI());
             resDTO.setIdentifier(res.getProperty(DCTerms.identifier).getString());
             resDTO.setLabel(MapperUtils.localizedPropertyToMap(res, RDFS.label));
+            resDTO.setNote(MapperUtils.localizedPropertyToMap(res, RDFS.comment));
+            resDTO.setCurie(MapperUtils.uriToURIDTO(res.getURI(), classResources).getCurie());
+            var conceptDTO = new ConceptDTO();
+            conceptDTO.setConceptURI(MapperUtils.propertyToString(res, DCTerms.subject));
+            resDTO.setConcept(conceptDTO);
+            subjectMapper.accept(resDTO);
             var modelUri = MapperUtils.propertyToString(res, RDFS.isDefinedBy);
             if(modelUri == null){
                 throw new MappingError("ModelUri null for resource");

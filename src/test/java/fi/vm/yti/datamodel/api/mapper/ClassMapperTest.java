@@ -274,7 +274,7 @@ class ClassMapperTest {
         var m = MapperTestUtils.getModelFromFile("/models/test_resource_query_model.ttl");
 
         var dto = new ClassInfoDTO();
-        ClassMapper.addClassResourcesToDTO(m, dto);
+        ClassMapper.addClassResourcesToDTO(m, dto, (var simpleResourceDTO) -> {});
 
         assertEquals(1, dto.getAttribute().size());
 

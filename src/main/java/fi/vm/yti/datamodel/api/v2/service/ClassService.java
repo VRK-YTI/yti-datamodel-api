@@ -88,10 +88,10 @@ public class ClassService {
 
         ResourceInfoBaseDTO dto;
         if (MapperUtils.isLibrary(model.getResource(modelURI))) {
-            var classResources = coreRepository.queryConstruct(ClassMapper.getClassResourcesQuery(classURI, false));
             dto = ClassMapper.mapToClassDTO(model, modelURI, classIdentifier, orgModel,
                     hasRightToModel, userMapper);
-            ClassMapper.addClassResourcesToDTO(classResources, (ClassInfoDTO) dto);
+            var classResources = coreRepository.queryConstruct(ClassMapper.getClassResourcesQuery(classURI, false));
+            ClassMapper.addClassResourcesToDTO(classResources, (ClassInfoDTO) dto, terminologyService.mapConceptToResource());
         } else {
             dto = ClassMapper.mapToNodeShapeDTO(model, modelURI, classIdentifier, orgModel,
                     hasRightToModel, userMapper);
