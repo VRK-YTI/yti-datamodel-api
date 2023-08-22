@@ -7,6 +7,8 @@ import jakarta.validation.ConstraintValidatorContext;
 import org.apache.jena.graph.NodeFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.Set;
+
 public class ClassValidator extends BaseValidator implements
         ConstraintValidator<ValidClass, ClassDTO> {
 
@@ -28,8 +30,9 @@ public class ClassValidator extends BaseValidator implements
         checkEditorialNote(context, classDTO);
         checkNote(context, classDTO);
         checkStatus(context, classDTO.getStatus());
-        checkEquivalentClass(context, classDTO);
-        checkSubClassOf(context, classDTO);
+        checkClassResolvable(context, classDTO.getEquivalentClass(), "equivalentClass");
+        checkClassResolvable(context, classDTO.getSubClassOf(), "subClassOf");
+        checkClassResolvable(context, classDTO.getDisjointWith(), "disjointWith");
         checkSubject(context, classDTO);
         checkPrefixOrIdentifier(context, classDTO.getIdentifier(), "identifier", ValidationConstants.RESOURCE_IDENTIFIER_MAX_LENGTH, updateClass);
         checkReservedIdentifier(context, classDTO);
@@ -37,29 +40,14 @@ public class ClassValidator extends BaseValidator implements
         return !isConstraintViolationAdded();
     }
 
-    private void checkEquivalentClass(ConstraintValidatorContext context, ClassDTO classDTO){
-        var equivalentClass = classDTO.getEquivalentClass();
-        if(equivalentClass != null){
-            equivalentClass.forEach(eqClass -> {
-                var asUri = NodeFactory.createURI(eqClass);
+    private void checkClassResolvable(ConstraintValidatorContext context, Set<String> classes, String property) {
+        if(classes != null){
+            classes.forEach(cls -> {
+                var asUri = NodeFactory.createURI(cls);
                 //if namespace is resolvable make sure class can be found in resolved namespace
                 if(importsRepository.graphExists(asUri.getNameSpace())
-                        && !importsRepository.resourceExistsInGraph(asUri.getNameSpace(), asUri.getURI())){
-                    addConstraintViolation(context, "class-not-found-in-resolved-namespace", "eqClass");
-                }
-            });
-        }
-    }
-
-    private void checkSubClassOf(ConstraintValidatorContext context, ClassDTO classDTO){
-        var subClassOf = classDTO.getSubClassOf();
-        if(subClassOf != null) {
-            subClassOf.forEach(subClass -> {
-                var asUri = NodeFactory.createURI(subClass);
-                //if namespace is resolvable make sure class can be found in resolved namespace
-                if(importsRepository.graphExists(asUri.getNameSpace())
-                        && !importsRepository.resourceExistsInGraph(asUri.getNameSpace(), asUri.getURI())){
-                    addConstraintViolation(context, "class-not-found-in-resolved-namespace", "subClassOf");
+                && !importsRepository.resourceExistsInGraph(asUri.getNameSpace(), asUri.getURI())) {
+                    addConstraintViolation(context, "class-not-found-in-resolved-namespace", property);
                 }
             });
         }
