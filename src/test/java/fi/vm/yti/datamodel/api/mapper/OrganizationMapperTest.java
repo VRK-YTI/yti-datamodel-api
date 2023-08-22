@@ -4,6 +4,7 @@ import fi.vm.yti.datamodel.api.v2.dto.GroupManagementOrganizationDTO;
 import fi.vm.yti.datamodel.api.v2.dto.Iow;
 import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.mapper.OrganizationMapper;
+import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.sparql.vocabulary.FOAF;
 import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.RDF;
@@ -14,8 +15,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.*;
 import static fi.vm.yti.datamodel.api.v2.dto.ModelConstants.URN_UUID;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class OrganizationMapperTest {
 
@@ -57,7 +58,8 @@ class OrganizationMapperTest {
         dto.setUrl("https://dvv.fi");
         dto.setParentId(parentId);
 
-        var model = OrganizationMapper.mapGroupManagementOrganizationToModel(List.of(dto));
+        var model = ModelFactory.createDefaultModel();
+        OrganizationMapper.mapOrganizationsToModel(List.of(dto), model);
         var resource = model.getResource(URN_UUID + uuid);
         var label = MapperUtils.localizedPropertyToMap(resource, SKOS.prefLabel);
         var description = MapperUtils.localizedPropertyToMap(resource, DCTerms.description);

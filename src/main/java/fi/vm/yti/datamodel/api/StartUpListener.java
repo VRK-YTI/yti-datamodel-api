@@ -12,7 +12,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -47,13 +46,12 @@ public class StartUpListener {
 
         initDefaultNamespaces();
         initOrganizations();
+        initUsers();
         initServiceCategories();
         initOpenSearchIndices();
-        groupManagementService.updateUsers();
     }
 
-    @Scheduled(cron = "0 */5 * * * *")
-    void initOrganizations() {
+    private void initOrganizations() {
         groupManagementService.initOrganizations();
     }
 
@@ -63,6 +61,10 @@ public class StartUpListener {
 
     private void initDefaultNamespaces() {
         namespaceService.resolveDefaultNamespaces();
+    }
+
+    private void initUsers() {
+        groupManagementService.initUsers();
     }
 
     private void initOpenSearchIndices() {
