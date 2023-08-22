@@ -35,6 +35,7 @@ public class ResourceService {
     private final AuthorizationManager authorizationManager;
     private final GroupManagementService groupManagementService;
     private final TerminologyService terminologyService;
+    private final CodeListService codeListService;
     private final AuthenticatedUserProvider userProvider;
     private final OpenSearchIndexer openSearchIndexer;
 
@@ -44,6 +45,7 @@ public class ResourceService {
                            AuthorizationManager authorizationManager,
                            GroupManagementService groupManagementService,
                            TerminologyService terminologyService,
+                           CodeListService codeListService,
                            AuthenticatedUserProvider userProvider,
                            OpenSearchIndexer openSearchIndexer){
         this.coreRepository = coreRepository;
@@ -51,6 +53,7 @@ public class ResourceService {
         this.authorizationManager = authorizationManager;
         this.groupManagementService = groupManagementService;
         this.terminologyService = terminologyService;
+        this.codeListService = codeListService;
         this.userProvider = userProvider;
         this.openSearchIndexer = openSearchIndexer;
     }
@@ -100,6 +103,9 @@ public class ResourceService {
         checkDataModelType(model.getResource(graphUri), dto);
 
         terminologyService.resolveConcept(dto.getSubject());
+        if(applicationProfile && resourceType.equals(ResourceType.ATTRIBUTE)) {
+            codeListService.resolveCodelistScheme(((AttributeRestriction) dto).getCodeLists());
+        }
 
         if(applicationProfile){
             resourceUri = ResourceMapper.mapToPropertyShapeResource(graphUri, model, (PropertyShapeDTO) dto, resourceType, userProvider.getUser());
@@ -123,6 +129,10 @@ public class ResourceService {
         var model = coreRepository.fetch(graphUri);
         check(authorizationManager.hasRightToModel(prefix, model));
         checkDataModelType(model.getResource(graphUri), dto);
+
+        if(dto instanceof AttributeRestriction attributeRestriction) {
+            codeListService.resolveCodelistScheme(attributeRestriction.getCodeLists());
+        }
 
         if (dto instanceof ResourceDTO resourceDTO) {
             ResourceMapper.mapToUpdateResource(graphUri, model, identifier, resourceDTO, userProvider.getUser());
