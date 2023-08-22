@@ -53,6 +53,8 @@ class ResourceServiceTest {
     @MockBean
     TerminologyService terminologyService;
     @MockBean
+    CodeListService codeListService;
+    @MockBean
     AuthenticatedUserProvider userProvider;
     @MockBean
     OpenSearchIndexer openSearchIndexer;
