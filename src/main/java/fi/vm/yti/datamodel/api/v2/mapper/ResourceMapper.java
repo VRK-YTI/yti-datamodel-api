@@ -94,7 +94,7 @@ public class ResourceMapper {
         var modelCodeLists = MapperUtils.arrayPropertyToList(modelResource, DCTerms.requires);
         dto.getCodeLists().forEach(codeList -> {
             if(!modelCodeLists.contains(codeList)){
-                throw new MappingError("Model does not contain codelist");
+                MapperUtils.addOptionalUriProperty(modelResource, DCTerms.requires, codeList);
             }
             MapperUtils.addOptionalUriProperty(resource, Iow.codeList, codeList);
         });
@@ -179,7 +179,7 @@ public class ResourceMapper {
         resource.removeAll(Iow.codeList);
         dto.getCodeLists().forEach(codeList -> {
             if(!requires.contains(codeList)){
-                throw new MappingError("Model does not contain codelist");
+                MapperUtils.addOptionalUriProperty(modelResource, DCTerms.requires, codeList);
             }
             MapperUtils.addOptionalUriProperty(resource, Iow.codeList, codeList);
         });

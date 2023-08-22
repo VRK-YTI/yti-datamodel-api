@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.net.URI;
-import java.util.Set;
+import java.util.Collection;
 
 @Service
 public class CodeListService {
@@ -41,7 +41,7 @@ public class CodeListService {
      * Fetch CodeList information and persist to Fuseki
      * @param codeLists set of uris
      */
-    public void resolveCodelistScheme(Set<String> codeLists) {
+    public void resolveCodelistScheme(Collection<String> codeLists) {
         codeLists.forEach(codeList -> {
             var uri = URI.create(codeList);
             LOG.debug("Fetching codelist {}", uri);
