@@ -3,7 +3,6 @@ package fi.vm.yti.datamodel.api.v2.service;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import fi.vm.yti.datamodel.api.v2.dto.*;
-import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
 import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import org.apache.jena.rdf.model.ModelFactory;
@@ -17,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Consumer;
@@ -154,8 +154,9 @@ public class GroupManagementService {
 
     public List<UUID> getChildOrganizations(UUID orgId) {
         var orgUrn = ModelConstants.URN_UUID + orgId.toString();
-        if(coreRepository.resourceExistsInGraph(ModelConstants.ORGANIZATION_GRAPH, orgUrn)){
-            throw new ResourceNotFoundException("Organization not found");
+        if(!coreRepository.resourceExistsInGraph(ModelConstants.ORGANIZATION_GRAPH, orgUrn)){
+            LOG.warn("Organization not found {}", orgUrn);
+            return new ArrayList<>();
         }
         var model = coreRepository.getOrganizations();
 
