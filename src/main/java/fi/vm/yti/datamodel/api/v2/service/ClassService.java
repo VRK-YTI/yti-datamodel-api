@@ -14,6 +14,7 @@ import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import fi.vm.yti.datamodel.api.v2.repository.ImportsRepository;
 import fi.vm.yti.security.AuthenticatedUserProvider;
+import org.apache.jena.arq.querybuilder.AskBuilder;
 import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Resource;
@@ -312,7 +313,6 @@ public class ClassService {
         return coreRepository.resourceExistsInGraph(graphUri, graphUri + ModelConstants.RESOURCE_SEPARATOR + identifier);
     }
 
-    //TODO should boolean delete be enum instead?
     public void handlePropertyShapeReference(String prefix, String nodeShapeIdentifier, String uri, boolean delete) {
         var modelURI = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
         var model = coreRepository.fetch(modelURI);
@@ -332,12 +332,18 @@ public class ClassService {
     public void togglePropertyShape(String prefix, String propertyUri) {
         var modelURI = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
 
-        if(!coreRepository.resourceExistsInGraph(modelURI, propertyUri)){
+        var query = new AskBuilder()
+                .addGraph(NodeFactory.createURI(modelURI), "?s", SH.property, NodeFactory.createURI(propertyUri))
+                .build();
+
+        var externalExists = coreRepository.queryAsk(query);
+
+        if(!coreRepository.resourceExistsInGraph(modelURI, propertyUri) && !externalExists){
             throw new ResourceNotFoundException(propertyUri);
         }
         var model = coreRepository.fetch(modelURI);
         check(authorizationManager.hasRightToModel(prefix, model));
-        ClassMapper.toggleAndMapDeactivatedProperty(model, propertyUri);
+        ClassMapper.toggleAndMapDeactivatedProperty(model, propertyUri, externalExists);
         coreRepository.put(modelURI, model);
     }
 }

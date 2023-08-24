@@ -244,7 +244,7 @@ class ClassServiceTest {
         when(authorizationManager.hasRightToModel(anyString(), any(Model.class))).thenReturn(true);
         try(var mapper = mockStatic(ClassMapper.class)) {
             classService.togglePropertyShape("test", "http://uri.suomi.fi/datamodel/ns/test/Uri");
-            mapper.verify(() -> ClassMapper.toggleAndMapDeactivatedProperty( any(Model.class), anyString()));
+            mapper.verify(() -> ClassMapper.toggleAndMapDeactivatedProperty( any(Model.class), anyString(), anyBoolean()));
         }
 
         verify(coreRepository).resourceExistsInGraph(anyString(), anyString());
