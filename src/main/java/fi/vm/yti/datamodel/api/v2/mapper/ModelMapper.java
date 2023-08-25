@@ -92,13 +92,7 @@ public class ModelMapper {
         addInternalNamespaceToDatamodel(modelDTO, modelResource, model);
         addExternalNamespaceToDatamodel(modelDTO, model, modelResource);
 
-        modelDTO.getLinks().forEach(linkDTO -> {
-            var blankNode = model.createResource();
-            blankNode.addProperty(DCTerms.title, linkDTO.getName());
-            MapperUtils.addOptionalStringProperty(blankNode, DCTerms.description, linkDTO.getDescription());
-            blankNode.addProperty(FOAF.homepage, linkDTO.getUri());
-            modelResource.addProperty(RDFS.seeAlso, blankNode);
-        });
+        modelDTO.getLinks().forEach(linkDTO -> addLinkToModel(model, modelResource, linkDTO));
 
         modelDTO.getTerminologies().forEach(terminology -> MapperUtils.addOptionalUriProperty(modelResource, DCTerms.requires, terminology));
 
@@ -162,14 +156,7 @@ public class ModelMapper {
         }
 
         modelResource.removeAll(RDFS.seeAlso);
-        dataModelDTO.getLinks().forEach(linkDTO -> {
-            var blankNode = model.createResource();
-            blankNode.addProperty(DCTerms.title, linkDTO.getName());
-            MapperUtils.addOptionalStringProperty(blankNode, DCTerms.description, linkDTO.getDescription());
-            blankNode.addProperty(FOAF.homepage, linkDTO.getUri());
-            modelResource.addProperty(RDFS.seeAlso, blankNode);
-        });
-
+        dataModelDTO.getLinks().forEach(linkDTO -> addLinkToModel(model, modelResource, linkDTO));
 
         MapperUtils.addUpdateMetadata(modelResource, user);
         return model;
@@ -184,6 +171,14 @@ public class ModelMapper {
                 statements.remove();
             }
         }
+    }
+
+    private void addLinkToModel(Model model, Resource modelResource, LinkDTO linkDTO) {
+        var blankNode = model.createResource();
+        blankNode.addProperty(DCTerms.title, linkDTO.getName());
+        MapperUtils.addOptionalStringProperty(blankNode, DCTerms.description, linkDTO.getDescription());
+        blankNode.addProperty(FOAF.homepage, linkDTO.getUri());
+        modelResource.addProperty(RDFS.seeAlso, blankNode);
     }
 
     /**
@@ -222,7 +217,7 @@ public class ModelMapper {
 
         MapperUtils.mapCreationInfo(datamodelDTO, modelResource, userMapper);
 
-        var internalNamespaces = new HashSet<String>();
+        var internalNamespaces = new HashSet<InternalNamespaceDTO>();
         var externalNamespaces = new HashSet<ExternalNamespaceDTO>();
         addNamespacesToList(internalNamespaces, externalNamespaces, model, modelResource, OWL.imports);
         addNamespacesToList(internalNamespaces, externalNamespaces, model, modelResource, DCTerms.requires);
@@ -338,7 +333,7 @@ public class ModelMapper {
      * @param resource Model resource where the given property lies
      * @param property Property to get namespace reference from
      */
-    private void addNamespacesToList(Set<String> intNs, Set<ExternalNamespaceDTO> extNs, Model model, Resource resource, Property property){
+    private void addNamespacesToList(Set<InternalNamespaceDTO> intNs, Set<ExternalNamespaceDTO> extNs, Model model, Resource resource, Property property){
         resource.listProperties(property)
                 .filterDrop(prop -> {
                     var string = prop.getObject().toString();
@@ -347,7 +342,13 @@ public class ModelMapper {
                 .forEach(prop -> {
             var ns = prop.getObject().toString();
             if(ns.startsWith(ModelConstants.SUOMI_FI_NAMESPACE)){
-                intNs.add(ns);
+                var nsModel = coreRepository.fetch(ns);
+                var nsResource = nsModel.getResource(ns);
+                var dto = new InternalNamespaceDTO();
+                dto.setNamespace(ns);
+                dto.setPrefix(MapperUtils.propertyToString(nsResource, DCAP.preferredXMLNamespacePrefix));
+                dto.setName(MapperUtils.localizedPropertyToMap(nsResource, RDFS.label));
+                intNs.add(dto);
             }else {
                 var extNsModel = model.getResource(ns);
                 var extNsDTO = new ExternalNamespaceDTO();
