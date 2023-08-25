@@ -12,7 +12,7 @@ public class DataModelInfoDTO extends ResourceCommonDTO {
     private Set<String> languages = Set.of();
     private Set<OrganizationDTO> organizations = Set.of();
     private Set<ServiceCategoryDTO> groups = Set.of();
-    private Set<String> internalNamespaces = Set.of();
+    private Set<InternalNamespaceDTO> internalNamespaces = Set.of();
     private Set<ExternalNamespaceDTO> externalNamespaces = Set.of();
     private Set<TerminologyDTO> terminologies = Set.of();
     private Set<CodeListDTO> codeLists = Set.of();
@@ -84,11 +84,11 @@ public class DataModelInfoDTO extends ResourceCommonDTO {
         this.groups = groups;
     }
 
-    public Set<String> getInternalNamespaces() {
+    public Set<InternalNamespaceDTO> getInternalNamespaces() {
         return internalNamespaces;
     }
 
-    public void setInternalNamespaces(Set<String> internalNamespaces) {
+    public void setInternalNamespaces(Set<InternalNamespaceDTO> internalNamespaces) {
         this.internalNamespaces = internalNamespaces;
     }
 

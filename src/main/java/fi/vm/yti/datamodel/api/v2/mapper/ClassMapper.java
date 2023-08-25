@@ -55,7 +55,7 @@ public class ClassMapper {
         }else{
             dto.getSubClassOf().forEach(sub -> MapperUtils.addResourceRelationship(owlImports, dcTermsRequires, resource, RDFS.subClassOf, sub));
         }
-        dto.getDisjointWith().forEach(disjoint -> MapperUtils.addOptionalUriProperty(resource, OWL.disjointWith, disjoint));
+        dto.getDisjointWith().forEach(disjoint -> MapperUtils.addResourceRelationship(owlImports, dcTermsRequires, resource, OWL.disjointWith, disjoint));
 
         modelResource.addProperty(DCTerms.hasPart, resource);
         return resource.getURI();
@@ -150,7 +150,7 @@ public class ClassMapper {
         }
 
         classResource.removeAll(OWL.disjointWith);
-        classDTO.getDisjointWith().forEach(disjoint -> MapperUtils.addOptionalUriProperty(classResource, OWL.disjointWith, disjoint));
+        classDTO.getDisjointWith().forEach(disjoint -> MapperUtils.addResourceRelationship(owlImports, dcTermsRequires, classResource, OWL.disjointWith, disjoint));
         MapperUtils.addUpdateMetadata(classResource, user);
     }
 

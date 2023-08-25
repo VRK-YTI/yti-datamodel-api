@@ -322,7 +322,8 @@ class ModelMapperTest {
     @Test
     void testMapToDatamodelDTO() {
         var m = MapperTestUtils.getModelFromFile("/test_datamodel_library.ttl");
-
+        var nsModel = MapperTestUtils.getModelFromFile("/test_datamodel_internal_reference.ttl");
+        when(coreRepository.fetch("http://uri.suomi.fi/datamodel/ns/int")).thenReturn(nsModel);
         var result = mapper.mapToDataModelDTO("test", m, null);
 
         assertEquals("test", result.getPrefix());
@@ -352,6 +353,16 @@ class ModelMapperTest {
         assertEquals("""
                 hello
                 test""", result.getDocumentation().get("fi"));
+
+        var internalDTO = result.getInternalNamespaces().stream().findFirst().orElseThrow();
+        assertEquals("internal label", internalDTO.getName().get("fi"));
+        assertEquals("int", internalDTO.getPrefix());
+        assertEquals("http://uri.suomi.fi/datamodel/ns/int", internalDTO.getNamespace());
+
+        var externalDTO = result.getExternalNamespaces().stream().findFirst().orElseThrow();
+        assertEquals("test resource", externalDTO.getName());
+        assertEquals("extres", externalDTO.getPrefix());
+        assertEquals("https://www.example.com/ns/ext", externalDTO.getNamespace());
 
         assertEquals(1, result.getLinks().size());
         var linkDTO = result.getLinks().stream().findFirst().orElseThrow();
