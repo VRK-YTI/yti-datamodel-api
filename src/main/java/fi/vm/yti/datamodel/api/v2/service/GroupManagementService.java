@@ -64,14 +64,14 @@ public class GroupManagementService {
         LOG.info("Initialized organizations with {} organizations", organizations.size());
     }
 
-    @Scheduled(cron = "0 */5 * * * *")
+    @Scheduled(cron = "0 */30 * * * *")
     public void updateOrganizations() {
         LOG.info("Updating organizations cache");
         var organizations = webClient.get().uri(builder -> builder
                         .path("/organizations")
                         .queryParam("onlyValid", "true")
                         .build())
-                .ifModifiedSince(ZonedDateTime.now().minusMinutes(5))
+                .ifModifiedSince(ZonedDateTime.now().minusMinutes(30))
                 .retrieve()
                 .bodyToMono(new ParameterizedTypeReference<List<GroupManagementOrganizationDTO>>() {
                 })
@@ -81,6 +81,7 @@ public class GroupManagementService {
             var model = coreRepository.fetch(ModelConstants.ORGANIZATION_GRAPH);
             mapOrganizationsToModel(organizations, model);
             coreRepository.put(ModelConstants.ORGANIZATION_GRAPH, model);
+            coreRepository.invalidateOrganizationCache();
             LOG.info("Updated {} organizations to fuseki", organizations.size());
         }else {
             LOG.info("No updates to organizations found");
@@ -108,14 +109,14 @@ public class GroupManagementService {
         LOG.info("Initialized user cache with {} users", map.size());
     }
 
-    @Scheduled(cron = "0 */5 * * * *")
+    @Scheduled(cron = "0 */30 * * * *")
     public void updateUsers() {
         LOG.info("Updating user cache");
         var users = webClient.get()
                 .uri(builder -> builder
                     .path("/users")
                 .build())
-                .ifModifiedSince(ZonedDateTime.now().minusMinutes(5))
+                .ifModifiedSince(ZonedDateTime.now().minusMinutes(30))
                 .retrieve()
                 .bodyToMono(new ParameterizedTypeReference<List<GroupManagementUserDTO>>() {
                 })

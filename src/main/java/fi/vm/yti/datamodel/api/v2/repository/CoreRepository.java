@@ -13,6 +13,8 @@ import org.apache.jena.sparql.vocabulary.FOAF;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
 import org.apache.jena.vocabulary.SKOS;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
 
@@ -20,6 +22,8 @@ import java.util.concurrent.TimeUnit;
 
 @Repository
 public class CoreRepository extends BaseRepository{
+
+    private Logger logger = LoggerFactory.getLogger(CoreRepository.class);
 
     private final Cache<String, Model> modelCache;
 
@@ -51,9 +55,13 @@ public class CoreRepository extends BaseRepository{
         }
 
         organizations = fetch("urn:yti:organizations");
-
+        logger.info("Fetched organizations from fuseki to cache");
         modelCache.put("organizations", organizations);
         return organizations;
+    }
+
+    public void invalidateOrganizationCache(){
+        modelCache.invalidate("organizations");
     }
 
     public Model getServiceCategories(){
@@ -79,7 +87,7 @@ public class CoreRepository extends BaseRepository{
                 ));
 
         serviceCategories = queryConstruct(builder.build());
-
+        logger.info("Fetched service categories from fuseki to cache");
         modelCache.put("serviceCategories", serviceCategories);
         return serviceCategories;
     }
