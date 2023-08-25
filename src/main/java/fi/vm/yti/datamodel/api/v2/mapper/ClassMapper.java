@@ -358,9 +358,9 @@ public class ClassMapper {
         dto.setAssociations(associations);
     }
 
-    public static void toggleAndMapDeactivatedProperty(Model model, String propertyURI) {
+    public static void toggleAndMapDeactivatedProperty(Model model, String propertyURI, boolean external) {
         var resource = model.getResource(propertyURI);
-        if (!MapperUtils.hasType(resource, SH.PropertyShape, SH.NodeShape)) {
+        if (!external && !MapperUtils.hasType(resource, SH.PropertyShape, SH.NodeShape)) {
             throw new MappingError("Resource must be NodeShape or PropertyShape");
         }
         if (resource.hasProperty(SH.deactivated)) {

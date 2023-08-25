@@ -227,8 +227,8 @@ class NodeShapeMapperTest {
         assertFalse(propertyShape1.hasProperty(SH.deactivated));
         assertTrue(propertyShape2.getProperty(SH.deactivated).getObject().asLiteral().getBoolean());
 
-        ClassMapper.toggleAndMapDeactivatedProperty(m, "http://uri.suomi.fi/datamodel/ns/test/TestAttributeRestriction");
-        ClassMapper.toggleAndMapDeactivatedProperty(m, "http://uri.suomi.fi/datamodel/ns/test/DeactivatedPropertyShape");
+        ClassMapper.toggleAndMapDeactivatedProperty(m, "http://uri.suomi.fi/datamodel/ns/test/TestAttributeRestriction", false);
+        ClassMapper.toggleAndMapDeactivatedProperty(m, "http://uri.suomi.fi/datamodel/ns/test/DeactivatedPropertyShape", false);
 
         assertTrue(propertyShape1.getProperty(SH.deactivated).getObject().asLiteral().getBoolean());
         assertFalse(propertyShape2.hasProperty(SH.deactivated));

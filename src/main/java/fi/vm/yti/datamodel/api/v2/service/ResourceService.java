@@ -228,12 +228,9 @@ public class ResourceService {
 
     public boolean checkActiveStatus(String prefix, String uri) {
         var modelUri = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
-        if(!coreRepository.resourceExistsInGraph(modelUri, uri)){
-            throw new ResourceNotFoundException(uri);
-        }
 
         var askBuilder = new AskBuilder()
-                .addGraph(NodeFactory.createURI(ModelConstants.SUOMI_FI_NAMESPACE + prefix),
+                .addGraph(NodeFactory.createURI(modelUri),
                         NodeFactory.createURI(uri), SH.deactivated, "?o");
 
         return !coreRepository.queryAsk(askBuilder.build());
