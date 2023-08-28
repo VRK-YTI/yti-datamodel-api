@@ -123,7 +123,7 @@ class DataModelControllerTest {
     void shouldInValidate(DataModelDTO dataModelDTO) throws Exception {
         //Mock validation stuff
         var mockModel = ModelFactory.createDefaultModel();
-        var res = mockModel.createResource(ModelConstants.URN_UUID + RANDOM_ORG);
+        var res = mockModel.createResource(ModelConstants.URN_UUID + RANDOM_ORG + "-over-the-limit");
         res.addProperty(SKOS.notation, "P11");
         when(coreRepository.getOrganizations()).thenReturn(mockModel);
         when(coreRepository.getServiceCategories()).thenReturn(mockModel);
