@@ -53,7 +53,7 @@ public class TerminologyService {
 
         for (String u : terminologyUris) {
             var uri = URI.create(u);
-            LOG.debug("Fetching terminology {}", uri);
+            LOG.debug("Fetching terminology {} from env {}", uri, awsEnv);
             try {
                 var result = client.get().uri(uriBuilder -> uriBuilder
                                 .path(uri.getPath())
@@ -91,7 +91,7 @@ public class TerminologyService {
         }
 
         var uri = URI.create(conceptURI);
-        LOG.debug("Fetching concept {}", uri);
+        LOG.debug("Fetching concept {} from env {}", uri, awsEnv);
 
         List<TerminologyNodeDTO> result;
         try {
@@ -107,7 +107,7 @@ public class TerminologyService {
                     .block();
         } catch(Exception e) {
             LOG.warn("Could not resolve concept uri {}", uri);
-            throw new ResolvingException("Concept not found", String.format("Concept %s not found", conceptURI));
+            throw new ResolvingException("Concept not found", String.format("Concept %s not found in env %s", conceptURI, awsEnv));
         }
 
         var terminologyURI = conceptURI.substring(0, conceptURI.lastIndexOf("/"));
