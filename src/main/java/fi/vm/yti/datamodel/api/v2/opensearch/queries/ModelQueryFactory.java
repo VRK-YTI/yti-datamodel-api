@@ -91,7 +91,7 @@ public class ModelQueryFactory {
                 .query(finalQuery._toQuery())
                 .build();
 
-        logPayload(sr);
+        logPayload(sr, OpenSearchIndexer.OPEN_SEARCH_INDEX_MODEL);
         return sr;
     }
 

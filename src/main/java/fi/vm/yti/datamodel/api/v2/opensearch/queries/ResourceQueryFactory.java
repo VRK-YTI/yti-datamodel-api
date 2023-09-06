@@ -14,7 +14,10 @@ import org.opensearch.client.opensearch._types.query_dsl.Query;
 import org.opensearch.client.opensearch._types.query_dsl.QueryBuilders;
 import org.opensearch.client.opensearch.core.SearchRequest;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
 
 import static fi.vm.yti.datamodel.api.v2.opensearch.OpenSearchUtil.logPayload;
 
@@ -51,6 +54,7 @@ public class ResourceQueryFactory {
                     .should(QueryFactoryUtils.termsQuery("id", request.getAdditionalResources() != null
                             ? request.getAdditionalResources()
                             : Collections.emptySet()))
+                    .minimumShouldMatch("1")
                     .build().
                     _toQuery()
             );
@@ -93,7 +97,7 @@ public class ResourceQueryFactory {
                 .query(finalQuery)
                 .sort(SortOptions.of(sortOptions -> sortOptions.field(sort)))
                 .build();
-        logPayload(sr);
+        logPayload(sr, String.join(", ", indices));
         return sr;
     }
 
@@ -132,7 +136,8 @@ public class ResourceQueryFactory {
             isDefinedByCondition.addAll(restrictedDataModels);
         }
 
-        if (limitToDataModel != null) {
+        //Limit to datamodel shouldn't be added in the intersection if it's not the right ModelType
+        if (limitToDataModel != null && (restrictedDataModels.isEmpty() || restrictedDataModels.contains(limitToDataModel))) {
             isDefinedByCondition.add(limitToDataModel);
         }
         return isDefinedByCondition;

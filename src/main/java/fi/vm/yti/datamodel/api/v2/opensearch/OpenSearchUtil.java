@@ -20,13 +20,13 @@ public class OpenSearchUtil {
      *
      * @param object object
      */
-    public static void logPayload(JsonpSerializable object) {
+    public static void logPayload(JsonpSerializable object, String index) {
         if (LOG.isDebugEnabled()) {
             var out = new ByteArrayOutputStream();
             var generator = MAPPER.jsonProvider().createGenerator(out);
             MAPPER.serialize(object, generator);
             generator.close();
-            LOG.debug("Payload for object of type {}", object.getClass().getSimpleName());
+            LOG.debug("Payload for object of type {} in index {}", object.getClass().getSimpleName(), index);
             LOG.debug(out.toString());
         }
     }
