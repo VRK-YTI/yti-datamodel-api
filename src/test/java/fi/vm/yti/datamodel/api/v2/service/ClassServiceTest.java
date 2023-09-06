@@ -80,6 +80,7 @@ class ClassServiceTest {
         when(coreRepository.resourceExistsInGraph(anyString(), anyString())).thenReturn(true);
         when(coreRepository.fetch(anyString())).thenReturn(ModelFactory.createDefaultModel());
         when(terminologyService.mapConcept()).thenReturn(mock(Consumer.class));
+        when(resourceService.mapUriLabels()).thenReturn(mock(Consumer.class));
 
         try(var mapper = mockStatic(ClassMapper.class)) {
             classService.get("test", "TestClass");

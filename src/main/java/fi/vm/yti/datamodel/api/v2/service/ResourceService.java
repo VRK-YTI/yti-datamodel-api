@@ -15,6 +15,7 @@ import org.apache.jena.arq.querybuilder.ConstructBuilder;
 import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.rdf.model.*;
 import org.apache.jena.vocabulary.RDF;
+import org.apache.jena.vocabulary.RDFS;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.topbraid.shacl.vocabulary.SH;
@@ -23,7 +24,10 @@ import javax.annotation.Nonnull;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import static fi.vm.yti.security.AuthorizationException.check;
 
@@ -78,6 +82,7 @@ public class ResourceService {
             throw new MappingError("Invalid model");
         }
 
+        MapperUtils.addLabelsToURIs(dto, mapUriLabels());
         terminologyService.mapConcept().accept(dto);
         return dto;
     }
@@ -267,5 +272,34 @@ public class ResourceService {
 
         resultModel.add(importsModel);
         return resultModel;
+    }
+
+    public Consumer<Set<UriDTO>> mapUriLabels() {
+
+        return (var uriDtos) -> {
+            var uris = uriDtos.stream()
+                    .filter(u -> u.getLabel() == null)
+                    .map(UriDTO::getUri)
+                    .collect(Collectors.toSet());
+
+            if (uris.isEmpty()) {
+                return;
+            }
+
+            var model = findResources(uris);
+
+            uriDtos.forEach(u -> {
+                if (u.getLabel() != null) {
+                    return;
+                }
+                var res = model.getResource(u.getUri());
+                if (res.hasProperty(RDFS.label)) {
+                    u.setLabel(MapperUtils.localizedPropertyToMap(res, RDFS.label));
+                } else {
+                    // use local name if no rdfs:label defined
+                    u.setLabel(Map.of("en", u.getCurie().substring(u.getCurie().lastIndexOf(":") + 1)));
+                }
+            });
+        };
     }
 }
