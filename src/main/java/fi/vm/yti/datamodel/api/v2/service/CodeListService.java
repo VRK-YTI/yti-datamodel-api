@@ -44,7 +44,7 @@ public class CodeListService {
     public void resolveCodelistScheme(Collection<String> codeLists) {
         codeLists.forEach(codeList -> {
             var uri = URI.create(codeList);
-            LOG.debug("Fetching codelist {}", uri);
+            LOG.debug("Fetching codelist {} from env {}", uri, awsEnv);
             try {
                 var result = client.get().uri(builder -> builder
                                 .path(uri.getPath())
@@ -60,7 +60,7 @@ public class CodeListService {
                     schemesRepository.put(codeList, model);
                 }
             } catch (Exception e) {
-                LOG.warn("Could not resolve codelist scheme {}, {}", uri, e.getMessage());
+                LOG.warn("Could not resolve codelist scheme {} from env {}, {}", uri, awsEnv, e.getMessage());
             }
         });
     }
