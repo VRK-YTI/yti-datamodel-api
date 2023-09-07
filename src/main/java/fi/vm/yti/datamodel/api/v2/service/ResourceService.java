@@ -278,7 +278,7 @@ public class ResourceService {
 
         return (var uriDtos) -> {
             var uris = uriDtos.stream()
-                    .filter(u -> u.getLabel() == null)
+                    .filter(u -> u != null && u.getLabel() == null)
                     .map(UriDTO::getUri)
                     .collect(Collectors.toSet());
 
@@ -289,7 +289,7 @@ public class ResourceService {
             var model = findResources(uris);
 
             uriDtos.forEach(u -> {
-                if (u.getLabel() != null) {
+                if (u == null || u.getLabel() != null) {
                     return;
                 }
                 var res = model.getResource(u.getUri());
