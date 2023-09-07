@@ -193,6 +193,10 @@ public class ClassService {
         } else {
             var nodeShape = (NodeShapeDTO) dto;
 
+            if(nodeShape.getTargetNode() != null && nodeShape.getTargetNode().equals(classResource.getURI())) {
+                throw new MappingError("Target node is a self reference");
+            }
+
             var oldNode = MapperUtils.propertyToString(classResource, SH.node);
             var oldTarget = MapperUtils.propertyToString(classResource, SH.targetClass);
 
@@ -200,15 +204,18 @@ public class ClassService {
                     .mapWith((var stmt) -> stmt.getResource().getURI())
                     .toSet();
 
-            // TODO: how to handle existing properties from sh:node reference
             if (oldNode == null && nodeShape.getTargetNode() != null) {
                 // add new sh:node, add properties from sh:node reference
                 nodeShapeProperties.addAll(getTargetNodeProperties(nodeShape.getTargetNode()));
             } else if (oldNode != null && nodeShape.getTargetNode() != null && !oldNode.equals(nodeShape.getTargetNode())) {
-                // replace sh:node, remove properties inherited from old sh:node (?) and add properties from new sh:node reference
+                // replace sh:node, remove properties inherited from old sh:node and add properties from new sh:node reference
+                var oldProperties = getTargetNodeProperties(oldNode);
+                nodeShapeProperties.removeAll(oldProperties);
                 nodeShapeProperties.addAll(getTargetNodeProperties(nodeShape.getTargetNode()));
             } else if (oldNode != null && nodeShape.getTargetNode() == null) {
-                // remove sh:node, remove properties old sh:node reference (?)
+                // remove sh:node, remove properties old sh:node reference
+                var oldProperties = getTargetNodeProperties(oldNode);
+                nodeShapeProperties.removeAll(oldProperties);
             }
 
             // add properties from new target class and create placeholders

@@ -90,7 +90,7 @@ public class CountQueryFactory {
                 .aggregations("groups", getAggregation("isPartOf"))
                 .build();
 
-        logPayload(sr);
+        logPayload(sr, OpenSearchIndexer.OPEN_SEARCH_INDEX_MODEL);
         return sr;
     }
 

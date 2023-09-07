@@ -1,19 +1,22 @@
 package fi.vm.yti.datamodel.api.index;
 
-import java.io.IOException;
-
 import fi.vm.yti.datamodel.api.v2.utils.DataModelUtils;
 import org.opensearch.client.opensearch.OpenSearchClient;
 import org.opensearch.client.opensearch._types.OpenSearchException;
 import org.opensearch.client.opensearch._types.Refresh;
-import org.opensearch.client.opensearch._types.mapping.*;
-import org.opensearch.client.opensearch.core.*;
-import org.opensearch.client.opensearch.indices.*;
+import org.opensearch.client.opensearch._types.mapping.TypeMapping;
+import org.opensearch.client.opensearch.core.DeleteRequest;
+import org.opensearch.client.opensearch.core.IndexRequest;
+import org.opensearch.client.opensearch.core.UpdateRequest;
+import org.opensearch.client.opensearch.indices.CreateIndexRequest;
+import org.opensearch.client.opensearch.indices.DeleteIndexRequest;
 import org.opensearch.client.opensearch.indices.ExistsRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.io.IOException;
 
 import static fi.vm.yti.datamodel.api.v2.opensearch.OpenSearchUtil.logPayload;
 
@@ -78,7 +81,7 @@ public class OpenSearchConnector {
         var request = new CreateIndexRequest.Builder()
                 .index(index)
                 .mappings(mappings).build();
-        logPayload(request);
+        logPayload(request, index);
         try {
             client.indices().create(request);
             logger.info("Index {} created", index);
@@ -98,7 +101,7 @@ public class OpenSearchConnector {
                     .document(doc)
                     .build();
 
-            logPayload(indexReq);
+            logPayload(indexReq, index);
             client.index(indexReq);
             logger.info("Indexed {} to {}}", id, index);
         } catch (IOException | OpenSearchException e) {
@@ -116,7 +119,7 @@ public class OpenSearchConnector {
                     .id(encId)
                     .doc(doc)
                     .build();
-            logPayload(request);
+            logPayload(request, index);
             client.update(request, String.class);
             logger.info("Updated {} to {}", id, index);
         } catch (IOException | OpenSearchException e) {

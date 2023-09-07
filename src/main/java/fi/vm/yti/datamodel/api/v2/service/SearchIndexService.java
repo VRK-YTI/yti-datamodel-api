@@ -1,6 +1,7 @@
 package fi.vm.yti.datamodel.api.v2.service;
 
 import fi.vm.yti.datamodel.api.index.OpenSearchConnector;
+import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
 import fi.vm.yti.datamodel.api.v2.dto.ModelType;
 import fi.vm.yti.datamodel.api.v2.dto.ResourceType;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.OpenSearchException;
@@ -234,6 +235,7 @@ public class SearchIndexService {
         var resource = model.getResource(modelUri);
         namespaces.addAll(MapperUtils.arrayPropertyToList(resource, OWL.imports));
         namespaces.addAll(MapperUtils.arrayPropertyToList(resource, DCTerms.requires));
+        namespaces.removeIf(ns -> ns.startsWith(ModelConstants.CODELIST_NAMESPACE) || ns.startsWith(ModelConstants.TERMINOLOGY_NAMESPACE));
     }
 
     private Set<UUID> getOrganizationsForUser(YtiUser user){
