@@ -17,10 +17,10 @@ public class ValidationConstants {
     public static final int EMAIL_FIELD_MAX_LENGTH = 320;
     public static final int TEXT_AREA_MAX_LENGTH = 5000;
 
-    public static final int PREFIX_MIN_LENGTH = 3;
+    public static final int PREFIX_MIN_LENGTH = 2;
     public static final int PREFIX_MAX_LENGTH = 32;
     public static final int RESOURCE_IDENTIFIER_MAX_LENGTH = 32;
-    public static final String PREFIX_REGEX = "^[a-z][a-z0-9-_]{2,}";
+    public static final String PREFIX_REGEX = "^[a-z][a-z0-9-_]+";
 
     public static final Map<String, String> RESERVED_NAMESPACES = Map.ofEntries(
             Map.entry("owl", "http://www.w3.org/2002/07/owl#"),
