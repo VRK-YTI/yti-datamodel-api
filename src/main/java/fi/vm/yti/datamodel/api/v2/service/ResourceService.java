@@ -289,15 +289,13 @@ public class ResourceService {
             var model = findResources(uris);
 
             uriDtos.forEach(u -> {
-                if (u == null || u.getLabel() != null) {
-                    return;
-                }
-                var res = model.getResource(u.getUri());
-                if (res.hasProperty(RDFS.label)) {
-                    u.setLabel(MapperUtils.localizedPropertyToMap(res, RDFS.label));
-                } else {
+                if (u != null && u.getLabel() == null) {
+                    var res = model.getResource(u.getUri());
+
                     // use local name if no rdfs:label defined
-                    u.setLabel(Map.of("en", u.getCurie().substring(u.getCurie().lastIndexOf(":") + 1)));
+                    u.setLabel(res.hasProperty(RDFS.label)
+                        ? MapperUtils.localizedPropertyToMap(res, RDFS.label)
+                        : Map.of("en", u.getCurie().substring(u.getCurie().lastIndexOf(":") + 1)));
                 }
             });
         };
