@@ -5,6 +5,7 @@ import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.endpoint.EndpointUtils;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
+import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.mapper.ResourceMapper;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexResource;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
@@ -12,10 +13,12 @@ import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import fi.vm.yti.datamodel.api.v2.repository.ImportsRepository;
 import fi.vm.yti.security.AuthenticatedUserProvider;
 import fi.vm.yti.security.YtiUser;
+import org.apache.jena.query.Query;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDF;
+import org.apache.jena.vocabulary.RDFS;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -27,6 +30,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.net.URISyntaxException;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -266,6 +270,49 @@ class ResourceServiceTest {
         result = resourceService.exists("test", "NotFree");
         assertTrue(result);
     }
+
+    @Test
+    void mapUriLabels() {
+        var model = ModelFactory.createDefaultModel();
+        var res = model.createResource("http://uri.suomi.fi/datamodel/ns/test_lib/attribute-1");
+        MapperUtils.addLocalizedProperty(Set.of("en"), Map.of("en", "Class label"), res, RDFS.label, model);
+
+        var uri1 = new UriDTO("http://uri.suomi.fi/datamodel/ns/test_lib/attribute-1", "test_lib:attribute-1", null);
+        var uri2 = new UriDTO("http://uri.suomi.fi/datamodel/ns/test_lib/attribute-2", "test_lib:attribute-2", null);
+        var uri3 = new UriDTO("http://uri.suomi.fi/datamodel/ns/test_lib/attribute-3", "test_lib:attribute-3", Map.of("en", "Existing label"));
+
+        var uris = new HashSet<UriDTO>();
+        uris.add(uri1);
+        uris.add(uri2);
+        uris.add(uri3);
+
+        when(coreRepository.queryConstruct(any(Query.class))).thenReturn(model);
+        when(importsRepository.queryConstruct(any(Query.class))).thenReturn(ModelFactory.createDefaultModel());
+
+        resourceService.mapUriLabels().accept(uris);
+
+        var result1 = uris.stream()
+                .filter(u -> u.getCurie().equals("test_lib:attribute-1"))
+                .findFirst();
+        var result2 = uris.stream()
+                .filter(u -> u.getCurie().equals("test_lib:attribute-2"))
+                .findFirst();
+        var result3 = uris.stream()
+                .filter(u -> u.getCurie().equals("test_lib:attribute-3"))
+                .findFirst();
+
+        assertTrue(result1.isPresent());
+        assertTrue(result2.isPresent());
+        assertTrue(result3.isPresent());
+
+        // map label from query result
+        assertEquals(Map.of("en", "Class label"), result1.get().getLabel());
+        // no label found -> use local name
+        assertEquals(Map.of("en", "attribute-2"), result2.get().getLabel());
+        // label already added
+        assertEquals(Map.of("en", "Existing label"), result3.get().getLabel());
+    }
+
     private static ResourceDTO createResourceDTO(boolean update, ResourceType resourceType){
         var dto = new ResourceDTO();
         dto.setEditorialNote("test comment");

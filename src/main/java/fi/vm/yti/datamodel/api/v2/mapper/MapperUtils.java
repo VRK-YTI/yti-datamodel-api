@@ -391,17 +391,24 @@ public class MapperUtils {
         }
         var u = NodeFactory.createURI(uri);
         var prefix = model.getNsURIPrefix(u.getNameSpace());
+
+        Map<String,String> label = null;
+        var resource = model.getResource(uri);
+        if (resource.hasProperty(RDFS.label)) {
+            label = localizedPropertyToMap(resource, RDFS.label);
+        }
         if (prefix != null) {
-            return new UriDTO(uri, String.format("%s:%s", prefix, u.getLocalName()));
+            return new UriDTO(uri, String.format("%s:%s", prefix, u.getLocalName()), label);
         } else if (uri.startsWith(ModelConstants.SUOMI_FI_NAMESPACE)) {
             return new UriDTO(uri, uri
                     .replace(ModelConstants.SUOMI_FI_NAMESPACE, "")
-                    .replace(ModelConstants.RESOURCE_SEPARATOR, ":")
+                    .replace(ModelConstants.RESOURCE_SEPARATOR, ":"),
+                    label
             );
         } else {
             // use last element of the path as a prefix, if it could not determine
             var parts = u.getNameSpace().split("\\W");
-            return new UriDTO(uri, String.format("%s:%s", parts[parts.length - 1], u.getLocalName()));
+            return new UriDTO(uri, String.format("%s:%s", parts[parts.length - 1], u.getLocalName()), label);
         }
     }
 
@@ -409,5 +416,28 @@ public class MapperUtils {
         return uris.stream()
                 .map(s -> uriToURIDTO(s, model))
                 .collect(Collectors.toSet());
+    }
+
+    public static void addLabelsToURIs(ResourceInfoBaseDTO dto, Consumer<Set<UriDTO>> mapper) {
+        var uris = new HashSet<UriDTO>();
+
+        if (dto instanceof ClassInfoDTO classInfoDTO) {
+            uris.addAll(classInfoDTO.getSubClassOf());
+            uris.addAll(classInfoDTO.getEquivalentClass());
+            uris.addAll(classInfoDTO.getDisjointWith());
+        } else if (dto instanceof NodeShapeInfoDTO nodeShapeInfoDTO) {
+            uris.add(nodeShapeInfoDTO.getTargetNode());
+            uris.add(nodeShapeInfoDTO.getTargetClass());
+        } else if (dto instanceof PropertyShapeInfoDTO propertyShapeInfoDTO) {
+            uris.add(propertyShapeInfoDTO.getClassType());
+            uris.add(propertyShapeInfoDTO.getPath());
+        } else if (dto instanceof ResourceInfoDTO resourceInfoDTO) {
+            uris.add(resourceInfoDTO.getRange());
+            uris.add(resourceInfoDTO.getDomain());
+            uris.addAll(resourceInfoDTO.getEquivalentResource());
+            uris.addAll(resourceInfoDTO.getSubResourceOf());
+        }
+
+        mapper.accept(uris);
     }
 }

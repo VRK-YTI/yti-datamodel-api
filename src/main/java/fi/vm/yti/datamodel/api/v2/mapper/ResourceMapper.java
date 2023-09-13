@@ -356,7 +356,7 @@ public class ResourceMapper {
 
         // attribute's range is data type, e.g. rdfs:Literal
         // association's range is URI
-        if (dto.getType().equals(ResourceType.ATTRIBUTE)) {
+        if (dto.getType().equals(ResourceType.ATTRIBUTE) && range != null) {
             dto.setRange(new UriDTO(range, range));
         } else {
             dto.setRange(MapperUtils.uriToURIDTO(range, model));
