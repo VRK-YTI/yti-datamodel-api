@@ -699,6 +699,27 @@ class ResourceMapperTest {
         assertEquals(ResourceType.ASSOCIATION, indexResource2.getResourceType());
     }
 
+    @Test
+    void testUpdateRestrictionsAfterRangeChange() {
+        var model = MapperTestUtils.getModelFromFile("/class_with_owl_restrictions.ttl");
+
+        var graphUri = "http://uri.suomi.fi/datamodel/ns/model";
+        var identifier = "attribute-1";
+
+        // update range to xsd:integer
+        var dto = new ResourceDTO();
+        dto.setIdentifier(identifier);
+        dto.setLabel(Map.of("fi", "test label"));
+        dto.setRange("xsd:integer");
+
+        ResourceMapper.mapToUpdateResource(graphUri, model, identifier, dto, EndpointUtils.mockUser);
+
+        var classResource = model.getResource(graphUri + "/class-1");
+        var restrictionResource = classResource.getProperty(OWL.intersectionOf).getObject().asResource();
+
+        assertEquals("xsd:integer", restrictionResource.getProperty(OWL.someValuesFrom).getObject().toString());
+    }
+
     private Model getOrgModel(){
         var model = ModelFactory.createDefaultModel();
               model.createResource("urn:uuid:7d3a3c00-5a6b-489b-a3ed-63bb58c26a63")

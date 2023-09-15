@@ -4,6 +4,7 @@ import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.endpoint.EndpointUtils;
 import fi.vm.yti.datamodel.api.v2.mapper.ClassMapper;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
+import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.vocabulary.*;
 import org.junit.jupiter.api.Test;
@@ -11,6 +12,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -302,4 +304,42 @@ class ClassMapperTest {
         assertEquals("encoding", attributes.get(0).getLabel().get("en"));
         assertEquals(ns + "encoding", attributes.get(0).getUri());
     }
+
+    @Test
+    void testMapAndRemoveAnonymousRestrictions() {
+        var model = ModelFactory.createDefaultModel();
+        model.setNsPrefixes(ModelConstants.PREFIXES);
+        var attributeURI = "http://uri.suomi.fi/datamodel/ns/model/attribute-1";
+
+        var classResource1 = model.createResource("http://uri.suomi.fi/datamodel/ns/model/class-1");
+        classResource1.addProperty(RDF.type, OWL.Class);
+
+        var classResource2 = model.createResource("http://uri.suomi.fi/datamodel/ns/model/class-2");
+        classResource2.addProperty(RDF.type, OWL.Class);
+
+        var attributeResource = model.createResource(attributeURI);
+        attributeResource.addProperty(RDF.type, OWL.DatatypeProperty);
+        attributeResource.addProperty(RDFS.range, XSD.anyURI);
+
+        ClassMapper.mapClassRestrictionProperty(model, classResource1, attributeResource);
+        ClassMapper.mapClassRestrictionProperty(model, classResource2, attributeResource);
+
+        Consumer<Resource> checkRestriction = (var res) -> {
+            var restriction = res.getProperty(OWL.intersectionOf).getObject().asResource();
+            assertEquals(OWL.Restriction, restriction.getProperty(RDF.type).getResource());
+            assertEquals(attributeURI, restriction.getProperty(OWL.onProperty).getObject().toString());
+            assertEquals(XSD.anyURI, restriction.getProperty(OWL.someValuesFrom).getResource());
+        };
+
+        // both class1 and class2 should have reference to attribute-1
+        List.of(classResource1, classResource2).forEach(checkRestriction);
+
+        // remove reference from class-1
+        ClassMapper.mapRemoveClassRestrictionProperty(model, classResource1, attributeURI);
+
+        // class-1 should not have property owl:intersectionOf but class-2's reference has not changed
+        checkRestriction.accept(classResource2);
+        assertNull(classResource1.getProperty(OWL.intersectionOf));
+    }
+
 }

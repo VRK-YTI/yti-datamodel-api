@@ -6,9 +6,7 @@ import fi.vm.yti.datamodel.api.v2.opensearch.index.*;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelUtils;
 import fi.vm.yti.security.YtiUser;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.Resource;
-import org.apache.jena.rdf.model.ResourceFactory;
+import org.apache.jena.rdf.model.*;
 import org.apache.jena.vocabulary.*;
 import org.topbraid.shacl.vocabulary.SH;
 
@@ -135,6 +133,17 @@ public class ResourceMapper {
 
         MapperUtils.updateUriProperty(resource, RDFS.domain, dto.getDomain());
         MapperUtils.updateUriProperty(resource, RDFS.range, dto.getRange());
+
+        // update range to attribute and association restrictions (owl:someValuesFrom)
+        model.listStatements(new SimpleSelector(null, OWL.intersectionOf, (RDFNode) null))
+                .filterKeep(p -> p.getResource().hasProperty(OWL.onProperty)
+                        && p.getResource().getProperty(OWL.onProperty).getObject().equals(resource))
+                .toList().forEach(r -> {
+                    r.getResource().removeAll(OWL.someValuesFrom);
+                    if (dto.getRange() != null) {
+                        r.getResource().addProperty(OWL.someValuesFrom, ResourceFactory.createResource(dto.getRange()));
+                    }
+        });
 
         MapperUtils.addUpdateMetadata(resource, user);
     }

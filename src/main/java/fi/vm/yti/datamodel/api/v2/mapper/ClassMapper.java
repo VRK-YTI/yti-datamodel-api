@@ -385,4 +385,29 @@ public class ClassMapper {
         }
         model.remove(ResourceFactory.createStatement(classResource, SH.property, ResourceFactory.createResource(propertyURI)));
     }
+
+    public static void mapClassRestrictionProperty(Model model, Resource classResource, Resource propertyResource) {
+        var restrictionResource = model.createResource();
+        restrictionResource.addProperty(RDF.type, OWL.Restriction);
+        restrictionResource.addProperty(OWL.onProperty, propertyResource);
+
+        if (propertyResource.hasProperty(RDFS.range)) {
+            restrictionResource.addProperty(OWL.someValuesFrom,
+                    propertyResource.getProperty(RDFS.range).getObject());
+        }
+
+        classResource.addProperty(OWL.intersectionOf, restrictionResource);
+    }
+
+    public static void mapRemoveClassRestrictionProperty(Model model, Resource classResource, String propertyResource) {
+        var removed = classResource.listProperties(OWL.intersectionOf)
+                .filterKeep(s -> s.getObject().asResource().getProperty(OWL.onProperty).getObject().toString().equals(propertyResource))
+                .toSet();
+        if (removed.isEmpty()) {
+            throw new MappingError(String.format("Restriction %s not added to class", propertyResource));
+        }
+        var bNode = removed.iterator().next().getObject();
+        model.remove(ResourceFactory.createStatement(classResource, OWL.intersectionOf, bNode));
+        model.removeAll(bNode.asResource(), null, null);
+    }
 }

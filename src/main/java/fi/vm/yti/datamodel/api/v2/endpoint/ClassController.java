@@ -161,6 +161,33 @@ public class ClassController {
         classService.handlePropertyShapeReference(prefix, nodeShapeIdentifier, uri, false);
     }
 
+    @Operation(summary = "Add class restriction to the class")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Class restriction added to the class successfully"),
+            @ApiResponse(responseCode = "401", description = "Current user does not have rights for this model"),
+            @ApiResponse(responseCode = "404", description = "Class or resource cannot be found", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ApiError.class))})
+    })
+    @PutMapping(value = "/library/{prefix}/{classIdentifier}/properties")
+    public void addClassRestrictionReference(@PathVariable @Parameter(description = "Data model prefix") String prefix,
+                                              @PathVariable @Parameter(description = "Class identifier restriction is added to") String classIdentifier,
+                                              @RequestParam @Parameter(description = "Attribute or association uri to be added as a restriction") String uri) {
+        classService.handleClassRestrictionReference(prefix, classIdentifier, uri, false);
+    }
+
+    @Operation(summary = "Delete class restriction from the class")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Class restriction deleted from the class successfully"),
+            @ApiResponse(responseCode = "401", description = "Current user does not have rights for this model"),
+            @ApiResponse(responseCode = "404", description = "Class or resource cannot be found", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ApiError.class))})
+    })
+    @ApiResponse(responseCode = "200", description = "Property reference deleted successfully")
+    @DeleteMapping(value = "/library/{prefix}/{classIdentifier}/properties")
+    public void deleteClassRestrictionReference(@PathVariable @Parameter(description = "Data model prefix") String prefix,
+                                             @PathVariable @Parameter(description = "Class identifier restriction is removed from") String classIdentifier,
+                                             @RequestParam @Parameter(description = "Attribute or association uri to be added as a restriction") String uri) {
+        classService.handleClassRestrictionReference(prefix, classIdentifier, uri, true);
+    }
+
     @Operation(summary = "Delete property reference from node shape")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Property reference deleted successfully"),
