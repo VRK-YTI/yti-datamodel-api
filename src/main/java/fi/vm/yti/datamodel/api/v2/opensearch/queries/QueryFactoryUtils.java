@@ -36,10 +36,10 @@ public class QueryFactoryUtils {
 
     //COMMON QUERIES
 
-    public static Query hideIncompleteStatusQuery(){
+    public static Query hideDraftStatusQuery(){
         var termQuery = TermQuery.of(q -> q
                 .field("status")
-                .value(FieldValue.of(Status.INCOMPLETE.name()))
+                .value(FieldValue.of(Status.DRAFT.name()))
                 )._toQuery();
         return BoolQuery.of(q -> q.mustNot(termQuery))._toQuery();
     }

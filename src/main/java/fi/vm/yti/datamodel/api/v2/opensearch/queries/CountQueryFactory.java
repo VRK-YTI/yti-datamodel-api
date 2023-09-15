@@ -30,13 +30,13 @@ public class CountQueryFactory {
         var must = new ArrayList<Query>();
         var should = new ArrayList<Query>();
 
-        var incompleteFrom = request.getIncludeIncompleteFrom();
+        var incompleteFrom = request.getIncludeDraftFrom();
         if(incompleteFrom != null && !incompleteFrom.isEmpty()){
             var incompleteFromQuery = QueryFactoryUtils.termsQuery("contributor", incompleteFrom.stream().map(UUID::toString).toList());
             should.add(incompleteFromQuery);
         }
 
-        should.add(QueryFactoryUtils.hideIncompleteStatusQuery());
+        should.add(QueryFactoryUtils.hideDraftStatusQuery());
 
         var queryString = request.getQuery();
         if(queryString != null && !queryString.isBlank()){

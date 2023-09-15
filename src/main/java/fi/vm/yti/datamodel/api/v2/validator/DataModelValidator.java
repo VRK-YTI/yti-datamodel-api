@@ -29,7 +29,7 @@ public class DataModelValidator extends BaseValidator implements
     public boolean isValid(DataModelDTO dataModel, ConstraintValidatorContext context) {
         setConstraintViolationAdded(false);
         checkPrefix(context, dataModel);
-        checkStatus(context, dataModel.getStatus());
+        checkModelStatus(context, dataModel);
         checkLanguages(context, dataModel);
         checkLabels(context, dataModel);
         checkDescription(context, dataModel);
@@ -79,6 +79,15 @@ public class DataModelValidator extends BaseValidator implements
         }
 
         checkLanguageTags(context, languages, "languages");
+    }
+
+    private void checkModelStatus(ConstraintValidatorContext context, DataModelDTO dataModelDTO) {
+        //TODO in the future resources should not have statuses
+        if(!updateModel && dataModelDTO.getStatus() != null) {
+            addConstraintViolation(context, "not-allowed-creation", "status");
+        }else if(updateModel && dataModelDTO.getStatus() == null) {
+            addConstraintViolation(context, ValidationConstants.MSG_VALUE_MISSING, "status");
+        }
     }
 
     /**

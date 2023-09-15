@@ -39,7 +39,7 @@
               {
                 "term": {
                   "status": {
-                    "value": "INCOMPLETE"
+                    "value": "DRAFT"
                   }
                 }
               }

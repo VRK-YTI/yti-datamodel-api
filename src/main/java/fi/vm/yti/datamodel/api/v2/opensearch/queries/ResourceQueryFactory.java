@@ -34,7 +34,7 @@ public class ResourceQueryFactory {
             should.add(QueryFactoryUtils.termsQuery("isDefinedBy", allowedDatamodels));
         }
 
-        should.add(QueryFactoryUtils.hideIncompleteStatusQuery());
+        should.add(QueryFactoryUtils.hideDraftStatusQuery());
 
         var query = request.getQuery();
         if(query != null && !query.isBlank()){

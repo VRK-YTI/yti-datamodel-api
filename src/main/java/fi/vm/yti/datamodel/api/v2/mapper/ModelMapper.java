@@ -60,7 +60,7 @@ public class ModelMapper {
         var creationDate = new XSDDateTime(Calendar.getInstance());
         var modelResource = model.createResource(modelUri)
                 .addProperty(RDF.type, OWL.Ontology)
-                .addProperty(OWL.versionInfo, modelDTO.getStatus().name())
+                .addProperty(OWL.versionInfo, Status.DRAFT.name())
                 .addProperty(DCTerms.identifier, UUID.randomUUID().toString())
                 .addProperty(Iow.contentModified, ResourceFactory.createTypedLiteral(creationDate))
                 .addProperty(DCAP.preferredXMLNamespacePrefix, modelDTO.getPrefix())
@@ -116,7 +116,10 @@ public class ModelMapper {
 
         var langs = MapperUtils.arrayPropertyToSet(modelResource, DCTerms.language);
 
+
+        //TODO this will change that current model cannot be changed unless they are published and old ones have restricted choices
         MapperUtils.updateStringProperty(modelResource, OWL.versionInfo, dataModelDTO.getStatus().name());
+
 
         MapperUtils.updateLocalizedProperty(langs, dataModelDTO.getLabel(), modelResource, RDFS.label, model);
         MapperUtils.updateLocalizedProperty(langs, dataModelDTO.getDescription(), modelResource, RDFS.comment, model);

@@ -479,7 +479,7 @@ class ResourceMapperTest {
 
         var dto = new ResourceDTO();
         dto.setLabel(Map.of("fi", "new label"));
-        dto.setStatus(Status.INVALID);
+        dto.setStatus(Status.RETIRED);
         dto.setNote(Map.of("fi", "new note"));
         dto.setEquivalentResource(Set.of("http://uri.suomi.fi/datamodel/ns/int/NewEq"));
         dto.setSubResourceOf(Set.of("https://www.example.com/ns/ext/NewSub"));
@@ -513,7 +513,7 @@ class ResourceMapperTest {
         assertEquals("http://uri.suomi.fi/terminology/qwe", resource.getProperty(DCTerms.subject).getObject().toString());
         assertEquals("http://uri.suomi.fi/datamodel/ns/int/NewEq", resource.getProperty(OWL.equivalentProperty).getObject().toString());
         assertEquals("https://www.example.com/ns/ext/NewSub", resource.getProperty(RDFS.subPropertyOf).getObject().toString());
-        assertEquals(Status.INVALID.name(), resource.getProperty(OWL.versionInfo).getObject().toString());
+        assertEquals(Status.RETIRED.name(), resource.getProperty(OWL.versionInfo).getObject().toString());
         assertEquals("new editorial note", resource.getProperty(SKOS.editorialNote).getObject().toString());
         assertEquals(1, resource.listProperties(RDFS.comment).toList().size());
         assertEquals("new note", resource.getProperty(RDFS.comment).getLiteral().getString());
@@ -531,7 +531,7 @@ class ResourceMapperTest {
 
         var dto = new ResourceDTO();
         dto.setLabel(Map.of("fi", "new label"));
-        dto.setStatus(Status.INVALID);
+        dto.setStatus(Status.RETIRED);
         dto.setNote(Map.of("fi", "new note"));
         dto.setEquivalentResource(Set.of("http://uri.suomi.fi/datamodel/ns/int/NewEq"));
         dto.setSubResourceOf(Set.of("https://www.example.com/ns/ext/NewSub"));
@@ -564,7 +564,7 @@ class ResourceMapperTest {
         assertEquals("http://uri.suomi.fi/terminology/qwe", resource.getProperty(DCTerms.subject).getObject().toString());
         assertEquals("http://uri.suomi.fi/datamodel/ns/int/NewEq", resource.getProperty(OWL.equivalentProperty).getObject().toString());
         assertEquals("https://www.example.com/ns/ext/NewSub", resource.getProperty(RDFS.subPropertyOf).getObject().toString());
-        assertEquals(Status.INVALID.name(), resource.getProperty(OWL.versionInfo).getObject().toString());
+        assertEquals(Status.RETIRED.name(), resource.getProperty(OWL.versionInfo).getObject().toString());
         assertEquals("new editorial note", resource.getProperty(SKOS.editorialNote).getObject().toString());
         assertEquals(1, resource.listProperties(RDFS.comment).toList().size());
         assertEquals("new note", resource.getProperty(RDFS.comment).getLiteral().getString());

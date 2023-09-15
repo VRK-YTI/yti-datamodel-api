@@ -23,17 +23,19 @@ public class ModelQueryFactory {
         //only static functions here
     }
 
-    public static SearchRequest createModelQuery(ModelSearchRequest request){
+    public static SearchRequest createModelQuery(ModelSearchRequest request, boolean isSuperUser){
         var must = new ArrayList<Query>();
         var should = new ArrayList<Query>();
 
-        var incompleteFrom = request.getIncludeIncompleteFrom();
-        if(incompleteFrom != null && !incompleteFrom.isEmpty()){
-            var incompleteFromQuery = QueryFactoryUtils.termsQuery("contributor", incompleteFrom.stream().map(UUID::toString).toList());
+        var draftFrom = request.getIncludeDraftFrom();
+        if(draftFrom != null && !draftFrom.isEmpty()){
+            var incompleteFromQuery = QueryFactoryUtils.termsQuery("contributor", draftFrom.stream().map(UUID::toString).toList());
             should.add(incompleteFromQuery);
         }
 
-        should.add(QueryFactoryUtils.hideIncompleteStatusQuery());
+        if(!isSuperUser) {
+            should.add(QueryFactoryUtils.hideDraftStatusQuery());
+        }
 
         var queryString = request.getQuery();
         if(queryString != null && !queryString.isBlank()){
@@ -71,10 +73,11 @@ public class ModelQueryFactory {
         }
 
         var finalQuery = QueryBuilders.bool()
-                .must(must)
-                .minimumShouldMatch("1")
-                .should(should)
-                .build();
+                .must(must);
+
+        if(!should.isEmpty()) {
+            finalQuery.should(should).minimumShouldMatch("1");
+        }
 
         var sortLang = request.getSortLang() != null ? request.getSortLang() : QueryFactoryUtils.DEFAULT_SORT_LANG;
         var sort = SortOptionsBuilders.field()
@@ -88,7 +91,7 @@ public class ModelQueryFactory {
                 .size(QueryFactoryUtils.pageSize(request.getPageSize()))
                 .from(QueryFactoryUtils.pageFrom(request.getPageFrom()))
                 .sort(SortOptions.of(s -> s.field(sort)))
-                .query(finalQuery._toQuery())
+                .query(finalQuery.build()._toQuery())
                 .build();
 
         logPayload(sr, OpenSearchIndexer.OPEN_SEARCH_INDEX_MODEL);

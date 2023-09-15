@@ -213,7 +213,9 @@ class DataModelControllerTest {
         if(!updateModel){
             dataModelDTO.setPrefix("test");
         }
-        dataModelDTO.setStatus(Status.DRAFT);
+        if(updateModel) {
+            dataModelDTO.setStatus(Status.DRAFT);
+        }
         dataModelDTO.setTerminologies(Set.of("http://uri.suomi.fi/terminology/test"));
         var linkDTO = new LinkDTO();
         linkDTO.setName("test link");

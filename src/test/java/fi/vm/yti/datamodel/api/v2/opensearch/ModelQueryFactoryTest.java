@@ -27,11 +27,11 @@ class ModelQueryFactoryTest {
         request.setLanguage("en");
         request.setPageFrom(1);
         request.setPageSize(100);
-        request.setStatus(Set.of(Status.DRAFT, Status.VALID));
+        request.setStatus(Set.of(Status.SUGGESTED, Status.VALID));
         request.setSortLang("en");
-        request.setIncludeIncompleteFrom(Set.of(UUID.fromString("7d3a3c00-5a6b-489b-a3ed-63bb58c26a63")));
+        request.setIncludeDraftFrom(Set.of(UUID.fromString("7d3a3c00-5a6b-489b-a3ed-63bb58c26a63")));
 
-        var modelQuery = ModelQueryFactory.createModelQuery(request);
+        var modelQuery = ModelQueryFactory.createModelQuery(request, false);
 
         String expected = OpenSearchUtils.getJsonString("/es/modelrequest.json");
         JSONAssert.assertEquals(expected, OpenSearchUtils.getPayload(modelQuery), JSONCompareMode.LENIENT);
@@ -44,7 +44,7 @@ class ModelQueryFactoryTest {
     void createModelClassQueryDefaultsTest() {
         var request = new ModelSearchRequest();
 
-        var modelQuery = ModelQueryFactory.createModelQuery(request);
+        var modelQuery = ModelQueryFactory.createModelQuery(request, false);
 
         assertEquals("Page from value not matching", 0, modelQuery.from());
         assertEquals("Page size value not matching", 10, modelQuery.size());

@@ -26,7 +26,7 @@ class ResourceQueryFactoryTest {
         request.setFromAddedNamespaces(true);
         request.setPageFrom(1);
         request.setPageSize(100);
-        request.setStatus(Set.of(Status.DRAFT, Status.VALID));
+        request.setStatus(Set.of(Status.SUGGESTED, Status.VALID));
         request.setSortLang("en");
         request.setTargetClass("http://uri.suomi.fi/datamodel/ns/test/TestClass");
         request.setResourceTypes(Set.of(ResourceType.ATTRIBUTE, ResourceType.ASSOCIATION));
