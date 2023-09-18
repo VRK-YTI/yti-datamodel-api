@@ -302,7 +302,7 @@ public class ClassMapper {
             resDTO.setModelId(MapperUtils.getModelIdFromNamespace(modelUri));
             if (MapperUtils.hasType(res, OWL.DatatypeProperty)) {
                 attributes.add(resDTO);
-            } else if (MapperUtils.hasType(OWL.ObjectProperty)) {
+            } else if (MapperUtils.hasType(res, OWL.ObjectProperty)) {
                 associations.add(resDTO);
             }
             dto.setAssociation(associations);

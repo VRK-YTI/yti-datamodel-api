@@ -148,8 +148,8 @@ public class VisualizationService {
     private static List<Resource> getAttributesAndAssociations(
             Model model, Resource classResource, Resource modelResource) {
         if (MapperUtils.isLibrary(modelResource)) {
-            return model.listObjectsOfProperty(OWL.intersectionOf)
-                    .mapWith(n -> model.getResource(n.asResource()
+            return classResource.listProperties(OWL.intersectionOf)
+                    .mapWith(n -> model.getResource(n.getObject().asResource()
                             .getProperty(OWL.onProperty).getObject().toString()))
                     .toList();
         } else if (MapperUtils.isApplicationProfile(modelResource)) {
