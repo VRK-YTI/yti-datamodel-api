@@ -10,7 +10,6 @@ import org.apache.jena.rdf.model.*;
 import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDF;
-import org.apache.jena.vocabulary.RDFS;
 import org.springframework.stereotype.Service;
 import org.topbraid.shacl.vocabulary.SH;
 
@@ -149,7 +148,10 @@ public class VisualizationService {
     private static List<Resource> getAttributesAndAssociations(
             Model model, Resource classResource, Resource modelResource) {
         if (MapperUtils.isLibrary(modelResource)) {
-            return model.listSubjectsWithProperty(RDFS.domain, classResource).toList();
+            return model.listObjectsOfProperty(OWL.intersectionOf)
+                    .mapWith(n -> model.getResource(n.asResource()
+                            .getProperty(OWL.onProperty).getObject().toString()))
+                    .toList();
         } else if (MapperUtils.isApplicationProfile(modelResource)) {
             return classResource.listProperties(SH.property)
                     .mapWith(Statement::getResource)

@@ -17,7 +17,17 @@ test:testclass1  rdf:type     owl:Class ;
         rdfs:isDefinedBy     <http://uri.suomi.fi/datamodel/ns/test> ;
         dcterms:identifier   "testclass1"^^xsd:NCName ;
         rdfs:label           "Label 1"@fi ;
-        rdfs:subClassOf      <http://uri.suomi.fi/datamodel/ns/yti-model/TestClass> .
+        rdfs:subClassOf      <http://uri.suomi.fi/datamodel/ns/yti-model/TestClass> ;
+        owl:intersectionOf   [
+            rdf:type  owl:Restriction ;
+            owl:onProperty      test:attribute-1 ;
+            owl:someValuesFrom  <xsd:string>
+        ] ;
+        owl:intersectionOf   [
+            rdf:type  owl:Restriction ;
+            owl:onProperty      test:association-1 ;
+            owl:someValuesFrom  <http://uri.suomi.fi/datamodel/ns/visu/testclass2>
+        ] .
 
 test:testclass2  rdf:type     owl:Class ;
         rdfs:isDefinedBy     <http://uri.suomi.fi/datamodel/ns/test> ;
@@ -35,7 +45,8 @@ test:attribute-1  rdf:type  owl:DatatypeProperty ;
         rdfs:domain         <http://uri.suomi.fi/datamodel/ns/test/testclass1> ;
         rdfs:isDefinedBy    <http://uri.suomi.fi/datamodel/ns/test> ;
         dcterms:identifier  "attribute-1"^^xsd:NCName ;
-        rdfs:label          "testiattribuutti"@fi .
+        rdfs:label          "testiattribuutti"@fi ;
+        rdfs:range          <xsd:string> .
 
 test:association-1 rdf:type  owl:ObjectProperty ;
         rdfs:domain         <http://uri.suomi.fi/datamodel/ns/test/testclass1> ;

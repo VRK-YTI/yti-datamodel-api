@@ -48,7 +48,28 @@ class VisualizationServiceTest {
     private VisualizationService visualizationService;
 
     @Test
-    void testMapVisualizationData() {
+    void testMapVisualizationDataLibrary() {
+        var model = MapperTestUtils.getModelFromFile("/models/test_datamodel_visualization.ttl");
+        var positionModel = MapperTestUtils.getModelFromFile("/positions.ttl");
+
+        when(coreRepository.fetch(anyString())).thenReturn(model);
+        when(coreRepository.fetch(ModelConstants.MODEL_POSITIONS_NAMESPACE + "test")).thenReturn(positionModel);
+
+        var visualizationData = visualizationService.getVisualizationData("test");
+
+        // should contain 3 classes and 2 references to external models
+        assertEquals(5, visualizationData.getNodes().size());
+
+        var cls = findClass(visualizationData.getNodes(), "testclass1");
+        assertEquals(1, cls.getAttributes().size());
+        assertEquals(1, cls.getAssociations().size());
+
+        var extClass = findClass(visualizationData.getNodes(), "ext:ExternalClass");
+        assertNotNull(extClass);
+    }
+
+    @Test
+    void testMapVisualizationDataProfile() {
         var model = MapperTestUtils.getModelFromFile("/models/test_application_profile_visualization.ttl");
         var positionModel = MapperTestUtils.getModelFromFile("/positions.ttl");
         var externalPropertiesModel = getExternalPropertiesResult();

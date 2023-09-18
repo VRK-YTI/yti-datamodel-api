@@ -287,7 +287,7 @@ public class ClassMapper {
         classResources.listSubjects().forEach(res -> {
             var resDTO = new SimpleResourceDTO();
             resDTO.setUri(res.getURI());
-            resDTO.setIdentifier(res.getProperty(DCTerms.identifier).getString());
+            resDTO.setIdentifier(MapperUtils.getLiteral(res, DCTerms.identifier, String.class));
             resDTO.setLabel(MapperUtils.localizedPropertyToMap(res, RDFS.label));
             resDTO.setNote(MapperUtils.localizedPropertyToMap(res, RDFS.comment));
             resDTO.setCurie(MapperUtils.uriToURIDTO(res.getURI(), classResources).getCurie());
@@ -300,11 +300,10 @@ public class ClassMapper {
                 throw new MappingError("ModelUri null for resource");
             }
             resDTO.setModelId(MapperUtils.getModelIdFromNamespace(modelUri));
-            var type = res.getProperty(RDF.type).getResource();
-            if(type.equals(OWL.ObjectProperty)){
-                associations.add(resDTO);
-            }else if(type.equals(OWL.DatatypeProperty)){
+            if (MapperUtils.hasType(res, OWL.DatatypeProperty)) {
                 attributes.add(resDTO);
+            } else if (MapperUtils.hasType(OWL.ObjectProperty)) {
+                associations.add(resDTO);
             }
             dto.setAssociation(associations);
             dto.setAttribute(attributes);
