@@ -13,7 +13,7 @@ public class CountRequest {
     private Set<Status> status;
     private Set<UUID> organizations;
     private Set<String> groups;
-    private Set<UUID> includeIncompleteFrom;
+    private Set<UUID> includeDraftFrom;
 
     public String getQuery() {
         return query;
@@ -63,11 +63,11 @@ public class CountRequest {
         this.groups = groups;
     }
 
-    public Set<UUID> getIncludeIncompleteFrom() {
-        return includeIncompleteFrom;
+    public Set<UUID> getIncludeDraftFrom() {
+        return includeDraftFrom;
     }
 
-    public void setIncludeIncompleteFrom(Set<UUID> includeIncompleteFrom) {
-        this.includeIncompleteFrom = includeIncompleteFrom;
+    public void setIncludeDraftFrom(Set<UUID> includeDraftFrom) {
+        this.includeDraftFrom = includeDraftFrom;
     }
 }

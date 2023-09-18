@@ -69,10 +69,10 @@ public class SearchIndexService {
     public SearchResponseDTO<IndexModel> searchModels(ModelSearchRequest request, YtiUser user) {
         try {
             if (!user.isSuperuser()) {
-                request.setIncludeIncompleteFrom(getOrganizationsForUser(user));
+                request.setIncludeDraftFrom(getOrganizationsForUser(user));
             }
 
-            var build = ModelQueryFactory.createModelQuery(request);
+            var build = ModelQueryFactory.createModelQuery(request, user.isSuperuser());
             var response = client.search(build, IndexModel.class);
 
             var modelSearchResponse = new SearchResponseDTO<IndexModel>();
@@ -97,8 +97,8 @@ public class SearchIndexService {
                 var modelRequest = new ModelSearchRequest();
                 modelRequest.setPageSize(QueryFactoryUtils.INTERNAL_SEARCH_PAGE_SIZE);
                 modelRequest.setOrganizations(organizations);
-                modelRequest.setIncludeIncompleteFrom(organizations);
-                var build = ModelQueryFactory.createModelQuery(modelRequest);
+                modelRequest.setIncludeDraftFrom(organizations);
+                var build = ModelQueryFactory.createModelQuery(modelRequest, user.isSuperuser());
                 var response = client.search(build, IndexModel.class);
                 allowedDatamodels = response.hits().hits().stream()
                         .filter(hit -> hit.source() != null)
@@ -136,7 +136,7 @@ public class SearchIndexService {
             coreRepository.querySelect(select.build(), (var row) -> externalResources.add(row.get("property").toString()));
             request.setAdditionalResources(externalResources);
         }
-        return searchInternalResources(request, allowedDatamodels);
+        return searchInternalResources(request, allowedDatamodels, user);
     }
 
     public SearchResponseDTO<IndexResourceInfo> searchInternalResourcesWithInfo(ResourceSearchRequest request, YtiUser user) throws IOException {
@@ -166,7 +166,7 @@ public class SearchIndexService {
      * @param groups Service category groups
      * @return List of DataModel URIs
      */
-    private List<String> getModelSpecificRestrictions(ModelType modelType, Set<String> groups){
+    private List<String> getModelSpecificRestrictions(ModelType modelType, Set<String> groups, YtiUser user){
         if(modelType == null && (groups == null || groups.isEmpty())){
             //Skip the search all together if no extra filtering needs to be done
             return Collections.emptyList();
@@ -179,7 +179,7 @@ public class SearchIndexService {
         if(groups != null && !groups.isEmpty()){
             modelRequest.setGroups(groups);
         }
-        var build = ModelQueryFactory.createModelQuery(modelRequest);
+        var build = ModelQueryFactory.createModelQuery(modelRequest, user.isSuperuser());
         try {
             var response = client.search(build, IndexModel.class);
             return response.hits().hits().stream()
@@ -190,7 +190,7 @@ public class SearchIndexService {
         }
     }
 
-   public SearchResponseDTO<IndexResource> searchInternalResources(ResourceSearchRequest request, Set<String> allowedDatamodels) throws IOException {
+   public SearchResponseDTO<IndexResource> searchInternalResources(ResourceSearchRequest request, Set<String> allowedDatamodels, YtiUser user) throws IOException {
         var namespaces = new ArrayList<String>();
         if(request.getLimitToDataModel() != null && !request.getLimitToDataModel().isBlank()){
             namespaces.add(request.getLimitToDataModel());
@@ -203,7 +203,7 @@ public class SearchIndexService {
             getNamespacesFromModel(request.getLimitToDataModel(), namespaces);
         }
 
-        var restrictedDataModels = getModelSpecificRestrictions(request.getLimitToModelType(), request.getGroups());
+        var restrictedDataModels = getModelSpecificRestrictions(request.getLimitToModelType(), request.getGroups(), user);
         var build = ResourceQueryFactory.createInternalResourceQuery(request, namespaces, restrictedDataModels, allowedDatamodels);
         var response = client.search(build, IndexResource.class);
 

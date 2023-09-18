@@ -49,7 +49,7 @@ class CountQueryFactoryTest {
                                 .build())
                         .build())
                 .aggregations(getAggregation("statuses", Map.of(
-                        Status.DRAFT.name(), 7L,
+                        Status.SUGGESTED.name(), 7L,
                         Status.VALID.name(), 1L
                 )))
                 .aggregations(getAggregation("groups", Map.of(
@@ -70,7 +70,7 @@ class CountQueryFactoryTest {
         assertEquals(1L, groups.get("P21"));
 
         assertEquals(2, statuses.keySet().size());
-        assertEquals(7, statuses.get(Status.DRAFT.name()));
+        assertEquals(7, statuses.get(Status.SUGGESTED.name()));
         assertEquals(1, statuses.get(Status.VALID.name()));
     }
 

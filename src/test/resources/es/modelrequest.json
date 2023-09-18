@@ -33,7 +33,7 @@
         },
         {
           "terms": {
-            "status": ["DRAFT", "VALID"]
+            "status": ["SUGGESTED", "VALID"]
           }
         },
         {
@@ -51,7 +51,7 @@
               {
                 "term": {
                   "status": {
-                    "value": "INCOMPLETE"
+                    "value": "DRAFT"
                   }
                 }
               }

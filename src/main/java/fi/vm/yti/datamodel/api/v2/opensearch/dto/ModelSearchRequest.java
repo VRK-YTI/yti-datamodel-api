@@ -11,7 +11,7 @@ public class ModelSearchRequest extends BaseSearchRequest {
 
     private Set<ModelType> type;
 
-    private Set<UUID> includeIncompleteFrom;
+    private Set<UUID> includeDraftFrom;
 
     private Set<UUID> organizations;
 
@@ -35,12 +35,12 @@ public class ModelSearchRequest extends BaseSearchRequest {
         this.type = type;
     }
 
-    public Set<UUID> getIncludeIncompleteFrom() {
-        return includeIncompleteFrom;
+    public Set<UUID> getIncludeDraftFrom() {
+        return includeDraftFrom;
     }
 
-    public void setIncludeIncompleteFrom(Set<UUID> includeIncompleteFrom) {
-        this.includeIncompleteFrom = includeIncompleteFrom;
+    public void setIncludeDraftFrom(Set<UUID> includeDraftFrom) {
+        this.includeDraftFrom = includeDraftFrom;
     }
 
     public Set<UUID> getOrganizations() {

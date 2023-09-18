@@ -29,7 +29,10 @@ import org.topbraid.shacl.vocabulary.SH;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -116,7 +119,7 @@ public class ClassService {
 
     public List<IndexResourceInfo> getNodeShapes(String targetClass) throws IOException {
         var request = new ResourceSearchRequest();
-        request.setStatus(Set.of(Status.VALID, Status.DRAFT));
+        request.setStatus(Set.of(Status.VALID, Status.SUGGESTED));
         request.setTargetClass(targetClass);
         return searchIndexService
                 .searchInternalResourcesWithInfo(request, userProvider.getUser())
