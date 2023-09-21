@@ -1,0 +1,35 @@
+
+
+<http://uri.suomi.fi/datamodel/ns/model/attribute-1>
+        a       <http://www.w3.org/2002/07/owl#DatatypeProperty> ;
+        <http://www.w3.org/2000/01/rdf-schema#range>
+                <http://www.w3.org/2001/XMLSchema#anyURI> .
+
+<http://uri.suomi.fi/datamodel/ns/model/class-1>
+        a       <http://www.w3.org/2002/07/owl#Class> ;
+        <http://www.w3.org/2002/07/owl#equivalentClass>  <http://uri.suomi.fi/datamodel/ns/model/class-2> ;
+        <http://www.w3.org/2002/07/owl#equivalentClass>
+                [ a       <http://www.w3.org/2002/07/owl#Class> ;
+                  <http://www.w3.org/2002/07/owl#intersectionOf>
+                          ( [ a       <http://www.w3.org/2002/07/owl#Restriction> ;
+                              <http://www.w3.org/2002/07/owl#onProperty>
+                                      <http://uri.suomi.fi/datamodel/ns/model/attribute-1> ;
+                              <http://www.w3.org/2002/07/owl#someValuesFrom>
+                                      <http://www.w3.org/2001/XMLSchema#anyURI>
+                            ]
+                            [ a       <http://www.w3.org/2002/07/owl#Restriction> ;
+                              <http://www.w3.org/2002/07/owl#onProperty>
+                                      <http://uri.suomi.fi/datamodel/ns/model/attribute-2> ;
+                              <http://www.w3.org/2002/07/owl#someValuesFrom>
+                                      <http://www.w3.org/2001/XMLSchema#anyURI>
+                            ]
+                          )
+                ] .
+
+<http://uri.suomi.fi/datamodel/ns/model/attribute-2>
+        a       <http://www.w3.org/2002/07/owl#DatatypeProperty> ;
+        <http://www.w3.org/2000/01/rdf-schema#range>
+                <http://www.w3.org/2001/XMLSchema#anyURI> .
+
+<http://uri.suomi.fi/datamodel/ns/model/class-2>
+        a       <http://www.w3.org/2002/07/owl#Class> .

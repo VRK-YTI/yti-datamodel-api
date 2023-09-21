@@ -10,9 +10,7 @@ import org.apache.jena.arq.querybuilder.WhereBuilder;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.query.Query;
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.Resource;
-import org.apache.jena.rdf.model.ResourceFactory;
+import org.apache.jena.rdf.model.*;
 import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDF;
@@ -21,10 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.topbraid.shacl.vocabulary.SH;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -386,6 +381,11 @@ public class ClassMapper {
     }
 
     public static void mapClassRestrictionProperty(Model model, Resource classResource, Resource propertyResource) {
+
+        var existingEqClassResource = classResource.listProperties(OWL.equivalentClass)
+                .filterKeep(p -> p.getObject().isAnon())
+                .mapWith(r -> r.getObject().asResource());
+
         var restrictionResource = model.createResource();
         restrictionResource.addProperty(RDF.type, OWL.Restriction);
         restrictionResource.addProperty(OWL.onProperty, propertyResource);
@@ -395,18 +395,81 @@ public class ClassMapper {
                     propertyResource.getProperty(RDFS.range).getObject());
         }
 
-        classResource.addProperty(OWL.intersectionOf, restrictionResource);
+        RDFList rdfList;
+
+        if (existingEqClassResource.hasNext()) {
+            var res = existingEqClassResource.next();
+            rdfList = MapperUtils.getList(model, res, OWL.intersectionOf);
+
+            if (rdfList.asJavaList().stream()
+                    .anyMatch(r -> r.asResource().getProperty(OWL.onProperty).getObject().equals(propertyResource))) {
+                throw new MappingError(String.format("Property %s already added", propertyResource.getURI()));
+            }
+
+            rdfList.add(restrictionResource);
+        } else {
+            Resource equvalentClassResource = model.createResource();
+            equvalentClassResource.addProperty(RDF.type, OWL.Class);
+
+            rdfList = model.createList().cons(restrictionResource);
+            equvalentClassResource.addProperty(OWL.intersectionOf, rdfList);
+
+            classResource.addProperty(OWL.equivalentClass, equvalentClassResource);
+        }
     }
 
     public static void mapRemoveClassRestrictionProperty(Model model, Resource classResource, String propertyResource) {
-        var removed = classResource.listProperties(OWL.intersectionOf)
-                .filterKeep(s -> s.getObject().asResource().getProperty(OWL.onProperty).getObject().toString().equals(propertyResource))
-                .toSet();
-        if (removed.isEmpty()) {
-            throw new MappingError(String.format("Restriction %s not added to class", propertyResource));
+        var eqResource = classResource.listProperties(OWL.equivalentClass)
+                .filterKeep(p -> p.getObject().isAnon())
+                .mapWith(r -> r.getObject().asResource());
+
+        if (eqResource.hasNext() && propertyResource != null) {
+            // construct new list of anonymous owl:restriction resources,
+            // because RDFList.remove() doesn't work as expected in this scenario
+            var eq = eqResource.next();
+            var restrictionList = MapperUtils.getList(model, eq, OWL.intersectionOf);
+
+            var remainingNodes = new ArrayList<RDFNode>();
+            RDFNode removed = null;
+
+            for (var rdfNode : restrictionList.asJavaList()) {
+                if (propertyResource.equals(MapperUtils.propertyToString(rdfNode.asResource(), OWL.onProperty))) {
+                    removed = rdfNode;
+                    continue;
+                }
+                remainingNodes.add(rdfNode);
+            }
+
+            if (removed == null) {
+                throw new MappingError(String.format("Property %s not added to the class", propertyResource));
+            }
+
+            if (remainingNodes.isEmpty()) {
+                model.removeAll(classResource, OWL.equivalentClass, eq);
+                model.removeAll(eq, null, null);
+            } else {
+                eq.removeAll(OWL.intersectionOf);
+                eq.addProperty(OWL.intersectionOf, model.createList(remainingNodes.iterator()));
+            }
+
+            model.removeAll(removed.asResource(), null, null);
+            restrictionList.removeList();
+        } else {
+            throw new MappingError(String.format("No restrictions found from class %s", classResource.getURI()));
         }
-        var bNode = removed.iterator().next().getObject();
-        model.remove(ResourceFactory.createStatement(classResource, OWL.intersectionOf, bNode));
-        model.removeAll(bNode.asResource(), null, null);
+    }
+
+    public static List<RDFNode> getClassRestrictionList(Model model, Resource classResource) {
+        var eqResource = classResource.listProperties(OWL.equivalentClass)
+                .filterKeep(p -> p.getObject().isAnon())
+                .mapWith(r -> r.getObject().asResource());
+
+        if (eqResource.hasNext()) {
+            var eq = eqResource.next();
+            var restrictionList = MapperUtils.getList(model, eq, OWL.intersectionOf);
+            return restrictionList.asJavaList();
+        } else {
+            return List.of();
+        }
     }
 }

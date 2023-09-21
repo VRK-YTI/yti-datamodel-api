@@ -16,10 +16,7 @@ import fi.vm.yti.datamodel.api.v2.repository.ImportsRepository;
 import fi.vm.yti.security.AuthenticatedUserProvider;
 import org.apache.jena.arq.querybuilder.AskBuilder;
 import org.apache.jena.graph.NodeFactory;
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.Resource;
-import org.apache.jena.rdf.model.ResourceFactory;
-import org.apache.jena.rdf.model.SimpleSelector;
+import org.apache.jena.rdf.model.*;
 import org.apache.jena.vocabulary.OWL;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -93,10 +90,10 @@ public class ClassService {
             dto = ClassMapper.mapToClassDTO(model, modelURI, classIdentifier, orgModel,
                     hasRightToModel, userMapper);
             var classResource = model.getResource(classURI);
-            var restrictions = classResource.listProperties(OWL.intersectionOf)
-                    .filterKeep(s -> s.getObject().asResource().hasProperty(OWL.onProperty))
-                    .mapWith(s -> s.getResource().getProperty(OWL.onProperty).getObject().toString())
-                    .toSet();
+
+            var restrictions = ClassMapper.getClassRestrictionList(model, classResource)
+                    .stream().map(restriction -> MapperUtils.propertyToString(restriction.asResource(), OWL.onProperty))
+                    .collect(Collectors.toSet());
             var findResourcesModel = resourceService.findResources(restrictions);
             ClassMapper.addClassResourcesToDTO(findResourcesModel, (ClassInfoDTO) dto, terminologyService.mapConceptToResource());
         } else {

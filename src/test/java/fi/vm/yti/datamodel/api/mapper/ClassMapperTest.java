@@ -4,7 +4,6 @@ import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.endpoint.EndpointUtils;
 import fi.vm.yti.datamodel.api.v2.mapper.ClassMapper;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
-import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.vocabulary.*;
 import org.junit.jupiter.api.Test;
@@ -307,39 +306,69 @@ class ClassMapperTest {
 
     @Test
     void testMapAndRemoveAnonymousRestrictions() {
-        var model = ModelFactory.createDefaultModel();
+
+        var model = MapperTestUtils.getModelFromFile("/model_with_owl_restrictions.ttl");
         model.setNsPrefixes(ModelConstants.PREFIXES);
-        var attributeURI = "http://uri.suomi.fi/datamodel/ns/model/attribute-1";
 
-        var classResource1 = model.createResource("http://uri.suomi.fi/datamodel/ns/model/class-1");
-        classResource1.addProperty(RDF.type, OWL.Class);
+        var classResource1 = model.getResource("http://uri.suomi.fi/datamodel/ns/model/class-1");
+        var classResource2 = model.getResource("http://uri.suomi.fi/datamodel/ns/model/class-2");
+        var attributeResource1 = model.getResource("http://uri.suomi.fi/datamodel/ns/model/attribute-1");
+        var attributeResource2 = model.getResource("http://uri.suomi.fi/datamodel/ns/model/attribute-2");
 
-        var classResource2 = model.createResource("http://uri.suomi.fi/datamodel/ns/model/class-2");
-        classResource2.addProperty(RDF.type, OWL.Class);
-
-        var attributeResource = model.createResource(attributeURI);
-        attributeResource.addProperty(RDF.type, OWL.DatatypeProperty);
-        attributeResource.addProperty(RDFS.range, XSD.anyURI);
-
-        ClassMapper.mapClassRestrictionProperty(model, classResource1, attributeResource);
-        ClassMapper.mapClassRestrictionProperty(model, classResource2, attributeResource);
+        ClassMapper.mapClassRestrictionProperty(model, classResource2, attributeResource1);
 
         Consumer<Resource> checkRestriction = (var res) -> {
-            var restriction = res.getProperty(OWL.intersectionOf).getObject().asResource();
-            assertEquals(OWL.Restriction, restriction.getProperty(RDF.type).getResource());
-            assertEquals(attributeURI, restriction.getProperty(OWL.onProperty).getObject().toString());
-            assertEquals(XSD.anyURI, restriction.getProperty(OWL.someValuesFrom).getResource());
+            var eqClassResource = getEqResource(res);
+            assertNotNull(eqClassResource);
+            var restrictionResources = eqClassResource.getProperty(OWL.intersectionOf).getList().asJavaList();
+
+            assertEquals(OWL.Class, eqClassResource.getProperty(RDF.type).getResource());
+            assertTrue(restrictionResources.stream().allMatch(r ->
+                    r.asResource().hasProperty(RDF.type) &&
+                            r.asResource().hasProperty(OWL.onProperty) &&
+                            r.asResource().hasProperty(OWL.someValuesFrom)));
+            assertTrue(restrictionResources.stream()
+                    .allMatch(r -> r.asResource().getProperty(RDF.type).getObject().equals(OWL.Restriction) &&
+                            r.asResource().getProperty(OWL.someValuesFrom).getObject().equals(XSD.anyURI)));
         };
 
-        // both class1 and class2 should have reference to attribute-1
         List.of(classResource1, classResource2).forEach(checkRestriction);
 
-        // remove reference from class-1
-        ClassMapper.mapRemoveClassRestrictionProperty(model, classResource1, attributeURI);
+        var classEqResource1 = getEqResource(classResource1);
+        assertNotNull(classEqResource1);
+        var attributeURIs1 = classEqResource1.getProperty(OWL.intersectionOf).getList().asJavaList()
+                .stream().map(r -> r.asResource().getProperty(OWL.onProperty).getObject().toString())
+                .toList();
+        assertEquals(List.of(attributeResource1.getURI(), attributeResource2.getURI()), attributeURIs1);
 
-        // class-1 should not have property owl:intersectionOf but class-2's reference has not changed
-        checkRestriction.accept(classResource2);
-        assertNull(classResource1.getProperty(OWL.intersectionOf));
+        var classEqResource2 = getEqResource(classResource2);
+        assertNotNull(classEqResource2);
+        var attributeURIs2 = classEqResource2.getProperty(OWL.intersectionOf).getList().asJavaList()
+                .stream().map(r -> r.asResource().getProperty(OWL.onProperty).getObject().toString())
+                .toList();
+        assertEquals(List.of(attributeResource1.getURI()), attributeURIs2);
+
+        // remove all restriction references
+        ClassMapper.mapRemoveClassRestrictionProperty(model, classResource1, attributeResource1.getURI());
+        ClassMapper.mapRemoveClassRestrictionProperty(model, classResource1, attributeResource2.getURI());
+        ClassMapper.mapRemoveClassRestrictionProperty(model, classResource2, attributeResource1.getURI());
+
+        assertNull(getEqResource(classResource1));
+        assertNull(getEqResource(classResource2));
+        assertNotNull(classResource1.getProperty(OWL.equivalentClass));
+    }
+
+    private Resource getEqResource(Resource res) {
+        var eq = res.listProperties(OWL.equivalentClass)
+                .filterKeep(p -> p.getResource().isAnon())
+                .mapWith(p -> p.getObject().asResource())
+                .toList();
+
+        if (eq.isEmpty()) {
+            return null;
+        } else {
+            return eq.get(0);
+        }
     }
 
 }

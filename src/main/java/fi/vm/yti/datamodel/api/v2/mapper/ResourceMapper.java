@@ -135,16 +135,18 @@ public class ResourceMapper {
         MapperUtils.updateUriProperty(resource, RDFS.range, dto.getRange());
 
         // update range to attribute and association restrictions (owl:someValuesFrom)
-        model.listStatements(new SimpleSelector(null, OWL.intersectionOf, (RDFNode) null))
-                .filterKeep(p -> p.getResource().hasProperty(OWL.onProperty)
-                        && p.getResource().getProperty(OWL.onProperty).getObject().equals(resource))
-                .toList().forEach(r -> {
-                    r.getResource().removeAll(OWL.someValuesFrom);
-                    if (dto.getRange() != null) {
-                        r.getResource().addProperty(OWL.someValuesFrom, ResourceFactory.createResource(dto.getRange()));
-                    }
-        });
-
+        model.listStatements(new SimpleSelector(null, OWL.equivalentClass, (RDFNode) null))
+                .filterKeep(p -> p.getObject().isAnon()).toList()
+                .forEach(r -> r.getProperty(OWL.intersectionOf).getObject().as(RDFList.class)
+                        .asJavaList().stream()
+                        .map(RDFNode::asResource)
+                        .filter(p -> p.hasProperty(OWL.onProperty) && p.getProperty(OWL.onProperty).getObject().equals(resource))
+                        .forEach(s -> {
+                            s.removeAll(OWL.someValuesFrom);
+                            if (dto.getRange() != null) {
+                                s.addProperty(OWL.someValuesFrom, ResourceFactory.createResource(dto.getRange()));
+                            }
+                        }));
         MapperUtils.addUpdateMetadata(resource, user);
     }
 
