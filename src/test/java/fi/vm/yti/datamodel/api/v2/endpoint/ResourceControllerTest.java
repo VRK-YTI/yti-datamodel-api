@@ -6,6 +6,7 @@ import fi.vm.yti.datamodel.api.v2.service.ResourceService;
 import fi.vm.yti.datamodel.api.v2.validator.ExceptionHandlerAdvice;
 import fi.vm.yti.datamodel.api.v2.validator.ValidationConstants;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -20,13 +21,11 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Stream;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -52,7 +51,6 @@ class ResourceControllerTest {
     @Autowired
     private ResourceController resourceController;
 
-
     @BeforeEach
     public void setup() {
         this.mvc = MockMvcBuilders
@@ -74,9 +72,9 @@ class ResourceControllerTest {
                 .andDo(print())
                 .andExpect(status().isCreated());
         //validator
-        if(resourceType.equals("attribute")){
+        if (resourceType.equals("attribute")) {
             verify(resourceService, times(1)).checkIfResourceIsOneOfTypes(anyString(), anyList(), anyBoolean());
-        }else{
+        } else {
             verify(resourceService, times(2)).checkIfResourceIsOneOfTypes(anyString(), anyList(), anyBoolean());
         }
         //controller
@@ -122,7 +120,7 @@ class ResourceControllerTest {
         args.add(Arguments.of(testType, resourceDTO));
 
         resourceDTO = createResourceDTO(false, testType);
-        resourceDTO.setLabel(Map.of("fi", RandomStringUtils.random(textAreaMaxPlus)));
+        resourceDTO.setLabel(Map.of("fi", RandomStringUtils.randomAlphanumeric(textAreaMaxPlus)));
         args.add(Arguments.of(testType, resourceDTO));
 
         resourceDTO = createResourceDTO(false, testType);
@@ -130,11 +128,11 @@ class ResourceControllerTest {
         args.add(Arguments.of(testType, resourceDTO));
 
         resourceDTO = createResourceDTO(false, testType);
-        resourceDTO.setEditorialNote(RandomStringUtils.random(textAreaMaxPlus));
+        resourceDTO.setEditorialNote(RandomStringUtils.randomAlphanumeric(textAreaMaxPlus));
         args.add(Arguments.of(testType, resourceDTO));
 
         resourceDTO = createResourceDTO(false, testType);
-        resourceDTO.setNote(Map.of("fi", RandomStringUtils.random(textAreaMaxPlus)));
+        resourceDTO.setNote(Map.of("fi", RandomStringUtils.randomAlphanumeric(textAreaMaxPlus)));
         args.add(Arguments.of(testType, resourceDTO));
 
         resourceDTO = createResourceDTO(false, testType);
@@ -169,9 +167,9 @@ class ResourceControllerTest {
                 .andExpect(status().isNoContent());
 
         //validator
-        if(resourceType.equals("attribute")){
+        if (resourceType.equals("attribute")) {
             verify(resourceService, times(1)).checkIfResourceIsOneOfTypes(anyString(), anyList(), anyBoolean());
-        }else{
+        } else {
             verify(resourceService, times(2)).checkIfResourceIsOneOfTypes(anyString(), anyList(), anyBoolean());
         }
         verify(resourceService).update(anyString(), anyString(), any(ResourceDTO.class));
@@ -180,7 +178,7 @@ class ResourceControllerTest {
 
     @ParameterizedTest
     @MethodSource("provideUpdateResourceDTOInvalidData")
-    void shouldInvalidateUpdate(ResourceDTO resourceDTO) throws Exception{
+    void shouldInvalidateUpdate(ResourceDTO resourceDTO) throws Exception {
         this.mvc
                 .perform(put("/v2/resource/library/test/association/resource")
                         .contentType("application/json")
@@ -196,7 +194,6 @@ class ResourceControllerTest {
         verifyNoMoreInteractions(resourceService);
     }
 
-
     @Test
     void shouldDeleteResource() throws Exception {
         mvc.perform(delete("/v2/resource/library/test/resource"))
@@ -204,8 +201,6 @@ class ResourceControllerTest {
 
         verify(resourceService).delete(anyString(), anyString());
     }
-
-
 
     @Test
     void shouldValidateAndCreatePropertyShape() throws Exception {
@@ -228,26 +223,77 @@ class ResourceControllerTest {
 
     @Test
     void shouldCopy() throws Exception {
-            this.mvc
-                    .perform(post("/v2/resource/profile/test/PropertyShape/copy")
-                            .contentType("application/json")
-                            .param("targetPrefix", "newtest")
-                            .param("newIdentifier", "newid"))
-                    .andExpect(status().isCreated());
+        this.mvc
+                .perform(post("/v2/resource/profile/test/PropertyShape/copy")
+                        .contentType("application/json")
+                        .param("targetPrefix", "newtest")
+                        .param("newIdentifier", "newid"))
+                .andExpect(status().isCreated());
 
-            verify(resourceService).copyPropertyShape(anyString(), anyString(), anyString(), anyString());
+        verify(resourceService).copyPropertyShape(anyString(), anyString(), anyString(), anyString());
     }
 
     @ParameterizedTest
     @MethodSource("provideCreateAttributeRestrictionInvalidData")
-    void shouldInvalidateAttributeRestriction(AttributeRestriction dto) throws Exception {
+    void shouldInvalidateAttributeRestriction(
+            AttributeRestriction dto,
+            String[] expectedResult) throws Exception {
+        when(resourceService.checkIfResourceIsOneOfTypes(
+                eq("http://uri.suomi.fi/datamodel/ns/int/FakeClass"),
+                anyList(),
+                anyBoolean()))
+                .thenReturn(true);
         this.mvc
                 .perform(post("/v2/resource/profile/test/attribute")
                         .contentType("application/json")
                         .content(EndpointUtils.convertObjectToJsonString(dto)))
-                .andExpect(status().isBadRequest());
+
+                // these tests should always result in an error
+                .andExpect(status().isBadRequest())
+
+                // but let's also inspect the errors in closer detail
+                .andExpect(
+                        (res) -> {
+                            var errors = res.getResolvedException() != null ?
+                                    res.getResolvedException().getMessage().split(", ") :
+                                    new String[]{};
+                            assertArrayEquals(
+                                    Arrays.stream(expectedResult).sorted().toArray(String[]::new),
+                                    Arrays.stream(errors).sorted().toArray(String[]::new));
+                        }
+                );
     }
 
+    @ParameterizedTest
+    @MethodSource("provideCreateAssociationRestrictionInvalidData")
+    void shouldInvalidateAssociationRestriction(
+            AssociationRestriction dto,
+            String[] expectedResult) throws Exception {
+        when(resourceService.checkIfResourceIsOneOfTypes(
+                eq("http://uri.suomi.fi/datamodel/ns/int/FakeClass"),
+                anyList(),
+                anyBoolean()))
+                .thenReturn(true);
+        this.mvc
+                .perform(post("/v2/resource/profile/test/association")
+                        .contentType("application/json")
+                        .content(EndpointUtils.convertObjectToJsonString(dto)))
+
+                // these tests should always result in an error
+                .andExpect(status().isBadRequest())
+
+                // but let's also inspect the errors in closer detail
+                .andExpect(
+                        (res) -> {
+                            var errors = res.getResolvedException() != null ?
+                                    res.getResolvedException().getMessage().split(", ") :
+                                    new String[]{};
+                            assertArrayEquals(
+                                    Arrays.stream(expectedResult).sorted().toArray(String[]::new),
+                                    Arrays.stream(errors).sorted().toArray(String[]::new));
+                        }
+                );
+    }
 
     @Test
     void shouldCheckFreeIdentifierWhenExists() throws Exception {
@@ -269,37 +315,73 @@ class ResourceControllerTest {
                 .andExpect(content().string(containsString("false")));
     }
 
-
     private static Stream<Arguments> provideCreateAttributeRestrictionInvalidData() {
-        var args = new ArrayList<AttributeRestriction>();
-        var length = ValidationConstants.TEXT_FIELD_MAX_LENGTH;
+        var args = new ArrayList<Pair<AttributeRestriction, String[]>>();
 
         var dto = createAttributeRestriction();
+        var expected = new String[]{"createAttributeRestriction.dto.path: not-property-or-doesnt-exist"};
         dto.setPath("http://uri.suomi.fi/invalid");
-        args.add(dto);
+        args.add(Pair.of(dto, expected));
 
         dto = createAttributeRestriction();
+        expected = new String[]{"createAttributeRestriction.dto.dataType: unsupported-datatype"};
         dto.setDataType("invalid");
-        args.add(dto);
+        args.add(Pair.of(dto, expected));
 
         dto = createAttributeRestriction();
-        dto.setDefaultValue(RandomStringUtils.random(length + 1));
-        args.add(dto);
+        expected = new String[]{
+                "createAttributeRestriction.dto.defaultValue: value-over-character-limit." +
+                        ValidationConstants.TEXT_AREA_MAX_LENGTH
+        };
+        dto.setDefaultValue(RandomStringUtils.randomAlphanumeric(
+                ValidationConstants.TEXT_AREA_MAX_LENGTH + 1));
+        args.add(Pair.of(dto, expected));
 
         dto = createAttributeRestriction();
-        dto.setHasValue(RandomStringUtils.random(length + 1));
-        args.add(dto);
+        expected = new String[]{
+                "createAttributeRestriction.dto.hasValue: value-over-character-limit." +
+                        ValidationConstants.TEXT_AREA_MAX_LENGTH
+        };
+        dto.setHasValue(RandomStringUtils.randomAlphanumeric(
+                ValidationConstants.TEXT_AREA_MAX_LENGTH + 1));
+        args.add(Pair.of(dto, expected));
 
         dto = createAttributeRestriction();
-        dto.setAllowedValues(List.of(RandomStringUtils.random(length + 1)));
-        args.add(dto);
+        expected = new String[]{
+                "createAttributeRestriction.dto.allowedValues: value-over-character-limit." +
+                        ValidationConstants.TEXT_AREA_MAX_LENGTH
+        };
+        dto.setAllowedValues(List.of(RandomStringUtils.randomAlphanumeric(
+                ValidationConstants.TEXT_AREA_MAX_LENGTH + 1)));
+        args.add(Pair.of(dto, expected));
 
         dto = createAttributeRestriction();
+        expected = new String[]{"createAttributeRestriction.dto.codelists: invalid-codelist-uri"};
         dto.setCodeLists(List.of("http://uri.suomi.fi/invalid"));
-        args.add(dto);
+        args.add(Pair.of(dto, expected));
 
-        return args.stream().map(Arguments::of);
+        return args.stream().map((pair) ->
+                Arguments.of(pair.getLeft(), pair.getRight()));
     }
+
+    private static Stream<Arguments> provideCreateAssociationRestrictionInvalidData() {
+        var args = new ArrayList<Pair<AssociationRestriction, String[]>>();
+
+        // test for invalid path
+        var dto = createAssociationRestriction();
+        var expected = new String[]{"createAssociationRestriction.dto.path: not-property-or-doesnt-exist"};
+        dto.setPath("http://uri.suomi.fi/invalid");
+        args.add(Pair.of(dto, expected));
+
+        // test for invalid classType
+        dto = createAssociationRestriction();
+        expected = new String[]{"createAssociationRestriction.dto.path: not-class-or-doesnt-exist"};
+        dto.setClassType("http://uri.suomi.fi/invalid");
+        args.add(Pair.of(dto, expected));
+
+        return args.stream().map((pair) -> Arguments.of(pair.getLeft(), pair.getRight()));
+    }
+
     private static Stream<Arguments> provideUpdateResourceDTOInvalidData() {
         var args = new ArrayList<ResourceDTO>();
 
@@ -310,10 +392,10 @@ class ResourceControllerTest {
         return args.stream().map(Arguments::of);
     }
 
-    private static ResourceDTO createResourceDTO(boolean update, String resourceType){
+    private static ResourceDTO createResourceDTO(boolean update, String resourceType) {
         var dto = new ResourceDTO();
         dto.setEditorialNote("test comment");
-        if(!update){
+        if (!update) {
             dto.setIdentifier("Identifier");
         }
         dto.setStatus(Status.DRAFT);
@@ -322,9 +404,9 @@ class ResourceControllerTest {
         dto.setEquivalentResource(Set.of("http://uri.suomi.fi/datamodel/ns/int/FakeResource"));
         dto.setSubResourceOf(Set.of("http://uri.suomi.fi/datamodel/ns/int/FakeResource"));
         dto.setDomain("http://uri.suomi.fi/datamodel/ns/int/FakeClass");
-        if(resourceType.equals("association")){
+        if (resourceType.equals("association")) {
             dto.setRange("http://uri.suomi.fi/datamodel/ns/int/FakeClass");
-        }else{
+        } else {
             dto.setRange("owl:real");
         }
         dto.setNote(Map.of("fi", "test note"));
