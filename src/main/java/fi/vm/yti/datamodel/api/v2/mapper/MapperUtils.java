@@ -108,8 +108,8 @@ public class MapperUtils {
                                                Resource resource,
                                                Property property,
                                                Model model) {
+        resource.removeAll(property);
         if (data != null && languages != null && !languages.isEmpty()) {
-            resource.removeAll(property);
             addLocalizedProperty(languages, data, resource, property, model);
         }
     }
