@@ -7,6 +7,7 @@ import fi.vm.yti.datamodel.api.v2.dto.ExternalNamespaceDTO;
 import fi.vm.yti.datamodel.api.v2.dto.ModelType;
 import fi.vm.yti.datamodel.api.v2.dto.Status;
 import fi.vm.yti.datamodel.api.v2.endpoint.EndpointUtils;
+import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
 import fi.vm.yti.datamodel.api.v2.mapper.ModelMapper;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexModel;
@@ -16,9 +17,11 @@ import fi.vm.yti.security.AuthenticatedUserProvider;
 import fi.vm.yti.security.YtiUser;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.vocabulary.OWL;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -193,6 +196,59 @@ class DataModelServiceTest {
         assertNotNull(response.getBody());
         assertFalse(response.getBody().contains("skos:editorialNote"));
     }
+
+
+    @Test
+    void testCreateRelease(){
+        var model = MapperTestUtils.getModelFromFile("/test_datamodel_library.ttl");
+        //remove prior version property since we want to test without
+        model.getResource("http://uri.suomi.fi/datamodel/ns/test").removeAll(OWL.priorVersion);
+        when(coreRepository.fetch(anyString())).thenReturn(model);
+        when(modelMapper.mapReleaseProperties(any(Model.class), anyString(), anyString(), any(Status.class)))
+                .thenReturn("http://uri.suomi.fi/datamodel/ns/test/1.0.1");
+
+        dataModelService.createRelease("test", "1.0.1", Status.VALID);
+
+        verify(modelMapper).mapReleaseProperties(model,
+                "http://uri.suomi.fi/datamodel/ns/test",
+                "1.0.1",
+                Status.VALID);
+        verify(modelMapper).mapPriorVersion(any(Model.class),
+                                            eq("http://uri.suomi.fi/datamodel/ns/test"),
+                                            eq("http://uri.suomi.fi/datamodel/ns/test/1.0.1"));
+
+        verify(coreRepository).put(eq("http://uri.suomi.fi/datamodel/ns/test/1.0.1"), any(Model.class));
+        verify(coreRepository).put(eq("http://uri.suomi.fi/datamodel/ns/test"), any(Model.class));
+    }
+
+    @Test
+    void testCreateReleaseInvalidVersions(){
+        var model = MapperTestUtils.getModelFromFile("/test_datamodel_library.ttl");
+        when(coreRepository.fetch(anyString())).thenReturn(model);
+
+        var error = assertThrows(MappingError.class ,() -> dataModelService.createRelease("test", "not valid semver", Status.VALID));
+        assertEquals("Error during mapping: Not valid Semantic version string", error.getMessage());
+
+        error = assertThrows(MappingError.class ,() -> dataModelService.createRelease("test", "v1.2.3", Status.VALID));
+        assertEquals("Error during mapping: Not valid Semantic version string", error.getMessage());
+
+        error = assertThrows(MappingError.class ,() -> dataModelService.createRelease("test", "1.0.0", Status.VALID));
+        assertEquals("Error during mapping: Same version number", error.getMessage());
+
+        error = assertThrows(MappingError.class ,() -> dataModelService.createRelease("test", "0.1.0", Status.VALID));
+        assertEquals("Error during mapping: Older version given", error.getMessage());
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = Status.class, names = {"VALID", "SUGGESTED"}, mode = EnumSource.Mode.EXCLUDE)
+    void testCreateReleaseInvalidStatus(Status status){
+        var model = MapperTestUtils.getModelFromFile("/test_datamodel_library.ttl");
+        when(coreRepository.fetch(anyString())).thenReturn(model);
+
+        var error = assertThrows(MappingError.class ,() -> dataModelService.createRelease("test", "1.0.1", status));
+        assertEquals("Error during mapping: Status has to be SUGGESTED or VALID", error.getMessage());
+    }
+
 
     /**
      * Create Datamodel DTO for testing

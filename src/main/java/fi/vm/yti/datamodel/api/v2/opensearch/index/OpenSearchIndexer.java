@@ -3,6 +3,7 @@ package fi.vm.yti.datamodel.api.v2.opensearch.index;
 import com.google.common.collect.Iterables;
 import fi.vm.yti.datamodel.api.index.OpenSearchConnector;
 import fi.vm.yti.datamodel.api.security.AuthorizationManager;
+import fi.vm.yti.datamodel.api.v2.dto.DCAP;
 import fi.vm.yti.datamodel.api.v2.dto.Iow;
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
 import fi.vm.yti.datamodel.api.v2.mapper.ModelMapper;
@@ -13,11 +14,9 @@ import fi.vm.yti.datamodel.api.v2.utils.DataModelUtils;
 import fi.vm.yti.datamodel.api.v2.utils.SparqlUtils;
 import org.apache.jena.arq.querybuilder.ConstructBuilder;
 import org.apache.jena.arq.querybuilder.ExprFactory;
+import org.apache.jena.arq.querybuilder.WhereBuilder;
 import org.apache.jena.rdf.model.ModelFactory;
-import org.apache.jena.vocabulary.DCTerms;
-import org.apache.jena.vocabulary.OWL;
-import org.apache.jena.vocabulary.RDF;
-import org.apache.jena.vocabulary.RDFS;
+import org.apache.jena.vocabulary.*;
 import org.opensearch.client.opensearch.OpenSearchClient;
 import org.opensearch.client.opensearch._types.mapping.*;
 import org.opensearch.client.opensearch.core.BulkRequest;
@@ -32,6 +31,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import static fi.vm.yti.security.AuthorizationException.check;
 
@@ -191,27 +191,19 @@ public class OpenSearchIndexer {
     public void initModelIndex() {
         var constructBuilder = new ConstructBuilder()
                 .addPrefixes(ModelConstants.PREFIXES);
-        SparqlUtils.addConstructProperty(GRAPH_VARIABLE, constructBuilder, RDFS.label, "?prefLabel");
-        SparqlUtils.addConstructOptional(GRAPH_VARIABLE, constructBuilder, RDFS.comment, "?comment");
-        SparqlUtils.addConstructProperty(GRAPH_VARIABLE, constructBuilder, RDF.type, "?modelType");
-        SparqlUtils.addConstructProperty(GRAPH_VARIABLE, constructBuilder, OWL.versionInfo, "?versionInfo");
-        SparqlUtils.addConstructProperty(GRAPH_VARIABLE, constructBuilder, DCTerms.modified, "?modified");
-        SparqlUtils.addConstructProperty(GRAPH_VARIABLE, constructBuilder, DCTerms.created, "?created");
-        SparqlUtils.addConstructProperty(GRAPH_VARIABLE, constructBuilder, DCTerms.contributor, "?contributor");
-        SparqlUtils.addConstructProperty(GRAPH_VARIABLE, constructBuilder, DCTerms.isPartOf, "?isPartOf");
-        SparqlUtils.addConstructOptional(GRAPH_VARIABLE, constructBuilder, Iow.contentModified, "?contentModified");
-        SparqlUtils.addConstructOptional(GRAPH_VARIABLE, constructBuilder, Iow.documentation, "?documentation");
-        //TODO swap to commented text once older migration is ready
-        //addProperty(constructBuilder, DCTerms.language, "?language");
-        constructBuilder.addConstruct(GRAPH_VARIABLE, DCTerms.language, "?language")
-                .addOptional(GRAPH_VARIABLE, "dcterms:language/rdf:rest*/rdf:first", "?language")
-                .addOptional(GRAPH_VARIABLE, DCTerms.language, "?language");
+
+        var whereBuilder = new WhereBuilder();
+        Stream.of(RDFS.label, DCTerms.language, DCAP.preferredXMLNamespacePrefix, RDF.type, OWL.versionInfo, DCTerms.modified, DCTerms.created, DCTerms.contributor, DCTerms.isPartOf)
+                .forEach(property -> SparqlUtils.addRequiredToGraphConstruct(GRAPH_VARIABLE, constructBuilder, whereBuilder, property));
+        Stream.of(RDFS.comment, OWL2.versionIRI, Iow.contentModified, Iow.documentation)
+                .forEach(property -> SparqlUtils.addOptionalToGraphConstruct(GRAPH_VARIABLE, constructBuilder, whereBuilder, property));
+        constructBuilder.addGraph("?g", whereBuilder);
         var indexModels = coreRepository.queryConstruct(constructBuilder.build());
         var list = new ArrayList<IndexModel>();
         indexModels.listSubjects().forEach(next -> {
             var newModel = ModelFactory.createDefaultModel()
                     .add(next.listProperties());
-            var indexModel = modelMapper.mapToIndexModel(next.getLocalName(), newModel);
+            var indexModel = modelMapper.mapToIndexModel(next.getURI(), newModel);
             list.add(indexModel);
         });
         bulkInsert(OPEN_SEARCH_INDEX_MODEL, list);
@@ -304,7 +296,7 @@ public class OpenSearchIndexer {
                             .filter(i -> i.error() != null)
                             .forEach(i -> logger.warn("Error in document {}, caused by {}", i.id(), i.error().reason()));
                 }
-                logger.debug("Bulk insert status for {}: errors: {}, items: {}, took: {}",
+                logger.debug("Bulk insert status for {}: errors: {}, items: {}, took: {}ms",
                         indexName, response.errors(), response.items().size(), response.took());
             } catch (IOException e) {
                 logger.warn("Error in bulk operation", e);
@@ -334,15 +326,20 @@ public class OpenSearchIndexer {
     }
 
     private Map<String, org.opensearch.client.opensearch._types.mapping.Property> getModelProperties() {
-        return Map.of("id", getKeywordProperty(),
-                "status", getKeywordProperty(),
-                "type", getKeywordProperty(),
-                "prefix", getKeywordProperty(),
-                "contributor", getKeywordProperty(),
-                "language", getKeywordProperty(),
-                "isPartOf", getKeywordProperty(),
-                "created", getDateProperty(),
-                "contentModified", getDateProperty());
+        return Map.ofEntries(
+                Map.entry("id", getKeywordProperty()),
+                Map.entry("status", getKeywordProperty()),
+                Map.entry("type", getKeywordProperty()),
+                Map.entry("prefix", getKeywordProperty()),
+                Map.entry("contributor", getKeywordProperty()),
+                Map.entry("language", getKeywordProperty()),
+                Map.entry("isPartOf", getKeywordProperty()),
+                Map.entry("uri", getKeywordProperty()),
+                Map.entry("versionIri", getKeywordProperty()),
+                Map.entry("version", getKeywordProperty()),
+                Map.entry("created", getDateProperty()),
+                Map.entry("contentModified", getDateProperty())
+        );
     }
 
     private Map<String, org.opensearch.client.opensearch._types.mapping.Property> getClassProperties() {
