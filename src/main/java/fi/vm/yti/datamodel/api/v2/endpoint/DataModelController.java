@@ -121,7 +121,7 @@ public class DataModelController {
 
     @PostMapping(value = "/{prefix}/release")
     public void createRelease(@PathVariable @Parameter(description = "Data model prefix") String prefix,
-                              @RequestParam @Parameter(description = "Semver version") String version,
+                              @RequestParam @Parameter(description = "Semantic version") String version,
                               @RequestParam @Parameter(description = "Status") Status status) {
         dataModelService.createRelease(prefix, version, status);
     }
