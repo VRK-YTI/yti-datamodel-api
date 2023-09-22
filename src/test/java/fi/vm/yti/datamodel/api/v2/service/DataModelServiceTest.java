@@ -35,8 +35,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(SpringExtension.class)
 @Import({
@@ -219,6 +218,10 @@ class DataModelServiceTest {
 
         verify(coreRepository).put(eq("http://uri.suomi.fi/datamodel/ns/test/1.0.1"), any(Model.class));
         verify(coreRepository).put(eq("http://uri.suomi.fi/datamodel/ns/test"), any(Model.class));
+
+        verify(modelMapper, times(2)).mapToIndexModel(eq("http://uri.suomi.fi/datamodel/ns/test"), any(Model.class));
+        verify(openSearchIndexer).createModelToIndex(any(IndexModel.class));
+        verify(openSearchIndexer).updateModelToIndex(any(IndexModel.class));
     }
 
     @Test

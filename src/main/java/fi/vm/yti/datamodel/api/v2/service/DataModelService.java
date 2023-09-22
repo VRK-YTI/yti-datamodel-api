@@ -206,5 +206,11 @@ public class DataModelService {
         mapper.mapPriorVersion(newDraft, modelUri, versionUri);
         coreRepository.put(modelUri, newDraft);
         coreRepository.put(versionUri, model);
+
+        var newVersion = mapper.mapToIndexModel(modelUri, model);
+        var draftIndex = mapper.mapToIndexModel(modelUri, newDraft);
+        openSearchIndexer.createModelToIndex(newVersion);
+        openSearchIndexer.updateModelToIndex(draftIndex);
+
     }
 }
