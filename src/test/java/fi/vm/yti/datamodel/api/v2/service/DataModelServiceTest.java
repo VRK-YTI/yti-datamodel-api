@@ -205,6 +205,7 @@ class DataModelServiceTest {
         when(coreRepository.fetch(anyString())).thenReturn(model);
         when(modelMapper.mapReleaseProperties(any(Model.class), anyString(), anyString(), any(Status.class)))
                 .thenReturn("http://uri.suomi.fi/datamodel/ns/test/1.0.1");
+        when(modelMapper.mapToIndexModel(anyString(), any(Model.class))).thenReturn(mock(IndexModel.class));
 
         dataModelService.createRelease("test", "1.0.1", Status.VALID);
 
