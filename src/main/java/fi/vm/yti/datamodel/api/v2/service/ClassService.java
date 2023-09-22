@@ -16,10 +16,8 @@ import fi.vm.yti.datamodel.api.v2.repository.ImportsRepository;
 import fi.vm.yti.security.AuthenticatedUserProvider;
 import org.apache.jena.arq.querybuilder.AskBuilder;
 import org.apache.jena.graph.NodeFactory;
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.Resource;
-import org.apache.jena.rdf.model.ResourceFactory;
-import org.apache.jena.rdf.model.SimpleSelector;
+import org.apache.jena.rdf.model.*;
+import org.apache.jena.vocabulary.OWL;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -91,8 +89,13 @@ public class ClassService {
         if (MapperUtils.isLibrary(model.getResource(modelURI))) {
             dto = ClassMapper.mapToClassDTO(model, modelURI, classIdentifier, orgModel,
                     hasRightToModel, userMapper);
-            var classResources = coreRepository.queryConstruct(ClassMapper.getClassResourcesQuery(classURI, false));
-            ClassMapper.addClassResourcesToDTO(classResources, (ClassInfoDTO) dto, terminologyService.mapConceptToResource());
+            var classResource = model.getResource(classURI);
+
+            var restrictions = ClassMapper.getClassRestrictionList(model, classResource)
+                    .stream().map(restriction -> MapperUtils.propertyToString(restriction.asResource(), OWL.onProperty))
+                    .collect(Collectors.toSet());
+            var findResourcesModel = resourceService.findResources(restrictions);
+            ClassMapper.addClassResourcesToDTO(findResourcesModel, (ClassInfoDTO) dto, terminologyService.mapConceptToResource());
         } else {
             dto = ClassMapper.mapToNodeShapeDTO(model, modelURI, classIdentifier, orgModel,
                     hasRightToModel, userMapper);
@@ -334,6 +337,33 @@ public class ClassService {
         }else {
             ClassMapper.mapAppendNodeShapeProperty(classResource, uri, existingProperties);
         }
+        coreRepository.put(modelURI, model);
+    }
+
+    public void handleClassRestrictionReference(String prefix, String classIdentifier, String uri, boolean delete) {
+        var modelURI = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
+        var model = coreRepository.fetch(modelURI);
+        var classURI = modelURI + ModelConstants.RESOURCE_SEPARATOR + classIdentifier;
+
+        if(!coreRepository.resourceExistsInGraph(modelURI, classURI)){
+            throw new ResourceNotFoundException(classURI);
+        }
+
+        check(authorizationManager.hasRightToModel(prefix, model));
+
+        var classResource = model.getResource(classURI);
+        var findResourceModel = resourceService.findResources(Set.of(uri));
+        var propertyResource = findResourceModel.getResource(uri);
+        if (findResourceModel.size() == 0) {
+            throw new ResourceNotFoundException(uri);
+        }
+
+        if (delete) {
+            ClassMapper.mapRemoveClassRestrictionProperty(model, classResource, propertyResource.getURI());
+        } else {
+            ClassMapper.mapClassRestrictionProperty(model, classResource, propertyResource);
+        }
+
         coreRepository.put(modelURI, model);
     }
 

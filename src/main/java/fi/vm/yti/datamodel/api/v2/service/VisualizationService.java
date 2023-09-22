@@ -3,6 +3,7 @@ package fi.vm.yti.datamodel.api.v2.service;
 import fi.vm.yti.datamodel.api.security.AuthorizationManager;
 import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
+import fi.vm.yti.datamodel.api.v2.mapper.ClassMapper;
 import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.mapper.VisualizationMapper;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
@@ -10,11 +11,11 @@ import org.apache.jena.rdf.model.*;
 import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDF;
-import org.apache.jena.vocabulary.RDFS;
 import org.springframework.stereotype.Service;
 import org.topbraid.shacl.vocabulary.SH;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static fi.vm.yti.security.AuthorizationException.check;
 
@@ -51,7 +52,11 @@ public class VisualizationService {
         var visualizationClasses = new HashSet<VisualizationClassDTO>();
 
         while (classURIs.hasNext()) {
-            var classURI = classURIs.next().getSubject().getURI();
+            var subject = classURIs.next().getSubject();
+            if (subject.isAnon()) {
+                continue;
+            }
+            var classURI = subject.getURI();
             var classResource = model.getResource(classURI);
 
             var classDTO = VisualizationMapper.mapClass(classURI, model, namespaces);
@@ -146,15 +151,18 @@ public class VisualizationService {
         return namespaces;
     }
 
-    private static List<Resource> getAttributesAndAssociations(
+    private static Set<Resource> getAttributesAndAssociations(
             Model model, Resource classResource, Resource modelResource) {
         if (MapperUtils.isLibrary(modelResource)) {
-            return model.listSubjectsWithProperty(RDFS.domain, classResource).toList();
+            return ClassMapper.getClassRestrictionList(model, classResource).stream()
+                    .filter(r -> r.asResource().hasProperty(OWL.onProperty))
+                    .map(r -> model.getResource(MapperUtils.propertyToString(r.asResource(), OWL.onProperty)))
+                    .collect(Collectors.toSet());
         } else if (MapperUtils.isApplicationProfile(modelResource)) {
             return classResource.listProperties(SH.property)
                     .mapWith(Statement::getResource)
-                    .toList();
+                    .toSet();
         }
-        return List.of();
+        return Set.of();
     }
 }

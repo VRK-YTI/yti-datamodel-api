@@ -6,10 +6,7 @@ import fi.vm.yti.security.YtiUser;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.datatypes.xsd.XSDDateTime;
 import org.apache.jena.graph.NodeFactory;
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.Property;
-import org.apache.jena.rdf.model.Resource;
-import org.apache.jena.rdf.model.ResourceFactory;
+import org.apache.jena.rdf.model.*;
 import org.apache.jena.shared.JenaException;
 import org.apache.jena.vocabulary.*;
 
@@ -123,11 +120,14 @@ public class MapperUtils {
     public static List<String> arrayPropertyToList(Resource resource, Property property){
         var list = new ArrayList<String>();
         try{
-            var statement = resource.getProperty(property);
-            if (statement == null) {
+            var statement = resource.listProperties(property)
+                    .filterDrop(p -> p.getObject().isAnon())
+                    .toList();
+            if (statement.isEmpty()) {
                 return list;
             }
-            statement.getList()
+            statement.get(0)
+                    .getList()
                     .asJavaList()
                     .forEach(node -> list.add(node.toString()));
         }catch(JenaException ex){
@@ -145,21 +145,7 @@ public class MapperUtils {
      * @return Set of property values, empty if property is not found
      */
     public static Set<String> arrayPropertyToSet(Resource resource, Property property){
-        var list = new HashSet<String>();
-        try{
-            var statement = resource.getProperty(property);
-            if (statement == null) {
-                return list;
-            }
-            statement.getList()
-                    .asJavaList()
-                    .forEach(node -> list.add(node.toString()));
-        }catch(JenaException ex){
-            //if item could not be gotten as list it means it is multiple statements of the property
-            resource.listProperties(property)
-                    .forEach(val -> list.add(val.getObject().toString()));
-        }
-        return list;
+        return new HashSet<>(arrayPropertyToList(resource, property));
     }
 
     /**
@@ -192,6 +178,8 @@ public class MapperUtils {
             return type.cast(literal.getBoolean());
         } else if (type.equals(Double.class)) {
             return type.cast(literal.getDouble());
+        } else if (type.equals(String.class)) {
+            return type.cast(literal.getString());
         }
         return null;
     }
@@ -439,5 +427,15 @@ public class MapperUtils {
         }
 
         mapper.accept(uris);
+    }
+
+    public static RDFList getList(Model model, Resource resource, Property property) {
+        var obj = resource.getProperty(property).getObject();
+
+        if (!obj.canAs(RDFList.class)) {
+            throw new MappingError(String.format("Property %s in resource %s is not RDFList",
+                    property, resource));
+        }
+        return model.getList(obj.asResource());
     }
 }

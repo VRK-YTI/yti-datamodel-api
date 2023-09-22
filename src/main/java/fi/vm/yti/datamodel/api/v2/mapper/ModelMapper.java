@@ -158,6 +158,10 @@ public class ModelMapper {
             dataModelDTO.getCodeLists().forEach(codeList -> MapperUtils.addOptionalUriProperty(modelResource, DCTerms.requires, codeList));
         }
 
+        // remove blank nodes
+        modelResource.listProperties(RDFS.seeAlso)
+                .mapWith(Statement::getObject)
+                .forEach(obj -> model.removeAll(obj.asResource(), null, null));
         modelResource.removeAll(RDFS.seeAlso);
         dataModelDTO.getLinks().forEach(linkDTO -> addLinkToModel(model, modelResource, linkDTO));
 

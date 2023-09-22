@@ -8,10 +8,7 @@ import fi.vm.yti.datamodel.api.v2.mapper.ResourceMapper;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexModel;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexResource;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.ModelFactory;
-import org.apache.jena.rdf.model.Resource;
-import org.apache.jena.rdf.model.ResourceFactory;
+import org.apache.jena.rdf.model.*;
 import org.apache.jena.sparql.vocabulary.FOAF;
 import org.apache.jena.vocabulary.*;
 import org.junit.jupiter.api.Test;
@@ -697,6 +694,34 @@ class ResourceMapperTest {
 
         assertEquals(ResourceType.ATTRIBUTE, indexResource1.getResourceType());
         assertEquals(ResourceType.ASSOCIATION, indexResource2.getResourceType());
+    }
+
+    @Test
+    void testUpdateRestrictionsAfterRangeChange() {
+        var model = MapperTestUtils.getModelFromFile("/model_with_owl_restrictions.ttl");
+
+        var graphUri = "http://uri.suomi.fi/datamodel/ns/model";
+        var identifier = "attribute-1";
+        var newRange = XSD.integer.getURI();
+
+        // update range to xsd:integer
+        var dto = new ResourceDTO();
+        dto.setIdentifier(identifier);
+        dto.setLabel(Map.of("fi", "test label"));
+        dto.setRange(newRange);
+
+        ResourceMapper.mapToUpdateResource(graphUri, model, identifier, dto, EndpointUtils.mockUser);
+
+        var classResource = model.getResource(graphUri + "/class-1");
+        var list = classResource.getProperty(OWL.equivalentClass).getObject()
+                .asResource().getProperty(OWL.intersectionOf).getObject().as(RDFList.class);
+
+        var updated = list.asJavaList().stream()
+                .filter(r -> r.asResource().getProperty(OWL.onProperty).getObject().toString()
+                        .equals("http://uri.suomi.fi/datamodel/ns/model/attribute-1"))
+                .findFirst();
+        assertTrue(updated.isPresent());
+        assertEquals(newRange, updated.get().asResource().getProperty(OWL.someValuesFrom).getObject().toString());
     }
 
     private Model getOrgModel(){
