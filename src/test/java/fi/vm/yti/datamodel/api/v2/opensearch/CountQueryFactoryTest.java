@@ -31,7 +31,7 @@ class CountQueryFactoryTest {
     void testModelCounts() throws Exception {
         String expected = OpenSearchUtils.getJsonString("/es/models_count_request.json");
 
-        SearchRequest request = CountQueryFactory.createModelQuery(new CountRequest());
+        SearchRequest request = CountQueryFactory.createModelQuery(new CountRequest(), false);
 
         JSONAssert.assertEquals(expected, OpenSearchUtils.getPayload(request), JSONCompareMode.LENIENT);
     }

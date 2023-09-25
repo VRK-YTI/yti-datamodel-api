@@ -26,17 +26,19 @@ public class CountQueryFactory {
     private CountQueryFactory(){
         //Static class
     }
-    public static SearchRequest createModelQuery(CountRequest request) {
+    public static SearchRequest createModelQuery(CountRequest request, boolean isSuperUser) {
         var must = new ArrayList<Query>();
         var should = new ArrayList<Query>();
 
-        var incompleteFrom = request.getIncludeDraftFrom();
-        if(incompleteFrom != null && !incompleteFrom.isEmpty()){
-            var incompleteFromQuery = QueryFactoryUtils.termsQuery("contributor", incompleteFrom.stream().map(UUID::toString).toList());
+        var draftFrom = request.getIncludeDraftFrom();
+        if(draftFrom != null && !draftFrom.isEmpty()){
+            var incompleteFromQuery = QueryFactoryUtils.termsQuery("contributor", draftFrom.stream().map(UUID::toString).toList());
             should.add(incompleteFromQuery);
         }
 
-        should.add(QueryFactoryUtils.hideDraftStatusQuery());
+        if(!isSuperUser) {
+            should.add(QueryFactoryUtils.hideDraftStatusQuery());
+        }
 
         var queryString = request.getQuery();
         if(queryString != null && !queryString.isBlank()){
@@ -74,16 +76,16 @@ public class CountQueryFactory {
         }
 
         var finalQuery = QueryBuilders.bool()
-                .must(must)
-                .minimumShouldMatch("1")
-                .should(should)
-                .build()
-                ._toQuery();
+                .must(must);
+
+        if(!should.isEmpty()) {
+            finalQuery.should(should).minimumShouldMatch("1");
+        }
 
         var sr = new SearchRequest.Builder()
                 .index(OpenSearchIndexer.OPEN_SEARCH_INDEX_MODEL)
                 .size(0)
-                .query(finalQuery)
+                .query(finalQuery.build()._toQuery())
                 .aggregations("statuses", getAggregation("status"))
                 .aggregations("types", getAggregation("type"))
                 .aggregations("languages", getAggregation("language"))

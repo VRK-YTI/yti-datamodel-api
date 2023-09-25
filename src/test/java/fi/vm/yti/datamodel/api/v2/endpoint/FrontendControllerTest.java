@@ -60,7 +60,7 @@ class FrontendControllerTest {
         this.mvc.perform(get("/v2/frontend/counts")
                         .contentType("application/json"))
                 .andExpect(status().isOk());
-        verify(searchIndexService).getCounts(any(CountRequest.class));
+        verify(searchIndexService).getCounts(any(CountRequest.class), any(YtiUser.class));
     }
 
     @Test
