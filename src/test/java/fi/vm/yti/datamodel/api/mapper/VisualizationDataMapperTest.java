@@ -27,7 +27,7 @@ class VisualizationDataMapperTest {
         var classDTO = VisualizationMapper.mapClass("http://uri.suomi.fi/datamodel/ns/test/testclass1", model, libraryNamespaces);
         assertEquals("Label 1", classDTO.getLabel().get("fi"));
         assertEquals("testclass1", classDTO.getIdentifier());
-        assertEquals("yti-model:TestClass", classDTO.getParentClasses().iterator().next());
+        assertEquals("yti-model:TestClass", classDTO.getParentClasses().iterator().next().getIdentifier());
 
         var attribute = model.getResource("http://uri.suomi.fi/datamodel/ns/test/attribute-1");
         var association = model.getResource("http://uri.suomi.fi/datamodel/ns/test/association-1");
@@ -55,7 +55,7 @@ class VisualizationDataMapperTest {
 
         VisualizationMapper.mapResource(classDTO, association, model, libraryNamespaces);
 
-        assertEquals("ext:ExternalClass", classDTO.getParentClasses().iterator().next());
+        assertEquals("ext:ExternalClass", classDTO.getParentClasses().iterator().next().getIdentifier());
         assertEquals("ext:ExternalClass", classDTO.getAssociations().get(0).getReferenceTarget());
     }
 
@@ -148,7 +148,9 @@ class VisualizationDataMapperTest {
 
         var classDTO1 = new VisualizationClassDTO();
         classDTO1.setIdentifier("class-1");
-        classDTO1.setParentClasses(Set.of("class-2"));
+        var ref = new VisualizationReferenceDTO();
+        ref.setIdentifier("class-2");
+        classDTO1.setParentClasses(Set.of(ref));
 
         var classDTO2 = new VisualizationClassDTO();
         classDTO2.setIdentifier("class-2");
@@ -166,7 +168,7 @@ class VisualizationDataMapperTest {
         assertEquals(2.0, c1.getPosition().getY());
 
         assertEquals(2, classes.size());
-        assertEquals("class-2", c1.getParentClasses().iterator().next());
+        assertEquals("class-2", c1.getParentClasses().iterator().next().getIdentifier());
     }
 
     @Test
@@ -196,7 +198,11 @@ class VisualizationDataMapperTest {
 
         var classDTO1 = new VisualizationClassDTO();
         classDTO1.setIdentifier("class-1");
-        classDTO1.setParentClasses(Set.of("class-2"));
+
+        var ref = new VisualizationReferenceDTO();
+        ref.setIdentifier("class-2");
+        classDTO1.setParentClasses(Set.of(ref));
+        classDTO1.setParentClasses(Set.of(ref));
 
         var classDTO2 = new VisualizationClassDTO();
         classDTO2.setIdentifier("class-2");
@@ -214,7 +220,7 @@ class VisualizationDataMapperTest {
 
         assertEquals(2, classes.size());
         assertEquals(1, hiddenNodes.size());
-        assertEquals("corner-1", c1.getParentClasses().iterator().next());
+        assertEquals("corner-1", c1.getParentClasses().iterator().next().getIdentifier());
         assertEquals("class-2", hidden.getReferenceTarget());
     }
 
@@ -270,12 +276,19 @@ class VisualizationDataMapperTest {
 
         var classDTO1 = new VisualizationClassDTO();
         classDTO1.setIdentifier("class-1");
-        classDTO1.setParentClasses(Set.of("class-2"));
+
+        var ref1 = new VisualizationReferenceDTO();
+        ref1.setIdentifier("class-2");
+        classDTO1.setParentClasses(Set.of(ref1));
+        classDTO1.setParentClasses(Set.of(ref1));
         classDTO1.setAssociations(List.of(association));
 
         var classDTO2 = new VisualizationClassDTO();
         classDTO2.setIdentifier("class-2");
-        classDTO2.setParentClasses(Set.of("class-3"));
+
+        var ref2 = new VisualizationReferenceDTO();
+        ref2.setIdentifier("class-3");
+        classDTO2.setParentClasses(Set.of(ref2));
 
         var classDTO3 = new VisualizationClassDTO();
         classDTO3.setIdentifier("class-3");
@@ -299,9 +312,9 @@ class VisualizationDataMapperTest {
 
         var classItem2 = findClass(classes, "class-2");
         assertNotNull(classItem2);
-        assertEquals("class-3", classItem2.getParentClasses().iterator().next());
+        assertEquals("class-3", classItem2.getParentClasses().iterator().next().getIdentifier());
 
-        assertEquals("corner-1", classItem.getParentClasses().iterator().next());
+        assertEquals("corner-1", classItem.getParentClasses().iterator().next().getIdentifier());
         assertEquals(1.0, classItem.getPosition().getX());
         assertEquals(2.0, classItem.getPosition().getY());
 

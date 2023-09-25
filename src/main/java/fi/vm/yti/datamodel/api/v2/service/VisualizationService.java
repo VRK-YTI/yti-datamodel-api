@@ -109,8 +109,8 @@ public class VisualizationService {
 
     private static void addExternalClasses(VisualizationClassDTO classDTO, Set<String> languages, HashSet<VisualizationClassDTO> result) {
         classDTO.getParentClasses().forEach(parent -> {
-            if (parent.contains(":")) {
-                result.add(VisualizationMapper.mapExternalClass(parent, languages));
+            if (parent.getIdentifier().contains(":")) {
+                result.add(VisualizationMapper.mapExternalClass(parent.getIdentifier(), languages));
             }
         });
         classDTO.getAssociations().forEach(association -> {
