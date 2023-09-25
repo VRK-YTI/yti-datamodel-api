@@ -60,7 +60,7 @@ public class FrontendController {
     @GetMapping(path = "/counts", produces = MediaType.APPLICATION_JSON_VALUE)
     public CountSearchResponse getCounts(@Parameter(description = "Count request parameters") CountRequest request) {
         logger.info("GET /counts requested");
-        return searchIndexService.getCounts(request);
+        return searchIndexService.getCounts(request, userProvider.getUser());
     }
 
     @Operation(summary = "Get organizations", description = "List of organizations sorted by name")

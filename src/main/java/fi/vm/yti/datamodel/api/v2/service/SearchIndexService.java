@@ -56,8 +56,12 @@ public class SearchIndexService {
      * List counts of data model grouped by different search results
      * @return response containing counts for data models
      */
-    public CountSearchResponse getCounts(CountRequest searchRequest) {
-        var query = CountQueryFactory.createModelQuery(searchRequest);
+    public CountSearchResponse getCounts(CountRequest searchRequest, YtiUser user) {
+        if (!user.isSuperuser()) {
+            searchRequest.setIncludeDraftFrom(getOrganizationsForUser(user));
+        }
+
+        var query = CountQueryFactory.createModelQuery(searchRequest, user.isSuperuser());
         try {
             var response = client.search(query, IndexModel.class);
             return CountQueryFactory.parseResponse(response);
