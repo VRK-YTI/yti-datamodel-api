@@ -76,28 +76,27 @@ public class VisualizationMapper {
             Model positions, String modelPrefix, Set<VisualizationClassDTO> classes) {
         var hiddenElements = new HashSet<VisualizationHiddenNodeDTO>();
 
-        classes.forEach(classDTO -> {
+        classes.forEach(dto -> {
             var positionResource = positions.getResource(ModelConstants.MODEL_POSITIONS_NAMESPACE + modelPrefix
                     + ModelConstants.RESOURCE_SEPARATOR
-                    + classDTO.getIdentifier());
-            classDTO.setPosition(getPositionFromResource(positionResource));
+                    + dto.getIdentifier());
+            dto.setPosition(getPositionFromResource(positionResource));
 
             // check if there are hidden nodes between parent relations
-            if (classDTO.getParentClasses() != null && !classDTO.getParentClasses().isEmpty()) {
-                var parentsWithTarget = new HashSet<VisualizationReferenceDTO>();
-                classDTO.getParentClasses().forEach(parent -> {
-                    var path = handlePath(positions, classDTO.getIdentifier(), parent.getIdentifier(), hiddenElements);
-                    parent.setReferenceTarget(path.get(0));
-                    parentsWithTarget.add(parent);
+            if (dto.getParentClasses() != null && !dto.getParentClasses().isEmpty()) {
+                var parentsWithTarget = new HashSet<String>();
+                dto.getParentClasses().forEach(parent -> {
+                    var path = handlePath(positions, dto.getIdentifier(), parent, hiddenElements);
+                    parentsWithTarget.add(path.get(0));
                 });
-                classDTO.setParentClasses(parentsWithTarget);
+                dto.setParentClasses(parentsWithTarget);
             }
 
             // check if there are hidden nodes between association relations
-            classDTO.getAssociations().forEach(association -> {
+            dto.getAssociations().forEach(association -> {
                 var target = association.getReferenceTarget();
                 if (target != null) {
-                    var path = handlePath(positions, classDTO.getIdentifier(), target, hiddenElements);
+                    var path = handlePath(positions, dto.getIdentifier(), target, hiddenElements);
                     association.setReferenceTarget(path.get(0));
                 }
             });
@@ -222,10 +221,8 @@ public class VisualizationMapper {
     }
 
     @NotNull
-    private static Set<VisualizationReferenceDTO> getParentClasses(Resource resource, Map<String, String> namespaceMap) {
-        var parentClasses = new HashSet<VisualizationReferenceDTO>();
-
-        var ref = new VisualizationReferenceDTO();
+    private static HashSet<String> getParentClasses(Resource resource, Map<String, String> namespaceMap) {
+        var parentClasses = new HashSet<String>();
 
         if (MapperUtils.hasType(resource, OWL.Class)) {
             var subClassOf = resource.listProperties(RDFS.subClassOf).toList();
@@ -235,18 +232,12 @@ public class VisualizationMapper {
                 if ("http://www.w3.org/2002/07/owl#Thing".equals(classURI)) {
                     return;
                 }
-
-                var identifier = getReferenceIdentifier(classURI, namespaceMap);
-                ref.setIdentifier(identifier);
-                ref.setLabel(Map.of("fi", identifier));
-                parentClasses.add(ref);
+                parentClasses.add(getReferenceIdentifier(classURI, namespaceMap));
             });
         } else {
             var node = MapperUtils.propertyToString(resource, SH.node);
             if (node != null) {
-                ref.setIdentifier(getReferenceIdentifier(node, namespaceMap));
-                ref.setLabel(Map.of("fi", ref.getIdentifier()));
-                parentClasses.add(ref);
+                parentClasses.add(getReferenceIdentifier(node, namespaceMap));
             }
         }
         return parentClasses;

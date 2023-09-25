@@ -6,7 +6,7 @@ import java.util.*;
 
 public class VisualizationClassDTO extends VisualizationItemDTO {
 
-    private Set<VisualizationReferenceDTO> parentClasses = new HashSet<>();
+    private Set<String> parentClasses = new HashSet<>();
     private PositionDTO position = new PositionDTO(0.0, 0.0);
     private List<VisualizationAttributeDTO> attributes = new ArrayList<>();
     private List<VisualizationAssociationDTO> associations = new ArrayList<>();
@@ -40,11 +40,11 @@ public class VisualizationClassDTO extends VisualizationItemDTO {
         return ToStringBuilder.reflectionToString(this);
     }
 
-    public Set<VisualizationReferenceDTO> getParentClasses() {
+    public Set<String> getParentClasses() {
         return parentClasses;
     }
 
-    public void setParentClasses(Set<VisualizationReferenceDTO> parentClasses) {
+    public void setParentClasses(Set<String> parentClasses) {
         this.parentClasses = parentClasses;
     }
 
