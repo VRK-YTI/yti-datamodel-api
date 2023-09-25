@@ -1,6 +1,6 @@
 package fi.vm.yti.datamodel.api.v2.dto;
 
-public class VisualizationPropertyShapeAssociationDTO extends VisualizationAssociationDTO {
+public class VisualizationPropertyShapeAssociationDTO extends VisualizationReferenceDTO {
     private String path;
     private Integer minCount;
     private Integer maxCount;

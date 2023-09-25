@@ -9,7 +9,10 @@ public class VisualizationClassDTO extends VisualizationItemDTO {
     private Set<String> parentClasses = new HashSet<>();
     private PositionDTO position = new PositionDTO(0.0, 0.0);
     private List<VisualizationAttributeDTO> attributes = new ArrayList<>();
-    private List<VisualizationAssociationDTO> associations = new ArrayList<>();
+    private List<VisualizationReferenceDTO> associations = new ArrayList<>();
+    private List<VisualizationReferenceDTO> attributeReferences = new ArrayList<>();
+    private List<VisualizationReferenceDTO> associationReferences = new ArrayList<>();
+    private VisualizationNodeType type;
 
     public PositionDTO getPosition() {
         return position;
@@ -27,12 +30,36 @@ public class VisualizationClassDTO extends VisualizationItemDTO {
         this.attributes = attributes;
     }
 
-    public List<VisualizationAssociationDTO> getAssociations() {
+    public List<VisualizationReferenceDTO> getAssociations() {
         return associations;
     }
 
-    public void setAssociations(List<VisualizationAssociationDTO> associations) {
+    public void setAssociations(List<VisualizationReferenceDTO> associations) {
         this.associations = associations;
+    }
+
+    public List<VisualizationReferenceDTO> getAttributeReferences() {
+        return attributeReferences;
+    }
+
+    public void setAttributeReferences(List<VisualizationReferenceDTO> attributeReferences) {
+        this.attributeReferences = attributeReferences;
+    }
+
+    public List<VisualizationReferenceDTO> getAssociationReferences() {
+        return associationReferences;
+    }
+
+    public void setAssociationReferences(List<VisualizationReferenceDTO> associationReferences) {
+        this.associationReferences = associationReferences;
+    }
+
+    public VisualizationNodeType getType() {
+        return type;
+    }
+
+    public void setType(VisualizationNodeType type) {
+        this.type = type;
     }
 
     @Override
@@ -52,8 +79,15 @@ public class VisualizationClassDTO extends VisualizationItemDTO {
         this.attributes.add(dto);
     }
 
-    public void addAssociation(VisualizationAssociationDTO dto) {
+    public void addAssociation(VisualizationReferenceDTO dto) {
         this.associations.add(dto);
     }
 
+    public void addAttributeReference(VisualizationReferenceDTO dto) {
+        this.attributeReferences.add(dto);
+    }
+
+    public void addAssociationReference(VisualizationReferenceDTO dto) {
+        this.associationReferences.add(dto);
+    }
 }

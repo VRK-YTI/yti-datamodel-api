@@ -57,12 +57,13 @@ class VisualizationServiceTest {
 
         var visualizationData = visualizationService.getVisualizationData("test");
 
-        // should contain 3 classes and 2 references to external models
-        assertEquals(5, visualizationData.getNodes().size());
+        // should contain 3 classes, 2 references to external models and two attribute references (rdfs:domain)
+        assertEquals(7, visualizationData.getNodes().size());
 
         var cls = findClass(visualizationData.getNodes(), "testclass1");
         assertEquals(1, cls.getAttributes().size());
         assertEquals(1, cls.getAssociations().size());
+        assertEquals(2, cls.getAttributeReferences().size());
 
         var extClass = findClass(visualizationData.getNodes(), "ext:ExternalClass");
         assertNotNull(extClass);

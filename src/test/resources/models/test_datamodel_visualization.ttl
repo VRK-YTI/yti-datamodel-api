@@ -52,6 +52,13 @@ test:attribute-1  rdf:type  owl:DatatypeProperty ;
         rdfs:label          "testiattribuutti"@fi ;
         rdfs:range          <xsd:string> .
 
+test:attribute-2  rdf:type  owl:DatatypeProperty ;
+        rdfs:domain         <http://uri.suomi.fi/datamodel/ns/test/testclass1> ;
+        rdfs:isDefinedBy    <http://uri.suomi.fi/datamodel/ns/test> ;
+        dcterms:identifier  "attribute-2"^^xsd:NCName ;
+        rdfs:label          "testiattribuutti 2"@fi ;
+        rdfs:range          <xsd:string> .
+
 test:association-1 rdf:type  owl:ObjectProperty ;
         rdfs:domain         <http://uri.suomi.fi/datamodel/ns/test/testclass1> ;
         rdfs:isDefinedBy    <http://uri.suomi.fi/datamodel/ns/test> ;

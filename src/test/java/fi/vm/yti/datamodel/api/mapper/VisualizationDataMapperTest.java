@@ -264,7 +264,7 @@ class VisualizationDataMapperTest {
         var postionModel = VisualizationMapper.mapPositionDataToModel(positionGraphURI,
                 List.of(node1, node2, node3, corner1, corner2, corner3));
 
-        var association = new VisualizationAssociationDTO();
+        var association = new VisualizationReferenceDTO();
         association.setReferenceTarget("class-3");
         association.setIdentifier("assoc-1");
 
@@ -325,7 +325,7 @@ class VisualizationDataMapperTest {
         var modelPrefix = "test-model";
         var positionGraphURI = ModelConstants.MODEL_POSITIONS_NAMESPACE + modelPrefix;
 
-        var association = new VisualizationAssociationDTO();
+        var association = new VisualizationReferenceDTO();
         association.setReferenceTarget("class-1");
         association.setIdentifier("assoc-1");
 
