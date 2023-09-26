@@ -35,13 +35,14 @@ public class VisualizationMapper {
         mapCommon(classDTO, classResource, namespaces);
 
         classDTO.setParentClasses(getParentClasses(classResource, namespaces));
-
+        classDTO.setType(VisualizationNodeType.CLASS);
         return classDTO;
     }
 
     public static VisualizationClassDTO mapExternalClass(String identifier, Set<String> languages) {
         var dto = new VisualizationClassDTO();
         dto.setIdentifier(identifier);
+        dto.setType(VisualizationNodeType.EXTERNAL_CLASS);
 
         var label = new HashMap<String, String>();
         languages.forEach(key -> label.put(key, identifier));
@@ -54,7 +55,19 @@ public class VisualizationMapper {
         if (MapperUtils.hasType(resource, OWL.DatatypeProperty)) {
             dto.addAttribute(mapAttribute(resource, namespaces));
         } else if (MapperUtils.hasType(resource, OWL.ObjectProperty)) {
-            dto.addAssociation(mapAssociation(resource, model, namespaces));
+            dto.addAssociation(mapAssociationReference(resource, model, namespaces));
+        }
+    }
+
+    public static void mapReferenceResources(VisualizationClassDTO dto, Resource resource, Map<String, String> namespaces) {
+        var ref = new VisualizationReferenceDTO();
+        mapCommon(ref, resource, namespaces);
+        ref.setReferenceTarget(ref.getIdentifier());
+
+        if (MapperUtils.hasType(resource, OWL.DatatypeProperty)) {
+            dto.addAttributeReference(ref);
+        } else if (MapperUtils.hasType(resource, OWL.ObjectProperty)) {
+            dto.addAssociationReference(ref);
         }
     }
 
@@ -104,7 +117,6 @@ public class VisualizationMapper {
         return hiddenElements;
     }
 
-
     private static VisualizationAttributeDTO mapAttribute(Resource resource, Map<String, String> namespaces) {
         if (MapperUtils.hasType(resource, SH.PropertyShape)) {
             var dto = new VisualizationPropertyShapeAttributeDTO();
@@ -122,7 +134,15 @@ public class VisualizationMapper {
         }
     }
 
-    private static VisualizationAssociationDTO mapAssociation(Resource resource, Model model, Map<String, String> namespaces) {
+    public static VisualizationClassDTO mapAttributeReferenceNode(VisualizationReferenceDTO attribute) {
+        var dto = new VisualizationClassDTO();
+        dto.setType(VisualizationNodeType.ATTRIBUTE);
+        dto.setLabel(attribute.getLabel());
+        dto.setIdentifier(attribute.getIdentifier());
+        return dto;
+    }
+
+    private static VisualizationReferenceDTO mapAssociationReference(Resource resource, Model model, Map<String, String> namespaces) {
         if (MapperUtils.hasType(resource, SH.PropertyShape)) {
             var dto = new VisualizationPropertyShapeAssociationDTO();
             mapCommon(dto, resource, namespaces);
@@ -132,7 +152,7 @@ public class VisualizationMapper {
             dto.setReferenceTarget(getPropertyShapeAssociationTarget(model, resource, namespaces));
             return dto;
         } else {
-            var dto = new VisualizationAssociationDTO();
+            var dto = new VisualizationReferenceDTO();
             var target = MapperUtils.propertyToString(resource, RDFS.range);
             mapCommon(dto, resource, namespaces);
             dto.setReferenceTarget(getReferenceIdentifier(target, namespaces));

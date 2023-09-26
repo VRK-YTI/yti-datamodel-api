@@ -11,6 +11,7 @@ import org.apache.jena.rdf.model.*;
 import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDF;
+import org.apache.jena.vocabulary.RDFS;
 import org.springframework.stereotype.Service;
 import org.topbraid.shacl.vocabulary.SH;
 
@@ -60,6 +61,12 @@ public class VisualizationService {
             var classResource = model.getResource(classURI);
 
             var classDTO = VisualizationMapper.mapClass(classURI, model, namespaces);
+
+            var attributeReferences = model.listSubjectsWithProperty(RDFS.domain, classResource)
+                    .toList();
+            for (var attribute : attributeReferences) {
+                VisualizationMapper.mapReferenceResources(classDTO, attribute, namespaces);
+            }
 
             var attributesAndAssociations = getAttributesAndAssociations(model, classResource, modelResource);
             var externalPropertyURIs = new HashSet<String>();
@@ -119,6 +126,8 @@ public class VisualizationService {
                 result.add(VisualizationMapper.mapExternalClass(target, languages));
             }
         });
+        classDTO.getAttributeReferences()
+                .forEach(attribute -> result.add(VisualizationMapper.mapAttributeReferenceNode(attribute)));
     }
 
     private static StmtIterator getClassURIs(Model model, String graph) {
