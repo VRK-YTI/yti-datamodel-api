@@ -208,6 +208,7 @@ class ClassMapperTest {
         assertEquals("2a5c075f-0d0e-4688-90e0-29af1eebbf6d", resource.getProperty(Iow.creator).getObject().toString());
     }
 
+    // null values should delete (some) properties from resource
     @Test
     void testMapToUpdateClassNullValuesDTO(){
         var m = MapperTestUtils.getModelFromFile("/models/test_datamodel_library_with_resources.ttl");
@@ -232,13 +233,13 @@ class ClassMapperTest {
 
         assertEquals(OWL.Class, resource.getProperty(RDF.type).getResource());
         assertEquals("http://uri.suomi.fi/datamodel/ns/test", resource.getProperty(RDFS.isDefinedBy).getObject().toString());
-        assertEquals("test label", resource.getProperty(RDFS.label).getLiteral().getString());
-        assertEquals("fi", resource.getProperty(RDFS.label).getLiteral().getLanguage());
+        assertNull(resource.getProperty(RDFS.label));
+        assertNull(resource.getProperty(RDFS.label));
         assertEquals("TestClass", resource.getProperty(DCTerms.identifier).getLiteral().getString());
-        assertEquals("http://uri.suomi.fi/terminology/test/test1", resource.getProperty(DCTerms.subject).getObject().toString());
+        assertNull(resource.getProperty(DCTerms.subject));
         assertEquals(Status.VALID.name(), resource.getProperty(OWL.versionInfo).getObject().toString());
-        assertEquals("comment visible for admin", resource.getProperty(SKOS.editorialNote).getObject().toString());
-        assertEquals(2, resource.listProperties(RDFS.comment).toList().size());
+        assertNull(resource.getProperty(SKOS.editorialNote));
+        assertEquals(0, resource.listProperties(RDFS.comment).toList().size());
     }
 
     @Test

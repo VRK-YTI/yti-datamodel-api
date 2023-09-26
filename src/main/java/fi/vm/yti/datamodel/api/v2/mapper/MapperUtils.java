@@ -105,8 +105,8 @@ public class MapperUtils {
                                                Resource resource,
                                                Property property,
                                                Model model) {
-        if(data != null && languages != null && !languages.isEmpty()){
-            resource.removeAll(property);
+        resource.removeAll(property);
+        if (data != null && languages != null && !languages.isEmpty()) {
             addLocalizedProperty(languages, data, resource, property, model);
         }
     }
@@ -192,11 +192,9 @@ public class MapperUtils {
      * @param value Value
      */
     public static void updateStringProperty(Resource resource, Property property, String value){
-        if(value != null){
-            resource.removeAll(property);
-            if(!value.isBlank()){
-                resource.addProperty(property, value);
-            }
+        resource.removeAll(property);
+        if (value != null && !value.isBlank()){
+            resource.addProperty(property, value);
         }
     }
 
@@ -206,8 +204,8 @@ public class MapperUtils {
         }
     }
     public static void updateLiteral(Resource resource, Property property, Object value){
+        resource.removeAll(property);
         if (value != null) {
-            resource.removeAll(property);
             resource.addLiteral(property, value);
         }
     }
@@ -219,12 +217,10 @@ public class MapperUtils {
      * @param property Property
      * @param value Value
      */
-    public static void updateUriProperty(Resource resource, Property property, String value){
-        if(value != null){
-            resource.removeAll(property);
-            if(!value.isBlank()){
-                resource.addProperty(property, ResourceFactory.createResource(value));
-            }
+    public static void updateUriProperty(Resource resource, Property property, String value) {
+        resource.removeAll(property);
+        if (value != null && !value.isBlank()) {
+            resource.addProperty(property, ResourceFactory.createResource(value));
         }
     }
 
