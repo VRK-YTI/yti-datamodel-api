@@ -400,12 +400,6 @@ public class ClassMapper {
         if (existingEqClassResource.hasNext()) {
             var res = existingEqClassResource.next();
             rdfList = MapperUtils.getList(model, res, OWL.intersectionOf);
-
-            if (rdfList.asJavaList().stream()
-                    .anyMatch(r -> r.asResource().getProperty(OWL.onProperty).getObject().equals(propertyResource))) {
-                throw new MappingError(String.format("Property %s already added", propertyResource.getURI()));
-            }
-
             rdfList.add(restrictionResource);
         } else {
             Resource equvalentClassResource = model.createResource();
