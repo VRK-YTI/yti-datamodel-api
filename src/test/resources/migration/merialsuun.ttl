@@ -1,0 +1,151 @@
+@prefix adms:       <http://www.w3.org/ns/adms#> .
+@prefix afn:        <http://jena.hpl.hp.com/ARQ/function#> .
+@prefix at:         <http://publications.europa.eu/ontology/authority/> .
+@prefix dc:         <http://purl.org/dc/elements/1.1/> .
+@prefix dcam:       <http://purl.org/dc/dcam/> .
+@prefix dcap:       <http://purl.org/ws-mmi-dc/terms/> .
+@prefix dcterms:    <http://purl.org/dc/terms/> .
+@prefix foaf:       <http://xmlns.com/foaf/0.1/> .
+@prefix httpv:      <http://www.w3.org/2011/http#> .
+@prefix iow:        <http://uri.suomi.fi/datamodel/ns/iow#> .
+@prefix jhs:        <http://uri.suomi.fi/datamodel/ns/jhs#> .
+@prefix kmr:        <http://uri.suomi.fi/datamodel/ns/kmr#> .
+@prefix merialsuun: <http://uri.suomi.fi/datamodel/ns/merialsuun#> .
+@prefix owl:        <http://www.w3.org/2002/07/owl#> .
+@prefix prov:       <http://www.w3.org/ns/prov#> .
+@prefix rak:        <http://uri.suomi.fi/datamodel/ns/rak#> .
+@prefix rdf:        <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:       <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix rytj:       <http://uri.suomi.fi/datamodel/ns/rytj#> .
+@prefix rytj-tj:    <http://uri.suomi.fi/datamodel/ns/rytj-tj#> .
+@prefix schema:     <http://schema.org/> .
+@prefix sd:         <http://www.w3.org/ns/sparql-service-description#> .
+@prefix sh:         <http://www.w3.org/ns/shacl#> .
+@prefix skos:       <http://www.w3.org/2004/02/skos/core#> .
+@prefix skosxl:     <http://www.w3.org/2008/05/skos-xl#> .
+@prefix text:       <http://jena.apache.org/text#> .
+@prefix tihatos:    <http://uri.suomi.fi/datamodel/ns/tihatos#> .
+@prefix ts:         <http://www.w3.org/2003/06/sw-vocab-status/ns#> .
+@prefix void:       <http://rdfs.org/ns/void#> .
+@prefix xsd:        <http://www.w3.org/2001/XMLSchema#> .
+@prefix test_un:    <https://vocabulary.uncefact.org/> .
+
+
+<http://uri.suomi.fi/datamodel/ns/merialsuun>
+        rdf:type                        dcap:MetadataVocabulary , owl:Ontology ;
+        rdfs:comment                    "Sample description"@fi ;
+        rdfs:label                      "Merialuesuunnitelma"@fi ;
+        dcterms:contributor             <urn:uuid:7d3a3c00-5a6b-489b-a3ed-63bb58c26a63> ;
+        dcterms:created                 "2021-11-15T10:49:49.661Z"^^xsd:dateTime ;
+        dcterms:hasPart                  merialsuun:MerialuesuunnitelmanKohde , merialsuun:Lahtotietoaineisto , merialsuun:kohdenimi , merialsuun:koostuu ;
+        dcterms:identifier              "urn:uuid:b615f838-9d6f-46a7-ada1-ac768d527024" ;
+        dcterms:isPartOf                <http://urn.fi/URN:NBN:fi:au:ptvl:v1105> ;
+        dcterms:language                ( "fi" "sv" "en" ) ;
+        dcterms:modified                "2022-08-30T06:14:04.896Z"^^xsd:dateTime ;
+        dcterms:references              <http://uri.suomi.fi/terminology/rytj/> , <http://uri.suomi.fi/terminology/geoinfsan/> ;
+        dcterms:relation                ( [ dcterms:title  "Ympäristöministerio/Merialuesuunnittelu"@fi ;
+                                            dcterms:description  "Test description"@fi ;
+                                            foaf:homepage  "https://ym.fi/merialuesuunnittelu"
+                                          ]
+                                          [ dcterms:title  "Suomen merialuesuunnitelma 2030"@fi ;
+                                            foaf:homepage  "https://www.merialuesuunnittelu.fi/merialuesuunnitelmaluonnos-2030/"
+                                          ]
+                                        ) ;
+        dcterms:requires                test_un: , <http://uri.suomi.fi/datamodel/ns/tihatos> , <http://uri.suomi.fi/datamodel/ns/rak> ;
+        dcap:preferredXMLNamespaceName  "http://uri.suomi.fi/datamodel/ns/merialsuun#" ;
+        dcap:preferredXMLNamespacePrefix
+                "merialsuun" ;
+        iow:codeLists                   <http://uri.suomi.fi/codelist/rytj/mspMerk> , <http://uri.suomi.fi/codelist/rytj/MSPprocessStep> ;
+        iow:contentModified             "2022-08-30T06:25:30.951Z"^^xsd:dateTime ;
+        iow:documentation               "Sample documentation..."@fi ;
+        iow:statusModified              "2021-11-15T10:49:49.661Z"^^xsd:dateTime ;
+        iow:useContext                  "InformationDescription" ;
+        owl:versionInfo                 "DRAFT" .
+
+
+# Classes
+merialsuun:MerialuesuunnitelmanKohde
+        rdf:type            rdfs:Class ;
+        rdfs:isDefinedBy    <http://uri.suomi.fi/datamodel/ns/merialsuun> ;
+        dcterms:created     "2021-11-23T10:28:18.642Z"^^xsd:dateTime ;
+        dcterms:identifier  "urn:uuid:4215ef51-98b3-427c-9f17-b5d1a66f9209" ;
+        dcterms:modified    "2022-08-30T06:25:30.612Z"^^xsd:dateTime ;
+        dcterms:subject     <http://uri.suomi.fi/terminology/geoinfsan/c37> ;
+        iow:statusModified  "2021-11-23T10:28:18.642Z"^^xsd:dateTime ;
+        owl:versionInfo     "DRAFT" ;
+        sh:description      "Merialuesuunnitelmaan sisältyvä maantieteellinen kohde, jolla on tietty sijainti. Kohde voi olla esim. alue-, yhteys- tai vyöhykemerkintä eli mikä tahansa muu kuin merialuesuunnitelman rajaukseen liittyvä merkintä."@fi ;
+        sh:name             "Merialuesuunnitelman kohde"@fi ;
+        sh:property         <urn:uuid:9716512a-1317-4473-8b20-43f24dbd8698> .
+
+# Class with an association Lahtotietoaineisto -> MerialuesuunnitelmanKohde
+merialsuun:Lahtotietoaineisto
+        rdf:type             rdfs:Class ;
+        rdfs:isDefinedBy     <http://uri.suomi.fi/datamodel/ns/merialsuun> ;
+        rdfs:subClassOf      rak:Lahtotietoaineisto ;
+        dcterms:created      "2022-08-30T05:18:00.949Z"^^xsd:dateTime ;
+        dcterms:identifier   "urn:uuid:0e8cf39d-e0cc-42e2-b42b-4155101022d7" ;
+        dcterms:modified     "2022-08-30T05:18:00.949Z"^^xsd:dateTime ;
+        dcterms:subject      <http://uri.suomi.fi/terminology/rytj-kaava/concept-13> ;
+        iow:statusModified   "2022-08-30T05:18:00.949Z"^^xsd:dateTime ;
+        owl:versionInfo      "DRAFT" ;
+        prov:wasDerivedFrom  <http://uri.suomi.fi/datamodel/ns/rytj-kaava#Lahtotietoaineisto> ;
+        sh:description       "Test description"@fi ;
+        sh:name              "Lähtötietoaineisto"@fi ;
+        skos:editorialNote   "Test editorial note" ;
+        sh:property          <urn:uuid:74ae03c9-62d4-4880-9ac0-c98aca1787f6> .
+
+# Attributes
+merialsuun:kohdenimi  rdf:type  owl:DatatypeProperty ;
+        rdfs:comment        "Kohteen nimi suomeksi."@fi ;
+        rdfs:isDefinedBy    <http://uri.suomi.fi/datamodel/ns/merialsuun> ;
+        rdfs:label          "Kohdenimi"@fi ;
+        rdfs:range          xsd:string ;
+        dcterms:created     "2021-11-18T11:47:55.876Z"^^xsd:dateTime ;
+        dcterms:identifier  "urn:uuid:f0d7a064-083c-4860-8e03-0c309599169b" ;
+        dcterms:modified    "2022-02-10T09:19:26.372Z"^^xsd:dateTime ;
+        iow:statusModified  "2021-11-18T11:47:55.876Z"^^xsd:dateTime ;
+        owl:versionInfo     "DRAFT" .
+
+# Associations
+merialsuun:koostuu  rdf:type  owl:ObjectProperty ;
+        rdfs:isDefinedBy    <http://uri.suomi.fi/datamodel/ns/merialsuun> ;
+        rdfs:label          "Koostuu"@fi ;
+        rdfs:range          merialsuun:MerialuesuunnitelmanKohde ;
+        dcterms:created     "2021-11-23T10:57:39.922Z"^^xsd:dateTime ;
+        dcterms:identifier  "urn:uuid:108e57bd-7473-4f27-95c8-b3955346a177" ;
+        dcterms:modified    "2021-11-23T10:57:39.922Z"^^xsd:dateTime ;
+        iow:statusModified  "2021-11-23T10:57:39.922Z"^^xsd:dateTime ;
+        owl:versionInfo     "DRAFT" .
+
+# Restrictions
+<urn:uuid:74ae03c9-62d4-4880-9ac0-c98aca1787f6>
+        rdf:type         sh:PropertyShape ;
+        dcterms:type     owl:ObjectProperty ;
+        iow:localName    "koostuu" ;
+        owl:versionInfo  "DRAFT" ;
+        sh:minCount      1 ;
+        sh:name          "Koostuu"@fi ;
+        sh:node          merialsuun:MerialuesuunnitelmanKohde ;
+        sh:order         2 ;
+        sh:path          tihatos:kohdistuu .
+
+<urn:uuid:9716512a-1317-4473-8b20-43f24dbd8698>
+        rdf:type         sh:PropertyShape ;
+        dcterms:type     owl:DatatypeProperty ;
+        iow:localName    "kohdenimi" ;
+        owl:versionInfo  "DRAFT" ;
+        sh:datatype      xsd:string ;
+        sh:description   "Kohteen nimi suomeksi."@fi ;
+        sh:maxCount      1 ;
+        sh:minCount      1 ;
+        sh:name          "Kohdenimi"@fi , "Object name"@en , "Objekts namn"@sv ;
+        sh:order         0 ;
+        sh:path          merialsuun:kohdenimi .
+
+# External namespace
+test_un:  rdf:type                      rdfs:Resource ;
+        rdfs:label                      "test un"@fi ;
+        dcap:preferredXMLNamespaceName  "https://vocabulary.uncefact.org/" ;
+        dcap:preferredXMLNamespacePrefix
+                "test_un" ;
+        iow:isResolved                  false .
