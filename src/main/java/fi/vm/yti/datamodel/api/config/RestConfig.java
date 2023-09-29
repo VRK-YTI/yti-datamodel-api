@@ -9,6 +9,7 @@ import org.springframework.http.MediaType;
 
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 
+import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.netty.http.client.HttpClient;
 import reactor.netty.resources.ConnectionProvider;
@@ -38,8 +39,11 @@ public class RestConfig {
 
     @Bean("uriResolveClient")
     WebClient uriResolveClient() {
+        var size = 20 * 1024 * 1024;
         return WebClient.builder()
                 .defaultHeaders(headers -> headers.addAll(defaultHttpHeaders))
+                .exchangeStrategies(ExchangeStrategies.builder()
+                        .codecs(codecs -> codecs.defaultCodecs().maxInMemorySize(size)).build())
                 .baseUrl(URI_SUOMI_FI)
                 .clientConnector(new ReactorClientHttpConnector(
                                 HttpClient.create(getConnectionProvider("uriResolve"))
