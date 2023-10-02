@@ -58,7 +58,6 @@ class ResourceQueryFactoryTest {
         var attributeListQuery = ResourceQueryFactory.createInternalResourceQuery(request, new ArrayList<>(),
                 new ArrayList<>(), new HashSet<>());
         String expected = OpenSearchUtils.getJsonString("/es/attributeListRequest.json");
-        String real = OpenSearchUtils.getPayload(attributeListQuery);
         JSONAssert.assertEquals(expected, OpenSearchUtils.getPayload(attributeListQuery), JSONCompareMode.LENIENT);
     }
 
