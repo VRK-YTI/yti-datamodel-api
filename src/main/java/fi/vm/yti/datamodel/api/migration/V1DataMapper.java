@@ -2,6 +2,7 @@ package fi.vm.yti.datamodel.api.migration;
 
 import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
+import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.Resource;
@@ -19,6 +20,9 @@ public class V1DataMapper {
 
     private static final Property DOCUMENTATION =
             ResourceFactory.createProperty("http://uri.suomi.fi/datamodel/ns/iow#documentation");
+
+    private static final Property POINT_XY =
+            ResourceFactory.createProperty("http://uri.suomi.fi/datamodel/ns/iow#pointXY");
 
     public static DataModelDTO getLibraryMetadata(String modelURI, Model oldData, Model serviceCategories, String defaultOrganization) {
         var modelResource = oldData.getResource(modelURI);
@@ -118,6 +122,33 @@ public class V1DataMapper {
             return oldData.listSubjectsWithProperty(RDF.type, type)
                     .mapWith(s -> oldData.getResource(s.getURI()))
                     .toList();
+    }
+
+    public static List<PositionDataDTO> mapPositions(String modelURI, Model oldVisualization) {
+        var positions = new ArrayList<PositionDataDTO>();
+
+        oldVisualization.listSubjectsWithProperty(RDF.type, RDFS.Class).forEach(subj -> {
+            var dto = new PositionDataDTO();
+            var uri = NodeFactory.createURI(subj.getURI());
+
+            if (uri.toString().startsWith(modelURI)) {
+                dto.setIdentifier(uri.getLocalName());
+            } else {
+                var prefix = MapperUtils.getModelIdFromNamespace(uri.getNameSpace().replace("#", ""));
+                dto.setIdentifier(prefix + ":" + uri.getLocalName());
+            }
+            var coordinates = MapperUtils.propertyToString(subj, POINT_XY);
+            if (coordinates == null) {
+                return;
+            }
+            var xy = coordinates.split(",");
+            dto.setX(Double.parseDouble(xy[0]));
+            dto.setY(Double.parseDouble(xy[1]));
+
+            positions.add(dto);
+        });
+
+        return positions;
     }
 
     private static void mapCommon(BaseDTO dto, Resource resource) {

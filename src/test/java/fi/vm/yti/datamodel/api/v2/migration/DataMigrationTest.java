@@ -7,8 +7,11 @@ import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import fi.vm.yti.datamodel.api.v2.service.ClassService;
 import fi.vm.yti.datamodel.api.v2.service.DataModelService;
 import fi.vm.yti.datamodel.api.v2.service.ResourceService;
+import fi.vm.yti.datamodel.api.v2.service.VisualizationService;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.riot.RDFDataMgr;
+import org.apache.jena.riot.RDFFormat;
 import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDFS;
 import org.junit.jupiter.api.Test;
@@ -39,7 +42,8 @@ class DataMigrationTest {
     ResourceService resourceService;
     @MockBean
     CoreRepository coreRepository;
-
+    @MockBean
+    VisualizationService visualizationService;
     @Captor
     ArgumentCaptor<DataModelDTO> dataModelCaptor;
     @Captor
@@ -86,6 +90,9 @@ class DataMigrationTest {
         assertTrue(resourcePrefixes.containsAll(List.of("koostuu", "kohdenimi", "Lahtotietoaineisto", "MerialuesuunnitelmanKohde")));
 
         // Class Lahtotietoaineisto should have property owl:equivalentClass containing class restrictions
-        assertTrue(modelCaptor.getValue().getResource(modelURI + "/Lahtotietoaineisto").hasProperty(OWL.equivalentClass));
+        var result = modelCaptor.getValue();
+        assertTrue(result.getResource(modelURI + "/Lahtotietoaineisto").hasProperty(OWL.equivalentClass));
+
+        RDFDataMgr.write(System.out, result, RDFFormat.TURTLE);
     }
 }

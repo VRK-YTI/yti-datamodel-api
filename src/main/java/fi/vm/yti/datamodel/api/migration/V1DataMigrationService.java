@@ -13,6 +13,7 @@ import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import fi.vm.yti.datamodel.api.v2.service.ClassService;
 import fi.vm.yti.datamodel.api.v2.service.DataModelService;
 import fi.vm.yti.datamodel.api.v2.service.ResourceService;
+import fi.vm.yti.datamodel.api.v2.service.VisualizationService;
 import org.apache.jena.arq.querybuilder.UpdateBuilder;
 import org.apache.jena.arq.querybuilder.WhereBuilder;
 import org.apache.jena.graph.NodeFactory;
@@ -22,11 +23,11 @@ import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFParser;
-import org.apache.jena.util.ResourceUtils;
 import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDFS;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -46,6 +47,7 @@ public class V1DataMigrationService {
     private final ClassService classService;
     private final ResourceService resourceService;
     private final CoreRepository coreRepository;
+    private final VisualizationService visualizationService;
 
     private final LoadingCache<String, Model> modelCache = CacheBuilder.newBuilder().build(getLoader());
 
@@ -55,16 +57,21 @@ public class V1DataMigrationService {
     public V1DataMigrationService(DataModelService dataModelService,
                                   ClassService classService,
                                   ResourceService resourceService,
-                                  CoreRepository coreRepository) {
+                                  CoreRepository coreRepository,
+                                  VisualizationService visualizationService) {
         this.dataModelService = dataModelService;
         this.classService = classService;
         this.resourceService = resourceService;
         this.coreRepository = coreRepository;
+        this.visualizationService = visualizationService;
     }
 
     public void migrateLibrary(String prefix, Model oldData) throws URISyntaxException {
 
         var modelURI = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
+        if (coreRepository.graphExists(modelURI)) {
+            throw new RuntimeException("Already exists");
+        }
         var groupModel = coreRepository.getServiceCategories();
         var dataModel = V1DataMapper.getLibraryMetadata(modelURI, oldData, groupModel, defaultOrganization);
 
@@ -78,7 +85,11 @@ public class V1DataMigrationService {
         // create data model
         var dataModelURI = dataModelService.create(dataModel, ModelType.LIBRARY);
 
+        // add references with separate query, because they might not exist yet (causes validation error)
         updateRequires(modelURI, modelResource);
+
+        // update created and modified info from the original resource. Remove creator and modifier properties,
+        // because they are not defined in the older application version
         handleModifiedInfo(modelURI, modelResource);
 
         LOG.info("Created datamodel {}", dataModelURI);
@@ -114,29 +125,37 @@ public class V1DataMigrationService {
                 var ns = NodeFactory.createURI(path).getNameSpace().replace("#", "");
 
                 if (ns.contains(URI_SUOMI_FI)) {
-                    Resource temp;
+                    Resource origResource;
                     if (ns.equals(modelURI)) {
                         // current model
-                        temp = oldData.getResource(path);
+                        origResource = oldData.getResource(path);
                     } else {
                         // reference to other model in Interoperability platform
-                        temp = modelCache.getUnchecked(ns).getResource(path);
-                        if (temp == null) {
-                            LOG.info("Resource {} not found from cached models", path);
-                            return;
-                        }
-                        var range = MapperUtils.propertyToString(temp, RDFS.range);
+                        var modelFromCache = modelCache.getUnchecked(ns);
+                        origResource = modelFromCache.getResource(path);
+                    }
 
-                        if (range != null && range.contains(URI_SUOMI_FI)) {
-                            temp.removeAll(RDFS.range);
-                            temp.addProperty(RDFS.range, ResourceFactory.createResource(range.replace("#", ModelConstants.RESOURCE_SEPARATOR)));
-                        }
-                    }
-                    if (temp.getURI().contains("#")) {
-                        targetRes = ResourceUtils.renameResource(temp, temp.getURI().replace("#", ModelConstants.RESOURCE_SEPARATOR));
+                    var tempModel = ModelFactory.createDefaultModel();
+                    var tempResource = tempModel.createResource(path.replace("#", ModelConstants.RESOURCE_SEPARATOR));
+
+                    String range;
+                    if (origResource.hasProperty(RDFS.range)) {
+                        range = MapperUtils.propertyToString(origResource, RDFS.range);
+                    } else if (restrictionRes.hasProperty(RDFS.range)) {
+                        range = MapperUtils.propertyToString(restrictionRes, RDFS.range);
+                    } else if (restrictionRes.hasProperty(SH.node)) {
+                        range = MapperUtils.propertyToString(restrictionRes, SH.node);
                     } else {
-                        targetRes = temp;
+                        LOG.warn("No range property found for class restriction {}, path {}", classResource.getURI(), path);
+                        return;
                     }
+
+                    if (range != null && range.contains(URI_SUOMI_FI)) {
+                        range = range.replace("#", ModelConstants.RESOURCE_SEPARATOR);
+                    }
+                    tempResource.addProperty(RDFS.range, ResourceFactory.createResource(range));
+                    targetRes = tempResource;
+
                 } else {
                     // reference to external resource
                     targetRes = resourceService.findResources(Set.of(path)).getResource(path);
@@ -147,6 +166,16 @@ public class V1DataMigrationService {
             });
         });
         coreRepository.put(modelURI, newModel);
+    }
+
+    @Nullable
+    private static String getAssociationTarget(Resource temp) {
+        var range = MapperUtils.propertyToString(temp, RDFS.range);
+
+        if (range == null) {
+            range = MapperUtils.propertyToString(temp, SH.node);
+        }
+        return range;
     }
 
     private void handleAddResources(String prefix, Model oldData, String modelURI, ResourceType type) {
@@ -176,7 +205,7 @@ public class V1DataMigrationService {
                     var resourceURI = resourceService.create(prefix, dto, type, false);
                     LOG.info("Created resource {}", resourceURI);
                 }
-                handleModifiedInfo(modelURI, oldData.getResource(modelURI));
+                handleModifiedInfo(modelURI, resource);
             } catch (Exception e) {
                 LOG.error("Error creating class {} to model {}: {}", resource.getURI(), modelURI, e.getMessage());
             }
@@ -188,12 +217,6 @@ public class V1DataMigrationService {
         return new CacheLoader<>() {
             @Override
             public @NotNull Model load(@NotNull String ns) {
-                try {
-                    LOG.info("Try to fetch model {} from Fuseki", ns);
-                    return coreRepository.fetch(ns);
-                } catch (Exception e) {
-                    LOG.info("Model not exists {}", ns);
-                }
                 var temp = ModelFactory.createDefaultModel();
                 LOG.info("Fetch reference datamodel and add to cache {}", ns);
                 RDFParser.create()
@@ -215,6 +238,9 @@ public class V1DataMigrationService {
         var g = NodeFactory.createURI(modelURI);
         MapperUtils.arrayPropertyToSet(modelResource, DCTerms.requires)
                 .forEach(ns -> {
+                    ns = ns
+                            .replaceAll("/?$", "")
+                            .replaceAll("#?$", "");
                     if (ns.contains(URI_SUOMI_FI)) {
                         builder.addInsert(g, g, DCTerms.requires, NodeFactory.createURI(ns));
                     }
@@ -244,7 +270,14 @@ public class V1DataMigrationService {
                         .addWhere("?s", Iow.modifier, "?modifier"));
 
         LOG.info("Add created {} and modified {} for resource {}", created, modified, resource.getURI());
-
+        // 2023-10-02T07:38:32
+        // 2023-10-02T07:48:07
         coreRepository.queryUpdate(builder.buildRequest());
+    }
+
+    public void migratePositions(String prefix, Model oldVisualization) {
+        var modelURI = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
+        var positions = V1DataMapper.mapPositions(modelURI, oldVisualization);
+        visualizationService.savePositionData(prefix, positions);
     }
 }

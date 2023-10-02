@@ -5,14 +5,14 @@ import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelUtils;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.riot.Lang;
+import org.apache.jena.riot.RDFDataMgr;
+import org.apache.jena.riot.RDFLanguages;
 import org.apache.jena.riot.RDFParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 import static fi.vm.yti.security.AuthorizationException.check;
 
@@ -34,18 +34,19 @@ public class DataMigrationController {
         this.authorizationManager = authorizationManager;
     }
 
-    @GetMapping
-    public void migrate(@RequestParam String prefix) {
+    @PostMapping
+    public ResponseEntity<Void> migrate(@RequestParam String prefix) {
         check(authorizationManager.hasRightToDoMigration());
 
         var oldData = ModelFactory.createDefaultModel();
 
-        /*
+        /* Use static file
         var stream = getClass().getResourceAsStream("/merialsuun_simple.ttl");
         RDFDataMgr.read(oldData, stream, RDFLanguages.TURTLE);
         */
 
         var modelURI = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
+        LOG.info("Fetching model {}", modelURI);
         RDFParser.create()
                 .source(serviceURL + "/datamodel-api/api/v1/exportModel?graph=" + DataModelUtils.encode(modelURI))
                 .lang(Lang.JSONLD)
@@ -54,8 +55,27 @@ public class DataMigrationController {
 
         try {
             migrationService.migrateLibrary(prefix, oldData);
+            return ResponseEntity.noContent().build();
         } catch (Exception e) {
             LOG.error(e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
         }
+    }
+
+    @PostMapping("/positions")
+    public ResponseEntity<Void> migrateVisualization(@RequestParam String prefix) {
+        check(authorizationManager.hasRightToDoMigration());
+
+        var oldVisualization = ModelFactory.createDefaultModel();
+        var modelURI = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
+        LOG.info("Fetching model {}", modelURI);
+        RDFParser.create()
+                .source(serviceURL + "/datamodel-api/api/v1/modelPositions?model=" + DataModelUtils.encode(modelURI))
+                .lang(Lang.JSONLD)
+                .acceptHeader("application/ld+json")
+                .parse(oldVisualization);
+
+        migrationService.migratePositions(prefix, oldVisualization);
+        return ResponseEntity.noContent().build();
     }
 }

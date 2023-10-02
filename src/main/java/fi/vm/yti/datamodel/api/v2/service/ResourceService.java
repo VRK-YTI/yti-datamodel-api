@@ -14,6 +14,7 @@ import org.apache.jena.arq.querybuilder.AskBuilder;
 import org.apache.jena.arq.querybuilder.ConstructBuilder;
 import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.rdf.model.*;
+import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -250,19 +251,23 @@ public class ResourceService {
         var importsBuilder = new ConstructBuilder()
                 .addPrefixes(ModelConstants.PREFIXES);
 
+        var predicates = List.of(RDFS.isDefinedBy, DCTerms.identifier, RDF.type, RDFS.label,
+                RDFS.range, SH.path, SH.datatype, SH.minCount, SH.maxCount);
+
         var iterator = resourceURIs.iterator();
         var count = 0;
         while (iterator.hasNext()) {
-            var pred = "?p" + count;
-            var obj = "?o" + count;
             String uri = iterator.next();
             var resource = ResourceFactory.createResource(uri);
-            if (uri.startsWith(ModelConstants.SUOMI_FI_NAMESPACE)) {
-                coreBuilder.addConstruct(resource, pred, obj);
-                coreBuilder.addOptional(resource, pred, obj);
-            } else {
-                importsBuilder.addConstruct(resource, pred, obj);
-                importsBuilder.addOptional(resource, pred, obj);
+            for (var pred : predicates) {
+                var obj = "?" + pred.getLocalName() + count;
+                if (uri.startsWith(ModelConstants.SUOMI_FI_NAMESPACE)) {
+                    coreBuilder.addConstruct(resource, pred, obj);
+                    coreBuilder.addOptional(resource, pred, obj);
+                } else {
+                    importsBuilder.addConstruct(resource, pred, obj);
+                    importsBuilder.addOptional(resource, pred, obj);
+                }
             }
             count++;
         }
