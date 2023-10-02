@@ -17,6 +17,9 @@ public class IndexModel extends IndexBase {
     @JsonFormat(with = JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY)
     private List<String> isPartOf;
     private List<String> language;
+    private String uri;
+    private String versionIri;
+    private String version;
 
     public String getContentModified() {
         return contentModified;
@@ -74,4 +77,27 @@ public class IndexModel extends IndexBase {
         this.language = language;
     }
 
+    public String getUri() {
+        return uri;
+    }
+
+    public void setUri(String uri) {
+        this.uri = uri;
+    }
+
+    public String getVersionIri() {
+        return versionIri;
+    }
+
+    public void setVersionIri(String versionIri) {
+        this.versionIri = versionIri;
+    }
+
+    public String getVersion() {
+        return version;
+    }
+
+    public void setVersion(String version) {
+        this.version = version;
+    }
 }

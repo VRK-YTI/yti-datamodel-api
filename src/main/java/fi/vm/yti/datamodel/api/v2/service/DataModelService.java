@@ -1,21 +1,23 @@
 package fi.vm.yti.datamodel.api.v2.service;
 
 import fi.vm.yti.datamodel.api.security.AuthorizationManager;
-import fi.vm.yti.datamodel.api.v2.dto.DataModelDTO;
-import fi.vm.yti.datamodel.api.v2.dto.DataModelInfoDTO;
-import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
-import fi.vm.yti.datamodel.api.v2.dto.ModelType;
+import fi.vm.yti.datamodel.api.v2.dto.*;
+import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
+import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.mapper.ModelMapper;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelUtils;
+import fi.vm.yti.datamodel.api.v2.utils.SemVer;
 import fi.vm.yti.datamodel.api.v2.validator.ValidationConstants;
 import fi.vm.yti.security.AuthenticatedUserProvider;
 import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.SimpleSelector;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFDataMgr;
+import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.SKOS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -80,7 +82,7 @@ public class DataModelService {
 
         coreRepository.put(graphUri, jenaModel);
 
-        var indexModel = mapper.mapToIndexModel(dto.getPrefix(), jenaModel);
+        var indexModel = mapper.mapToIndexModel(graphUri, jenaModel);
         openSearchIndexer.createModelToIndex(indexModel);
         return new URI(graphUri);
     }
@@ -97,7 +99,7 @@ public class DataModelService {
 
         coreRepository.put(graphUri, jenaModel);
 
-        var indexModel = mapper.mapToIndexModel(prefix, jenaModel);
+        var indexModel = mapper.mapToIndexModel(graphUri, jenaModel);
         openSearchIndexer.updateModelToIndex(indexModel);
     }
 
@@ -172,4 +174,43 @@ public class DataModelService {
         return ResponseEntity.ok(stringWriter.toString());
     }
 
+
+    public void createRelease(String prefix, String version, Status status) {
+        var modelUri = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
+        if(!status.equals(Status.SUGGESTED) && !status.equals(Status.VALID)){
+            throw new MappingError("Status has to be SUGGESTED or VALID");
+        }
+
+        if(!version.matches(SemVer.VALID_REGEX)){
+            throw new MappingError("Not valid Semantic version string");
+        }
+
+        //This gets the current "DRAFT" version
+        var model = coreRepository.fetch(modelUri);
+        var priorVersionUri = MapperUtils.propertyToString(model.getResource(modelUri), OWL.priorVersion);
+        if(priorVersionUri != null){
+            var priorVersion = priorVersionUri.substring(priorVersionUri.lastIndexOf("/")  + 1);
+            var result = SemVer.compareSemVers(priorVersion, version);
+            if(result == 0){
+                throw new MappingError("Same version number");
+            }
+            if(result > 0) {
+                throw new MappingError("Older version given");
+            }
+        }
+
+        var newDraft = ModelFactory.createDefaultModel().add(model);
+
+        var versionUri = mapper.mapReleaseProperties(model, modelUri, version, status);
+        //Map new newest release to draft model
+        mapper.mapPriorVersion(newDraft, modelUri, versionUri);
+        coreRepository.put(modelUri, newDraft);
+        coreRepository.put(versionUri, model);
+
+        var newVersion = mapper.mapToIndexModel(modelUri, model);
+        var draftIndex = mapper.mapToIndexModel(modelUri, newDraft);
+        openSearchIndexer.createModelToIndex(newVersion);
+        openSearchIndexer.updateModelToIndex(draftIndex);
+
+    }
 }

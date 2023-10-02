@@ -16,10 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import java.util.Calendar;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -277,15 +274,30 @@ public class ModelMapper {
 
     /**
      * Map a DataModel to a DataModelDocument
-     * @param prefix Prefix of model
+     * @param graphUri Graph URI
      * @param model Model
      * @return Index model
      */
-    public IndexModel mapToIndexModel(String prefix, Model model){
-        var resource = model.getResource(ModelConstants.SUOMI_FI_NAMESPACE + prefix);
+    public IndexModel mapToIndexModel(String graphUri, Model model){
+        var resource = model.getResource(graphUri);
         var indexModel = new IndexModel();
-        indexModel.setId(ModelConstants.SUOMI_FI_NAMESPACE + prefix);
-        indexModel.setStatus(Status.valueOf(resource.getProperty(OWL.versionInfo).getString()));
+
+        var versionIri = MapperUtils.propertyToString(resource, OWL2.versionIRI);
+        if(versionIri != null){
+            indexModel.setId(versionIri);
+        }else{
+            indexModel.setId(resource.getURI());
+        }
+        indexModel.setUri(resource.getURI());
+        var versionInfo = MapperUtils.arrayPropertyToList(resource, OWL.versionInfo);
+        versionInfo.forEach(ver -> {
+            if(Arrays.stream(Status.values()).map(Status::name).anyMatch(ver::equals)){
+                indexModel.setStatus(Status.valueOf(ver));
+            }else{
+                indexModel.setVersion(ver);
+            }
+        });
+        indexModel.setVersionIri(versionIri);
         indexModel.setModified(resource.getProperty(DCTerms.modified).getString());
         indexModel.setCreated(resource.getProperty(DCTerms.created).getString());
         var contentModified = resource.getProperty(Iow.contentModified);
@@ -301,7 +313,7 @@ public class ModelMapper {
             throw new MappingError("RDF:type not supported for data model");
         }
 
-        indexModel.setPrefix(prefix);
+        indexModel.setPrefix(MapperUtils.propertyToString(resource, DCAP.preferredXMLNamespacePrefix));
         indexModel.setLabel(MapperUtils.localizedPropertyToMap(resource, RDFS.label));
         indexModel.setComment(MapperUtils.localizedPropertyToMap(resource, RDFS.comment));
         var contributors = MapperUtils.arrayPropertyToList(resource, DCTerms.contributor)
@@ -421,5 +433,32 @@ public class ModelMapper {
                 }
                 model.setNsPrefix(namespace.getPrefix(), nsUri);
         });
+    }
+
+    public String mapReleaseProperties(Model model, String graphUri, String version, Status status){
+
+        /*
+        TODO: NOT MVP VC
+        owl:deprecated --> boolean is deprecated (same as Status.RETIRED?)
+        suomi-meta:onMuutostieto --> commit message
+        owl:backwardsCompatibleWith --> some versionIri
+         */
+
+        var versionIri = graphUri + ModelConstants.RESOURCE_SEPARATOR + version;
+        var res = model.getResource(graphUri);
+        res.addProperty(OWL2.versionIRI, ResourceFactory.createResource(versionIri));
+        res.removeAll(OWL.versionInfo);
+        res.addProperty(OWL2.versionInfo, version);
+        res.addProperty(OWL.versionInfo, status.name());
+
+
+        //prior version doesn't need to be mapped since it should always be already on the DRAFT model
+        return versionIri;
+    }
+
+    public void mapPriorVersion(Model model, String graphUri, String priorVersionUri) {
+        var resource = model.getResource(graphUri);
+        resource.removeAll(OWL.priorVersion);
+        resource.addProperty(OWL.priorVersion, ResourceFactory.createResource(priorVersionUri));
     }
 }

@@ -372,10 +372,38 @@ class ModelMapperTest {
     }
 
     @Test
+    void testMapReleaseProperties() {
+        //Model is loaded from the Draft version and mapping the properties will make it into a release version
+        var m = MapperTestUtils.getModelFromFile("/test_datamodel_library.ttl");
+        final var graphUri = "http://uri.suomi.fi/datamodel/ns/test";
+
+        var versionUri = mapper.mapReleaseProperties(m, graphUri, "1.0.1", Status.VALID);
+
+        assertEquals("http://uri.suomi.fi/datamodel/ns/test/1.0.1", versionUri);
+        var resource = m.getResource(graphUri);
+        assertEquals("http://uri.suomi.fi/datamodel/ns/test/1.0.1", MapperUtils.propertyToString(resource, OWL2.versionIRI));
+
+        var versionInfoList = List.of(Status.VALID.name(), "1.0.1");
+        assertTrue(MapperUtils.arrayPropertyToList(resource, OWL.versionInfo).containsAll(versionInfoList));
+
+        assertEquals(graphUri + "/1.0.0", MapperUtils.propertyToString(resource, OWL.priorVersion));
+    }
+
+    @Test
+    void testMapPriorVersion() {
+        //This is loaded as if it was a draft version
+        var m = MapperTestUtils.getModelFromFile("/test_datamodel_library.ttl");
+        mapper.mapPriorVersion(m, "http://uri.suomi.fi/datamodel/ns/test", "http://uri.suomi.fi/datamodel/ns/test/1.0.0");
+
+        var resource = m.getResource("http://uri.suomi.fi/datamodel/ns/test");
+        assertEquals("http://uri.suomi.fi/datamodel/ns/test/1.0.0", MapperUtils.propertyToString(resource, OWL.priorVersion));
+    }
+
+    @Test
     void testMapToIndexModel() {
         var m = MapperTestUtils.getModelFromFile("/test_datamodel_library.ttl");
 
-        var result = mapper.mapToIndexModel("test", m);
+        var result = mapper.mapToIndexModel("http://uri.suomi.fi/datamodel/ns/test", m);
 
         assertEquals("test", result.getPrefix());
         assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "test", result.getId());

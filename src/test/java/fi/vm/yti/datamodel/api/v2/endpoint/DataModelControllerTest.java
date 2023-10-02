@@ -413,4 +413,15 @@ class DataModelControllerTest {
         verifyNoMoreInteractions(dataModelService);
     }
 
+
+    @Test
+    void shouldCreateRelease() throws Exception {
+        mvc.perform(post("/v2/model/test/release")
+                        .param("status", "VALID")
+                        .param("version","1.0.1"))
+                .andExpect(status().isOk());
+
+        verify(dataModelService).createRelease("test", "1.0.1", Status.VALID);
+        verifyNoMoreInteractions(dataModelService);
+    }
 }

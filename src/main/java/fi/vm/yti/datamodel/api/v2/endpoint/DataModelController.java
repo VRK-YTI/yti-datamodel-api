@@ -3,6 +3,7 @@ package fi.vm.yti.datamodel.api.v2.endpoint;
 import fi.vm.yti.datamodel.api.v2.dto.DataModelDTO;
 import fi.vm.yti.datamodel.api.v2.dto.DataModelInfoDTO;
 import fi.vm.yti.datamodel.api.v2.dto.ModelType;
+import fi.vm.yti.datamodel.api.v2.dto.Status;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.ApiError;
 import fi.vm.yti.datamodel.api.v2.service.DataModelService;
 import fi.vm.yti.datamodel.api.v2.validator.ValidDatamodel;
@@ -116,5 +117,12 @@ public class DataModelController {
     @DeleteMapping(value = "/{prefix}")
     public void deleteModel(@PathVariable @Parameter(description = "Data model prefix") String prefix) {
         dataModelService.delete(prefix);
+    }
+
+    @PostMapping(value = "/{prefix}/release")
+    public void createRelease(@PathVariable @Parameter(description = "Data model prefix") String prefix,
+                              @RequestParam @Parameter(description = "Semantic version") String version,
+                              @RequestParam @Parameter(description = "Status") Status status) {
+        dataModelService.createRelease(prefix, version, status);
     }
 }
