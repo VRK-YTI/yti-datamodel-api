@@ -106,7 +106,7 @@ class DataModelControllerTest {
 
     @Test
     void shouldReturnModel() throws Exception {
-        when(dataModelService.get(anyString())).thenReturn(new DataModelInfoDTO());
+        when(dataModelService.get(anyString(), eq(null))).thenReturn(new DataModelInfoDTO());
         this.mvc
                 .perform(get("/v2/model/test")
                         .accept(MediaType.APPLICATION_JSON_VALUE)
@@ -114,7 +114,7 @@ class DataModelControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE));
 
-        verify(dataModelService).get(anyString());
+        verify(dataModelService).get(anyString(), eq(null));
         verifyNoMoreInteractions(dataModelService);
     }
 
@@ -419,7 +419,7 @@ class DataModelControllerTest {
         mvc.perform(post("/v2/model/test/release")
                         .param("status", "VALID")
                         .param("version","1.0.1"))
-                .andExpect(status().isOk());
+                .andExpect(status().isCreated());
 
         verify(dataModelService).createRelease("test", "1.0.1", Status.VALID);
         verifyNoMoreInteractions(dataModelService);

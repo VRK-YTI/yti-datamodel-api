@@ -190,7 +190,16 @@ class ResourceControllerTest {
     void shouldGetResource() throws Exception {
         mvc.perform(get("/v2/resource/library/test/TestAttribute"))
                 .andExpect(status().isOk());
-        verify(resourceService).get(anyString(), anyString());
+        verify(resourceService).get(anyString(), eq(null), anyString());
+        verifyNoMoreInteractions(resourceService);
+    }
+
+    @Test
+    void shouldGetResourceWithVersion() throws Exception {
+        mvc.perform(get("/v2/resource/library/test/TestAttribute")
+                        .param("version", "1.0.1"))
+                .andExpect(status().isOk());
+        verify(resourceService).get(anyString(), eq("1.0.1"), anyString());
         verifyNoMoreInteractions(resourceService);
     }
 

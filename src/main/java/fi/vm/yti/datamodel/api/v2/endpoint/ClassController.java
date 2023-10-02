@@ -100,8 +100,9 @@ public class ClassController {
     })
     @GetMapping(value = "/library/{prefix}/{classIdentifier}", produces = APPLICATION_JSON_VALUE)
     public ClassInfoDTO getClass(@PathVariable @Parameter(description = "Data model prefix") String prefix,
-                                 @PathVariable @Parameter(description = "Class identifier") String classIdentifier){
-        return (ClassInfoDTO) classService.get(prefix, classIdentifier);
+                                 @PathVariable @Parameter(description = "Class identifier") String classIdentifier,
+                                 @RequestParam(required = false) @Parameter(description = "Version") String version){
+        return (ClassInfoDTO) classService.get(prefix, version, classIdentifier);
     }
 
     @Operation(summary = "Get a node shape from a profile")
@@ -110,8 +111,9 @@ public class ClassController {
             @ApiResponse(responseCode = "404", description = "Node shape not found", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ApiError.class))})
     })    @GetMapping(value = "/profile/{prefix}/{nodeShapeIdentifier}", produces = APPLICATION_JSON_VALUE)
     public NodeShapeInfoDTO getNodeShape(@PathVariable @Parameter(description = "Data model prefix") String prefix,
-                                         @PathVariable @Parameter(description = "Node shape identifier") String nodeShapeIdentifier){
-        return (NodeShapeInfoDTO) classService.get(prefix, nodeShapeIdentifier);
+                                         @PathVariable @Parameter(description = "Node shape identifier") String nodeShapeIdentifier,
+                                         @RequestParam(required = false) @Parameter(description = "Version") String version){
+        return (NodeShapeInfoDTO) classService.get(prefix, version, nodeShapeIdentifier);
     }
 
 

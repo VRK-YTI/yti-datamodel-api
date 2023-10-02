@@ -198,8 +198,16 @@ public class ModelMapper {
         datamodelDTO.setPrefix(prefix);
 
         var modelResource = model.getResource(ModelConstants.SUOMI_FI_NAMESPACE + prefix);
-        datamodelDTO.setStatus(Status.valueOf(MapperUtils.propertyToString(modelResource, OWL.versionInfo)));
 
+        var versionInfo = MapperUtils.arrayPropertyToList(modelResource, OWL.versionInfo);
+        versionInfo.forEach(ver -> {
+            if(Arrays.stream(Status.values()).map(Status::name).anyMatch(ver::equals)){
+                datamodelDTO.setStatus(Status.valueOf(ver));
+            }else{
+                datamodelDTO.setVersion(ver);
+            }
+        });
+        datamodelDTO.setVersionIri(MapperUtils.propertyToString(modelResource, OWL2.versionIRI));
         if(MapperUtils.isApplicationProfile(modelResource)){
             datamodelDTO.setType(ModelType.PROFILE);
         }else if(MapperUtils.isLibrary(modelResource)){

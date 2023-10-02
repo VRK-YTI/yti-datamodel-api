@@ -3,6 +3,10 @@ package fi.vm.yti.datamodel.api.v2.opensearch.queries;
 
 import fi.vm.yti.datamodel.api.v2.dto.Status;
 import org.opensearch.client.opensearch._types.FieldValue;
+import org.opensearch.client.opensearch._types.SortOptions;
+import org.opensearch.client.opensearch._types.SortOptionsBuilders;
+import org.opensearch.client.opensearch._types.SortOrder;
+import org.opensearch.client.opensearch._types.mapping.FieldType;
 import org.opensearch.client.opensearch._types.query_dsl.*;
 
 import java.util.Collection;
@@ -34,6 +38,23 @@ public class QueryFactoryUtils {
         }
     }
 
+    public static String getSortLang(String sortLang) {
+        if(sortLang == null || sortLang.isBlank()){
+            return DEFAULT_SORT_LANG;
+        }else{
+            return sortLang;
+        }
+    }
+
+    public static SortOptions getLangSortOptions(String sortLang){
+        var builder = SortOptionsBuilders.field()
+                .field("label." + QueryFactoryUtils.getSortLang(sortLang) + ".keyword")
+                .order(SortOrder.Asc)
+                .unmappedType(FieldType.Keyword)
+                .build();
+        return SortOptions.of(s -> s.field(builder));
+    }
+
     //COMMON QUERIES
 
     public static Query hideDraftStatusQuery(){
@@ -60,6 +81,14 @@ public class QueryFactoryUtils {
                         .field(field)
                         .value(FieldValue.of(value)))
                 ._toQuery();
+    }
+
+    public static Query existsQuery(String field, boolean notExists){
+        var exists = ExistsQuery.of(q -> q.field(field))._toQuery();
+        if(notExists) {
+            return BoolQuery.of(q -> q.mustNot(exists))._toQuery();
+        }
+        return exists;
     }
 
     public static Query labelQuery(String query) {

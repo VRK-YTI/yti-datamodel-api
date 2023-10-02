@@ -19,6 +19,8 @@ public class DataModelInfoDTO extends ResourceCommonDTO {
     private String contact;
     private Map<String, String> documentation = Map.of();
     private Set<LinkDTO> links = Set.of();
+    private String version;
+    private String versionIri;
 
     public ModelType getType() {
         return type;
@@ -138,5 +140,21 @@ public class DataModelInfoDTO extends ResourceCommonDTO {
 
     public void setLinks(Set<LinkDTO> links) {
         this.links = links;
+    }
+
+    public String getVersion() {
+        return version;
+    }
+
+    public void setVersion(String version) {
+        this.version = version;
+    }
+
+    public String getVersionIri() {
+        return versionIri;
+    }
+
+    public void setVersionIri(String versionIri) {
+        this.versionIri = versionIri;
     }
 }

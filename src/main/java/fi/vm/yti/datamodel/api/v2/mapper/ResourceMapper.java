@@ -4,6 +4,7 @@ import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.*;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelUtils;
+import fi.vm.yti.datamodel.api.v2.utils.SemVer;
 import fi.vm.yti.security.YtiUser;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.rdf.model.*;
@@ -225,9 +226,19 @@ public class ResourceMapper {
 
     public static IndexResource mapToIndexResource(Model model, String resourceUri){
         var indexResource = new IndexResource();
+
         var resource = model.getResource(resourceUri);
 
-        indexResource.setId(resourceUri);
+        var id = resourceUri;
+        var isDefinedBy = MapperUtils.propertyToString(model.getResource(resourceUri), RDFS.isDefinedBy);
+        var version = MapperUtils.arrayPropertyToList(model.getResource(isDefinedBy), OWL.versionInfo)
+                .stream().filter(v -> v.matches(SemVer.VALID_REGEX)).findFirst().orElse(null);
+        if(version != null){
+            id = isDefinedBy + ModelConstants.RESOURCE_SEPARATOR + version + ModelConstants.RESOURCE_SEPARATOR + resource.getLocalName();
+            indexResource.setFromVersion(version);
+        }
+
+        indexResource.setId(id);
         indexResource.setCurie(MapperUtils.uriToURIDTO(resourceUri, model).getCurie());
         indexResource.setLabel(MapperUtils.localizedPropertyToMap(resource, RDFS.label));
         indexResource.setStatus(Status.valueOf(MapperUtils.propertyToString(resource, OWL.versionInfo)));

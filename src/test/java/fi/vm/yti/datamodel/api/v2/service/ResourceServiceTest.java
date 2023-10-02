@@ -85,13 +85,32 @@ class ResourceServiceTest {
         when(terminologyService.mapConcept()).thenReturn(mock(Consumer.class));
 
         try(var mapper = mockStatic(ResourceMapper.class)) {
-            resourceService.get("test", "TestClass");
+            resourceService.get("test", null, "TestResource");
         }
 
-        verify(coreRepository).resourceExistsInGraph(anyString(), anyString());
-        verify(coreRepository).fetch(anyString());
-        verify(authorizationManager).hasRightToModel(anyString(), any(Model.class));
+        verify(coreRepository).resourceExistsInGraph("http://uri.suomi.fi/datamodel/ns/test", "http://uri.suomi.fi/datamodel/ns/test/TestResource");
+        verify(coreRepository).fetch("http://uri.suomi.fi/datamodel/ns/test");
+        verify(authorizationManager).hasRightToModel(eq("test"), any(Model.class));
         verify(coreRepository).getOrganizations();
+
+    }
+
+    @Test
+    void getWithVersion() {
+        when(coreRepository.resourceExistsInGraph(anyString(), anyString())).thenReturn(true);
+        when(coreRepository.fetch(anyString())).thenReturn(EndpointUtils.getMockModel(OWL.Ontology));
+        when(terminologyService.mapConcept()).thenReturn(mock(Consumer.class));
+
+        try(var mapper = mockStatic(ResourceMapper.class)) {
+            resourceService.get("test", "1.0.1", "TestResource");
+        }
+
+
+        verify(coreRepository).resourceExistsInGraph("http://uri.suomi.fi/datamodel/ns/test/1.0.1", "http://uri.suomi.fi/datamodel/ns/test/TestResource");
+        verify(coreRepository).fetch("http://uri.suomi.fi/datamodel/ns/test/1.0.1");
+        verify(authorizationManager).hasRightToModel(eq("test"), any(Model.class));
+        verify(coreRepository).getOrganizations();
+
     }
 
     @ParameterizedTest

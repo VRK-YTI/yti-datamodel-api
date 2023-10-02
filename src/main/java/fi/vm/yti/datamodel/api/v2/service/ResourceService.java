@@ -62,13 +62,17 @@ public class ResourceService {
         this.openSearchIndexer = openSearchIndexer;
     }
 
-    public ResourceInfoBaseDTO get(String prefix, String identifier) {
+    public ResourceInfoBaseDTO get(String prefix, String version, String identifier) {
         var graphUri = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
-        if(!coreRepository.resourceExistsInGraph(graphUri,graphUri + ModelConstants.RESOURCE_SEPARATOR + identifier)){
+        var versionUri = graphUri;
+        if(version != null){
+            versionUri += ModelConstants.RESOURCE_SEPARATOR + version;
+        }
+        if(!coreRepository.resourceExistsInGraph(versionUri,graphUri + ModelConstants.RESOURCE_SEPARATOR + identifier)){
             throw new ResourceNotFoundException(identifier);
         }
 
-        var model = coreRepository.fetch(graphUri);
+        var model = coreRepository.fetch(versionUri);
         var orgModel = coreRepository.getOrganizations();
         var hasRightToModel = authorizationManager.hasRightToModel(prefix, model);
         var modelResource = model.getResource(graphUri);

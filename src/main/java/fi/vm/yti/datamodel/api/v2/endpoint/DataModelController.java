@@ -97,8 +97,9 @@ public class DataModelController {
             @ApiResponse(responseCode = "404", description = "Data model was not found", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ApiError.class))}),
     })
     @GetMapping(value = "/{prefix}", produces = APPLICATION_JSON_VALUE)
-    public DataModelInfoDTO getModel(@PathVariable @Parameter(description = "Data model prefix") String prefix){
-        return dataModelService.get(prefix);
+    public DataModelInfoDTO getModel(@PathVariable @Parameter(description = "Data model prefix") String prefix,
+                                     @RequestParam(required = false) @Parameter(description = "Model version, if empty gets the draft version") String version){
+        return dataModelService.get(prefix, version);
     }
 
     @Operation(summary = "Check if prefix already exists")
@@ -120,9 +121,10 @@ public class DataModelController {
     }
 
     @PostMapping(value = "/{prefix}/release")
-    public void createRelease(@PathVariable @Parameter(description = "Data model prefix") String prefix,
-                              @RequestParam @Parameter(description = "Semantic version") String version,
-                              @RequestParam @Parameter(description = "Status") Status status) {
-        dataModelService.createRelease(prefix, version, status);
+    public ResponseEntity<String> createRelease(@PathVariable @Parameter(description = "Data model prefix") String prefix,
+                                                @RequestParam @Parameter(description = "Semantic version") String version,
+                                                @RequestParam @Parameter(description = "Status") Status status) throws URISyntaxException {
+        var uri = dataModelService.createRelease(prefix, version, status);
+        return ResponseEntity.created(uri).build();
     }
 }

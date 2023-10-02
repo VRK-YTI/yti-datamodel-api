@@ -47,7 +47,14 @@
               }
             ]
           }
-        }
+        },
+        { "bool": {
+          "must_not": [{
+            "exists": {
+              "field": "fromVersion"
+            }
+          }]
+        } }
       ],
       "should": [
         {

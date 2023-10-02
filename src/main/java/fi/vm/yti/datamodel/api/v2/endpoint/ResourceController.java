@@ -167,9 +167,10 @@ public class ResourceController {
     })
     @GetMapping(value = "/library/{prefix}/{resourceIdentifier}", produces = APPLICATION_JSON_VALUE)
     public ResourceInfoDTO getResource(@PathVariable @Parameter(description = "Data model prefix") String prefix,
-                                       @PathVariable @Parameter(description = "Attribute or association identifier") String resourceIdentifier){
+                                       @PathVariable @Parameter(description = "Attribute or association identifier") String resourceIdentifier,
+                                       @RequestParam(required = false) @Parameter(description = "Version") String version){
         //TODO check if this can be generic instead of casting
-        return (ResourceInfoDTO) resourceService.get(prefix, resourceIdentifier);
+        return (ResourceInfoDTO) resourceService.get(prefix, version, resourceIdentifier);
     }
 
     @Operation(summary = "Find a property shape from a profile")
@@ -179,8 +180,9 @@ public class ResourceController {
     })
     @GetMapping(value = "/profile/{prefix}/{propertyShapeIdentifier}", produces = APPLICATION_JSON_VALUE)
     public PropertyShapeInfoDTO getPropertyShape(@PathVariable @Parameter(description = "Data model prefix") String prefix,
-                                                 @PathVariable @Parameter(description = "Property shape identifier") String propertyShapeIdentifier){
-        return (PropertyShapeInfoDTO) resourceService.get(prefix, propertyShapeIdentifier);
+                                                 @PathVariable @Parameter(description = "Property shape identifier") String propertyShapeIdentifier,
+                                                 @RequestParam(required = false) @Parameter(description = "Version") String version){
+        return (PropertyShapeInfoDTO) resourceService.get(prefix, version, propertyShapeIdentifier);
     }
 
     @Operation(summary = "Get an external resource from imports")

@@ -372,6 +372,20 @@ class ModelMapperTest {
     }
 
     @Test
+    void testMapToDatamodelDTOVersion() {
+        var m = MapperTestUtils.getModelFromFile("/models/test_datamodel_library_version.ttl");
+        var nsModel = MapperTestUtils.getModelFromFile("/test_datamodel_internal_reference.ttl");
+        when(coreRepository.fetch("http://uri.suomi.fi/datamodel/ns/int")).thenReturn(nsModel);
+        var result = mapper.mapToDataModelDTO("test", m, null);
+
+
+        //no need to check other values since the file should be almost the same as above with the exception of version properties
+        assertEquals("1.0.1", result.getVersion());
+        assertEquals(Status.VALID, result.getStatus());
+        assertEquals("http://uri.suomi.fi/datamodel/ns/test/1.0.1", result.getVersionIri());
+    }
+
+    @Test
     void testMapReleaseProperties() {
         //Model is loaded from the Draft version and mapping the properties will make it into a release version
         var m = MapperTestUtils.getModelFromFile("/test_datamodel_library.ttl");
