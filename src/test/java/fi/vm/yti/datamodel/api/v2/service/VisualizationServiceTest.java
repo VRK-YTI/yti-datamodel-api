@@ -55,7 +55,7 @@ class VisualizationServiceTest {
         when(coreRepository.fetch(anyString())).thenReturn(model);
         when(coreRepository.fetch(ModelConstants.MODEL_POSITIONS_NAMESPACE + "test")).thenReturn(positionModel);
 
-        var visualizationData = visualizationService.getVisualizationData("test");
+        var visualizationData = visualizationService.getVisualizationData("test", null);
 
         // should contain 3 classes, 2 references to external models and two attribute references (rdfs:domain)
         assertEquals(7, visualizationData.getNodes().size());
@@ -79,7 +79,7 @@ class VisualizationServiceTest {
         when(coreRepository.fetch(ModelConstants.MODEL_POSITIONS_NAMESPACE + "visuprof")).thenReturn(positionModel);
         when(resourceService.findResources(anySet())).thenReturn(externalPropertiesModel);
 
-        var visualizationData = visualizationService.getVisualizationData("visuprof");
+        var visualizationData = visualizationService.getVisualizationData("visuprof", null);
 
         assertEquals(3, visualizationData.getNodes().size());
 
@@ -120,12 +120,25 @@ class VisualizationServiceTest {
 
         visualizationService.savePositionData("test-model", List.of(positionData));
 
-        verify(coreRepository).delete(graphURI);
         verify(coreRepository).put(eq(graphURI), modelCaptor.capture());
 
         var resourceURI = graphURI + ModelConstants.RESOURCE_SEPARATOR + positionData.getIdentifier();
         var resource = modelCaptor.getValue().getResource(resourceURI);
         assertEquals("pos-1", resource.getProperty(DCTerms.identifier).getString());
+    }
+
+    @Test
+    void saveVersionedPositions() {
+        var graphURI = ModelConstants.MODEL_POSITIONS_NAMESPACE + "test-model";
+        when(coreRepository.fetch(anyString())).thenReturn(ModelFactory.createDefaultModel());
+        when(authorizationManager.hasRightToModel(anyString(), any(Model.class))).thenReturn(true);
+
+        visualizationService.saveVersionedPositions("test-model", "1.0.0");
+
+        verify(coreRepository).fetch(graphURI);
+        verify(coreRepository).put(eq(graphURI + ModelConstants.RESOURCE_SEPARATOR + "1.0.0"), any(Model.class));
+
+
     }
 
     private static Model getExternalPropertiesResult() {

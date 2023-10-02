@@ -59,6 +59,9 @@ class DataModelServiceTest {
     TerminologyService terminologyService;
 
     @MockBean
+    VisualizationService visualizationService;
+
+    @MockBean
     CodeListService codeListService;
 
     @MockBean
@@ -237,6 +240,7 @@ class DataModelServiceTest {
 
         verify(modelMapper).mapToIndexModel(eq("http://uri.suomi.fi/datamodel/ns/test"), any(Model.class));
         verify(openSearchIndexer).createModelToIndex(any(IndexModel.class));
+        verify(visualizationService).saveVersionedPositions("test", "1.0.1");
     }
 
     @Test

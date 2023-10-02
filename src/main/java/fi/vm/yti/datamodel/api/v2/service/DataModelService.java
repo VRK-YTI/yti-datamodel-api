@@ -46,6 +46,7 @@ public class DataModelService {
     private final GroupManagementService groupManagementService;
     private final ModelMapper mapper;
     private final TerminologyService terminologyService;
+    private final VisualizationService visualisationService;
     private final CodeListService codeListService;
     private final OpenSearchIndexer openSearchIndexer;
     private final AuthenticatedUserProvider userProvider;
@@ -56,6 +57,7 @@ public class DataModelService {
                             GroupManagementService groupManagementService,
                             ModelMapper modelMapper,
                             TerminologyService terminologyService,
+                            VisualizationService visualizationService,
                             CodeListService codeListService,
                             OpenSearchIndexer openSearchIndexer,
                             AuthenticatedUserProvider userProvider) {
@@ -64,6 +66,7 @@ public class DataModelService {
         this.groupManagementService = groupManagementService;
         this.mapper = modelMapper;
         this.terminologyService = terminologyService;
+        this.visualisationService = visualizationService;
         this.codeListService = codeListService;
         this.openSearchIndexer = openSearchIndexer;
         this.userProvider = userProvider;
@@ -230,6 +233,7 @@ public class DataModelService {
                 .andThen(model.listSubjectsWithProperty(RDF.type, SH.NodeShape));
         resources.forEach(resource -> list.add(ResourceMapper.mapToIndexResource(model, resource.getURI())));
         openSearchIndexer.bulkInsert(OpenSearchIndexer.OPEN_SEARCH_INDEX_RESOURCE, list);
+        visualisationService.saveVersionedPositions(prefix, version);
         //Draft model does not need to be indexed since opensearch specific properties on it did not change
         return new URI(versionUri);
 
