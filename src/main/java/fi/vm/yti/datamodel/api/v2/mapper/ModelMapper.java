@@ -369,12 +369,16 @@ public class ModelMapper {
                 .forEach(prop -> {
             var ns = prop.getObject().toString();
             if(ns.startsWith(ModelConstants.SUOMI_FI_NAMESPACE)){
-                var nsModel = coreRepository.fetch(ns);
-                var nsResource = nsModel.getResource(ns);
                 var dto = new InternalNamespaceDTO();
-                dto.setNamespace(ns);
-                dto.setPrefix(MapperUtils.propertyToString(nsResource, DCAP.preferredXMLNamespacePrefix));
-                dto.setName(MapperUtils.localizedPropertyToMap(nsResource, RDFS.label));
+                try {
+                    var nsModel = coreRepository.fetch(ns);
+                    var nsResource = nsModel.getResource(ns);
+                    dto.setNamespace(ns);
+                    dto.setPrefix(MapperUtils.propertyToString(nsResource, DCAP.preferredXMLNamespacePrefix));
+                    dto.setName(MapperUtils.localizedPropertyToMap(nsResource, RDFS.label));
+                } catch (Exception e) {
+                    dto.setNamespace(ns);
+                }
                 intNs.add(dto);
             }else {
                 var extNsModel = model.getResource(ns);

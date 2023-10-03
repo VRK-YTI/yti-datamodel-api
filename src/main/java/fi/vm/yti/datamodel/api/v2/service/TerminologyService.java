@@ -74,8 +74,9 @@ public class TerminologyService {
                         .findFirst();
 
                 if (node.isPresent()) {
-                    var model = TerminologyMapper.mapTerminologyToJenaModel(u, node.get());
-                    conceptRepository.put(uri.toString(), model);
+                    var terminologyURI = u.replaceAll("/?$", "");
+                    var model = TerminologyMapper.mapTerminologyToJenaModel(terminologyURI, node.get());
+                    conceptRepository.put(terminologyURI, model);
                 } else {
                     LOG.warn("Could not find node with type TerminologicalVocabulary from {}", uri);
                 }
