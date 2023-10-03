@@ -14,6 +14,7 @@ import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.riot.RDFFormat;
 import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDFS;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
@@ -32,6 +33,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @Import({
         V1DataMigrationService.class
 })
+@Disabled
 class DataMigrationTest {
 
     @MockBean

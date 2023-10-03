@@ -155,11 +155,7 @@ public class VisualizationMapper {
             var dto = new VisualizationReferenceDTO();
             var target = MapperUtils.propertyToString(resource, RDFS.range);
             mapCommon(dto, resource, namespaces);
-            if (target == null) {
-                dto.setReferenceTarget(MapperUtils.uriToURIDTO(resource.getURI(), model).getCurie());
-            } else {
-                dto.setReferenceTarget(getReferenceIdentifier(target, namespaces));
-            }
+            dto.setReferenceTarget(getReferenceIdentifier(target, namespaces));
             return dto;
         }
     }
