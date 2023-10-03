@@ -5,11 +5,12 @@ import java.util.Map;
 
 public class ValidationConstants {
 
-    private ValidationConstants(){
+    private ValidationConstants() {
         //Utility class
     }
 
     public static final String MSG_VALUE_MISSING = "should-have-value";
+    public static final String MSG_VALUE_INVALID = "invalid-value";
     public static final String MSG_NOT_ALLOWED_UPDATE =  "not-allowed-update";
     public static final String MSG_OVER_CHARACTER_LIMIT = "value-over-character-limit.";
 
@@ -21,6 +22,8 @@ public class ValidationConstants {
     public static final int PREFIX_MAX_LENGTH = 32;
     public static final int RESOURCE_IDENTIFIER_MAX_LENGTH = 32;
     public static final String PREFIX_REGEX = "^[a-z][a-z0-9-_]+";
+
+    public static final String RESOURCE_IDENTIFIER_REGEX = "^[a-zA-Z0-9-_]+";
 
     public static final Map<String, String> RESERVED_NAMESPACES = Map.ofEntries(
             Map.entry("owl", "http://www.w3.org/2002/07/owl#"),

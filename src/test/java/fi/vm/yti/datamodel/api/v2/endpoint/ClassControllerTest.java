@@ -28,6 +28,7 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -217,6 +218,22 @@ class ClassControllerTest {
                 .andExpect(content().string(containsString("false")));
     }
 
+    @Test
+    void shouldThrowValidationErrorWithInvalidIdentifier() throws Exception {
+        when(classService.exists(anyString(), anyString())).thenReturn(true);
+
+        this.mvc
+                .perform(get("/v2/class/test/test /exists")
+                        .contentType("application/json"))
+                .andExpect(status().isBadRequest())
+                .andExpect(result -> {
+                    assertEquals(
+                            "freeIdentifier.identifier.identifier: invalid-value",
+                            result.getResolvedException() != null ?
+                                    result.getResolvedException().getMessage() :
+                                    "");
+                });
+    }
 
     private static ClassDTO createClassDTO(boolean update){
         var dto = new ClassDTO();
