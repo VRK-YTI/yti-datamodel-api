@@ -251,8 +251,9 @@ public class ResourceService {
         var importsBuilder = new ConstructBuilder()
                 .addPrefixes(ModelConstants.PREFIXES);
 
+        // TODO: resource type specific list of properties?
         var predicates = List.of(RDFS.isDefinedBy, DCTerms.identifier, RDF.type, RDFS.label,
-                RDFS.range, SH.path, SH.datatype, SH.minCount, SH.maxCount);
+                RDFS.range, DCTerms.subject, SH.path, SH.datatype, SH.minCount, SH.maxCount);
 
         var iterator = resourceURIs.iterator();
         var count = 0;
