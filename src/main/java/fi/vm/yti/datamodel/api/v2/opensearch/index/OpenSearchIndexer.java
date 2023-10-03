@@ -14,6 +14,7 @@ import fi.vm.yti.datamodel.api.v2.utils.DataModelUtils;
 import fi.vm.yti.datamodel.api.v2.utils.SparqlUtils;
 import org.apache.jena.arq.querybuilder.ConstructBuilder;
 import org.apache.jena.arq.querybuilder.ExprFactory;
+import org.apache.jena.arq.querybuilder.SelectBuilder;
 import org.apache.jena.arq.querybuilder.WhereBuilder;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.vocabulary.*;
@@ -210,35 +211,30 @@ public class OpenSearchIndexer {
     }
 
     public void initResourceIndex() {
-        var constructBuilder = new ConstructBuilder()
-                .addPrefixes(ModelConstants.PREFIXES)
-                .addConstruct(GRAPH_VARIABLE, RDF.type, "?resourceType")
-                .addWhere(GRAPH_VARIABLE, RDF.type, "?resourceType")
-                .addWhereValueVar("?resourceType", OWL.Class, OWL.ObjectProperty, OWL.DatatypeProperty, SH.NodeShape);
-        SparqlUtils.addConstructProperty(GRAPH_VARIABLE, constructBuilder, RDFS.label, "?label");
-        SparqlUtils.addConstructProperty(GRAPH_VARIABLE, constructBuilder, OWL.versionInfo, "?versionInfo");
-        SparqlUtils.addConstructProperty(GRAPH_VARIABLE, constructBuilder, DCTerms.modified, "?modified");
-        SparqlUtils.addConstructProperty(GRAPH_VARIABLE, constructBuilder, DCTerms.created, "?created");
-        SparqlUtils.addConstructOptional(GRAPH_VARIABLE, constructBuilder, Iow.contentModified, "?contentModified");
-        SparqlUtils.addConstructProperty(GRAPH_VARIABLE, constructBuilder, RDFS.isDefinedBy, "?isDefinedBy");
-        SparqlUtils.addConstructOptional(GRAPH_VARIABLE, constructBuilder, RDFS.comment, "?note");
-        SparqlUtils.addConstructOptional(GRAPH_VARIABLE, constructBuilder, RDFS.subClassOf, "?subClassOf");
-        SparqlUtils.addConstructOptional(GRAPH_VARIABLE, constructBuilder, RDFS.subPropertyOf, "?subPropertyOf");
-        SparqlUtils.addConstructOptional(GRAPH_VARIABLE, constructBuilder, OWL.equivalentClass, "?equivalentClass");
-        SparqlUtils.addConstructOptional(GRAPH_VARIABLE, constructBuilder, OWL.equivalentProperty, "?equivalentProperty");
-        SparqlUtils.addConstructOptional(GRAPH_VARIABLE, constructBuilder, DCTerms.subject, "?subject");
-        SparqlUtils.addConstructOptional(GRAPH_VARIABLE, constructBuilder, SH.targetClass, "?targetClass");
 
-        var indexClasses = coreRepository.queryConstruct(constructBuilder.build());
-        var list = new ArrayList<IndexResource>();
-        indexClasses.listSubjects().forEach(next -> {
-            var newClass = ModelFactory.createDefaultModel()
-                    .setNsPrefixes(indexClasses.getNsPrefixMap())
-                    .add(next.listProperties());
-            var indexClass = ResourceMapper.mapToIndexResource(newClass, next.getURI());
-            list.add(indexClass);
+        var selectBuilder = new SelectBuilder();
+        selectBuilder.addPrefixes(ModelConstants.PREFIXES);
+        var exprFactory = selectBuilder.getExprFactory();
+        var expr = exprFactory.strstarts(exprFactory.str("?g"), ModelConstants.SUOMI_FI_NAMESPACE);
+        selectBuilder.addFilter(expr);
+        selectBuilder.addGraph("?g", new WhereBuilder());
+
+        var graphs = new ArrayList<String>();
+        coreRepository.querySelect(selectBuilder.build(), res -> graphs.add(res.get("g").toString()));
+
+        graphs.forEach(graph -> {
+            var model = coreRepository.fetch(graph);
+            //list resources with type Class, Property, DatatypeProperty, NodeShape
+            var resources = model.listSubjectsWithProperty(RDF.type, OWL.Class)
+                    .andThen(model.listSubjectsWithProperty(RDF.type, OWL.ObjectProperty))
+                    .andThen(model.listSubjectsWithProperty(RDF.type, OWL.DatatypeProperty))
+                    .andThen(model.listSubjectsWithProperty(RDF.type, SH.NodeShape));
+            var list = resources.mapWith(resource -> ResourceMapper.mapToIndexResource(model, resource.getURI())).toList();
+            //we should bulk insert resources for each model separately if there are a lot of resources otherwise might cause memory issues
+            if(!list.isEmpty()){
+                bulkInsert(OPEN_SEARCH_INDEX_RESOURCE, list);
+            }
         });
-        bulkInsert(OPEN_SEARCH_INDEX_RESOURCE, list);
     }
 
     public void initExternalResourceIndex() {
@@ -343,16 +339,19 @@ public class OpenSearchIndexer {
     }
 
     private Map<String, org.opensearch.client.opensearch._types.mapping.Property> getClassProperties() {
-        return Map.of("id", getKeywordProperty(),
-                "status", getKeywordProperty(),
-                "isDefinedBy", getKeywordProperty(),
-                "comment", getKeywordProperty(),
-                "namespace", getKeywordProperty(),
-                "identifier", getKeywordProperty(),
-                "created", getDateProperty(),
-                "modified", getDateProperty(),
-                "resourceType", getKeywordProperty(),
-                "targetClass", getKeywordProperty());
+        return Map.ofEntries(
+                Map.entry("id", getKeywordProperty()),
+                Map.entry("status", getKeywordProperty()),
+                Map.entry("isDefinedBy", getKeywordProperty()),
+                Map.entry("comment", getKeywordProperty()),
+                Map.entry("namespace", getKeywordProperty()),
+                Map.entry("identifier", getKeywordProperty()),
+                Map.entry("created", getDateProperty()),
+                Map.entry("modified", getDateProperty()),
+                Map.entry("fromVersion", getKeywordProperty()),
+                Map.entry("resourceType", getKeywordProperty()),
+                Map.entry("targetClass", getKeywordProperty())
+        );
     }
 
     private Map<String, org.opensearch.client.opensearch._types.mapping.Property> getExternalResourcesProperties() {

@@ -4,10 +4,6 @@ import fi.vm.yti.datamodel.api.v2.dto.ModelType;
 import fi.vm.yti.datamodel.api.v2.dto.Status;
 import fi.vm.yti.datamodel.api.v2.opensearch.dto.ModelSearchRequest;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
-import org.opensearch.client.opensearch._types.SortOptions;
-import org.opensearch.client.opensearch._types.SortOptionsBuilders;
-import org.opensearch.client.opensearch._types.SortOrder;
-import org.opensearch.client.opensearch._types.mapping.FieldType;
 import org.opensearch.client.opensearch._types.query_dsl.Query;
 import org.opensearch.client.opensearch._types.query_dsl.QueryBuilders;
 import org.opensearch.client.opensearch.core.SearchRequest;
@@ -79,18 +75,11 @@ public class ModelQueryFactory {
             finalQuery.should(should).minimumShouldMatch("1");
         }
 
-        var sortLang = request.getSortLang() != null ? request.getSortLang() : QueryFactoryUtils.DEFAULT_SORT_LANG;
-        var sort = SortOptionsBuilders.field()
-                .field("label." + sortLang + ".keyword")
-                .order(SortOrder.Asc)
-                .unmappedType(FieldType.Keyword)
-                .build();
-
         var sr = new SearchRequest.Builder()
                 .index(OpenSearchIndexer.OPEN_SEARCH_INDEX_MODEL)
                 .size(QueryFactoryUtils.pageSize(request.getPageSize()))
                 .from(QueryFactoryUtils.pageFrom(request.getPageFrom()))
-                .sort(SortOptions.of(s -> s.field(sort)))
+                .sort(QueryFactoryUtils.getLangSortOptions(request.getSortLang()))
                 .query(finalQuery.build()._toQuery())
                 .build();
 

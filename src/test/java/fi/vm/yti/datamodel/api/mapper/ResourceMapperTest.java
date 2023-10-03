@@ -227,7 +227,7 @@ class ResourceMapperTest {
         var indexClass = ResourceMapper.mapToIndexResource(m, "http://uri.suomi.fi/datamodel/ns/test/TestClass");
 
         assertEquals(ResourceType.CLASS, indexClass.getResourceType());
-        assertEquals("http://uri.suomi.fi/datamodel/ns/test/TestClass", indexClass.getId());
+        assertEquals("http://uri.suomi.fi/datamodel/ns/test/1.0.1/TestClass", indexClass.getId());
         assertEquals("test note fi", indexClass.getNote().get("fi"));
         assertEquals(Status.VALID, indexClass.getStatus());
         assertEquals("TestClass", indexClass.getIdentifier());
@@ -235,6 +235,7 @@ class ResourceMapperTest {
         assertEquals("http://uri.suomi.fi/datamodel/ns/test/", indexClass.getNamespace());
         assertEquals(1, indexClass.getLabel().size());
         assertEquals("test label", indexClass.getLabel().get("fi"));
+        assertEquals("1.0.1", indexClass.getFromVersion());
     }
 
     @Test
@@ -245,7 +246,7 @@ class ResourceMapperTest {
         var indexClass = ResourceMapper.mapToIndexResource(m, "http://uri.suomi.fi/datamodel/ns/test/TestAttribute");
 
         assertEquals(ResourceType.ATTRIBUTE, indexClass.getResourceType());
-        assertEquals("http://uri.suomi.fi/datamodel/ns/test/TestAttribute", indexClass.getId());
+        assertEquals("http://uri.suomi.fi/datamodel/ns/test/1.0.1/TestAttribute", indexClass.getId());
         assertEquals("test note fi", indexClass.getNote().get("fi"));
         assertEquals(Status.VALID, indexClass.getStatus());
         assertEquals("TestAttribute", indexClass.getIdentifier());
@@ -255,6 +256,7 @@ class ResourceMapperTest {
         assertEquals("test attribute", indexClass.getLabel().get("fi"));
         assertEquals("http://uri.suomi.fi/datamodel/ns/test/DomainClass", indexClass.getDomain());
         assertEquals("rdf:Literal", indexClass.getRange());
+        assertEquals("1.0.1", indexClass.getFromVersion());
     }
 
     @Test
@@ -265,7 +267,7 @@ class ResourceMapperTest {
         var indexClass = ResourceMapper.mapToIndexResource(m, "http://uri.suomi.fi/datamodel/ns/test/TestAssociation");
 
         assertEquals(ResourceType.ASSOCIATION, indexClass.getResourceType());
-        assertEquals("http://uri.suomi.fi/datamodel/ns/test/TestAssociation", indexClass.getId());
+        assertEquals("http://uri.suomi.fi/datamodel/ns/test/1.0.1/TestAssociation", indexClass.getId());
         assertEquals("test note fi", indexClass.getNote().get("fi"));
         assertEquals(Status.VALID, indexClass.getStatus());
         assertEquals("TestAssociation", indexClass.getIdentifier());
@@ -275,6 +277,7 @@ class ResourceMapperTest {
         assertEquals("test association", indexClass.getLabel().get("fi"));
         assertEquals("http://uri.suomi.fi/datamodel/ns/test/DomainClass", indexClass.getDomain());
         assertEquals("http://uri.suomi.fi/datamodel/ns/test/RangeClass", indexClass.getRange());
+        assertEquals("1.0.1", indexClass.getFromVersion());
     }
 
     @Test

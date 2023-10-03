@@ -6,6 +6,8 @@ import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
 import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.mapper.ModelMapper;
+import fi.vm.yti.datamodel.api.v2.mapper.ResourceMapper;
+import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexResource;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelUtils;
@@ -18,16 +20,19 @@ import org.apache.jena.rdf.model.SimpleSelector;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.vocabulary.OWL;
+import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.SKOS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.topbraid.shacl.vocabulary.SH;
 
 import java.io.StringWriter;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 
 import static fi.vm.yti.security.AuthorizationException.check;
 
@@ -41,6 +46,7 @@ public class DataModelService {
     private final GroupManagementService groupManagementService;
     private final ModelMapper mapper;
     private final TerminologyService terminologyService;
+    private final VisualizationService visualisationService;
     private final CodeListService codeListService;
     private final OpenSearchIndexer openSearchIndexer;
     private final AuthenticatedUserProvider userProvider;
@@ -51,6 +57,7 @@ public class DataModelService {
                             GroupManagementService groupManagementService,
                             ModelMapper modelMapper,
                             TerminologyService terminologyService,
+                            VisualizationService visualizationService,
                             CodeListService codeListService,
                             OpenSearchIndexer openSearchIndexer,
                             AuthenticatedUserProvider userProvider) {
@@ -59,13 +66,18 @@ public class DataModelService {
         this.groupManagementService = groupManagementService;
         this.mapper = modelMapper;
         this.terminologyService = terminologyService;
+        this.visualisationService = visualizationService;
         this.codeListService = codeListService;
         this.openSearchIndexer = openSearchIndexer;
         this.userProvider = userProvider;
     }
 
-    public DataModelInfoDTO get(String prefix) {
-        var model = coreRepository.fetch(ModelConstants.SUOMI_FI_NAMESPACE + prefix);
+    public DataModelInfoDTO get(String prefix, String version) {
+        var graphUri = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
+        if(version != null) {
+            graphUri += ModelConstants.RESOURCE_SEPARATOR + version;
+        }
+        var model = coreRepository.fetch(graphUri);
         var hasRightsToModel = authorizationManager.hasRightToModel(prefix, model);
 
         var userMapper = hasRightsToModel ? groupManagementService.mapUser() : null;
@@ -122,15 +134,19 @@ public class DataModelService {
         return coreRepository.graphExists(ModelConstants.SUOMI_FI_NAMESPACE + prefix);
     }
 
-    public ResponseEntity<String> export(String prefix, String resource, String accept) {
+    public ResponseEntity<String> export(String prefix, String version, String resource, String accept) {
         var modelURI = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
-        logger.info("Exporting datamodel {}, {}", modelURI, accept);
+        var versionUri = modelURI;
+        if(version != null) {
+            versionUri += ModelConstants.RESOURCE_SEPARATOR + version;
+        }
+        logger.info("Exporting datamodel {}, {}", versionUri, accept);
 
         Model exportedModel;
         Model model;
 
         try {
-            model = coreRepository.fetch(modelURI);
+            model = coreRepository.fetch(versionUri);
         } catch (ResourceNotFoundException e) {
             // cannot throw ResourceNotFoundException because accept header is not application/json
             return ResponseEntity.notFound().build();
@@ -175,7 +191,7 @@ public class DataModelService {
     }
 
 
-    public void createRelease(String prefix, String version, Status status) {
+    public URI createRelease(String prefix, String version, Status status) throws URISyntaxException {
         var modelUri = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
         if(!status.equals(Status.SUGGESTED) && !status.equals(Status.VALID)){
             throw new MappingError("Status has to be SUGGESTED or VALID");
@@ -187,6 +203,7 @@ public class DataModelService {
 
         //This gets the current "DRAFT" version
         var model = coreRepository.fetch(modelUri);
+        check(authorizationManager.hasRightToModel(prefix, model));
         var priorVersionUri = MapperUtils.propertyToString(model.getResource(modelUri), OWL.priorVersion);
         if(priorVersionUri != null){
             var priorVersion = priorVersionUri.substring(priorVersionUri.lastIndexOf("/")  + 1);
@@ -208,9 +225,17 @@ public class DataModelService {
         coreRepository.put(versionUri, model);
 
         var newVersion = mapper.mapToIndexModel(modelUri, model);
-        var draftIndex = mapper.mapToIndexModel(modelUri, newDraft);
         openSearchIndexer.createModelToIndex(newVersion);
-        openSearchIndexer.updateModelToIndex(draftIndex);
+        var list = new ArrayList<IndexResource>();
+        var resources = model.listSubjectsWithProperty(RDF.type, OWL.Class)
+                .andThen(model.listSubjectsWithProperty(RDF.type, OWL.ObjectProperty))
+                .andThen(model.listSubjectsWithProperty(RDF.type, OWL.DatatypeProperty))
+                .andThen(model.listSubjectsWithProperty(RDF.type, SH.NodeShape));
+        resources.forEach(resource -> list.add(ResourceMapper.mapToIndexResource(model, resource.getURI())));
+        openSearchIndexer.bulkInsert(OpenSearchIndexer.OPEN_SEARCH_INDEX_RESOURCE, list);
+        visualisationService.saveVersionedPositions(prefix, version);
+        //Draft model does not need to be indexed since opensearch specific properties on it did not change
+        return new URI(versionUri);
 
     }
 }

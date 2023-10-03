@@ -29,8 +29,9 @@ public class VisualizationController {
     @Operation(summary = "Get data for model visualization")
     @ApiResponse(responseCode = "200", description = "Visualization data found for model")
     @GetMapping(value = "/{prefix}", produces = APPLICATION_JSON_VALUE)
-    public VisualizationResultDTO getVisualizationData(@PathVariable @Parameter(description = "Data model prefix") String prefix) {
-        return visualizationService.getVisualizationData(prefix);
+    public VisualizationResultDTO getVisualizationData(@PathVariable @Parameter(description = "Data model prefix") String prefix,
+                                                       @RequestParam(required = false) @Parameter(description = "Version of the model") String version) {
+        return visualizationService.getVisualizationData(prefix, version);
     }
 
     @Operation(summary = "Saves position data for visualization components")

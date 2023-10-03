@@ -35,12 +35,19 @@ public class VisualizationService {
         this.authorizationManager = authorizationManager;
     }
 
-    public VisualizationResultDTO getVisualizationData(String prefix) {
+    public VisualizationResultDTO getVisualizationData(String prefix, String version) {
         var graph = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
-        var model = coreRepository.fetch(graph);
+        var graphUri = graph;
+        var positionUri = ModelConstants.MODEL_POSITIONS_NAMESPACE + prefix;
+        if(version != null) {
+            graphUri += ModelConstants.RESOURCE_SEPARATOR + version;
+            positionUri += ModelConstants.RESOURCE_SEPARATOR + version;
+        }
+
+        var model = coreRepository.fetch(graphUri);
         Model positions;
         try {
-            positions = coreRepository.fetch(ModelConstants.MODEL_POSITIONS_NAMESPACE + prefix);
+            positions = coreRepository.fetch(positionUri);
         } catch(ResourceNotFoundException e) {
             positions = ModelFactory.createDefaultModel();
         }
@@ -105,13 +112,19 @@ public class VisualizationService {
 
         var positionGraphURI = ModelConstants.MODEL_POSITIONS_NAMESPACE + prefix;
 
-        // remove old positions if exists
-        if (coreRepository.graphExists(positionGraphURI)) {
-            coreRepository.delete(positionGraphURI);
-        }
-
         var positionModel = VisualizationMapper.mapPositionDataToModel(positionGraphURI, positions);
         coreRepository.put(positionGraphURI, positionModel);
+    }
+
+    /**
+     * Save current DRAFT version of positions to versioned graph
+     * @param prefix data model prefix
+     * @param version version of the model
+     */
+    public void saveVersionedPositions(String prefix, String version) {
+        var positionUri = ModelConstants.MODEL_POSITIONS_NAMESPACE + prefix;
+        var positionModel = coreRepository.fetch(positionUri);
+        coreRepository.put(positionUri + ModelConstants.RESOURCE_SEPARATOR + version, positionModel);
     }
 
     private static void addExternalClasses(VisualizationClassDTO classDTO, Set<String> languages, HashSet<VisualizationClassDTO> result) {

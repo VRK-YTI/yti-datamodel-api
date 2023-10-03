@@ -19,6 +19,8 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import java.util.function.Consumer;
+
 import static org.mockito.Mockito.*;
 
 @ExtendWith(SpringExtension.class)
@@ -75,6 +77,6 @@ class OpenSearchIndexerTest {
 
         openSearchIndexer.initResourceIndex();
 
-        verify(coreRepository).queryConstruct(any(Query.class));
+        verify(coreRepository).querySelect(any(Query.class), any(Consumer.class));
     }
 }

@@ -33,7 +33,8 @@ public class ExportController {
             produces = {"application/ld+json;charset=utf-8", "text/turtle;charset=utf-8", "application/rdf+xml;charset=utf-8"})
     public ResponseEntity<String> export(@PathVariable @Parameter(description = "Data model prefix") String prefix,
                                          @PathVariable(required = false) @Parameter(description = "Resource identifier") String resourceIdentifier,
+                                         @RequestParam(required = false) @Parameter(description = "Version") String version,
                                          @RequestHeader(value = HttpHeaders.ACCEPT) String accept){
-        return dataModelService.export(prefix, resourceIdentifier, accept);
+        return dataModelService.export(prefix, version, resourceIdentifier, accept);
     }
 }

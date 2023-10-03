@@ -5,10 +5,6 @@ import fi.vm.yti.datamodel.api.v2.dto.ResourceType;
 import fi.vm.yti.datamodel.api.v2.dto.Status;
 import fi.vm.yti.datamodel.api.v2.opensearch.dto.ResourceSearchRequest;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
-import org.opensearch.client.opensearch._types.SortOptions;
-import org.opensearch.client.opensearch._types.SortOptionsBuilders;
-import org.opensearch.client.opensearch._types.SortOrder;
-import org.opensearch.client.opensearch._types.mapping.FieldType;
 import org.opensearch.client.opensearch._types.query_dsl.BoolQuery;
 import org.opensearch.client.opensearch._types.query_dsl.Query;
 import org.opensearch.client.opensearch._types.query_dsl.QueryBuilders;
@@ -27,8 +23,8 @@ public class ResourceQueryFactory {
         //only provides static methods
     }
     public static SearchRequest createInternalResourceQuery(ResourceSearchRequest request, List<String> fromNamespaces, List<String> restrictedDataModels, Set<String> allowedDatamodels) {
-        List<Query> must = new ArrayList<>();
-        List<Query> should = new ArrayList<>();
+        var must = new ArrayList<Query>();
+        var should = new ArrayList<Query>();
 
         if(allowedDatamodels != null && !allowedDatamodels.isEmpty()){
             should.add(QueryFactoryUtils.termsQuery("isDefinedBy", allowedDatamodels));
@@ -39,6 +35,13 @@ public class ResourceQueryFactory {
         var query = request.getQuery();
         if(query != null && !query.isBlank()){
             must.add(QueryFactoryUtils.labelQuery(query));
+        }
+
+        var fromVersion = request.getFromVersion();
+        if(fromVersion != null && !fromVersion.isBlank()){
+            must.add(QueryFactoryUtils.termQuery("fromVersion", fromVersion));
+        }else{
+            must.add(QueryFactoryUtils.existsQuery("fromVersion", true));
         }
 
         var statuses = request.getStatus();
@@ -75,13 +78,6 @@ public class ResourceQueryFactory {
                 .build()
                 ._toQuery();
 
-        var sortLang = request.getSortLang() != null ? request.getSortLang() : QueryFactoryUtils.DEFAULT_SORT_LANG;
-        var sort = SortOptionsBuilders.field()
-                .field("label." + sortLang + ".keyword")
-                .order(SortOrder.Asc)
-                .unmappedType(FieldType.Keyword)
-                .build();
-
         var indices = new ArrayList<String>();
         var hasExternalNamespaces = isDefinedByCondition.stream()
                 .anyMatch(ns -> !ns.startsWith(ModelConstants.SUOMI_FI_NAMESPACE));
@@ -95,7 +91,7 @@ public class ResourceQueryFactory {
                 .size(QueryFactoryUtils.pageSize(request.getPageSize()))
                 .index(indices)
                 .query(finalQuery)
-                .sort(SortOptions.of(sortOptions -> sortOptions.field(sort)))
+                .sort(QueryFactoryUtils.getLangSortOptions(request.getSortLang()))
                 .build();
         logPayload(sr, String.join(", ", indices));
         return sr;

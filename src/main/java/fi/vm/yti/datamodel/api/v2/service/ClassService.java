@@ -16,7 +16,10 @@ import fi.vm.yti.datamodel.api.v2.repository.ImportsRepository;
 import fi.vm.yti.security.AuthenticatedUserProvider;
 import org.apache.jena.arq.querybuilder.AskBuilder;
 import org.apache.jena.graph.NodeFactory;
-import org.apache.jena.rdf.model.*;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.rdf.model.ResourceFactory;
+import org.apache.jena.rdf.model.SimpleSelector;
 import org.apache.jena.vocabulary.OWL;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -73,13 +76,19 @@ public class ClassService {
         this.searchIndexService = searchIndexService;
     }
 
-    public ResourceInfoBaseDTO get(String prefix, String classIdentifier) {
+    public ResourceInfoBaseDTO get(String prefix, String version, String classIdentifier) {
         var modelURI = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
+
+        var versionUri = modelURI;
+        if(version != null){
+            versionUri += ModelConstants.RESOURCE_SEPARATOR + version;
+        }
+
         var classURI = modelURI + ModelConstants.RESOURCE_SEPARATOR + classIdentifier;
-        if(!coreRepository.resourceExistsInGraph(modelURI , classURI)){
+        if(!coreRepository.resourceExistsInGraph(versionUri , classURI)){
             throw new ResourceNotFoundException(classURI);
         }
-        var model = coreRepository.fetch(modelURI);
+        var model = coreRepository.fetch(versionUri);
         var hasRightToModel = authorizationManager.hasRightToModel(prefix, model);
 
         var orgModel = coreRepository.getOrganizations();

@@ -45,7 +45,24 @@ class ExportControllerTest {
         mvc.perform(get("/v2/export/test")
                 .header("Accept", "application/ld+json"))
                 .andExpect(status().isOk());
-        verify(dataModelService).export("test", null, "application/ld+json");
+        verify(dataModelService).export("test", null, null, "application/ld+json");
+    }
+
+    @Test
+    void shouldCallDataModelServiceWithVersion() throws Exception {
+        mvc.perform(get("/v2/export/test")
+                        .header("Accept", "application/ld+json")
+                        .param("version", "1.0.0"))
+                .andExpect(status().isOk());
+        verify(dataModelService).export("test", "1.0.0", null, "application/ld+json");
+    }
+
+    @Test
+    void shouldCallDataModelServiceWithResource() throws Exception {
+        mvc.perform(get("/v2/export/test/Resource")
+                        .header("Accept", "application/ld+json"))
+                .andExpect(status().isOk());
+        verify(dataModelService).export("test", null, "Resource", "application/ld+json");
     }
 
     @Test
