@@ -133,6 +133,7 @@ public class MapperUtils {
         }catch(JenaException ex){
             //if item could not be gotten as list it means it is multiple statements of the property
             resource.listProperties(property)
+                    .filterDrop(p -> p.getObject().isAnon())
                     .forEach(val -> list.add(val.getObject().toString()));
         }
         return list;
