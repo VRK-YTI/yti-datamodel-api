@@ -133,7 +133,12 @@ public class ClassMapper {
         var dcTermsRequires = MapperUtils.arrayPropertyToSet(modelResource, DCTerms.requires);
 
         var equivalentClasses = classDTO.getEquivalentClass();
-        classResource.removeAll(OWL.equivalentClass);
+
+        var eqProps = classResource.listProperties(OWL.equivalentClass)
+                .filterDrop(p -> p.getObject().isAnon())
+                .toList();
+        model.remove(eqProps);
+
         equivalentClasses.forEach(eq -> MapperUtils.addResourceRelationship(owlImports, dcTermsRequires, classResource, OWL.equivalentClass, eq));
 
         var subClassOf = classDTO.getSubClassOf();
