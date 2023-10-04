@@ -123,8 +123,12 @@ public class VisualizationService {
      */
     public void saveVersionedPositions(String prefix, String version) {
         var positionUri = ModelConstants.MODEL_POSITIONS_NAMESPACE + prefix;
-        var positionModel = coreRepository.fetch(positionUri);
-        coreRepository.put(positionUri + ModelConstants.RESOURCE_SEPARATOR + version, positionModel);
+        try{
+            var positionModel = coreRepository.fetch(positionUri);
+            coreRepository.put(positionUri + ModelConstants.RESOURCE_SEPARATOR + version, positionModel);
+        }catch (ResourceNotFoundException e){
+            //if no positions found, do nothing
+        }
     }
 
     private static void addExternalClasses(VisualizationClassDTO classDTO, Set<String> languages, HashSet<VisualizationClassDTO> result) {
