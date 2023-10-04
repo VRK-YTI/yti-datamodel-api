@@ -17,6 +17,7 @@ import org.apache.jena.arq.querybuilder.ExprFactory;
 import org.apache.jena.arq.querybuilder.SelectBuilder;
 import org.apache.jena.arq.querybuilder.WhereBuilder;
 import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.vocabulary.*;
 import org.opensearch.client.opensearch.OpenSearchClient;
 import org.opensearch.client.opensearch._types.mapping.*;
@@ -228,7 +229,8 @@ public class OpenSearchIndexer {
             var resources = model.listSubjectsWithProperty(RDF.type, OWL.Class)
                     .andThen(model.listSubjectsWithProperty(RDF.type, OWL.ObjectProperty))
                     .andThen(model.listSubjectsWithProperty(RDF.type, OWL.DatatypeProperty))
-                    .andThen(model.listSubjectsWithProperty(RDF.type, SH.NodeShape));
+                    .andThen(model.listSubjectsWithProperty(RDF.type, SH.NodeShape))
+                    .filterDrop(RDFNode::isAnon);
             var list = resources.mapWith(resource -> ResourceMapper.mapToIndexResource(model, resource.getURI())).toList();
             //we should bulk insert resources for each model separately if there are a lot of resources otherwise might cause memory issues
             if(!list.isEmpty()){
