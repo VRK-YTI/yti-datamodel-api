@@ -16,6 +16,7 @@ import fi.vm.yti.datamodel.api.v2.validator.ValidationConstants;
 import fi.vm.yti.security.AuthenticatedUserProvider;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.SimpleSelector;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFDataMgr;
@@ -230,7 +231,8 @@ public class DataModelService {
         var resources = model.listSubjectsWithProperty(RDF.type, OWL.Class)
                 .andThen(model.listSubjectsWithProperty(RDF.type, OWL.ObjectProperty))
                 .andThen(model.listSubjectsWithProperty(RDF.type, OWL.DatatypeProperty))
-                .andThen(model.listSubjectsWithProperty(RDF.type, SH.NodeShape));
+                .andThen(model.listSubjectsWithProperty(RDF.type, SH.NodeShape))
+                .filterDrop(RDFNode::isAnon);
         resources.forEach(resource -> list.add(ResourceMapper.mapToIndexResource(model, resource.getURI())));
         openSearchIndexer.bulkInsert(OpenSearchIndexer.OPEN_SEARCH_INDEX_RESOURCE, list);
         visualisationService.saveVersionedPositions(prefix, version);
