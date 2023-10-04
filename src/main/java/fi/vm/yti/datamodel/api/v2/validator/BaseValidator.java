@@ -78,19 +78,29 @@ public abstract class BaseValidator implements Annotation{
         }
     }
 
-    public void checkPrefixOrIdentifier(ConstraintValidatorContext context, final String value, String propertyName, final int maxLength, boolean update){
-        if(!update && (value == null || value.isBlank())){
+    public void checkIdentifier(ConstraintValidatorContext context, final String value, String propertyName, final int maxLength, boolean update) {
+        if (!update && (value == null || value.trim().isBlank())) {
+            addConstraintViolation(context, ValidationConstants.MSG_VALUE_MISSING, propertyName);
+        } else if (update && value != null) {
+            addConstraintViolation(context, ValidationConstants.MSG_NOT_ALLOWED_UPDATE, propertyName);
+        } else if (value != null && !value.matches(ValidationConstants.RESOURCE_IDENTIFIER_REGEX)) {
+            addConstraintViolation(context, ValidationConstants.MSG_VALUE_INVALID, propertyName);
+        }
+    }
+
+    public void checkPrefixOrIdentifier(ConstraintValidatorContext context, final String value, String propertyName, final int maxLength, boolean update) {
+        if (!update && (value == null || value.trim().isBlank())) {
             addConstraintViolation(context, ValidationConstants.MSG_VALUE_MISSING, propertyName);
             return;
-        }else if(update && value != null){
+        } else if (update && value != null) {
             addConstraintViolation(context, ValidationConstants.MSG_NOT_ALLOWED_UPDATE, propertyName);
             return;
-        }else if(value == null){
+        } else if (value == null) {
             //no need to check further if null
             return;
         }
 
-        if(value.length() < ValidationConstants.PREFIX_MIN_LENGTH || value.length() > maxLength){
+        if (value.length() < ValidationConstants.PREFIX_MIN_LENGTH || value.length() > maxLength) {
             addConstraintViolation(context, propertyName + "-character-count-mismatch", propertyName);
         }
     }

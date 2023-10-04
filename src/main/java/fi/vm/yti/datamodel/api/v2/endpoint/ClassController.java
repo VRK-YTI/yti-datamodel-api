@@ -6,6 +6,7 @@ import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexResource;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexResourceInfo;
 import fi.vm.yti.datamodel.api.v2.service.ClassService;
 import fi.vm.yti.datamodel.api.v2.validator.ValidClass;
+import fi.vm.yti.datamodel.api.v2.validator.ValidResourceIdentifier;
 import fi.vm.yti.datamodel.api.v2.validator.ValidNodeShape;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -72,7 +73,7 @@ public class ClassController {
     })
     @PutMapping(value = "/library/{prefix}/{classIdentifier}", consumes = APPLICATION_JSON_VALUE)
     public ResponseEntity<Void> updateClass(@PathVariable @Parameter(description = "Data model prefix") String prefix,
-                                            @PathVariable @Parameter(description = "Class identifier") String classIdentifier,
+                                            @PathVariable @Parameter(description = "Class identifier") @ValidResourceIdentifier String classIdentifier,
                                             @RequestBody @Parameter(description = "Class data") @ValidClass(updateClass = true) ClassDTO classDTO){
         classService.update(prefix, classIdentifier, classDTO);
         return ResponseEntity.noContent().build();
@@ -87,7 +88,7 @@ public class ClassController {
     })
     @PutMapping(value = "/profile/{prefix}/{nodeShapeIdentifier}", consumes = APPLICATION_JSON_VALUE)
     public ResponseEntity<Void> updateNodeShape(@PathVariable @Parameter(description = "Data model prefix") String prefix,
-                                                @PathVariable @Parameter(description = "Node shape identifier") String nodeShapeIdentifier,
+                                                @PathVariable @Parameter(description = "Node shape identifier") @ValidResourceIdentifier String nodeShapeIdentifier,
                                                 @RequestBody @Parameter(description = "Node shape data") @ValidNodeShape(updateNodeShape = true) NodeShapeDTO nodeShapeDTO){
         classService.update(prefix, nodeShapeIdentifier, nodeShapeDTO);
         return ResponseEntity.noContent().build();
@@ -100,7 +101,7 @@ public class ClassController {
     })
     @GetMapping(value = "/library/{prefix}/{classIdentifier}", produces = APPLICATION_JSON_VALUE)
     public ClassInfoDTO getClass(@PathVariable @Parameter(description = "Data model prefix") String prefix,
-                                 @PathVariable @Parameter(description = "Class identifier") String classIdentifier,
+                                 @PathVariable @Parameter(description = "Class identifier") @ValidResourceIdentifier String classIdentifier,
                                  @RequestParam(required = false) @Parameter(description = "Version") String version){
         return (ClassInfoDTO) classService.get(prefix, version, classIdentifier);
     }
@@ -111,7 +112,7 @@ public class ClassController {
             @ApiResponse(responseCode = "404", description = "Node shape not found", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ApiError.class))})
     })    @GetMapping(value = "/profile/{prefix}/{nodeShapeIdentifier}", produces = APPLICATION_JSON_VALUE)
     public NodeShapeInfoDTO getNodeShape(@PathVariable @Parameter(description = "Data model prefix") String prefix,
-                                         @PathVariable @Parameter(description = "Node shape identifier") String nodeShapeIdentifier,
+                                         @PathVariable @Parameter(description = "Node shape identifier") @ValidResourceIdentifier String nodeShapeIdentifier,
                                          @RequestParam(required = false) @Parameter(description = "Version") String version){
         return (NodeShapeInfoDTO) classService.get(prefix, version, nodeShapeIdentifier);
     }
@@ -121,7 +122,7 @@ public class ClassController {
     @ApiResponse(responseCode = "200", description = "Boolean value indicating whether a resource with given identifier exists")
     @GetMapping(value = "/{prefix}/{identifier}/exists", produces = APPLICATION_JSON_VALUE)
     public Boolean freeIdentifier(@PathVariable @Parameter(description = "Data model prefix") String prefix,
-                                  @PathVariable @Parameter(description = "Resource identifier") String identifier) {
+                                  @PathVariable @Parameter(description = "Resource identifier") @ValidResourceIdentifier String identifier) {
         return classService.exists(prefix, identifier);
     }
 
@@ -133,7 +134,7 @@ public class ClassController {
     })
     @DeleteMapping(value = "/library/{prefix}/{classIdentifier}")
     public void deleteClass(@PathVariable @Parameter(description = "Data model prefix") String prefix,
-                            @PathVariable @Parameter(description = "Class identifier") String classIdentifier){
+                            @PathVariable @Parameter(description = "Class identifier") @ValidResourceIdentifier String classIdentifier){
         classService.delete(prefix, classIdentifier);
     }
 
@@ -145,7 +146,7 @@ public class ClassController {
     })
     @DeleteMapping(value = "/profile/{prefix}/{classIdentifier}")
     public void deleteNodeShape(@PathVariable @Parameter(description = "Data model prefix") String prefix,
-                                @PathVariable @Parameter(description = "Class identifier") String classIdentifier){
+                                @PathVariable @Parameter(description = "Class identifier") @ValidResourceIdentifier String classIdentifier){
         classService.delete(prefix, classIdentifier);
     }
 
@@ -158,7 +159,7 @@ public class ClassController {
     @ApiResponse(responseCode = "200", description = "Property reference deleted successfully")
     @PutMapping(value = "/profile/{prefix}/{nodeShapeIdentifier}/properties")
     public void addNodeShapePropertyReference(@PathVariable @Parameter(description = "Data model prefix") String prefix,
-                                              @PathVariable @Parameter(description = "Node shape identifier") String nodeShapeIdentifier,
+                                              @PathVariable @Parameter(description = "Node shape identifier") @ValidResourceIdentifier String nodeShapeIdentifier,
                                               @RequestParam @Parameter(description = "Property shape ") String uri) {
         classService.handlePropertyShapeReference(prefix, nodeShapeIdentifier, uri, false);
     }
@@ -198,7 +199,7 @@ public class ClassController {
     })
     @DeleteMapping(value = "/profile/{prefix}/{nodeShapeIdentifier}/properties")
     public void deleteNodeShapePropertyReference(@PathVariable @Parameter(description = "Data model prefix") String prefix,
-                                                 @PathVariable @Parameter(description = "Node shape identifier") String nodeShapeIdentifier,
+                                                 @PathVariable @Parameter(description = "Node shape identifier") @ValidResourceIdentifier String nodeShapeIdentifier,
                                                  @RequestParam @Parameter(description = "Property shape URI") String uri) {
         classService.handlePropertyShapeReference(prefix, nodeShapeIdentifier, uri, true);
     }
