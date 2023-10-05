@@ -34,8 +34,9 @@ public class MapperUtils {
         }
     }
 
-    public static String getModelIdFromNamespace(String namespace){
-        return namespace.substring(namespace.lastIndexOf("/") + 1);
+    public static String getModelIdFromNamespace(String namespace) {
+        var nsWithoutVersion = namespace.replaceAll("/[0-9.]+(.*)$", "");
+        return nsWithoutVersion.substring(nsWithoutVersion.lastIndexOf("/") + 1);
     }
 
     public static ModelType getModelTypeFromResource(Resource resource){
@@ -434,5 +435,13 @@ public class MapperUtils {
                     property, resource));
         }
         return model.getList(obj.asResource());
+    }
+
+    public static Resource getModelResourceFromVersion(Model model) {
+        var typeStmt = model.listStatements(null, RDF.type, OWL.Ontology);
+        if (!typeStmt.hasNext()) {
+            throw new MappingError("Invalid datamodel added to internal namespaces");
+        }
+        return model.getResource(typeStmt.next().getSubject().getURI());
     }
 }
