@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+@SuppressWarnings("java:S101")
 @Component
 public class V6_VersionStatusResources implements MigrationTask {
     private static final Logger LOG = LoggerFactory.getLogger(V6_VersionStatusResources.class);
