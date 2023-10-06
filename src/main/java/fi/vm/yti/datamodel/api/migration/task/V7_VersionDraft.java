@@ -55,11 +55,19 @@ public class V7_VersionDraft implements MigrationTask {
             var model = coreRepository.fetch(graph);
             var modelRes = model.getResource(graph);
             var status = Status.valueOf(MapperUtils.propertyToString(modelRes, OWL.versionInfo));
+            var previousVersion = MapperUtils.propertyToString(modelRes, OWL.priorVersion);
             if(status.equals(Status.SUGGESTED)){
                 coreRepository.put(graph, model);
                 var newDraft = ModelFactory.createDefaultModel().add(model);
 
-                var versionUri = modelMapper.mapReleaseProperties(model, graph, "0.1.0", Status.SUGGESTED);
+
+                var newVersion = "0.1.0";
+                if(previousVersion != null) {
+                    var previousNumber = new SemVer(previousVersion.substring(previousVersion.lastIndexOf("/") + 1));
+                    newVersion = previousNumber.getMajor() + "." + previousNumber.getMinor() + "." + (previousNumber.getPatch() + 1);
+                }
+
+                var versionUri = modelMapper.mapReleaseProperties(model, graph, newVersion, Status.SUGGESTED);
                 //Map new newest release to draft model
                 modelMapper.mapPriorVersion(newDraft, graph, versionUri);
                 //unversioned graphs should not be suggested
