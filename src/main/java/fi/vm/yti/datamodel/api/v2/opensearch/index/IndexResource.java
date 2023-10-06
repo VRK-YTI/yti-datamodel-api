@@ -17,6 +17,7 @@ public class IndexResource extends IndexBase {
     private String subject;
     private String targetClass;
     private String fromVersion;
+    private String versionIri;
 
     public ResourceType getResourceType() {
         return resourceType;
@@ -104,5 +105,13 @@ public class IndexResource extends IndexBase {
 
     public void setFromVersion(String fromVersion) {
         this.fromVersion = fromVersion;
+    }
+
+    public String getVersionIri() {
+        return versionIri;
+    }
+
+    public void setVersionIri(String versionIri) {
+        this.versionIri = versionIri;
     }
 }

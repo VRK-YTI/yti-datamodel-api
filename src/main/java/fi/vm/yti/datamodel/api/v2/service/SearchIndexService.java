@@ -171,10 +171,6 @@ public class SearchIndexService {
      * @return List of DataModel URIs
      */
     private List<String> getModelSpecificRestrictions(ModelType modelType, Set<String> groups, YtiUser user){
-        if(modelType == null && (groups == null || groups.isEmpty())){
-            //Skip the search all together if no extra filtering needs to be done
-            return Collections.emptyList();
-        }
         var modelRequest = new ModelSearchRequest();
         modelRequest.setPageSize(QueryFactoryUtils.INTERNAL_SEARCH_PAGE_SIZE);
         if(modelType != null){
@@ -195,31 +191,40 @@ public class SearchIndexService {
     }
 
    public SearchResponseDTO<IndexResource> searchInternalResources(ResourceSearchRequest request, Set<String> allowedDatamodels, YtiUser user) throws IOException {
-        var namespaces = new ArrayList<String>();
-        if(request.getLimitToDataModel() != null && !request.getLimitToDataModel().isBlank()){
-            namespaces.add(request.getLimitToDataModel());
-        }
+        var externalNamespaces = new ArrayList<String>();
+        var internalNamespaces = new ArrayList<String>();
 
         if(request.isFromAddedNamespaces()){
             if(request.getLimitToDataModel() == null){
                 throw new OpenSearchException("limitToDataModel cannot be empty if getting from added namespace", OpenSearchIndexer.OPEN_SEARCH_INDEX_RESOURCE);
             }
-            getNamespacesFromModel(request.getLimitToDataModel(), namespaces);
+            getNamespacesFromModel(request.getLimitToDataModel(), internalNamespaces, externalNamespaces);
         }
 
-        var restrictedDataModels = getModelSpecificRestrictions(request.getLimitToModelType(), request.getGroups(), user);
-        var build = ResourceQueryFactory.createInternalResourceQuery(request, namespaces, restrictedDataModels, allowedDatamodels);
-        var response = client.search(build, IndexResource.class);
-
         var result = new SearchResponseDTO<IndexResource>();
-        result.setResponseObjects(response.hits().hits().stream()
-                .map(Hit::source)
-                .toList()
-        );
-        result.setTotalHitCount(response.hits().total().value());
         result.setPageFrom(request.getPageFrom());
         result.setPageSize(request.getPageSize());
 
+        List<String> restrictedDataModels = null;
+
+        if (request.getLimitToModelType() != null || (request.getGroups() != null && !request.getGroups().isEmpty())) {
+            //Skip the search all together if no extra filtering needs to be done
+            restrictedDataModels = getModelSpecificRestrictions(request.getLimitToModelType(), request.getGroups(), user);
+        }
+
+        // no matched data models found
+        if (restrictedDataModels != null && restrictedDataModels.isEmpty()) {
+            result.setResponseObjects(List.of());
+            result.setTotalHitCount(0);
+        } else {
+            var build = ResourceQueryFactory.createInternalResourceQuery(request, externalNamespaces, internalNamespaces, restrictedDataModels, allowedDatamodels);
+            var response = client.search(build, IndexResource.class);
+            result.setResponseObjects(response.hits().hits().stream()
+                    .map(Hit::source)
+                    .toList()
+            );
+            result.setTotalHitCount(response.hits().total().value());
+        }
         return result;
     }
 
@@ -234,12 +239,17 @@ public class SearchIndexService {
         return result;
     }
 
-    private void getNamespacesFromModel(String modelUri, List<String> namespaces){
+    private void getNamespacesFromModel(String modelUri, List<String> internalNamespaces, List<String> externalNamespaces){
         var model = coreRepository.fetch(modelUri);
         var resource = model.getResource(modelUri);
-        namespaces.addAll(MapperUtils.arrayPropertyToList(resource, OWL.imports));
-        namespaces.addAll(MapperUtils.arrayPropertyToList(resource, DCTerms.requires));
-        namespaces.removeIf(ns -> ns.startsWith(ModelConstants.CODELIST_NAMESPACE) || ns.startsWith(ModelConstants.TERMINOLOGY_NAMESPACE));
+        var allNamespaces = new ArrayList<String>();
+        allNamespaces.addAll(MapperUtils.arrayPropertyToList(resource, OWL.imports));
+        allNamespaces.addAll(MapperUtils.arrayPropertyToList(resource, DCTerms.requires));
+
+        // resource from external models are searched by isDefinedBy property
+        externalNamespaces.addAll(allNamespaces.stream().filter(ns -> !ns.contains(ModelConstants.SUOMI_FI_DOMAIN)).toList());
+        // internal namespaces are searched by versionIRI
+        internalNamespaces.addAll(allNamespaces.stream().filter(ns -> ns.startsWith(ModelConstants.SUOMI_FI_NAMESPACE)).toList());
     }
 
     private Set<UUID> getOrganizationsForUser(YtiUser user){

@@ -33,7 +33,7 @@ public class DataModelUtils {
                     if (uri.startsWith(ModelConstants.SUOMI_FI_NAMESPACE)) {
                         var prefix = MapperUtils.getModelIdFromNamespace(uri);
                         model.setNsPrefix(prefix, uri + ModelConstants.RESOURCE_SEPARATOR);
-                    } else if (!uri.contains("uri.suomi.fi")) {
+                    } else if (!uri.contains(ModelConstants.SUOMI_FI_DOMAIN)) {
                         // handle external namespaces, skip for now terminologies and code lists
                         var extResource = model.getResource(uri);
                         var extPrefix = MapperUtils.propertyToString(extResource, DCAP.preferredXMLNamespacePrefix);

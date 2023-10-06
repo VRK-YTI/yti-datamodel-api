@@ -1,6 +1,5 @@
 package fi.vm.yti.datamodel.api.v2.opensearch.queries;
 
-import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
 import fi.vm.yti.datamodel.api.v2.dto.ResourceType;
 import fi.vm.yti.datamodel.api.v2.dto.Status;
 import fi.vm.yti.datamodel.api.v2.opensearch.dto.ResourceSearchRequest;
@@ -22,7 +21,11 @@ public class ResourceQueryFactory {
     private ResourceQueryFactory(){
         //only provides static methods
     }
-    public static SearchRequest createInternalResourceQuery(ResourceSearchRequest request, List<String> fromNamespaces, List<String> restrictedDataModels, Set<String> allowedDatamodels) {
+    public static SearchRequest createInternalResourceQuery(ResourceSearchRequest request,
+                                                            List<String> externalNamespaces,
+                                                            List<String> internalNamespaces,
+                                                            List<String> restrictedDataModels,
+                                                            Set<String> allowedDatamodels) {
         var must = new ArrayList<Query>();
         var should = new ArrayList<Query>();
 
@@ -37,30 +40,13 @@ public class ResourceQueryFactory {
             must.add(QueryFactoryUtils.labelQuery(query));
         }
 
-        var fromVersion = request.getFromVersion();
-        if(fromVersion != null && !fromVersion.isBlank()){
-            must.add(QueryFactoryUtils.termQuery("fromVersion", fromVersion));
-        }else{
-            must.add(QueryFactoryUtils.existsQuery("fromVersion", true));
-        }
-
         var statuses = request.getStatus();
         if(statuses != null && !statuses.isEmpty()){
             must.add(QueryFactoryUtils.termsQuery("status", statuses.stream().map(Status::name).toList()));
         }
 
-        // intersect allowed data model lists and include possible additional resources (references from other models)
-        var isDefinedByCondition = getIsDefinedByCondition(fromNamespaces, restrictedDataModels, request.getLimitToDataModel());
-        if (!isDefinedByCondition.isEmpty()) {
-            must.add(new BoolQuery.Builder()
-                    .should(QueryFactoryUtils.termsQuery("isDefinedBy", isDefinedByCondition))
-                    .should(QueryFactoryUtils.termsQuery("id", request.getAdditionalResources() != null
-                            ? request.getAdditionalResources()
-                            : Collections.emptySet()))
-                    .minimumShouldMatch("1")
-                    .build().
-                    _toQuery()
-            );
+        if (request.getLimitToDataModel() != null) {
+            must.add(getIncludedNamespacesQuery(request, externalNamespaces, internalNamespaces, restrictedDataModels));
         }
 
         var types = request.getResourceTypes();
@@ -79,10 +65,10 @@ public class ResourceQueryFactory {
                 ._toQuery();
 
         var indices = new ArrayList<String>();
-        var hasExternalNamespaces = isDefinedByCondition.stream()
-                .anyMatch(ns -> !ns.startsWith(ModelConstants.SUOMI_FI_NAMESPACE));
         indices.add(OpenSearchIndexer.OPEN_SEARCH_INDEX_RESOURCE);
-        if (hasExternalNamespaces) {
+
+        // include external models only if there are no Interoperability platform specific conditions
+        if (!externalNamespaces.isEmpty() && request.getGroups() == null) {
             indices.add(OpenSearchIndexer.OPEN_SEARCH_INDEX_EXTERNAL);
         }
 
@@ -95,6 +81,41 @@ public class ResourceQueryFactory {
                 .build();
         logPayload(sr, String.join(", ", indices));
         return sr;
+    }
+
+    private static Query getIncludedNamespacesQuery(ResourceSearchRequest request, List<String> externalNamespaces, List<String> internalNamespaces, List<String> restrictedDataModels) {
+        // filter out restricted models from included internal namespaces
+        var internalNamespacesCondition = getInternalNamespaceCondition(internalNamespaces, restrictedDataModels);
+
+        var builder = new BoolQuery.Builder();
+        builder.minimumShouldMatch("1");
+
+        if (restrictedDataModels == null || restrictedDataModels.contains(request.getLimitToDataModel())) {
+            builder.should(addCurrentModelQuery(request));
+        }
+
+        builder.should(QueryFactoryUtils.termsQuery("isDefinedBy", externalNamespaces))
+            .should(QueryFactoryUtils.termsQuery("versionIri", internalNamespacesCondition))
+            .should(QueryFactoryUtils.termsQuery("id", request.getAdditionalResources() != null
+                    ? request.getAdditionalResources()
+                    : Collections.emptyList()));
+        return builder.build()._toQuery();
+    }
+
+    /**
+     * limit to particular model with or without version in case if not included to restricted data models
+     */
+    private static Query addCurrentModelQuery(ResourceSearchRequest request) {
+        var fromVersion = request.getFromVersion();
+        BoolQuery.Builder builder = new BoolQuery.Builder();
+
+        builder.must(QueryFactoryUtils.termsQuery("isDefinedBy", List.of(request.getLimitToDataModel())));
+        if (fromVersion != null && !fromVersion.isBlank()) {
+            builder.must(QueryFactoryUtils.termQuery("fromVersion", fromVersion));
+        } else {
+            builder.must(QueryFactoryUtils.existsQuery("fromVersion", true));
+        }
+        return builder.build()._toQuery();
     }
 
     public static SearchRequest createFindResourcesByURIQuery(Set<String> resourceURIs) {
@@ -111,32 +132,25 @@ public class ResourceQueryFactory {
     /**
      * Intersect allowed data model lists. Only checks models from Interoperability platform,
      * external namespaces are always included.
-     * @param fromNamespaces namespaces added to current model
+     * @param internalNamespaces internal namespaces added to current model
      * @param restrictedDataModels models to include based on query by model type, status, group etc
      * @return intersection of restricted models
      */
-    private static List<String> getIsDefinedByCondition(List<String> fromNamespaces, List<String> restrictedDataModels, String limitToDataModel) {
-        List<String> isDefinedByCondition = new ArrayList<>();
-        if(fromNamespaces != null && !fromNamespaces.isEmpty()) {
-            if (restrictedDataModels.isEmpty()) {
-                isDefinedByCondition.addAll(fromNamespaces);
+    private static List<String> getInternalNamespaceCondition(List<String> internalNamespaces, List<String> restrictedDataModels) {
+        List<String> condition = new ArrayList<>();
+        if(!internalNamespaces.isEmpty()) {
+            if (restrictedDataModels == null) {
+                condition.addAll(internalNamespaces);
             } else {
-                isDefinedByCondition.addAll(
-                        fromNamespaces.stream()
-                            .filter(ns -> !ns.startsWith(ModelConstants.SUOMI_FI_NAMESPACE)
-                                    || restrictedDataModels.contains(ns))
+                condition.addAll(
+                        internalNamespaces.stream()
+                            .filter(restrictedDataModels::contains)
                             .toList()
                 );
             }
-        } else {
-            isDefinedByCondition.addAll(restrictedDataModels);
         }
 
-        //Limit to datamodel shouldn't be added in the intersection if it's not the right ModelType
-        if (limitToDataModel != null && (restrictedDataModels.isEmpty() || restrictedDataModels.contains(limitToDataModel))) {
-            isDefinedByCondition.add(limitToDataModel);
-        }
-        return isDefinedByCondition;
+        return condition;
     }
 
 }
