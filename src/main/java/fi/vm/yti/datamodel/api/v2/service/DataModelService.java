@@ -14,15 +14,16 @@ import fi.vm.yti.datamodel.api.v2.utils.DataModelUtils;
 import fi.vm.yti.datamodel.api.v2.utils.SemVer;
 import fi.vm.yti.datamodel.api.v2.validator.ValidationConstants;
 import fi.vm.yti.security.AuthenticatedUserProvider;
+import org.apache.jena.arq.querybuilder.ConstructBuilder;
+import org.apache.jena.arq.querybuilder.WhereBuilder;
+import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.SimpleSelector;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFDataMgr;
-import org.apache.jena.vocabulary.OWL;
-import org.apache.jena.vocabulary.RDF;
-import org.apache.jena.vocabulary.SKOS;
+import org.apache.jena.vocabulary.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +35,7 @@ import java.io.StringWriter;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.List;
 
 import static fi.vm.yti.security.AuthorizationException.check;
 
@@ -239,5 +241,33 @@ public class DataModelService {
         //Draft model does not need to be indexed since opensearch specific properties on it did not change
         return new URI(versionUri);
 
+    }
+
+
+    public List<ModelVersionInfo> getPreviousVersions(String prefix, String version){
+        var modelUri = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
+        //Would be nice to do traverse the graphs using SPARQL starting from the correct versionIRI but currently that traversing named graphs is not supported
+        var constructBuilder = new ConstructBuilder()
+                .addConstruct("?g", OWL2.versionInfo, "?versionInfo")
+                .addConstruct("?g", OWL2.versionIRI, "?versionIRI")
+                .addConstruct("?g", RDFS.label, "?label");
+        var uri = NodeFactory.createURI(modelUri);
+        var whereBuilder = new WhereBuilder()
+                .addWhere(uri, OWL2.versionInfo, "?versionInfo")
+                .addWhere(uri, OWL2.versionIRI, "?versionIRI")
+                .addWhere(uri, RDFS.label, "?label");
+        constructBuilder.addGraph("?g", whereBuilder);
+        var model = coreRepository.queryConstruct(constructBuilder.build());
+
+        //filtering cannot be done reasonably in query since semver is not naturally comparable
+        var versions = new ArrayList<ModelVersionInfo>();
+        model.listSubjects().forEach(subject -> {
+            var dto = mapper.mapModelVersionInfo(subject);
+            if(version == null || SemVer.compareSemVers(dto.getVersion(), version) < 0){
+                versions.add(dto);
+            }
+        });
+        versions.sort((a, b) -> -SemVer.compareSemVers(a.getVersion(), b.getVersion()));
+        return versions;
     }
 }
