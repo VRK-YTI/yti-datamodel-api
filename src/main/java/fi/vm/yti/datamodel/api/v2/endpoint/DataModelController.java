@@ -118,6 +118,12 @@ public class DataModelController {
         dataModelService.delete(prefix);
     }
 
+    @Operation(summary = "Create a release of a model")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Release created successfully"),
+            @ApiResponse(responseCode = "401", description = "Current user does not have rights for this model"),
+            @ApiResponse(responseCode = "404", description = "Data model was not found", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ApiError.class))}),
+    })
     @PostMapping(value = "/{prefix}/release")
     public ResponseEntity<String> createRelease(@PathVariable @Parameter(description = "Data model prefix") String prefix,
                                                 @RequestParam @Parameter(description = "Semantic version") String version,
@@ -126,9 +132,15 @@ public class DataModelController {
         return ResponseEntity.created(uri).build();
     }
 
+    @Operation(summary = "Get version information of a model")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Prior versions found"),
+    })
     @GetMapping(value = "/{prefix}/versions")
-    public ResponseEntity<Collection<ModelVersionInfo>> getPreviousVersions(@PathVariable @Parameter(description = "Data model prefix") String prefix,
-                                                                            @RequestParam(required = false) @Parameter(description = "Semantic version") String version) {
-        return ResponseEntity.ok(dataModelService.getPreviousVersions(prefix, version));
+    public ResponseEntity<Collection<ModelVersionInfo>> getPriorVersions(@PathVariable @Parameter(description = "Data model prefix") String prefix,
+                                                                         @RequestParam(required = false) @Parameter(description = "Semantic version") String version) {
+        return ResponseEntity.ok(dataModelService.getPriorVersions(prefix, version));
     }
+
+
 }

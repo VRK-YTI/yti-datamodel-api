@@ -96,4 +96,11 @@ class SemVerTest {
         //Actual release is larger than pre-release https://semver.org/#spec-item-9
         assertTrue(SemVer.compareSemVers("2.0.0","2.0.0-alpha") > 0);
     }
+
+    @Test
+    void testSemverNullValues() {
+        assertEquals(0, SemVer.compareSemVers(null, null));
+        assertTrue(SemVer.compareSemVers(null, "1.0.0") < 0);
+        assertTrue(SemVer.compareSemVers("1.0.0", null) > 0);
+    }
 }

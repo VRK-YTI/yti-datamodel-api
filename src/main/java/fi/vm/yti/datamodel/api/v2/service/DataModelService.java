@@ -244,7 +244,7 @@ public class DataModelService {
     }
 
 
-    public List<ModelVersionInfo> getPreviousVersions(String prefix, String version){
+    public List<ModelVersionInfo> getPriorVersions(String prefix, String version){
         var modelUri = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
         //Would be nice to do traverse the graphs using SPARQL starting from the correct versionIRI but currently that traversing named graphs is not supported
         var constructBuilder = new ConstructBuilder()

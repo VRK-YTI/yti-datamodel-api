@@ -444,4 +444,16 @@ class ModelMapperTest {
         assertEquals(1, result.getIsPartOf().size());
         assertTrue(result.getIsPartOf().contains("P11"));
     }
+
+    @Test
+    void mapModelVersionInfo() {
+        var m = MapperTestUtils.getModelFromFile("/models/test_datamodel_prior_versions.ttl");
+
+
+        var result = mapper.mapModelVersionInfo(m.getResource("http://uri.suomi.fi/datamodel/ns/test/1.0.0"));
+        assertEquals("Test", result.getLabel().get("fi"));
+        assertEquals("1.0.0", result.getVersion());
+        assertEquals("http://uri.suomi.fi/datamodel/ns/test/1.0.0", result.getVersionIRI());
+        assertEquals(Status.VALID, result.getStatus());
+    }
 }

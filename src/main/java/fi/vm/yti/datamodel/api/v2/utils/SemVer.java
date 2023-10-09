@@ -49,6 +49,16 @@ public class SemVer {
      * @return negative if a is smaller, 0 if equal, positive if a is larger
      */
     public static int compareSemVers(String a, String b){
+        if(a != null && b == null) {
+            return 1;
+        }
+        if(a == null && b != null) {
+            return -1;
+        }
+        if(a == null && b == null) {
+            return 0;
+        }
+
         var semVerA = new SemVer(a);
         var semVerB = new SemVer(b);
 
