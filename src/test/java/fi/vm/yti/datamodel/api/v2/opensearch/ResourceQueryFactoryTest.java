@@ -32,11 +32,13 @@ class ResourceQueryFactoryTest {
         request.setResourceTypes(Set.of(ResourceType.ATTRIBUTE, ResourceType.ASSOCIATION));
 
         var groupNamespaces = List.of("http://uri.suomi.fi/datamodel/ns/groupNs", "http://uri.suomi.fi/datamodel/ns/addedNs");
-        var addedNamespaces = List.of("http://uri.suomi.fi/datamodel/ns/addedNs", "http://external-data.com/test");
+        var internalNamespaces = List.of("http://uri.suomi.fi/datamodel/ns/addedNs");
+        var externalNamespaces = List.of("http://external-data.com/test");
 
         var allowedIncompleteDatamodels = Set.of("http://uri.suomi.fi/datamodel/ns/test");
 
-        var classQuery = ResourceQueryFactory.createInternalResourceQuery(request, addedNamespaces, groupNamespaces, allowedIncompleteDatamodels);
+        var classQuery = ResourceQueryFactory.createInternalResourceQuery(request, externalNamespaces, internalNamespaces,
+                groupNamespaces, allowedIncompleteDatamodels);
 
         String expected = OpenSearchUtils.getJsonString("/es/classRequest.json");
         JSONAssert.assertEquals(expected, OpenSearchUtils.getPayload(classQuery), JSONCompareMode.LENIENT);
@@ -55,17 +57,33 @@ class ResourceQueryFactoryTest {
         request.setResourceTypes(Set.of(ResourceType.ATTRIBUTE));
         request.setAdditionalResources(Set.of("http://uri.suomi.fi/datamodel/ns/ext/some-property"));
 
-        var attributeListQuery = ResourceQueryFactory.createInternalResourceQuery(request, new ArrayList<>(),
-                new ArrayList<>(), new HashSet<>());
+        var attributeListQuery = ResourceQueryFactory.createInternalResourceQuery(request, new ArrayList<>(), new ArrayList<>(),
+                null, new HashSet<>());
         String expected = OpenSearchUtils.getJsonString("/es/attributeListRequest.json");
         JSONAssert.assertEquals(expected, OpenSearchUtils.getPayload(attributeListQuery), JSONCompareMode.LENIENT);
+    }
+
+    @Test
+    void listClassesByVersion() throws Exception {
+        var request = new ResourceSearchRequest();
+
+        request.setPageFrom(1);
+        request.setPageSize(100);
+        request.setLimitToDataModel("http://uri.suomi.fi/datamodel/ns/test");
+        request.setResourceTypes(Set.of(ResourceType.CLASS));
+        request.setFromVersion("1.2.3");
+
+        var query = ResourceQueryFactory.createInternalResourceQuery(request, new ArrayList<>(), new ArrayList<>(),
+                null, new HashSet<>());
+        String expected = OpenSearchUtils.getJsonString("/es/classesByVersion.json");
+        JSONAssert.assertEquals(expected, OpenSearchUtils.getPayload(query), JSONCompareMode.LENIENT);
     }
 
     @Test
     void createInternalClassQueryDefaults() {
         var request = new ResourceSearchRequest();
 
-        var classQuery = ResourceQueryFactory.createInternalResourceQuery(request, Collections.emptyList(), Collections.emptyList(), Collections.emptySet());
+        var classQuery = ResourceQueryFactory.createInternalResourceQuery(request, Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptySet());
 
         assertEquals("Page from value not matching", QueryFactoryUtils.DEFAULT_PAGE_FROM, classQuery.from());
         assertEquals("Page size value not matching", QueryFactoryUtils.DEFAULT_PAGE_SIZE, classQuery.size());

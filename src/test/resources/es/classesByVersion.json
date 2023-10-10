@@ -18,14 +18,10 @@
                       }
                     },
                     {
-                      "bool": {
-                        "must_not": [
-                          {
-                            "exists": {
-                              "field": "fromVersion"
-                            }
-                          }
-                        ]
+                      "term": {
+                        "fromVersion": {
+                          "value": "1.2.3"
+                        }
                       }
                     }
                   ]
@@ -43,9 +39,7 @@
               },
               {
                 "terms": {
-                  "id": [
-                    "http://uri.suomi.fi/datamodel/ns/ext/some-property"
-                  ]
+                  "id": []
                 }
               }
             ]
@@ -54,7 +48,7 @@
         {
           "terms": {
             "resourceType": [
-              "ATTRIBUTE"
+              "CLASS"
             ]
           }
         }
@@ -76,6 +70,7 @@
       ]
     }
   },
+  "size": 100,
   "sort": [
     {
       "label.fi.keyword": {

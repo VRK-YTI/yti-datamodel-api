@@ -236,6 +236,7 @@ public class ResourceMapper {
         if(version != null){
             id = isDefinedBy + ModelConstants.RESOURCE_SEPARATOR + version + ModelConstants.RESOURCE_SEPARATOR + resource.getLocalName();
             indexResource.setFromVersion(version);
+            indexResource.setVersionIri(MapperUtils.propertyToString(model.getResource(isDefinedBy), OWL2.versionIRI));
         }
 
         indexResource.setId(id);

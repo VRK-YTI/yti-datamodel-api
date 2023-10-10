@@ -168,10 +168,9 @@ public class VisualizationService {
                 .forEach(prop -> modelResource.listProperties(prop).toList().forEach(ns -> {
                     var uri = ns.getObject().toString();
                     if (uri.startsWith(ModelConstants.SUOMI_FI_NAMESPACE)) {
-                        namespaces.put(uri, uri.replace(ModelConstants.SUOMI_FI_NAMESPACE, ""));
-                    } else if (!uri.startsWith(ModelConstants.TERMINOLOGY_NAMESPACE)
-                            && !uri.startsWith(ModelConstants.CODELIST_NAMESPACE)) {
-                        namespaces.put(uri, model.getResource(uri).getProperty(DCAP.preferredXMLNamespacePrefix).getString());
+                        namespaces.put(uri, MapperUtils.getModelIdFromNamespace(uri));
+                    } else if (!uri.contains(ModelConstants.SUOMI_FI_DOMAIN)) {
+                        namespaces.put(uri, MapperUtils.propertyToString(model.getResource(uri), DCAP.preferredXMLNamespacePrefix));
                     }
                 }));
         return namespaces;

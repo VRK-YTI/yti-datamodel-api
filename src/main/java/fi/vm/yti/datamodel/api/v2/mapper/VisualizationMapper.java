@@ -1,6 +1,7 @@
 package fi.vm.yti.datamodel.api.v2.mapper;
 
 import fi.vm.yti.datamodel.api.v2.dto.*;
+import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.rdf.model.*;
 import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.OWL;
@@ -10,7 +11,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.topbraid.shacl.vocabulary.SH;
 
-import java.net.URI;
 import java.util.*;
 
 public class VisualizationMapper {
@@ -265,16 +265,15 @@ public class VisualizationMapper {
 
     private static String getReferenceIdentifier(String uri, Map<String, String> namespaces) {
         try {
-            var uriPath = URI.create(uri).getPath();
-            var fragment = uriPath.substring(uriPath.lastIndexOf("/") + 1);
-            String prefix = namespaces.get(uri.substring(0, uri.lastIndexOf("/")));
+            var u = NodeFactory.createURI(uri);
+            String prefix = namespaces.get(u.getNameSpace().replaceAll("/?$", ""));
 
             if (prefix == null) {
                 // referenced class in the same model
-                return fragment;
+                return u.getLocalName();
             } else {
                 // referenced class in the external namespace or other model in Interoperability platform
-                return prefix + ":" + fragment;
+                return prefix + ":" + u.getLocalName();
             }
         } catch (Exception e) {
             LOG.warn("Invalid uri reference {}", uri);

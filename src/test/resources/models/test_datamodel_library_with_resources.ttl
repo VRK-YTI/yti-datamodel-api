@@ -26,7 +26,8 @@ dcap:preferredXMLNamespaceName  "http://uri.suomi.fi/datamodel/ns/test" ;
 dcap:preferredXMLNamespacePrefix
 "test" ;
 iow:contentModified             "2023-01-03T12:44:45.799Z"^^xsd:dateTime ;
-owl:versionInfo                 "VALID", "1.0.1".
+owl:versionInfo                 "VALID", "1.0.1" ;
+owl:versionIRI                  <http://uri.suomi.fi/datamodel/ns/test/1.0.1> .
 
 <https://www.example.com/ns/ext>
 dcterms:type                        rdfs:Resource ;

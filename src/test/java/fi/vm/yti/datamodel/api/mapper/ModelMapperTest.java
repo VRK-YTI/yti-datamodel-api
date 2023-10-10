@@ -75,6 +75,7 @@ class ModelMapperTest {
     void testMapToJenaModel(ModelType modelType) {
         var mockModel = ModelFactory.createDefaultModel();
         mockModel.createResource("http://uri.suomi.fi/datamodel/ns/newint")
+                        .addProperty(RDF.type, OWL.Ontology)
                         .addProperty(RDF.type, Iow.ApplicationProfile)
                         .addProperty(DCAP.preferredXMLNamespacePrefix, "test");
         when(coreRepository.fetch(anyString())).thenReturn(mockModel);

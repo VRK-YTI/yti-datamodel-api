@@ -236,6 +236,7 @@ class ResourceMapperTest {
         assertEquals(1, indexClass.getLabel().size());
         assertEquals("test label", indexClass.getLabel().get("fi"));
         assertEquals("1.0.1", indexClass.getFromVersion());
+        assertEquals("http://uri.suomi.fi/datamodel/ns/test/1.0.1", indexClass.getVersionIri());
     }
 
     @Test
@@ -257,6 +258,7 @@ class ResourceMapperTest {
         assertEquals("http://uri.suomi.fi/datamodel/ns/test/DomainClass", indexClass.getDomain());
         assertEquals("rdf:Literal", indexClass.getRange());
         assertEquals("1.0.1", indexClass.getFromVersion());
+        assertEquals("http://uri.suomi.fi/datamodel/ns/test/1.0.1", indexClass.getVersionIri());
     }
 
     @Test
@@ -278,6 +280,7 @@ class ResourceMapperTest {
         assertEquals("http://uri.suomi.fi/datamodel/ns/test/DomainClass", indexClass.getDomain());
         assertEquals("http://uri.suomi.fi/datamodel/ns/test/RangeClass", indexClass.getRange());
         assertEquals("1.0.1", indexClass.getFromVersion());
+        assertEquals("http://uri.suomi.fi/datamodel/ns/test/1.0.1", indexClass.getVersionIri());
     }
 
     @Test

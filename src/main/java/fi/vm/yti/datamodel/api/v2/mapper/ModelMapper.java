@@ -372,7 +372,7 @@ public class ModelMapper {
                 var dto = new InternalNamespaceDTO();
                 try {
                     var nsModel = coreRepository.fetch(ns);
-                    var nsResource = nsModel.getResource(ns);
+                    var nsResource = MapperUtils.getModelResourceFromVersion(nsModel);
                     dto.setNamespace(ns);
                     dto.setPrefix(MapperUtils.propertyToString(nsResource, DCAP.preferredXMLNamespacePrefix));
                     dto.setName(MapperUtils.localizedPropertyToMap(nsResource, RDFS.label));
@@ -399,11 +399,11 @@ public class ModelMapper {
     private void addInternalNamespaceToDatamodel(DataModelDTO modelDTO, Resource resource, Model model){
         modelDTO.getInternalNamespaces().forEach(namespace -> {
             var ns = coreRepository.fetch(namespace);
-            var nsRes = ns.getResource(namespace);
+            var nsRes = MapperUtils.getModelResourceFromVersion(ns);
             var prefix = MapperUtils.propertyToString(nsRes, DCAP.preferredXMLNamespacePrefix);
             var nsType = MapperUtils.getModelTypeFromResource(nsRes);
             var modelType = MapperUtils.getModelTypeFromResource(resource);
-            resource.addProperty(getNamespacePropertyFromType(modelType, nsType), nsRes);
+            resource.addProperty(getNamespacePropertyFromType(modelType, nsType), ResourceFactory.createResource(namespace));
             model.setNsPrefix(prefix, namespace);
         });
     }

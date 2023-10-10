@@ -1,6 +1,5 @@
 {
   "from": 1,
-  "size": 100,
   "query": {
     "bool": {
       "must": [
@@ -9,7 +8,8 @@
             "fields": [
               "label.*"
             ],
-            "fuzziness": "2"
+            "fuzziness": "2",
+            "query": "*test query*"
           }
         },
         {
@@ -18,25 +18,20 @@
           }
         },
         {
-          "term": {
-            "targetClass": {
-              "value": "http://uri.suomi.fi/datamodel/ns/test/TestClass"
-            }
-          }
-        },
-        {
-          "terms": {
-            "resourceType": ["ATTRIBUTE", "ASSOCIATION"]
-          }
-        },
-        {
           "bool": {
+            "minimum_should_match": "1",
             "should": [
               {
                 "terms": {
                   "isDefinedBy": [
-                    "http://uri.suomi.fi/datamodel/ns/addedNs",
                     "http://external-data.com/test"
+                  ]
+                }
+              },
+              {
+                "terms": {
+                  "versionIri": [
+                    "http://uri.suomi.fi/datamodel/ns/addedNs"
                   ]
                 }
               },
@@ -48,15 +43,27 @@
             ]
           }
         },
-        { "bool": {
-          "must_not": [{
-            "exists": {
-              "field": "fromVersion"
+        {
+          "terms": {
+            "resourceType": ["ASSOCIATION", "ATTRIBUTE"]
+          }
+        },
+        {
+          "term": {
+            "targetClass": {
+              "value": "http://uri.suomi.fi/datamodel/ns/test/TestClass"
             }
-          }]
-        } }
+          }
+        }
       ],
       "should": [
+        {
+          "terms": {
+            "isDefinedBy": [
+              "http://uri.suomi.fi/datamodel/ns/test"
+            ]
+          }
+        },
         {
           "bool": {
             "must_not": [
@@ -68,11 +75,6 @@
                 }
               }
             ]
-          }
-        },
-        {
-          "terms": {
-            "isDefinedBy": ["http://uri.suomi.fi/datamodel/ns/test"]
           }
         }
       ]

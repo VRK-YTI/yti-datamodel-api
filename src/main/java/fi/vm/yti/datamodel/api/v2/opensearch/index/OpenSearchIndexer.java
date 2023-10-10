@@ -352,7 +352,8 @@ public class OpenSearchIndexer {
                 Map.entry("modified", getDateProperty()),
                 Map.entry("fromVersion", getKeywordProperty()),
                 Map.entry("resourceType", getKeywordProperty()),
-                Map.entry("targetClass", getKeywordProperty())
+                Map.entry("targetClass", getKeywordProperty()),
+                Map.entry("versionIri", getKeywordProperty())
         );
     }
 
