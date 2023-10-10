@@ -308,7 +308,7 @@ class ResourceServiceTest {
         when(coreRepository.queryConstruct(any(Query.class))).thenReturn(model);
         when(importsRepository.queryConstruct(any(Query.class))).thenReturn(ModelFactory.createDefaultModel());
 
-        resourceService.mapUriLabels().accept(uris);
+        resourceService.mapUriLabels(Set.of()).accept(uris);
 
         var result1 = uris.stream()
                 .filter(u -> u.getCurie().equals("test_lib:attribute-1"))

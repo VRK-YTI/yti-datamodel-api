@@ -84,7 +84,7 @@ class NodeShapeMapperTest {
         assertTrue(MapperUtils.hasType(propertyShapeAssociation, SH.PropertyShape));
         assertTrue(MapperUtils.hasType(propertyShapeAssociation, OWL.ObjectProperty));
 
-        assertEquals("http://uri.suomi.fi/datamodel/ns/test_lib/attribute-1",
+        assertEquals("http://uri.suomi.fi/datamodel/ns/test_lib/1.0.0/attribute-1",
                 propertyShapeAttribute.getProperty(SH.path).getObject().toString());
         assertEquals(Status.DRAFT.name(), propertyShapeAttribute.getProperty(OWL.versionInfo).getObject().toString());
         assertEquals("Attribute attribute-1", MapperUtils.localizedPropertyToMap(propertyShapeAttribute, RDFS.label).get("fi"));

@@ -5,6 +5,7 @@ import java.util.Map;
 public class SimpleResourceDTO {
 
     private String uri;
+    private String version;
     private Map<String, String> label;
     private String identifier;
     private String modelId;
@@ -66,5 +67,13 @@ public class SimpleResourceDTO {
 
     public void setNote(Map<String, String> note) {
         this.note = note;
+    }
+
+    public String getVersion() {
+        return version;
+    }
+
+    public void setVersion(String version) {
+        this.version = version;
     }
 }

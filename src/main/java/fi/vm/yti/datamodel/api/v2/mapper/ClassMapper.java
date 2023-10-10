@@ -11,10 +11,7 @@ import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.query.Query;
 import org.apache.jena.rdf.model.*;
-import org.apache.jena.vocabulary.DCTerms;
-import org.apache.jena.vocabulary.OWL;
-import org.apache.jena.vocabulary.RDF;
-import org.apache.jena.vocabulary.RDFS;
+import org.apache.jena.vocabulary.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.topbraid.shacl.vocabulary.SH;
@@ -72,7 +69,7 @@ public class ClassMapper {
     public static List<String> mapPlaceholderPropertyShapes(Model applicationProfileModel, String classURI,
                                                             Model propertiesModel, YtiUser user,
                                                             Predicate<String> checkFreeIdentifier) {
-        var iterator = propertiesModel.listSubjects();
+        var iterator = propertiesModel.listSubjectsWithProperty(RDFS.isDefinedBy);
         var classResource = applicationProfileModel.getResource(classURI);
         var propertyResourceURIs = new ArrayList<String>();
         while (iterator.hasNext()) {
@@ -101,7 +98,15 @@ public class ClassMapper {
                 }
             }
 
-            propertyShapeResource.addProperty(SH.path, ResourceFactory.createResource(uri))
+            var u = NodeFactory.createURI(uri);
+            var versionResource = propertiesModel.listSubjectsWithProperty(OWL2.versionIRI);
+            String pathURI;
+            if (versionResource.hasNext()) {
+                pathURI = versionResource.next().getProperty(OWL2.versionIRI).getObject().toString() + ModelConstants.RESOURCE_SEPARATOR + u.getLocalName();
+            } else {
+                pathURI = uri;
+            }
+            propertyShapeResource.addProperty(SH.path, ResourceFactory.createResource(pathURI))
                     .addProperty(DCTerms.identifier, ResourceFactory.createTypedLiteral(currentIdentifier, XSDDatatype.XSDNCName))
                     .addProperty(RDF.type, SH.PropertyShape)
                     .addProperty(RDF.type, targetResource.getProperty(RDF.type).getObject())
@@ -284,10 +289,15 @@ public class ClassMapper {
     public static void addClassResourcesToDTO(Model classResources, ClassInfoDTO dto, Consumer<SimpleResourceDTO> subjectMapper){
         var associations = new ArrayList<SimpleResourceDTO>();
         var attributes = new ArrayList<SimpleResourceDTO>();
-        classResources.listSubjects().forEach(res -> {
+        classResources.listSubjectsWithProperty(RDFS.isDefinedBy).forEach(res -> {
             var resDTO = new SimpleResourceDTO();
             resDTO.setUri(res.getURI());
             resDTO.setIdentifier(MapperUtils.getLiteral(res, DCTerms.identifier, String.class));
+            var ns = DataModelUtils.removeTrailingSlash(NodeFactory.createURI(res.getURI()).getNameSpace());
+            var versionIRI = MapperUtils.propertyToString(classResources.getResource(ns), OWL2.versionIRI);
+            if (versionIRI != null) {
+                resDTO.setVersion(versionIRI.substring(versionIRI.lastIndexOf("/") + 1));
+            }
             resDTO.setLabel(MapperUtils.localizedPropertyToMap(res, RDFS.label));
             resDTO.setNote(MapperUtils.localizedPropertyToMap(res, RDFS.comment));
             resDTO.setCurie(MapperUtils.uriToURIDTO(res.getURI(), classResources).getCurie());
@@ -300,7 +310,7 @@ public class ClassMapper {
                 throw new MappingError("ModelUri null for resource");
             }
             resDTO.setModelId(MapperUtils.getModelIdFromNamespace(modelUri));
-            if (MapperUtils.hasType(res, OWL.DatatypeProperty)) {
+            if (MapperUtils.hasType(res, OWL.DatatypeProperty, OWL.AnnotationProperty)) {
                 attributes.add(resDTO);
             } else if (MapperUtils.hasType(res, OWL.ObjectProperty)) {
                 associations.add(resDTO);

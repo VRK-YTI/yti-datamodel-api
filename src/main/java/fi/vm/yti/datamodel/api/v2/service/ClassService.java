@@ -8,11 +8,11 @@ import fi.vm.yti.datamodel.api.v2.mapper.ClassMapper;
 import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.mapper.ResourceMapper;
 import fi.vm.yti.datamodel.api.v2.opensearch.dto.ResourceSearchRequest;
-import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexResource;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexResourceInfo;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import fi.vm.yti.datamodel.api.v2.repository.ImportsRepository;
+import fi.vm.yti.datamodel.api.v2.utils.DataModelUtils;
 import fi.vm.yti.security.AuthenticatedUserProvider;
 import org.apache.jena.arq.querybuilder.AskBuilder;
 import org.apache.jena.graph.NodeFactory;
@@ -95,26 +95,29 @@ public class ClassService {
         var userMapper = hasRightToModel ? groupManagementService.mapUser() : null;
 
         ResourceInfoBaseDTO dto;
-        if (MapperUtils.isLibrary(model.getResource(modelURI))) {
+        var modelResource = model.getResource(modelURI);
+        var includedNamespaces = DataModelUtils.getInternalReferenceModels(versionUri, modelResource);
+
+        if (MapperUtils.isLibrary(modelResource)) {
             dto = ClassMapper.mapToClassDTO(model, modelURI, classIdentifier, orgModel,
                     hasRightToModel, userMapper);
-            var classResource = model.getResource(classURI);
 
+            var classResource = model.getResource(classURI);
             var restrictions = ClassMapper.getClassRestrictionList(model, classResource)
                     .stream().map(restriction -> MapperUtils.propertyToString(restriction.asResource(), OWL.onProperty))
                     .collect(Collectors.toSet());
-            var findResourcesModel = resourceService.findResources(restrictions);
+            var findResourcesModel = resourceService.findResources(restrictions, includedNamespaces);
             ClassMapper.addClassResourcesToDTO(findResourcesModel, (ClassInfoDTO) dto, terminologyService.mapConceptToResource());
         } else {
             dto = ClassMapper.mapToNodeShapeDTO(model, modelURI, classIdentifier, orgModel,
                     hasRightToModel, userMapper);
-            var existingProperties = getTargetNodeProperties(MapperUtils.propertyToString(model.getResource(classURI), SH.node));
+            var existingProperties = getTargetNodeProperties(MapperUtils.propertyToString(model.getResource(classURI), SH.node), includedNamespaces);
             var nodeShapeResources = coreRepository.queryConstruct(ClassMapper.getNodeShapeResourcesQuery(classURI));
             ClassMapper.addNodeShapeResourcesToDTO(model, nodeShapeResources, (NodeShapeInfoDTO) dto, existingProperties);
         }
 
         terminologyService.mapConcept().accept(dto);
-        MapperUtils.addLabelsToURIs(dto, resourceService.mapUriLabels());
+        MapperUtils.addLabelsToURIs(dto, resourceService.mapUriLabels(includedNamespaces));
         return dto;
     }
 
@@ -138,13 +141,6 @@ public class ClassService {
                 .getResponseObjects();
     }
 
-    public List<IndexResource> getNodeShapeProperties(String nodeURI) throws IOException {
-        var propertyURIs = getTargetNodeProperties(nodeURI);
-        return searchIndexService
-                .findResourcesByURI(propertyURIs)
-                .getResponseObjects();
-    }
-
     public URI create(String prefix, BaseDTO dto, boolean applicationProfile) throws URISyntaxException {
         var modelUri = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
         var classUri = modelUri + ModelConstants.RESOURCE_SEPARATOR + dto.getIdentifier();
@@ -152,14 +148,16 @@ public class ClassService {
             throw new MappingError("Class already exists");
         }
         var model = coreRepository.fetch(modelUri);
+        var modelResource = model.getResource(modelUri);
         check(authorizationManager.hasRightToModel(prefix, model));
-        checkDataModelType(model.getResource(modelUri), dto);
+        checkDataModelType(modelResource, dto);
         terminologyService.resolveConcept(dto.getSubject());
 
+        var includedNamespaces = DataModelUtils.getInternalReferenceModels(modelUri, modelResource);
 
         if(applicationProfile) {
             ClassMapper.createNodeShapeAndMapToModel(modelUri, model, (NodeShapeDTO) dto, userProvider.getUser());
-            addNodeShapeProperties(model, classUri, (NodeShapeDTO) dto);
+            addNodeShapeProperties(model, classUri, (NodeShapeDTO) dto, includedNamespaces);
         }else {
             ClassMapper.createOntologyClassAndMapToModel(modelUri, model, (ClassDTO) dto, userProvider.getUser());
         }
@@ -169,10 +167,10 @@ public class ClassService {
         return new URI(classUri);
     }
 
-    public void addNodeShapeProperties(Model model, String classUri, NodeShapeDTO dto) {
+    public void addNodeShapeProperties(Model model, String classUri, NodeShapeDTO dto, Set<String> includedNamespaces) {
         var allProperties = new HashSet<String>();
         // Node shape based on an existing node shape (sh:node)
-        allProperties.addAll(getTargetNodeProperties(dto.getTargetNode()));
+        allProperties.addAll(getTargetNodeProperties(dto.getTargetNode(), includedNamespaces));
         // User defined properties from target class reference
         allProperties.addAll(getNodeShapeTargetClassProperties(dto, model, classUri));
 
@@ -212,6 +210,7 @@ public class ClassService {
 
             var oldNode = MapperUtils.propertyToString(classResource, SH.node);
             var oldTarget = MapperUtils.propertyToString(classResource, SH.targetClass);
+            var includedNamespaces = DataModelUtils.getInternalReferenceModels(graph, model.getResource(graph));
 
             var nodeShapeProperties = classResource.listProperties(SH.property)
                     .mapWith((var stmt) -> stmt.getResource().getURI())
@@ -219,15 +218,15 @@ public class ClassService {
 
             if (oldNode == null && nodeShape.getTargetNode() != null) {
                 // add new sh:node, add properties from sh:node reference
-                nodeShapeProperties.addAll(getTargetNodeProperties(nodeShape.getTargetNode()));
+                nodeShapeProperties.addAll(getTargetNodeProperties(nodeShape.getTargetNode(), includedNamespaces));
             } else if (oldNode != null && nodeShape.getTargetNode() != null && !oldNode.equals(nodeShape.getTargetNode())) {
                 // replace sh:node, remove properties inherited from old sh:node and add properties from new sh:node reference
-                var oldProperties = getTargetNodeProperties(oldNode);
+                var oldProperties = getTargetNodeProperties(oldNode, includedNamespaces);
                 nodeShapeProperties.removeAll(oldProperties);
-                nodeShapeProperties.addAll(getTargetNodeProperties(nodeShape.getTargetNode()));
+                nodeShapeProperties.addAll(getTargetNodeProperties(nodeShape.getTargetNode(), includedNamespaces));
             } else if (oldNode != null && nodeShape.getTargetNode() == null) {
                 // remove sh:node, remove properties old sh:node reference
-                var oldProperties = getTargetNodeProperties(oldNode);
+                var oldProperties = getTargetNodeProperties(oldNode, includedNamespaces);
                 nodeShapeProperties.removeAll(oldProperties);
             }
 
@@ -262,19 +261,20 @@ public class ClassService {
         openSearchIndexer.deleteResourceFromIndex(classURI);
     }
 
-    private Set<String> getTargetNodeProperties(String targetNode) {
+    private Set<String> getTargetNodeProperties(String targetNode, Set<String> graphsIncluded) {
         var propertyShapes = new HashSet<String>();
         var handledNodeShapes = new HashSet<String>();
 
         // collect recursively all property shape uris from target node
         while (targetNode != null) {
+            var targetNodeURI = DataModelUtils.removeVersionFromURI(targetNode);
             if (handledNodeShapes.contains(targetNode)) {
                 throw new MappingError("Circular dependency, cannot add sh:node reference");
             }
             handledNodeShapes.add(targetNode);
 
-            var nodeModel = resourceService.findResources(Set.of(targetNode));
-            var nodeResource = nodeModel.getResource(targetNode);
+            var nodeModel = resourceService.findResources(Set.of(targetNode), graphsIncluded);
+            var nodeResource = nodeModel.getResource(targetNodeURI);
 
             propertyShapes.addAll(nodeResource.listProperties(SH.property)
                     .mapWith((var stmt) -> stmt.getResource().getURI())
@@ -300,15 +300,18 @@ public class ClassService {
                 .filter(Objects::nonNull)
                 .toList();
 
-        var newProperties = resourceService.findResources(nodeShapeDTO.getProperties().stream()
+        var modelURI = DataModelUtils.removeTrailingSlash(NodeFactory.createURI(classURI).getNameSpace());
+        var included = DataModelUtils.getInternalReferenceModels(modelURI, model.getResource(modelURI));
+        var newProperties = nodeShapeDTO.getProperties().stream()
                 .filter(p -> !existingProperties.contains(p))
-                .collect(Collectors.toSet()));
+                .collect(Collectors.toSet());
+        var newPropertiesModel = resourceService.findResources(newProperties, included);
 
         Predicate<String> checkFreeIdentifier =
                 (var uri) -> coreRepository.resourceExistsInGraph(model.getResource(classURI).getNameSpace(), uri);
 
         // create new property shape resources to the model
-        var createdProperties = ClassMapper.mapPlaceholderPropertyShapes(model, classURI, newProperties,
+        var createdProperties = ClassMapper.mapPlaceholderPropertyShapes(model, classURI, newPropertiesModel,
                 userProvider.getUser(), checkFreeIdentifier);
 
         var allProperties = new HashSet<String>();
@@ -339,8 +342,9 @@ public class ClassService {
         var classURI = modelURI + ModelConstants.RESOURCE_SEPARATOR + nodeShapeIdentifier;
         check(authorizationManager.hasRightToModel(prefix, model));
 
+        var includedNamespaces = DataModelUtils.getInternalReferenceModels(modelURI, model.getResource(modelURI));
         var classResource = model.getResource(classURI);
-        var existingProperties = getTargetNodeProperties(MapperUtils.propertyToString(classResource, SH.node));
+        var existingProperties = getTargetNodeProperties(MapperUtils.propertyToString(classResource, SH.node), includedNamespaces);
         if(delete) {
             ClassMapper.mapRemoveNodeShapeProperty(model, classResource, uri, existingProperties);
         }else {
@@ -361,7 +365,10 @@ public class ClassService {
         check(authorizationManager.hasRightToModel(prefix, model));
 
         var classResource = model.getResource(classURI);
-        var findResourceModel = resourceService.findResources(Set.of(uri));
+        var modelResource = model.getResource(modelURI);
+        var includedNamespaces = MapperUtils.arrayPropertyToSet(modelResource, OWL.imports);
+        includedNamespaces.add(modelURI);
+        var findResourceModel = resourceService.findResources(Set.of(uri), includedNamespaces);
         var propertyResource = findResourceModel.getResource(uri);
         if (findResourceModel.size() == 0) {
             throw new ResourceNotFoundException(uri);

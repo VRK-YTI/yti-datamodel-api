@@ -1,6 +1,5 @@
 package fi.vm.yti.datamodel.api.v2.validator;
 
-import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
 import fi.vm.yti.datamodel.api.v2.dto.NodeShapeDTO;
 import fi.vm.yti.datamodel.api.v2.service.ResourceService;
 import jakarta.validation.ConstraintValidator;
@@ -44,21 +43,17 @@ public class NodeShapeValidator extends BaseValidator implements
 
     private void checkTargetClass(ConstraintValidatorContext context, NodeShapeDTO nodeShapeDTO){
         var targetClass = nodeShapeDTO.getTargetClass();
-        if(targetClass != null && !targetClass.isBlank()){
-            var checkImports = !targetClass.startsWith(ModelConstants.SUOMI_FI_NAMESPACE);
-            if(!resourceService.checkIfResourceIsOneOfTypes(targetClass, List.of(RDFS.Class, OWL.Class), checkImports)){
-                addConstraintViolation(context, "not-class-or-doesnt-exist", "targetClass");
-            }
+        if(targetClass != null && !targetClass.isBlank()
+                && !resourceService.checkIfResourceIsOneOfTypes(targetClass, List.of(RDFS.Class, OWL.Class))) {
+            addConstraintViolation(context, "not-class-or-doesnt-exist", "targetClass");
         }
     }
 
     private void checkTargetNode(ConstraintValidatorContext context, NodeShapeDTO nodeShapeDTO){
         var targetNode = nodeShapeDTO.getTargetNode();
-        if(targetNode != null && !targetNode.isBlank()){
-            var checkImports = !targetNode.startsWith(ModelConstants.SUOMI_FI_NAMESPACE);
-            if(!resourceService.checkIfResourceIsOneOfTypes(targetNode, List.of(SH.NodeShape), checkImports)){
-                addConstraintViolation(context, "not-node-shape-or-doesnt-exist", "targetNode");
-            }
+        if(targetNode != null && !targetNode.isBlank()
+                && !resourceService.checkIfResourceIsOneOfTypes(targetNode, List.of(SH.NodeShape))) {
+            addConstraintViolation(context, "not-node-shape-or-doesnt-exist", "targetNode");
         }
     }
 }

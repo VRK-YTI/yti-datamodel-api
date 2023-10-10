@@ -80,7 +80,7 @@ class ClassServiceTest {
         when(coreRepository.resourceExistsInGraph(anyString(), anyString())).thenReturn(true);
         when(coreRepository.fetch(anyString())).thenReturn(ModelFactory.createDefaultModel());
         when(terminologyService.mapConcept()).thenReturn(mock(Consumer.class));
-        when(resourceService.mapUriLabels()).thenReturn(mock(Consumer.class));
+        when(resourceService.mapUriLabels(anySet())).thenReturn(mock(Consumer.class));
 
         try(var mapper = mockStatic(ClassMapper.class)) {
             classService.get("test", null, "TestClass");
@@ -97,7 +97,7 @@ class ClassServiceTest {
         when(coreRepository.resourceExistsInGraph(anyString(), anyString())).thenReturn(true);
         when(coreRepository.fetch(anyString())).thenReturn(ModelFactory.createDefaultModel());
         when(terminologyService.mapConcept()).thenReturn(mock(Consumer.class));
-        when(resourceService.mapUriLabels()).thenReturn(mock(Consumer.class));
+        when(resourceService.mapUriLabels(anySet())).thenReturn(mock(Consumer.class));
 
         try(var mapper = mockStatic(ClassMapper.class)) {
             classService.get("test", "1.0.1", "TestClass");

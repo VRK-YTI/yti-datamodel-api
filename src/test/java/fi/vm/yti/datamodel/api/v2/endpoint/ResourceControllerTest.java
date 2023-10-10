@@ -62,7 +62,7 @@ class ResourceControllerTest {
     @CsvSource({"attribute", "association"})
     void shouldValidateAndCreate(String resourceType) throws Exception {
         var resourceDTO = createResourceDTO(false, resourceType);
-        when(resourceService.checkIfResourceIsOneOfTypes(eq("http://uri.suomi.fi/datamodel/ns/int/FakeClass"), anyList(), anyBoolean())).thenReturn(true);
+        when(resourceService.checkIfResourceIsOneOfTypes(eq("http://uri.suomi.fi/datamodel/ns/int/FakeClass"), anyList())).thenReturn(true);
 
         this.mvc
                 .perform(post("/v2/resource/library/test/{resourceType}", resourceType)
@@ -71,9 +71,9 @@ class ResourceControllerTest {
                 .andExpect(status().isCreated());
         //validator
         if (resourceType.equals("attribute")) {
-            verify(resourceService, times(1)).checkIfResourceIsOneOfTypes(anyString(), anyList(), anyBoolean());
+            verify(resourceService, times(1)).checkIfResourceIsOneOfTypes(anyString(), anyList());
         } else {
-            verify(resourceService, times(2)).checkIfResourceIsOneOfTypes(anyString(), anyList(), anyBoolean());
+            verify(resourceService, times(2)).checkIfResourceIsOneOfTypes(anyString(), anyList());
         }
         //controller
         verify(resourceService).create(anyString(), any(ResourceDTO.class), any(ResourceType.class), eq(false));
@@ -156,7 +156,7 @@ class ResourceControllerTest {
     @CsvSource({"attribute", "association"})
     void shouldValidateAndUpdate(String resourceType) throws Exception {
         var resourceDTO = createResourceDTO(true, resourceType);
-        when(resourceService.checkIfResourceIsOneOfTypes(eq("http://uri.suomi.fi/datamodel/ns/int/FakeClass"), anyList(), anyBoolean())).thenReturn(true);
+        when(resourceService.checkIfResourceIsOneOfTypes(eq("http://uri.suomi.fi/datamodel/ns/int/FakeClass"), anyList())).thenReturn(true);
 
         this.mvc
                 .perform(put("/v2/resource/library/test/{resourceType}/TestA{resourceType}", resourceType, resourceType.substring(1))
@@ -166,9 +166,9 @@ class ResourceControllerTest {
 
         //validator
         if (resourceType.equals("attribute")) {
-            verify(resourceService, times(1)).checkIfResourceIsOneOfTypes(anyString(), anyList(), anyBoolean());
+            verify(resourceService, times(1)).checkIfResourceIsOneOfTypes(anyString(), anyList());
         } else {
-            verify(resourceService, times(2)).checkIfResourceIsOneOfTypes(anyString(), anyList(), anyBoolean());
+            verify(resourceService, times(2)).checkIfResourceIsOneOfTypes(anyString(), anyList());
         }
         verify(resourceService).update(anyString(), anyString(), any(ResourceDTO.class));
         verifyNoMoreInteractions(resourceService);
@@ -213,8 +213,8 @@ class ResourceControllerTest {
     void shouldValidateAndCreatePropertyShape() throws Exception {
         var dto = createAttributeRestriction();
 
-        when(resourceService.checkIfResourceIsOneOfTypes(eq("http://uri.suomi.fi/datamodel/ns/int/FakeClass"), anyList(),
-                anyBoolean())).thenReturn(true);
+        when(resourceService.checkIfResourceIsOneOfTypes(eq("http://uri.suomi.fi/datamodel/ns/int/FakeClass"), anyList()))
+                .thenReturn(true);
 
         this.mvc
                 .perform(post("/v2/resource/profile/test/attribute")
@@ -222,7 +222,7 @@ class ResourceControllerTest {
                         .content(EndpointUtils.convertObjectToJsonString(dto)))
                 .andExpect(status().isCreated());
 
-        verify(resourceService).checkIfResourceIsOneOfTypes(anyString(), anyList(), anyBoolean());
+        verify(resourceService).checkIfResourceIsOneOfTypes(anyString(), anyList());
         verify(resourceService).create(anyString(), any(PropertyShapeDTO.class), eq(ResourceType.ATTRIBUTE), eq(true));
         verifyNoMoreInteractions(resourceService);
     }
@@ -246,8 +246,7 @@ class ResourceControllerTest {
             String[] expectedResult) throws Exception {
         when(resourceService.checkIfResourceIsOneOfTypes(
                 eq("http://uri.suomi.fi/datamodel/ns/int/FakeClass"),
-                anyList(),
-                anyBoolean()))
+                anyList()))
                 .thenReturn(true);
         this.mvc
                 .perform(post("/v2/resource/profile/test/attribute")
@@ -277,8 +276,7 @@ class ResourceControllerTest {
             String[] expectedResult) throws Exception {
         when(resourceService.checkIfResourceIsOneOfTypes(
                 eq("http://uri.suomi.fi/datamodel/ns/int/FakeClass"),
-                anyList(),
-                anyBoolean()))
+                anyList()))
                 .thenReturn(true);
         this.mvc
                 .perform(post("/v2/resource/profile/test/association")
