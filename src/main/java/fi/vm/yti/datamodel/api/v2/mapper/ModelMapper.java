@@ -473,4 +473,19 @@ public class ModelMapper {
         resource.removeAll(OWL.priorVersion);
         resource.addProperty(OWL.priorVersion, ResourceFactory.createResource(priorVersionUri));
     }
+
+    public ModelVersionInfo mapModelVersionInfo(Resource resource) {
+        var dto = new ModelVersionInfo();
+        dto.setLabel(MapperUtils.localizedPropertyToMap(resource, RDFS.label));
+        dto.setVersionIRI(MapperUtils.propertyToString(resource, OWL2.versionIRI));
+        var versionInfo = MapperUtils.arrayPropertyToList(resource, OWL.versionInfo);
+        versionInfo.forEach(ver -> {
+            if(Arrays.stream(Status.values()).map(Status::name).anyMatch(ver::equals)){
+                dto.setStatus(Status.valueOf(ver));
+            }else{
+                dto.setVersion(ver);
+            }
+        });
+        return dto;
+    }
 }

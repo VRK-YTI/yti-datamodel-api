@@ -1,9 +1,6 @@
 package fi.vm.yti.datamodel.api.v2.endpoint;
 
-import fi.vm.yti.datamodel.api.v2.dto.DataModelDTO;
-import fi.vm.yti.datamodel.api.v2.dto.DataModelInfoDTO;
-import fi.vm.yti.datamodel.api.v2.dto.ModelType;
-import fi.vm.yti.datamodel.api.v2.dto.Status;
+import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.ApiError;
 import fi.vm.yti.datamodel.api.v2.service.DataModelService;
 import fi.vm.yti.datamodel.api.v2.validator.ValidDatamodel;
@@ -19,6 +16,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URISyntaxException;
+import java.util.Collection;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
@@ -120,6 +118,12 @@ public class DataModelController {
         dataModelService.delete(prefix);
     }
 
+    @Operation(summary = "Create a release of a model")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Release created successfully"),
+            @ApiResponse(responseCode = "401", description = "Current user does not have rights for this model"),
+            @ApiResponse(responseCode = "404", description = "Data model was not found", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ApiError.class))}),
+    })
     @PostMapping(value = "/{prefix}/release")
     public ResponseEntity<String> createRelease(@PathVariable @Parameter(description = "Data model prefix") String prefix,
                                                 @RequestParam @Parameter(description = "Semantic version") String version,
@@ -127,4 +131,16 @@ public class DataModelController {
         var uri = dataModelService.createRelease(prefix, version, status);
         return ResponseEntity.created(uri).build();
     }
+
+    @Operation(summary = "Get version information of a model")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Prior versions found"),
+    })
+    @GetMapping(value = "/{prefix}/versions")
+    public ResponseEntity<Collection<ModelVersionInfo>> getPriorVersions(@PathVariable @Parameter(description = "Data model prefix") String prefix,
+                                                                         @RequestParam(required = false) @Parameter(description = "Semantic version") String version) {
+        return ResponseEntity.ok(dataModelService.getPriorVersions(prefix, version));
+    }
+
+
 }

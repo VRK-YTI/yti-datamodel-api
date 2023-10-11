@@ -2,10 +2,7 @@ package fi.vm.yti.datamodel.api.v2.service;
 
 import fi.vm.yti.datamodel.api.mapper.MapperTestUtils;
 import fi.vm.yti.datamodel.api.security.AuthorizationManager;
-import fi.vm.yti.datamodel.api.v2.dto.DataModelDTO;
-import fi.vm.yti.datamodel.api.v2.dto.ExternalNamespaceDTO;
-import fi.vm.yti.datamodel.api.v2.dto.ModelType;
-import fi.vm.yti.datamodel.api.v2.dto.Status;
+import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.endpoint.EndpointUtils;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
@@ -15,8 +12,10 @@ import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import fi.vm.yti.security.AuthenticatedUserProvider;
 import fi.vm.yti.security.YtiUser;
+import org.apache.jena.query.Query;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.vocabulary.OWL;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -270,6 +269,34 @@ class DataModelServiceTest {
 
         var error = assertThrows(MappingError.class ,() -> dataModelService.createRelease("test", "1.0.1", status));
         assertEquals("Error during mapping: Status has to be SUGGESTED or VALID", error.getMessage());
+    }
+
+    @Test
+    void testGetPriorVersions(){
+        var model = MapperTestUtils.getModelFromFile("/models/test_datamodel_prior_versions.ttl");
+        when(coreRepository.queryConstruct(any(Query.class))).thenReturn(model);
+        when(modelMapper.mapModelVersionInfo(any(Resource.class))).thenReturn(mock(ModelVersionInfo.class));
+        var result = dataModelService.getPriorVersions("test", null);
+
+        verify(coreRepository).queryConstruct(any(Query.class));
+        verify(modelMapper, times(2)).mapModelVersionInfo(any(Resource.class));
+        assertEquals(2, result.size());
+    }
+
+    @Test
+    void testGetPriorVersionsWithVersion(){
+        var model = MapperTestUtils.getModelFromFile("/models/test_datamodel_prior_versions.ttl");
+        var mockVersionInfo = new ModelVersionInfo();
+        mockVersionInfo.setVersion("1.0.2");
+        mockVersionInfo.setStatus(Status.VALID);
+        mockVersionInfo.setVersionIRI("http://uri.suomi.fi/datamodel/ns/test/1.0.2");
+        when(modelMapper.mapModelVersionInfo(any(Resource.class))).thenReturn(mockVersionInfo);
+        when(coreRepository.queryConstruct(any(Query.class))).thenReturn(model);
+        var result = dataModelService.getPriorVersions("test", "1.0.1");
+
+        verify(coreRepository).queryConstruct(any(Query.class));
+        verify(modelMapper, times(2)).mapModelVersionInfo(any(Resource.class));
+        assertTrue(result.isEmpty());
     }
 
 

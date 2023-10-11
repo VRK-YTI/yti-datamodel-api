@@ -424,4 +424,14 @@ class DataModelControllerTest {
         verify(dataModelService).createRelease("test", "1.0.1", Status.VALID);
         verifyNoMoreInteractions(dataModelService);
     }
+
+    @Test
+    void shouldGetPriorVersions() throws Exception {
+        mvc.perform(get("/v2/model/test/versions")
+                        .param("version","1.0.1"))
+                .andExpect(status().isOk());
+
+        verify(dataModelService).getPriorVersions("test", "1.0.1");
+        verifyNoMoreInteractions(dataModelService);
+    }
 }
