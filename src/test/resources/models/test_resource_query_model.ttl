@@ -14,3 +14,6 @@
         rdfs:range           <http://uri.suomi.fi/datamodel/ns/testkirj/NewNewId> ;
         dcterms:identifier   "test"^^xsd:NCName ;
         rdfs:isDefinedBy     <http://uri.suomi.fi/datamodel/ns/test> .
+
+<http://uri.suomi.fi/datamodel/ns/test>
+        owl:versionIRI       <http://uri.suomi.fi/datamodel/ns/test/1.0.0> .
