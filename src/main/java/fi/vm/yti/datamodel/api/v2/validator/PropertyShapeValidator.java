@@ -61,21 +61,15 @@ public class PropertyShapeValidator extends BaseValidator implements ConstraintV
             addConstraintViolation(context, ValidationConstants.MSG_VALUE_MISSING, "path");
         }
 
-        if (path != null && !path.isBlank()) {
-            var checkImports = !path.startsWith(ModelConstants.SUOMI_FI_NAMESPACE);
-            if (!resourceService.checkIfResourceIsOneOfTypes(path, List.of(OWL.ObjectProperty, OWL.DatatypeProperty), checkImports)) {
-                addConstraintViolation(context, "not-property-or-doesnt-exist", "path");
-            }
+        if (path != null && !path.isBlank() && !resourceService.checkIfResourceIsOneOfTypes(path, List.of(OWL.ObjectProperty, OWL.DatatypeProperty))) {
+            addConstraintViolation(context, "not-property-or-doesnt-exist", "path");
         }
     }
 
     private void checkClassType(ConstraintValidatorContext context, AssociationRestriction dto) {
         var classType = dto.getClassType();
-        if (classType != null) {
-            var checkImports = !classType.startsWith(ModelConstants.SUOMI_FI_NAMESPACE);
-            if(!resourceService.checkIfResourceIsOneOfTypes(classType, List.of(RDFS.Class, OWL.Class), checkImports)){
-                addConstraintViolation(context, "not-class-or-doesnt-exist", "path");
-            }
+        if (classType != null && !resourceService.checkIfResourceIsOneOfTypes(classType, List.of(RDFS.Class, OWL.Class))) {
+            addConstraintViolation(context, "not-class-or-doesnt-exist", "path");
         }
     }
 

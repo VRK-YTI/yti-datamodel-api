@@ -2,7 +2,6 @@ package fi.vm.yti.datamodel.api.v2.endpoint;
 
 import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.ApiError;
-import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexResource;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexResourceInfo;
 import fi.vm.yti.datamodel.api.v2.service.ClassService;
 import fi.vm.yti.datamodel.api.v2.validator.ValidClass;
@@ -219,13 +218,6 @@ public class ClassController {
     @GetMapping(value = "/nodeshapes", produces = APPLICATION_JSON_VALUE)
     public Collection<IndexResourceInfo> getNodeShapes(@RequestParam @Parameter(description = "Target class") String targetClass) throws IOException {
         return classService.getNodeShapes(targetClass);
-    }
-
-    @Operation(summary = "Get all node shapes properties based on sh:node reference")
-    @ApiResponse(responseCode = "200", description = "List of node shape's properties fetched successfully")
-    @GetMapping(value = "/nodeshape/properties", produces = APPLICATION_JSON_VALUE)
-    public Collection<IndexResource> getNodeShapeProperties(@RequestParam @Parameter(description = "Node shape URI") String nodeUri) throws IOException {
-        return classService.getNodeShapeProperties(nodeUri);
     }
 
     @Operation(summary = "Toggles deactivation of a single property shape")

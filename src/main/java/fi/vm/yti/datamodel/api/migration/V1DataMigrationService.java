@@ -157,8 +157,8 @@ public class V1DataMigrationService {
                     targetRes = tempResource;
 
                 } else {
-                    // reference to external resource
-                    targetRes = resourceService.findResources(Set.of(path)).getResource(path);
+                    // reference to external resource, no need to specify namespaces
+                    targetRes = resourceService.findResources(Set.of(path), Set.of()).getResource(path);
                 }
 
                 LOG.info("add restriction {} to class {}", targetRes.getURI(), classResource.getURI());

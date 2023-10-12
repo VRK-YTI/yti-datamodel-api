@@ -79,11 +79,8 @@ public class ResourceValidator extends BaseValidator implements ConstraintValida
 
     private void checkDomain(ConstraintValidatorContext context, ResourceDTO resourceDTO){
         var domain = resourceDTO.getDomain();
-        if(domain != null && !domain.isBlank()){
-            var checkImports = !domain.startsWith(ModelConstants.SUOMI_FI_NAMESPACE);
-            if(!resourceService.checkIfResourceIsOneOfTypes(domain, List.of(RDFS.Class, OWL.Class), checkImports)){
-                addConstraintViolation(context, "not-class-or-doesnt-exist", "domain");
-            }
+        if(domain != null && !domain.isBlank() && !resourceService.checkIfResourceIsOneOfTypes(domain, List.of(RDFS.Class, OWL.Class))){
+            addConstraintViolation(context, "not-class-or-doesnt-exist", "domain");
         }
     }
 
@@ -91,8 +88,7 @@ public class ResourceValidator extends BaseValidator implements ConstraintValida
         var range = resourceDTO.getRange();
         if(range != null && !range.isBlank()){
             if(resourceType.equals(ResourceType.ASSOCIATION)){
-                var checkImports = !range.startsWith(ModelConstants.SUOMI_FI_NAMESPACE);
-                if(!resourceService.checkIfResourceIsOneOfTypes(range, List.of(RDFS.Class, OWL.Class), checkImports)){
+                if(!resourceService.checkIfResourceIsOneOfTypes(range, List.of(RDFS.Class, OWL.Class))){
                     addConstraintViolation(context, "not-class-or-doesnt-exist", "range");
                 }
             }else{

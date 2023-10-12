@@ -285,7 +285,7 @@ class ClassMapperTest {
     }
 
     @Test
-    void testAddDomainAndRangeToClassDTO(){
+    void testAddAttributeAndAssociationRestrictionsToClassDTO(){
         var m = MapperTestUtils.getModelFromFile("/models/test_resource_query_model.ttl");
 
         var dto = new ClassInfoDTO();
@@ -299,6 +299,7 @@ class ClassMapperTest {
         assertEquals("test", attribute.getIdentifier());
         assertEquals("http://uri.suomi.fi/datamodel/ns/test/rangetest2", attribute.getUri());
         assertEquals("test", attribute.getModelId());
+        assertEquals("1.0.0", attribute.getVersion());
     }
 
     @Test

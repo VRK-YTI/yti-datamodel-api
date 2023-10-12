@@ -77,7 +77,7 @@ class VisualizationServiceTest {
 
         when(coreRepository.fetch(anyString())).thenReturn(model);
         when(coreRepository.fetch(ModelConstants.MODEL_POSITIONS_NAMESPACE + "visuprof")).thenReturn(positionModel);
-        when(resourceService.findResources(anySet())).thenReturn(externalPropertiesModel);
+        when(resourceService.findResources(anySet(), anySet())).thenReturn(externalPropertiesModel);
 
         var visualizationData = visualizationService.getVisualizationData("visuprof", null);
 

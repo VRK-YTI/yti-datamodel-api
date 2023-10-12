@@ -17,7 +17,7 @@
         dcterms:isPartOf                <http://urn.fi/URN:NBN:fi:au:ptvl:v1105> ;
         dcterms:language                "fi" ;
         owl:imports                     <http://uri.suomi.fi/datamodel/ns/int> ;
-        dcterms:requires                <https://www.example.com/ns/ext>, <http://uri.suomi.fi/codelist/test/testcodelist> ;
+        dcterms:requires                <https://www.example.com/ns/ext>, <http://uri.suomi.fi/codelist/test/testcodelist> , <http://uri.suomi.fi/datamodel/ns/test_lib/1.0.0> ;
         dcterms:modified                "2023-01-03T12:44:45.799Z"^^xsd:dateTime ;
         dcap:preferredXMLNamespaceName  "http://uri.suomi.fi/datamodel/ns/test" ;
         dcap:preferredXMLNamespacePrefix

@@ -86,7 +86,7 @@ public class VisualizationService {
             }
 
             if (!externalPropertyURIs.isEmpty()) {
-                var externalResources = resourceService.findResources(externalPropertyURIs);
+                var externalResources = resourceService.findResources(externalPropertyURIs, namespaces.keySet());
                 externalPropertyURIs.forEach(uri -> VisualizationMapper
                         .mapResource(classDTO, externalResources.getResource(uri), model, namespaces));
             }

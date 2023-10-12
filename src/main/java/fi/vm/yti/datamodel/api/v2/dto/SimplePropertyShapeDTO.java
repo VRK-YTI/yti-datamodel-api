@@ -5,6 +5,7 @@ import java.util.Map;
 public class SimplePropertyShapeDTO {
     private String identifier;
     private String uri;
+    private String version;
     private String modelId;
     private Map<String, String> label;
     private boolean deactivated;
@@ -56,5 +57,13 @@ public class SimplePropertyShapeDTO {
 
     public void setFromShNode(boolean fromShNode) {
         this.fromShNode = fromShNode;
+    }
+
+    public String getVersion() {
+        return version;
+    }
+
+    public void setVersion(String version) {
+        this.version = version;
     }
 }

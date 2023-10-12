@@ -9,14 +9,14 @@ import fi.vm.yti.datamodel.api.v2.mapper.ResourceMapper;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import fi.vm.yti.datamodel.api.v2.repository.ImportsRepository;
+import fi.vm.yti.datamodel.api.v2.utils.DataModelUtils;
+import fi.vm.yti.datamodel.api.v2.utils.SparqlUtils;
 import fi.vm.yti.security.AuthenticatedUserProvider;
 import org.apache.jena.arq.querybuilder.AskBuilder;
 import org.apache.jena.arq.querybuilder.ConstructBuilder;
 import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.rdf.model.*;
-import org.apache.jena.vocabulary.DCTerms;
-import org.apache.jena.vocabulary.RDF;
-import org.apache.jena.vocabulary.RDFS;
+import org.apache.jena.vocabulary.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.topbraid.shacl.vocabulary.SH;
@@ -77,6 +77,7 @@ public class ResourceService {
         var orgModel = coreRepository.getOrganizations();
         var hasRightToModel = authorizationManager.hasRightToModel(prefix, model);
         var modelResource = model.getResource(graphUri);
+        var includedNamespaces = DataModelUtils.getInternalReferenceModels(versionUri, modelResource);
 
         ResourceInfoBaseDTO dto;
         if (MapperUtils.isLibrary(modelResource)) {
@@ -87,7 +88,7 @@ public class ResourceService {
             throw new MappingError("Invalid model");
         }
 
-        MapperUtils.addLabelsToURIs(dto, mapUriLabels());
+        MapperUtils.addLabelsToURIs(dto, mapUriLabels(includedNamespaces));
         terminologyService.mapConcept().accept(dto);
         return dto;
     }
@@ -221,17 +222,22 @@ public class ResourceService {
      * Check if resource uri is one of given types
      * @param resourceUri Resource uri
      * @param types List of types to check
-     * @param checkImports Should imports be checked instead of core
      * @return true if resource is one of types
      */
-    public boolean checkIfResourceIsOneOfTypes(String resourceUri, List<Resource> types, boolean checkImports) {
-        var askBuilder  =new AskBuilder()
-                .addWhere(NodeFactory.createURI(resourceUri), RDF.type, "?type")
-                .addValueVar("?type", types.toArray());
+    public boolean checkIfResourceIsOneOfTypes(String resourceUri, List<Resource> types) {
+        var checkImports = !resourceUri.startsWith(ModelConstants.SUOMI_FI_NAMESPACE);
 
-        if(checkImports){
+        var uri = NodeFactory.createURI(resourceUri);
+        var typeVar = "?type";
+        var askBuilder = new AskBuilder()
+                .addValueVar(typeVar, types.toArray());
+
+        if (checkImports) {
+            askBuilder.addWhere(uri, RDF.type, typeVar);
             return importsRepository.queryAsk(askBuilder.build());
-        }else {
+        } else {
+            askBuilder.addWhere(NodeFactory.createURI(DataModelUtils.removeVersionFromURI(resourceUri)), RDF.type, typeVar);
+            askBuilder.from(DataModelUtils.removeTrailingSlash(uri.getNameSpace()));
             return coreRepository.queryAsk(askBuilder.build());
         }
     }
@@ -246,23 +252,31 @@ public class ResourceService {
         return !coreRepository.queryAsk(askBuilder.build());
     }
 
-    public Model findResources(Set<String> resourceURIs) {
+    public Model findResources(Set<String> resourceURIs, Set<String> graphsIncluded) {
         if (resourceURIs == null || resourceURIs.isEmpty()) {
             return ModelFactory.createDefaultModel();
         }
         var coreBuilder = new ConstructBuilder()
                 .addPrefixes(ModelConstants.PREFIXES);
+        SparqlUtils.addConstructOptional("?graph", coreBuilder, OWL2.versionIRI, "?versionIRI");
+        graphsIncluded.forEach(coreBuilder::from);
+
         var importsBuilder = new ConstructBuilder()
                 .addPrefixes(ModelConstants.PREFIXES);
 
         // TODO: resource type specific list of properties?
         var predicates = List.of(RDFS.isDefinedBy, DCTerms.identifier, RDF.type, RDFS.label,
-                RDFS.range, DCTerms.subject, SH.path, SH.datatype, SH.minCount, SH.maxCount);
+                RDFS.range, DCTerms.subject, SH.path, SH.datatype, SH.minCount, SH.maxCount, SH.property);
 
         var iterator = resourceURIs.iterator();
         var count = 0;
         while (iterator.hasNext()) {
             String uri = iterator.next();
+
+            // fetch resources without version number
+            if (uri.startsWith(ModelConstants.SUOMI_FI_NAMESPACE)) {
+                uri = DataModelUtils.removeVersionFromURI(uri);
+            }
             var resource = ResourceFactory.createResource(uri);
             for (var pred : predicates) {
                 var obj = "?" + pred.getLocalName() + count;
@@ -284,7 +298,7 @@ public class ResourceService {
         return resultModel;
     }
 
-    public Consumer<Set<UriDTO>> mapUriLabels() {
+    public Consumer<Set<UriDTO>> mapUriLabels(Set<String> includedNamespaces) {
 
         return (var uriDtos) -> {
             var uris = uriDtos.stream()
@@ -296,7 +310,7 @@ public class ResourceService {
                 return;
             }
 
-            var model = findResources(uris);
+            var model = findResources(uris, includedNamespaces);
 
             uriDtos.forEach(u -> {
                 if (u != null && u.getLabel() == null) {
