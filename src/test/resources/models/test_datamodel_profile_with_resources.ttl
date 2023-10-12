@@ -8,6 +8,7 @@
 @prefix rdf:      <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix skos:     <http://www.w3.org/2004/02/skos/core#> .
 @prefix sh:      <http://www.w3.org/ns/shacl#>
+@prefix suomi-meta: <http://uri.suomi.fi/datamodel/ns/suomi-meta/> .
 
 
 <http://uri.suomi.fi/datamodel/ns/test>
@@ -27,7 +28,7 @@ dcap:preferredXMLNamespaceName  "http://uri.suomi.fi/datamodel/ns/test" ;
 dcap:preferredXMLNamespacePrefix
 "test" ;
 iow:contentModified             "2023-01-03T12:44:45.799Z"^^xsd:dateTime ;
-owl:versionInfo                 "VALID" .
+suomi-meta:publicationStatus                 "VALID" .
 
 <https://www.example.com/ns/ext>
 dcterms:type                        rdfs:Resource ;
@@ -41,7 +42,7 @@ test:TestClass  rdf:type     sh:NodeShape ;
         dcterms:identifier   "TestClass"^^xsd:NCName ;
         dcterms:modified     "2023-02-03T11:46:36.404Z"^^xsd:dateTime ;
         dcterms:subject      <http://uri.suomi.fi/terminology/test/test1> ;
-        owl:versionInfo      "VALID" ;
+        suomi-meta:publicationStatus      "VALID" ;
         skos:editorialNote   "comment visible for admin" ;
         rdfs:comment         "test technical description fi"@fi, "test technical description en"@en ;
         iow:creator          "2a5c075f-0d0e-4688-90e0-29af1eebbf6d" ;
@@ -57,7 +58,7 @@ test:TestAttributeRestriction  rdf:type  sh:PropertyShape ;
         dcterms:created      "2023-02-03T11:46:36.404Z"^^xsd:dateTime ;
         dcterms:modified     "2023-02-03T11:46:36.404Z"^^xsd:dateTime ;
         rdfs:label           "test property shape"@fi ;
-        owl:versionInfo      "DRAFT" ;
+        suomi-meta:publicationStatus      "DRAFT" ;
         sh:defaultValue      "foo" ;
         sh:hasValue          "hasValue" ;
         sh:datatype          "xsd:integer" ;
@@ -81,7 +82,7 @@ test:TestAssociationRestriction  rdf:type  sh:PropertyShape ;
         dcterms:created      "2023-02-03T11:46:36.404Z"^^xsd:dateTime ;
         dcterms:modified     "2023-02-03T11:46:36.404Z"^^xsd:dateTime ;
         rdfs:label           "test property shape"@fi ;
-        owl:versionInfo      "DRAFT" ;
+        suomi-meta:publicationStatus      "DRAFT" ;
         sh:maxCount          10 ;
         sh:minCount          1 ;
         sh:path              <http://uri.suomi.fi/datamodel/ns/ytm/some-attribute> ;

@@ -4,10 +4,13 @@ import fi.vm.yti.datamodel.api.v2.dto.ConceptDTO;
 import fi.vm.yti.datamodel.api.v2.dto.Status;
 import fi.vm.yti.datamodel.api.v2.dto.TerminologyDTO;
 import fi.vm.yti.datamodel.api.v2.dto.TerminologyNodeDTO;
+import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.ResourceFactory;
-import org.apache.jena.vocabulary.*;
+import org.apache.jena.vocabulary.RDF;
+import org.apache.jena.vocabulary.RDFS;
+import org.apache.jena.vocabulary.SKOS;
 
 import java.util.List;
 
@@ -37,11 +40,11 @@ public class TerminologyMapper {
         var resource = terminologyModel.getResource(conceptURI);
         resource.removeAll(SKOS.definition);
         resource.removeAll(SKOS.prefLabel);
-        resource.removeAll(OWL.versionInfo);
+        resource.removeAll(SuomiMeta.publicationStatus);
 
         resource.addProperty(RDF.type, SKOS.Concept);
         resource.addProperty(SKOS.inScheme, ResourceFactory.createResource(terminologyURI));
-        resource.addProperty(OWL.versionInfo,
+        resource.addProperty(SuomiMeta.publicationStatus,
                 getProperty(nodeDTO.getProperties().getStatus(), Status.DRAFT.name()));
 
         for (var def : nodeDTO.getProperties().getDefinition()) {
@@ -71,7 +74,7 @@ public class TerminologyMapper {
 
         var status = Status.DRAFT;
         try {
-            status = Status.valueOf(MapperUtils.propertyToString(resource, OWL.versionInfo));
+            status = Status.valueOf(MapperUtils.propertyToString(resource, SuomiMeta.publicationStatus));
         } catch (Exception e) {
             // use default status in case of status is missing or invalid
         }

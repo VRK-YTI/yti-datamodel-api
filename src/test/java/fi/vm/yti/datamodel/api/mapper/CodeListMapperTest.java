@@ -3,7 +3,8 @@ package fi.vm.yti.datamodel.api.mapper;
 import fi.vm.yti.datamodel.api.v2.dto.CodeListDTO;
 import fi.vm.yti.datamodel.api.v2.dto.Status;
 import fi.vm.yti.datamodel.api.v2.mapper.CodeListMapper;
-import org.apache.jena.vocabulary.OWL;
+import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
+import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
 import org.apache.jena.vocabulary.RDFS;
 import org.junit.jupiter.api.Test;
 
@@ -26,7 +27,7 @@ class CodeListMapperTest {
 
         assertEquals(graph, resource.getURI());
         assertEquals("Test@en", resource.getProperty(RDFS.label).getObject().toString());
-        assertEquals("DRAFT", resource.getProperty(OWL.versionInfo).getObject().toString());
+        assertEquals(Status.DRAFT, Status.valueOf(MapperUtils.propertyToString(resource, SuomiMeta.publicationStatus)));
     }
 
     @Test

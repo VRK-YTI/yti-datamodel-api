@@ -5,6 +5,7 @@ import fi.vm.yti.datamodel.api.v2.endpoint.EndpointUtils;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
 import fi.vm.yti.datamodel.api.v2.mapper.ClassMapper;
 import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
+import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.vocabulary.*;
@@ -58,7 +59,7 @@ class NodeShapeMapperTest {
         assertEquals("fi", classResource.getProperty(RDFS.label).getLiteral().getLanguage());
 
         assertEquals(SH.NodeShape, classResource.getProperty(RDF.type).getResource());
-        assertEquals(Status.DRAFT, Status.valueOf(classResource.getProperty(OWL.versionInfo).getObject().toString()));
+        assertEquals(Status.DRAFT, Status.valueOf(MapperUtils.propertyToString(classResource, SuomiMeta.publicationStatus)));
         assertEquals("http://uri.suomi.fi/datamodel/ns/test", classResource.getProperty(RDFS.isDefinedBy).getObject().toString());
 
         assertEquals(XSDDatatype.XSDNCName, classResource.getProperty(DCTerms.identifier).getLiteral().getDatatype());
@@ -86,7 +87,7 @@ class NodeShapeMapperTest {
 
         assertEquals("http://uri.suomi.fi/datamodel/ns/test_lib/1.0.0/attribute-1",
                 propertyShapeAttribute.getProperty(SH.path).getObject().toString());
-        assertEquals(Status.DRAFT.name(), propertyShapeAttribute.getProperty(OWL.versionInfo).getObject().toString());
+        assertEquals(Status.DRAFT, Status.valueOf(MapperUtils.propertyToString(propertyShapeAttribute, SuomiMeta.publicationStatus)));
         assertEquals("Attribute attribute-1", MapperUtils.localizedPropertyToMap(propertyShapeAttribute, RDFS.label).get("fi"));
     }
 
@@ -156,7 +157,7 @@ class NodeShapeMapperTest {
         assertEquals("fi", resource.getProperty(RDFS.label).getLiteral().getLanguage());
         assertEquals("TestClass", resource.getProperty(DCTerms.identifier).getLiteral().getString());
         assertEquals("http://uri.suomi.fi/terminology/test/test1", resource.getProperty(DCTerms.subject).getObject().toString());
-        assertEquals(Status.VALID.name(), resource.getProperty(OWL.versionInfo).getObject().toString());
+        assertEquals(Status.VALID, Status.valueOf(MapperUtils.propertyToString(resource, SuomiMeta.publicationStatus)));
         assertEquals("comment visible for admin", resource.getProperty(SKOS.editorialNote).getObject().toString());
         assertEquals(2, resource.listProperties(RDFS.comment).toList().size());
         assertEquals("http://uri.suomi.fi/datamodel/ns/target/Class", resource.getProperty(SH.targetClass).getObject().toString());
@@ -169,7 +170,7 @@ class NodeShapeMapperTest {
         assertEquals("fi", resource.getProperty(RDFS.label).getLiteral().getLanguage());
         assertEquals("TestClass", resource.getProperty(DCTerms.identifier).getLiteral().getString());
         assertEquals("http://uri.suomi.fi/terminology/qwe", resource.getProperty(DCTerms.subject).getObject().toString());
-        assertEquals(Status.RETIRED.name(), resource.getProperty(OWL.versionInfo).getObject().toString());
+        assertEquals(Status.RETIRED, Status.valueOf(MapperUtils.propertyToString(resource, SuomiMeta.publicationStatus)));
         assertEquals("new editorial note", resource.getProperty(SKOS.editorialNote).getObject().toString());
         assertEquals(1, resource.listProperties(RDFS.comment).toList().size());
         assertEquals("new note", resource.getProperty(RDFS.comment).getLiteral().getString());

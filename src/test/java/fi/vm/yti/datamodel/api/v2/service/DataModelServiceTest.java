@@ -321,7 +321,6 @@ class DataModelServiceTest {
         if(!updateModel){
             dataModelDTO.setPrefix("test");
         }
-        dataModelDTO.setStatus(Status.DRAFT);
         dataModelDTO.setTerminologies(Set.of("http://uri.suomi.fi/terminology/test"));
         return dataModelDTO;
     }

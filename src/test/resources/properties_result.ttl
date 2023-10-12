@@ -7,20 +7,21 @@
 @prefix sh:      <http://www.w3.org/ns/shacl#> .
 @prefix skos:    <http://www.w3.org/2004/02/skos/core#> .
 @prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+@prefix suomi-meta: <http://uri.suomi.fi/datamodel/ns/suomi-meta/> .
 
 <http://uri.suomi.fi/datamodel/ns/test_lib/attribute-1>
         rdf:type            owl:DatatypeProperty ;
         rdfs:isDefinedBy    <http://uri.suomi.fi/datamodel/ns/test_lib> ;
         rdfs:label          "Attribute attribute-1"@fi ;
         dcterms:identifier  "attribute-1"^^xsd:NCName ;
-        owl:versionInfo     "VALID" .
+        suomi-meta:publicationStatus     "VALID" .
 
 <http://uri.suomi.fi/datamodel/ns/test_lib/association-1>
         rdf:type            owl:ObjectProperty ;
         rdfs:isDefinedBy    <http://uri.suomi.fi/datamodel/ns/test_lib> ;
         rdfs:label          "Association association-1"@fi ;
         dcterms:identifier  "attribute-1"^^xsd:NCName ;
-        owl:versionInfo     "VALID" .
+        suomi-meta:publicationStatus     "VALID" .
 
 <http://uri.suomi.fi/datamodel/ns/test_lib>
         owl:versionIRI       <http://uri.suomi.fi/datamodel/ns/test_lib/1.0.0> .
