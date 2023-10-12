@@ -6,6 +6,7 @@ import fi.vm.yti.datamodel.api.v2.service.DataModelService;
 import fi.vm.yti.datamodel.api.v2.validator.ExceptionHandlerAdvice;
 import fi.vm.yti.datamodel.api.v2.validator.ValidationConstants;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.vocabulary.SKOS;
 import org.junit.jupiter.api.BeforeEach;
@@ -27,6 +28,7 @@ import java.util.*;
 import java.util.stream.Stream;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -213,9 +215,6 @@ class DataModelControllerTest {
         if(!updateModel){
             dataModelDTO.setPrefix("test");
         }
-        if(updateModel) {
-            dataModelDTO.setStatus(Status.DRAFT);
-        }
         dataModelDTO.setTerminologies(Set.of("http://uri.suomi.fi/terminology/test"));
         var linkDTO = new LinkDTO();
         linkDTO.setName("test link");
@@ -233,10 +232,6 @@ class DataModelControllerTest {
         var args = new ArrayList<DataModelDTO>();
 
         var dataModelDTO = createDatamodelDTO(false);
-
-        dataModelDTO = createDatamodelDTO(false);
-        dataModelDTO.setStatus(null);
-        args.add(dataModelDTO);
 
         dataModelDTO = createDatamodelDTO(false);
         dataModelDTO.setPrefix("123");
@@ -433,5 +428,61 @@ class DataModelControllerTest {
 
         verify(dataModelService).getPriorVersions("test", "1.0.1");
         verifyNoMoreInteractions(dataModelService);
+    }
+
+    @Test
+    void shouldValidateAndUpdateVersionedModel() throws Exception {
+        var dto = new VersionedModelDTO();
+        dto.setDocumentation(Map.of("fi", "test"));
+        dto.setStatus(Status.DRAFT);
+
+        mvc.perform(put("/v2/model/test/version")
+                .contentType("application/json")
+                .content(EndpointUtils.convertObjectToJsonString(dto))
+                .param("version", "1.0.1"))
+                .andExpect(status().isNoContent());
+
+        verify(dataModelService).updateVersionedModel(eq("test"), eq("1.0.1"), any(VersionedModelDTO.class));
+    }
+
+    @ParameterizedTest
+    @MethodSource("provideInvalidUpdateVersionedModelDTO")
+    void shouldInvalidateUpdateVersionedModel(VersionedModelDTO dto, String[] expectedResult) throws Exception {
+        mvc.perform(put("/v2/model/test/version")
+                        .contentType("application/json")
+                        .content(EndpointUtils.convertObjectToJsonString(dto))
+                        .param("version", "1.0.1"))
+                .andExpect(status().isBadRequest())
+                .andExpect(
+                        (res) -> {
+                            var errors = res.getResolvedException() != null ?
+                                    res.getResolvedException().getMessage().split(", ") :
+                                    new String[]{};
+                            assertArrayEquals(
+                                    Arrays.stream(expectedResult).sorted().toArray(String[]::new),
+                                    Arrays.stream(errors).sorted().toArray(String[]::new));
+                        }
+                );
+    }
+
+    private static Stream<Arguments> provideInvalidUpdateVersionedModelDTO() {
+        var args = new ArrayList<Pair<VersionedModelDTO, String[]>>();
+
+        var dto = new VersionedModelDTO();
+        var expected = new String[]{"updateVersionedModel.dto.status: should-have-value"};
+        dto.setDocumentation(Map.of("fi", "test"));
+        //dont set status
+        args.add(Pair.of(dto, expected));
+
+        //documentation over character limit
+        dto = new VersionedModelDTO();
+        expected = new String[]{"updateVersionedModel.dto.documentation: value-over-character-limit.5000"};
+        dto.setDocumentation(Map.of("fi", RandomStringUtils.randomAlphanumeric(
+                ValidationConstants.TEXT_AREA_MAX_LENGTH + 1)));
+        dto.setStatus(Status.VALID);
+        args.add(Pair.of(dto, expected));
+
+        return args.stream().map((pair) ->
+                Arguments.of(pair.getLeft(), pair.getRight()));
     }
 }

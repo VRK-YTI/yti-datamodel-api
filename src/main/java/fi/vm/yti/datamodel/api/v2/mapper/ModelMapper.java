@@ -113,11 +113,6 @@ public class ModelMapper {
 
         var langs = MapperUtils.arrayPropertyToSet(modelResource, DCTerms.language);
 
-
-        //TODO this will change that current model cannot be changed unless they are published and old ones have restricted choices
-        MapperUtils.updateStringProperty(modelResource, OWL.versionInfo, dataModelDTO.getStatus().name());
-
-
         MapperUtils.updateLocalizedProperty(langs, dataModelDTO.getLabel(), modelResource, RDFS.label, model);
         MapperUtils.updateLocalizedProperty(langs, dataModelDTO.getDescription(), modelResource, RDFS.comment, model);
         MapperUtils.updateStringProperty(modelResource, Iow.contact, dataModelDTO.getContact());
@@ -487,5 +482,33 @@ public class ModelMapper {
             }
         });
         return dto;
+    }
+
+    public void mapUpdateVersionedModel(Model model, String graphUri, String version, VersionedModelDTO dto, YtiUser user) {
+        var resource = model.getResource(graphUri);
+        var status = MapperUtils.arrayPropertyToList(resource, OWL.versionInfo).stream()
+                .filter(ver -> Arrays.stream(Status.values())
+                        .map(Status::name)
+                        .anyMatch(ver::equals))
+                .map(Status::valueOf)
+                .findFirst()
+                .orElse(null);
+
+        var langs = MapperUtils.arrayPropertyToSet(resource, DCTerms.language);
+
+
+        if(status.equals(Status.VALID) && !List.of(Status.VALID, Status.RETIRED, Status.SUPERSEDED).contains(dto.getStatus())){
+            throw new MappingError("Cannot change status from VALID to " + dto.getStatus());
+        }else if(status.equals(Status.SUGGESTED) && !List.of(Status.SUGGESTED, Status.VALID, Status.RETIRED, Status.SUPERSEDED).contains(dto.getStatus())) {
+            throw new MappingError("Cannot change status from SUGGESTED to " + dto.getStatus());
+        }
+
+        //TODO change this when moving status from owl:versionInfo
+        MapperUtils.updateStringProperty(resource, OWL.versionInfo, dto.getStatus().name());
+        resource.addProperty(OWL.versionInfo, version);
+        MapperUtils.updateLocalizedProperty(langs, dto.getDocumentation(), resource, Iow.documentation, model);
+
+        MapperUtils.addUpdateMetadata(resource, user);
+
     }
 }

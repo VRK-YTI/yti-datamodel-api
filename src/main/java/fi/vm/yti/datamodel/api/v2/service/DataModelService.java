@@ -245,6 +245,7 @@ public class DataModelService {
 
 
     public List<ModelVersionInfo> getPriorVersions(String prefix, String version){
+
         var modelUri = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
         //Would be nice to do traverse the graphs using SPARQL starting from the correct versionIRI but currently that traversing named graphs is not supported
         var constructBuilder = new ConstructBuilder()
@@ -269,5 +270,20 @@ public class DataModelService {
         });
         versions.sort((a, b) -> -SemVer.compareSemVers(a.getVersion(), b.getVersion()));
         return versions;
+    }
+
+    public void updateVersionedModel(String prefix, String version, VersionedModelDTO dto) {
+        var graphUri = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
+        var versionUri = graphUri + ModelConstants.RESOURCE_SEPARATOR + version;
+
+        var model = coreRepository.fetch(versionUri);
+        check(authorizationManager.hasRightToModel(prefix, model));
+
+        mapper.mapUpdateVersionedModel(model, graphUri, version, dto, userProvider.getUser());
+
+        coreRepository.put(versionUri, model);
+
+        var indexModel = mapper.mapToIndexModel(graphUri, model);
+        openSearchIndexer.updateModelToIndex(indexModel);
     }
 }

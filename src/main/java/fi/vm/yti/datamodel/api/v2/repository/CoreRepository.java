@@ -23,7 +23,7 @@ import java.util.concurrent.TimeUnit;
 @Repository
 public class CoreRepository extends BaseRepository{
 
-    private Logger logger = LoggerFactory.getLogger(CoreRepository.class);
+    private final Logger logger = LoggerFactory.getLogger(CoreRepository.class);
 
     private final Cache<String, Model> modelCache;
 

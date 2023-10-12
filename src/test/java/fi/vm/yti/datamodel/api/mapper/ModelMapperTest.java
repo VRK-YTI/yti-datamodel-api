@@ -3,6 +3,7 @@ package fi.vm.yti.datamodel.api.mapper;
 
 import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.endpoint.EndpointUtils;
+import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
 import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.mapper.ModelMapper;
 import fi.vm.yti.datamodel.api.v2.repository.ConceptRepository;
@@ -91,7 +92,6 @@ class ModelMapperTest {
         dto.setDescription(Map.of(
                 "fi", "Test description fi",
                 "sv", "Test description sv"));
-        dto.setStatus(Status.DRAFT);
         dto.setGroups(Set.of("P11"));
         dto.setLanguages(Set.of("fi", "sv"));
         dto.setOrganizations(Set.of(organizationId));
@@ -197,7 +197,6 @@ class ModelMapperTest {
                 "fi", "new test label"));
         dto.setDescription(Map.of(
                 "fi", "new test description"));
-        dto.setStatus(Status.DRAFT);
         dto.setGroups(Set.of("P11"));
         dto.setLanguages(Set.of("fi", "sv"));
         dto.setOrganizations(Set.of(organizationId));
@@ -229,8 +228,6 @@ class ModelMapperTest {
 
         assertEquals(1, modelResource.listProperties(RDFS.comment).toList().size());
         assertEquals("test desc", modelResource.listProperties(RDFS.comment).next().getString());
-
-        assertEquals(Status.VALID, Status.valueOf(modelResource.getProperty(OWL.versionInfo).getString()));
 
         assertEquals(1, modelResource.listProperties(OWL.imports).toList().size());
         assertEquals("http://uri.suomi.fi/datamodel/ns/int", modelResource.listProperties(OWL.imports).next().getObject().toString());
@@ -264,8 +261,6 @@ class ModelMapperTest {
 
         assertEquals(1, modelResource.listProperties(RDFS.label).toList().size());
         assertEquals("new test label", modelResource.listProperties(RDFS.label, "fi").next().getString());
-
-        assertEquals(Status.DRAFT, Status.valueOf(modelResource.getProperty(OWL.versionInfo).getString()));
 
         requires = MapperUtils.arrayPropertyToList(modelResource, DCTerms.requires);
         assertEquals(2, requires.size());
@@ -304,7 +299,6 @@ class ModelMapperTest {
         YtiUser mockUser = EndpointUtils.mockUser;
 
         DataModelDTO dto = new DataModelDTO();
-        dto.setStatus(Status.DRAFT);
         dto.setCodeLists(Set.of("http://uri.suomi.fi/codelist/test/newcodelist"));
 
         Resource modelResource = m.getResource("http://uri.suomi.fi/datamodel/ns/test");
@@ -457,4 +451,30 @@ class ModelMapperTest {
         assertEquals("http://uri.suomi.fi/datamodel/ns/test/1.0.0", result.getVersionIRI());
         assertEquals(Status.VALID, result.getStatus());
     }
+
+    @Test
+    void mapUpdateVersionedModel() {
+        var m = MapperTestUtils.getModelFromFile("/models/test_datamodel_library_version.ttl");
+        var dto = new VersionedModelDTO();
+        dto.setStatus(Status.RETIRED);
+        dto.setDocumentation(Map.of("fi", "new documentation"));
+        mapper.mapUpdateVersionedModel(m, "http://uri.suomi.fi/datamodel/ns/test", "1.0.1", dto, EndpointUtils.mockUser);
+
+        var resource = m.getResource("http://uri.suomi.fi/datamodel/ns/test");
+        assertEquals("new documentation", MapperUtils.localizedPropertyToMap(resource, Iow.documentation).get("fi"));
+        assertEquals(Status.RETIRED, Status.valueOf(MapperUtils.propertyToString(resource, OWL.versionInfo)));
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = Status.class, names = {"VALID", "SUGGESTED", "RETIRED", "SUPERSEDED"}, mode = EnumSource.Mode.EXCLUDE)
+    void mapUpdateVersionedModelInvalidStatuses(Status status) {
+        var m = MapperTestUtils.getModelFromFile("/models/test_datamodel_library_version.ttl");
+        var dto = new VersionedModelDTO();
+        dto.setStatus(status);
+        dto.setDocumentation(Map.of("fi", "new documentation"));
+        var error = assertThrows(MappingError.class, () -> mapper.mapUpdateVersionedModel(m, "http://uri.suomi.fi/datamodel/ns/test", "1.0.1", dto, EndpointUtils.mockUser));
+        assertEquals("Error during mapping: Cannot change status from VALID to " + status.name(), error.getMessage());
+
+    }
+
 }

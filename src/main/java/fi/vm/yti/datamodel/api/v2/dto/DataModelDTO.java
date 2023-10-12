@@ -9,13 +9,11 @@ import java.util.UUID;
 public class DataModelDTO {
 
     private String prefix;
-    private Status status;
     private Map<String, String> label = Map.of();
     private Map<String, String> description = Map.of();
     private Set<String> languages = Set.of();
     private Set<UUID> organizations = Set.of();
     private Set<String> groups = Set.of();
-
     private Set<String> internalNamespaces = Set.of();
     private Set<ExternalNamespaceDTO> externalNamespaces = Set.of();
     private Set<String> terminologies = Set.of();
@@ -31,14 +29,6 @@ public class DataModelDTO {
 
     public void setPrefix(String prefix) {
         this.prefix = prefix;
-    }
-
-    public Status getStatus() {
-        return status;
-    }
-
-    public void setStatus(Status status) {
-        this.status = status;
     }
 
     public Map<String, String> getLabel() {

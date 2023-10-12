@@ -2,7 +2,6 @@ package fi.vm.yti.datamodel.api.v2.migration;
 
 import fi.vm.yti.datamodel.api.mapper.MapperTestUtils;
 import fi.vm.yti.datamodel.api.migration.V1DataMapper;
-import fi.vm.yti.datamodel.api.v2.dto.Status;
 import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDFS;
 import org.junit.jupiter.api.Test;
@@ -10,7 +9,8 @@ import org.junit.jupiter.api.Test;
 import java.util.Set;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class V1DataMapperTest {
 
@@ -28,7 +28,6 @@ public class V1DataMapperTest {
         assertEquals(Set.of("fi", "sv", "en"), result.getLanguages());
         assertEquals("P11", result.getGroups().iterator().next());
         assertEquals(UUID.fromString("7d3a3c00-5a6b-489b-a3ed-63bb58c26a63"), result.getOrganizations().iterator().next());
-        assertEquals(Status.DRAFT, result.getStatus());
         assertEquals("Sample description", result.getDescription().get("fi"));
         assertEquals(Set.of("http://uri.suomi.fi/terminology/rytj/", "http://uri.suomi.fi/terminology/geoinfsan/"), result.getTerminologies());
 

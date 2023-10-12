@@ -30,7 +30,6 @@ public class V1DataMapper {
         dto.setPrefix(MapperUtils.getLiteral(modelResource, DCAP.preferredXMLNamespacePrefix, String.class));
         dto.setLabel(MapperUtils.localizedPropertyToMap(modelResource, RDFS.label));
         dto.setDescription(MapperUtils.localizedPropertyToMap(modelResource, RDFS.comment));
-        dto.setStatus(Status.DRAFT);
 
         var groups = new HashSet<String>();
         MapperUtils.arrayPropertyToSet(modelResource, DCTerms.isPartOf)

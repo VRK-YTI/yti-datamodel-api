@@ -299,6 +299,24 @@ class DataModelServiceTest {
         assertTrue(result.isEmpty());
     }
 
+    @Test
+    void testUpdateVersionedDatamodel() {
+        when(authorizationManager.hasRightToModel(anyString(), any(Model.class))).thenReturn(true);
+        when(coreRepository.fetch(anyString())).thenReturn(ModelFactory.createDefaultModel());
+        when(userProvider.getUser()).thenReturn(EndpointUtils.mockUser);
+        when(modelMapper.mapToIndexModel(anyString(), any(Model.class))).thenReturn(new IndexModel());
+
+
+        dataModelService.updateVersionedModel("test", "1.0.1", new VersionedModelDTO());
+
+        verify(coreRepository).fetch(anyString());
+        verify(authorizationManager).hasRightToModel(anyString(), any(Model.class));
+        verify(modelMapper).mapUpdateVersionedModel(any(Model.class), anyString(), anyString(), any(VersionedModelDTO.class), any(YtiUser.class));
+        verify(coreRepository).put(anyString(), any(Model.class));
+        verify(modelMapper).mapToIndexModel(anyString(), any(Model.class));
+        verify(openSearchIndexer).updateModelToIndex(any(IndexModel.class));
+    }
+
 
     /**
      * Create Datamodel DTO for testing
@@ -321,7 +339,6 @@ class DataModelServiceTest {
         if(!updateModel){
             dataModelDTO.setPrefix("test");
         }
-        dataModelDTO.setStatus(Status.DRAFT);
         dataModelDTO.setTerminologies(Set.of("http://uri.suomi.fi/terminology/test"));
         return dataModelDTO;
     }

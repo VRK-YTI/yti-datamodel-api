@@ -4,6 +4,7 @@ import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.ApiError;
 import fi.vm.yti.datamodel.api.v2.service.DataModelService;
 import fi.vm.yti.datamodel.api.v2.validator.ValidDatamodel;
+import fi.vm.yti.datamodel.api.v2.validator.ValidVersionedDatamodel;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -140,6 +141,15 @@ public class DataModelController {
     public ResponseEntity<Collection<ModelVersionInfo>> getPriorVersions(@PathVariable @Parameter(description = "Data model prefix") String prefix,
                                                                          @RequestParam(required = false) @Parameter(description = "Semantic version") String version) {
         return ResponseEntity.ok(dataModelService.getPriorVersions(prefix, version));
+    }
+
+    @Operation(summary = "Update versioned model")
+    @PutMapping(value = "/{prefix}/version")
+    public ResponseEntity<Void> updateVersionedModel(@PathVariable @Parameter(description = "Data model prefix") String prefix,
+                                                     @RequestParam @Parameter(description = "Semantic version") String version,
+                                                     @ValidVersionedDatamodel @RequestBody VersionedModelDTO dto) {
+        dataModelService.updateVersionedModel(prefix, version, dto);
+        return ResponseEntity.noContent().build();
     }
 
 
