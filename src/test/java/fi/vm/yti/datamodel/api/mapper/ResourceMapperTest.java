@@ -731,6 +731,44 @@ class ResourceMapperTest {
         assertEquals(newRange, updated.get().asResource().getProperty(OWL.someValuesFrom).getObject().toString());
     }
 
+    @Test
+    void testMapReferenceResourceAndAddNamespace() {
+        var model = ModelFactory.createDefaultModel();
+        var modelURI = "http://uri.suomi.fi/datamodel/ns/test-library";
+        model.createResource(modelURI)
+                .addProperty(RDF.type, OWL.Ontology);
+
+        var attrDTO = new ResourceDTO();
+        attrDTO.setStatus(Status.DRAFT);
+        attrDTO.setIdentifier("attr-1");
+        attrDTO.setSubResourceOf(Set.of(ModelConstants.SUOMI_FI_NAMESPACE + "ns-int-1/sub"));
+        attrDTO.setEquivalentResource(Set.of(ModelConstants.SUOMI_FI_NAMESPACE + "ns-int-2/eq"));
+
+        ResourceMapper.mapToResource(modelURI, model, attrDTO, ResourceType.ATTRIBUTE, EndpointUtils.mockUser);
+
+        assertEquals(2, model.getResource(modelURI).listProperties(OWL.imports).toList().size());
+    }
+
+    @Test
+    void testMapReferencePropertyShapeAndAddNamespace() {
+        var model = ModelFactory.createDefaultModel();
+
+        var modelURI = "http://uri.suomi.fi/datamodel/ns/test-profile";
+
+        model.createResource(modelURI)
+                .addProperty(RDF.type, Iow.ApplicationProfile);
+
+        var propertyShape = new AssociationRestriction();
+        propertyShape.setStatus(Status.DRAFT);
+        propertyShape.setIdentifier("ps-1");
+        propertyShape.setPath(ModelConstants.SUOMI_FI_NAMESPACE + "/test_lib_2/path");
+        propertyShape.setClassType(ModelConstants.SUOMI_FI_NAMESPACE + "test_lib_2/class");
+
+        ResourceMapper.mapToPropertyShapeResource(modelURI, model, propertyShape, ResourceType.ASSOCIATION, EndpointUtils.mockUser);
+
+        assertEquals(2, model.getResource(modelURI).listProperties(DCTerms.requires).toList().size());
+    }
+
     private Model getOrgModel(){
         var model = ModelFactory.createDefaultModel();
               model.createResource("urn:uuid:7d3a3c00-5a6b-489b-a3ed-63bb58c26a63")

@@ -7,6 +7,7 @@ import fi.vm.yti.datamodel.api.v2.mapper.ClassMapper;
 import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
+import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.vocabulary.*;
 import org.junit.jupiter.api.Test;
@@ -273,6 +274,28 @@ class NodeShapeMapperTest {
         var properties = classResource.listProperties(SH.property).mapWith(p -> p.getObject().toString()).toList();
         assertEquals(1, properties.size());
         assertFalse(properties.contains(propertyURI));
+    }
+
+    @Test
+    void testMapReferenceResourceAndAddNamespace() {
+        var model = ModelFactory.createDefaultModel();
+        var modelURI = "http://uri.suomi.fi/datamodel/ns/test";
+
+        model.createResource(modelURI)
+                .addProperty(RDF.type, Iow.ApplicationProfile);
+
+        var dto = new NodeShapeDTO();
+        dto.setStatus(Status.DRAFT);
+        dto.setIdentifier("node-shape-1");
+        dto.setTargetNode(ModelConstants.SUOMI_FI_NAMESPACE + "ns-int-1/sub");
+        dto.setTargetClass(ModelConstants.SUOMI_FI_NAMESPACE + "ns-int-2/eq");
+
+        ClassMapper.createNodeShapeAndMapToModel(modelURI, model, dto, EndpointUtils.mockUser);
+
+        // should have namespaces ns-int-1 (application profile) ans ns-int-2 (library) added
+        var modelResource = model.getResource(modelURI);
+        assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "ns-int-1", modelResource.getProperty(OWL.imports).getObject().toString());
+        assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "ns-int-2", modelResource.getProperty(DCTerms.requires).getObject().toString());
     }
 
 }

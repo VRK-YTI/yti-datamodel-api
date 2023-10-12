@@ -6,6 +6,7 @@ import fi.vm.yti.datamodel.api.v2.mapper.ClassMapper;
 import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
+import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.vocabulary.*;
 import org.junit.jupiter.api.Test;
@@ -373,6 +374,37 @@ class ClassMapperTest {
         assertNull(getEqResource(classResource1));
         assertNull(getEqResource(classResource2));
         assertNotNull(classResource1.getProperty(OWL.equivalentClass));
+    }
+
+    @Test
+    void testMapReferenceResourceAndAddNamespace() {
+        var model = ModelFactory.createDefaultModel();
+        var modelURI = "http://uri.suomi.fi/datamodel/ns/test";
+
+        model.createResource(modelURI)
+                .addProperty(RDF.type, OWL.Ontology);
+
+        var dto = new ClassDTO();
+        dto.setStatus(Status.DRAFT);
+        dto.setIdentifier("class-1");
+        dto.setSubClassOf(Set.of(
+                ModelConstants.SUOMI_FI_NAMESPACE + "ns-int-1/sub",
+                modelURI + "/test-sub"
+        ));
+        dto.setEquivalentClass(Set.of(ModelConstants.SUOMI_FI_NAMESPACE + "ns-int-1/eq"));
+        dto.setDisjointWith(Set.of(ModelConstants.SUOMI_FI_NAMESPACE + "ns-int-2/disjoint"));
+
+        ClassMapper.createOntologyClassAndMapToModel(modelURI, model, dto, EndpointUtils.mockUser);
+
+        var modelResource = model.getResource(modelURI);
+
+        var imports = MapperUtils.arrayPropertyToSet(modelResource, OWL.imports);
+        assertEquals(2, imports.size());
+        assertTrue(imports.containsAll(Set.of(
+                ModelConstants.SUOMI_FI_NAMESPACE + "ns-int-1",
+                ModelConstants.SUOMI_FI_NAMESPACE + "ns-int-2"
+                ))
+        );
     }
 
     private Resource getEqResource(Resource res) {
