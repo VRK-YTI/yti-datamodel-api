@@ -233,4 +233,20 @@ public class ResourceController {
         // TODO: need to check node shapes' sh:property if resource is added there
         resourceService.delete(prefix, propertyShapeIdentifier);
     }
+
+
+    @Operation(summary = "Renames attribute or association with new identifier")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Resource renamed successfully"),
+            @ApiResponse(responseCode = "401", description = "Current user does not have rights for this model"),
+            @ApiResponse(responseCode = "404", description = "Resource not found", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ApiError.class))})
+    })
+    @PostMapping(value = "/{prefix}/{identifier}/rename", produces = APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> renameClass(@PathVariable @Parameter(description = "Data model prefix") String prefix,
+                                              @PathVariable @Parameter(description = "Identifier to be renamed") String identifier,
+                                              @RequestParam @Parameter(description = "New identifier") String newIdentifier) throws URISyntaxException {
+        var newURI = resourceService.renameResource(prefix, identifier, newIdentifier);
+        return ResponseEntity.created(newURI).build();
+    }
+
 }
