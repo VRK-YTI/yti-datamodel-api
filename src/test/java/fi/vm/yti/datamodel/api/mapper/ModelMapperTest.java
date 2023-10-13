@@ -6,6 +6,7 @@ import fi.vm.yti.datamodel.api.v2.endpoint.EndpointUtils;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
 import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.mapper.ModelMapper;
+import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
 import fi.vm.yti.datamodel.api.v2.repository.ConceptRepository;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import fi.vm.yti.datamodel.api.v2.repository.ImportsRepository;
@@ -129,7 +130,7 @@ class ModelMapperTest {
         assertNotNull(organizationResource);
 
         assertEquals(2, modelResource.listProperties(RDFS.label).toList().size());
-        assertEquals(Status.DRAFT, Status.valueOf(modelResource.getProperty(OWL.versionInfo).getString()));
+        assertEquals(Status.DRAFT, Status.valueOf(modelResource.getProperty(SuomiMeta.publicationStatus).getString()));
 
 
         var requires = MapperUtils.arrayPropertyToList(modelResource, DCTerms.requires);
@@ -392,8 +393,8 @@ class ModelMapperTest {
         var resource = m.getResource(graphUri);
         assertEquals("http://uri.suomi.fi/datamodel/ns/test/1.0.1", MapperUtils.propertyToString(resource, OWL2.versionIRI));
 
-        var versionInfoList = List.of(Status.VALID.name(), "1.0.1");
-        assertTrue(MapperUtils.arrayPropertyToList(resource, OWL.versionInfo).containsAll(versionInfoList));
+        assertEquals(Status.VALID, Status.valueOf(MapperUtils.propertyToString(resource, SuomiMeta.publicationStatus)));
+        assertEquals("1.0.1", MapperUtils.propertyToString(resource, OWL.versionInfo));
 
         assertEquals(graphUri + "/1.0.0", MapperUtils.propertyToString(resource, OWL.priorVersion));
     }

@@ -3,12 +3,12 @@ package fi.vm.yti.datamodel.api.v2.service;
 import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.ResolvingException;
 import fi.vm.yti.datamodel.api.v2.mapper.TerminologyMapper;
+import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
 import fi.vm.yti.datamodel.api.v2.repository.ConceptRepository;
 import fi.vm.yti.datamodel.api.v2.utils.SparqlUtils;
 import org.apache.jena.arq.querybuilder.ConstructBuilder;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ResourceFactory;
-import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDFS;
 import org.apache.jena.vocabulary.SKOS;
 import org.slf4j.Logger;
@@ -157,12 +157,12 @@ public class TerminologyService {
                 .addConstruct(res, SKOS.prefLabel, label)
                 .addConstruct(res, SKOS.inScheme, inScheme)
                 .addConstruct(res, SKOS.definition, definition)
-                .addConstruct(res, OWL.versionInfo, status)
+                .addConstruct(res, SuomiMeta.publicationStatus, status)
                 .addConstruct(res, RDFS.label, terminologyLabel)
                 .addWhere(res, SKOS.prefLabel, label)
                 .addWhere(res, SKOS.inScheme, inScheme)
                 .addOptional(res, SKOS.definition, definition)
-                .addWhere(res, OWL.versionInfo, status)
+                .addWhere(res, SuomiMeta.publicationStatus, status)
                 .addWhere(inScheme, RDFS.label, terminologyLabel);
 
         return conceptRepository.queryConstruct(builder.build());

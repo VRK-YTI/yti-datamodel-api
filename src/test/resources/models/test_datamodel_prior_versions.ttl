@@ -7,13 +7,16 @@
 @prefix test:    <http://uri.suomi.fi/datamodel/ns/test/> .
 @prefix rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix skos:    <http://www.w3.org/2004/02/skos/core#> .
+@prefix suomi-meta: <http://uri.suomi.fi/datamodel/ns/suomi-meta/> .
 
 <http://uri.suomi.fi/datamodel/ns/test/1.0.0>
-        owl:versionInfo       "1.0.0", "VALID";
+        suomi-meta:publicationStatus "VALID" ;
+        owl:versionInfo       "1.0.0" ;
         rdfs:label            "Test"@fi ;
         owl:versionIRI        <http://uri.suomi.fi/datamodel/ns/test/1.0.0> .
 
 <http://uri.suomi.fi/datamodel/ns/test/2.0.0>
-        owl:versionInfo       "2.0.0", "VALID";
+        suomi-meta:publicationStatus "VALID" ;
+        owl:versionInfo       "2.0.0";
         rdfs:label            "Test"@fi ;
         owl:versionIRI        <http://uri.suomi.fi/datamodel/ns/test/2.0.0> .

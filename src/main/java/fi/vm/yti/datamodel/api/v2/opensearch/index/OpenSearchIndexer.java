@@ -8,6 +8,7 @@ import fi.vm.yti.datamodel.api.v2.dto.Iow;
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
 import fi.vm.yti.datamodel.api.v2.mapper.ModelMapper;
 import fi.vm.yti.datamodel.api.v2.mapper.ResourceMapper;
+import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import fi.vm.yti.datamodel.api.v2.repository.ImportsRepository;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelUtils;
@@ -195,9 +196,9 @@ public class OpenSearchIndexer {
                 .addPrefixes(ModelConstants.PREFIXES);
 
         var whereBuilder = new WhereBuilder();
-        Stream.of(RDFS.label, DCTerms.language, DCAP.preferredXMLNamespacePrefix, RDF.type, OWL.versionInfo, DCTerms.modified, DCTerms.created, DCTerms.contributor, DCTerms.isPartOf)
+        Stream.of(RDFS.label, DCTerms.language, DCAP.preferredXMLNamespacePrefix, RDF.type, SuomiMeta.publicationStatus, DCTerms.modified, DCTerms.created, DCTerms.contributor, DCTerms.isPartOf)
                 .forEach(property -> SparqlUtils.addRequiredToGraphConstruct(GRAPH_VARIABLE, constructBuilder, whereBuilder, property));
-        Stream.of(RDFS.comment, OWL2.versionIRI, Iow.contentModified, Iow.documentation)
+        Stream.of(RDFS.comment, OWL2.versionIRI, Iow.contentModified, Iow.documentation, OWL.versionInfo)
                 .forEach(property -> SparqlUtils.addOptionalToGraphConstruct(GRAPH_VARIABLE, constructBuilder, whereBuilder, property));
         constructBuilder.addGraph("?g", whereBuilder);
         var indexModels = coreRepository.queryConstruct(constructBuilder.build());

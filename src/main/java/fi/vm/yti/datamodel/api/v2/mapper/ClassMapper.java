@@ -2,6 +2,7 @@ package fi.vm.yti.datamodel.api.v2.mapper;
 
 import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
+import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelUtils;
 import fi.vm.yti.datamodel.api.v2.utils.SparqlUtils;
 import fi.vm.yti.security.YtiUser;
@@ -16,7 +17,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.topbraid.shacl.vocabulary.SH;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -111,7 +115,7 @@ public class ClassMapper {
                     .addProperty(RDF.type, SH.PropertyShape)
                     .addProperty(RDF.type, targetResource.getProperty(RDF.type).getObject())
                     .addProperty(RDFS.isDefinedBy, classResource.getProperty(RDFS.isDefinedBy).getObject())
-                    .addProperty(OWL.versionInfo, Status.DRAFT.name());
+                    .addProperty(SuomiMeta.publicationStatus, Status.DRAFT.name());
 
             MapperUtils.addCreationMetadata(propertyShapeResource, user);
 

@@ -23,12 +23,13 @@ public class ModelConstants {
     public static final String SERVICE_CATEGORY_GRAPH = "urn:yti:servicecategories";
     public static final Map<String, String> PREFIXES = Map.of(
             "rdfs", "http://www.w3.org/2000/01/rdf-schema#",
-            "rdf", "http://www.w3.org/1999/02/22-rdf-syntax-ns#", //TODO this can be removed once migration for old rdf lists are done
+            "rdf", "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
             "dcterms", "http://purl.org/dc/terms/",
             "owl", "http://www.w3.org/2002/07/owl#",
             "dcap", "http://purl.org/ws-mmi-dc/terms/",
             "xsd", "http://www.w3.org/2001/XMLSchema#",
             "iow", "http://uri.suomi.fi/datamodel/ns/iow/",
+            "suomi-meta", "http://uri.suomi.fi/datamodel/ns/suomi-meta/",
             "skos", "http://www.w3.org/2004/02/skos/core#",
             "sh", "http://www.w3.org/ns/shacl#"
     );
