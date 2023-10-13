@@ -18,7 +18,9 @@ public class ConceptRepository extends BaseRepository{
                              @Value("${model.cache.expiration:1800}") Long cacheExpireTime){
         super(RDFConnection.connect(endpoint + "/concept/get"),
                 RDFConnection.connect(endpoint + "/concept/data"),
-                RDFConnection.connect(endpoint + "/concept/sparql"));
+                RDFConnection.connect(endpoint + "/concept/sparql"),
+                RDFConnection.connect(endpoint + "/concept/update")
+        );
 
         this.modelCache = CacheBuilder.newBuilder()
                 .expireAfterWrite(cacheExpireTime, TimeUnit.SECONDS)
