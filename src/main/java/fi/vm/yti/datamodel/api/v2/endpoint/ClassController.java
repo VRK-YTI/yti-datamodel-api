@@ -241,7 +241,7 @@ public class ClassController {
     @PostMapping(value = "/{prefix}/{identifier}/rename", produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<String> renameClass(@PathVariable @Parameter(description = "Data model prefix") String prefix,
                                               @PathVariable @Parameter(description = "Identifier to be renamed") String identifier,
-                                              @RequestParam @Parameter(description = "New identifier") String newIdentifier) throws URISyntaxException {
+                                              @RequestParam @Parameter(description = "New identifier") @ValidResourceIdentifier String newIdentifier) throws URISyntaxException {
         var newURI = classService.renameResource(prefix, identifier, newIdentifier);
         return ResponseEntity.created(newURI).build();
     }

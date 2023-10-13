@@ -5,6 +5,7 @@ import fi.vm.yti.datamodel.api.v2.endpoint.error.ApiError;
 import fi.vm.yti.datamodel.api.v2.service.ResourceService;
 import fi.vm.yti.datamodel.api.v2.validator.ValidPropertyShape;
 import fi.vm.yti.datamodel.api.v2.validator.ValidResource;
+import fi.vm.yti.datamodel.api.v2.validator.ValidResourceIdentifier;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -244,7 +245,7 @@ public class ResourceController {
     @PostMapping(value = "/{prefix}/{identifier}/rename", produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<String> renameClass(@PathVariable @Parameter(description = "Data model prefix") String prefix,
                                               @PathVariable @Parameter(description = "Identifier to be renamed") String identifier,
-                                              @RequestParam @Parameter(description = "New identifier") String newIdentifier) throws URISyntaxException {
+                                              @RequestParam @Parameter(description = "New identifier") @ValidResourceIdentifier String newIdentifier) throws URISyntaxException {
         var newURI = resourceService.renameResource(prefix, identifier, newIdentifier);
         return ResponseEntity.created(newURI).build();
     }
