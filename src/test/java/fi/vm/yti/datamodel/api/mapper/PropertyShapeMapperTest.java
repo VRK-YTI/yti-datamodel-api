@@ -4,6 +4,7 @@ import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.endpoint.EndpointUtils;
 import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.mapper.ResourceMapper;
+import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.OWL;
@@ -47,7 +48,7 @@ class PropertyShapeMapperTest {
         var allowedValues = resource.listProperties(SH.in).mapWith((var s) -> s.getObject().toString()).toList();
 
         assertEquals("PropertyShape label", MapperUtils.localizedPropertyToMap(resource, RDFS.label).get("fi"));
-        assertEquals(Status.DRAFT.name(), resource.getProperty(OWL.versionInfo).getObject().toString());
+        assertEquals(Status.DRAFT, Status.valueOf(MapperUtils.propertyToString(resource, SuomiMeta.publicationStatus)));
         assertEquals("http://uri.suomi.fi/datamodel/ns/test_attribute", resource.getProperty(SH.path).getObject().toString());
         assertTrue(MapperUtils.hasType(resource, OWL.DatatypeProperty, SH.PropertyShape));
         assertTrue(allowedValues.containsAll(List.of("Value 1", "Value 2")));
@@ -83,7 +84,7 @@ class PropertyShapeMapperTest {
         var resource = model.getResource("http://uri.suomi.fi/datamodel/ns/test/ps-1");
 
         assertEquals("PropertyShape label", MapperUtils.localizedPropertyToMap(resource, RDFS.label).get("fi"));
-        assertEquals(Status.DRAFT.name(), resource.getProperty(OWL.versionInfo).getObject().toString());
+        assertEquals(Status.DRAFT, Status.valueOf(MapperUtils.propertyToString(resource, SuomiMeta.publicationStatus)));
         assertEquals("http://uri.suomi.fi/datamodel/ns/test_attribute", resource.getProperty(SH.path).getObject().toString());
         assertTrue(MapperUtils.hasType(resource, OWL.ObjectProperty, SH.PropertyShape));
         assertEquals(10, MapperUtils.getLiteral(resource, SH.maxCount, Integer.class));
@@ -175,7 +176,7 @@ class PropertyShapeMapperTest {
         var allowedValues = resource.listProperties(SH.in).mapWith((var s) -> s.getObject().toString()).toList();
 
         assertEquals("Updated PropertyShape label", MapperUtils.localizedPropertyToMap(resource, RDFS.label).get("fi"));
-        assertEquals(Status.VALID.name(), resource.getProperty(OWL.versionInfo).getObject().toString());
+        assertEquals(Status.VALID, Status.valueOf(MapperUtils.propertyToString(resource, SuomiMeta.publicationStatus)));
         assertEquals("http://uri.suomi.fi/datamodel/ns/updated_test_attribute", resource.getProperty(SH.path).getObject().toString());
         assertTrue(allowedValues.contains("Updated value 1"));
         assertEquals(1, allowedValues.size());
@@ -204,7 +205,7 @@ class PropertyShapeMapperTest {
 
         var resource = model.getResource("http://uri.suomi.fi/datamodel/ns/test/TestAssociationRestriction");
         assertEquals("Updated PropertyShape label", MapperUtils.localizedPropertyToMap(resource, RDFS.label).get("fi"));
-        assertEquals(Status.VALID.name(), resource.getProperty(OWL.versionInfo).getObject().toString());
+        assertEquals(Status.VALID, Status.valueOf(MapperUtils.propertyToString(resource, SuomiMeta.publicationStatus)));
         assertEquals("http://uri.suomi.fi/datamodel/ns/updated_test_attribute", resource.getProperty(SH.path).getObject().toString());
         assertEquals(20, MapperUtils.getLiteral(resource, SH.maxCount, Integer.class));
         assertEquals(2, MapperUtils.getLiteral(resource, SH.minCount, Integer.class));

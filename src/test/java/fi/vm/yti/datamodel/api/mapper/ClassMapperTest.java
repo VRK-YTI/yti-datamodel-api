@@ -3,6 +3,8 @@ package fi.vm.yti.datamodel.api.mapper;
 import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.endpoint.EndpointUtils;
 import fi.vm.yti.datamodel.api.v2.mapper.ClassMapper;
+import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
+import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.vocabulary.*;
@@ -53,7 +55,7 @@ class ClassMapperTest {
         assertEquals("fi", classResource.getProperty(RDFS.label).getLiteral().getLanguage());
 
         assertEquals(OWL.Class, classResource.getProperty(RDF.type).getResource());
-        assertEquals(Status.DRAFT, Status.valueOf(classResource.getProperty(OWL.versionInfo).getObject().toString()));
+        assertEquals(Status.DRAFT, Status.valueOf(MapperUtils.propertyToString(classResource, SuomiMeta.publicationStatus)));
         assertEquals("http://uri.suomi.fi/datamodel/ns/test", classResource.getProperty(RDFS.isDefinedBy).getObject().toString());
 
         assertEquals(XSDDatatype.XSDNCName, classResource.getProperty(DCTerms.identifier).getLiteral().getDatatype());
@@ -187,7 +189,7 @@ class ClassMapperTest {
                 .filterDrop(p -> p.getObject().isAnon())
                 .next().getObject().toString());
         assertEquals("http://uri.suomi.fi/datamodel/ns/test/SubClass", resource.getProperty(RDFS.subClassOf).getObject().toString());
-        assertEquals(Status.VALID.name(), resource.getProperty(OWL.versionInfo).getObject().toString());
+        assertEquals(Status.VALID, Status.valueOf(MapperUtils.propertyToString(resource, SuomiMeta.publicationStatus)));
         assertEquals("comment visible for admin", resource.getProperty(SKOS.editorialNote).getObject().toString());
         assertEquals(2, resource.listProperties(RDFS.comment).toList().size());
 
@@ -203,7 +205,7 @@ class ClassMapperTest {
                 .filterDrop(p -> p.getObject().isAnon())
                 .next().getObject().toString());
         assertEquals("https://www.example.com/ns/ext/NewSub", resource.getProperty(RDFS.subClassOf).getObject().toString());
-        assertEquals(Status.RETIRED.name(), resource.getProperty(OWL.versionInfo).getObject().toString());
+        assertEquals(Status.RETIRED, Status.valueOf(MapperUtils.propertyToString(resource, SuomiMeta.publicationStatus)));
         assertEquals("new editorial note", resource.getProperty(SKOS.editorialNote).getObject().toString());
         assertEquals(1, resource.listProperties(RDFS.comment).toList().size());
         assertEquals("new note", resource.getProperty(RDFS.comment).getLiteral().getString());
@@ -234,7 +236,7 @@ class ClassMapperTest {
                 .filterDrop(p -> p.getObject().isAnon())
                 .next().getObject().toString());
         assertEquals("http://uri.suomi.fi/datamodel/ns/test/SubClass", resource.getProperty(RDFS.subClassOf).getObject().toString());
-        assertEquals(Status.VALID.name(), resource.getProperty(OWL.versionInfo).getObject().toString());
+        assertEquals(Status.VALID, Status.valueOf(MapperUtils.propertyToString(resource, SuomiMeta.publicationStatus)));
         assertEquals("comment visible for admin", resource.getProperty(SKOS.editorialNote).getObject().toString());
         assertEquals(2, resource.listProperties(RDFS.comment).toList().size());
 
@@ -246,7 +248,7 @@ class ClassMapperTest {
         assertNull(resource.getProperty(RDFS.label));
         assertEquals("TestClass", resource.getProperty(DCTerms.identifier).getLiteral().getString());
         assertNull(resource.getProperty(DCTerms.subject));
-        assertEquals(Status.VALID.name(), resource.getProperty(OWL.versionInfo).getObject().toString());
+        assertEquals(Status.VALID, Status.valueOf(MapperUtils.propertyToString(resource, SuomiMeta.publicationStatus)));
         assertNull(resource.getProperty(SKOS.editorialNote));
         assertEquals(0, resource.listProperties(RDFS.comment).toList().size());
     }

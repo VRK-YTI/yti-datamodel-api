@@ -5,6 +5,7 @@ import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.endpoint.EndpointUtils;
 import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.mapper.ModelMapper;
+import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
 import fi.vm.yti.datamodel.api.v2.repository.ConceptRepository;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import fi.vm.yti.datamodel.api.v2.repository.ImportsRepository;
@@ -91,7 +92,6 @@ class ModelMapperTest {
         dto.setDescription(Map.of(
                 "fi", "Test description fi",
                 "sv", "Test description sv"));
-        dto.setStatus(Status.DRAFT);
         dto.setGroups(Set.of("P11"));
         dto.setLanguages(Set.of("fi", "sv"));
         dto.setOrganizations(Set.of(organizationId));
@@ -129,7 +129,7 @@ class ModelMapperTest {
         assertNotNull(organizationResource);
 
         assertEquals(2, modelResource.listProperties(RDFS.label).toList().size());
-        assertEquals(Status.DRAFT, Status.valueOf(modelResource.getProperty(OWL.versionInfo).getString()));
+        assertEquals(Status.DRAFT, Status.valueOf(modelResource.getProperty(SuomiMeta.publicationStatus).getString()));
 
 
         var requires = MapperUtils.arrayPropertyToList(modelResource, DCTerms.requires);
@@ -197,7 +197,6 @@ class ModelMapperTest {
                 "fi", "new test label"));
         dto.setDescription(Map.of(
                 "fi", "new test description"));
-        dto.setStatus(Status.DRAFT);
         dto.setGroups(Set.of("P11"));
         dto.setLanguages(Set.of("fi", "sv"));
         dto.setOrganizations(Set.of(organizationId));
@@ -229,8 +228,6 @@ class ModelMapperTest {
 
         assertEquals(1, modelResource.listProperties(RDFS.comment).toList().size());
         assertEquals("test desc", modelResource.listProperties(RDFS.comment).next().getString());
-
-        assertEquals(Status.VALID, Status.valueOf(modelResource.getProperty(OWL.versionInfo).getString()));
 
         assertEquals(1, modelResource.listProperties(OWL.imports).toList().size());
         assertEquals("http://uri.suomi.fi/datamodel/ns/int", modelResource.listProperties(OWL.imports).next().getObject().toString());
@@ -264,8 +261,6 @@ class ModelMapperTest {
 
         assertEquals(1, modelResource.listProperties(RDFS.label).toList().size());
         assertEquals("new test label", modelResource.listProperties(RDFS.label, "fi").next().getString());
-
-        assertEquals(Status.DRAFT, Status.valueOf(modelResource.getProperty(OWL.versionInfo).getString()));
 
         requires = MapperUtils.arrayPropertyToList(modelResource, DCTerms.requires);
         assertEquals(2, requires.size());
@@ -304,7 +299,6 @@ class ModelMapperTest {
         YtiUser mockUser = EndpointUtils.mockUser;
 
         DataModelDTO dto = new DataModelDTO();
-        dto.setStatus(Status.DRAFT);
         dto.setCodeLists(Set.of("http://uri.suomi.fi/codelist/test/newcodelist"));
 
         Resource modelResource = m.getResource("http://uri.suomi.fi/datamodel/ns/test");
@@ -398,8 +392,8 @@ class ModelMapperTest {
         var resource = m.getResource(graphUri);
         assertEquals("http://uri.suomi.fi/datamodel/ns/test/1.0.1", MapperUtils.propertyToString(resource, OWL2.versionIRI));
 
-        var versionInfoList = List.of(Status.VALID.name(), "1.0.1");
-        assertTrue(MapperUtils.arrayPropertyToList(resource, OWL.versionInfo).containsAll(versionInfoList));
+        assertEquals(Status.VALID, Status.valueOf(MapperUtils.propertyToString(resource, SuomiMeta.publicationStatus)));
+        assertEquals("1.0.1", MapperUtils.propertyToString(resource, OWL.versionInfo));
 
         assertEquals(graphUri + "/1.0.0", MapperUtils.propertyToString(resource, OWL.priorVersion));
     }

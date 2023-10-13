@@ -2,6 +2,7 @@ package fi.vm.yti.datamodel.api.v2.mapper;
 
 import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
+import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
 import fi.vm.yti.security.YtiUser;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.datatypes.xsd.XSDDateTime;
@@ -322,7 +323,7 @@ public class MapperUtils {
         var languages = MapperUtils.arrayPropertyToSet(modelResource, DCTerms.language);
 
         var resource = model.createResource(graphUri + ModelConstants.RESOURCE_SEPARATOR + dto.getIdentifier())
-                .addProperty(OWL.versionInfo, dto.getStatus().name())
+                .addProperty(SuomiMeta.publicationStatus, dto.getStatus().name())
                 .addProperty(RDFS.isDefinedBy, modelResource)
                 .addProperty(DCTerms.identifier, ResourceFactory.createTypedLiteral(dto.getIdentifier(), XSDDatatype.XSDNCName));
         MapperUtils.addLocalizedProperty(languages, dto.getLabel(), resource, RDFS.label, model);
@@ -342,7 +343,7 @@ public class MapperUtils {
 
         var status = dto.getStatus();
         if (status != null) {
-            MapperUtils.updateStringProperty(resource, OWL.versionInfo, status.name());
+            MapperUtils.updateStringProperty(resource, SuomiMeta.publicationStatus, status.name());
         }
     }
 
@@ -352,7 +353,7 @@ public class MapperUtils {
         dto.setCurie(uriDTO.getCurie());
 
         dto.setLabel(MapperUtils.localizedPropertyToMap(resource, RDFS.label));
-        dto.setStatus(Status.valueOf(MapperUtils.propertyToString(resource, OWL.versionInfo)));
+        dto.setStatus(Status.valueOf(MapperUtils.propertyToString(resource, SuomiMeta.publicationStatus)));
 
         var subject = MapperUtils.propertyToString(resource, DCTerms.subject);
         if (subject != null) {

@@ -3,6 +3,7 @@ package fi.vm.yti.datamodel.api.v2.mapper;
 import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexModel;
+import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
 import fi.vm.yti.datamodel.api.v2.repository.ConceptRepository;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import fi.vm.yti.datamodel.api.v2.repository.ImportsRepository;
@@ -16,7 +17,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.Calendar;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -57,7 +61,7 @@ public class ModelMapper {
         var creationDate = new XSDDateTime(Calendar.getInstance());
         var modelResource = model.createResource(modelUri)
                 .addProperty(RDF.type, OWL.Ontology)
-                .addProperty(OWL.versionInfo, Status.DRAFT.name())
+                .addProperty(SuomiMeta.publicationStatus, Status.DRAFT.name())
                 .addProperty(DCTerms.identifier, UUID.randomUUID().toString())
                 .addProperty(Iow.contentModified, ResourceFactory.createTypedLiteral(creationDate))
                 .addProperty(DCAP.preferredXMLNamespacePrefix, modelDTO.getPrefix())
@@ -112,11 +116,6 @@ public class ModelMapper {
         dataModelDTO.getLanguages().forEach(lang -> modelResource.addProperty(DCTerms.language, lang));
 
         var langs = MapperUtils.arrayPropertyToSet(modelResource, DCTerms.language);
-
-
-        //TODO this will change that current model cannot be changed unless they are published and old ones have restricted choices
-        MapperUtils.updateStringProperty(modelResource, OWL.versionInfo, dataModelDTO.getStatus().name());
-
 
         MapperUtils.updateLocalizedProperty(langs, dataModelDTO.getLabel(), modelResource, RDFS.label, model);
         MapperUtils.updateLocalizedProperty(langs, dataModelDTO.getDescription(), modelResource, RDFS.comment, model);
@@ -199,14 +198,8 @@ public class ModelMapper {
 
         var modelResource = model.getResource(ModelConstants.SUOMI_FI_NAMESPACE + prefix);
 
-        var versionInfo = MapperUtils.arrayPropertyToList(modelResource, OWL.versionInfo);
-        versionInfo.forEach(ver -> {
-            if(Arrays.stream(Status.values()).map(Status::name).anyMatch(ver::equals)){
-                datamodelDTO.setStatus(Status.valueOf(ver));
-            }else{
-                datamodelDTO.setVersion(ver);
-            }
-        });
+        datamodelDTO.setStatus(Status.valueOf(MapperUtils.propertyToString(modelResource, SuomiMeta.publicationStatus)));
+        datamodelDTO.setVersion(MapperUtils.propertyToString(modelResource, OWL.versionInfo));
         datamodelDTO.setVersionIri(MapperUtils.propertyToString(modelResource, OWL2.versionIRI));
         if(MapperUtils.isApplicationProfile(modelResource)){
             datamodelDTO.setType(ModelType.PROFILE);
@@ -297,14 +290,8 @@ public class ModelMapper {
             indexModel.setId(resource.getURI());
         }
         indexModel.setUri(resource.getURI());
-        var versionInfo = MapperUtils.arrayPropertyToList(resource, OWL.versionInfo);
-        versionInfo.forEach(ver -> {
-            if(Arrays.stream(Status.values()).map(Status::name).anyMatch(ver::equals)){
-                indexModel.setStatus(Status.valueOf(ver));
-            }else{
-                indexModel.setVersion(ver);
-            }
-        });
+        indexModel.setStatus(Status.valueOf(MapperUtils.propertyToString(resource, SuomiMeta.publicationStatus)));
+        indexModel.setVersion(MapperUtils.propertyToString(resource, OWL.versionInfo));
         indexModel.setVersionIri(versionIri);
         indexModel.setModified(resource.getProperty(DCTerms.modified).getString());
         indexModel.setCreated(resource.getProperty(DCTerms.created).getString());
@@ -459,11 +446,8 @@ public class ModelMapper {
         var versionIri = graphUri + ModelConstants.RESOURCE_SEPARATOR + version;
         var res = model.getResource(graphUri);
         res.addProperty(OWL2.versionIRI, ResourceFactory.createResource(versionIri));
-        res.removeAll(OWL.versionInfo);
-        res.addProperty(OWL2.versionInfo, version);
-        res.addProperty(OWL.versionInfo, status.name());
-
-
+        res.addProperty(OWL.versionInfo, version);
+        MapperUtils.updateStringProperty(res, SuomiMeta.publicationStatus, status.name());
         //prior version doesn't need to be mapped since it should always be already on the DRAFT model
         return versionIri;
     }
@@ -478,14 +462,8 @@ public class ModelMapper {
         var dto = new ModelVersionInfo();
         dto.setLabel(MapperUtils.localizedPropertyToMap(resource, RDFS.label));
         dto.setVersionIRI(MapperUtils.propertyToString(resource, OWL2.versionIRI));
-        var versionInfo = MapperUtils.arrayPropertyToList(resource, OWL.versionInfo);
-        versionInfo.forEach(ver -> {
-            if(Arrays.stream(Status.values()).map(Status::name).anyMatch(ver::equals)){
-                dto.setStatus(Status.valueOf(ver));
-            }else{
-                dto.setVersion(ver);
-            }
-        });
+        dto.setStatus(Status.valueOf(MapperUtils.propertyToString(resource, SuomiMeta.publicationStatus)));
+        dto.setVersion(MapperUtils.propertyToString(resource, OWL.versionInfo));
         return dto;
     }
 }
