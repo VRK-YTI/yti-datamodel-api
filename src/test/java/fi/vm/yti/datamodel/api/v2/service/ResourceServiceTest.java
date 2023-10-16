@@ -9,6 +9,7 @@ import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.mapper.ResourceMapper;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexResource;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
+import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import fi.vm.yti.datamodel.api.v2.repository.ImportsRepository;
 import fi.vm.yti.security.AuthenticatedUserProvider;
@@ -27,7 +28,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
@@ -342,7 +342,7 @@ class ResourceServiceTest {
         var modelURI = ModelConstants.SUOMI_FI_NAMESPACE + "test";
         model.createResource(modelURI + "/resource-1")
                 .addProperty(DCTerms.identifier, "resource-1")
-                .addProperty(OWL.versionInfo, Status.DRAFT.name())
+                .addProperty(SuomiMeta.publicationStatus, Status.DRAFT.name())
                 .addProperty(DCTerms.created, "created")
                 .addProperty(DCTerms.modified, "modified");
         model.createResource(modelURI + "/resource-2")
