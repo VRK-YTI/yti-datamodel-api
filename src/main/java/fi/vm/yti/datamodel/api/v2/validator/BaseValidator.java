@@ -85,6 +85,8 @@ public abstract class BaseValidator implements Annotation{
             addConstraintViolation(context, ValidationConstants.MSG_NOT_ALLOWED_UPDATE, propertyName);
         } else if (value != null && !value.matches(ValidationConstants.RESOURCE_IDENTIFIER_REGEX)) {
             addConstraintViolation(context, ValidationConstants.MSG_VALUE_INVALID, propertyName);
+        } else if (value != null && (value.length() < ValidationConstants.PREFIX_MIN_LENGTH || value.length() > maxLength)) {
+            addConstraintViolation(context, propertyName + "-character-count-mismatch", propertyName);
         }
     }
 

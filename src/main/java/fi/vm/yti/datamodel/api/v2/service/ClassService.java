@@ -400,4 +400,8 @@ public class ClassService {
         ClassMapper.toggleAndMapDeactivatedProperty(model, propertyUri, externalExists);
         coreRepository.put(modelURI, model);
     }
+
+    public URI renameResource(String prefix, String oldIdentifier, String newIdentifier) throws URISyntaxException {
+        return resourceService.renameResource(prefix, oldIdentifier, newIdentifier);
+    }
 }
