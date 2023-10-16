@@ -41,18 +41,15 @@ public class ClassMapper {
 
         resource.addProperty(RDF.type, OWL.Class);
 
-        var owlImports = MapperUtils.arrayPropertyToSet(modelResource, OWL.imports);
-        var dcTermsRequires = MapperUtils.arrayPropertyToSet(modelResource, DCTerms.requires);
         //Equivalent class
-        dto.getEquivalentClass().forEach(eq -> MapperUtils.addResourceRelationship(owlImports, dcTermsRequires, resource, OWL.equivalentClass, eq));
+        dto.getEquivalentClass().forEach(eq -> MapperUtils.addResourceRelationship(modelResource, resource, OWL.equivalentClass, eq));
 
         if(dto.getSubClassOf().isEmpty()){
             resource.addProperty(RDFS.subClassOf, OWL.Thing); //Add OWL:Thing if nothing else is specified
         }else{
-            dto.getSubClassOf().forEach(sub -> MapperUtils.addResourceRelationship(owlImports, dcTermsRequires, resource, RDFS.subClassOf, sub));
+            dto.getSubClassOf().forEach(sub -> MapperUtils.addResourceRelationship(modelResource, resource, RDFS.subClassOf, sub));
         }
-        dto.getDisjointWith().forEach(disjoint -> MapperUtils.addResourceRelationship(owlImports, dcTermsRequires, resource, OWL.disjointWith, disjoint));
-
+        dto.getDisjointWith().forEach(disjoint -> MapperUtils.addResourceRelationship(modelResource, resource, OWL.disjointWith, disjoint));
         modelResource.addProperty(DCTerms.hasPart, resource);
         return resource.getURI();
     }
@@ -64,8 +61,10 @@ public class ClassMapper {
         MapperUtils.addCreationMetadata(nodeShapeResource, user);
 
         nodeShapeResource.addProperty(RDF.type, SH.NodeShape);
-        MapperUtils.addOptionalUriProperty(nodeShapeResource, SH.targetClass, dto.getTargetClass());
-        MapperUtils.addOptionalUriProperty(nodeShapeResource, SH.node, dto.getTargetNode());
+
+        var modelResource = model.getResource(modelURI);
+        MapperUtils.addResourceRelationship(modelResource, nodeShapeResource, SH.targetClass, dto.getTargetClass());
+        MapperUtils.addResourceRelationship(modelResource, nodeShapeResource, SH.node, dto.getTargetNode());
 
         return nodeShapeResource.getURI();
     }
@@ -138,28 +137,25 @@ public class ClassMapper {
 
         MapperUtils.updateCommonResourceInfo(model, classResource, modelResource, classDTO);
 
-        var owlImports = MapperUtils.arrayPropertyToSet(modelResource, OWL.imports);
-        var dcTermsRequires = MapperUtils.arrayPropertyToSet(modelResource, DCTerms.requires);
-
-        var equivalentClasses = classDTO.getEquivalentClass();
-
         var eqProps = classResource.listProperties(OWL.equivalentClass)
                 .filterDrop(p -> p.getObject().isAnon())
                 .toList();
         model.remove(eqProps);
 
-        equivalentClasses.forEach(eq -> MapperUtils.addResourceRelationship(owlImports, dcTermsRequires, classResource, OWL.equivalentClass, eq));
+        classDTO.getEquivalentClass().forEach(eq ->
+                MapperUtils.addResourceRelationship(modelResource, classResource, OWL.equivalentClass, eq));
 
         var subClassOf = classDTO.getSubClassOf();
         classResource.removeAll(RDFS.subClassOf);
         if(subClassOf.isEmpty()){
             classResource.addProperty(RDFS.subClassOf, OWL.Thing); //Add OWL:Thing if no subClassOf is specified
         }else{
-            subClassOf.forEach(sub -> MapperUtils.addResourceRelationship(owlImports, dcTermsRequires, classResource, RDFS.subClassOf, sub));
+            subClassOf.forEach(sub -> MapperUtils.addResourceRelationship(modelResource, classResource, RDFS.subClassOf, sub));
         }
 
         classResource.removeAll(OWL.disjointWith);
-        classDTO.getDisjointWith().forEach(disjoint -> MapperUtils.addResourceRelationship(owlImports, dcTermsRequires, classResource, OWL.disjointWith, disjoint));
+        classDTO.getDisjointWith().forEach(disjoint ->
+                MapperUtils.addResourceRelationship(modelResource, classResource, OWL.disjointWith, disjoint));
         MapperUtils.addUpdateMetadata(classResource, user);
     }
 

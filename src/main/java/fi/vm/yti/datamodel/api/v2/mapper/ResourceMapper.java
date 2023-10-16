@@ -28,11 +28,10 @@ public class ResourceMapper {
                 : OWL.DatatypeProperty);
 
         var modelResource = model.getResource(graphUri);
-        var owlImports = MapperUtils.arrayPropertyToSet(modelResource, OWL.imports);
-        var dcTermsRequires = MapperUtils.arrayPropertyToSet(modelResource, DCTerms.requires);
-        //Equivalent class
+
+        //Equivalent resource
         if(dto.getEquivalentResource() != null){
-            dto.getEquivalentResource().forEach(eq -> MapperUtils.addResourceRelationship(owlImports, dcTermsRequires, resourceResource, OWL.equivalentProperty, eq));
+            dto.getEquivalentResource().forEach(eq -> MapperUtils.addResourceRelationship(modelResource, resourceResource, OWL.equivalentProperty, eq));
         }
         //Sub Class
         if(dto.getSubResourceOf() == null || dto.getSubResourceOf().isEmpty()){
@@ -42,11 +41,11 @@ public class ResourceMapper {
                 resourceResource.addProperty(RDFS.subPropertyOf, OWL2.topDataProperty); //Add OWL:TopDataProperty if nothing else is specified
             }
         }else{
-            dto.getSubResourceOf().forEach(sub -> MapperUtils.addResourceRelationship(owlImports, dcTermsRequires, resourceResource, RDFS.subPropertyOf, sub));
+            dto.getSubResourceOf().forEach(sub -> MapperUtils.addResourceRelationship(modelResource, resourceResource, RDFS.subPropertyOf, sub));
         }
 
-        MapperUtils.addOptionalUriProperty(resourceResource, RDFS.domain, dto.getDomain());
-        MapperUtils.addOptionalUriProperty(resourceResource, RDFS.range, dto.getRange());
+        MapperUtils.addResourceRelationship(modelResource, resourceResource, RDFS.domain, dto.getDomain());
+        MapperUtils.addResourceRelationship(modelResource, resourceResource, RDFS.range, dto.getRange());
 
         modelResource.addProperty(DCTerms.hasPart, resourceResource);
         MapperUtils.addCreationMetadata(resourceResource, user);
@@ -56,17 +55,19 @@ public class ResourceMapper {
 
     public static String mapToPropertyShapeResource(String graphUri, Model model, PropertyShapeDTO dto, ResourceType resourceType, YtiUser user) {
         var resource = MapperUtils.addCommonResourceInfo(model, graphUri, dto);
+        var modelresource = model.getResource(graphUri);
 
         resource.addProperty(RDF.type, SH.PropertyShape);
         resource.addProperty(RDF.type, resourceType.equals(ResourceType.ASSOCIATION)
                 ? OWL.ObjectProperty
                 : OWL.DatatypeProperty);
-        MapperUtils.addOptionalUriProperty(resource, SH.path, dto.getPath());
+
+        MapperUtils.addResourceRelationship(modelresource, resource, SH.path, dto.getPath());
         MapperUtils.addLiteral(resource, SH.minCount, dto.getMinCount());
         MapperUtils.addLiteral(resource, SH.maxCount, dto.getMaxCount());
 
         if(resourceType.equals(ResourceType.ASSOCIATION)){
-            addAssociationRestrictionProperties(resource, (AssociationRestriction) dto);
+            MapperUtils.addResourceRelationship(modelresource, resource, SH.class_, ((AssociationRestriction) dto).getClassType());
         }else{
             addAttributeRestrictionProperties(resource, (AttributeRestriction) dto, model.getResource(graphUri));
         }
@@ -99,23 +100,16 @@ public class ResourceMapper {
         });
     }
 
-    public static void addAssociationRestrictionProperties(Resource resource, AssociationRestriction dto) {
-        MapperUtils.addOptionalUriProperty(resource, SH.class_, dto.getClassType());
-    }
-
     public static void mapToUpdateResource(String graphUri, Model model, String resourceIdentifier, ResourceDTO dto, YtiUser user) {
         var modelResource = model.getResource(graphUri);
         var resource = model.getResource(graphUri + ModelConstants.RESOURCE_SEPARATOR + resourceIdentifier);
 
         MapperUtils.updateCommonResourceInfo(model, resource, modelResource, dto);
 
-        var owlImports = MapperUtils.arrayPropertyToSet(modelResource, OWL.imports);
-        var dcTermsRequires = MapperUtils.arrayPropertyToSet(modelResource, DCTerms.requires);
-
         var equivalentResources = dto.getEquivalentResource();
         if(equivalentResources != null){
             resource.removeAll(OWL.equivalentProperty);
-            equivalentResources.forEach(eq -> MapperUtils.addResourceRelationship(owlImports, dcTermsRequires, resource, OWL.equivalentProperty, eq));
+            equivalentResources.forEach(eq -> MapperUtils.addResourceRelationship(modelResource, resource, OWL.equivalentProperty, eq));
         }
 
         var getSubResourceOf = dto.getSubResourceOf();
@@ -128,7 +122,7 @@ public class ResourceMapper {
                     resource.addProperty(RDFS.subPropertyOf, OWL2.topDataProperty); //Add OWL:TopDataProperty if nothing else is specified
                 }
             }else{
-                getSubResourceOf.forEach(sub -> MapperUtils.addResourceRelationship(owlImports, dcTermsRequires, resource, RDFS.subPropertyOf, sub));
+                getSubResourceOf.forEach(sub -> MapperUtils.addResourceRelationship(modelResource, resource, RDFS.subPropertyOf, sub));
             }
         }
 

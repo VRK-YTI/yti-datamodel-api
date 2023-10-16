@@ -3,6 +3,7 @@ package fi.vm.yti.datamodel.api.v2.mapper;
 import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
 import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
+import fi.vm.yti.datamodel.api.v2.utils.DataModelUtils;
 import fi.vm.yti.security.YtiUser;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.datatypes.xsd.XSDDateTime;
@@ -10,6 +11,7 @@ import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.rdf.model.*;
 import org.apache.jena.shared.JenaException;
 import org.apache.jena.vocabulary.*;
+import org.topbraid.shacl.vocabulary.SH;
 
 import java.util.*;
 import java.util.function.Consumer;
@@ -247,21 +249,45 @@ public class MapperUtils {
     }
 
     /**
-     * Add resource relationship to resource.
-     * Resource namespace needs to be in data model (owlImports or dcTermsRequires)
-     * @param owlImports Owl imports
-     * @param dcTermsRequires DcTerms requires
-     * @param resource Resource
-     * @param property Property
-     * @param resourceUri Resource URI
+     * Adds resource relationship to resource.
+     * Adds reference to the model (owl:imports or dcterms:requires) if not exists
      */
-    public static void addResourceRelationship(Set<String> owlImports, Set<String> dcTermsRequires, Resource resource, Property property, String resourceUri){
-        var namespace = NodeFactory.createURI(resourceUri).getNameSpace().replaceAll("/$", "");
-        var ownNamespace = resource.getNameSpace().replaceAll("/$", "");
-        if(!ownNamespace.equals(namespace) &&!owlImports.contains(namespace) && !dcTermsRequires.contains(namespace)){
-            throw new MappingError("Resource namespace not in owl:imports or dcterms:requires");
+    public static void addResourceRelationship(Resource modelResource, Resource resource, Property property, String resourceURI) {
+        if (resourceURI == null) {
+            return;
         }
-        resource.addProperty(property, ResourceFactory.createResource(resourceUri));
+
+        var namespaces = new HashSet<String>();
+        namespaces.addAll(arrayPropertyToSet(modelResource, OWL.imports));
+        namespaces.addAll(arrayPropertyToSet(modelResource, DCTerms.requires));
+        namespaces.add(DataModelUtils.removeTrailingSlash(resource.getNameSpace()));
+
+        var refNamespace = DataModelUtils.removeTrailingSlash(NodeFactory.createURI(resourceURI).getNameSpace());
+
+        // reference already added
+        if (namespaces.contains(refNamespace)) {
+            resource.addProperty(property, ResourceFactory.createResource(resourceURI));
+            return;
+        }
+
+        Property referenceProperty;
+        if (refNamespace.startsWith(ModelConstants.SUOMI_FI_NAMESPACE)) {
+            if (isLibrary(modelResource)) {
+                referenceProperty = OWL.imports;
+            } else {
+                // object of these properties belongs to library
+                var importsProperties = List.of(SH.path, SH.targetClass, SH.class_);
+                referenceProperty = importsProperties.contains(property)
+                        ? DCTerms.requires
+                        : OWL.imports;
+            }
+        } else {
+            // external namespaces are not added automatically
+            throw new MappingError(String.format("Namespace %s not in owl:imports or dcterms:requires", refNamespace));
+        }
+
+        modelResource.addProperty(referenceProperty, refNamespace);
+        resource.addProperty(property, ResourceFactory.createResource(resourceURI));
     }
 
     /**
