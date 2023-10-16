@@ -1,11 +1,7 @@
 package fi.vm.yti.datamodel.api.v2.dto;
 
-import java.util.Map;
-
-public class VersionedModelDTO {
-
+public class VersionedModelDTO extends ModelMetaData {
     private Status status;
-    private Map<String, String> documentation;
 
     public Status getStatus() {
         return status;
@@ -15,11 +11,4 @@ public class VersionedModelDTO {
         this.status = status;
     }
 
-    public Map<String, String> getDocumentation() {
-        return documentation;
-    }
-
-    public void setDocumentation(Map<String, String> documentation) {
-        this.documentation = documentation;
-    }
 }

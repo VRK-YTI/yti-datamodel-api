@@ -120,7 +120,6 @@ class DataModelServiceTest {
         when(coreRepository.fetch(anyString())).thenReturn(ModelFactory.createDefaultModel());
         when(authorizationManager.hasRightToModel(anyString(), any(Model.class))).thenReturn(true);
         when(userProvider.getUser()).thenReturn(EndpointUtils.mockUser);
-        when(modelMapper.mapToUpdateJenaModel(anyString(), any(DataModelDTO.class), any(Model.class), any(YtiUser.class))).thenReturn(ModelFactory.createDefaultModel());
         when(modelMapper.mapToIndexModel(anyString(), any(Model.class))).thenReturn(new IndexModel());
         var dto = createDatamodelDTO(true);
         dataModelService.update("test", dto);
@@ -311,7 +310,7 @@ class DataModelServiceTest {
 
         verify(coreRepository).fetch(anyString());
         verify(authorizationManager).hasRightToModel(anyString(), any(Model.class));
-        verify(modelMapper).mapUpdateVersionedModel(any(Model.class), anyString(), anyString(), any(VersionedModelDTO.class), any(YtiUser.class));
+        verify(modelMapper).mapUpdateVersionedModel(any(Model.class), anyString(), any(VersionedModelDTO.class), any(YtiUser.class));
         verify(coreRepository).put(anyString(), any(Model.class));
         verify(modelMapper).mapToIndexModel(anyString(), any(Model.class));
         verify(openSearchIndexer).updateModelToIndex(any(IndexModel.class));

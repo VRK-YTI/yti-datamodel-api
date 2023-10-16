@@ -1,5 +1,6 @@
 package fi.vm.yti.datamodel.api.v2.endpoint;
 
+import fi.vm.yti.datamodel.api.mapper.MapperTestUtils;
 import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import fi.vm.yti.datamodel.api.v2.service.DataModelService;
@@ -7,8 +8,6 @@ import fi.vm.yti.datamodel.api.v2.validator.ExceptionHandlerAdvice;
 import fi.vm.yti.datamodel.api.v2.validator.ValidationConstants;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.jena.rdf.model.ModelFactory;
-import org.apache.jena.vocabulary.SKOS;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -53,25 +52,20 @@ class DataModelControllerTest {
     @Autowired
     private DataModelController dataModelController;
 
-    private static final UUID RANDOM_ORG = UUID.randomUUID();
-
     @BeforeEach
     public void setup() {
         this.mvc = MockMvcBuilders
                 .standaloneSetup(this.dataModelController)
                 .setControllerAdvice(new ExceptionHandlerAdvice())
                 .build();
+
+        when(coreRepository.getServiceCategories()).thenReturn(MapperTestUtils.getMockGroups());
+        when(coreRepository.getOrganizations()).thenReturn(MapperTestUtils.getMockOrganizations());
     }
 
     @Test
     void shouldValidateAndCreate() throws Exception {
         var dataModelDTO = createDatamodelDTO(false);
-        //Mock validation stuff
-        var mockModel = ModelFactory.createDefaultModel();
-        var res = mockModel.createResource(ModelConstants.URN_UUID + RANDOM_ORG);
-        res.addProperty(SKOS.notation, "P11");
-        when(coreRepository.getOrganizations()).thenReturn(mockModel);
-        when(coreRepository.getServiceCategories()).thenReturn(mockModel);
 
         this.mvc
                 .perform(post("/v2/model/library")
@@ -87,13 +81,6 @@ class DataModelControllerTest {
     @Test
     void shouldValidateAndUpdate() throws Exception {
         var dataModelDTO = createDatamodelDTO(true);
-
-        //Mock validation stuff
-        var mockModel = ModelFactory.createDefaultModel();
-        var res = mockModel.createResource(ModelConstants.URN_UUID + RANDOM_ORG);
-        res.addProperty(SKOS.notation, "P11");
-        when(coreRepository.getOrganizations()).thenReturn(mockModel);
-        when(coreRepository.getServiceCategories()).thenReturn(mockModel);
 
         this.mvc
                 .perform(put("/v2/model/library/test")
@@ -123,12 +110,6 @@ class DataModelControllerTest {
     @ParameterizedTest
     @MethodSource("provideDataModelInvalidData")
     void shouldInValidate(DataModelDTO dataModelDTO) throws Exception {
-        //Mock validation stuff
-        var mockModel = ModelFactory.createDefaultModel();
-        var res = mockModel.createResource(ModelConstants.URN_UUID + RANDOM_ORG + "-over-the-limit");
-        res.addProperty(SKOS.notation, "P11");
-        when(coreRepository.getOrganizations()).thenReturn(mockModel);
-        when(coreRepository.getServiceCategories()).thenReturn(mockModel);
 
         this.mvc
                 .perform(post("/v2/model/profile")
@@ -139,11 +120,6 @@ class DataModelControllerTest {
 
     @Test
     void shouldInValidateLibrary() throws Exception {
-        var mockModel = ModelFactory.createDefaultModel();
-        var res = mockModel.createResource(ModelConstants.URN_UUID + RANDOM_ORG);
-        res.addProperty(SKOS.notation, "P11");
-        when(coreRepository.getOrganizations()).thenReturn(mockModel);
-        when(coreRepository.getServiceCategories()).thenReturn(mockModel);
 
         DataModelDTO dataModelDTO = createDatamodelDTO(false);
 
@@ -159,12 +135,6 @@ class DataModelControllerTest {
     @ParameterizedTest
     @MethodSource("provideDataModelUpdateInvalidData")
     void shouldInValidateUpdate(DataModelDTO dataModelDTO) throws Exception {
-        //Mock validation stuff
-        var mockModel = ModelFactory.createDefaultModel();
-        var res = mockModel.createResource(ModelConstants.URN_UUID + RANDOM_ORG);
-        res.addProperty(SKOS.notation, "P11");
-        when(coreRepository.getOrganizations()).thenReturn(mockModel);
-        when(coreRepository.getServiceCategories()).thenReturn(mockModel);
 
         this.mvc
                 .perform(put("/v2/model/library/test")
@@ -205,7 +175,7 @@ class DataModelControllerTest {
         dataModelDTO.setLabel(Map.of("fi", "test label"));
         dataModelDTO.setGroups(Set.of("P11"));
         dataModelDTO.setLanguages(Set.of("fi"));
-        dataModelDTO.setOrganizations(Set.of(RANDOM_ORG));
+        dataModelDTO.setOrganizations(Set.of(MapperTestUtils.TEST_ORG_ID));
         dataModelDTO.setInternalNamespaces(Set.of("http://uri.suomi.fi/datamodel/ns/test"));
         var extNs = new ExternalNamespaceDTO();
         extNs.setName("test external namespace");
@@ -225,6 +195,7 @@ class DataModelControllerTest {
     }
 
     private static Stream<Arguments> provideDataModelInvalidData() {
+        //TODO make pair of DTO and expected error message
         var textFieldMaxPlus = ValidationConstants.TEXT_FIELD_MAX_LENGTH + 20;
         var textAreaMaxPlus = ValidationConstants.TEXT_AREA_MAX_LENGTH + 20;
         var emailAreaMaxPlus = ValidationConstants.EMAIL_FIELD_MAX_LENGTH + 20;
@@ -237,8 +208,9 @@ class DataModelControllerTest {
         dataModelDTO.setPrefix("123");
         args.add(dataModelDTO);
 
+        //Prefix over max length
         dataModelDTO = createDatamodelDTO(false);
-        dataModelDTO.setPrefix("asd123asd1232asd123");
+        dataModelDTO.setPrefix(RandomStringUtils.randomAlphanumeric(ValidationConstants.PREFIX_MAX_LENGTH + 1));
         args.add(dataModelDTO);
 
         dataModelDTO = createDatamodelDTO(false);

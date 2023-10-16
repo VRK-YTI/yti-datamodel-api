@@ -98,7 +98,7 @@ class PropertyShapeMapperTest {
         var model = MapperTestUtils.getModelFromFile("/models/test_datamodel_profile_with_resources.ttl");
 
         var dto = ResourceMapper.mapToPropertyShapeInfoDTO(model, "http://uri.suomi.fi/datamodel/ns/test", "TestAttributeRestriction",
-                MapperTestUtils.getOrgModel(), false, null);
+                MapperTestUtils.getMockOrganizations(), false, null);
 
         assertEquals("test property shape", dto.getLabel().get("fi"));
         assertEquals(Status.DRAFT, dto.getStatus());
@@ -128,7 +128,7 @@ class PropertyShapeMapperTest {
         var model = MapperTestUtils.getModelFromFile("/models/test_datamodel_profile_with_resources.ttl");
 
         var dto = ResourceMapper.mapToPropertyShapeInfoDTO(model, "http://uri.suomi.fi/datamodel/ns/test", "TestAssociationRestriction",
-                MapperTestUtils.getOrgModel(), false, null);
+                MapperTestUtils.getMockOrganizations(), false, null);
 
         assertEquals("test property shape", dto.getLabel().get("fi"));
         assertEquals(Status.DRAFT, dto.getStatus());

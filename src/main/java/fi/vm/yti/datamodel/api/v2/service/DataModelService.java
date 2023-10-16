@@ -9,6 +9,7 @@ import fi.vm.yti.datamodel.api.v2.mapper.ModelMapper;
 import fi.vm.yti.datamodel.api.v2.mapper.ResourceMapper;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexResource;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
+import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelUtils;
 import fi.vm.yti.datamodel.api.v2.utils.SemVer;
@@ -104,17 +105,17 @@ public class DataModelService {
 
     public void update(String prefix, DataModelDTO dto) {
         var graphUri = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
-        var oldModel = coreRepository.fetch(graphUri);
+        var model = coreRepository.fetch(graphUri);
 
-        check(authorizationManager.hasRightToModel(prefix, oldModel));
+        check(authorizationManager.hasRightToModel(prefix, model));
 
         terminologyService.resolveTerminology(dto.getTerminologies());
         codeListService.resolveCodelistScheme(dto.getCodeLists());
-        var jenaModel = mapper.mapToUpdateJenaModel(prefix, dto, oldModel, userProvider.getUser());
+        mapper.mapToUpdateJenaModel(graphUri, dto, model, userProvider.getUser());
 
-        coreRepository.put(graphUri, jenaModel);
+        coreRepository.put(graphUri, model);
 
-        var indexModel = mapper.mapToIndexModel(graphUri, jenaModel);
+        var indexModel = mapper.mapToIndexModel(graphUri, model);
         openSearchIndexer.updateModelToIndex(indexModel);
     }
 
@@ -251,12 +252,14 @@ public class DataModelService {
         var constructBuilder = new ConstructBuilder()
                 .addConstruct("?g", OWL2.versionInfo, "?versionInfo")
                 .addConstruct("?g", OWL2.versionIRI, "?versionIRI")
-                .addConstruct("?g", RDFS.label, "?label");
+                .addConstruct("?g", RDFS.label, "?label")
+                .addConstruct("?g", SuomiMeta.publicationStatus, "?publicationStatus");
         var uri = NodeFactory.createURI(modelUri);
         var whereBuilder = new WhereBuilder()
                 .addWhere(uri, OWL2.versionInfo, "?versionInfo")
                 .addWhere(uri, OWL2.versionIRI, "?versionIRI")
-                .addWhere(uri, RDFS.label, "?label");
+                .addWhere(uri, RDFS.label, "?label")
+                .addWhere(uri, SuomiMeta.publicationStatus, "?publicationStatus");
         constructBuilder.addGraph("?g", whereBuilder);
         var model = coreRepository.queryConstruct(constructBuilder.build());
 
@@ -279,7 +282,7 @@ public class DataModelService {
         var model = coreRepository.fetch(versionUri);
         check(authorizationManager.hasRightToModel(prefix, model));
 
-        mapper.mapUpdateVersionedModel(model, graphUri, version, dto, userProvider.getUser());
+        mapper.mapUpdateVersionedModel(model, graphUri, dto, userProvider.getUser());
 
         coreRepository.put(versionUri, model);
 
