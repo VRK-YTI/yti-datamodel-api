@@ -9,6 +9,7 @@ import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexModel;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexResource;
 import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
+import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.RDFList;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.vocabulary.*;
