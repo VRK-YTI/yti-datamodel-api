@@ -9,6 +9,7 @@ import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.mapper.ResourceMapper;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexResource;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
+import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import fi.vm.yti.datamodel.api.v2.repository.ImportsRepository;
 import fi.vm.yti.security.AuthenticatedUserProvider;
@@ -16,6 +17,8 @@ import fi.vm.yti.security.YtiUser;
 import org.apache.jena.query.Query;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.rdf.model.ResourceFactory;
+import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
@@ -24,6 +27,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
@@ -330,6 +334,49 @@ class ResourceServiceTest {
         assertEquals(Map.of("en", "attribute-2"), result2.get().getLabel());
         // label already added
         assertEquals(Map.of("en", "Existing label"), result3.get().getLabel());
+    }
+
+    @Test
+    void testRenameResource() throws URISyntaxException {
+        var model = ModelFactory.createDefaultModel();
+        var modelURI = ModelConstants.SUOMI_FI_NAMESPACE + "test";
+        model.createResource(modelURI + "/resource-1")
+                .addProperty(DCTerms.identifier, "resource-1")
+                .addProperty(SuomiMeta.publicationStatus, Status.DRAFT.name())
+                .addProperty(DCTerms.created, "created")
+                .addProperty(DCTerms.modified, "modified");
+        model.createResource(modelURI + "/resource-2")
+                .addProperty(DCTerms.identifier, "resource-2")
+                .addProperty(RDFS.subPropertyOf, ResourceFactory.createResource(modelURI + "/resource-1"));
+
+        var newClassURI = modelURI + "/resource-1-new";
+
+        when(authorizationManager.hasRightToModel(anyString(), any(Model.class))).thenReturn(true);
+        when(coreRepository.fetch(modelURI)).thenReturn(model);
+        when(coreRepository.resourceExistsInGraph(modelURI, modelURI + "/resource-1")).thenReturn(true);
+        when(coreRepository.resourceExistsInGraph(modelURI, newClassURI)).thenReturn(false);
+
+        resourceService.renameResource("test", "resource-1", "resource-1-new");
+
+        ArgumentCaptor<IndexResource> indexCaptor = ArgumentCaptor.forClass(IndexResource.class);
+        verify(openSearchIndexer).deleteResourceFromIndex(modelURI + "/resource-1");
+        verify(openSearchIndexer).createResourceToIndex(indexCaptor.capture());
+
+        var renamed = model.getResource(newClassURI);
+
+        assertEquals(newClassURI, renamed.getURI());
+        assertEquals(newClassURI, model.getResource(modelURI + "/resource-2").getProperty(RDFS.subPropertyOf).getObject().toString());
+        assertEquals("resource-1-new", indexCaptor.getValue().getIdentifier());
+    }
+
+    @Test
+    void testRenameResourceExists() {
+        var modelURI = ModelConstants.SUOMI_FI_NAMESPACE + "test";
+
+        when(coreRepository.resourceExistsInGraph(modelURI, modelURI + "/resource-1")).thenReturn(true);
+        when(coreRepository.resourceExistsInGraph(modelURI, modelURI + "/foo")).thenReturn(true);
+
+        assertThrows(MappingError.class, () -> resourceService.renameResource("test", "resource-1", "foo"));
     }
 
     private static ResourceDTO createResourceDTO(boolean update, ResourceType resourceType){

@@ -218,7 +218,7 @@ class ModelMapperTest {
         assertEquals("http://uri.suomi.fi/datamodel/ns/int", modelResource.listProperties(OWL.imports).next().getObject().toString());
 
         var requires = MapperUtils.arrayPropertyToList(modelResource, DCTerms.requires);
-        assertEquals(2, requires.size());
+        assertEquals(3, requires.size());
         assertTrue(requires.containsAll(List.of("https://www.example.com/ns/ext", "http://uri.suomi.fi/terminology/test")));
 
         assertEquals("test@localhost", MapperUtils.propertyToString(modelResource, Iow.contact));
@@ -320,7 +320,10 @@ class ModelMapperTest {
         assertEquals("int", internalDTO.getPrefix());
         assertEquals("http://uri.suomi.fi/datamodel/ns/int", internalDTO.getNamespace());
 
-        var externalDTO = result.getExternalNamespaces().stream().findFirst().orElseThrow();
+        var externalDTO = result.getExternalNamespaces().stream()
+                .filter(ns -> ns.getNamespace().equals("https://www.example.com/ns/ext"))
+                .findFirst()
+                .orElseThrow();
         assertEquals("test resource", externalDTO.getName());
         assertEquals("extres", externalDTO.getPrefix());
         assertEquals("https://www.example.com/ns/ext", externalDTO.getNamespace());

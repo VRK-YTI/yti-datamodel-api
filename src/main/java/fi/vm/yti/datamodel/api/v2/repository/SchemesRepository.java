@@ -18,7 +18,9 @@ public class SchemesRepository extends BaseRepository {
                              @Value("${model.cache.expiration:1800}") Long cacheExpireTime) {
         super(
                 RDFConnection.connect(endpoint + "/scheme/get"),
-                RDFConnection.connect(endpoint + "/scheme/data")
+                RDFConnection.connect(endpoint + "/scheme/data"),
+                RDFConnection.connect(endpoint + "/scheme/sparql"),
+                RDFConnection.connect(endpoint + "/scheme/update")
         );
 
         this.modelCache = CacheBuilder.newBuilder()

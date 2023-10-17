@@ -28,7 +28,7 @@ class PropertyShapeMapperTest {
         dto.setStatus(Status.DRAFT);
         dto.setLabel(Map.of("fi", "PropertyShape label"));
         dto.setIdentifier("ps-1");
-        dto.setPath("http://uri.suomi.fi/datamodel/ns/test_attribute");
+        dto.setPath("http://uri.suomi.fi/datamodel/ns/test_lib/1.0.0/test_attribute");
         dto.setAllowedValues(List.of("Value 1", "Value 2"));
         dto.setDataType("xsd:integer");
         dto.setDefaultValue("default");
@@ -49,7 +49,7 @@ class PropertyShapeMapperTest {
 
         assertEquals("PropertyShape label", MapperUtils.localizedPropertyToMap(resource, RDFS.label).get("fi"));
         assertEquals(Status.DRAFT, Status.valueOf(MapperUtils.propertyToString(resource, SuomiMeta.publicationStatus)));
-        assertEquals("http://uri.suomi.fi/datamodel/ns/test_attribute", resource.getProperty(SH.path).getObject().toString());
+        assertEquals("http://uri.suomi.fi/datamodel/ns/test_lib/1.0.0/test_attribute", resource.getProperty(SH.path).getObject().toString());
         assertTrue(MapperUtils.hasType(resource, OWL.DatatypeProperty, SH.PropertyShape));
         assertTrue(allowedValues.containsAll(List.of("Value 1", "Value 2")));
         assertEquals("xsd:integer", MapperUtils.propertyToString(resource, SH.datatype));
@@ -75,7 +75,7 @@ class PropertyShapeMapperTest {
         dto.setStatus(Status.DRAFT);
         dto.setLabel(Map.of("fi", "PropertyShape label"));
         dto.setIdentifier("ps-1");
-        dto.setPath("http://uri.suomi.fi/datamodel/ns/test_attribute");
+        dto.setPath("http://uri.suomi.fi/datamodel/ns/test_lib/1.0.0/test_attribute");
         dto.setMaxCount(10);
         dto.setMinCount(1);
         dto.setClassType("http://uri.suomi.fi/datamodel/ns/test/TestClass");
@@ -85,7 +85,7 @@ class PropertyShapeMapperTest {
 
         assertEquals("PropertyShape label", MapperUtils.localizedPropertyToMap(resource, RDFS.label).get("fi"));
         assertEquals(Status.DRAFT, Status.valueOf(MapperUtils.propertyToString(resource, SuomiMeta.publicationStatus)));
-        assertEquals("http://uri.suomi.fi/datamodel/ns/test_attribute", resource.getProperty(SH.path).getObject().toString());
+        assertEquals("http://uri.suomi.fi/datamodel/ns/test_lib/1.0.0/test_attribute", resource.getProperty(SH.path).getObject().toString());
         assertTrue(MapperUtils.hasType(resource, OWL.ObjectProperty, SH.PropertyShape));
         assertEquals(10, MapperUtils.getLiteral(resource, SH.maxCount, Integer.class));
         assertEquals(1, MapperUtils.getLiteral(resource, SH.minCount, Integer.class));

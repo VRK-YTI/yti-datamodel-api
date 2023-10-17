@@ -20,6 +20,8 @@ import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.OWL2;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
+import org.apache.jena.util.ResourceUtils;
+import org.apache.jena.vocabulary.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.topbraid.shacl.vocabulary.SH;
@@ -170,7 +172,6 @@ public class ResourceService {
         }
         var model = coreRepository.fetch(modelURI);
         check(authorizationManager.hasRightToModel(prefix, model));
-
         coreRepository.deleteResource(resourceUri);
         openSearchIndexer.deleteResourceFromIndex(resourceUri);
     }
@@ -330,5 +331,35 @@ public class ResourceService {
                 }
             });
         };
+    }
+
+    public URI renameResource(String prefix, String oldIdentifier, String newIdentifier) throws URISyntaxException {
+        var modelURI = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
+        var resourceURI = modelURI + ModelConstants.RESOURCE_SEPARATOR + oldIdentifier;
+        var newResourceURI = modelURI + ModelConstants.RESOURCE_SEPARATOR + newIdentifier;
+
+        var model = coreRepository.fetch(modelURI);
+
+        if (!coreRepository.resourceExistsInGraph(modelURI, resourceURI)) {
+            throw new ResourceNotFoundException(resourceURI);
+        }
+
+        if (coreRepository.resourceExistsInGraph(modelURI, newResourceURI)) {
+            throw new MappingError("Resource already exists with identifier " + newIdentifier);
+        }
+
+        check(authorizationManager.hasRightToModel(prefix, model));
+
+        var oldResource = model.getResource(resourceURI);
+        oldResource.removeAll(DCTerms.identifier);
+        oldResource.addProperty(DCTerms.identifier, newIdentifier);
+
+        var newResource = ResourceUtils.renameResource(oldResource, oldResource.getNameSpace() + newIdentifier);
+        coreRepository.put(modelURI, model);
+
+        openSearchIndexer.deleteResourceFromIndex(resourceURI);
+        openSearchIndexer.createResourceToIndex(ResourceMapper.mapToIndexResource(model, newResourceURI));
+
+        return new URI(newResource.getURI());
     }
 }
