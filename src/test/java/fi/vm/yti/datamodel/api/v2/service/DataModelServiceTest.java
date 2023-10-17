@@ -120,7 +120,6 @@ class DataModelServiceTest {
         when(coreRepository.fetch(anyString())).thenReturn(ModelFactory.createDefaultModel());
         when(authorizationManager.hasRightToModel(anyString(), any(Model.class))).thenReturn(true);
         when(userProvider.getUser()).thenReturn(EndpointUtils.mockUser);
-        when(modelMapper.mapToUpdateJenaModel(anyString(), any(DataModelDTO.class), any(Model.class), any(YtiUser.class))).thenReturn(ModelFactory.createDefaultModel());
         when(modelMapper.mapToIndexModel(anyString(), any(Model.class))).thenReturn(new IndexModel());
         var dto = createDatamodelDTO(true);
         dataModelService.update("test", dto);
@@ -297,6 +296,24 @@ class DataModelServiceTest {
         verify(coreRepository).queryConstruct(any(Query.class));
         verify(modelMapper, times(2)).mapModelVersionInfo(any(Resource.class));
         assertTrue(result.isEmpty());
+    }
+
+    @Test
+    void testUpdateVersionedDatamodel() {
+        when(authorizationManager.hasRightToModel(anyString(), any(Model.class))).thenReturn(true);
+        when(coreRepository.fetch(anyString())).thenReturn(ModelFactory.createDefaultModel());
+        when(userProvider.getUser()).thenReturn(EndpointUtils.mockUser);
+        when(modelMapper.mapToIndexModel(anyString(), any(Model.class))).thenReturn(new IndexModel());
+
+
+        dataModelService.updateVersionedModel("test", "1.0.1", new VersionedModelDTO());
+
+        verify(coreRepository).fetch(anyString());
+        verify(authorizationManager).hasRightToModel(anyString(), any(Model.class));
+        verify(modelMapper).mapUpdateVersionedModel(any(Model.class), anyString(), any(VersionedModelDTO.class), any(YtiUser.class));
+        verify(coreRepository).put(anyString(), any(Model.class));
+        verify(modelMapper).mapToIndexModel(anyString(), any(Model.class));
+        verify(openSearchIndexer).updateModelToIndex(any(IndexModel.class));
     }
 
 

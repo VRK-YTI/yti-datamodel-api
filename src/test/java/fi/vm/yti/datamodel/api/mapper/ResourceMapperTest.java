@@ -9,8 +9,9 @@ import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexModel;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexResource;
 import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
-import org.apache.jena.rdf.model.*;
-import org.apache.jena.sparql.vocabulary.FOAF;
+import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.rdf.model.RDFList;
+import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.vocabulary.*;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -339,7 +340,7 @@ class ResourceMapperTest {
     void mapToResourceInfoDTOAttribute() {
         var m = MapperTestUtils.getModelFromFile("/models/test_datamodel_library_with_resources.ttl");
 
-        var dto = ResourceMapper.mapToResourceInfoDTO(m, "http://uri.suomi.fi/datamodel/ns/test", "TestAttribute", getOrgModel(), true, null);
+        var dto = ResourceMapper.mapToResourceInfoDTO(m, "http://uri.suomi.fi/datamodel/ns/test", "TestAttribute", MapperTestUtils.getMockOrganizations(), true, null);
 
         assertEquals(ResourceType.ATTRIBUTE, dto.getType());
         assertEquals(1, dto.getLabel().size());
@@ -357,8 +358,8 @@ class ResourceMapperTest {
         assertEquals("test note en", dto.getNote().get("en"));
         assertEquals("2023-02-03T11:46:36.404Z", dto.getModified());
         assertEquals("2023-02-03T11:46:36.404Z", dto.getCreated());
-        assertEquals("test org", dto.getContributor().stream().findFirst().orElseThrow().getLabel().get("fi"));
-        assertEquals("7d3a3c00-5a6b-489b-a3ed-63bb58c26a63", dto.getContributor().stream().findFirst().orElseThrow().getId());
+        assertEquals("Yhteentoimivuusalustan yllapito", dto.getContributor().stream().findFirst().orElseThrow().getLabel().get("fi"));
+        assertEquals(MapperTestUtils.TEST_ORG_ID.toString(), dto.getContributor().stream().findFirst().orElseThrow().getId());
         assertEquals("http://uri.suomi.fi/datamodel/ns/test/TestAttribute", dto.getUri());
         assertEquals("http://uri.suomi.fi/datamodel/ns/test/DomainClass", dto.getDomain().getUri());
         assertEquals("test:DomainClass", dto.getDomain().getCurie());
@@ -370,7 +371,7 @@ class ResourceMapperTest {
     void mapToResourceInfoDTOAssociation() {
         var m = MapperTestUtils.getModelFromFile("/models/test_datamodel_library_with_resources.ttl");
 
-        var dto = ResourceMapper.mapToResourceInfoDTO(m, "http://uri.suomi.fi/datamodel/ns/test", "TestAssociation", getOrgModel(), true, null);
+        var dto = ResourceMapper.mapToResourceInfoDTO(m, "http://uri.suomi.fi/datamodel/ns/test", "TestAssociation", MapperTestUtils.getMockOrganizations(), true, null);
 
         assertEquals(ResourceType.ASSOCIATION, dto.getType());
         assertEquals(1, dto.getLabel().size());
@@ -388,8 +389,8 @@ class ResourceMapperTest {
         assertEquals("test note en", dto.getNote().get("en"));
         assertEquals("2023-02-03T11:46:36.404Z", dto.getModified());
         assertEquals("2023-02-03T11:46:36.404Z", dto.getCreated());
-        assertEquals("test org", dto.getContributor().stream().findFirst().orElseThrow().getLabel().get("fi"));
-        assertEquals("7d3a3c00-5a6b-489b-a3ed-63bb58c26a63", dto.getContributor().stream().findFirst().orElseThrow().getId());
+        assertEquals("Yhteentoimivuusalustan yllapito", dto.getContributor().stream().findFirst().orElseThrow().getLabel().get("fi"));
+        assertEquals(MapperTestUtils.TEST_ORG_ID.toString(), dto.getContributor().stream().findFirst().orElseThrow().getId());
         assertEquals("http://uri.suomi.fi/datamodel/ns/test/TestAssociation", dto.getUri());
         assertEquals("http://uri.suomi.fi/datamodel/ns/test/DomainClass", dto.getDomain().getUri());
         assertEquals("http://uri.suomi.fi/datamodel/ns/test/RangeClass", dto.getRange().getUri());
@@ -399,7 +400,7 @@ class ResourceMapperTest {
     void mapToResourceInfoDTOAttributeMinimal() {
         var m = MapperTestUtils.getModelFromFile("/models/test_datamodel_with_minimal_resources.ttl");
 
-        var dto = ResourceMapper.mapToResourceInfoDTO(m, "http://uri.suomi.fi/datamodel/ns/test", "TestAttribute", getOrgModel(), true, null);
+        var dto = ResourceMapper.mapToResourceInfoDTO(m, "http://uri.suomi.fi/datamodel/ns/test", "TestAttribute", MapperTestUtils.getMockOrganizations(), true, null);
 
         assertEquals(ResourceType.ATTRIBUTE, dto.getType());
         assertEquals(1, dto.getLabel().size());
@@ -413,8 +414,8 @@ class ResourceMapperTest {
         assertEquals(0, dto.getNote().size());
         assertEquals("2023-02-03T11:46:36.404Z", dto.getModified());
         assertEquals("2023-02-03T11:46:36.404Z", dto.getCreated());
-        assertEquals("test org", dto.getContributor().stream().findFirst().orElseThrow().getLabel().get("fi"));
-        assertEquals("7d3a3c00-5a6b-489b-a3ed-63bb58c26a63", dto.getContributor().stream().findFirst().orElseThrow().getId());
+        assertEquals("Yhteentoimivuusalustan yllapito", dto.getContributor().stream().findFirst().orElseThrow().getLabel().get("fi"));
+        assertEquals(MapperTestUtils.TEST_ORG_ID.toString(), dto.getContributor().stream().findFirst().orElseThrow().getId());
         assertEquals("http://uri.suomi.fi/datamodel/ns/test/TestAttribute", dto.getUri());
     }
 
@@ -423,7 +424,7 @@ class ResourceMapperTest {
         var m = MapperTestUtils.getModelFromFile("/models/test_datamodel_with_minimal_resources.ttl");
 
 
-        var dto = ResourceMapper.mapToResourceInfoDTO(m, "http://uri.suomi.fi/datamodel/ns/test", "TestAssociation", getOrgModel(), true, null);
+        var dto = ResourceMapper.mapToResourceInfoDTO(m, "http://uri.suomi.fi/datamodel/ns/test", "TestAssociation", MapperTestUtils.getMockOrganizations(), true, null);
 
         assertEquals(ResourceType.ASSOCIATION, dto.getType());
         assertEquals(1, dto.getLabel().size());
@@ -437,8 +438,8 @@ class ResourceMapperTest {
         assertEquals(0, dto.getNote().size());
         assertEquals("2023-02-03T11:46:36.404Z", dto.getModified());
         assertEquals("2023-02-03T11:46:36.404Z", dto.getCreated());
-        assertEquals("test org", dto.getContributor().stream().findFirst().orElseThrow().getLabel().get("fi"));
-        assertEquals("7d3a3c00-5a6b-489b-a3ed-63bb58c26a63", dto.getContributor().stream().findFirst().orElseThrow().getId());
+        assertEquals("Yhteentoimivuusalustan yllapito", dto.getContributor().stream().findFirst().orElseThrow().getLabel().get("fi"));
+        assertEquals(MapperTestUtils.TEST_ORG_ID.toString(), dto.getContributor().stream().findFirst().orElseThrow().getId());
         assertEquals("http://uri.suomi.fi/datamodel/ns/test/TestAssociation", dto.getUri());
     }
 
@@ -447,13 +448,13 @@ class ResourceMapperTest {
     @Test
     void failMapToResourceInfoDTOClass(){
         var m = MapperTestUtils.getModelFromFile("/models/test_datamodel_library_with_resources.ttl");
-        assertThrowsExactly(MappingError.class, () -> ResourceMapper.mapToResourceInfoDTO(m, "http://uri.suomi.fi/datamodel/ns/test", "TestClass", getOrgModel(), true, null));
+        assertThrowsExactly(MappingError.class, () -> ResourceMapper.mapToResourceInfoDTO(m, "http://uri.suomi.fi/datamodel/ns/test", "TestClass", MapperTestUtils.getMockOrganizations(), true, null));
     }
 
     @Test
     void failMapToResourceInfoDTOClassMinimal(){
         var m = MapperTestUtils.getModelFromFile("/models/test_datamodel_with_minimal_resources.ttl");
-        assertThrowsExactly(MappingError.class, () -> ResourceMapper.mapToResourceInfoDTO(m, "http://uri.suomi.fi/datamodel/ns/test", "TestClass", getOrgModel(), true, null));
+        assertThrowsExactly(MappingError.class, () -> ResourceMapper.mapToResourceInfoDTO(m, "http://uri.suomi.fi/datamodel/ns/test", "TestClass", MapperTestUtils.getMockOrganizations(), true, null));
     }
 
     @Test
@@ -468,7 +469,7 @@ class ResourceMapperTest {
             dto.setCreator(creator);
             dto.setModifier(modifier);
         };
-        var dto = ResourceMapper.mapToResourceInfoDTO(m, "http://uri.suomi.fi/datamodel/ns/test", "TestAssociation", getOrgModel(), true, userMapper);
+        var dto = ResourceMapper.mapToResourceInfoDTO(m, "http://uri.suomi.fi/datamodel/ns/test", "TestAssociation", MapperTestUtils.getMockOrganizations(), true, userMapper);
 
         assertEquals("creator fake-user", dto.getCreator().getName());
         assertEquals("modifier fake-user", dto.getModifier().getName());
@@ -769,11 +770,5 @@ class ResourceMapperTest {
         assertEquals(2, model.getResource(modelURI).listProperties(DCTerms.requires).toList().size());
     }
 
-    private Model getOrgModel(){
-        var model = ModelFactory.createDefaultModel();
-              model.createResource("urn:uuid:7d3a3c00-5a6b-489b-a3ed-63bb58c26a63")
-                .addProperty(RDF.type, FOAF.Organization)
-                .addProperty(SKOS.prefLabel, ResourceFactory.createLangLiteral("test org", "fi"));
-        return model;
-    }
+
 }

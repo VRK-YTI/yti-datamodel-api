@@ -17,7 +17,10 @@ import org.apache.jena.arq.querybuilder.ConstructBuilder;
 import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.rdf.model.*;
 import org.apache.jena.util.ResourceUtils;
-import org.apache.jena.vocabulary.*;
+import org.apache.jena.vocabulary.DCTerms;
+import org.apache.jena.vocabulary.OWL2;
+import org.apache.jena.vocabulary.RDF;
+import org.apache.jena.vocabulary.RDFS;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.topbraid.shacl.vocabulary.SH;
@@ -242,8 +245,12 @@ public class ResourceService {
         }
     }
 
-    public boolean checkActiveStatus(String prefix, String uri) {
+    public boolean checkActiveStatus(String prefix, String uri, String version) {
         var modelUri = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
+
+        if(version != null){
+            modelUri += ModelConstants.RESOURCE_SEPARATOR + version;
+        }
 
         var askBuilder = new AskBuilder()
                 .addGraph(NodeFactory.createURI(modelUri),

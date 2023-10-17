@@ -17,10 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import java.util.Calendar;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -88,7 +85,7 @@ public class ModelMapper {
             }
         });
 
-        addOrgsToModel(modelDTO, modelResource);
+        addOrgsToModel(modelDTO.getOrganizations(), modelResource);
 
         addInternalNamespaceToDatamodel(modelDTO, modelResource, model);
         addExternalNamespaceToDatamodel(modelDTO, model, modelResource);
@@ -108,31 +105,12 @@ public class ModelMapper {
     }
 
 
-    public Model mapToUpdateJenaModel(String prefix, DataModelDTO dataModelDTO, Model model, YtiUser user){
-        var modelResource = model.getResource(ModelConstants.SUOMI_FI_NAMESPACE + prefix);
+    public void mapToUpdateJenaModel(String graphUri, DataModelDTO dataModelDTO, Model model, YtiUser user){
+        var modelResource = model.getResource(graphUri);
 
         //update languages before getting and using the languages for localized properties
         modelResource.removeAll(DCTerms.language);
         dataModelDTO.getLanguages().forEach(lang -> modelResource.addProperty(DCTerms.language, lang));
-
-        var langs = MapperUtils.arrayPropertyToSet(modelResource, DCTerms.language);
-
-        MapperUtils.updateLocalizedProperty(langs, dataModelDTO.getLabel(), modelResource, RDFS.label, model);
-        MapperUtils.updateLocalizedProperty(langs, dataModelDTO.getDescription(), modelResource, RDFS.comment, model);
-        MapperUtils.updateStringProperty(modelResource, Iow.contact, dataModelDTO.getContact());
-        MapperUtils.updateLocalizedProperty(langs, dataModelDTO.getDocumentation(), modelResource, Iow.documentation, model);
-
-        modelResource.removeAll(DCTerms.isPartOf);
-        var groupModel = coreRepository.getServiceCategories();
-        dataModelDTO.getGroups().forEach(group -> {
-            var groups = groupModel.listResourcesWithProperty(SKOS.notation, group);
-            if (groups.hasNext()) {
-                modelResource.addProperty(DCTerms.isPartOf, groups.next());
-            }
-        });
-
-        modelResource.removeAll(DCTerms.contributor);
-        addOrgsToModel(dataModelDTO, modelResource);
 
         removeFromIterator(modelResource.listProperties(DCTerms.requires), val -> val.startsWith(ModelConstants.SUOMI_FI_NAMESPACE));
         removeFromIterator(modelResource.listProperties(OWL.imports), val -> val.startsWith(ModelConstants.SUOMI_FI_NAMESPACE));
@@ -154,15 +132,7 @@ public class ModelMapper {
             dataModelDTO.getCodeLists().forEach(codeList -> MapperUtils.addOptionalUriProperty(modelResource, DCTerms.requires, codeList));
         }
 
-        // remove blank nodes
-        modelResource.listProperties(RDFS.seeAlso)
-                .mapWith(Statement::getObject)
-                .forEach(obj -> model.removeAll(obj.asResource(), null, null));
-        modelResource.removeAll(RDFS.seeAlso);
-        dataModelDTO.getLinks().forEach(linkDTO -> addLinkToModel(model, modelResource, linkDTO));
-
-        MapperUtils.addUpdateMetadata(modelResource, user);
-        return model;
+        updateCommonMetaData(model, modelResource, dataModelDTO, user);
     }
 
 
@@ -325,12 +295,12 @@ public class ModelMapper {
 
     /**
      * Add organizations to a model
-     * @param modelDTO Payload to get organizations from
+     * @param organizations Organizations
      * @param modelResource Model resource to add orgs to
      */
-    private void addOrgsToModel(DataModelDTO modelDTO, Resource modelResource) {
+    private void addOrgsToModel(Set<UUID> organizations, Resource modelResource) {
         var organizationsModel = coreRepository.getOrganizations();
-        modelDTO.getOrganizations().forEach(org -> {
+        organizations.forEach(org -> {
             var orgUri = ModelConstants.URN_UUID + org;
             var queryRes = ResourceFactory.createResource(orgUri);
             if(organizationsModel.containsResource(queryRes)){
@@ -341,7 +311,7 @@ public class ModelMapper {
 
     /**
      * Add namespaces from model to two sets
-     * @param intNs Internal namespaces set - Defined by having http://uri.suomi.fi/datamodel/ns as the namespace
+     * @param intNs Internal namespaces set - Defined by having {@link ModelConstants#SUOMI_FI_NAMESPACE} as the namespace
      * @param extNs External namespaces set - Everything not internal
      * @param model Model to get external namespace information from
      * @param resource Model resource where the given property lies
@@ -465,5 +435,49 @@ public class ModelMapper {
         dto.setStatus(Status.valueOf(MapperUtils.propertyToString(resource, SuomiMeta.publicationStatus)));
         dto.setVersion(MapperUtils.propertyToString(resource, OWL.versionInfo));
         return dto;
+    }
+
+    public void updateCommonMetaData(Model model, Resource resource, ModelMetaData dto, YtiUser user) {
+        var langs = MapperUtils.arrayPropertyToSet(resource, DCTerms.language);
+
+        MapperUtils.updateLocalizedProperty(langs, dto.getLabel(), resource, RDFS.label, model);
+        MapperUtils.updateLocalizedProperty(langs, dto.getDescription(), resource, RDFS.comment, model);
+        MapperUtils.updateStringProperty(resource, Iow.contact, dto.getContact());
+        MapperUtils.updateLocalizedProperty(langs, dto.getDocumentation(), resource, Iow.documentation, model);
+
+        resource.removeAll(DCTerms.contributor);
+        addOrgsToModel(dto.getOrganizations(), resource);
+
+        resource.removeAll(DCTerms.isPartOf);
+        var groupModel = coreRepository.getServiceCategories();
+        dto.getGroups().forEach(group -> {
+            var groups = groupModel.listResourcesWithProperty(SKOS.notation, group);
+            if (groups.hasNext()) {
+                resource.addProperty(DCTerms.isPartOf, groups.next());
+            }
+        });
+
+        // remove blank nodes
+        resource.listProperties(RDFS.seeAlso)
+                .mapWith(Statement::getObject)
+                .forEach(obj -> model.removeAll(obj.asResource(), null, null));
+        resource.removeAll(RDFS.seeAlso);
+        dto.getLinks().forEach(linkDTO -> addLinkToModel(model, resource, linkDTO));
+
+        MapperUtils.addUpdateMetadata(resource, user);
+    }
+
+    public void mapUpdateVersionedModel(Model model, String graphUri, VersionedModelDTO dto, YtiUser user) {
+        var resource = model.getResource(graphUri);
+
+        var status = Status.valueOf(MapperUtils.propertyToString(resource, SuomiMeta.publicationStatus));
+        if(status.equals(Status.VALID) && !List.of(Status.VALID, Status.RETIRED, Status.SUPERSEDED).contains(dto.getStatus())){
+            throw new MappingError("Cannot change status from VALID to " + dto.getStatus());
+        }else if(status.equals(Status.SUGGESTED) && !List.of(Status.SUGGESTED, Status.VALID, Status.RETIRED, Status.SUPERSEDED).contains(dto.getStatus())) {
+            throw new MappingError("Cannot change status from SUGGESTED to " + dto.getStatus());
+        }
+
+        MapperUtils.updateStringProperty(resource, SuomiMeta.publicationStatus, dto.getStatus().name());
+        updateCommonMetaData(model, resource, dto, user);
     }
 }

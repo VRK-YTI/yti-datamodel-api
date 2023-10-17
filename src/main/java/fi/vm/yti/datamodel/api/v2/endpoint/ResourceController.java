@@ -218,8 +218,9 @@ public class ResourceController {
 
     @GetMapping(value = "/profile/{prefix}/active")
     public Boolean getActiveStatus(@PathVariable @Parameter(description = "Data model prefix") String prefix,
-                                   @RequestParam @Parameter(description = "Property shape prefix") String uri){
-        return resourceService.checkActiveStatus(prefix, uri);
+                                   @RequestParam @Parameter(description = "Property shape prefix") String uri,
+                                   @RequestParam(required = false) @Parameter(description = "Version") String version){
+        return resourceService.checkActiveStatus(prefix, uri, version);
     }
 
     @Operation(summary = "Delete a property shape from a profile")

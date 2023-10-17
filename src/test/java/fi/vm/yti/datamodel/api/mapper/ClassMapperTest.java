@@ -99,7 +99,7 @@ class ClassMapperTest {
     void testMapToClassDTOLibrary(){
         var m = MapperTestUtils.getModelFromFile("/models/test_datamodel_library_with_resources.ttl");
 
-        var dto = ClassMapper.mapToClassDTO(m, "http://uri.suomi.fi/datamodel/ns/test", "TestClass", MapperTestUtils.getOrgModel(), false, null);
+        var dto = ClassMapper.mapToClassDTO(m, "http://uri.suomi.fi/datamodel/ns/test", "TestClass", MapperTestUtils.getMockOrganizations(), false, null);
 
         // not authenticated
         assertNull(dto.getEditorialNote());
@@ -117,8 +117,8 @@ class ClassMapperTest {
         assertEquals("test note en", dto.getNote().get("en"));
         assertEquals("2023-02-03T11:46:36.404Z", dto.getModified());
         assertEquals("2023-02-03T11:46:36.404Z", dto.getCreated());
-        assertEquals("test org", dto.getContributor().stream().findFirst().orElseThrow().getLabel().get("fi"));
-        assertEquals("7d3a3c00-5a6b-489b-a3ed-63bb58c26a63", dto.getContributor().stream().findFirst().orElseThrow().getId());
+        assertEquals("Yhteentoimivuusalustan yllapito", dto.getContributor().stream().findFirst().orElseThrow().getLabel().get("fi"));
+        assertEquals(MapperTestUtils.TEST_ORG_ID.toString(), dto.getContributor().stream().findFirst().orElseThrow().getId());
         assertEquals("http://uri.suomi.fi/datamodel/ns/test/TestClass", dto.getUri());
     }
 
@@ -126,7 +126,7 @@ class ClassMapperTest {
     void testMapToClassMinimalDTO(){
         var m = MapperTestUtils.getModelFromFile("/models/test_datamodel_with_minimal_resources.ttl");
 
-        var dto = ClassMapper.mapToClassDTO(m, "http://uri.suomi.fi/datamodel/ns/test", "TestClass", MapperTestUtils.getOrgModel(), true, null);
+        var dto = ClassMapper.mapToClassDTO(m, "http://uri.suomi.fi/datamodel/ns/test", "TestClass", MapperTestUtils.getMockOrganizations(), true, null);
 
         // not authenticated
         assertNull(dto.getEditorialNote());
@@ -140,8 +140,8 @@ class ClassMapperTest {
         assertTrue(dto.getNote().isEmpty());
         assertEquals("2023-02-03T11:46:36.404Z", dto.getModified());
         assertEquals("2023-02-03T11:46:36.404Z", dto.getCreated());
-        assertEquals("test org", dto.getContributor().stream().findFirst().orElseThrow().getLabel().get("fi"));
-        assertEquals("7d3a3c00-5a6b-489b-a3ed-63bb58c26a63", dto.getContributor().stream().findFirst().orElseThrow().getId());
+        assertEquals("Yhteentoimivuusalustan yllapito", dto.getContributor().stream().findFirst().orElseThrow().getLabel().get("fi"));
+        assertEquals(MapperTestUtils.TEST_ORG_ID.toString(), dto.getContributor().stream().findFirst().orElseThrow().getId());
         assertEquals("http://uri.suomi.fi/datamodel/ns/test/TestClass", dto.getUri());
     }
 
@@ -158,7 +158,7 @@ class ClassMapperTest {
             dto.setModifier(modifier);
         };
 
-        var dto = ClassMapper.mapToClassDTO(m, "http://uri.suomi.fi/datamodel/ns/test", "TestClass", MapperTestUtils.getOrgModel(), true, userMapper);
+        var dto = ClassMapper.mapToClassDTO(m, "http://uri.suomi.fi/datamodel/ns/test", "TestClass", MapperTestUtils.getMockOrganizations(), true, userMapper);
 
         assertEquals("comment visible for admin", dto.getEditorialNote());
         assertEquals("creator fake-user", dto.getCreator().getName());
