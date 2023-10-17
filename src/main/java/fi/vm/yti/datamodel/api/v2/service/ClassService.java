@@ -104,7 +104,7 @@ public class ClassService {
 
             var classResource = model.getResource(classURI);
             var restrictions = ClassMapper.getClassRestrictionList(model, classResource)
-                    .stream().map(restriction -> MapperUtils.propertyToString(restriction.asResource(), OWL.onProperty))
+                    .stream().map(restriction -> MapperUtils.propertyToString(restriction, OWL.onProperty))
                     .collect(Collectors.toSet());
             var findResourcesModel = resourceService.findResources(restrictions, includedNamespaces);
             ClassMapper.addClassResourcesToDTO(findResourcesModel, (ClassInfoDTO) dto, terminologyService.mapConceptToResource());
@@ -366,8 +366,7 @@ public class ClassService {
 
         var classResource = model.getResource(classURI);
         var modelResource = model.getResource(modelURI);
-        var includedNamespaces = MapperUtils.arrayPropertyToSet(modelResource, OWL.imports);
-        includedNamespaces.add(modelURI);
+        var includedNamespaces = DataModelUtils.getInternalReferenceModels(modelURI, modelResource);
         var findResourceModel = resourceService.findResources(Set.of(uri), includedNamespaces);
         var propertyResource = findResourceModel.getResource(uri);
         if (findResourceModel.size() == 0) {
@@ -403,5 +402,58 @@ public class ClassService {
 
     public URI renameResource(String prefix, String oldIdentifier, String newIdentifier) throws URISyntaxException {
         return resourceService.renameResource(prefix, oldIdentifier, newIdentifier);
+    }
+
+    public void handleClassRestrictionTargetUpdate(String prefix, String classId, String restrictionURI,
+                                                   String oldTarget, String newTarget) {
+        var modelURI = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
+        var model = coreRepository.fetch(modelURI);
+        var classURI = modelURI + ModelConstants.RESOURCE_SEPARATOR + classId;
+
+        check(authorizationManager.hasRightToModel(prefix, model));
+
+        if (!coreRepository.resourceExistsInGraph(modelURI, classURI)) {
+            throw new ResourceNotFoundException(classURI);
+        }
+
+        var classResource = model.getResource(classURI);
+        var modelResource = model.getResource(modelURI);
+
+        var includedNamespaces = DataModelUtils.getInternalReferenceModels(modelURI, modelResource);
+        var result = resourceService.findResources(Set.of(restrictionURI), includedNamespaces);
+        var restrictionResource = result.getResource(restrictionURI);
+
+        if (!restrictionResource.listProperties().hasNext()) {
+            throw new ResourceNotFoundException(restrictionURI);
+        }
+
+        ResourceType resourceType;
+        if (MapperUtils.hasType(restrictionResource, OWL.ObjectProperty)) {
+            var newTargetNamespace = DataModelUtils.removeTrailingSlash(NodeFactory.createURI(newTarget).getNameSpace());
+
+            // add namespace to the model if not present
+            if (!includedNamespaces.contains(newTargetNamespace)
+                    && newTargetNamespace.startsWith(ModelConstants.SUOMI_FI_NAMESPACE)) {
+                includedNamespaces.add(newTargetNamespace);
+                modelResource.addProperty(OWL.imports, newTargetNamespace);
+            }
+
+            var restrictionTargetResult = resourceService.findResources(Set.of(newTarget), includedNamespaces);
+            var newTargetResource = restrictionTargetResult.getResource(newTarget);
+            if (!newTargetResource.listProperties().hasNext()) {
+                throw new ResourceNotFoundException(newTarget);
+            }
+            resourceType = ResourceType.ASSOCIATION;
+        } else if (MapperUtils.hasType(restrictionResource, OWL.DatatypeProperty)) {
+            if (!ModelConstants.SUPPORTED_DATA_TYPES.contains(newTarget)) {
+                throw new MappingError("Unsupported data type");
+            }
+            resourceType = ResourceType.ATTRIBUTE;
+        } else {
+            throw new MappingError("Unsupported restriction type");
+        }
+
+        ClassMapper.mapUpdateClassRestrictionProperty(model, classResource, restrictionURI, oldTarget, newTarget, resourceType);
+        coreRepository.put(modelURI, model);
     }
 }

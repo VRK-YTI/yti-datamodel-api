@@ -406,13 +406,31 @@ public class ClassMapper {
                 .filterKeep(p -> p.getObject().isAnon())
                 .mapWith(r -> r.getObject().asResource());
 
+        var range = MapperUtils.propertyToString(propertyResource, RDFS.range);
+
+        // Check duplicates. Duplicate attributes are not allowed, duplicate associations are allowed
+        // as long as their target (owl:someValuesFrom) is different
+        var hasDuplicate = getClassRestrictionList(model, classResource).stream().anyMatch(r -> {
+            var onProperty = MapperUtils.propertyToString(r, OWL.onProperty);
+            var someValuesFrom = MapperUtils.propertyToString(r, OWL.someValuesFrom);
+
+            var rangeCheck = (range == null && someValuesFrom == null) || (range != null && range.equals(someValuesFrom));
+
+            return MapperUtils.hasType(propertyResource, OWL.ObjectProperty)
+                    ? propertyResource.getURI().equals(onProperty) && rangeCheck
+                    : propertyResource.getURI().equals(onProperty);
+        });
+
+        if (hasDuplicate) {
+            throw new MappingError(String.format("Target %s already exists for restriction %s", range, propertyResource.getURI()));
+        }
+
         var restrictionResource = model.createResource();
         restrictionResource.addProperty(RDF.type, OWL.Restriction);
         restrictionResource.addProperty(OWL.onProperty, propertyResource);
 
-        if (propertyResource.hasProperty(RDFS.range)) {
-            restrictionResource.addProperty(OWL.someValuesFrom,
-                    propertyResource.getProperty(RDFS.range).getObject());
+        if (range != null) {
+            restrictionResource.addProperty(OWL.someValuesFrom, ResourceFactory.createResource(range));
         }
 
         RDFList rdfList;
@@ -473,15 +491,53 @@ public class ClassMapper {
         }
     }
 
-    public static List<RDFNode> getClassRestrictionList(Model model, Resource classResource) {
+    public static void mapUpdateClassRestrictionProperty(Model model, Resource classResource, String restrictionURI,
+                                                         String oldTarget, String newTarget, ResourceType resourceType) {
+        var restrictions = getClassRestrictionList(model, classResource);
+        if (restrictions.isEmpty()) {
+            return;
+        }
+
+        // check for duplicates
+        var hasDuplicate = restrictions.stream().anyMatch(r -> {
+            var onProperty = MapperUtils.propertyToString(r, OWL.onProperty);
+            var someValuesFrom = MapperUtils.propertyToString(r, OWL.someValuesFrom);
+
+            return resourceType.equals(ResourceType.ASSOCIATION)
+                    ? restrictionURI.equals(onProperty) && newTarget.equals(someValuesFrom)
+                    : restrictionURI.equals(onProperty);
+        });
+
+        if (hasDuplicate) {
+            throw new MappingError(String.format("Target %s already exists for restriction %s", newTarget, restrictionURI));
+        }
+
+        var updated = restrictions.stream().filter(r -> {
+            var onProperty = MapperUtils.propertyToString(r, OWL.onProperty);
+            var someValuesFrom = MapperUtils.propertyToString(r, OWL.someValuesFrom);
+
+            return oldTarget == null
+                ? restrictionURI.equals(onProperty) && someValuesFrom == null
+                : restrictionURI.equals(onProperty) && oldTarget.equals(someValuesFrom);
+        })
+                .findFirst()
+                .orElseThrow(() ->
+                new MappingError(String.format("Restriction for %s not found with type %s", restrictionURI, oldTarget)));
+
+        updated.removeAll(OWL.someValuesFrom);
+        updated.addProperty(OWL.someValuesFrom, ResourceFactory.createResource(newTarget));
+    }
+
+    public static List<Resource> getClassRestrictionList(Model model, Resource classResource) {
         var eqResource = classResource.listProperties(OWL.equivalentClass)
                 .filterKeep(p -> p.getObject().isAnon())
                 .mapWith(r -> r.getObject().asResource());
 
         if (eqResource.hasNext()) {
             var eq = eqResource.next();
-            var restrictionList = MapperUtils.getList(model, eq, OWL.intersectionOf);
-            return restrictionList.asJavaList();
+            return MapperUtils.getList(model, eq, OWL.intersectionOf)
+                    .mapWith(RDFNode::asResource)
+                    .toList();
         } else {
             return List.of();
         }

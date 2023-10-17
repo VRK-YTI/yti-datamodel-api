@@ -176,6 +176,21 @@ public class ClassController {
         classService.handleClassRestrictionReference(prefix, classIdentifier, uri, false);
     }
 
+    @Operation(summary = "Update class restriction's target (owl:someValuesFrom)")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Class restriction updated successfully"),
+            @ApiResponse(responseCode = "401", description = "Current user does not have rights for this model"),
+            @ApiResponse(responseCode = "404", description = "Class or resource cannot be found", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ApiError.class))})
+    })
+    @PutMapping(value = "/library/{prefix}/{classIdentifier}/properties/modify")
+    public void updateClassRestrictionReference(@PathVariable @Parameter(description = "Data model prefix") String prefix,
+                                             @PathVariable @Parameter(description = "Class identifier restriction is added to") String classIdentifier,
+                                             @RequestParam @Parameter(description = "Restriction uri to be modified") String restrictionURI,
+                                             @RequestParam(required = false) @Parameter(description = "Old target value") String oldTarget,
+                                             @RequestParam @Parameter(description = "New target value") String newTarget) {
+        classService.handleClassRestrictionTargetUpdate(prefix, classIdentifier, restrictionURI, oldTarget, newTarget);
+    }
+
     @Operation(summary = "Delete class restriction from the class")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Class restriction deleted from the class successfully"),

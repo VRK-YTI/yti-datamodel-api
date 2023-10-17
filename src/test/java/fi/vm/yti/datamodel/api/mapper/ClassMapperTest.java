@@ -2,6 +2,7 @@ package fi.vm.yti.datamodel.api.mapper;
 
 import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.endpoint.EndpointUtils;
+import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
 import fi.vm.yti.datamodel.api.v2.mapper.ClassMapper;
 import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
@@ -374,6 +375,44 @@ class ClassMapperTest {
         assertNull(getEqResource(classResource1));
         assertNull(getEqResource(classResource2));
         assertNotNull(classResource1.getProperty(OWL.equivalentClass));
+    }
+
+    @Test
+    void testMapUpdateClassRestriction() {
+        var model = MapperTestUtils.getModelFromFile("/model_with_owl_restrictions.ttl");
+        model.setNsPrefixes(ModelConstants.PREFIXES);
+
+        var classResource = model.getResource(ModelConstants.SUOMI_FI_NAMESPACE + "model/class-update-target");
+        var restrictionURI = ModelConstants.SUOMI_FI_NAMESPACE + "model/association-1";
+        var oldTarget = ModelConstants.SUOMI_FI_NAMESPACE + "model/class-2";
+        var newTarget = ModelConstants.SUOMI_FI_NAMESPACE + "model/class-x";
+
+        ClassMapper.mapUpdateClassRestrictionProperty(model, classResource, restrictionURI, oldTarget,
+                newTarget, ResourceType.ASSOCIATION);
+
+        var eqResource = getEqResource(classResource);
+        assertNotNull(eqResource);
+        var restrictions = eqResource.getProperty(OWL.intersectionOf).getList().asJavaList().stream()
+                .filter(r -> r.asResource().getProperty(OWL.onProperty).getObject().toString().equals(restrictionURI))
+                .toList();
+
+        assertEquals(2, restrictions.size());
+        assertEquals(newTarget, restrictions.get(0).asResource().getProperty(OWL.someValuesFrom).getObject().toString());
+    }
+
+    @Test
+    void testMapUpdateClassRestrictionDuplicate() {
+        var model = MapperTestUtils.getModelFromFile("/model_with_owl_restrictions.ttl");
+        model.setNsPrefixes(ModelConstants.PREFIXES);
+
+        var classResource = model.getResource("http://uri.suomi.fi/datamodel/ns/model/class-update-target");
+        var restrictionURI = "http://uri.suomi.fi/datamodel/ns/model/association-1";
+        var oldTarget = "http://uri.suomi.fi/datamodel/ns/model/class-2";
+        var newTargetDuplicate = "http://uri.suomi.fi/datamodel/ns/model/class-3";
+
+        assertThrows(MappingError.class, () ->
+                ClassMapper.mapUpdateClassRestrictionProperty(model, classResource, restrictionURI,
+                        oldTarget, newTargetDuplicate, ResourceType.ASSOCIATION));
     }
 
     @Test
