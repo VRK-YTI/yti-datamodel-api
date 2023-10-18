@@ -51,6 +51,9 @@ public class ClassMapper {
         }
         dto.getDisjointWith().forEach(disjoint -> MapperUtils.addResourceRelationship(modelResource, resource, OWL.disjointWith, disjoint));
         modelResource.addProperty(DCTerms.hasPart, resource);
+
+        MapperUtils.addTerminologyReference(dto, modelResource);
+
         return resource.getURI();
     }
 
@@ -65,6 +68,8 @@ public class ClassMapper {
         var modelResource = model.getResource(modelURI);
         MapperUtils.addResourceRelationship(modelResource, nodeShapeResource, SH.targetClass, dto.getTargetClass());
         MapperUtils.addResourceRelationship(modelResource, nodeShapeResource, SH.node, dto.getTargetNode());
+
+        MapperUtils.addTerminologyReference(dto, modelResource);
 
         return nodeShapeResource.getURI();
     }
@@ -168,13 +173,13 @@ public class ClassMapper {
         if (nodeShapeDTO.getTargetClass() == null) {
             classResource.removeAll(SH.targetClass);
         } else {
-            MapperUtils.updateUriProperty(classResource, SH.targetClass, nodeShapeDTO.getTargetClass());
+            MapperUtils.updateUriPropertyAndAddReferenceNamespaces(modelResource, classResource, SH.targetClass, nodeShapeDTO.getTargetClass());
         }
 
         if (nodeShapeDTO.getTargetNode() == null) {
             classResource.removeAll(SH.node);
         } else {
-            MapperUtils.updateUriProperty(classResource, SH.node, nodeShapeDTO.getTargetNode());
+            MapperUtils.updateUriPropertyAndAddReferenceNamespaces(modelResource, classResource, SH.node, nodeShapeDTO.getTargetNode());
         }
 
         classResource.removeAll(SH.property);

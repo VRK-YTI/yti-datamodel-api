@@ -229,6 +229,13 @@ public class MapperUtils {
         }
     }
 
+    public static void updateUriPropertyAndAddReferenceNamespaces(Resource modelResource, Resource resource, Property property, String value) {
+        resource.removeAll(property);
+        if (value != null && !value.isBlank()) {
+            addResourceRelationship(modelResource, resource, property, value);
+        }
+    }
+
     /**
      * Adds an optional string property
      * This has a null check, so it does not need to be separately added
@@ -470,5 +477,15 @@ public class MapperUtils {
             throw new MappingError("Invalid datamodel added to internal namespaces");
         }
         return model.getResource(typeStmt.next().getSubject().getURI());
+    }
+
+    public static void addTerminologyReference(BaseDTO dto, Resource modelResource) {
+        if (dto.getSubject() != null) {
+            var terminologyURI = DataModelUtils.removeTrailingSlash(NodeFactory.createURI(dto.getSubject()).getNameSpace());
+            var requires = MapperUtils.arrayPropertyToSet(modelResource, DCTerms.requires);
+            if (!requires.contains(terminologyURI)) {
+                modelResource.addProperty(DCTerms.requires, terminologyURI);
+            }
+        }
     }
 }

@@ -159,7 +159,7 @@ class PropertyShapeMapperTest {
 
         dto.setStatus(Status.VALID);
         dto.setLabel(Map.of("fi", "Updated PropertyShape label"));
-        dto.setPath("http://uri.suomi.fi/datamodel/ns/updated_test_attribute");
+        dto.setPath("http://uri.suomi.fi/datamodel/ns/test/updated_test_attribute");
         dto.setAllowedValues(List.of("Updated value 1"));
         dto.setDataType("xsd:short");
         dto.setDefaultValue("Updated default");
@@ -177,7 +177,7 @@ class PropertyShapeMapperTest {
 
         assertEquals("Updated PropertyShape label", MapperUtils.localizedPropertyToMap(resource, RDFS.label).get("fi"));
         assertEquals(Status.VALID, Status.valueOf(MapperUtils.propertyToString(resource, SuomiMeta.publicationStatus)));
-        assertEquals("http://uri.suomi.fi/datamodel/ns/updated_test_attribute", resource.getProperty(SH.path).getObject().toString());
+        assertEquals("http://uri.suomi.fi/datamodel/ns/test/updated_test_attribute", resource.getProperty(SH.path).getObject().toString());
         assertTrue(allowedValues.contains("Updated value 1"));
         assertEquals(1, allowedValues.size());
         assertEquals("xsd:short", resource.getProperty(SH.datatype).getObject().toString());
@@ -195,7 +195,7 @@ class PropertyShapeMapperTest {
         var dto = new AssociationRestriction();
         dto.setStatus(Status.VALID);
         dto.setLabel(Map.of("fi", "Updated PropertyShape label"));
-        dto.setPath("http://uri.suomi.fi/datamodel/ns/updated_test_attribute");
+        dto.setPath("http://uri.suomi.fi/datamodel/ns/test/updated_test_attribute");
         dto.setMaxCount(20);
         dto.setMinCount(2);
         dto.setClassType("http://uri.suomi.fi/datamodel/ns/test/TestClass");
@@ -206,7 +206,7 @@ class PropertyShapeMapperTest {
         var resource = model.getResource("http://uri.suomi.fi/datamodel/ns/test/TestAssociationRestriction");
         assertEquals("Updated PropertyShape label", MapperUtils.localizedPropertyToMap(resource, RDFS.label).get("fi"));
         assertEquals(Status.VALID, Status.valueOf(MapperUtils.propertyToString(resource, SuomiMeta.publicationStatus)));
-        assertEquals("http://uri.suomi.fi/datamodel/ns/updated_test_attribute", resource.getProperty(SH.path).getObject().toString());
+        assertEquals("http://uri.suomi.fi/datamodel/ns/test/updated_test_attribute", resource.getProperty(SH.path).getObject().toString());
         assertEquals(20, MapperUtils.getLiteral(resource, SH.maxCount, Integer.class));
         assertEquals(2, MapperUtils.getLiteral(resource, SH.minCount, Integer.class));
         assertEquals("http://uri.suomi.fi/datamodel/ns/test/TestClass", MapperUtils.propertyToString(resource, SH.class_));
