@@ -103,23 +103,19 @@ public class TerminologyService {
                     )
                     .accept(MediaType.APPLICATION_JSON)
                     .retrieve()
-                    .bodyToMono(new ParameterizedTypeReference<List<TerminologyNodeDTO>>() {
-                    })
+                    .bodyToMono(new ParameterizedTypeReference<List<TerminologyNodeDTO>>() {})
                     .block();
         } catch(Exception e) {
             LOG.warn("Could not resolve concept uri {}", uri);
             throw new ResolvingException("Concept not found", String.format("Concept %s not found in env %s", conceptURI, awsEnv));
         }
 
-        var terminologyURI = conceptURI.substring(0, conceptURI.lastIndexOf("/"));
-        var terminologyModel = conceptRepository.fetch(terminologyURI);
-        if (terminologyModel == null) {
-            LOG.warn("Terminology {} not added to model", terminologyURI);
-            throw new ResolvingException("Terminology not added to the model",
-                    String.format("Add %s to the model", terminologyURI));
-        }
-
-        if(result != null && !result.isEmpty()){
+        if (result != null) {
+            var terminologyURI = conceptURI.substring(0, conceptURI.lastIndexOf("/"));
+            if (!conceptRepository.graphExists(terminologyURI)) {
+                resolveTerminology(Set.of(terminologyURI));
+            }
+            var terminologyModel = conceptRepository.fetch(terminologyURI);
             TerminologyMapper.mapConceptToTerminologyModel(terminologyModel, terminologyURI,
                     conceptURI, result.get(0));
 

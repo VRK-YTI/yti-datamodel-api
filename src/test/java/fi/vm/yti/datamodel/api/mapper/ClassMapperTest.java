@@ -407,6 +407,29 @@ class ClassMapperTest {
         );
     }
 
+    @Test
+    void testMapTerminologyToModel() {
+        var model = ModelFactory.createDefaultModel();
+        var modelURI = "http://uri.suomi.fi/datamodel/ns/test";
+
+        model.createResource(modelURI)
+                .addProperty(RDF.type, OWL.Ontology);
+
+        var classDTO = new ClassDTO();
+        classDTO.setStatus(Status.DRAFT);
+        classDTO.setIdentifier("class-1");
+        classDTO.setSubject(ModelConstants.TERMINOLOGY_NAMESPACE + "test-terminology/concept-1");
+
+        ClassMapper.createOntologyClassAndMapToModel(modelURI, model, classDTO, EndpointUtils.mockUser);
+
+        var requires = model.getResource(modelURI)
+                .listProperties(DCTerms.requires)
+                .mapWith(s -> s.getObject().toString())
+                .toList();
+
+        assertTrue(requires.contains(ModelConstants.TERMINOLOGY_NAMESPACE + "test-terminology"));
+    }
+
     private Resource getEqResource(Resource res) {
         var eq = res.listProperties(OWL.equivalentClass)
                 .filterKeep(p -> p.getResource().isAnon())

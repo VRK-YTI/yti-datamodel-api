@@ -45,7 +45,12 @@ public class ResourceMapper {
         }
 
         MapperUtils.addResourceRelationship(modelResource, resourceResource, RDFS.domain, dto.getDomain());
-        MapperUtils.addResourceRelationship(modelResource, resourceResource, RDFS.range, dto.getRange());
+
+        if (resourceType.equals(ResourceType.ASSOCIATION)) {
+            MapperUtils.addResourceRelationship(modelResource, resourceResource, RDFS.range, dto.getRange());
+        } else {
+            MapperUtils.addOptionalUriProperty(resourceResource, RDFS.range, dto.getRange());
+        }
 
         modelResource.addProperty(DCTerms.hasPart, resourceResource);
         MapperUtils.addCreationMetadata(resourceResource, user);
@@ -126,8 +131,14 @@ public class ResourceMapper {
             }
         }
 
-        MapperUtils.updateUriProperty(resource, RDFS.domain, dto.getDomain());
-        MapperUtils.updateUriProperty(resource, RDFS.range, dto.getRange());
+        MapperUtils.addTerminologyReference(dto, modelResource);
+        MapperUtils.updateUriPropertyAndAddReferenceNamespaces(modelResource, resource, RDFS.domain, dto.getDomain());
+
+        if (MapperUtils.hasType(resource, OWL.ObjectProperty)) {
+            MapperUtils.updateUriPropertyAndAddReferenceNamespaces(modelResource, resource, RDFS.range, dto.getRange());
+        } else {
+            MapperUtils.updateUriProperty(resource, RDFS.range, dto.getRange());
+        }
 
         // update range to attribute and association restrictions (owl:someValuesFrom)
         model.listStatements(new SimpleSelector(null, OWL.equivalentClass, (RDFNode) null))
@@ -155,16 +166,18 @@ public class ResourceMapper {
 
         MapperUtils.updateCommonResourceInfo(model,resource, modelResource, dto);
 
-        MapperUtils.updateUriProperty(resource, SH.path, dto.getPath());
+        MapperUtils.updateUriPropertyAndAddReferenceNamespaces(modelResource, resource, SH.path, dto.getPath());
         MapperUtils.updateLiteral(resource, SH.minCount, dto.getMinCount());
         MapperUtils.updateLiteral(resource, SH.maxCount, dto.getMaxCount());
 
         if(MapperUtils.hasType(resource, OWL.ObjectProperty)) {
-            updateAssociationRestrictionProperties(resource, (AssociationRestriction) dto);
+            MapperUtils.updateUriPropertyAndAddReferenceNamespaces(modelResource, resource, SH.class_,
+                    ((AssociationRestriction) dto).getClassType());
         }else{
             updateAttributeRestrictionProperties(resource, (AttributeRestriction) dto, modelResource);
         }
 
+        MapperUtils.addTerminologyReference(dto, modelResource);
         MapperUtils.addUpdateMetadata(resource, user);
     }
 
@@ -192,10 +205,6 @@ public class ResourceMapper {
         MapperUtils.updateStringProperty(resource, SH.pattern, dto.getPattern());
         resource.removeAll(SH.languageIn);
         dto.getLanguageIn().forEach(lang -> MapperUtils.addOptionalStringProperty(resource, SH.languageIn, lang));
-    }
-
-    public static void updateAssociationRestrictionProperties(Resource resource, AssociationRestriction dto){
-        MapperUtils.updateUriProperty(resource, SH.class_, dto.getClassType());
     }
 
     public static void mapToCopyToLocalPropertyShape(String graphUri, Model model, String resourceIdentifier, Model targetModel, String targetGraph, String targetIdentifier, YtiUser user){
