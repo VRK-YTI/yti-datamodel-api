@@ -16,11 +16,9 @@ import org.apache.jena.arq.querybuilder.AskBuilder;
 import org.apache.jena.arq.querybuilder.ConstructBuilder;
 import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.rdf.model.*;
+import org.apache.jena.sparql.path.PathFactory;
 import org.apache.jena.util.ResourceUtils;
-import org.apache.jena.vocabulary.DCTerms;
-import org.apache.jena.vocabulary.OWL2;
-import org.apache.jena.vocabulary.RDF;
-import org.apache.jena.vocabulary.RDFS;
+import org.apache.jena.vocabulary.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.topbraid.shacl.vocabulary.SH;
@@ -28,6 +26,7 @@ import org.topbraid.shacl.vocabulary.SH;
 import javax.annotation.Nonnull;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -136,8 +135,9 @@ public class ResourceService {
 
     public void update(String prefix, String identifier, BaseDTO dto) {
         var graphUri = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
+        var resourceUri = graphUri + ModelConstants.RESOURCE_SEPARATOR + identifier;
 
-        if(!coreRepository.resourceExistsInGraph(graphUri, graphUri + ModelConstants.RESOURCE_SEPARATOR + identifier)){
+        if(!coreRepository.resourceExistsInGraph(graphUri, resourceUri)){
             throw new ResourceNotFoundException(identifier);
         }
 
@@ -150,6 +150,8 @@ public class ResourceService {
         }
 
         if (dto instanceof ResourceDTO resourceDTO) {
+            checkCyclicalReferences(resourceDTO.getEquivalentResource(), OWL.equivalentProperty, resourceUri);
+            checkCyclicalReferences(resourceDTO.getSubResourceOf(), RDFS.subPropertyOf, resourceUri);
             ResourceMapper.mapToUpdateResource(graphUri, model, identifier, resourceDTO, userProvider.getUser());
         } else if (dto instanceof PropertyShapeDTO propertyShapeDTO) {
             ResourceMapper.mapToUpdatePropertyShape(graphUri, model, identifier, propertyShapeDTO, userProvider.getUser());
@@ -159,7 +161,7 @@ public class ResourceService {
         terminologyService.resolveConcept(dto.getSubject());
 
         coreRepository.put(graphUri, model);
-        var indexResource = ResourceMapper.mapToIndexResource(model, graphUri + ModelConstants.RESOURCE_SEPARATOR + identifier);
+        var indexResource = ResourceMapper.mapToIndexResource(model, resourceUri);
         openSearchIndexer.updateResourceToIndex(indexResource);
     }
 
@@ -360,5 +362,31 @@ public class ResourceService {
         openSearchIndexer.createResourceToIndex(ResourceMapper.mapToIndexResource(model, newResourceURI));
 
         return new URI(newResource.getURI());
+    }
+
+    public void checkCyclicalReferences(Collection<String> references, Property property, String resourceUri) {
+        var path = PathFactory.pathZeroOrMoreN(PathFactory.pathLink(property.asNode()));
+        var resource = NodeFactory.createURI(resourceUri);
+        references.forEach(ref -> {
+            var query = new AskBuilder()
+                    .addWhere(NodeFactory.createURI(ref), path, resource)
+                    .build();
+            if (coreRepository.queryAsk(query)) {
+                throw new MappingError(ref + " has cyclical reference to this class");
+            }
+        });
+    }
+
+    public void checkCyclicalReference(String reference, Property property, String resourceUri) {
+        if(reference == null) {
+            return;
+        }
+        var path = PathFactory.pathZeroOrMoreN(PathFactory.pathLink(property.asNode()));
+        var query = new AskBuilder()
+                .addWhere(NodeFactory.createURI(reference), path, NodeFactory.createURI(resourceUri))
+                .build();
+        if (coreRepository.queryAsk(query)) {
+            throw new MappingError(reference + " has cyclical reference to this class");
+        }
     }
 }
