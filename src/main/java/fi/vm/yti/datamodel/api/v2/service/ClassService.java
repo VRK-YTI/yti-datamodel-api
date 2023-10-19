@@ -21,6 +21,7 @@ import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.rdf.model.SimpleSelector;
 import org.apache.jena.vocabulary.OWL;
+import org.apache.jena.vocabulary.RDFS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -200,13 +201,19 @@ public class ClassService {
 
         var classResource = model.getResource(classURI);
         if (MapperUtils.isLibrary(model.getResource(graph))) {
-            ClassMapper.mapToUpdateOntologyClass(model, graph, classResource, (ClassDTO) dto, userProvider.getUser());
+            var classDTO = (ClassDTO) dto;
+            resourceService.checkCyclicalReferences(classDTO.getEquivalentClass(), OWL.equivalentClass, classURI);
+            resourceService.checkCyclicalReferences(classDTO.getSubClassOf(), RDFS.subClassOf, classURI);
+            resourceService.checkCyclicalReferences(classDTO.getDisjointWith(), OWL.disjointWith, classURI);
+            ClassMapper.mapToUpdateOntologyClass(model, graph, classResource, classDTO, userProvider.getUser());
         } else {
             var nodeShape = (NodeShapeDTO) dto;
 
             if(nodeShape.getTargetNode() != null && nodeShape.getTargetNode().equals(classResource.getURI())) {
                 throw new MappingError("Target node is a self reference");
             }
+            resourceService.checkCyclicalReference(nodeShape.getTargetClass(), SH.targetClass, classURI);
+            resourceService.checkCyclicalReference(nodeShape.getTargetNode(), SH.targetNode, classURI);
 
             var oldNode = MapperUtils.propertyToString(classResource, SH.node);
             var oldTarget = MapperUtils.propertyToString(classResource, SH.targetClass);
