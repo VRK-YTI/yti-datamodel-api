@@ -16,6 +16,8 @@ import fi.vm.yti.security.YtiUser;
 import org.apache.jena.rdf.model.*;
 import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDF;
+import org.apache.jena.vocabulary.RDFS;
+import org.apache.jena.vocabulary.XSD;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -270,6 +272,38 @@ class ClassServiceTest {
     }
 
     @Test
+    void testAddClassRestriction() {
+        var model = MapperTestUtils.getModelFromFile("/model_with_owl_restrictions.ttl");
+        var modelURI = ModelConstants.SUOMI_FI_NAMESPACE + "model";
+
+        String attributeURI = modelURI + ModelConstants.RESOURCE_SEPARATOR + "attribute-1";
+
+        var restrictionQueryResult = ModelFactory.createDefaultModel();
+        restrictionQueryResult.createResource(attributeURI)
+                .addProperty(RDF.type, OWL.DatatypeProperty)
+                .addProperty(RDFS.range, XSD.integer);
+
+        when(authorizationManager.hasRightToModel(anyString(), any(Model.class))).thenReturn(true);
+        when(coreRepository.fetch(anyString())).thenReturn(model);
+        when(coreRepository.resourceExistsInGraph(anyString(), anyString())).thenReturn(true);
+        when(resourceService.findResources(eq(Set.of(attributeURI)), anySet())).thenReturn(restrictionQueryResult);
+
+        classService.handleAddClassRestrictionReference("model", "class-2",
+                attributeURI);
+
+        var captor = ArgumentCaptor.forClass(Model.class);
+        verify(coreRepository).put(eq(modelURI), captor.capture());
+
+        // updated model contains with attributeURI as an object
+        var restrictionProperty = captor.getValue().listStatements(null, OWL.onProperty,
+                ResourceFactory.createResource(attributeURI));
+        var targetProperty = captor.getValue().listStatements(null, OWL.someValuesFrom, XSD.integer);
+
+        assertTrue(restrictionProperty.hasNext());
+        assertTrue(targetProperty.hasNext());
+    }
+
+    @Test
     void testUpdateClassRestrictionTarget() {
         var model = MapperTestUtils.getModelFromFile("/model_with_owl_restrictions.ttl");
         var modelURI = ModelConstants.SUOMI_FI_NAMESPACE + "model";
@@ -288,7 +322,7 @@ class ClassServiceTest {
         when(resourceService.findResources(eq(Set.of(modelURI + "/association-1")), anySet())).thenReturn(restrictionQueryResult);
         when(resourceService.findResources(eq(Set.of(modelURI + "/some-class")), anySet())).thenReturn(restrictionNewTargetResult);
 
-        classService.handleClassRestrictionTargetUpdate("model", "class-update-target",
+        classService.handleUpdateClassRestrictionReference("model", "class-update-target",
                 restrictionResource.getURI(),
                 "http://uri.suomi.fi/datamodel/ns/model/class-2",
                 modelURI + "/some-class");

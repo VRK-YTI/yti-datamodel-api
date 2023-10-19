@@ -12,6 +12,7 @@ public class SimpleResourceDTO {
     private String curie;
     private ConceptDTO concept;
     private Map<String, String> note;
+    private UriDTO range;
 
     public String getUri() {
         return uri;
@@ -75,5 +76,13 @@ public class SimpleResourceDTO {
 
     public void setVersion(String version) {
         this.version = version;
+    }
+
+    public UriDTO getRange() {
+        return range;
+    }
+
+    public void setRange(UriDTO range) {
+        this.range = range;
     }
 }

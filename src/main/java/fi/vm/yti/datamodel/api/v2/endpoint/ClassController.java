@@ -173,7 +173,7 @@ public class ClassController {
     public void addClassRestrictionReference(@PathVariable @Parameter(description = "Data model prefix") String prefix,
                                               @PathVariable @Parameter(description = "Class identifier restriction is added to") String classIdentifier,
                                               @RequestParam @Parameter(description = "Attribute or association uri to be added as a restriction") String uri) {
-        classService.handleClassRestrictionReference(prefix, classIdentifier, uri, false);
+        classService.handleAddClassRestrictionReference(prefix, classIdentifier, uri);
     }
 
     @Operation(summary = "Update class restriction's target (owl:someValuesFrom)")
@@ -186,9 +186,9 @@ public class ClassController {
     public void updateClassRestrictionReference(@PathVariable @Parameter(description = "Data model prefix") String prefix,
                                              @PathVariable @Parameter(description = "Class identifier restriction is added to") String classIdentifier,
                                              @RequestParam @Parameter(description = "Restriction uri to be modified") String restrictionURI,
-                                             @RequestParam(required = false) @Parameter(description = "Old target value") String oldTarget,
+                                             @RequestParam(required = false) @Parameter(description = "Old target value") String currentTarget,
                                              @RequestParam @Parameter(description = "New target value") String newTarget) {
-        classService.handleClassRestrictionTargetUpdate(prefix, classIdentifier, restrictionURI, oldTarget, newTarget);
+        classService.handleUpdateClassRestrictionReference(prefix, classIdentifier, restrictionURI, currentTarget, newTarget);
     }
 
     @Operation(summary = "Delete class restriction from the class")
@@ -201,8 +201,9 @@ public class ClassController {
     @DeleteMapping(value = "/library/{prefix}/{classIdentifier}/properties")
     public void deleteClassRestrictionReference(@PathVariable @Parameter(description = "Data model prefix") String prefix,
                                              @PathVariable @Parameter(description = "Class identifier restriction is removed from") String classIdentifier,
-                                             @RequestParam @Parameter(description = "Attribute or association uri to be added as a restriction") String uri) {
-        classService.handleClassRestrictionReference(prefix, classIdentifier, uri, true);
+                                             @RequestParam @Parameter(description = "Attribute or association uri to be removed") String restrictionURI,
+                                             @RequestParam(required = false) @Parameter(description = "Target of the removed restrictions") String currentTarget) {
+        classService.handleUpdateClassRestrictionReference(prefix, classIdentifier, restrictionURI, currentTarget, null);
     }
 
     @Operation(summary = "Delete property reference from node shape")

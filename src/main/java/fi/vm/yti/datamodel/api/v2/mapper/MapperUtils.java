@@ -267,7 +267,7 @@ public class MapperUtils {
         var namespaces = new HashSet<String>();
         namespaces.addAll(arrayPropertyToSet(modelResource, OWL.imports));
         namespaces.addAll(arrayPropertyToSet(modelResource, DCTerms.requires));
-        namespaces.add(DataModelUtils.removeTrailingSlash(resource.getNameSpace()));
+        namespaces.add(modelResource.getURI());
 
         var refNamespace = DataModelUtils.removeTrailingSlash(NodeFactory.createURI(resourceURI).getNameSpace());
 

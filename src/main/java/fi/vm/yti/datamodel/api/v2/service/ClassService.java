@@ -104,10 +104,23 @@ public class ClassService {
 
             var classResource = model.getResource(classURI);
             var restrictions = ClassMapper.getClassRestrictionList(model, classResource)
-                    .stream().map(restriction -> MapperUtils.propertyToString(restriction, OWL.onProperty))
+                    .stream()
+                    .filter(r -> r.hasProperty(OWL.onProperty))
+                    .map(restriction -> {
+                        var restrictionDTO = new SimpleResourceDTO();
+
+                        restrictionDTO.setUri(MapperUtils.propertyToString(restriction, OWL.onProperty));
+                        restrictionDTO.setRange(MapperUtils.uriToURIDTO(
+                                MapperUtils.propertyToString(restriction, OWL.someValuesFrom), model));
+                        return restrictionDTO;
+                    }).collect(Collectors.toSet());
+
+            var restrictionURIs = restrictions.stream()
+                    .map(SimpleResourceDTO::getUri)
                     .collect(Collectors.toSet());
-            var findResourcesModel = resourceService.findResources(restrictions, includedNamespaces);
-            ClassMapper.addClassResourcesToDTO(findResourcesModel, (ClassInfoDTO) dto, terminologyService.mapConceptToResource());
+            var findResourcesModel = resourceService.findResources(restrictionURIs, includedNamespaces);
+
+            ClassMapper.addClassResourcesToDTO(findResourcesModel, restrictions, (ClassInfoDTO) dto, terminologyService.mapConceptToResource());
         } else {
             dto = ClassMapper.mapToNodeShapeDTO(model, modelURI, classIdentifier, orgModel,
                     hasRightToModel, userMapper);
@@ -353,12 +366,57 @@ public class ClassService {
         coreRepository.put(modelURI, model);
     }
 
-    public void handleClassRestrictionReference(String prefix, String classIdentifier, String uri, boolean delete) {
+    public void handleUpdateClassRestrictionReference(String prefix, String classIdentifier, String restrictionURI, String currentTarget, String newTarget) {
+        var modelURI = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
+        var model = coreRepository.fetch(modelURI);
+        var classURI = modelURI + ModelConstants.RESOURCE_SEPARATOR + classIdentifier;
+        if (!coreRepository.resourceExistsInGraph(modelURI, classURI)) {
+            throw new ResourceNotFoundException(classURI);
+        }
+        check(authorizationManager.hasRightToModel(prefix, model));
+
+        var classResource = model.getResource(classURI);
+        var modelResource = model.getResource(modelURI);
+
+        var includedNamespaces = DataModelUtils.getInternalReferenceModels(modelURI, modelResource);
+        var result = resourceService.findResources(Set.of(restrictionURI), includedNamespaces);
+        var restrictionResource = result.getResource(restrictionURI);
+
+        if (!restrictionResource.listProperties().hasNext()) {
+            throw new ResourceNotFoundException(restrictionURI);
+        }
+
+        if (newTarget == null) {
+            ClassMapper.mapRemoveClassRestrictionProperty(model, classResource, restrictionResource, currentTarget);
+        } else {
+            ResourceType resourceType;
+            if (MapperUtils.hasType(restrictionResource, OWL.ObjectProperty)) {
+                var restrictionTargetResult = resourceService.findResources(Set.of(newTarget), includedNamespaces);
+                var newTargetResource = restrictionTargetResult.getResource(newTarget);
+                if (!newTargetResource.listProperties().hasNext()) {
+                    throw new ResourceNotFoundException(newTarget);
+                }
+                resourceType = ResourceType.ASSOCIATION;
+            } else if (MapperUtils.hasType(restrictionResource, OWL.DatatypeProperty)) {
+                if (!ModelConstants.SUPPORTED_DATA_TYPES.contains(newTarget)) {
+                    throw new MappingError("Unsupported data type");
+                }
+                resourceType = ResourceType.ATTRIBUTE;
+            } else {
+                throw new MappingError("Unsupported restriction type");
+            }
+
+            ClassMapper.mapUpdateClassRestrictionProperty(model, classResource, restrictionURI, currentTarget, newTarget, resourceType);
+        }
+        coreRepository.put(modelURI, model);
+    }
+
+    public void handleAddClassRestrictionReference(String prefix, String classIdentifier, String uri) {
         var modelURI = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
         var model = coreRepository.fetch(modelURI);
         var classURI = modelURI + ModelConstants.RESOURCE_SEPARATOR + classIdentifier;
 
-        if(!coreRepository.resourceExistsInGraph(modelURI, classURI)){
+        if (!coreRepository.resourceExistsInGraph(modelURI, classURI)) {
             throw new ResourceNotFoundException(classURI);
         }
 
@@ -373,12 +431,7 @@ public class ClassService {
             throw new ResourceNotFoundException(uri);
         }
 
-        if (delete) {
-            ClassMapper.mapRemoveClassRestrictionProperty(model, classResource, propertyResource.getURI());
-        } else {
-            ClassMapper.mapClassRestrictionProperty(model, classResource, propertyResource);
-        }
-
+        ClassMapper.mapClassRestrictionProperty(model, classResource, propertyResource);
         coreRepository.put(modelURI, model);
     }
 
@@ -402,58 +455,5 @@ public class ClassService {
 
     public URI renameResource(String prefix, String oldIdentifier, String newIdentifier) throws URISyntaxException {
         return resourceService.renameResource(prefix, oldIdentifier, newIdentifier);
-    }
-
-    public void handleClassRestrictionTargetUpdate(String prefix, String classId, String restrictionURI,
-                                                   String oldTarget, String newTarget) {
-        var modelURI = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
-        var model = coreRepository.fetch(modelURI);
-        var classURI = modelURI + ModelConstants.RESOURCE_SEPARATOR + classId;
-
-        check(authorizationManager.hasRightToModel(prefix, model));
-
-        if (!coreRepository.resourceExistsInGraph(modelURI, classURI)) {
-            throw new ResourceNotFoundException(classURI);
-        }
-
-        var classResource = model.getResource(classURI);
-        var modelResource = model.getResource(modelURI);
-
-        var includedNamespaces = DataModelUtils.getInternalReferenceModels(modelURI, modelResource);
-        var result = resourceService.findResources(Set.of(restrictionURI), includedNamespaces);
-        var restrictionResource = result.getResource(restrictionURI);
-
-        if (!restrictionResource.listProperties().hasNext()) {
-            throw new ResourceNotFoundException(restrictionURI);
-        }
-
-        ResourceType resourceType;
-        if (MapperUtils.hasType(restrictionResource, OWL.ObjectProperty)) {
-            var newTargetNamespace = DataModelUtils.removeTrailingSlash(NodeFactory.createURI(newTarget).getNameSpace());
-
-            // add namespace to the model if not present
-            if (!includedNamespaces.contains(newTargetNamespace)
-                    && newTargetNamespace.startsWith(ModelConstants.SUOMI_FI_NAMESPACE)) {
-                includedNamespaces.add(newTargetNamespace);
-                modelResource.addProperty(OWL.imports, newTargetNamespace);
-            }
-
-            var restrictionTargetResult = resourceService.findResources(Set.of(newTarget), includedNamespaces);
-            var newTargetResource = restrictionTargetResult.getResource(newTarget);
-            if (!newTargetResource.listProperties().hasNext()) {
-                throw new ResourceNotFoundException(newTarget);
-            }
-            resourceType = ResourceType.ASSOCIATION;
-        } else if (MapperUtils.hasType(restrictionResource, OWL.DatatypeProperty)) {
-            if (!ModelConstants.SUPPORTED_DATA_TYPES.contains(newTarget)) {
-                throw new MappingError("Unsupported data type");
-            }
-            resourceType = ResourceType.ATTRIBUTE;
-        } else {
-            throw new MappingError("Unsupported restriction type");
-        }
-
-        ClassMapper.mapUpdateClassRestrictionProperty(model, classResource, restrictionURI, oldTarget, newTarget, resourceType);
-        coreRepository.put(modelURI, model);
     }
 }

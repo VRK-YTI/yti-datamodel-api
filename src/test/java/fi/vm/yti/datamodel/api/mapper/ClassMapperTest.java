@@ -14,10 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -292,8 +289,12 @@ class ClassMapperTest {
     void testAddAttributeAndAssociationRestrictionsToClassDTO(){
         var m = MapperTestUtils.getModelFromFile("/models/test_resource_query_model.ttl");
 
+        var restriction = new SimpleResourceDTO();
+        restriction.setUri("http://uri.suomi.fi/datamodel/ns/test/rangetest2");
+        restriction.setRange(new UriDTO("http://www.w3.org/2001/XMLSchema#integer", "xsd:integer"));
+
         var dto = new ClassInfoDTO();
-        ClassMapper.addClassResourcesToDTO(m, dto, (var simpleResourceDTO) -> {});
+        ClassMapper.addClassResourcesToDTO(m, Set.of(restriction), dto, (var simpleResourceDTO) -> {});
 
         assertEquals(1, dto.getAttribute().size());
 
@@ -304,6 +305,7 @@ class ClassMapperTest {
         assertEquals("http://uri.suomi.fi/datamodel/ns/test/rangetest2", attribute.getUri());
         assertEquals("test", attribute.getModelId());
         assertEquals("1.0.0", attribute.getVersion());
+        assertEquals("xsd:integer", attribute.getRange().getCurie());
     }
 
     @Test
@@ -368,9 +370,9 @@ class ClassMapperTest {
         assertEquals(List.of(attributeResource1.getURI()), attributeURIs2);
 
         // remove all restriction references
-        ClassMapper.mapRemoveClassRestrictionProperty(model, classResource1, attributeResource1.getURI());
-        ClassMapper.mapRemoveClassRestrictionProperty(model, classResource1, attributeResource2.getURI());
-        ClassMapper.mapRemoveClassRestrictionProperty(model, classResource2, attributeResource1.getURI());
+        ClassMapper.mapRemoveClassRestrictionProperty(model, classResource1, attributeResource1, null);
+        ClassMapper.mapRemoveClassRestrictionProperty(model, classResource1, attributeResource2, null);
+        ClassMapper.mapRemoveClassRestrictionProperty(model, classResource2, attributeResource1, null);
 
         assertNull(getEqResource(classResource1));
         assertNull(getEqResource(classResource2));
