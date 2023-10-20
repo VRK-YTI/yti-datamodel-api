@@ -11,7 +11,7 @@
 <http://uri.suomi.fi/datamodel/ns/test/rangetest2>
         a                    owl:DatatypeProperty ;
         rdfs:label           "test label"@fi ;
-        rdfs:range           <http://uri.suomi.fi/datamodel/ns/testkirj/NewNewId> ;
+        rdfs:range           xsd:integer ;
         dcterms:identifier   "test"^^xsd:NCName ;
         rdfs:isDefinedBy     <http://uri.suomi.fi/datamodel/ns/test> .
 

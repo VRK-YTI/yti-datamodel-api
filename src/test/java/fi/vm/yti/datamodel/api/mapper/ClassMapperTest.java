@@ -2,6 +2,7 @@ package fi.vm.yti.datamodel.api.mapper;
 
 import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.endpoint.EndpointUtils;
+import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
 import fi.vm.yti.datamodel.api.v2.mapper.ClassMapper;
 import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
@@ -13,10 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -291,8 +289,12 @@ class ClassMapperTest {
     void testAddAttributeAndAssociationRestrictionsToClassDTO(){
         var m = MapperTestUtils.getModelFromFile("/models/test_resource_query_model.ttl");
 
+        var restriction = new SimpleResourceDTO();
+        restriction.setUri("http://uri.suomi.fi/datamodel/ns/test/rangetest2");
+        restriction.setRange(new UriDTO("http://www.w3.org/2001/XMLSchema#integer", "xsd:integer"));
+
         var dto = new ClassInfoDTO();
-        ClassMapper.addClassResourcesToDTO(m, dto, (var simpleResourceDTO) -> {});
+        ClassMapper.addClassResourcesToDTO(m, Set.of(restriction), dto, (var simpleResourceDTO) -> {});
 
         assertEquals(1, dto.getAttribute().size());
 
@@ -303,6 +305,7 @@ class ClassMapperTest {
         assertEquals("http://uri.suomi.fi/datamodel/ns/test/rangetest2", attribute.getUri());
         assertEquals("test", attribute.getModelId());
         assertEquals("1.0.0", attribute.getVersion());
+        assertEquals("xsd:integer", attribute.getRange().getCurie());
     }
 
     @Test
@@ -367,13 +370,51 @@ class ClassMapperTest {
         assertEquals(List.of(attributeResource1.getURI()), attributeURIs2);
 
         // remove all restriction references
-        ClassMapper.mapRemoveClassRestrictionProperty(model, classResource1, attributeResource1.getURI());
-        ClassMapper.mapRemoveClassRestrictionProperty(model, classResource1, attributeResource2.getURI());
-        ClassMapper.mapRemoveClassRestrictionProperty(model, classResource2, attributeResource1.getURI());
+        ClassMapper.mapRemoveClassRestrictionProperty(model, classResource1, attributeResource1, null);
+        ClassMapper.mapRemoveClassRestrictionProperty(model, classResource1, attributeResource2, null);
+        ClassMapper.mapRemoveClassRestrictionProperty(model, classResource2, attributeResource1, null);
 
         assertNull(getEqResource(classResource1));
         assertNull(getEqResource(classResource2));
         assertNotNull(classResource1.getProperty(OWL.equivalentClass));
+    }
+
+    @Test
+    void testMapUpdateClassRestriction() {
+        var model = MapperTestUtils.getModelFromFile("/model_with_owl_restrictions.ttl");
+        model.setNsPrefixes(ModelConstants.PREFIXES);
+
+        var classResource = model.getResource(ModelConstants.SUOMI_FI_NAMESPACE + "model/class-update-target");
+        var restrictionURI = ModelConstants.SUOMI_FI_NAMESPACE + "model/association-1";
+        var oldTarget = ModelConstants.SUOMI_FI_NAMESPACE + "model/class-2";
+        var newTarget = ModelConstants.SUOMI_FI_NAMESPACE + "model/class-x";
+
+        ClassMapper.mapUpdateClassRestrictionProperty(model, classResource, restrictionURI, oldTarget,
+                newTarget, ResourceType.ASSOCIATION);
+
+        var eqResource = getEqResource(classResource);
+        assertNotNull(eqResource);
+        var restrictions = eqResource.getProperty(OWL.intersectionOf).getList().asJavaList().stream()
+                .filter(r -> r.asResource().getProperty(OWL.onProperty).getObject().toString().equals(restrictionURI))
+                .toList();
+
+        assertEquals(2, restrictions.size());
+        assertEquals(newTarget, restrictions.get(0).asResource().getProperty(OWL.someValuesFrom).getObject().toString());
+    }
+
+    @Test
+    void testMapUpdateClassRestrictionDuplicate() {
+        var model = MapperTestUtils.getModelFromFile("/model_with_owl_restrictions.ttl");
+        model.setNsPrefixes(ModelConstants.PREFIXES);
+
+        var classResource = model.getResource("http://uri.suomi.fi/datamodel/ns/model/class-update-target");
+        var restrictionURI = "http://uri.suomi.fi/datamodel/ns/model/association-1";
+        var oldTarget = "http://uri.suomi.fi/datamodel/ns/model/class-2";
+        var newTargetDuplicate = "http://uri.suomi.fi/datamodel/ns/model/class-3";
+
+        assertThrows(MappingError.class, () ->
+                ClassMapper.mapUpdateClassRestrictionProperty(model, classResource, restrictionURI,
+                        oldTarget, newTargetDuplicate, ResourceType.ASSOCIATION));
     }
 
     @Test

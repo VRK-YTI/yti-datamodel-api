@@ -17,10 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.topbraid.shacl.vocabulary.SH;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -291,35 +288,40 @@ public class ClassMapper {
         return constructBuilder.build();
     }
 
-    public static void addClassResourcesToDTO(Model classResources, ClassInfoDTO dto, Consumer<SimpleResourceDTO> subjectMapper){
+    public static void addClassResourcesToDTO(Model resourcesResult, Set<SimpleResourceDTO> restrictions,
+                                              ClassInfoDTO dto, Consumer<SimpleResourceDTO> subjectMapper) {
         var associations = new ArrayList<SimpleResourceDTO>();
         var attributes = new ArrayList<SimpleResourceDTO>();
-        classResources.listSubjectsWithProperty(RDFS.isDefinedBy).forEach(res -> {
-            var resDTO = new SimpleResourceDTO();
-            resDTO.setUri(res.getURI());
-            resDTO.setIdentifier(MapperUtils.getLiteral(res, DCTerms.identifier, String.class));
-            var ns = DataModelUtils.removeTrailingSlash(NodeFactory.createURI(res.getURI()).getNameSpace());
-            var versionIRI = MapperUtils.propertyToString(classResources.getResource(ns), OWL2.versionIRI);
-            if (versionIRI != null) {
-                resDTO.setVersion(versionIRI.substring(versionIRI.lastIndexOf("/") + 1));
+        restrictions.forEach(restriction -> {
+            var resourceURI = DataModelUtils.removeVersionFromURI(restriction.getUri());
+            var resource = resourcesResult.getResource(resourceURI);
+            var modelUri = MapperUtils.propertyToString(resource, RDFS.isDefinedBy);
+
+            restriction.setIdentifier(MapperUtils.getLiteral(resource, DCTerms.identifier, String.class));
+            restriction.setLabel(MapperUtils.localizedPropertyToMap(resource, RDFS.label));
+
+            if (modelUri != null && modelUri.startsWith(ModelConstants.SUOMI_FI_NAMESPACE)) {
+                restriction.setModelId(MapperUtils.getModelIdFromNamespace(modelUri));
+                var ns = DataModelUtils.removeTrailingSlash(NodeFactory.createURI(resourceURI).getNameSpace());
+                var versionIRI = MapperUtils.propertyToString(resourcesResult.getResource(ns), OWL2.versionIRI);
+                if (versionIRI != null) {
+                    restriction.setVersion(versionIRI.substring(versionIRI.lastIndexOf("/") + 1));
+                }
             }
-            resDTO.setLabel(MapperUtils.localizedPropertyToMap(res, RDFS.label));
-            resDTO.setNote(MapperUtils.localizedPropertyToMap(res, RDFS.comment));
-            resDTO.setCurie(MapperUtils.uriToURIDTO(res.getURI(), classResources).getCurie());
+
+            restriction.setNote(MapperUtils.localizedPropertyToMap(resource, RDFS.comment));
+            restriction.setCurie(MapperUtils.uriToURIDTO(resource.getURI(), resourcesResult).getCurie());
             var conceptDTO = new ConceptDTO();
-            conceptDTO.setConceptURI(MapperUtils.propertyToString(res, DCTerms.subject));
-            resDTO.setConcept(conceptDTO);
-            subjectMapper.accept(resDTO);
-            var modelUri = MapperUtils.propertyToString(res, RDFS.isDefinedBy);
-            if(modelUri == null){
-                throw new MappingError("ModelUri null for resource");
+            conceptDTO.setConceptURI(MapperUtils.propertyToString(resource, DCTerms.subject));
+            restriction.setConcept(conceptDTO);
+            subjectMapper.accept(restriction);
+
+            if (MapperUtils.hasType(resource, OWL.DatatypeProperty, OWL.AnnotationProperty)) {
+                attributes.add(restriction);
+            } else if (MapperUtils.hasType(resource, OWL.ObjectProperty)) {
+                associations.add(restriction);
             }
-            resDTO.setModelId(MapperUtils.getModelIdFromNamespace(modelUri));
-            if (MapperUtils.hasType(res, OWL.DatatypeProperty, OWL.AnnotationProperty)) {
-                attributes.add(resDTO);
-            } else if (MapperUtils.hasType(res, OWL.ObjectProperty)) {
-                associations.add(resDTO);
-            }
+
             dto.setAssociation(associations);
             dto.setAttribute(attributes);
         });
@@ -406,13 +408,30 @@ public class ClassMapper {
                 .filterKeep(p -> p.getObject().isAnon())
                 .mapWith(r -> r.getObject().asResource());
 
+        var range = MapperUtils.propertyToString(propertyResource, RDFS.range);
+
+        // Check duplicates. Duplicate attributes are not allowed, duplicate associations are allowed
+        // as long as their target (owl:someValuesFrom) is different.
+        // By default, association restriction's range is empty
+        var hasDuplicate = getClassRestrictionList(model, classResource).stream().anyMatch(resource -> {
+            var onProperty = MapperUtils.propertyToString(resource, OWL.onProperty);
+            var someValuesFrom = MapperUtils.propertyToString(resource, OWL.someValuesFrom);
+
+            return MapperUtils.hasType(propertyResource, OWL.ObjectProperty)
+                    ? propertyResource.getURI().equals(onProperty) && someValuesFrom == null
+                    : propertyResource.getURI().equals(onProperty);
+        });
+
+        if (hasDuplicate) {
+            throw new MappingError(String.format("Restriction %s already exists", propertyResource.getURI()));
+        }
+
         var restrictionResource = model.createResource();
         restrictionResource.addProperty(RDF.type, OWL.Restriction);
         restrictionResource.addProperty(OWL.onProperty, propertyResource);
 
-        if (propertyResource.hasProperty(RDFS.range)) {
-            restrictionResource.addProperty(OWL.someValuesFrom,
-                    propertyResource.getProperty(RDFS.range).getObject());
+        if (range != null && !MapperUtils.hasType(propertyResource, OWL.ObjectProperty)) {
+            restrictionResource.addProperty(OWL.someValuesFrom, ResourceFactory.createResource(range));
         }
 
         RDFList rdfList;
@@ -432,56 +451,99 @@ public class ClassMapper {
         }
     }
 
-    public static void mapRemoveClassRestrictionProperty(Model model, Resource classResource, String propertyResource) {
+    public static void mapRemoveClassRestrictionProperty(Model model, Resource classResource, Resource propertyResource, String target) {
         var eqResource = classResource.listProperties(OWL.equivalentClass)
                 .filterKeep(p -> p.getObject().isAnon())
                 .mapWith(r -> r.getObject().asResource());
 
-        if (eqResource.hasNext() && propertyResource != null) {
-            // construct new list of anonymous owl:restriction resources,
-            // because RDFList.remove() doesn't work as expected in this scenario
-            var eq = eqResource.next();
-            var restrictionList = MapperUtils.getList(model, eq, OWL.intersectionOf);
-
-            var remainingNodes = new ArrayList<RDFNode>();
-            RDFNode removed = null;
-
-            for (var rdfNode : restrictionList.asJavaList()) {
-                if (propertyResource.equals(MapperUtils.propertyToString(rdfNode.asResource(), OWL.onProperty))) {
-                    removed = rdfNode;
-                    continue;
-                }
-                remainingNodes.add(rdfNode);
-            }
-
-            if (removed == null) {
-                throw new MappingError(String.format("Property %s not added to the class", propertyResource));
-            }
-
-            if (remainingNodes.isEmpty()) {
-                model.removeAll(classResource, OWL.equivalentClass, eq);
-                model.removeAll(eq, null, null);
-            } else {
-                eq.removeAll(OWL.intersectionOf);
-                eq.addProperty(OWL.intersectionOf, model.createList(remainingNodes.iterator()));
-            }
-
-            model.removeAll(removed.asResource(), null, null);
-            restrictionList.removeList();
-        } else {
+        if (!eqResource.hasNext()) {
             throw new MappingError(String.format("No restrictions found from class %s", classResource.getURI()));
         }
+
+        // construct new list of anonymous owl:restriction resources,
+        // because RDFList.remove() doesn't work as expected in this scenario
+        var eq = eqResource.next();
+        var restrictionList = MapperUtils.getList(model, eq, OWL.intersectionOf);
+
+        var remainingNodes = new ArrayList<RDFNode>();
+        RDFNode removed = null;
+
+        for (var rdfNode : restrictionList.asJavaList()) {
+            String onProperty = MapperUtils.propertyToString(rdfNode.asResource(), OWL.onProperty);
+            var someValuesFrom = MapperUtils.propertyToString(rdfNode.asResource(), OWL.someValuesFrom);
+
+            if (propertyResource.getURI().equals(onProperty) && (
+                    MapperUtils.hasType(propertyResource, OWL.DatatypeProperty) || Objects.equals(target, someValuesFrom))
+            ) {
+                removed = rdfNode;
+                continue;
+            }
+            remainingNodes.add(rdfNode);
+        }
+
+        if (removed == null) {
+            throw new MappingError(String.format("Property %s not added to the class", propertyResource));
+        }
+
+        if (remainingNodes.isEmpty()) {
+            model.removeAll(classResource, OWL.equivalentClass, eq);
+            model.removeAll(eq, null, null);
+        } else {
+            eq.removeAll(OWL.intersectionOf);
+            eq.addProperty(OWL.intersectionOf, model.createList(remainingNodes.iterator()));
+        }
+
+        model.removeAll(removed.asResource(), null, null);
+        restrictionList.removeList();
     }
 
-    public static List<RDFNode> getClassRestrictionList(Model model, Resource classResource) {
+    public static void mapUpdateClassRestrictionProperty(Model model, Resource classResource, String restrictionURI,
+                                                         String oldTarget, String newTarget, ResourceType resourceType) {
+        var restrictions = getClassRestrictionList(model, classResource);
+        if (restrictions.isEmpty()) {
+            return;
+        }
+
+        // check for duplicates
+        var hasDuplicate = restrictions.stream().anyMatch(r -> {
+            var onProperty = MapperUtils.propertyToString(r, OWL.onProperty);
+            var someValuesFrom = MapperUtils.propertyToString(r, OWL.someValuesFrom);
+
+            return resourceType.equals(ResourceType.ASSOCIATION)
+                    ? restrictionURI.equals(onProperty) && newTarget.equals(someValuesFrom)
+                    : restrictionURI.equals(onProperty);
+        });
+
+        if (hasDuplicate) {
+            throw new MappingError(String.format("Target %s already exists for restriction %s", newTarget, restrictionURI));
+        }
+
+        var updated = restrictions.stream().filter(r -> {
+            var onProperty = MapperUtils.propertyToString(r, OWL.onProperty);
+            var someValuesFrom = MapperUtils.propertyToString(r, OWL.someValuesFrom);
+
+            return oldTarget == null
+                ? restrictionURI.equals(onProperty) && someValuesFrom == null
+                : restrictionURI.equals(onProperty) && oldTarget.equals(someValuesFrom);
+        })
+                .findFirst()
+                .orElseThrow(() ->
+                new MappingError(String.format("Restriction for %s not found with type %s", restrictionURI, oldTarget)));
+
+        var modelResource = MapperUtils.getModelResourceFromVersion(model);
+        MapperUtils.updateUriPropertyAndAddReferenceNamespaces(modelResource, updated, OWL.someValuesFrom, newTarget);
+    }
+
+    public static List<Resource> getClassRestrictionList(Model model, Resource classResource) {
         var eqResource = classResource.listProperties(OWL.equivalentClass)
                 .filterKeep(p -> p.getObject().isAnon())
                 .mapWith(r -> r.getObject().asResource());
 
         if (eqResource.hasNext()) {
             var eq = eqResource.next();
-            var restrictionList = MapperUtils.getList(model, eq, OWL.intersectionOf);
-            return restrictionList.asJavaList();
+            return MapperUtils.getList(model, eq, OWL.intersectionOf)
+                    .mapWith(RDFNode::asResource)
+                    .toList();
         } else {
             return List.of();
         }

@@ -140,19 +140,21 @@ public class ResourceMapper {
             MapperUtils.updateUriProperty(resource, RDFS.range, dto.getRange());
         }
 
-        // update range to attribute and association restrictions (owl:someValuesFrom)
-        model.listStatements(new SimpleSelector(null, OWL.equivalentClass, (RDFNode) null))
-                .filterKeep(p -> p.getObject().isAnon()).toList()
-                .forEach(r -> r.getProperty(OWL.intersectionOf).getObject().as(RDFList.class)
-                        .asJavaList().stream()
-                        .map(RDFNode::asResource)
-                        .filter(p -> p.hasProperty(OWL.onProperty) && p.getProperty(OWL.onProperty).getObject().equals(resource))
-                        .forEach(s -> {
-                            s.removeAll(OWL.someValuesFrom);
-                            if (dto.getRange() != null) {
-                                s.addProperty(OWL.someValuesFrom, ResourceFactory.createResource(dto.getRange()));
-                            }
-                        }));
+        // update range to attribute restrictions (owl:someValuesFrom)
+        if (MapperUtils.hasType(resource, OWL.DatatypeProperty)) {
+            model.listStatements(new SimpleSelector(null, OWL.equivalentClass, (RDFNode) null))
+                    .filterKeep(p -> p.getObject().isAnon()).toList()
+                    .forEach(r -> r.getProperty(OWL.intersectionOf).getObject().as(RDFList.class)
+                            .asJavaList().stream()
+                            .map(RDFNode::asResource)
+                            .filter(p -> p.hasProperty(OWL.onProperty) && p.getProperty(OWL.onProperty).getObject().equals(resource))
+                            .forEach(s -> {
+                                s.removeAll(OWL.someValuesFrom);
+                                if (dto.getRange() != null) {
+                                    s.addProperty(OWL.someValuesFrom, ResourceFactory.createResource(dto.getRange()));
+                                }
+                            }));
+        }
         MapperUtils.addUpdateMetadata(resource, user);
     }
 
