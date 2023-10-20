@@ -185,10 +185,10 @@ public class ClassController {
     @PutMapping(value = "/library/{prefix}/{classIdentifier}/properties/modify")
     public void updateClassRestrictionReference(@PathVariable @Parameter(description = "Data model prefix") String prefix,
                                              @PathVariable @Parameter(description = "Class identifier restriction is added to") String classIdentifier,
-                                             @RequestParam @Parameter(description = "Restriction uri to be modified") String restrictionURI,
+                                             @RequestParam @Parameter(description = "Restriction uri to be modified") String uri,
                                              @RequestParam(required = false) @Parameter(description = "Old target value") String currentTarget,
                                              @RequestParam @Parameter(description = "New target value") String newTarget) {
-        classService.handleUpdateClassRestrictionReference(prefix, classIdentifier, restrictionURI, currentTarget, newTarget);
+        classService.handleUpdateClassRestrictionReference(prefix, classIdentifier, uri, currentTarget, newTarget);
     }
 
     @Operation(summary = "Delete class restriction from the class")
@@ -201,9 +201,9 @@ public class ClassController {
     @DeleteMapping(value = "/library/{prefix}/{classIdentifier}/properties")
     public void deleteClassRestrictionReference(@PathVariable @Parameter(description = "Data model prefix") String prefix,
                                              @PathVariable @Parameter(description = "Class identifier restriction is removed from") String classIdentifier,
-                                             @RequestParam @Parameter(description = "Attribute or association uri to be removed") String restrictionURI,
+                                             @RequestParam @Parameter(description = "Attribute or association uri to be removed") String uri,
                                              @RequestParam(required = false) @Parameter(description = "Target of the removed restrictions") String currentTarget) {
-        classService.handleUpdateClassRestrictionReference(prefix, classIdentifier, restrictionURI, currentTarget, null);
+        classService.handleUpdateClassRestrictionReference(prefix, classIdentifier, uri, currentTarget, null);
     }
 
     @Operation(summary = "Delete property reference from node shape")
