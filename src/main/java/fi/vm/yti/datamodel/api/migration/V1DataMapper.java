@@ -64,7 +64,7 @@ public class V1DataMapper {
                         var extResource = oldData.getResource(ns);
                         var ext = new ExternalNamespaceDTO();
                         ext.setNamespace(ns);
-                        ext.setName(MapperUtils.localizedPropertyToMap(extResource, RDFS.label).entrySet().iterator().next().getValue());
+                        ext.setName(MapperUtils.localizedPropertyToMap(extResource, RDFS.label));
                         ext.setPrefix(MapperUtils.propertyToString(extResource, DCAP.preferredXMLNamespacePrefix));
                         externalNamespaces.add(ext);
                     }
@@ -76,11 +76,9 @@ public class V1DataMapper {
         if (modelResource.hasProperty(DCTerms.relation)) {
             var links = MapperUtils.getList(oldData, modelResource, DCTerms.relation).asJavaList().stream().map(link -> {
                 var linkDTO = new LinkDTO();
-                var title = MapperUtils.localizedPropertyToMap(link.asResource(), DCTerms.title);
-                var description = MapperUtils.localizedPropertyToMap(link.asResource(), DCTerms.description);
                 linkDTO.setUri(MapperUtils.propertyToString(link.asResource(), FOAF.homepage));
-                linkDTO.setName(title.isEmpty() ? "" : title.entrySet().iterator().next().getValue());
-                linkDTO.setDescription(description.isEmpty() ? "" : description.entrySet().iterator().next().getValue());
+                linkDTO.setName(MapperUtils.localizedPropertyToMap(link.asResource(), DCTerms.title));
+                linkDTO.setDescription(MapperUtils.localizedPropertyToMap(link.asResource(), DCTerms.description));
                 return linkDTO;
             }).collect(Collectors.toSet());
             dto.setLinks(links);

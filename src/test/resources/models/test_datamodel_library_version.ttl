@@ -32,8 +32,8 @@
         iow:contact                     "test@localhost"                       ;
         iow:documentation               "hello\ntest"@fi                       ;
         rdfs:seeAlso                    [
-                                            dcterms:description "link description" ;
-                                            dcterms:title       "link title" ;
+                                            dcterms:description "link description"@fi ;
+                                            dcterms:title       "link title"@fi ;
                                             foaf:homepage       "https://example.com"
                                         ] ;
         owl:versionIRI                  "http://uri.suomi.fi/datamodel/ns/test/1.0.1" ;

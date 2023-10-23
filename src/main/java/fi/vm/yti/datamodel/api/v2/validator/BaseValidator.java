@@ -6,6 +6,7 @@ import jakarta.validation.ConstraintValidatorContext;
 
 import java.lang.annotation.Annotation;
 import java.util.Collection;
+import java.util.Map;
 
 public abstract class BaseValidator implements Annotation{
 
@@ -44,12 +45,7 @@ public abstract class BaseValidator implements Annotation{
 
 
     public void checkLabel(ConstraintValidatorContext context, BaseDTO dto){
-        var labels = dto.getLabel();
-        if (labels == null || labels.isEmpty() || labels.values().stream().anyMatch(label -> label == null || label.isBlank())){
-            addConstraintViolation(context, ValidationConstants.MSG_VALUE_MISSING, "label");
-        }else {
-            labels.forEach((lang, value) -> checkCommonTextField(context, value, "label"));
-        }
+        checkRequiredLocalizedValue(context, dto.getLabel(), "label");
     }
 
     public void checkEditorialNote(ConstraintValidatorContext context, BaseDTO dto){
@@ -146,6 +142,14 @@ public abstract class BaseValidator implements Annotation{
                 addConstraintViolation(context, "does-not-match-rfc-4646", property);
             }
         });
+    }
+
+    public void checkRequiredLocalizedValue(ConstraintValidatorContext context, Map<String, String> value, String property) {
+        if (value == null || value.isEmpty() || value.values().stream().anyMatch(v -> v == null || v.isBlank())) {
+            addConstraintViolation(context, ValidationConstants.MSG_VALUE_MISSING, property);
+        } else {
+            value.forEach((lang, v) -> checkCommonTextField(context, v, property));
+        }
     }
 }
 

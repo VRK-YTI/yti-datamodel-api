@@ -250,12 +250,9 @@ public class DataModelValidator extends BaseValidator implements
 
     private void checkLinks(ConstraintValidatorContext context, DataModelDTO dataModel) {
         dataModel.getLinks().forEach(linkDTO -> {
-            checkNotNull(context, linkDTO.getName(), "links.name");
-            checkCommonTextField(context, linkDTO.getName(), "links.name");
-
+            checkRequiredLocalizedValue(context, linkDTO.getName(), "links.name");
             checkNotNull(context, linkDTO.getUri(), "links.uri");
-
-            checkCommonTextArea(context, linkDTO.getDescription(), "links.description");
+            linkDTO.getDescription().forEach((description, value) -> checkCommonTextArea(context, value, "links.description"));
         });
     }
 }

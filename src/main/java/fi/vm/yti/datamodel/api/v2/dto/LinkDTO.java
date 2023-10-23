@@ -1,16 +1,18 @@
 package fi.vm.yti.datamodel.api.v2.dto;
 
+import java.util.Map;
+
 public class LinkDTO {
 
-    private String name;
+    private Map<String, String> name = Map.of();
     private String uri;
-    private String description;
+    private Map<String, String> description = Map.of();
 
-    public String getName() {
+    public Map<String, String> getName() {
         return name;
     }
 
-    public void setName(String name) {
+    public void setName(Map<String, String> name) {
         this.name = name;
     }
 
@@ -22,11 +24,11 @@ public class LinkDTO {
         this.uri = uri;
     }
 
-    public String getDescription() {
+    public Map<String, String> getDescription() {
         return description;
     }
 
-    public void setDescription(String description) {
+    public void setDescription(Map<String, String> description) {
         this.description = description;
     }
 }

@@ -2,18 +2,19 @@ package fi.vm.yti.datamodel.api.v2.dto;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
+import java.util.Map;
+
 public class ExternalNamespaceDTO {
 
-
-    private String name;
+    private Map<String, String> name;
     private String namespace;
     private String prefix;
 
-    public String getName() {
+    public Map<String, String> getName() {
         return name;
     }
 
-    public void setName(String name) {
+    public void setName(Map<String, String> name) {
         this.name = name;
     }
 

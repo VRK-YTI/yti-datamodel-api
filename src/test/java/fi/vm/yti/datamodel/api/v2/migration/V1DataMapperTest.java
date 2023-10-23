@@ -37,14 +37,14 @@ public class V1DataMapperTest {
         var externalNamespace = result.getExternalNamespaces().iterator().next();
         assertEquals("test_un", externalNamespace.getPrefix());
         assertEquals("https://vocabulary.uncefact.org/", externalNamespace.getNamespace());
-        assertEquals("test un", externalNamespace.getName());
+        assertEquals("test un", externalNamespace.getName().get("fi"));
 
         assertEquals(2, result.getLinks().size());
         var link = result.getLinks().stream()
-                .filter(l -> l.getName().equals("Ympäristöministerio/Merialuesuunnittelu"))
+                .filter(l -> l.getName().get("fi").equals("Ympäristöministerio/Merialuesuunnittelu"))
                 .findFirst();
         assertTrue(link.isPresent());
-        assertEquals("Test description", link.get().getDescription());
+        assertEquals("Test description", link.get().getDescription().get("fi"));
         assertEquals("https://ym.fi/merialuesuunnittelu", link.get().getUri());
 
         assertEquals("Sample documentation...", result.getDocumentation().get("fi"));

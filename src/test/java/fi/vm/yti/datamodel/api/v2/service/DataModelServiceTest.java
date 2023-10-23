@@ -330,7 +330,7 @@ class DataModelServiceTest {
         dataModelDTO.setOrganizations(Set.of(RANDOM_ORG));
         dataModelDTO.setInternalNamespaces(Set.of("http://uri.suomi.fi/datamodel/ns/test"));
         var extNs = new ExternalNamespaceDTO();
-        extNs.setName("test external namespace");
+        extNs.setName(Map.of("fi", "test external namespace"));
         extNs.setPrefix("testprefix");
         extNs.setNamespace("http://example.com/ns/test");
         dataModelDTO.setExternalNamespaces(Set.of(extNs));

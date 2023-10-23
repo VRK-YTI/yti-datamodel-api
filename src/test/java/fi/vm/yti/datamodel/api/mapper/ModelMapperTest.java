@@ -100,15 +100,15 @@ class ModelMapperTest {
                 **bold**
                 """));
         var externalDTO = new ExternalNamespaceDTO();
-        externalDTO.setName("test dto");
+        externalDTO.setName(Map.of("fi", "test dto"));
         externalDTO.setNamespace("http://www.w3.org/2000/01/rdf-schema#");
         externalDTO.setPrefix("ext");
         dto.setExternalNamespaces(Set.of(externalDTO));
 
         var linkDTO = new LinkDTO();
-        linkDTO.setName("new link");
+        linkDTO.setName(Map.of("fi", "new link"));
         linkDTO.setUri("https://example.com");
-        linkDTO.setDescription("link description");
+        linkDTO.setDescription(Map.of("fi", "link description"));
         dto.setLinks(Set.of(linkDTO));
 
         Model model = mapper.mapToJenaModel(dto, modelType, mockUser);
@@ -160,8 +160,8 @@ class ModelMapperTest {
 
         var linkResource = modelResource.getProperty(RDFS.seeAlso);
         var linkObject = linkResource.getResource();
-        assertEquals("new link", MapperUtils.propertyToString(linkObject, DCTerms.title));
-        assertEquals("link description", MapperUtils.propertyToString(linkObject, DCTerms.description));
+        assertEquals("new link", MapperUtils.localizedPropertyToMap(linkObject, DCTerms.title).get("fi"));
+        assertEquals("link description", MapperUtils.localizedPropertyToMap(linkObject, DCTerms.description).get("fi"));
         assertEquals("https://example.com", MapperUtils.propertyToString(linkObject, FOAF.homepage));
     }
 
@@ -196,16 +196,16 @@ class ModelMapperTest {
 
         dto.setInternalNamespaces(Set.of("http://uri.suomi.fi/datamodel/ns/newint"));
         var externalDTO = new ExternalNamespaceDTO();
-        externalDTO.setName("test dto");
+        externalDTO.setName(Map.of("fi", "test dto"));
         externalDTO.setNamespace("http://www.w3.org/2000/01/rdf-schema#");
         externalDTO.setPrefix("ext");
 
         dto.setExternalNamespaces(Set.of(externalDTO));
 
         var linkDTO = new LinkDTO();
-        linkDTO.setName("new link");
+        linkDTO.setName(Map.of("fi", "new link"));
         linkDTO.setUri("https://test.com");
-        linkDTO.setDescription("new link description");
+        linkDTO.setDescription(Map.of("fi", "new link description"));
         dto.setLinks(Set.of(linkDTO));
 
         //unchanged values
@@ -231,8 +231,8 @@ class ModelMapperTest {
 
         var linkResource = modelResource.getProperty(RDFS.seeAlso);
         var linkObject = linkResource.getResource();
-        assertEquals("link title", MapperUtils.propertyToString(linkObject, DCTerms.title));
-        assertEquals("link description", MapperUtils.propertyToString(linkObject, DCTerms.description));
+        assertEquals("link title", MapperUtils.localizedPropertyToMap(linkObject, DCTerms.title).get("fi"));
+        assertEquals("link description", MapperUtils.localizedPropertyToMap(linkObject, DCTerms.description).get("fi"));
         assertEquals("https://example.com", MapperUtils.propertyToString(linkObject, FOAF.homepage));
 
         mapper.mapToUpdateJenaModel("http://uri.suomi.fi/datamodel/ns/test", dto, m, mockUser);
@@ -260,8 +260,8 @@ class ModelMapperTest {
 
         linkResource = modelResource.getProperty(RDFS.seeAlso);
         linkObject = linkResource.getResource();
-        assertEquals("new link", MapperUtils.propertyToString(linkObject, DCTerms.title));
-        assertEquals("new link description", MapperUtils.propertyToString(linkObject, DCTerms.description));
+        assertEquals("new link", MapperUtils.localizedPropertyToMap(linkObject, DCTerms.title).get("fi"));
+        assertEquals("new link description", MapperUtils.localizedPropertyToMap(linkObject, DCTerms.description).get("fi"));
         assertEquals("https://test.com", MapperUtils.propertyToString(linkObject, FOAF.homepage));
     }
 
@@ -326,14 +326,14 @@ class ModelMapperTest {
                 .filter(ns -> ns.getNamespace().equals("https://www.example.com/ns/ext"))
                 .findFirst()
                 .orElseThrow();
-        assertEquals("test resource", externalDTO.getName());
+        assertEquals("test resource", externalDTO.getName().get("fi"));
         assertEquals("extres", externalDTO.getPrefix());
         assertEquals("https://www.example.com/ns/ext", externalDTO.getNamespace());
 
         assertEquals(1, result.getLinks().size());
         var linkDTO = result.getLinks().stream().findFirst().orElseThrow();
-        assertEquals("link title", linkDTO.getName());
-        assertEquals("link description", linkDTO.getDescription());
+        assertEquals("link title", linkDTO.getName().get("fi"));
+        assertEquals("link description", linkDTO.getDescription().get("fi"));
         assertEquals("https://example.com", linkDTO.getUri());
     }
 
@@ -435,8 +435,8 @@ class ModelMapperTest {
         dto.setGroups(Set.of("P17"));
         dto.setOrganizations(Set.of(UUID.fromString("74776e94-7f51-48dc-aeec-c084c4defa09")));
         var linkDTO = new LinkDTO();
-        linkDTO.setDescription("new link description");
-        linkDTO.setName("new link");
+        linkDTO.setDescription(Map.of("fi", "new link description"));
+        linkDTO.setName(Map.of("fi", "new link"));
         linkDTO.setUri("https://test.com");
         dto.setLinks(Set.of(linkDTO));
         mapper.mapUpdateVersionedModel(m, "http://uri.suomi.fi/datamodel/ns/test", dto, EndpointUtils.mockUser);
@@ -452,8 +452,8 @@ class ModelMapperTest {
 
         var linkResource = resource.getProperty(RDFS.seeAlso);
         var linkObject = linkResource.getResource();
-        assertEquals("new link", MapperUtils.propertyToString(linkObject, DCTerms.title));
-        assertEquals("new link description", MapperUtils.propertyToString(linkObject, DCTerms.description));
+        assertEquals("new link", MapperUtils.localizedPropertyToMap(linkObject, DCTerms.title).get("fi"));
+        assertEquals("new link description", MapperUtils.localizedPropertyToMap(linkObject, DCTerms.description).get("fi"));
         assertEquals("https://test.com", MapperUtils.propertyToString(linkObject, FOAF.homepage));
 
     }

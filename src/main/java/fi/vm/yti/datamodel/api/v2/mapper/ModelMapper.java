@@ -150,8 +150,9 @@ public class ModelMapper {
 
     private void addLinkToModel(Model model, Resource modelResource, LinkDTO linkDTO) {
         var blankNode = model.createResource();
-        blankNode.addProperty(DCTerms.title, linkDTO.getName());
-        MapperUtils.addOptionalStringProperty(blankNode, DCTerms.description, linkDTO.getDescription());
+        var languages = MapperUtils.arrayPropertyToSet(modelResource, DCTerms.language);
+        MapperUtils.addLocalizedProperty(languages, linkDTO.getName(), blankNode, DCTerms.title, model);
+        MapperUtils.addLocalizedProperty(languages, linkDTO.getDescription(), blankNode, DCTerms.description, model);
         blankNode.addProperty(FOAF.homepage, linkDTO.getUri());
         modelResource.addProperty(RDFS.seeAlso, blankNode);
     }
@@ -235,8 +236,8 @@ public class ModelMapper {
         var links = modelResource.listProperties(RDFS.seeAlso).toSet().stream().map(statement -> {
             var linkRes = statement.getResource();
             var linkDTO = new LinkDTO();
-            linkDTO.setName(MapperUtils.propertyToString(linkRes, DCTerms.title));
-            linkDTO.setDescription(MapperUtils.propertyToString(linkRes, DCTerms.description));
+            linkDTO.setName(MapperUtils.localizedPropertyToMap(linkRes, DCTerms.title));
+            linkDTO.setDescription(MapperUtils.localizedPropertyToMap(linkRes, DCTerms.description));
             linkDTO.setUri(MapperUtils.propertyToString(linkRes, FOAF.homepage));
             return linkDTO;
         }).collect(Collectors.toSet());
@@ -344,7 +345,7 @@ public class ModelMapper {
                 var extNsDTO = new ExternalNamespaceDTO();
                 extNsDTO.setNamespace(ns);
                 extNsDTO.setPrefix(MapperUtils.propertyToString(extNsModel, DCAP.preferredXMLNamespacePrefix));
-                extNsDTO.setName(MapperUtils.propertyToString(extNsModel, RDFS.label));
+                extNsDTO.setName(MapperUtils.localizedPropertyToMap(extNsModel, RDFS.label));
                 extNs.add(extNsDTO);
             }
         });
@@ -389,7 +390,7 @@ public class ModelMapper {
             modelDTO.getExternalNamespaces().forEach(namespace -> {
                 var nsUri = namespace.getNamespace();
                 var nsRes = model.createResource(nsUri);
-                nsRes.addProperty(RDFS.label, namespace.getName());
+                MapperUtils.addLocalizedProperty(modelDTO.getLanguages(), namespace.getName(), nsRes, RDFS.label, model);
                 nsRes.addProperty(DCAP.preferredXMLNamespacePrefix, namespace.getPrefix());
 
                 try{
