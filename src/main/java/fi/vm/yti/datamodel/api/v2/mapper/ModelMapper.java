@@ -390,7 +390,8 @@ public class ModelMapper {
             modelDTO.getExternalNamespaces().forEach(namespace -> {
                 var nsUri = namespace.getNamespace();
                 var nsRes = model.createResource(nsUri);
-                MapperUtils.addLocalizedProperty(modelDTO.getLanguages(), namespace.getName(), nsRes, RDFS.label, model);
+
+                MapperUtils.updateLocalizedProperty(modelDTO.getLanguages(), namespace.getName(), nsRes, RDFS.label, model);
                 nsRes.addProperty(DCAP.preferredXMLNamespacePrefix, namespace.getPrefix());
 
                 try{
