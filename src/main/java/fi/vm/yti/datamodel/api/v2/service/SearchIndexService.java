@@ -179,6 +179,9 @@ public class SearchIndexService {
         if(groups != null && !groups.isEmpty()){
             modelRequest.setGroups(groups);
         }
+        if (!user.isSuperuser()) {
+            modelRequest.setIncludeDraftFrom(getOrganizationsForUser(user));
+        }
         var build = ModelQueryFactory.createModelQuery(modelRequest, user.isSuperuser());
         try {
             var response = client.search(build, IndexModel.class);
