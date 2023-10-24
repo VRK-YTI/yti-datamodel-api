@@ -111,24 +111,19 @@ public class ResourceMapper {
 
         MapperUtils.updateCommonResourceInfo(model, resource, modelResource, dto);
 
-        var equivalentResources = dto.getEquivalentResource();
-        if(equivalentResources != null){
-            resource.removeAll(OWL.equivalentProperty);
-            equivalentResources.forEach(eq -> MapperUtils.addResourceRelationship(modelResource, resource, OWL.equivalentProperty, eq));
-        }
+        resource.removeAll(OWL.equivalentProperty);
+        dto.getEquivalentResource().forEach(eq -> MapperUtils.addResourceRelationship(modelResource, resource, OWL.equivalentProperty, eq));
 
         var getSubResourceOf = dto.getSubResourceOf();
-        if (getSubResourceOf != null){
-            resource.removeAll(RDFS.subPropertyOf);
-            if(getSubResourceOf.isEmpty()){
-                if(MapperUtils.hasType(resource, OWL.ObjectProperty)){
-                    resource.addProperty(RDFS.subPropertyOf, OWL2.topObjectProperty); //Add OWL:TopObjectProperty if nothing else is specified
-                }else{
-                    resource.addProperty(RDFS.subPropertyOf, OWL2.topDataProperty); //Add OWL:TopDataProperty if nothing else is specified
-                }
+        resource.removeAll(RDFS.subPropertyOf);
+        if(getSubResourceOf.isEmpty()){
+            if(MapperUtils.hasType(resource, OWL.ObjectProperty)){
+                resource.addProperty(RDFS.subPropertyOf, OWL2.topObjectProperty); //Add OWL:TopObjectProperty if nothing else is specified
             }else{
-                getSubResourceOf.forEach(sub -> MapperUtils.addResourceRelationship(modelResource, resource, RDFS.subPropertyOf, sub));
+                resource.addProperty(RDFS.subPropertyOf, OWL2.topDataProperty); //Add OWL:TopDataProperty if nothing else is specified
             }
+        }else{
+            getSubResourceOf.forEach(sub -> MapperUtils.addResourceRelationship(modelResource, resource, RDFS.subPropertyOf, sub));
         }
 
         MapperUtils.addTerminologyReference(dto, modelResource);
