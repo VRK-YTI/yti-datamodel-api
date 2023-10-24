@@ -292,7 +292,10 @@ public class ResourceMapper {
         indexResource.setNamespace(resource.getNamespace());
         indexResource.setIdentifier(resource.getIdentifier());
 
-        var dataModel = dataModels.get(resource.getIsDefinedBy());
+
+        var modelIri = resource.getVersionIri() != null ? resource.getVersionIri() : resource.getIsDefinedBy();
+
+        var dataModel = dataModels.get(modelIri);
         var dataModelInfo = new DatamodelInfo();
         if (dataModel != null) {
             dataModelInfo.setModelType(dataModel.getType());
