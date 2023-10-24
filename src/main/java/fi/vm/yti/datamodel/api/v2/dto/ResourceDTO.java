@@ -6,8 +6,8 @@ import java.util.Set;
 
 public class ResourceDTO extends BaseDTO {
 
-    private Set<String> subResourceOf;
-    private Set<String> equivalentResource;
+    private Set<String> subResourceOf = Set.of();
+    private Set<String> equivalentResource = Set.of();
     private String domain;
     private String range;
 

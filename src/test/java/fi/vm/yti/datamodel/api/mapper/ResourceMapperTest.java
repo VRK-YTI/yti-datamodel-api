@@ -583,16 +583,19 @@ class ResourceMapperTest {
         var m = MapperTestUtils.getModelFromFile("/models/test_datamodel_library_with_resources.ttl");
         var resource = m.getResource("http://uri.suomi.fi/datamodel/ns/test/TestAttribute");
 
-        //Shouldn't change if null
+        //null values get removed, so it will change to topObjectProperty
         ResourceMapper.mapToUpdateResource("http://uri.suomi.fi/datamodel/ns/test", m, "TestAttribute", new ResourceDTO(), EndpointUtils.mockUser);
-        assertEquals("http://uri.suomi.fi/datamodel/ns/test/SubResource", resource.getProperty(RDFS.subPropertyOf).getObject().toString());
+        assertEquals(OWL2.topDataProperty, resource.getProperty(RDFS.subPropertyOf).getResource());
 
         var dto = new ResourceDTO();
         dto.setSubResourceOf(Set.of());
 
+        m = MapperTestUtils.getModelFromFile("/models/test_datamodel_library_with_resources.ttl");
+        resource = m.getResource("http://uri.suomi.fi/datamodel/ns/test/TestAttribute");
+
         //should change if empty
         ResourceMapper.mapToUpdateResource("http://uri.suomi.fi/datamodel/ns/test", m, "TestAttribute", dto, EndpointUtils.mockUser);
-        assertEquals("http://www.w3.org/2002/07/owl#topDataProperty", resource.getProperty(RDFS.subPropertyOf).getObject().toString());
+        assertEquals(OWL2.topDataProperty, resource.getProperty(RDFS.subPropertyOf).getResource());
     }
 
     @Test
@@ -600,16 +603,19 @@ class ResourceMapperTest {
         var m = MapperTestUtils.getModelFromFile("/models/test_datamodel_library_with_resources.ttl");
         var resource = m.getResource("http://uri.suomi.fi/datamodel/ns/test/TestAssociation");
 
-        //Shouldn't change if null
+        //null values get removed, so it will change to topObjectProperty
         ResourceMapper.mapToUpdateResource("http://uri.suomi.fi/datamodel/ns/test", m, "TestAssociation", new ResourceDTO(), EndpointUtils.mockUser);
-        assertEquals("http://uri.suomi.fi/datamodel/ns/test/SubResource", resource.getProperty(RDFS.subPropertyOf).getObject().toString());
+        assertEquals(OWL2.topObjectProperty, resource.getProperty(RDFS.subPropertyOf).getResource());
 
         var dto = new ResourceDTO();
         dto.setSubResourceOf(Set.of());
 
+        m = MapperTestUtils.getModelFromFile("/models/test_datamodel_library_with_resources.ttl");
+        resource = m.getResource("http://uri.suomi.fi/datamodel/ns/test/TestAssociation");
+
         //should change if empty
         ResourceMapper.mapToUpdateResource("http://uri.suomi.fi/datamodel/ns/test", m, "TestAssociation", dto, EndpointUtils.mockUser);
-        assertEquals("http://www.w3.org/2002/07/owl#topObjectProperty", resource.getProperty(RDFS.subPropertyOf).getObject().toString());
+        assertEquals(OWL2.topObjectProperty, resource.getProperty(RDFS.subPropertyOf).getResource());
     }
 
     @Test
