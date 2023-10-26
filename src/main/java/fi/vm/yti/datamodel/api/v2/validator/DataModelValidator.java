@@ -195,7 +195,8 @@ public class DataModelValidator extends BaseValidator implements
         var namespaces = dataModel.getExternalNamespaces();
         var externalNamespace = "externalNamespaces";
         namespaces.forEach(namespace -> {
-            if(namespace.getPrefix() == null || namespace.getName() == null || namespace.getNamespace() == null){
+            checkRequiredLocalizedValue(context, namespace.getName(), "namespace.name");
+            if(namespace.getPrefix() == null || namespace.getNamespace() == null){
                 addConstraintViolation(context, "namespace-missing-value", externalNamespace);
             }else {
                 checkPrefixOrIdentifier(context, namespace.getPrefix(), externalNamespace, ValidationConstants.PREFIX_MAX_LENGTH, false);
