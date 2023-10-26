@@ -13,11 +13,6 @@
           }
         },
         {
-          "terms": {
-            "status": ["VALID", "SUGGESTED"]
-          }
-        },
-        {
           "bool": {
             "minimum_should_match": "1",
             "should": [

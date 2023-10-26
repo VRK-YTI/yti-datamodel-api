@@ -2,7 +2,6 @@ package fi.vm.yti.datamodel.api.v2.service;
 
 import fi.vm.yti.datamodel.api.index.OpenSearchConnector;
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
-import fi.vm.yti.datamodel.api.v2.dto.ModelType;
 import fi.vm.yti.datamodel.api.v2.dto.ResourceType;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.OpenSearchException;
 import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
@@ -166,19 +165,17 @@ public class SearchIndexService {
 
     /**
      * Get model specific restrictions for a resource search
-     * @param modelType Model type
-     * @param groups Service category groups
      * @return List of DataModel URIs
      */
-    private List<String> getModelSpecificRestrictions(ModelType modelType, Set<String> groups, YtiUser user){
+    private List<String> getModelSpecificRestrictions(ResourceSearchRequest request, YtiUser user) {
         var modelRequest = new ModelSearchRequest();
         modelRequest.setPageSize(QueryFactoryUtils.INTERNAL_SEARCH_PAGE_SIZE);
-        if(modelType != null){
-            modelRequest.setType(Set.of(modelType));
+        if(request.getLimitToModelType() != null) {
+            modelRequest.setType(Set.of(request.getLimitToModelType()));
         }
-        if(groups != null && !groups.isEmpty()){
-            modelRequest.setGroups(groups);
-        }
+        modelRequest.setStatus(request.getStatus());
+        modelRequest.setGroups(request.getGroups());
+
         if (!user.isSuperuser()) {
             modelRequest.setIncludeDraftFrom(getOrganizationsForUser(user));
         }
@@ -210,9 +207,11 @@ public class SearchIndexService {
 
         List<String> restrictedDataModels = null;
 
-        if (request.getLimitToModelType() != null || (request.getGroups() != null && !request.getGroups().isEmpty())) {
+       if(request.getLimitToModelType() != null
+               || (request.getGroups() != null && !request.getGroups().isEmpty())
+               || (request.getStatus() != null && !request.getStatus().isEmpty())) {
             //Skip the search all together if no extra filtering needs to be done
-            restrictedDataModels = getModelSpecificRestrictions(request.getLimitToModelType(), request.getGroups(), user);
+           restrictedDataModels = getModelSpecificRestrictions(request, user);
         }
 
         // no matched data models found
