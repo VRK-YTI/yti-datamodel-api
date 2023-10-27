@@ -1,7 +1,6 @@
 package fi.vm.yti.datamodel.api.v2.opensearch.queries;
 
 import fi.vm.yti.datamodel.api.v2.dto.ResourceType;
-import fi.vm.yti.datamodel.api.v2.dto.Status;
 import fi.vm.yti.datamodel.api.v2.opensearch.dto.ResourceSearchRequest;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
 import org.opensearch.client.opensearch._types.query_dsl.BoolQuery;
@@ -40,12 +39,7 @@ public class ResourceQueryFactory {
             must.add(QueryFactoryUtils.labelQuery(query));
         }
 
-        var statuses = request.getStatus();
-        if(statuses != null && !statuses.isEmpty()){
-            must.add(QueryFactoryUtils.termsQuery("status", statuses.stream().map(Status::name).toList()));
-        }
-
-        if (request.getLimitToDataModel() != null) {
+        if(request.getLimitToDataModel() != null || restrictedDataModels != null || externalNamespaces != null) {
             must.add(getIncludedNamespacesQuery(request, externalNamespaces, internalNamespaces, restrictedDataModels));
         }
 
@@ -137,20 +131,19 @@ public class ResourceQueryFactory {
      * @return intersection of restricted models
      */
     private static List<String> getInternalNamespaceCondition(List<String> internalNamespaces, List<String> restrictedDataModels) {
-        List<String> condition = new ArrayList<>();
-        if(!internalNamespaces.isEmpty()) {
-            if (restrictedDataModels == null) {
-                condition.addAll(internalNamespaces);
-            } else {
-                condition.addAll(
-                        internalNamespaces.stream()
-                            .filter(restrictedDataModels::contains)
-                            .toList()
-                );
-            }
+        //no need to intersect if other one is null
+        if(restrictedDataModels == null) {
+            return internalNamespaces;
         }
 
-        return condition;
+        //internalNamespaces cannot be null so check return restrictedModels if its empty
+        if(internalNamespaces.isEmpty()) {
+            return restrictedDataModels;
+        }
+
+        return internalNamespaces.stream()
+                .filter(restrictedDataModels::contains)
+                .toList();
     }
 
 }
