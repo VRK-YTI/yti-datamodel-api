@@ -226,13 +226,11 @@ class ClassControllerTest {
                 .perform(get("/v2/class/test/test /exists")
                         .contentType("application/json"))
                 .andExpect(status().isBadRequest())
-                .andExpect(result -> {
-                    assertEquals(
-                            "freeIdentifier.identifier.identifier: invalid-value",
-                            result.getResolvedException() != null ?
-                                    result.getResolvedException().getMessage() :
-                                    "");
-                });
+                .andExpect(result -> assertEquals(
+                        "freeIdentifier.identifier.identifier: invalid-value",
+                        result.getResolvedException() != null ?
+                                result.getResolvedException().getMessage() :
+                                ""));
     }
 
     private static ClassDTO createClassDTO(boolean update){

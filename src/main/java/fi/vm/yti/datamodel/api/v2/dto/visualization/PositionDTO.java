@@ -1,4 +1,4 @@
-package fi.vm.yti.datamodel.api.v2.dto;
+package fi.vm.yti.datamodel.api.v2.dto.visualization;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 

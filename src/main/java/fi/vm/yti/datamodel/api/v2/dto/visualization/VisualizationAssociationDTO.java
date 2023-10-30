@@ -1,6 +1,7 @@
-package fi.vm.yti.datamodel.api.v2.dto;
+package fi.vm.yti.datamodel.api.v2.dto.visualization;
 
-public class VisualizationReferenceDTO extends VisualizationItemDTO {
+public class VisualizationAssociationDTO extends VisualizationItemDTO {
+
     private String referenceTarget;
 
     public String getReferenceTarget() {

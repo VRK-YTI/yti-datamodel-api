@@ -10,6 +10,7 @@ public class ValidationConstants {
     }
 
     public static final String MSG_VALUE_MISSING = "should-have-value";
+    public static final String MSQ_NOT_ALLOWED = "should-not-have-value";
     public static final String MSG_VALUE_INVALID = "invalid-value";
     public static final String MSG_NOT_ALLOWED_UPDATE =  "not-allowed-update";
     public static final String MSG_OVER_CHARACTER_LIMIT = "value-over-character-limit.";

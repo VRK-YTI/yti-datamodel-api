@@ -3,6 +3,7 @@ package fi.vm.yti.datamodel.api.v2.mapper;
 import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.*;
+import fi.vm.yti.datamodel.api.v2.properties.Iow;
 import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelUtils;
 import fi.vm.yti.security.YtiUser;
@@ -45,9 +46,11 @@ public class ResourceMapper {
         }
 
         MapperUtils.addResourceRelationship(modelResource, resourceResource, RDFS.domain, dto.getDomain());
-
+        MapperUtils.addBooleanResourceType(resourceResource, OWL.FunctionalProperty, dto.getFunctionalProperty());
         if (resourceType.equals(ResourceType.ASSOCIATION)) {
             MapperUtils.addResourceRelationship(modelResource, resourceResource, RDFS.range, dto.getRange());
+            MapperUtils.addBooleanResourceType(resourceResource, OWL.TransitiveProperty, dto.getTransitiveProperty());
+            MapperUtils.addBooleanResourceType(resourceResource, OWL2.ReflexiveProperty, dto.getReflexiveProperty());
         } else {
             MapperUtils.addOptionalUriProperty(resourceResource, RDFS.range, dto.getRange());
         }
@@ -129,8 +132,12 @@ public class ResourceMapper {
         MapperUtils.addTerminologyReference(dto, modelResource);
         MapperUtils.updateUriPropertyAndAddReferenceNamespaces(modelResource, resource, RDFS.domain, dto.getDomain());
 
+        MapperUtils.updateBooleanTypeProperty(model, resource, OWL.FunctionalProperty, dto.getFunctionalProperty());
+        //Object property meaning association
         if (MapperUtils.hasType(resource, OWL.ObjectProperty)) {
             MapperUtils.updateUriPropertyAndAddReferenceNamespaces(modelResource, resource, RDFS.range, dto.getRange());
+            MapperUtils.updateBooleanTypeProperty(model, resource, OWL.TransitiveProperty, dto.getTransitiveProperty());
+            MapperUtils.updateBooleanTypeProperty(model, resource, OWL2.ReflexiveProperty, dto.getReflexiveProperty());
         } else {
             MapperUtils.updateUriProperty(resource, RDFS.range, dto.getRange());
         }
@@ -379,12 +386,16 @@ public class ResourceMapper {
         dto.setEquivalentResource(MapperUtils.uriToURIDTOs(equivalentProperties, model));
         dto.setDomain(MapperUtils.uriToURIDTO(domain, model));
 
+        dto.setFunctionalProperty(MapperUtils.hasType(resourceResource, OWL.FunctionalProperty));
+
         // attribute's range is data type, e.g. rdfs:Literal
         // association's range is URI
         if (dto.getType().equals(ResourceType.ATTRIBUTE) && range != null) {
             dto.setRange(new UriDTO(range, range));
         } else {
             dto.setRange(MapperUtils.uriToURIDTO(range, model));
+            dto.setTransitiveProperty(MapperUtils.hasType(resourceResource, OWL.TransitiveProperty));
+            dto.setReflexiveProperty(MapperUtils.hasType(resourceResource, OWL2.ReflexiveProperty));
         }
 
         MapperUtils.mapCreationInfo(dto, resourceResource, userMapper);

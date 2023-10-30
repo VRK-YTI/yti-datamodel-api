@@ -1,8 +1,11 @@
-package fi.vm.yti.datamodel.api.v2.dto;
+package fi.vm.yti.datamodel.api.v2.dto.visualization;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 public class VisualizationClassDTO extends VisualizationItemDTO {
 

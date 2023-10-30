@@ -149,6 +149,14 @@ class ResourceControllerTest {
         resourceDTO.setRange("http://uri.suomi.fi/datamodel/ns/int/InvalidClass");
         args.add(Arguments.of("association", resourceDTO));
 
+        resourceDTO = createResourceDTO(false, "attribute");
+        resourceDTO.setReflexiveProperty(true);
+        args.add(Arguments.of("attribute", resourceDTO));
+
+        resourceDTO = createResourceDTO(false, "attribute");
+        resourceDTO.setTransitiveProperty(true);
+        args.add(Arguments.of("attribute", resourceDTO));
+
         return args.stream();
     }
 
@@ -408,10 +416,14 @@ class ResourceControllerTest {
         dto.setEquivalentResource(Set.of("http://uri.suomi.fi/datamodel/ns/int/FakeResource"));
         dto.setSubResourceOf(Set.of("http://uri.suomi.fi/datamodel/ns/int/FakeResource"));
         dto.setDomain("http://uri.suomi.fi/datamodel/ns/int/FakeClass");
+        dto.setFunctionalProperty(true);
         if (resourceType.equals("association")) {
             dto.setRange("http://uri.suomi.fi/datamodel/ns/int/FakeClass");
+            dto.setTransitiveProperty(true);
+            dto.setReflexiveProperty(true);
         } else {
             dto.setRange("owl:real");
+
         }
         dto.setNote(Map.of("fi", "test note"));
         return dto;

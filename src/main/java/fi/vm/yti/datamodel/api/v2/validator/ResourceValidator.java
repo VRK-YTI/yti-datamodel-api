@@ -45,6 +45,11 @@ public class ResourceValidator extends BaseValidator implements ConstraintValida
         checkDomain(context, value);
         checkRange(context, value);
 
+        if(resourceType.equals(ResourceType.ATTRIBUTE)) {
+            checkShouldBeNull(context, value.getTransitiveProperty(), "functionalProperty");
+            checkShouldBeNull(context, value.getReflexiveProperty(), "reflexiveProperty");
+        }
+
         return !isConstraintViolationAdded();
     }
 

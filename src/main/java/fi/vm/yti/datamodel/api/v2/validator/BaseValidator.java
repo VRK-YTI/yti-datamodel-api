@@ -127,9 +127,15 @@ public abstract class BaseValidator implements Annotation{
         }
     }
 
-    public void checkNull(ConstraintValidatorContext context, String value, String property) {
+    public void checkNotNull(ConstraintValidatorContext context, String value, String property) {
         if(value == null){
             addConstraintViolation(context, ValidationConstants.MSG_VALUE_MISSING, property);
+        }
+    }
+
+    public void checkShouldBeNull(ConstraintValidatorContext context, Object value, String property) {
+        if(value != null) {
+            addConstraintViolation(context, ValidationConstants.MSQ_NOT_ALLOWED, property);
         }
     }
 

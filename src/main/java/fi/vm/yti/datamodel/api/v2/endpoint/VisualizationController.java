@@ -1,7 +1,7 @@
 package fi.vm.yti.datamodel.api.v2.endpoint;
 
-import fi.vm.yti.datamodel.api.v2.dto.PositionDataDTO;
-import fi.vm.yti.datamodel.api.v2.dto.VisualizationResultDTO;
+import fi.vm.yti.datamodel.api.v2.dto.visualization.PositionDataDTO;
+import fi.vm.yti.datamodel.api.v2.dto.visualization.VisualizationResultDTO;
 import fi.vm.yti.datamodel.api.v2.service.VisualizationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
