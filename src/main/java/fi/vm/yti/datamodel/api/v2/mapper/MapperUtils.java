@@ -11,6 +11,7 @@ import org.apache.jena.datatypes.xsd.XSDDateTime;
 import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.rdf.model.*;
 import org.apache.jena.shared.JenaException;
+import org.apache.jena.util.ResourceUtils;
 import org.apache.jena.vocabulary.*;
 import org.topbraid.shacl.vocabulary.SH;
 
@@ -502,5 +503,19 @@ public class MapperUtils {
                 modelResource.addProperty(DCTerms.requires, terminologyURI);
             }
         }
+    }
+
+    /**
+     * Rename a resource in a datamodel
+     * This will change the identifier of the resource and the URI
+     *
+     * @param resource      Resource to rename
+     * @param newIdentifier New identifier of resource
+     * @return Renamed resource
+     */
+    public static Resource renameResource(Resource resource, String newIdentifier) {
+        resource.removeAll(DCTerms.identifier);
+        resource.addProperty(DCTerms.identifier, ResourceFactory.createTypedLiteral(newIdentifier, XSDDatatype.XSDNCName));
+        return ResourceUtils.renameResource(resource, resource.getNameSpace() + newIdentifier);
     }
 }

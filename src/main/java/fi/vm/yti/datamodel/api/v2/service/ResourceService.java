@@ -17,7 +17,6 @@ import org.apache.jena.arq.querybuilder.ConstructBuilder;
 import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.rdf.model.*;
 import org.apache.jena.sparql.path.PathFactory;
-import org.apache.jena.util.ResourceUtils;
 import org.apache.jena.vocabulary.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -351,12 +350,19 @@ public class ResourceService {
 
         check(authorizationManager.hasRightToModel(prefix, model));
 
-        var oldResource = model.getResource(resourceURI);
-        oldResource.removeAll(DCTerms.identifier);
-        oldResource.addProperty(DCTerms.identifier, newIdentifier);
 
-        var newResource = ResourceUtils.renameResource(oldResource, oldResource.getNameSpace() + newIdentifier);
+        var newResource = MapperUtils.renameResource(model.getResource(resourceURI), newIdentifier);
         coreRepository.put(modelURI, model);
+
+        // rename visualization resource as well
+        var visualizationModelUri = ModelConstants.MODEL_POSITIONS_NAMESPACE + prefix;
+        var visualizationResourceUri = visualizationModelUri + ModelConstants.RESOURCE_SEPARATOR + oldIdentifier;
+        if(coreRepository.resourceExistsInGraph(visualizationModelUri, visualizationResourceUri)) {
+            var visualizationModel = coreRepository.fetch(visualizationModelUri);
+            MapperUtils.renameResource(visualizationModel.getResource(visualizationResourceUri), newIdentifier);
+            coreRepository.put(visualizationModelUri, visualizationModel);
+        }
+
 
         openSearchIndexer.deleteResourceFromIndex(resourceURI);
         openSearchIndexer.createResourceToIndex(ResourceMapper.mapToIndexResource(model, newResourceURI));
