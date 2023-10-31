@@ -195,7 +195,8 @@ public class DataModelValidator extends BaseValidator implements
         var namespaces = dataModel.getExternalNamespaces();
         var externalNamespace = "externalNamespaces";
         namespaces.forEach(namespace -> {
-            if(namespace.getPrefix() == null || namespace.getName() == null || namespace.getNamespace() == null){
+            checkRequiredLocalizedValue(context, namespace.getName(), "namespace.name");
+            if(namespace.getPrefix() == null || namespace.getNamespace() == null){
                 addConstraintViolation(context, "namespace-missing-value", externalNamespace);
             }else {
                 checkPrefixOrIdentifier(context, namespace.getPrefix(), externalNamespace, ValidationConstants.PREFIX_MAX_LENGTH, false);
@@ -250,12 +251,9 @@ public class DataModelValidator extends BaseValidator implements
 
     private void checkLinks(ConstraintValidatorContext context, DataModelDTO dataModel) {
         dataModel.getLinks().forEach(linkDTO -> {
-            checkNotNull(context, linkDTO.getName(), "links.name");
-            checkCommonTextField(context, linkDTO.getName(), "links.name");
-
+            checkRequiredLocalizedValue(context, linkDTO.getName(), "links.name");
             checkNotNull(context, linkDTO.getUri(), "links.uri");
-
-            checkCommonTextArea(context, linkDTO.getDescription(), "links.description");
+            linkDTO.getDescription().forEach((description, value) -> checkCommonTextArea(context, value, "links.description"));
         });
     }
 }

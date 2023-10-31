@@ -178,7 +178,7 @@ class DataModelControllerTest {
         dataModelDTO.setOrganizations(Set.of(MapperTestUtils.TEST_ORG_ID));
         dataModelDTO.setInternalNamespaces(Set.of("http://uri.suomi.fi/datamodel/ns/test"));
         var extNs = new ExternalNamespaceDTO();
-        extNs.setName("test external namespace");
+        extNs.setName(Map.of("fi", "test external namespace"));
         extNs.setPrefix("testprefix");
         extNs.setNamespace("http://example.com/ns/test");
         dataModelDTO.setExternalNamespaces(Set.of(extNs));
@@ -187,8 +187,8 @@ class DataModelControllerTest {
         }
         dataModelDTO.setTerminologies(Set.of("http://uri.suomi.fi/terminology/test"));
         var linkDTO = new LinkDTO();
-        linkDTO.setName("test link");
-        linkDTO.setDescription("link description");
+        linkDTO.setName(Map.of("fi", "test link"));
+        linkDTO.setDescription(Map.of("fi", "link description"));
         linkDTO.setUri("https://example.com");
         dataModelDTO.setLinks(Set.of(linkDTO));
         return dataModelDTO;
@@ -271,7 +271,7 @@ class DataModelControllerTest {
 
         dataModelDTO = createDatamodelDTO(false);
         invalidExtRes = new ExternalNamespaceDTO();
-        invalidExtRes.setName("test name");
+        invalidExtRes.setName(Map.of("fi", "test name"));
         invalidExtRes.setPrefix(null); //no null prefix
         invalidExtRes.setNamespace("http:://example.com/ns/test");
         dataModelDTO.setExternalNamespaces(Set.of(invalidExtRes));
@@ -279,7 +279,7 @@ class DataModelControllerTest {
 
         dataModelDTO = createDatamodelDTO(false);
         invalidExtRes = new ExternalNamespaceDTO();
-        invalidExtRes.setName("test name");
+        invalidExtRes.setName(Map.of("fi", "test name"));
         invalidExtRes.setPrefix("test");
         invalidExtRes.setNamespace(null); //no null namespace
         dataModelDTO.setExternalNamespaces(Set.of(invalidExtRes));
@@ -287,7 +287,7 @@ class DataModelControllerTest {
 
         dataModelDTO = createDatamodelDTO(false);
         invalidExtRes = new ExternalNamespaceDTO();
-        invalidExtRes.setName("this is invalid");
+        invalidExtRes.setName(Map.of("fi", "this is invalid"));
         //Reserved namespace, see ValidationConstants.RESERVED_NAMESPACES
         invalidExtRes.setPrefix("dcterms");
         invalidExtRes.setNamespace("http:://example.com/ns/test");
@@ -296,7 +296,7 @@ class DataModelControllerTest {
 
         dataModelDTO = createDatamodelDTO(false);
         invalidExtRes = new ExternalNamespaceDTO();
-        invalidExtRes.setName("this is invalid");
+        invalidExtRes.setName(Map.of("fi", "this is invalid"));
         //Reserved word, see ValidationConstants.RESERVED_WORDS
         invalidExtRes.setPrefix("rootResource");
         invalidExtRes.setNamespace("http:://example.com/ns/test");
@@ -305,7 +305,7 @@ class DataModelControllerTest {
 
         dataModelDTO = createDatamodelDTO(false);
         invalidExtRes = new ExternalNamespaceDTO();
-        invalidExtRes.setName("this is invalid");
+        invalidExtRes.setName(Map.of("fi", "this is invalid"));
         //uri.suomi.fi cannot be set as external namespace
         invalidExtRes.setPrefix("test");
         invalidExtRes.setNamespace("http://uri.suomi.fi/datamodel/ns/test");
@@ -330,29 +330,29 @@ class DataModelControllerTest {
 
         dataModelDTO = createDatamodelDTO(false);
         var linkDTO = new LinkDTO();
-        linkDTO.setName(null);
+        linkDTO.setName(Map.of());
         linkDTO.setUri("http://example.com");
         dataModelDTO.setLinks(Set.of(linkDTO));
         args.add(dataModelDTO);
 
         dataModelDTO = createDatamodelDTO(false);
         linkDTO = new LinkDTO();
-        linkDTO.setName("link");
+        linkDTO.setName(Map.of("fi", "link"));
         linkDTO.setUri(null);
         dataModelDTO.setLinks(Set.of(linkDTO));
         args.add(dataModelDTO);
 
         dataModelDTO = createDatamodelDTO(false);
         linkDTO = new LinkDTO();
-        linkDTO.setName("link");
+        linkDTO.setName(Map.of("fi", "link"));
         linkDTO.setUri("https://example.com");
-        linkDTO.setDescription(RandomStringUtils.random(textAreaMaxPlus));
+        linkDTO.setDescription(Map.of("fi", RandomStringUtils.random(textAreaMaxPlus)));
         dataModelDTO.setLinks(Set.of(linkDTO));
         args.add(dataModelDTO);
 
         dataModelDTO = createDatamodelDTO(false);
         linkDTO = new LinkDTO();
-        linkDTO.setName(RandomStringUtils.random(textFieldMaxPlus));
+        linkDTO.setName(Map.of("fi", RandomStringUtils.random(textFieldMaxPlus)));
         linkDTO.setUri("https://example.com");
         dataModelDTO.setLinks(Set.of(linkDTO));
         args.add(dataModelDTO);

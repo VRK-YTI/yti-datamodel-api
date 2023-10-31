@@ -31,13 +31,13 @@
         iow:contact                     "test@localhost"                       ;
         iow:documentation               "hello\ntest"@fi                       ;
         rdfs:seeAlso                    [
-                                            dcterms:description "link description" ;
-                                            dcterms:title       "link title" ;
+                                            dcterms:description "link description"@fi ;
+                                            dcterms:title       "link title"@fi ;
                                             foaf:homepage       "https://example.com"
                                         ] ;
         owl:priorVersion                "http://uri.suomi.fi/datamodel/ns/test/1.0.0" .
 
 <https://www.example.com/ns/ext>
         dcterms:type                        rdfs:Resource ;
-        rdfs:label                          "test resource";
-        dcap:preferredXMLNamespacePrefix    "extres" ;
+        rdfs:label                          "test resource"@fi;
+        dcap:preferredXMLNamespacePrefix    "extres" .
