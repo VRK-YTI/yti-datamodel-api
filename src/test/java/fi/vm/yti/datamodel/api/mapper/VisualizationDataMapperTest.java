@@ -4,7 +4,10 @@ import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
 import fi.vm.yti.datamodel.api.v2.dto.visualization.*;
 import fi.vm.yti.datamodel.api.v2.mapper.VisualizationMapper;
 import fi.vm.yti.datamodel.api.v2.properties.Iow;
+import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
+import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.vocabulary.DCTerms;
+import org.apache.jena.vocabulary.OWL;
 import org.junit.jupiter.api.Test;
 
 import java.util.HashSet;
@@ -26,42 +29,120 @@ class VisualizationDataMapperTest {
     );
 
     @Test
-    void mapLibraryClassWithAttributes() {
-        var model = MapperTestUtils.getModelFromFile("/models/test_datamodel_visualization.ttl");
+    void mapClassWithParent() {
+        var model = MapperTestUtils.getModelFromFile("/models/test_datamodel_library_visualization.ttl");
 
-        var classDTO = VisualizationMapper.mapClass("http://uri.suomi.fi/datamodel/ns/test/testclass1", model, libraryNamespaces);
-        assertEquals("Label 1", classDTO.getLabel().get("fi"));
-        assertEquals("testclass1", classDTO.getIdentifier());
-        assertEquals("yti-model:TestClass", classDTO.getParentClasses().iterator().next());
+        var classDTO = VisualizationMapper.mapClass("http://uri.suomi.fi/datamodel/ns/visu/natural-person", model, libraryNamespaces);
 
-        var attribute = model.getResource("http://uri.suomi.fi/datamodel/ns/test/attribute-1");
-        var association = model.getResource("http://uri.suomi.fi/datamodel/ns/test/association-1");
+        assertEquals("Luonnollinen henkilö", classDTO.getLabel().get("fi"));
 
-        VisualizationMapper.mapResource(classDTO, attribute, model, libraryNamespaces);
-        VisualizationMapper.mapResource(classDTO, association, model, libraryNamespaces);
+        var parentClass = classDTO.getReferences().stream()
+                .filter(r -> r.getReferenceType().equals(VisualizationReferenceType.PARENT_CLASS))
+                .findFirst();
 
-        assertEquals(1, classDTO.getAttributes().size());
-        assertEquals(1, classDTO.getAssociations().size());
+        assertTrue(parentClass.isPresent());
 
-        assertEquals("testiattribuutti", classDTO.getAttributes().get(0).getLabel().get("fi"));
-        assertEquals("testiassosiaatio", classDTO.getAssociations().get(0).getLabel().get("fi"));
-        assertEquals("attribute-1", classDTO.getAttributes().get(0).getIdentifier());
-        assertEquals("association-1", classDTO.getAssociations().get(0).getIdentifier());
-        assertEquals("testclass2", classDTO.getAssociations().get(0).getReferenceTarget());
+        assertEquals("person", parentClass.get().getIdentifier());
+        assertEquals(VisualizationReferenceType.PARENT_CLASS, parentClass.get().getReferenceType());
+
+        assertEquals(VisualizationNodeType.CLASS, classDTO.getType());
+        assertEquals("natural-person", classDTO.getIdentifier());
+    }
+
+    @Test
+    void mapLibraryAttributesAndAssociations() {
+        var model = MapperTestUtils.getModelFromFile("/models/test_datamodel_library_visualization.ttl");
+        var classResource = model.getResource(ModelConstants.SUOMI_FI_NAMESPACE + "visu" + ModelConstants.RESOURCE_SEPARATOR + "person");
+        var externalResources = new HashSet<Resource>();
+        var classDTO = new VisualizationClassDTO();
+        VisualizationMapper.mapLibraryClassResources(classDTO, model, classResource, externalResources, libraryNamespaces);
+
+        var attributes = classDTO.getAttributes();
+        var associations = classDTO.getAssociations();
+
+        assertEquals(1, attributes.size());
+        assertEquals(2, associations.size());
+
+        var attributeAge = attributes.get(0);
+        var associationAddress = associations.stream()
+                .filter(a -> a.getIdentifier().equals("is-address"))
+                .findFirst();
+
+        assertTrue(associationAddress.isPresent());
+        assertEquals("age", attributeAge.getIdentifier());
+        assertEquals("Ikä", attributeAge.getLabel().get("fi"));
+
+        assertEquals("is-address", associationAddress.get().getIdentifier());
+        assertEquals(VisualizationReferenceType.ASSOCIATION, associationAddress.get().getReferenceType());
+        assertEquals("onOsoite", associationAddress.get().getLabel().get("fi"));
+        assertEquals("address", associationAddress.get().getReferenceTarget());
+    }
+
+    @Test
+    void mapAttributesWithDomain() {
+        var model = MapperTestUtils.getModelFromFile("/models/test_datamodel_library_visualization.ttl");
+
+        var attributes = VisualizationMapper.mapAttributesWithDomain(model);
+
+        assertEquals(1, attributes.size());
+
+        var attribute = attributes.get(0);
+
+        assertEquals("name", attribute.getIdentifier());
+        assertEquals("Nimi", attribute.getLabel().get("fi"));
+        assertEquals(VisualizationNodeType.ATTRIBUTE, attribute.getType());
+        assertEquals(1, attribute.getReferences().size());
+
+        var reference = attribute.getReferences().iterator().next();
+        assertEquals("person", reference.getReferenceTarget());
+        assertNull(reference.getLabel());
+    }
+
+    @Test
+    void mapAssociationsWithDomain() {
+        var model = MapperTestUtils.getModelFromFile("/models/test_datamodel_library_visualization.ttl");
+        var classResource = model.getResource(ModelConstants.SUOMI_FI_NAMESPACE + "visu" + ModelConstants.RESOURCE_SEPARATOR + "address");
+        var classDTO = new VisualizationClassDTO();
+        VisualizationMapper.mapAssociationsWithDomain(classDTO, model, classResource, libraryNamespaces);
+
+        assertEquals(1, classDTO.getReferences().size());
+
+        var reference = classDTO.getReferences().iterator().next();
+
+        assertEquals("city", reference.getReferenceTarget());
+        assertEquals("onKaupunki", reference.getLabel().get("fi"));
+        assertEquals(VisualizationReferenceType.ASSOCIATION, reference.getReferenceType());
     }
 
     @Test
     void mapLibraryClassWithExternalResources() {
-        var model = MapperTestUtils.getModelFromFile("/models/test_datamodel_visualization.ttl");
+        var model = MapperTestUtils.getModelFromFile("/models/test_datamodel_library_visualization.ttl");
+        var classURI = ModelConstants.SUOMI_FI_NAMESPACE + "visu" + ModelConstants.RESOURCE_SEPARATOR + "person";
+        var externalResources = new HashSet<Resource>();
 
-        var classDTO = VisualizationMapper.mapClass("http://uri.suomi.fi/datamodel/ns/test/testclass3", model, libraryNamespaces);
+        var classDTO = VisualizationMapper.mapClass(classURI, model, libraryNamespaces);
+        VisualizationMapper.mapLibraryClassResources(classDTO, model, model.getResource(classURI), externalResources, libraryNamespaces);
 
-        var association = model.getResource("http://uri.suomi.fi/datamodel/ns/test/association-3");
+        // should have one parent class reference to external class
+        assertEquals(1, classDTO.getReferences().size());
+        // should have one association restriction
+        assertEquals(2, classDTO.getAssociations().size());
+        // should have one reference to external association (will be mapped later)
+        assertEquals("https://www.example.com/ns/external/someTarget",
+                MapperUtils.propertyToString(externalResources.iterator().next().asResource(), OWL.someValuesFrom));
 
-        VisualizationMapper.mapResource(classDTO, association, model, libraryNamespaces);
+        var parentRef = classDTO.getReferences().stream()
+                .filter(ref -> ref.getReferenceType().equals(VisualizationReferenceType.PARENT_CLASS))
+                .findFirst();
+        var associationRef = classDTO.getAssociations().stream()
+                .filter(ref -> ref.getReferenceTarget().equals("ext:address"))
+                .findFirst();
 
-        assertEquals("ext:ExternalClass", classDTO.getParentClasses().iterator().next());
-        assertEquals("ext:ExternalClass", classDTO.getAssociations().get(0).getReferenceTarget());
+        assertTrue(parentRef.isPresent());
+        assertTrue(associationRef.isPresent());
+
+        assertEquals("ext:Person", parentRef.get().getReferenceTarget());
+        assertNull(parentRef.get().getLabel());
     }
 
     @Test
@@ -77,22 +158,23 @@ class VisualizationDataMapperTest {
     @Test
     void mapApplicationProfileClass() {
         var model = MapperTestUtils.getModelFromFile("/models/test_application_profile_visualization.ttl");
+        var classURI = ModelConstants.SUOMI_FI_NAMESPACE + "visuprof" + ModelConstants.RESOURCE_SEPARATOR + "person";
+        var externalResources = new HashSet<Resource>();
 
         var classDTO = (VisualizationNodeShapeDTO) VisualizationMapper
-                .mapClass("http://uri.suomi.fi/datamodel/ns/visuprof/person", model,profileNamespaces);
+                .mapClass(classURI, model, profileNamespaces);
+        VisualizationMapper.mapNodeShapeResources(classDTO, model.getResource(classURI), model, externalResources, profileNamespaces);
 
         assertEquals("person", classDTO.getIdentifier());
         assertEquals("Henkilö", classDTO.getLabel().get("fi"));
         assertEquals("ytm:person", classDTO.getTargetClass());
 
-        var attribute = model.getResource("http://uri.suomi.fi/datamodel/ns/visuprof/age");
-        var association = model.getResource("http://uri.suomi.fi/datamodel/ns/visuprof/is-address");
+        assertEquals(2, classDTO.getAttributes().size());
+        assertEquals(1, classDTO.getAssociations().size());
+        assertEquals("http://uri.suomi.fi/datamodel/ns/personprof/ext-attr", externalResources.iterator().next().getURI());
 
-        VisualizationMapper.mapResource(classDTO, attribute, model, profileNamespaces);
-        VisualizationMapper.mapResource(classDTO, association, model, profileNamespaces);
-
-        var mappedAttribute = (VisualizationPropertyShapeAttributeDTO) classDTO.getAttributes().get(0);
-        var mappedAssociation = (VisualizationPropertyShapeAssociationDTO) classDTO.getAssociations().get(0);
+        var mappedAttribute = findItem(classDTO.getAttributes(), "age", VisualizationPropertyShapeAttributeDTO.class);
+        var mappedAssociation = findItem(classDTO.getAssociations(), "is-address", VisualizationPropertyShapeAssociationDTO.class);
 
         assertNotNull(mappedAttribute);
         assertNotNull(mappedAssociation);
@@ -100,13 +182,12 @@ class VisualizationDataMapperTest {
         assertEquals("Ikä", mappedAttribute.getLabel().get("fi"));
         assertEquals("age", mappedAttribute.getIdentifier());
         assertEquals("xsd:integer", mappedAttribute.getDataType());
-        assertEquals("ytm:age", mappedAttribute.getPath());
+        // assertEquals("ytm:age", mappedAttribute.getPath());
         assertEquals(1, mappedAttribute.getMinCount());
         assertEquals(1, mappedAttribute.getMaxCount());
 
         assertEquals("onOsoite", mappedAssociation.getLabel().get("fi"));
         assertEquals("is-address", mappedAssociation.getIdentifier());
-        assertEquals("ytm:is-address", mappedAssociation.getPath());
         assertEquals(1, mappedAssociation.getMinCount());
         assertEquals(2, mappedAssociation.getMaxCount());
         assertEquals("address", mappedAssociation.getReferenceTarget());
@@ -148,30 +229,29 @@ class VisualizationDataMapperTest {
         node2.setX(0.0);
         node2.setY(10.0);
 
-        var postionModel = VisualizationMapper.mapPositionDataToModel(positionGraphURI,
+        var positionModel = VisualizationMapper.mapPositionDataToModel(positionGraphURI,
                 List.of(node1, node2));
 
         var classDTO1 = new VisualizationClassDTO();
         classDTO1.setIdentifier("class-1");
-        classDTO1.setParentClasses(Set.of("class-2"));
+        classDTO1.setReferences(Set.of(getReference("class-2", VisualizationReferenceType.PARENT_CLASS)));
 
         var classDTO2 = new VisualizationClassDTO();
         classDTO2.setIdentifier("class-2");
 
-        var classes = new HashSet<VisualizationClassDTO>();
+        var classes = new HashSet<VisualizationNodeDTO>();
         classes.add(classDTO1);
         classes.add(classDTO2);
 
-        var hiddenNodes = VisualizationMapper.mapPositionsDataToDTOsAndCreateHiddenNodes(postionModel, modelPrefix, classes);
+        var hiddenNodes = VisualizationMapper.mapPositionsDataToDTOsAndCreateHiddenNodes(positionModel, modelPrefix, classes);
         assertEquals(0, hiddenNodes.size());
 
-        var c1 = findClass(classes, "class-1");
-        assertNotNull(c1);
+        var c1 = findItem(classes, "class-1", VisualizationClassDTO.class);
         assertEquals(1.0, c1.getPosition().getX());
         assertEquals(2.0, c1.getPosition().getY());
 
         assertEquals(2, classes.size());
-        assertEquals("class-2", c1.getParentClasses().iterator().next());
+        assertEquals("class-2", c1.getReferences().iterator().next().getIdentifier());
     }
 
     @Test
@@ -196,30 +276,29 @@ class VisualizationDataMapperTest {
         corner1.setY(0.0);
         corner1.setReferenceTargets(Set.of("class-2"));
 
-        var postionModel = VisualizationMapper.mapPositionDataToModel(positionGraphURI,
+        var positionModel = VisualizationMapper.mapPositionDataToModel(positionGraphURI,
                 List.of(node1, node2, corner1));
 
         var classDTO1 = new VisualizationClassDTO();
         classDTO1.setIdentifier("class-1");
-        classDTO1.setParentClasses(Set.of("class-2"));
+        classDTO1.setReferences(Set.of(getReference("class-2", VisualizationReferenceType.PARENT_CLASS)));
 
         var classDTO2 = new VisualizationClassDTO();
         classDTO2.setIdentifier("class-2");
 
-        var classes = new HashSet<VisualizationClassDTO>();
+        var classes = new HashSet<VisualizationNodeDTO>();
         classes.add(classDTO1);
         classes.add(classDTO2);
 
-        var hiddenNodes = VisualizationMapper.mapPositionsDataToDTOsAndCreateHiddenNodes(postionModel, modelPrefix, classes);
+        var hiddenNodes = VisualizationMapper.mapPositionsDataToDTOsAndCreateHiddenNodes(positionModel, modelPrefix, classes);
 
-        var c1 = findClass(classes, "class-1");
+        var c1 = findItem(classes, "class-1", VisualizationClassDTO.class);
         var hidden = findHiddenNode(hiddenNodes, "corner-1");
-        assertNotNull(c1);
         assertNotNull(hidden);
 
         assertEquals(2, classes.size());
         assertEquals(1, hiddenNodes.size());
-        assertEquals("corner-1", c1.getParentClasses().iterator().next());
+        assertEquals("corner-1", c1.getReferences().iterator().next().getReferenceTarget());
         assertEquals("class-2", hidden.getReferenceTarget());
     }
 
@@ -266,31 +345,30 @@ class VisualizationDataMapperTest {
         corner3.setIdentifier("corner-3");
         corner3.setReferenceTargets(Set.of("class-3"));
 
-        var postionModel = VisualizationMapper.mapPositionDataToModel(positionGraphURI,
+        var positionModel = VisualizationMapper.mapPositionDataToModel(positionGraphURI,
                 List.of(node1, node2, node3, corner1, corner2, corner3));
 
-        var association = new VisualizationReferenceDTO();
-        association.setReferenceTarget("class-3");
-        association.setIdentifier("assoc-1");
+        var class1AssociationRef = getReference("class-3", VisualizationReferenceType.ASSOCIATION);
+        var class1ParentRef = getReference("class-2", VisualizationReferenceType.PARENT_CLASS);
 
         var classDTO1 = new VisualizationClassDTO();
         classDTO1.setIdentifier("class-1");
-        classDTO1.setParentClasses(Set.of("class-2"));
-        classDTO1.setAssociations(List.of(association));
+        classDTO1.setReferences(Set.of(class1ParentRef, class1AssociationRef));
 
+        var class2ParentRef = getReference("class-3", VisualizationReferenceType.PARENT_CLASS);
         var classDTO2 = new VisualizationClassDTO();
         classDTO2.setIdentifier("class-2");
-        classDTO2.setParentClasses(Set.of("class-3"));
+        classDTO2.setReferences(Set.of(class2ParentRef));
 
         var classDTO3 = new VisualizationClassDTO();
         classDTO3.setIdentifier("class-3");
 
-        var classes = new HashSet<VisualizationClassDTO>();
+        var classes = new HashSet<VisualizationNodeDTO>();
         classes.add(classDTO1);
         classes.add(classDTO2);
         classes.add(classDTO3);
 
-        var hiddenNodes = VisualizationMapper.mapPositionsDataToDTOsAndCreateHiddenNodes(postionModel, modelPrefix, classes);
+        var hiddenNodes = VisualizationMapper.mapPositionsDataToDTOsAndCreateHiddenNodes(positionModel, modelPrefix, classes);
 
         // should contain three classes and three hidden nodes
         assertEquals(3, classes.size());
@@ -299,14 +377,23 @@ class VisualizationDataMapperTest {
         var identifiers = hiddenNodes.stream().map(VisualizationHiddenNodeDTO::getIdentifier).toList();
         assertTrue(identifiers.containsAll(List.of("corner-1", "corner-2", "corner-3")));
 
-        var classItem = findClass(classes, "class-1");
-        assertNotNull(classItem);
+        var classItem = findItem(classes, "class-1", VisualizationNodeDTO.class);
+        var classItem2 =  findItem(classes, "class-2", VisualizationNodeDTO.class);
+        assertEquals(2, classItem.getReferences().size());
+        assertEquals(1, classItem2.getReferences().size());
 
-        var classItem2 = findClass(classes, "class-2");
-        assertNotNull(classItem2);
-        assertEquals("class-3", classItem2.getParentClasses().iterator().next());
+        var ref1 = findItem(classItem.getReferences(), "class-3", VisualizationReferenceDTO.class);
+        var ref2 = findItem(classItem.getReferences(), "class-2", VisualizationReferenceDTO.class);
+        var ref3 = findItem(classItem2.getReferences(), "class-3", VisualizationReferenceDTO.class);
 
-        assertEquals("corner-1", classItem.getParentClasses().iterator().next());
+        // class1 -> corner-3
+        assertEquals("corner-3", ref1.getReferenceTarget());
+        // class1 -> corner-1
+        assertEquals("corner-1", ref2.getReferenceTarget());
+        // class-2 -> class-3
+        assertEquals("class-3", ref3.getReferenceTarget());
+
+        // assertEquals("corner-1", classItem.getReferences().iterator().next().getReferenceTarget());
         assertEquals(1.0, classItem.getPosition().getX());
         assertEquals(2.0, classItem.getPosition().getY());
 
@@ -359,7 +446,7 @@ class VisualizationDataMapperTest {
         classDTO1.setIdentifier("class-1");
         classDTO1.setAssociations(List.of(association));
 
-        var classes = new HashSet<VisualizationClassDTO>();
+        var classes = new HashSet<VisualizationNodeDTO>();
         classes.add(classDTO1);
 
         var hiddenNodes = VisualizationMapper.mapPositionsDataToDTOsAndCreateHiddenNodes(positionModel, modelPrefix, classes);
@@ -368,11 +455,25 @@ class VisualizationDataMapperTest {
         assertEquals(2, hiddenNodes.size());
     }
 
-    private static VisualizationClassDTO findClass(Set<VisualizationClassDTO> classes, String identifier) {
-        return classes.stream().filter(c -> c.getIdentifier().equals(identifier)).findFirst().orElse(null);
+    private static VisualizationReferenceDTO getReference(String target, VisualizationReferenceType type) {
+        var ref = new VisualizationReferenceDTO();
+        ref.setIdentifier(target);
+        ref.setReferenceTarget(target);
+        ref.setReferenceType(type);
+
+        return ref;
     }
 
     private static VisualizationHiddenNodeDTO findHiddenNode(Set<VisualizationHiddenNodeDTO> hiddenNodes, String identifier) {
         return hiddenNodes.stream().filter(c -> c.getIdentifier().equals(identifier)).findFirst().orElse(null);
     }
+
+    private static <T extends VisualizationItemDTO> T findItem(Collection<? extends VisualizationItemDTO> references,
+                                                               String identifier,
+                                                               Class<T> type) {
+        var ref = references.stream().filter(c -> c.getIdentifier().equals(identifier)).findFirst();
+        assertTrue(ref.isPresent(), "Item not present: " + identifier);
+        return type.cast(ref.get());
+    }
 }
+

@@ -399,7 +399,7 @@ public class ClassService {
             ResourceType resourceType;
             if (MapperUtils.hasType(restrictionResource, OWL.ObjectProperty)) {
                 var restrictionTargetResult = resourceService.findResources(Set.of(newTarget), includedNamespaces);
-                var newTargetResource = restrictionTargetResult.getResource(newTarget);
+                var newTargetResource = restrictionTargetResult.getResource(DataModelUtils.removeVersionFromURI(newTarget));
                 if (!newTargetResource.listProperties().hasNext()) {
                     throw new ResourceNotFoundException(newTarget);
                 }

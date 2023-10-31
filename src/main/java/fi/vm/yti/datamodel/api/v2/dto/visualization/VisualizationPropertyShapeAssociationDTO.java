@@ -1,17 +1,8 @@
 package fi.vm.yti.datamodel.api.v2.dto.visualization;
 
 public class VisualizationPropertyShapeAssociationDTO extends VisualizationReferenceDTO {
-    private String path;
     private Integer minCount;
     private Integer maxCount;
-
-    public String getPath() {
-        return path;
-    }
-
-    public void setPath(String path) {
-        this.path = path;
-    }
 
     public Integer getMinCount() {
         return minCount;

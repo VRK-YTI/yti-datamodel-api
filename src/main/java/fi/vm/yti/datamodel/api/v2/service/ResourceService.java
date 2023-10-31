@@ -260,6 +260,17 @@ public class ResourceService {
         return !coreRepository.queryAsk(askBuilder.build());
     }
 
+    public Resource findResource(String uri, Set<String> graphsIncluded) {
+        if (uri == null) {
+            return null;
+        }
+        var result = findResources(Set.of(uri), graphsIncluded).getResource(uri);
+        if (result.listProperties().hasNext()) {
+            return result;
+        }
+        return null;
+     }
+
     public Model findResources(Set<String> resourceURIs, Set<String> graphsIncluded) {
         if (resourceURIs == null || resourceURIs.isEmpty()) {
             return ModelFactory.createDefaultModel();

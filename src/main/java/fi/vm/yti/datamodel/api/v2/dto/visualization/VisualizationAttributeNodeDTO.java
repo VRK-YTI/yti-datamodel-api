@@ -1,6 +1,6 @@
 package fi.vm.yti.datamodel.api.v2.dto.visualization;
 
-public class VisualizationAttributeDTO extends VisualizationItemDTO {
+public class VisualizationAttributeNodeDTO extends VisualizationNodeDTO {
     private String dataType;
 
     public String getDataType() {
