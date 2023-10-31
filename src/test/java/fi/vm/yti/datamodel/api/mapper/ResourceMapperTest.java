@@ -376,6 +376,9 @@ class ResourceMapperTest {
         assertEquals("test:DomainClass", dto.getDomain().getCurie());
         assertEquals("rdf:Literal", dto.getRange().getUri());
         assertEquals("rdf:Literal", dto.getRange().getCurie());
+        assertFalse(dto.getFunctionalProperty());
+        assertNull(dto.getReflexiveProperty());
+        assertNull(dto.getTransitiveProperty());
     }
 
     @Test
@@ -406,6 +409,8 @@ class ResourceMapperTest {
         assertEquals("http://uri.suomi.fi/datamodel/ns/test/DomainClass", dto.getDomain().getUri());
         assertEquals("http://uri.suomi.fi/datamodel/ns/test/RangeClass", dto.getRange().getUri());
         assertTrue(dto.getFunctionalProperty());
+        assertFalse(dto.getTransitiveProperty());
+        assertFalse(dto.getReflexiveProperty());
     }
 
     @Test
