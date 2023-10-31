@@ -1,8 +1,8 @@
 package fi.vm.yti.datamodel.api.v2.mapper;
 
 import fi.vm.yti.datamodel.api.v2.dto.CodeListDTO;
-import fi.vm.yti.datamodel.api.v2.dto.Iow;
 import fi.vm.yti.datamodel.api.v2.dto.Status;
+import fi.vm.yti.datamodel.api.v2.properties.Iow;
 import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;

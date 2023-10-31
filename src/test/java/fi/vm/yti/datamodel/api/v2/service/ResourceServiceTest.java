@@ -9,6 +9,8 @@ import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.mapper.ResourceMapper;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexResource;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
+import fi.vm.yti.datamodel.api.v2.properties.DCAP;
+import fi.vm.yti.datamodel.api.v2.properties.Iow;
 import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import fi.vm.yti.datamodel.api.v2.repository.ImportsRepository;
@@ -40,8 +42,6 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(SpringExtension.class)

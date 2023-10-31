@@ -10,6 +10,9 @@ public class ResourceDTO extends BaseDTO {
     private Set<String> equivalentResource = Set.of();
     private String domain;
     private String range;
+    private Boolean functionalProperty;
+    private Boolean transitiveProperty;
+    private Boolean reflexiveProperty;
 
     public Set<String> getSubResourceOf() {
         return subResourceOf;
@@ -41,6 +44,30 @@ public class ResourceDTO extends BaseDTO {
 
     public void setRange(String range) {
         this.range = range;
+    }
+
+    public Boolean getFunctionalProperty() {
+        return functionalProperty;
+    }
+
+    public void setFunctionalProperty(Boolean functionalProperty) {
+        this.functionalProperty = functionalProperty;
+    }
+
+    public Boolean getTransitiveProperty() {
+        return transitiveProperty;
+    }
+
+    public void setTransitiveProperty(Boolean transitiveProperty) {
+        this.transitiveProperty = transitiveProperty;
+    }
+
+    public Boolean getReflexiveProperty() {
+        return reflexiveProperty;
+    }
+
+    public void setReflexiveProperty(Boolean reflexiveProperty) {
+        this.reflexiveProperty = reflexiveProperty;
     }
 
     @Override

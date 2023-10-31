@@ -1,11 +1,15 @@
 package fi.vm.yti.datamodel.api.v2.service;
 
 import fi.vm.yti.datamodel.api.security.AuthorizationManager;
-import fi.vm.yti.datamodel.api.v2.dto.*;
+import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
+import fi.vm.yti.datamodel.api.v2.dto.visualization.PositionDataDTO;
+import fi.vm.yti.datamodel.api.v2.dto.visualization.VisualizationClassDTO;
+import fi.vm.yti.datamodel.api.v2.dto.visualization.VisualizationResultDTO;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
 import fi.vm.yti.datamodel.api.v2.mapper.ClassMapper;
 import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.mapper.VisualizationMapper;
+import fi.vm.yti.datamodel.api.v2.properties.DCAP;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import org.apache.jena.rdf.model.*;
 import org.apache.jena.vocabulary.DCTerms;

@@ -9,6 +9,9 @@ public class ResourceInfoDTO extends ResourceInfoBaseDTO {
     private Set<UriDTO> equivalentResource;
     private UriDTO domain;
     private UriDTO range;
+    private boolean functionalProperty;
+    private boolean transitiveProperty;
+    private boolean reflexiveProperty;
 
     public ResourceType getType() {
         return type;
@@ -48,5 +51,29 @@ public class ResourceInfoDTO extends ResourceInfoBaseDTO {
 
     public void setRange(UriDTO range) {
         this.range = range;
+    }
+
+    public boolean getFunctionalProperty() {
+        return functionalProperty;
+    }
+
+    public void setFunctionalProperty(boolean functionalProperty) {
+        this.functionalProperty = functionalProperty;
+    }
+
+    public boolean getTransitiveProperty() {
+        return transitiveProperty;
+    }
+
+    public void setTransitiveProperty(boolean transitiveProperty) {
+        this.transitiveProperty = transitiveProperty;
+    }
+
+    public boolean getReflexiveProperty() {
+        return reflexiveProperty;
+    }
+
+    public void setReflexiveProperty(boolean reflexiveProperty) {
+        this.reflexiveProperty = reflexiveProperty;
     }
 }

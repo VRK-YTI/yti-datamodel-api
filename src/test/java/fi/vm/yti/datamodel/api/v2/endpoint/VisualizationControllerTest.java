@@ -1,6 +1,6 @@
 package fi.vm.yti.datamodel.api.v2.endpoint;
 
-import fi.vm.yti.datamodel.api.v2.dto.PositionDataDTO;
+import fi.vm.yti.datamodel.api.v2.dto.visualization.PositionDataDTO;
 import fi.vm.yti.datamodel.api.v2.service.VisualizationService;
 import fi.vm.yti.datamodel.api.v2.validator.ExceptionHandlerAdvice;
 import org.junit.jupiter.api.BeforeEach;

@@ -1,9 +1,9 @@
 package fi.vm.yti.datamodel.api.v2.mapper;
 
 import fi.vm.yti.datamodel.api.v2.dto.GroupManagementOrganizationDTO;
-import fi.vm.yti.datamodel.api.v2.dto.Iow;
 import fi.vm.yti.datamodel.api.v2.dto.OrganizationDTO;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
+import fi.vm.yti.datamodel.api.v2.properties.Iow;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ResourceFactory;

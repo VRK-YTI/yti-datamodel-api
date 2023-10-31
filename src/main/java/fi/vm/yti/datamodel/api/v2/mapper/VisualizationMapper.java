@@ -1,8 +1,13 @@
 package fi.vm.yti.datamodel.api.v2.mapper;
 
-import fi.vm.yti.datamodel.api.v2.dto.*;
+import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
+import fi.vm.yti.datamodel.api.v2.dto.visualization.*;
+import fi.vm.yti.datamodel.api.v2.properties.Iow;
 import org.apache.jena.graph.NodeFactory;
-import org.apache.jena.rdf.model.*;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDFS;

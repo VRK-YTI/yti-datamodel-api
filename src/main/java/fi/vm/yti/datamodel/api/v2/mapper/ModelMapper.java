@@ -3,6 +3,8 @@ package fi.vm.yti.datamodel.api.v2.mapper;
 import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexModel;
+import fi.vm.yti.datamodel.api.v2.properties.DCAP;
+import fi.vm.yti.datamodel.api.v2.properties.Iow;
 import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
 import fi.vm.yti.datamodel.api.v2.repository.ConceptRepository;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;

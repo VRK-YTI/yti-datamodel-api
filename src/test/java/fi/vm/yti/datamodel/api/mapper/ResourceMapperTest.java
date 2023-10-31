@@ -7,6 +7,7 @@ import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.mapper.ResourceMapper;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexModel;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexResource;
+import fi.vm.yti.datamodel.api.v2.properties.Iow;
 import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.rdf.model.ModelFactory;
@@ -43,6 +44,9 @@ class ResourceMapperTest {
         dto.setNote(Map.of("fi", "test note"));
         dto.setDomain("http://www.w3.org/2002/07/owl#Class");
         dto.setRange("http://uri.suomi.fi/datamodel/ns/test/RangeClass");
+        dto.setFunctionalProperty(true);
+        dto.setReflexiveProperty(true);
+        dto.setTransitiveProperty(true);
 
         ResourceMapper.mapToResource("http://uri.suomi.fi/datamodel/ns/test", m, dto, ResourceType.ASSOCIATION, mockUser);
 
@@ -55,7 +59,7 @@ class ResourceMapperTest {
         assertEquals(1, modelResource.listProperties(DCTerms.hasPart).toList().size());
         assertEquals("http://uri.suomi.fi/datamodel/ns/test/Resource", modelResource.getProperty(DCTerms.hasPart).getObject().toString());
 
-        assertEquals(OWL.ObjectProperty, resourceResource.getProperty(RDF.type).getResource());
+        assertTrue(MapperUtils.hasType(resourceResource, OWL.ObjectProperty));
 
         assertEquals(1, resourceResource.listProperties(RDFS.label).toList().size());
         assertEquals("test label", resourceResource.getProperty(RDFS.label).getLiteral().getString());
@@ -79,6 +83,10 @@ class ResourceMapperTest {
 
         assertEquals("http://www.w3.org/2002/07/owl#Class", MapperUtils.propertyToString(resourceResource, RDFS.domain));
         assertEquals("http://uri.suomi.fi/datamodel/ns/test/RangeClass", MapperUtils.propertyToString(resourceResource, RDFS.range));
+
+        assertTrue(MapperUtils.hasType(resourceResource, OWL.FunctionalProperty));
+        assertTrue(MapperUtils.hasType(resourceResource, OWL2.ReflexiveProperty));
+        assertTrue(MapperUtils.hasType(resourceResource, OWL.TransitiveProperty));
     }
 
     @Test
@@ -186,6 +194,7 @@ class ResourceMapperTest {
         dto.setNote(Map.of("fi", "test note"));
         dto.setDomain("http://www.w3.org/2002/07/owl#Class");
         dto.setRange("http://uri.suomi.fi/datamodel/ns/test/RangeClass");
+        dto.setFunctionalProperty(true);
 
         ResourceMapper.mapToResource("http://uri.suomi.fi/datamodel/ns/test", m, dto, ResourceType.ATTRIBUTE, EndpointUtils.mockUser);
 
@@ -198,7 +207,7 @@ class ResourceMapperTest {
         assertEquals(1, modelResource.listProperties(DCTerms.hasPart).toList().size());
         assertEquals("http://uri.suomi.fi/datamodel/ns/test/Resource", modelResource.getProperty(DCTerms.hasPart).getObject().toString());
 
-        assertEquals(OWL.DatatypeProperty, resourceResource.getProperty(RDF.type).getResource());
+        assertTrue(MapperUtils.hasType(resourceResource, OWL.DatatypeProperty));
 
         assertEquals(1, resourceResource.listProperties(RDFS.label).toList().size());
         assertEquals("test label", resourceResource.getProperty(RDFS.label).getLiteral().getString());
@@ -220,6 +229,8 @@ class ResourceMapperTest {
 
         assertEquals("http://www.w3.org/2002/07/owl#Class", MapperUtils.propertyToString(resourceResource, RDFS.domain));
         assertEquals("http://uri.suomi.fi/datamodel/ns/test/RangeClass", MapperUtils.propertyToString(resourceResource, RDFS.range));
+
+        assertTrue(MapperUtils.hasType(resourceResource, OWL.FunctionalProperty));
     }
 
     @Test
@@ -394,6 +405,7 @@ class ResourceMapperTest {
         assertEquals("http://uri.suomi.fi/datamodel/ns/test/TestAssociation", dto.getUri());
         assertEquals("http://uri.suomi.fi/datamodel/ns/test/DomainClass", dto.getDomain().getUri());
         assertEquals("http://uri.suomi.fi/datamodel/ns/test/RangeClass", dto.getRange().getUri());
+        assertTrue(dto.getFunctionalProperty());
     }
 
     @Test
@@ -492,6 +504,7 @@ class ResourceMapperTest {
         dto.setEditorialNote("new editorial note");
         dto.setDomain("http://uri.suomi.fi/datamodel/ns/test/NewDomainClass");
         dto.setRange("xsd:integer");
+        dto.setFunctionalProperty(true);
 
         assertEquals(OWL.DatatypeProperty, resource.getProperty(RDF.type).getResource());
         assertEquals("http://uri.suomi.fi/datamodel/ns/test", resource.getProperty(RDFS.isDefinedBy).getObject().toString());
@@ -506,7 +519,7 @@ class ResourceMapperTest {
         assertEquals(2, resource.listProperties(RDFS.comment).toList().size());
         assertEquals("http://uri.suomi.fi/datamodel/ns/test/DomainClass", MapperUtils.propertyToString(resource, RDFS.domain));
         assertEquals("rdf:Literal", MapperUtils.propertyToString(resource, RDFS.range));
-
+        assertFalse(MapperUtils.hasType(resource, OWL.FunctionalProperty));
 
         ResourceMapper.mapToUpdateResource("http://uri.suomi.fi/datamodel/ns/test", m, "TestAttribute", dto, mockUser);
 
@@ -527,6 +540,7 @@ class ResourceMapperTest {
         assertEquals("2a5c075f-0d0e-4688-90e0-29af1eebbf6d", resource.getProperty(Iow.creator).getObject().toString());
         assertEquals("http://uri.suomi.fi/datamodel/ns/test/NewDomainClass", MapperUtils.propertyToString(resource, RDFS.domain));
         assertEquals("xsd:integer", MapperUtils.propertyToString(resource, RDFS.range));
+        assertTrue(MapperUtils.hasType(resource, OWL.FunctionalProperty));
     }
 
     @Test
@@ -544,6 +558,9 @@ class ResourceMapperTest {
         dto.setEditorialNote("new editorial note");
         dto.setDomain("http://uri.suomi.fi/datamodel/ns/test/NewDomainClass");
         dto.setRange("http://uri.suomi.fi/datamodel/ns/test/NewRangeClass");
+        dto.setFunctionalProperty(true);
+        dto.setTransitiveProperty(true);
+        dto.setReflexiveProperty(true);
 
         assertEquals(OWL.ObjectProperty, resource.getProperty(RDF.type).getResource());
         assertEquals("http://uri.suomi.fi/datamodel/ns/test", resource.getProperty(RDFS.isDefinedBy).getObject().toString());
@@ -558,6 +575,9 @@ class ResourceMapperTest {
         assertEquals(2, resource.listProperties(RDFS.comment).toList().size());
         assertEquals("http://uri.suomi.fi/datamodel/ns/test/DomainClass", MapperUtils.propertyToString(resource, RDFS.domain));
         assertEquals("http://uri.suomi.fi/datamodel/ns/test/RangeClass", MapperUtils.propertyToString(resource, RDFS.range));
+        assertTrue(MapperUtils.hasType(resource, OWL.FunctionalProperty));
+        assertFalse(MapperUtils.hasType(resource, OWL2.ReflexiveProperty));
+        assertFalse(MapperUtils.hasType(resource, OWL2.TransitiveProperty));
 
         ResourceMapper.mapToUpdateResource("http://uri.suomi.fi/datamodel/ns/test", m, "TestAssociation", dto, EndpointUtils.mockUser);
 
@@ -576,6 +596,9 @@ class ResourceMapperTest {
         assertEquals("fi", resource.getProperty(RDFS.comment).getLiteral().getLanguage());
         assertEquals("http://uri.suomi.fi/datamodel/ns/test/NewDomainClass", MapperUtils.propertyToString(resource, RDFS.domain));
         assertEquals("http://uri.suomi.fi/datamodel/ns/test/NewRangeClass", MapperUtils.propertyToString(resource, RDFS.range));
+        assertTrue(MapperUtils.hasType(resource, OWL.FunctionalProperty));
+        assertTrue(MapperUtils.hasType(resource, OWL2.ReflexiveProperty));
+        assertTrue(MapperUtils.hasType(resource, OWL.TransitiveProperty));
     }
 
     @Test

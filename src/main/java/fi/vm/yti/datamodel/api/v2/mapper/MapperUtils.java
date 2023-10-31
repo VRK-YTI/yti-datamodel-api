@@ -2,6 +2,7 @@ package fi.vm.yti.datamodel.api.v2.mapper;
 
 import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
+import fi.vm.yti.datamodel.api.v2.properties.Iow;
 import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelUtils;
 import fi.vm.yti.security.YtiUser;
@@ -254,6 +255,20 @@ public class MapperUtils {
             resource.addProperty(property, ResourceFactory.createResource(value));
         }
     }
+
+    public static void addBooleanResourceType(Resource resource, Resource type, Boolean value) {
+        if(value != null && value) {
+            resource.addProperty(RDF.type, type);
+        }
+    }
+
+    public static void updateBooleanTypeProperty(Model model, Resource resource, Resource type, Boolean value) {
+        model.remove(resource, RDF.type, type);
+        if(value != null && value) {
+            resource.addProperty(RDF.type, type);
+        }
+    }
+
 
     /**
      * Adds resource relationship to resource.

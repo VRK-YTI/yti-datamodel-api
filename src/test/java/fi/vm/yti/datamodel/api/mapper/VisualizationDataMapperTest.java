@@ -1,11 +1,16 @@
 package fi.vm.yti.datamodel.api.mapper;
 
-import fi.vm.yti.datamodel.api.v2.dto.*;
+import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
+import fi.vm.yti.datamodel.api.v2.dto.visualization.*;
 import fi.vm.yti.datamodel.api.v2.mapper.VisualizationMapper;
+import fi.vm.yti.datamodel.api.v2.properties.Iow;
 import org.apache.jena.vocabulary.DCTerms;
 import org.junit.jupiter.api.Test;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 

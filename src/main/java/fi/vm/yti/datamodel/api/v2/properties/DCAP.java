@@ -1,4 +1,4 @@
-package fi.vm.yti.datamodel.api.v2.dto;
+package fi.vm.yti.datamodel.api.v2.properties;
 
 import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.ResourceFactory;
