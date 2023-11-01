@@ -11,6 +11,7 @@ import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.mapper.VisualizationMapper;
 import fi.vm.yti.datamodel.api.v2.properties.DCAP;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
+import fi.vm.yti.datamodel.api.v2.utils.DataModelUtils;
 import org.apache.jena.rdf.model.*;
 import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.OWL;
@@ -85,8 +86,12 @@ public class VisualizationService {
                 VisualizationMapper.mapNodeShapeResources(classDTO, classResource, model, externalResources, namespaces);
                 var propertyURIs = externalResources.stream().map(Resource::getURI).collect(Collectors.toSet());
                 var externalResourceResult = resourceService.findResources(propertyURIs, namespaces.keySet());
-                externalResources.forEach(ext -> VisualizationMapper
-                        .mapProfileResource(classDTO, externalResourceResult.getResource(ext.getURI()), model, namespaces));
+                externalResources.forEach(ext -> {
+                    var resourceURI = DataModelUtils.removeVersionFromURI(ext.getURI());
+                    VisualizationMapper
+                            .mapProfileResource(classDTO, externalResourceResult.getResource(resourceURI), ext.getURI(), model, namespaces);
+                    }
+                );
             }
 
             // add dummy classes for external classes

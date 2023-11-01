@@ -127,27 +127,36 @@ public class VisualizationMapper {
                                           Resource resource,
                                           Map<String, String> namespaces) {
         var someValuesFrom = MapperUtils.propertyToString(restrictionResource, OWL.someValuesFrom);
+        var resourceURI = MapperUtils.propertyToString(restrictionResource, OWL.onProperty);
+        var label = MapperUtils.localizedPropertyToMap(resource, RDFS.label);
         if (MapperUtils.hasType(resource, OWL.DatatypeProperty)) {
             var attribute = new VisualizationAttributeDTO();
-            var attributeURI = MapperUtils.propertyToString(restrictionResource, OWL.onProperty);
-            attribute.setIdentifier(getReferenceIdentifier(attributeURI, namespaces));
-            attribute.setLabel(MapperUtils.localizedPropertyToMap(resource, RDFS.label));
+            attribute.setIdentifier(getReferenceIdentifier(resourceURI, namespaces));
+            attribute.setLabel(label);
             attribute.setDataType(someValuesFrom);
             classDTO.addAttribute(attribute);
         } else if (MapperUtils.hasType(resource, OWL.ObjectProperty)) {
             var association = new VisualizationReferenceDTO();
-            mapCommon(association, resource, namespaces);
+            association.setIdentifier(getReferenceIdentifier(resourceURI, namespaces));
+            association.setLabel(label);
             association.setReferenceType(VisualizationReferenceType.ASSOCIATION);
             association.setReferenceTarget(getReferenceIdentifier(someValuesFrom, namespaces));
-            association.setLabel(MapperUtils.localizedPropertyToMap(resource, RDFS.label));
             classDTO.addAssociation(association);
         }
     }
 
-    public static void mapProfileResource(VisualizationClassDTO dto, Resource resource, Model model, Map<String, String> namespaces) {
+    public static void mapProfileResource(VisualizationClassDTO dto, Resource resource,
+                                          Model model, Map<String, String> namespaces) {
+        mapProfileResource(dto, resource, resource.getURI(), model, namespaces);
+    }
+
+    public static void mapProfileResource(VisualizationClassDTO dto, Resource resource, String versionedResourceURI,
+                                          Model model, Map<String, String> namespaces) {
+        var label = MapperUtils.localizedPropertyToMap(resource, RDFS.label);
         if (MapperUtils.hasType(resource, OWL.DatatypeProperty)) {
             var attribute = new VisualizationPropertyShapeAttributeDTO();
-            mapCommon(attribute, resource, namespaces);
+            attribute.setIdentifier(getReferenceIdentifier(versionedResourceURI, namespaces));
+            attribute.setLabel(label);
             attribute.setDataType(MapperUtils.propertyToString(resource, SH.datatype));
             attribute.setMaxCount(MapperUtils.getLiteral(resource, SH.maxCount, Integer.class));
             attribute.setMinCount(MapperUtils.getLiteral(resource, SH.minCount, Integer.class));
@@ -155,7 +164,8 @@ public class VisualizationMapper {
             dto.addAttribute(attribute);
         } else if (MapperUtils.hasType(resource, OWL.ObjectProperty)) {
             var association = new VisualizationPropertyShapeAssociationDTO();
-            mapCommon(association, resource, namespaces);
+            association.setIdentifier(getReferenceIdentifier(versionedResourceURI, namespaces));
+            association.setLabel(label);
             association.setMaxCount(MapperUtils.getLiteral(resource, SH.maxCount, Integer.class));
             association.setMinCount(MapperUtils.getLiteral(resource, SH.minCount, Integer.class));
             association.setReferenceTarget(getPropertyShapeAssociationTarget(model, resource, namespaces));
@@ -279,7 +289,7 @@ public class VisualizationMapper {
 
     private static String getPropertyShapeAssociationTarget(Model model, Resource resource, Map<String, String> namespaces) {
         var target = MapperUtils.propertyToString(resource, SH.class_);
-        if (target != null) {
+            if (target != null) {
             var iterator = model.listSubjectsWithProperty(SH.targetClass,
                     ResourceFactory.createResource(target));
             if (iterator.hasNext()) {
