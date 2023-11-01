@@ -129,7 +129,9 @@ public class VisualizationMapper {
         var someValuesFrom = MapperUtils.propertyToString(restrictionResource, OWL.someValuesFrom);
         if (MapperUtils.hasType(resource, OWL.DatatypeProperty)) {
             var attribute = new VisualizationAttributeDTO();
-            mapCommon(attribute, resource, namespaces);
+            var attributeURI = MapperUtils.propertyToString(restrictionResource, OWL.onProperty);
+            attribute.setIdentifier(getReferenceIdentifier(attributeURI, namespaces));
+            attribute.setLabel(MapperUtils.localizedPropertyToMap(resource, RDFS.label));
             attribute.setDataType(someValuesFrom);
             classDTO.addAttribute(attribute);
         } else if (MapperUtils.hasType(resource, OWL.ObjectProperty)) {

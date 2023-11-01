@@ -264,6 +264,9 @@ public class ResourceService {
         if (uri == null) {
             return null;
         }
+        if (uri.startsWith(ModelConstants.SUOMI_FI_NAMESPACE)) {
+            uri = DataModelUtils.removeVersionFromURI(uri);
+        }
         var result = findResources(Set.of(uri), graphsIncluded).getResource(uri);
         if (result.listProperties().hasNext()) {
             return result;
