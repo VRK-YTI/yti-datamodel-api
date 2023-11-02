@@ -673,6 +673,7 @@ class ResourceMapperTest {
         indexModel.setStatus(Status.VALID);
         indexModel.setIsPartOf(List.of("P1", "P2"));
         indexModel.setType(ModelType.LIBRARY);
+        indexModel.setVersion("1.0.1");
 
         var dataModels = Map.of(modelURI, indexModel);
 
@@ -691,6 +692,7 @@ class ResourceMapperTest {
         assertEquals(ModelType.LIBRARY, dataModel.getModelType());
         assertEquals(Status.VALID, dataModel.getStatus());
         assertTrue(dataModel.getGroups().containsAll(List.of("P1", "P2")));
+        assertEquals("1.0.1", dataModel.getVersion());
 
         var concept = result.getConceptInfo();
         assertEquals("käsite", concept.getConceptLabel().get("fi"));
