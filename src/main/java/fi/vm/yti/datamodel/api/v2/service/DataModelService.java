@@ -119,16 +119,21 @@ public class DataModelService {
         openSearchIndexer.updateModelToIndex(indexModel);
     }
 
-    public void delete(String prefix) {
+    public void delete(String prefix, String version) {
+        check(userProvider.getUser().isSuperuser());
+
         var modelUri = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
+        var versionUri = modelUri;
+        if(version != null) {
+            versionUri += ModelConstants.RESOURCE_SEPARATOR + version;
+        }
         if(!coreRepository.graphExists(modelUri)){
             throw new ResourceNotFoundException(modelUri);
         }
-        var model = coreRepository.fetch(modelUri);
-        check(authorizationManager.hasRightToModel(prefix, model));
 
-        coreRepository.delete(modelUri);
-        openSearchIndexer.deleteModelFromIndex(modelUri);
+        coreRepository.delete(versionUri);
+        openSearchIndexer.deleteModelFromIndex(versionUri);
+        openSearchIndexer.removeResourceIndexesByDataModel(modelUri, version);
     }
 
     public boolean exists(String prefix) {

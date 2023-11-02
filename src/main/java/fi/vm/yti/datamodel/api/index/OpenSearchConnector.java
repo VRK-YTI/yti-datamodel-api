@@ -5,6 +5,8 @@ import org.opensearch.client.opensearch.OpenSearchClient;
 import org.opensearch.client.opensearch._types.OpenSearchException;
 import org.opensearch.client.opensearch._types.Refresh;
 import org.opensearch.client.opensearch._types.mapping.TypeMapping;
+import org.opensearch.client.opensearch._types.query_dsl.Query;
+import org.opensearch.client.opensearch.core.DeleteByQueryRequest;
 import org.opensearch.client.opensearch.core.DeleteRequest;
 import org.opensearch.client.opensearch.core.IndexRequest;
 import org.opensearch.client.opensearch.core.UpdateRequest;
@@ -124,6 +126,21 @@ public class OpenSearchConnector {
             logger.info("Updated {} to {}", id, index);
         } catch (IOException | OpenSearchException e) {
             logger.warn("Could not update to index: " + id, e);
+        }
+    }
+
+    public void removeFromIndexWithQuery(String index, Query query) {
+        try {
+            final long startTime = System.currentTimeMillis();
+            DeleteByQueryRequest req = new DeleteByQueryRequest.Builder()
+                    .index(index)
+                    .query(query)
+                    .refresh(true)
+                    .build();
+            var response = client.deleteByQuery(req);
+            logger.info("Removed {} items from {} (took {} ms)", response.deleted(), index, System.currentTimeMillis() - startTime);
+        } catch (IOException e) {
+            logger.warn(e.getMessage(), e);
         }
     }
 

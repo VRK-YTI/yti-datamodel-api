@@ -6,6 +6,7 @@ import fi.vm.yti.datamodel.api.security.AuthorizationManager;
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
 import fi.vm.yti.datamodel.api.v2.mapper.ModelMapper;
 import fi.vm.yti.datamodel.api.v2.mapper.ResourceMapper;
+import fi.vm.yti.datamodel.api.v2.opensearch.queries.QueryFactoryUtils;
 import fi.vm.yti.datamodel.api.v2.properties.DCAP;
 import fi.vm.yti.datamodel.api.v2.properties.Iow;
 import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
@@ -22,6 +23,8 @@ import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.vocabulary.*;
 import org.opensearch.client.opensearch.OpenSearchClient;
 import org.opensearch.client.opensearch._types.mapping.*;
+import org.opensearch.client.opensearch._types.query_dsl.Query;
+import org.opensearch.client.opensearch._types.query_dsl.QueryBuilders;
 import org.opensearch.client.opensearch.core.BulkRequest;
 import org.opensearch.client.opensearch.core.bulk.BulkOperation;
 import org.opensearch.client.opensearch.core.bulk.IndexOperation;
@@ -186,6 +189,32 @@ public class OpenSearchIndexer {
     public void deleteResourceFromIndex(String id){
         logger.info("Removing index for: {}", id);
         openSearchConnector.removeFromIndex(OPEN_SEARCH_INDEX_RESOURCE, id);
+    }
+
+    /**
+     * Removes all resources that are based a certain data model
+     *
+     * @param modelUri Model URI
+     * @param version  version number, will remove draft version resources if null or empty
+     */
+    public void removeResourceIndexesByDataModel(String modelUri, String version) {
+        logger.info("Removing resource indexes from model: {}, version: {}", modelUri, version);
+        var queries = new ArrayList<Query>();
+
+        queries.add(QueryFactoryUtils.termQuery("isDefinedBy", modelUri));
+
+        if(version != null && !version.isBlank()) {
+            queries.add(QueryFactoryUtils.termQuery("fromVersion", version));
+        } else {
+            queries.add(QueryFactoryUtils.existsQuery("fromVersion", true));
+        }
+
+        var finalQuery = QueryBuilders.bool()
+                .must(queries)
+                .build()
+                ._toQuery();
+
+        openSearchConnector.removeFromIndexWithQuery(OPEN_SEARCH_INDEX_RESOURCE, finalQuery);
     }
 
     /**
