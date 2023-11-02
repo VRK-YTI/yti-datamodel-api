@@ -120,7 +120,7 @@ test {
 
 dependencyCheck {
     format = 'ALL'
-    autoUpdate = false
+    autoUpdate = true
     analyzers {
         centralEnabled = false
     }
