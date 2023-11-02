@@ -4,18 +4,18 @@ import fi.vm.yti.datamodel.api.security.AuthorizationManager;
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
 import fi.vm.yti.datamodel.api.v2.dto.visualization.PositionDataDTO;
 import fi.vm.yti.datamodel.api.v2.dto.visualization.VisualizationClassDTO;
+import fi.vm.yti.datamodel.api.v2.dto.visualization.VisualizationNodeDTO;
 import fi.vm.yti.datamodel.api.v2.dto.visualization.VisualizationResultDTO;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
-import fi.vm.yti.datamodel.api.v2.mapper.ClassMapper;
 import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.mapper.VisualizationMapper;
 import fi.vm.yti.datamodel.api.v2.properties.DCAP;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
+import fi.vm.yti.datamodel.api.v2.utils.DataModelUtils;
 import org.apache.jena.rdf.model.*;
 import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDF;
-import org.apache.jena.vocabulary.RDFS;
 import org.springframework.stereotype.Service;
 import org.topbraid.shacl.vocabulary.SH;
 
@@ -26,7 +26,6 @@ import static fi.vm.yti.security.AuthorizationException.check;
 
 @Service
 public class VisualizationService {
-
 
     private final ResourceService resourceService;
     private final CoreRepository coreRepository;
@@ -43,7 +42,7 @@ public class VisualizationService {
         var graph = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
         var graphUri = graph;
         var positionUri = ModelConstants.MODEL_POSITIONS_NAMESPACE + prefix;
-        if(version != null) {
+        if (version != null) {
             graphUri += ModelConstants.RESOURCE_SEPARATOR + version;
             positionUri += ModelConstants.RESOURCE_SEPARATOR + version;
         }
@@ -52,7 +51,7 @@ public class VisualizationService {
         Model positions;
         try {
             positions = coreRepository.fetch(positionUri);
-        } catch(ResourceNotFoundException e) {
+        } catch (ResourceNotFoundException e) {
             positions = ModelFactory.createDefaultModel();
         }
 
@@ -61,49 +60,52 @@ public class VisualizationService {
         var namespaces = getNamespaces(model, graph);
         var languages = MapperUtils.arrayPropertyToSet(modelResource, DCTerms.language);
 
-        var visualizationClasses = new HashSet<VisualizationClassDTO>();
+        var nodes = new HashSet<VisualizationNodeDTO>();
 
         while (classURIs.hasNext()) {
             var subject = classURIs.next().getSubject();
             if (subject.isAnon()) {
                 continue;
             }
-            var classURI = subject.getURI();
-            var classResource = model.getResource(classURI);
+            var classResource = model.getResource(subject.getURI());
+            var externalResources = new HashSet<Resource>();
 
-            var classDTO = VisualizationMapper.mapClass(classURI, model, namespaces);
+            var classDTO = VisualizationMapper.mapClass(subject.getURI(), model, namespaces);
 
-            var attributeReferences = model.listSubjectsWithProperty(RDFS.domain, classResource)
-                    .toList();
-            for (var attribute : attributeReferences) {
-                VisualizationMapper.mapReferenceResources(classDTO, attribute, namespaces);
-            }
-
-            var attributesAndAssociations = getAttributesAndAssociations(model, classResource, modelResource);
-            var externalPropertyURIs = new HashSet<String>();
-            for (var resource : attributesAndAssociations) {
-                if (!model.contains(resource, null)) {
-                    externalPropertyURIs.add(resource.getURI());
-                } else {
-                    VisualizationMapper.mapResource(classDTO, resource, model, namespaces);
-                }
-            }
-
-            if (!externalPropertyURIs.isEmpty()) {
-                var externalResources = resourceService.findResources(externalPropertyURIs, namespaces.keySet());
-                externalPropertyURIs.forEach(uri -> VisualizationMapper
-                        .mapResource(classDTO, externalResources.getResource(uri), model, namespaces));
+            if (MapperUtils.isLibrary(modelResource)) {
+                VisualizationMapper.mapLibraryClassResources(classDTO, model, classResource, externalResources, namespaces);
+                VisualizationMapper.mapAssociationsWithDomain(classDTO, model, classResource, namespaces);
+                externalResources.forEach(restrictionResource -> {
+                    var onProperty = MapperUtils.propertyToString(restrictionResource, OWL.onProperty);
+                    var externalResource = resourceService.findResource(onProperty, namespaces.keySet());
+                    if (externalResource != null) {
+                        VisualizationMapper.mapLibraryResource(classDTO, restrictionResource, externalResource, namespaces);
+                    }
+                });
+            } else {
+                VisualizationMapper.mapNodeShapeResources(classDTO, classResource, model, externalResources, namespaces);
+                var propertyURIs = externalResources.stream().map(Resource::getURI).collect(Collectors.toSet());
+                var externalResourceResult = resourceService.findResources(propertyURIs, namespaces.keySet());
+                externalResources.forEach(ext -> {
+                    var resourceURI = DataModelUtils.removeVersionFromURI(ext.getURI());
+                    VisualizationMapper
+                            .mapProfileResource(classDTO, externalResourceResult.getResource(resourceURI), ext.getURI(), model, namespaces);
+                    }
+                );
             }
 
             // add dummy classes for external classes
-            addExternalClasses(classDTO, languages, visualizationClasses);
+            addExternalClasses(classDTO, languages, nodes);
 
-            visualizationClasses.add(classDTO);
+            nodes.add(classDTO);
         }
-        var hiddenNodes = VisualizationMapper.mapPositionsDataToDTOsAndCreateHiddenNodes(positions, prefix, visualizationClasses);
+        nodes.addAll(VisualizationMapper.mapAttributesWithDomain(model));
+
+        var hiddenNodes = VisualizationMapper.mapPositionsDataToDTOsAndCreateHiddenNodes(positions, prefix, nodes);
 
         var visualizationResult = new VisualizationResultDTO();
-        visualizationResult.setNodes(visualizationClasses);
+
+        visualizationResult.setNodes(nodes);
         visualizationResult.setHiddenNodes(hiddenNodes);
 
         return visualizationResult;
@@ -135,10 +137,10 @@ public class VisualizationService {
         }
     }
 
-    private static void addExternalClasses(VisualizationClassDTO classDTO, Set<String> languages, HashSet<VisualizationClassDTO> result) {
-        classDTO.getParentClasses().forEach(parent -> {
-            if (parent.contains(":")) {
-                result.add(VisualizationMapper.mapExternalClass(parent, languages));
+    private static void addExternalClasses(VisualizationClassDTO classDTO, Set<String> languages, HashSet<VisualizationNodeDTO> result) {
+        classDTO.getReferences().forEach(parent -> {
+            if (parent.getIdentifier().contains(":")) {
+                result.add(VisualizationMapper.mapExternalClass(parent.getIdentifier(), languages));
             }
         });
         classDTO.getAssociations().forEach(association -> {
@@ -147,8 +149,6 @@ public class VisualizationService {
                 result.add(VisualizationMapper.mapExternalClass(target, languages));
             }
         });
-        classDTO.getAttributeReferences()
-                .forEach(attribute -> result.add(VisualizationMapper.mapAttributeReferenceNode(attribute)));
     }
 
     private static StmtIterator getClassURIs(Model model, String graph) {
@@ -178,20 +178,5 @@ public class VisualizationService {
                     }
                 }));
         return namespaces;
-    }
-
-    private static Set<Resource> getAttributesAndAssociations(
-            Model model, Resource classResource, Resource modelResource) {
-        if (MapperUtils.isLibrary(modelResource)) {
-            return ClassMapper.getClassRestrictionList(model, classResource).stream()
-                    .filter(r -> r.asResource().hasProperty(OWL.onProperty))
-                    .map(r -> model.getResource(MapperUtils.propertyToString(r.asResource(), OWL.onProperty)))
-                    .collect(Collectors.toSet());
-        } else if (MapperUtils.isApplicationProfile(modelResource)) {
-            return classResource.listProperties(SH.property)
-                    .mapWith(Statement::getResource)
-                    .toSet();
-        }
-        return Set.of();
     }
 }

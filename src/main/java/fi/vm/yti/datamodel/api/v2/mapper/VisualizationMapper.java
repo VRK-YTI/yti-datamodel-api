@@ -3,11 +3,9 @@ package fi.vm.yti.datamodel.api.v2.mapper;
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
 import fi.vm.yti.datamodel.api.v2.dto.visualization.*;
 import fi.vm.yti.datamodel.api.v2.properties.Iow;
+import fi.vm.yti.datamodel.api.v2.utils.DataModelUtils;
 import org.apache.jena.graph.NodeFactory;
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.ModelFactory;
-import org.apache.jena.rdf.model.Resource;
-import org.apache.jena.rdf.model.ResourceFactory;
+import org.apache.jena.rdf.model.*;
 import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDFS;
@@ -24,7 +22,8 @@ public class VisualizationMapper {
     private VisualizationMapper() {
     }
 
-    public static VisualizationClassDTO mapClass(String classURI, Model model, Map<String, String> namespaces) {
+    public static VisualizationClassDTO mapClass(String classURI, Model model,
+                                                 Map<String, String> namespaces) {
         var classResource = model.getResource(classURI);
         VisualizationClassDTO classDTO;
 
@@ -38,13 +37,80 @@ public class VisualizationMapper {
         }
 
         mapCommon(classDTO, classResource, namespaces);
-
-        classDTO.setParentClasses(getParentClasses(classResource, namespaces));
+        getParentReferences(classResource, namespaces).forEach(classDTO::addReference);
         classDTO.setType(VisualizationNodeType.CLASS);
         return classDTO;
     }
 
-    public static VisualizationClassDTO mapExternalClass(String identifier, Set<String> languages) {
+    public static void mapLibraryClassResources(VisualizationClassDTO classDTO, Model model,
+                                                Resource classResource,
+                                                Set<Resource> externalResources,
+                                                Map<String, String> namespaces) {
+        ClassMapper.getClassRestrictionList(model, classResource).stream()
+                .filter(r -> r.asResource().hasProperty(OWL.onProperty))
+                .forEach(r -> {
+                    var resource = model.getResource(MapperUtils.propertyToString(r.asResource(), OWL.onProperty));
+                    if (!model.contains(resource, null)) {
+                        externalResources.add(r.asResource());
+                        return;
+                    }
+                    mapLibraryResource(classDTO, r.asResource(), resource, namespaces);
+                });
+    }
+
+    public static void mapNodeShapeResources(VisualizationClassDTO classDTO,  Resource nodeShapeResource, Model model,
+                                             Set<Resource> externalResources, Map<String, String> namespaces) {
+        nodeShapeResource.listProperties(SH.property)
+                .forEach(s -> {
+                    var resource = model.getResource(s.getResource().getURI());
+                    if (!model.contains(resource, null)) {
+                        externalResources.add(s.getResource());
+                        return;
+                    }
+                    mapProfileResource(classDTO, resource, model, namespaces);
+                });
+    }
+
+    public static List<VisualizationAttributeNodeDTO> mapAttributesWithDomain(Model model) {
+        return model.listStatements(null, RDFS.domain, (RDFNode) null)
+                .filterKeep(r -> MapperUtils.hasType(r.getSubject(), OWL.DatatypeProperty))
+                .mapWith(r -> {
+                    var nodeDTO = new VisualizationAttributeNodeDTO();
+                    nodeDTO.setType(VisualizationNodeType.ATTRIBUTE);
+                    nodeDTO.setDataType(MapperUtils.propertyToString(r.getSubject(), RDFS.range));
+                    mapCommon(nodeDTO, r.getSubject(), Map.of());
+                    var domain = r.getObject().asResource();
+                    var reference = new VisualizationReferenceDTO();
+                    var referenceIdentifier = getReferenceIdentifier(domain.getURI(), Map.of());
+                    reference.setIdentifier(referenceIdentifier);
+                    reference.setReferenceTarget(referenceIdentifier);
+                    reference.setReferenceType(VisualizationReferenceType.ATTRIBUTE_DOMAIN);
+                    nodeDTO.setReferences(Set.of(reference));
+                    return nodeDTO;
+                }).toList();
+    }
+
+    public static void mapAssociationsWithDomain(VisualizationClassDTO classDTO,
+                                                 Model model,
+                                                 Resource classResource,
+                                                 Map<String, String> namespaces) {
+        model.listStatements(null, RDFS.domain, classResource)
+                .filterKeep(r -> MapperUtils.hasType(r.getSubject(), OWL.ObjectProperty))
+                .forEach(r -> {
+                    var range = MapperUtils.propertyToString(r.getSubject(), RDFS.range);
+                    if (range == null) {
+                        return;
+                    }
+                    var dto = new VisualizationReferenceDTO();
+                    dto.setLabel(MapperUtils.localizedPropertyToMap(r.getSubject(), RDFS.label));
+                    dto.setReferenceType(VisualizationReferenceType.ASSOCIATION);
+                    dto.setIdentifier(MapperUtils.getLiteral(r.getSubject(), DCTerms.identifier, String.class));
+                    dto.setReferenceTarget(getReferenceIdentifier(range, namespaces));
+                    classDTO.addReference(dto);
+                });
+    }
+
+    public static VisualizationNodeDTO mapExternalClass(String identifier, Set<String> languages) {
         var dto = new VisualizationClassDTO();
         dto.setIdentifier(identifier);
         dto.setType(VisualizationNodeType.EXTERNAL_CLASS);
@@ -56,23 +122,55 @@ public class VisualizationMapper {
         return dto;
     }
 
-    public static void mapResource(VisualizationClassDTO dto, Resource resource, Model model, Map<String, String> namespaces) {
+    public static void mapLibraryResource(VisualizationClassDTO classDTO,
+                                          Resource restrictionResource,
+                                          Resource resource,
+                                          Map<String, String> namespaces) {
+        var someValuesFrom = MapperUtils.propertyToString(restrictionResource, OWL.someValuesFrom);
+        var resourceURI = MapperUtils.propertyToString(restrictionResource, OWL.onProperty);
+        var label = MapperUtils.localizedPropertyToMap(resource, RDFS.label);
         if (MapperUtils.hasType(resource, OWL.DatatypeProperty)) {
-            dto.addAttribute(mapAttribute(resource, namespaces));
+            var attribute = new VisualizationAttributeDTO();
+            attribute.setIdentifier(getReferenceIdentifier(resourceURI, namespaces));
+            attribute.setLabel(label);
+            attribute.setDataType(someValuesFrom);
+            classDTO.addAttribute(attribute);
         } else if (MapperUtils.hasType(resource, OWL.ObjectProperty)) {
-            dto.addAssociation(mapAssociationReference(resource, model, namespaces));
+            var association = new VisualizationReferenceDTO();
+            association.setIdentifier(getReferenceIdentifier(resourceURI, namespaces));
+            association.setLabel(label);
+            association.setReferenceType(VisualizationReferenceType.ASSOCIATION);
+            association.setReferenceTarget(getReferenceIdentifier(someValuesFrom, namespaces));
+            classDTO.addAssociation(association);
         }
     }
 
-    public static void mapReferenceResources(VisualizationClassDTO dto, Resource resource, Map<String, String> namespaces) {
-        var ref = new VisualizationReferenceDTO();
-        mapCommon(ref, resource, namespaces);
-        ref.setReferenceTarget(ref.getIdentifier());
+    public static void mapProfileResource(VisualizationClassDTO dto, Resource resource,
+                                          Model model, Map<String, String> namespaces) {
+        mapProfileResource(dto, resource, resource.getURI(), model, namespaces);
+    }
 
+    public static void mapProfileResource(VisualizationClassDTO dto, Resource resource, String versionedResourceURI,
+                                          Model model, Map<String, String> namespaces) {
+        var label = MapperUtils.localizedPropertyToMap(resource, RDFS.label);
         if (MapperUtils.hasType(resource, OWL.DatatypeProperty)) {
-            dto.addAttributeReference(ref);
+            var attribute = new VisualizationPropertyShapeAttributeDTO();
+            attribute.setIdentifier(getReferenceIdentifier(versionedResourceURI, namespaces));
+            attribute.setLabel(label);
+            attribute.setDataType(MapperUtils.propertyToString(resource, SH.datatype));
+            attribute.setMaxCount(MapperUtils.getLiteral(resource, SH.maxCount, Integer.class));
+            attribute.setMinCount(MapperUtils.getLiteral(resource, SH.minCount, Integer.class));
+            attribute.setCodeLists(MapperUtils.arrayPropertyToSet(resource, Iow.codeList));
+            dto.addAttribute(attribute);
         } else if (MapperUtils.hasType(resource, OWL.ObjectProperty)) {
-            dto.addAssociationReference(ref);
+            var association = new VisualizationPropertyShapeAssociationDTO();
+            association.setIdentifier(getReferenceIdentifier(versionedResourceURI, namespaces));
+            association.setLabel(label);
+            association.setMaxCount(MapperUtils.getLiteral(resource, SH.maxCount, Integer.class));
+            association.setMinCount(MapperUtils.getLiteral(resource, SH.minCount, Integer.class));
+            association.setReferenceTarget(getPropertyShapeAssociationTarget(model, resource, namespaces));
+            association.setReferenceType(VisualizationReferenceType.ASSOCIATION);
+            dto.addAssociation(association);
         }
     }
 
@@ -91,7 +189,7 @@ public class VisualizationMapper {
     }
 
     public static Set<VisualizationHiddenNodeDTO> mapPositionsDataToDTOsAndCreateHiddenNodes(
-            Model positions, String modelPrefix, Set<VisualizationClassDTO> classes) {
+            Model positions, String modelPrefix, Set<VisualizationNodeDTO> classes) {
         var hiddenElements = new HashSet<VisualizationHiddenNodeDTO>();
 
         classes.forEach(dto -> {
@@ -101,74 +199,31 @@ public class VisualizationMapper {
             dto.setPosition(getPositionFromResource(positionResource));
 
             // check if there are hidden nodes between parent relations
-            if (dto.getParentClasses() != null && !dto.getParentClasses().isEmpty()) {
-                var parentsWithTarget = new HashSet<String>();
-                dto.getParentClasses().forEach(parent -> {
-                    var path = handlePath(positions, dto.getIdentifier(), parent, hiddenElements);
-                    parentsWithTarget.add(path.get(0));
+            if (dto.getReferences() != null && !dto.getReferences().isEmpty()) {
+                dto.getReferences().forEach(reference -> {
+                    var path = handlePath(positions, dto.getIdentifier(), reference, hiddenElements);
+                    reference.setReferenceTarget(path.get(0));
                 });
-                dto.setParentClasses(parentsWithTarget);
             }
 
-            // check if there are hidden nodes between association relations
-            dto.getAssociations().forEach(association -> {
-                var target = association.getReferenceTarget();
-                if (target != null) {
-                    var path = handlePath(positions, dto.getIdentifier(), target, hiddenElements);
-                    association.setReferenceTarget(path.get(0));
-                }
-            });
+            if (dto instanceof VisualizationClassDTO classDTO) {
+                // check if there are hidden nodes between association relations
+                classDTO.getAssociations().forEach(reference -> {
+                    var target = reference.getReferenceTarget();
+                    if (target != null) {
+                        var path = handlePath(positions, dto.getIdentifier(), reference, hiddenElements);
+                        reference.setReferenceTarget(path.get(0));
+                    }
+                });
+            }
         });
         return hiddenElements;
     }
 
-    private static VisualizationAttributeDTO mapAttribute(Resource resource, Map<String, String> namespaces) {
-        if (MapperUtils.hasType(resource, SH.PropertyShape)) {
-            var dto = new VisualizationPropertyShapeAttributeDTO();
-            mapCommon(dto, resource, namespaces);
-            dto.setPath(getReferenceIdentifier(MapperUtils.propertyToString(resource, SH.path), namespaces));
-            dto.setDataType(MapperUtils.propertyToString(resource, SH.datatype));
-            dto.setMaxCount(MapperUtils.getLiteral(resource, SH.maxCount, Integer.class));
-            dto.setMinCount(MapperUtils.getLiteral(resource, SH.minCount, Integer.class));
-            dto.setCodeLists(MapperUtils.arrayPropertyToSet(resource, Iow.codeList));
-            return dto;
-        } else {
-            var dto = new VisualizationAttributeDTO();
-            mapCommon(dto, resource, namespaces);
-            return dto;
-        }
-    }
-
-    public static VisualizationClassDTO mapAttributeReferenceNode(VisualizationReferenceDTO attribute) {
-        var dto = new VisualizationClassDTO();
-        dto.setType(VisualizationNodeType.ATTRIBUTE);
-        dto.setLabel(attribute.getLabel());
-        dto.setIdentifier(attribute.getIdentifier());
-        return dto;
-    }
-
-    private static VisualizationReferenceDTO mapAssociationReference(Resource resource, Model model, Map<String, String> namespaces) {
-        if (MapperUtils.hasType(resource, SH.PropertyShape)) {
-            var dto = new VisualizationPropertyShapeAssociationDTO();
-            mapCommon(dto, resource, namespaces);
-            dto.setPath(getReferenceIdentifier(MapperUtils.propertyToString(resource, SH.path), namespaces));
-            dto.setMaxCount(MapperUtils.getLiteral(resource, SH.maxCount, Integer.class));
-            dto.setMinCount(MapperUtils.getLiteral(resource, SH.minCount, Integer.class));
-            dto.setReferenceTarget(getPropertyShapeAssociationTarget(model, resource, namespaces));
-            return dto;
-        } else {
-            var dto = new VisualizationReferenceDTO();
-            var target = MapperUtils.propertyToString(resource, RDFS.range);
-            mapCommon(dto, resource, namespaces);
-            dto.setReferenceTarget(getReferenceIdentifier(target, namespaces));
-            return dto;
-        }
-    }
-
-    private static List<String> handlePath(Model positions, String sourceIdentifier, String target,
+    private static List<String> handlePath(Model positions, String sourceIdentifier, VisualizationReferenceDTO reference,
                                            Set<VisualizationHiddenNodeDTO> hiddenElements) {
 
-        var positionResources = positions.listSubjectsWithProperty(Iow.referenceTarget, target).toList();
+        var positionResources = positions.listSubjectsWithProperty(Iow.referenceTarget, reference.getReferenceTarget()).toList();
 
         for (Resource positionResource : positionResources) {
             var path = new LinkedList<String>();
@@ -182,13 +237,13 @@ public class VisualizationMapper {
                 } else if (sourceIdentifier.equals(identifier)) {
                     // reached the source node
                     if (path.isEmpty()) {
-                        path.add(target);
+                        path.add(reference.getReferenceTarget());
                     }
                     return path;
                 }
 
                 path.addFirst(positionResource.getLocalName());
-                hiddenElements.add(mapHiddenNode(positionResource));
+                hiddenElements.add(mapHiddenNode(positionResource, reference.getReferenceType()));
 
                 var references = positions.listSubjectsWithProperty(Iow.referenceTarget, positionResource.getLocalName()).toList();
 
@@ -204,15 +259,16 @@ public class VisualizationMapper {
             }
         }
         // no hidden nodes between source and target
-        return List.of(target);
+        return List.of(reference.getReferenceTarget());
     }
 
-    private static VisualizationHiddenNodeDTO mapHiddenNode(Resource position) {
+    private static VisualizationHiddenNodeDTO mapHiddenNode(Resource position, VisualizationReferenceType referenceType) {
         var dto = new VisualizationHiddenNodeDTO();
 
         dto.setIdentifier(MapperUtils.propertyToString(position, DCTerms.identifier));
         dto.setPosition(getPositionFromResource(position));
         dto.setReferenceTarget(MapperUtils.propertyToString(position, Iow.referenceTarget));
+        dto.setReferenceType(referenceType);
 
         return dto;
     }
@@ -233,7 +289,7 @@ public class VisualizationMapper {
 
     private static String getPropertyShapeAssociationTarget(Model model, Resource resource, Map<String, String> namespaces) {
         var target = MapperUtils.propertyToString(resource, SH.class_);
-        if (target != null) {
+            if (target != null) {
             var iterator = model.listSubjectsWithProperty(SH.targetClass,
                     ResourceFactory.createResource(target));
             if (iterator.hasNext()) {
@@ -246,32 +302,41 @@ public class VisualizationMapper {
     }
 
     @NotNull
-    private static HashSet<String> getParentClasses(Resource resource, Map<String, String> namespaceMap) {
-        var parentClasses = new HashSet<String>();
+    private static Set<VisualizationReferenceDTO> getParentReferences(Resource resource, Map<String, String> namespaceMap) {
+        var parentReferences = new HashSet<VisualizationReferenceDTO>();
 
         if (MapperUtils.hasType(resource, OWL.Class)) {
-            var subClassOf = resource.listProperties(RDFS.subClassOf).toList();
-            subClassOf.forEach(parent -> {
+            resource.listProperties(RDFS.subClassOf).forEach(parent -> {
                 String classURI = parent.getObject().toString();
                 // skip default parent class (owl#Thing)
                 if ("http://www.w3.org/2002/07/owl#Thing".equals(classURI)) {
                     return;
                 }
-                parentClasses.add(getReferenceIdentifier(classURI, namespaceMap));
+                var ref = new VisualizationReferenceDTO();
+                var referenceIdentifier = getReferenceIdentifier(classURI, namespaceMap);
+                ref.setIdentifier(referenceIdentifier);
+                ref.setReferenceType(VisualizationReferenceType.PARENT_CLASS);
+                ref.setReferenceTarget(referenceIdentifier);
+                parentReferences.add(ref);
             });
         } else {
             var node = MapperUtils.propertyToString(resource, SH.node);
             if (node != null) {
-                parentClasses.add(getReferenceIdentifier(node, namespaceMap));
+                var ref = new VisualizationReferenceDTO();
+                var referenceIdentifier = getReferenceIdentifier(node, namespaceMap);
+                ref.setIdentifier(referenceIdentifier);
+                ref.setReferenceType(VisualizationReferenceType.PARENT_CLASS);
+                ref.setReferenceTarget(referenceIdentifier);
+                parentReferences.add(ref);
             }
         }
-        return parentClasses;
+        return parentReferences;
     }
 
     private static String getReferenceIdentifier(String uri, Map<String, String> namespaces) {
         try {
             var u = NodeFactory.createURI(uri);
-            String prefix = namespaces.get(u.getNameSpace().replaceAll("/?$", ""));
+            String prefix = namespaces.get(DataModelUtils.removeTrailingSlash(u.getNameSpace()));
 
             if (prefix == null) {
                 // referenced class in the same model
@@ -285,4 +350,5 @@ public class VisualizationMapper {
             return null;
         }
     }
+
 }

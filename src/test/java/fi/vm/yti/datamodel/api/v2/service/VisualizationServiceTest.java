@@ -5,6 +5,8 @@ import fi.vm.yti.datamodel.api.security.AuthorizationManager;
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
 import fi.vm.yti.datamodel.api.v2.dto.visualization.PositionDataDTO;
 import fi.vm.yti.datamodel.api.v2.dto.visualization.VisualizationClassDTO;
+import fi.vm.yti.datamodel.api.v2.dto.visualization.VisualizationNodeDTO;
+import fi.vm.yti.datamodel.api.v2.dto.visualization.VisualizationNodeType;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import fi.vm.yti.security.AuthorizationException;
 import org.apache.jena.rdf.model.Model;
@@ -47,26 +49,38 @@ class VisualizationServiceTest {
     @Autowired
     private VisualizationService visualizationService;
 
+
     @Test
     void testMapVisualizationDataLibrary() {
-        var model = MapperTestUtils.getModelFromFile("/models/test_datamodel_visualization.ttl");
-        var positionModel = MapperTestUtils.getModelFromFile("/positions.ttl");
-
+        var model = MapperTestUtils.getModelFromFile("/models/test_datamodel_library_visualization.ttl");
         when(coreRepository.fetch(anyString())).thenReturn(model);
-        when(coreRepository.fetch(ModelConstants.MODEL_POSITIONS_NAMESPACE + "test")).thenReturn(positionModel);
 
-        var visualizationData = visualizationService.getVisualizationData("test", null);
+        var findResoureceModel = ModelFactory.createDefaultModel();
+        var extResourceURI = "https://www.example.com/ns/external/testAssociation";
+        var extResource = findResoureceModel
+                .createResource(extResourceURI)
+                .addProperty(RDF.type, OWL.ObjectProperty);
+        when(resourceService.findResource(eq(extResourceURI), anySet())).thenReturn(extResource);
 
-        // should contain 3 classes, 2 references to external models and two attribute references (rdfs:domain)
-        assertEquals(7, visualizationData.getNodes().size());
+        var visualizationData = visualizationService.getVisualizationData("visu", null);
 
-        var cls = findClass(visualizationData.getNodes(), "testclass1");
+        // rdfs:class
+        assertEquals(4, visualizationData.getNodes().stream().filter(n -> n.getType().equals(VisualizationNodeType.CLASS)).count());
+        // attribute with domain (visu:name)
+        assertEquals(1, visualizationData.getNodes().stream().filter(n -> n.getType().equals(VisualizationNodeType.ATTRIBUTE)).count());
+        // ext:Person, ext:address and ext:someTarget
+        assertEquals(3, visualizationData.getNodes().stream().filter(n -> n.getType().equals(VisualizationNodeType.EXTERNAL_CLASS)).count());
+
+        var cls = findClass(visualizationData.getNodes(), "person");
+
+        assertEquals(1, cls.getReferences().size());
         assertEquals(1, cls.getAttributes().size());
-        assertEquals(1, cls.getAssociations().size());
-        assertEquals(2, cls.getAttributeReferences().size());
+        assertEquals(3, cls.getAssociations().size());
 
-        var extClass = findClass(visualizationData.getNodes(), "ext:ExternalClass");
+        var extClass = findClass(visualizationData.getNodes(), "ext:Person");
         assertNotNull(extClass);
+
+        assertEquals(0, visualizationData.getHiddenNodes().size());
     }
 
     @Test
@@ -103,7 +117,6 @@ class VisualizationServiceTest {
     void savePositionsNoAuth(){
         assertThrows(AuthorizationException.class,
                 () -> visualizationService.savePositionData("test-model", List.of()));
-
     }
 
     @Test
@@ -137,8 +150,6 @@ class VisualizationServiceTest {
 
         verify(coreRepository).fetch(graphURI);
         verify(coreRepository).put(eq(graphURI + ModelConstants.RESOURCE_SEPARATOR + "1.0.0"), any(Model.class));
-
-
     }
 
     private static Model getExternalPropertiesResult() {
@@ -156,8 +167,8 @@ class VisualizationServiceTest {
         return externalPropertiesModel;
     }
 
-    private static VisualizationClassDTO findClass(Set<VisualizationClassDTO> visualizationData, String identifier) {
-        return visualizationData.stream()
+    private static VisualizationClassDTO findClass(Set<VisualizationNodeDTO> visualizationData, String identifier) {
+        return (VisualizationClassDTO) visualizationData.stream()
                 .filter(d -> d.getIdentifier().equals(identifier))
                 .findFirst()
                 .orElse(null);
