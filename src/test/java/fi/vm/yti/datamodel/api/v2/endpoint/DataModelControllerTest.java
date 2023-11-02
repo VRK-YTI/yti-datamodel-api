@@ -376,7 +376,7 @@ class DataModelControllerTest {
         mvc.perform(delete("/v2/model/test/"))
                 .andExpect(status().isOk());
 
-        verify(dataModelService).delete(anyString());
+        verify(dataModelService).delete(anyString(), eq(null));
         verifyNoMoreInteractions(dataModelService);
     }
 

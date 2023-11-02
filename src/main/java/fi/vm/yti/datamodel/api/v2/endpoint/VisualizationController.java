@@ -3,6 +3,7 @@ package fi.vm.yti.datamodel.api.v2.endpoint;
 import fi.vm.yti.datamodel.api.v2.dto.visualization.PositionDataDTO;
 import fi.vm.yti.datamodel.api.v2.dto.visualization.VisualizationResultDTO;
 import fi.vm.yti.datamodel.api.v2.service.VisualizationService;
+import fi.vm.yti.datamodel.api.v2.validator.ValidSemanticVersion;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -30,7 +31,7 @@ public class VisualizationController {
     @ApiResponse(responseCode = "200", description = "Visualization data found for model")
     @GetMapping(value = "/{prefix}", produces = APPLICATION_JSON_VALUE)
     public VisualizationResultDTO getVisualizationData(@PathVariable @Parameter(description = "Data model prefix") String prefix,
-                                                       @RequestParam(required = false) @Parameter(description = "Version of the model") String version) {
+                                                       @RequestParam(required = false) @Parameter(description = "Version of the model") @ValidSemanticVersion String version) {
         return visualizationService.getVisualizationData(prefix, version);
     }
 

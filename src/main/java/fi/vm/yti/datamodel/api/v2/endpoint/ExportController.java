@@ -2,6 +2,7 @@ package fi.vm.yti.datamodel.api.v2.endpoint;
 
 import fi.vm.yti.datamodel.api.v2.endpoint.error.ApiError;
 import fi.vm.yti.datamodel.api.v2.service.DataModelService;
+import fi.vm.yti.datamodel.api.v2.validator.ValidSemanticVersion;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -33,7 +34,7 @@ public class ExportController {
             produces = {"application/ld+json;charset=utf-8", "text/turtle;charset=utf-8", "application/rdf+xml;charset=utf-8"})
     public ResponseEntity<String> export(@PathVariable @Parameter(description = "Data model prefix") String prefix,
                                          @PathVariable(required = false) @Parameter(description = "Resource identifier") String resourceIdentifier,
-                                         @RequestParam(required = false) @Parameter(description = "Version") String version,
+                                         @RequestParam(required = false) @Parameter(description = "Version") @ValidSemanticVersion String version,
                                          @RequestHeader(value = HttpHeaders.ACCEPT) String accept){
         return dataModelService.export(prefix, version, resourceIdentifier, accept);
     }

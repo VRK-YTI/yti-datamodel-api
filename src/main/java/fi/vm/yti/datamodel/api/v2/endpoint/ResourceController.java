@@ -6,6 +6,7 @@ import fi.vm.yti.datamodel.api.v2.service.ResourceService;
 import fi.vm.yti.datamodel.api.v2.validator.ValidPropertyShape;
 import fi.vm.yti.datamodel.api.v2.validator.ValidResource;
 import fi.vm.yti.datamodel.api.v2.validator.ValidResourceIdentifier;
+import fi.vm.yti.datamodel.api.v2.validator.ValidSemanticVersion;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -169,7 +170,7 @@ public class ResourceController {
     @GetMapping(value = "/library/{prefix}/{resourceIdentifier}", produces = APPLICATION_JSON_VALUE)
     public ResourceInfoDTO getResource(@PathVariable @Parameter(description = "Data model prefix") String prefix,
                                        @PathVariable @Parameter(description = "Attribute or association identifier") String resourceIdentifier,
-                                       @RequestParam(required = false) @Parameter(description = "Version") String version){
+                                       @RequestParam(required = false) @Parameter(description = "Version") @ValidSemanticVersion String version) {
         //TODO check if this can be generic instead of casting
         return (ResourceInfoDTO) resourceService.get(prefix, version, resourceIdentifier);
     }
@@ -182,7 +183,7 @@ public class ResourceController {
     @GetMapping(value = "/profile/{prefix}/{propertyShapeIdentifier}", produces = APPLICATION_JSON_VALUE)
     public PropertyShapeInfoDTO getPropertyShape(@PathVariable @Parameter(description = "Data model prefix") String prefix,
                                                  @PathVariable @Parameter(description = "Property shape identifier") String propertyShapeIdentifier,
-                                                 @RequestParam(required = false) @Parameter(description = "Version") String version){
+                                                 @RequestParam(required = false) @Parameter(description = "Version") @ValidSemanticVersion String version) {
         return (PropertyShapeInfoDTO) resourceService.get(prefix, version, propertyShapeIdentifier);
     }
 
@@ -219,7 +220,7 @@ public class ResourceController {
     @GetMapping(value = "/profile/{prefix}/active")
     public Boolean getActiveStatus(@PathVariable @Parameter(description = "Data model prefix") String prefix,
                                    @RequestParam @Parameter(description = "Property shape prefix") String uri,
-                                   @RequestParam(required = false) @Parameter(description = "Version") String version){
+                                   @RequestParam(required = false) @Parameter(description = "Version") @ValidSemanticVersion String version) {
         return resourceService.checkActiveStatus(prefix, uri, version);
     }
 

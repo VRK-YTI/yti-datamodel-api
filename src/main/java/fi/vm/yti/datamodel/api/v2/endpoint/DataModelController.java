@@ -4,6 +4,7 @@ import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.ApiError;
 import fi.vm.yti.datamodel.api.v2.service.DataModelService;
 import fi.vm.yti.datamodel.api.v2.validator.ValidDatamodel;
+import fi.vm.yti.datamodel.api.v2.validator.ValidSemanticVersion;
 import fi.vm.yti.datamodel.api.v2.validator.ValidVersionedDatamodel;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -97,7 +98,7 @@ public class DataModelController {
     })
     @GetMapping(value = "/{prefix}", produces = APPLICATION_JSON_VALUE)
     public DataModelInfoDTO getModel(@PathVariable @Parameter(description = "Data model prefix") String prefix,
-                                     @RequestParam(required = false) @Parameter(description = "Model version, if empty gets the draft version") String version){
+                                     @RequestParam(required = false) @Parameter(description = "Model version, if empty gets the draft version") @ValidSemanticVersion String version) {
         return dataModelService.get(prefix, version);
     }
 
@@ -115,8 +116,9 @@ public class DataModelController {
             @ApiResponse(responseCode = "404", description = "Data model was not found", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ApiError.class))}),
     })
     @DeleteMapping(value = "/{prefix}")
-    public void deleteModel(@PathVariable @Parameter(description = "Data model prefix") String prefix) {
-        dataModelService.delete(prefix);
+    public void deleteModel(@PathVariable @Parameter(description = "Data model prefix") String prefix,
+                            @RequestParam(required = false) @Parameter(description = "Model version, if empty deletes the draft version") @ValidSemanticVersion String version) {
+        dataModelService.delete(prefix, version);
     }
 
     @Operation(summary = "Create a release of a model")
@@ -127,7 +129,7 @@ public class DataModelController {
     })
     @PostMapping(value = "/{prefix}/release")
     public ResponseEntity<String> createRelease(@PathVariable @Parameter(description = "Data model prefix") String prefix,
-                                                @RequestParam @Parameter(description = "Semantic version") String version,
+                                                @RequestParam @Parameter(description = "Semantic version") @ValidSemanticVersion String version,
                                                 @RequestParam @Parameter(description = "Status") Status status) throws URISyntaxException {
         var uri = dataModelService.createRelease(prefix, version, status);
         return ResponseEntity.created(uri).build();
@@ -139,14 +141,14 @@ public class DataModelController {
     })
     @GetMapping(value = "/{prefix}/versions")
     public ResponseEntity<Collection<ModelVersionInfo>> getPriorVersions(@PathVariable @Parameter(description = "Data model prefix") String prefix,
-                                                                         @RequestParam(required = false) @Parameter(description = "Semantic version") String version) {
+                                                                         @RequestParam(required = false) @Parameter(description = "Semantic version") @ValidSemanticVersion String version) {
         return ResponseEntity.ok(dataModelService.getPriorVersions(prefix, version));
     }
 
     @Operation(summary = "Update versioned model")
     @PutMapping(value = "/{prefix}/version")
     public ResponseEntity<Void> updateVersionedModel(@PathVariable @Parameter(description = "Data model prefix") String prefix,
-                                                     @RequestParam @Parameter(description = "Semantic version") String version,
+                                                     @RequestParam @Parameter(description = "Semantic version") @ValidSemanticVersion String version,
                                                      @ValidVersionedDatamodel @RequestBody VersionedModelDTO dto) {
         dataModelService.updateVersionedModel(prefix, version, dto);
         return ResponseEntity.noContent().build();

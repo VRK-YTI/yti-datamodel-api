@@ -11,6 +11,7 @@ import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexModel;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import fi.vm.yti.security.AuthenticatedUserProvider;
+import fi.vm.yti.security.AuthorizationException;
 import fi.vm.yti.security.YtiUser;
 import org.apache.jena.query.Query;
 import org.apache.jena.rdf.model.Model;
@@ -138,18 +139,47 @@ class DataModelServiceTest {
     void delete() {
         when(coreRepository.graphExists(anyString())).thenReturn(true);
         when(coreRepository.fetch(anyString())).thenReturn(ModelFactory.createDefaultModel());
-        when(authorizationManager.hasRightToModel(anyString(), any(Model.class))).thenReturn(true);
-        dataModelService.delete("test");
+        var mockUser = spy(EndpointUtils.mockUser);
+        when(userProvider.getUser()).thenReturn(mockUser);
+        dataModelService.delete("test", null);
 
-        verify(coreRepository).fetch(anyString());
-        verify(authorizationManager).hasRightToModel(anyString(), any(Model.class));
+        verify(coreRepository).graphExists(anyString());
+        verify(mockUser).isSuperuser();
         verify(coreRepository).delete(anyString());
         verify(openSearchIndexer).deleteModelFromIndex(anyString());
+        verify(openSearchIndexer).removeResourceIndexesByDataModel(anyString(), eq(null));
+    }
+
+    @Test
+    void deleteVersionedModel() {
+        when(coreRepository.graphExists(anyString())).thenReturn(true);
+        when(coreRepository.fetch(anyString())).thenReturn(ModelFactory.createDefaultModel());
+        var mockUser = spy(EndpointUtils.mockUser);
+        when(userProvider.getUser()).thenReturn(mockUser);
+        dataModelService.delete("test", "1.0.1");
+
+        verify(coreRepository).graphExists(anyString());
+        verify(mockUser).isSuperuser();
+        verify(coreRepository).delete(anyString());
+        verify(openSearchIndexer).deleteModelFromIndex(anyString());
+        verify(openSearchIndexer).removeResourceIndexesByDataModel(anyString(), eq("1.0.1"));
+    }
+
+    @Test
+    void deleteNotSuperUser() {
+        when(userProvider.getUser()).thenReturn(mock(YtiUser.class));
+        assertThrows(AuthorizationException.class, () -> dataModelService.delete("test", null));
+        assertThrows(AuthorizationException.class, () -> dataModelService.delete("test", "1.0.1"));
     }
 
     @Test
     void deleteNotExists() {
-        assertThrows(ResourceNotFoundException.class, () -> dataModelService.delete("test"));
+        when(userProvider.getUser()).thenReturn(EndpointUtils.mockUser);
+
+        assertThrows(ResourceNotFoundException.class, () -> dataModelService.delete("test", null));
+
+        verify(coreRepository, never()).delete(anyString());
+        verifyNoInteractions(openSearchIndexer);
     }
 
     @Test

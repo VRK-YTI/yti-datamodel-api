@@ -5,8 +5,9 @@ import fi.vm.yti.datamodel.api.v2.endpoint.error.ApiError;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexResourceInfo;
 import fi.vm.yti.datamodel.api.v2.service.ClassService;
 import fi.vm.yti.datamodel.api.v2.validator.ValidClass;
-import fi.vm.yti.datamodel.api.v2.validator.ValidResourceIdentifier;
 import fi.vm.yti.datamodel.api.v2.validator.ValidNodeShape;
+import fi.vm.yti.datamodel.api.v2.validator.ValidResourceIdentifier;
+import fi.vm.yti.datamodel.api.v2.validator.ValidSemanticVersion;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -101,7 +102,7 @@ public class ClassController {
     @GetMapping(value = "/library/{prefix}/{classIdentifier}", produces = APPLICATION_JSON_VALUE)
     public ClassInfoDTO getClass(@PathVariable @Parameter(description = "Data model prefix") String prefix,
                                  @PathVariable @Parameter(description = "Class identifier") @ValidResourceIdentifier String classIdentifier,
-                                 @RequestParam(required = false) @Parameter(description = "Version") String version){
+                                 @RequestParam(required = false) @Parameter(description = "Version") @ValidSemanticVersion String version) {
         return (ClassInfoDTO) classService.get(prefix, version, classIdentifier);
     }
 
@@ -112,7 +113,7 @@ public class ClassController {
     })    @GetMapping(value = "/profile/{prefix}/{nodeShapeIdentifier}", produces = APPLICATION_JSON_VALUE)
     public NodeShapeInfoDTO getNodeShape(@PathVariable @Parameter(description = "Data model prefix") String prefix,
                                          @PathVariable @Parameter(description = "Node shape identifier") @ValidResourceIdentifier String nodeShapeIdentifier,
-                                         @RequestParam(required = false) @Parameter(description = "Version") String version){
+                                         @RequestParam(required = false) @Parameter(description = "Version") @ValidSemanticVersion String version) {
         return (NodeShapeInfoDTO) classService.get(prefix, version, nodeShapeIdentifier);
     }
 
