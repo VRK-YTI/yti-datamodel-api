@@ -10,7 +10,7 @@ public class PropertyShapeInfoDTO extends ResourceInfoBaseDTO {
     private ResourceType type;
     private UriDTO path;
     private UriDTO classType;
-    private String dataType;
+    private UriDTO dataType;
     private List<String> allowedValues = new ArrayList<>();
     private String defaultValue;
     private String hasValue;
@@ -50,11 +50,12 @@ public class PropertyShapeInfoDTO extends ResourceInfoBaseDTO {
         this.classType = classType;
     }
 
-    public String getDataType() {
+
+    public UriDTO getDataType() {
         return dataType;
     }
 
-    public void setDataType(String dataType) {
+    public void setDataType(UriDTO dataType) {
         this.dataType = dataType;
     }
 

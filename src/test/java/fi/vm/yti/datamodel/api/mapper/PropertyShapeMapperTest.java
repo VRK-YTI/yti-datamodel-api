@@ -120,7 +120,7 @@ class PropertyShapeMapperTest {
         assertTrue(dto.getCodeLists().contains("http://uri.suomi.fi/codelist/Test"));
         assertEquals("hasValue", dto.getHasValue());
         assertEquals("foo", dto.getDefaultValue());
-        assertEquals("xsd:integer", dto.getDataType());
+        assertEquals("xsd:integer", dto.getDataType().getCurie());
         assertEquals(ResourceType.ATTRIBUTE, dto.getType());
     }
 
