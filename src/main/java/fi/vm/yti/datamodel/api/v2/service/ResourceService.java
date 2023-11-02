@@ -14,6 +14,8 @@ import fi.vm.yti.datamodel.api.v2.utils.SparqlUtils;
 import fi.vm.yti.security.AuthenticatedUserProvider;
 import org.apache.jena.arq.querybuilder.AskBuilder;
 import org.apache.jena.arq.querybuilder.ConstructBuilder;
+import org.apache.jena.arq.querybuilder.SelectBuilder;
+import org.apache.jena.arq.querybuilder.WhereBuilder;
 import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.rdf.model.*;
 import org.apache.jena.sparql.path.PathFactory;
@@ -25,10 +27,7 @@ import org.topbraid.shacl.vocabulary.SH;
 import javax.annotation.Nonnull;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -170,7 +169,26 @@ public class ResourceService {
         if(!coreRepository.resourceExistsInGraph(modelURI , resourceUri)){
             throw new ResourceNotFoundException(resourceUri);
         }
+
+
+        var selectBuilder = new SelectBuilder()
+                .addPrefixes(ModelConstants.PREFIXES);
+        var exprFactory = selectBuilder.getExprFactory();
+        var expr = exprFactory.notexists(new WhereBuilder().addWhere("?s", DCTerms.hasPart, "?o"));
+        selectBuilder.addFilter(expr);
+        selectBuilder.addGraph(NodeFactory.createURI(modelURI), "?s", "?p", "?o");
+        selectBuilder.addWhere("?s", "?p", NodeFactory.createURI(resourceUri));
+
+        var references = new ArrayList<String>();
+        coreRepository.querySelect(selectBuilder.build(), res -> references.add(res.get("s").toString()));
+        if(!references.isEmpty()) {
+            //Cannot list subjects in error message because we cannot list blank nodes
+            //TODO is it possible to do?
+            throw new MappingError("referenced-by-others");
+        }
+
         var model = coreRepository.fetch(modelURI);
+
         check(authorizationManager.hasRightToModel(prefix, model));
         coreRepository.deleteResource(resourceUri);
         openSearchIndexer.deleteResourceFromIndex(resourceUri);

@@ -15,11 +15,14 @@ import fi.vm.yti.datamodel.api.v2.repository.ImportsRepository;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelUtils;
 import fi.vm.yti.security.AuthenticatedUserProvider;
 import org.apache.jena.arq.querybuilder.AskBuilder;
+import org.apache.jena.arq.querybuilder.SelectBuilder;
+import org.apache.jena.arq.querybuilder.WhereBuilder;
 import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.rdf.model.SimpleSelector;
+import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDFS;
 import org.slf4j.Logger;
@@ -31,10 +34,7 @@ import org.topbraid.shacl.vocabulary.SH;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -275,6 +275,23 @@ public class ClassService {
         if(!coreRepository.resourceExistsInGraph(modelURI , classURI)){
             throw new ResourceNotFoundException(classURI);
         }
+
+        var selectBuilder = new SelectBuilder()
+                .addPrefixes(ModelConstants.PREFIXES);
+        var exprFactory = selectBuilder.getExprFactory();
+        var expr = exprFactory.notexists(new WhereBuilder().addWhere("?s", DCTerms.hasPart, "?o"));
+        selectBuilder.addFilter(expr);
+        selectBuilder.addGraph(NodeFactory.createURI(modelURI), "?s", "?p", "?o");
+        selectBuilder.addWhere("?s", "?p", NodeFactory.createURI(classURI));
+
+        var references = new ArrayList<String>();
+        coreRepository.querySelect(selectBuilder.build(), res -> references.add(res.get("s").toString()));
+        if(!references.isEmpty()) {
+            //Cannot list subjects in error message because we cannot list blank nodes
+            //TODO is it possible to do?
+            throw new MappingError("Class is referenced in other resources");
+        }
+
         var model = coreRepository.fetch(modelURI);
         check(authorizationManager.hasRightToModel(prefix, model));
         coreRepository.deleteResource(classURI);
