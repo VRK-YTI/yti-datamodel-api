@@ -12,6 +12,7 @@ public class DatamodelInfo {
     private Status status;
     private ModelType modelType;
     private String uri;
+    private String version;
 
     public Map<String, String> getLabel() {
         return label;
@@ -51,5 +52,13 @@ public class DatamodelInfo {
 
     public void setUri(String uri) {
         this.uri = uri;
+    }
+
+    public String getVersion() {
+        return version;
+    }
+
+    public void setVersion(String version) {
+        this.version = version;
     }
 }

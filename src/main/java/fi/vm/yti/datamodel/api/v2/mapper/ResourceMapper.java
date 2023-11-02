@@ -299,7 +299,6 @@ public class ResourceMapper {
         indexResource.setNamespace(resource.getNamespace());
         indexResource.setIdentifier(resource.getIdentifier());
 
-
         var modelIri = resource.getVersionIri() != null ? resource.getVersionIri() : resource.getIsDefinedBy();
 
         var dataModel = dataModels.get(modelIri);
@@ -309,6 +308,7 @@ public class ResourceMapper {
             dataModelInfo.setStatus(dataModel.getStatus());
             dataModelInfo.setLabel(dataModel.getLabel());
             dataModelInfo.setGroups(dataModel.getIsPartOf());
+            dataModelInfo.setVersion(dataModel.getVersion());
         }
         dataModelInfo.setUri(resource.getIsDefinedBy());
         indexResource.setDataModelInfo(dataModelInfo);
