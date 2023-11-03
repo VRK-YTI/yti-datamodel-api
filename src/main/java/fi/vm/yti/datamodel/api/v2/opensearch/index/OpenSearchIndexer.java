@@ -353,7 +353,7 @@ public class OpenSearchIndexer {
         );
     }
 
-    private Map<String, org.opensearch.client.opensearch._types.mapping.Property> getModelProperties() {
+    private Map<String, Property> getModelProperties() {
         return Map.ofEntries(
                 Map.entry("id", getKeywordProperty()),
                 Map.entry("status", getKeywordProperty()),
@@ -370,7 +370,7 @@ public class OpenSearchIndexer {
         );
     }
 
-    private Map<String, org.opensearch.client.opensearch._types.mapping.Property> getClassProperties() {
+    private Map<String, Property> getClassProperties() {
         return Map.ofEntries(
                 Map.entry("id", getKeywordProperty()),
                 Map.entry("status", getKeywordProperty()),
@@ -387,7 +387,7 @@ public class OpenSearchIndexer {
         );
     }
 
-    private Map<String, org.opensearch.client.opensearch._types.mapping.Property> getExternalResourcesProperties() {
+    private Map<String, Property> getExternalResourcesProperties() {
         return Map.of("id", getKeywordProperty(),
                 "status", getKeywordProperty(),
                 "isDefinedBy", getKeywordProperty(),
@@ -402,11 +402,12 @@ public class OpenSearchIndexer {
                 .mapping(getTextKeyWordProperty()).build());
     }
 
-    private static org.opensearch.client.opensearch._types.mapping.Property getTextKeyWordProperty() {
-        return new org.opensearch.client.opensearch._types.mapping.Property.Builder()
+    private static Property getTextKeyWordProperty() {
+        return new Property.Builder()
                 .text(new TextProperty.Builder()
                         .fields("keyword",
                                 new KeywordProperty.Builder()
+                                        .normalizer("lowercase")
                                         .ignoreAbove(256)
                                         .build()
                                         ._toProperty())
@@ -415,14 +416,14 @@ public class OpenSearchIndexer {
                 .build();
     }
 
-    private static org.opensearch.client.opensearch._types.mapping.Property getKeywordProperty() {
-        return new org.opensearch.client.opensearch._types.mapping.Property.Builder()
+    private static Property getKeywordProperty() {
+        return new Property.Builder()
                 .keyword(new KeywordProperty.Builder().build())
                 .build();
     }
 
-    private static org.opensearch.client.opensearch._types.mapping.Property getDateProperty() {
-        return new org.opensearch.client.opensearch._types.mapping.Property.Builder()
+    private static Property getDateProperty() {
+        return new Property.Builder()
                 .date(new DateProperty.Builder().build()).build();
     }
 }
