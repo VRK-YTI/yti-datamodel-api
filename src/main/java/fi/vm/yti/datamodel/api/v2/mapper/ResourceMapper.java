@@ -385,15 +385,11 @@ public class ResourceMapper {
         dto.setSubResourceOf(MapperUtils.uriToURIDTOs(subProperties, model));
         dto.setEquivalentResource(MapperUtils.uriToURIDTOs(equivalentProperties, model));
         dto.setDomain(MapperUtils.uriToURIDTO(domain, model));
+        dto.setRange(MapperUtils.uriToURIDTO(range, model));
 
         dto.setFunctionalProperty(MapperUtils.hasType(resourceResource, OWL.FunctionalProperty));
 
-        // attribute's range is data type, e.g. rdfs:Literal
-        // association's range is URI
-        if (dto.getType().equals(ResourceType.ATTRIBUTE) && range != null) {
-            dto.setRange(new UriDTO(range, range));
-        } else {
-            dto.setRange(MapperUtils.uriToURIDTO(range, model));
+        if (dto.getType().equals(ResourceType.ASSOCIATION)) {
             dto.setTransitiveProperty(MapperUtils.hasType(resourceResource, OWL.TransitiveProperty));
             dto.setReflexiveProperty(MapperUtils.hasType(resourceResource, OWL2.ReflexiveProperty));
         }
@@ -424,7 +420,7 @@ public class ResourceMapper {
         dto.setClassType(MapperUtils.uriToURIDTO(
                 MapperUtils.propertyToString(resource, SH.class_), model)
         );
-        dto.setDataType(MapperUtils.propertyToString(resource, SH.datatype));
+        dto.setDataType(MapperUtils.uriToURIDTO(MapperUtils.propertyToString(resource, SH.datatype), model));
         dto.setDefaultValue(MapperUtils.propertyToString(resource, SH.defaultValue));
         dto.setHasValue(MapperUtils.propertyToString(resource, SH.hasValue));
         dto.setPath(MapperUtils.uriToURIDTO(

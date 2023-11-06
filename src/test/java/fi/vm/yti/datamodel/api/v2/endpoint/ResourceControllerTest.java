@@ -142,7 +142,7 @@ class ResourceControllerTest {
         args.add(Arguments.of(testType, resourceDTO));
 
         resourceDTO = createResourceDTO(false, "attribute");
-        resourceDTO.setRange("notreal:type");
+        resourceDTO.setRange("http://www.w3.org/2002/07/owl#Invalid");
         args.add(Arguments.of("attribute", resourceDTO));
 
         resourceDTO = createResourceDTO(false, "association");
@@ -422,7 +422,7 @@ class ResourceControllerTest {
             dto.setTransitiveProperty(true);
             dto.setReflexiveProperty(true);
         } else {
-            dto.setRange("owl:real");
+            dto.setRange("http://www.w3.org/2002/07/owl#real");
 
         }
         dto.setNote(Map.of("fi", "test note"));

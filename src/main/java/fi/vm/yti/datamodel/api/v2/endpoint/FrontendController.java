@@ -3,6 +3,7 @@ package fi.vm.yti.datamodel.api.v2.endpoint;
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
 import fi.vm.yti.datamodel.api.v2.dto.OrganizationDTO;
 import fi.vm.yti.datamodel.api.v2.dto.ServiceCategoryDTO;
+import fi.vm.yti.datamodel.api.v2.dto.UriDTO;
 import fi.vm.yti.datamodel.api.v2.opensearch.dto.*;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexModel;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexResource;
@@ -16,6 +17,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.apache.jena.graph.NodeFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,7 +29,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
@@ -105,8 +109,15 @@ public class FrontendController {
     @Operation(summary = "Get supported data types")
     @ApiResponse(responseCode = "200", description = "List of supported data types")
     @GetMapping(path = "/data-types", produces = APPLICATION_JSON_VALUE)
-    public Collection<String> getSupportedDataTypes() {
-        return ModelConstants.SUPPORTED_DATA_TYPES;
+    public Collection<UriDTO> getSupportedDataTypes() {
+        var namespaceURIs = ModelConstants.PREFIXES.entrySet().stream()
+                .collect(Collectors.toMap(Map.Entry::getValue, Map.Entry::getKey));
+
+        return ModelConstants.SUPPORTED_DATA_TYPES.stream().map(dataType -> {
+            var uri = NodeFactory.createURI(dataType);
+            var prefix = namespaceURIs.get(uri.getNameSpace());
+            return new UriDTO(dataType, String.format("%s:%s", prefix, uri.getLocalName()));
+        }).collect(Collectors.toSet());
     }
 
     @Operation(summary = "Get resolved external namespaces")
