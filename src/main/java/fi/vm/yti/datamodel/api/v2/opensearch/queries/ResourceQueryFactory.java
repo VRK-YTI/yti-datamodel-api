@@ -39,7 +39,7 @@ public class ResourceQueryFactory {
             must.add(QueryFactoryUtils.labelQuery(query));
         }
 
-        if(request.getLimitToDataModel() != null || restrictedDataModels != null || externalNamespaces != null) {
+        if(request.getLimitToDataModel() != null || internalNamespaces != null || restrictedDataModels != null || externalNamespaces != null) {
             must.add(getIncludedNamespacesQuery(request, externalNamespaces, internalNamespaces, restrictedDataModels));
         }
 
@@ -79,7 +79,7 @@ public class ResourceQueryFactory {
 
     private static Query getIncludedNamespacesQuery(ResourceSearchRequest request, List<String> externalNamespaces, List<String> internalNamespaces, List<String> restrictedDataModels) {
         // filter out restricted models from included internal namespaces
-        var internalNamespacesCondition = getInternalNamespaceCondition(internalNamespaces, restrictedDataModels);
+        var internalNamespacesCondition = getInternalNamespaceCondition(request.isFromAddedNamespaces(), internalNamespaces, restrictedDataModels);
 
         var builder = new BoolQuery.Builder();
         builder.minimumShouldMatch("1");
@@ -130,14 +130,14 @@ public class ResourceQueryFactory {
      * @param restrictedDataModels models to include based on query by model type, status, group etc
      * @return intersection of restricted models
      */
-    private static List<String> getInternalNamespaceCondition(List<String> internalNamespaces, List<String> restrictedDataModels) {
+    private static List<String> getInternalNamespaceCondition(boolean isFromAddedNamespaces, List<String> internalNamespaces, List<String> restrictedDataModels) {
         //no need to intersect if other one is null
         if(restrictedDataModels == null) {
             return internalNamespaces;
         }
 
         //internalNamespaces cannot be null so check return restrictedModels if its empty
-        if(internalNamespaces.isEmpty()) {
+        if(!isFromAddedNamespaces && internalNamespaces.isEmpty()) {
             return restrictedDataModels;
         }
 
