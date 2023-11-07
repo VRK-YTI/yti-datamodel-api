@@ -17,6 +17,7 @@ import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import fi.vm.yti.datamodel.api.v2.repository.ImportsRepository;
 import fi.vm.yti.security.AuthenticatedUserProvider;
 import fi.vm.yti.security.YtiUser;
+import org.apache.jena.query.Query;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Resource;
@@ -30,13 +31,13 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.net.URISyntaxException;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -53,9 +54,6 @@ class ClassServiceTest {
 
     @MockBean
     AuthorizationManager authorizationManager;
-
-    @MockBean
-    ResourceService resourceService;
 
     @MockBean
     ImportsRepository importsRepository;
@@ -75,17 +73,15 @@ class ClassServiceTest {
     @MockBean
     SearchIndexService searchIndexService;
 
+    @SpyBean
     @Autowired
     ClassService classService;
-
-    private static final UUID RANDOM_ORG = UUID.randomUUID();
 
     @Test
     void get() {
         when(coreRepository.resourceExistsInGraph(anyString(), anyString())).thenReturn(true);
         when(coreRepository.fetch(anyString())).thenReturn(ModelFactory.createDefaultModel());
         when(terminologyService.mapConcept()).thenReturn(mock(Consumer.class));
-        when(resourceService.mapUriLabels(anySet())).thenReturn(mock(Consumer.class));
 
         try(var mapper = mockStatic(ClassMapper.class)) {
             classService.get("test", null, "TestClass");
@@ -102,7 +98,6 @@ class ClassServiceTest {
         when(coreRepository.resourceExistsInGraph(anyString(), anyString())).thenReturn(true);
         when(coreRepository.fetch(anyString())).thenReturn(ModelFactory.createDefaultModel());
         when(terminologyService.mapConcept()).thenReturn(mock(Consumer.class));
-        when(resourceService.mapUriLabels(anySet())).thenReturn(mock(Consumer.class));
 
         try(var mapper = mockStatic(ClassMapper.class)) {
             classService.get("test", "1.0.1", "TestClass");
@@ -291,7 +286,8 @@ class ClassServiceTest {
         when(authorizationManager.hasRightToModel(anyString(), any(Model.class))).thenReturn(true);
         when(coreRepository.fetch(anyString())).thenReturn(model);
         when(coreRepository.resourceExistsInGraph(anyString(), anyString())).thenReturn(true);
-        when(resourceService.findResources(eq(Set.of(attributeURI)), anySet())).thenReturn(restrictionQueryResult);
+        when(coreRepository.queryConstruct(any(Query.class))).thenReturn(restrictionQueryResult);
+        when(importsRepository.queryConstruct(any(Query.class))).thenReturn(ModelFactory.createDefaultModel());
 
         classService.handleAddClassRestrictionReference("model", "class-2",
                 attributeURI);
@@ -324,8 +320,8 @@ class ClassServiceTest {
         when(authorizationManager.hasRightToModel(anyString(), any(Model.class))).thenReturn(true);
         when(coreRepository.fetch(anyString())).thenReturn(model);
         when(coreRepository.resourceExistsInGraph(anyString(), anyString())).thenReturn(true);
-        when(resourceService.findResources(eq(Set.of(modelURI + "/association-1")), anySet())).thenReturn(restrictionQueryResult);
-        when(resourceService.findResources(eq(Set.of(modelURI + "/some-class")), anySet())).thenReturn(restrictionNewTargetResult);
+        when(classService.findResources(eq(Set.of(modelURI + "/association-1")), anySet())).thenReturn(restrictionQueryResult);
+        when(classService.findResources(eq(Set.of(modelURI + "/some-class")), anySet())).thenReturn(restrictionNewTargetResult);
 
         classService.handleUpdateClassRestrictionReference("model", "class-update-target",
                 restrictionResource.getURI(),
@@ -340,6 +336,20 @@ class ClassServiceTest {
                 ResourceFactory.createResource(modelURI + "/some-class"));
 
         assertTrue(stmtIterator.hasNext());
+    }
+
+    @Test
+    void testCheckCyclicalReferences() {
+        classService.checkCyclicalReference("http://uri.suomi.fi/datamodel/ns/Model-2/Class-1", OWL.equivalentClass, "http://uri.suomi.fi/datamodel/ns/Model-1/class-1");
+
+        var captor = ArgumentCaptor.forClass(Query.class);
+        verify(coreRepository).queryAsk(captor.capture());
+        assertEquals("""
+                        ASK
+                        WHERE
+                          { <http://uri.suomi.fi/datamodel/ns/Model-2/Class-1> (<http://www.w3.org/2002/07/owl#equivalentClass>){*} <http://uri.suomi.fi/datamodel/ns/Model-1/class-1>}
+                        """,
+                captor.getValue().toString());
     }
 
     private static ClassDTO createClassDTO(boolean update){

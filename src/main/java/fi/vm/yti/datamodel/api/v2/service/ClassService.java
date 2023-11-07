@@ -15,14 +15,11 @@ import fi.vm.yti.datamodel.api.v2.repository.ImportsRepository;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelUtils;
 import fi.vm.yti.security.AuthenticatedUserProvider;
 import org.apache.jena.arq.querybuilder.AskBuilder;
-import org.apache.jena.arq.querybuilder.SelectBuilder;
-import org.apache.jena.arq.querybuilder.WhereBuilder;
 import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.rdf.model.SimpleSelector;
-import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDFS;
 import org.slf4j.Logger;
@@ -34,21 +31,22 @@ import org.topbraid.shacl.vocabulary.SH;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static fi.vm.yti.security.AuthorizationException.check;
 
 @Service
-public class ClassService {
+public class ClassService extends BaseResourceService {
 
     private final Logger logger = LoggerFactory.getLogger(ClassService.class);
 
-    private final ResourceService resourceService;
     private final CoreRepository coreRepository;
     private final ImportsRepository importsRepository;
-
     private final AuthorizationManager authorizationManager;
     private final AuthenticatedUserProvider userProvider;
     private final TerminologyService terminologyService;
@@ -57,8 +55,7 @@ public class ClassService {
     private final SearchIndexService searchIndexService;
 
     @Autowired
-    public ClassService(ResourceService resourceService,
-                        CoreRepository coreRepository,
+    public ClassService(CoreRepository coreRepository,
                         ImportsRepository importsRepository,
                         AuthorizationManager authorizationManager,
                         AuthenticatedUserProvider userProvider,
@@ -66,7 +63,7 @@ public class ClassService {
                         GroupManagementService groupManagementService,
                         OpenSearchIndexer openSearchIndexer,
                         SearchIndexService searchIndexService) {
-        this.resourceService = resourceService;
+        super(coreRepository, importsRepository, authorizationManager, openSearchIndexer);
         this.coreRepository = coreRepository;
         this.importsRepository = importsRepository;
         this.authorizationManager = authorizationManager;
@@ -119,7 +116,7 @@ public class ClassService {
             var restrictionURIs = restrictions.stream()
                     .map(SimpleResourceDTO::getUri)
                     .collect(Collectors.toSet());
-            var findResourcesModel = resourceService.findResources(restrictionURIs, includedNamespaces);
+            var findResourcesModel = findResources(restrictionURIs, includedNamespaces);
 
             ClassMapper.addClassResourcesToDTO(findResourcesModel, restrictions, (ClassInfoDTO) dto, terminologyService.mapConceptToResource());
         } else {
@@ -131,7 +128,7 @@ public class ClassService {
         }
 
         terminologyService.mapConcept().accept(dto);
-        MapperUtils.addLabelsToURIs(dto, resourceService.mapUriLabels(includedNamespaces));
+        MapperUtils.addLabelsToURIs(dto, mapUriLabels(includedNamespaces));
         return dto;
     }
 
@@ -176,8 +173,7 @@ public class ClassService {
             ClassMapper.createOntologyClassAndMapToModel(modelUri, model, (ClassDTO) dto, userProvider.getUser());
         }
 
-        coreRepository.put(modelUri, model);
-        openSearchIndexer.createResourceToIndex(ResourceMapper.mapToIndexResource(model, classUri));
+        saveResource(model, modelUri, classUri, false);
         return new URI(classUri);
     }
 
@@ -215,9 +211,9 @@ public class ClassService {
         var classResource = model.getResource(classURI);
         if (MapperUtils.isLibrary(model.getResource(graph))) {
             var classDTO = (ClassDTO) dto;
-            resourceService.checkCyclicalReferences(classDTO.getEquivalentClass(), OWL.equivalentClass, classURI);
-            resourceService.checkCyclicalReferences(classDTO.getSubClassOf(), RDFS.subClassOf, classURI);
-            resourceService.checkCyclicalReferences(classDTO.getDisjointWith(), OWL.disjointWith, classURI);
+            checkCyclicalReferences(classDTO.getEquivalentClass(), OWL.equivalentClass, classURI);
+            checkCyclicalReferences(classDTO.getSubClassOf(), RDFS.subClassOf, classURI);
+            checkCyclicalReferences(classDTO.getDisjointWith(), OWL.disjointWith, classURI);
             ClassMapper.mapToUpdateOntologyClass(model, graph, classResource, classDTO, userProvider.getUser());
         } else {
             var nodeShape = (NodeShapeDTO) dto;
@@ -225,8 +221,8 @@ public class ClassService {
             if(nodeShape.getTargetNode() != null && nodeShape.getTargetNode().equals(classResource.getURI())) {
                 throw new MappingError("Target node is a self reference");
             }
-            resourceService.checkCyclicalReference(nodeShape.getTargetClass(), SH.targetClass, classURI);
-            resourceService.checkCyclicalReference(nodeShape.getTargetNode(), SH.targetNode, classURI);
+            checkCyclicalReference(nodeShape.getTargetClass(), SH.targetClass, classURI);
+            checkCyclicalReference(nodeShape.getTargetNode(), SH.targetNode, classURI);
 
             var oldNode = MapperUtils.propertyToString(classResource, SH.node);
             var oldTarget = MapperUtils.propertyToString(classResource, SH.targetClass);
@@ -258,44 +254,8 @@ public class ClassService {
             ClassMapper.mapToUpdateNodeShape(model, graph, classResource, (NodeShapeDTO) dto,
                     nodeShapeProperties, userProvider.getUser());
         }
-        coreRepository.put(graph, model);
 
-        var indexClass = ResourceMapper.mapToIndexResource(model, classURI);
-        openSearchIndexer.updateResourceToIndex(indexClass);
-    }
-
-    /**
-     * Delete a Class or Node shape
-     * @param prefix Model prefix
-     * @param identifier Resource identifier
-     */
-    public void delete(String prefix, String identifier) {
-        var modelURI = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
-        var classURI = modelURI + ModelConstants.RESOURCE_SEPARATOR + identifier;
-        if(!coreRepository.resourceExistsInGraph(modelURI , classURI)){
-            throw new ResourceNotFoundException(classURI);
-        }
-
-        var selectBuilder = new SelectBuilder()
-                .addPrefixes(ModelConstants.PREFIXES);
-        var exprFactory = selectBuilder.getExprFactory();
-        var expr = exprFactory.notexists(new WhereBuilder().addWhere("?s", DCTerms.hasPart, "?o"));
-        selectBuilder.addFilter(expr);
-        selectBuilder.addGraph(NodeFactory.createURI(modelURI), "?s", "?p", "?o");
-        selectBuilder.addWhere("?s", "?p", NodeFactory.createURI(classURI));
-
-        var references = new ArrayList<String>();
-        coreRepository.querySelect(selectBuilder.build(), res -> references.add(res.get("s").toString()));
-        if(!references.isEmpty()) {
-            //Cannot list subjects in error message because we cannot list blank nodes
-            //TODO is it possible to do?
-            throw new MappingError("Class is referenced in other resources");
-        }
-
-        var model = coreRepository.fetch(modelURI);
-        check(authorizationManager.hasRightToModel(prefix, model));
-        coreRepository.deleteResource(classURI);
-        openSearchIndexer.deleteResourceFromIndex(classURI);
+        saveResource(model, graph, classURI, true);
     }
 
     private Set<String> getTargetNodeProperties(String targetNode, Set<String> graphsIncluded) {
@@ -310,7 +270,7 @@ public class ClassService {
             }
             handledNodeShapes.add(targetNode);
 
-            var nodeModel = resourceService.findResources(Set.of(targetNode), graphsIncluded);
+            var nodeModel = findResources(Set.of(targetNode), graphsIncluded);
             var nodeResource = nodeModel.getResource(targetNodeURI);
 
             propertyShapes.addAll(nodeResource.listProperties(SH.property)
@@ -342,7 +302,7 @@ public class ClassService {
         var newProperties = nodeShapeDTO.getProperties().stream()
                 .filter(p -> !existingProperties.contains(p))
                 .collect(Collectors.toSet());
-        var newPropertiesModel = resourceService.findResources(newProperties, included);
+        var newPropertiesModel = findResources(newProperties, included);
 
         Predicate<String> checkFreeIdentifier =
                 (var uri) -> coreRepository.resourceExistsInGraph(model.getResource(classURI).getNameSpace(), uri);
@@ -362,15 +322,6 @@ public class ClassService {
                         .toList());
 
         return allProperties;
-    }
-
-    public boolean exists(String prefix, String identifier) {
-        // identifiers e.g. corner-abcd1234 are reserved for visualization
-        if (identifier.startsWith("corner-")) {
-            return true;
-        }
-        var graphUri = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
-        return coreRepository.resourceExistsInGraph(graphUri, graphUri + ModelConstants.RESOURCE_SEPARATOR + identifier);
     }
 
     public void handlePropertyShapeReference(String prefix, String nodeShapeIdentifier, String uri, boolean delete) {
@@ -403,7 +354,7 @@ public class ClassService {
         var modelResource = model.getResource(modelURI);
 
         var includedNamespaces = DataModelUtils.getInternalReferenceModels(modelURI, modelResource);
-        var result = resourceService.findResources(Set.of(restrictionURI), includedNamespaces);
+        var result = findResources(Set.of(restrictionURI), includedNamespaces);
         var restrictionResource = result.getResource(restrictionURI);
 
         if (!restrictionResource.listProperties().hasNext()) {
@@ -415,7 +366,7 @@ public class ClassService {
         } else {
             ResourceType resourceType;
             if (MapperUtils.hasType(restrictionResource, OWL.ObjectProperty)) {
-                var restrictionTargetResult = resourceService.findResources(Set.of(newTarget), includedNamespaces);
+                var restrictionTargetResult = findResources(Set.of(newTarget), includedNamespaces);
                 var newTargetResource = restrictionTargetResult.getResource(DataModelUtils.removeVersionFromURI(newTarget));
                 if (!newTargetResource.listProperties().hasNext()) {
                     throw new ResourceNotFoundException(newTarget);
@@ -449,7 +400,7 @@ public class ClassService {
         var classResource = model.getResource(classURI);
         var modelResource = model.getResource(modelURI);
         var includedNamespaces = DataModelUtils.getInternalReferenceModels(modelURI, modelResource);
-        var findResourceModel = resourceService.findResources(Set.of(uri), includedNamespaces);
+        var findResourceModel = findResources(Set.of(uri), includedNamespaces);
         var propertyResource = findResourceModel.getResource(uri);
         if (findResourceModel.size() == 0) {
             throw new ResourceNotFoundException(uri);
@@ -477,7 +428,4 @@ public class ClassService {
         coreRepository.put(modelURI, model);
     }
 
-    public URI renameResource(String prefix, String oldIdentifier, String newIdentifier) throws URISyntaxException {
-        return resourceService.renameResource(prefix, oldIdentifier, newIdentifier);
-    }
 }

@@ -10,16 +10,14 @@ import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import fi.vm.yti.datamodel.api.v2.repository.ImportsRepository;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelUtils;
-import fi.vm.yti.datamodel.api.v2.utils.SparqlUtils;
 import fi.vm.yti.security.AuthenticatedUserProvider;
 import org.apache.jena.arq.querybuilder.AskBuilder;
-import org.apache.jena.arq.querybuilder.ConstructBuilder;
-import org.apache.jena.arq.querybuilder.SelectBuilder;
-import org.apache.jena.arq.querybuilder.WhereBuilder;
 import org.apache.jena.graph.NodeFactory;
-import org.apache.jena.rdf.model.*;
-import org.apache.jena.sparql.path.PathFactory;
-import org.apache.jena.vocabulary.*;
+import org.apache.jena.rdf.model.RDFNode;
+import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.vocabulary.OWL;
+import org.apache.jena.vocabulary.RDF;
+import org.apache.jena.vocabulary.RDFS;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.topbraid.shacl.vocabulary.SH;
@@ -27,14 +25,13 @@ import org.topbraid.shacl.vocabulary.SH;
 import javax.annotation.Nonnull;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.*;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
+import java.util.List;
+import java.util.Set;
 
 import static fi.vm.yti.security.AuthorizationException.check;
 
 @Service
-public class ResourceService {
+public class ResourceService extends BaseResourceService {
 
     private final CoreRepository coreRepository;
     private final ImportsRepository importsRepository;
@@ -43,7 +40,6 @@ public class ResourceService {
     private final TerminologyService terminologyService;
     private final CodeListService codeListService;
     private final AuthenticatedUserProvider userProvider;
-    private final OpenSearchIndexer openSearchIndexer;
 
     @Autowired
     public ResourceService(CoreRepository coreRepository,
@@ -54,6 +50,7 @@ public class ResourceService {
                            CodeListService codeListService,
                            AuthenticatedUserProvider userProvider,
                            OpenSearchIndexer openSearchIndexer){
+        super(coreRepository, importsRepository, authorizationManager, openSearchIndexer);
         this.coreRepository = coreRepository;
         this.importsRepository = importsRepository;
         this.authorizationManager = authorizationManager;
@@ -61,7 +58,6 @@ public class ResourceService {
         this.terminologyService = terminologyService;
         this.codeListService = codeListService;
         this.userProvider = userProvider;
-        this.openSearchIndexer = openSearchIndexer;
     }
 
     public ResourceInfoBaseDTO get(String prefix, String version, String identifier) {
@@ -125,9 +121,7 @@ public class ResourceService {
             resourceUri = ResourceMapper.mapToResource(graphUri, model, (ResourceDTO) dto, resourceType, userProvider.getUser());
         }
 
-        coreRepository.put(graphUri, model);
-        var indexClass = ResourceMapper.mapToIndexResource(model, resourceUri);
-        openSearchIndexer.createResourceToIndex(indexClass);
+        saveResource(model, graphUri, resourceUri, false);
         return new URI(resourceUri);
     }
 
@@ -158,40 +152,7 @@ public class ResourceService {
         }
         terminologyService.resolveConcept(dto.getSubject());
 
-        coreRepository.put(graphUri, model);
-        var indexResource = ResourceMapper.mapToIndexResource(model, resourceUri);
-        openSearchIndexer.updateResourceToIndex(indexResource);
-    }
-
-    public void delete(String prefix, String resourceIdentifier) {
-        var modelURI = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
-        var resourceUri  = modelURI + ModelConstants.RESOURCE_SEPARATOR + resourceIdentifier;
-        if(!coreRepository.resourceExistsInGraph(modelURI , resourceUri)){
-            throw new ResourceNotFoundException(resourceUri);
-        }
-
-
-        var selectBuilder = new SelectBuilder()
-                .addPrefixes(ModelConstants.PREFIXES);
-        var exprFactory = selectBuilder.getExprFactory();
-        var expr = exprFactory.notexists(new WhereBuilder().addWhere("?s", DCTerms.hasPart, "?o"));
-        selectBuilder.addFilter(expr);
-        selectBuilder.addGraph(NodeFactory.createURI(modelURI), "?s", "?p", "?o");
-        selectBuilder.addWhere("?s", "?p", NodeFactory.createURI(resourceUri));
-
-        var references = new ArrayList<String>();
-        coreRepository.querySelect(selectBuilder.build(), res -> references.add(res.get("s").toString()));
-        if(!references.isEmpty()) {
-            //Cannot list subjects in error message because we cannot list blank nodes
-            //TODO is it possible to do?
-            throw new MappingError("referenced-by-others");
-        }
-
-        var model = coreRepository.fetch(modelURI);
-
-        check(authorizationManager.hasRightToModel(prefix, model));
-        coreRepository.deleteResource(resourceUri);
-        openSearchIndexer.deleteResourceFromIndex(resourceUri);
+        saveResource(model, graphUri, resourceUri, true);
     }
 
     public URI copyPropertyShape(String prefix, String propertyShapeIdentifier, String targetPrefix, String newIdentifier) throws URISyntaxException {
@@ -217,19 +178,8 @@ public class ResourceService {
 
         ResourceMapper.mapToCopyToLocalPropertyShape(graphUri, model, propertyShapeIdentifier, targetModel, targetGraph, newIdentifier, userProvider.getUser());
 
-        coreRepository.put(targetGraph, targetModel);
-        var indexResource = ResourceMapper.mapToIndexResource(targetModel, targetGraph + ModelConstants.RESOURCE_SEPARATOR + newIdentifier);
-        openSearchIndexer.createResourceToIndex(indexResource);
+        saveResource(targetModel, targetGraph, targetResource, false);
         return new URI(targetResource);
-    }
-
-    public boolean exists(String prefix, String identifier) {
-        // identifiers e.g. corner-abcd1234 are reserved for visualization
-        if (identifier.startsWith("corner-")) {
-            return true;
-        }
-        var graphUri = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
-        return coreRepository.resourceExistsInGraph(graphUri, graphUri + ModelConstants.RESOURCE_SEPARATOR + identifier);
     }
 
     private void checkDataModelType(Resource modelResource, BaseDTO dto) {
@@ -292,139 +242,4 @@ public class ResourceService {
         return null;
      }
 
-    public Model findResources(Set<String> resourceURIs, Set<String> graphsIncluded) {
-        if (resourceURIs == null || resourceURIs.isEmpty()) {
-            return ModelFactory.createDefaultModel();
-        }
-        var coreBuilder = new ConstructBuilder()
-                .addPrefixes(ModelConstants.PREFIXES);
-        SparqlUtils.addConstructOptional("?graph", coreBuilder, OWL2.versionIRI, "?versionIRI");
-        graphsIncluded.forEach(coreBuilder::from);
-
-        var importsBuilder = new ConstructBuilder()
-                .addPrefixes(ModelConstants.PREFIXES);
-
-        // TODO: resource type specific list of properties?
-        var predicates = List.of(RDFS.isDefinedBy, DCTerms.identifier, RDF.type, RDFS.label,
-                RDFS.range, DCTerms.subject, SH.path, SH.datatype, SH.minCount, SH.maxCount, SH.property);
-
-        var iterator = resourceURIs.iterator();
-        var count = 0;
-        while (iterator.hasNext()) {
-            String uri = iterator.next();
-
-            // fetch resources without version number
-            if (uri.startsWith(ModelConstants.SUOMI_FI_NAMESPACE)) {
-                uri = DataModelUtils.removeVersionFromURI(uri);
-            }
-            var resource = ResourceFactory.createResource(uri);
-            for (var pred : predicates) {
-                var obj = "?" + pred.getLocalName() + count;
-                if (uri.startsWith(ModelConstants.SUOMI_FI_NAMESPACE)) {
-                    coreBuilder.addConstruct(resource, pred, obj);
-                    coreBuilder.addOptional(resource, pred, obj);
-                } else {
-                    importsBuilder.addConstruct(resource, pred, obj);
-                    importsBuilder.addOptional(resource, pred, obj);
-                }
-            }
-            count++;
-        }
-
-        var resultModel = coreRepository.queryConstruct(coreBuilder.build());
-        var importsModel = importsRepository.queryConstruct(importsBuilder.build());
-
-        resultModel.add(importsModel);
-        return resultModel;
-    }
-
-    public Consumer<Set<UriDTO>> mapUriLabels(Set<String> includedNamespaces) {
-
-        return (var uriDtos) -> {
-            var uris = uriDtos.stream()
-                    .filter(u -> u != null && u.getLabel() == null)
-                    .map(UriDTO::getUri)
-                    .collect(Collectors.toSet());
-
-            if (uris.isEmpty()) {
-                return;
-            }
-
-            var model = findResources(uris, includedNamespaces);
-
-            uriDtos.forEach(u -> {
-                if (u != null && u.getLabel() == null) {
-                    var res = model.getResource(u.getUri());
-
-                    // use local name if no rdfs:label defined
-                    u.setLabel(res.hasProperty(RDFS.label)
-                        ? MapperUtils.localizedPropertyToMap(res, RDFS.label)
-                        : Map.of("en", u.getCurie().substring(u.getCurie().lastIndexOf(":") + 1)));
-                }
-            });
-        };
-    }
-
-    public URI renameResource(String prefix, String oldIdentifier, String newIdentifier) throws URISyntaxException {
-        var modelURI = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
-        var resourceURI = modelURI + ModelConstants.RESOURCE_SEPARATOR + oldIdentifier;
-        var newResourceURI = modelURI + ModelConstants.RESOURCE_SEPARATOR + newIdentifier;
-
-        var model = coreRepository.fetch(modelURI);
-
-        if (!coreRepository.resourceExistsInGraph(modelURI, resourceURI)) {
-            throw new ResourceNotFoundException(resourceURI);
-        }
-
-        if (coreRepository.resourceExistsInGraph(modelURI, newResourceURI)) {
-            throw new MappingError("Resource already exists with identifier " + newIdentifier);
-        }
-
-        check(authorizationManager.hasRightToModel(prefix, model));
-
-
-        var newResource = MapperUtils.renameResource(model.getResource(resourceURI), newIdentifier);
-        coreRepository.put(modelURI, model);
-
-        // rename visualization resource as well
-        var visualizationModelUri = ModelConstants.MODEL_POSITIONS_NAMESPACE + prefix;
-        var visualizationResourceUri = visualizationModelUri + ModelConstants.RESOURCE_SEPARATOR + oldIdentifier;
-        if(coreRepository.resourceExistsInGraph(visualizationModelUri, visualizationResourceUri)) {
-            var visualizationModel = coreRepository.fetch(visualizationModelUri);
-            MapperUtils.renameResource(visualizationModel.getResource(visualizationResourceUri), newIdentifier);
-            coreRepository.put(visualizationModelUri, visualizationModel);
-        }
-
-
-        openSearchIndexer.deleteResourceFromIndex(resourceURI);
-        openSearchIndexer.createResourceToIndex(ResourceMapper.mapToIndexResource(model, newResourceURI));
-
-        return new URI(newResource.getURI());
-    }
-
-    public void checkCyclicalReferences(Collection<String> references, Property property, String resourceUri) {
-        var path = PathFactory.pathZeroOrMoreN(PathFactory.pathLink(property.asNode()));
-        var resource = NodeFactory.createURI(resourceUri);
-        references.forEach(ref -> {
-            var query = new AskBuilder()
-                    .addWhere(NodeFactory.createURI(ref), path, resource)
-                    .build();
-            if (coreRepository.queryAsk(query)) {
-                throw new MappingError(ref + " has cyclical reference to this class");
-            }
-        });
-    }
-
-    public void checkCyclicalReference(String reference, Property property, String resourceUri) {
-        if(reference == null) {
-            return;
-        }
-        var path = PathFactory.pathZeroOrMoreN(PathFactory.pathLink(property.asNode()));
-        var query = new AskBuilder()
-                .addWhere(NodeFactory.createURI(reference), path, NodeFactory.createURI(resourceUri))
-                .build();
-        if (coreRepository.queryAsk(query)) {
-            throw new MappingError(reference + " has cyclical reference to this class");
-        }
-    }
 }
