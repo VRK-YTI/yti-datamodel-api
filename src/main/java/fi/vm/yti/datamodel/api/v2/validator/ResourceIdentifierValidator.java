@@ -9,7 +9,7 @@ public class ResourceIdentifierValidator extends BaseValidator implements
     @Override
     public boolean isValid(String identifier, ConstraintValidatorContext context) {
         setConstraintViolationAdded(false);
-        checkIdentifier(context, identifier, "identifier", ValidationConstants.RESOURCE_IDENTIFIER_MAX_LENGTH, false);
+        checkIdentifier(context, identifier, false);
         return !isConstraintViolationAdded();
     }
 }

@@ -34,7 +34,7 @@ public class ClassValidator extends BaseValidator implements
         checkClassResolvable(context, classDTO.getSubClassOf(), "subClassOf");
         checkClassResolvable(context, classDTO.getDisjointWith(), "disjointWith");
         checkSubject(context, classDTO);
-        checkPrefixOrIdentifier(context, classDTO.getIdentifier(), "identifier", ValidationConstants.RESOURCE_IDENTIFIER_MAX_LENGTH, updateClass);
+        checkIdentifier(context, classDTO.getIdentifier(), updateClass);
         checkReservedIdentifier(context, classDTO);
 
         return !isConstraintViolationAdded();

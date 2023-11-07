@@ -21,7 +21,6 @@ public class ValidationConstants {
 
     public static final int PREFIX_MIN_LENGTH = 2;
     public static final int PREFIX_MAX_LENGTH = 32;
-    public static final int RESOURCE_IDENTIFIER_MAX_LENGTH = 32;
     public static final String PREFIX_REGEX = "^[a-z][a-z0-9-_]+";
 
     public static final String RESOURCE_IDENTIFIER_REGEX = "^[a-zA-Z][a-zA-Z0-9-_]+";

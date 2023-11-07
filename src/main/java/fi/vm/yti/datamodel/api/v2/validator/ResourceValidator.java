@@ -41,7 +41,7 @@ public class ResourceValidator extends BaseValidator implements ConstraintValida
         checkNote(context, value);
         checkEquivalentProperty(context, value);
         checkSubPropertyOf(context, value);
-        checkPrefixOrIdentifier(context, value.getIdentifier(), "identifier", ValidationConstants.RESOURCE_IDENTIFIER_MAX_LENGTH, updateProperty);
+        checkIdentifier(context, value.getIdentifier(), updateProperty);
         checkDomain(context, value);
         checkRange(context, value);
 

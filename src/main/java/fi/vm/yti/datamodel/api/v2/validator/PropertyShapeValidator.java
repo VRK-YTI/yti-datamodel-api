@@ -34,7 +34,7 @@ public class PropertyShapeValidator extends BaseValidator implements ConstraintV
         checkEditorialNote(context, value);
         checkStatus(context, value.getStatus());
         checkNote(context, value);
-        checkPrefixOrIdentifier(context, value.getIdentifier(), "identifier", ValidationConstants.RESOURCE_IDENTIFIER_MAX_LENGTH, updateProperty);
+        checkIdentifier(context, value.getIdentifier(), updateProperty);
         checkPath(context, value);
         if(resourceType.equals(ResourceType.ASSOCIATION)){
             checkClassType(context, (AssociationRestriction) value);

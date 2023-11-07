@@ -28,7 +28,7 @@ public class DataModelValidator extends BaseValidator implements
     @Override
     public boolean isValid(DataModelDTO dataModel, ConstraintValidatorContext context) {
         setConstraintViolationAdded(false);
-        checkPrefix(context, dataModel);
+        checkModelPrefix(context, dataModel);
         checkLanguages(context, dataModel);
         checkLabels(context, dataModel);
         checkDescription(context, dataModel);
@@ -52,14 +52,16 @@ public class DataModelValidator extends BaseValidator implements
      * @param context Constraint validator context
      * @param dataModel DataModel
      */
-    private void checkPrefix(ConstraintValidatorContext context, DataModelDTO dataModel){
+    private void checkModelPrefix(ConstraintValidatorContext context, DataModelDTO dataModel){
         final var prefixPropertyLabel = "prefix";
         var prefix = dataModel.getPrefix();
-        checkPrefixOrIdentifier(context, prefix, prefixPropertyLabel, ValidationConstants.PREFIX_MAX_LENGTH, updateModel);
-        //Check prefix text content
+
+        checkPrefix(context, prefix, prefixPropertyLabel, updateModel);
+        // Check prefix text content
         checkPrefixContent(context, prefix, prefixPropertyLabel);
-        //Checking if in use is different for datamodels and its resources so it is not in the above function
-        if(coreRepository.graphExists(ModelConstants.SUOMI_FI_NAMESPACE + prefix)){
+
+        if (coreRepository.graphExists(ModelConstants.SUOMI_FI_NAMESPACE + prefix)) {
+            // Checking if in use is different for data models and its resources so it is not in the above function
             addConstraintViolation(context, "prefix-in-use", prefixPropertyLabel);
         }
     }
@@ -199,7 +201,7 @@ public class DataModelValidator extends BaseValidator implements
             if(namespace.getPrefix() == null || namespace.getNamespace() == null){
                 addConstraintViolation(context, "namespace-missing-value", externalNamespace);
             }else {
-                checkPrefixOrIdentifier(context, namespace.getPrefix(), externalNamespace, ValidationConstants.PREFIX_MAX_LENGTH, false);
+                checkPrefix(context, namespace.getPrefix(), externalNamespace, false);
                 if(namespace.getNamespace().startsWith(ModelConstants.SUOMI_FI_NAMESPACE)){
                     addConstraintViolation(context, "namespace-not-external", externalNamespace);
                 }
@@ -222,10 +224,6 @@ public class DataModelValidator extends BaseValidator implements
         if(ValidationConstants.RESERVED_WORDS.contains(prefix)
                 || ValidationConstants.RESERVED_NAMESPACES.containsKey(prefix)){
             addConstraintViolation(context, "prefix-is-reserved", property);
-        }
-
-        if(!prefix.matches(ValidationConstants.PREFIX_REGEX)){
-            addConstraintViolation(context, "prefix-not-matching-pattern", property);
         }
     }
 

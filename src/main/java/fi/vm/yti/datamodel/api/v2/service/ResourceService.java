@@ -103,7 +103,7 @@ public class ResourceService extends BaseResourceService {
     public URI create(String prefix, BaseDTO dto, @Nonnull ResourceType resourceType, boolean applicationProfile) throws URISyntaxException {
         var graphUri = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
         var resourceUri = graphUri + ModelConstants.RESOURCE_SEPARATOR + dto.getIdentifier();
-        if (coreRepository.resourceExistsInGraph(graphUri, resourceUri)){
+        if (coreRepository.resourceExistsInGraph(graphUri, resourceUri, false)){
             throw new MappingError("Already exists");
         }
         var model = coreRepository.fetch(graphUri);
@@ -163,7 +163,7 @@ public class ResourceService extends BaseResourceService {
         if(!coreRepository.resourceExistsInGraph(graphUri, graphUri + ModelConstants.RESOURCE_SEPARATOR + propertyShapeIdentifier)){
             throw new ResourceNotFoundException(propertyShapeIdentifier);
         }
-        if(coreRepository.resourceExistsInGraph(targetGraph, targetResource)){
+        if(coreRepository.resourceExistsInGraph(targetGraph, targetResource, false)){
             throw new MappingError("Identifier in use");
         }
 
@@ -241,5 +241,4 @@ public class ResourceService extends BaseResourceService {
         }
         return null;
      }
-
 }
