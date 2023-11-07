@@ -133,11 +133,13 @@ public abstract class BaseValidator implements Annotation{
     private void checkPrefixOrIdentifier(ConstraintValidatorContext context, String value, String propertyName, String regexp, boolean update) {
         if (update && value != null) {
             addConstraintViolation(context, ValidationConstants.MSG_NOT_ALLOWED_UPDATE, propertyName);
-        } else if (value == null || value.isBlank()) {
+        } else if (!update && (value == null || value.isBlank())) {
             addConstraintViolation(context, ValidationConstants.MSG_VALUE_MISSING, propertyName);
-        } else if (!value.matches(regexp)) {
+        } else if (value != null && !value.matches(regexp)) {
             addConstraintViolation(context, ValidationConstants.MSG_VALUE_INVALID, propertyName);
-        } else if (value.length() < ValidationConstants.PREFIX_MIN_LENGTH || value.length() > ValidationConstants.PREFIX_MAX_LENGTH) {
+        } else if (value != null && (
+                value.length() < ValidationConstants.PREFIX_MIN_LENGTH
+                        || value.length() > ValidationConstants.PREFIX_MAX_LENGTH)) {
             addConstraintViolation(context, propertyName + "-character-count-mismatch", propertyName);
         }
     }
