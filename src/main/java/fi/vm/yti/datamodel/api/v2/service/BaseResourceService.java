@@ -90,7 +90,7 @@ abstract class BaseResourceService {
             return true;
         }
         var graphUri = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
-        return coreRepository.resourceExistsInGraph(graphUri, graphUri + ModelConstants.RESOURCE_SEPARATOR + identifier);
+        return coreRepository.resourceExistsInGraph(graphUri, graphUri + ModelConstants.RESOURCE_SEPARATOR + identifier, false);
     }
 
     public URI renameResource(String prefix, String oldIdentifier, String newIdentifier) throws URISyntaxException {

@@ -132,7 +132,7 @@ class ResourceServiceTest {
             assertEquals("http://uri.suomi.fi/datamodel/ns/test/Identifier", uri.toString());
         }
 
-        verify(coreRepository).resourceExistsInGraph(anyString(), anyString());
+        verify(coreRepository).resourceExistsInGraph(anyString(), anyString(), eq(false));
         verify(coreRepository).fetch(anyString());
         verify(authorizationManager).hasRightToModel(anyString(), any(Model.class));
         verify(terminologyService).resolveConcept(anyString());
@@ -155,7 +155,7 @@ class ResourceServiceTest {
             assertEquals("http://uri.suomi.fi/datamodel/ns/test/Identifier", uri.toString());
         }
 
-        verify(coreRepository).resourceExistsInGraph(anyString(), anyString());
+        verify(coreRepository).resourceExistsInGraph(anyString(), anyString(), eq(false));
         verify(coreRepository).fetch(anyString());
         verify(authorizationManager).hasRightToModel(anyString(), any(Model.class));
         verify(terminologyService).resolveConcept(anyString());
@@ -238,7 +238,8 @@ class ResourceServiceTest {
             var uri = resourceService.copyPropertyShape("test", "Identifier", "newTest", "newId");
             assertEquals("http://uri.suomi.fi/datamodel/ns/newTest/newId", uri.toString());
         }
-        verify(coreRepository, times(2)).resourceExistsInGraph(anyString(), anyString());
+        verify(coreRepository).resourceExistsInGraph(anyString(), anyString());
+        verify(coreRepository).resourceExistsInGraph(anyString(), anyString(), eq(false));
         verify(coreRepository, times(2)).fetch(anyString());
         verify(authorizationManager, times(2)).hasRightToModel(anyString(), any(Model.class));
     }
@@ -251,7 +252,7 @@ class ResourceServiceTest {
     @Test
     void failCopyPropertyShapeIdInUse() {
         when(coreRepository.resourceExistsInGraph(anyString(), anyString())).thenReturn(true);
-
+        when(coreRepository.resourceExistsInGraph(anyString(), anyString(), eq(false))).thenReturn(true);
         var error = assertThrows(MappingError.class, () ->resourceService.copyPropertyShape("test", "Identifier", "newTest", "newId"));
         assertEquals("Error during mapping: Identifier in use", error.getMessage());
 
@@ -289,7 +290,7 @@ class ResourceServiceTest {
         assertTrue(result);
         result = resourceService.exists("test", "Free");
         assertFalse(result);
-        when(coreRepository.resourceExistsInGraph(anyString(), anyString())).thenReturn(true);
+        when(coreRepository.resourceExistsInGraph(anyString(), anyString(), eq(false))).thenReturn(true);
         result = resourceService.exists("test", "NotFree");
         assertTrue(result);
     }

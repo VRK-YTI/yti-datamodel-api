@@ -12,6 +12,7 @@ import org.apache.jena.query.QuerySolution;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdfconnection.RDFConnection;
 import org.apache.jena.update.UpdateRequest;
+import org.apache.jena.vocabulary.DCTerms;
 import org.springframework.http.HttpStatus;
 
 import java.util.function.Consumer;
@@ -58,7 +59,7 @@ public abstract class BaseRepository {
     }
 
     public void delete(String graph) {
-        try{
+        try {
             write.delete(graph);
         } catch (HttpException ex) {
             if (ex.getStatusCode() == HttpStatus.NOT_FOUND.value()) {
@@ -75,7 +76,7 @@ public abstract class BaseRepository {
         var filter = expr.or(expr.eq("?s", NodeFactory.createURI(resource)), expr.eq("?o", NodeFactory.createURI(resource)));
         deleteBuilder.addDelete("?g", "?s", "?p", "?o")
                 .addGraph("?g", new WhereBuilder().addWhere("?s", "?p", "?o").addFilter(filter));
-        try{
+        try {
             update.update(deleteBuilder.buildRequest());
         } catch (HttpException ex) {
             if (ex.getStatusCode() == HttpStatus.NOT_FOUND.value()) {
@@ -93,9 +94,21 @@ public abstract class BaseRepository {
     }
 
     public boolean resourceExistsInGraph(String graph, String resource) {
-        var askBuilder = new AskBuilder()
-                .addGraph(NodeFactory.createURI(graph),
-                        NodeFactory.createURI(resource), "?p", "?o");
+        return resourceExistsInGraph(graph, resource, true);
+    }
+
+    public boolean resourceExistsInGraph(String graph, String resource, boolean caseSensitive) {
+        var askBuilder = new AskBuilder();
+        if (caseSensitive) {
+            askBuilder.addGraph(NodeFactory.createURI(graph),
+                    NodeFactory.createURI(resource), "?p", "?o");
+        } else {
+            var localName = NodeFactory.createURI(resource).getLocalName();
+            var expr = askBuilder.getExprFactory();
+            askBuilder
+                    .addGraph(NodeFactory.createURI(graph), "?s", DCTerms.identifier, "?o")
+                    .addFilter(expr.regex("?o", String.format("^%s$", localName), "i"));
+        }
         return this.queryAsk(askBuilder.build());
     }
 
@@ -114,7 +127,7 @@ public abstract class BaseRepository {
     public boolean queryAsk(Query query) {
         try {
             return sparql.queryAsk(query);
-        }catch(HttpException ex){
+        } catch (HttpException ex) {
             throw new JenaQueryException();
         }
     }

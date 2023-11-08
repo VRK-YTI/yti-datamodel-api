@@ -155,7 +155,7 @@ public class ClassService extends BaseResourceService {
     public URI create(String prefix, BaseDTO dto, boolean applicationProfile) throws URISyntaxException {
         var modelUri = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
         var classUri = modelUri + ModelConstants.RESOURCE_SEPARATOR + dto.getIdentifier();
-        if(coreRepository.resourceExistsInGraph(modelUri, classUri)){
+        if(coreRepository.resourceExistsInGraph(modelUri, classUri, false)){
             throw new MappingError("Class already exists");
         }
         var model = coreRepository.fetch(modelUri);

@@ -123,7 +123,7 @@ class ClassServiceTest {
             mapper.verify(() -> ClassMapper.createOntologyClassAndMapToModel(anyString(), any(Model.class), any(ClassDTO.class), any(YtiUser.class)));
         }
 
-        verify(coreRepository).resourceExistsInGraph(anyString(), anyString());
+        verify(coreRepository).resourceExistsInGraph(anyString(), anyString(), eq(false));
         verify(coreRepository).fetch(anyString());
         verify(authorizationManager).hasRightToModel(anyString(), any(Model.class));
         verify(terminologyService).resolveConcept(anyString());
@@ -145,7 +145,7 @@ class ClassServiceTest {
             mapper.verify(() -> ClassMapper.createNodeShapeAndMapToModel(anyString(), any(Model.class), any(NodeShapeDTO.class), any(YtiUser.class)));
         }
 
-        verify(coreRepository).resourceExistsInGraph(anyString(), anyString());
+        verify(coreRepository).resourceExistsInGraph(anyString(), anyString(), eq(false));
         verify(coreRepository).fetch(anyString());
         verify(authorizationManager).hasRightToModel(anyString(), any(Model.class));
         verify(terminologyService).resolveConcept(anyString());
@@ -222,7 +222,7 @@ class ClassServiceTest {
         assertTrue(response);
 
         //exists
-        when(coreRepository.resourceExistsInGraph(anyString(), anyString())).thenReturn(true);
+        when(coreRepository.resourceExistsInGraph(anyString(), anyString(), eq(false))).thenReturn(true);
         response = classService.exists("test", "Identifier");
         assertTrue(response);
     }
