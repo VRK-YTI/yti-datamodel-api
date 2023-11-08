@@ -77,7 +77,10 @@ public class VisualizationMapper {
                 .mapWith(r -> {
                     var nodeDTO = new VisualizationAttributeNodeDTO();
                     nodeDTO.setType(VisualizationNodeType.ATTRIBUTE);
-                    nodeDTO.setDataType(MapperUtils.propertyToString(r.getSubject(), RDFS.range));
+                    var range = MapperUtils.uriToURIDTO(MapperUtils.propertyToString(r.getSubject(), RDFS.range), model);
+                    if (range != null) {
+                        nodeDTO.setDataType(range.getCurie());
+                    }
                     mapCommon(nodeDTO, r.getSubject(), Map.of());
                     var domain = r.getObject().asResource();
                     var reference = new VisualizationReferenceDTO();
@@ -133,7 +136,10 @@ public class VisualizationMapper {
             var attribute = new VisualizationAttributeDTO();
             attribute.setIdentifier(getReferenceIdentifier(resourceURI, namespaces));
             attribute.setLabel(label);
-            attribute.setDataType(someValuesFrom);
+            if (someValuesFrom != null) {
+                var uriDTO = MapperUtils.uriToURIDTO(someValuesFrom, resource.getModel());
+                attribute.setDataType(uriDTO.getCurie());
+            }
             classDTO.addAttribute(attribute);
         } else if (MapperUtils.hasType(resource, OWL.ObjectProperty)) {
             var association = new VisualizationReferenceDTO();
@@ -157,7 +163,11 @@ public class VisualizationMapper {
             var attribute = new VisualizationPropertyShapeAttributeDTO();
             attribute.setIdentifier(getReferenceIdentifier(versionedResourceURI, namespaces));
             attribute.setLabel(label);
-            attribute.setDataType(MapperUtils.propertyToString(resource, SH.datatype));
+            var dataType = MapperUtils.propertyToString(resource, SH.datatype);
+            if (dataType != null) {
+                var uriDTO = MapperUtils.uriToURIDTO(dataType, model);
+                attribute.setDataType(uriDTO.getCurie());
+            }
             attribute.setMaxCount(MapperUtils.getLiteral(resource, SH.maxCount, Integer.class));
             attribute.setMinCount(MapperUtils.getLiteral(resource, SH.minCount, Integer.class));
             attribute.setCodeLists(MapperUtils.arrayPropertyToSet(resource, Iow.codeList));
@@ -336,6 +346,9 @@ public class VisualizationMapper {
     }
 
     private static String getReferenceIdentifier(String uri, Map<String, String> namespaces) {
+        if (uri == null) {
+            return null;
+        }
         try {
             var u = NodeFactory.createURI(uri);
             String prefix = namespaces.get(DataModelUtils.removeTrailingSlash(u.getNameSpace()));

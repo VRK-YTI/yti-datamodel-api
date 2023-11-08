@@ -269,7 +269,7 @@ class ResourceMapperTest {
         assertEquals(1, indexClass.getLabel().size());
         assertEquals("test attribute", indexClass.getLabel().get("fi"));
         assertEquals("http://uri.suomi.fi/datamodel/ns/test/DomainClass", indexClass.getDomain());
-        assertEquals("rdf:Literal", indexClass.getRange());
+        assertEquals("http://www.w3.org/2000/01/rdf-schema#Literal", indexClass.getRange());
         assertEquals("1.0.1", indexClass.getFromVersion());
         assertEquals("http://uri.suomi.fi/datamodel/ns/test/1.0.1", indexClass.getVersionIri());
     }
@@ -374,8 +374,8 @@ class ResourceMapperTest {
         assertEquals("http://uri.suomi.fi/datamodel/ns/test/TestAttribute", dto.getUri());
         assertEquals("http://uri.suomi.fi/datamodel/ns/test/DomainClass", dto.getDomain().getUri());
         assertEquals("test:DomainClass", dto.getDomain().getCurie());
-        assertEquals("rdf:Literal", dto.getRange().getUri());
-        assertEquals("rdf:Literal", dto.getRange().getCurie());
+        assertEquals("http://www.w3.org/2000/01/rdf-schema#Literal", dto.getRange().getUri());
+        assertEquals("rdfs:Literal", dto.getRange().getCurie());
         assertFalse(dto.getFunctionalProperty());
         assertNull(dto.getReflexiveProperty());
         assertNull(dto.getTransitiveProperty());
@@ -523,7 +523,7 @@ class ResourceMapperTest {
         assertEquals("comment visible for admin", resource.getProperty(SKOS.editorialNote).getObject().toString());
         assertEquals(2, resource.listProperties(RDFS.comment).toList().size());
         assertEquals("http://uri.suomi.fi/datamodel/ns/test/DomainClass", MapperUtils.propertyToString(resource, RDFS.domain));
-        assertEquals("rdf:Literal", MapperUtils.propertyToString(resource, RDFS.range));
+        assertEquals("http://www.w3.org/2000/01/rdf-schema#Literal", MapperUtils.propertyToString(resource, RDFS.range));
         assertFalse(MapperUtils.hasType(resource, OWL.FunctionalProperty));
 
         ResourceMapper.mapToUpdateResource("http://uri.suomi.fi/datamodel/ns/test", m, "TestAttribute", dto, mockUser);
