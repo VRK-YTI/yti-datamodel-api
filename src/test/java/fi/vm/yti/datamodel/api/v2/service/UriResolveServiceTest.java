@@ -38,10 +38,10 @@ class UriResolveServiceTest {
     @Test
     void testRedirectSiteModel() {
         var accept = "text/html";
-        var response = service.resolve("http://uri.suomi.fi/datamodel/ns/test", accept);
+        var response = service.resolve("http://uri.suomi.fi/datamodel/ns/test/1.0.1", accept);
         assertTrue(response.getStatusCode().is3xxRedirection());
         assertNotNull(response.getHeaders().getLocation());
-        assertTrue(response.getHeaders().getLocation().toString().endsWith("/model/test"));
+        assertTrue(response.getHeaders().getLocation().toString().endsWith("/model/test?ver=1.0.1"));
     }
 
     @Test
@@ -49,11 +49,10 @@ class UriResolveServiceTest {
         var model = MapperTestUtils.getModelFromFile("/models/test_datamodel_library_with_resources.ttl");
         when(coreRepository.fetch(anyString())).thenReturn(model);
 
-
         var pathMap = Map.of(
-                "http://uri.suomi.fi/datamodel/ns/test/TestClass", "/model/test/class/TestClass",
-                "http://uri.suomi.fi/datamodel/ns/test/TestAttribute", "/model/test/attribute/TestAttribute",
-                "http://uri.suomi.fi/datamodel/ns/test/TestAssociation", "/model/test/association/TestAssociation"
+                "http://uri.suomi.fi/datamodel/ns/test/1.0.1/TestClass", "/model/test/class/TestClass?ver=1.0.1",
+                "http://uri.suomi.fi/datamodel/ns/test/1.0.1/TestAttribute", "/model/test/attribute/TestAttribute?ver=1.0.1",
+                "http://uri.suomi.fi/datamodel/ns/test/1.0.1/TestAssociation", "/model/test/association/TestAssociation?ver=1.0.1"
         );
         var accept = "text/html";
         for (var key : pathMap.keySet()) {
@@ -70,10 +69,10 @@ class UriResolveServiceTest {
         when(coreRepository.fetch(anyString())).thenReturn(model);
 
         var accept = "text/turtle";
-        var response = service.resolve("http://uri.suomi.fi/datamodel/ns/test/TestClass", accept);
+        var response = service.resolve("http://uri.suomi.fi/datamodel/ns/test/1.0.1/TestClass", accept);
         assertTrue(response.getStatusCode().is3xxRedirection());
         assertNotNull(response.getHeaders().getLocation());
-        assertTrue(response.getHeaders().getLocation().toString().endsWith("/datamodel-api/v2/export/test/TestClass"));
+        assertTrue(response.getHeaders().getLocation().toString().endsWith("/datamodel-api/v2/export/test/TestClass?version=1.0.1"));
     }
 
     @Test
