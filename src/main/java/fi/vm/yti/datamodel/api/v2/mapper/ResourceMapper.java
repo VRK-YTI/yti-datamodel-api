@@ -5,7 +5,6 @@ import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.*;
 import fi.vm.yti.datamodel.api.v2.properties.Iow;
 import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
-import fi.vm.yti.datamodel.api.v2.utils.DataModelUtils;
 import fi.vm.yti.security.YtiUser;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.rdf.model.*;
@@ -365,8 +364,6 @@ public class ResourceMapper {
         var resourceUri = modelUri + ModelConstants.RESOURCE_SEPARATOR + resourceIdentifier;
         var resourceResource = model.getResource(resourceUri);
 
-        DataModelUtils.addPrefixesToModel(modelUri, model);
-
         MapperUtils.addCommonResourceDtoInfo(dto, resourceResource, model.getResource(modelUri), orgModel, hasRightToModel);
 
         if(MapperUtils.hasType(resourceResource, OWL.ObjectProperty)){
@@ -404,8 +401,6 @@ public class ResourceMapper {
         var dto = new PropertyShapeInfoDTO();
         var resourceUri = modelUri + ModelConstants.RESOURCE_SEPARATOR + identifier;
         var resource = model.getResource(resourceUri);
-
-        DataModelUtils.addPrefixesToModel(modelUri, model);
 
         MapperUtils.addCommonResourceDtoInfo(dto, resource, model.getResource(modelUri), orgModel, hasRightToModel);
 

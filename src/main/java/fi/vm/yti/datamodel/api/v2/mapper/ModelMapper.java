@@ -55,8 +55,6 @@ public class ModelMapper {
         var model = ModelFactory.createDefaultModel();
         var modelUri = ModelConstants.SUOMI_FI_NAMESPACE + modelDTO.getPrefix();
 
-        model.setNsPrefixes(ModelConstants.PREFIXES);
-
         var creationDate = new XSDDateTime(Calendar.getInstance());
         var modelResource = model.createResource(modelUri)
                 .addProperty(RDF.type, OWL.Ontology)
@@ -89,7 +87,7 @@ public class ModelMapper {
 
         addOrgsToModel(modelDTO.getOrganizations(), modelResource);
 
-        addInternalNamespaceToDatamodel(modelDTO, modelResource, model);
+        addInternalNamespaceToDatamodel(modelDTO, modelResource);
         addExternalNamespaceToDatamodel(modelDTO, model, modelResource);
 
         modelDTO.getLinks().forEach(linkDTO -> addLinkToModel(model, modelResource, linkDTO));
@@ -100,7 +98,6 @@ public class ModelMapper {
             modelDTO.getCodeLists().forEach(codeList -> MapperUtils.addOptionalUriProperty(modelResource, DCTerms.requires, codeList));
         }
 
-        model.setNsPrefix(modelDTO.getPrefix(), modelUri + ModelConstants.RESOURCE_SEPARATOR);
         MapperUtils.addCreationMetadata(modelResource, user);
 
         return model;
@@ -116,7 +113,7 @@ public class ModelMapper {
 
         removeFromIterator(modelResource.listProperties(DCTerms.requires), val -> val.startsWith(ModelConstants.SUOMI_FI_NAMESPACE));
         removeFromIterator(modelResource.listProperties(OWL.imports), val -> val.startsWith(ModelConstants.SUOMI_FI_NAMESPACE));
-        addInternalNamespaceToDatamodel(dataModelDTO, modelResource, model);
+        addInternalNamespaceToDatamodel(dataModelDTO, modelResource);
 
         removeFromIterator(modelResource.listProperties(DCTerms.requires), val -> !val.startsWith(ModelConstants.SUOMI_FI_NAMESPACE)
                 && !val.startsWith(ModelConstants.CODELIST_NAMESPACE) && !val.startsWith(ModelConstants.TERMINOLOGY_NAMESPACE));
@@ -356,15 +353,13 @@ public class ModelMapper {
      * @param modelDTO Model DTO to get internal namespaces from
      * @param resource Data model resource to add linking property (OWL.imports or DCTerms.requires)
      */
-    private void addInternalNamespaceToDatamodel(DataModelDTO modelDTO, Resource resource, Model model){
+    private void addInternalNamespaceToDatamodel(DataModelDTO modelDTO, Resource resource) {
         modelDTO.getInternalNamespaces().forEach(namespace -> {
             var ns = coreRepository.fetch(namespace);
             var nsRes = MapperUtils.getModelResourceFromVersion(ns);
-            var prefix = MapperUtils.propertyToString(nsRes, DCAP.preferredXMLNamespacePrefix);
             var nsType = MapperUtils.getModelTypeFromResource(nsRes);
             var modelType = MapperUtils.getModelTypeFromResource(resource);
             resource.addProperty(getNamespacePropertyFromType(modelType, nsType), ResourceFactory.createResource(namespace));
-            model.setNsPrefix(prefix, namespace);
         });
     }
 
@@ -404,7 +399,6 @@ public class ModelMapper {
                     //If namespace wasn't resolved just add it as dcterms:requires
                     resource.addProperty(DCTerms.requires, nsRes);
                 }
-                model.setNsPrefix(namespace.getPrefix(), nsUri);
         });
     }
 

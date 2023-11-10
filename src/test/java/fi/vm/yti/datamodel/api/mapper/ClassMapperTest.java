@@ -333,7 +333,6 @@ class ClassMapperTest {
     void testMapAndRemoveAnonymousRestrictions() {
 
         var model = MapperTestUtils.getModelFromFile("/model_with_owl_restrictions.ttl");
-        model.setNsPrefixes(ModelConstants.PREFIXES);
 
         var classResource1 = model.getResource("http://uri.suomi.fi/datamodel/ns/model/class-1");
         var classResource2 = model.getResource("http://uri.suomi.fi/datamodel/ns/model/class-2");
@@ -386,7 +385,6 @@ class ClassMapperTest {
     @Test
     void testMapUpdateClassRestriction() {
         var model = MapperTestUtils.getModelFromFile("/model_with_owl_restrictions.ttl");
-        model.setNsPrefixes(ModelConstants.PREFIXES);
 
         var classResource = model.getResource(ModelConstants.SUOMI_FI_NAMESPACE + "model/class-update-target");
         var restrictionURI = ModelConstants.SUOMI_FI_NAMESPACE + "model/association-1";
@@ -409,7 +407,6 @@ class ClassMapperTest {
     @Test
     void testMapUpdateClassRestrictionDuplicate() {
         var model = MapperTestUtils.getModelFromFile("/model_with_owl_restrictions.ttl");
-        model.setNsPrefixes(ModelConstants.PREFIXES);
 
         var classResource = model.getResource("http://uri.suomi.fi/datamodel/ns/model/class-update-target");
         var restrictionURI = "http://uri.suomi.fi/datamodel/ns/model/association-1";

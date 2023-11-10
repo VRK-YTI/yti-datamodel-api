@@ -25,6 +25,7 @@ public class DataModelUtils {
     }
 
     public static void addPrefixesToModel(String modelURI, Model model) {
+        model.clearNsPrefixMap();
         model.setNsPrefixes(ModelConstants.PREFIXES);
         model.setNsPrefix(MapperUtils.getModelIdFromNamespace(modelURI), modelURI + ModelConstants.RESOURCE_SEPARATOR);
 

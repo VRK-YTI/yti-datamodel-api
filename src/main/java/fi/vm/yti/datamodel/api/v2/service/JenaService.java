@@ -24,7 +24,6 @@ public class JenaService {
 
     public void setVersionNumber(int version) {
         var versionModel = ModelFactory.createDefaultModel().addLiteral(ResourceFactory.createResource(VERSION_NUMBER_GRAPH), OWL.versionInfo, version);
-        versionModel.setNsPrefix("owl", "http://www.w3.org/2002/07/owl#");
         coreRepository.put(VERSION_NUMBER_GRAPH, versionModel);
     }
 
