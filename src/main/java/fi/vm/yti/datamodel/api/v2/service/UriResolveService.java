@@ -3,11 +3,13 @@ package fi.vm.yti.datamodel.api.v2.service;
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
 import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
+import fi.vm.yti.datamodel.api.v2.utils.SemVer;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIFactory;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDF;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
@@ -36,18 +38,38 @@ public class UriResolveService {
             return ResponseEntity.badRequest().build();
         }
 
-        String resourcePath = iri.substring(ModelConstants.SUOMI_FI_NAMESPACE.length());
-        var parts = resourcePath.split("\\W");
-        String resource = null;
+        String resourcePath = iri.substring(ModelConstants.SUOMI_FI_NAMESPACE.length())
+                .split("\\?")[0];
+        var parts = resourcePath.split("/");
 
         if (parts.length == 0) {
             return ResponseEntity.badRequest().build();
         }
 
-        var modelPrefix = parts[0];
-        if (parts.length == 2) {
-            // single resource
-            resource = parts[1];
+        var redirectURL = buildURL(parts, accept);
+        return ResponseEntity
+                .status(HttpStatus.SEE_OTHER)
+                .header(HttpHeaders.LOCATION, redirectURL)
+                .build();
+    }
+
+    @NotNull
+    private String buildURL(String[] parts, String accept) {
+        String modelPrefix = parts[0];
+        String resource = null;
+        String version = null;
+
+        for (var i = 1; i < parts.length; i++) {
+            var p = parts[i];
+            if (i == 1) {
+                if (p.matches(SemVer.VALID_REGEX)) {
+                    version = p;
+                } else {
+                    resource = p;
+                }
+            } else if (i == 2) {
+                resource = p;
+            }
         }
 
         var currentUrl = ServletUriComponentsBuilder.fromCurrentRequestUri().build().toUri();
@@ -63,17 +85,16 @@ public class UriResolveService {
                     .append("/model/")
                     .append(modelPrefix);
             appendResource(redirectURL, modelPrefix, resource);
+            redirectURL.append(version != null ? "?ver=" + version : "");
         } else {
             // redirect to serialized resource
             redirectURL
                     .append("/datamodel-api/v2/export/")
                     .append(modelPrefix)
-                    .append(resource != null ? "/" + resource : "");
+                    .append(resource != null ? "/" + resource : "")
+                    .append(version != null ? "?version=" + version : "");
         }
-        return ResponseEntity
-                .status(HttpStatus.SEE_OTHER)
-                .header(HttpHeaders.LOCATION, redirectURL.toString())
-                .build();
+        return redirectURL.toString();
     }
 
     private void appendResource(StringBuilder redirectURL, String modelPrefix, String resource) {
