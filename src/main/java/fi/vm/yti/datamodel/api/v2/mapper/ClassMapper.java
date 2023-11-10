@@ -205,8 +205,6 @@ public class ClassMapper {
         var classResource = model.getResource(classUri);
         var modelResource = model.getResource(modelUri);
 
-        DataModelUtils.addPrefixesToModel(modelResource.getURI(), model);
-
         MapperUtils.addCommonResourceDtoInfo(dto, classResource, modelResource, orgModel, hasRightToModel);
         MapperUtils.mapCreationInfo(dto, classResource, userMapper);
 
@@ -230,8 +228,6 @@ public class ClassMapper {
         var nodeShapeURI = modelUri + ModelConstants.RESOURCE_SEPARATOR + identifier;
         var nodeShapeResource = model.getResource(nodeShapeURI);
         var modelResource = model.getResource(modelUri);
-
-        DataModelUtils.addPrefixesToModel(modelUri, model);
 
         MapperUtils.addCommonResourceDtoInfo(dto, nodeShapeResource, modelResource, orgModel, hasRightToModel);
         MapperUtils.mapCreationInfo(dto, nodeShapeResource, userMapper);
