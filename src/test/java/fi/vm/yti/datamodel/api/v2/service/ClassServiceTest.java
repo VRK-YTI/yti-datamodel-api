@@ -73,6 +73,9 @@ class ClassServiceTest {
     @MockBean
     SearchIndexService searchIndexService;
 
+    @MockBean
+    VisualizationService visualizationService;
+
     @SpyBean
     @Autowired
     ClassService classService;
@@ -129,6 +132,7 @@ class ClassServiceTest {
         verify(terminologyService).resolveConcept(anyString());
         verify(coreRepository).put(anyString(), any(Model.class));
         verify(openSearchIndexer).createResourceToIndex(any(IndexResource.class));
+        verify(visualizationService).addNewResourceDefaultPosition("test","Identifier");
     }
 
     @Test

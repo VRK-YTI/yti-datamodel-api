@@ -7,6 +7,7 @@ import fi.vm.yti.datamodel.api.v2.dto.visualization.PositionDataDTO;
 import fi.vm.yti.datamodel.api.v2.dto.visualization.VisualizationClassDTO;
 import fi.vm.yti.datamodel.api.v2.dto.visualization.VisualizationNodeDTO;
 import fi.vm.yti.datamodel.api.v2.dto.visualization.VisualizationNodeType;
+import fi.vm.yti.datamodel.api.v2.properties.Iow;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import fi.vm.yti.security.AuthorizationException;
 import org.apache.jena.rdf.model.Model;
@@ -150,6 +151,31 @@ class VisualizationServiceTest {
 
         verify(coreRepository).fetch(graphURI);
         verify(coreRepository).put(eq(graphURI + ModelConstants.RESOURCE_SEPARATOR + "1.0.0"), any(Model.class));
+    }
+
+    @Test
+    void testAddDefaultPosition() {
+        var positionURI = ModelConstants.MODEL_POSITIONS_NAMESPACE + "test";
+        var positionModel = ModelFactory.createDefaultModel();
+
+        positionModel.createResource(positionURI + ModelConstants.RESOURCE_SEPARATOR + "res1")
+                        .addLiteral(Iow.posX, 10.0)
+                        .addLiteral(Iow.posY, 20.0);
+
+        positionModel.createResource(positionURI + ModelConstants.RESOURCE_SEPARATOR + "res2")
+                .addLiteral(Iow.posX, 120.0)
+                .addLiteral(Iow.posY, -10.0);
+
+        when(coreRepository.fetch(positionURI)).thenReturn(positionModel);
+
+        visualizationService.addNewResourceDefaultPosition("test", "test-id");
+        verify(coreRepository).put(anyString(), modelCaptor.capture());
+
+        var positionResource = modelCaptor.getValue().getResource(positionURI + ModelConstants.RESOURCE_SEPARATOR + "test-id");
+
+        // new position x = 0, y = existing minimum y coordinate - 50
+        assertEquals(0.0, positionResource.getProperty(Iow.posX).getDouble());
+        assertEquals(-60.0, positionResource.getProperty(Iow.posY).getDouble());
     }
 
     private static Model getExternalPropertiesResult() {

@@ -53,6 +53,7 @@ public class ClassService extends BaseResourceService {
     private final GroupManagementService groupManagementService;
     private final OpenSearchIndexer openSearchIndexer;
     private final SearchIndexService searchIndexService;
+    private final VisualizationService visualizationService;
 
     @Autowired
     public ClassService(CoreRepository coreRepository,
@@ -62,7 +63,8 @@ public class ClassService extends BaseResourceService {
                         TerminologyService terminologyService,
                         GroupManagementService groupManagementService,
                         OpenSearchIndexer openSearchIndexer,
-                        SearchIndexService searchIndexService) {
+                        SearchIndexService searchIndexService,
+                        VisualizationService visualizationService) {
         super(coreRepository, importsRepository, authorizationManager, openSearchIndexer);
         this.coreRepository = coreRepository;
         this.importsRepository = importsRepository;
@@ -72,6 +74,7 @@ public class ClassService extends BaseResourceService {
         this.groupManagementService = groupManagementService;
         this.openSearchIndexer = openSearchIndexer;
         this.searchIndexService = searchIndexService;
+        this.visualizationService = visualizationService;
     }
 
     public ResourceInfoBaseDTO get(String prefix, String version, String classIdentifier) {
@@ -174,6 +177,7 @@ public class ClassService extends BaseResourceService {
         }
 
         saveResource(model, modelUri, classUri, false);
+        visualizationService.addNewResourceDefaultPosition(prefix, dto.getIdentifier());
         return new URI(classUri);
     }
 

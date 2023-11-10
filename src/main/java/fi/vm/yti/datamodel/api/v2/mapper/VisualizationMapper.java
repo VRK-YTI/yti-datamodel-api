@@ -176,16 +176,18 @@ public class VisualizationMapper {
 
     public static Model mapPositionDataToModel(String positionGraphURI, List<PositionDataDTO> positions) {
         var positionModel = ModelFactory.createDefaultModel();
-        positions.forEach(node -> {
-            var resource = positionModel.createResource(positionGraphURI + ModelConstants.RESOURCE_SEPARATOR + node.getIdentifier());
-            resource.addLiteral(Iow.posX, node.getX());
-            resource.addLiteral(Iow.posY, node.getY());
-            resource.addProperty(DCTerms.identifier, node.getIdentifier());
-            if (node.getReferenceTargets() != null) {
-                node.getReferenceTargets().forEach(target -> resource.addProperty(Iow.referenceTarget, target));
-            }
-        });
+        positions.forEach(node -> mapPosition(positionModel, positionGraphURI, node));
         return positionModel;
+    }
+
+    public static void mapPosition(Model positionModel, String positionGraphURI, PositionDataDTO node) {
+        var resource = positionModel.createResource(positionGraphURI + ModelConstants.RESOURCE_SEPARATOR + node.getIdentifier());
+        resource.addLiteral(Iow.posX, node.getX());
+        resource.addLiteral(Iow.posY, node.getY());
+        resource.addProperty(DCTerms.identifier, node.getIdentifier());
+        if (node.getReferenceTargets() != null) {
+            node.getReferenceTargets().forEach(target -> resource.addProperty(Iow.referenceTarget, target));
+        }
     }
 
     public static Set<VisualizationHiddenNodeDTO> mapPositionsDataToDTOsAndCreateHiddenNodes(
