@@ -26,11 +26,23 @@ public class EndpointUtils {
             "test",
             "tester",
             UUID.randomUUID(),
+            false,
+            false,
+            LocalDateTime.of(2001, 1, 1, 0,0),
+            LocalDateTime.of(2001, 1, 1, 0,0),
+            new HashMap<>(Map.of(UUID.randomUUID(), Set.of(Role.DATA_MODEL_EDITOR))),
+            "",
+            "");
+
+    public static final YtiUser mockSuperUser = new YtiUser("test@localhost",
+            "super",
+            "user",
+            UUID.randomUUID(),
             true,
             false,
             LocalDateTime.of(2001, 1, 1, 0,0),
             LocalDateTime.of(2001, 1, 1, 0,0),
-            new HashMap<>(Map.of(UUID.randomUUID(), Set.of(Role.ADMIN))),
+            new HashMap<>(Map.of()),
             "",
             "");
 

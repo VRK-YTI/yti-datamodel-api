@@ -2,9 +2,9 @@ package fi.vm.yti.datamodel.api.v2.opensearch;
 
 import fi.vm.yti.datamodel.api.index.OpenSearchUtils;
 import fi.vm.yti.datamodel.api.v2.dto.Status;
-import fi.vm.yti.datamodel.api.v2.opensearch.dto.CountRequest;
 import fi.vm.yti.datamodel.api.v2.opensearch.dto.CountSearchResponse;
-import fi.vm.yti.datamodel.api.v2.opensearch.queries.CountQueryFactory;
+import fi.vm.yti.datamodel.api.v2.opensearch.dto.ModelSearchRequest;
+import fi.vm.yti.datamodel.api.v2.opensearch.queries.ModelQueryFactory;
 import org.junit.jupiter.api.Test;
 import org.opensearch.client.opensearch._types.aggregations.Aggregate;
 import org.opensearch.client.opensearch._types.aggregations.Buckets;
@@ -31,7 +31,7 @@ class CountQueryFactoryTest {
     void testModelCounts() throws Exception {
         String expected = OpenSearchUtils.getJsonString("/es/models_count_request.json");
 
-        SearchRequest request = CountQueryFactory.createModelQuery(new CountRequest(), false);
+        SearchRequest request = ModelQueryFactory.createModelCountQuery(new ModelSearchRequest(), false);
 
         JSONAssert.assertEquals(expected, OpenSearchUtils.getPayload(request), JSONCompareMode.LENIENT);
     }
@@ -58,7 +58,7 @@ class CountQueryFactoryTest {
                         "P21", 1L
                 )));
 
-        CountSearchResponse countSearchResponse = CountQueryFactory.parseResponse(response.build());
+        CountSearchResponse countSearchResponse = ModelQueryFactory.parseModelCountResponse(response.build());
 
         assertEquals(8, countSearchResponse.getTotalHitCount());
         Map<String, Long> groups = countSearchResponse.getCounts().getGroups();

@@ -1,6 +1,5 @@
 package fi.vm.yti.datamodel.api.v2.endpoint;
 
-import fi.vm.yti.datamodel.api.v2.opensearch.dto.CountRequest;
 import fi.vm.yti.datamodel.api.v2.opensearch.dto.ModelSearchRequest;
 import fi.vm.yti.datamodel.api.v2.opensearch.dto.ResourceSearchRequest;
 import fi.vm.yti.datamodel.api.v2.service.FrontendService;
@@ -60,7 +59,7 @@ class FrontendControllerTest {
         this.mvc.perform(get("/v2/frontend/counts")
                         .contentType("application/json"))
                 .andExpect(status().isOk());
-        verify(searchIndexService).getCounts(any(CountRequest.class), any(YtiUser.class));
+        verify(searchIndexService).getCounts(any(ModelSearchRequest.class), any(YtiUser.class));
     }
 
     @Test

@@ -24,12 +24,12 @@ public class ResourceQueryFactory {
                                                             List<String> externalNamespaces,
                                                             List<String> internalNamespaces,
                                                             List<String> restrictedDataModels,
-                                                            Set<String> allowedDatamodels) {
+                                                            Set<String> allowedDataModels) {
         var must = new ArrayList<Query>();
         var should = new ArrayList<Query>();
 
-        if(allowedDatamodels != null && !allowedDatamodels.isEmpty()){
-            should.add(QueryFactoryUtils.termsQuery("isDefinedBy", allowedDatamodels));
+        if(allowedDataModels != null && !allowedDataModels.isEmpty()){
+            should.add(QueryFactoryUtils.termsQuery("isDefinedBy", allowedDataModels));
         }
 
         should.add(QueryFactoryUtils.hideDraftStatusQuery());

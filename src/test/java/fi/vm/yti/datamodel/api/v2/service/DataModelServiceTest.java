@@ -139,7 +139,7 @@ class DataModelServiceTest {
     void delete() {
         when(coreRepository.graphExists(anyString())).thenReturn(true);
         when(coreRepository.fetch(anyString())).thenReturn(ModelFactory.createDefaultModel());
-        var mockUser = spy(EndpointUtils.mockUser);
+        var mockUser = spy(EndpointUtils.mockSuperUser);
         when(userProvider.getUser()).thenReturn(mockUser);
         dataModelService.delete("test", null);
 
@@ -154,7 +154,7 @@ class DataModelServiceTest {
     void deleteVersionedModel() {
         when(coreRepository.graphExists(anyString())).thenReturn(true);
         when(coreRepository.fetch(anyString())).thenReturn(ModelFactory.createDefaultModel());
-        var mockUser = spy(EndpointUtils.mockUser);
+        var mockUser = spy(EndpointUtils.mockSuperUser);
         when(userProvider.getUser()).thenReturn(mockUser);
         dataModelService.delete("test", "1.0.1");
 
@@ -174,7 +174,7 @@ class DataModelServiceTest {
 
     @Test
     void deleteNotExists() {
-        when(userProvider.getUser()).thenReturn(EndpointUtils.mockUser);
+        when(userProvider.getUser()).thenReturn(EndpointUtils.mockSuperUser);
 
         assertThrows(ResourceNotFoundException.class, () -> dataModelService.delete("test", null));
 
