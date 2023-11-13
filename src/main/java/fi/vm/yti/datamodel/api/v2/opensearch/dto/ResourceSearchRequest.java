@@ -15,6 +15,7 @@ public class ResourceSearchRequest extends BaseSearchRequest{
     private String targetClass;
     private Set<String> additionalResources;
     private String fromVersion;
+    private Set<String> includeDraftFrom;
 
     public String getLimitToDataModel() {
         return limitToDataModel;
@@ -78,5 +79,13 @@ public class ResourceSearchRequest extends BaseSearchRequest{
 
     public void setFromVersion(String fromVersion) {
         this.fromVersion = fromVersion;
+    }
+
+    public Set<String> getIncludeDraftFrom() {
+        return includeDraftFrom;
+    }
+
+    public void setIncludeDraftFrom(Set<String> includeDraftFrom) {
+        this.includeDraftFrom = includeDraftFrom;
     }
 }
