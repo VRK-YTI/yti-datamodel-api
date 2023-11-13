@@ -68,6 +68,7 @@ class VisualizationDataMapperTest {
         assertTrue(associationAddress.isPresent());
         assertEquals("age", attributeAge.getIdentifier());
         assertEquals("Ikä", attributeAge.getLabel().get("fi"));
+        assertEquals("xsd:integer", attributeAge.getDataType());
 
         assertEquals("is-address", associationAddress.get().getIdentifier());
         assertEquals(VisualizationReferenceType.ASSOCIATION, associationAddress.get().getReferenceType());
@@ -89,6 +90,7 @@ class VisualizationDataMapperTest {
         assertEquals("Nimi", attribute.getLabel().get("fi"));
         assertEquals(VisualizationNodeType.ATTRIBUTE, attribute.getType());
         assertEquals(1, attribute.getReferences().size());
+        assertEquals("xsd:string", attribute.getDataType());
 
         var reference = attribute.getReferences().iterator().next();
         assertEquals("person", reference.getReferenceTarget());

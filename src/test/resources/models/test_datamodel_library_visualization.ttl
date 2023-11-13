@@ -21,7 +21,7 @@ visu:name  rdf:type                   owl:DatatypeProperty ;
         dcterms:identifier            "name"^^xsd:NCName ;
         rdfs:isDefinedBy              <http://uri.suomi.fi/datamodel/ns/visu> ;
         rdfs:label                    "Nimi"@fi ;
-        rdfs:range                    <xsd:string> .
+        rdfs:range                    xsd:string .
 
 visu:is-city  rdf:type                owl:ObjectProperty ;
         rdfs:domain                   visu:address ;
@@ -37,7 +37,7 @@ visu:address  rdf:type                owl:Class ;
         owl:equivalentClass           [ rdf:type            owl:Class ;
                                         owl:intersectionOf  ( [ rdf:type            owl:Restriction ;
                                                                 owl:onProperty      visu:street ;
-                                                                owl:someValuesFrom  <xsd:string>
+                                                                owl:someValuesFrom  xsd:string
                                                               ]
                                                             )
                                       ] .
@@ -93,13 +93,13 @@ visu:street  rdf:type                 owl:DatatypeProperty ;
         rdfs:isDefinedBy              <http://uri.suomi.fi/datamodel/ns/visu> ;
         rdfs:label                    "Street"@fi ;
         dcterms:identifier            "street"^^xsd:NCName ;
-        rdfs:range                    <xsd:string> .
+        rdfs:range                    xsd:string .
 
  visu:age  rdf:type                    owl:DatatypeProperty ;
          rdfs:isDefinedBy              <http://uri.suomi.fi/datamodel/ns/visu> ;
          dcterms:identifier            "age"^^xsd:NCName ;
          rdfs:label                    "Ikä"@fi ;
-         rdfs:range                    <xsd:integer> .
+         rdfs:range                    xsd:integer .
 
 <https://www.example.com/ns/external>
  dcterms:type                        rdfs:Resource ;

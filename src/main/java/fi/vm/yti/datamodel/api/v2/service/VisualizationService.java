@@ -50,6 +50,7 @@ public class VisualizationService {
         var namespaces = getNamespaces(model, graph);
         var languages = MapperUtils.arrayPropertyToSet(modelResource, DCTerms.language);
 
+        DataModelUtils.addPrefixesToModel(modelResource.getURI(), model);
         var nodes = new HashSet<VisualizationNodeDTO>();
 
         while (classURIs.hasNext()) {
