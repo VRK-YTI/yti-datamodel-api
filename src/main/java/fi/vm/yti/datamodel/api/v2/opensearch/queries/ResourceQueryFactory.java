@@ -39,9 +39,8 @@ public class ResourceQueryFactory {
             must.add(QueryFactoryUtils.labelQuery(query));
         }
 
-        if(request.getLimitToDataModel() != null || internalNamespaces != null || restrictedDataModels != null || externalNamespaces != null) {
-            must.add(getIncludedNamespacesQuery(request, externalNamespaces, internalNamespaces, restrictedDataModels));
-        }
+        must.add(getIncludedNamespacesQuery(request, externalNamespaces, internalNamespaces, restrictedDataModels));
+
 
         var types = request.getResourceTypes();
         if(types != null && !types.isEmpty()){
@@ -86,6 +85,10 @@ public class ResourceQueryFactory {
 
         if (restrictedDataModels == null || restrictedDataModels.contains(request.getLimitToDataModel())) {
             builder.should(addCurrentModelQuery(request));
+        }
+
+        if(request.getIncludeDraftFrom() != null && !request.getIncludeDraftFrom().isEmpty()) {
+            builder.should(QueryFactoryUtils.termsQuery("isDefinedBy", request.getIncludeDraftFrom()));
         }
 
         builder.should(QueryFactoryUtils.termsQuery("isDefinedBy", externalNamespaces))
