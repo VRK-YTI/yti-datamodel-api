@@ -9,6 +9,7 @@ import fi.vm.yti.datamodel.api.v2.dto.ResourceCommonDTO;
 import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.properties.Iow;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
+import fi.vm.yti.security.YtiUser;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,9 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -188,6 +187,21 @@ public class GroupManagementService {
             }
         }
         return List.of();
+    }
+
+    public Set<UUID> getOrganizationsForUser(YtiUser user) {
+        final var rolesInOrganizations = user.getRolesInOrganizations();
+
+        var orgIds = new HashSet<>(rolesInOrganizations.keySet());
+
+        // show child organization's incomplete content for main organization users
+        var childOrganizationIds = orgIds.stream()
+                .map(this::getChildOrganizations)
+                .flatMap(Collection::stream)
+                .collect(Collectors.toSet());
+
+        orgIds.addAll(childOrganizationIds);
+        return orgIds;
     }
 
     private static final class GroupManagementException extends RuntimeException{

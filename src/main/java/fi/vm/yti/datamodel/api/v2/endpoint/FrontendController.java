@@ -27,7 +27,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.io.IOException;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
@@ -62,7 +61,7 @@ public class FrontendController {
             @ApiResponse(responseCode = "200", description = "Counts response container object as JSON")
     })
     @GetMapping(path = "/counts", produces = MediaType.APPLICATION_JSON_VALUE)
-    public CountSearchResponse getCounts(@Parameter(description = "Count request parameters") CountRequest request) {
+    public CountSearchResponse getCounts(@Parameter(description = "Count request parameters") ModelSearchRequest request) {
         logger.info("GET /counts requested");
         return searchIndexService.getCounts(request, userProvider.getUser());
     }
@@ -95,14 +94,14 @@ public class FrontendController {
     @Operation(summary = "Search resources", description = "List of resources")
     @ApiResponse(responseCode = "200", description = "List of resources as JSON")
     @GetMapping(path = "/search-internal-resources", produces = APPLICATION_JSON_VALUE)
-    public SearchResponseDTO<IndexResource> getInternalResources(@Parameter(description = "Resource search parameters") ResourceSearchRequest request) throws IOException {
+    public SearchResponseDTO<IndexResource> getInternalResources(@Parameter(description = "Resource search parameters") ResourceSearchRequest request) {
         return searchIndexService.searchInternalResources(request, userProvider.getUser());
     }
 
     @Operation(summary = "Search resources with data model information", description = "List of resources")
     @ApiResponse(responseCode = "200", description = "List of resources as JSON")
     @GetMapping(path = "/search-internal-resources-info", produces = APPLICATION_JSON_VALUE)
-    public SearchResponseDTO<IndexResourceInfo> getInternalResourcesInfo(@Parameter(description = "Resource search parameters") ResourceSearchRequest request) throws IOException {
+    public SearchResponseDTO<IndexResourceInfo> getInternalResourcesInfo(@Parameter(description = "Resource search parameters") ResourceSearchRequest request) {
         return searchIndexService.searchInternalResourcesWithInfo(request, userProvider.getUser());
     }
 

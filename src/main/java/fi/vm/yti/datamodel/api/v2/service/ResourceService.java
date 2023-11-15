@@ -12,6 +12,9 @@ import fi.vm.yti.datamodel.api.v2.repository.ImportsRepository;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelUtils;
 import fi.vm.yti.security.AuthenticatedUserProvider;
 import org.apache.jena.arq.querybuilder.AskBuilder;
+import org.apache.jena.arq.querybuilder.ExprFactory;
+import org.apache.jena.arq.querybuilder.SelectBuilder;
+import org.apache.jena.arq.querybuilder.WhereBuilder;
 import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
@@ -25,6 +28,7 @@ import org.topbraid.shacl.vocabulary.SH;
 import javax.annotation.Nonnull;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -240,5 +244,26 @@ public class ResourceService extends BaseResourceService {
             return result;
         }
         return null;
+     }
+
+     public Set<String> findNodeShapeExternalProperties(String graphURI, Resource resourceType) {
+         var externalResources = new HashSet<String>();
+         if (resourceType == null) {
+             return externalResources;
+         }
+
+         ExprFactory exprFactory = new ExprFactory();
+         var propertyVar = "?property";
+         var select = new SelectBuilder()
+                 .addVar(propertyVar)
+                 .addWhere(new WhereBuilder()
+                         .addGraph(NodeFactory.createURI(graphURI), new WhereBuilder()
+                                 .addWhere("?subj", SH.property, propertyVar))
+                         .addFilter(exprFactory
+                                 .not(exprFactory.strstarts(exprFactory.str(propertyVar), graphURI))))
+                 .addWhere(new WhereBuilder()
+                         .addWhere(propertyVar, "a", resourceType));
+         coreRepository.querySelect(select.build(), (var row) -> externalResources.add(row.get("property").toString()));
+         return externalResources;
      }
 }
