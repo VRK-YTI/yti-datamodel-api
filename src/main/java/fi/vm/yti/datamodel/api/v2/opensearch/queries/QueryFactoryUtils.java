@@ -93,7 +93,7 @@ public class QueryFactoryUtils {
 
     public static Query labelQuery(String query) {
         return QueryStringQuery.of(q -> q
-                .query("*" + query + "*")
+                        .query("*" + query.trim() + "*")
                 .fields("label.*")
                 .fuzziness("2")
                 )._toQuery();
