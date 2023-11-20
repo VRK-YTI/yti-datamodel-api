@@ -126,6 +126,22 @@ public class VisualizationService {
         coreRepository.put(positionGraphURI, positionModel);
     }
 
+    public void savePositionData(String prefix, List<PositionDataDTO> positions, String version) {
+        if (version == null) {
+            savePositionData(prefix, positions);
+            return;
+        }
+
+        var modelURI = ModelConstants.SUOMI_FI_NAMESPACE + prefix + ModelConstants.RESOURCE_SEPARATOR + version;
+        var dataModel = coreRepository.fetch(modelURI);
+        check(authorizationManager.hasRightToModel(prefix, dataModel));
+
+        var positionGraphURI = ModelConstants.MODEL_POSITIONS_NAMESPACE + prefix + ModelConstants.RESOURCE_SEPARATOR + version;
+
+        var positionModel = VisualizationMapper.mapPositionDataToModel(positionGraphURI, positions);
+        coreRepository.put(positionGraphURI, positionModel);
+    }
+
     public void addNewResourceDefaultPosition(String prefix, String identifier) {
         var positionGraphURI = ModelConstants.MODEL_POSITIONS_NAMESPACE + prefix;
         var positions = getPositions(prefix, null);
