@@ -6,6 +6,7 @@ import java.util.Map;
 
 public class VisualizationItemDTO {
     private String identifier;
+    private String uri;
     private Map<String, String> label;
 
     public String getIdentifier() {
@@ -22,6 +23,14 @@ public class VisualizationItemDTO {
 
     public void setLabel(Map<String, String> label) {
         this.label = label;
+    }
+
+    public String getUri() {
+        return uri;
+    }
+
+    public void setUri(String uri) {
+        this.uri = uri;
     }
 
     @Override
