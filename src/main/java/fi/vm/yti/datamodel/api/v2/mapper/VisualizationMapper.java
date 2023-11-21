@@ -106,6 +106,7 @@ public class VisualizationMapper {
                     }
                     var dto = new VisualizationReferenceDTO();
                     dto.setLabel(MapperUtils.localizedPropertyToMap(r.getSubject(), RDFS.label));
+                    dto.setUri(r.getSubject().getURI());
                     dto.setReferenceType(VisualizationReferenceType.ASSOCIATION);
                     dto.setIdentifier(MapperUtils.getLiteral(r.getSubject(), DCTerms.identifier, String.class));
                     dto.setReferenceTarget(getReferenceIdentifier(range, namespaces));
@@ -136,6 +137,7 @@ public class VisualizationMapper {
             var attribute = new VisualizationAttributeDTO();
             attribute.setIdentifier(getReferenceIdentifier(resourceURI, namespaces));
             attribute.setLabel(label);
+            attribute.setUri(resourceURI);
             if (someValuesFrom != null) {
                 var uriDTO = MapperUtils.uriToURIDTO(someValuesFrom, resource.getModel());
                 attribute.setDataType(uriDTO.getCurie());
@@ -145,6 +147,7 @@ public class VisualizationMapper {
             var association = new VisualizationReferenceDTO();
             association.setIdentifier(getReferenceIdentifier(resourceURI, namespaces));
             association.setLabel(label);
+            association.setUri(resourceURI);
             association.setReferenceType(VisualizationReferenceType.ASSOCIATION);
             association.setReferenceTarget(getReferenceIdentifier(someValuesFrom, namespaces));
             classDTO.addAssociation(association);
@@ -163,6 +166,7 @@ public class VisualizationMapper {
             var attribute = new VisualizationPropertyShapeAttributeDTO();
             attribute.setIdentifier(getReferenceIdentifier(versionedResourceURI, namespaces));
             attribute.setLabel(label);
+            attribute.setUri(resource.getURI());
             var dataType = MapperUtils.propertyToString(resource, SH.datatype);
             if (dataType != null) {
                 var uriDTO = MapperUtils.uriToURIDTO(dataType, model);
@@ -176,6 +180,7 @@ public class VisualizationMapper {
             var association = new VisualizationPropertyShapeAssociationDTO();
             association.setIdentifier(getReferenceIdentifier(versionedResourceURI, namespaces));
             association.setLabel(label);
+            association.setUri(resource.getURI());
             association.setMaxCount(MapperUtils.getLiteral(resource, SH.maxCount, Integer.class));
             association.setMinCount(MapperUtils.getLiteral(resource, SH.minCount, Integer.class));
             association.setReferenceTarget(getPropertyShapeAssociationTarget(model, resource, namespaces));
@@ -297,6 +302,7 @@ public class VisualizationMapper {
     private static void mapCommon(VisualizationItemDTO item, Resource resource, Map<String, String> namespaces) {
         item.setLabel(MapperUtils.localizedPropertyToMap(resource, RDFS.label));
         item.setIdentifier(getReferenceIdentifier(resource.getURI(), namespaces));
+        item.setUri(resource.getURI());
     }
 
     private static String getPropertyShapeAssociationTarget(Model model, Resource resource, Map<String, String> namespaces) {
