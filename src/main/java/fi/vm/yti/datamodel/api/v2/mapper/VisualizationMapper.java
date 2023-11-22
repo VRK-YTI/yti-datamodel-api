@@ -216,7 +216,7 @@ public class VisualizationMapper {
                     var path = handlePath(positions, dto.getIdentifier(), reference, hiddenElements);
                     reference.setReferenceTarget(path.get(0));
                 });
-            } // http://uri.suomi.fi/datamodel/positions/testlib/1.0.0
+            }
 
             if (dto instanceof VisualizationClassDTO classDTO) {
                 // check if there are hidden nodes between association relations
