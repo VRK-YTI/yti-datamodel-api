@@ -68,6 +68,18 @@ class VisualizationControllerTest {
                 )
                 .andExpect(status().isNoContent());
 
-        verify(visualizationService).savePositionData(eq("test"), anyList());
+        verify(visualizationService).savePositionData(eq("test"), anyList(), eq(null));
+    }
+
+    @Test
+    void testSavePositionsVersion() throws Exception {
+        mvc.perform(put("/v2/visualization/{prefix}/positions", "test")
+                        .param("version", "1.1.1")
+                        .contentType("application/json")
+                        .content(EndpointUtils.convertObjectToJsonString(new ArrayList<PositionDataDTO>()))
+                )
+                .andExpect(status().isNoContent());
+
+        verify(visualizationService).savePositionData(eq("test"), anyList(), eq("1.1.1"));
     }
 }

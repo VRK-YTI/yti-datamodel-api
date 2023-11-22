@@ -116,29 +116,23 @@ public class VisualizationService {
     }
 
     public void savePositionData(String prefix, List<PositionDataDTO> positions) {
-        var modelURI = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
-        var dataModel = coreRepository.fetch(modelURI);
-        check(authorizationManager.hasRightToModel(prefix, dataModel));
-
-        var positionGraphURI = ModelConstants.MODEL_POSITIONS_NAMESPACE + prefix;
-
-        var positionModel = VisualizationMapper.mapPositionDataToModel(positionGraphURI, positions);
-        coreRepository.put(positionGraphURI, positionModel);
+        savePositionData(prefix, positions, null);
     }
 
     public void savePositionData(String prefix, List<PositionDataDTO> positions, String version) {
-        if (version == null) {
-            savePositionData(prefix, positions);
-            return;
+        var modelURI = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
+        var positionBaseURI = ModelConstants.MODEL_POSITIONS_NAMESPACE + prefix;
+        var positionGraphURI = positionBaseURI;
+
+        if (version != null) {
+            modelURI += ModelConstants.RESOURCE_SEPARATOR + version;
+            positionGraphURI += ModelConstants.RESOURCE_SEPARATOR + version;
         }
 
-        var modelURI = ModelConstants.SUOMI_FI_NAMESPACE + prefix + ModelConstants.RESOURCE_SEPARATOR + version;
         var dataModel = coreRepository.fetch(modelURI);
         check(authorizationManager.hasRightToModel(prefix, dataModel));
 
-        var positionGraphURI = ModelConstants.MODEL_POSITIONS_NAMESPACE + prefix + ModelConstants.RESOURCE_SEPARATOR + version;
-
-        var positionModel = VisualizationMapper.mapPositionDataToModel(positionGraphURI, positions);
+        var positionModel = VisualizationMapper.mapPositionDataToModel(positionBaseURI, positions);
         coreRepository.put(positionGraphURI, positionModel);
     }
 
