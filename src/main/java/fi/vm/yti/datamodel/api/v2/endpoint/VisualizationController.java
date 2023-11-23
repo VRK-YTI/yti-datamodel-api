@@ -42,8 +42,9 @@ public class VisualizationController {
     })
     @PutMapping(value = "/{prefix}/positions")
     public ResponseEntity<Void> savePositions(@PathVariable @Parameter(description = "Data model prefix") String prefix,
+                                              @RequestParam(required = false) @Parameter(description = "Model version, if empty uses the draft version") @ValidSemanticVersion String version,
                                               @RequestBody @Parameter(description = "List of positions") List<PositionDataDTO> positions) {
-        visualizationService.savePositionData(prefix, positions);
+        visualizationService.savePositionData(prefix, positions, version);
         return ResponseEntity.noContent().build();
     }
 }

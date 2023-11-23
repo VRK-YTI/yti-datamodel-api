@@ -116,13 +116,23 @@ public class VisualizationService {
     }
 
     public void savePositionData(String prefix, List<PositionDataDTO> positions) {
+        savePositionData(prefix, positions, null);
+    }
+
+    public void savePositionData(String prefix, List<PositionDataDTO> positions, String version) {
         var modelURI = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
+        var positionBaseURI = ModelConstants.MODEL_POSITIONS_NAMESPACE + prefix;
+        var positionGraphURI = positionBaseURI;
+
+        if (version != null) {
+            modelURI += ModelConstants.RESOURCE_SEPARATOR + version;
+            positionGraphURI += ModelConstants.RESOURCE_SEPARATOR + version;
+        }
+
         var dataModel = coreRepository.fetch(modelURI);
         check(authorizationManager.hasRightToModel(prefix, dataModel));
 
-        var positionGraphURI = ModelConstants.MODEL_POSITIONS_NAMESPACE + prefix;
-
-        var positionModel = VisualizationMapper.mapPositionDataToModel(positionGraphURI, positions);
+        var positionModel = VisualizationMapper.mapPositionDataToModel(positionBaseURI, positions);
         coreRepository.put(positionGraphURI, positionModel);
     }
 

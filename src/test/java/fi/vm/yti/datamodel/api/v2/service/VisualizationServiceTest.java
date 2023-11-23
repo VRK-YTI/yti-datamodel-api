@@ -142,6 +142,29 @@ class VisualizationServiceTest {
     }
 
     @Test
+    void savePositionsVersion() {
+        var graphURI = ModelConstants.MODEL_POSITIONS_NAMESPACE + "test-model/1.2.3";
+        when(coreRepository.graphExists(graphURI)).thenReturn(true);
+        when(coreRepository.fetch(anyString())).thenReturn(ModelFactory.createDefaultModel());
+        when(authorizationManager.hasRightToModel(anyString(), any(Model.class))).thenReturn(true);
+
+        var positionData = new PositionDataDTO();
+        positionData.setX(1.0);
+        positionData.setY(2.0);
+        positionData.setIdentifier("pos-1");
+
+        visualizationService.savePositionData("test-model", List.of(positionData), "1.2.3");
+
+        verify(coreRepository).put(eq(graphURI), modelCaptor.capture());
+
+        var resourceURI = ModelConstants.MODEL_POSITIONS_NAMESPACE + "test-model"
+                + ModelConstants.RESOURCE_SEPARATOR
+                + positionData.getIdentifier();
+        var resource = modelCaptor.getValue().getResource(resourceURI);
+        assertEquals("pos-1", resource.getProperty(DCTerms.identifier).getString());
+    }
+
+    @Test
     void saveVersionedPositions() {
         var graphURI = ModelConstants.MODEL_POSITIONS_NAMESPACE + "test-model";
         when(coreRepository.fetch(anyString())).thenReturn(ModelFactory.createDefaultModel());
