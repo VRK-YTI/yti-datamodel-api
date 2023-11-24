@@ -203,6 +203,7 @@ class ClassServiceTest {
         when(coreRepository.resourceExistsInGraph(anyString(), anyString())).thenReturn(true);
         when(coreRepository.fetch(anyString())).thenReturn(ModelFactory.createDefaultModel());
         when(authorizationManager.hasRightToModel(anyString(), any(Model.class))).thenReturn(true);
+        when(userProvider.getUser()).thenReturn(YtiUser.ANONYMOUS_USER);
         classService.delete("test", "Identifier");
 
         verify(coreRepository).fetch(anyString());
@@ -235,6 +236,7 @@ class ClassServiceTest {
     void handlePropertyShapeReferencePut(){
         when(coreRepository.fetch(anyString())).thenReturn(ModelFactory.createDefaultModel());
         when(authorizationManager.hasRightToModel(anyString(), any(Model.class))).thenReturn(true);
+        when(userProvider.getUser()).thenReturn(YtiUser.ANONYMOUS_USER);
         try(var mapper = mockStatic(ClassMapper.class)) {
             classService.handlePropertyShapeReference("test", "node-shape-1", "http://uri.suomi.fi/datamodel/ns/test/ref-1", false);
             mapper.verify(() -> ClassMapper.mapAppendNodeShapeProperty( any(Resource.class), anyString(), anySet()));
@@ -249,6 +251,7 @@ class ClassServiceTest {
     void handlePropertyShapeReferenceDelete(){
         when(coreRepository.fetch(anyString())).thenReturn(ModelFactory.createDefaultModel());
         when(authorizationManager.hasRightToModel(anyString(), any(Model.class))).thenReturn(true);
+        when(userProvider.getUser()).thenReturn(YtiUser.ANONYMOUS_USER);
         try(var mapper = mockStatic(ClassMapper.class)) {
             classService.handlePropertyShapeReference("test", "node-shape-1", "http://uri.suomi.fi/datamodel/ns/test/ref-1", true);
             mapper.verify(() -> ClassMapper.mapRemoveNodeShapeProperty(any(Model.class), any(Resource.class), anyString(), anySet()));
@@ -264,6 +267,7 @@ class ClassServiceTest {
         when(coreRepository.fetch(anyString())).thenReturn(ModelFactory.createDefaultModel());
         when(coreRepository.resourceExistsInGraph(anyString(), anyString())).thenReturn(true);
         when(authorizationManager.hasRightToModel(anyString(), any(Model.class))).thenReturn(true);
+        when(userProvider.getUser()).thenReturn(YtiUser.ANONYMOUS_USER);
         try(var mapper = mockStatic(ClassMapper.class)) {
             classService.togglePropertyShape("test", "http://uri.suomi.fi/datamodel/ns/test/Uri");
             mapper.verify(() -> ClassMapper.toggleAndMapDeactivatedProperty( any(Model.class), anyString(), anyBoolean()));
@@ -288,6 +292,7 @@ class ClassServiceTest {
                 .addProperty(RDFS.range, XSD.integer);
 
         when(authorizationManager.hasRightToModel(anyString(), any(Model.class))).thenReturn(true);
+        when(userProvider.getUser()).thenReturn(YtiUser.ANONYMOUS_USER);
         when(coreRepository.fetch(anyString())).thenReturn(model);
         when(coreRepository.resourceExistsInGraph(anyString(), anyString())).thenReturn(true);
         when(coreRepository.queryConstruct(any(Query.class))).thenReturn(restrictionQueryResult);
@@ -322,6 +327,7 @@ class ClassServiceTest {
                 .addProperty(RDF.type, OWL.Class);
 
         when(authorizationManager.hasRightToModel(anyString(), any(Model.class))).thenReturn(true);
+        when(userProvider.getUser()).thenReturn(YtiUser.ANONYMOUS_USER);
         when(coreRepository.fetch(anyString())).thenReturn(model);
         when(coreRepository.resourceExistsInGraph(anyString(), anyString())).thenReturn(true);
         when(classService.findResources(eq(Set.of(modelURI + "/association-1")), anySet())).thenReturn(restrictionQueryResult);

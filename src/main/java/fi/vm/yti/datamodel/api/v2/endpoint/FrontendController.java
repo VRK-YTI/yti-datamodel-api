@@ -4,7 +4,10 @@ import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
 import fi.vm.yti.datamodel.api.v2.dto.OrganizationDTO;
 import fi.vm.yti.datamodel.api.v2.dto.ServiceCategoryDTO;
 import fi.vm.yti.datamodel.api.v2.dto.UriDTO;
-import fi.vm.yti.datamodel.api.v2.opensearch.dto.*;
+import fi.vm.yti.datamodel.api.v2.opensearch.dto.CountSearchResponse;
+import fi.vm.yti.datamodel.api.v2.opensearch.dto.ModelSearchRequest;
+import fi.vm.yti.datamodel.api.v2.opensearch.dto.ResourceSearchRequest;
+import fi.vm.yti.datamodel.api.v2.opensearch.dto.SearchResponseDTO;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexModel;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexResource;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexResourceInfo;
@@ -18,8 +21,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.apache.jena.graph.NodeFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -38,8 +39,6 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 @RequestMapping("v2/frontend")
 @Tag(name = "Frontend")
 public class FrontendController {
-
-    private static final Logger logger = LoggerFactory.getLogger(FrontendController.class);
     private final SearchIndexService searchIndexService;
     private final FrontendService frontendService;
     private final AuthenticatedUserProvider userProvider;
@@ -62,7 +61,6 @@ public class FrontendController {
     })
     @GetMapping(path = "/counts", produces = MediaType.APPLICATION_JSON_VALUE)
     public CountSearchResponse getCounts(@Parameter(description = "Count request parameters") ModelSearchRequest request) {
-        logger.info("GET /counts requested");
         return searchIndexService.getCounts(request, userProvider.getUser());
     }
 
@@ -72,7 +70,6 @@ public class FrontendController {
     public Collection<OrganizationDTO> getOrganizations(
             @RequestParam(required = false, defaultValue = ModelConstants.DEFAULT_LANGUAGE) @Parameter(description = "Alphabetical sorting language") String sortLang,
             @RequestParam(required = false) @Parameter(description = "Include child organizations in response") boolean includeChildOrganizations) {
-        logger.info("GET /organizations requested");
         return frontendService.getOrganizations(sortLang, includeChildOrganizations);
     }
 
@@ -80,7 +77,6 @@ public class FrontendController {
     @ApiResponse(responseCode = "200", description = "Service categories as JSON")
     @GetMapping(path = "/service-categories", produces = MediaType.APPLICATION_JSON_VALUE)
     public Collection<ServiceCategoryDTO> getServiceCategories(@RequestParam(required = false, defaultValue = ModelConstants.DEFAULT_LANGUAGE) @Parameter(description = "Alphabetical sorting language") String sortLang) {
-        logger.info("GET /serviceCategories requested");
         return frontendService.getServiceCategories(sortLang);
     }
 

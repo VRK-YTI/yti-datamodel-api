@@ -43,6 +43,7 @@ import static fi.vm.yti.security.AuthorizationException.check;
 @Service
 public class DataModelService {
 
+    private final AuditService auditService = new AuditService("DATAMODEL");
     private final Logger logger = LoggerFactory.getLogger(DataModelService.class);
 
     private final CoreRepository coreRepository;
@@ -100,6 +101,7 @@ public class DataModelService {
 
         var indexModel = mapper.mapToIndexModel(graphUri, jenaModel);
         openSearchIndexer.createModelToIndex(indexModel);
+        auditService.log(AuditService.ActionType.CREATE, graphUri, userProvider.getUser());
         return new URI(graphUri);
     }
 
@@ -117,6 +119,7 @@ public class DataModelService {
 
         var indexModel = mapper.mapToIndexModel(graphUri, model);
         openSearchIndexer.updateModelToIndex(indexModel);
+        auditService.log(AuditService.ActionType.UPDATE, graphUri, userProvider.getUser());
     }
 
     public void delete(String prefix, String version) {
@@ -134,6 +137,7 @@ public class DataModelService {
         coreRepository.delete(versionUri);
         openSearchIndexer.deleteModelFromIndex(versionUri);
         openSearchIndexer.removeResourceIndexesByDataModel(modelUri, version);
+        auditService.log(AuditService.ActionType.DELETE, modelUri, userProvider.getUser());
     }
 
     public boolean exists(String prefix) {
@@ -149,7 +153,6 @@ public class DataModelService {
         if(version != null) {
             versionUri += ModelConstants.RESOURCE_SEPARATOR + version;
         }
-        logger.info("Exporting datamodel {}, {}", versionUri, accept);
 
         Model exportedModel;
         Model model;
@@ -244,7 +247,7 @@ public class DataModelService {
         resources.forEach(resource -> list.add(ResourceMapper.mapToIndexResource(model, resource.getURI())));
         openSearchIndexer.bulkInsert(OpenSearchIndexer.OPEN_SEARCH_INDEX_RESOURCE, list);
         visualisationService.saveVersionedPositions(prefix, version);
-        //Draft model does not need to be indexed since opensearch specific properties on it did not change
+        auditService.log(AuditService.ActionType.CREATE, versionUri, userProvider.getUser());
         return new URI(versionUri);
 
     }
@@ -293,5 +296,6 @@ public class DataModelService {
 
         var indexModel = mapper.mapToIndexModel(graphUri, model);
         openSearchIndexer.updateModelToIndex(indexModel);
+        auditService.log(AuditService.ActionType.UPDATE, versionUri, userProvider.getUser());
     }
 }

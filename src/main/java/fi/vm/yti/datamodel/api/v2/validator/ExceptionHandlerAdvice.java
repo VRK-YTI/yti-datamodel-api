@@ -1,6 +1,7 @@
 package fi.vm.yti.datamodel.api.v2.validator;
 
 import fi.vm.yti.datamodel.api.v2.endpoint.error.*;
+import fi.vm.yti.security.AuthorizationException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import org.hibernate.validator.internal.engine.path.PathImpl;
@@ -38,6 +39,13 @@ public class ExceptionHandlerAdvice extends ResponseEntityExceptionHandler {
             @NotNull HttpStatusCode status,
             @NotNull WebRequest request) {
         return buildResponseEntity(new ApiError(HttpStatus.BAD_REQUEST, "Malformed JSON request", ex));
+    }
+
+    @ExceptionHandler(AuthorizationException.class)
+    protected ResponseEntity<Object> handleAuthorizationException(AuthorizationException ex) {
+        var apiError = new ApiError(HttpStatus.UNAUTHORIZED);
+        apiError.setMessage(ex.getMessage());
+        return buildResponseEntity(apiError);
     }
 
     @ExceptionHandler(ConstraintViolationException.class)

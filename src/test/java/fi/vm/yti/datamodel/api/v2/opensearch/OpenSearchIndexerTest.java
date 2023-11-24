@@ -8,6 +8,7 @@ import fi.vm.yti.datamodel.api.v2.mapper.ModelMapper;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import fi.vm.yti.datamodel.api.v2.repository.ImportsRepository;
+import fi.vm.yti.security.AuthenticatedUserProvider;
 import org.apache.jena.query.Query;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ResIterator;
@@ -46,6 +47,9 @@ class OpenSearchIndexerTest {
 
     @MockBean
     AuthorizationManager authorizationManager;
+
+    @MockBean
+    AuthenticatedUserProvider userProvider;
 
     @MockBean
     OpenSearchClient client;

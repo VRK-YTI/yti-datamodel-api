@@ -2,7 +2,10 @@ package fi.vm.yti.datamodel.api.v2.service;
 
 import fi.vm.yti.datamodel.api.security.AuthorizationManager;
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
-import fi.vm.yti.datamodel.api.v2.dto.visualization.*;
+import fi.vm.yti.datamodel.api.v2.dto.visualization.PositionDataDTO;
+import fi.vm.yti.datamodel.api.v2.dto.visualization.VisualizationClassDTO;
+import fi.vm.yti.datamodel.api.v2.dto.visualization.VisualizationNodeDTO;
+import fi.vm.yti.datamodel.api.v2.dto.visualization.VisualizationResultDTO;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
 import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.mapper.VisualizationMapper;
@@ -10,6 +13,7 @@ import fi.vm.yti.datamodel.api.v2.properties.DCAP;
 import fi.vm.yti.datamodel.api.v2.properties.Iow;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelUtils;
+import fi.vm.yti.security.AuthenticatedUserProvider;
 import org.apache.jena.rdf.model.*;
 import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.OWL;
@@ -25,16 +29,21 @@ import static fi.vm.yti.security.AuthorizationException.check;
 @Service
 public class VisualizationService {
 
+    private final AuditService auditService = new AuditService("VISUALIZATION");
+
     private final ResourceService resourceService;
     private final CoreRepository coreRepository;
     private final AuthorizationManager authorizationManager;
+    private final AuthenticatedUserProvider userProvider;
     public VisualizationService(ResourceService resourceService,
                                 CoreRepository coreRepository,
-                                AuthorizationManager authorizationManager) {
+                                AuthorizationManager authorizationManager, AuthenticatedUserProvider userProvider) {
         this.resourceService = resourceService;
         this.coreRepository = coreRepository;
         this.authorizationManager = authorizationManager;
+        this.userProvider = userProvider;
     }
+
 
     public VisualizationResultDTO getVisualizationData(String prefix, String version) {
         var graph = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
@@ -134,6 +143,7 @@ public class VisualizationService {
 
         var positionModel = VisualizationMapper.mapPositionDataToModel(positionBaseURI, positions);
         coreRepository.put(positionGraphURI, positionModel);
+        auditService.log(AuditService.ActionType.SAVE, modelURI, userProvider.getUser());
     }
 
     public void addNewResourceDefaultPosition(String prefix, String identifier) {

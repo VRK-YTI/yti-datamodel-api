@@ -37,6 +37,7 @@ import static fi.vm.yti.security.AuthorizationException.check;
 @Service
 public class ResourceService extends BaseResourceService {
 
+    private static final AuditService AUDIT_SERVICE = new AuditService("RESOURCE");
     private final CoreRepository coreRepository;
     private final ImportsRepository importsRepository;
     private final AuthorizationManager authorizationManager;
@@ -54,7 +55,7 @@ public class ResourceService extends BaseResourceService {
                            CodeListService codeListService,
                            AuthenticatedUserProvider userProvider,
                            OpenSearchIndexer openSearchIndexer){
-        super(coreRepository, importsRepository, authorizationManager, openSearchIndexer);
+        super(coreRepository, importsRepository, authorizationManager, openSearchIndexer, AUDIT_SERVICE, userProvider);
         this.coreRepository = coreRepository;
         this.importsRepository = importsRepository;
         this.authorizationManager = authorizationManager;
@@ -126,6 +127,7 @@ public class ResourceService extends BaseResourceService {
         }
 
         saveResource(model, graphUri, resourceUri, false);
+        AUDIT_SERVICE.log(AuditService.ActionType.CREATE, resourceUri, userProvider.getUser());
         return new URI(resourceUri);
     }
 
@@ -157,6 +159,7 @@ public class ResourceService extends BaseResourceService {
         terminologyService.resolveConcept(dto.getSubject());
 
         saveResource(model, graphUri, resourceUri, true);
+        AUDIT_SERVICE.log(AuditService.ActionType.UPDATE, resourceUri, userProvider.getUser());
     }
 
     public URI copyPropertyShape(String prefix, String propertyShapeIdentifier, String targetPrefix, String newIdentifier) throws URISyntaxException {
@@ -183,6 +186,7 @@ public class ResourceService extends BaseResourceService {
         ResourceMapper.mapToCopyToLocalPropertyShape(graphUri, model, propertyShapeIdentifier, targetModel, targetGraph, newIdentifier, userProvider.getUser());
 
         saveResource(targetModel, targetGraph, targetResource, false);
+        AUDIT_SERVICE.log(AuditService.ActionType.CREATE, targetResource, userProvider.getUser());
         return new URI(targetResource);
     }
 

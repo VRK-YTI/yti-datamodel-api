@@ -21,8 +21,7 @@ import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(SpringExtension.class)
 @Import({
@@ -51,7 +50,7 @@ class NamespaceResolverTest {
     @Test
     void shouldTryToResolve() {
         namespaceResolver.resolve("notrealaddress", false);
-        verify(userProvider).getUser();
+        verify(userProvider, times(2)).getUser();
         verify(importsRepository).graphExists(anyString());
     }
 
