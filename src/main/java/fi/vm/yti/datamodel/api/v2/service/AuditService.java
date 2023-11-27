@@ -18,7 +18,7 @@ public class AuditService {
         if(user.isAnonymous()) {
             return;
         }
-        logger.info("{} {}: <{}>, User[email={}, id={}]", entityType, type, uri, user.getEmail(), user.getId());
+        logger.info("{} {}: <{}>, User[id={}]", entityType, type, uri, user.getId());
     }
 
     public enum ActionType {
