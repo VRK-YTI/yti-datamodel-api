@@ -5,11 +5,13 @@ import fi.vm.yti.datamodel.api.v2.dto.Status;
 import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.mapper.ModelMapper;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
+import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
 import fi.vm.yti.datamodel.api.v2.utils.SemVer;
 import fi.vm.yti.migration.MigrationTask;
 import org.apache.jena.arq.querybuilder.SelectBuilder;
 import org.apache.jena.arq.querybuilder.WhereBuilder;
 import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.OWL;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,6 +56,7 @@ public class V7_VersionDraft implements MigrationTask {
         }).forEach(graph -> {
             var model = coreRepository.fetch(graph);
             var modelRes = model.getResource(graph);
+            var prefix = MapperUtils.getLiteral(modelRes, DCTerms.identifier, String.class);
             var status = Status.valueOf(MapperUtils.propertyToString(modelRes, OWL.versionInfo));
             var previousVersion = MapperUtils.propertyToString(modelRes, OWL.priorVersion);
             if(status.equals(Status.SUGGESTED)){
@@ -67,16 +70,17 @@ public class V7_VersionDraft implements MigrationTask {
                     newVersion = previousNumber.getMajor() + "." + previousNumber.getMinor() + "." + (previousNumber.getPatch() + 1);
                 }
 
-                var versionUri = modelMapper.mapReleaseProperties(model, graph, newVersion, Status.SUGGESTED);
+                var versionUri = DataModelURI.createModelURI(prefix, newVersion);
+                modelMapper.mapReleaseProperties(model, versionUri, Status.SUGGESTED);
                 //Map new newest release to draft model
-                modelMapper.mapPriorVersion(newDraft, graph, versionUri);
+                modelMapper.mapPriorVersion(newDraft, graph, versionUri.getGraphURI());
                 //unversioned graphs should not be suggested
                 var newDraftRes = newDraft.getResource(graph);
                 newDraftRes.removeAll(OWL.versionInfo);
                 newDraftRes.addProperty(OWL.versionInfo, Status.DRAFT.name());
 
                 coreRepository.put(graph, newDraft);
-                coreRepository.put(versionUri, model);
+                coreRepository.put(versionUri.getGraphURI(), model);
 
                 //this migration does not need to index as migration happens before startup indexing
             }

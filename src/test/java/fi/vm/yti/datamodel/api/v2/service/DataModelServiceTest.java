@@ -10,6 +10,7 @@ import fi.vm.yti.datamodel.api.v2.mapper.ModelMapper;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexModel;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
+import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
 import fi.vm.yti.security.AuthenticatedUserProvider;
 import fi.vm.yti.security.AuthorizationException;
 import fi.vm.yti.security.YtiUser;
@@ -80,7 +81,7 @@ class DataModelServiceTest {
 
         dataModelService.get("test", null);
 
-        verify(coreRepository).fetch("http://uri.suomi.fi/datamodel/ns/test");
+        verify(coreRepository).fetch(ModelConstants.SUOMI_FI_NAMESPACE + "test" + ModelConstants.RESOURCE_SEPARATOR);
         verify(authorizationManager).hasRightToModel(eq("test"), any(Model.class));
         verify(modelMapper).mapToDataModelDTO(anyString(), any(Model.class), eq(null));
     }
@@ -91,7 +92,7 @@ class DataModelServiceTest {
 
         dataModelService.get("test", "1.0.1");
 
-        verify(coreRepository).fetch("http://uri.suomi.fi/datamodel/ns/test/1.0.1");
+        verify(coreRepository).fetch(ModelConstants.SUOMI_FI_NAMESPACE + "test/1.0.1" + ModelConstants.RESOURCE_SEPARATOR);
         verify(authorizationManager).hasRightToModel(eq("test"), any(Model.class));
         verify(modelMapper).mapToDataModelDTO(anyString(), any(Model.class), eq(null));
     }
@@ -104,7 +105,7 @@ class DataModelServiceTest {
         when(modelMapper.mapToIndexModel(anyString(), any(Model.class))).thenReturn(new IndexModel());
         var dto = createDatamodelDTO(false);
         var uri = dataModelService.create(dto, ModelType.LIBRARY);
-        assertEquals("http://uri.suomi.fi/datamodel/ns/test", uri.toString());
+        assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "test/", uri.toString());
 
         verify(authorizationManager).hasRightToAnyOrganization(anyCollection());
         verify(terminologyService).resolveTerminology(anySet());
@@ -203,17 +204,11 @@ class DataModelServiceTest {
         when(coreRepository.fetch(anyString())).thenReturn(model);
         when(authorizationManager.hasRightToModel(anyString(), any(Model.class))).thenReturn(true);
 
-        var response = dataModelService.export("test", null, null, "text/turtle");
+        var response = dataModelService.export("test", null, "text/turtle", false);
         assertNotNull(response.getBody());
         assertTrue(response.getBody().contains("test:TestClass"));
         assertTrue(response.getBody().contains("test:TestAttribute"));
         assertTrue(response.getBody().contains("test:TestAssociation"));
-
-        //resource
-        response = dataModelService.export("test", null, "TestClass", "text/turtle");
-        assertNotNull(response.getBody());
-        assertTrue(response.getBody().contains("test:TestClass"));
-        assertFalse(response.getBody().contains("test:TestAttribute"));
     }
 
     @ParameterizedTest
@@ -221,7 +216,7 @@ class DataModelServiceTest {
     void shouldGetModelWithAcceptHeader(String accept) {
         when(coreRepository.fetch(anyString())).thenReturn(ModelFactory.createDefaultModel());
 
-        var response = dataModelService.export("test", null, null, accept);
+        var response = dataModelService.export("test", null, accept, false);
         assertTrue(response.getStatusCode().is2xxSuccessful());
         //TODO can this be fixed
     }
@@ -231,7 +226,7 @@ class DataModelServiceTest {
         var model = MapperTestUtils.getModelFromFile("/models/test_datamodel_library_with_resources.ttl");
         when(coreRepository.fetch(anyString())).thenReturn(model);
         when(authorizationManager.hasRightToModel(anyString(), any(Model.class))).thenReturn(false);
-        var response = dataModelService.export("test", null, null, "text/turtle");
+        var response = dataModelService.export("test", null, "text/turtle", false);
         assertTrue(response.getStatusCode().is2xxSuccessful());
         assertNotNull(response.getBody());
         assertFalse(response.getBody().contains("skos:editorialNote"));
@@ -243,30 +238,26 @@ class DataModelServiceTest {
         var model = MapperTestUtils.getModelFromFile("/test_datamodel_library.ttl");
         when(authorizationManager.hasRightToModel(anyString(), any(Model.class))).thenReturn(true);
         //remove prior version property since we want to test without
-        model.getResource("http://uri.suomi.fi/datamodel/ns/test").removeAll(OWL.priorVersion);
+        model.getResource(ModelConstants.SUOMI_FI_NAMESPACE + "test").removeAll(OWL.priorVersion);
         when(coreRepository.fetch(anyString())).thenReturn(model);
-        when(modelMapper.mapReleaseProperties(any(Model.class), anyString(), anyString(), any(Status.class)))
-                .thenReturn("http://uri.suomi.fi/datamodel/ns/test/1.0.1");
         when(modelMapper.mapToIndexModel(anyString(), any(Model.class))).thenReturn(mock(IndexModel.class));
         when(userProvider.getUser()).thenReturn(YtiUser.ANONYMOUS_USER);
 
         dataModelService.createRelease("test", "1.0.1", Status.VALID);
 
-
         verify(coreRepository).fetch(anyString());
         verify(authorizationManager).hasRightToModel(anyString(), any(Model.class));
-        verify(modelMapper).mapReleaseProperties(model,
-                "http://uri.suomi.fi/datamodel/ns/test",
-                "1.0.1",
-                Status.VALID);
+        verify(modelMapper).mapReleaseProperties(any(Model.class),
+                any(DataModelURI.class),
+                eq(Status.VALID));
         verify(modelMapper).mapPriorVersion(any(Model.class),
-                                            eq("http://uri.suomi.fi/datamodel/ns/test"),
-                                            eq("http://uri.suomi.fi/datamodel/ns/test/1.0.1"));
+                                            eq(ModelConstants.SUOMI_FI_NAMESPACE + "test/"),
+                                            eq(ModelConstants.SUOMI_FI_NAMESPACE + "test/1.0.1/"));
 
-        verify(coreRepository).put(eq("http://uri.suomi.fi/datamodel/ns/test/1.0.1"), any(Model.class));
-        verify(coreRepository).put(eq("http://uri.suomi.fi/datamodel/ns/test"), any(Model.class));
+        verify(coreRepository).put(eq(ModelConstants.SUOMI_FI_NAMESPACE + "test/1.0.1/"), any(Model.class));
+        verify(coreRepository).put(eq(ModelConstants.SUOMI_FI_NAMESPACE + "test/"), any(Model.class));
 
-        verify(modelMapper).mapToIndexModel(eq("http://uri.suomi.fi/datamodel/ns/test"), any(Model.class));
+        verify(modelMapper).mapToIndexModel(eq(ModelConstants.SUOMI_FI_NAMESPACE + "test/"), any(Model.class));
         verify(openSearchIndexer).createModelToIndex(any(IndexModel.class));
         verify(visualizationService).saveVersionedPositions("test", "1.0.1");
     }
@@ -318,7 +309,7 @@ class DataModelServiceTest {
         var mockVersionInfo = new ModelVersionInfo();
         mockVersionInfo.setVersion("1.0.2");
         mockVersionInfo.setStatus(Status.VALID);
-        mockVersionInfo.setVersionIRI("http://uri.suomi.fi/datamodel/ns/test/1.0.2");
+        mockVersionInfo.setVersionIRI(ModelConstants.SUOMI_FI_NAMESPACE + "test/1.0.2");
         when(modelMapper.mapModelVersionInfo(any(Resource.class))).thenReturn(mockVersionInfo);
         when(coreRepository.queryConstruct(any(Query.class))).thenReturn(model);
         var result = dataModelService.getPriorVersions("test", "1.0.1");
@@ -359,7 +350,7 @@ class DataModelServiceTest {
         dataModelDTO.setGroups(Set.of("P11"));
         dataModelDTO.setLanguages(Set.of("fi"));
         dataModelDTO.setOrganizations(Set.of(RANDOM_ORG));
-        dataModelDTO.setInternalNamespaces(Set.of("http://uri.suomi.fi/datamodel/ns/test"));
+        dataModelDTO.setInternalNamespaces(Set.of(ModelConstants.SUOMI_FI_NAMESPACE + "test"));
         var extNs = new ExternalNamespaceDTO();
         extNs.setName(Map.of("fi", "test external namespace"));
         extNs.setPrefix("testprefix");

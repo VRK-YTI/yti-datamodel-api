@@ -13,7 +13,7 @@
                     {
                       "terms": {
                         "isDefinedBy": [
-                          "http://uri.suomi.fi/datamodel/ns/test"
+                          "https://iri.suomi.fi/model/test/"
                         ]
                       }
                     },

@@ -10,6 +10,7 @@ import fi.vm.yti.datamodel.api.v2.repository.ConceptRepository;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import fi.vm.yti.datamodel.api.v2.repository.ImportsRepository;
 import fi.vm.yti.datamodel.api.v2.repository.SchemesRepository;
+import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
 import fi.vm.yti.security.YtiUser;
 import org.apache.jena.datatypes.xsd.XSDDateTime;
 import org.apache.jena.rdf.model.*;
@@ -53,7 +54,7 @@ public class ModelMapper {
     public Model mapToJenaModel(DataModelDTO modelDTO, ModelType modelType, YtiUser user) {
         log.info("Mapping DatamodelDTO to Jena Model");
         var model = ModelFactory.createDefaultModel();
-        var modelUri = ModelConstants.SUOMI_FI_NAMESPACE + modelDTO.getPrefix();
+        var modelUri = DataModelURI.createModelURI(modelDTO.getPrefix()).getModelURI();
 
         var creationDate = new XSDDateTime(Calendar.getInstance());
         var modelResource = model.createResource(modelUri)
@@ -163,10 +164,11 @@ public class ModelMapper {
      */
     public DataModelInfoDTO mapToDataModelDTO(String prefix, Model model, Consumer<ResourceCommonDTO> userMapper) {
 
+        var uri = DataModelURI.createModelURI(prefix);
         var datamodelDTO = new DataModelInfoDTO();
         datamodelDTO.setPrefix(prefix);
-
-        var modelResource = model.getResource(ModelConstants.SUOMI_FI_NAMESPACE + prefix);
+        datamodelDTO.setUri(uri.getGraphURI());
+        var modelResource = model.getResource(uri.getModelURI());
 
         datamodelDTO.setStatus(Status.valueOf(MapperUtils.propertyToString(modelResource, SuomiMeta.publicationStatus)));
         datamodelDTO.setVersion(MapperUtils.propertyToString(modelResource, OWL.versionInfo));
@@ -402,7 +404,7 @@ public class ModelMapper {
         });
     }
 
-    public String mapReleaseProperties(Model model, String graphUri, String version, Status status){
+    public void mapReleaseProperties(Model model, DataModelURI uri, Status status){
 
         /*
         TODO: NOT MVP VC
@@ -411,17 +413,15 @@ public class ModelMapper {
         owl:backwardsCompatibleWith --> some versionIri
          */
 
-        var versionIri = graphUri + ModelConstants.RESOURCE_SEPARATOR + version;
-        var res = model.getResource(graphUri);
-        res.addProperty(OWL2.versionIRI, ResourceFactory.createResource(versionIri));
-        res.addProperty(OWL.versionInfo, version);
+        var res = model.getResource(uri.getModelURI());
+        res.addProperty(OWL2.versionIRI, ResourceFactory.createResource(uri.getGraphURI()));
+        res.addProperty(OWL.versionInfo, uri.getVersion());
         MapperUtils.updateStringProperty(res, SuomiMeta.publicationStatus, status.name());
         //prior version doesn't need to be mapped since it should always be already on the DRAFT model
-        return versionIri;
     }
 
-    public void mapPriorVersion(Model model, String graphUri, String priorVersionUri) {
-        var resource = model.getResource(graphUri);
+    public void mapPriorVersion(Model model, String modelUri, String priorVersionUri) {
+        var resource = model.getResource(modelUri);
         resource.removeAll(OWL.priorVersion);
         resource.addProperty(OWL.priorVersion, ResourceFactory.createResource(priorVersionUri));
     }
@@ -465,8 +465,8 @@ public class ModelMapper {
         MapperUtils.addUpdateMetadata(resource, user);
     }
 
-    public void mapUpdateVersionedModel(Model model, String graphUri, VersionedModelDTO dto, YtiUser user) {
-        var resource = model.getResource(graphUri);
+    public void mapUpdateVersionedModel(Model model, String modelUri, VersionedModelDTO dto, YtiUser user) {
+        var resource = model.getResource(modelUri);
 
         var status = Status.valueOf(MapperUtils.propertyToString(resource, SuomiMeta.publicationStatus));
         if(status.equals(Status.VALID) && !List.of(Status.VALID, Status.RETIRED, Status.SUPERSEDED).contains(dto.getStatus())){

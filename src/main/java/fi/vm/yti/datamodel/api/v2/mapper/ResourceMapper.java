@@ -3,8 +3,10 @@ package fi.vm.yti.datamodel.api.v2.mapper;
 import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.*;
+import fi.vm.yti.datamodel.api.v2.properties.DCAP;
 import fi.vm.yti.datamodel.api.v2.properties.Iow;
 import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
+import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
 import fi.vm.yti.security.YtiUser;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.rdf.model.*;
@@ -20,14 +22,14 @@ public class ResourceMapper {
         //Static class
     }
 
-    public static String mapToResource(String graphUri, Model model, ResourceDTO dto, ResourceType resourceType, YtiUser user){
-        var resourceResource = MapperUtils.addCommonResourceInfo(model, graphUri, dto);
+    public static String mapToResource(DataModelURI uri, Model model, ResourceDTO dto, ResourceType resourceType, YtiUser user){
+        var resourceResource = MapperUtils.addCommonResourceInfo(model, uri, dto);
 
         resourceResource.addProperty(RDF.type, resourceType.equals(ResourceType.ASSOCIATION)
                 ? OWL.ObjectProperty
                 : OWL.DatatypeProperty);
 
-        var modelResource = model.getResource(graphUri);
+        var modelResource = model.getResource(uri.getModelURI());
 
         //Equivalent resource
         if(dto.getEquivalentResource() != null){
@@ -60,23 +62,23 @@ public class ResourceMapper {
         return resourceResource.getURI();
     }
 
-    public static String mapToPropertyShapeResource(String graphUri, Model model, PropertyShapeDTO dto, ResourceType resourceType, YtiUser user) {
-        var resource = MapperUtils.addCommonResourceInfo(model, graphUri, dto);
-        var modelresource = model.getResource(graphUri);
+    public static String mapToPropertyShapeResource(DataModelURI uri, Model model, PropertyShapeDTO dto, ResourceType resourceType, YtiUser user) {
+        var resource = MapperUtils.addCommonResourceInfo(model, uri, dto);
+        var modelResource = model.getResource(uri.getModelURI());
 
         resource.addProperty(RDF.type, SH.PropertyShape);
         resource.addProperty(RDF.type, resourceType.equals(ResourceType.ASSOCIATION)
                 ? OWL.ObjectProperty
                 : OWL.DatatypeProperty);
 
-        MapperUtils.addResourceRelationship(modelresource, resource, SH.path, dto.getPath());
+        MapperUtils.addResourceRelationship(modelResource, resource, SH.path, dto.getPath());
         MapperUtils.addLiteral(resource, SH.minCount, dto.getMinCount());
         MapperUtils.addLiteral(resource, SH.maxCount, dto.getMaxCount());
 
         if(resourceType.equals(ResourceType.ASSOCIATION)){
-            MapperUtils.addResourceRelationship(modelresource, resource, SH.class_, ((AssociationRestriction) dto).getClassType());
+            MapperUtils.addResourceRelationship(modelResource, resource, SH.class_, ((AssociationRestriction) dto).getClassType());
         }else{
-            addAttributeRestrictionProperties(resource, (AttributeRestriction) dto, model.getResource(graphUri));
+            addAttributeRestrictionProperties(resource, (AttributeRestriction) dto, modelResource);
         }
 
         MapperUtils.addCreationMetadata(resource, user);
@@ -107,9 +109,9 @@ public class ResourceMapper {
         });
     }
 
-    public static void mapToUpdateResource(String graphUri, Model model, String resourceIdentifier, ResourceDTO dto, YtiUser user) {
-        var modelResource = model.getResource(graphUri);
-        var resource = model.getResource(graphUri + ModelConstants.RESOURCE_SEPARATOR + resourceIdentifier);
+    public static void mapToUpdateResource(DataModelURI uri, Model model, ResourceDTO dto, YtiUser user) {
+        var modelResource = model.getResource(uri.getModelURI());
+        var resource = model.getResource(uri.getResourceURI());
 
         MapperUtils.updateCommonResourceInfo(model, resource, modelResource, dto);
 
@@ -159,9 +161,9 @@ public class ResourceMapper {
         MapperUtils.addUpdateMetadata(resource, user);
     }
 
-    public static void mapToUpdatePropertyShape(String graphUri, Model model, String resourceIdentifier, PropertyShapeDTO dto, YtiUser user) {
-        var modelResource = model.getResource(graphUri);
-        var resource = model.getResource(graphUri + ModelConstants.RESOURCE_SEPARATOR + resourceIdentifier);
+    public static void mapToUpdatePropertyShape(DataModelURI uri, Model model, PropertyShapeDTO dto, YtiUser user) {
+        var modelResource = model.getResource(uri.getModelURI());
+        var resource = model.getResource(uri.getResourceURI());
 
         if(!MapperUtils.hasType(resource, OWL.DatatypeProperty, OWL.ObjectProperty)){
             throw new MappingError("Class cannot be updated through this endpoint");
@@ -232,19 +234,21 @@ public class ResourceMapper {
 
     public static IndexResource mapToIndexResource(Model model, String resourceUri){
         var indexResource = new IndexResource();
-
         var resource = model.getResource(resourceUri);
 
-        var id = resourceUri;
         var isDefinedBy = MapperUtils.propertyToString(model.getResource(resourceUri), RDFS.isDefinedBy);
-        var version = MapperUtils.propertyToString(model.getResource(isDefinedBy), OWL.versionInfo);
+        var modelResource = model.getResource(isDefinedBy);
+        var version = MapperUtils.propertyToString(modelResource, OWL.versionInfo);
+
         if(version != null){
-            id = isDefinedBy + ModelConstants.RESOURCE_SEPARATOR + version + ModelConstants.RESOURCE_SEPARATOR + resource.getLocalName();
             indexResource.setFromVersion(version);
-            indexResource.setVersionIri(MapperUtils.propertyToString(model.getResource(isDefinedBy), OWL2.versionIRI));
+            indexResource.setVersionIri(MapperUtils.propertyToString(modelResource, OWL2.versionIRI));
         }
 
-        indexResource.setId(id);
+        var id = DataModelURI.createResourceURI(MapperUtils.propertyToString(modelResource, DCAP.preferredXMLNamespacePrefix),
+                resource.getLocalName(), version);
+
+        indexResource.setId(id.getResourceVersionURI());
         indexResource.setCurie(MapperUtils.uriToURIDTO(resourceUri, model).getCurie());
         indexResource.setLabel(MapperUtils.localizedPropertyToMap(resource, RDFS.label));
         indexResource.setStatus(Status.valueOf(MapperUtils.propertyToString(resource, SuomiMeta.publicationStatus)));
@@ -357,14 +361,13 @@ public class ResourceMapper {
         return indexResource;
     }
 
-    public static ResourceInfoDTO mapToResourceInfoDTO(Model model, String modelUri,
-                                                       String resourceIdentifier, Model orgModel,
+    public static ResourceInfoDTO mapToResourceInfoDTO(Model model, DataModelURI uri, Model orgModel,
                                                        boolean hasRightToModel, Consumer<ResourceCommonDTO> userMapper) {
         var dto = new ResourceInfoDTO();
-        var resourceUri = modelUri + ModelConstants.RESOURCE_SEPARATOR + resourceIdentifier;
+        var resourceUri = uri.getResourceURI();
         var resourceResource = model.getResource(resourceUri);
 
-        MapperUtils.addCommonResourceDtoInfo(dto, resourceResource, model.getResource(modelUri), orgModel, hasRightToModel);
+        MapperUtils.addCommonResourceDtoInfo(dto, resourceResource, model.getResource(uri.getModelURI()), orgModel, hasRightToModel);
 
         if(MapperUtils.hasType(resourceResource, OWL.ObjectProperty)){
             dto.setType(ResourceType.ASSOCIATION);
@@ -395,14 +398,12 @@ public class ResourceMapper {
         return dto;
     }
 
-    public static PropertyShapeInfoDTO mapToPropertyShapeInfoDTO(Model model, String modelUri,
-                                                                 String identifier, Model orgModel,
+    public static PropertyShapeInfoDTO mapToPropertyShapeInfoDTO(Model model, DataModelURI uri, Model orgModel,
                                                                  boolean hasRightToModel, Consumer<ResourceCommonDTO> userMapper ) {
         var dto = new PropertyShapeInfoDTO();
-        var resourceUri = modelUri + ModelConstants.RESOURCE_SEPARATOR + identifier;
-        var resource = model.getResource(resourceUri);
+        var resource = model.getResource(uri.getResourceURI());
 
-        MapperUtils.addCommonResourceDtoInfo(dto, resource, model.getResource(modelUri), orgModel, hasRightToModel);
+        MapperUtils.addCommonResourceDtoInfo(dto, resource, model.getResource(uri.getModelURI()), orgModel, hasRightToModel);
 
         if(MapperUtils.hasType(resource, OWL.ObjectProperty)){
             dto.setType(ResourceType.ASSOCIATION);

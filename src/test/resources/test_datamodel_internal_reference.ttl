@@ -1,15 +1,15 @@
 @prefix dcap:    <http://purl.org/ws-mmi-dc/terms/> .
 @prefix dcterms: <http://purl.org/dc/terms/> .
-@prefix iow:     <http://uri.suomi.fi/datamodel/ns/iow/> .
+@prefix iow:     <https://iri.suomi.fi/model/iow/> .
 @prefix owl:     <http://www.w3.org/2002/07/owl#> .
 @prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
 @prefix ext:     <https://www.example.com/ns/ext> .
-@prefix int:     <http://uri.suomi.fi/datamodel/ns/int> .
+@prefix int:     <https://iri.suomi.fi/model/int> .
 @prefix foaf:    <http://xmlns.com/foaf/0.1/> .
-@prefix suomi-meta: <http://uri.suomi.fi/datamodel/ns/suomi-meta/> .
+@prefix suomi-meta: <https://iri.suomi.fi/model/suomi-meta/> .
 
-<http://uri.suomi.fi/datamodel/ns/int>
+<https://iri.suomi.fi/model/int/>
         a                               owl:Ontology ;
         rdfs:label                      "internal label"@fi ;
         dcterms:contributor             <urn:uuid:7d3a3c00-5a6b-489b-a3ed-63bb58c26a63> ;
@@ -18,7 +18,7 @@
         dcterms:isPartOf                <http://urn.fi/URN:NBN:fi:au:ptvl:v1105> ;
         dcterms:language                "fi" ;
         dcterms:modified                "2023-01-03T12:44:45.799Z"^^xsd:dateTime ;
-        dcap:preferredXMLNamespaceName  "http://uri.suomi.fi/datamodel/ns/int" ;
+        dcap:preferredXMLNamespaceName  "https://iri.suomi.fi/model/int" ;
         dcap:preferredXMLNamespacePrefix
                 "int" ;
         iow:contentModified             "2023-01-03T12:44:45.799Z"^^xsd:dateTime ;

@@ -1,6 +1,7 @@
 package fi.vm.yti.datamodel.api.v2.service;
 
 import fi.vm.yti.datamodel.api.mapper.MapperTestUtils;
+import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -38,7 +39,7 @@ class UriResolveServiceTest {
     @Test
     void testRedirectSiteModel() {
         var accept = "text/html";
-        var response = service.resolve("http://uri.suomi.fi/datamodel/ns/test/1.0.1", accept);
+        var response = service.resolve(ModelConstants.SUOMI_FI_NAMESPACE + "test/1.0.1/", accept);
         assertTrue(response.getStatusCode().is3xxRedirection());
         assertNotNull(response.getHeaders().getLocation());
         assertTrue(response.getHeaders().getLocation().toString().endsWith("/model/test?ver=1.0.1"));
@@ -50,9 +51,9 @@ class UriResolveServiceTest {
         when(coreRepository.fetch(anyString())).thenReturn(model);
 
         var pathMap = Map.of(
-                "http://uri.suomi.fi/datamodel/ns/test/1.0.1/TestClass", "/model/test/class/TestClass?ver=1.0.1",
-                "http://uri.suomi.fi/datamodel/ns/test/1.0.1/TestAttribute", "/model/test/attribute/TestAttribute?ver=1.0.1",
-                "http://uri.suomi.fi/datamodel/ns/test/1.0.1/TestAssociation", "/model/test/association/TestAssociation?ver=1.0.1"
+                ModelConstants.SUOMI_FI_NAMESPACE + "test/1.0.1/TestClass", "/model/test/class/TestClass?ver=1.0.1",
+                ModelConstants.SUOMI_FI_NAMESPACE + "test/1.0.1/TestAttribute", "/model/test/attribute/TestAttribute?ver=1.0.1",
+                ModelConstants.SUOMI_FI_NAMESPACE + "test/1.0.1/TestAssociation", "/model/test/association/TestAssociation?ver=1.0.1"
         );
         var accept = "text/html";
         for (var key : pathMap.keySet()) {
@@ -69,10 +70,8 @@ class UriResolveServiceTest {
         when(coreRepository.fetch(anyString())).thenReturn(model);
 
         var accept = "text/turtle";
-        var response = service.resolve("http://uri.suomi.fi/datamodel/ns/test/1.0.1/TestClass", accept);
-        assertTrue(response.getStatusCode().is3xxRedirection());
-        assertNotNull(response.getHeaders().getLocation());
-        assertTrue(response.getHeaders().getLocation().toString().endsWith("/datamodel-api/v2/export/test/TestClass?version=1.0.1"));
+        var response = service.resolve(ModelConstants.SUOMI_FI_NAMESPACE + "test/1.0.1/TestClass", accept);
+        assertTrue(response.getStatusCode().is4xxClientError());
     }
 
     @Test
@@ -80,5 +79,13 @@ class UriResolveServiceTest {
         var accept = "text/turtle";
         var response = service.resolve("http://invalid.com", accept);
         assertEquals("400 BAD_REQUEST", response.getStatusCode().toString());
+    }
+
+    @Test
+    void testFile() {
+        var response = service.resolve(ModelConstants.SUOMI_FI_NAMESPACE + "test/1.0.0/test.ttl", null);
+        assertTrue(response.getStatusCode().is3xxRedirection());
+        assertNotNull(response.getHeaders().getLocation());
+        assertTrue(response.getHeaders().getLocation().toString().contains("contentType=text/turtle"));
     }
 }

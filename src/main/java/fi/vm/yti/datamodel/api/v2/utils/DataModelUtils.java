@@ -27,22 +27,23 @@ public class DataModelUtils {
     public static void addPrefixesToModel(String modelURI, Model model) {
         model.clearNsPrefixMap();
         model.setNsPrefixes(ModelConstants.PREFIXES);
-        model.setNsPrefix(MapperUtils.getModelIdFromNamespace(modelURI), modelURI + ModelConstants.RESOURCE_SEPARATOR);
+
+        var dataModelURI = DataModelURI.fromURI(modelURI);
+        model.setNsPrefix(dataModelURI.getModelId(), dataModelURI.getNamespace());
 
         var modelResource = model.getResource(modelURI);
 
         List.of(OWL.imports, DCTerms.requires).forEach(property ->
                 modelResource.listProperties(property).forEach(res -> {
-                    var uri = res.getObject().toString();
-                    if (uri.startsWith(ModelConstants.SUOMI_FI_NAMESPACE)) {
-                        var prefix = MapperUtils.getModelIdFromNamespace(uri);
-                        model.setNsPrefix(prefix, uri + ModelConstants.RESOURCE_SEPARATOR);
-                    } else if (!uri.contains(ModelConstants.SUOMI_FI_DOMAIN)) {
+                    var uri = DataModelURI.fromURI(res.getObject().toString());
+                    if (uri.isDataModelURI()) {
+                        model.setNsPrefix(uri.getModelId(), uri.getNamespace());
+                    } else if (!uri.isTerminologyURI() && !uri.isCodeListURI()) {
                         // handle external namespaces, skip for now terminologies and code lists
-                        var extResource = model.getResource(uri);
+                        var extResource = model.getResource(uri.getNamespace());
                         var extPrefix = MapperUtils.propertyToString(extResource, DCAP.preferredXMLNamespacePrefix);
                         if (extPrefix != null) {
-                            model.setNsPrefix(extPrefix, uri);
+                            model.setNsPrefix(extPrefix, uri.getNamespace());
                         }
                     }
                 })

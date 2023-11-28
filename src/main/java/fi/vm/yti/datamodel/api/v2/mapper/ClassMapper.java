@@ -3,7 +3,7 @@ package fi.vm.yti.datamodel.api.v2.mapper;
 import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
 import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
-import fi.vm.yti.datamodel.api.v2.utils.DataModelUtils;
+import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
 import fi.vm.yti.datamodel.api.v2.utils.SparqlUtils;
 import fi.vm.yti.security.YtiUser;
 import org.apache.jena.arq.querybuilder.ConstructBuilder;
@@ -29,11 +29,11 @@ public class ClassMapper {
 
     private static final Logger logger = LoggerFactory.getLogger(ClassMapper.class);
 
-    public static String createOntologyClassAndMapToModel(String modelURI, Model model, ClassDTO dto, YtiUser user) {
-        logger.info("Adding class to {}", modelURI);
-        var modelResource = model.getResource(modelURI);
+    public static void createOntologyClassAndMapToModel(DataModelURI uri, Model model, ClassDTO dto, YtiUser user) {
+        logger.info("Adding class to {}", uri.getModelURI());
+        var modelResource = model.getResource(uri.getModelURI());
 
-        var resource = MapperUtils.addCommonResourceInfo(model, modelURI, dto);
+        var resource = MapperUtils.addCommonResourceInfo(model, uri, dto);
         MapperUtils.addCreationMetadata(resource, user);
 
         resource.addProperty(RDF.type, OWL.Class);
@@ -50,25 +50,22 @@ public class ClassMapper {
         modelResource.addProperty(DCTerms.hasPart, resource);
 
         MapperUtils.addTerminologyReference(dto, modelResource);
-
-        return resource.getURI();
     }
 
-    public static String createNodeShapeAndMapToModel(String modelURI, Model model, NodeShapeDTO dto, YtiUser user) {
-        logger.info("Adding node shape to {}", modelURI);
+    public static void createNodeShapeAndMapToModel(DataModelURI uri, Model model, NodeShapeDTO dto, YtiUser user) {
+        logger.info("Adding node shape to {}", uri.getGraphURI());
 
-        var nodeShapeResource = MapperUtils.addCommonResourceInfo(model, modelURI, dto);
+        // var uri = DataModelURI.createResourceURI()
+        var nodeShapeResource = MapperUtils.addCommonResourceInfo(model, uri, dto);
         MapperUtils.addCreationMetadata(nodeShapeResource, user);
 
         nodeShapeResource.addProperty(RDF.type, SH.NodeShape);
 
-        var modelResource = model.getResource(modelURI);
+        var modelResource = model.getResource(uri.getModelURI());
         MapperUtils.addResourceRelationship(modelResource, nodeShapeResource, SH.targetClass, dto.getTargetClass());
         MapperUtils.addResourceRelationship(modelResource, nodeShapeResource, SH.node, dto.getTargetNode());
 
         MapperUtils.addTerminologyReference(dto, modelResource);
-
-        return nodeShapeResource.getURI();
     }
 
     public static List<String> mapPlaceholderPropertyShapes(Model applicationProfileModel, String classURI,
@@ -92,7 +89,7 @@ public class ClassMapper {
 
             if (label != null) {
                 // external class labels are defined often in only one language
-                if (label.getLanguage().equals("")) {
+                if (label.getLanguage().isEmpty()) {
                     MapperUtils.addLocalizedProperty(Set.of("en"),
                             Map.of("en", label.getObject().toString()),
                             propertyShapeResource,
@@ -107,7 +104,7 @@ public class ClassMapper {
             var versionResource = propertiesModel.listSubjectsWithProperty(OWL2.versionIRI);
             String pathURI;
             if (versionResource.hasNext()) {
-                pathURI = versionResource.next().getProperty(OWL2.versionIRI).getObject().toString() + ModelConstants.RESOURCE_SEPARATOR + u.getLocalName();
+                pathURI = versionResource.next().getProperty(OWL2.versionIRI).getObject().toString() + u.getLocalName();
             } else {
                 pathURI = uri;
             }
@@ -133,9 +130,9 @@ public class ClassMapper {
         );
     }
 
-    public static void mapToUpdateOntologyClass(Model model, String graph, Resource classResource, ClassDTO classDTO, YtiUser user) {
-        logger.info("Updating class in graph {}", graph);
-        var modelResource = model.getResource(graph);
+    public static void mapToUpdateOntologyClass(Model model, String modelUri, Resource classResource, ClassDTO classDTO, YtiUser user) {
+        logger.info("Updating class in graph {}", modelUri);
+        var modelResource = model.getResource(modelUri);
 
         MapperUtils.updateCommonResourceInfo(model, classResource, modelResource, classDTO);
 
@@ -189,21 +186,18 @@ public class ClassMapper {
      * Map model with given prefix and class identifier
      *
      * @param model Model
-     * @param modelUri Model uri
-     * @param classIdentifier class identifier
+     * @param uri DataModelURI
      * @param orgModel Model of organisations
      * @param hasRightToModel does current user have right to model
      * @return Class DTO
      */
-    public static ClassInfoDTO mapToClassDTO(Model model, String modelUri,
-                                             String classIdentifier,
+    public static ClassInfoDTO mapToClassDTO(Model model, DataModelURI uri,
                                              Model orgModel,
                                              boolean hasRightToModel,
                                              Consumer<ResourceCommonDTO> userMapper){
         var dto = new ClassInfoDTO();
-        var classUri = modelUri + ModelConstants.RESOURCE_SEPARATOR + classIdentifier;
-        var classResource = model.getResource(classUri);
-        var modelResource = model.getResource(modelUri);
+        var classResource = model.getResource(uri.getResourceURI());
+        var modelResource = model.getResource(uri.getModelURI());
 
         MapperUtils.addCommonResourceDtoInfo(dto, classResource, modelResource, orgModel, hasRightToModel);
         MapperUtils.mapCreationInfo(dto, classResource, userMapper);
@@ -219,15 +213,14 @@ public class ClassMapper {
         return dto;
     }
 
-    public static NodeShapeInfoDTO mapToNodeShapeDTO(Model model, String modelUri,
-                                                     String identifier,
+    public static NodeShapeInfoDTO mapToNodeShapeDTO(Model model, DataModelURI uri,
                                                      Model orgModel,
                                                      boolean hasRightToModel,
                                                      Consumer<ResourceCommonDTO> userMapper) {
         var dto = new NodeShapeInfoDTO();
-        var nodeShapeURI = modelUri + ModelConstants.RESOURCE_SEPARATOR + identifier;
+        var nodeShapeURI = uri.getResourceURI();
         var nodeShapeResource = model.getResource(nodeShapeURI);
-        var modelResource = model.getResource(modelUri);
+        var modelResource = model.getResource(uri.getModelURI());
 
         MapperUtils.addCommonResourceDtoInfo(dto, nodeShapeResource, modelResource, orgModel, hasRightToModel);
         MapperUtils.mapCreationInfo(dto, nodeShapeResource, userMapper);
@@ -289,19 +282,19 @@ public class ClassMapper {
         var associations = new ArrayList<SimpleResourceDTO>();
         var attributes = new ArrayList<SimpleResourceDTO>();
         restrictions.forEach(restriction -> {
-            var resourceURI = DataModelUtils.removeVersionFromURI(restriction.getUri());
-            var resource = resourcesResult.getResource(resourceURI);
+            var uri = DataModelURI.fromURI(restriction.getUri());
+            var resource = resourcesResult.getResource(uri.getResourceURI());
             var modelUri = MapperUtils.propertyToString(resource, RDFS.isDefinedBy);
 
             restriction.setIdentifier(MapperUtils.getLiteral(resource, DCTerms.identifier, String.class));
             restriction.setLabel(MapperUtils.localizedPropertyToMap(resource, RDFS.label));
 
             if (modelUri != null && modelUri.startsWith(ModelConstants.SUOMI_FI_NAMESPACE)) {
-                restriction.setModelId(MapperUtils.getModelIdFromNamespace(modelUri));
-                var ns = DataModelUtils.removeTrailingSlash(NodeFactory.createURI(resourceURI).getNameSpace());
+                restriction.setModelId(uri.getModelId());
+                var ns = uri.getModelURI();
                 var versionIRI = MapperUtils.propertyToString(resourcesResult.getResource(ns), OWL2.versionIRI);
                 if (versionIRI != null) {
-                    restriction.setVersion(versionIRI.substring(versionIRI.lastIndexOf("/") + 1));
+                    restriction.setVersion(DataModelURI.fromURI(versionIRI).getVersion());
                 }
             }
 
@@ -335,12 +328,13 @@ public class ClassMapper {
                 throw new MappingError("ModelUri null for resource");
             }
 
+            var uri = DataModelURI.fromURI(modelUri);
             if(restrictedProperties.contains(resource.getURI())){
                 dto.setFromShNode(true);
             }
 
             dto.setUri(resource.getURI());
-            dto.setModelId(MapperUtils.getModelIdFromNamespace(modelUri));
+            dto.setModelId(uri.getModelId());
             dto.setLabel(MapperUtils.localizedPropertyToMap(resource, RDFS.label));
             dto.setIdentifier(resource.getLocalName());
             dto.setDeactivated(deactivatedURIs.contains(resource.getURI()));

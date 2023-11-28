@@ -176,7 +176,7 @@ class DataModelControllerTest {
         dataModelDTO.setGroups(Set.of("P11"));
         dataModelDTO.setLanguages(Set.of("fi"));
         dataModelDTO.setOrganizations(Set.of(MapperTestUtils.TEST_ORG_ID));
-        dataModelDTO.setInternalNamespaces(Set.of("http://uri.suomi.fi/datamodel/ns/test"));
+        dataModelDTO.setInternalNamespaces(Set.of(ModelConstants.SUOMI_FI_NAMESPACE + "test"));
         var extNs = new ExternalNamespaceDTO();
         extNs.setName(Map.of("fi", "test external namespace"));
         extNs.setPrefix("testprefix");
@@ -308,7 +308,7 @@ class DataModelControllerTest {
         invalidExtRes.setName(Map.of("fi", "this is invalid"));
         //uri.suomi.fi cannot be set as external namespace
         invalidExtRes.setPrefix("test");
-        invalidExtRes.setNamespace("http://uri.suomi.fi/datamodel/ns/test");
+        invalidExtRes.setNamespace(ModelConstants.SUOMI_FI_NAMESPACE + "test");
         dataModelDTO.setExternalNamespaces(Set.of(invalidExtRes));
         args.add(dataModelDTO);
 

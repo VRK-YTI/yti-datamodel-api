@@ -3,40 +3,40 @@
 @prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
 
-<http://uri.suomi.fi/datamodel/ns/model/>
+<https://iri.suomi.fi/model/model/>
     a           owl:Ontology .
 
-<http://uri.suomi.fi/datamodel/ns/model/attribute-1>
+<https://iri.suomi.fi/model/model/attribute-1>
     a          owl:DatatypeProperty ;
     rdfs:range xsd:anyURI .
 
-<http://uri.suomi.fi/datamodel/ns/model/class-1>
+<https://iri.suomi.fi/model/model/class-1>
     a                   owl:Class ;
-    owl:equivalentClass <http://uri.suomi.fi/datamodel/ns/model/class-2> ;
+    owl:equivalentClass <https://iri.suomi.fi/model/model/class-2> ;
     owl:equivalentClass [ a                  owl:Class ;
                           owl:intersectionOf ( [ a                  owl:Restriction ;
-                                                 owl:onProperty     <http://uri.suomi.fi/datamodel/ns/model/attribute-1> ;
+                                                 owl:onProperty     <https://iri.suomi.fi/model/model/attribute-1> ;
                                                  owl:someValuesFrom xsd:anyURI ]
                                                [ a                  owl:Restriction ;
-                                                 owl:onProperty     <http://uri.suomi.fi/datamodel/ns/model/attribute-2> ;
+                                                 owl:onProperty     <https://iri.suomi.fi/model/model/attribute-2> ;
                                                  owl:someValuesFrom xsd:anyURI ] ) ] .
 
-<http://uri.suomi.fi/datamodel/ns/model/class-update-target>
+<https://iri.suomi.fi/model/model/class-update-target>
     a                   owl:Class ;
     owl:equivalentClass [ a                  owl:Class ;
                           owl:intersectionOf ( [ a                  owl:Restriction ;
-                                                 owl:onProperty     <http://uri.suomi.fi/datamodel/ns/model/association-1> ;
-                                                 owl:someValuesFrom <http://uri.suomi.fi/datamodel/ns/model/class-2> ]
+                                                 owl:onProperty     <https://iri.suomi.fi/model/model/association-1> ;
+                                                 owl:someValuesFrom <https://iri.suomi.fi/model/model/class-2> ]
                                                [ a                  owl:Restriction ;
-                                                 owl:onProperty     <http://uri.suomi.fi/datamodel/ns/model/association-1> ;
-                                                 owl:someValuesFrom <http://uri.suomi.fi/datamodel/ns/model/class-3> ]) ] .
+                                                 owl:onProperty     <https://iri.suomi.fi/model/model/association-1> ;
+                                                 owl:someValuesFrom <https://iri.suomi.fi/model/model/class-3> ]) ] .
 
-<http://uri.suomi.fi/datamodel/ns/model/attribute-2>
+<https://iri.suomi.fi/model/model/attribute-2>
     a          owl:DatatypeProperty ;
     rdfs:range xsd:anyURI .
 
-<http://uri.suomi.fi/datamodel/ns/model/association-1>
+<https://iri.suomi.fi/model/model/association-1>
     a owl:DatatypeProperty .
 
-<http://uri.suomi.fi/datamodel/ns/model/class-2>
+<https://iri.suomi.fi/model/model/class-2>
     a owl:Class .

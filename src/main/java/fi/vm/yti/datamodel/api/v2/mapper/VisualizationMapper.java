@@ -3,7 +3,6 @@ package fi.vm.yti.datamodel.api.v2.mapper;
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
 import fi.vm.yti.datamodel.api.v2.dto.visualization.*;
 import fi.vm.yti.datamodel.api.v2.properties.Iow;
-import fi.vm.yti.datamodel.api.v2.utils.DataModelUtils;
 import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.rdf.model.*;
 import org.apache.jena.vocabulary.DCTerms;
@@ -189,14 +188,14 @@ public class VisualizationMapper {
         }
     }
 
-    public static Model mapPositionDataToModel(String positionGraphURI, List<PositionDataDTO> positions) {
+    public static Model mapPositionDataToModel(String positionBaseURI, List<PositionDataDTO> positions) {
         var positionModel = ModelFactory.createDefaultModel();
-        positions.forEach(node -> mapPosition(positionModel, positionGraphURI, node));
+        positions.forEach(node -> mapPosition(positionModel, positionBaseURI, node));
         return positionModel;
     }
 
-    public static void mapPosition(Model positionModel, String positionGraphURI, PositionDataDTO node) {
-        var resource = positionModel.createResource(positionGraphURI + ModelConstants.RESOURCE_SEPARATOR + node.getIdentifier());
+    public static void mapPosition(Model positionModel, String positionBaseURI, PositionDataDTO node) {
+        var resource = positionModel.createResource(positionBaseURI + node.getIdentifier());
         resource.addLiteral(Iow.posX, node.getX());
         resource.addLiteral(Iow.posY, node.getY());
         resource.addProperty(DCTerms.identifier, node.getIdentifier());
@@ -357,7 +356,7 @@ public class VisualizationMapper {
         }
         try {
             var u = NodeFactory.createURI(uri);
-            String prefix = namespaces.get(DataModelUtils.removeTrailingSlash(u.getNameSpace()));
+            String prefix = namespaces.get(u.getNameSpace());
 
             if (prefix == null) {
                 // referenced class in the same model

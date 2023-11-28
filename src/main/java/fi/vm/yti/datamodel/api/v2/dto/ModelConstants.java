@@ -9,10 +9,10 @@ public class ModelConstants {
         //utility class
     }
 
-    public static final String SUOMI_FI_NAMESPACE = "http://uri.suomi.fi/datamodel/ns/";
+    public static final String SUOMI_FI_NAMESPACE = "https://iri.suomi.fi/model/";
     public static final String CODELIST_NAMESPACE = "http://uri.suomi.fi/codelist/";
     public static final String TERMINOLOGY_NAMESPACE = "http://uri.suomi.fi/terminology/";
-    public static final String MODEL_POSITIONS_NAMESPACE = "http://uri.suomi.fi/datamodel/positions/";
+    public static final String MODEL_POSITIONS_NAMESPACE = "https://iri.suomi.fi/model-positions/";
     public static final String SUOMI_FI_DOMAIN = "uri.suomi.fi";
 
     public static final String RESOURCE_SEPARATOR = "/";
@@ -28,8 +28,8 @@ public class ModelConstants {
             "owl", "http://www.w3.org/2002/07/owl#",
             "dcap", "http://purl.org/ws-mmi-dc/terms/",
             "xsd", "http://www.w3.org/2001/XMLSchema#",
-            "iow", "http://uri.suomi.fi/datamodel/ns/iow/",
-            "suomi-meta", "http://uri.suomi.fi/datamodel/ns/suomi-meta/",
+            "iow", "https://iri.suomi.fi/model/iow/",
+            "suomi-meta", "https://iri.suomi.fi/model/suomi-meta/",
             "skos", "http://www.w3.org/2004/02/skos/core#",
             "sh", "http://www.w3.org/ns/shacl#"
     );

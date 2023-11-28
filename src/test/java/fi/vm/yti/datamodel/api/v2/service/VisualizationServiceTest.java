@@ -93,9 +93,10 @@ class VisualizationServiceTest {
         var model = MapperTestUtils.getModelFromFile("/models/test_application_profile_visualization.ttl");
         var positionModel = MapperTestUtils.getModelFromFile("/positions.ttl");
         var externalPropertiesModel = getExternalPropertiesResult();
+        var graph = ModelConstants.MODEL_POSITIONS_NAMESPACE + "visuprof" + ModelConstants.RESOURCE_SEPARATOR;
 
         when(coreRepository.fetch(anyString())).thenReturn(model);
-        when(coreRepository.fetch(ModelConstants.MODEL_POSITIONS_NAMESPACE + "visuprof")).thenReturn(positionModel);
+        when(coreRepository.fetch(graph)).thenReturn(positionModel);
         when(resourceService.findResources(anySet(), anySet())).thenReturn(externalPropertiesModel);
 
 
@@ -127,7 +128,7 @@ class VisualizationServiceTest {
 
     @Test
     void savePositions() {
-        var graphURI = ModelConstants.MODEL_POSITIONS_NAMESPACE + "test-model";
+        var graphURI = ModelConstants.MODEL_POSITIONS_NAMESPACE + "test-model" + ModelConstants.RESOURCE_SEPARATOR;
         when(coreRepository.graphExists(graphURI)).thenReturn(true);
         when(coreRepository.fetch(anyString())).thenReturn(ModelFactory.createDefaultModel());
         when(authorizationManager.hasRightToModel(anyString(), any(Model.class))).thenReturn(true);
@@ -142,14 +143,14 @@ class VisualizationServiceTest {
 
         verify(coreRepository).put(eq(graphURI), modelCaptor.capture());
 
-        var resourceURI = graphURI + ModelConstants.RESOURCE_SEPARATOR + positionData.getIdentifier();
+        var resourceURI = graphURI + positionData.getIdentifier();
         var resource = modelCaptor.getValue().getResource(resourceURI);
         assertEquals("pos-1", resource.getProperty(DCTerms.identifier).getString());
     }
 
     @Test
     void savePositionsVersion() {
-        var graphURI = ModelConstants.MODEL_POSITIONS_NAMESPACE + "test-model/1.2.3";
+        var graphURI = ModelConstants.MODEL_POSITIONS_NAMESPACE + "test-model/1.2.3" + ModelConstants.RESOURCE_SEPARATOR;
         when(coreRepository.graphExists(graphURI)).thenReturn(true);
         when(coreRepository.fetch(anyString())).thenReturn(ModelFactory.createDefaultModel());
         when(authorizationManager.hasRightToModel(anyString(), any(Model.class))).thenReturn(true);
@@ -173,26 +174,26 @@ class VisualizationServiceTest {
 
     @Test
     void saveVersionedPositions() {
-        var graphURI = ModelConstants.MODEL_POSITIONS_NAMESPACE + "test-model";
+        var graphURI = ModelConstants.MODEL_POSITIONS_NAMESPACE + "test-model" + ModelConstants.RESOURCE_SEPARATOR;
         when(coreRepository.fetch(anyString())).thenReturn(ModelFactory.createDefaultModel());
         when(authorizationManager.hasRightToModel(anyString(), any(Model.class))).thenReturn(true);
 
         visualizationService.saveVersionedPositions("test-model", "1.0.0");
 
         verify(coreRepository).fetch(graphURI);
-        verify(coreRepository).put(eq(graphURI + ModelConstants.RESOURCE_SEPARATOR + "1.0.0"), any(Model.class));
+        verify(coreRepository).put(eq(graphURI + "1.0.0" + ModelConstants.RESOURCE_SEPARATOR), any(Model.class));
     }
 
     @Test
     void testAddDefaultPosition() {
-        var positionURI = ModelConstants.MODEL_POSITIONS_NAMESPACE + "test";
+        var positionURI = ModelConstants.MODEL_POSITIONS_NAMESPACE + "test" + ModelConstants.RESOURCE_SEPARATOR;
         var positionModel = ModelFactory.createDefaultModel();
 
-        positionModel.createResource(positionURI + ModelConstants.RESOURCE_SEPARATOR + "res1")
+        positionModel.createResource(positionURI + "res1")
                         .addLiteral(Iow.posX, 10.0)
                         .addLiteral(Iow.posY, 20.0);
 
-        positionModel.createResource(positionURI + ModelConstants.RESOURCE_SEPARATOR + "res2")
+        positionModel.createResource(positionURI + "res2")
                 .addLiteral(Iow.posX, 120.0)
                 .addLiteral(Iow.posY, -10.0);
 
@@ -201,7 +202,7 @@ class VisualizationServiceTest {
         visualizationService.addNewResourceDefaultPosition("test", "test-id");
         verify(coreRepository).put(anyString(), modelCaptor.capture());
 
-        var positionResource = modelCaptor.getValue().getResource(positionURI + ModelConstants.RESOURCE_SEPARATOR + "test-id");
+        var positionResource = modelCaptor.getValue().getResource(positionURI + "test-id");
 
         // new position x = 0, y = existing minimum y coordinate - 50
         assertEquals(0.0, positionResource.getProperty(Iow.posX).getDouble());
@@ -211,12 +212,12 @@ class VisualizationServiceTest {
     private static Model getExternalPropertiesResult() {
         var externalPropertiesModel = ModelFactory.createDefaultModel();
 
-        var resource1 = externalPropertiesModel.createResource("http://uri.suomi.fi/datamodel/ns/personprof/street");
+        var resource1 = externalPropertiesModel.createResource(ModelConstants.SUOMI_FI_NAMESPACE + "personprof/street");
         resource1.addProperty(DCTerms.identifier, "street");
         resource1.addProperty(RDF.type, OWL.DatatypeProperty);
         resource1.addProperty(RDF.type, SH.PropertyShape);
 
-        var resource2 = externalPropertiesModel.createResource("http://uri.suomi.fi/datamodel/ns/personprof/zipcode");
+        var resource2 = externalPropertiesModel.createResource(ModelConstants.SUOMI_FI_NAMESPACE + "personprof/zipcode");
         resource2.addProperty(DCTerms.identifier, "zipcode");
         resource2.addProperty(RDF.type, OWL.DatatypeProperty);
         resource2.addProperty(RDF.type, SH.PropertyShape);

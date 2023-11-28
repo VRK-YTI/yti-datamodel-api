@@ -14,6 +14,9 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
+
 @RestController
 @RequestMapping("v2/export")
 @Tag(name = "Export" )
@@ -33,9 +36,16 @@ public class ExportController {
     @GetMapping(value = {"{prefix}", "/{prefix}/{resourceIdentifier}"},
             produces = {"application/ld+json;charset=utf-8", "text/turtle;charset=utf-8", "application/rdf+xml;charset=utf-8"})
     public ResponseEntity<String> export(@PathVariable @Parameter(description = "Data model prefix") String prefix,
-                                         @PathVariable(required = false) @Parameter(description = "Resource identifier") String resourceIdentifier,
                                          @RequestParam(required = false) @Parameter(description = "Version") @ValidSemanticVersion String version,
+                                         @RequestParam(required = false) @Parameter(description = "Content type") String contentType,
                                          @RequestHeader(value = HttpHeaders.ACCEPT) String accept){
-        return dataModelService.export(prefix, version, resourceIdentifier, accept);
+        var showAsFile = false;
+        var type = accept;
+
+        if (contentType != null) {
+            type = URLDecoder.decode(contentType, StandardCharsets.UTF_8);
+            showAsFile = true;
+        }
+        return dataModelService.export(prefix, version, type, showAsFile);
     }
 }

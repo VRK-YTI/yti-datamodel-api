@@ -15,6 +15,7 @@ import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
 import fi.vm.yti.datamodel.api.v2.properties.DCAP;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import fi.vm.yti.datamodel.api.v2.repository.ImportsRepository;
+import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
 import fi.vm.yti.security.AuthenticatedUserProvider;
 import fi.vm.yti.security.YtiUser;
 import org.apache.jena.query.Query;
@@ -90,8 +91,9 @@ class ClassServiceTest {
             classService.get("test", null, "TestClass");
         }
 
-        verify(coreRepository).resourceExistsInGraph("http://uri.suomi.fi/datamodel/ns/test", "http://uri.suomi.fi/datamodel/ns/test/TestClass");
-        verify(coreRepository).fetch("http://uri.suomi.fi/datamodel/ns/test");
+        var graphURI = ModelConstants.SUOMI_FI_NAMESPACE + "test" + ModelConstants.RESOURCE_SEPARATOR;
+        verify(coreRepository).resourceExistsInGraph(graphURI, ModelConstants.SUOMI_FI_NAMESPACE + "test/TestClass");
+        verify(coreRepository).fetch(graphURI);
         verify(authorizationManager).hasRightToModel(anyString(), any(Model.class));
         verify(coreRepository).getOrganizations();
     }
@@ -106,8 +108,8 @@ class ClassServiceTest {
             classService.get("test", "1.0.1", "TestClass");
         }
 
-        verify(coreRepository).resourceExistsInGraph("http://uri.suomi.fi/datamodel/ns/test/1.0.1", "http://uri.suomi.fi/datamodel/ns/test/TestClass");
-        verify(coreRepository).fetch("http://uri.suomi.fi/datamodel/ns/test/1.0.1");
+        verify(coreRepository).resourceExistsInGraph(ModelConstants.SUOMI_FI_NAMESPACE + "test/1.0.1/", ModelConstants.SUOMI_FI_NAMESPACE + "test/TestClass");
+        verify(coreRepository).fetch(ModelConstants.SUOMI_FI_NAMESPACE + "test/1.0.1/");
         verify(authorizationManager).hasRightToModel(eq("test"), any(Model.class));
         verify(coreRepository).getOrganizations();
     }
@@ -122,8 +124,8 @@ class ClassServiceTest {
             var resMapper = mockStatic(ResourceMapper.class)) {
             resMapper.when(() -> ResourceMapper.mapToIndexResource(any(Model.class), anyString())).thenReturn(new IndexResource());
             var uri = classService.create("test", dto,false);
-            assertEquals("http://uri.suomi.fi/datamodel/ns/test/Identifier", uri.toString());
-            mapper.verify(() -> ClassMapper.createOntologyClassAndMapToModel(anyString(), any(Model.class), any(ClassDTO.class), any(YtiUser.class)));
+            assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "test/Identifier", uri.toString());
+            mapper.verify(() -> ClassMapper.createOntologyClassAndMapToModel(any(DataModelURI.class), any(Model.class), any(ClassDTO.class), any(YtiUser.class)));
         }
 
         verify(coreRepository).resourceExistsInGraph(anyString(), anyString(), eq(false));
@@ -145,8 +147,8 @@ class ClassServiceTest {
             var resMapper = mockStatic(ResourceMapper.class)) {
             resMapper.when(() -> ResourceMapper.mapToIndexResource(any(Model.class), anyString())).thenReturn(new IndexResource());
             var uri = classService.create("test", dto,true);
-            assertEquals("http://uri.suomi.fi/datamodel/ns/test/node-shape-1", uri.toString());
-            mapper.verify(() -> ClassMapper.createNodeShapeAndMapToModel(anyString(), any(Model.class), any(NodeShapeDTO.class), any(YtiUser.class)));
+            assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "test/node-shape-1", uri.toString());
+            mapper.verify(() -> ClassMapper.createNodeShapeAndMapToModel(any(DataModelURI.class), any(Model.class), any(NodeShapeDTO.class), any(YtiUser.class)));
         }
 
         verify(coreRepository).resourceExistsInGraph(anyString(), anyString(), eq(false));
@@ -238,7 +240,7 @@ class ClassServiceTest {
         when(authorizationManager.hasRightToModel(anyString(), any(Model.class))).thenReturn(true);
         when(userProvider.getUser()).thenReturn(YtiUser.ANONYMOUS_USER);
         try(var mapper = mockStatic(ClassMapper.class)) {
-            classService.handlePropertyShapeReference("test", "node-shape-1", "http://uri.suomi.fi/datamodel/ns/test/ref-1", false);
+            classService.handlePropertyShapeReference("test", "node-shape-1", ModelConstants.SUOMI_FI_NAMESPACE + "test/ref-1", false);
             mapper.verify(() -> ClassMapper.mapAppendNodeShapeProperty( any(Resource.class), anyString(), anySet()));
         }
 
@@ -253,7 +255,7 @@ class ClassServiceTest {
         when(authorizationManager.hasRightToModel(anyString(), any(Model.class))).thenReturn(true);
         when(userProvider.getUser()).thenReturn(YtiUser.ANONYMOUS_USER);
         try(var mapper = mockStatic(ClassMapper.class)) {
-            classService.handlePropertyShapeReference("test", "node-shape-1", "http://uri.suomi.fi/datamodel/ns/test/ref-1", true);
+            classService.handlePropertyShapeReference("test", "node-shape-1", ModelConstants.SUOMI_FI_NAMESPACE + "test/ref-1", true);
             mapper.verify(() -> ClassMapper.mapRemoveNodeShapeProperty(any(Model.class), any(Resource.class), anyString(), anySet()));
         }
 
@@ -269,7 +271,7 @@ class ClassServiceTest {
         when(authorizationManager.hasRightToModel(anyString(), any(Model.class))).thenReturn(true);
         when(userProvider.getUser()).thenReturn(YtiUser.ANONYMOUS_USER);
         try(var mapper = mockStatic(ClassMapper.class)) {
-            classService.togglePropertyShape("test", "http://uri.suomi.fi/datamodel/ns/test/Uri");
+            classService.togglePropertyShape("test", ModelConstants.SUOMI_FI_NAMESPACE + "test/Uri");
             mapper.verify(() -> ClassMapper.toggleAndMapDeactivatedProperty( any(Model.class), anyString(), anyBoolean()));
         }
 
@@ -282,7 +284,7 @@ class ClassServiceTest {
     @Test
     void testAddClassRestriction() {
         var model = MapperTestUtils.getModelFromFile("/model_with_owl_restrictions.ttl");
-        var modelURI = ModelConstants.SUOMI_FI_NAMESPACE + "model";
+        var modelURI = ModelConstants.SUOMI_FI_NAMESPACE + "model" + ModelConstants.RESOURCE_SEPARATOR;
 
         String attributeURI = modelURI + ModelConstants.RESOURCE_SEPARATOR + "attribute-1";
 
@@ -316,48 +318,48 @@ class ClassServiceTest {
     @Test
     void testUpdateClassRestrictionTarget() {
         var model = MapperTestUtils.getModelFromFile("/model_with_owl_restrictions.ttl");
-        var modelURI = ModelConstants.SUOMI_FI_NAMESPACE + "model";
+        var modelURI = ModelConstants.SUOMI_FI_NAMESPACE + "model" + ModelConstants.RESOURCE_SEPARATOR;
 
         var restrictionQueryResult = ModelFactory.createDefaultModel();
-        var restrictionResource = restrictionQueryResult.createResource(modelURI + "/association-1")
+        var restrictionResource = restrictionQueryResult.createResource(modelURI + "association-1")
                 .addProperty(RDF.type, OWL.ObjectProperty);
 
         var restrictionNewTargetResult = ModelFactory.createDefaultModel();
-        restrictionNewTargetResult.createResource(modelURI + "/some-class")
+        restrictionNewTargetResult.createResource(modelURI + "some-class")
                 .addProperty(RDF.type, OWL.Class);
 
         when(authorizationManager.hasRightToModel(anyString(), any(Model.class))).thenReturn(true);
         when(userProvider.getUser()).thenReturn(YtiUser.ANONYMOUS_USER);
         when(coreRepository.fetch(anyString())).thenReturn(model);
         when(coreRepository.resourceExistsInGraph(anyString(), anyString())).thenReturn(true);
-        when(classService.findResources(eq(Set.of(modelURI + "/association-1")), anySet())).thenReturn(restrictionQueryResult);
-        when(classService.findResources(eq(Set.of(modelURI + "/some-class")), anySet())).thenReturn(restrictionNewTargetResult);
+        when(classService.findResources(eq(Set.of(modelURI + "association-1")), anySet())).thenReturn(restrictionQueryResult);
+        when(classService.findResources(eq(Set.of(modelURI + "some-class")), anySet())).thenReturn(restrictionNewTargetResult);
 
         classService.handleUpdateClassRestrictionReference("model", "class-update-target",
                 restrictionResource.getURI(),
-                "http://uri.suomi.fi/datamodel/ns/model/class-2",
-                modelURI + "/some-class");
+                modelURI + "class-2",
+                modelURI + "some-class");
 
         var captor = ArgumentCaptor.forClass(Model.class);
         verify(coreRepository).put(eq(modelURI), captor.capture());
 
         // updated model contains triple with property OWL.someValuesFrom and "some-class" as an object
         var stmtIterator = captor.getValue().listStatements(null, OWL.someValuesFrom,
-                ResourceFactory.createResource(modelURI + "/some-class"));
+                ResourceFactory.createResource(modelURI + "some-class"));
 
         assertTrue(stmtIterator.hasNext());
     }
 
     @Test
     void testCheckCyclicalReferences() {
-        classService.checkCyclicalReference("http://uri.suomi.fi/datamodel/ns/Model-2/Class-1", OWL.equivalentClass, "http://uri.suomi.fi/datamodel/ns/Model-1/class-1");
+        classService.checkCyclicalReference(ModelConstants.SUOMI_FI_NAMESPACE + "Model-2/Class-1", OWL.equivalentClass, ModelConstants.SUOMI_FI_NAMESPACE + "Model-1/class-1");
 
         var captor = ArgumentCaptor.forClass(Query.class);
         verify(coreRepository).queryAsk(captor.capture());
         assertEquals("""
                         ASK
                         WHERE
-                          { <http://uri.suomi.fi/datamodel/ns/Model-2/Class-1> (<http://www.w3.org/2002/07/owl#equivalentClass>){*} <http://uri.suomi.fi/datamodel/ns/Model-1/class-1>}
+                          { <https://iri.suomi.fi/model/Model-2/Class-1> (<http://www.w3.org/2002/07/owl#equivalentClass>){*} <https://iri.suomi.fi/model/Model-1/class-1>}
                         """,
                 captor.getValue().toString());
     }
@@ -371,8 +373,8 @@ class ClassServiceTest {
         dto.setStatus(Status.DRAFT);
         dto.setSubject("http://uri.suomi.fi/terminology/notrealurl");
         dto.setLabel(Map.of("fi", "test label"));
-        dto.setEquivalentClass(Set.of("http://uri.suomi.fi/datamodel/ns/notrealns/FakeClass"));
-        dto.setSubClassOf(Set.of("http://uri.suomi.fi/datamodel/ns/notrealns/FakeClass"));
+        dto.setEquivalentClass(Set.of(ModelConstants.SUOMI_FI_NAMESPACE + "notrealns/FakeClass"));
+        dto.setSubClassOf(Set.of(ModelConstants.SUOMI_FI_NAMESPACE + "notrealns/FakeClass"));
         dto.setNote(Map.of("fi", "test note"));
         return dto;
     }

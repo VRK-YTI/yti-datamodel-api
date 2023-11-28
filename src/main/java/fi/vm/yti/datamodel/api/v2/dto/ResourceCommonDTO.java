@@ -5,6 +5,7 @@ public class ResourceCommonDTO {
     private String modified;
     private UserDTO modifier;
     private UserDTO creator;
+    private String uri;
 
     public String getCreated() {
         return created;
@@ -36,5 +37,13 @@ public class ResourceCommonDTO {
 
     public void setCreator(UserDTO creator) {
         this.creator = creator;
+    }
+
+    public String getUri() {
+        return uri;
+    }
+
+    public void setUri(String uri) {
+        this.uri = uri;
     }
 }

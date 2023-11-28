@@ -1,15 +1,15 @@
 @prefix dcap:    <http://purl.org/ws-mmi-dc/terms/> .
 @prefix dcterms: <http://purl.org/dc/terms/> .
-@prefix iow:     <http://uri.suomi.fi/datamodel/ns/iow/> .
+@prefix iow:     <https://iri.suomi.fi/model/iow/> .
 @prefix owl:     <http://www.w3.org/2002/07/owl#> .
 @prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
 @prefix ext:     <https://www.example.com/ns/ext> .
-@prefix int:     <http://uri.suomi.fi/datamodel/ns/int> .
+@prefix int:     <https://iri.suomi.fi/model/int> .
 @prefix foaf:    <http://xmlns.com/foaf/0.1/> .
-@prefix suomi-meta: <http://uri.suomi.fi/datamodel/ns/suomi-meta/> .
+@prefix suomi-meta: <https://iri.suomi.fi/model/suomi-meta/> .
 
-<http://uri.suomi.fi/datamodel/ns/test>
+<https://iri.suomi.fi/model/test/>
         a                               owl:Ontology ;
         rdfs:comment                    "test desc"@fi ;
         rdfs:label                      "testlabel"@fi ;
@@ -18,10 +18,10 @@
         dcterms:identifier              "d2edb497-ba0b-49c9-aeb7-49749d836434" ;
         dcterms:isPartOf                <http://urn.fi/URN:NBN:fi:au:ptvl:v1105> ;
         dcterms:language                "fi" ;
-        owl:imports                     <http://uri.suomi.fi/datamodel/ns/int> ;
+        owl:imports                     <https://iri.suomi.fi/model/int> ;
         dcterms:requires                <https://www.example.com/ns/ext>, <http://uri.suomi.fi/terminology/test> ;
         dcterms:modified                "2023-01-03T12:44:45.799Z"^^xsd:dateTime ;
-        dcap:preferredXMLNamespaceName  "http://uri.suomi.fi/datamodel/ns/test" ;
+        dcap:preferredXMLNamespaceName  "https://iri.suomi.fi/model/test" ;
         dcap:preferredXMLNamespacePrefix
                 "test" ;
         iow:contentModified             "2023-01-03T12:44:45.799Z"^^xsd:dateTime ;
@@ -36,5 +36,5 @@
                                             dcterms:title       "link title"@fi ;
                                             foaf:homepage       "https://example.com"
                                         ] ;
-        owl:versionIRI                  "http://uri.suomi.fi/datamodel/ns/test/1.0.1" ;
-        owl:priorVersion                "http://uri.suomi.fi/datamodel/ns/test/1.0.0" .
+        owl:versionIRI                  "https://iri.suomi.fi/model/test/1.0.1/" ;
+        owl:priorVersion                "https://iri.suomi.fi/model/test/1.0.0/" .

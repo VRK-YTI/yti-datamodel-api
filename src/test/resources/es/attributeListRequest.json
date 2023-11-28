@@ -13,7 +13,7 @@
                     {
                       "terms": {
                         "isDefinedBy": [
-                          "http://uri.suomi.fi/datamodel/ns/test"
+                          "https://iri.suomi.fi/model/test/"
                         ]
                       }
                     },
@@ -44,7 +44,7 @@
               {
                 "terms": {
                   "id": [
-                    "http://uri.suomi.fi/datamodel/ns/ext/some-property"
+                    "https://iri.suomi.fi/model/ext/some-property"
                   ]
                 }
               }

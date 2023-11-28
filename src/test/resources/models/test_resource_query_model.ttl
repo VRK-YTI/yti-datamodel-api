@@ -1,4 +1,4 @@
-@prefix iow:   <http://uri.suomi.fi/datamodel/ns/iow/> .
+@prefix iow:   <https://iri.suomi.fi/model/iow/> .
 @prefix dcap:  <http://purl.org/ws-mmi-dc/terms/> .
 @prefix rdf:   <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix owl:   <http://www.w3.org/2002/07/owl#> .
@@ -8,12 +8,12 @@
 @prefix dcterms: <http://purl.org/dc/terms/> .
 @prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
 
-<http://uri.suomi.fi/datamodel/ns/test/rangetest2>
+<https://iri.suomi.fi/model/test/rangetest2>
         a                    owl:DatatypeProperty ;
         rdfs:label           "test label"@fi ;
         rdfs:range           xsd:integer ;
         dcterms:identifier   "test"^^xsd:NCName ;
-        rdfs:isDefinedBy     <http://uri.suomi.fi/datamodel/ns/test> .
+        rdfs:isDefinedBy     <https://iri.suomi.fi/model/test/> .
 
-<http://uri.suomi.fi/datamodel/ns/test>
-        owl:versionIRI       <http://uri.suomi.fi/datamodel/ns/test/1.0.0> .
+<https://iri.suomi.fi/model/test/>
+        owl:versionIRI       <https://iri.suomi.fi/model/test/1.0.0/> .

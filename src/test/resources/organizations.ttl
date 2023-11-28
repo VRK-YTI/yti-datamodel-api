@@ -6,17 +6,17 @@
 <urn:uuid:74776e94-7f51-48dc-aeec-c084c4defa09>
         a                    <http://xmlns.com/foaf/0.1/Organization> ;
         dcterms:description  "kuvaus"@fi ;
-        <http://uri.suomi.fi/datamodel/ns/iow/parentOrganization> "" ;
+        <https://iri.suomi.fi/model/iow/parentOrganization> "" ;
         skos:prefLabel       "Testiorganisaatio"@fi , "Test organization"@en  ;
         <http://xmlns.com/foaf/0.1/homepage> "http://testi.fi" .
 
 <urn:uuid:7d3a3c00-5a6b-489b-a3ed-63bb58c26a63>
         a               <http://xmlns.com/foaf/0.1/Organization> ;
-        <http://uri.suomi.fi/datamodel/ns/iow/parentOrganization> "" ;
+        <https://iri.suomi.fi/model/iow/parentOrganization> "" ;
         skos:prefLabel  "Yhteentoimivuusalustan yllapito"@fi , "Interoperability platform developers"@en , "Utvecklare av interoperabilitetsplattform"@sv ;
         <http://xmlns.com/foaf/0.1/homepage> "https://yhteentoimiva.suomi.fi/" .
 
 <urn:uuid:8fab2816-03c5-48cd-9d48-b61048f435da>
         a               <http://xmlns.com/foaf/0.1/Organization> ;
-        <http://uri.suomi.fi/datamodel/ns/iow/parentOrganization> <urn:uuid:74776e94-7f51-48dc-aeec-c084c4defa09> ;
+        <https://iri.suomi.fi/model/iow/parentOrganization> <urn:uuid:74776e94-7f51-48dc-aeec-c084c4defa09> ;
         skos:prefLabel  "Test aliorganisaatio"@fi .

@@ -48,7 +48,7 @@ public class EndpointUtils {
 
     public static Model getMockModel(Resource type) {
         var mockModel = ModelFactory.createDefaultModel();
-        mockModel.createResource("http://uri.suomi.fi/datamodel/ns/test")
+        mockModel.createResource("https://iri.suomi.fi/model/test/")
                 .addProperty(RDF.type, type);
         return mockModel;
     }
