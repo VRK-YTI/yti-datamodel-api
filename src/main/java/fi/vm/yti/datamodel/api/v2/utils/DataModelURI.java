@@ -123,7 +123,10 @@ public class DataModelURI {
      * Graph's URI, used when fetching and putting data to Fuseki
      */
     public String getGraphURI() {
-        var uri = getModelURI();
+        var uri = this.modelId != null
+                ? getModelURI()
+                : this.namespace;
+
         if (this.version != null) {
             return uri + this.version + ModelConstants.RESOURCE_SEPARATOR;
         }

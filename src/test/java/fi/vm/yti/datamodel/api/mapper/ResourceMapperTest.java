@@ -378,8 +378,8 @@ class ResourceMapperTest {
         assertEquals("2023-02-03T11:46:36.404Z", dto.getCreated());
         assertEquals("Yhteentoimivuusalustan yllapito", dto.getContributor().stream().findFirst().orElseThrow().getLabel().get("fi"));
         assertEquals(MapperTestUtils.TEST_ORG_ID.toString(), dto.getContributor().stream().findFirst().orElseThrow().getId());
-        assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "test/TestAttribute", dto.getUri());
-        assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "test/DomainClass", dto.getDomain().getUri());
+        assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "test/1.0.1/TestAttribute", dto.getUri());
+        assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "test/1.0.1/DomainClass", dto.getDomain().getUri());
         assertEquals("test:DomainClass", dto.getDomain().getCurie());
         assertEquals("http://www.w3.org/2000/01/rdf-schema#Literal", dto.getRange().getUri());
         assertEquals("rdfs:Literal", dto.getRange().getCurie());
@@ -413,9 +413,9 @@ class ResourceMapperTest {
         assertEquals("2023-02-03T11:46:36.404Z", dto.getCreated());
         assertEquals("Yhteentoimivuusalustan yllapito", dto.getContributor().stream().findFirst().orElseThrow().getLabel().get("fi"));
         assertEquals(MapperTestUtils.TEST_ORG_ID.toString(), dto.getContributor().stream().findFirst().orElseThrow().getId());
-        assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "test/TestAssociation", dto.getUri());
-        assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "test/DomainClass", dto.getDomain().getUri());
-        assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "test/RangeClass", dto.getRange().getUri());
+        assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "test/1.0.1/TestAssociation", dto.getUri());
+        assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "test/1.0.1/DomainClass", dto.getDomain().getUri());
+        assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "test/1.0.1/RangeClass", dto.getRange().getUri());
         assertTrue(dto.getFunctionalProperty());
         assertFalse(dto.getTransitiveProperty());
         assertFalse(dto.getReflexiveProperty());

@@ -19,8 +19,8 @@ dcterms:hasPart                 test:TestAttribute, test:TestClass, test:TestAss
 dcterms:identifier              "d2edb497-ba0b-49c9-aeb7-49749d836434" ;
 dcterms:isPartOf                <http://urn.fi/URN:NBN:fi:au:ptvl:v1105> ;
 dcterms:language                "fi" ;
-owl:imports                     <https://iri.suomi.fi/model/int> ;
-dcterms:requires                <https://www.example.com/ns/ext> ;
+owl:imports                     <https://iri.suomi.fi/model/int/> ;
+dcterms:requires                <https://www.example.com/ns/ext/> ;
 dcterms:modified                "2023-01-03T12:44:45.799Z"^^xsd:dateTime ;
 dcap:preferredXMLNamespaceName  "https://iri.suomi.fi/model/test" ;
 dcap:preferredXMLNamespacePrefix
@@ -30,7 +30,7 @@ suomi-meta:publicationStatus    "VALID" ;
 owl:versionInfo                 "1.0.1" ;
 owl:versionIRI                  <https://iri.suomi.fi/model/test/1.0.1/> .
 
-<https://www.example.com/ns/ext>
+<https://www.example.com/ns/ext/>
 dcterms:type                        rdfs:Resource ;
 rdfs:label                          "test resource"@fi;
 dcap:preferredXMLNamespacePrefix    "extres" .
@@ -91,8 +91,11 @@ test:TestAssociation  rdf:type     owl:ObjectProperty, owl:FunctionalProperty ;
         iow:creator             "2a5c075f-0d0e-4688-90e0-29af1eebbf6d" ;
         iow:modifier            "2a5c075f-0d0e-4688-90e0-29af1eebbf6d" ;
         rdfs:domain             <https://iri.suomi.fi/model/test/DomainClass> ;
-        rdfs:range              <https://iri.suomi.fi/model/test/RangeClass>
+        rdfs:range              <https://iri.suomi.fi/model/test/RangeClass> .
 
+test:DomainClass    rdf:type    owl:Class .
+
+test:RangeClass    rdf:type    owl:Class ;
 
 
 

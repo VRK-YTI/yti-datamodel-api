@@ -219,11 +219,11 @@ class ModelMapperTest {
         assertEquals("test desc", modelResource.listProperties(RDFS.comment).next().getString());
 
         assertEquals(1, modelResource.listProperties(OWL.imports).toList().size());
-        assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "int", modelResource.listProperties(OWL.imports).next().getObject().toString());
+        assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "int/", modelResource.listProperties(OWL.imports).next().getObject().toString());
 
         var requires = MapperUtils.arrayPropertyToList(modelResource, DCTerms.requires);
         assertEquals(3, requires.size());
-        assertTrue(requires.containsAll(List.of("https://www.example.com/ns/ext", "http://uri.suomi.fi/terminology/test")));
+        assertTrue(requires.containsAll(List.of("https://www.example.com/ns/ext/", "http://uri.suomi.fi/terminology/test")));
 
         assertEquals("test@localhost", MapperUtils.propertyToString(modelResource, Iow.contact));
 
@@ -292,7 +292,7 @@ class ModelMapperTest {
     void testMapToDatamodelDTO() {
         var m = MapperTestUtils.getModelFromFile("/test_datamodel_library.ttl");
         var nsModel = MapperTestUtils.getModelFromFile("/test_datamodel_internal_reference.ttl");
-        when(coreRepository.fetch(ModelConstants.SUOMI_FI_NAMESPACE + "int")).thenReturn(nsModel);
+        when(coreRepository.fetch(ModelConstants.SUOMI_FI_NAMESPACE + "int/")).thenReturn(nsModel);
         var result = mapper.mapToDataModelDTO("test", m, null);
 
         assertEquals("test", result.getPrefix());
@@ -326,15 +326,15 @@ class ModelMapperTest {
         var internalDTO = result.getInternalNamespaces().stream().findFirst().orElseThrow();
         assertEquals("internal label", internalDTO.getName().get("fi"));
         assertEquals("int", internalDTO.getPrefix());
-        assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "int", internalDTO.getNamespace());
+        assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "int/", internalDTO.getNamespace());
 
         var externalDTO = result.getExternalNamespaces().stream()
-                .filter(ns -> ns.getNamespace().equals("https://www.example.com/ns/ext"))
+                .filter(ns -> ns.getNamespace().equals("https://www.example.com/ns/ext/"))
                 .findFirst()
                 .orElseThrow();
         assertEquals("test resource", externalDTO.getName().get("fi"));
         assertEquals("extres", externalDTO.getPrefix());
-        assertEquals("https://www.example.com/ns/ext", externalDTO.getNamespace());
+        assertEquals("https://www.example.com/ns/ext/", externalDTO.getNamespace());
 
         assertEquals(1, result.getLinks().size());
         var linkDTO = result.getLinks().stream().findFirst().orElseThrow();
