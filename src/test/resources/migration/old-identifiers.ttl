@@ -1,42 +1,42 @@
 @prefix dcap:    <http://purl.org/ws-mmi-dc/terms/> .
 @prefix dcterms: <http://purl.org/dc/terms/> .
-@prefix iow:     <https://iri.suomi.fi/model/iow/> .
+@prefix iow:     <http://uri.suomi.fi/datamodel/ns/iow/> .
 @prefix owl:     <http://www.w3.org/2002/07/owl#> .
 @prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
-@prefix test:    <https://iri.suomi.fi/model/test/> .
+@prefix test:    <http://uri.suomi.fi/datamodel/ns/test/> .
 @prefix rdf:      <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix skos:     <http://www.w3.org/2004/02/skos/core#> .
 @prefix sh:      <http://www.w3.org/ns/shacl#>
-@prefix suomi-meta: <https://iri.suomi.fi/model/suomi-meta/> .
+@prefix suomi-meta: <http://uri.suomi.fi/datamodel/ns/suomi-meta/> .
 
-
-<https://iri.suomi.fi/model/test/>
-a                               iow:ApplicationProfile , owl:Ontology ;
-rdfs:comment                    "test desc"@fi ;
-rdfs:label                      "testlabel"@fi ;
-dcterms:contributor             <urn:uuid:7d3a3c00-5a6b-489b-a3ed-63bb58c26a63> ;
-dcterms:created                 "2023-01-03T12:44:45.799Z"^^xsd:dateTime ;
-dcterms:hasPart                 test:TestAttribute, test:TestClass, test:TestAssociation ;
-dcterms:identifier              "d2edb497-ba0b-49c9-aeb7-49749d836434" ;
-dcterms:isPartOf                <http://urn.fi/URN:NBN:fi:au:ptvl:v1105> ;
-dcterms:language                "fi" ;
-owl:imports                     <https://iri.suomi.fi/model/int> ;
-dcterms:requires                <https://www.example.com/ns/ext> ;
-dcterms:modified                "2023-01-03T12:44:45.799Z"^^xsd:dateTime ;
-dcap:preferredXMLNamespaceName  "https://iri.suomi.fi/model/test" ;
-dcap:preferredXMLNamespacePrefix
-"test" ;
-iow:contentModified             "2023-01-03T12:44:45.799Z"^^xsd:dateTime ;
-suomi-meta:publicationStatus                 "VALID" .
+<http://uri.suomi.fi/datamodel/ns/test>
+    a                               iow:ApplicationProfile , owl:Ontology ;
+    rdfs:comment                    "test desc"@fi ;
+    rdfs:label                      "testlabel"@fi ;
+    dcterms:contributor             <urn:uuid:7d3a3c00-5a6b-489b-a3ed-63bb58c26a63> ;
+    dcterms:created                 "2023-01-03T12:44:45.799Z"^^xsd:dateTime ;
+    dcterms:hasPart                 test:TestAttribute, test:TestClass, test:TestAssociation ;
+    dcterms:identifier              "d2edb497-ba0b-49c9-aeb7-49749d836434" ;
+    dcterms:isPartOf                <http://urn.fi/URN:NBN:fi:au:ptvl:v1105> ;
+    dcterms:language                "fi" ;
+    owl:imports                     <http://uri.suomi.fi/datamodel/ns/int> ;
+    dcterms:requires                <https://www.example.com/ns/ext> ;
+    dcterms:modified                "2023-01-03T12:44:45.799Z"^^xsd:dateTime ;
+    dcap:preferredXMLNamespaceName  "http://uri.suomi.fi/datamodel/ns/test" ;
+    dcap:preferredXMLNamespacePrefix
+    "test" ;
+    iow:contentModified             "2023-01-03T12:44:45.799Z"^^xsd:dateTime ;
+    owl:priorVersion                test:1.0.0 ;
+    suomi-meta:publicationStatus    "VALID" .
 
 <https://www.example.com/ns/ext>
-dcterms:type                        rdfs:Resource ;
-rdfs:label                          "test resource"@fi;
-dcap:preferredXMLNamespacePrefix    "extres" .
+    dcterms:type                        rdfs:Resource ;
+    rdfs:label                          "test resource"@fi;
+    dcap:preferredXMLNamespacePrefix    "extres" .
 
 test:TestClass  rdf:type     sh:NodeShape ;
-        rdfs:isDefinedBy     <https://iri.suomi.fi/model/test/> ;
+        rdfs:isDefinedBy     <http://uri.suomi.fi/datamodel/ns/test> ;
         rdfs:label           "test label"@fi ;
         dcterms:created      "2023-02-03T11:46:36.404Z"^^xsd:dateTime ;
         dcterms:identifier   "TestClass"^^xsd:NCName ;
@@ -47,12 +47,12 @@ test:TestClass  rdf:type     sh:NodeShape ;
         rdfs:comment         "test technical description fi"@fi, "test technical description en"@en ;
         iow:creator          "2a5c075f-0d0e-4688-90e0-29af1eebbf6d" ;
         iow:modifier         "2a5c075f-0d0e-4688-90e0-29af1eebbf6d" ;
-        sh:property          <https://iri.suomi.fi/model/test/TestPropertyShape> , <https://iri.suomi.fi/model/test/DeactivatedPropertyShape> ;
-        sh:targetClass       <https://iri.suomi.fi/model/target/Class> .
+        sh:property          <http://uri.suomi.fi/datamodel/ns/test/TestPropertyShape> , <http://uri.suomi.fi/datamodel/ns/test/DeactivatedPropertyShape> ;
+        sh:targetClass       <http://uri.suomi.fi/datamodel/ns/target/Class> .
 
 test:TestAttributeRestriction  rdf:type  sh:PropertyShape ;
         rdf:type             owl:DatatypeProperty ;
-        rdfs:isDefinedBy     <https://iri.suomi.fi/model/test/> ;
+        rdfs:isDefinedBy     <http://uri.suomi.fi/datamodel/ns/test> ;
         dcterms:subject      <http://uri.suomi.fi/terminology/test/test1> ;
         dcterms:identifier   "TestPropertyShape"^^xsd:NCName ;
         dcterms:created      "2023-02-03T11:46:36.404Z"^^xsd:dateTime ;
@@ -60,23 +60,12 @@ test:TestAttributeRestriction  rdf:type  sh:PropertyShape ;
         rdfs:label           "test property shape"@fi ;
         suomi-meta:publicationStatus      "DRAFT" ;
         sh:defaultValue      "foo" ;
-        sh:hasValue          "hasValue" ;
-        sh:datatype          "xsd:integer" ;
-        sh:in                "bar" , "foo" ;
-        sh:maxCount          10 ;
-        sh:maxLength         100 ;
-        sh:minCount          1 ;
-        sh:minLength         2 ;
-        sh:minInclusive      5 ;
-        sh:maxInclusive      7 ;
-        sh:minExclusive      6 ;
-        sh:maxExclusive      8 ;
         iow:codeList         <http://uri.suomi.fi/codelist/Test> ;
-        sh:path              <https://iri.suomi.fi/model/ytm/some-attribute> .
+        sh:path              <http://uri.suomi.fi/datamodel/ns/ytm/some-attribute> .
 
 test:TestAssociationRestriction  rdf:type  sh:PropertyShape ;
         rdf:type             owl:ObjectProperty ;
-        rdfs:isDefinedBy     <https://iri.suomi.fi/model/test/> ;
+        rdfs:isDefinedBy     <http://uri.suomi.fi/datamodel/ns/test> ;
         dcterms:subject      <http://uri.suomi.fi/terminology/test/test1> ;
         dcterms:identifier   "TestPropertyShape"^^xsd:NCName ;
         dcterms:created      "2023-02-03T11:46:36.404Z"^^xsd:dateTime ;
@@ -85,12 +74,12 @@ test:TestAssociationRestriction  rdf:type  sh:PropertyShape ;
         suomi-meta:publicationStatus      "DRAFT" ;
         sh:maxCount          10 ;
         sh:minCount          1 ;
-        sh:path              <https://iri.suomi.fi/model/ytm/some-attribute> ;
-        sh:class             <https://iri.suomi.fi/model/ytm/some-class> .
+        sh:path              <http://uri.suomi.fi/datamodel/ns/ytm/some-attribute> ;
+        sh:class             <http://uri.suomi.fi/datamodel/ns/ytm/some-class> .
 
 test:DeactivatedPropertyShape  rdf:type  sh:PropertyShape ;
         rdf:type             owl:DatatypeProperty ;
-        rdfs:isDefinedBy     <https://iri.suomi.fi/model/test/> ;
+        rdfs:isDefinedBy     <http://uri.suomi.fi/datamodel/ns/test> ;
         dcterms:identifier   "DeactivatedPropertyShape"^^xsd:NCName ;
         sh:deactivated       true ;
         rdfs:label           "deactivated property shape"@fi .

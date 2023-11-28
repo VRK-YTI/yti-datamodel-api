@@ -1,15 +1,15 @@
 @prefix dcap:    <http://purl.org/ws-mmi-dc/terms/> .
 @prefix dcterms: <http://purl.org/dc/terms/> .
-@prefix iow:     <http://uri.suomi.fi/datamodel/ns/iow/> .
+@prefix iow:     <https://iri.suomi.fi/model/iow/> .
 @prefix owl:     <http://www.w3.org/2002/07/owl#> .
 @prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
-@prefix test:    <http://uri.suomi.fi/datamodel/ns/test/> .
+@prefix test:    <https://iri.suomi.fi/model/test/> .
 @prefix rdf:      <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix skos:     <http://www.w3.org/2004/02/skos/core#> .
-@prefix suomi-meta: <http://uri.suomi.fi/datamodel/ns/suomi-meta/> .
+@prefix suomi-meta: <https://iri.suomi.fi/model/suomi-meta/> .
 
-<http://uri.suomi.fi/datamodel/ns/test>
+<https://iri.suomi.fi/model/test/>
 a                               owl:Ontology ;
 rdfs:comment                    "test desc"@fi ;
 rdfs:label                      "testlabel"@fi ;
@@ -19,16 +19,16 @@ dcterms:hasPart                 test:TestAttribute, test:TestClass, test:TestAss
 dcterms:identifier              "d2edb497-ba0b-49c9-aeb7-49749d836434" ;
 dcterms:isPartOf                <http://urn.fi/URN:NBN:fi:au:ptvl:v1105> ;
 dcterms:language                "fi" ;
-owl:imports                     <http://uri.suomi.fi/datamodel/ns/int> ;
+owl:imports                     <https://iri.suomi.fi/model/int> ;
 dcterms:requires                <https://www.example.com/ns/ext> ;
 dcterms:modified                "2023-01-03T12:44:45.799Z"^^xsd:dateTime ;
-dcap:preferredXMLNamespaceName  "http://uri.suomi.fi/datamodel/ns/test" ;
+dcap:preferredXMLNamespaceName  "https://iri.suomi.fi/model/test" ;
 dcap:preferredXMLNamespacePrefix
 "test" ;
 iow:contentModified             "2023-01-03T12:44:45.799Z"^^xsd:dateTime ;
 suomi-meta:publicationStatus    "VALID" ;
 owl:versionInfo                 "1.0.1" ;
-owl:versionIRI                  <http://uri.suomi.fi/datamodel/ns/test/1.0.1> .
+owl:versionIRI                  <https://iri.suomi.fi/model/test/1.0.1/> .
 
 <https://www.example.com/ns/ext>
 dcterms:type                        rdfs:Resource ;
@@ -36,14 +36,14 @@ rdfs:label                          "test resource"@fi;
 dcap:preferredXMLNamespacePrefix    "extres" .
 
 test:TestClass  rdf:type     owl:Class ;
-        rdfs:isDefinedBy     <http://uri.suomi.fi/datamodel/ns/test> ;
+        rdfs:isDefinedBy     <https://iri.suomi.fi/model/test/> ;
         rdfs:label           "test label"@fi ;
-        rdfs:subClassOf      <http://uri.suomi.fi/datamodel/ns/test/SubClass> ;
+        rdfs:subClassOf      <https://iri.suomi.fi/model/test/SubClass> ;
         dcterms:created      "2023-02-03T11:46:36.404Z"^^xsd:dateTime ;
         dcterms:identifier   "TestClass"^^xsd:NCName ;
         dcterms:modified     "2023-02-03T11:46:36.404Z"^^xsd:dateTime ;
         dcterms:subject      <http://uri.suomi.fi/terminology/test/test1> ;
-        owl:equivalentClass  <http://uri.suomi.fi/datamodel/ns/test/EqClass> ;
+        owl:equivalentClass  <https://iri.suomi.fi/model/test/EqClass> ;
         suomi-meta:publicationStatus      "VALID" ;
         skos:editorialNote   "comment visible for admin" ;
         rdfs:comment         "test note fi"@fi, "test note en"@en ;
@@ -60,38 +60,38 @@ test:TestClass  rdf:type     owl:Class ;
                 ] .
 
 test:TestAttribute  rdf:type     owl:DatatypeProperty ;
-        rdfs:isDefinedBy        <http://uri.suomi.fi/datamodel/ns/test> ;
+        rdfs:isDefinedBy        <https://iri.suomi.fi/model/test/> ;
         rdfs:label              "test attribute"@fi ;
-        rdfs:subPropertyOf      <http://uri.suomi.fi/datamodel/ns/test/SubResource> ;
+        rdfs:subPropertyOf      <https://iri.suomi.fi/model/test/SubResource> ;
         dcterms:created         "2023-02-03T11:46:36.404Z"^^xsd:dateTime ;
         dcterms:identifier      "TestAttribute"^^xsd:NCName ;
         dcterms:modified        "2023-02-03T11:46:36.404Z"^^xsd:dateTime ;
         dcterms:subject         <http://uri.suomi.fi/terminology/test/test1> ;
-        owl:equivalentProperty  <http://uri.suomi.fi/datamodel/ns/test/EqResource> ;
+        owl:equivalentProperty  <https://iri.suomi.fi/model/test/EqResource> ;
         suomi-meta:publicationStatus         "VALID" ;
         skos:editorialNote      "comment visible for admin" ;
         rdfs:comment            "test note fi"@fi, "test note en"@en ;
         iow:creator             "2a5c075f-0d0e-4688-90e0-29af1eebbf6d" ;
         iow:modifier            "2a5c075f-0d0e-4688-90e0-29af1eebbf6d" ;
-        rdfs:domain             <http://uri.suomi.fi/datamodel/ns/test/DomainClass> ;
+        rdfs:domain             <https://iri.suomi.fi/model/test/DomainClass> ;
         rdfs:range              rdfs:Literal .
 
 test:TestAssociation  rdf:type     owl:ObjectProperty, owl:FunctionalProperty ;
-        rdfs:isDefinedBy        <http://uri.suomi.fi/datamodel/ns/test> ;
+        rdfs:isDefinedBy        <https://iri.suomi.fi/model/test/> ;
         rdfs:label              "test association"@fi ;
-        rdfs:subPropertyOf      <http://uri.suomi.fi/datamodel/ns/test/SubResource> ;
+        rdfs:subPropertyOf      <https://iri.suomi.fi/model/test/SubResource> ;
         dcterms:created         "2023-02-03T11:46:36.404Z"^^xsd:dateTime ;
         dcterms:identifier      "TestAssociation"^^xsd:NCName ;
         dcterms:modified        "2023-02-03T11:46:36.404Z"^^xsd:dateTime ;
         dcterms:subject         <http://uri.suomi.fi/terminology/test/test1> ;
-        owl:equivalentProperty  <http://uri.suomi.fi/datamodel/ns/test/EqResource> ;
+        owl:equivalentProperty  <https://iri.suomi.fi/model/test/EqResource> ;
         suomi-meta:publicationStatus         "VALID" ;
         skos:editorialNote      "comment visible for admin" ;
         rdfs:comment            "test note fi"@fi, "test note en"@en ;
         iow:creator             "2a5c075f-0d0e-4688-90e0-29af1eebbf6d" ;
         iow:modifier            "2a5c075f-0d0e-4688-90e0-29af1eebbf6d" ;
-        rdfs:domain             <http://uri.suomi.fi/datamodel/ns/test/DomainClass> ;
-        rdfs:range              <http://uri.suomi.fi/datamodel/ns/test/RangeClass>
+        rdfs:domain             <https://iri.suomi.fi/model/test/DomainClass> ;
+        rdfs:range              <https://iri.suomi.fi/model/test/RangeClass>
 
 
 

@@ -1,37 +1,37 @@
 @prefix dcap:       <http://purl.org/ws-mmi-dc/terms/> .
 @prefix dcterms:    <http://purl.org/dc/terms/> .
-@prefix iow:        <http://uri.suomi.fi/datamodel/ns/iow/> .
+@prefix iow:        <https://iri.suomi.fi/model/iow/> .
 @prefix owl:        <http://www.w3.org/2002/07/owl#> .
 @prefix rdf:        <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs:       <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix sh:         <http://www.w3.org/ns/shacl#> .
 @prefix skos:       <http://www.w3.org/2004/02/skos/core#> .
-@prefix suomi-meta: <http://uri.suomi.fi/datamodel/ns/suomi-meta/> .
-@prefix visu:       <http://uri.suomi.fi/datamodel/ns/visu/> .
+@prefix suomi-meta: <https://iri.suomi.fi/model/suomi-meta/> .
+@prefix visu:       <https://iri.suomi.fi/model/visu/> .
 @prefix xsd:        <http://www.w3.org/2001/XMLSchema#> .
 @prefix ext:        <https://www.example.com/ns/external/> .
 
 visu:city  rdf:type                   owl:Class ;
-        rdfs:isDefinedBy              <http://uri.suomi.fi/datamodel/ns/visu> ;
+        rdfs:isDefinedBy              <https://iri.suomi.fi/model/visu/> ;
         dcterms:identifier            "city"^^xsd:NCName ;
         rdfs:label                    "Kaupunki"@fi .
 
 visu:name  rdf:type                   owl:DatatypeProperty ;
         rdfs:domain                   visu:person ;
         dcterms:identifier            "name"^^xsd:NCName ;
-        rdfs:isDefinedBy              <http://uri.suomi.fi/datamodel/ns/visu> ;
+        rdfs:isDefinedBy              <https://iri.suomi.fi/model/visu/> ;
         rdfs:label                    "Nimi"@fi ;
         rdfs:range                    xsd:string .
 
 visu:is-city  rdf:type                owl:ObjectProperty ;
         rdfs:domain                   visu:address ;
         dcterms:identifier            "is-city"^^xsd:NCName ;
-        rdfs:isDefinedBy              <http://uri.suomi.fi/datamodel/ns/visu> ;
+        rdfs:isDefinedBy              <https://iri.suomi.fi/model/visu/> ;
         rdfs:label                    "onKaupunki"@fi ;
         rdfs:range                    visu:city .
 
 visu:address  rdf:type                owl:Class ;
-        rdfs:isDefinedBy              <http://uri.suomi.fi/datamodel/ns/visu> ;
+        rdfs:isDefinedBy              <https://iri.suomi.fi/model/visu/> ;
         rdfs:label                    "Osoite"@fi ;
         dcterms:identifier            "address"^^xsd:NCName ;
         owl:equivalentClass           [ rdf:type            owl:Class ;
@@ -43,7 +43,7 @@ visu:address  rdf:type                owl:Class ;
                                       ] .
 
 visu:person  rdf:type                 owl:Class ;
-        rdfs:isDefinedBy              <http://uri.suomi.fi/datamodel/ns/visu> ;
+        rdfs:isDefinedBy              <https://iri.suomi.fi/model/visu/> ;
         rdfs:label                    "Henkilö"@fi ;
         rdfs:subClassOf               ext:Person ;
         dcterms:identifier            "person"^^xsd:NCName ;
@@ -68,40 +68,40 @@ visu:person  rdf:type                 owl:Class ;
                                       ] .
 
 visu:natural-person  rdf:type         owl:Class ;
-        rdfs:isDefinedBy              <http://uri.suomi.fi/datamodel/ns/visu> ;
+        rdfs:isDefinedBy              <https://iri.suomi.fi/model/visu/> ;
         rdfs:label                    "Luonnollinen henkilö"@fi ;
         dcterms:identifier            "natural-person"^^xsd:NCName ;
         rdfs:subClassOf               visu:person .
 
-<http://uri.suomi.fi/datamodel/ns/visu>
+<https://iri.suomi.fi/model/visu/>
         rdf:type                      owl:Ontology ;
         rdfs:label                    "Visualisaatio"@fi ;
         dcterms:contributor           <urn:uuid:7d3a3c00-5a6b-489b-a3ed-63bb58c26a63> ;
         dcterms:language              "fi" ;
-        dcap:preferredXMLNamespace    "http://uri.suomi.fi/datamodel/ns/visu" ;
+        dcap:preferredXMLNamespace    "https://iri.suomi.fi/model/visu/" ;
         dcap:preferredXMLNamespacePrefix
                 "visu" ;
-        owl:imports                   <https://www.example.com/ns/external> ;
+        owl:imports                   <https://www.example.com/ns/external/> ;
         suomi-meta:publicationStatus  "DRAFT" .
 
 visu:is-address  rdf:type             owl:ObjectProperty ;
-        rdfs:isDefinedBy              <http://uri.suomi.fi/datamodel/ns/visu> ;
+        rdfs:isDefinedBy              <https://iri.suomi.fi/model/visu/> ;
         dcterms:identifier            "is-address"^^xsd:NCName ;
         rdfs:label                    "onOsoite"@fi .
 
 visu:street  rdf:type                 owl:DatatypeProperty ;
-        rdfs:isDefinedBy              <http://uri.suomi.fi/datamodel/ns/visu> ;
+        rdfs:isDefinedBy              <https://iri.suomi.fi/model/visu/> ;
         rdfs:label                    "Street"@fi ;
         dcterms:identifier            "street"^^xsd:NCName ;
         rdfs:range                    xsd:string .
 
  visu:age  rdf:type                    owl:DatatypeProperty ;
-         rdfs:isDefinedBy              <http://uri.suomi.fi/datamodel/ns/visu> ;
+         rdfs:isDefinedBy              <https://iri.suomi.fi/model/visu/> ;
          dcterms:identifier            "age"^^xsd:NCName ;
          rdfs:label                    "Ikä"@fi ;
          rdfs:range                    xsd:integer .
 
-<https://www.example.com/ns/external>
+<https://www.example.com/ns/external/>
  dcterms:type                        rdfs:Resource ;
  rdfs:label                          "External"@fi;
  dcap:preferredXMLNamespacePrefix    "ext" .

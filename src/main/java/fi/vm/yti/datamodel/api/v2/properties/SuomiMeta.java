@@ -10,7 +10,7 @@ public class SuomiMeta {
         //property class
     }
 
-    public static final String URI ="http://uri.suomi.fi/datamodel/ns/suomi-meta/";
+    public static final String URI ="https://iri.suomi.fi/model/suomi-meta/";
 
     public static final Property publicationStatus = ResourceFactory.createProperty(URI, "publicationStatus");
 }

@@ -5,6 +5,7 @@ import fi.vm.yti.datamodel.api.v2.dto.visualization.*;
 import fi.vm.yti.datamodel.api.v2.mapper.VisualizationMapper;
 import fi.vm.yti.datamodel.api.v2.properties.Iow;
 import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
+import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.OWL;
@@ -17,19 +18,20 @@ import static org.junit.jupiter.api.Assertions.*;
 class VisualizationDataMapperTest {
 
     private final Map<String, String> libraryNamespaces = Map.of(
-            "http://uri.suomi.fi/datamodel/ns/yti-model", "yti-model",
-            "https://www.example.com/ns/external", "ext");
+            ModelConstants.SUOMI_FI_NAMESPACE + "yti-model/", "yti-model",
+            "https://www.example.com/ns/external/", "ext");
 
     private final Map<String, String> profileNamespaces = Map.of(
-            "http://uri.suomi.fi/datamodel/ns/personprof", "personprof",
-            "http://uri.suomi.fi/datamodel/ns/ytm", "ytm"
+            ModelConstants.SUOMI_FI_NAMESPACE + "personprof/", "personprof",
+            ModelConstants.SUOMI_FI_NAMESPACE + "ytm/", "ytm"
     );
 
     @Test
     void mapClassWithParent() {
         var model = MapperTestUtils.getModelFromFile("/models/test_datamodel_library_visualization.ttl");
 
-        var classDTO = VisualizationMapper.mapClass("http://uri.suomi.fi/datamodel/ns/visu/natural-person", model, libraryNamespaces);
+        var uri = DataModelURI.createResourceURI("visu", "natural-person");
+        var classDTO = VisualizationMapper.mapClass(uri.getResourceURI(), model, libraryNamespaces);
 
         assertEquals("Luonnollinen henkilö", classDTO.getLabel().get("fi"));
 
@@ -157,7 +159,7 @@ class VisualizationDataMapperTest {
     @Test
     void mapApplicationProfileClass() {
         var model = MapperTestUtils.getModelFromFile("/models/test_application_profile_visualization.ttl");
-        var classURI = ModelConstants.SUOMI_FI_NAMESPACE + "visuprof" + ModelConstants.RESOURCE_SEPARATOR + "person";
+        var classURI = DataModelURI.createResourceURI("visuprof", "person").getResourceURI();
         var externalResources = new HashSet<Resource>();
 
         var classDTO = (VisualizationNodeShapeDTO) VisualizationMapper
@@ -170,7 +172,7 @@ class VisualizationDataMapperTest {
 
         assertEquals(2, classDTO.getAttributes().size());
         assertEquals(1, classDTO.getAssociations().size());
-        assertEquals("http://uri.suomi.fi/datamodel/ns/personprof/ext-attr", externalResources.iterator().next().getURI());
+        assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "personprof/ext-attr", externalResources.iterator().next().getURI());
 
         var mappedAttribute = findItem(classDTO.getAttributes(), "age", VisualizationPropertyShapeAttributeDTO.class);
         var mappedAssociation = findItem(classDTO.getAssociations(), "is-address", VisualizationPropertyShapeAssociationDTO.class);
@@ -194,7 +196,7 @@ class VisualizationDataMapperTest {
 
     @Test
     void mapPositionDataToGraph() {
-        var positionGraphURI = ModelConstants.MODEL_POSITIONS_NAMESPACE + "test-model";
+        var positionGraphURI = ModelConstants.MODEL_POSITIONS_NAMESPACE + "test-model" + ModelConstants.RESOURCE_SEPARATOR;
 
         var position = new PositionDataDTO();
         position.setIdentifier("class-1");
@@ -204,7 +206,7 @@ class VisualizationDataMapperTest {
 
         var positionModel = VisualizationMapper.mapPositionDataToModel(positionGraphURI, List.of(position));
 
-        var resource = positionModel.getResource(positionGraphURI + ModelConstants.RESOURCE_SEPARATOR + position.getIdentifier());
+        var resource = positionModel.getResource(positionGraphURI + position.getIdentifier());
 
         assertEquals("class-1", resource.getProperty(DCTerms.identifier).getString());
         assertEquals(3.0, resource.getProperty(Iow.posX).getLiteral().getDouble());
@@ -215,7 +217,7 @@ class VisualizationDataMapperTest {
     @Test
     void mapPositionDataWithParentClasses() {
         var modelPrefix = "test-model";
-        var positionGraphURI = ModelConstants.MODEL_POSITIONS_NAMESPACE + modelPrefix;
+        var positionGraphURI = ModelConstants.MODEL_POSITIONS_NAMESPACE + modelPrefix + ModelConstants.RESOURCE_SEPARATOR;
 
         var node1 = new PositionDataDTO();
         node1.setIdentifier("class-1");
@@ -256,7 +258,7 @@ class VisualizationDataMapperTest {
     @Test
     void mapPositionDataWithParentClassesAndHiddenNode() {
         var modelPrefix = "test-model";
-        var positionGraphURI = ModelConstants.MODEL_POSITIONS_NAMESPACE + modelPrefix;
+        var positionGraphURI = ModelConstants.MODEL_POSITIONS_NAMESPACE + modelPrefix + ModelConstants.RESOURCE_SEPARATOR;
 
         var node1 = new PositionDataDTO();
         node1.setIdentifier("class-1");
@@ -304,7 +306,7 @@ class VisualizationDataMapperTest {
     @Test
     void mapPositionDataWithParentClassesAndAssociationsAndHiddenNodes() {
         var modelPrefix = "test-model";
-        var positionGraphURI = ModelConstants.MODEL_POSITIONS_NAMESPACE + modelPrefix;
+        var positionGraphURI = ModelConstants.MODEL_POSITIONS_NAMESPACE + modelPrefix + ModelConstants.RESOURCE_SEPARATOR;
 
         // class-1 has parent class reference to class-2 via corner-1 and corner-2
         // class-1 has association to class-3 via corner-3
@@ -414,7 +416,7 @@ class VisualizationDataMapperTest {
     @Test
     void mapPositionDataAssociationRecursive() {
         var modelPrefix = "test-model";
-        var positionGraphURI = ModelConstants.MODEL_POSITIONS_NAMESPACE + modelPrefix;
+        var positionGraphURI = ModelConstants.MODEL_POSITIONS_NAMESPACE + modelPrefix + ModelConstants.RESOURCE_SEPARATOR;
 
         var association = new VisualizationReferenceDTO();
         association.setReferenceTarget("class-1");

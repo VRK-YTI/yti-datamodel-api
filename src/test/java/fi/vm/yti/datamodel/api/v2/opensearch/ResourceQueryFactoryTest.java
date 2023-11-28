@@ -1,11 +1,13 @@
 package fi.vm.yti.datamodel.api.v2.opensearch;
 
 import fi.vm.yti.datamodel.api.index.OpenSearchUtils;
+import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
 import fi.vm.yti.datamodel.api.v2.dto.ResourceType;
 import fi.vm.yti.datamodel.api.v2.dto.Status;
 import fi.vm.yti.datamodel.api.v2.opensearch.dto.ResourceSearchRequest;
 import fi.vm.yti.datamodel.api.v2.opensearch.queries.QueryFactoryUtils;
 import fi.vm.yti.datamodel.api.v2.opensearch.queries.ResourceQueryFactory;
+import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
 import org.junit.jupiter.api.Test;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.skyscreamer.jsonassert.JSONCompareMode;
@@ -17,28 +19,30 @@ import static org.springframework.test.util.AssertionErrors.assertEquals;
 
 class ResourceQueryFactoryTest {
 
+    static String modelURI = DataModelURI.createModelURI("test").getModelURI();
+
     @Test
     void createInternalClassQueryValues() throws Exception {
         var request = new ResourceSearchRequest();
         request.setQuery("test query");
         request.setGroups(Set.of("P11", "P1"));
-        request.setLimitToDataModel("http://uri.suomi.fi/datamodel/ns/test");
+        request.setLimitToDataModel(modelURI);
         request.setFromAddedNamespaces(true);
         request.setPageFrom(1);
         request.setPageSize(100);
         request.setStatus(Set.of(Status.SUGGESTED, Status.VALID));
         request.setSortLang("en");
-        request.setTargetClass("http://uri.suomi.fi/datamodel/ns/test/TestClass");
+        request.setTargetClass(modelURI + "TestClass");
         request.setResourceTypes(Set.of(ResourceType.ATTRIBUTE, ResourceType.ASSOCIATION));
 
-        var groupNamespaces = List.of("http://uri.suomi.fi/datamodel/ns/groupNs", "http://uri.suomi.fi/datamodel/ns/addedNs");
-        var internalNamespaces = List.of("http://uri.suomi.fi/datamodel/ns/addedNs");
+        var groupNamespaces = List.of(ModelConstants.SUOMI_FI_NAMESPACE + "groupNs/", ModelConstants.SUOMI_FI_NAMESPACE + "addedNs/");
+        var internalNamespaces = List.of(ModelConstants.SUOMI_FI_NAMESPACE + "addedNs/");
         var externalNamespaces = List.of("http://external-data.com/test");
 
-        var allowedIncompleteDatamodels = Set.of("http://uri.suomi.fi/datamodel/ns/test");
+        var allowedIncompleteDataModels = Set.of(modelURI);
 
         var classQuery = ResourceQueryFactory.createInternalResourceQuery(request, externalNamespaces, internalNamespaces,
-                groupNamespaces, allowedIncompleteDatamodels);
+                groupNamespaces, allowedIncompleteDataModels);
 
         String expected = OpenSearchUtils.getJsonString("/es/classRequest.json");
         JSONAssert.assertEquals(expected, OpenSearchUtils.getPayload(classQuery), JSONCompareMode.LENIENT);
@@ -53,9 +57,9 @@ class ResourceQueryFactoryTest {
 
         request.setPageFrom(1);
         request.setPageSize(100);
-        request.setLimitToDataModel("http://uri.suomi.fi/datamodel/ns/test");
+        request.setLimitToDataModel(modelURI);
         request.setResourceTypes(Set.of(ResourceType.ATTRIBUTE));
-        request.setAdditionalResources(Set.of("http://uri.suomi.fi/datamodel/ns/ext/some-property"));
+        request.setAdditionalResources(Set.of(ModelConstants.SUOMI_FI_NAMESPACE + "ext/some-property"));
 
         var attributeListQuery = ResourceQueryFactory.createInternalResourceQuery(request, new ArrayList<>(), new ArrayList<>(),
                 null, new HashSet<>());
@@ -69,7 +73,7 @@ class ResourceQueryFactoryTest {
 
         request.setPageFrom(1);
         request.setPageSize(100);
-        request.setLimitToDataModel("http://uri.suomi.fi/datamodel/ns/test");
+        request.setLimitToDataModel(modelURI);
         request.setResourceTypes(Set.of(ResourceType.CLASS));
         request.setFromVersion("1.2.3");
 

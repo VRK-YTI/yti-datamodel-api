@@ -12,6 +12,7 @@ import fi.vm.yti.datamodel.api.v2.opensearch.queries.ModelQueryFactory;
 import fi.vm.yti.datamodel.api.v2.opensearch.queries.QueryFactoryUtils;
 import fi.vm.yti.datamodel.api.v2.opensearch.queries.ResourceQueryFactory;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
+import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
 import fi.vm.yti.security.YtiUser;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.vocabulary.DCTerms;
@@ -175,16 +176,19 @@ public class SearchIndexService {
                 .toList();
     }
 
-    private void getNamespacesFromModel(String modelUri, List<String> internalNamespaces, List<String> externalNamespaces){
-        var model = coreRepository.fetch(modelUri);
-        var resource = model.getResource(modelUri);
+    private void getNamespacesFromModel(String graphUri, List<String> internalNamespaces, List<String> externalNamespaces){
+        var uri = DataModelURI.fromURI(graphUri);
+        var model = coreRepository.fetch(uri.getGraphURI());
+        var resource = model.getResource(uri.getModelURI());
         var allNamespaces = new ArrayList<String>();
 
         allNamespaces.addAll(MapperUtils.arrayPropertyToList(resource, OWL.imports));
         allNamespaces.addAll(MapperUtils.arrayPropertyToList(resource, DCTerms.requires));
 
         // resource from external models are searched by isDefinedBy property
-        externalNamespaces.addAll(allNamespaces.stream().filter(ns -> !ns.contains(ModelConstants.SUOMI_FI_DOMAIN)).toList());
+        externalNamespaces.addAll(allNamespaces.stream().filter(ns -> !ns.contains(ModelConstants.SUOMI_FI_DOMAIN)
+                && !ns.contains(ModelConstants.SUOMI_FI_NAMESPACE))
+                .toList());
         // internal namespaces are searched by versionIRI
         internalNamespaces.addAll(allNamespaces.stream().filter(ns -> ns.startsWith(ModelConstants.SUOMI_FI_NAMESPACE)).toList());
     }

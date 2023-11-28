@@ -11,6 +11,7 @@ import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexResource;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
 import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
+import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelUtils;
 import fi.vm.yti.datamodel.api.v2.utils.SemVer;
 import fi.vm.yti.datamodel.api.v2.validator.ValidationConstants;
@@ -28,6 +29,7 @@ import org.apache.jena.vocabulary.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.topbraid.shacl.vocabulary.SH;
@@ -78,11 +80,8 @@ public class DataModelService {
     }
 
     public DataModelInfoDTO get(String prefix, String version) {
-        var graphUri = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
-        if(version != null) {
-            graphUri += ModelConstants.RESOURCE_SEPARATOR + version;
-        }
-        var model = coreRepository.fetch(graphUri);
+        var uri = DataModelURI.createModelURI(prefix, version);
+        var model = coreRepository.fetch(uri.getGraphURI());
         var hasRightsToModel = authorizationManager.hasRightToModel(prefix, model);
 
         var userMapper = hasRightsToModel ? groupManagementService.mapUser() : null;
@@ -91,7 +90,7 @@ public class DataModelService {
 
     public URI create(DataModelDTO dto, ModelType modelType) throws URISyntaxException {
         check(authorizationManager.hasRightToAnyOrganization(dto.getOrganizations()));
-        var graphUri = ModelConstants.SUOMI_FI_NAMESPACE + dto.getPrefix();
+        var graphUri = DataModelURI.createModelURI(dto.getPrefix()).getGraphURI();
 
         terminologyService.resolveTerminology(dto.getTerminologies());
         codeListService.resolveCodelistScheme(dto.getCodeLists());
@@ -106,7 +105,7 @@ public class DataModelService {
     }
 
     public void update(String prefix, DataModelDTO dto) {
-        var graphUri = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
+        var graphUri = DataModelURI.createModelURI(prefix).getGraphURI();
         var model = coreRepository.fetch(graphUri);
 
         check(authorizationManager.hasRightToModel(prefix, model));
@@ -125,40 +124,33 @@ public class DataModelService {
     public void delete(String prefix, String version) {
         check(userProvider.getUser().isSuperuser());
 
-        var modelUri = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
-        var versionUri = modelUri;
-        if(version != null) {
-            versionUri += ModelConstants.RESOURCE_SEPARATOR + version;
-        }
-        if(!coreRepository.graphExists(modelUri)){
-            throw new ResourceNotFoundException(modelUri);
+        var modelUri = DataModelURI.createModelURI(prefix, version);
+        var graphUri = modelUri.getGraphURI();
+        if(!coreRepository.graphExists(graphUri)) {
+            throw new ResourceNotFoundException(graphUri);
         }
 
-        coreRepository.delete(versionUri);
-        openSearchIndexer.deleteModelFromIndex(versionUri);
-        openSearchIndexer.removeResourceIndexesByDataModel(modelUri, version);
-        auditService.log(AuditService.ActionType.DELETE, modelUri, userProvider.getUser());
+        coreRepository.delete(graphUri);
+        openSearchIndexer.deleteModelFromIndex(graphUri);
+        openSearchIndexer.removeResourceIndexesByDataModel(modelUri.getModelURI(), version);
+        auditService.log(AuditService.ActionType.DELETE, graphUri, userProvider.getUser());
     }
 
     public boolean exists(String prefix) {
         if (ValidationConstants.RESERVED_WORDS.contains(prefix)) {
             return true;
         }
-        return coreRepository.graphExists(ModelConstants.SUOMI_FI_NAMESPACE + prefix);
+        return coreRepository.graphExists(DataModelURI.createModelURI(prefix).getModelURI());
     }
 
-    public ResponseEntity<String> export(String prefix, String version, String resource, String accept) {
-        var modelURI = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
-        var versionUri = modelURI;
-        if(version != null) {
-            versionUri += ModelConstants.RESOURCE_SEPARATOR + version;
-        }
+    public ResponseEntity<String> export(String prefix, String version, String accept, boolean showAsFile) {
+        var uri = DataModelURI.createModelURI(prefix, version);
 
         Model exportedModel;
         Model model;
 
         try {
-            model = coreRepository.fetch(versionUri);
+            model = coreRepository.fetch(uri.getGraphURI());
         } catch (ResourceNotFoundException e) {
             // cannot throw ResourceNotFoundException because accept header is not application/json
             return ResponseEntity.notFound().build();
@@ -167,44 +159,52 @@ public class DataModelService {
             return ResponseEntity.internalServerError().build();
         }
 
-        if (resource != null) {
-            var res = model.getResource(modelURI + ModelConstants.RESOURCE_SEPARATOR + resource);
-            var properties = res.listProperties();
-            if (!properties.hasNext()) {
-                return ResponseEntity.notFound().build();
-            }
-            exportedModel = properties.toModel();
+        // if no version is defined, return only metadata of the draft version
+        if (version == null) {
+            var modelResource = model.getResource(uri.getModelURI());
+            exportedModel = modelResource.listProperties().toModel();
         } else {
             exportedModel = model;
         }
 
-        DataModelUtils.addPrefixesToModel(modelURI, exportedModel);
+        DataModelUtils.addPrefixesToModel(uri.getGraphURI(), exportedModel);
 
         // remove editorial notes from resources
-        if (!authorizationManager.hasRightToModel(prefix, model)) {
-            var hiddenValues = model.listStatements(
+        if (!authorizationManager.hasRightToModel(prefix, exportedModel)) {
+            var hiddenValues = exportedModel.listStatements(
                     new SimpleSelector(null, SKOS.editorialNote, (String) null)).toList();
             exportedModel.remove(hiddenValues);
         }
 
         var stringWriter = new StringWriter();
+        var fileExtension = ".jsonld";
         switch (accept) {
             case "text/turtle":
+                fileExtension = ".ttl";
                 RDFDataMgr.write(stringWriter, exportedModel, Lang.TURTLE);
                 break;
             case "application/rdf+xml":
+                fileExtension = ".rdf";
                 RDFDataMgr.write(stringWriter, exportedModel, Lang.RDFXML);
                 break;
             case "application/ld+json":
             default:
                 RDFDataMgr.write(stringWriter, exportedModel, Lang.JSONLD);
         }
-        return ResponseEntity.ok(stringWriter.toString());
+
+        var contentDisposition = showAsFile
+                ? "attachment; filename=" + uri.getModelId() + fileExtension
+                : "inline";
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, contentDisposition)
+                .body(stringWriter.toString());
     }
 
-
     public URI createRelease(String prefix, String version, Status status) throws URISyntaxException {
-        var modelUri = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
+        var modelVersionURI = DataModelURI.createModelURI(prefix, version);
+        var modelUri = modelVersionURI.getModelURI();
+        var graphUri = modelVersionURI.getGraphURI();
         if(!status.equals(Status.SUGGESTED) && !status.equals(Status.VALID)){
             throw new MappingError("Status has to be SUGGESTED or VALID");
         }
@@ -214,11 +214,11 @@ public class DataModelService {
         }
 
         //This gets the current "DRAFT" version
-        var model = coreRepository.fetch(modelUri);
+        var model = coreRepository.fetch(modelVersionURI.getDraftGraphURI());
         check(authorizationManager.hasRightToModel(prefix, model));
         var priorVersionUri = MapperUtils.propertyToString(model.getResource(modelUri), OWL.priorVersion);
         if(priorVersionUri != null){
-            var priorVersion = priorVersionUri.substring(priorVersionUri.lastIndexOf("/")  + 1);
+            var priorVersion = DataModelURI.fromURI(priorVersionUri).getVersion();
             var result = SemVer.compareSemVers(priorVersion, version);
             if(result == 0){
                 throw new MappingError("Same version number");
@@ -230,11 +230,11 @@ public class DataModelService {
 
         var newDraft = ModelFactory.createDefaultModel().add(model);
 
-        var versionUri = mapper.mapReleaseProperties(model, modelUri, version, status);
+        mapper.mapReleaseProperties(model, modelVersionURI, status);
         //Map new newest release to draft model
-        mapper.mapPriorVersion(newDraft, modelUri, versionUri);
-        coreRepository.put(modelUri, newDraft);
-        coreRepository.put(versionUri, model);
+        mapper.mapPriorVersion(newDraft, modelUri, graphUri);
+        coreRepository.put(modelVersionURI.getDraftGraphURI(), newDraft);
+        coreRepository.put(modelVersionURI.getGraphURI(), model);
 
         var newVersion = mapper.mapToIndexModel(modelUri, model);
         openSearchIndexer.createModelToIndex(newVersion);
@@ -247,22 +247,22 @@ public class DataModelService {
         resources.forEach(resource -> list.add(ResourceMapper.mapToIndexResource(model, resource.getURI())));
         openSearchIndexer.bulkInsert(OpenSearchIndexer.OPEN_SEARCH_INDEX_RESOURCE, list);
         visualisationService.saveVersionedPositions(prefix, version);
-        auditService.log(AuditService.ActionType.CREATE, versionUri, userProvider.getUser());
-        return new URI(versionUri);
-
+        auditService.log(AuditService.ActionType.CREATE, modelVersionURI.getGraphURI(), userProvider.getUser());
+        //Draft model does not need to be indexed since opensearch specific properties on it did not change
+        return new URI(modelVersionURI.getGraphURI());
     }
 
 
     public List<ModelVersionInfo> getPriorVersions(String prefix, String version){
 
-        var modelUri = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
+        var modelUri = DataModelURI.createModelURI(prefix);
         //Would be nice to do traverse the graphs using SPARQL starting from the correct versionIRI but currently that traversing named graphs is not supported
         var constructBuilder = new ConstructBuilder()
                 .addConstruct("?g", OWL2.versionInfo, "?versionInfo")
                 .addConstruct("?g", OWL2.versionIRI, "?versionIRI")
                 .addConstruct("?g", RDFS.label, "?label")
                 .addConstruct("?g", SuomiMeta.publicationStatus, "?publicationStatus");
-        var uri = NodeFactory.createURI(modelUri);
+        var uri = NodeFactory.createURI(modelUri.getModelURI());
         var whereBuilder = new WhereBuilder()
                 .addWhere(uri, OWL2.versionInfo, "?versionInfo")
                 .addWhere(uri, OWL2.versionIRI, "?versionIRI")
@@ -284,18 +284,17 @@ public class DataModelService {
     }
 
     public void updateVersionedModel(String prefix, String version, VersionedModelDTO dto) {
-        var graphUri = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
-        var versionUri = graphUri + ModelConstants.RESOURCE_SEPARATOR + version;
+        var uri = DataModelURI.createModelURI(prefix, version);
 
-        var model = coreRepository.fetch(versionUri);
+        var model = coreRepository.fetch(uri.getGraphURI());
         check(authorizationManager.hasRightToModel(prefix, model));
 
-        mapper.mapUpdateVersionedModel(model, graphUri, dto, userProvider.getUser());
+        mapper.mapUpdateVersionedModel(model, uri.getModelURI(), dto, userProvider.getUser());
 
-        coreRepository.put(versionUri, model);
+        coreRepository.put(uri.getGraphURI(), model);
 
-        var indexModel = mapper.mapToIndexModel(graphUri, model);
+        var indexModel = mapper.mapToIndexModel(uri.getModelId(), model);
         openSearchIndexer.updateModelToIndex(indexModel);
-        auditService.log(AuditService.ActionType.UPDATE, versionUri, userProvider.getUser());
+        auditService.log(AuditService.ActionType.UPDATE, uri.getGraphURI(), userProvider.getUser());
     }
 }

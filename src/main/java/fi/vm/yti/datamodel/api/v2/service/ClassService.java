@@ -12,6 +12,7 @@ import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexResourceInfo;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import fi.vm.yti.datamodel.api.v2.repository.ImportsRepository;
+import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelUtils;
 import fi.vm.yti.security.AuthenticatedUserProvider;
 import org.apache.jena.arq.querybuilder.AskBuilder;
@@ -75,18 +76,14 @@ public class ClassService extends BaseResourceService {
     }
 
     public ResourceInfoBaseDTO get(String prefix, String version, String classIdentifier) {
-        var modelURI = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
+        var uri = DataModelURI.createResourceURI(prefix, classIdentifier, version);
+        var modelURI = uri.getModelURI();
+        var classURI = uri.getResourceURI();
 
-        var versionUri = modelURI;
-        if(version != null){
-            versionUri += ModelConstants.RESOURCE_SEPARATOR + version;
-        }
-
-        var classURI = modelURI + ModelConstants.RESOURCE_SEPARATOR + classIdentifier;
-        if(!coreRepository.resourceExistsInGraph(versionUri , classURI)){
+        if(!coreRepository.resourceExistsInGraph(uri.getGraphURI(), classURI)){
             throw new ResourceNotFoundException(classURI);
         }
-        var model = coreRepository.fetch(versionUri);
+        var model = coreRepository.fetch(uri.getGraphURI());
         var hasRightToModel = authorizationManager.hasRightToModel(prefix, model);
 
         var orgModel = coreRepository.getOrganizations();
@@ -94,11 +91,10 @@ public class ClassService extends BaseResourceService {
 
         ResourceInfoBaseDTO dto;
         var modelResource = model.getResource(modelURI);
-        var includedNamespaces = DataModelUtils.getInternalReferenceModels(versionUri, modelResource);
+        var includedNamespaces = DataModelUtils.getInternalReferenceModels(uri.getGraphURI(), modelResource);
 
         if (MapperUtils.isLibrary(modelResource)) {
-            dto = ClassMapper.mapToClassDTO(model, modelURI, classIdentifier, orgModel,
-                    hasRightToModel, userMapper);
+            dto = ClassMapper.mapToClassDTO(model, uri, orgModel, hasRightToModel, userMapper);
 
             var classResource = model.getResource(classURI);
             var restrictions = ClassMapper.getClassRestrictionList(model, classResource)
@@ -120,8 +116,7 @@ public class ClassService extends BaseResourceService {
 
             ClassMapper.addClassResourcesToDTO(findResourcesModel, restrictions, (ClassInfoDTO) dto, terminologyService.mapConceptToResource());
         } else {
-            dto = ClassMapper.mapToNodeShapeDTO(model, modelURI, classIdentifier, orgModel,
-                    hasRightToModel, userMapper);
+            dto = ClassMapper.mapToNodeShapeDTO(model, uri, orgModel, hasRightToModel, userMapper);
             var existingProperties = getTargetNodeProperties(MapperUtils.propertyToString(model.getResource(classURI), SH.node), includedNamespaces);
             var nodeShapeResources = coreRepository.queryConstruct(ClassMapper.getNodeShapeResourcesQuery(classURI));
             ClassMapper.addNodeShapeResourcesToDTO(model, nodeShapeResources, (NodeShapeInfoDTO) dto, existingProperties);
@@ -153,27 +148,28 @@ public class ClassService extends BaseResourceService {
     }
 
     public URI create(String prefix, BaseDTO dto, boolean applicationProfile) throws URISyntaxException {
-        var modelUri = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
-        var classUri = modelUri + ModelConstants.RESOURCE_SEPARATOR + dto.getIdentifier();
-        if(coreRepository.resourceExistsInGraph(modelUri, classUri, false)){
+        var uri = DataModelURI.createResourceURI(prefix, dto.getIdentifier());
+        var graphUri = uri.getGraphURI();
+        var classUri = uri.getResourceURI();
+        if(coreRepository.resourceExistsInGraph(graphUri, classUri, false)){
             throw new MappingError("Class already exists");
         }
-        var model = coreRepository.fetch(modelUri);
-        var modelResource = model.getResource(modelUri);
+        var model = coreRepository.fetch(graphUri);
+        var modelResource = model.getResource(uri.getModelURI());
         check(authorizationManager.hasRightToModel(prefix, model));
         checkDataModelType(modelResource, dto);
         terminologyService.resolveConcept(dto.getSubject());
 
-        var includedNamespaces = DataModelUtils.getInternalReferenceModels(modelUri, modelResource);
+        var includedNamespaces = DataModelUtils.getInternalReferenceModels(graphUri, modelResource);
 
         if(applicationProfile) {
-            ClassMapper.createNodeShapeAndMapToModel(modelUri, model, (NodeShapeDTO) dto, userProvider.getUser());
+            ClassMapper.createNodeShapeAndMapToModel(uri, model, (NodeShapeDTO) dto, userProvider.getUser());
             addNodeShapeProperties(model, classUri, (NodeShapeDTO) dto, includedNamespaces);
         }else {
-            ClassMapper.createOntologyClassAndMapToModel(modelUri, model, (ClassDTO) dto, userProvider.getUser());
+            ClassMapper.createOntologyClassAndMapToModel(uri, model, (ClassDTO) dto, userProvider.getUser());
         }
 
-        saveResource(model, modelUri, classUri, false);
+        saveResource(model, graphUri, classUri, false);
         visualizationService.addNewResourceDefaultPosition(prefix, dto.getIdentifier());
         AUDIT_SERVICE.log(AuditService.ActionType.CREATE, classUri, userProvider.getUser());
         return new URI(classUri);
@@ -198,8 +194,10 @@ public class ClassService extends BaseResourceService {
     }
 
     public void update(String prefix, String classIdentifier, BaseDTO dto) {
-        var graph = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
-        var classURI = graph + ModelConstants.RESOURCE_SEPARATOR + classIdentifier;
+        var uri = DataModelURI.createResourceURI(prefix, classIdentifier);
+        var graph = uri.getGraphURI();
+        var classURI = uri.getResourceURI();
+
         if(!coreRepository.resourceExistsInGraph(graph, classURI)){
             throw new ResourceNotFoundException(classIdentifier);
         }
@@ -265,7 +263,7 @@ public class ClassService extends BaseResourceService {
 
         // collect recursively all property shape uris from target node
         while (targetNode != null) {
-            var targetNodeURI = DataModelUtils.removeVersionFromURI(targetNode);
+            var targetNodeURI = DataModelURI.fromURI(targetNode).getResourceURI();
             if (handledNodeShapes.contains(targetNode)) {
                 throw new MappingError("Circular dependency, cannot add sh:node reference");
             }
@@ -298,8 +296,8 @@ public class ClassService extends BaseResourceService {
                 .filter(Objects::nonNull)
                 .toList();
 
-        var modelURI = DataModelUtils.removeTrailingSlash(NodeFactory.createURI(classURI).getNameSpace());
-        var included = DataModelUtils.getInternalReferenceModels(modelURI, model.getResource(modelURI));
+        var dataModelURI = DataModelURI.fromURI(classURI);
+        var included = DataModelUtils.getInternalReferenceModels(dataModelURI.getGraphURI(), model.getResource(dataModelURI.getModelURI()));
         var newProperties = nodeShapeDTO.getProperties().stream()
                 .filter(p -> !existingProperties.contains(p))
                 .collect(Collectors.toSet());
@@ -326,12 +324,13 @@ public class ClassService extends BaseResourceService {
     }
 
     public void handlePropertyShapeReference(String prefix, String nodeShapeIdentifier, String uri, boolean delete) {
-        var modelURI = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
-        var model = coreRepository.fetch(modelURI);
-        var classURI = modelURI + ModelConstants.RESOURCE_SEPARATOR + nodeShapeIdentifier;
+        var dataModelURI = DataModelURI.createResourceURI(prefix, nodeShapeIdentifier);
+        var graphURI = dataModelURI.getGraphURI();
+        var model = coreRepository.fetch(graphURI);
+        var classURI = dataModelURI.getResourceURI();
         check(authorizationManager.hasRightToModel(prefix, model));
 
-        var includedNamespaces = DataModelUtils.getInternalReferenceModels(modelURI, model.getResource(modelURI));
+        var includedNamespaces = DataModelUtils.getInternalReferenceModels(graphURI, model.getResource(dataModelURI.getModelURI()));
         var classResource = model.getResource(classURI);
         var existingProperties = getTargetNodeProperties(MapperUtils.propertyToString(classResource, SH.node), includedNamespaces);
         if(delete) {
@@ -340,14 +339,16 @@ public class ClassService extends BaseResourceService {
             ClassMapper.mapAppendNodeShapeProperty(classResource, uri, existingProperties);
         }
         AUDIT_SERVICE.log(AuditService.ActionType.UPDATE, classURI, userProvider.getUser());
-        coreRepository.put(modelURI, model);
+        coreRepository.put(graphURI, model);
     }
 
     public void handleUpdateClassRestrictionReference(String prefix, String classIdentifier, String restrictionURI, String currentTarget, String newTarget) {
-        var modelURI = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
-        var model = coreRepository.fetch(modelURI);
-        var classURI = modelURI + ModelConstants.RESOURCE_SEPARATOR + classIdentifier;
-        if (!coreRepository.resourceExistsInGraph(modelURI, classURI)) {
+        var dataModelURI = DataModelURI.createResourceURI(prefix, classIdentifier);
+        var modelURI = dataModelURI.getModelURI();
+        var classURI = dataModelURI.getResourceURI();
+        var graphURI = dataModelURI.getGraphURI();
+        var model = coreRepository.fetch(graphURI);
+        if (!coreRepository.resourceExistsInGraph(graphURI, classURI)) {
             throw new ResourceNotFoundException(classURI);
         }
         check(authorizationManager.hasRightToModel(prefix, model));
@@ -385,53 +386,53 @@ public class ClassService extends BaseResourceService {
 
             ClassMapper.mapUpdateClassRestrictionProperty(model, classResource, restrictionURI, currentTarget, newTarget, resourceType);
         }
-        coreRepository.put(modelURI, model);
         AUDIT_SERVICE.log(AuditService.ActionType.UPDATE, classURI, userProvider.getUser());
-
+        coreRepository.put(graphURI, model);
     }
 
     public void handleAddClassRestrictionReference(String prefix, String classIdentifier, String uri) {
-        var modelURI = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
-        var model = coreRepository.fetch(modelURI);
-        var classURI = modelURI + ModelConstants.RESOURCE_SEPARATOR + classIdentifier;
+        var dataModelURI = DataModelURI.createResourceURI(prefix, classIdentifier);
+        var graphURI = dataModelURI.getGraphURI();
+        var classURI = dataModelURI.getResourceURI();
+        var model = coreRepository.fetch(graphURI);
 
-        if (!coreRepository.resourceExistsInGraph(modelURI, classURI)) {
+        if (!coreRepository.resourceExistsInGraph(graphURI, classURI)) {
             throw new ResourceNotFoundException(classURI);
         }
 
         check(authorizationManager.hasRightToModel(prefix, model));
 
         var classResource = model.getResource(classURI);
-        var modelResource = model.getResource(modelURI);
-        var includedNamespaces = DataModelUtils.getInternalReferenceModels(modelURI, modelResource);
+        var modelResource = model.getResource(graphURI);
+        var includedNamespaces = DataModelUtils.getInternalReferenceModels(graphURI, modelResource);
         var findResourceModel = findResources(Set.of(uri), includedNamespaces);
         var propertyResource = findResourceModel.getResource(uri);
-        if (findResourceModel.size() == 0) {
+        if (findResourceModel.isEmpty()) {
             throw new ResourceNotFoundException(uri);
         }
 
         ClassMapper.mapClassRestrictionProperty(model, classResource, propertyResource);
-        coreRepository.put(modelURI, model);
         AUDIT_SERVICE.log(AuditService.ActionType.UPDATE, classURI, userProvider.getUser());
+        coreRepository.put(graphURI, model);
     }
 
     public void togglePropertyShape(String prefix, String propertyUri) {
-        var modelURI = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
+        var graphURI = DataModelURI.createModelURI(prefix).getGraphURI();
 
         var query = new AskBuilder()
-                .addGraph(NodeFactory.createURI(modelURI), "?s", SH.property, NodeFactory.createURI(propertyUri))
+                .addGraph(NodeFactory.createURI(graphURI), "?s", SH.property, NodeFactory.createURI(propertyUri))
                 .build();
 
         var externalExists = coreRepository.queryAsk(query);
 
-        if(!coreRepository.resourceExistsInGraph(modelURI, propertyUri) && !externalExists){
+        if(!coreRepository.resourceExistsInGraph(graphURI, propertyUri) && !externalExists){
             throw new ResourceNotFoundException(propertyUri);
         }
-        var model = coreRepository.fetch(modelURI);
+        var model = coreRepository.fetch(graphURI);
         check(authorizationManager.hasRightToModel(prefix, model));
         ClassMapper.toggleAndMapDeactivatedProperty(model, propertyUri, externalExists);
-        coreRepository.put(modelURI, model);
         AUDIT_SERVICE.log(AuditService.ActionType.UPDATE, propertyUri, userProvider.getUser());
+        coreRepository.put(graphURI, model);
     }
 
 }

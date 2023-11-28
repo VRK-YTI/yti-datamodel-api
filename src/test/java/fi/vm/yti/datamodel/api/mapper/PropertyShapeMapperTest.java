@@ -6,6 +6,7 @@ import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.mapper.ResourceMapper;
 import fi.vm.yti.datamodel.api.v2.properties.Iow;
 import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
+import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.OWL;
@@ -29,7 +30,7 @@ class PropertyShapeMapperTest {
         dto.setStatus(Status.DRAFT);
         dto.setLabel(Map.of("fi", "PropertyShape label"));
         dto.setIdentifier("ps-1");
-        dto.setPath("http://uri.suomi.fi/datamodel/ns/test_lib/1.0.0/test_attribute");
+        dto.setPath(ModelConstants.SUOMI_FI_NAMESPACE + "test_lib/1.0.0/test_attribute");
         dto.setAllowedValues(List.of("Value 1", "Value 2"));
         dto.setDataType("xsd:integer");
         dto.setDefaultValue("default");
@@ -43,14 +44,15 @@ class PropertyShapeMapperTest {
         dto.setMinExclusive(6);
         dto.setMaxExclusive(8);
         dto.setCodeLists(List.of("http://uri.suomi.fi/codelist/test/testcodelist"));
-        ResourceMapper.mapToPropertyShapeResource("http://uri.suomi.fi/datamodel/ns/test", model, dto, ResourceType.ATTRIBUTE, mockUser);
+        var uri = DataModelURI.createResourceURI("test", dto.getIdentifier());
+        ResourceMapper.mapToPropertyShapeResource(uri, model, dto, ResourceType.ATTRIBUTE, mockUser);
 
-        var resource = model.getResource("http://uri.suomi.fi/datamodel/ns/test/ps-1");
+        var resource = model.getResource(ModelConstants.SUOMI_FI_NAMESPACE + "test/ps-1");
         var allowedValues = resource.listProperties(SH.in).mapWith((var s) -> s.getObject().toString()).toList();
 
         assertEquals("PropertyShape label", MapperUtils.localizedPropertyToMap(resource, RDFS.label).get("fi"));
         assertEquals(Status.DRAFT, Status.valueOf(MapperUtils.propertyToString(resource, SuomiMeta.publicationStatus)));
-        assertEquals("http://uri.suomi.fi/datamodel/ns/test_lib/1.0.0/test_attribute", resource.getProperty(SH.path).getObject().toString());
+        assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "test_lib/1.0.0/test_attribute", resource.getProperty(SH.path).getObject().toString());
         assertTrue(MapperUtils.hasType(resource, OWL.DatatypeProperty, SH.PropertyShape));
         assertTrue(allowedValues.containsAll(List.of("Value 1", "Value 2")));
         assertEquals("xsd:integer", MapperUtils.propertyToString(resource, SH.datatype));
@@ -76,21 +78,23 @@ class PropertyShapeMapperTest {
         dto.setStatus(Status.DRAFT);
         dto.setLabel(Map.of("fi", "PropertyShape label"));
         dto.setIdentifier("ps-1");
-        dto.setPath("http://uri.suomi.fi/datamodel/ns/test_lib/1.0.0/test_attribute");
+        dto.setPath(ModelConstants.SUOMI_FI_NAMESPACE + "test_lib/1.0.0/test_attribute");
         dto.setMaxCount(10);
         dto.setMinCount(1);
-        dto.setClassType("http://uri.suomi.fi/datamodel/ns/test/TestClass");
-        ResourceMapper.mapToPropertyShapeResource("http://uri.suomi.fi/datamodel/ns/test", model, dto, ResourceType.ASSOCIATION, mockUser);
+        dto.setClassType(ModelConstants.SUOMI_FI_NAMESPACE + "test/TestClass");
 
-        var resource = model.getResource("http://uri.suomi.fi/datamodel/ns/test/ps-1");
+        var uri = DataModelURI.createResourceURI("test", dto.getIdentifier());
+        ResourceMapper.mapToPropertyShapeResource(uri, model, dto, ResourceType.ASSOCIATION, mockUser);
+
+        var resource = model.getResource(ModelConstants.SUOMI_FI_NAMESPACE + "test/ps-1");
 
         assertEquals("PropertyShape label", MapperUtils.localizedPropertyToMap(resource, RDFS.label).get("fi"));
         assertEquals(Status.DRAFT, Status.valueOf(MapperUtils.propertyToString(resource, SuomiMeta.publicationStatus)));
-        assertEquals("http://uri.suomi.fi/datamodel/ns/test_lib/1.0.0/test_attribute", resource.getProperty(SH.path).getObject().toString());
+        assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "test_lib/1.0.0/test_attribute", resource.getProperty(SH.path).getObject().toString());
         assertTrue(MapperUtils.hasType(resource, OWL.ObjectProperty, SH.PropertyShape));
         assertEquals(10, MapperUtils.getLiteral(resource, SH.maxCount, Integer.class));
         assertEquals(1, MapperUtils.getLiteral(resource, SH.minCount, Integer.class));
-        assertEquals("http://uri.suomi.fi/datamodel/ns/test/TestClass", MapperUtils.propertyToString(resource, SH.class_));
+        assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "test/TestClass", MapperUtils.propertyToString(resource, SH.class_));
     }
 
 
@@ -98,13 +102,14 @@ class PropertyShapeMapperTest {
     void testMapToAttributeRestrictionDTO() {
         var model = MapperTestUtils.getModelFromFile("/models/test_datamodel_profile_with_resources.ttl");
 
-        var dto = ResourceMapper.mapToPropertyShapeInfoDTO(model, "http://uri.suomi.fi/datamodel/ns/test", "TestAttributeRestriction",
-                MapperTestUtils.getMockOrganizations(), false, null);
+        var uri = DataModelURI.createResourceURI("test", "TestAttributeRestriction");
+        var dto = ResourceMapper.mapToPropertyShapeInfoDTO(model, uri, MapperTestUtils.getMockOrganizations(),
+                false, null);
 
         assertEquals("test property shape", dto.getLabel().get("fi"));
         assertEquals(Status.DRAFT, dto.getStatus());
         assertEquals("TestAttributeRestriction", dto.getIdentifier());
-        assertEquals(new UriDTO("http://uri.suomi.fi/datamodel/ns/ytm/some-attribute"), dto.getPath());
+        assertEquals(new UriDTO(ModelConstants.SUOMI_FI_NAMESPACE + "ytm/some-attribute"), dto.getPath());
         assertNull(dto.getClassType());
         assertEquals("http://uri.suomi.fi/terminology/test/test1", dto.getSubject().getConceptURI());
         assertEquals("foo", dto.getDefaultValue());
@@ -128,14 +133,15 @@ class PropertyShapeMapperTest {
     void testMapToAssociationRestrictionDTO() {
         var model = MapperTestUtils.getModelFromFile("/models/test_datamodel_profile_with_resources.ttl");
 
-        var dto = ResourceMapper.mapToPropertyShapeInfoDTO(model, "http://uri.suomi.fi/datamodel/ns/test", "TestAssociationRestriction",
-                MapperTestUtils.getMockOrganizations(), false, null);
+        var uri = DataModelURI.createResourceURI("test", "TestAssociationRestriction");
+        var dto = ResourceMapper.mapToPropertyShapeInfoDTO(model, uri, MapperTestUtils.getMockOrganizations(),
+                false, null);
 
         assertEquals("test property shape", dto.getLabel().get("fi"));
         assertEquals(Status.DRAFT, dto.getStatus());
         assertEquals("TestAssociationRestriction", dto.getIdentifier());
-        assertEquals(new UriDTO("http://uri.suomi.fi/datamodel/ns/ytm/some-attribute"), dto.getPath());
-        assertEquals(new UriDTO("http://uri.suomi.fi/datamodel/ns/ytm/some-class"), dto.getClassType());
+        assertEquals(new UriDTO(ModelConstants.SUOMI_FI_NAMESPACE + "ytm/some-attribute"), dto.getPath());
+        assertEquals(new UriDTO(ModelConstants.SUOMI_FI_NAMESPACE + "ytm/some-class"), dto.getClassType());
         assertEquals("http://uri.suomi.fi/terminology/test/test1", dto.getSubject().getConceptURI());
         assertNull(dto.getDefaultValue());
         assertTrue(dto.getAllowedValues().isEmpty());
@@ -160,7 +166,7 @@ class PropertyShapeMapperTest {
 
         dto.setStatus(Status.VALID);
         dto.setLabel(Map.of("fi", "Updated PropertyShape label"));
-        dto.setPath("http://uri.suomi.fi/datamodel/ns/test/updated_test_attribute");
+        dto.setPath(ModelConstants.SUOMI_FI_NAMESPACE + "test/updated_test_attribute");
         dto.setAllowedValues(List.of("Updated value 1"));
         dto.setDataType("xsd:short");
         dto.setDefaultValue("Updated default");
@@ -170,15 +176,15 @@ class PropertyShapeMapperTest {
         dto.setMaxLength(200);
         dto.setMinLength(5);
 
-        ResourceMapper.mapToUpdatePropertyShape("http://uri.suomi.fi/datamodel/ns/test", model,
-                "TestAttributeRestriction", dto, EndpointUtils.mockUser);
+        var uri = DataModelURI.createResourceURI("test", "TestAttributeRestriction");
+        ResourceMapper.mapToUpdatePropertyShape(uri, model, dto, EndpointUtils.mockUser);
 
-        var resource = model.getResource("http://uri.suomi.fi/datamodel/ns/test/TestAttributeRestriction");
+        var resource = model.getResource(uri.getResourceURI());
         var allowedValues = resource.listProperties(SH.in).mapWith((var s) -> s.getObject().toString()).toList();
 
         assertEquals("Updated PropertyShape label", MapperUtils.localizedPropertyToMap(resource, RDFS.label).get("fi"));
         assertEquals(Status.VALID, Status.valueOf(MapperUtils.propertyToString(resource, SuomiMeta.publicationStatus)));
-        assertEquals("http://uri.suomi.fi/datamodel/ns/test/updated_test_attribute", resource.getProperty(SH.path).getObject().toString());
+        assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "test/updated_test_attribute", resource.getProperty(SH.path).getObject().toString());
         assertTrue(allowedValues.contains("Updated value 1"));
         assertEquals(1, allowedValues.size());
         assertEquals("xsd:short", resource.getProperty(SH.datatype).getObject().toString());
@@ -196,21 +202,21 @@ class PropertyShapeMapperTest {
         var dto = new AssociationRestriction();
         dto.setStatus(Status.VALID);
         dto.setLabel(Map.of("fi", "Updated PropertyShape label"));
-        dto.setPath("http://uri.suomi.fi/datamodel/ns/test/updated_test_attribute");
+        dto.setPath(ModelConstants.SUOMI_FI_NAMESPACE + "test/updated_test_attribute");
         dto.setMaxCount(20);
         dto.setMinCount(2);
-        dto.setClassType("http://uri.suomi.fi/datamodel/ns/test/TestClass");
+        dto.setClassType(ModelConstants.SUOMI_FI_NAMESPACE + "test/TestClass");
 
-        ResourceMapper.mapToUpdatePropertyShape("http://uri.suomi.fi/datamodel/ns/test", model,
-                "TestAssociationRestriction", dto, EndpointUtils.mockUser);
+        var uri = DataModelURI.createResourceURI("test", "TestAssociationRestriction");
+        ResourceMapper.mapToUpdatePropertyShape(uri, model, dto, EndpointUtils.mockUser);
 
-        var resource = model.getResource("http://uri.suomi.fi/datamodel/ns/test/TestAssociationRestriction");
+        var resource = model.getResource(uri.getResourceURI());
         assertEquals("Updated PropertyShape label", MapperUtils.localizedPropertyToMap(resource, RDFS.label).get("fi"));
         assertEquals(Status.VALID, Status.valueOf(MapperUtils.propertyToString(resource, SuomiMeta.publicationStatus)));
-        assertEquals("http://uri.suomi.fi/datamodel/ns/test/updated_test_attribute", resource.getProperty(SH.path).getObject().toString());
+        assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "test/updated_test_attribute", resource.getProperty(SH.path).getObject().toString());
         assertEquals(20, MapperUtils.getLiteral(resource, SH.maxCount, Integer.class));
         assertEquals(2, MapperUtils.getLiteral(resource, SH.minCount, Integer.class));
-        assertEquals("http://uri.suomi.fi/datamodel/ns/test/TestClass", MapperUtils.propertyToString(resource, SH.class_));
+        assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "test/TestClass", MapperUtils.propertyToString(resource, SH.class_));
     }
 
     @Test
@@ -218,11 +224,11 @@ class PropertyShapeMapperTest {
         var model = MapperTestUtils.getModelFromFile("/models/test_datamodel_profile_with_resources.ttl");
         var newModel = ModelFactory.createDefaultModel();
 
-        ResourceMapper.mapToCopyToLocalPropertyShape("http://uri.suomi.fi/datamodel/ns/test", model, "DeactivatedPropertyShape", newModel, "http://uri.suomi.fi/datamodel/ns/new", "NewShape", EndpointUtils.mockUser);
+        ResourceMapper.mapToCopyToLocalPropertyShape(ModelConstants.SUOMI_FI_NAMESPACE + "test", model, "DeactivatedPropertyShape", newModel, ModelConstants.SUOMI_FI_NAMESPACE + "new", "NewShape", EndpointUtils.mockUser);
 
-        var resource = newModel.getResource("http://uri.suomi.fi/datamodel/ns/new/NewShape");
+        var resource = newModel.getResource(ModelConstants.SUOMI_FI_NAMESPACE + "new/NewShape");
         assertEquals("NewShape", resource.getProperty(DCTerms.identifier).getLiteral().getString());
-        assertEquals("http://uri.suomi.fi/datamodel/ns/new", MapperUtils.propertyToString(resource, RDFS.isDefinedBy));
+        assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "new", MapperUtils.propertyToString(resource, RDFS.isDefinedBy));
         assertTrue(MapperUtils.hasType(resource, OWL.DatatypeProperty, SH.PropertyShape));
         assertEquals("deactivated property shape", MapperUtils.localizedPropertyToMap(resource, RDFS.label).get("fi"));
     }

@@ -12,6 +12,7 @@ import fi.vm.yti.datamodel.api.v2.mapper.VisualizationMapper;
 import fi.vm.yti.datamodel.api.v2.properties.DCAP;
 import fi.vm.yti.datamodel.api.v2.properties.Iow;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
+import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelUtils;
 import fi.vm.yti.security.AuthenticatedUserProvider;
 import org.apache.jena.rdf.model.*;
@@ -46,12 +47,11 @@ public class VisualizationService {
 
 
     public VisualizationResultDTO getVisualizationData(String prefix, String version) {
-        var graph = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
-        var graphUri = graph;
-        if (version != null) {
-            graphUri += ModelConstants.RESOURCE_SEPARATOR + version;
-        }
-        var model = coreRepository.fetch(graphUri);
+
+        var dataModelURI = DataModelURI.createModelURI(prefix, version);
+        var graph = dataModelURI.getModelURI();
+
+        var model = coreRepository.fetch(dataModelURI.getGraphURI());
         var positions = getPositions(prefix, version);
 
         var modelResource = model.getResource(graph);
@@ -112,13 +112,8 @@ public class VisualizationService {
     }
 
     public Model getPositions(String prefix, String version) {
-        var positionUri = ModelConstants.MODEL_POSITIONS_NAMESPACE + prefix;
-        if (version != null) {
-            positionUri += ModelConstants.RESOURCE_SEPARATOR + version;
-        }
-
         try {
-            return coreRepository.fetch(positionUri);
+            return coreRepository.fetch(getPositionGraphURI(prefix, version));
         } catch (ResourceNotFoundException e) {
             return ModelFactory.createDefaultModel();
         }
@@ -129,25 +124,20 @@ public class VisualizationService {
     }
 
     public void savePositionData(String prefix, List<PositionDataDTO> positions, String version) {
-        var modelURI = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
-        var positionBaseURI = ModelConstants.MODEL_POSITIONS_NAMESPACE + prefix;
-        var positionGraphURI = positionBaseURI;
+        var uri = DataModelURI.createModelURI(prefix, version);
+        var positionBaseURI = ModelConstants.MODEL_POSITIONS_NAMESPACE + prefix + ModelConstants.RESOURCE_SEPARATOR;
+        var positionGraphURI = getPositionGraphURI(prefix, version);
 
-        if (version != null) {
-            modelURI += ModelConstants.RESOURCE_SEPARATOR + version;
-            positionGraphURI += ModelConstants.RESOURCE_SEPARATOR + version;
-        }
-
-        var dataModel = coreRepository.fetch(modelURI);
+        var dataModel = coreRepository.fetch(uri.getGraphURI());
         check(authorizationManager.hasRightToModel(prefix, dataModel));
 
         var positionModel = VisualizationMapper.mapPositionDataToModel(positionBaseURI, positions);
         coreRepository.put(positionGraphURI, positionModel);
-        auditService.log(AuditService.ActionType.SAVE, modelURI, userProvider.getUser());
+        auditService.log(AuditService.ActionType.SAVE, uri.getGraphURI(), userProvider.getUser());
     }
 
     public void addNewResourceDefaultPosition(String prefix, String identifier) {
-        var positionGraphURI = ModelConstants.MODEL_POSITIONS_NAMESPACE + prefix;
+        var positionGraphURI = getPositionGraphURI(prefix, null);
         var positions = getPositions(prefix, null);
 
         var yMin = positions.listStatements().toList().stream()
@@ -172,10 +162,10 @@ public class VisualizationService {
      * @param version version of the model
      */
     public void saveVersionedPositions(String prefix, String version) {
-        var positionUri = ModelConstants.MODEL_POSITIONS_NAMESPACE + prefix;
+        var draftPositionUri = getPositionGraphURI(prefix, null);
         try{
-            var positionModel = coreRepository.fetch(positionUri);
-            coreRepository.put(positionUri + ModelConstants.RESOURCE_SEPARATOR + version, positionModel);
+            var positionModel = coreRepository.fetch(draftPositionUri);
+            coreRepository.put(getPositionGraphURI(prefix, version), positionModel);
         }catch (ResourceNotFoundException e){
             //if no positions found, do nothing
         }
@@ -214,13 +204,22 @@ public class VisualizationService {
         var modelResource = model.getResource(graph);
         Arrays.asList(OWL.imports, DCTerms.requires)
                 .forEach(prop -> modelResource.listProperties(prop).toList().forEach(ns -> {
-                    var uri = ns.getObject().toString();
-                    if (uri.startsWith(ModelConstants.SUOMI_FI_NAMESPACE)) {
-                        namespaces.put(uri, MapperUtils.getModelIdFromNamespace(uri));
-                    } else if (!uri.contains(ModelConstants.SUOMI_FI_DOMAIN)) {
-                        namespaces.put(uri, MapperUtils.propertyToString(model.getResource(uri), DCAP.preferredXMLNamespacePrefix));
+                    var uri = DataModelURI.fromURI(ns.getObject().toString());
+                    if (uri.isDataModelURI()) {
+                        namespaces.put(uri.getGraphURI(), uri.getModelId());
+                    } else if (!uri.isTerminologyURI() && !uri.isCodeListURI()) {
+                        namespaces.put(uri.getNamespace(), MapperUtils.propertyToString(model.getResource(uri.getNamespace()), DCAP.preferredXMLNamespacePrefix));
                     }
                 }));
         return namespaces;
+    }
+
+    private String getPositionGraphURI(String prefix, String version) {
+        var positionURI = ModelConstants.MODEL_POSITIONS_NAMESPACE + prefix;
+        if (version != null) {
+            positionURI += "/" + version;
+        }
+        positionURI += "/";
+        return positionURI;
     }
 }

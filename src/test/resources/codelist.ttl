@@ -2,7 +2,7 @@
 @prefix skos:  <http://www.w3.org/2004/02/skos/core#> .
 @prefix owl:     <http://www.w3.org/2002/07/owl#> .
 @prefix iow:   <http://uri.suomi.fi/datamodel/ns/iow/> .
-@prefix suomi-meta: <http://uri.suomi.fi/datamodel/ns/suomi-meta/> .
+@prefix suomi-meta: <https://iri.suomi.fi/model/suomi-meta/> .
 
 <http://uri.suomi.fi/codelist/test/testcodelist>
     a               iow:CodeScheme ;

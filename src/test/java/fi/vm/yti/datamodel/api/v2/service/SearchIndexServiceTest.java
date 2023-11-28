@@ -1,5 +1,6 @@
 package fi.vm.yti.datamodel.api.v2.service;
 
+import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
 import fi.vm.yti.datamodel.api.v2.dto.ModelType;
 import fi.vm.yti.datamodel.api.v2.dto.ResourceType;
 import fi.vm.yti.datamodel.api.v2.dto.Status;
@@ -16,6 +17,7 @@ import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import fi.vm.yti.security.YtiUser;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.ResourceFactory;
+import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.OWL;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -69,7 +71,7 @@ class SearchIndexServiceTest {
     @Autowired
     SearchIndexService searchIndexService;
 
-    private static final String DATA_MODEL_URI = "http://uri.suomi.fi/datamodel/ns/profile";
+    private static final String DATA_MODEL_URI = ModelConstants.SUOMI_FI_NAMESPACE + "profile" + ModelConstants.RESOURCE_SEPARATOR;
 
     private static final UUID ORGANIZATION_ID = UUID.randomUUID();
 
@@ -115,7 +117,7 @@ class SearchIndexServiceTest {
 
         doSearch(request);
 
-        assertEquals("http://uri.suomi.fi/datamodel/ns/model", internalNamespaceCaptor.getValue().iterator().next());
+        assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "model", internalNamespaceCaptor.getValue().iterator().next());
         assertEquals("http://ext.org/datamodel", externalNamespaceCaptor.getValue().iterator().next());
     }
 
@@ -153,8 +155,9 @@ class SearchIndexServiceTest {
         // model's namespaces
         var model = ModelFactory.createDefaultModel();
         model.createResource(DATA_MODEL_URI)
-                .addProperty(OWL.imports, ResourceFactory.createResource("http://uri.suomi.fi/datamodel/ns/model"))
-                .addProperty(OWL.imports, ResourceFactory.createResource("http://ext.org/datamodel"));
+                .addProperty(OWL.imports, ResourceFactory.createResource(ModelConstants.SUOMI_FI_NAMESPACE + "model"))
+                .addProperty(OWL.imports, ResourceFactory.createResource("http://ext.org/datamodel"))
+                .addProperty(DCTerms.requires, ResourceFactory.createResource("http://uri.suomi.fi/terminology/test-123"));
         when(coreRepository.fetch(DATA_MODEL_URI)).thenReturn(model);
 
         var allowedModel = new IndexModel();

@@ -4,18 +4,18 @@
 @prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix sh:      <http://www.w3.org/ns/shacl#> .
 @prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
-@prefix suomi-meta: <http://uri.suomi.fi/datamodel/ns/suomi-meta/> .
+@prefix suomi-meta: <https://iri.suomi.fi/model/suomi-meta/> .
 
-<http://uri.suomi.fi/datamodel/ns/test_profile/ps-1>
+<https://iri.suomi.fi/model/test_profile/ps-1>
         rdf:type            sh:PropertyShape , owl:DatatypeProperty ;
-        rdfs:isDefinedBy    <http://uri.suomi.fi/datamodel/ns/test_profile> ;
+        rdfs:isDefinedBy    <https://iri.suomi.fi/model/test_profile/> ;
         rdfs:label          "Property shape attribute"@fi ;
         dcterms:identifier  "ps-1"^^xsd:NCName ;
         suomi-meta:publicationStatus     "VALID" .
 
-<http://uri.suomi.fi/datamodel/ns/TestPropertyShape>
+<https://iri.suomi.fi/model/TestPropertyShape>
         rdf:type             sh:PropertyShape , owl:DatatypeProperty ;
-        rdfs:isDefinedBy     <http://uri.suomi.fi/datamodel/ns/test> ;
+        rdfs:isDefinedBy     <https://iri.suomi.fi/model/test/> ;
         dcterms:subject      <http://uri.suomi.fi/terminology/test/test1> ;
         dcterms:identifier   "TestPropertyShape"^^xsd:NCName ;
         dcterms:created      "2023-02-03T11:46:36.404Z"^^xsd:dateTime ;
@@ -30,11 +30,11 @@
         sh:maxLength         100 ;
         sh:minCount          1 ;
         sh:minLength         2 ;
-        sh:path              <http://uri.suomi.fi/datamodel/ns/ytm/some-attribute> .
+        sh:path              <https://iri.suomi.fi/model/ytm/some-attribute> .
 
-<http://uri.suomi.fi/datamodel/ns/test/DeactivatedPropertyShape>
+<https://iri.suomi.fi/model/test/DeactivatedPropertyShape>
         rdf:type             sh:PropertyShape , owl:DatatypeProperty ;
-        rdfs:isDefinedBy     <http://uri.suomi.fi/datamodel/ns/test> ;
+        rdfs:isDefinedBy     <https://iri.suomi.fi/model/test> ;
         dcterms:identifier   "DeactivatedPropertyShape"^^xsd:NCName ;
         sh:deactivated       true ;
         rdfs:label           "deactivated property shape"@fi .

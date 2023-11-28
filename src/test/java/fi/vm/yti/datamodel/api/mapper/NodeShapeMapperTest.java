@@ -7,6 +7,7 @@ import fi.vm.yti.datamodel.api.v2.mapper.ClassMapper;
 import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.properties.Iow;
 import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
+import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Resource;
@@ -35,7 +36,7 @@ class NodeShapeMapperTest {
 
         // assume there is a resource with identifier association-1 defined in the model
         // suffix -1 should be added when creating new property shape resource
-        Predicate<String> freePrefixCheck = s -> s.equals("http://uri.suomi.fi/datamodel/ns/test/association-1");
+        Predicate<String> freePrefixCheck = s -> s.equals(ModelConstants.SUOMI_FI_NAMESPACE + "test/association-1");
 
         var dto = new NodeShapeDTO();
         dto.setIdentifier("TestClass");
@@ -44,14 +45,15 @@ class NodeShapeMapperTest {
         dto.setLabel(Map.of("fi", "test label"));
         dto.setStatus(Status.DRAFT);
         dto.setNote(Map.of("fi", "test note"));
-        dto.setTargetClass("http://uri.suomi.fi/datamodel/ns/target/Class");
+        dto.setTargetClass(ModelConstants.SUOMI_FI_NAMESPACE + "target/Class");
 
-        ClassMapper.createNodeShapeAndMapToModel("http://uri.suomi.fi/datamodel/ns/test", model, dto, mockUser);
-        ClassMapper.mapPlaceholderPropertyShapes(model, "http://uri.suomi.fi/datamodel/ns/test/TestClass",
+        var uri = DataModelURI.createResourceURI("test", "TestClass");
+        ClassMapper.createNodeShapeAndMapToModel(uri, model, dto, mockUser);
+        ClassMapper.mapPlaceholderPropertyShapes(model, uri.getResourceURI(),
                 propertiesQueryResult, mockUser, freePrefixCheck);
 
-        Resource modelResource = model.getResource("http://uri.suomi.fi/datamodel/ns/test");
-        Resource classResource = model.getResource("http://uri.suomi.fi/datamodel/ns/test/TestClass");
+        Resource modelResource = model.getResource(uri.getModelURI());
+        Resource classResource = model.getResource(uri.getResourceURI());
 
         assertNotNull(modelResource);
         assertNotNull(classResource);
@@ -62,7 +64,7 @@ class NodeShapeMapperTest {
 
         assertEquals(SH.NodeShape, classResource.getProperty(RDF.type).getResource());
         assertEquals(Status.DRAFT, Status.valueOf(MapperUtils.propertyToString(classResource, SuomiMeta.publicationStatus)));
-        assertEquals("http://uri.suomi.fi/datamodel/ns/test", classResource.getProperty(RDFS.isDefinedBy).getObject().toString());
+        assertEquals(uri.getModelURI(), classResource.getProperty(RDFS.isDefinedBy).getObject().toString());
 
         assertEquals(XSDDatatype.XSDNCName, classResource.getProperty(DCTerms.identifier).getLiteral().getDatatype());
         assertEquals("TestClass", classResource.getProperty(DCTerms.identifier).getLiteral().getString());
@@ -71,11 +73,11 @@ class NodeShapeMapperTest {
         assertEquals("test note", classResource.getProperty(RDFS.comment).getLiteral().getString());
         assertEquals(mockUser.getId().toString(), classResource.getProperty(Iow.creator).getString());
         assertEquals(mockUser.getId().toString(), classResource.getProperty(Iow.modifier).getString());
-        assertEquals("http://uri.suomi.fi/datamodel/ns/target/Class", classResource.getProperty(SH.targetClass).getObject().toString());
+        assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "target/Class", classResource.getProperty(SH.targetClass).getObject().toString());
 
         assertEquals(2, classResource.listProperties(SH.property).toList().size());
-        var propertyShapeAttribute = model.getResource("http://uri.suomi.fi/datamodel/ns/test/attribute-1");
-        var propertyShapeAssociation = model.getResource("http://uri.suomi.fi/datamodel/ns/test/association-1-1");
+        var propertyShapeAttribute = model.getResource(ModelConstants.SUOMI_FI_NAMESPACE + "test/attribute-1");
+        var propertyShapeAssociation = model.getResource(ModelConstants.SUOMI_FI_NAMESPACE + "test/association-1-1");
 
         assertNotNull(propertyShapeAttribute);
         assertNotNull(propertyShapeAssociation);
@@ -87,7 +89,7 @@ class NodeShapeMapperTest {
         assertTrue(MapperUtils.hasType(propertyShapeAssociation, SH.PropertyShape));
         assertTrue(MapperUtils.hasType(propertyShapeAssociation, OWL.ObjectProperty));
 
-        assertEquals("http://uri.suomi.fi/datamodel/ns/test_lib/1.0.0/attribute-1",
+        assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "test_lib/1.0.0/attribute-1",
                 propertyShapeAttribute.getProperty(SH.path).getObject().toString());
         assertEquals(Status.DRAFT, Status.valueOf(MapperUtils.propertyToString(propertyShapeAttribute, SuomiMeta.publicationStatus)));
         assertEquals("Attribute attribute-1", MapperUtils.localizedPropertyToMap(propertyShapeAttribute, RDFS.label).get("fi"));
@@ -97,7 +99,8 @@ class NodeShapeMapperTest {
     void testMapNodeShapeToClassDTO(){
         var m = MapperTestUtils.getModelFromFile("/models/test_datamodel_profile_with_resources.ttl");
 
-        var dto = ClassMapper.mapToNodeShapeDTO(m, "http://uri.suomi.fi/datamodel/ns/test", "TestClass", MapperTestUtils.getMockOrganizations(), false, null);
+        var uri = DataModelURI.createResourceURI("test", "TestClass");
+        var dto = ClassMapper.mapToNodeShapeDTO(m, uri, MapperTestUtils.getMockOrganizations(), false, null);
 
         // not authenticated
         assertNull(dto.getEditorialNote());
@@ -113,36 +116,37 @@ class NodeShapeMapperTest {
         assertEquals("2023-02-03T11:46:36.404Z", dto.getCreated());
         assertEquals("Yhteentoimivuusalustan yllapito", dto.getContributor().stream().findFirst().orElseThrow().getLabel().get("fi"));
         assertEquals(MapperTestUtils.TEST_ORG_ID.toString(), dto.getContributor().stream().findFirst().orElseThrow().getId());
-        assertEquals("http://uri.suomi.fi/datamodel/ns/test/TestClass", dto.getUri());
-        assertEquals(new UriDTO("http://uri.suomi.fi/datamodel/ns/target/Class"), dto.getTargetClass());
+        assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "test/TestClass", dto.getUri());
+        assertEquals(new UriDTO(ModelConstants.SUOMI_FI_NAMESPACE + "target/Class"), dto.getTargetClass());
     }
 
     @Test
     void testMapReferencePropertyShapes() {
         var model = MapperTestUtils.getModelFromFile("/models/test_datamodel_profile_with_resources.ttl");
         // var propertiesQueryResult = MapperTestUtils.getModelFromFile("/properties_result.ttl");
-        ClassMapper.mapNodeShapeProperties(model, "http://uri.suomi.fi/datamodel/ns/test/TestClass",
-                Set.of("http://uri.suomi.fi/datamodel/ns/test_lib/attribute-1", "http://uri.suomi.fi/datamodel/ns/test_lib/association-1")
+        ClassMapper.mapNodeShapeProperties(model, ModelConstants.SUOMI_FI_NAMESPACE + "test/TestClass",
+                Set.of(ModelConstants.SUOMI_FI_NAMESPACE + "test_lib/attribute-1", ModelConstants.SUOMI_FI_NAMESPACE + "test_lib/association-1")
         );
 
-        var classRes = model.getResource("http://uri.suomi.fi/datamodel/ns/test/TestClass");
+        var classRes = model.getResource(ModelConstants.SUOMI_FI_NAMESPACE + "test/TestClass");
 
         var propertyShapes = classRes.listProperties(SH.property).mapWith(p -> p.getObject().toString()).toList();
 
         // should contain both existing in the model and those found from with query
         assertEquals(4, propertyShapes.size());
         assertTrue(propertyShapes.containsAll(List.of(
-                "http://uri.suomi.fi/datamodel/ns/test_lib/attribute-1",
-                "http://uri.suomi.fi/datamodel/ns/test_lib/association-1",
-                "http://uri.suomi.fi/datamodel/ns/test/TestPropertyShape",
-                "http://uri.suomi.fi/datamodel/ns/test/DeactivatedPropertyShape"))
+                ModelConstants.SUOMI_FI_NAMESPACE + "test_lib/attribute-1",
+                ModelConstants.SUOMI_FI_NAMESPACE + "test_lib/association-1",
+                ModelConstants.SUOMI_FI_NAMESPACE + "test/TestPropertyShape",
+                ModelConstants.SUOMI_FI_NAMESPACE + "test/DeactivatedPropertyShape"))
         );
     }
 
     @Test
     void testMapToUpdateClassProfile(){
         var m = MapperTestUtils.getModelFromFile("/models/test_datamodel_profile_with_resources.ttl");
-        var resource = m.getResource("http://uri.suomi.fi/datamodel/ns/test/TestClass");
+        var uri = DataModelURI.createResourceURI("test", "TestClass");
+        var resource = m.getResource(uri.getResourceURI());
         var mockUser = EndpointUtils.mockUser;
 
         var dto = new NodeShapeDTO();
@@ -151,10 +155,10 @@ class NodeShapeMapperTest {
         dto.setNote(Map.of("fi", "new note"));
         dto.setSubject("http://uri.suomi.fi/terminology/qwe");
         dto.setEditorialNote("new editorial note");
-        dto.setTargetClass("http://uri.suomi.fi/datamodel/ns/target/NewClass");
+        dto.setTargetClass(ModelConstants.SUOMI_FI_NAMESPACE + "target/NewClass");
 
         assertEquals(SH.NodeShape, resource.getProperty(RDF.type).getResource());
-        assertEquals("http://uri.suomi.fi/datamodel/ns/test", resource.getProperty(RDFS.isDefinedBy).getObject().toString());
+        assertEquals(uri.getModelURI(), resource.getProperty(RDFS.isDefinedBy).getObject().toString());
         assertEquals("test label", resource.getProperty(RDFS.label).getLiteral().getString());
         assertEquals("fi", resource.getProperty(RDFS.label).getLiteral().getLanguage());
         assertEquals("TestClass", resource.getProperty(DCTerms.identifier).getLiteral().getString());
@@ -162,12 +166,12 @@ class NodeShapeMapperTest {
         assertEquals(Status.VALID, Status.valueOf(MapperUtils.propertyToString(resource, SuomiMeta.publicationStatus)));
         assertEquals("comment visible for admin", resource.getProperty(SKOS.editorialNote).getObject().toString());
         assertEquals(2, resource.listProperties(RDFS.comment).toList().size());
-        assertEquals("http://uri.suomi.fi/datamodel/ns/target/Class", resource.getProperty(SH.targetClass).getObject().toString());
+        assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "target/Class", resource.getProperty(SH.targetClass).getObject().toString());
 
-        ClassMapper.mapToUpdateNodeShape(m, "http://uri.suomi.fi/datamodel/ns/test", resource, dto, Set.of(), mockUser);
+        ClassMapper.mapToUpdateNodeShape(m, uri.getModelURI(), resource, dto, Set.of(), mockUser);
 
         assertEquals(SH.NodeShape, resource.getProperty(RDF.type).getResource());
-        assertEquals("http://uri.suomi.fi/datamodel/ns/test", resource.getProperty(RDFS.isDefinedBy).getObject().toString());
+        assertEquals(uri.getModelURI(), resource.getProperty(RDFS.isDefinedBy).getObject().toString());
         assertEquals("new label", resource.getProperty(RDFS.label).getLiteral().getString());
         assertEquals("fi", resource.getProperty(RDFS.label).getLiteral().getLanguage());
         assertEquals("TestClass", resource.getProperty(DCTerms.identifier).getLiteral().getString());
@@ -186,7 +190,8 @@ class NodeShapeMapperTest {
         var model = MapperTestUtils.getModelFromFile("/models/test_datamodel_profile_with_resources.ttl");
         var propertyShapeResult = MapperTestUtils.getModelFromFile("/property_shapes_result.ttl");
 
-        var resource = model.getResource("http://uri.suomi.fi/datamodel/ns/test/TestClass");
+        var uri = DataModelURI.createResourceURI("test", "TestClass");
+        var resource = model.getResource(uri.getResourceURI());
         var dto = new NodeShapeInfoDTO();
         dto.setUri(resource.getURI());
 
@@ -224,14 +229,14 @@ class NodeShapeMapperTest {
     void testMapDeactivatedPropertyShape() {
         var m = MapperTestUtils.getModelFromFile("/models/test_datamodel_profile_with_resources.ttl");
 
-        var propertyShape1 = m.getResource("http://uri.suomi.fi/datamodel/ns/test/TestAttributeRestriction");
-        var propertyShape2 = m.getResource("http://uri.suomi.fi/datamodel/ns/test/DeactivatedPropertyShape");
+        var propertyShape1 = m.getResource(ModelConstants.SUOMI_FI_NAMESPACE + "test/TestAttributeRestriction");
+        var propertyShape2 = m.getResource(ModelConstants.SUOMI_FI_NAMESPACE + "test/DeactivatedPropertyShape");
 
         assertFalse(propertyShape1.hasProperty(SH.deactivated));
         assertTrue(propertyShape2.getProperty(SH.deactivated).getObject().asLiteral().getBoolean());
 
-        ClassMapper.toggleAndMapDeactivatedProperty(m, "http://uri.suomi.fi/datamodel/ns/test/TestAttributeRestriction", false);
-        ClassMapper.toggleAndMapDeactivatedProperty(m, "http://uri.suomi.fi/datamodel/ns/test/DeactivatedPropertyShape", false);
+        ClassMapper.toggleAndMapDeactivatedProperty(m, ModelConstants.SUOMI_FI_NAMESPACE + "test/TestAttributeRestriction", false);
+        ClassMapper.toggleAndMapDeactivatedProperty(m, ModelConstants.SUOMI_FI_NAMESPACE + "test/DeactivatedPropertyShape", false);
 
         assertTrue(propertyShape1.getProperty(SH.deactivated).getObject().asLiteral().getBoolean());
         assertFalse(propertyShape2.hasProperty(SH.deactivated));
@@ -240,8 +245,8 @@ class NodeShapeMapperTest {
     @Test
     void testAppendNodeShapeProperty() {
         var model = MapperTestUtils.getModelFromFile("/models/test_datamodel_profile_with_resources.ttl");
-        var classResource = model.getResource("http://uri.suomi.fi/datamodel/ns/test/TestClass");
-        var propertyURI = "http://uri.suomi.fi/datamodel/ns/foo";
+        var classResource = model.getResource(ModelConstants.SUOMI_FI_NAMESPACE + "test/TestClass");
+        var propertyURI = ModelConstants.SUOMI_FI_NAMESPACE + "foo";
 
         assertEquals(2, classResource.listProperties(SH.property).toList().size());
 
@@ -255,9 +260,9 @@ class NodeShapeMapperTest {
     @Test
     void testAppendExistingNodeShapeProperty() {
         var model = MapperTestUtils.getModelFromFile("/models/test_datamodel_profile_with_resources.ttl");
-        var classResource = model.getResource("http://uri.suomi.fi/datamodel/ns/test/TestClass");
+        var classResource = model.getResource(ModelConstants.SUOMI_FI_NAMESPACE + "test/TestClass");
 
-        var propertyURI = "http://uri.suomi.fi/datamodel/ns/test/TestPropertyShape";
+        var propertyURI = ModelConstants.SUOMI_FI_NAMESPACE + "test/TestPropertyShape";
         assertThrowsExactly(MappingError.class,
                 () -> ClassMapper.mapAppendNodeShapeProperty(classResource, propertyURI, Set.of(propertyURI)));
     }
@@ -265,8 +270,8 @@ class NodeShapeMapperTest {
     @Test
     void testRemoveNodeShapeProperty() {
         var model = MapperTestUtils.getModelFromFile("/models/test_datamodel_profile_with_resources.ttl");
-        var classResource = model.getResource("http://uri.suomi.fi/datamodel/ns/test/TestClass");
-        var propertyURI = "http://uri.suomi.fi/datamodel/ns/test/TestPropertyShape";
+        var classResource = model.getResource(ModelConstants.SUOMI_FI_NAMESPACE + "test/TestClass");
+        var propertyURI = ModelConstants.SUOMI_FI_NAMESPACE + "test/TestPropertyShape";
 
         assertEquals(2, classResource.listProperties(SH.property).toList().size());
 
@@ -280,9 +285,9 @@ class NodeShapeMapperTest {
     @Test
     void testMapReferenceResourceAndAddNamespace() {
         var model = ModelFactory.createDefaultModel();
-        var modelURI = "http://uri.suomi.fi/datamodel/ns/test";
+        var uri = DataModelURI.createModelURI("test");
 
-        model.createResource(modelURI)
+        model.createResource(uri.getModelURI())
                 .addProperty(RDF.type, Iow.ApplicationProfile);
 
         var dto = new NodeShapeDTO();
@@ -291,12 +296,12 @@ class NodeShapeMapperTest {
         dto.setTargetNode(ModelConstants.SUOMI_FI_NAMESPACE + "ns-int-1/sub");
         dto.setTargetClass(ModelConstants.SUOMI_FI_NAMESPACE + "ns-int-2/eq");
 
-        ClassMapper.createNodeShapeAndMapToModel(modelURI, model, dto, EndpointUtils.mockUser);
+        ClassMapper.createNodeShapeAndMapToModel(uri, model, dto, EndpointUtils.mockUser);
 
         // should have namespaces ns-int-1 (application profile) ans ns-int-2 (library) added
-        var modelResource = model.getResource(modelURI);
-        assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "ns-int-1", modelResource.getProperty(OWL.imports).getObject().toString());
-        assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "ns-int-2", modelResource.getProperty(DCTerms.requires).getObject().toString());
+        var modelResource = model.getResource(uri.getModelURI());
+        assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "ns-int-1/", modelResource.getProperty(OWL.imports).getObject().toString());
+        assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "ns-int-2/", modelResource.getProperty(DCTerms.requires).getObject().toString());
     }
 
 }

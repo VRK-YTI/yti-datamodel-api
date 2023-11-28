@@ -14,6 +14,7 @@ import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import fi.vm.yti.datamodel.api.v2.repository.ImportsRepository;
 import fi.vm.yti.datamodel.api.v2.repository.SchemesRepository;
 import fi.vm.yti.datamodel.api.v2.service.DataModelService;
+import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
 import fi.vm.yti.security.YtiUser;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
@@ -68,7 +69,7 @@ class ModelMapperTest {
     @EnumSource(ModelType.class)
     void testMapToJenaModel(ModelType modelType) {
         var mockModel = ModelFactory.createDefaultModel();
-        mockModel.createResource("http://uri.suomi.fi/datamodel/ns/newint")
+        mockModel.createResource(ModelConstants.SUOMI_FI_NAMESPACE + "newint" + ModelConstants.RESOURCE_SEPARATOR)
                         .addProperty(RDF.type, OWL.Ontology)
                         .addProperty(RDF.type, Iow.ApplicationProfile)
                         .addProperty(DCAP.preferredXMLNamespacePrefix, "test");
@@ -88,7 +89,7 @@ class ModelMapperTest {
         dto.setGroups(Set.of("P11"));
         dto.setLanguages(Set.of("fi", "sv"));
         dto.setOrganizations(Set.of(organizationId));
-        dto.setInternalNamespaces(Set.of("http://uri.suomi.fi/datamodel/ns/newint"));
+        dto.setInternalNamespaces(Set.of(ModelConstants.SUOMI_FI_NAMESPACE + "newint"));
         dto.setContact("test@localhost");
         if (modelType.equals(ModelType.PROFILE)) {
             dto.setCodeLists(Set.of("http://uri.suomi.fi/codelist/test/testcodelist"));
@@ -113,7 +114,7 @@ class ModelMapperTest {
 
         Model model = mapper.mapToJenaModel(dto, modelType, mockUser);
 
-        Resource modelResource = model.getResource("http://uri.suomi.fi/datamodel/ns/test");
+        Resource modelResource = model.getResource(ModelConstants.SUOMI_FI_NAMESPACE + "test" + ModelConstants.RESOURCE_SEPARATOR);
 
         assertEquals(2, modelResource.listProperties(RDFS.label).toList().size());
         assertEquals(Status.DRAFT, Status.valueOf(modelResource.getProperty(SuomiMeta.publicationStatus).getString()));
@@ -134,7 +135,7 @@ class ModelMapperTest {
             assertTrue(requires.containsAll(
                     List.of("http://www.w3.org/2000/01/rdf-schema#",
                             "http://uri.suomi.fi/terminology/test",
-                            "http://uri.suomi.fi/datamodel/ns/newint"
+                            ModelConstants.SUOMI_FI_NAMESPACE + "newint"
                     )));
         }
 
@@ -168,10 +169,11 @@ class ModelMapperTest {
     @Test
     void testMapToUpdateJenaModel() {
         var m = MapperTestUtils.getModelFromFile("/test_datamodel_library.ttl");
+        var uri = DataModelURI.createModelURI("test");
 
         when(coreRepository.fetch("test")).thenReturn(m);
         var mockModel = ModelFactory.createDefaultModel();
-        mockModel.createResource("http://uri.suomi.fi/datamodel/ns/newint")
+        mockModel.createResource(ModelConstants.SUOMI_FI_NAMESPACE + "newint")
                 .addProperty(RDF.type, OWL.Ontology)
                 .addProperty(DCAP.preferredXMLNamespacePrefix, "test");
         when(coreRepository.fetch(anyString())).thenReturn(mockModel);
@@ -194,7 +196,7 @@ class ModelMapperTest {
                 
                 new test"""));
 
-        dto.setInternalNamespaces(Set.of("http://uri.suomi.fi/datamodel/ns/newint"));
+        dto.setInternalNamespaces(Set.of(ModelConstants.SUOMI_FI_NAMESPACE + "newint"));
         var externalDTO = new ExternalNamespaceDTO();
         externalDTO.setName(Map.of("fi", "test dto"));
         externalDTO.setNamespace("http://www.w3.org/2000/01/rdf-schema#");
@@ -209,7 +211,7 @@ class ModelMapperTest {
         dto.setLinks(Set.of(linkDTO));
 
         //unchanged values
-        Resource modelResource = m.getResource("http://uri.suomi.fi/datamodel/ns/test");
+        Resource modelResource = m.getResource(uri.getModelURI());
         assertEquals(1, modelResource.listProperties(RDFS.label).toList().size());
         assertEquals("testlabel", modelResource.listProperties(RDFS.label).next().getString());
 
@@ -217,7 +219,7 @@ class ModelMapperTest {
         assertEquals("test desc", modelResource.listProperties(RDFS.comment).next().getString());
 
         assertEquals(1, modelResource.listProperties(OWL.imports).toList().size());
-        assertEquals("http://uri.suomi.fi/datamodel/ns/int", modelResource.listProperties(OWL.imports).next().getObject().toString());
+        assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "int", modelResource.listProperties(OWL.imports).next().getObject().toString());
 
         var requires = MapperUtils.arrayPropertyToList(modelResource, DCTerms.requires);
         assertEquals(3, requires.size());
@@ -235,10 +237,10 @@ class ModelMapperTest {
         assertEquals("link description", MapperUtils.localizedPropertyToMap(linkObject, DCTerms.description).get("fi"));
         assertEquals("https://example.com", MapperUtils.propertyToString(linkObject, FOAF.homepage));
 
-        mapper.mapToUpdateJenaModel("http://uri.suomi.fi/datamodel/ns/test", dto, m, mockUser);
+        mapper.mapToUpdateJenaModel(uri.getModelURI(), dto, m, mockUser);
 
         //changed values
-        modelResource = m.getResource("http://uri.suomi.fi/datamodel/ns/test");
+        modelResource = m.getResource(uri.getModelURI());
 
         assertEquals(1, modelResource.listProperties(RDFS.label).toList().size());
         assertEquals("new test label", modelResource.listProperties(RDFS.label, "fi").next().getString());
@@ -248,7 +250,7 @@ class ModelMapperTest {
         assertTrue(requires.containsAll(List.of("http://www.w3.org/2000/01/rdf-schema#", "http://uri.suomi.fi/terminology/newtest")));
 
         assertEquals(1, modelResource.listProperties(OWL.imports).toList().size());
-        assertEquals("http://uri.suomi.fi/datamodel/ns/newint", modelResource.listProperties(OWL.imports).next().getObject().toString());
+        assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "newint", modelResource.listProperties(OWL.imports).next().getObject().toString());
         assertEquals(mockUser.getId().toString(), modelResource.getProperty(Iow.modifier).getString());
         assertEquals("2a5c075f-0d0e-4688-90e0-29af1eebbf6d", modelResource.getProperty(Iow.creator).getObject().toString());
 
@@ -266,27 +268,31 @@ class ModelMapperTest {
     }
 
     @Test
-    void testMapToUpdateModelProfile(){
+    void testMapToUpdateModelProfile() {
         //Testing profile specific properties
         var m = MapperTestUtils.getModelFromFile("/test_datamodel_profile.ttl");
         var dto = new DataModelDTO();
         dto.setCodeLists(Set.of("http://uri.suomi.fi/codelist/test/newcodelist"));
 
-        var modelResource = m.getResource("http://uri.suomi.fi/datamodel/ns/test");
-        assertEquals("http://uri.suomi.fi/codelist/test/testcodelist", MapperUtils.propertyToString(modelResource, DCTerms.requires));
+        var uri = DataModelURI.createModelURI("test").getModelURI();
 
-        mapper.mapToUpdateJenaModel("http://uri.suomi.fi/datamodel/ns/test", dto, m, EndpointUtils.mockUser);
+        var modelResource = m.getResource(uri);
+        assertTrue(MapperUtils.arrayPropertyToList(modelResource, DCTerms.requires)
+                .contains("http://uri.suomi.fi/codelist/test/testcodelist"));
+
+        mapper.mapToUpdateJenaModel(uri, dto, m, EndpointUtils.mockUser);
 
         //changed values
-        modelResource = m.getResource("http://uri.suomi.fi/datamodel/ns/test");
-        assertEquals("http://uri.suomi.fi/codelist/test/newcodelist", MapperUtils.propertyToString(modelResource, DCTerms.requires));
+        modelResource = m.getResource(uri);
+        assertTrue(MapperUtils.arrayPropertyToList(modelResource, DCTerms.requires)
+                .contains("http://uri.suomi.fi/codelist/test/newcodelist"));
     }
 
     @Test
     void testMapToDatamodelDTO() {
         var m = MapperTestUtils.getModelFromFile("/test_datamodel_library.ttl");
         var nsModel = MapperTestUtils.getModelFromFile("/test_datamodel_internal_reference.ttl");
-        when(coreRepository.fetch("http://uri.suomi.fi/datamodel/ns/int")).thenReturn(nsModel);
+        when(coreRepository.fetch(ModelConstants.SUOMI_FI_NAMESPACE + "int")).thenReturn(nsModel);
         var result = mapper.mapToDataModelDTO("test", m, null);
 
         assertEquals("test", result.getPrefix());
@@ -320,7 +326,7 @@ class ModelMapperTest {
         var internalDTO = result.getInternalNamespaces().stream().findFirst().orElseThrow();
         assertEquals("internal label", internalDTO.getName().get("fi"));
         assertEquals("int", internalDTO.getPrefix());
-        assertEquals("http://uri.suomi.fi/datamodel/ns/int", internalDTO.getNamespace());
+        assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "int", internalDTO.getNamespace());
 
         var externalDTO = result.getExternalNamespaces().stream()
                 .filter(ns -> ns.getNamespace().equals("https://www.example.com/ns/ext"))
@@ -341,52 +347,54 @@ class ModelMapperTest {
     void testMapToDatamodelDTOVersion() {
         var m = MapperTestUtils.getModelFromFile("/models/test_datamodel_library_version.ttl");
         var nsModel = MapperTestUtils.getModelFromFile("/test_datamodel_internal_reference.ttl");
-        when(coreRepository.fetch("http://uri.suomi.fi/datamodel/ns/int")).thenReturn(nsModel);
+        when(coreRepository.fetch(ModelConstants.SUOMI_FI_NAMESPACE + "int")).thenReturn(nsModel);
         var result = mapper.mapToDataModelDTO("test", m, null);
 
 
         //no need to check other values since the file should be almost the same as above with the exception of version properties
         assertEquals("1.0.1", result.getVersion());
         assertEquals(Status.VALID, result.getStatus());
-        assertEquals("http://uri.suomi.fi/datamodel/ns/test/1.0.1", result.getVersionIri());
+        assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "test/1.0.1/", result.getVersionIri());
     }
 
     @Test
     void testMapReleaseProperties() {
         //Model is loaded from the Draft version and mapping the properties will make it into a release version
         var m = MapperTestUtils.getModelFromFile("/test_datamodel_library.ttl");
-        final var graphUri = "http://uri.suomi.fi/datamodel/ns/test";
+        final var graphUri = ModelConstants.SUOMI_FI_NAMESPACE + "test" + ModelConstants.RESOURCE_SEPARATOR;
 
-        var versionUri = mapper.mapReleaseProperties(m, graphUri, "1.0.1", Status.VALID);
+        var uri = DataModelURI.createModelURI("test", "1.0.1");
+        mapper.mapReleaseProperties(m, uri, Status.VALID);
 
-        assertEquals("http://uri.suomi.fi/datamodel/ns/test/1.0.1", versionUri);
+        assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "test/1.0.1/", uri.getGraphURI());
         var resource = m.getResource(graphUri);
-        assertEquals("http://uri.suomi.fi/datamodel/ns/test/1.0.1", MapperUtils.propertyToString(resource, OWL2.versionIRI));
+        assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "test/1.0.1/", MapperUtils.propertyToString(resource, OWL2.versionIRI));
 
         assertEquals(Status.VALID, Status.valueOf(MapperUtils.propertyToString(resource, SuomiMeta.publicationStatus)));
         assertEquals("1.0.1", MapperUtils.propertyToString(resource, OWL.versionInfo));
 
-        assertEquals(graphUri + "/1.0.0", MapperUtils.propertyToString(resource, OWL.priorVersion));
+        assertEquals(graphUri + "1.0.0/", MapperUtils.propertyToString(resource, OWL.priorVersion));
     }
 
     @Test
     void testMapPriorVersion() {
         //This is loaded as if it was a draft version
         var m = MapperTestUtils.getModelFromFile("/test_datamodel_library.ttl");
-        mapper.mapPriorVersion(m, "http://uri.suomi.fi/datamodel/ns/test", "http://uri.suomi.fi/datamodel/ns/test/1.0.0");
+        mapper.mapPriorVersion(m, ModelConstants.SUOMI_FI_NAMESPACE + "test", ModelConstants.SUOMI_FI_NAMESPACE + "test/1.0.0/");
 
-        var resource = m.getResource("http://uri.suomi.fi/datamodel/ns/test");
-        assertEquals("http://uri.suomi.fi/datamodel/ns/test/1.0.0", MapperUtils.propertyToString(resource, OWL.priorVersion));
+        var resource = m.getResource(ModelConstants.SUOMI_FI_NAMESPACE + "test");
+        assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "test/1.0.0/", MapperUtils.propertyToString(resource, OWL.priorVersion));
     }
 
     @Test
     void testMapToIndexModel() {
         var m = MapperTestUtils.getModelFromFile("/test_datamodel_library.ttl");
 
-        var result = mapper.mapToIndexModel("http://uri.suomi.fi/datamodel/ns/test", m);
+        var graphUri = ModelConstants.SUOMI_FI_NAMESPACE + "test/";
+        var result = mapper.mapToIndexModel(graphUri, m);
 
         assertEquals("test", result.getPrefix());
-        assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "test", result.getId());
+        assertEquals(graphUri, result.getId());
         assertEquals(ModelType.LIBRARY, result.getType());
         assertEquals(Status.VALID, result.getStatus());
         assertEquals("2023-01-03T12:44:45.799Z", result.getModified());
@@ -415,17 +423,18 @@ class ModelMapperTest {
     void mapModelVersionInfo() {
         var m = MapperTestUtils.getModelFromFile("/models/test_datamodel_prior_versions.ttl");
 
-
-        var result = mapper.mapModelVersionInfo(m.getResource("http://uri.suomi.fi/datamodel/ns/test/1.0.0"));
+        var uri = ModelConstants.SUOMI_FI_NAMESPACE + "test/1.0.0/";
+        var result = mapper.mapModelVersionInfo(m.getResource(uri));
         assertEquals("Test", result.getLabel().get("fi"));
         assertEquals("1.0.0", result.getVersion());
-        assertEquals("http://uri.suomi.fi/datamodel/ns/test/1.0.0", result.getVersionIRI());
+        assertEquals(uri, result.getVersionIRI());
         assertEquals(Status.VALID, result.getStatus());
     }
 
     @Test
     void mapUpdateVersionedModel() {
         var m = MapperTestUtils.getModelFromFile("/models/test_datamodel_library_version.ttl");
+        var graphUri = ModelConstants.SUOMI_FI_NAMESPACE + "test" + ModelConstants.RESOURCE_SEPARATOR;
         var dto = new VersionedModelDTO();
         dto.setStatus(Status.RETIRED);
         dto.setDocumentation(Map.of("fi", "new documentation"));
@@ -439,9 +448,10 @@ class ModelMapperTest {
         linkDTO.setName(Map.of("fi", "new link"));
         linkDTO.setUri("https://test.com");
         dto.setLinks(Set.of(linkDTO));
-        mapper.mapUpdateVersionedModel(m, "http://uri.suomi.fi/datamodel/ns/test", dto, EndpointUtils.mockUser);
 
-        var resource = m.getResource("http://uri.suomi.fi/datamodel/ns/test");
+        mapper.mapUpdateVersionedModel(m, graphUri, dto, EndpointUtils.mockUser);
+
+        var resource = m.getResource(graphUri);
         assertEquals("new documentation", MapperUtils.localizedPropertyToMap(resource, Iow.documentation).get("fi"));
         assertEquals(Status.RETIRED, Status.valueOf(MapperUtils.propertyToString(resource, SuomiMeta.publicationStatus)));
         assertEquals("new description", MapperUtils.localizedPropertyToMap(resource, RDFS.comment).get("fi"));
@@ -462,10 +472,11 @@ class ModelMapperTest {
     @EnumSource(value = Status.class, names = {"VALID", "SUGGESTED", "RETIRED", "SUPERSEDED"}, mode = EnumSource.Mode.EXCLUDE)
     void mapUpdateVersionedModelInvalidStatuses(Status status) {
         var m = MapperTestUtils.getModelFromFile("/models/test_datamodel_library_version.ttl");
+        var graphUri = ModelConstants.SUOMI_FI_NAMESPACE + "test" + ModelConstants.RESOURCE_SEPARATOR;
         var dto = new VersionedModelDTO();
         dto.setStatus(status);
         dto.setDocumentation(Map.of("fi", "new documentation"));
-        var error = assertThrows(MappingError.class, () -> mapper.mapUpdateVersionedModel(m, "http://uri.suomi.fi/datamodel/ns/test", dto, EndpointUtils.mockUser));
+        var error = assertThrows(MappingError.class, () -> mapper.mapUpdateVersionedModel(m, graphUri, dto, EndpointUtils.mockUser));
         assertEquals("Error during mapping: Cannot change status from VALID to " + status.name(), error.getMessage());
     }
 

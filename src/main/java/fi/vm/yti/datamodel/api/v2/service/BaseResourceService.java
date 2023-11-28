@@ -10,6 +10,7 @@ import fi.vm.yti.datamodel.api.v2.mapper.ResourceMapper;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import fi.vm.yti.datamodel.api.v2.repository.ImportsRepository;
+import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelUtils;
 import fi.vm.yti.datamodel.api.v2.utils.SparqlUtils;
 import fi.vm.yti.security.AuthenticatedUserProvider;
@@ -63,9 +64,10 @@ abstract class BaseResourceService {
 
 
     public void delete(String prefix, String resourceIdentifier) {
-        var modelURI = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
-        var resourceUri = modelURI + ModelConstants.RESOURCE_SEPARATOR + resourceIdentifier;
-        if(!coreRepository.resourceExistsInGraph(modelURI, resourceUri)) {
+        var uri = DataModelURI.createResourceURI(prefix, resourceIdentifier);
+        var graphUri = uri.getGraphURI();
+        var resourceUri = uri.getResourceURI();
+        if(!coreRepository.resourceExistsInGraph(graphUri, resourceUri)) {
             throw new ResourceNotFoundException(resourceUri);
         }
 
@@ -74,7 +76,7 @@ abstract class BaseResourceService {
         var exprFactory = selectBuilder.getExprFactory();
         var expr = exprFactory.notexists(new WhereBuilder().addWhere("?s", DCTerms.hasPart, "?o"));
         selectBuilder.addFilter(expr);
-        selectBuilder.addGraph(NodeFactory.createURI(modelURI), "?s", "?p", "?o");
+        selectBuilder.addGraph(NodeFactory.createURI(graphUri), "?s", "?p", "?o");
         selectBuilder.addWhere("?s", "?p", NodeFactory.createURI(resourceUri));
 
         var references = new ArrayList<String>();
@@ -85,7 +87,7 @@ abstract class BaseResourceService {
             throw new MappingError("referenced-by-others");
         }
 
-        var model = coreRepository.fetch(modelURI);
+        var model = coreRepository.fetch(graphUri);
 
         check(authorizationManager.hasRightToModel(prefix, model));
         coreRepository.deleteResource(resourceUri);
@@ -98,22 +100,23 @@ abstract class BaseResourceService {
         if(identifier.startsWith("corner-")) {
             return true;
         }
-        var graphUri = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
-        return coreRepository.resourceExistsInGraph(graphUri, graphUri + ModelConstants.RESOURCE_SEPARATOR + identifier, false);
+        var uri = DataModelURI.createResourceURI(prefix, identifier);
+        return coreRepository.resourceExistsInGraph(uri.getModelURI(), uri.getResourceURI(), false);
     }
 
     public URI renameResource(String prefix, String oldIdentifier, String newIdentifier) throws URISyntaxException {
-        var modelURI = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
-        var resourceURI = modelURI + ModelConstants.RESOURCE_SEPARATOR + oldIdentifier;
-        var newResourceURI = modelURI + ModelConstants.RESOURCE_SEPARATOR + newIdentifier;
+        var uri = DataModelURI.createResourceURI(prefix, oldIdentifier);
+        var graphURI = uri.getGraphURI();
+        var resourceURI = uri.getResourceURI();
+        var newResourceURI = DataModelURI.createResourceURI(prefix, newIdentifier).getResourceURI();
 
-        var model = coreRepository.fetch(modelURI);
+        var model = coreRepository.fetch(graphURI);
 
-        if(!coreRepository.resourceExistsInGraph(modelURI, resourceURI)) {
+        if(!coreRepository.resourceExistsInGraph(graphURI, resourceURI)) {
             throw new ResourceNotFoundException(resourceURI);
         }
 
-        if(coreRepository.resourceExistsInGraph(modelURI, newResourceURI)) {
+        if(coreRepository.resourceExistsInGraph(graphURI, newResourceURI)) {
             throw new MappingError("Resource already exists with identifier " + newIdentifier);
         }
 
@@ -121,7 +124,7 @@ abstract class BaseResourceService {
 
 
         var newResource = MapperUtils.renameResource(model.getResource(resourceURI), newIdentifier);
-        coreRepository.put(modelURI, model);
+        coreRepository.put(graphURI, model);
 
         // rename visualization resource as well
         var visualizationModelUri = ModelConstants.MODEL_POSITIONS_NAMESPACE + prefix;

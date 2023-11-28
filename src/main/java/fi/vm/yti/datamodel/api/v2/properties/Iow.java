@@ -9,7 +9,7 @@ public class Iow {
         //property class
     }
 
-    public static final String URI ="http://uri.suomi.fi/datamodel/ns/iow/";
+    public static final String URI = "https://iri.suomi.fi/model/iow/";
 
     public static final Property contentModified = ResourceFactory.createProperty(URI, "contentModified");
     public static final Property documentation = ResourceFactory.createProperty(URI, "documentation");

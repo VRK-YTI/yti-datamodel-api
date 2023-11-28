@@ -4,6 +4,7 @@ import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
 import fi.vm.yti.datamodel.api.v2.properties.Iow;
 import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
+import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelUtils;
 import fi.vm.yti.security.YtiUser;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
@@ -65,7 +66,7 @@ public class MapperUtils {
         resource.listProperties(property).forEach(prop -> {
             var lang = prop.getLanguage();
             var value = prop.getString();
-            if (lang == null || lang.trim().equals("")) {
+            if (lang == null || lang.isBlank()) {
                 map.put("en", value);
             } else {
                 map.put(lang, value);
@@ -285,7 +286,7 @@ public class MapperUtils {
         namespaces.addAll(arrayPropertyToSet(modelResource, DCTerms.requires));
         namespaces.add(modelResource.getURI());
 
-        var refNamespace = DataModelUtils.removeTrailingSlash(NodeFactory.createURI(resourceURI).getNameSpace());
+        var refNamespace = DataModelURI.fromURI(resourceURI).getGraphURI();
 
         // reference already added
         if (namespaces.contains(refNamespace)) {
@@ -367,11 +368,11 @@ public class MapperUtils {
         }
     }
 
-    public static Resource addCommonResourceInfo(Model model, String graphUri, BaseDTO dto) {
-        var modelResource = model.getResource(graphUri);
+    public static Resource addCommonResourceInfo(Model model, DataModelURI uri, BaseDTO dto) {
+        var modelResource = model.getResource(uri.getModelURI());
         var languages = MapperUtils.arrayPropertyToSet(modelResource, DCTerms.language);
 
-        var resource = model.createResource(graphUri + ModelConstants.RESOURCE_SEPARATOR + dto.getIdentifier())
+        var resource = model.createResource(uri.getResourceURI())
                 .addProperty(SuomiMeta.publicationStatus, dto.getStatus().name())
                 .addProperty(RDFS.isDefinedBy, modelResource)
                 .addProperty(DCTerms.identifier, ResourceFactory.createTypedLiteral(dto.getIdentifier(), XSDDatatype.XSDNCName));
@@ -396,7 +397,7 @@ public class MapperUtils {
         }
     }
 
-    public static void addCommonResourceDtoInfo(ResourceInfoBaseDTO dto,Resource resource, Resource modelResource, Model orgModel, boolean hasRightToModel) {
+    public static void addCommonResourceDtoInfo(ResourceInfoBaseDTO dto, Resource resource, Resource modelResource, Model orgModel, boolean hasRightToModel) {
         var uriDTO = MapperUtils.uriToURIDTO(resource.getURI(), resource.getModel());
         dto.setUri(uriDTO.getUri());
         dto.setCurie(uriDTO.getCurie());
@@ -425,27 +426,14 @@ public class MapperUtils {
         if (uri == null) {
             return null;
         }
-        var u = NodeFactory.createURI(uri);
-        var prefix = model.getNsURIPrefix(u.getNameSpace());
+        var u = DataModelURI.fromURI(uri);
 
         Map<String,String> label = null;
         var resource = model.getResource(uri);
         if (resource.hasProperty(RDFS.label)) {
             label = localizedPropertyToMap(resource, RDFS.label);
         }
-        if (prefix != null) {
-            return new UriDTO(uri, String.format("%s:%s", prefix, u.getLocalName()), label);
-        } else if (uri.startsWith(ModelConstants.SUOMI_FI_NAMESPACE)) {
-            return new UriDTO(uri, uri
-                    .replace(ModelConstants.SUOMI_FI_NAMESPACE, "")
-                    .replace(ModelConstants.RESOURCE_SEPARATOR, ":"),
-                    label
-            );
-        } else {
-            // use last element of the path as a prefix, if it could not determine
-            var parts = u.getNameSpace().split("\\W");
-            return new UriDTO(uri, String.format("%s:%s", parts[parts.length - 1], u.getLocalName()), label);
-        }
+        return new UriDTO(uri, u.getCurie(model.getGraph().getPrefixMapping()), label);
     }
 
     public static Set<UriDTO> uriToURIDTOs(Collection<String> uris, Model model) {

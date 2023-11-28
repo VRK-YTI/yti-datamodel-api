@@ -3,7 +3,7 @@ package fi.vm.yti.datamodel.api.v2.service;
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
 import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
-import fi.vm.yti.datamodel.api.v2.utils.SemVer;
+import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIFactory;
 import org.apache.jena.rdf.model.Model;
@@ -18,6 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.MimeTypeUtils;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+import org.springframework.web.util.UriComponentsBuilder;
 import org.topbraid.shacl.vocabulary.SH;
 
 @Service
@@ -38,15 +39,20 @@ public class UriResolveService {
             return ResponseEntity.badRequest().build();
         }
 
-        String resourcePath = iri.substring(ModelConstants.SUOMI_FI_NAMESPACE.length())
-                .split("\\?")[0];
-        var parts = resourcePath.split("/");
-
-        if (parts.length == 0) {
+        var datamodelURI = DataModelURI.fromURI(iri);
+        if (datamodelURI.getModelId() == null) {
             return ResponseEntity.badRequest().build();
+        } else if (datamodelURI.getContentType() == null && datamodelURI.getResourceId() != null && !isHtml(accept)) {
+            // do not support serializing single resource
+            return ResponseEntity.notFound().build();
+        } else if (datamodelURI.getContentType() == null && datamodelURI.getResourceId() == null && !iri.endsWith(ModelConstants.RESOURCE_SEPARATOR)) {
+            // iri must end with slash except when requesting with file extension, e.g. /model/ns/1.2.3/ns.ttl
+            return ResponseEntity.notFound().build();
         }
-
-        var redirectURL = buildURL(parts, accept);
+        var contentType = datamodelURI.getContentType() != null
+                ? datamodelURI.getContentType()
+                : accept;
+        var redirectURL = buildURL(datamodelURI, contentType);
         return ResponseEntity
                 .status(HttpStatus.SEE_OTHER)
                 .header(HttpHeaders.LOCATION, redirectURL)
@@ -54,73 +60,69 @@ public class UriResolveService {
     }
 
     @NotNull
-    private String buildURL(String[] parts, String accept) {
-        String modelPrefix = parts[0];
-        String resource = null;
-        String version = null;
-
-        for (var i = 1; i < parts.length; i++) {
-            var p = parts[i];
-            if (i == 1) {
-                if (p.matches(SemVer.VALID_REGEX)) {
-                    version = p;
-                } else {
-                    resource = p;
-                }
-            } else if (i == 2) {
-                resource = p;
-            }
-        }
+    private String buildURL(DataModelURI uri, String accept) {
+        String modelPrefix = uri.getModelId();
+        String version = uri.getVersion();
 
         var currentUrl = ServletUriComponentsBuilder.fromCurrentRequestUri().build().toUri();
-        var redirectURL = new StringBuilder();
-        redirectURL.append(currentUrl.getScheme())
-                .append("://")
-                .append(currentUrl.getHost())
-                .append(currentUrl.getHost().equals("localhost") ? ":3000" : "");
 
-        if (accept != null && accept.contains(MimeTypeUtils.TEXT_HTML_VALUE)) {
+        var redirectURL = UriComponentsBuilder.newInstance()
+                .scheme(currentUrl.getScheme())
+                .host(currentUrl.getHost());
+
+        if (currentUrl.getHost().equals("localhost")) {
+            redirectURL.port(3000);
+        }
+
+        if (isHtml(accept)) {
             // redirect to the site
-            redirectURL
-                    .append("/model/")
-                    .append(modelPrefix);
-            appendResource(redirectURL, modelPrefix, resource);
-            redirectURL.append(version != null ? "?ver=" + version : "");
+            redirectURL.pathSegment("model", modelPrefix);
+            appendResource(redirectURL, modelPrefix, uri.getResourceId(), version);
+            if (version != null) {
+                redirectURL.queryParam("ver", version);
+            }
         } else {
             // redirect to serialized resource
-            redirectURL
-                    .append("/datamodel-api/v2/export/")
-                    .append(modelPrefix)
-                    .append(resource != null ? "/" + resource : "")
-                    .append(version != null ? "?version=" + version : "");
+            redirectURL.pathSegment("datamodel-api", "v2", "export", modelPrefix);
+
+            if (uri.getContentType() != null) {
+                redirectURL.queryParam("contentType", uri.getContentType().replace("+", "%2B"));
+            }
+            if (version != null) {
+                redirectURL.queryParam("version", version);
+            }
         }
-        return redirectURL.toString();
+        return redirectURL.toUriString();
     }
 
-    private void appendResource(StringBuilder redirectURL, String modelPrefix, String resource) {
+    private static boolean isHtml(String accept) {
+        return accept != null && accept.contains(MimeTypeUtils.TEXT_HTML_VALUE);
+    }
+
+    private void appendResource(UriComponentsBuilder redirectURL, String modelPrefix, String resource, String version) {
         if (resource != null) {
-            var modelURI = ModelConstants.SUOMI_FI_NAMESPACE + modelPrefix;
+            var uri = DataModelURI.createResourceURI(modelPrefix, resource, version);
             Model dataModel;
             try {
-                dataModel = coreRepository.fetch(modelURI);
+                dataModel = coreRepository.fetch(uri.getGraphURI());
             } catch (Exception e) {
                 return;
             }
 
-            var dataModelResource = dataModel.getResource(modelURI + ModelConstants.RESOURCE_SEPARATOR + resource);
+            var dataModelResource = dataModel.getResource(uri.getResourceURI());
 
             if (MapperUtils.hasType(dataModelResource, OWL.Class, SH.NodeShape)) {
-                redirectURL.append("/class/");
+                redirectURL.pathSegment("class");
             } else if (MapperUtils.hasType(dataModelResource, OWL.DatatypeProperty)) {
-                redirectURL.append("/attribute/");
+                redirectURL.pathSegment("attribute");
             } else if (MapperUtils.hasType(dataModelResource, OWL.ObjectProperty)) {
-                redirectURL.append("/association/");
+                redirectURL.pathSegment("association");
             } else {
                 logger.warn("No valid type found from resource {}, {}", dataModelResource.getURI(),
                         dataModelResource.getProperty(RDF.type));
                 return;
             }
-            redirectURL.append(resource);
+            redirectURL.pathSegment(resource);
         }
     }
 

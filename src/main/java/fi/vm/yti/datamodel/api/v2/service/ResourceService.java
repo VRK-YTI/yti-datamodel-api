@@ -9,6 +9,7 @@ import fi.vm.yti.datamodel.api.v2.mapper.ResourceMapper;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import fi.vm.yti.datamodel.api.v2.repository.ImportsRepository;
+import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelUtils;
 import fi.vm.yti.security.AuthenticatedUserProvider;
 import org.apache.jena.arq.querybuilder.AskBuilder;
@@ -66,26 +67,25 @@ public class ResourceService extends BaseResourceService {
     }
 
     public ResourceInfoBaseDTO get(String prefix, String version, String identifier) {
-        var graphUri = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
-        var versionUri = graphUri;
-        if(version != null){
-            versionUri += ModelConstants.RESOURCE_SEPARATOR + version;
-        }
-        if(!coreRepository.resourceExistsInGraph(versionUri,graphUri + ModelConstants.RESOURCE_SEPARATOR + identifier)){
+        var uri = DataModelURI.createResourceURI(prefix, identifier, version);
+        var modelUri = uri.getModelURI();
+        var versionUri = uri.getGraphURI();
+
+        if(!coreRepository.resourceExistsInGraph(versionUri, uri.getResourceURI())){
             throw new ResourceNotFoundException(identifier);
         }
 
         var model = coreRepository.fetch(versionUri);
         var orgModel = coreRepository.getOrganizations();
         var hasRightToModel = authorizationManager.hasRightToModel(prefix, model);
-        var modelResource = model.getResource(graphUri);
+        var modelResource = model.getResource(modelUri);
         var includedNamespaces = DataModelUtils.getInternalReferenceModels(versionUri, modelResource);
 
         ResourceInfoBaseDTO dto;
         if (MapperUtils.isLibrary(modelResource)) {
-            dto = ResourceMapper.mapToResourceInfoDTO(model, graphUri, identifier, orgModel, hasRightToModel, groupManagementService.mapUser());
+            dto = ResourceMapper.mapToResourceInfoDTO(model, uri, orgModel, hasRightToModel, groupManagementService.mapUser());
         } else if (MapperUtils.isApplicationProfile(modelResource)) {
-            dto = ResourceMapper.mapToPropertyShapeInfoDTO(model, graphUri, identifier, orgModel, hasRightToModel, groupManagementService.mapUser());
+            dto = ResourceMapper.mapToPropertyShapeInfoDTO(model, uri, orgModel, hasRightToModel, groupManagementService.mapUser());
         } else {
             throw new MappingError("Invalid model");
         }
@@ -106,14 +106,15 @@ public class ResourceService extends BaseResourceService {
     }
 
     public URI create(String prefix, BaseDTO dto, @Nonnull ResourceType resourceType, boolean applicationProfile) throws URISyntaxException {
-        var graphUri = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
-        var resourceUri = graphUri + ModelConstants.RESOURCE_SEPARATOR + dto.getIdentifier();
+        var dataModelURI = DataModelURI.createResourceURI(prefix, dto.getIdentifier());
+        var graphUri = dataModelURI.getGraphURI();
+        var resourceUri = dataModelURI.getResourceURI();
         if (coreRepository.resourceExistsInGraph(graphUri, resourceUri, false)){
             throw new MappingError("Already exists");
         }
         var model = coreRepository.fetch(graphUri);
         check(authorizationManager.hasRightToModel(prefix, model));
-        checkDataModelType(model.getResource(graphUri), dto);
+        checkDataModelType(model.getResource(dataModelURI.getModelURI()), dto);
 
         terminologyService.resolveConcept(dto.getSubject());
         if(applicationProfile && resourceType.equals(ResourceType.ATTRIBUTE)) {
@@ -121,9 +122,9 @@ public class ResourceService extends BaseResourceService {
         }
 
         if(applicationProfile){
-            resourceUri = ResourceMapper.mapToPropertyShapeResource(graphUri, model, (PropertyShapeDTO) dto, resourceType, userProvider.getUser());
+            resourceUri = ResourceMapper.mapToPropertyShapeResource(dataModelURI, model, (PropertyShapeDTO) dto, resourceType, userProvider.getUser());
         }else {
-            resourceUri = ResourceMapper.mapToResource(graphUri, model, (ResourceDTO) dto, resourceType, userProvider.getUser());
+            resourceUri = ResourceMapper.mapToResource(dataModelURI, model, (ResourceDTO) dto, resourceType, userProvider.getUser());
         }
 
         saveResource(model, graphUri, resourceUri, false);
@@ -132,8 +133,9 @@ public class ResourceService extends BaseResourceService {
     }
 
     public void update(String prefix, String identifier, BaseDTO dto) {
-        var graphUri = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
-        var resourceUri = graphUri + ModelConstants.RESOURCE_SEPARATOR + identifier;
+        var dataModelURI = DataModelURI.createResourceURI(prefix, identifier);
+        var graphUri = dataModelURI.getGraphURI();
+        var resourceUri = dataModelURI.getResourceURI();
 
         if(!coreRepository.resourceExistsInGraph(graphUri, resourceUri)){
             throw new ResourceNotFoundException(identifier);
@@ -141,7 +143,7 @@ public class ResourceService extends BaseResourceService {
 
         var model = coreRepository.fetch(graphUri);
         check(authorizationManager.hasRightToModel(prefix, model));
-        checkDataModelType(model.getResource(graphUri), dto);
+        checkDataModelType(model.getResource(dataModelURI.getModelURI()), dto);
 
         if(dto instanceof AttributeRestriction attributeRestriction) {
             codeListService.resolveCodelistScheme(attributeRestriction.getCodeLists());
@@ -150,9 +152,9 @@ public class ResourceService extends BaseResourceService {
         if (dto instanceof ResourceDTO resourceDTO) {
             checkCyclicalReferences(resourceDTO.getEquivalentResource(), OWL.equivalentProperty, resourceUri);
             checkCyclicalReferences(resourceDTO.getSubResourceOf(), RDFS.subPropertyOf, resourceUri);
-            ResourceMapper.mapToUpdateResource(graphUri, model, identifier, resourceDTO, userProvider.getUser());
+            ResourceMapper.mapToUpdateResource(dataModelURI, model, resourceDTO, userProvider.getUser());
         } else if (dto instanceof PropertyShapeDTO propertyShapeDTO) {
-            ResourceMapper.mapToUpdatePropertyShape(graphUri, model, identifier, propertyShapeDTO, userProvider.getUser());
+            ResourceMapper.mapToUpdatePropertyShape(dataModelURI, model, propertyShapeDTO, userProvider.getUser());
         } else {
             throw new MappingError("Invalid content type for mapping resource");
         }
@@ -163,11 +165,15 @@ public class ResourceService extends BaseResourceService {
     }
 
     public URI copyPropertyShape(String prefix, String propertyShapeIdentifier, String targetPrefix, String newIdentifier) throws URISyntaxException {
-        var graphUri = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
-        var targetGraph = ModelConstants.SUOMI_FI_NAMESPACE + targetPrefix;
-        var targetResource = targetGraph + ModelConstants.RESOURCE_SEPARATOR + newIdentifier;
+        var source = DataModelURI.createResourceURI(prefix, propertyShapeIdentifier);
+        var target = DataModelURI.createResourceURI(targetPrefix, newIdentifier);
 
-        if(!coreRepository.resourceExistsInGraph(graphUri, graphUri + ModelConstants.RESOURCE_SEPARATOR + propertyShapeIdentifier)){
+        var graphUri = source.getModelURI();
+
+        var targetGraph = target.getModelURI();
+        var targetResource = target.getResourceURI();
+
+        if(!coreRepository.resourceExistsInGraph(graphUri, source.getResourceURI())){
             throw new ResourceNotFoundException(propertyShapeIdentifier);
         }
         if(coreRepository.resourceExistsInGraph(targetGraph, targetResource, false)){
@@ -205,32 +211,28 @@ public class ResourceService extends BaseResourceService {
      * @return true if resource is one of types
      */
     public boolean checkIfResourceIsOneOfTypes(String resourceUri, List<Resource> types) {
-        var checkImports = !resourceUri.startsWith(ModelConstants.SUOMI_FI_NAMESPACE);
+        var dataModelURI = DataModelURI.fromURI(resourceUri);
 
         var uri = NodeFactory.createURI(resourceUri);
         var typeVar = "?type";
         var askBuilder = new AskBuilder()
                 .addValueVar(typeVar, types.toArray());
 
-        if (checkImports) {
+        if (!dataModelURI.isDataModelURI()) {
             askBuilder.addWhere(uri, RDF.type, typeVar);
             return importsRepository.queryAsk(askBuilder.build());
         } else {
-            askBuilder.addWhere(NodeFactory.createURI(DataModelUtils.removeVersionFromURI(resourceUri)), RDF.type, typeVar);
-            askBuilder.from(DataModelUtils.removeTrailingSlash(uri.getNameSpace()));
+            askBuilder.addWhere(NodeFactory.createURI(dataModelURI.getResourceURI()), RDF.type, typeVar);
+            askBuilder.from(dataModelURI.getGraphURI());
             return coreRepository.queryAsk(askBuilder.build());
         }
     }
 
     public boolean checkActiveStatus(String prefix, String uri, String version) {
-        var modelUri = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
-
-        if(version != null){
-            modelUri += ModelConstants.RESOURCE_SEPARATOR + version;
-        }
+        var dataModelURI = DataModelURI.createModelURI(prefix, version);
 
         var askBuilder = new AskBuilder()
-                .addGraph(NodeFactory.createURI(modelUri),
+                .addGraph(NodeFactory.createURI(dataModelURI.getGraphURI()),
                         NodeFactory.createURI(uri), SH.deactivated, "?o");
 
         return !coreRepository.queryAsk(askBuilder.build());
@@ -240,10 +242,8 @@ public class ResourceService extends BaseResourceService {
         if (uri == null) {
             return null;
         }
-        if (uri.startsWith(ModelConstants.SUOMI_FI_NAMESPACE)) {
-            uri = DataModelUtils.removeVersionFromURI(uri);
-        }
-        var result = findResources(Set.of(uri), graphsIncluded).getResource(uri);
+        var resourceURI = DataModelURI.fromURI(uri).getResourceURI();
+        var result = findResources(Set.of(resourceURI), graphsIncluded).getResource(resourceURI);
         if (result.listProperties().hasNext()) {
             return result;
         }

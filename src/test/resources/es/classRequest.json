@@ -26,7 +26,7 @@
               {
                 "terms": {
                   "versionIri": [
-                    "http://uri.suomi.fi/datamodel/ns/addedNs"
+                    "https://iri.suomi.fi/model/addedNs/"
                   ]
                 }
               },
@@ -46,7 +46,7 @@
         {
           "term": {
             "targetClass": {
-              "value": "http://uri.suomi.fi/datamodel/ns/test/TestClass"
+              "value": "https://iri.suomi.fi/model/test/TestClass"
             }
           }
         }
@@ -55,7 +55,7 @@
         {
           "terms": {
             "isDefinedBy": [
-              "http://uri.suomi.fi/datamodel/ns/test"
+              "https://iri.suomi.fi/model/test/"
             ]
           }
         },

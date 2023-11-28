@@ -14,6 +14,7 @@ import fi.vm.yti.datamodel.api.v2.properties.Iow;
 import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import fi.vm.yti.datamodel.api.v2.repository.ImportsRepository;
+import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
 import fi.vm.yti.security.AuthenticatedUserProvider;
 import fi.vm.yti.security.YtiUser;
 import org.apache.jena.query.Query;
@@ -91,9 +92,10 @@ class ResourceServiceTest {
         try(var mapper = mockStatic(ResourceMapper.class)) {
             resourceService.get("test", null, "TestResource");
         }
+        var uri = DataModelURI.createResourceURI("test", "TestResource");
 
-        verify(coreRepository).resourceExistsInGraph("http://uri.suomi.fi/datamodel/ns/test", "http://uri.suomi.fi/datamodel/ns/test/TestResource");
-        verify(coreRepository).fetch("http://uri.suomi.fi/datamodel/ns/test");
+        verify(coreRepository).resourceExistsInGraph(uri.getGraphURI(), uri.getResourceURI());
+        verify(coreRepository).fetch(uri.getGraphURI());
         verify(authorizationManager).hasRightToModel(eq("test"), any(Model.class));
         verify(coreRepository).getOrganizations();
 
@@ -108,10 +110,10 @@ class ResourceServiceTest {
         try(var mapper = mockStatic(ResourceMapper.class)) {
             resourceService.get("test", "1.0.1", "TestResource");
         }
+        var dataModelURI = DataModelURI.createResourceURI("test", "TestResource", "1.0.1");
 
-
-        verify(coreRepository).resourceExistsInGraph("http://uri.suomi.fi/datamodel/ns/test/1.0.1", "http://uri.suomi.fi/datamodel/ns/test/TestResource");
-        verify(coreRepository).fetch("http://uri.suomi.fi/datamodel/ns/test/1.0.1");
+        verify(coreRepository).resourceExistsInGraph(dataModelURI.getGraphURI(), dataModelURI.getResourceURI());
+        verify(coreRepository).fetch(dataModelURI.getGraphURI());
         verify(authorizationManager).hasRightToModel(eq("test"), any(Model.class));
         verify(coreRepository).getOrganizations();
 
@@ -123,13 +125,14 @@ class ResourceServiceTest {
         var model = EndpointUtils.getMockModel(OWL.Ontology);
         when(coreRepository.fetch(anyString())).thenReturn(model);
 
+        var dataModelURI = DataModelURI.createResourceURI("test", "Identifier");
         var dto = createResourceDTO(false, resourceType);
         try(var mapper = mockStatic(ResourceMapper.class)) {
-            mapper.when(() -> ResourceMapper.mapToResource(anyString(), any(Model.class), any(ResourceDTO.class), any(ResourceType.class), any(YtiUser.class)))
-                            .thenReturn("http://uri.suomi.fi/datamodel/ns/test/Identifier");
+            mapper.when(() -> ResourceMapper.mapToResource(any(DataModelURI.class), any(Model.class), any(ResourceDTO.class), any(ResourceType.class), any(YtiUser.class)))
+                            .thenReturn(dataModelURI.getResourceURI());
             mapper.when(() -> ResourceMapper.mapToIndexResource(any(Model.class), anyString())).thenReturn(new IndexResource());
-            var uri = resourceService.create("test", dto, resourceType, false);
-            assertEquals("http://uri.suomi.fi/datamodel/ns/test/Identifier", uri.toString());
+            var uri = resourceService.create(dataModelURI.getModelId(), dto, resourceType, false);
+            assertEquals(dataModelURI.getResourceURI(), uri.toString());
         }
 
         verify(coreRepository).resourceExistsInGraph(anyString(), anyString(), eq(false));
@@ -146,13 +149,14 @@ class ResourceServiceTest {
         var model = EndpointUtils.getMockModel(DCAP.DCAP);
         when(coreRepository.fetch(anyString())).thenReturn(model);
 
-        var dto = createAssociationRestriction(true);
+        var dataModelURI = DataModelURI.createResourceURI("test", "Identifier");
+        var dto = createAssociationRestriction(false);
         try(var mapper = mockStatic(ResourceMapper.class)) {
-            mapper.when(() -> ResourceMapper.mapToPropertyShapeResource(anyString(), any(Model.class), any(PropertyShapeDTO.class), any(ResourceType.class), any(YtiUser.class)))
-                    .thenReturn("http://uri.suomi.fi/datamodel/ns/test/Identifier");
+            mapper.when(() -> ResourceMapper.mapToPropertyShapeResource(any(DataModelURI.class), any(Model.class), any(PropertyShapeDTO.class), any(ResourceType.class), any(YtiUser.class)))
+                    .thenReturn(dataModelURI.getResourceURI());
             mapper.when(() -> ResourceMapper.mapToIndexResource(any(Model.class), anyString())).thenReturn(new IndexResource());
             var uri = resourceService.create("test", dto, ResourceType.ASSOCIATION, true);
-            assertEquals("http://uri.suomi.fi/datamodel/ns/test/Identifier", uri.toString());
+            assertEquals(dataModelURI.getResourceURI(), uri.toString());
         }
 
         verify(coreRepository).resourceExistsInGraph(anyString(), anyString(), eq(false));
@@ -174,7 +178,7 @@ class ResourceServiceTest {
         try(var mapper = mockStatic(ResourceMapper.class)) {
             mapper.when(() -> ResourceMapper.mapToIndexResource(any(Model.class), anyString())).thenReturn(new IndexResource());
             resourceService.update("test", "Identifier", dto);
-            mapper.verify(() -> ResourceMapper.mapToUpdateResource(anyString(), any(Model.class), anyString(), any(ResourceDTO.class), any(YtiUser.class)));
+            mapper.verify(() -> ResourceMapper.mapToUpdateResource(any(DataModelURI.class), any(Model.class), any(ResourceDTO.class), any(YtiUser.class)));
         }
         verify(coreRepository).resourceExistsInGraph(anyString(), anyString());
         verify(coreRepository).fetch(anyString());
@@ -194,7 +198,7 @@ class ResourceServiceTest {
         try(var mapper = mockStatic(ResourceMapper.class)) {
             mapper.when(() -> ResourceMapper.mapToIndexResource(any(Model.class), anyString())).thenReturn(new IndexResource());
             resourceService.update("test", "Identifier", dto);
-            mapper.verify(() -> ResourceMapper.mapToUpdatePropertyShape(anyString(), any(Model.class), anyString(), any(PropertyShapeDTO.class), any(YtiUser.class)));
+            mapper.verify(() -> ResourceMapper.mapToUpdatePropertyShape(any(DataModelURI.class), any(Model.class), any(PropertyShapeDTO.class), any(YtiUser.class)));
         }
         verify(coreRepository).resourceExistsInGraph(anyString(), anyString());
         verify(coreRepository).fetch(anyString());
@@ -224,19 +228,21 @@ class ResourceServiceTest {
 
     @Test
     void copyPropertyShape() throws URISyntaxException {
-        when(coreRepository.resourceExistsInGraph("http://uri.suomi.fi/datamodel/ns/test", "http://uri.suomi.fi/datamodel/ns/test/Identifier")).thenReturn(true);
+        var sourceURI = DataModelURI.createResourceURI("test", "Identifier");
+        var targetURI = DataModelURI.createResourceURI("newTest", "newId");
+        when(coreRepository.resourceExistsInGraph(sourceURI.getGraphURI(), sourceURI.getResourceURI())).thenReturn(true);
         var m = ModelFactory.createDefaultModel();
-        m.createResource("http://uri.suomi.fi/datamodel/ns/test")
+        m.createResource(sourceURI.getModelURI())
                 .addProperty(RDF.type, OWL.Ontology)
                 .addProperty(RDF.type, Iow.ApplicationProfile);
-        m.createResource("http://uri.suomi.fi/datamodel/ns/newTest")
+        m.createResource(targetURI.getModelURI())
                 .addProperty(RDF.type, OWL.Ontology)
                 .addProperty(RDF.type, Iow.ApplicationProfile);
         when(coreRepository.fetch(anyString())).thenReturn(m);
         try(var mapper = mockStatic(ResourceMapper.class)) {
             mapper.when(() -> ResourceMapper.mapToIndexResource(any(Model.class), anyString())).thenReturn(new IndexResource());
             var uri = resourceService.copyPropertyShape("test", "Identifier", "newTest", "newId");
-            assertEquals("http://uri.suomi.fi/datamodel/ns/newTest/newId", uri.toString());
+            assertEquals(targetURI.getResourceURI(), uri.toString());
         }
         verify(coreRepository).resourceExistsInGraph(anyString(), anyString());
         verify(coreRepository).resourceExistsInGraph(anyString(), anyString(), eq(false));
@@ -260,23 +266,25 @@ class ResourceServiceTest {
 
     @Test
     void failCopyPropertyShapeModelType() {
+        var sourceURI = DataModelURI.createResourceURI("test", "Identifier");
+        var targetURI = DataModelURI.createResourceURI("newTest", "newId");
         //Only one is application profile
-        when(coreRepository.resourceExistsInGraph("http://uri.suomi.fi/datamodel/ns/test", "http://uri.suomi.fi/datamodel/ns/test/Identifier")).thenReturn(true);
+        when(coreRepository.resourceExistsInGraph(sourceURI.getGraphURI(), sourceURI.getResourceURI())).thenReturn(true);
         var m = ModelFactory.createDefaultModel();
-        m.createResource("http://uri.suomi.fi/datamodel/ns/test")
+        m.createResource(sourceURI.getModelURI())
                 .addProperty(RDF.type, OWL.Ontology);
-        m.createResource("http://uri.suomi.fi/datamodel/ns/newTest")
+        m.createResource(targetURI.getModelURI())
                 .addProperty(RDF.type, OWL.Ontology)
                 .addProperty(RDF.type, Iow.ApplicationProfile);
         when(coreRepository.fetch(anyString())).thenReturn(m);
-        var error = assertThrows(MappingError.class, () ->resourceService.copyPropertyShape("test", "Identifier", "newTest", "newId"));
+        var error = assertThrows(MappingError.class, () -> resourceService.copyPropertyShape("test", "Identifier", "newTest", "newId"));
         assertEquals("Error during mapping: Both data models have to be application profiles", error.getMessage());
 
         //Both are libraries
         m = ModelFactory.createDefaultModel();
-        m.createResource("http://uri.suomi.fi/datamodel/ns/test")
+        m.createResource(sourceURI.getModelURI())
                 .addProperty(RDF.type, OWL.Ontology);
-        m.createResource("http://uri.suomi.fi/datamodel/ns/newTest")
+        m.createResource(targetURI.getModelURI())
                 .addProperty(RDF.type, OWL.Ontology);
         when(coreRepository.fetch(anyString())).thenReturn(m);
         error = assertThrows(MappingError.class, () ->resourceService.copyPropertyShape("test", "Identifier", "newTest", "newId"));
@@ -340,42 +348,42 @@ class ResourceServiceTest {
     @Test
     void testRenameResource() throws URISyntaxException {
         var model = ModelFactory.createDefaultModel();
-        var modelURI = ModelConstants.SUOMI_FI_NAMESPACE + "test";
-        model.createResource(modelURI + "/resource-1")
+        var uri = DataModelURI.createResourceURI("test", "resource-1");
+        model.createResource(uri.getResourceURI())
                 .addProperty(DCTerms.identifier, "resource-1")
                 .addProperty(SuomiMeta.publicationStatus, Status.DRAFT.name())
                 .addProperty(DCTerms.created, "created")
                 .addProperty(DCTerms.modified, "modified");
-        model.createResource(modelURI + "/resource-2")
+        model.createResource(uri.getModelURI() + "resource-2")
                 .addProperty(DCTerms.identifier, "resource-2")
-                .addProperty(RDFS.subPropertyOf, ResourceFactory.createResource(modelURI + "/resource-1"));
+                .addProperty(RDFS.subPropertyOf, ResourceFactory.createResource(uri.getResourceURI()));
 
-        var newClassURI = modelURI + "/resource-1-new";
+        var newClassURI = uri.getModelURI() + "resource-1-new";
 
         when(authorizationManager.hasRightToModel(anyString(), any(Model.class))).thenReturn(true);
-        when(coreRepository.fetch(modelURI)).thenReturn(model);
-        when(coreRepository.resourceExistsInGraph(modelURI, modelURI + "/resource-1")).thenReturn(true);
-        when(coreRepository.resourceExistsInGraph(modelURI, newClassURI)).thenReturn(false);
+        when(coreRepository.fetch(uri.getGraphURI())).thenReturn(model);
+        when(coreRepository.resourceExistsInGraph(uri.getGraphURI(), uri.getResourceURI())).thenReturn(true);
+        when(coreRepository.resourceExistsInGraph(uri.getGraphURI(), newClassURI)).thenReturn(false);
 
         resourceService.renameResource("test", "resource-1", "resource-1-new");
 
         ArgumentCaptor<IndexResource> indexCaptor = ArgumentCaptor.forClass(IndexResource.class);
-        verify(openSearchIndexer).deleteResourceFromIndex(modelURI + "/resource-1");
+        verify(openSearchIndexer).deleteResourceFromIndex(uri.getResourceURI());
         verify(openSearchIndexer).createResourceToIndex(indexCaptor.capture());
 
         var renamed = model.getResource(newClassURI);
 
         assertEquals(newClassURI, renamed.getURI());
-        assertEquals(newClassURI, model.getResource(modelURI + "/resource-2").getProperty(RDFS.subPropertyOf).getObject().toString());
+        assertEquals(newClassURI, model.getResource(uri.getModelURI() + "resource-2").getProperty(RDFS.subPropertyOf).getObject().toString());
         assertEquals("resource-1-new", indexCaptor.getValue().getIdentifier());
     }
 
     @Test
     void testRenameResourceExists() {
-        var modelURI = ModelConstants.SUOMI_FI_NAMESPACE + "test";
+        var uri = DataModelURI.createResourceURI("test", "resource-1");
 
-        when(coreRepository.resourceExistsInGraph(modelURI, modelURI + "/resource-1")).thenReturn(true);
-        when(coreRepository.resourceExistsInGraph(modelURI, modelURI + "/foo")).thenReturn(true);
+        when(coreRepository.resourceExistsInGraph(uri.getGraphURI(), uri.getResourceURI())).thenReturn(true);
+        when(coreRepository.resourceExistsInGraph(uri.getGraphURI(), uri.getModelURI() + "foo")).thenReturn(true);
 
         assertThrows(MappingError.class, () -> resourceService.renameResource("test", "resource-1", "foo"));
     }
