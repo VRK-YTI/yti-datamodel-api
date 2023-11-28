@@ -12,8 +12,10 @@ import fi.vm.yti.datamodel.api.v2.properties.Iow;
 import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import fi.vm.yti.datamodel.api.v2.repository.ImportsRepository;
+import fi.vm.yti.datamodel.api.v2.service.AuditService;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelUtils;
 import fi.vm.yti.datamodel.api.v2.utils.SparqlUtils;
+import fi.vm.yti.security.AuthenticatedUserProvider;
 import org.apache.jena.arq.querybuilder.ConstructBuilder;
 import org.apache.jena.arq.querybuilder.ExprFactory;
 import org.apache.jena.arq.querybuilder.SelectBuilder;
@@ -45,6 +47,8 @@ import static fi.vm.yti.security.AuthorizationException.check;
 @Service
 public class OpenSearchIndexer {
 
+    private final AuditService auditService = new AuditService("INDEX");
+
     public static final String OPEN_SEARCH_INDEX_MODEL = "models_v2";
     public static final String OPEN_SEARCH_INDEX_RESOURCE = "resources_v2";
     public static final String OPEN_SEARCH_INDEX_EXTERNAL = "external_v2";
@@ -55,6 +59,7 @@ public class OpenSearchIndexer {
     private final CoreRepository coreRepository;
     private final ImportsRepository importsRepository;
     private final AuthorizationManager authorizationManager;
+    private final AuthenticatedUserProvider userProvider;
     private final ModelMapper modelMapper;
     private final OpenSearchClient client;
 
@@ -62,12 +67,13 @@ public class OpenSearchIndexer {
                              CoreRepository coreRepository,
                              ImportsRepository importsRepository,
                              AuthorizationManager authorizationManager,
-                             ModelMapper modelMapper,
+                             AuthenticatedUserProvider userProvider, ModelMapper modelMapper,
                              OpenSearchClient client) {
         this.openSearchConnector = openSearchConnector;
         this.coreRepository = coreRepository;
         this.importsRepository = importsRepository;
         this.authorizationManager = authorizationManager;
+        this.userProvider = userProvider;
         this.modelMapper = modelMapper;
         this.client = client;
     }
@@ -92,14 +98,15 @@ public class OpenSearchIndexer {
         check(authorizationManager.hasRightToDropDatabase());
         if(index == null){
             reindexAll();
+            auditService.log(AuditService.ActionType.UPDATE, "all_indexes", userProvider.getUser());
             return;
         }
         switch (index){
-            case OpenSearchIndexer.OPEN_SEARCH_INDEX_EXTERNAL -> initExternalResourceIndex();
             case OpenSearchIndexer.OPEN_SEARCH_INDEX_MODEL -> initModelIndex();
             case OpenSearchIndexer.OPEN_SEARCH_INDEX_RESOURCE -> initResourceIndex();
             default -> throw new IllegalArgumentException("Given value not allowed");
         }
+        auditService.log(AuditService.ActionType.UPDATE, index, userProvider.getUser());
     }
 
     public void reindexAll() {

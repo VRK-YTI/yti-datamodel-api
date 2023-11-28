@@ -9,7 +9,9 @@ import fi.vm.yti.datamodel.api.v2.dto.visualization.VisualizationNodeDTO;
 import fi.vm.yti.datamodel.api.v2.dto.visualization.VisualizationNodeType;
 import fi.vm.yti.datamodel.api.v2.properties.Iow;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
+import fi.vm.yti.security.AuthenticatedUserProvider;
 import fi.vm.yti.security.AuthorizationException;
+import fi.vm.yti.security.YtiUser;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.vocabulary.DCTerms;
@@ -44,6 +46,8 @@ class VisualizationServiceTest {
     private CoreRepository coreRepository;
     @MockBean
     private AuthorizationManager authorizationManager;
+    @MockBean
+    private AuthenticatedUserProvider userProvider;
     @Captor
     private ArgumentCaptor<Model> modelCaptor;
 
@@ -94,6 +98,7 @@ class VisualizationServiceTest {
         when(coreRepository.fetch(ModelConstants.MODEL_POSITIONS_NAMESPACE + "visuprof")).thenReturn(positionModel);
         when(resourceService.findResources(anySet(), anySet())).thenReturn(externalPropertiesModel);
 
+
         var visualizationData = visualizationService.getVisualizationData("visuprof", null);
 
         assertEquals(3, visualizationData.getNodes().size());
@@ -126,6 +131,7 @@ class VisualizationServiceTest {
         when(coreRepository.graphExists(graphURI)).thenReturn(true);
         when(coreRepository.fetch(anyString())).thenReturn(ModelFactory.createDefaultModel());
         when(authorizationManager.hasRightToModel(anyString(), any(Model.class))).thenReturn(true);
+        when(userProvider.getUser()).thenReturn(YtiUser.ANONYMOUS_USER);
 
         var positionData = new PositionDataDTO();
         positionData.setX(1.0);
@@ -147,6 +153,7 @@ class VisualizationServiceTest {
         when(coreRepository.graphExists(graphURI)).thenReturn(true);
         when(coreRepository.fetch(anyString())).thenReturn(ModelFactory.createDefaultModel());
         when(authorizationManager.hasRightToModel(anyString(), any(Model.class))).thenReturn(true);
+        when(userProvider.getUser()).thenReturn(YtiUser.ANONYMOUS_USER);
 
         var positionData = new PositionDataDTO();
         positionData.setX(1.0);

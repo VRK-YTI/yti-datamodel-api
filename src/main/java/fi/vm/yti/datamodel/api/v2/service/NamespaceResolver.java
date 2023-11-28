@@ -24,6 +24,7 @@ import static fi.vm.yti.security.AuthorizationException.check;
 @Service
 public class NamespaceResolver {
 
+    private final AuditService auditService = new AuditService("NAMESPACE");
     private final Logger logger = LoggerFactory.getLogger(NamespaceResolver.class);
 
     private final ImportsRepository importsRepository;
@@ -40,6 +41,7 @@ public class NamespaceResolver {
 
     public boolean resolve(String namespace, boolean force) {
         check(!userProvider.getUser().getOrganizations(Role.DATA_MODEL_EDITOR, Role.ADMIN).isEmpty());
+        auditService.log(AuditService.ActionType.UPDATE, namespace, userProvider.getUser());
         if(!force && namespaceAlreadyResolved(namespace)){
             throw new ResolvingException("Already resolved", "Use force parameter to force resolving");
         }

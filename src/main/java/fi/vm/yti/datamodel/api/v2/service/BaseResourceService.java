@@ -12,6 +12,7 @@ import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import fi.vm.yti.datamodel.api.v2.repository.ImportsRepository;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelUtils;
 import fi.vm.yti.datamodel.api.v2.utils.SparqlUtils;
+import fi.vm.yti.security.AuthenticatedUserProvider;
 import org.apache.jena.arq.querybuilder.AskBuilder;
 import org.apache.jena.arq.querybuilder.ConstructBuilder;
 import org.apache.jena.arq.querybuilder.SelectBuilder;
@@ -38,19 +39,26 @@ import static fi.vm.yti.security.AuthorizationException.check;
 
 abstract class BaseResourceService {
 
+    private final AuditService auditService;
+
     private final CoreRepository coreRepository;
     private final ImportsRepository importsRepository;
     private final AuthorizationManager authorizationManager;
+    private final AuthenticatedUserProvider userProvider;
     private final OpenSearchIndexer openSearchIndexer;
 
     BaseResourceService(CoreRepository coreRepository,
                         ImportsRepository importsRepository,
                         AuthorizationManager authorizationManager,
-                        OpenSearchIndexer openSearchIndexer) {
+                        OpenSearchIndexer openSearchIndexer,
+                        AuditService auditService,
+                        AuthenticatedUserProvider userProvider) {
         this.coreRepository = coreRepository;
         this.importsRepository = importsRepository;
         this.authorizationManager = authorizationManager;
         this.openSearchIndexer = openSearchIndexer;
+        this.auditService = auditService;
+        this.userProvider = userProvider;
     }
 
 
@@ -82,6 +90,7 @@ abstract class BaseResourceService {
         check(authorizationManager.hasRightToModel(prefix, model));
         coreRepository.deleteResource(resourceUri);
         openSearchIndexer.deleteResourceFromIndex(resourceUri);
+        auditService.log(AuditService.ActionType.DELETE, resourceUri, userProvider.getUser());
     }
 
     public boolean exists(String prefix, String identifier) {
@@ -126,7 +135,7 @@ abstract class BaseResourceService {
 
         openSearchIndexer.deleteResourceFromIndex(resourceURI);
         openSearchIndexer.createResourceToIndex(ResourceMapper.mapToIndexResource(model, newResourceURI));
-
+        auditService.log(AuditService.ActionType.UPDATE, resourceURI, userProvider.getUser());
         return new URI(newResource.getURI());
     }
 

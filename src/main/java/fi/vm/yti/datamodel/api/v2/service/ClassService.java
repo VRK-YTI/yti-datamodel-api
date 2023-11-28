@@ -22,13 +22,10 @@ import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.rdf.model.SimpleSelector;
 import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDFS;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.topbraid.shacl.vocabulary.SH;
 
-import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashSet;
@@ -43,8 +40,8 @@ import static fi.vm.yti.security.AuthorizationException.check;
 @Service
 public class ClassService extends BaseResourceService {
 
-    private final Logger logger = LoggerFactory.getLogger(ClassService.class);
-
+    private static final AuditService AUDIT_SERVICE = new AuditService("CLASS");
+    
     private final CoreRepository coreRepository;
     private final ImportsRepository importsRepository;
     private final AuthorizationManager authorizationManager;
@@ -65,7 +62,7 @@ public class ClassService extends BaseResourceService {
                         OpenSearchIndexer openSearchIndexer,
                         SearchIndexService searchIndexService,
                         VisualizationService visualizationService) {
-        super(coreRepository, importsRepository, authorizationManager, openSearchIndexer);
+        super(coreRepository, importsRepository, authorizationManager, openSearchIndexer, AUDIT_SERVICE, userProvider);
         this.coreRepository = coreRepository;
         this.importsRepository = importsRepository;
         this.authorizationManager = authorizationManager;
@@ -146,7 +143,7 @@ public class ClassService extends BaseResourceService {
         return dto;
     }
 
-    public List<IndexResourceInfo> getNodeShapes(String targetClass) throws IOException {
+    public List<IndexResourceInfo> getNodeShapes(String targetClass) {
         var request = new ResourceSearchRequest();
         request.setStatus(Set.of(Status.VALID, Status.SUGGESTED));
         request.setTargetClass(targetClass);
@@ -178,6 +175,7 @@ public class ClassService extends BaseResourceService {
 
         saveResource(model, modelUri, classUri, false);
         visualizationService.addNewResourceDefaultPosition(prefix, dto.getIdentifier());
+        AUDIT_SERVICE.log(AuditService.ActionType.CREATE, classUri, userProvider.getUser());
         return new URI(classUri);
     }
 
@@ -200,8 +198,6 @@ public class ClassService extends BaseResourceService {
     }
 
     public void update(String prefix, String classIdentifier, BaseDTO dto) {
-        logger.info("Updating class {}", classIdentifier);
-
         var graph = ModelConstants.SUOMI_FI_NAMESPACE + prefix;
         var classURI = graph + ModelConstants.RESOURCE_SEPARATOR + classIdentifier;
         if(!coreRepository.resourceExistsInGraph(graph, classURI)){
@@ -260,6 +256,7 @@ public class ClassService extends BaseResourceService {
         }
 
         saveResource(model, graph, classURI, true);
+        AUDIT_SERVICE.log(AuditService.ActionType.UPDATE, classURI, userProvider.getUser());
     }
 
     private Set<String> getTargetNodeProperties(String targetNode, Set<String> graphsIncluded) {
@@ -342,6 +339,7 @@ public class ClassService extends BaseResourceService {
         }else {
             ClassMapper.mapAppendNodeShapeProperty(classResource, uri, existingProperties);
         }
+        AUDIT_SERVICE.log(AuditService.ActionType.UPDATE, classURI, userProvider.getUser());
         coreRepository.put(modelURI, model);
     }
 
@@ -388,6 +386,8 @@ public class ClassService extends BaseResourceService {
             ClassMapper.mapUpdateClassRestrictionProperty(model, classResource, restrictionURI, currentTarget, newTarget, resourceType);
         }
         coreRepository.put(modelURI, model);
+        AUDIT_SERVICE.log(AuditService.ActionType.UPDATE, classURI, userProvider.getUser());
+
     }
 
     public void handleAddClassRestrictionReference(String prefix, String classIdentifier, String uri) {
@@ -412,6 +412,7 @@ public class ClassService extends BaseResourceService {
 
         ClassMapper.mapClassRestrictionProperty(model, classResource, propertyResource);
         coreRepository.put(modelURI, model);
+        AUDIT_SERVICE.log(AuditService.ActionType.UPDATE, classURI, userProvider.getUser());
     }
 
     public void togglePropertyShape(String prefix, String propertyUri) {
@@ -430,6 +431,7 @@ public class ClassService extends BaseResourceService {
         check(authorizationManager.hasRightToModel(prefix, model));
         ClassMapper.toggleAndMapDeactivatedProperty(model, propertyUri, externalExists);
         coreRepository.put(modelURI, model);
+        AUDIT_SERVICE.log(AuditService.ActionType.UPDATE, propertyUri, userProvider.getUser());
     }
 
 }
