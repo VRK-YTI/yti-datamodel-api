@@ -18,8 +18,8 @@
         dcterms:identifier              "d2edb497-ba0b-49c9-aeb7-49749d836434" ;
         dcterms:isPartOf                <http://urn.fi/URN:NBN:fi:au:ptvl:v1105> ;
         dcterms:language                "fi" ;
-        owl:imports                     <https://iri.suomi.fi/model/int> ;
-        dcterms:requires                <https://www.example.com/ns/ext>, <http://uri.suomi.fi/terminology/test> , owl: ;
+        owl:imports                     <https://iri.suomi.fi/model/int/> ;
+        dcterms:requires                <https://www.example.com/ns/ext/>, <http://uri.suomi.fi/terminology/test> , owl: ;
         dcterms:modified                "2023-01-03T12:44:45.799Z"^^xsd:dateTime ;
         dcap:preferredXMLNamespaceName  "https://iri.suomi.fi/model/test" ;
         dcap:preferredXMLNamespacePrefix
@@ -37,7 +37,7 @@
                                         ] ;
         owl:priorVersion                "https://iri.suomi.fi/model/test/1.0.0/" .
 
-<https://www.example.com/ns/ext>
+<https://www.example.com/ns/ext/>
         dcterms:type                        rdfs:Resource ;
         rdfs:label                          "test resource"@fi;
         dcap:preferredXMLNamespacePrefix    "extres" .

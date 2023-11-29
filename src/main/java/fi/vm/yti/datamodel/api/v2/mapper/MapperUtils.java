@@ -433,7 +433,16 @@ public class MapperUtils {
         if (resource.hasProperty(RDFS.label)) {
             label = localizedPropertyToMap(resource, RDFS.label);
         }
-        return new UriDTO(uri, u.getCurie(model.getGraph().getPrefixMapping()), label);
+
+        // if resource is part of the model, add version information to URI (if not draft version)
+        if (resource.listProperties().hasNext()
+                && model.getResource(u.getModelURI()).hasProperty(OWL2.versionInfo)) {
+            u = DataModelURI.createResourceURI(u.getModelId(),
+                    u.getResourceId(),
+                    propertyToString(model.getResource(u.getModelURI()), OWL2.versionInfo));
+        }
+
+        return new UriDTO(u.getResourceVersionURI(), u.getCurie(model.getGraph().getPrefixMapping()), label);
     }
 
     public static Set<UriDTO> uriToURIDTOs(Collection<String> uris, Model model) {

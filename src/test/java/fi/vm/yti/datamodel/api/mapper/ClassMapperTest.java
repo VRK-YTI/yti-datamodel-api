@@ -124,7 +124,7 @@ class ClassMapperTest {
         assertEquals("2023-02-03T11:46:36.404Z", dto.getCreated());
         assertEquals("Yhteentoimivuusalustan yllapito", dto.getContributor().stream().findFirst().orElseThrow().getLabel().get("fi"));
         assertEquals(MapperTestUtils.TEST_ORG_ID.toString(), dto.getContributor().stream().findFirst().orElseThrow().getId());
-        assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "test/TestClass", dto.getUri());
+        assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "test/1.0.1/TestClass", dto.getUri());
     }
 
     @Test
