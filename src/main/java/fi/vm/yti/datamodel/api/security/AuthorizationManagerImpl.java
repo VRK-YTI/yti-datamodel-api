@@ -1,6 +1,6 @@
 package fi.vm.yti.datamodel.api.security;
 
-import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
+import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
 import fi.vm.yti.security.AuthenticatedUserProvider;
 import fi.vm.yti.security.YtiUser;
 import org.apache.jena.iri.IRI;
@@ -33,7 +33,7 @@ public class AuthorizationManagerImpl implements AuthorizationManager {
     }
 
     public boolean hasRightToModel(String prefix, Model model){
-        var oldRes = model.getResource(ModelConstants.SUOMI_FI_NAMESPACE + prefix);
+        var oldRes = model.getResource(DataModelURI.createModelURI(prefix).getModelURI());
         var organizations = oldRes.listProperties(DCTerms.contributor).toList().stream().map(prop -> {
             var orgUri = prop.getObject().toString();
             return UUID.fromString(
