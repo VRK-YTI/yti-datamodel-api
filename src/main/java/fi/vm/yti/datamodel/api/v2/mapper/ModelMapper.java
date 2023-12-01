@@ -16,8 +16,6 @@ import org.apache.jena.datatypes.xsd.XSDDateTime;
 import org.apache.jena.rdf.model.*;
 import org.apache.jena.sparql.vocabulary.FOAF;
 import org.apache.jena.vocabulary.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -27,8 +25,6 @@ import java.util.stream.Collectors;
 
 @Service
 public class ModelMapper {
-
-    private final Logger log = LoggerFactory.getLogger(ModelMapper.class);
 
     private final CoreRepository coreRepository;
     private final ConceptRepository conceptRepository;
@@ -52,7 +48,6 @@ public class ModelMapper {
      * @return Model
      */
     public Model mapToJenaModel(DataModelDTO modelDTO, ModelType modelType, YtiUser user) {
-        log.info("Mapping DatamodelDTO to Jena Model");
         var model = ModelFactory.createDefaultModel();
         var modelUri = DataModelURI.createModelURI(modelDTO.getPrefix()).getModelURI();
 
@@ -416,8 +411,8 @@ public class ModelMapper {
         var res = model.getResource(uri.getModelURI());
         res.addProperty(OWL2.versionIRI, ResourceFactory.createResource(uri.getGraphURI()));
         res.addProperty(OWL.versionInfo, uri.getVersion());
-        MapperUtils.updateStringProperty(res, SuomiMeta.publicationStatus, status.name());
-        //prior version doesn't need to be mapped since it should always be already on the DRAFT model
+        model.listSubjectsWithProperty(SuomiMeta.publicationStatus).forEach(subject -> MapperUtils.updateStringProperty(subject, SuomiMeta.publicationStatus, status.name()));
+
     }
 
     public void mapPriorVersion(Model model, String modelUri, String priorVersionUri) {
@@ -475,7 +470,8 @@ public class ModelMapper {
             throw new MappingError("Cannot change status from SUGGESTED to " + dto.getStatus());
         }
 
-        MapperUtils.updateStringProperty(resource, SuomiMeta.publicationStatus, dto.getStatus().name());
+        model.listSubjectsWithProperty(SuomiMeta.publicationStatus).forEach(subject -> MapperUtils.updateStringProperty(subject, SuomiMeta.publicationStatus, dto.getStatus().name()));
+
         updateCommonMetaData(model, resource, dto, user);
     }
 }

@@ -32,7 +32,6 @@ public class PropertyShapeValidator extends BaseValidator implements ConstraintV
 
         checkLabel(context, value);
         checkEditorialNote(context, value);
-        checkStatus(context, value.getStatus());
         checkNote(context, value);
         checkIdentifier(context, value.getIdentifier(), updateProperty);
         checkPath(context, value);

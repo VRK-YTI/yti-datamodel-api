@@ -41,7 +41,6 @@ class ClassMapperTest {
         dto.setSubClassOf(Set.of("https://www.example.com/ns/ext/SubClass"));
         dto.setEditorialNote("comment");
         dto.setLabel(Map.of("fi", "test label"));
-        dto.setStatus(Status.DRAFT);
         dto.setNote(Map.of("fi", "test note"));
 
         ClassMapper.createOntologyClassAndMapToModel(uri, m, dto, mockUser);
@@ -60,7 +59,7 @@ class ClassMapperTest {
         assertEquals("fi", classResource.getProperty(RDFS.label).getLiteral().getLanguage());
 
         assertEquals(OWL.Class, classResource.getProperty(RDF.type).getResource());
-        assertEquals(Status.DRAFT, Status.valueOf(MapperUtils.propertyToString(classResource, SuomiMeta.publicationStatus)));
+        assertEquals(Status.VALID, Status.valueOf(MapperUtils.propertyToString(classResource, SuomiMeta.publicationStatus)));
         assertEquals(uri.getModelURI(), classResource.getProperty(RDFS.isDefinedBy).getObject().toString());
 
         assertEquals(XSDDatatype.XSDNCName, classResource.getProperty(DCTerms.identifier).getLiteral().getDatatype());
@@ -84,7 +83,6 @@ class ClassMapperTest {
 
         ClassDTO dto = new ClassDTO();
         dto.setSubClassOf(Collections.emptySet());
-        dto.setStatus(Status.VALID);
         dto.setIdentifier("Identifier");
 
         var uri = DataModelURI.createResourceURI("test", dto.getIdentifier());
@@ -180,7 +178,6 @@ class ClassMapperTest {
 
         var dto = new ClassDTO();
         dto.setLabel(Map.of("fi", "new label"));
-        dto.setStatus(Status.RETIRED);
         dto.setNote(Map.of("fi", "new note"));
         dto.setEquivalentClass(Set.of(ModelConstants.SUOMI_FI_NAMESPACE + "int/NewEq"));
         dto.setSubClassOf(Set.of("https://www.example.com/ns/ext/NewSub"));
@@ -197,7 +194,6 @@ class ClassMapperTest {
                 .filterDrop(p -> p.getObject().isAnon())
                 .next().getObject().toString());
         assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "test/SubClass", resource.getProperty(RDFS.subClassOf).getObject().toString());
-        assertEquals(Status.VALID, Status.valueOf(MapperUtils.propertyToString(resource, SuomiMeta.publicationStatus)));
         assertEquals("comment visible for admin", resource.getProperty(SKOS.editorialNote).getObject().toString());
         assertEquals(2, resource.listProperties(RDFS.comment).toList().size());
 
@@ -213,7 +209,6 @@ class ClassMapperTest {
                 .filterDrop(p -> p.getObject().isAnon())
                 .next().getObject().toString());
         assertEquals("https://www.example.com/ns/ext/NewSub", resource.getProperty(RDFS.subClassOf).getObject().toString());
-        assertEquals(Status.RETIRED, Status.valueOf(MapperUtils.propertyToString(resource, SuomiMeta.publicationStatus)));
         assertEquals("new editorial note", resource.getProperty(SKOS.editorialNote).getObject().toString());
         assertEquals(1, resource.listProperties(RDFS.comment).toList().size());
         assertEquals("new note", resource.getProperty(RDFS.comment).getLiteral().getString());
@@ -434,10 +429,10 @@ class ClassMapperTest {
         var uri = DataModelURI.createResourceURI("test", "class-1");
 
         model.createResource(uri.getModelURI())
-                .addProperty(RDF.type, OWL.Ontology);
+                .addProperty(RDF.type, OWL.Ontology)
+                .addProperty(SuomiMeta.publicationStatus, Status.DRAFT.name());
 
         var dto = new ClassDTO();
-        dto.setStatus(Status.DRAFT);
         dto.setIdentifier(uri.getResourceId());
         dto.setSubClassOf(Set.of(
                 ModelConstants.SUOMI_FI_NAMESPACE + "ns-int-1/sub",
@@ -465,10 +460,10 @@ class ClassMapperTest {
         var uri = DataModelURI.createModelURI("test");
 
         model.createResource(uri.getModelURI())
-                .addProperty(RDF.type, OWL.Ontology);
+                .addProperty(RDF.type, OWL.Ontology)
+                .addProperty(SuomiMeta.publicationStatus, Status.DRAFT.name());
 
         var classDTO = new ClassDTO();
-        classDTO.setStatus(Status.DRAFT);
         classDTO.setIdentifier("class-1");
         classDTO.setSubject(ModelConstants.TERMINOLOGY_NAMESPACE + "test-terminology/concept-1");
 

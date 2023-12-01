@@ -2,7 +2,6 @@ package fi.vm.yti.datamodel.api.v2.endpoint;
 
 import fi.vm.yti.datamodel.api.v2.dto.ClassDTO;
 import fi.vm.yti.datamodel.api.v2.dto.NodeShapeDTO;
-import fi.vm.yti.datamodel.api.v2.dto.Status;
 import fi.vm.yti.datamodel.api.v2.repository.ImportsRepository;
 import fi.vm.yti.datamodel.api.v2.service.ClassService;
 import fi.vm.yti.datamodel.api.v2.service.ResourceService;
@@ -81,7 +80,6 @@ class ClassControllerTest {
     void shouldValidateAndCreateMinimalClass() throws Exception {
         var classDTO = new ClassDTO();
         classDTO.setIdentifier("Identifier");
-        classDTO.setStatus(Status.DRAFT);
         classDTO.setLabel(Map.of("fi", "test"));
 
        this.mvc
@@ -109,10 +107,6 @@ class ClassControllerTest {
         var textAreaMaxPlus = ValidationConstants.TEXT_AREA_MAX_LENGTH + 20;
 
         var classDTO = createClassDTO(false);
-        classDTO.setStatus(null);
-        args.add(classDTO);
-
-        classDTO = createClassDTO(false);
         classDTO.setLabel(Map.of("fi", RandomStringUtils.random(textAreaMaxPlus)));
         args.add(classDTO);
 
@@ -239,7 +233,6 @@ class ClassControllerTest {
         if(!update){
             dto.setIdentifier("Identifier");
         }
-        dto.setStatus(Status.DRAFT);
         dto.setSubject("http://uri.suomi.fi/terminology/notrealurl");
         dto.setLabel(Map.of("fi", "test label"));
         dto.setEquivalentClass(Set.of("http://uri.suomi.fi/datamodel/ns/notrealns/FakeClass"));
@@ -252,7 +245,6 @@ class ClassControllerTest {
         var dto = new NodeShapeDTO();
         dto.setLabel(Map.of("fi", "node label"));
         dto.setIdentifier("node-shape-1");
-        dto.setStatus(Status.DRAFT);
         dto.setSubject("http://uri.suomi.fi/terminology/concept-123");
 
         return dto;

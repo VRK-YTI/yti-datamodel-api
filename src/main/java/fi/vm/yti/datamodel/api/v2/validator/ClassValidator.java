@@ -29,7 +29,6 @@ public class ClassValidator extends BaseValidator implements
         checkLabel(context, classDTO);
         checkEditorialNote(context, classDTO);
         checkNote(context, classDTO);
-        checkStatus(context, classDTO.getStatus());
         checkClassResolvable(context, classDTO.getEquivalentClass(), "equivalentClass");
         checkClassResolvable(context, classDTO.getSubClassOf(), "subClassOf");
         checkClassResolvable(context, classDTO.getDisjointWith(), "disjointWith");

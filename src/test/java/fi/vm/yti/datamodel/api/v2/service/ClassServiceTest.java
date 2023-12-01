@@ -5,7 +5,6 @@ import fi.vm.yti.datamodel.api.security.AuthorizationManager;
 import fi.vm.yti.datamodel.api.v2.dto.ClassDTO;
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
 import fi.vm.yti.datamodel.api.v2.dto.NodeShapeDTO;
-import fi.vm.yti.datamodel.api.v2.dto.Status;
 import fi.vm.yti.datamodel.api.v2.endpoint.EndpointUtils;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
 import fi.vm.yti.datamodel.api.v2.mapper.ClassMapper;
@@ -370,7 +369,6 @@ class ClassServiceTest {
         if(!update){
             dto.setIdentifier("Identifier");
         }
-        dto.setStatus(Status.DRAFT);
         dto.setSubject("http://uri.suomi.fi/terminology/notrealurl");
         dto.setLabel(Map.of("fi", "test label"));
         dto.setEquivalentClass(Set.of(ModelConstants.SUOMI_FI_NAMESPACE + "notrealns/FakeClass"));
@@ -385,7 +383,6 @@ class ClassServiceTest {
         if(!update){
             dto.setIdentifier("node-shape-1");
         }
-        dto.setStatus(Status.DRAFT);
         dto.setProperties(Set.of());
         dto.setSubject("http://uri.suomi.fi/terminology/concept-123");
 

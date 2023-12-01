@@ -394,7 +394,6 @@ class ResourceServiceTest {
         if(!update){
             dto.setIdentifier("Identifier");
         }
-        dto.setStatus(Status.DRAFT);
         dto.setSubject("sanastot.suomi.fi/notrealurl");
         dto.setLabel(Map.of("fi", "test label"));
         dto.setEquivalentResource(Set.of("http://uri.suomi.fi/datamodel/ns/int/FakeResource"));
@@ -415,7 +414,6 @@ class ResourceServiceTest {
         if(!update) {
             dto.setIdentifier("Identifier");
         }
-        dto.setStatus(Status.DRAFT);
         dto.setSubject("sanastot.suomi.fi/notrealurl");
         dto.setPath("http://uri.suomi.fi/datamodel/ns/int/FakeClass");
         return dto;
@@ -427,7 +425,6 @@ class ResourceServiceTest {
         if(!update) {
             dto.setIdentifier("Identifier");
         }
-        dto.setStatus(Status.DRAFT);
         dto.setSubject("sanastot.suomi.fi/notrealurl");
         dto.setPath("http://uri.suomi.fi/datamodel/ns/int/FakeClass");
         dto.setClassType("http://uri.suomi.fi/datamodel/ns/int/FakeClass");

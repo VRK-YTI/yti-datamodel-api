@@ -41,7 +41,6 @@ class ResourceMapperTest {
         dto.setSubResourceOf(Set.of("https://www.example.com/ns/ext/SubRes"));
         dto.setEditorialNote("comment");
         dto.setLabel(Map.of("fi", "test label"));
-        dto.setStatus(Status.DRAFT);
         dto.setNote(Map.of("fi", "test note"));
         dto.setDomain("http://www.w3.org/2002/07/owl#Class");
         dto.setRange(ModelConstants.SUOMI_FI_NAMESPACE + "test/RangeClass");
@@ -67,7 +66,7 @@ class ResourceMapperTest {
         assertEquals("test label", resourceResource.getProperty(RDFS.label).getLiteral().getString());
         assertEquals("fi", resourceResource.getProperty(RDFS.label).getLiteral().getLanguage());
 
-        assertEquals(Status.DRAFT, Status.valueOf(MapperUtils.propertyToString(resourceResource, SuomiMeta.publicationStatus)));
+        assertEquals(Status.VALID, Status.valueOf(MapperUtils.propertyToString(resourceResource, SuomiMeta.publicationStatus)));
         assertEquals(uri.getModelURI(), resourceResource.getProperty(RDFS.isDefinedBy).getObject().toString());
 
         assertEquals(XSDDatatype.XSDNCName, resourceResource.getProperty(DCTerms.identifier).getLiteral().getDatatype());
@@ -101,7 +100,6 @@ class ResourceMapperTest {
         dto.setEquivalentResource(Set.of(ModelConstants.SUOMI_FI_NAMESPACE + "int/EqRes"));
         dto.setEditorialNote("comment");
         dto.setLabel(Map.of("fi", "test label"));
-        dto.setStatus(Status.DRAFT);
         dto.setNote(Map.of("fi", "test note"));
 
         var uri = DataModelURI.createResourceURI("test", dto.getIdentifier());
@@ -122,7 +120,7 @@ class ResourceMapperTest {
         assertEquals("test label", resourceResource.getProperty(RDFS.label).getLiteral().getString());
         assertEquals("fi", resourceResource.getProperty(RDFS.label).getLiteral().getLanguage());
 
-        assertEquals(Status.DRAFT, Status.valueOf(MapperUtils.propertyToString(resourceResource, SuomiMeta.publicationStatus)));
+        assertEquals(Status.VALID, Status.valueOf(MapperUtils.propertyToString(resourceResource, SuomiMeta.publicationStatus)));
         assertEquals(uri.getModelURI(), resourceResource.getProperty(RDFS.isDefinedBy).getObject().toString());
 
         assertEquals(XSDDatatype.XSDNCName, resourceResource.getProperty(DCTerms.identifier).getLiteral().getDatatype());
@@ -147,7 +145,6 @@ class ResourceMapperTest {
         dto.setEquivalentResource(Set.of(ModelConstants.SUOMI_FI_NAMESPACE + "int/EqRes"));
         dto.setEditorialNote("comment");
         dto.setLabel(Map.of("fi", "test label"));
-        dto.setStatus(Status.DRAFT);
         dto.setNote(Map.of("fi", "test note"));
 
         var uri = DataModelURI.createResourceURI("test", dto.getIdentifier());
@@ -168,7 +165,7 @@ class ResourceMapperTest {
         assertEquals("test label", resourceResource.getProperty(RDFS.label).getLiteral().getString());
         assertEquals("fi", resourceResource.getProperty(RDFS.label).getLiteral().getLanguage());
 
-        assertEquals(Status.DRAFT, Status.valueOf(MapperUtils.propertyToString(resourceResource, SuomiMeta.publicationStatus)));
+        assertEquals(Status.VALID, Status.valueOf(MapperUtils.propertyToString(resourceResource, SuomiMeta.publicationStatus)));
         assertEquals(uri.getModelURI(), resourceResource.getProperty(RDFS.isDefinedBy).getObject().toString());
 
         assertEquals(XSDDatatype.XSDNCName, resourceResource.getProperty(DCTerms.identifier).getLiteral().getDatatype());
@@ -194,7 +191,6 @@ class ResourceMapperTest {
         dto.setSubResourceOf(Set.of("https://www.example.com/ns/ext/SubRes"));
         dto.setEditorialNote("comment");
         dto.setLabel(Map.of("fi", "test label"));
-        dto.setStatus(Status.DRAFT);
         dto.setNote(Map.of("fi", "test note"));
         dto.setDomain("http://www.w3.org/2002/07/owl#Class");
         dto.setRange(ModelConstants.SUOMI_FI_NAMESPACE + "test/RangeClass");
@@ -218,7 +214,7 @@ class ResourceMapperTest {
         assertEquals("test label", resourceResource.getProperty(RDFS.label).getLiteral().getString());
         assertEquals("fi", resourceResource.getProperty(RDFS.label).getLiteral().getLanguage());
 
-        assertEquals(Status.DRAFT, Status.valueOf(MapperUtils.propertyToString(resourceResource, SuomiMeta.publicationStatus)));
+        assertEquals(Status.VALID, Status.valueOf(MapperUtils.propertyToString(resourceResource, SuomiMeta.publicationStatus)));
         assertEquals(uri.getModelURI(), resourceResource.getProperty(RDFS.isDefinedBy).getObject().toString());
 
         assertEquals(XSDDatatype.XSDNCName, resourceResource.getProperty(DCTerms.identifier).getLiteral().getDatatype());
@@ -514,7 +510,6 @@ class ResourceMapperTest {
 
         var dto = new ResourceDTO();
         dto.setLabel(Map.of("fi", "new label"));
-        dto.setStatus(Status.RETIRED);
         dto.setNote(Map.of("fi", "new note"));
         dto.setEquivalentResource(Set.of(ModelConstants.SUOMI_FI_NAMESPACE + "int/NewEq"));
         dto.setSubResourceOf(Set.of("https://www.example.com/ns/ext/NewSub"));
@@ -549,7 +544,6 @@ class ResourceMapperTest {
         assertEquals("http://uri.suomi.fi/terminology/qwe", resource.getProperty(DCTerms.subject).getObject().toString());
         assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "int/NewEq", resource.getProperty(OWL.equivalentProperty).getObject().toString());
         assertEquals("https://www.example.com/ns/ext/NewSub", resource.getProperty(RDFS.subPropertyOf).getObject().toString());
-        assertEquals(Status.RETIRED, Status.valueOf(MapperUtils.propertyToString(resource, SuomiMeta.publicationStatus)));
         assertEquals("new editorial note", resource.getProperty(SKOS.editorialNote).getObject().toString());
         assertEquals(1, resource.listProperties(RDFS.comment).toList().size());
         assertEquals("new note", resource.getProperty(RDFS.comment).getLiteral().getString());
@@ -569,7 +563,6 @@ class ResourceMapperTest {
 
         var dto = new ResourceDTO();
         dto.setLabel(Map.of("fi", "new label"));
-        dto.setStatus(Status.RETIRED);
         dto.setNote(Map.of("fi", "new note"));
         dto.setEquivalentResource(Set.of(ModelConstants.SUOMI_FI_NAMESPACE + "int/NewEq"));
         dto.setSubResourceOf(Set.of("https://www.example.com/ns/ext/NewSub"));
@@ -608,7 +601,6 @@ class ResourceMapperTest {
         assertEquals("http://uri.suomi.fi/terminology/qwe", resource.getProperty(DCTerms.subject).getObject().toString());
         assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "int/NewEq", resource.getProperty(OWL.equivalentProperty).getObject().toString());
         assertEquals("https://www.example.com/ns/ext/NewSub", resource.getProperty(RDFS.subPropertyOf).getObject().toString());
-        assertEquals(Status.RETIRED, Status.valueOf(MapperUtils.propertyToString(resource, SuomiMeta.publicationStatus)));
         assertEquals("new editorial note", resource.getProperty(SKOS.editorialNote).getObject().toString());
         assertEquals(1, resource.listProperties(RDFS.comment).toList().size());
         assertEquals("new note", resource.getProperty(RDFS.comment).getLiteral().getString());
@@ -788,10 +780,11 @@ class ResourceMapperTest {
         var model = ModelFactory.createDefaultModel();
         var uri = DataModelURI.createResourceURI("test-library", "attr-1");
         model.createResource(uri.getModelURI())
-                .addProperty(RDF.type, OWL.Ontology);
+                .addProperty(RDF.type, OWL.Ontology)
+                .addProperty(SuomiMeta.publicationStatus, Status.DRAFT.name());
+
 
         var attrDTO = new ResourceDTO();
-        attrDTO.setStatus(Status.DRAFT);
         attrDTO.setIdentifier("attr-1");
         attrDTO.setSubResourceOf(Set.of(ModelConstants.SUOMI_FI_NAMESPACE + "ns-int-1/sub"));
         attrDTO.setEquivalentResource(Set.of(ModelConstants.SUOMI_FI_NAMESPACE + "ns-int-2/eq"));
@@ -808,10 +801,10 @@ class ResourceMapperTest {
         var uri = DataModelURI.createResourceURI("test-profile", "ps-1");
 
         model.createResource(uri.getModelURI())
-                .addProperty(RDF.type, Iow.ApplicationProfile);
+                .addProperty(RDF.type, Iow.ApplicationProfile)
+                .addProperty(SuomiMeta.publicationStatus, Status.DRAFT.name());
 
         var propertyShape = new AssociationRestriction();
-        propertyShape.setStatus(Status.DRAFT);
         propertyShape.setIdentifier("ps-1");
         propertyShape.setPath(ModelConstants.SUOMI_FI_NAMESPACE + "/test_lib_2/path");
         propertyShape.setClassType(ModelConstants.SUOMI_FI_NAMESPACE + "test_lib_2/class");

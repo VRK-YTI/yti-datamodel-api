@@ -27,7 +27,6 @@ class PropertyShapeMapperTest {
         var mockUser = EndpointUtils.mockUser;
         var dto = new AttributeRestriction();
 
-        dto.setStatus(Status.DRAFT);
         dto.setLabel(Map.of("fi", "PropertyShape label"));
         dto.setIdentifier("ps-1");
         dto.setPath(ModelConstants.SUOMI_FI_NAMESPACE + "test_lib/1.0.0/test_attribute");
@@ -51,7 +50,7 @@ class PropertyShapeMapperTest {
         var allowedValues = resource.listProperties(SH.in).mapWith((var s) -> s.getObject().toString()).toList();
 
         assertEquals("PropertyShape label", MapperUtils.localizedPropertyToMap(resource, RDFS.label).get("fi"));
-        assertEquals(Status.DRAFT, Status.valueOf(MapperUtils.propertyToString(resource, SuomiMeta.publicationStatus)));
+        assertEquals(Status.VALID, Status.valueOf(MapperUtils.propertyToString(resource, SuomiMeta.publicationStatus)));
         assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "test_lib/1.0.0/test_attribute", resource.getProperty(SH.path).getObject().toString());
         assertTrue(MapperUtils.hasType(resource, OWL.DatatypeProperty, SH.PropertyShape));
         assertTrue(allowedValues.containsAll(List.of("Value 1", "Value 2")));
@@ -75,7 +74,6 @@ class PropertyShapeMapperTest {
         var mockUser = EndpointUtils.mockUser;
         var dto = new AssociationRestriction();
 
-        dto.setStatus(Status.DRAFT);
         dto.setLabel(Map.of("fi", "PropertyShape label"));
         dto.setIdentifier("ps-1");
         dto.setPath(ModelConstants.SUOMI_FI_NAMESPACE + "test_lib/1.0.0/test_attribute");
@@ -89,7 +87,7 @@ class PropertyShapeMapperTest {
         var resource = model.getResource(ModelConstants.SUOMI_FI_NAMESPACE + "test/ps-1");
 
         assertEquals("PropertyShape label", MapperUtils.localizedPropertyToMap(resource, RDFS.label).get("fi"));
-        assertEquals(Status.DRAFT, Status.valueOf(MapperUtils.propertyToString(resource, SuomiMeta.publicationStatus)));
+        assertEquals(Status.VALID, Status.valueOf(MapperUtils.propertyToString(resource, SuomiMeta.publicationStatus)));
         assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "test_lib/1.0.0/test_attribute", resource.getProperty(SH.path).getObject().toString());
         assertTrue(MapperUtils.hasType(resource, OWL.ObjectProperty, SH.PropertyShape));
         assertEquals(10, MapperUtils.getLiteral(resource, SH.maxCount, Integer.class));
@@ -164,7 +162,6 @@ class PropertyShapeMapperTest {
         var model = MapperTestUtils.getModelFromFile("/models/test_datamodel_profile_with_resources.ttl");
         var dto = new AttributeRestriction();
 
-        dto.setStatus(Status.VALID);
         dto.setLabel(Map.of("fi", "Updated PropertyShape label"));
         dto.setPath(ModelConstants.SUOMI_FI_NAMESPACE + "test/updated_test_attribute");
         dto.setAllowedValues(List.of("Updated value 1"));
@@ -183,7 +180,6 @@ class PropertyShapeMapperTest {
         var allowedValues = resource.listProperties(SH.in).mapWith((var s) -> s.getObject().toString()).toList();
 
         assertEquals("Updated PropertyShape label", MapperUtils.localizedPropertyToMap(resource, RDFS.label).get("fi"));
-        assertEquals(Status.VALID, Status.valueOf(MapperUtils.propertyToString(resource, SuomiMeta.publicationStatus)));
         assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "test/updated_test_attribute", resource.getProperty(SH.path).getObject().toString());
         assertTrue(allowedValues.contains("Updated value 1"));
         assertEquals(1, allowedValues.size());
@@ -200,7 +196,6 @@ class PropertyShapeMapperTest {
     void testMapToUpdatedAssociationRestrictionResource() {
         var model = MapperTestUtils.getModelFromFile("/models/test_datamodel_profile_with_resources.ttl");
         var dto = new AssociationRestriction();
-        dto.setStatus(Status.VALID);
         dto.setLabel(Map.of("fi", "Updated PropertyShape label"));
         dto.setPath(ModelConstants.SUOMI_FI_NAMESPACE + "test/updated_test_attribute");
         dto.setMaxCount(20);
@@ -212,7 +207,6 @@ class PropertyShapeMapperTest {
 
         var resource = model.getResource(uri.getResourceURI());
         assertEquals("Updated PropertyShape label", MapperUtils.localizedPropertyToMap(resource, RDFS.label).get("fi"));
-        assertEquals(Status.VALID, Status.valueOf(MapperUtils.propertyToString(resource, SuomiMeta.publicationStatus)));
         assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "test/updated_test_attribute", resource.getProperty(SH.path).getObject().toString());
         assertEquals(20, MapperUtils.getLiteral(resource, SH.maxCount, Integer.class));
         assertEquals(2, MapperUtils.getLiteral(resource, SH.minCount, Integer.class));

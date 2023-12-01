@@ -43,7 +43,6 @@ class NodeShapeMapperTest {
         dto.setSubject("http://uri.suomi.fi/terminology/test/test1");
         dto.setEditorialNote("comment");
         dto.setLabel(Map.of("fi", "test label"));
-        dto.setStatus(Status.DRAFT);
         dto.setNote(Map.of("fi", "test note"));
         dto.setTargetClass(ModelConstants.SUOMI_FI_NAMESPACE + "target/Class");
 
@@ -63,7 +62,7 @@ class NodeShapeMapperTest {
         assertEquals("fi", classResource.getProperty(RDFS.label).getLiteral().getLanguage());
 
         assertEquals(SH.NodeShape, classResource.getProperty(RDF.type).getResource());
-        assertEquals(Status.DRAFT, Status.valueOf(MapperUtils.propertyToString(classResource, SuomiMeta.publicationStatus)));
+        assertEquals(Status.VALID, Status.valueOf(MapperUtils.propertyToString(classResource, SuomiMeta.publicationStatus)));
         assertEquals(uri.getModelURI(), classResource.getProperty(RDFS.isDefinedBy).getObject().toString());
 
         assertEquals(XSDDatatype.XSDNCName, classResource.getProperty(DCTerms.identifier).getLiteral().getDatatype());
@@ -151,7 +150,6 @@ class NodeShapeMapperTest {
 
         var dto = new NodeShapeDTO();
         dto.setLabel(Map.of("fi", "new label"));
-        dto.setStatus(Status.RETIRED);
         dto.setNote(Map.of("fi", "new note"));
         dto.setSubject("http://uri.suomi.fi/terminology/qwe");
         dto.setEditorialNote("new editorial note");
@@ -163,7 +161,6 @@ class NodeShapeMapperTest {
         assertEquals("fi", resource.getProperty(RDFS.label).getLiteral().getLanguage());
         assertEquals("TestClass", resource.getProperty(DCTerms.identifier).getLiteral().getString());
         assertEquals("http://uri.suomi.fi/terminology/test/test1", resource.getProperty(DCTerms.subject).getObject().toString());
-        assertEquals(Status.VALID, Status.valueOf(MapperUtils.propertyToString(resource, SuomiMeta.publicationStatus)));
         assertEquals("comment visible for admin", resource.getProperty(SKOS.editorialNote).getObject().toString());
         assertEquals(2, resource.listProperties(RDFS.comment).toList().size());
         assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "target/Class", resource.getProperty(SH.targetClass).getObject().toString());
@@ -176,7 +173,6 @@ class NodeShapeMapperTest {
         assertEquals("fi", resource.getProperty(RDFS.label).getLiteral().getLanguage());
         assertEquals("TestClass", resource.getProperty(DCTerms.identifier).getLiteral().getString());
         assertEquals("http://uri.suomi.fi/terminology/qwe", resource.getProperty(DCTerms.subject).getObject().toString());
-        assertEquals(Status.RETIRED, Status.valueOf(MapperUtils.propertyToString(resource, SuomiMeta.publicationStatus)));
         assertEquals("new editorial note", resource.getProperty(SKOS.editorialNote).getObject().toString());
         assertEquals(1, resource.listProperties(RDFS.comment).toList().size());
         assertEquals("new note", resource.getProperty(RDFS.comment).getLiteral().getString());
@@ -288,10 +284,10 @@ class NodeShapeMapperTest {
         var uri = DataModelURI.createModelURI("test");
 
         model.createResource(uri.getModelURI())
-                .addProperty(RDF.type, Iow.ApplicationProfile);
+                .addProperty(RDF.type, Iow.ApplicationProfile)
+                .addProperty(SuomiMeta.publicationStatus, Status.DRAFT.name());
 
         var dto = new NodeShapeDTO();
-        dto.setStatus(Status.DRAFT);
         dto.setIdentifier("node-shape-1");
         dto.setTargetNode(ModelConstants.SUOMI_FI_NAMESPACE + "ns-int-1/sub");
         dto.setTargetClass(ModelConstants.SUOMI_FI_NAMESPACE + "ns-int-2/eq");

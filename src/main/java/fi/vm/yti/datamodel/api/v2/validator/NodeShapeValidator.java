@@ -31,7 +31,6 @@ public class NodeShapeValidator extends BaseValidator implements
         checkLabel(context, nodeShapeDTO);
         checkEditorialNote(context, nodeShapeDTO);
         checkNote(context, nodeShapeDTO);
-        checkStatus(context, nodeShapeDTO.getStatus());
         checkSubject(context, nodeShapeDTO);
         checkIdentifier(context, nodeShapeDTO.getIdentifier(), updateNodeShape);
         checkReservedIdentifier(context, nodeShapeDTO);

@@ -85,7 +85,6 @@ class ResourceControllerTest {
     void shouldValidateAndCreateMinimalResource(String resourceType) throws Exception {
         var resourceDTO = new ResourceDTO();
         resourceDTO.setIdentifier("Identifier");
-        resourceDTO.setStatus(Status.DRAFT);
         resourceDTO.setLabel(Map.of("fi", "test"));
 
         this.mvc
@@ -114,10 +113,6 @@ class ResourceControllerTest {
 
         var testType = "association";
         var resourceDTO = createResourceDTO(false, testType);
-        resourceDTO.setStatus(null);
-        args.add(Arguments.of(testType, resourceDTO));
-
-        resourceDTO = createResourceDTO(false, testType);
         resourceDTO.setLabel(Map.of("fi", RandomStringUtils.randomAlphanumeric(textAreaMaxPlus)));
         args.add(Arguments.of(testType, resourceDTO));
 
@@ -410,7 +405,6 @@ class ResourceControllerTest {
         if (!update) {
             dto.setIdentifier("Identifier");
         }
-        dto.setStatus(Status.DRAFT);
         dto.setSubject("sanastot.suomi.fi/notrealurl");
         dto.setLabel(Map.of("fi", "test label"));
         dto.setEquivalentResource(Set.of("http://uri.suomi.fi/datamodel/ns/int/FakeResource"));
@@ -433,7 +427,6 @@ class ResourceControllerTest {
         var dto = new AttributeRestriction();
         dto.setLabel(Map.of("fi", "test label"));
         dto.setIdentifier("Identifier");
-        dto.setStatus(Status.DRAFT);
         dto.setSubject("sanastot.suomi.fi/notrealurl");
         dto.setPath("http://uri.suomi.fi/datamodel/ns/int/FakeClass");
         return dto;
@@ -443,7 +436,6 @@ class ResourceControllerTest {
         var dto = new AssociationRestriction();
         dto.setLabel(Map.of("fi", "test label"));
         dto.setIdentifier("Identifier");
-        dto.setStatus(Status.DRAFT);
         dto.setSubject("sanastot.suomi.fi/notrealurl");
         dto.setPath("http://uri.suomi.fi/datamodel/ns/int/FakeClass");
         dto.setClassType("http://uri.suomi.fi/datamodel/ns/int/FakeClass");

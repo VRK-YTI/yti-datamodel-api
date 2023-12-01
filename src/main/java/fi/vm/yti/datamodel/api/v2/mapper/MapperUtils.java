@@ -371,9 +371,10 @@ public class MapperUtils {
     public static Resource addCommonResourceInfo(Model model, DataModelURI uri, BaseDTO dto) {
         var modelResource = model.getResource(uri.getModelURI());
         var languages = MapperUtils.arrayPropertyToSet(modelResource, DCTerms.language);
+        var status = MapperUtils.propertyToString(modelResource, SuomiMeta.publicationStatus);
 
         var resource = model.createResource(uri.getResourceURI())
-                .addProperty(SuomiMeta.publicationStatus, dto.getStatus().name())
+                .addProperty(SuomiMeta.publicationStatus, status)
                 .addProperty(RDFS.isDefinedBy, modelResource)
                 .addProperty(DCTerms.identifier, ResourceFactory.createTypedLiteral(dto.getIdentifier(), XSDDatatype.XSDNCName));
         MapperUtils.addLocalizedProperty(languages, dto.getLabel(), resource, RDFS.label, model);
@@ -390,11 +391,6 @@ public class MapperUtils {
         MapperUtils.updateLocalizedProperty(languages, dto.getNote(), resource, RDFS.comment, model);
         MapperUtils.updateStringProperty(resource, SKOS.editorialNote, dto.getEditorialNote());
         MapperUtils.updateUriProperty(resource, DCTerms.subject, dto.getSubject());
-
-        var status = dto.getStatus();
-        if (status != null) {
-            MapperUtils.updateStringProperty(resource, SuomiMeta.publicationStatus, status.name());
-        }
     }
 
     public static void addCommonResourceDtoInfo(ResourceInfoBaseDTO dto, Resource resource, Resource modelResource, Model orgModel, boolean hasRightToModel) {

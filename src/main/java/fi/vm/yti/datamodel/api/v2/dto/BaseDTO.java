@@ -10,7 +10,6 @@ public abstract class BaseDTO {
     private String subject;
     private Map<String, String> note;
     private String editorialNote;
-    private Status status;
 
     public Map<String, String> getLabel() {
         return label;
@@ -42,14 +41,6 @@ public abstract class BaseDTO {
 
     public void setEditorialNote(String editorialNote) {
         this.editorialNote = editorialNote;
-    }
-
-    public Status getStatus() {
-        return status;
-    }
-
-    public void setStatus(Status status) {
-        this.status = status;
     }
 
     public Map<String, String> getNote() {
