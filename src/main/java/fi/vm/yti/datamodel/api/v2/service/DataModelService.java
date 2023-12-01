@@ -159,8 +159,10 @@ public class DataModelService {
             return ResponseEntity.internalServerError().build();
         }
 
+        var hasRights = authorizationManager.hasRightToModel(prefix, model);
+
         // if no version is defined, return only metadata of the draft version
-        if (version == null) {
+        if (version == null && !hasRights) {
             var modelResource = model.getResource(uri.getModelURI());
             exportedModel = modelResource.listProperties().toModel();
         } else {
@@ -170,7 +172,7 @@ public class DataModelService {
         DataModelUtils.addPrefixesToModel(uri.getGraphURI(), exportedModel);
 
         // remove editorial notes from resources
-        if (!authorizationManager.hasRightToModel(prefix, exportedModel)) {
+        if (!hasRights) {
             var hiddenValues = exportedModel.listStatements(
                     new SimpleSelector(null, SKOS.editorialNote, (String) null)).toList();
             exportedModel.remove(hiddenValues);
