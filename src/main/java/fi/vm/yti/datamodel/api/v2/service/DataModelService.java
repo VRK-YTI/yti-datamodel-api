@@ -295,7 +295,7 @@ public class DataModelService {
 
         coreRepository.put(uri.getGraphURI(), model);
 
-        var indexModel = mapper.mapToIndexModel(uri.getModelId(), model);
+        var indexModel = mapper.mapToIndexModel(uri.getModelURI(), model);
         openSearchIndexer.updateModelToIndex(indexModel);
         auditService.log(AuditService.ActionType.UPDATE, uri.getGraphURI(), userProvider.getUser());
     }

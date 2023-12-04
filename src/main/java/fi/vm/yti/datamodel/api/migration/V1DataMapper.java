@@ -152,7 +152,6 @@ public class V1DataMapper {
 
     private static void mapCommon(BaseDTO dto, Resource resource) {
         dto.setIdentifier(resource.getLocalName());
-        dto.setStatus(Status.DRAFT);
         dto.setEditorialNote(MapperUtils.propertyToString(resource, SKOS.editorialNote));
         dto.setSubject(MapperUtils.propertyToString(resource, DCTerms.subject));
     }
