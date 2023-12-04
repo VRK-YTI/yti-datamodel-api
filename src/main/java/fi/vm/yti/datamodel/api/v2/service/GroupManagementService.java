@@ -50,7 +50,7 @@ public class GroupManagementService {
 
     public void initOrganizations() {
         var organizations = webClient.get().uri(builder -> builder
-                        .path("/organizations")
+                        .pathSegment("public-api", "organizations")
                         .queryParam("onlyValid", "true")
                         .build())
                 .retrieve()
@@ -71,7 +71,7 @@ public class GroupManagementService {
     public void updateOrganizations() {
         LOG.info("Updating organizations cache");
         var organizations = webClient.get().uri(builder -> builder
-                        .path("/organizations")
+                        .pathSegment("public-api", "organizations")
                         .queryParam("onlyValid", "true")
                         .build())
                 .ifModifiedSince(ZonedDateTime.now().minusMinutes(30))
@@ -95,7 +95,7 @@ public class GroupManagementService {
         LOG.info("Initializing user cache");
         var users = webClient.get()
                 .uri(builder -> builder
-                        .path("/users")
+                        .pathSegment("private-api", "users")
                         .build())
                 .retrieve()
                 .bodyToMono(new ParameterizedTypeReference<List<GroupManagementUserDTO>>() {
@@ -117,7 +117,7 @@ public class GroupManagementService {
         LOG.info("Updating user cache");
         var users = webClient.get()
                 .uri(builder -> builder
-                    .path("/users")
+                    .pathSegment("private-api", "users")
                 .build())
                 .ifModifiedSince(ZonedDateTime.now().minusMinutes(30))
                 .retrieve()
@@ -145,13 +145,13 @@ public class GroupManagementService {
             if (creator != null) {
                 dto.getCreator().setName(creator.getFirstName() + " " + creator.getLastName());
             } else {
-                dto.getCreator().setName("fake user");
+                dto.getCreator().setName("");
             }
 
             if (modifier != null) {
                 dto.getModifier().setName(modifier.getFirstName() + " " + modifier.getLastName());
             } else {
-                dto.getModifier().setName("fake user");
+                dto.getModifier().setName("");
             }
         };
     }
@@ -176,7 +176,7 @@ public class GroupManagementService {
 
             try {
                 return webClient.get().uri(builder -> builder
-                                .path("/users")
+                                .pathSegment("public-api", "users")
                                 .build())
                         .retrieve()
                         .bodyToMono(new ParameterizedTypeReference<List<GroupManagementUserDTO>>() {

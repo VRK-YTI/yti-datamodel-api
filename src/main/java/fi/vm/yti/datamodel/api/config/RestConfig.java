@@ -20,8 +20,10 @@ import java.time.Duration;
 @Configuration
 public class RestConfig {
     public static final String URI_SUOMI_FI = "http://uri.suomi.fi";
-    @Value("${defaultGroupManagementAPI}")
-    private String defaultGroupManagementUrl;
+
+    @Value("${groupmanagement.url}")
+    private String groupManagementURL;
+
     private final HttpHeaders defaultHttpHeaders = new HttpHeaders();
     RestConfig() {
         defaultHttpHeaders.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
@@ -30,7 +32,7 @@ public class RestConfig {
     WebClient defaultWebClient() {
         return WebClient.builder()
                 .defaultHeaders(headers -> headers.addAll(defaultHttpHeaders))
-                .baseUrl(defaultGroupManagementUrl)
+                .baseUrl(groupManagementURL)
                 .clientConnector(new ReactorClientHttpConnector(
                         HttpClient.create(getConnectionProvider("groupManagement"))
                 )
