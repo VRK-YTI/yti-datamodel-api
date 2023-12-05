@@ -294,6 +294,7 @@ public class ClassMapper {
                 var ns = uri.getModelURI();
                 var versionIRI = MapperUtils.propertyToString(resourcesResult.getResource(ns), OWL2.versionIRI);
                 if (versionIRI != null) {
+                    restriction.setVersionIri(versionIRI);
                     restriction.setVersion(DataModelURI.fromURI(versionIRI).getVersion());
                 }
             }

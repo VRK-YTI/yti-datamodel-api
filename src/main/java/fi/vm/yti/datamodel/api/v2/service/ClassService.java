@@ -102,7 +102,6 @@ public class ClassService extends BaseResourceService {
                     .filter(r -> r.hasProperty(OWL.onProperty))
                     .map(restriction -> {
                         var restrictionDTO = new SimpleResourceDTO();
-
                         restrictionDTO.setUri(MapperUtils.propertyToString(restriction, OWL.onProperty));
                         restrictionDTO.setRange(MapperUtils.uriToURIDTO(
                                 MapperUtils.propertyToString(restriction, OWL.someValuesFrom), model));
