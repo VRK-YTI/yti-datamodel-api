@@ -7,7 +7,7 @@ import fi.vm.yti.datamodel.api.v2.dto.visualization.PositionDataDTO;
 import fi.vm.yti.datamodel.api.v2.dto.visualization.VisualizationClassDTO;
 import fi.vm.yti.datamodel.api.v2.dto.visualization.VisualizationNodeDTO;
 import fi.vm.yti.datamodel.api.v2.dto.visualization.VisualizationNodeType;
-import fi.vm.yti.datamodel.api.v2.properties.Iow;
+import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import fi.vm.yti.security.AuthenticatedUserProvider;
 import fi.vm.yti.security.AuthorizationException;
@@ -190,12 +190,12 @@ class VisualizationServiceTest {
         var positionModel = ModelFactory.createDefaultModel();
 
         positionModel.createResource(positionURI + "res1")
-                        .addLiteral(Iow.posX, 10.0)
-                        .addLiteral(Iow.posY, 20.0);
+                .addLiteral(SuomiMeta.posX, 10.0)
+                .addLiteral(SuomiMeta.posY, 20.0);
 
         positionModel.createResource(positionURI + "res2")
-                .addLiteral(Iow.posX, 120.0)
-                .addLiteral(Iow.posY, -10.0);
+                .addLiteral(SuomiMeta.posX, 120.0)
+                .addLiteral(SuomiMeta.posY, -10.0);
 
         when(coreRepository.fetch(positionURI)).thenReturn(positionModel);
 
@@ -205,8 +205,8 @@ class VisualizationServiceTest {
         var positionResource = modelCaptor.getValue().getResource(positionURI + "test-id");
 
         // new position x = 0, y = existing minimum y coordinate - 50
-        assertEquals(0.0, positionResource.getProperty(Iow.posX).getDouble());
-        assertEquals(-60.0, positionResource.getProperty(Iow.posY).getDouble());
+        assertEquals(0.0, positionResource.getProperty(SuomiMeta.posX).getDouble());
+        assertEquals(-60.0, positionResource.getProperty(SuomiMeta.posY).getDouble());
     }
 
     private static Model getExternalPropertiesResult() {

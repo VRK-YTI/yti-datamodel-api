@@ -7,7 +7,6 @@ import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.mapper.ResourceMapper;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexModel;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexResource;
-import fi.vm.yti.datamodel.api.v2.properties.Iow;
 import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
@@ -79,8 +78,8 @@ class ResourceMapperTest {
         assertEquals("https://www.example.com/ns/ext/SubRes", resourceResource.getProperty(RDFS.subPropertyOf).getObject().toString());
         assertEquals(1, resourceResource.listProperties(OWL.equivalentProperty).toList().size());
         assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "int/EqRes", resourceResource.getProperty(OWL.equivalentProperty).getObject().toString());
-        assertEquals(mockUser.getId().toString(), resourceResource.getProperty(Iow.creator).getObject().toString());
-        assertEquals(mockUser.getId().toString(), resourceResource.getProperty(Iow.modifier).getObject().toString());
+        assertEquals(mockUser.getId().toString(), MapperUtils.propertyToString(resourceResource, SuomiMeta.creator));
+        assertEquals(mockUser.getId().toString(), MapperUtils.propertyToString(resourceResource, SuomiMeta.modifier));
 
         assertEquals("http://www.w3.org/2002/07/owl#Class", MapperUtils.propertyToString(resourceResource, RDFS.domain));
         assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "test/RangeClass", MapperUtils.propertyToString(resourceResource, RDFS.range));
@@ -548,8 +547,8 @@ class ResourceMapperTest {
         assertEquals(1, resource.listProperties(RDFS.comment).toList().size());
         assertEquals("new note", resource.getProperty(RDFS.comment).getLiteral().getString());
         assertEquals("fi", resource.getProperty(RDFS.comment).getLiteral().getLanguage());
-        assertEquals(mockUser.getId().toString(), resource.getProperty(Iow.modifier).getObject().toString());
-        assertEquals("2a5c075f-0d0e-4688-90e0-29af1eebbf6d", resource.getProperty(Iow.creator).getObject().toString());
+        assertEquals(mockUser.getId().toString(), MapperUtils.propertyToString(resource, SuomiMeta.modifier));
+        assertEquals("2a5c075f-0d0e-4688-90e0-29af1eebbf6d", MapperUtils.propertyToString(resource, SuomiMeta.creator));
         assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "test/NewDomainClass", MapperUtils.propertyToString(resource, RDFS.domain));
         assertEquals("xsd:integer", MapperUtils.propertyToString(resource, RDFS.range));
         assertTrue(MapperUtils.hasType(resource, OWL.FunctionalProperty));
@@ -801,7 +800,7 @@ class ResourceMapperTest {
         var uri = DataModelURI.createResourceURI("test-profile", "ps-1");
 
         model.createResource(uri.getModelURI())
-                .addProperty(RDF.type, Iow.ApplicationProfile)
+                .addProperty(RDF.type, SuomiMeta.ApplicationProfile)
                 .addProperty(SuomiMeta.publicationStatus, Status.DRAFT.name());
 
         var propertyShape = new AssociationRestriction();

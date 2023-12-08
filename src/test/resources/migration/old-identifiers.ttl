@@ -1,6 +1,5 @@
 @prefix dcap:    <http://purl.org/ws-mmi-dc/terms/> .
 @prefix dcterms: <http://purl.org/dc/terms/> .
-@prefix iow:     <http://uri.suomi.fi/datamodel/ns/iow/> .
 @prefix owl:     <http://www.w3.org/2002/07/owl#> .
 @prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
@@ -11,7 +10,7 @@
 @prefix suomi-meta: <http://uri.suomi.fi/datamodel/ns/suomi-meta/> .
 
 <http://uri.suomi.fi/datamodel/ns/test>
-    a                               iow:ApplicationProfile , owl:Ontology ;
+    a                               suomi-meta:ApplicationProfile , owl:Ontology ;
     rdfs:comment                    "test desc"@fi ;
     rdfs:label                      "testlabel"@fi ;
     dcterms:contributor             <urn:uuid:7d3a3c00-5a6b-489b-a3ed-63bb58c26a63> ;
@@ -26,7 +25,7 @@
     dcap:preferredXMLNamespaceName  "http://uri.suomi.fi/datamodel/ns/test" ;
     dcap:preferredXMLNamespacePrefix
     "test" ;
-    iow:contentModified             "2023-01-03T12:44:45.799Z"^^xsd:dateTime ;
+    suomi-meta:contentModified             "2023-01-03T12:44:45.799Z"^^xsd:dateTime ;
     owl:priorVersion                test:1.0.0 ;
     suomi-meta:publicationStatus    "VALID" .
 
@@ -45,8 +44,8 @@ test:TestClass  rdf:type     sh:NodeShape ;
         suomi-meta:publicationStatus      "VALID" ;
         skos:editorialNote   "comment visible for admin" ;
         rdfs:comment         "test technical description fi"@fi, "test technical description en"@en ;
-        iow:creator          "2a5c075f-0d0e-4688-90e0-29af1eebbf6d" ;
-        iow:modifier         "2a5c075f-0d0e-4688-90e0-29af1eebbf6d" ;
+        suomi-meta:creator          "2a5c075f-0d0e-4688-90e0-29af1eebbf6d" ;
+        suomi-meta:modifier         "2a5c075f-0d0e-4688-90e0-29af1eebbf6d" ;
         sh:property          <http://uri.suomi.fi/datamodel/ns/test/TestPropertyShape> , <http://uri.suomi.fi/datamodel/ns/test/DeactivatedPropertyShape> ;
         sh:targetClass       <http://uri.suomi.fi/datamodel/ns/target/Class> .
 
@@ -60,7 +59,7 @@ test:TestAttributeRestriction  rdf:type  sh:PropertyShape ;
         rdfs:label           "test property shape"@fi ;
         suomi-meta:publicationStatus      "DRAFT" ;
         sh:defaultValue      "foo" ;
-        iow:codeList         <http://uri.suomi.fi/codelist/Test> ;
+        suomi-meta:codeList         <http://uri.suomi.fi/codelist/Test> ;
         sh:path              <http://uri.suomi.fi/datamodel/ns/ytm/some-attribute> .
 
 test:TestAssociationRestriction  rdf:type  sh:PropertyShape ;

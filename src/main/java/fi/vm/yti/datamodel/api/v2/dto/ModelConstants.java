@@ -28,7 +28,6 @@ public class ModelConstants {
             "owl", "http://www.w3.org/2002/07/owl#",
             "dcap", "http://purl.org/ws-mmi-dc/terms/",
             "xsd", "http://www.w3.org/2001/XMLSchema#",
-            "iow", "https://iri.suomi.fi/model/iow/",
             "suomi-meta", "https://iri.suomi.fi/model/suomi-meta/",
             "skos", "http://www.w3.org/2004/02/skos/core#",
             "sh", "http://www.w3.org/ns/shacl#"

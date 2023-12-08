@@ -7,7 +7,7 @@ import fi.vm.yti.datamodel.api.v2.dto.GroupManagementUserDTO;
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
 import fi.vm.yti.datamodel.api.v2.dto.ResourceCommonDTO;
 import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
-import fi.vm.yti.datamodel.api.v2.properties.Iow;
+import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import fi.vm.yti.security.YtiUser;
 import org.apache.jena.rdf.model.ModelFactory;
@@ -166,7 +166,7 @@ public class GroupManagementService {
 
         var resource = model.getResource(orgUrn);
 
-        return MapperUtils.arrayPropertyToList(resource, Iow.parentOrganization).stream()
+        return MapperUtils.arrayPropertyToList(resource, SuomiMeta.parentOrganization).stream()
                 .map(MapperUtils::getUUID).toList();
     }
 

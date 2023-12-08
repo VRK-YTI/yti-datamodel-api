@@ -2,7 +2,6 @@ package fi.vm.yti.datamodel.api.v2.mapper;
 
 import fi.vm.yti.datamodel.api.v2.dto.CodeListDTO;
 import fi.vm.yti.datamodel.api.v2.dto.Status;
-import fi.vm.yti.datamodel.api.v2.properties.Iow;
 import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
@@ -18,7 +17,7 @@ public class CodeListMapper {
     public static Model mapToJenaModel(String graph, CodeListDTO codelistDTO){
         var model = ModelFactory.createDefaultModel();
         var resource = model.createResource(graph)
-                .addProperty(RDF.type, Iow.CodeScheme);
+                .addProperty(RDF.type, SuomiMeta.CodeScheme);
         codelistDTO.getPrefLabel().forEach((lang, val) -> resource.addProperty(RDFS.label, model.createLiteral(val, lang)));
         resource.addProperty(SuomiMeta.publicationStatus, codelistDTO.getStatus().name());
         return model;

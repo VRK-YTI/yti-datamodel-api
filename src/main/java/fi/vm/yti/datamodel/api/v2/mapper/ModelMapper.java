@@ -4,7 +4,6 @@ import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexModel;
 import fi.vm.yti.datamodel.api.v2.properties.DCAP;
-import fi.vm.yti.datamodel.api.v2.properties.Iow;
 import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
 import fi.vm.yti.datamodel.api.v2.repository.ConceptRepository;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
@@ -56,20 +55,20 @@ public class ModelMapper {
                 .addProperty(RDF.type, OWL.Ontology)
                 .addProperty(SuomiMeta.publicationStatus, Status.DRAFT.name())
                 .addProperty(DCTerms.identifier, UUID.randomUUID().toString())
-                .addProperty(Iow.contentModified, ResourceFactory.createTypedLiteral(creationDate))
+                .addProperty(SuomiMeta.contentModified, ResourceFactory.createTypedLiteral(creationDate))
                 .addProperty(DCAP.preferredXMLNamespacePrefix, modelDTO.getPrefix())
                 .addProperty(DCAP.preferredXMLNamespace, modelUri);
 
         MapperUtils.addCreationMetadata(modelResource, user);
 
         if (modelType.equals(ModelType.PROFILE)) {
-            modelResource.addProperty(RDF.type, Iow.ApplicationProfile);
+            modelResource.addProperty(RDF.type, SuomiMeta.ApplicationProfile);
         }
 
         modelDTO.getLanguages().forEach(lang -> modelResource.addProperty(DCTerms.language, lang));
 
-        MapperUtils.addOptionalStringProperty(modelResource, Iow.contact, modelDTO.getContact());
-        MapperUtils.addLocalizedProperty(modelDTO.getLanguages(), modelDTO.getDocumentation(), modelResource, Iow.documentation, model);
+        MapperUtils.addOptionalStringProperty(modelResource, SuomiMeta.contact, modelDTO.getContact());
+        MapperUtils.addLocalizedProperty(modelDTO.getLanguages(), modelDTO.getDocumentation(), modelResource, SuomiMeta.documentation, model);
         MapperUtils.addLocalizedProperty(modelDTO.getLanguages(), modelDTO.getLabel(), modelResource, RDFS.label, model);
         MapperUtils.addLocalizedProperty(modelDTO.getLanguages(), modelDTO.getDescription(), modelResource, RDFS.comment, model);
 
@@ -224,8 +223,8 @@ public class ModelMapper {
             userMapper.accept(datamodelDTO);
         }
 
-        datamodelDTO.setContact(MapperUtils.propertyToString(modelResource, Iow.contact));
-        datamodelDTO.setDocumentation(MapperUtils.localizedPropertyToMap(modelResource, Iow.documentation));
+        datamodelDTO.setContact(MapperUtils.propertyToString(modelResource, SuomiMeta.contact));
+        datamodelDTO.setDocumentation(MapperUtils.localizedPropertyToMap(modelResource, SuomiMeta.documentation));
 
         var links = modelResource.listProperties(RDFS.seeAlso).toSet().stream().map(statement -> {
             var linkRes = statement.getResource();
@@ -262,7 +261,7 @@ public class ModelMapper {
         indexModel.setVersionIri(versionIri);
         indexModel.setModified(resource.getProperty(DCTerms.modified).getString());
         indexModel.setCreated(resource.getProperty(DCTerms.created).getString());
-        var contentModified = resource.getProperty(Iow.contentModified);
+        var contentModified = resource.getProperty(SuomiMeta.contentModified);
         if(contentModified != null) {
             indexModel.setContentModified(contentModified.getString());
         }
@@ -400,19 +399,10 @@ public class ModelMapper {
     }
 
     public void mapReleaseProperties(Model model, DataModelURI uri, Status status){
-
-        /*
-        TODO: NOT MVP VC
-        owl:deprecated --> boolean is deprecated (same as Status.RETIRED?)
-        suomi-meta:onMuutostieto --> commit message
-        owl:backwardsCompatibleWith --> some versionIri
-         */
-
         var res = model.getResource(uri.getModelURI());
         res.addProperty(OWL2.versionIRI, ResourceFactory.createResource(uri.getGraphURI()));
         res.addProperty(OWL.versionInfo, uri.getVersion());
         model.listSubjectsWithProperty(SuomiMeta.publicationStatus).forEach(subject -> MapperUtils.updateStringProperty(subject, SuomiMeta.publicationStatus, status.name()));
-
     }
 
     public void mapPriorVersion(Model model, String modelUri, String priorVersionUri) {
@@ -435,8 +425,8 @@ public class ModelMapper {
 
         MapperUtils.updateLocalizedProperty(langs, dto.getLabel(), resource, RDFS.label, model);
         MapperUtils.updateLocalizedProperty(langs, dto.getDescription(), resource, RDFS.comment, model);
-        MapperUtils.updateStringProperty(resource, Iow.contact, dto.getContact());
-        MapperUtils.updateLocalizedProperty(langs, dto.getDocumentation(), resource, Iow.documentation, model);
+        MapperUtils.updateStringProperty(resource, SuomiMeta.contact, dto.getContact());
+        MapperUtils.updateLocalizedProperty(langs, dto.getDocumentation(), resource, SuomiMeta.documentation, model);
 
         resource.removeAll(DCTerms.contributor);
         addOrgsToModel(dto.getOrganizations(), resource);

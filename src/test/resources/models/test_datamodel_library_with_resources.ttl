@@ -1,6 +1,5 @@
 @prefix dcap:    <http://purl.org/ws-mmi-dc/terms/> .
 @prefix dcterms: <http://purl.org/dc/terms/> .
-@prefix iow:     <https://iri.suomi.fi/model/iow/> .
 @prefix owl:     <http://www.w3.org/2002/07/owl#> .
 @prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
@@ -25,7 +24,7 @@ dcterms:modified                "2023-01-03T12:44:45.799Z"^^xsd:dateTime ;
 dcap:preferredXMLNamespaceName  "https://iri.suomi.fi/model/test" ;
 dcap:preferredXMLNamespacePrefix
 "test" ;
-iow:contentModified             "2023-01-03T12:44:45.799Z"^^xsd:dateTime ;
+suomi-meta:contentModified             "2023-01-03T12:44:45.799Z"^^xsd:dateTime ;
 suomi-meta:publicationStatus    "VALID" ;
 owl:versionInfo                 "1.0.1" ;
 owl:versionIRI                  <https://iri.suomi.fi/model/test/1.0.1/> .
@@ -47,8 +46,8 @@ test:TestClass  rdf:type     owl:Class ;
         suomi-meta:publicationStatus      "VALID" ;
         skos:editorialNote   "comment visible for admin" ;
         rdfs:comment         "test note fi"@fi, "test note en"@en ;
-        iow:creator           "2a5c075f-0d0e-4688-90e0-29af1eebbf6d" ;
-        iow:modifier          "2a5c075f-0d0e-4688-90e0-29af1eebbf6d" ;
+        suomi-meta:creator           "2a5c075f-0d0e-4688-90e0-29af1eebbf6d" ;
+        suomi-meta:modifier          "2a5c075f-0d0e-4688-90e0-29af1eebbf6d" ;
         owl:equivalentClass
                 [ rdf:type       owl:Class ;
                   owl:intersectionOf   ([
@@ -71,8 +70,8 @@ test:TestAttribute  rdf:type     owl:DatatypeProperty ;
         suomi-meta:publicationStatus         "VALID" ;
         skos:editorialNote      "comment visible for admin" ;
         rdfs:comment            "test note fi"@fi, "test note en"@en ;
-        iow:creator             "2a5c075f-0d0e-4688-90e0-29af1eebbf6d" ;
-        iow:modifier            "2a5c075f-0d0e-4688-90e0-29af1eebbf6d" ;
+        suomi-meta:creator             "2a5c075f-0d0e-4688-90e0-29af1eebbf6d" ;
+        suomi-meta:modifier            "2a5c075f-0d0e-4688-90e0-29af1eebbf6d" ;
         rdfs:domain             <https://iri.suomi.fi/model/test/DomainClass> ;
         rdfs:range              rdfs:Literal .
 
@@ -88,8 +87,8 @@ test:TestAssociation  rdf:type     owl:ObjectProperty, owl:FunctionalProperty ;
         suomi-meta:publicationStatus         "VALID" ;
         skos:editorialNote      "comment visible for admin" ;
         rdfs:comment            "test note fi"@fi, "test note en"@en ;
-        iow:creator             "2a5c075f-0d0e-4688-90e0-29af1eebbf6d" ;
-        iow:modifier            "2a5c075f-0d0e-4688-90e0-29af1eebbf6d" ;
+        suomi-meta:creator             "2a5c075f-0d0e-4688-90e0-29af1eebbf6d" ;
+        suomi-meta:modifier            "2a5c075f-0d0e-4688-90e0-29af1eebbf6d" ;
         rdfs:domain             <https://iri.suomi.fi/model/test/DomainClass> ;
         rdfs:range              <https://iri.suomi.fi/model/test/RangeClass> .
 

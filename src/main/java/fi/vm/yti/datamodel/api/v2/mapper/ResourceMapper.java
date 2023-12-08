@@ -4,7 +4,6 @@ import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.*;
 import fi.vm.yti.datamodel.api.v2.properties.DCAP;
-import fi.vm.yti.datamodel.api.v2.properties.Iow;
 import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
 import fi.vm.yti.security.YtiUser;
@@ -105,7 +104,7 @@ public class ResourceMapper {
             if(!modelCodeLists.contains(codeList)){
                 MapperUtils.addOptionalUriProperty(modelResource, DCTerms.requires, codeList);
             }
-            MapperUtils.addOptionalUriProperty(resource, Iow.codeList, codeList);
+            MapperUtils.addOptionalUriProperty(resource, SuomiMeta.codeList, codeList);
         });
     }
 
@@ -200,12 +199,12 @@ public class ResourceMapper {
         MapperUtils.updateLiteral(resource, SH.maxExclusive, dto.getMaxExclusive());
 
         var requires = MapperUtils.arrayPropertyToList(modelResource, DCTerms.requires);
-        resource.removeAll(Iow.codeList);
+        resource.removeAll(SuomiMeta.codeList);
         dto.getCodeLists().forEach(codeList -> {
             if(!requires.contains(codeList)){
                 MapperUtils.addOptionalUriProperty(modelResource, DCTerms.requires, codeList);
             }
-            MapperUtils.addOptionalUriProperty(resource, Iow.codeList, codeList);
+            MapperUtils.addOptionalUriProperty(resource, SuomiMeta.codeList, codeList);
         });
         MapperUtils.updateStringProperty(resource, SH.pattern, dto.getPattern());
         resource.removeAll(SH.languageIn);
@@ -227,8 +226,8 @@ public class ResourceMapper {
 
         newResource.removeAll(DCTerms.modified);
         newResource.removeAll(DCTerms.created);
-        newResource.removeAll(Iow.modifier);
-        newResource.removeAll(Iow.creator);
+        newResource.removeAll(SuomiMeta.modifier);
+        newResource.removeAll(SuomiMeta.creator);
         MapperUtils.addCreationMetadata(newResource, user);
     }
 
@@ -263,7 +262,7 @@ public class ResourceMapper {
             indexResource.setNote(note);
         }
 
-        var contentModified = resource.getProperty(Iow.contentModified);
+        var contentModified = resource.getProperty(SuomiMeta.contentModified);
         if(contentModified != null){
             indexResource.setContentModified(contentModified.getString());
         }
@@ -432,7 +431,7 @@ public class ResourceMapper {
         dto.setMaxExclusive(MapperUtils.getLiteral(resource, SH.maxExclusive, Integer.class));
         dto.setPattern(MapperUtils.propertyToString(resource, SH.pattern));
         dto.setLanguageIn(MapperUtils.arrayPropertyToSet(resource, SH.languageIn));
-        dto.setCodeLists(MapperUtils.arrayPropertyToList(resource, Iow.codeList));
+        dto.setCodeLists(MapperUtils.arrayPropertyToList(resource, SuomiMeta.codeList));
         MapperUtils.mapCreationInfo(dto, resource, userMapper);
 
         return dto;

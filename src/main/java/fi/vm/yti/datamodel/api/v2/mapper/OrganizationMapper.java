@@ -3,7 +3,7 @@ package fi.vm.yti.datamodel.api.v2.mapper;
 import fi.vm.yti.datamodel.api.v2.dto.GroupManagementOrganizationDTO;
 import fi.vm.yti.datamodel.api.v2.dto.OrganizationDTO;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
-import fi.vm.yti.datamodel.api.v2.properties.Iow;
+import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ResourceFactory;
@@ -48,7 +48,7 @@ public class OrganizationMapper {
             });
 
             if (StringUtils.isNotBlank(organization.getParentId())) {
-                resource.addProperty(Iow.parentOrganization, URN_UUID + organization.getParentId());
+                resource.addProperty(SuomiMeta.parentOrganization, URN_UUID + organization.getParentId());
             }
             if (StringUtils.isNotBlank(organization.getUrl())) {
                 resource.addLiteral(FOAF.homepage, organization.getUrl());
@@ -62,7 +62,7 @@ public class OrganizationMapper {
             var labels = localizedPropertyToMap(orgRes, SKOS.prefLabel);
             var id = getUUID(orgRes.getURI());
 
-            var parentId = getUUID(MapperUtils.propertyToString(orgRes, Iow.parentOrganization));
+            var parentId = getUUID(MapperUtils.propertyToString(orgRes, SuomiMeta.parentOrganization));
             if(id == null){
                 throw new MappingError("Could not map organization");
             }
@@ -80,7 +80,7 @@ public class OrganizationMapper {
             var labels = localizedPropertyToMap(resource, SKOS.prefLabel);
             var id = getUUID(resource.getURI());
 
-            var parentId = getUUID(MapperUtils.propertyToString(resource, Iow.parentOrganization));
+            var parentId = getUUID(MapperUtils.propertyToString(resource, SuomiMeta.parentOrganization));
 
             if (id != null) {
                 result.add(new OrganizationDTO(id.toString(), labels, parentId));

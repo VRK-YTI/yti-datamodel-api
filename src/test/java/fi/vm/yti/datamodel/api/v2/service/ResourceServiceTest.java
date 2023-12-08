@@ -10,7 +10,6 @@ import fi.vm.yti.datamodel.api.v2.mapper.ResourceMapper;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexResource;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
 import fi.vm.yti.datamodel.api.v2.properties.DCAP;
-import fi.vm.yti.datamodel.api.v2.properties.Iow;
 import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import fi.vm.yti.datamodel.api.v2.repository.ImportsRepository;
@@ -234,10 +233,10 @@ class ResourceServiceTest {
         var m = ModelFactory.createDefaultModel();
         m.createResource(sourceURI.getModelURI())
                 .addProperty(RDF.type, OWL.Ontology)
-                .addProperty(RDF.type, Iow.ApplicationProfile);
+                .addProperty(RDF.type, SuomiMeta.ApplicationProfile);
         m.createResource(targetURI.getModelURI())
                 .addProperty(RDF.type, OWL.Ontology)
-                .addProperty(RDF.type, Iow.ApplicationProfile);
+                .addProperty(RDF.type, SuomiMeta.ApplicationProfile);
         when(coreRepository.fetch(anyString())).thenReturn(m);
         try(var mapper = mockStatic(ResourceMapper.class)) {
             mapper.when(() -> ResourceMapper.mapToIndexResource(any(Model.class), anyString())).thenReturn(new IndexResource());
@@ -275,7 +274,7 @@ class ResourceServiceTest {
                 .addProperty(RDF.type, OWL.Ontology);
         m.createResource(targetURI.getModelURI())
                 .addProperty(RDF.type, OWL.Ontology)
-                .addProperty(RDF.type, Iow.ApplicationProfile);
+                .addProperty(RDF.type, SuomiMeta.ApplicationProfile);
         when(coreRepository.fetch(anyString())).thenReturn(m);
         var error = assertThrows(MappingError.class, () -> resourceService.copyPropertyShape("test", "Identifier", "newTest", "newId"));
         assertEquals("Error during mapping: Both data models have to be application profiles", error.getMessage());

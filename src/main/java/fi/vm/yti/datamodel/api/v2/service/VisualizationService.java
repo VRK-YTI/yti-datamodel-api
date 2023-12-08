@@ -10,7 +10,7 @@ import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
 import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.mapper.VisualizationMapper;
 import fi.vm.yti.datamodel.api.v2.properties.DCAP;
-import fi.vm.yti.datamodel.api.v2.properties.Iow;
+import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelUtils;
@@ -141,7 +141,7 @@ public class VisualizationService {
         var positions = getPositions(prefix, null);
 
         var yMin = positions.listStatements().toList().stream()
-                .map(s -> MapperUtils.getLiteral(s.getSubject(), Iow.posY, Double.class))
+                .map(s -> MapperUtils.getLiteral(s.getSubject(), SuomiMeta.posY, Double.class))
                 .filter(Objects::nonNull)
                 .min(Double::compare)
                 .orElse(0.0);

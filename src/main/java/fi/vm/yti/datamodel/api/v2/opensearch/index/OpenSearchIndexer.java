@@ -8,7 +8,6 @@ import fi.vm.yti.datamodel.api.v2.mapper.ModelMapper;
 import fi.vm.yti.datamodel.api.v2.mapper.ResourceMapper;
 import fi.vm.yti.datamodel.api.v2.opensearch.queries.QueryFactoryUtils;
 import fi.vm.yti.datamodel.api.v2.properties.DCAP;
-import fi.vm.yti.datamodel.api.v2.properties.Iow;
 import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import fi.vm.yti.datamodel.api.v2.repository.ImportsRepository;
@@ -234,7 +233,7 @@ public class OpenSearchIndexer {
         var whereBuilder = new WhereBuilder();
         Stream.of(RDFS.label, DCTerms.language, DCAP.preferredXMLNamespacePrefix, RDF.type, SuomiMeta.publicationStatus, DCTerms.modified, DCTerms.created, DCTerms.contributor, DCTerms.isPartOf)
                 .forEach(property -> SparqlUtils.addRequiredToGraphConstruct(GRAPH_VARIABLE, constructBuilder, whereBuilder, property));
-        Stream.of(RDFS.comment, OWL2.versionIRI, Iow.contentModified, Iow.documentation, OWL.versionInfo)
+        Stream.of(RDFS.comment, OWL2.versionIRI, SuomiMeta.contentModified, SuomiMeta.documentation, OWL.versionInfo)
                 .forEach(property -> SparqlUtils.addOptionalToGraphConstruct(GRAPH_VARIABLE, constructBuilder, whereBuilder, property));
         constructBuilder.addGraph("?g", whereBuilder);
         var indexModels = coreRepository.queryConstruct(constructBuilder.build());

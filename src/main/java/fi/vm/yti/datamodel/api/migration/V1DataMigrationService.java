@@ -8,7 +8,7 @@ import fi.vm.yti.datamodel.api.v2.dto.ModelType;
 import fi.vm.yti.datamodel.api.v2.dto.ResourceType;
 import fi.vm.yti.datamodel.api.v2.mapper.ClassMapper;
 import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
-import fi.vm.yti.datamodel.api.v2.properties.Iow;
+import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import fi.vm.yti.datamodel.api.v2.service.ClassService;
 import fi.vm.yti.datamodel.api.v2.service.DataModelService;
@@ -254,20 +254,20 @@ public class V1DataMigrationService {
         var builder = new UpdateBuilder();
         builder.addPrefixes(ModelConstants.PREFIXES);
 
-        var created = resource.getProperty(DCTerms.created).getLiteral().getString();
-        var modified = resource.getProperty(DCTerms.modified).getLiteral().getString();
+        var created = MapperUtils.getLiteral(resource, DCTerms.created, String.class);
+        var modified = MapperUtils.getLiteral(resource, DCTerms.modified, String.class);
 
         builder.addDelete(graph, "?s", DCTerms.created, "?created")
                 .addDelete(graph, "?s", DCTerms.modified, "?modified")
-                .addDelete(graph, "?s", Iow.creator, "?creator")
-                .addDelete(graph, "?s", Iow.modifier, "?modifier")
+                .addDelete(graph, "?s", SuomiMeta.creator, "?creator")
+                .addDelete(graph, "?s", SuomiMeta.modifier, "?modifier")
                 .addInsert(graph, "?s", DCTerms.created, created)
                 .addInsert(graph, "?s", DCTerms.modified, modified)
                 .addGraph(graph, new WhereBuilder()
                         .addWhere("?s", DCTerms.created, "?created")
                         .addWhere("?s", DCTerms.modified, "?modified")
-                        .addWhere("?s", Iow.creator, "?creator")
-                        .addWhere("?s", Iow.modifier, "?modifier"));
+                        .addWhere("?s", SuomiMeta.creator, "?creator")
+                        .addWhere("?s", SuomiMeta.modifier, "?modifier"));
 
         LOG.info("Add created {} and modified {} for resource {}", created, modified, resource.getURI());
         // 2023-10-02T07:38:32

@@ -1,6 +1,5 @@
 @prefix dcap:    <http://purl.org/ws-mmi-dc/terms/> .
 @prefix dcterms: <http://purl.org/dc/terms/> .
-@prefix iow:     <https://iri.suomi.fi/model/iow/> .
 @prefix owl:     <http://www.w3.org/2002/07/owl#> .
 @prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
@@ -9,7 +8,7 @@
 @prefix suomi-meta: <https://iri.suomi.fi/model/suomi-meta/> .
 
 <https://iri.suomi.fi/model/test/>
-        a                               iow:ApplicationProfile , owl:Ontology  ;
+        a                               suomi-meta:ApplicationProfile , owl:Ontology  ;
         rdfs:comment                    "test desc"@fi ;
         rdfs:label                      "testlabel"@fi ;
         dcterms:contributor             <urn:uuid:7d3a3c00-5a6b-489b-a3ed-63bb58c26a63> ;
@@ -23,11 +22,11 @@
         dcap:preferredXMLNamespaceName  "https://iri.suomi.fi/model/test" ;
         dcap:preferredXMLNamespacePrefix
                 "test" ;
-        iow:contentModified             "2023-01-03T12:44:45.799Z"^^xsd:dateTime ;
+        suomi-meta:contentModified             "2023-01-03T12:44:45.799Z"^^xsd:dateTime ;
         suomi-meta:publicationStatus                 "VALID" ;
-        iow:creator                     "2a5c075f-0d0e-4688-90e0-29af1eebbf6d" ;
-        iow:modifier                    "2a5c075f-0d0e-4688-90e0-29af1eebbf6d" ;
-        iow:contact                     "test@localhost"                       .
+        suomi-meta:creator                     "2a5c075f-0d0e-4688-90e0-29af1eebbf6d" ;
+        suomi-meta:modifier                    "2a5c075f-0d0e-4688-90e0-29af1eebbf6d" ;
+        suomi-meta:contact                     "test@localhost"                       .
 
 
 <https://www.example.com/ns/ext>

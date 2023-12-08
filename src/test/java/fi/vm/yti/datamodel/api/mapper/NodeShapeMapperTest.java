@@ -5,7 +5,6 @@ import fi.vm.yti.datamodel.api.v2.endpoint.EndpointUtils;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
 import fi.vm.yti.datamodel.api.v2.mapper.ClassMapper;
 import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
-import fi.vm.yti.datamodel.api.v2.properties.Iow;
 import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
@@ -70,8 +69,8 @@ class NodeShapeMapperTest {
 
         assertEquals("comment", MapperUtils.propertyToString(classResource, SKOS.editorialNote));
         assertEquals("test note", classResource.getProperty(RDFS.comment).getLiteral().getString());
-        assertEquals(mockUser.getId().toString(), classResource.getProperty(Iow.creator).getString());
-        assertEquals(mockUser.getId().toString(), classResource.getProperty(Iow.modifier).getString());
+        assertEquals(mockUser.getId().toString(), MapperUtils.propertyToString(classResource, SuomiMeta.creator));
+        assertEquals(mockUser.getId().toString(), MapperUtils.propertyToString(classResource, SuomiMeta.modifier));
         assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "target/Class", classResource.getProperty(SH.targetClass).getObject().toString());
 
         assertEquals(2, classResource.listProperties(SH.property).toList().size());
@@ -177,8 +176,8 @@ class NodeShapeMapperTest {
         assertEquals(1, resource.listProperties(RDFS.comment).toList().size());
         assertEquals("new note", resource.getProperty(RDFS.comment).getLiteral().getString());
         assertEquals("fi", resource.getProperty(RDFS.comment).getLiteral().getLanguage());
-        assertEquals(mockUser.getId().toString(), resource.getProperty(Iow.modifier).getObject().toString());
-        assertEquals("2a5c075f-0d0e-4688-90e0-29af1eebbf6d", resource.getProperty(Iow.creator).getObject().toString());
+        assertEquals(mockUser.getId().toString(), MapperUtils.propertyToString(resource, SuomiMeta.modifier));
+        assertEquals("2a5c075f-0d0e-4688-90e0-29af1eebbf6d", MapperUtils.propertyToString(resource, SuomiMeta.creator));
     }
 
     @Test
@@ -284,7 +283,7 @@ class NodeShapeMapperTest {
         var uri = DataModelURI.createModelURI("test");
 
         model.createResource(uri.getModelURI())
-                .addProperty(RDF.type, Iow.ApplicationProfile)
+                .addProperty(RDF.type, SuomiMeta.ApplicationProfile)
                 .addProperty(SuomiMeta.publicationStatus, Status.DRAFT.name());
 
         var dto = new NodeShapeDTO();

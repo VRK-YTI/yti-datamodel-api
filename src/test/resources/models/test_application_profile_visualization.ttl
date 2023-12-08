@@ -1,6 +1,6 @@
 @prefix dcap:       <http://purl.org/ws-mmi-dc/terms/> .
 @prefix dcterms:    <http://purl.org/dc/terms/> .
-@prefix iow:        <https://iri.suomi.fi/model/iow/> .
+@prefix suomi-meta:        <https://iri.suomi.fi/model/suomi-meta/> .
 @prefix owl:        <http://www.w3.org/2002/07/owl#> .
 @prefix personprof: <https://iri.suomi.fi/model/personprof/> .
 @prefix rdf:        <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
@@ -21,7 +21,7 @@ visuprof:age  rdf:type      sh:PropertyShape , owl:DatatypeProperty ;
         sh:path             ytm:age .
 
 <https://iri.suomi.fi/model/visuprof/>
-        rdf:type                    owl:Ontology , iow:ApplicationProfile ;
+        rdf:type                    owl:Ontology , suomi-meta:ApplicationProfile ;
         rdfs:label                  "Soveltamisprofiili visu"@fi ;
         dcterms:identifier          "1ff6db8a-78fa-4411-9cd9-21df40ef4418" ;
         dcterms:language            "fi" ;
