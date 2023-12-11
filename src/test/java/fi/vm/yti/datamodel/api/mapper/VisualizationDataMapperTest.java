@@ -2,9 +2,9 @@ package fi.vm.yti.datamodel.api.mapper;
 
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
 import fi.vm.yti.datamodel.api.v2.dto.visualization.*;
-import fi.vm.yti.datamodel.api.v2.mapper.VisualizationMapper;
-import fi.vm.yti.datamodel.api.v2.properties.Iow;
 import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
+import fi.vm.yti.datamodel.api.v2.mapper.VisualizationMapper;
+import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.vocabulary.DCTerms;
@@ -209,9 +209,9 @@ class VisualizationDataMapperTest {
         var resource = positionModel.getResource(positionGraphURI + position.getIdentifier());
 
         assertEquals("class-1", resource.getProperty(DCTerms.identifier).getString());
-        assertEquals(3.0, resource.getProperty(Iow.posX).getLiteral().getDouble());
-        assertEquals(5.0, resource.getProperty(Iow.posY).getLiteral().getDouble());
-        assertEquals("class-2", resource.listProperties(Iow.referenceTarget).toList().get(0).getString());
+        assertEquals(3.0, resource.getProperty(SuomiMeta.posX).getLiteral().getDouble());
+        assertEquals(5.0, resource.getProperty(SuomiMeta.posY).getLiteral().getDouble());
+        assertEquals("class-2", resource.listProperties(SuomiMeta.referenceTarget).toList().get(0).getString());
     }
 
     @Test

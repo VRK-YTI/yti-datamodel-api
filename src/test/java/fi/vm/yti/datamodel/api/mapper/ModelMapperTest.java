@@ -7,7 +7,6 @@ import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
 import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.mapper.ModelMapper;
 import fi.vm.yti.datamodel.api.v2.properties.DCAP;
-import fi.vm.yti.datamodel.api.v2.properties.Iow;
 import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
 import fi.vm.yti.datamodel.api.v2.repository.ConceptRepository;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
@@ -71,7 +70,7 @@ class ModelMapperTest {
         var mockModel = ModelFactory.createDefaultModel();
         mockModel.createResource(ModelConstants.SUOMI_FI_NAMESPACE + "newint" + ModelConstants.RESOURCE_SEPARATOR)
                         .addProperty(RDF.type, OWL.Ontology)
-                        .addProperty(RDF.type, Iow.ApplicationProfile)
+                .addProperty(RDF.type, SuomiMeta.ApplicationProfile)
                         .addProperty(DCAP.preferredXMLNamespacePrefix, "test");
         when(coreRepository.fetch(anyString())).thenReturn(mockModel);
 
@@ -141,8 +140,8 @@ class ModelMapperTest {
 
         assertNotNull(model.getResource("http://example.com/ns/ext"));
 
-        assertEquals(mockUser.getId().toString(), MapperUtils.propertyToString(modelResource, Iow.creator));
-        assertEquals(mockUser.getId().toString(), MapperUtils.propertyToString(modelResource, Iow.modifier));
+        assertEquals(mockUser.getId().toString(), MapperUtils.propertyToString(modelResource, SuomiMeta.creator));
+        assertEquals(mockUser.getId().toString(), MapperUtils.propertyToString(modelResource, SuomiMeta.modifier));
 
         if (modelType.equals(ModelType.PROFILE)) {
             assertTrue(MapperUtils.arrayPropertyToList(modelResource, DCTerms.requires).contains("http://uri.suomi.fi/codelist/test/testcodelist"));
@@ -155,9 +154,9 @@ class ModelMapperTest {
                 test documentation
                 # Header
                 **bold**
-                """, MapperUtils.localizedPropertyToMap(modelResource, Iow.documentation).get("fi"));
+                """, MapperUtils.localizedPropertyToMap(modelResource, SuomiMeta.documentation).get("fi"));
 
-        assertEquals("test@localhost", MapperUtils.propertyToString(modelResource, Iow.contact));
+        assertEquals("test@localhost", MapperUtils.propertyToString(modelResource, SuomiMeta.contact));
 
         var linkResource = modelResource.getProperty(RDFS.seeAlso);
         var linkObject = linkResource.getResource();
@@ -225,11 +224,11 @@ class ModelMapperTest {
         assertEquals(3, requires.size());
         assertTrue(requires.containsAll(List.of("https://www.example.com/ns/ext/", "http://uri.suomi.fi/terminology/test")));
 
-        assertEquals("test@localhost", MapperUtils.propertyToString(modelResource, Iow.contact));
+        assertEquals("test@localhost", MapperUtils.propertyToString(modelResource, SuomiMeta.contact));
 
         assertEquals("""
                 hello
-                test""", MapperUtils.localizedPropertyToMap(modelResource, Iow.documentation).get("fi"));
+                test""", MapperUtils.localizedPropertyToMap(modelResource, SuomiMeta.documentation).get("fi"));
 
         var linkResource = modelResource.getProperty(RDFS.seeAlso);
         var linkObject = linkResource.getResource();
@@ -251,14 +250,14 @@ class ModelMapperTest {
 
         assertEquals(1, modelResource.listProperties(OWL.imports).toList().size());
         assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "newint", modelResource.listProperties(OWL.imports).next().getObject().toString());
-        assertEquals(mockUser.getId().toString(), modelResource.getProperty(Iow.modifier).getString());
-        assertEquals("2a5c075f-0d0e-4688-90e0-29af1eebbf6d", modelResource.getProperty(Iow.creator).getObject().toString());
+        assertEquals(mockUser.getId().toString(), MapperUtils.propertyToString(modelResource, SuomiMeta.modifier));
+        assertEquals("2a5c075f-0d0e-4688-90e0-29af1eebbf6d", MapperUtils.propertyToString(modelResource, SuomiMeta.creator));
 
-        assertEquals("new@localhost", MapperUtils.propertyToString(modelResource, Iow.contact));
+        assertEquals("new@localhost", MapperUtils.propertyToString(modelResource, SuomiMeta.contact));
         assertEquals("""
                 hello
                 
-                new test""", MapperUtils.localizedPropertyToMap(modelResource, Iow.documentation).get("fi"));
+                new test""", MapperUtils.localizedPropertyToMap(modelResource, SuomiMeta.documentation).get("fi"));
 
         linkResource = modelResource.getProperty(RDFS.seeAlso);
         linkObject = linkResource.getResource();
@@ -452,11 +451,11 @@ class ModelMapperTest {
         mapper.mapUpdateVersionedModel(m, graphUri, dto, EndpointUtils.mockUser);
 
         var resource = m.getResource(graphUri);
-        assertEquals("new documentation", MapperUtils.localizedPropertyToMap(resource, Iow.documentation).get("fi"));
+        assertEquals("new documentation", MapperUtils.localizedPropertyToMap(resource, SuomiMeta.documentation).get("fi"));
         assertEquals(Status.RETIRED, Status.valueOf(MapperUtils.propertyToString(resource, SuomiMeta.publicationStatus)));
         assertEquals("new description", MapperUtils.localizedPropertyToMap(resource, RDFS.comment).get("fi"));
         assertEquals("new label", MapperUtils.localizedPropertyToMap(resource, RDFS.label).get("fi"));
-        assertEquals("new@localhost", MapperUtils.propertyToString(resource, Iow.contact));
+        assertEquals("new@localhost", MapperUtils.propertyToString(resource, SuomiMeta.contact));
         assertEquals("http://urn.fi/URN:NBN:fi:au:ptvl:v1152", MapperUtils.propertyToString(resource, DCTerms.isPartOf));
         assertEquals("urn:uuid:74776e94-7f51-48dc-aeec-c084c4defa09", MapperUtils.propertyToString(resource, DCTerms.contributor));
 

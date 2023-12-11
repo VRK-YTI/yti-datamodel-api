@@ -3,7 +3,7 @@ package fi.vm.yti.datamodel.api.mapper;
 import fi.vm.yti.datamodel.api.v2.dto.GroupManagementOrganizationDTO;
 import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.mapper.OrganizationMapper;
-import fi.vm.yti.datamodel.api.v2.properties.Iow;
+import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.sparql.vocabulary.FOAF;
 import org.apache.jena.vocabulary.DCTerms;
@@ -69,6 +69,6 @@ class OrganizationMapperTest {
         assertEquals("Organization", label.get("en"));
         assertEquals("Test", description.get("en"));
         assertEquals("https://dvv.fi", resource.getProperty(FOAF.homepage).getObject().toString());
-        assertEquals(URN_UUID + parentId, resource.getProperty(Iow.parentOrganization).getObject().toString());
+        assertEquals(URN_UUID + parentId, MapperUtils.propertyToString(resource, SuomiMeta.parentOrganization));
     }
 }

@@ -1,6 +1,5 @@
 @prefix dcap:    <http://purl.org/ws-mmi-dc/terms/> .
 @prefix dcterms: <http://purl.org/dc/terms/> .
-@prefix iow:     <https://iri.suomi.fi/model/iow/> .
 @prefix owl:     <http://www.w3.org/2002/07/owl#> .
 @prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
@@ -12,7 +11,7 @@
 
 
 <https://iri.suomi.fi/model/test/>
-a                               iow:ApplicationProfile , owl:Ontology ;
+a                               suomi-meta:ApplicationProfile , owl:Ontology ;
 rdfs:comment                    "test desc"@fi ;
 rdfs:label                      "testlabel"@fi ;
 dcterms:contributor             <urn:uuid:7d3a3c00-5a6b-489b-a3ed-63bb58c26a63> ;
@@ -27,7 +26,7 @@ dcterms:modified                "2023-01-03T12:44:45.799Z"^^xsd:dateTime ;
 dcap:preferredXMLNamespaceName  "https://iri.suomi.fi/model/test" ;
 dcap:preferredXMLNamespacePrefix
 "test" ;
-iow:contentModified             "2023-01-03T12:44:45.799Z"^^xsd:dateTime ;
+suomi-meta:contentModified             "2023-01-03T12:44:45.799Z"^^xsd:dateTime ;
 suomi-meta:publicationStatus                 "VALID" .
 
 <https://www.example.com/ns/ext>
@@ -45,8 +44,8 @@ test:TestClass  rdf:type     sh:NodeShape ;
         suomi-meta:publicationStatus      "VALID" ;
         skos:editorialNote   "comment visible for admin" ;
         rdfs:comment         "test technical description fi"@fi, "test technical description en"@en ;
-        iow:creator          "2a5c075f-0d0e-4688-90e0-29af1eebbf6d" ;
-        iow:modifier         "2a5c075f-0d0e-4688-90e0-29af1eebbf6d" ;
+        suomi-meta:creator          "2a5c075f-0d0e-4688-90e0-29af1eebbf6d" ;
+        suomi-meta:modifier         "2a5c075f-0d0e-4688-90e0-29af1eebbf6d" ;
         sh:property          <https://iri.suomi.fi/model/test/TestPropertyShape> , <https://iri.suomi.fi/model/test/DeactivatedPropertyShape> ;
         sh:targetClass       <https://iri.suomi.fi/model/target/Class> .
 
@@ -71,7 +70,7 @@ test:TestAttributeRestriction  rdf:type  sh:PropertyShape ;
         sh:maxInclusive      7 ;
         sh:minExclusive      6 ;
         sh:maxExclusive      8 ;
-        iow:codeList         <http://uri.suomi.fi/codelist/Test> ;
+        suomi-meta:codeList         <http://uri.suomi.fi/codelist/Test> ;
         sh:path              <https://iri.suomi.fi/model/ytm/some-attribute> .
 
 test:TestAssociationRestriction  rdf:type  sh:PropertyShape ;

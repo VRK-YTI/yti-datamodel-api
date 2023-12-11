@@ -2,7 +2,7 @@ package fi.vm.yti.datamodel.api.v2.mapper;
 
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
 import fi.vm.yti.datamodel.api.v2.dto.visualization.*;
-import fi.vm.yti.datamodel.api.v2.properties.Iow;
+import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
 import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.rdf.model.*;
 import org.apache.jena.vocabulary.DCTerms;
@@ -173,7 +173,7 @@ public class VisualizationMapper {
             }
             attribute.setMaxCount(MapperUtils.getLiteral(resource, SH.maxCount, Integer.class));
             attribute.setMinCount(MapperUtils.getLiteral(resource, SH.minCount, Integer.class));
-            attribute.setCodeLists(MapperUtils.arrayPropertyToSet(resource, Iow.codeList));
+            attribute.setCodeLists(MapperUtils.arrayPropertyToSet(resource, SuomiMeta.codeList));
             dto.addAttribute(attribute);
         } else if (MapperUtils.hasType(resource, OWL.ObjectProperty)) {
             var association = new VisualizationPropertyShapeAssociationDTO();
@@ -196,11 +196,11 @@ public class VisualizationMapper {
 
     public static void mapPosition(Model positionModel, String positionBaseURI, PositionDataDTO node) {
         var resource = positionModel.createResource(positionBaseURI + node.getIdentifier());
-        resource.addLiteral(Iow.posX, node.getX());
-        resource.addLiteral(Iow.posY, node.getY());
+        resource.addLiteral(SuomiMeta.posX, node.getX());
+        resource.addLiteral(SuomiMeta.posY, node.getY());
         resource.addProperty(DCTerms.identifier, node.getIdentifier());
         if (node.getReferenceTargets() != null) {
-            node.getReferenceTargets().forEach(target -> resource.addProperty(Iow.referenceTarget, target));
+            node.getReferenceTargets().forEach(target -> resource.addProperty(SuomiMeta.referenceTarget, target));
         }
     }
 
@@ -239,11 +239,11 @@ public class VisualizationMapper {
     private static List<String> handlePath(Model positions, String sourceIdentifier, VisualizationReferenceDTO reference,
                                            Set<VisualizationHiddenNodeDTO> hiddenElements) {
 
-        var positionResources = positions.listSubjectsWithProperty(Iow.referenceTarget, reference.getReferenceTarget()).toList();
+        var positionResources = positions.listSubjectsWithProperty(SuomiMeta.referenceTarget, reference.getReferenceTarget()).toList();
 
         for (Resource positionResource : positionResources) {
             var path = new LinkedList<String>();
-            while (positionResource.hasProperty(Iow.referenceTarget)) {
+            while(positionResource.hasProperty(SuomiMeta.referenceTarget)) {
                 var identifier = MapperUtils.propertyToString(positionResource, DCTerms.identifier);
 
                 if (identifier != null && !identifier.startsWith("corner-") && !identifier.equals(sourceIdentifier)) {
@@ -261,7 +261,7 @@ public class VisualizationMapper {
                 path.addFirst(positionResource.getLocalName());
                 hiddenElements.add(mapHiddenNode(positionResource, reference.getReferenceType()));
 
-                var references = positions.listSubjectsWithProperty(Iow.referenceTarget, positionResource.getLocalName()).toList();
+                var references = positions.listSubjectsWithProperty(SuomiMeta.referenceTarget, positionResource.getLocalName()).toList();
 
                 // no more references found, return path
                 // should not happen as each hidden node should have references
@@ -283,15 +283,15 @@ public class VisualizationMapper {
 
         dto.setIdentifier(MapperUtils.propertyToString(position, DCTerms.identifier));
         dto.setPosition(getPositionFromResource(position));
-        dto.setReferenceTarget(MapperUtils.propertyToString(position, Iow.referenceTarget));
+        dto.setReferenceTarget(MapperUtils.propertyToString(position, SuomiMeta.referenceTarget));
         dto.setReferenceType(referenceType);
 
         return dto;
     }
 
     private static PositionDTO getPositionFromResource(Resource positionResource) {
-        var x = MapperUtils.getLiteral(positionResource, Iow.posX, Double.class);
-        var y = MapperUtils.getLiteral(positionResource, Iow.posY, Double.class);
+        var x = MapperUtils.getLiteral(positionResource, SuomiMeta.posX, Double.class);
+        var y = MapperUtils.getLiteral(positionResource, SuomiMeta.posY, Double.class);
         return new PositionDTO(
                 x != null ? x : 0.0,
                 y != null ? y : 0.0

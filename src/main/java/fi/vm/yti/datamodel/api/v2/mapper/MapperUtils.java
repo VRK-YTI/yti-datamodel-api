@@ -2,7 +2,6 @@ package fi.vm.yti.datamodel.api.v2.mapper;
 
 import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
-import fi.vm.yti.datamodel.api.v2.properties.Iow;
 import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelUtils;
@@ -330,27 +329,27 @@ public class MapperUtils {
     }
 
     public static boolean isApplicationProfile(Resource resource) {
-        return hasType(resource, Iow.ApplicationProfile);
+        return hasType(resource, SuomiMeta.ApplicationProfile);
     }
 
     public static boolean isLibrary(Resource resource) {
-        return hasType(resource, OWL.Ontology) && !hasType(resource, Iow.ApplicationProfile);
+        return hasType(resource, OWL.Ontology) && !hasType(resource, SuomiMeta.ApplicationProfile);
     }
 
     public static void addCreationMetadata(Resource resource, YtiUser user) {
         var creationDate = new XSDDateTime(Calendar.getInstance());
         resource.addProperty(DCTerms.modified, ResourceFactory.createTypedLiteral(creationDate))
                 .addProperty(DCTerms.created, ResourceFactory.createTypedLiteral(creationDate))
-                .addProperty(Iow.creator, user.getId().toString())
-                .addProperty(Iow.modifier, user.getId().toString());
+                .addProperty(SuomiMeta.creator, user.getId().toString())
+                .addProperty(SuomiMeta.modifier, user.getId().toString());
     }
 
     public static void addUpdateMetadata(Resource resource, YtiUser user) {
         var updateDate = new XSDDateTime(Calendar.getInstance());
         resource.removeAll(DCTerms.modified);
         resource.addProperty(DCTerms.modified, ResourceFactory.createTypedLiteral(updateDate));
-        resource.removeAll(Iow.modifier);
-        resource.addProperty(Iow.modifier, user.getId().toString());
+        resource.removeAll(SuomiMeta.modifier);
+        resource.addProperty(SuomiMeta.modifier, user.getId().toString());
     }
 
     public static void mapCreationInfo(ResourceCommonDTO dto,
@@ -360,8 +359,8 @@ public class MapperUtils {
         var modified = resource.getProperty(DCTerms.modified).getLiteral().getString();
         dto.setCreated(created);
         dto.setModified(modified);
-        dto.setCreator(new UserDTO(MapperUtils.propertyToString(resource, Iow.creator)));
-        dto.setModifier(new UserDTO(MapperUtils.propertyToString(resource, Iow.modifier)));
+        dto.setCreator(new UserDTO(MapperUtils.propertyToString(resource, SuomiMeta.creator)));
+        dto.setModifier(new UserDTO(MapperUtils.propertyToString(resource, SuomiMeta.modifier)));
 
         if (userMapper != null) {
             userMapper.accept(dto);
@@ -414,7 +413,7 @@ public class MapperUtils {
 
         var contributors = MapperUtils.arrayPropertyToSet(modelResource, DCTerms.contributor);
         dto.setContributor(OrganizationMapper.mapOrganizationsToDTO(contributors, orgModel));
-        dto.setContact(MapperUtils.propertyToString(modelResource, Iow.contact));
+        dto.setContact(MapperUtils.propertyToString(modelResource, SuomiMeta.contact));
         dto.setNote(MapperUtils.localizedPropertyToMap(resource, RDFS.comment));
     }
 

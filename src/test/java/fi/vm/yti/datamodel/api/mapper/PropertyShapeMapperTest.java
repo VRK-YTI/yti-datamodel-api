@@ -4,7 +4,6 @@ import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.endpoint.EndpointUtils;
 import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.mapper.ResourceMapper;
-import fi.vm.yti.datamodel.api.v2.properties.Iow;
 import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
 import org.apache.jena.rdf.model.ModelFactory;
@@ -65,7 +64,7 @@ class PropertyShapeMapperTest {
         assertEquals(7, MapperUtils.getLiteral(resource, SH.maxInclusive, Integer.class));
         assertEquals(6, MapperUtils.getLiteral(resource, SH.minExclusive, Integer.class));
         assertEquals(8, MapperUtils.getLiteral(resource, SH.maxExclusive, Integer.class));
-        assertTrue(MapperUtils.arrayPropertyToList(resource, Iow.codeList).contains("http://uri.suomi.fi/codelist/test/testcodelist"));
+        assertTrue(MapperUtils.arrayPropertyToList(resource, SuomiMeta.codeList).contains("http://uri.suomi.fi/codelist/test/testcodelist"));
     }
 
     @Test

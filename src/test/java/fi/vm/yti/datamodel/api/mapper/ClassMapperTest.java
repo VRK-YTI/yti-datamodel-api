@@ -5,7 +5,6 @@ import fi.vm.yti.datamodel.api.v2.endpoint.EndpointUtils;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
 import fi.vm.yti.datamodel.api.v2.mapper.ClassMapper;
 import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
-import fi.vm.yti.datamodel.api.v2.properties.Iow;
 import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
@@ -72,8 +71,8 @@ class ClassMapperTest {
         assertEquals("https://www.example.com/ns/ext/SubClass", classResource.getProperty(RDFS.subClassOf).getObject().toString());
         assertEquals(1, classResource.listProperties(OWL.equivalentClass).toList().size());
         assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "int/EqClass", classResource.getProperty(OWL.equivalentClass).getObject().toString());
-        assertEquals(mockUser.getId().toString(), classResource.getProperty(Iow.creator).getString());
-        assertEquals(mockUser.getId().toString(), classResource.getProperty(Iow.modifier).getString());
+        assertEquals(mockUser.getId().toString(), MapperUtils.propertyToString(classResource, SuomiMeta.creator));
+        assertEquals(mockUser.getId().toString(), MapperUtils.propertyToString(classResource, SuomiMeta.modifier));
     }
 
     @Test
@@ -213,8 +212,8 @@ class ClassMapperTest {
         assertEquals(1, resource.listProperties(RDFS.comment).toList().size());
         assertEquals("new note", resource.getProperty(RDFS.comment).getLiteral().getString());
         assertEquals("fi", resource.getProperty(RDFS.comment).getLiteral().getLanguage());
-        assertEquals(mockUser.getId().toString(), resource.getProperty(Iow.modifier).getObject().toString());
-        assertEquals("2a5c075f-0d0e-4688-90e0-29af1eebbf6d", resource.getProperty(Iow.creator).getObject().toString());
+        assertEquals(mockUser.getId().toString(), MapperUtils.propertyToString(resource, SuomiMeta.modifier));
+        assertEquals("2a5c075f-0d0e-4688-90e0-29af1eebbf6d", MapperUtils.propertyToString(resource, SuomiMeta.creator));
 
         // class restrictions added to owl:equivalentClass property should remain
         assertEquals(1, resource.listProperties(OWL.equivalentClass).filterKeep(p -> p.getObject().isAnon()).toList().size());
