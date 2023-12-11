@@ -49,7 +49,7 @@ class PropertyShapeMapperTest {
         var allowedValues = resource.listProperties(SH.in).mapWith((var s) -> s.getObject().toString()).toList();
 
         assertEquals("PropertyShape label", MapperUtils.localizedPropertyToMap(resource, RDFS.label).get("fi"));
-        assertEquals(Status.VALID, Status.valueOf(MapperUtils.propertyToString(resource, SuomiMeta.publicationStatus)));
+        assertEquals(Status.VALID, MapperUtils.getStatusFromUri(MapperUtils.propertyToString(resource, SuomiMeta.publicationStatus)));
         assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "test_lib/1.0.0/test_attribute", resource.getProperty(SH.path).getObject().toString());
         assertTrue(MapperUtils.hasType(resource, OWL.DatatypeProperty, SH.PropertyShape));
         assertTrue(allowedValues.containsAll(List.of("Value 1", "Value 2")));
@@ -86,7 +86,7 @@ class PropertyShapeMapperTest {
         var resource = model.getResource(ModelConstants.SUOMI_FI_NAMESPACE + "test/ps-1");
 
         assertEquals("PropertyShape label", MapperUtils.localizedPropertyToMap(resource, RDFS.label).get("fi"));
-        assertEquals(Status.VALID, Status.valueOf(MapperUtils.propertyToString(resource, SuomiMeta.publicationStatus)));
+        assertEquals(Status.VALID, MapperUtils.getStatusFromUri(MapperUtils.propertyToString(resource, SuomiMeta.publicationStatus)));
         assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "test_lib/1.0.0/test_attribute", resource.getProperty(SH.path).getObject().toString());
         assertTrue(MapperUtils.hasType(resource, OWL.ObjectProperty, SH.PropertyShape));
         assertEquals(10, MapperUtils.getLiteral(resource, SH.maxCount, Integer.class));

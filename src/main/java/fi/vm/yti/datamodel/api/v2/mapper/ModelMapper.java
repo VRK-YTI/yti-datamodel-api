@@ -164,7 +164,7 @@ public class ModelMapper {
         datamodelDTO.setUri(uri.getGraphURI());
         var modelResource = model.getResource(uri.getModelURI());
 
-        datamodelDTO.setStatus(Status.valueOf(MapperUtils.propertyToString(modelResource, SuomiMeta.publicationStatus)));
+        datamodelDTO.setStatus(MapperUtils.getStatusFromUri(MapperUtils.propertyToString(modelResource, SuomiMeta.publicationStatus)));
         datamodelDTO.setVersion(MapperUtils.propertyToString(modelResource, OWL.versionInfo));
         datamodelDTO.setVersionIri(MapperUtils.propertyToString(modelResource, OWL2.versionIRI));
         if(MapperUtils.isApplicationProfile(modelResource)){
@@ -256,7 +256,7 @@ public class ModelMapper {
             indexModel.setId(resource.getURI());
         }
         indexModel.setUri(resource.getURI());
-        indexModel.setStatus(Status.valueOf(MapperUtils.propertyToString(resource, SuomiMeta.publicationStatus)));
+        indexModel.setStatus(MapperUtils.getStatusFromUri(MapperUtils.propertyToString(resource, SuomiMeta.publicationStatus)));
         indexModel.setVersion(MapperUtils.propertyToString(resource, OWL.versionInfo));
         indexModel.setVersionIri(versionIri);
         indexModel.setModified(resource.getProperty(DCTerms.modified).getString());
@@ -402,7 +402,7 @@ public class ModelMapper {
         var res = model.getResource(uri.getModelURI());
         res.addProperty(OWL2.versionIRI, ResourceFactory.createResource(uri.getGraphURI()));
         res.addProperty(OWL.versionInfo, uri.getVersion());
-        model.listSubjectsWithProperty(SuomiMeta.publicationStatus).forEach(subject -> MapperUtils.updateStringProperty(subject, SuomiMeta.publicationStatus, status.name()));
+        model.listSubjectsWithProperty(SuomiMeta.publicationStatus).forEach(subject -> MapperUtils.updateUriProperty(subject, SuomiMeta.publicationStatus, MapperUtils.getStatusUri(status)));
     }
 
     public void mapPriorVersion(Model model, String modelUri, String priorVersionUri) {
@@ -415,7 +415,7 @@ public class ModelMapper {
         var dto = new ModelVersionInfo();
         dto.setLabel(MapperUtils.localizedPropertyToMap(resource, RDFS.label));
         dto.setVersionIRI(MapperUtils.propertyToString(resource, OWL2.versionIRI));
-        dto.setStatus(Status.valueOf(MapperUtils.propertyToString(resource, SuomiMeta.publicationStatus)));
+        dto.setStatus(MapperUtils.getStatusFromUri(MapperUtils.propertyToString(resource, SuomiMeta.publicationStatus)));
         dto.setVersion(MapperUtils.propertyToString(resource, OWL.versionInfo));
         return dto;
     }
@@ -453,7 +453,7 @@ public class ModelMapper {
     public void mapUpdateVersionedModel(Model model, String modelUri, VersionedModelDTO dto, YtiUser user) {
         var resource = model.getResource(modelUri);
 
-        var status = Status.valueOf(MapperUtils.propertyToString(resource, SuomiMeta.publicationStatus));
+        var status = MapperUtils.getStatusFromUri(MapperUtils.propertyToString(resource, SuomiMeta.publicationStatus));
         if(status.equals(Status.VALID) && !List.of(Status.VALID, Status.RETIRED, Status.SUPERSEDED).contains(dto.getStatus())){
             throw new MappingError("Cannot change status from VALID to " + dto.getStatus());
         }else if(status.equals(Status.SUGGESTED) && !List.of(Status.SUGGESTED, Status.VALID, Status.RETIRED, Status.SUPERSEDED).contains(dto.getStatus())) {

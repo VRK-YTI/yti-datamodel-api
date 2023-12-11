@@ -350,7 +350,7 @@ class ResourceServiceTest {
         var uri = DataModelURI.createResourceURI("test", "resource-1");
         model.createResource(uri.getResourceURI())
                 .addProperty(DCTerms.identifier, "resource-1")
-                .addProperty(SuomiMeta.publicationStatus, Status.DRAFT.name())
+                .addProperty(SuomiMeta.publicationStatus, ResourceFactory.createResource(MapperUtils.getStatusUri(Status.DRAFT)))
                 .addProperty(DCTerms.created, "created")
                 .addProperty(DCTerms.modified, "modified");
         model.createResource(uri.getModelURI() + "resource-2")

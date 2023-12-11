@@ -25,7 +25,7 @@ dcap:preferredXMLNamespaceName  "https://iri.suomi.fi/model/test" ;
 dcap:preferredXMLNamespacePrefix
 "test" ;
 suomi-meta:contentModified             "2023-01-03T12:44:45.799Z"^^xsd:dateTime ;
-suomi-meta:publicationStatus    "VALID" ;
+suomi-meta:publicationStatus    <http://uri.suomi.fi/codelist/interoperabilityplatform/interoperabilityplatform_status/code/VALID> ;
 owl:versionInfo                 "1.0.1" ;
 owl:versionIRI                  <https://iri.suomi.fi/model/test/1.0.1/> .
 
@@ -43,7 +43,7 @@ test:TestClass  rdf:type     owl:Class ;
         dcterms:modified     "2023-02-03T11:46:36.404Z"^^xsd:dateTime ;
         dcterms:subject      <http://uri.suomi.fi/terminology/test/test1> ;
         owl:equivalentClass  <https://iri.suomi.fi/model/test/EqClass> ;
-        suomi-meta:publicationStatus      "VALID" ;
+        suomi-meta:publicationStatus      <http://uri.suomi.fi/codelist/interoperabilityplatform/interoperabilityplatform_status/code/VALID> ;
         skos:editorialNote   "comment visible for admin" ;
         rdfs:comment         "test note fi"@fi, "test note en"@en ;
         suomi-meta:creator           "2a5c075f-0d0e-4688-90e0-29af1eebbf6d" ;
@@ -67,7 +67,7 @@ test:TestAttribute  rdf:type     owl:DatatypeProperty ;
         dcterms:modified        "2023-02-03T11:46:36.404Z"^^xsd:dateTime ;
         dcterms:subject         <http://uri.suomi.fi/terminology/test/test1> ;
         owl:equivalentProperty  <https://iri.suomi.fi/model/test/EqResource> ;
-        suomi-meta:publicationStatus         "VALID" ;
+        suomi-meta:publicationStatus         <http://uri.suomi.fi/codelist/interoperabilityplatform/interoperabilityplatform_status/code/VALID> ;
         skos:editorialNote      "comment visible for admin" ;
         rdfs:comment            "test note fi"@fi, "test note en"@en ;
         suomi-meta:creator             "2a5c075f-0d0e-4688-90e0-29af1eebbf6d" ;
@@ -84,7 +84,7 @@ test:TestAssociation  rdf:type     owl:ObjectProperty, owl:FunctionalProperty ;
         dcterms:modified        "2023-02-03T11:46:36.404Z"^^xsd:dateTime ;
         dcterms:subject         <http://uri.suomi.fi/terminology/test/test1> ;
         owl:equivalentProperty  <https://iri.suomi.fi/model/test/EqResource> ;
-        suomi-meta:publicationStatus         "VALID" ;
+        suomi-meta:publicationStatus         <http://uri.suomi.fi/codelist/interoperabilityplatform/interoperabilityplatform_status/code/VALID> ;
         skos:editorialNote      "comment visible for admin" ;
         rdfs:comment            "test note fi"@fi, "test note en"@en ;
         suomi-meta:creator             "2a5c075f-0d0e-4688-90e0-29af1eebbf6d" ;

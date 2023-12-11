@@ -58,7 +58,7 @@ class ClassMapperTest {
         assertEquals("fi", classResource.getProperty(RDFS.label).getLiteral().getLanguage());
 
         assertEquals(OWL.Class, classResource.getProperty(RDF.type).getResource());
-        assertEquals(Status.VALID, Status.valueOf(MapperUtils.propertyToString(classResource, SuomiMeta.publicationStatus)));
+        assertEquals(Status.VALID, MapperUtils.getStatusFromUri(MapperUtils.propertyToString(classResource, SuomiMeta.publicationStatus)));
         assertEquals(uri.getModelURI(), classResource.getProperty(RDFS.isDefinedBy).getObject().toString());
 
         assertEquals(XSDDatatype.XSDNCName, classResource.getProperty(DCTerms.identifier).getLiteral().getDatatype());
@@ -239,7 +239,7 @@ class ClassMapperTest {
                 .filterDrop(p -> p.getObject().isAnon())
                 .next().getObject().toString());
         assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "test/SubClass", resource.getProperty(RDFS.subClassOf).getObject().toString());
-        assertEquals(Status.VALID, Status.valueOf(MapperUtils.propertyToString(resource, SuomiMeta.publicationStatus)));
+        assertEquals(Status.VALID, MapperUtils.getStatusFromUri(MapperUtils.propertyToString(resource, SuomiMeta.publicationStatus)));
         assertEquals("comment visible for admin", resource.getProperty(SKOS.editorialNote).getObject().toString());
         assertEquals(2, resource.listProperties(RDFS.comment).toList().size());
 
@@ -251,7 +251,7 @@ class ClassMapperTest {
         assertNull(resource.getProperty(RDFS.label));
         assertEquals("TestClass", resource.getProperty(DCTerms.identifier).getLiteral().getString());
         assertNull(resource.getProperty(DCTerms.subject));
-        assertEquals(Status.VALID, Status.valueOf(MapperUtils.propertyToString(resource, SuomiMeta.publicationStatus)));
+        assertEquals(Status.VALID, MapperUtils.getStatusFromUri(MapperUtils.propertyToString(resource, SuomiMeta.publicationStatus)));
         assertNull(resource.getProperty(SKOS.editorialNote));
         assertEquals(0, resource.listProperties(RDFS.comment).toList().size());
     }

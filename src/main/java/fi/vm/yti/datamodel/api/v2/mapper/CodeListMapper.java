@@ -1,7 +1,6 @@
 package fi.vm.yti.datamodel.api.v2.mapper;
 
 import fi.vm.yti.datamodel.api.v2.dto.CodeListDTO;
-import fi.vm.yti.datamodel.api.v2.dto.Status;
 import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
@@ -29,7 +28,7 @@ public class CodeListMapper {
         var label = MapperUtils.localizedPropertyToMap(resource, RDFS.label);
         dto.setPrefLabel(label);
         dto.setId(graph);
-        dto.setStatus(Status.valueOf(MapperUtils.propertyToString(resource, SuomiMeta.publicationStatus)));
+        dto.setStatus(MapperUtils.getStatusFromUri(MapperUtils.propertyToString(resource, SuomiMeta.publicationStatus)));
         return dto;
     }
 }

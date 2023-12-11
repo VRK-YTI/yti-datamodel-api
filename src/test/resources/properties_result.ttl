@@ -13,14 +13,14 @@
         rdfs:isDefinedBy    <https://iri.suomi.fi/model/test_lib/> ;
         rdfs:label          "Attribute attribute-1"@fi ;
         dcterms:identifier  "attribute-1"^^xsd:NCName ;
-        suomi-meta:publicationStatus     "VALID" .
+        suomi-meta:publicationStatus     <http://uri.suomi.fi/codelist/interoperabilityplatform/interoperabilityplatform_status/code/VALID> .
 
 <https://iri.suomi.fi/model/test_lib/association-1>
         rdf:type            owl:ObjectProperty ;
         rdfs:isDefinedBy    <https://iri.suomi.fi/model/test_lib/> ;
         rdfs:label          "Association association-1"@fi ;
         dcterms:identifier  "attribute-1"^^xsd:NCName ;
-        suomi-meta:publicationStatus     "VALID" .
+        suomi-meta:publicationStatus     <http://uri.suomi.fi/codelist/interoperabilityplatform/interoperabilityplatform_status/code/VALID> .
 
 <https://iri.suomi.fi/model/test_lib/>
         owl:versionIRI       <https://iri.suomi.fi/model/test_lib/1.0.0/> .

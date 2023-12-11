@@ -116,7 +116,7 @@ class ModelMapperTest {
         Resource modelResource = model.getResource(ModelConstants.SUOMI_FI_NAMESPACE + "test" + ModelConstants.RESOURCE_SEPARATOR);
 
         assertEquals(2, modelResource.listProperties(RDFS.label).toList().size());
-        assertEquals(Status.DRAFT, Status.valueOf(modelResource.getProperty(SuomiMeta.publicationStatus).getString()));
+        assertEquals(Status.DRAFT, MapperUtils.getStatusFromUri(modelResource.getProperty(SuomiMeta.publicationStatus).getString()));
 
 
         var requires = MapperUtils.arrayPropertyToList(modelResource, DCTerms.requires);
@@ -369,7 +369,7 @@ class ModelMapperTest {
         var resource = m.getResource(graphUri);
         assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "test/1.0.1/", MapperUtils.propertyToString(resource, OWL2.versionIRI));
 
-        assertEquals(Status.VALID, Status.valueOf(MapperUtils.propertyToString(resource, SuomiMeta.publicationStatus)));
+        assertEquals(Status.VALID, MapperUtils.getStatusFromUri(MapperUtils.propertyToString(resource, SuomiMeta.publicationStatus)));
         assertEquals("1.0.1", MapperUtils.propertyToString(resource, OWL.versionInfo));
 
         assertEquals(graphUri + "1.0.0/", MapperUtils.propertyToString(resource, OWL.priorVersion));
@@ -452,7 +452,7 @@ class ModelMapperTest {
 
         var resource = m.getResource(graphUri);
         assertEquals("new documentation", MapperUtils.localizedPropertyToMap(resource, SuomiMeta.documentation).get("fi"));
-        assertEquals(Status.RETIRED, Status.valueOf(MapperUtils.propertyToString(resource, SuomiMeta.publicationStatus)));
+        assertEquals(Status.RETIRED, MapperUtils.getStatusFromUri(MapperUtils.propertyToString(resource, SuomiMeta.publicationStatus)));
         assertEquals("new description", MapperUtils.localizedPropertyToMap(resource, RDFS.comment).get("fi"));
         assertEquals("new label", MapperUtils.localizedPropertyToMap(resource, RDFS.label).get("fi"));
         assertEquals("new@localhost", MapperUtils.propertyToString(resource, SuomiMeta.contact));

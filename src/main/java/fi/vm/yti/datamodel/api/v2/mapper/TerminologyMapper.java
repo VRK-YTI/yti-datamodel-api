@@ -45,7 +45,7 @@ public class TerminologyMapper {
         resource.addProperty(RDF.type, SKOS.Concept);
         resource.addProperty(SKOS.inScheme, ResourceFactory.createResource(terminologyURI));
         resource.addProperty(SuomiMeta.publicationStatus,
-                getProperty(nodeDTO.getProperties().getStatus(), Status.DRAFT.name()));
+                ResourceFactory.createResource(getProperty(nodeDTO.getProperties().getStatus(), MapperUtils.getStatusUri(Status.DRAFT))));
 
         for (var def : nodeDTO.getProperties().getDefinition()) {
             if (def.getValue() == null || def.getValue().isEmpty()) {
@@ -74,7 +74,7 @@ public class TerminologyMapper {
 
         var status = Status.DRAFT;
         try {
-            status = Status.valueOf(MapperUtils.propertyToString(resource, SuomiMeta.publicationStatus));
+            status = MapperUtils.getStatusFromUri(MapperUtils.propertyToString(resource, SuomiMeta.publicationStatus));
         } catch (Exception e) {
             // use default status in case of status is missing or invalid
         }

@@ -250,7 +250,7 @@ public class ResourceMapper {
         indexResource.setId(id.getResourceVersionURI());
         indexResource.setCurie(MapperUtils.uriToURIDTO(resourceUri, model).getCurie());
         indexResource.setLabel(MapperUtils.localizedPropertyToMap(resource, RDFS.label));
-        indexResource.setStatus(Status.valueOf(MapperUtils.propertyToString(resource, SuomiMeta.publicationStatus)));
+        indexResource.setStatus(MapperUtils.getStatusFromUri(MapperUtils.propertyToString(resource, SuomiMeta.publicationStatus)));
         indexResource.setIsDefinedBy(MapperUtils.propertyToString(resource, RDFS.isDefinedBy));
         indexResource.setIdentifier(resource.getLocalName());
         indexResource.setNamespace(resource.getNameSpace());

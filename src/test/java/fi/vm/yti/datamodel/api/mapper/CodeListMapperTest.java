@@ -27,7 +27,7 @@ class CodeListMapperTest {
 
         assertEquals(graph, resource.getURI());
         assertEquals("Test@en", resource.getProperty(RDFS.label).getObject().toString());
-        assertEquals(Status.DRAFT, Status.valueOf(MapperUtils.propertyToString(resource, SuomiMeta.publicationStatus)));
+        assertEquals(Status.DRAFT, MapperUtils.getStatusFromUri(MapperUtils.propertyToString(resource, SuomiMeta.publicationStatus)));
     }
 
     @Test

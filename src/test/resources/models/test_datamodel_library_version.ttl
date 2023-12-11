@@ -24,7 +24,7 @@
         dcap:preferredXMLNamespacePrefix
                 "test" ;
         suomi-meta:contentModified             "2023-01-03T12:44:45.799Z"^^xsd:dateTime ;
-        suomi-meta:publicationStatus    "VALID" ;
+        suomi-meta:publicationStatus    <http://uri.suomi.fi/codelist/interoperabilityplatform/interoperabilityplatform_status/code/VALID> ;
         owl:versionInfo                 "1.0.1" ;
         suomi-meta:creator                     "2a5c075f-0d0e-4688-90e0-29af1eebbf6d" ;
         suomi-meta:modifier                    "2a5c075f-0d0e-4688-90e0-29af1eebbf6d" ;

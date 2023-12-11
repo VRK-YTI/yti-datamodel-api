@@ -81,7 +81,7 @@ visu:natural-person  rdf:type         owl:Class ;
         dcap:preferredXMLNamespacePrefix
                 "visu" ;
         owl:imports                   <https://www.example.com/ns/external/> ;
-        suomi-meta:publicationStatus  "DRAFT" .
+        suomi-meta:publicationStatus  <http://uri.suomi.fi/codelist/interoperabilityplatform/interoperabilityplatform_status/code/DRAFT> .
 
 visu:is-address  rdf:type             owl:ObjectProperty ;
         rdfs:isDefinedBy              <https://iri.suomi.fi/model/visu/> ;

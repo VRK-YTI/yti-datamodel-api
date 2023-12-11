@@ -6,7 +6,7 @@
 
 <http://uri.suomi.fi/terminology/dd0e10ed/concept-1>
         rdfs:label       "Testisanasto"@fi , "Test terminology"@en ;
-        suomi-meta:publicationStatus  "DRAFT" ;
+        suomi-meta:publicationStatus  <http://uri.suomi.fi/codelist/interoperabilityplatform/interoperabilityplatform_status/code/DRAFT> ;
         skos:inScheme    <http://uri.suomi.fi/terminology/dd0e10ed/> ;
         skos:prefLabel   "käsite"@fi , "concept"@en ;
         skos:definition  "määritelmä"@fi , "definition"@en .
