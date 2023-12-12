@@ -39,6 +39,17 @@ public class MapperUtils {
         }
     }
 
+    public static String getStatusUri(Status status) {
+        return "http://uri.suomi.fi/codelist/interoperabilityplatform/interoperabilityplatform_status/code/" + status.name();
+    }
+
+    public static Status getStatusFromUri(String uri) {
+        if(uri == null || uri.isBlank()) {
+            throw new MappingError("Could not get status from uri");
+        }
+        return Status.valueOf(uri.substring(uri.lastIndexOf("/") + 1));
+    }
+
     public static String getModelIdFromNamespace(String namespace) {
         var nsWithoutVersion = namespace.replaceAll("/[0-9.]+(.*)$", "");
         return nsWithoutVersion.substring(nsWithoutVersion.lastIndexOf("/") + 1);
@@ -398,7 +409,7 @@ public class MapperUtils {
         dto.setCurie(uriDTO.getCurie());
 
         dto.setLabel(MapperUtils.localizedPropertyToMap(resource, RDFS.label));
-        dto.setStatus(Status.valueOf(MapperUtils.propertyToString(resource, SuomiMeta.publicationStatus)));
+        dto.setStatus(MapperUtils.getStatusFromUri(MapperUtils.propertyToString(resource, SuomiMeta.publicationStatus)));
 
         var subject = MapperUtils.propertyToString(resource, DCTerms.subject);
         if (subject != null) {

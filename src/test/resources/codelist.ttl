@@ -6,4 +6,4 @@
 <http://uri.suomi.fi/codelist/test/testcodelist>
     a               suomi-meta:CodeScheme ;
     rdfs:label      "testkoodisto"@fi , "Test codelist"@en  ;
-    suomi-meta:publicationStatus "DRAFT" .
+    suomi-meta:publicationStatus <http://uri.suomi.fi/codelist/interoperabilityplatform/interoperabilityplatform_status/code/DRAFT> .

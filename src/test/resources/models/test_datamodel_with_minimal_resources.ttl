@@ -25,7 +25,7 @@
         dcap:preferredXMLNamespacePrefix
                 "test" ;
         suomi-meta:contentModified             "2023-01-03T12:44:45.799Z"^^xsd:dateTime ;
-        suomi-meta:publicationStatus                 "VALID" .
+        suomi-meta:publicationStatus                 <http://uri.suomi.fi/codelist/interoperabilityplatform/interoperabilityplatform_status/code/VALID> .
 
 <https://www.example.com/ns/ext>
         dcterms:type                        rdfs:Resource ;
@@ -38,7 +38,7 @@ test:TestClass  rdf:type     owl:Class ;
         dcterms:created      "2023-02-03T11:46:36.404Z"^^xsd:dateTime ;
         dcterms:identifier   "TestClass"^^xsd:NCName ;
         dcterms:modified     "2023-02-03T11:46:36.404Z"^^xsd:dateTime ;
-        suomi-meta:publicationStatus      "VALID" .
+        suomi-meta:publicationStatus      <http://uri.suomi.fi/codelist/interoperabilityplatform/interoperabilityplatform_status/code/VALID> .
 
 test:TestAttribute  rdf:type     owl:DatatypeProperty ;
         rdfs:isDefinedBy     <https://iri.suomi.fi/model/test/> ;
@@ -46,7 +46,7 @@ test:TestAttribute  rdf:type     owl:DatatypeProperty ;
         dcterms:created      "2023-02-03T11:46:36.404Z"^^xsd:dateTime ;
         dcterms:identifier   "TestAttribute"^^xsd:NCName ;
         dcterms:modified     "2023-02-03T11:46:36.404Z"^^xsd:dateTime ;
-        suomi-meta:publicationStatus      "VALID" .
+        suomi-meta:publicationStatus      <http://uri.suomi.fi/codelist/interoperabilityplatform/interoperabilityplatform_status/code/VALID> .
 
 test:TestAssociation  rdf:type     owl:ObjectProperty ;
         rdfs:isDefinedBy     <https://iri.suomi.fi/model/test/> ;
@@ -54,4 +54,4 @@ test:TestAssociation  rdf:type     owl:ObjectProperty ;
         dcterms:created      "2023-02-03T11:46:36.404Z"^^xsd:dateTime ;
         dcterms:identifier   "TestAssociation"^^xsd:NCName ;
         dcterms:modified     "2023-02-03T11:46:36.404Z"^^xsd:dateTime ;
-        suomi-meta:publicationStatus      "VALID" .
+        suomi-meta:publicationStatus      <http://uri.suomi.fi/codelist/interoperabilityplatform/interoperabilityplatform_status/code/VALID> .

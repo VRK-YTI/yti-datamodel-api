@@ -113,7 +113,7 @@ public class ClassMapper {
                     .addProperty(RDF.type, SH.PropertyShape)
                     .addProperty(RDF.type, targetResource.getProperty(RDF.type).getObject())
                     .addProperty(RDFS.isDefinedBy, classResource.getProperty(RDFS.isDefinedBy).getObject())
-                    .addProperty(SuomiMeta.publicationStatus, Status.DRAFT.name());
+                    .addProperty(SuomiMeta.publicationStatus, ResourceFactory.createResource(MapperUtils.getStatusUri(Status.DRAFT)));
 
             MapperUtils.addCreationMetadata(propertyShapeResource, user);
 

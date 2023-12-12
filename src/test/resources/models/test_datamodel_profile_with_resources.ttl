@@ -27,7 +27,7 @@ dcap:preferredXMLNamespaceName  "https://iri.suomi.fi/model/test" ;
 dcap:preferredXMLNamespacePrefix
 "test" ;
 suomi-meta:contentModified             "2023-01-03T12:44:45.799Z"^^xsd:dateTime ;
-suomi-meta:publicationStatus                 "VALID" .
+suomi-meta:publicationStatus                 <http://uri.suomi.fi/codelist/interoperabilityplatform/interoperabilityplatform_status/code/VALID> .
 
 <https://www.example.com/ns/ext>
 dcterms:type                        rdfs:Resource ;
@@ -41,7 +41,7 @@ test:TestClass  rdf:type     sh:NodeShape ;
         dcterms:identifier   "TestClass"^^xsd:NCName ;
         dcterms:modified     "2023-02-03T11:46:36.404Z"^^xsd:dateTime ;
         dcterms:subject      <http://uri.suomi.fi/terminology/test/test1> ;
-        suomi-meta:publicationStatus      "VALID" ;
+        suomi-meta:publicationStatus      <http://uri.suomi.fi/codelist/interoperabilityplatform/interoperabilityplatform_status/code/VALID> ;
         skos:editorialNote   "comment visible for admin" ;
         rdfs:comment         "test technical description fi"@fi, "test technical description en"@en ;
         suomi-meta:creator          "2a5c075f-0d0e-4688-90e0-29af1eebbf6d" ;
@@ -57,7 +57,7 @@ test:TestAttributeRestriction  rdf:type  sh:PropertyShape ;
         dcterms:created      "2023-02-03T11:46:36.404Z"^^xsd:dateTime ;
         dcterms:modified     "2023-02-03T11:46:36.404Z"^^xsd:dateTime ;
         rdfs:label           "test property shape"@fi ;
-        suomi-meta:publicationStatus      "DRAFT" ;
+        suomi-meta:publicationStatus      <http://uri.suomi.fi/codelist/interoperabilityplatform/interoperabilityplatform_status/code/DRAFT> ;
         sh:defaultValue      "foo" ;
         sh:hasValue          "hasValue" ;
         sh:datatype          "xsd:integer" ;
@@ -81,7 +81,7 @@ test:TestAssociationRestriction  rdf:type  sh:PropertyShape ;
         dcterms:created      "2023-02-03T11:46:36.404Z"^^xsd:dateTime ;
         dcterms:modified     "2023-02-03T11:46:36.404Z"^^xsd:dateTime ;
         rdfs:label           "test property shape"@fi ;
-        suomi-meta:publicationStatus      "DRAFT" ;
+        suomi-meta:publicationStatus      <http://uri.suomi.fi/codelist/interoperabilityplatform/interoperabilityplatform_status/code/DRAFT> ;
         sh:maxCount          10 ;
         sh:minCount          1 ;
         sh:path              <https://iri.suomi.fi/model/ytm/some-attribute> ;

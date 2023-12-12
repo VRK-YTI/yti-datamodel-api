@@ -61,7 +61,7 @@ class NodeShapeMapperTest {
         assertEquals("fi", classResource.getProperty(RDFS.label).getLiteral().getLanguage());
 
         assertEquals(SH.NodeShape, classResource.getProperty(RDF.type).getResource());
-        assertEquals(Status.VALID, Status.valueOf(MapperUtils.propertyToString(classResource, SuomiMeta.publicationStatus)));
+        assertEquals(Status.VALID, MapperUtils.getStatusFromUri(MapperUtils.propertyToString(classResource, SuomiMeta.publicationStatus)));
         assertEquals(uri.getModelURI(), classResource.getProperty(RDFS.isDefinedBy).getObject().toString());
 
         assertEquals(XSDDatatype.XSDNCName, classResource.getProperty(DCTerms.identifier).getLiteral().getDatatype());
@@ -89,7 +89,7 @@ class NodeShapeMapperTest {
 
         assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "test_lib/1.0.0/attribute-1",
                 propertyShapeAttribute.getProperty(SH.path).getObject().toString());
-        assertEquals(Status.DRAFT, Status.valueOf(MapperUtils.propertyToString(propertyShapeAttribute, SuomiMeta.publicationStatus)));
+        assertEquals(Status.DRAFT, MapperUtils.getStatusFromUri(MapperUtils.propertyToString(propertyShapeAttribute, SuomiMeta.publicationStatus)));
         assertEquals("Attribute attribute-1", MapperUtils.localizedPropertyToMap(propertyShapeAttribute, RDFS.label).get("fi"));
     }
 

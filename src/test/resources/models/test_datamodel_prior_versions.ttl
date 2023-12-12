@@ -9,13 +9,13 @@
 @prefix suomi-meta: <https://iri.suomi.fi/model/suomi-meta/> .
 
 <https://iri.suomi.fi/model/test/1.0.0/>
-        suomi-meta:publicationStatus "VALID" ;
+        suomi-meta:publicationStatus <http://uri.suomi.fi/codelist/interoperabilityplatform/interoperabilityplatform_status/code/VALID> ;
         owl:versionInfo       "1.0.0" ;
         rdfs:label            "Test"@fi ;
         owl:versionIRI        <https://iri.suomi.fi/model/test/1.0.0/> .
 
 <https://iri.suomi.fi/model/test/2.0.0/>
-        suomi-meta:publicationStatus "VALID" ;
+        suomi-meta:publicationStatus <http://uri.suomi.fi/codelist/interoperabilityplatform/interoperabilityplatform_status/code/VALID> ;
         owl:versionInfo       "2.0.0";
         rdfs:label            "Test"@fi ;
         owl:versionIRI        <https://iri.suomi.fi/model/test/2.0.0/> .

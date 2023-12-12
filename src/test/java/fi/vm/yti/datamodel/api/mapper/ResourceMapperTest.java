@@ -65,7 +65,7 @@ class ResourceMapperTest {
         assertEquals("test label", resourceResource.getProperty(RDFS.label).getLiteral().getString());
         assertEquals("fi", resourceResource.getProperty(RDFS.label).getLiteral().getLanguage());
 
-        assertEquals(Status.VALID, Status.valueOf(MapperUtils.propertyToString(resourceResource, SuomiMeta.publicationStatus)));
+        assertEquals(Status.VALID, MapperUtils.getStatusFromUri(MapperUtils.propertyToString(resourceResource, SuomiMeta.publicationStatus)));
         assertEquals(uri.getModelURI(), resourceResource.getProperty(RDFS.isDefinedBy).getObject().toString());
 
         assertEquals(XSDDatatype.XSDNCName, resourceResource.getProperty(DCTerms.identifier).getLiteral().getDatatype());
@@ -119,7 +119,7 @@ class ResourceMapperTest {
         assertEquals("test label", resourceResource.getProperty(RDFS.label).getLiteral().getString());
         assertEquals("fi", resourceResource.getProperty(RDFS.label).getLiteral().getLanguage());
 
-        assertEquals(Status.VALID, Status.valueOf(MapperUtils.propertyToString(resourceResource, SuomiMeta.publicationStatus)));
+        assertEquals(Status.VALID, MapperUtils.getStatusFromUri(MapperUtils.propertyToString(resourceResource, SuomiMeta.publicationStatus)));
         assertEquals(uri.getModelURI(), resourceResource.getProperty(RDFS.isDefinedBy).getObject().toString());
 
         assertEquals(XSDDatatype.XSDNCName, resourceResource.getProperty(DCTerms.identifier).getLiteral().getDatatype());
@@ -164,7 +164,7 @@ class ResourceMapperTest {
         assertEquals("test label", resourceResource.getProperty(RDFS.label).getLiteral().getString());
         assertEquals("fi", resourceResource.getProperty(RDFS.label).getLiteral().getLanguage());
 
-        assertEquals(Status.VALID, Status.valueOf(MapperUtils.propertyToString(resourceResource, SuomiMeta.publicationStatus)));
+        assertEquals(Status.VALID, MapperUtils.getStatusFromUri(MapperUtils.propertyToString(resourceResource, SuomiMeta.publicationStatus)));
         assertEquals(uri.getModelURI(), resourceResource.getProperty(RDFS.isDefinedBy).getObject().toString());
 
         assertEquals(XSDDatatype.XSDNCName, resourceResource.getProperty(DCTerms.identifier).getLiteral().getDatatype());
@@ -213,7 +213,7 @@ class ResourceMapperTest {
         assertEquals("test label", resourceResource.getProperty(RDFS.label).getLiteral().getString());
         assertEquals("fi", resourceResource.getProperty(RDFS.label).getLiteral().getLanguage());
 
-        assertEquals(Status.VALID, Status.valueOf(MapperUtils.propertyToString(resourceResource, SuomiMeta.publicationStatus)));
+        assertEquals(Status.VALID, MapperUtils.getStatusFromUri(MapperUtils.propertyToString(resourceResource, SuomiMeta.publicationStatus)));
         assertEquals(uri.getModelURI(), resourceResource.getProperty(RDFS.isDefinedBy).getObject().toString());
 
         assertEquals(XSDDatatype.XSDNCName, resourceResource.getProperty(DCTerms.identifier).getLiteral().getDatatype());
@@ -526,7 +526,7 @@ class ResourceMapperTest {
         assertEquals("http://uri.suomi.fi/terminology/test/test1", resource.getProperty(DCTerms.subject).getObject().toString());
         assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "test/EqResource", resource.getProperty(OWL.equivalentProperty).getObject().toString());
         assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "test/SubResource", resource.getProperty(RDFS.subPropertyOf).getObject().toString());
-        assertEquals(Status.VALID, Status.valueOf(MapperUtils.propertyToString(resource, SuomiMeta.publicationStatus)));
+        assertEquals(Status.VALID, MapperUtils.getStatusFromUri(MapperUtils.propertyToString(resource, SuomiMeta.publicationStatus)));
         assertEquals("comment visible for admin", resource.getProperty(SKOS.editorialNote).getObject().toString());
         assertEquals(2, resource.listProperties(RDFS.comment).toList().size());
         assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "test/DomainClass", MapperUtils.propertyToString(resource, RDFS.domain));
@@ -581,7 +581,7 @@ class ResourceMapperTest {
         assertEquals("http://uri.suomi.fi/terminology/test/test1", resource.getProperty(DCTerms.subject).getObject().toString());
         assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "test/EqResource", resource.getProperty(OWL.equivalentProperty).getObject().toString());
         assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "test/SubResource", resource.getProperty(RDFS.subPropertyOf).getObject().toString());
-        assertEquals(Status.VALID, Status.valueOf(MapperUtils.propertyToString(resource, SuomiMeta.publicationStatus)));
+        assertEquals(Status.VALID, MapperUtils.getStatusFromUri(MapperUtils.propertyToString(resource, SuomiMeta.publicationStatus)));
         assertEquals("comment visible for admin", resource.getProperty(SKOS.editorialNote).getObject().toString());
         assertEquals(2, resource.listProperties(RDFS.comment).toList().size());
         assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "test/DomainClass", MapperUtils.propertyToString(resource, RDFS.domain));
