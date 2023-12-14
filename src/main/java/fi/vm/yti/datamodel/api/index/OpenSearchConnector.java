@@ -99,6 +99,7 @@ public class OpenSearchConnector {
         try {
             IndexRequest<T> indexReq = new IndexRequest.Builder<T>()
                     .index(index)
+                    .refresh(Refresh.True)
                     .id(encId)
                     .document(doc)
                     .build();
@@ -118,6 +119,7 @@ public class OpenSearchConnector {
         try {
             var request = new UpdateRequest.Builder<String, T>()
                     .index(index)
+                    .refresh(Refresh.True)
                     .id(encId)
                     .doc(doc)
                     .build();
