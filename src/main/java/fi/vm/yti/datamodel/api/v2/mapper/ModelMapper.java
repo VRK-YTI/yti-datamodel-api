@@ -53,7 +53,7 @@ public class ModelMapper {
         var creationDate = new XSDDateTime(Calendar.getInstance());
         var modelResource = model.createResource(modelUri)
                 .addProperty(RDF.type, OWL.Ontology)
-                .addProperty(SuomiMeta.publicationStatus, Status.DRAFT.name())
+                .addProperty(SuomiMeta.publicationStatus, ResourceFactory.createResource(MapperUtils.getStatusUri(Status.DRAFT)))
                 .addProperty(DCTerms.identifier, UUID.randomUUID().toString())
                 .addProperty(SuomiMeta.contentModified, ResourceFactory.createTypedLiteral(creationDate))
                 .addProperty(DCAP.preferredXMLNamespacePrefix, modelDTO.getPrefix())
@@ -460,7 +460,7 @@ public class ModelMapper {
             throw new MappingError("Cannot change status from SUGGESTED to " + dto.getStatus());
         }
 
-        model.listSubjectsWithProperty(SuomiMeta.publicationStatus).forEach(subject -> MapperUtils.updateStringProperty(subject, SuomiMeta.publicationStatus, dto.getStatus().name()));
+        model.listSubjectsWithProperty(SuomiMeta.publicationStatus).forEach(subject -> MapperUtils.updateUriProperty(subject, SuomiMeta.publicationStatus, dto.getStatus().name()));
 
         updateCommonMetaData(model, resource, dto, user);
     }

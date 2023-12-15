@@ -4,6 +4,7 @@ import fi.vm.yti.datamodel.api.v2.dto.CodeListDTO;
 import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
 
@@ -18,7 +19,7 @@ public class CodeListMapper {
         var resource = model.createResource(graph)
                 .addProperty(RDF.type, SuomiMeta.CodeScheme);
         codelistDTO.getPrefLabel().forEach((lang, val) -> resource.addProperty(RDFS.label, model.createLiteral(val, lang)));
-        resource.addProperty(SuomiMeta.publicationStatus, codelistDTO.getStatus().name());
+        resource.addProperty(SuomiMeta.publicationStatus, ResourceFactory.createResource(MapperUtils.getStatusUri(codelistDTO.getStatus())));
         return model;
     }
 

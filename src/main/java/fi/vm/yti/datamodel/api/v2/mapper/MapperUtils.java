@@ -384,7 +384,7 @@ public class MapperUtils {
         var status = MapperUtils.propertyToString(modelResource, SuomiMeta.publicationStatus);
 
         var resource = model.createResource(uri.getResourceURI())
-                .addProperty(SuomiMeta.publicationStatus, status)
+                .addProperty(SuomiMeta.publicationStatus, ResourceFactory.createResource(status))
                 .addProperty(RDFS.isDefinedBy, modelResource)
                 .addProperty(DCTerms.identifier, ResourceFactory.createTypedLiteral(dto.getIdentifier(), XSDDatatype.XSDNCName));
         MapperUtils.addLocalizedProperty(languages, dto.getLabel(), resource, RDFS.label, model);
