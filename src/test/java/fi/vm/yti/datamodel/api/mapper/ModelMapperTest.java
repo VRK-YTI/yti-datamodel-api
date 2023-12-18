@@ -116,7 +116,7 @@ class ModelMapperTest {
         Resource modelResource = model.getResource(ModelConstants.SUOMI_FI_NAMESPACE + "test" + ModelConstants.RESOURCE_SEPARATOR);
 
         assertEquals(2, modelResource.listProperties(RDFS.label).toList().size());
-        assertEquals(Status.DRAFT, MapperUtils.getStatusFromUri(modelResource.getProperty(SuomiMeta.publicationStatus).getString()));
+        assertEquals(Status.DRAFT, MapperUtils.getStatusFromUri(MapperUtils.propertyToString(modelResource, SuomiMeta.publicationStatus)));
 
 
         var requires = MapperUtils.arrayPropertyToList(modelResource, DCTerms.requires);
