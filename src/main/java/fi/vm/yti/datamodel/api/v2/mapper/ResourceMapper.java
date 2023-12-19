@@ -248,6 +248,7 @@ public class ResourceMapper {
                 resource.getLocalName(), version);
 
         indexResource.setId(id.getResourceVersionURI());
+        indexResource.setUri(resourceUri);
         indexResource.setCurie(MapperUtils.uriToURIDTO(resourceUri, model).getCurie());
         indexResource.setLabel(MapperUtils.localizedPropertyToMap(resource, RDFS.label));
         indexResource.setStatus(MapperUtils.getStatusFromUri(MapperUtils.propertyToString(resource, SuomiMeta.publicationStatus)));

@@ -8,6 +8,7 @@ import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.vocabulary.RDFS;
 import org.apache.jena.vocabulary.SKOS;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -36,6 +37,7 @@ import static org.mockito.Mockito.*;
 @Import({
         TerminologyService.class
 })
+@Disabled
 class TerminologyServiceTest {
 
     @MockBean

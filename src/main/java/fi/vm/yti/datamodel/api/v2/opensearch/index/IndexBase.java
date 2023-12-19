@@ -6,6 +6,7 @@ import java.util.Map;
 
 public abstract class IndexBase {
     private String id;
+    private String uri;
     private String curie;
     private Map<String, String> label;
     private Status status;
@@ -18,6 +19,14 @@ public abstract class IndexBase {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public String getUri() {
+        return uri;
+    }
+
+    public void setUri(String uri) {
+        this.uri = uri;
     }
 
     public String getCurie() {

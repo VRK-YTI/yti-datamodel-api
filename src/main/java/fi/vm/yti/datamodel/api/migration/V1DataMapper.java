@@ -16,6 +16,8 @@ import org.topbraid.shacl.vocabulary.SH;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static fi.vm.yti.datamodel.api.migration.V1DataMigrationService.OLD_NAMESPACE;
+
 public class V1DataMapper {
 
     private V1DataMapper() {}
@@ -63,9 +65,19 @@ public class V1DataMapper {
                     if (!ns.contains("uri.suomi.fi")) {
                         var extResource = oldData.getResource(ns);
                         var ext = new ExternalNamespaceDTO();
+
+                        if (!ns.endsWith("/") && !ns.endsWith("#")) {
+                            ns = ns + "/";
+                        }
                         ext.setNamespace(ns);
-                        ext.setName(MapperUtils.localizedPropertyToMap(extResource, RDFS.label));
-                        ext.setPrefix(MapperUtils.propertyToString(extResource, DCAP.preferredXMLNamespacePrefix));
+                        var label = MapperUtils.localizedPropertyToMap(extResource, RDFS.label);
+                        var prefix = MapperUtils.propertyToString(extResource, DCAP.preferredXMLNamespacePrefix);
+                        if (label.isEmpty() && prefix != null) {
+                            ext.setName(Map.of("fi", prefix));
+                        } else {
+                            ext.setName(label);
+                        }
+                        ext.setPrefix(prefix);
                         externalNamespaces.add(ext);
                     }
                 });
@@ -107,12 +119,6 @@ public class V1DataMapper {
         dto.setLabel(MapperUtils.localizedPropertyToMap(resource, RDFS.label));
         dto.setNote(MapperUtils.localizedPropertyToMap(resource, RDFS.comment));
         var range = fixNamespace(MapperUtils.propertyToString(resource, RDFS.range));
-
-        if (MapperUtils.hasType(resource, OWL.DatatypeProperty) && range != null) {
-            range = range.replace(ModelConstants.PREFIXES.get("rdf"), "rdf:");
-            range = range.replace(ModelConstants.PREFIXES.get("rdfs"), "rdfs:");
-            range = range.replace(ModelConstants.PREFIXES.get("owl"), "owl:");
-        }
         dto.setRange(range);
         return dto;
     }
@@ -141,8 +147,8 @@ public class V1DataMapper {
                 return;
             }
             var xy = coordinates.split(",");
-            dto.setX(Double.parseDouble(xy[0]));
-            dto.setY(Double.parseDouble(xy[1]));
+            dto.setX(Double.parseDouble(xy[0]) * 1.2);
+            dto.setY(Double.parseDouble(xy[1]) * 1.2);
 
             positions.add(dto);
         });
@@ -158,9 +164,9 @@ public class V1DataMapper {
 
     private static String fixNamespace(String uri) {
         if (uri != null && uri.contains("uri.suomi.fi")) {
-            return uri.replace("#", ModelConstants.RESOURCE_SEPARATOR);
-        } else if (uri != null) {
-            return uri.replace("http://www.w3.org/2001/XMLSchema#", "xsd:");
+            return uri
+                    .replace(OLD_NAMESPACE, ModelConstants.SUOMI_FI_NAMESPACE)
+                    .replace("#", ModelConstants.RESOURCE_SEPARATOR);
         }
         return uri;
     }

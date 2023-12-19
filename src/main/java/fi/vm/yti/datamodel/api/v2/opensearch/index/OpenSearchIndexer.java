@@ -379,6 +379,7 @@ public class OpenSearchIndexer {
     private Map<String, Property> getClassProperties() {
         return Map.ofEntries(
                 Map.entry("id", getKeywordProperty()),
+                Map.entry("uri", getKeywordProperty()),
                 Map.entry("status", getKeywordProperty()),
                 Map.entry("isDefinedBy", getKeywordProperty()),
                 Map.entry("comment", getKeywordProperty()),
