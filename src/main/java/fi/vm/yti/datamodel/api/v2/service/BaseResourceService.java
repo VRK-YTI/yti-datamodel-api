@@ -19,6 +19,7 @@ import org.apache.jena.arq.querybuilder.ConstructBuilder;
 import org.apache.jena.arq.querybuilder.SelectBuilder;
 import org.apache.jena.arq.querybuilder.WhereBuilder;
 import org.apache.jena.graph.NodeFactory;
+import org.apache.jena.query.Query;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Property;
@@ -207,10 +208,18 @@ abstract class BaseResourceService {
             count++;
         }
 
-        var resultModel = coreRepository.queryConstruct(coreBuilder.build());
-        var importsModel = importsRepository.queryConstruct(importsBuilder.build());
+        var resultModel = ModelFactory.createDefaultModel();
 
-        resultModel.add(importsModel);
+        Query coreQuery = coreBuilder.build();
+        Query importsQuery = importsBuilder.build();
+
+        if (!coreQuery.getConstructTemplate().getTriples().isEmpty()) {
+            resultModel.add(coreRepository.queryConstruct(coreQuery));
+        }
+        if (!importsQuery.getConstructTemplate().getTriples().isEmpty()) {
+            resultModel.add(importsRepository.queryConstruct(importsQuery));
+        }
+
         return resultModel;
     }
 
