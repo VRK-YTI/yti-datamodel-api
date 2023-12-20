@@ -199,6 +199,7 @@ class DataModelControllerTest {
         var textFieldMaxPlus = ValidationConstants.TEXT_FIELD_MAX_LENGTH + 20;
         var textAreaMaxPlus = ValidationConstants.TEXT_AREA_MAX_LENGTH + 20;
         var emailAreaMaxPlus = ValidationConstants.EMAIL_FIELD_MAX_LENGTH + 20;
+        var documentationAreaMaxPlus = ValidationConstants.DOCUMENTATION_MAX_LENGTH + 20;
 
         var args = new ArrayList<DataModelDTO>();
 
@@ -325,7 +326,7 @@ class DataModelControllerTest {
         args.add(dataModelDTO);
 
         dataModelDTO = createDatamodelDTO(false);
-        dataModelDTO.setDocumentation(Map.of("en", RandomStringUtils.random(textAreaMaxPlus)));
+        dataModelDTO.setDocumentation(Map.of("en", RandomStringUtils.random(documentationAreaMaxPlus)));
         args.add(dataModelDTO);
 
         dataModelDTO = createDatamodelDTO(false);

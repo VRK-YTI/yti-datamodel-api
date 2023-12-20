@@ -116,7 +116,12 @@ public class ResourceService extends BaseResourceService {
         check(authorizationManager.hasRightToModel(prefix, model));
         checkDataModelType(model.getResource(dataModelURI.getModelURI()), dto);
 
-        terminologyService.resolveConcept(dto.getSubject());
+        try {
+            terminologyService.resolveConcept(dto.getSubject());
+        } catch (Exception e) {
+            // TODO after migration: remove try catch
+            dto.setSubject(null);
+        }
         if(applicationProfile && resourceType.equals(ResourceType.ATTRIBUTE)) {
             codeListService.resolveCodelistScheme(((AttributeRestriction) dto).getCodeLists());
         }

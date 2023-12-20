@@ -244,7 +244,11 @@ public class DataModelValidator extends BaseValidator implements
     }
 
     private void checkDocumentation(ConstraintValidatorContext context, DataModelDTO dataModel) {
-        dataModel.getDocumentation().forEach((lang, value) -> checkCommonTextArea(context, value, "documentation"));
+        dataModel.getDocumentation().forEach((lang, value) -> {
+            if (value != null && value.length() > ValidationConstants.DOCUMENTATION_MAX_LENGTH) {
+                addConstraintViolation(context, ValidationConstants.MSG_OVER_CHARACTER_LIMIT, "documentation");
+            }
+        });
     }
 
     private void checkLinks(ConstraintValidatorContext context, DataModelDTO dataModel) {

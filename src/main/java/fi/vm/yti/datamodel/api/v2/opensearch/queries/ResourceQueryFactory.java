@@ -4,6 +4,7 @@ import fi.vm.yti.datamodel.api.v2.dto.ResourceType;
 import fi.vm.yti.datamodel.api.v2.opensearch.dto.ResourceSearchRequest;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
 import org.opensearch.client.opensearch._types.query_dsl.BoolQuery;
+import org.opensearch.client.opensearch._types.query_dsl.ExistsQuery;
 import org.opensearch.client.opensearch._types.query_dsl.Query;
 import org.opensearch.client.opensearch._types.query_dsl.QueryBuilders;
 import org.opensearch.client.opensearch.core.SearchRequest;
@@ -115,15 +116,26 @@ public class ResourceQueryFactory {
         return builder.build()._toQuery();
     }
 
-    public static SearchRequest createFindResourcesByURIQuery(Set<String> resourceURIs) {
-        return new SearchRequest.Builder()
-                .index(OpenSearchIndexer.OPEN_SEARCH_INDEX_RESOURCE)
+    public static SearchRequest createFindResourcesByURIQuery(Set<String> resourceURIs, String versionURI) {
+        var queries = new ArrayList<Query>();
+        var field = versionURI == null ? "id" : "uri";
+        queries.add(QueryFactoryUtils.termsQuery(field, resourceURIs));
+
+        if (versionURI != null) {
+            queries.add(ExistsQuery.of(q -> q.field("versionIri"))._toQuery());
+        }
+
+        var req = new SearchRequest.Builder()
+                .index(OpenSearchIndexer.OPEN_SEARCH_INDEX_RESOURCE, OpenSearchIndexer.OPEN_SEARCH_INDEX_EXTERNAL)
+                .size(1000)
                 .query(QueryBuilders
                         .bool()
-                        .must(QueryFactoryUtils.termsQuery("id", resourceURIs))
+                        .must(queries)
                         .build()
                         ._toQuery())
                 .build();
+        logPayload(req, "resources_v2");
+        return req;
     }
 
     /**

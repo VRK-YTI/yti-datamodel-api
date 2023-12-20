@@ -118,6 +118,10 @@ public class SearchIndexService {
         return response;
     }
 
+    public SearchResponseDTO<IndexResource> findResourcesByURI(Set<String> resourceURIs, String versionURI) {
+        return client.search(ResourceQueryFactory.createFindResourcesByURIQuery(resourceURIs, versionURI), IndexResource.class);
+    }
+
     private SearchResponseDTO<IndexResource> searchInternalResources(ResourceSearchRequest request, Set<String> allowedDataModels, YtiUser user) {
         var externalNamespaces = new ArrayList<String>();
         var internalNamespaces = new ArrayList<String>();

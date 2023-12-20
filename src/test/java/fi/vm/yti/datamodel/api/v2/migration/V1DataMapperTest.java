@@ -15,6 +15,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class V1DataMapperTest {
 
     public static final String GRAPH_URI = "http://uri.suomi.fi/datamodel/ns/merialsuun";
+    public static final String NEW_GRAPH_URI = "https://iri.suomi.fi/model/merialsuun/";
 
     @Test
     void testMapOldLibraryMetadata() {
@@ -61,7 +62,7 @@ public class V1DataMapperTest {
         var dto = V1DataMapper.mapLibraryResource(attributes.get(0));
         assertEquals("kohdenimi", dto.getIdentifier());
         assertEquals("Kohdenimi", dto.getLabel().get("fi"));
-        assertEquals("xsd:string", dto.getRange());
+        assertEquals("http://www.w3.org/2001/XMLSchema#string", dto.getRange());
         assertEquals("Kohteen nimi suomeksi.", dto.getNote().get("fi"));
     }
 
@@ -76,7 +77,7 @@ public class V1DataMapperTest {
         var dto = V1DataMapper.mapLibraryResource(associations.get(0));
         assertEquals("koostuu", dto.getIdentifier());
         assertEquals("Koostuu", dto.getLabel().get("fi"));
-        assertEquals(GRAPH_URI + "/MerialuesuunnitelmanKohde", dto.getRange());
+        assertEquals(NEW_GRAPH_URI + "MerialuesuunnitelmanKohde", dto.getRange());
     }
 
     @Test
@@ -99,7 +100,7 @@ public class V1DataMapperTest {
         assertEquals("Lähtötietoaineisto", dto.getLabel().get("fi"));
         assertEquals("Test description", dto.getNote().get("fi"));
         assertEquals("http://uri.suomi.fi/terminology/rytj-kaava/concept-13", dto.getSubject());
-        assertEquals("http://uri.suomi.fi/datamodel/ns/rak/Lahtotietoaineisto", dto.getSubClassOf().iterator().next());
+        assertEquals("https://iri.suomi.fi/model/rak/Lahtotietoaineisto", dto.getSubClassOf().iterator().next());
         assertEquals("Test editorial note", dto.getEditorialNote());
     }
 }

@@ -52,6 +52,14 @@ public class TerminologyService {
     public void resolveTerminology(Set<String> terminologyUris) {
 
         for (String u : terminologyUris) {
+            var terminologyURI = u.replaceAll("/?$", "");
+            var terminologyModel = conceptRepository.fetch(terminologyURI);
+
+            if (terminologyModel != null) {
+                LOG.info("Use existing terminology {}", terminologyURI);
+                continue;
+            }
+
             var uri = URI.create(u);
             LOG.debug("Fetching terminology {} from env {}", uri, awsEnv);
             try {
@@ -74,7 +82,6 @@ public class TerminologyService {
                         .findFirst();
 
                 if (node.isPresent()) {
-                    var terminologyURI = u.replaceAll("/?$", "");
                     var model = TerminologyMapper.mapTerminologyToJenaModel(terminologyURI, node.get());
                     conceptRepository.put(terminologyURI, model);
                 } else {

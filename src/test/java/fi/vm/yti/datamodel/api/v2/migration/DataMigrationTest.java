@@ -8,6 +8,7 @@ import fi.vm.yti.datamodel.api.v2.service.ClassService;
 import fi.vm.yti.datamodel.api.v2.service.DataModelService;
 import fi.vm.yti.datamodel.api.v2.service.ResourceService;
 import fi.vm.yti.datamodel.api.v2.service.VisualizationService;
+import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.riot.RDFDataMgr;
@@ -23,6 +24,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
 
@@ -60,6 +62,7 @@ class DataMigrationTest {
     void testLibraryMigration() throws URISyntaxException {
         var modelURI = "http://uri.suomi.fi/datamodel/ns/merialsuun";
         var prefix = "merialsuun";
+        var newModelURI = DataModelURI.createModelURI(prefix).getModelURI();
 
         when(coreRepository.getServiceCategories())
                 .thenReturn(MapperTestUtils.getModelFromFile("/service-categories.ttl"));
@@ -70,11 +73,12 @@ class DataMigrationTest {
         var refResource = refModel.getResource("http://uri.suomi.fi/datamodel/ns/tihatos#kohdistuu");
         refResource.addProperty(RDFS.range, "http://uri.suomi.fi/datamodel/ns/tihatos#Asia");
         when(coreRepository.fetch("http://uri.suomi.fi/datamodel/ns/tihatos")).thenReturn(refModel);
+        when(dataModelService.create(any(DataModelDTO.class), any(ModelType.class))).thenReturn(new URI(newModelURI));
 
         var newModel = ModelFactory.createDefaultModel();
-        newModel.createResource(modelURI + ModelConstants.RESOURCE_SEPARATOR + "MerialuesuunnitelmanKohde");
-        newModel.createResource(modelURI + ModelConstants.RESOURCE_SEPARATOR + "Lahtotietoaineisto");
-        when(coreRepository.fetch(modelURI)).thenReturn(newModel);
+        newModel.createResource(newModelURI + "MerialuesuunnitelmanKohde");
+        newModel.createResource(newModelURI + "Lahtotietoaineisto");
+        when(coreRepository.fetch(newModelURI)).thenReturn(newModel);
 
         migrationService.migrateLibrary(prefix, oldData);
 
@@ -82,7 +86,7 @@ class DataMigrationTest {
         verify(classService, times(2)).create(eq(prefix), baseDtoCaptor.capture(), eq(false));
         verify(resourceService).create(eq(prefix), baseDtoCaptor.capture(), eq(ResourceType.ATTRIBUTE), eq(false));
         verify(resourceService).create(eq(prefix), baseDtoCaptor.capture(), eq(ResourceType.ASSOCIATION), eq(false));
-        verify(coreRepository).put(eq(modelURI), modelCaptor.capture());
+        verify(coreRepository).put(eq(newModelURI), modelCaptor.capture());
 
         assertEquals(prefix, dataModelCaptor.getValue().getPrefix());
 
@@ -93,7 +97,7 @@ class DataMigrationTest {
 
         // Class Lahtotietoaineisto should have property owl:equivalentClass containing class restrictions
         var result = modelCaptor.getValue();
-        assertTrue(result.getResource(modelURI + "/Lahtotietoaineisto").hasProperty(OWL.equivalentClass));
+        assertTrue(result.getResource(newModelURI + "Lahtotietoaineisto").hasProperty(OWL.equivalentClass));
 
         RDFDataMgr.write(System.out, result, RDFFormat.TURTLE);
     }

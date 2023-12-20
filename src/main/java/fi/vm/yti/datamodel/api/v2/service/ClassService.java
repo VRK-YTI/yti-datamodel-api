@@ -29,10 +29,7 @@ import org.topbraid.shacl.vocabulary.SH;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -108,12 +105,19 @@ public class ClassService extends BaseResourceService {
                         return restrictionDTO;
                     }).collect(Collectors.toSet());
 
-            var restrictionURIs = restrictions.stream()
-                    .map(SimpleResourceDTO::getUri)
+            var restrictionInternalURIs = restrictions.stream()
+                    .filter(u -> u.getUri().startsWith(modelURI))
                     .collect(Collectors.toSet());
-            var findResourcesModel = findResources(restrictionURIs, includedNamespaces);
 
-            ClassMapper.addClassResourcesToDTO(findResourcesModel, restrictions, (ClassInfoDTO) dto, terminologyService.mapConceptToResource());
+            var restrictionExternalURIs = restrictions.stream()
+                    .map(SimpleResourceDTO::getUri)
+                    .filter(u -> !u.startsWith(modelURI))
+                    .collect(Collectors.toSet());
+
+            var uriResultExternal = searchIndexService.findResourcesByURI(restrictionExternalURIs, null);
+
+            ClassMapper.addClassResourcesToDTO(model, restrictionInternalURIs, (ClassInfoDTO) dto, terminologyService.mapConceptToResource());
+            ClassMapper.addClassResourcesToDTO(uriResultExternal.getResponseObjects(), restrictions, (ClassInfoDTO) dto);
         } else {
             dto = ClassMapper.mapToNodeShapeDTO(model, uri, orgModel, hasRightToModel, userMapper);
             var existingProperties = getTargetNodeProperties(MapperUtils.propertyToString(model.getResource(classURI), SH.node), includedNamespaces);
@@ -157,7 +161,12 @@ public class ClassService extends BaseResourceService {
         var modelResource = model.getResource(uri.getModelURI());
         check(authorizationManager.hasRightToModel(prefix, model));
         checkDataModelType(modelResource, dto);
-        terminologyService.resolveConcept(dto.getSubject());
+        try {
+            terminologyService.resolveConcept(dto.getSubject());
+        } catch (Exception e) {
+            // TODO remove try catch after migration
+            dto.setSubject(null);
+        }
 
         var includedNamespaces = DataModelUtils.getInternalReferenceModels(graphUri, modelResource);
 

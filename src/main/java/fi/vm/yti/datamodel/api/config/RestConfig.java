@@ -41,7 +41,7 @@ public class RestConfig {
 
     @Bean("uriResolveClient")
     WebClient uriResolveClient() {
-        var size = 20 * 1024 * 1024;
+        var size = 100 * 1024 * 1024;
         return WebClient.builder()
                 .defaultHeaders(headers -> headers.addAll(defaultHttpHeaders))
                 .exchangeStrategies(ExchangeStrategies.builder()

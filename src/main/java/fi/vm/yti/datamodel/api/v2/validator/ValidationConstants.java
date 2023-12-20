@@ -18,6 +18,7 @@ public class ValidationConstants {
     public static final int TEXT_FIELD_MAX_LENGTH = 150;
     public static final int EMAIL_FIELD_MAX_LENGTH = 320;
     public static final int TEXT_AREA_MAX_LENGTH = 5000;
+    public static final int DOCUMENTATION_MAX_LENGTH = 50000;
 
     public static final int PREFIX_MIN_LENGTH = 2;
     public static final int PREFIX_MAX_LENGTH = 32;

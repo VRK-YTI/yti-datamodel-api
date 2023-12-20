@@ -2,6 +2,7 @@ package fi.vm.yti.datamodel.api.v2.mapper;
 
 import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
+import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexResource;
 import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
 import fi.vm.yti.datamodel.api.v2.utils.SparqlUtils;
@@ -277,13 +278,42 @@ public class ClassMapper {
         return constructBuilder.build();
     }
 
-    public static void addClassResourcesToDTO(Model resourcesResult, Set<SimpleResourceDTO> restrictions,
+    public static void addClassResourcesToDTO(List<IndexResource> uriResult, Set<SimpleResourceDTO> restrictions, ClassInfoDTO dto) {
+        for (var restriction : restrictions) {
+            var uri = DataModelURI.fromURI(restriction.getUri());
+            var resource = uriResult.stream()
+                    .filter(result -> result.getId().equals(restriction.getUri()))
+                    .findFirst();
+
+            resource.ifPresent(res -> {
+                var modelUri = res.getIsDefinedBy();
+                if (modelUri != null && modelUri.startsWith(ModelConstants.SUOMI_FI_NAMESPACE)) {
+                    restriction.setModelId(uri.getModelId());
+                    var versionIRI = res.getVersionIri();
+                    if (versionIRI != null) {
+                        restriction.setVersionIri(versionIRI);
+                        restriction.setVersion(DataModelURI.fromURI(versionIRI).getVersion());
+                    }
+                }
+                restriction.setCurie(res.getCurie());
+                restriction.setLabel(res.getLabel());
+                restriction.setIdentifier(res.getIdentifier());
+                if (res.getResourceType().equals(ResourceType.ATTRIBUTE)) {
+                    dto.getAttribute().add(restriction);
+                } else if (res.getResourceType().equals(ResourceType.ASSOCIATION)) {
+                    dto.getAssociation().add(restriction);
+                }
+            });
+        }
+    }
+
+    public static void addClassResourcesToDTO(Model model, Set<SimpleResourceDTO> restrictions,
                                               ClassInfoDTO dto, Consumer<SimpleResourceDTO> subjectMapper) {
         var associations = new ArrayList<SimpleResourceDTO>();
         var attributes = new ArrayList<SimpleResourceDTO>();
         restrictions.forEach(restriction -> {
             var uri = DataModelURI.fromURI(restriction.getUri());
-            var resource = resourcesResult.getResource(uri.getResourceURI());
+            var resource = model.getResource(uri.getResourceURI());
             var modelUri = MapperUtils.propertyToString(resource, RDFS.isDefinedBy);
 
             restriction.setIdentifier(MapperUtils.getLiteral(resource, DCTerms.identifier, String.class));
@@ -292,7 +322,7 @@ public class ClassMapper {
             if (modelUri != null && modelUri.startsWith(ModelConstants.SUOMI_FI_NAMESPACE)) {
                 restriction.setModelId(uri.getModelId());
                 var ns = uri.getModelURI();
-                var versionIRI = MapperUtils.propertyToString(resourcesResult.getResource(ns), OWL2.versionIRI);
+                var versionIRI = MapperUtils.propertyToString(model.getResource(ns), OWL2.versionIRI);
                 if (versionIRI != null) {
                     restriction.setVersionIri(versionIRI);
                     restriction.setVersion(DataModelURI.fromURI(versionIRI).getVersion());
@@ -300,7 +330,7 @@ public class ClassMapper {
             }
 
             restriction.setNote(MapperUtils.localizedPropertyToMap(resource, RDFS.comment));
-            restriction.setCurie(MapperUtils.uriToURIDTO(resource.getURI(), resourcesResult).getCurie());
+            restriction.setCurie(MapperUtils.uriToURIDTO(resource.getURI(), model).getCurie());
             var conceptDTO = new ConceptDTO();
             conceptDTO.setConceptURI(MapperUtils.propertyToString(resource, DCTerms.subject));
             restriction.setConcept(conceptDTO);
@@ -414,14 +444,15 @@ public class ClassMapper {
         });
 
         if (hasDuplicate) {
-            throw new MappingError(String.format("Restriction %s already exists", propertyResource.getURI()));
+            throw new MappingError(String.format("Restriction %s already exists in class %s", propertyResource.getURI(), classResource.getURI()));
         }
 
         var restrictionResource = model.createResource();
         restrictionResource.addProperty(RDF.type, OWL.Restriction);
         restrictionResource.addProperty(OWL.onProperty, propertyResource);
 
-        if (range != null && !MapperUtils.hasType(propertyResource, OWL.ObjectProperty)) {
+        // TODO after migration: enable type check
+        if (range != null) { //  && !MapperUtils.hasType(propertyResource, OWL.ObjectProperty)) {
             restrictionResource.addProperty(OWL.someValuesFrom, ResourceFactory.createResource(range));
         }
 
