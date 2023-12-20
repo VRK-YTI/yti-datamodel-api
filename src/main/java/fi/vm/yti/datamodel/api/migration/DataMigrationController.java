@@ -86,28 +86,39 @@ public class DataMigrationController {
     public ResponseEntity<Void> migrate(@RequestParam String prefix) {
         check(authorizationManager.hasRightToDoMigration());
 
-        var oldData = ModelFactory.createDefaultModel();
-
         /* Use static file
         var stream = getClass().getResourceAsStream("/merialsuun_simple.ttl");
         RDFDataMgr.read(oldData, stream, RDFLanguages.TURTLE);
         */
 
-        var modelURI = OLD_NAMESPACE + prefix;
-        LOG.info("Fetching model {}", modelURI);
-        RDFParser.create()
-                .source(serviceURL + "/datamodel-api/api/v1/exportModel?graph=" + DataModelUtils.encode(modelURI))
-                .lang(Lang.JSONLD)
-                .acceptHeader("application/ld+json")
-                .parse(oldData);
+        migrationService.initRenamedResources();
+        var prefixes = prefix.split(",");
 
-        try {
-            migrationService.migrateLibrary(prefix, oldData);
-            return ResponseEntity.noContent().build();
-        } catch (Exception e) {
-            LOG.error(e.getMessage(), e);
-            return ResponseEntity.internalServerError().build();
+        for (var p : prefixes) {
+            var oldData = ModelFactory.createDefaultModel();
+            var modelURI = OLD_NAMESPACE + p;
+            LOG.info("Fetching model {}", modelURI);
+            try {
+                RDFParser.create()
+                        .source(serviceURL + "/datamodel-api/api/v1/exportModel?graph=" + DataModelUtils.encode(modelURI))
+                        .lang(Lang.JSONLD)
+                        .acceptHeader("application/ld+json")
+                        .parse(oldData);
+                migrationService.migrateLibrary(p, oldData);
+                migrateVisualization(p);
+            } catch (Exception e) {
+                LOG.error(e.getMessage(), e);
+            }
         }
+
+        for (var p : prefixes) {
+            migrationService.createVersions(p);
+        }
+
+        migrationService.renameResources();
+
+        LOG.info("Done");
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/positions")
