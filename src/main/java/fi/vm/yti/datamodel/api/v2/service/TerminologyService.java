@@ -53,12 +53,11 @@ public class TerminologyService {
 
         for (String u : terminologyUris) {
             var terminologyURI = u.replaceAll("/?$", "");
-            try {
-                conceptRepository.fetch(terminologyURI);
+            var terminologyModel = conceptRepository.fetch(terminologyURI);
+
+            if (terminologyModel != null) {
                 LOG.info("Use existing terminology {}", terminologyURI);
                 continue;
-            } catch (Exception e) {
-                LOG.info("Terminology {} not resolved yet", terminologyURI);
             }
 
             var uri = URI.create(u);
