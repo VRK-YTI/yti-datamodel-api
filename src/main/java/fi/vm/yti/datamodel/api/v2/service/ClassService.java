@@ -17,10 +17,7 @@ import fi.vm.yti.datamodel.api.v2.utils.DataModelUtils;
 import fi.vm.yti.security.AuthenticatedUserProvider;
 import org.apache.jena.arq.querybuilder.AskBuilder;
 import org.apache.jena.graph.NodeFactory;
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.Resource;
-import org.apache.jena.rdf.model.ResourceFactory;
-import org.apache.jena.rdf.model.SimpleSelector;
+import org.apache.jena.rdf.model.*;
 import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDFS;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -365,8 +362,7 @@ public class ClassService extends BaseResourceService {
         var modelResource = model.getResource(modelURI);
 
         var includedNamespaces = DataModelUtils.getInternalReferenceModels(modelURI, modelResource);
-        var result = findResources(Set.of(restrictionURI), includedNamespaces);
-        var restrictionResource = result.getResource(restrictionURI);
+        var restrictionResource = getResourceWithVersion(restrictionURI, includedNamespaces);
 
         if (!restrictionResource.listProperties().hasNext()) {
             throw new ResourceNotFoundException(restrictionURI);
@@ -412,14 +408,20 @@ public class ClassService extends BaseResourceService {
 
         var classResource = model.getResource(classURI);
         var modelResource = model.getResource(graphURI);
-        var includedNamespaces = DataModelUtils.getInternalReferenceModels(graphURI, modelResource);
-        var findResourceModel = findResources(Set.of(uri), includedNamespaces);
-        var propertyResource = findResourceModel.getResource(uri);
-        if (findResourceModel.isEmpty()) {
+
+        Resource restrictionResource;
+        if (model.contains(ResourceFactory.createResource(uri), null)) {
+            restrictionResource = model.getResource(uri);
+        } else {
+            var includedNamespaces = DataModelUtils.getInternalReferenceModels(graphURI, modelResource);
+            restrictionResource = getResourceWithVersion(uri, includedNamespaces);
+        }
+
+        if (!restrictionResource.listProperties().hasNext()) {
             throw new ResourceNotFoundException(uri);
         }
 
-        ClassMapper.mapClassRestrictionProperty(model, classResource, propertyResource);
+        ClassMapper.mapClassRestrictionProperty(model, classResource, restrictionResource);
         AUDIT_SERVICE.log(AuditService.ActionType.UPDATE, classURI, userProvider.getUser());
         coreRepository.put(graphURI, model);
     }
@@ -443,4 +445,19 @@ public class ClassService extends BaseResourceService {
         coreRepository.put(graphURI, model);
     }
 
+    /**
+     * Fetch resource from graph and append resource version iri to properties found from the DB
+     * @param restrictionURI resource uri with version
+     * @param includedNamespaces namespaces included to the model
+     * @return
+     */
+    private Resource getResourceWithVersion(String restrictionURI, Set<String> includedNamespaces) {
+        var resourceResult = findResources(Set.of(restrictionURI), includedNamespaces)
+                .getResource(DataModelUtils.removeVersionFromURI(restrictionURI));
+
+        var tempModel = ModelFactory.createDefaultModel();
+        var restrictionResource = tempModel.createResource(restrictionURI);
+        resourceResult.listProperties().forEach(prop -> restrictionResource.addProperty(prop.getPredicate(), prop.getObject()));
+        return restrictionResource;
+    }
 }
