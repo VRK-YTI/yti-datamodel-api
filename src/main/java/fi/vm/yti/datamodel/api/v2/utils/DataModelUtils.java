@@ -37,7 +37,7 @@ public class DataModelUtils {
                 modelResource.listProperties(property).forEach(res -> {
                     var uri = DataModelURI.fromURI(res.getObject().toString());
                     if (uri.isDataModelURI()) {
-                        model.setNsPrefix(uri.getModelId(), uri.getNamespace());
+                        model.setNsPrefix(uri.getModelId(), uri.getGraphURI());
                     } else if (!uri.isTerminologyURI() && !uri.isCodeListURI()) {
                         // handle external namespaces, skip for now terminologies and code lists
                         var extResource = model.getResource(uri.getNamespace());
