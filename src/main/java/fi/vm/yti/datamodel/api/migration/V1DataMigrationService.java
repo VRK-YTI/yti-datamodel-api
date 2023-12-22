@@ -200,12 +200,12 @@ public class V1DataMigrationService {
                             .replace("#", ModelConstants.RESOURCE_SEPARATOR));
 
                     String range;
-                    if (origResource.hasProperty(RDFS.range)) {
-                        range = MapperUtils.propertyToString(origResource, RDFS.range);
-                    } else if (restrictionRes.hasProperty(RDFS.range)) {
+                    if (restrictionRes.hasProperty(RDFS.range)) {
                         range = MapperUtils.propertyToString(restrictionRes, RDFS.range);
                     } else if (restrictionRes.hasProperty(SH.node)) {
                         range = MapperUtils.propertyToString(restrictionRes, SH.node);
+                    } else if (origResource.hasProperty(RDFS.range)) {
+                        range = MapperUtils.propertyToString(origResource, RDFS.range);
                     } else {
                         LOG.warn("No range property found for class restriction {}, class {}, path {}",
                                 restrictionRes.getURI(), classResource.getURI(), path);
