@@ -2,6 +2,7 @@ package fi.vm.yti.datamodel.api.v2.opensearch.dto;
 
 import fi.vm.yti.datamodel.api.v2.dto.ModelType;
 
+import java.util.Collection;
 import java.util.Set;
 import java.util.UUID;
 
@@ -18,6 +19,8 @@ public class ModelSearchRequest extends BaseSearchRequest {
     private Set<String> groups;
 
     private boolean searchResources;
+
+    private Set<String> additionalModelIds;
 
     public String getLanguage() {
         return language;
@@ -65,5 +68,13 @@ public class ModelSearchRequest extends BaseSearchRequest {
 
     public void setSearchResources(boolean searchResources) {
         this.searchResources = searchResources;
+    }
+
+    public Collection<String> getAdditionalModelIds() {
+        return additionalModelIds;
+    }
+
+    public void setAdditionalModelIds(Set<String> additionalModelIds) {
+        this.additionalModelIds = additionalModelIds;
     }
 }

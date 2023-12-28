@@ -1,24 +1,13 @@
 {
-  "size": 100,
   "from": 1,
+  "highlight": {
+    "fields": {
+      "label.*": {}
+    }
+  },
   "query": {
     "bool": {
       "must": [
-        {
-          "term": {
-            "language":  {
-              "value": "en"
-            }
-          }
-        },
-        {
-          "terms": {
-            "isPartOf": [
-              "P11",
-              "P1"
-            ]
-          }
-        },
         {
           "terms": {
             "contributor": [
@@ -26,25 +15,6 @@
             ]
           }
         },
-        {
-          "terms": {
-            "type": ["PROFILE"]
-            }
-        },
-        {
-          "terms": {
-            "status": ["SUGGESTED", "VALID"]
-          }
-        },
-        {
-          "query_string": {
-            "query": "*test query*",
-            "fields": ["label.*"],
-            "fuzziness": "2"
-          }
-        }
-      ],
-      "should": [
         {
           "bool": {
             "must_not": [
@@ -60,12 +30,54 @@
         },
         {
           "terms": {
-            "contributor": ["7d3a3c00-5a6b-489b-a3ed-63bb58c26a63"]
+            "type": [
+              "PROFILE"
+            ]
+          }
+        },
+        {
+          "terms": {
+            "isPartOf": [
+              "P1",
+              "P11"
+            ]
+          }
+        },
+        {
+          "terms": {
+            "contributor": [
+              "7d3a3c00-5a6b-489b-a3ed-63bb58c26a63"
+            ]
+          }
+        },
+        {
+          "term": {
+            "language": {
+              "value": "en"
+            }
+          }
+        },
+        {
+          "terms": {
+            "status": [
+              "VALID",
+              "SUGGESTED"
+            ]
+          }
+        },
+        {
+          "query_string": {
+            "fields": [
+              "label.*"
+            ],
+            "fuzziness": "2",
+            "query": "*test query*"
           }
         }
       ]
     }
   },
+  "size": 100,
   "sort": [
     {
       "label.en.keyword": {

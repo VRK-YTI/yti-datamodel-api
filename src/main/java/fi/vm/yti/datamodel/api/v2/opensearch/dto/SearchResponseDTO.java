@@ -3,6 +3,7 @@ package fi.vm.yti.datamodel.api.v2.opensearch.dto;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexBase;
 
 import java.util.List;
+import java.util.Map;
 
 public class SearchResponseDTO<T extends IndexBase> {
     private long totalHitCount;

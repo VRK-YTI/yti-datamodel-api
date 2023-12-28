@@ -13,6 +13,7 @@ import org.opensearch.client.opensearch._types.query_dsl.Query;
 import org.opensearch.client.opensearch._types.query_dsl.QueryBuilders;
 import org.opensearch.client.opensearch.core.SearchRequest;
 import org.opensearch.client.opensearch.core.SearchResponse;
+import org.opensearch.client.opensearch.core.search.Highlight;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -28,14 +29,17 @@ public class ModelQueryFactory {
         //only static functions here
     }
 
-    public static SearchRequest createModelQuery(ModelSearchRequest request, boolean isSuperUser){
+    public static SearchRequest createModelQuery(ModelSearchRequest request, boolean isSuperUser) {
         var modelQuery = getModelBaseQuery(request, isSuperUser);
 
+        Highlight.Builder highlight = new Highlight.Builder();
+        highlight.fields("label.*", f -> f);
         var sr = new SearchRequest.Builder()
                 .index(OpenSearchIndexer.OPEN_SEARCH_INDEX_MODEL)
                 .size(QueryFactoryUtils.pageSize(request.getPageSize()))
                 .from(QueryFactoryUtils.pageFrom(request.getPageFrom()))
                 .sort(QueryFactoryUtils.getLangSortOptions(request.getSortLang()))
+                .highlight(highlight.build())
                 .query(modelQuery)
                 .build();
 
@@ -78,57 +82,73 @@ public class ModelQueryFactory {
         var should = new ArrayList<Query>();
 
         var draftFrom = request.getIncludeDraftFrom();
-        if(draftFrom != null && !draftFrom.isEmpty()){
+        if (draftFrom != null && !draftFrom.isEmpty()) {
             var incompleteFromQuery = QueryFactoryUtils.termsQuery("contributor", draftFrom.stream().map(UUID::toString).toList());
-            should.add(incompleteFromQuery);
+            must.add(incompleteFromQuery);
         }
 
-        if(!isSuperUser) {
-            should.add(QueryFactoryUtils.hideDraftStatusQuery());
-        }
-
-        var queryString = request.getQuery();
-        if(queryString != null && !queryString.isBlank()){
-            must.add(QueryFactoryUtils.labelQuery(queryString));
+        if (!isSuperUser) {
+            must.add(QueryFactoryUtils.hideDraftStatusQuery());
         }
 
         var modelType = request.getType();
-        if(modelType != null && !modelType.isEmpty()){
+        if (modelType != null && !modelType.isEmpty()) {
             var modelTypeQuery = QueryFactoryUtils.termsQuery("type", modelType.stream().map(ModelType::name).toList());
             must.add(modelTypeQuery);
         }
 
         var groups = request.getGroups();
-        if(groups != null && !groups.isEmpty()){
+        if (groups != null && !groups.isEmpty()) {
             var groupsQuery = QueryFactoryUtils.termsQuery("isPartOf", groups);
             must.add(groupsQuery);
         }
 
         var organizations = request.getOrganizations();
-        if(organizations != null && !organizations.isEmpty()){
+        if (organizations != null && !organizations.isEmpty()) {
             var orgsQuery = QueryFactoryUtils.termsQuery("contributor", organizations.stream().map(UUID::toString).toList());
             must.add(orgsQuery);
         }
 
         var language = request.getLanguage();
-        if(language != null && !language.isBlank()) {
+        if (language != null && !language.isBlank()) {
             var languageQuery = QueryFactoryUtils.termQuery("language", language);
             must.add(languageQuery);
         }
 
         var status = request.getStatus();
-        if(status != null && !status.isEmpty()){
+        if (status != null && !status.isEmpty()) {
             var statusQuery = QueryFactoryUtils.termsQuery("status", status.stream().map(Status::name).toList());
             must.add(statusQuery);
         }
 
-        var finalQuery = QueryBuilders.bool()
-                .must(must);
-
-        if(!should.isEmpty()) {
-            finalQuery.should(should).minimumShouldMatch("1");
+        var additionalModelIds = request.getAdditionalModelIds();
+        Query additionalModelIdsQuery = null;
+        if (additionalModelIds != null && !additionalModelIds.isEmpty()) {
+            additionalModelIdsQuery = QueryFactoryUtils.termsQuery("uri", additionalModelIds);
         }
-        return finalQuery.build()._toQuery();
+
+        if (additionalModelIdsQuery != null) {
+            should.add(additionalModelIdsQuery);
+        }
+
+        var queryString = request.getQuery();
+        if (queryString != null && !queryString.isBlank()) {
+            should.add(QueryFactoryUtils.labelQuery(queryString));
+        }
+
+        if (should.size() == 1) {
+            // no need to build a "should" query from a single expression
+            must.add(should.get(0));
+        } else if (should.size() > 1) {
+            // build a "should" query from all entries and add to the "must"
+            must.add(QueryBuilders.bool()
+                    .should(should)
+                    .minimumShouldMatch("1")
+                    .build()
+                    ._toQuery());
+        }
+
+        return QueryBuilders.bool().must(must).build()._toQuery();
     }
 
     private static Aggregation getAggregation(String fieldName) {

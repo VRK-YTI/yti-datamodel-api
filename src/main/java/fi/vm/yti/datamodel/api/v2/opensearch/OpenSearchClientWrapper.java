@@ -7,7 +7,6 @@ import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexBase;
 import org.opensearch.client.opensearch.OpenSearchClient;
 import org.opensearch.client.opensearch.core.SearchRequest;
 import org.opensearch.client.opensearch.core.SearchResponse;
-import org.opensearch.client.opensearch.core.search.Hit;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -34,10 +33,15 @@ public class OpenSearchClientWrapper {
         try {
             var result = client.search(request, type);
             response.setTotalHitCount(result.hits().total().value());
-            response.setResponseObjects(result.hits().hits().stream()
+            var sources = result.hits().hits().stream()
                     .filter(hit -> hit.source() != null)
-                    .map(Hit::source)
-                    .toList());
+                    .map(hit -> {
+                        var base = hit.source();
+                        base.setHighlights(hit.highlight());
+                        return base;
+                    })
+                    .toList();
+            response.setResponseObjects(sources);
             response.setPageFrom(request.from());
             response.setPageSize(request.size());
             return response;

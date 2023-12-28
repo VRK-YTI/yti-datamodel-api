@@ -2,6 +2,7 @@ package fi.vm.yti.datamodel.api.v2.opensearch.index;
 
 import fi.vm.yti.datamodel.api.v2.dto.Status;
 
+import java.util.List;
 import java.util.Map;
 
 public abstract class IndexBase {
@@ -12,6 +13,7 @@ public abstract class IndexBase {
     private Status status;
     private String modified;
     private String created;
+    private Map<String, List<String>> highlights;
 
     public String getId() {
         return id;
@@ -69,4 +71,11 @@ public abstract class IndexBase {
         this.created = created;
     }
 
+    public Map<String, List<String>> getHighlights() {
+        return highlights;
+    }
+
+    public void setHighlights(Map<String, List<String>> highlights) {
+        this.highlights = highlights;
+    }
 }

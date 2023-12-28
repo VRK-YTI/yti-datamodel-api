@@ -1,6 +1,7 @@
 package fi.vm.yti.datamodel.api.v2.service;
 
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
+import fi.vm.yti.datamodel.api.v2.dto.ModelSearchResultDTO;
 import fi.vm.yti.datamodel.api.v2.dto.ResourceType;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.OpenSearchException;
 import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
@@ -55,14 +56,56 @@ public class SearchIndexService {
         return ModelQueryFactory.parseModelCountResponse(client.searchResponse(query, IndexModel.class));
     }
 
-    public SearchResponseDTO<IndexModel> searchModels(ModelSearchRequest request, YtiUser user) {
+    public SearchResponseDTO<ModelSearchResultDTO> searchModels(ModelSearchRequest request, YtiUser user) {
 
         if (!user.isSuperuser()) {
             request.setIncludeDraftFrom(groupManagementService.getOrganizationsForUser(user));
         }
 
+        // search resources with the same parameters
+        var resourceSearchRequest = new ResourceSearchRequest();
+        resourceSearchRequest.setQuery(request.getQuery());
+        // search for status as well?
+
+        var resourceQuery = ResourceQueryFactory.createResourceQuery(
+                resourceSearchRequest,
+                Collections.emptyList(),
+                Collections.emptyList());
+        var resources = client.search(resourceQuery, IndexResource.class);
+
+        // now let's add those matching models to the model search request
+        request.setAdditionalModelIds(resources
+                .getResponseObjects()
+                .stream()
+                // model id should include the version, if available
+                .map(r -> {
+                    var id = r.getIsDefinedBy();
+                    if (r.getFromVersion() != null) {
+                        id = id + r.getFromVersion() + ModelConstants.RESOURCE_SEPARATOR;
+                    }
+                    return id;
+                })
+                .filter(Objects::nonNull)
+                .map(DataModelURI::fromURI)
+                .map(DataModelURI::getGraphURI)
+                .collect(Collectors.toSet()));
+
         var query = ModelQueryFactory.createModelQuery(request, user.isSuperuser());
-        return client.search(query, IndexModel.class);
+
+        var models = client.search(query, ModelSearchResultDTO.class);
+        for (var searchResult : models.getResponseObjects()) {
+            // link each matching resource to the model, if the versioned id matches
+            resources.getResponseObjects().stream()
+                    .filter(o -> {
+                        var id = o.getFromVersion() != null ?
+                                o.getIsDefinedBy() + o.getFromVersion() + ModelConstants.RESOURCE_SEPARATOR :
+                                o.getIsDefinedBy();
+                        return id.equals(searchResult.getId());
+                    })
+                    .forEach(o -> searchResult.addMatchingResource(o));
+        }
+
+        return models;
     }
 
     public SearchResponseDTO<IndexResource> searchInternalResources(ResourceSearchRequest request, YtiUser user) {
