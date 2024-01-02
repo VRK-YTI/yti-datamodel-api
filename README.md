@@ -38,3 +38,18 @@ Copy content from main/resources/config/application.properties.template to file 
 
 ## API docs
 http://localhost:9004/datamodel-api/swagger-ui/index.html
+
+## Troubleshooting
+
+### Error: index external_v2 doesn't exist
+
+*Solution:* Run re-indexing (requires super user). Also JSESSIONID cookie can be used for authorization.
+```
+curl -X POST -H 'Authorization: Bearer <api_key>' <host>/datamodel-api/v2/index/reindex
+```
+
+### External resources don't appear in the search dialogs
+
+*Solution:* External resources are not resolved by default on startup. 
+Define property `namespaces.resolveDefault=true` in application-local.properties and restart the application. 
+Once resolved, set this property to false to make starting application faster.

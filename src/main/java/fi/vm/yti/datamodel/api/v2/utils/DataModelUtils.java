@@ -31,7 +31,7 @@ public class DataModelUtils {
         var dataModelURI = DataModelURI.fromURI(modelURI);
         model.setNsPrefix(dataModelURI.getModelId(), dataModelURI.getNamespace());
 
-        var modelResource = model.getResource(modelURI);
+        var modelResource = model.getResource(dataModelURI.getModelURI());
 
         List.of(OWL.imports, DCTerms.requires).forEach(property ->
                 modelResource.listProperties(property).forEach(res -> {
