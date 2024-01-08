@@ -45,6 +45,24 @@ public class SearchIndexService {
     }
 
     /**
+     * Search resources with the same keyword that was used to search a model
+     * @return response containing resources
+     */
+    private SearchResponseDTO<IndexResource> getMatchingResources(ModelSearchRequest request, YtiUser user) {
+        var resourceSearchRequest = new ResourceSearchRequest();
+        // use the same query string for resources that was used for models
+        resourceSearchRequest.setQuery(request.getQuery());
+
+        var resourceQuery = ResourceQueryFactory.createResourceQuery(
+                resourceSearchRequest,
+                Collections.emptyList(),
+                Collections.emptyList());
+        var resources = client.search(resourceQuery, IndexResource.class);
+
+        return resources;
+    }
+
+    /**
      * List counts of data model grouped by different search results
      * @return response containing counts for data models
      */
@@ -52,6 +70,17 @@ public class SearchIndexService {
         if (!user.isSuperuser()) {
             searchRequest.setIncludeDraftFrom(groupManagementService.getOrganizationsForUser(user));
         }
+
+        var resources = this.getMatchingResources(searchRequest, user);
+
+        // now let's add those matching models to the model search request
+        searchRequest.setAdditionalModelIds(resources
+                .getResponseObjects()
+                .stream()
+                .map(r -> (r.getVersionIri() != null ? r.getVersionIri() : r.getIsDefinedBy()))
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet()));
+
         var query = ModelQueryFactory.createModelCountQuery(searchRequest, user.isSuperuser());
         return ModelQueryFactory.parseModelCountResponse(client.searchResponse(query, IndexModel.class));
     }
@@ -62,32 +91,14 @@ public class SearchIndexService {
             request.setIncludeDraftFrom(groupManagementService.getOrganizationsForUser(user));
         }
 
-        // search resources with the same parameters
-        var resourceSearchRequest = new ResourceSearchRequest();
-        resourceSearchRequest.setQuery(request.getQuery());
-        // search for status as well?
-
-        var resourceQuery = ResourceQueryFactory.createResourceQuery(
-                resourceSearchRequest,
-                Collections.emptyList(),
-                Collections.emptyList());
-        var resources = client.search(resourceQuery, IndexResource.class);
+        var resources = this.getMatchingResources(request, user);
 
         // now let's add those matching models to the model search request
         request.setAdditionalModelIds(resources
                 .getResponseObjects()
                 .stream()
-                // model id should include the version, if available
-                .map(r -> {
-                    var id = r.getIsDefinedBy();
-                    if (r.getFromVersion() != null) {
-                        id = id + r.getFromVersion() + ModelConstants.RESOURCE_SEPARATOR;
-                    }
-                    return id;
-                })
+                .map(r -> (r.getVersionIri() != null ? r.getVersionIri() : r.getIsDefinedBy()))
                 .filter(Objects::nonNull)
-                .map(DataModelURI::fromURI)
-                .map(DataModelURI::getGraphURI)
                 .collect(Collectors.toSet()));
 
         var query = ModelQueryFactory.createModelQuery(request, user.isSuperuser());
@@ -96,12 +107,9 @@ public class SearchIndexService {
         for (var searchResult : models.getResponseObjects()) {
             // link each matching resource to the model, if the versioned id matches
             resources.getResponseObjects().stream()
-                    .filter(o -> {
-                        var id = o.getFromVersion() != null ?
-                                o.getIsDefinedBy() + o.getFromVersion() + ModelConstants.RESOURCE_SEPARATOR :
-                                o.getIsDefinedBy();
-                        return id.equals(searchResult.getId());
-                    })
+                    .filter(o -> (o.getVersionIri() != null ?
+                            o.getVersionIri() :
+                            o.getIsDefinedBy()).equals(searchResult.getId()))
                     .forEach(o -> searchResult.addMatchingResource(o));
         }
 
