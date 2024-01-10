@@ -412,9 +412,11 @@ public class ClassService extends BaseResourceService {
         Resource restrictionResource;
         if (model.contains(ResourceFactory.createResource(uri), null)) {
             restrictionResource = model.getResource(uri);
-        } else {
+        } else if (uri.startsWith(ModelConstants.SUOMI_FI_NAMESPACE)) {
             var includedNamespaces = DataModelUtils.getInternalReferenceModels(graphURI, modelResource);
             restrictionResource = getResourceWithVersion(uri, includedNamespaces);
+        } else {
+            restrictionResource = findResources(Set.of(uri), Set.of()).getResource(uri);
         }
 
         if (!restrictionResource.listProperties().hasNext()) {
