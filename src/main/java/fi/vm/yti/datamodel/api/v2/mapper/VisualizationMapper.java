@@ -214,10 +214,12 @@ public class VisualizationMapper {
                     + dto.getIdentifier());
             dto.setPosition(getPositionFromResource(positionResource));
 
+            var handledElements = new HashSet<String>();
+
             // check if there are hidden nodes between parent relations
             if (dto.getReferences() != null && !dto.getReferences().isEmpty()) {
                 dto.getReferences().forEach(reference -> {
-                    var path = handlePath(positions, dto.getIdentifier(), reference, hiddenElements);
+                    var path = handlePath(positions, dto.getIdentifier(), reference, hiddenElements, handledElements);
                     reference.setReferenceTarget(path.get(0));
                 });
             }
@@ -227,7 +229,7 @@ public class VisualizationMapper {
                 classDTO.getAssociations().forEach(reference -> {
                     var target = reference.getReferenceTarget();
                     if (target != null) {
-                        var path = handlePath(positions, dto.getIdentifier(), reference, hiddenElements);
+                        var path = handlePath(positions, dto.getIdentifier(), reference, hiddenElements, handledElements);
                         reference.setReferenceTarget(path.get(0));
                     }
                 });
@@ -237,18 +239,20 @@ public class VisualizationMapper {
     }
 
     private static List<String> handlePath(Model positions, String sourceIdentifier, VisualizationReferenceDTO reference,
-                                           Set<VisualizationHiddenNodeDTO> hiddenElements) {
+                                           Set<VisualizationHiddenNodeDTO> hiddenElements, Set<String> handledElements) {
 
         var positionResources = positions.listSubjectsWithProperty(SuomiMeta.referenceTarget, reference.getReferenceTarget()).toList();
-
         for (Resource positionResource : positionResources) {
             var path = new LinkedList<String>();
-            while(positionResource.hasProperty(SuomiMeta.referenceTarget)) {
+            while (positionResource.hasProperty(SuomiMeta.referenceTarget)) {
                 var identifier = MapperUtils.propertyToString(positionResource, DCTerms.identifier);
 
                 if (identifier != null && !identifier.startsWith("corner-") && !identifier.equals(sourceIdentifier)) {
                     // if there is an element in the path, that is not a hidden node and not the same as source node,
                     // this is the wrong path. Jump to the next resource
+                    break;
+                } else if (handledElements.contains(identifier)) {
+                    // already handled
                     break;
                 } else if (sourceIdentifier.equals(identifier)) {
                     // reached the source node
@@ -257,6 +261,8 @@ public class VisualizationMapper {
                     }
                     return path;
                 }
+
+                handledElements.add(positionResource.getLocalName());
 
                 path.addFirst(positionResource.getLocalName());
                 hiddenElements.add(mapHiddenNode(positionResource, reference.getReferenceType()));
