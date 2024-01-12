@@ -1,18 +1,4 @@
 {
-  "size": 0,
-  "query": {
-    "bool": {
-      "minimum_should_match": "1",
-      "must": [],
-      "should": [
-        {
-          "bool": {
-            "must_not": [{ "term": { "status": { "value": "DRAFT" } } }]
-          }
-        }
-      ]
-    }
-  },
   "aggregations": {
     "types": {
       "terms": {
@@ -34,5 +20,25 @@
         "field": "isPartOf"
       }
     }
-  }
+  },
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "bool": {
+            "must_not": [
+              {
+                "term": {
+                  "status": {
+                    "value": "DRAFT"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "size": 0
 }

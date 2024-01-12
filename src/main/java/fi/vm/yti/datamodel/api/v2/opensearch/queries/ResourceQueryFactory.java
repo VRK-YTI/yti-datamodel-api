@@ -8,11 +8,9 @@ import org.opensearch.client.opensearch._types.query_dsl.ExistsQuery;
 import org.opensearch.client.opensearch._types.query_dsl.Query;
 import org.opensearch.client.opensearch._types.query_dsl.QueryBuilders;
 import org.opensearch.client.opensearch.core.SearchRequest;
+import org.opensearch.client.opensearch.core.search.Highlight;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import static fi.vm.yti.datamodel.api.v2.opensearch.OpenSearchUtil.logPayload;
 
@@ -21,6 +19,7 @@ public class ResourceQueryFactory {
     private ResourceQueryFactory(){
         //only provides static methods
     }
+
     public static SearchRequest createInternalResourceQuery(ResourceSearchRequest request,
                                                             List<String> externalNamespaces,
                                                             List<String> internalNamespaces,
@@ -71,6 +70,58 @@ public class ResourceQueryFactory {
                 .size(QueryFactoryUtils.pageSize(request.getPageSize()))
                 .index(indices)
                 .query(finalQuery)
+                .sort(QueryFactoryUtils.getLangSortOptions(request.getSortLang()))
+                .build();
+        logPayload(sr, String.join(", ", indices));
+        return sr;
+    }
+
+    public static SearchRequest createResourceQuery(ResourceSearchRequest request,
+                                                    List<String> externalNamespaces,
+                                                    List<String> internalNamespaces) {
+        var must = new ArrayList<Query>();
+        var should = new ArrayList<Query>();
+
+        should.add(QueryFactoryUtils.hideDraftStatusQuery());
+
+        var query = request.getQuery();
+        if (query != null && !query.isBlank()){
+            must.add(QueryFactoryUtils.labelQuery(query));
+        }
+
+        var types = request.getResourceTypes();
+        if (types != null && !types.isEmpty()) {
+            must.add(QueryFactoryUtils.termsQuery("resourceType", types.stream().map(ResourceType::name).toList()));
+        }
+
+        if (request.getTargetClass() != null) {
+            must.add(QueryFactoryUtils.termQuery("targetClass", request.getTargetClass()));
+        }
+
+        var finalQuery = QueryBuilders.bool()
+                .must(must)
+                .should(should)
+                .build()
+                ._toQuery();
+
+        var indices = new ArrayList<String>();
+        indices.add(OpenSearchIndexer.OPEN_SEARCH_INDEX_RESOURCE);
+
+        // include external models only if there are no Interoperability platform specific conditions
+        if (!externalNamespaces.isEmpty() && request.getGroups() == null) {
+            indices.add(OpenSearchIndexer.OPEN_SEARCH_INDEX_EXTERNAL);
+        }
+
+        Highlight.Builder highlight = new Highlight.Builder()
+                .fields("label.*", f -> f)
+                .preTags("<b>")
+                .postTags("</b>");
+        SearchRequest sr = new SearchRequest.Builder()
+                .from(QueryFactoryUtils.pageFrom(request.getPageFrom()))
+                .size(QueryFactoryUtils.pageSize(request.getPageSize()))
+                .index(indices)
+                .query(finalQuery)
+                .highlight(highlight.build())
                 .sort(QueryFactoryUtils.getLangSortOptions(request.getSortLang()))
                 .build();
         logPayload(sr, String.join(", ", indices));

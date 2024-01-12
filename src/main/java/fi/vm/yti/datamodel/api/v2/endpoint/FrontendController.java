@@ -1,9 +1,6 @@
 package fi.vm.yti.datamodel.api.v2.endpoint;
 
-import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
-import fi.vm.yti.datamodel.api.v2.dto.OrganizationDTO;
-import fi.vm.yti.datamodel.api.v2.dto.ServiceCategoryDTO;
-import fi.vm.yti.datamodel.api.v2.dto.UriDTO;
+import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.opensearch.dto.CountSearchResponse;
 import fi.vm.yti.datamodel.api.v2.opensearch.dto.ModelSearchRequest;
 import fi.vm.yti.datamodel.api.v2.opensearch.dto.ResourceSearchRequest;
@@ -83,7 +80,7 @@ public class FrontendController {
     @Operation(summary = "Search models")
     @ApiResponse(responseCode = "200", description = "List of data model objects")
     @GetMapping(value = "/search-models", produces = APPLICATION_JSON_VALUE)
-    public SearchResponseDTO<IndexModel> getModels(@Parameter(description = "Data model search parameters") ModelSearchRequest request) {
+    public SearchResponseDTO<ModelSearchResultDTO> getModels(@Parameter(description = "Data model search parameters") ModelSearchRequest request) {
         return searchIndexService.searchModels(request, userProvider.getUser());
     }
 
