@@ -165,7 +165,7 @@ public class VisualizationMapper {
             var attribute = new VisualizationPropertyShapeAttributeDTO();
             attribute.setIdentifier(getReferenceIdentifier(versionedResourceURI, namespaces));
             attribute.setLabel(label);
-            attribute.setUri(resource.getURI());
+            attribute.setUri(versionedResourceURI);
             var dataType = MapperUtils.propertyToString(resource, SH.datatype);
             if (dataType != null) {
                 var uriDTO = MapperUtils.uriToURIDTO(dataType, model);
@@ -179,7 +179,7 @@ public class VisualizationMapper {
             var association = new VisualizationPropertyShapeAssociationDTO();
             association.setIdentifier(getReferenceIdentifier(versionedResourceURI, namespaces));
             association.setLabel(label);
-            association.setUri(resource.getURI());
+            association.setUri(versionedResourceURI);
             association.setMaxCount(MapperUtils.getLiteral(resource, SH.maxCount, Integer.class));
             association.setMinCount(MapperUtils.getLiteral(resource, SH.minCount, Integer.class));
             association.setReferenceTarget(getPropertyShapeAssociationTarget(model, resource, namespaces));
