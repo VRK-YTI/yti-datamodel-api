@@ -71,15 +71,19 @@ public class SearchIndexService {
             searchRequest.setIncludeDraftFrom(groupManagementService.getOrganizationsForUser(user));
         }
 
-        var resources = this.getMatchingResources(searchRequest, user);
+        // if we were provided a search string, let's search for resources with the same string
+        SearchResponseDTO<IndexResource> resources = null;
+        if (searchRequest.getQuery() != null && !searchRequest.getQuery().isBlank()) {
+            resources = this.getMatchingResources(searchRequest, user);
 
-        // now let's add those matching models to the model search request
-        searchRequest.setAdditionalModelIds(resources
-                .getResponseObjects()
-                .stream()
-                .map(r -> (r.getVersionIri() != null ? r.getVersionIri() : r.getIsDefinedBy()))
-                .filter(Objects::nonNull)
-                .collect(Collectors.toSet()));
+            // now let's add those matching models to the model search request
+            searchRequest.setAdditionalModelIds(resources
+                    .getResponseObjects()
+                    .stream()
+                    .map(r -> (r.getVersionIri() != null ? r.getVersionIri() : r.getIsDefinedBy()))
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toSet()));
+        }
 
         var query = ModelQueryFactory.createModelCountQuery(searchRequest, user.isSuperuser());
         return ModelQueryFactory.parseModelCountResponse(client.searchResponse(query, IndexModel.class));
@@ -91,26 +95,32 @@ public class SearchIndexService {
             request.setIncludeDraftFrom(groupManagementService.getOrganizationsForUser(user));
         }
 
-        var resources = this.getMatchingResources(request, user);
+        // if we were provided a search string, let's search for resources with the same string
+        SearchResponseDTO<IndexResource> resources = null;
+        if (request.getQuery() != null && !request.getQuery().isBlank()) {
+            resources = this.getMatchingResources(request, user);
 
-        // now let's add those matching models to the model search request
-        request.setAdditionalModelIds(resources
-                .getResponseObjects()
-                .stream()
-                .map(r -> (r.getVersionIri() != null ? r.getVersionIri() : r.getIsDefinedBy()))
-                .filter(Objects::nonNull)
-                .collect(Collectors.toSet()));
+            // now let's add those matching models to the model search request
+            request.setAdditionalModelIds(resources
+                    .getResponseObjects()
+                    .stream()
+                    .map(r -> (r.getVersionIri() != null ? r.getVersionIri() : r.getIsDefinedBy()))
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toSet()));
+        }
 
         var query = ModelQueryFactory.createModelQuery(request, user.isSuperuser());
-
         var models = client.search(query, ModelSearchResultDTO.class);
-        for (var searchResult : models.getResponseObjects()) {
-            // link each matching resource to the model, if the versioned id matches
-            resources.getResponseObjects().stream()
-                    .filter(o -> (o.getVersionIri() != null ?
-                            o.getVersionIri() :
-                            o.getIsDefinedBy()).equals(searchResult.getId()))
-                    .forEach(o -> searchResult.addMatchingResource(o));
+
+        if (resources != null) {
+            for (var searchResult : models.getResponseObjects()) {
+                // link each matching resource to the model, if the versioned id matches
+                resources.getResponseObjects().stream()
+                        .filter(o -> (o.getVersionIri() != null ?
+                                o.getVersionIri() :
+                                o.getIsDefinedBy()).equals(searchResult.getId()))
+                        .forEach(o -> searchResult.addMatchingResource(o));
+            }
         }
 
         return models;
