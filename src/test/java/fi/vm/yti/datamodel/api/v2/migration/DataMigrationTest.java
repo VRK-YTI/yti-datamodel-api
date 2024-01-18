@@ -15,7 +15,6 @@ import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.riot.RDFFormat;
 import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDFS;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
@@ -35,7 +34,6 @@ import static org.junit.jupiter.api.Assertions.*;
 @Import({
         V1DataMigrationService.class
 })
-@Disabled
 class DataMigrationTest {
 
     @MockBean
@@ -60,7 +58,6 @@ class DataMigrationTest {
 
     @Test
     void testLibraryMigration() throws URISyntaxException {
-        var modelURI = "http://uri.suomi.fi/datamodel/ns/merialsuun";
         var prefix = "merialsuun";
         var newModelURI = DataModelURI.createModelURI(prefix).getModelURI();
 
@@ -80,7 +77,7 @@ class DataMigrationTest {
         newModel.createResource(newModelURI + "Lahtotietoaineisto");
         when(coreRepository.fetch(newModelURI)).thenReturn(newModel);
 
-        migrationService.migrateLibrary(prefix, oldData);
+        migrationService.migrateDatamodel(prefix, oldData);
 
         verify(dataModelService).create(dataModelCaptor.capture(), eq(ModelType.LIBRARY));
         verify(classService, times(2)).create(eq(prefix), baseDtoCaptor.capture(), eq(false));
@@ -100,5 +97,47 @@ class DataMigrationTest {
         assertTrue(result.getResource(newModelURI + "Lahtotietoaineisto").hasProperty(OWL.equivalentClass));
 
         RDFDataMgr.write(System.out, result, RDFFormat.TURTLE);
+    }
+
+    @Test
+    void testProfileMigration() throws URISyntaxException {
+        var prefix = "fi-dcatap";
+        var newModelURI = DataModelURI.createModelURI(prefix).getModelURI();
+
+        when(coreRepository.getServiceCategories())
+                .thenReturn(MapperTestUtils.getModelFromFile("/service-categories.ttl"));
+        var oldData = MapperTestUtils.getModelFromFile("/migration/fi-dcatap.ttl");
+
+        var newModel = ModelFactory.createDefaultModel();
+        newModel.createResource(DataModelURI.createResourceURI(prefix, "CatalogRecord").getResourceURI());
+
+        when(coreRepository.fetch(newModelURI)).thenReturn(newModel);
+        when(dataModelService.create(any(DataModelDTO.class), any(ModelType.class))).thenReturn(new URI(newModelURI));
+
+        migrationService.migrateDatamodel(prefix, oldData);
+
+        verify(dataModelService).create(dataModelCaptor.capture(), eq(ModelType.PROFILE));
+        verify(classService, times(2)).create(eq(prefix), baseDtoCaptor.capture(), eq(true));
+        verify(resourceService).create(eq(prefix), baseDtoCaptor.capture(), eq(ResourceType.ATTRIBUTE), eq(true));
+        verify(resourceService).create(eq(prefix), baseDtoCaptor.capture(), eq(ResourceType.ASSOCIATION), eq(true));
+        verify(coreRepository).put(eq(newModelURI), modelCaptor.capture());
+
+        var identifiers = baseDtoCaptor.getAllValues().stream().map(BaseDTO::getIdentifier).toList();
+        var datasetNodeShape = baseDtoCaptor.getAllValues().stream().filter(b -> b.getIdentifier().equals("Dataset")).findFirst();
+        var createdModel = modelCaptor.getValue();
+        var nodeShapeResource = createdModel.getResource(DataModelURI.createResourceURI(prefix, "CatalogRecord").getResourceURI());
+        var propertyURIs = nodeShapeResource.listProperties().mapWith(p -> p.getObject().toString()).toList();
+
+        assertEquals(prefix, dataModelCaptor.getValue().getPrefix());
+
+        assertTrue(identifiers.containsAll(List.of("CatalogRecord", "Dataset", "primaryTopic", "modified")));
+        assertEquals(2, propertyURIs.size());
+        assertTrue(propertyURIs.containsAll(List.of(
+                "https://iri.suomi.fi/model/fi-dcatap/modified",
+                "https://iri.suomi.fi/model/fi-dcatap/primaryTopic")
+        ));
+
+        // should remove invalid language from label
+        assertEquals(1, datasetNodeShape.get().getLabel().keySet().size());
     }
 }

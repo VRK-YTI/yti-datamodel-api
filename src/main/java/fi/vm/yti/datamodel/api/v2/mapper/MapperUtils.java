@@ -50,11 +50,6 @@ public class MapperUtils {
         return Status.valueOf(uri.substring(uri.lastIndexOf("/") + 1));
     }
 
-    public static String getModelIdFromNamespace(String namespace) {
-        var nsWithoutVersion = namespace.replaceAll("/[0-9.]+(.*)$", "");
-        return nsWithoutVersion.substring(nsWithoutVersion.lastIndexOf("/") + 1);
-    }
-
     public static ModelType getModelTypeFromResource(Resource resource){
         if(isApplicationProfile(resource)) {
             return ModelType.PROFILE;

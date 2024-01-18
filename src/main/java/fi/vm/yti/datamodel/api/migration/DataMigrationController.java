@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.net.URISyntaxException;
 import java.util.Arrays;
 
 import static fi.vm.yti.datamodel.api.migration.V1DataMigrationService.OLD_NAMESPACE;
@@ -83,15 +84,18 @@ public class DataMigrationController {
     }
 
     @PostMapping("/prefix")
-    public ResponseEntity<Void> migrate(@RequestParam String prefix) {
+    public ResponseEntity<Void> migrate(@RequestParam String prefix) throws URISyntaxException {
         check(authorizationManager.hasRightToDoMigration());
 
+        migrationService.initRenamedResources();
+
         /* Use static file
-        var stream = getClass().getResourceAsStream("/merialsuun_simple.ttl");
+        var oldData = ModelFactory.createDefaultModel();
+        var stream = getClass().getResourceAsStream("/fi-dcatap.ttl");
         RDFDataMgr.read(oldData, stream, RDFLanguages.TURTLE);
+        migrationService.migrateDatamodel(prefix, oldData);
         */
 
-        migrationService.initRenamedResources();
         var prefixes = prefix.split(",");
 
         for (var p : prefixes) {
@@ -104,15 +108,11 @@ public class DataMigrationController {
                         .lang(Lang.JSONLD)
                         .acceptHeader("application/ld+json")
                         .parse(oldData);
-                migrationService.migrateLibrary(p, oldData);
+                migrationService.migrateDatamodel(p, oldData);
                 migrateVisualization(p);
             } catch (Exception e) {
                 LOG.error(e.getMessage(), e);
             }
-        }
-
-        for (var p : prefixes) {
-            migrationService.createVersions(p);
         }
 
         migrationService.renameResources();
@@ -127,6 +127,8 @@ public class DataMigrationController {
         check(authorizationManager.hasRightToDoMigration());
 
         var oldVisualization = ModelFactory.createDefaultModel();
+        var oldData = ModelFactory.createDefaultModel();
+
         var modelURI = OLD_NAMESPACE + prefix;
         LOG.info("Fetching model {}", modelURI);
         RDFParser.create()
@@ -135,7 +137,13 @@ public class DataMigrationController {
                 .acceptHeader("application/ld+json")
                 .parse(oldVisualization);
 
-        migrationService.migratePositions(prefix, oldVisualization);
+        RDFParser.create()
+                .source(serviceURL + "/datamodel-api/api/v1/exportModel?graph=" + DataModelUtils.encode(modelURI))
+                .lang(Lang.JSONLD)
+                .acceptHeader("application/ld+json")
+                .parse(oldData);
+
+        migrationService.migratePositions(prefix, oldVisualization, oldData.getGraph().getPrefixMapping());
         return ResponseEntity.noContent().build();
     }
 

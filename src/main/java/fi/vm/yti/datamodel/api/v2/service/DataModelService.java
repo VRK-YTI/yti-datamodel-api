@@ -95,6 +95,7 @@ public class DataModelService {
         terminologyService.resolveTerminology(dto.getTerminologies());
         codeListService.resolveCodelistScheme(dto.getCodeLists());
         var jenaModel = mapper.mapToJenaModel(dto, modelType, userProvider.getUser());
+        addPrefixes(jenaModel, dto);
 
         coreRepository.put(graphUri, jenaModel);
 
@@ -113,6 +114,7 @@ public class DataModelService {
         terminologyService.resolveTerminology(dto.getTerminologies());
         codeListService.resolveCodelistScheme(dto.getCodeLists());
         mapper.mapToUpdateJenaModel(graphUri, dto, model, userProvider.getUser());
+        addPrefixes(model, dto);
 
         coreRepository.put(graphUri, model);
 
@@ -298,5 +300,9 @@ public class DataModelService {
         var indexModel = mapper.mapToIndexModel(uri.getModelURI(), model);
         openSearchIndexer.updateModelToIndex(indexModel);
         auditService.log(AuditService.ActionType.UPDATE, uri.getGraphURI(), userProvider.getUser());
+    }
+
+    private void addPrefixes(Model model, DataModelDTO dto) {
+        dto.getExternalNamespaces().forEach(ns -> model.getGraph().getPrefixMapping().setNsPrefix(ns.getPrefix(), ns.getNamespace()));
     }
 }
