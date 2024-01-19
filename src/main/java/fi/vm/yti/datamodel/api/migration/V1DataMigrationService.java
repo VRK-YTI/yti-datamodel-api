@@ -54,6 +54,8 @@ public class V1DataMigrationService {
 
     private final Set<String> renamedResources = new HashSet<>();
 
+    private final Map<String, String> propertyShapeIdMap = new HashMap<>();
+
     public V1DataMigrationService(DataModelService dataModelService,
                                   ClassService classService,
                                   ResourceService resourceService,
@@ -66,8 +68,10 @@ public class V1DataMigrationService {
         this.visualizationService = visualizationService;
     }
 
-    public void initRenamedResources() {
+    public void initMigration() {
         renamedResources.clear();
+        propertyShapeIdMap.clear();
+        V1DataMapper.clearErrors();
     }
 
     public void renameResources() {
@@ -108,6 +112,7 @@ public class V1DataMigrationService {
         var modelResource = oldData.getResource(oldModelURI);
         var languages = dataModel.getLanguages();
 
+        // filter out localized information not included to languages added to the model
         var invalidStatements = oldData.listStatements().toList().stream()
                 .filter(s -> s.getObject().isLiteral())
                 .filter(s -> !"".equals(s.getLanguage()) && !languages.contains(s.getLanguage()))
@@ -156,6 +161,8 @@ public class V1DataMigrationService {
 
     private void handleAddNodeShapes(String prefix, Model oldData) {
         var nodeShapes = V1DataMapper.findResourcesByType(oldData, SH.NodeShape);
+        nodeShapes.addAll(V1DataMapper.findResourcesByType(oldData, RDFS.Class));
+
         var newModelURI = DataModelURI.createModelURI(prefix).getGraphURI();
 
         for (var nodeShape : nodeShapes) {
@@ -164,7 +171,8 @@ public class V1DataMigrationService {
                 classService.create(prefix, dto, true);
                 handleModifiedInfo(newModelURI, nodeShape);
             } catch (Exception e) {
-                LOG.warn("Error creating node shape {} to model {}", dto.getIdentifier(), prefix);
+                LOG.warn("MIGRATION ERROR: Error creating node shape {} to model {}, cause: {}", dto.getIdentifier(), prefix, e.getMessage());
+                V1DataMapper.addError(prefix, String.format("Error creating node shape %s, cause: %s", dto.getIdentifier(), e.getMessage()));
             }
         }
     }
@@ -174,31 +182,55 @@ public class V1DataMigrationService {
         var newModelURI = DataModelURI.createModelURI(prefix).getGraphURI();
 
         for (var propertyShape : propertyShapes) {
-            var ps = V1DataMapper.mapProfileResource(oldData, propertyShape);
-            if (ps != null) {
-                var resourceType = ps instanceof AttributeRestriction
-                        ? ResourceType.ATTRIBUTE
-                        : ResourceType.ASSOCIATION;
-                try {
-                    resourceService.create(prefix, ps, resourceType, true);
-                    handleModifiedInfo(newModelURI, propertyShape);
-                } catch (Exception e) {
-                    LOG.warn("MIGRATION ERROR: Error creating property shape {} to model {}, cause: {}", ps.getIdentifier(), prefix, e.getMessage());
-                }
+            var classResource = oldData.listSubjectsWithProperty(SH.property, propertyShape).nextResource();
+
+            var ps = V1DataMapper.mapProfileResource(oldData, propertyShape, prefix, classResource.getURI());
+            if (ps == null) {
+                continue;
+            }
+            var resourceType = ps instanceof AttributeRestriction
+                    ? ResourceType.ATTRIBUTE
+                    : ResourceType.ASSOCIATION;
+
+            int n = 0;
+            var originalId = ps.getIdentifier();
+            while (resourceService.exists(prefix, ps.getIdentifier())) {
+                ps.setIdentifier(originalId + "-" + ++n);
+                propertyShapeIdMap.put(propertyShape.getURI(), ps.getIdentifier());
+            }
+
+            try {
+                resourceService.create(prefix, ps, resourceType, true);
+                handleModifiedInfo(newModelURI, propertyShape);
+            } catch (Exception e) {
+                LOG.warn("MIGRATION ERROR: Error creating property shape {} to model {}, cause: {}",
+                        ps.getIdentifier(), prefix, e.getMessage());
+                V1DataMapper.addError(prefix, String.format("Error creating property shape %s, cause: %s", ps.getIdentifier(), e.getMessage()));
             }
         }
     }
 
     private void handleAddPropertiesToNodeShapes(String prefix, Model oldData) {
         var nodeShapes = V1DataMapper.findResourcesByType(oldData, SH.NodeShape);
+        nodeShapes.addAll(V1DataMapper.findResourcesByType(oldData, RDFS.Class));
+
         var dataModelURI = DataModelURI.createModelURI(prefix).getGraphURI();
         var newModel = coreRepository.fetch(dataModelURI);
         for (var nodeShape : nodeShapes) {
             var nodeShapeURI = dataModelURI + NodeFactory.createURI(nodeShape.getURI()).getLocalName();
             var nodeShapeResource = newModel.getResource(nodeShapeURI);
             var properties = nodeShape.listProperties(SH.property)
-                    .mapWith(p -> V1DataMapper.getUriForOldResource(prefix, oldData.getResource(p.getObject().toString())))
+                    .mapWith(p -> {
+                        var property = p.getObject().toString();
+
+                        // if property shape is renamed with suffix, e.g. title-1
+                        if (propertyShapeIdMap.containsKey(property)) {
+                            return DataModelURI.createResourceURI(prefix, propertyShapeIdMap.get(property)).getResourceURI();
+                        }
+                        return V1DataMapper.getUriForOldResource(prefix, oldData.getResource(p.getObject().toString()));
+                    })
                     .filterKeep(Objects::nonNull);
+
             properties.forEach(p -> nodeShapeResource.addProperty(SH.property, ResourceFactory.createResource(p)));
         }
         coreRepository.put(dataModelURI, newModel);
@@ -353,17 +385,16 @@ public class V1DataMigrationService {
                 if (type.equals(ResourceType.CLASS)) {
                     var dto = V1DataMapper.mapLibraryClass(resource);
                     handleExists(prefix, resource, exists, dto);
-                    var classURI = classService.create(prefix, dto, false);
-                    LOG.info("Created class {}", classURI);
+                    classService.create(prefix, dto, false);
                 } else {
                     var dto = V1DataMapper.mapLibraryResource(resource);
                     handleExists(prefix, resource, exists, dto);
-                    var resourceURI = resourceService.create(prefix, dto, type, false);
-                    LOG.info("Created resource {}", resourceURI);
+                    resourceService.create(prefix, dto, type, false);
                 }
                 handleModifiedInfo(newModelURI.getModelURI(), resource);
             } catch (Exception e) {
                 LOG.error("Error creating class {} to model {}: {}", resource.getURI(), modelURI, e.getMessage());
+                V1DataMapper.addError(prefix, String.format("Error creating class %s, cause: %s", resource.getURI(), e.getMessage()));
             }
         });
     }
@@ -480,6 +511,11 @@ public class V1DataMigrationService {
         }
     }
 
+    /**
+     * Updates references from draft to published version.
+     * E.g. https://iri.suomi.fi/model/foo/resource -> https://iri.suomi.fi/model/foo/1.0.0/resource
+     * @param graph published graph uri
+     */
     private void updateReferences(String graph) {
         var query = String.format("""
                 delete {
@@ -495,7 +531,7 @@ public class V1DataMigrationService {
                 where {
                   graph ?g {
                     ?s ?p ?o
-                    filter(strstarts(str(?o), "%s"))
+                    filter regex(str(?o), "%s([a-zA-Z](.)*)?$")
                     bind(iri(
                         replace(str(?o), "%s", "%s1.0.0/")
                     ) as ?uri)

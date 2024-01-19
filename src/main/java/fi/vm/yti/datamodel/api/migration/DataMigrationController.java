@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.net.URISyntaxException;
 import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 
 import static fi.vm.yti.datamodel.api.migration.V1DataMigrationService.OLD_NAMESPACE;
 import static fi.vm.yti.security.AuthorizationException.check;
@@ -63,7 +65,7 @@ public class DataMigrationController {
     public ResponseEntity<Void> migrateAll() {
         check(authorizationManager.hasRightToDoMigration());
 
-        migrationService.initRenamedResources();
+        migrationService.initMigration();
 
         var prefixes = Arrays.asList(PREFIXES.split(","));
         prefixes.forEach(prefix -> {
@@ -84,17 +86,17 @@ public class DataMigrationController {
     }
 
     @PostMapping("/prefix")
-    public ResponseEntity<Void> migrate(@RequestParam String prefix) throws URISyntaxException {
+    public ResponseEntity<Map<String, List<String>>> migrate(@RequestParam String prefix) throws URISyntaxException {
         check(authorizationManager.hasRightToDoMigration());
 
-        migrationService.initRenamedResources();
+        migrationService.initMigration();
 
         /* Use static file
         var oldData = ModelFactory.createDefaultModel();
-        var stream = getClass().getResourceAsStream("/fi-dcatap.ttl");
+        var stream = getClass().getResourceAsStream("/isa2core-org.ttl");
         RDFDataMgr.read(oldData, stream, RDFLanguages.TURTLE);
         migrationService.migrateDatamodel(prefix, oldData);
-        */
+ */
 
         var prefixes = prefix.split(",");
 
@@ -117,8 +119,10 @@ public class DataMigrationController {
 
         migrationService.renameResources();
 
-        LOG.info("Done");
-        return ResponseEntity.noContent().build();
+        var errors = V1DataMapper.getErrors();
+        LOG.info("Done, errors: {}", errors);
+
+        return ResponseEntity.ok(errors);
     }
 
     @PostMapping("/positions")

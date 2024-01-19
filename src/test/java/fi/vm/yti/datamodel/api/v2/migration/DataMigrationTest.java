@@ -112,6 +112,7 @@ class DataMigrationTest {
         newModel.createResource(DataModelURI.createResourceURI(prefix, "CatalogRecord").getResourceURI());
 
         when(coreRepository.fetch(newModelURI)).thenReturn(newModel);
+        when(resourceService.exists(prefix, "primaryTopic")).thenReturn(true);
         when(dataModelService.create(any(DataModelDTO.class), any(ModelType.class))).thenReturn(new URI(newModelURI));
 
         migrationService.migrateDatamodel(prefix, oldData);
@@ -130,14 +131,16 @@ class DataMigrationTest {
 
         assertEquals(prefix, dataModelCaptor.getValue().getPrefix());
 
-        assertTrue(identifiers.containsAll(List.of("CatalogRecord", "Dataset", "primaryTopic", "modified")));
+        // Assume there is already resource with id primaryTopic, so suffix '-1' is added
+        assertTrue(identifiers.containsAll(List.of("CatalogRecord", "Dataset", "primaryTopic-1", "modified")));
         assertEquals(2, propertyURIs.size());
         assertTrue(propertyURIs.containsAll(List.of(
                 "https://iri.suomi.fi/model/fi-dcatap/modified",
-                "https://iri.suomi.fi/model/fi-dcatap/primaryTopic")
+                "https://iri.suomi.fi/model/fi-dcatap/primaryTopic-1")
         ));
 
         // should remove invalid language from label
+        assertTrue(datasetNodeShape.isPresent());
         assertEquals(1, datasetNodeShape.get().getLabel().keySet().size());
     }
 }

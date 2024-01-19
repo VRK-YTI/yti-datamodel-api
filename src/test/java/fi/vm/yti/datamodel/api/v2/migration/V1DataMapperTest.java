@@ -42,10 +42,11 @@ public class V1DataMapperTest {
         // internal namespaces have to add separately without validation
         assertEquals(Set.of(), result.getInternalNamespaces());
 
-        var externalNamespace = result.getExternalNamespaces().iterator().next();
-        assertEquals("test_un", externalNamespace.getPrefix());
-        assertEquals("https://vocabulary.uncefact.org/", externalNamespace.getNamespace());
-        assertEquals("test un", externalNamespace.getName().get("fi"));
+        var externalNamespace = result.getExternalNamespaces().stream().filter(e -> e.getPrefix().equals("test_un")).findFirst();
+        assertTrue(externalNamespace.isPresent());
+        assertEquals("test_un", externalNamespace.get().getPrefix());
+        assertEquals("https://vocabulary.uncefact.org/", externalNamespace.get().getNamespace());
+        assertEquals("test un", externalNamespace.get().getName().get("fi"));
 
         assertEquals(2, result.getLinks().size());
         var link = result.getLinks().stream()
@@ -166,8 +167,8 @@ public class V1DataMapperTest {
         assertTrue(propertyShapeAssociation.isPresent());
         assertTrue(propertyShapeAttribute.isPresent());
 
-        var associationDTO = (AssociationRestriction) V1DataMapper.mapProfileResource(oldData, propertyShapeAssociation.get());
-        var attributeDTO = (AttributeRestriction) V1DataMapper.mapProfileResource(oldData, propertyShapeAttribute.get());
+        var associationDTO = (AssociationRestriction) V1DataMapper.mapProfileResource(oldData, propertyShapeAssociation.get(), "fi-dcatap", "classResource");
+        var attributeDTO = (AttributeRestriction) V1DataMapper.mapProfileResource(oldData, propertyShapeAttribute.get(), "fi-dcatap", "classResource");
 
         assertTrue(associationDTO != null && attributeDTO != null);
 
