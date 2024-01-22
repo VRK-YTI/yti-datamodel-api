@@ -503,44 +503,16 @@ public class V1DataMigrationService {
 
     public void createVersions(String prefix) {
         try {
-            dataModelService.createRelease(prefix, "1.0.0", Status.VALID);
+            var version = "1.0.0";
+            dataModelService.createRelease(prefix, version, Status.VALID);
             var uri = DataModelURI.createModelURI(prefix).getGraphURI();
-            updateReferences(uri);
+            dataModelService.updateDraftReferences(uri, version);
         } catch (Exception e) {
             LOG.error(e.getMessage(), e);
         }
     }
 
-    /**
-     * Updates references from draft to published version.
-     * E.g. https://iri.suomi.fi/model/foo/resource -> https://iri.suomi.fi/model/foo/1.0.0/resource
-     * @param graph published graph uri
-     */
-    private void updateReferences(String graph) {
-        var query = String.format("""
-                delete {
-                  graph ?g {
-                    ?s ?p ?o
-                  }
-                }
-                insert {
-                  graph ?g {
-                    ?s ?p ?uri
-                  }
-                }
-                where {
-                  graph ?g {
-                    ?s ?p ?o
-                    filter regex(str(?o), "%s([a-zA-Z](.)*)?$")
-                    bind(iri(
-                        replace(str(?o), "%s", "%s1.0.0/")
-                    ) as ?uri)
-                  }
-                  filter(!strstarts(str(?g), "%s"))
-                }""", graph, graph, graph, graph);
 
-        coreRepository.queryUpdate(query);
-    }
 
     private void addModelSpecificInfo(String prefix, DataModelDTO dataModel) {
         if (prefix.equals("fi-dcatap")) {

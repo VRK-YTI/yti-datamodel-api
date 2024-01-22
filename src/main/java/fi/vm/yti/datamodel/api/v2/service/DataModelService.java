@@ -17,6 +17,7 @@ import fi.vm.yti.datamodel.api.v2.utils.SemVer;
 import fi.vm.yti.datamodel.api.v2.validator.ValidationConstants;
 import fi.vm.yti.security.AuthenticatedUserProvider;
 import org.apache.jena.arq.querybuilder.ConstructBuilder;
+import org.apache.jena.arq.querybuilder.UpdateBuilder;
 import org.apache.jena.arq.querybuilder.WhereBuilder;
 import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.rdf.model.Model;
@@ -240,6 +241,8 @@ public class DataModelService {
         coreRepository.put(modelVersionURI.getDraftGraphURI(), newDraft);
         coreRepository.put(modelVersionURI.getGraphURI(), model);
 
+        updateDraftReferences(modelUri, version);
+
         var newVersion = mapper.mapToIndexModel(modelUri, model);
         openSearchIndexer.createModelToIndex(newVersion);
         var list = new ArrayList<IndexResource>();
@@ -300,6 +303,28 @@ public class DataModelService {
         var indexModel = mapper.mapToIndexModel(uri.getModelURI(), model);
         openSearchIndexer.updateModelToIndex(indexModel);
         auditService.log(AuditService.ActionType.UPDATE, uri.getGraphURI(), userProvider.getUser());
+    }
+
+    /**
+     * Updates references from draft to published version in other data models.
+     * E.g. https://iri.suomi.fi/model/foo/resource -> https://iri.suomi.fi/model/foo/1.0.0/resource
+     * @param graph published graph uri
+     */
+    public void updateDraftReferences(String graph, String newVersion) {
+        var builder = new UpdateBuilder();
+        var e = builder.getExprFactory();
+        builder
+                .addDelete("?g", "?s", "?p", "?o")
+                .addInsert("?g", "?s", "?p", "?releaseUri")
+                .addWhere(new WhereBuilder()
+                        .addGraph("?g", "?s", "?p", "?o"))
+                        .addFilter(e.regex(e.str("?o"), graph + "([a-zA-Z](.)*)?$", ""))
+                        .addBind(e.iri(
+                            e.replace(e.str("?o"), graph, graph + newVersion + "/")
+                        ), "releaseUri")
+                        .addFilter(e.not(e.strstarts(e.str("?g"), graph)));
+
+        coreRepository.queryUpdate(builder.buildRequest());
     }
 
     private void addPrefixes(Model model, DataModelDTO dto) {
