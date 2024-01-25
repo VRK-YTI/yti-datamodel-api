@@ -12,11 +12,11 @@ import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import fi.vm.yti.datamodel.api.v2.repository.ImportsRepository;
 import fi.vm.yti.datamodel.api.v2.service.AuditService;
+import fi.vm.yti.datamodel.api.v2.service.NamespaceService;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelUtils;
 import fi.vm.yti.datamodel.api.v2.utils.SparqlUtils;
 import fi.vm.yti.security.AuthenticatedUserProvider;
 import org.apache.jena.arq.querybuilder.ConstructBuilder;
-import org.apache.jena.arq.querybuilder.ExprFactory;
 import org.apache.jena.arq.querybuilder.SelectBuilder;
 import org.apache.jena.arq.querybuilder.WhereBuilder;
 import org.apache.jena.rdf.model.ModelFactory;
@@ -277,21 +277,18 @@ public class OpenSearchIndexer {
 
     public void initExternalResourceIndex() {
         var builder = new ConstructBuilder()
-                .addPrefixes(ModelConstants.PREFIXES);
+                .addPrefixes(NamespaceService.DEFAULT_NAMESPACES);
 
         SparqlUtils.addConstructOptional("?s", builder, RDFS.label, "?label");
         SparqlUtils.addConstructOptional("?s", builder, RDFS.isDefinedBy, "?isDefinedBy");
         SparqlUtils.addConstructOptional("?s", builder, RDFS.comment, "?comment");
-        builder
-                .addOptional("?s", RDF.type, "?primaryType")
-                .addOptional("?s", OWL.inverseOf, "?inverseOf")
-                .addOptional("?inverseOf", RDF.type, "?inverseType")
-                .addBind(new ExprFactory().coalesce("?primaryType", "?inverseType"), "?type")
-                .addConstruct("?s", RDF.type, "?type");
+        SparqlUtils.addConstructOptional("?s", builder, RDF.type, "?type");
+        SparqlUtils.addConstructOptional("?s", builder, OWL.inverseOf, "?inverseOf");
+
         var result = importsRepository.queryConstruct(builder.build());
         var list = new ArrayList<IndexBase>();
         result.listSubjects().forEach(resource -> {
-            var indexClass = ResourceMapper.mapExternalToIndexResource(result, resource);
+            var indexClass = ResourceMapper.mapExternalToIndexResource(resource);
             if (indexClass == null) {
                 logger.info("Could not determine required properties for resource {}", resource.getURI());
                 return;

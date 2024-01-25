@@ -60,15 +60,21 @@ public class NamespaceResolver {
         logger.info("Resolving namespace: {}", namespace);
         var model = ModelFactory.createDefaultModel();
         try{
+            var accept = String.join(", ", ACCEPT_TYPES);
+
+            // Uncefact works only with one accept header
+            if (namespace.equals("https://vocabulary.uncefact.org/")) {
+                accept = "application/ld+json";
+            }
             RDFParser.create()
                     .source(namespace)
                     .lang(Lang.RDFXML)
-                    .acceptHeader(String.join(", ", ACCEPT_TYPES))
+                    .acceptHeader(accept)
                     .parse(model);
-            if(model.size() > 0){
+            if (!model.isEmpty()){
                 importsRepository.put(namespace, model);
                 var indexResources = model.listSubjects()
-                        .mapWith(resource -> ResourceMapper.mapExternalToIndexResource(model, resource))
+                        .mapWith(ResourceMapper::mapExternalToIndexResource)
                         .toList()
                         .stream().filter(Objects::nonNull)
                         .toList();
