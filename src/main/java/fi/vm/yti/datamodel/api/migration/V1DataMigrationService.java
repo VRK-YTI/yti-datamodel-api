@@ -527,6 +527,13 @@ public class V1DataMigrationService {
             spdx.setPrefix("spdx");
 
             dataModel.getExternalNamespaces().addAll(Set.of(rdfs, spdx));
+        } else if (prefix.equals("fi-nsipap")) {
+            var skos = new ExternalNamespaceDTO();
+            skos.setName(Map.of("en", "skos"));
+            skos.setNamespace("http://www.w3.org/2004/02/skos/core# ");
+            skos.setPrefix("skos");
+
+            dataModel.getExternalNamespaces().add(skos);
         }
     }
 }
