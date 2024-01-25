@@ -5,6 +5,7 @@ import fi.vm.yti.datamodel.api.v2.service.ResourceService;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import org.apache.jena.vocabulary.OWL;
+import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -60,7 +61,8 @@ public class PropertyShapeValidator extends BaseValidator implements ConstraintV
             addConstraintViolation(context, ValidationConstants.MSG_VALUE_MISSING, "path");
         }
 
-        if (path != null && !path.isBlank() && !resourceService.checkIfResourceIsOneOfTypes(path, List.of(OWL.ObjectProperty, OWL.DatatypeProperty))) {
+        if (path != null && !path.isBlank()
+                && !resourceService.checkIfResourceIsOneOfTypes(path, List.of(OWL.ObjectProperty, OWL.DatatypeProperty, RDF.Property))) {
             addConstraintViolation(context, "not-property-or-doesnt-exist", "path");
         }
     }

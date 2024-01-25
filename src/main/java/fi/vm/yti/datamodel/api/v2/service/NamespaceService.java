@@ -40,7 +40,8 @@ public class NamespaceService {
             Map.entry("dc", "http://purl.org/dc/elements/1.1/"),
             Map.entry("sd", "http://www.w3.org/ns/sparql-service-description#"),
             Map.entry("sh", "http://www.w3.org/ns/shacl#"),
-            Map.entry("shsh", "http://www.w3.org/ns/shacl-shacl")
+            Map.entry("shsh", "http://www.w3.org/ns/shacl-shacl"),
+            Map.entry("foaf", "http://xmlns.com/foaf/0.1/")
     );
 
     public void resolveDefaultNamespaces() {

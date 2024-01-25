@@ -58,7 +58,7 @@ public class DataModelValidator extends BaseValidator implements
 
         checkPrefix(context, prefix, prefixPropertyLabel, updateModel);
         // Check prefix text content
-        checkPrefixContent(context, prefix, prefixPropertyLabel);
+        checkPrefixContent(context, prefix, prefixPropertyLabel, false);
 
         if (coreRepository.graphExists(ModelConstants.SUOMI_FI_NAMESPACE + prefix)) {
             // Checking if in use is different for data models and its resources so it is not in the above function
@@ -205,7 +205,7 @@ public class DataModelValidator extends BaseValidator implements
                 if(namespace.getNamespace().startsWith(ModelConstants.SUOMI_FI_NAMESPACE)){
                     addConstraintViolation(context, "namespace-not-external", externalNamespace);
                 }
-                checkPrefixContent(context, namespace.getPrefix(), externalNamespace);
+                checkPrefixContent(context, namespace.getPrefix(), externalNamespace, true);
             }
         });
     }
@@ -215,14 +215,15 @@ public class DataModelValidator extends BaseValidator implements
      * @param context Constraint validator context
      * @param prefix Prefix
      * @param property Property name if violation happens
+     * @param externalNamespace if true, allow using reserved prefixes, e.g. 'owl'
      */
-    private void checkPrefixContent(ConstraintValidatorContext context, String prefix, String property){
+    private void checkPrefixContent(ConstraintValidatorContext context, String prefix, String property, boolean externalNamespace){
         if(prefix == null){
             return;
         }
         //Checking for reserved words and reserved namespaces. This error won't distinguish which one it was
         if(ValidationConstants.RESERVED_WORDS.contains(prefix)
-                || ValidationConstants.RESERVED_NAMESPACES.containsKey(prefix)){
+                || (!externalNamespace && ValidationConstants.RESERVED_NAMESPACES.containsKey(prefix))) {
             addConstraintViolation(context, "prefix-is-reserved", property);
         }
     }

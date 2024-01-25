@@ -19,6 +19,7 @@ import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.rdf.model.*;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFParser;
+import org.apache.jena.shared.PrefixMapping;
 import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDF;
@@ -31,8 +32,7 @@ import org.springframework.stereotype.Service;
 import org.topbraid.shacl.vocabulary.SH;
 
 import java.net.URISyntaxException;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 @Service
 public class V1DataMigrationService {
@@ -54,6 +54,8 @@ public class V1DataMigrationService {
 
     private final Set<String> renamedResources = new HashSet<>();
 
+    private final Map<String, String> propertyShapeIdMap = new HashMap<>();
+
     public V1DataMigrationService(DataModelService dataModelService,
                                   ClassService classService,
                                   ResourceService resourceService,
@@ -66,8 +68,10 @@ public class V1DataMigrationService {
         this.visualizationService = visualizationService;
     }
 
-    public void initRenamedResources() {
+    public void initMigration() {
         renamedResources.clear();
+        propertyShapeIdMap.clear();
+        V1DataMapper.clearErrors();
     }
 
     public void renameResources() {
@@ -75,26 +79,25 @@ public class V1DataMigrationService {
         for (String res : renamedResources) {
             LOG.info("Renaming references {}", res);
             var query = String.format("""
-                delete { graph ?g {
-                    ?s ?p ?o
-                  }
-                }
-                insert { graph ?g {
-                    ?s ?p ?newURI
-                  }
-                }
-                where { graph ?g {
-                    ?s ?p ?o .
-                    filter(str(?o) = "%s")
-                    bind (iri(str(?o) + "_") as ?newURI)
-                  }
-                }""", res);
+                    delete { graph ?g {
+                        ?s ?p ?o
+                      }
+                    }
+                    insert { graph ?g {
+                        ?s ?p ?newURI
+                      }
+                    }
+                    where { graph ?g {
+                        ?s ?p ?o .
+                        filter(str(?o) = "%s")
+                        bind (iri(str(?o) + "_") as ?newURI)
+                      }
+                    }""", res);
             coreRepository.queryUpdate(query);
         }
     }
 
-    public void migrateLibrary(String prefix, Model oldData) throws URISyntaxException {
-
+    public void migrateDatamodel(String prefix, Model oldData) throws URISyntaxException {
         var modelURI = DataModelURI.createModelURI(prefix).getModelURI();
         var oldModelURI = OLD_NAMESPACE + prefix;
 
@@ -104,15 +107,26 @@ public class V1DataMigrationService {
         var groupModel = coreRepository.getServiceCategories();
         var dataModel = V1DataMapper.getLibraryMetadata(oldModelURI, oldData, groupModel, defaultOrganization);
 
-        Resource modelResource = oldData.getResource(oldModelURI);
+        addModelSpecificInfo(prefix, dataModel);
 
-        if (!MapperUtils.hasType(modelResource,
-                ResourceFactory.createProperty("http://purl.org/ws-mmi-dc/terms/MetadataVocabulary"))) {
-            throw new RuntimeException("Not a library");
-        }
+        var modelResource = oldData.getResource(oldModelURI);
+        var languages = dataModel.getLanguages();
+
+        // filter out localized information not included to languages added to the model
+        var invalidStatements = oldData.listStatements().toList().stream()
+                .filter(s -> s.getObject().isLiteral())
+                .filter(s -> !"".equals(s.getLanguage()) && !languages.contains(s.getLanguage()))
+                .toList();
+
+        oldData.remove(invalidStatements);
+
+        var modelType = MapperUtils.hasType(modelResource,
+                ResourceFactory.createProperty("http://purl.org/ws-mmi-dc/terms/MetadataVocabulary"))
+                ? ModelType.LIBRARY
+                : ModelType.PROFILE;
 
         // create data model
-        var dataModelURI = dataModelService.create(dataModel, ModelType.LIBRARY);
+        var dataModelURI = dataModelService.create(dataModel, modelType);
 
         // add references with separate query, because they might not exist yet (causes validation error)
         updateRequires(dataModelURI.toString(), modelResource);
@@ -123,17 +137,103 @@ public class V1DataMigrationService {
 
         LOG.info("Created datamodel {}", dataModelURI);
 
-        // create classes
-        handleAddResources(prefix, oldData, oldModelURI, ResourceType.CLASS);
+        if (modelType.equals(ModelType.LIBRARY)) {
+            // create library classes
+            handleAddResources(prefix, oldData, oldModelURI, ResourceType.CLASS);
 
-        // create attributes and associations
-        handleAddResources(prefix, oldData, oldModelURI, ResourceType.ATTRIBUTE);
-        handleAddResources(prefix, oldData, oldModelURI, ResourceType.ASSOCIATION);
+            // create library attributes and associations
+            handleAddResources(prefix, oldData, oldModelURI, ResourceType.ATTRIBUTE);
+            handleAddResources(prefix, oldData, oldModelURI, ResourceType.ASSOCIATION);
 
-        // add class restrictions
-        handleRestrictions(oldData, oldModelURI, modelURI);
+            // add class restrictions
+            handleRestrictions(oldData, oldModelURI, modelURI);
+        } else {
+            // create node shapes
+            handleAddNodeShapes(prefix, oldData);
+            // create property shapes
+            handleAddPropertyShapes(prefix, oldData);
 
+            // attach property shapes to node shapes
+            handleAddPropertiesToNodeShapes(prefix, oldData);
+        }
         LOG.info("Migrated model {}", modelURI);
+    }
+
+    private void handleAddNodeShapes(String prefix, Model oldData) {
+        var nodeShapes = V1DataMapper.findResourcesByType(oldData, SH.NodeShape);
+        nodeShapes.addAll(V1DataMapper.findResourcesByType(oldData, RDFS.Class));
+
+        var newModelURI = DataModelURI.createModelURI(prefix).getGraphURI();
+
+        for (var nodeShape : nodeShapes) {
+            var dto = V1DataMapper.mapProfileClass(nodeShape);
+            try {
+                classService.create(prefix, dto, true);
+                handleModifiedInfo(newModelURI, nodeShape);
+            } catch (Exception e) {
+                LOG.warn("MIGRATION ERROR: Error creating node shape {} to model {}, cause: {}", dto.getIdentifier(), prefix, e.getMessage());
+                V1DataMapper.addError(prefix, String.format("Error creating node shape %s, cause: %s", dto.getIdentifier(), e.getMessage()));
+            }
+        }
+    }
+
+    private void handleAddPropertyShapes(String prefix, Model oldData) {
+        var propertyShapes = V1DataMapper.findResourcesByType(oldData, SH.PropertyShape);
+        var newModelURI = DataModelURI.createModelURI(prefix).getGraphURI();
+
+        for (var propertyShape : propertyShapes) {
+            var classResource = oldData.listSubjectsWithProperty(SH.property, propertyShape).nextResource();
+
+            var ps = V1DataMapper.mapProfileResource(oldData, propertyShape, prefix, classResource.getURI());
+            if (ps == null) {
+                continue;
+            }
+            var resourceType = ps instanceof AttributeRestriction
+                    ? ResourceType.ATTRIBUTE
+                    : ResourceType.ASSOCIATION;
+
+            int n = 0;
+            var originalId = ps.getIdentifier();
+            while (resourceService.exists(prefix, ps.getIdentifier())) {
+                ps.setIdentifier(originalId + "-" + ++n);
+                propertyShapeIdMap.put(propertyShape.getURI(), ps.getIdentifier());
+            }
+
+            try {
+                resourceService.create(prefix, ps, resourceType, true);
+                handleModifiedInfo(newModelURI, propertyShape);
+            } catch (Exception e) {
+                LOG.warn("MIGRATION ERROR: Error creating property shape {} to model {}, cause: {}",
+                        ps.getIdentifier(), prefix, e.getMessage());
+                V1DataMapper.addError(prefix, String.format("Error creating property shape %s, cause: %s", ps.getIdentifier(), e.getMessage()));
+            }
+        }
+    }
+
+    private void handleAddPropertiesToNodeShapes(String prefix, Model oldData) {
+        var nodeShapes = V1DataMapper.findResourcesByType(oldData, SH.NodeShape);
+        nodeShapes.addAll(V1DataMapper.findResourcesByType(oldData, RDFS.Class));
+
+        var dataModelURI = DataModelURI.createModelURI(prefix).getGraphURI();
+        var newModel = coreRepository.fetch(dataModelURI);
+        for (var nodeShape : nodeShapes) {
+            var nodeShapeURI = dataModelURI + NodeFactory.createURI(nodeShape.getURI()).getLocalName();
+            var nodeShapeResource = newModel.getResource(nodeShapeURI);
+            var properties = nodeShape.listProperties(SH.property)
+                    .mapWith(p -> {
+                        var property = p.getObject().toString();
+
+                        // if property shape is renamed with suffix, e.g. title-1
+                        if (propertyShapeIdMap.containsKey(property)) {
+                            return DataModelURI.createResourceURI(prefix, propertyShapeIdMap.get(property)).getResourceURI();
+                        }
+                        return V1DataMapper.getUriForOldResource(prefix, oldData.getResource(p.getObject().toString()));
+                    })
+                    .filterKeep(Objects::nonNull);
+
+            properties.forEach(p -> nodeShapeResource.addProperty(SH.property, ResourceFactory.createResource(p)));
+        }
+        coreRepository.put(dataModelURI, newModel);
     }
 
     private void handleRestrictions(Model oldData, String oldModelURI, String newModelURI) {
@@ -168,14 +268,15 @@ public class V1DataMigrationService {
                     continue;
                 }
 
-                // replace "yläluokka" associations with subClassOf reference
+                // replace "yläluokka" and "perii" associations with subClassOf reference
                 var label = MapperUtils.localizedPropertyToMap(restrictionRes, SH.name);
-                if ("yläluokka".equalsIgnoreCase(label.get("fi"))) {
+                if ("yläluokka".equalsIgnoreCase(label.get("fi")) || "perii".equalsIgnoreCase(label.get("fi"))) {
                     var subClassTarget = MapperUtils.propertyToString(restrictionRes, SH.node);
                     if (subClassTarget != null) {
                         classResource.addProperty(RDFS.subClassOf, ResourceFactory.createResource(subClassTarget
                                 .replace(OLD_NAMESPACE, ModelConstants.SUOMI_FI_NAMESPACE)
                                 .replace("#", ModelConstants.RESOURCE_SEPARATOR)));
+                        newModel.remove(classResource, RDFS.subClassOf, OWL.Thing);
                         continue;
                     }
                 }
@@ -284,17 +385,16 @@ public class V1DataMigrationService {
                 if (type.equals(ResourceType.CLASS)) {
                     var dto = V1DataMapper.mapLibraryClass(resource);
                     handleExists(prefix, resource, exists, dto);
-                    var classURI = classService.create(prefix, dto, false);
-                    LOG.info("Created class {}", classURI);
+                    classService.create(prefix, dto, false);
                 } else {
                     var dto = V1DataMapper.mapLibraryResource(resource);
                     handleExists(prefix, resource, exists, dto);
-                    var resourceURI = resourceService.create(prefix, dto, type, false);
-                    LOG.info("Created resource {}", resourceURI);
+                    resourceService.create(prefix, dto, type, false);
                 }
                 handleModifiedInfo(newModelURI.getModelURI(), resource);
             } catch (Exception e) {
                 LOG.error("Error creating class {} to model {}: {}", resource.getURI(), modelURI, e.getMessage());
+                V1DataMapper.addError(prefix, String.format("Error creating class %s, cause: %s", resource.getURI(), e.getMessage()));
             }
         });
     }
@@ -359,6 +459,8 @@ public class V1DataMigrationService {
     }
 
     public void handleModifiedInfo(String modelURI, Resource resource) {
+        var hasModifiedInfo = resource.hasProperty(DCTerms.created) && resource.hasProperty(DCTerms.modified);
+
         var graph = NodeFactory.createURI(modelURI);
 
         var builder = new UpdateBuilder();
@@ -367,59 +469,64 @@ public class V1DataMigrationService {
         var created = MapperUtils.getLiteral(resource, DCTerms.created, String.class);
         var modified = MapperUtils.getLiteral(resource, DCTerms.modified, String.class);
 
-        builder.addDelete(graph, "?s", DCTerms.created, "?created")
-                .addDelete(graph, "?s", DCTerms.modified, "?modified")
-                .addDelete(graph, "?s", SuomiMeta.creator, "?creator")
-                .addDelete(graph, "?s", SuomiMeta.modifier, "?modifier")
-                .addInsert(graph, "?s", DCTerms.created, created)
-                .addInsert(graph, "?s", DCTerms.modified, modified)
-                .addGraph(graph, new WhereBuilder()
-                        .addWhere("?s", DCTerms.created, "?created")
-                        .addWhere("?s", DCTerms.modified, "?modified")
-                        .addWhere("?s", SuomiMeta.creator, "?creator")
-                        .addWhere("?s", SuomiMeta.modifier, "?modifier"));
+        builder.addDelete(graph, "?s", SuomiMeta.creator, "?creator")
+                .addDelete(graph, "?s", SuomiMeta.modifier, "?modifier");
+
+        if (hasModifiedInfo) {
+            builder.addDelete(graph, "?s", DCTerms.created, "?created")
+                    .addDelete(graph, "?s", DCTerms.modified, "?modified")
+                    .addInsert(graph, "?s", DCTerms.created, created)
+                    .addInsert(graph, "?s", DCTerms.modified, modified);
+        }
+
+        var whereBuilder = new WhereBuilder()
+                .addWhere("?s", SuomiMeta.creator, "?creator")
+                .addWhere("?s", SuomiMeta.modifier, "?modifier");
+
+        if (hasModifiedInfo) {
+            whereBuilder
+                    .addWhere("?s", DCTerms.created, "?created")
+                    .addWhere("?s", DCTerms.modified, "?modified");
+
+        }
+
+        builder.addGraph(graph, whereBuilder);
+
         coreRepository.queryUpdate(builder.buildRequest());
     }
 
-    public void migratePositions(String prefix, Model oldVisualization) {
+    public void migratePositions(String prefix, Model oldVisualization, PrefixMapping prefixMapping) {
         var modelURI = OLD_NAMESPACE + prefix;
-        var positions = V1DataMapper.mapPositions(modelURI, oldVisualization);
+        var positions = V1DataMapper.mapPositions(modelURI, oldVisualization, prefixMapping);
         visualizationService.savePositionData(prefix, positions);
     }
 
     public void createVersions(String prefix) {
         try {
-            dataModelService.createRelease(prefix, "1.0.0", Status.VALID);
+            var version = "1.0.0";
+            dataModelService.createRelease(prefix, version, Status.VALID);
             var uri = DataModelURI.createModelURI(prefix).getGraphURI();
-            updateReferences(uri);
+            dataModelService.updateDraftReferences(uri, version);
         } catch (Exception e) {
             LOG.error(e.getMessage(), e);
         }
     }
 
-    private void updateReferences(String graph) {
-        var query = String.format("""
-            delete {
-              graph ?g {
-                ?s ?p ?o
-              }
-            }
-            insert {
-              graph ?g {
-                ?s ?p ?uri
-              }
-            }
-            where {
-              graph ?g {
-                ?s ?p ?o
-                filter(strstarts(str(?o), "%s"))
-                bind(iri(
-                    replace(str(?o), "%s", "%s1.0.0/")
-                ) as ?uri)
-              }
-              filter(!strstarts(str(?g), "%s"))
-            }""", graph, graph, graph, graph);
 
-        coreRepository.queryUpdate(query);
+
+    private void addModelSpecificInfo(String prefix, DataModelDTO dataModel) {
+        if (prefix.equals("fi-dcatap")) {
+            var rdfs = new ExternalNamespaceDTO();
+            rdfs.setName(Map.of("en", "rdfs"));
+            rdfs.setNamespace("http://www.w3.org/2000/01/rdf-schema#");
+            rdfs.setPrefix("rdfs");
+
+            var spdx = new ExternalNamespaceDTO();
+            spdx.setName(Map.of("en", "spdx"));
+            spdx.setNamespace("http://spdx.org/rdf/terms#");
+            spdx.setPrefix("spdx");
+
+            dataModel.getExternalNamespaces().addAll(Set.of(rdfs, spdx));
+        }
     }
 }

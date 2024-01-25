@@ -289,8 +289,8 @@ class DataModelControllerTest {
         dataModelDTO = createDatamodelDTO(false);
         invalidExtRes = new ExternalNamespaceDTO();
         invalidExtRes.setName(Map.of("fi", "this is invalid"));
-        //Reserved namespace, see ValidationConstants.RESERVED_NAMESPACES
-        invalidExtRes.setPrefix("dcterms");
+        //Reserved words, see ValidationConstants.RESERVED_WORDS
+        invalidExtRes.setPrefix("urn");
         invalidExtRes.setNamespace("http:://example.com/ns/test");
         dataModelDTO.setExternalNamespaces(Set.of(invalidExtRes));
         args.add(dataModelDTO);

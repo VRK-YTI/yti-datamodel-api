@@ -1,0 +1,106 @@
+@prefix dcap:  <http://purl.org/ws-mmi-dc/terms/> .
+@prefix schema: <http://schema.org/> .
+@prefix spdx:  <http://spdx.org/rdf/terms#> .
+@prefix dcam:  <http://purl.org/dc/dcam/> .
+@prefix owl:   <http://www.w3.org/2002/07/owl#> .
+@prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
+@prefix skos:  <http://www.w3.org/2004/02/skos/core#> .
+@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix iow:   <http://uri.suomi.fi/datamodel/ns/iow#> .
+@prefix sd:    <http://www.w3.org/ns/sparql-service-description#> .
+@prefix sh:    <http://www.w3.org/ns/shacl#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix text:  <http://jena.apache.org/text#> .
+@prefix dcat:  <http://www.w3.org/ns/dcat#> .
+@prefix prov:  <http://www.w3.org/ns/prov#> .
+@prefix httpv: <http://www.w3.org/2011/http#> .
+@prefix foaf:  <http://xmlns.com/foaf/0.1/> .
+@prefix void:  <http://rdfs.org/ns/void#> .
+@prefix dcatap: <http://data.europa.eu/r5r#> .
+@prefix adms:  <http://www.w3.org/ns/adms#> .
+@prefix skosxl: <http://www.w3.org/2008/05/skos-xl#> .
+@prefix afn:   <http://jena.hpl.hp.com/ARQ/function#> .
+@prefix vcard: <http://www.w3.org/2006/vcard/ns#> .
+@prefix at:    <http://publications.europa.eu/ontology/authority/> .
+@prefix rdf:   <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix fi-dcatap: <http://uri.suomi.fi/datamodel/ns/fi-dcatap#> .
+@prefix odrl:  <http://www.w3.org/ns/odrl/2/> .
+@prefix ts:    <http://www.w3.org/2003/06/sw-vocab-status/ns#> .
+@prefix dc:    <http://purl.org/dc/elements/1.1/> .
+
+<http://uri.suomi.fi/datamodel/ns/fi-dcatap>
+        rdf:type                        dcap:DCAP , owl:Ontology ;
+        rdfs:comment                    "Open Data’s extension is mostly compatible with DCAT-AP with some some exception."@fi ;
+        rdfs:label                      "Avoindata.fi:n DCAT-AP laajennos"@fi , "Suomi.fi Open Data’s extension on DCAT-AP"@en ;
+        dcterms:contributor             <urn:uuid:d9c76d52-03d3-4480-8c2c-b66e6d9c57f2> ;
+        dcterms:created                 "2022-11-23T13:55:35.278Z"^^xsd:dateTime ;
+        dcterms:hasPart                 fi-dcatap:distributor ;
+        dcterms:identifier              "urn:uuid:37538e8d-fcc3-4228-9ed2-d1ab0bb1b3da" ;
+        dcterms:isPartOf                <http://urn.fi/URN:NBN:fi:au:ptvl:v1105> ;
+        dcterms:language                ( "en" "fi" "sv" ) ;
+        dcterms:modified                "2024-01-10T11:07:28.863Z"^^xsd:dateTime ;
+        dcterms:requires                skos: , prov: , dcterms: ;
+        dcap:preferredXMLNamespaceName  "http://uri.suomi.fi/datamodel/ns/fi-dcatap#" ;
+        dcap:preferredXMLNamespacePrefix
+                "fi-dcatap" ;
+        iow:contentModified             "2024-01-13T08:03:15.86Z"^^xsd:dateTime ;
+        iow:documentation               "[Lisätietoa Suomi.fi avoindatan DCAT-AP laajennoksesta](https://www.avoindata.fi/fi/dcat-ap)"@fi ;
+        iow:statusModified              "2023-05-10T11:58:56.892Z"^^xsd:dateTime ;
+        iow:useContext                  "InformationDescription" ;
+        owl:versionInfo                 "DRAFT" .
+
+fi-dcatap:CatalogRecord
+          a                   sh:NodeShape ;
+          rdfs:isDefinedBy    <http://uri.suomi.fi/datamodel/ns/fi-dcatap> ;
+          dcterms:created     "2022-12-08T08:07:40.737Z"^^xsd:dateTime ;
+          dcterms:identifier  "urn:uuid:f94690e0-6e66-48c6-a95b-6ff35a04649b" ;
+          dcterms:modified    "2024-01-09T16:54:28.81Z"^^xsd:dateTime ;
+          iow:statusModified  "2023-05-10T11:58:56.13Z"^^xsd:dateTime ;
+          owl:versionInfo     "DRAFT" ;
+          sh:description      "A record in a data catalog, describing a single dataset."@en , "Tiedot, jotka liittävät yksittäisen tietoaineiston datakatalogiin."@fi ;
+          sh:name             "Catalog Record"@en , "Tietoaineiston kuvailutietue"@fi ;
+          sh:property         <urn:uuid:88caff9f-b060-449b-a8b2-26a276e1fdce> , <urn:uuid:81f75fa1-561c-477e-b942-eb29edb05033> ;
+          sh:targetClass      dcat:CatalogRecord .
+
+fi-dcatap:Dataset  a        sh:NodeShape ;
+        rdfs:isDefinedBy    <http://uri.suomi.fi/datamodel/ns/fi-dcatap> ;
+        dcterms:created     "2022-12-08T07:55:54.252Z"^^xsd:dateTime ;
+        dcterms:identifier  "urn:uuid:1d8476f7-f3be-423e-ad76-07b4610f3389" ;
+        dcterms:modified    "2024-01-15T12:11:37.672Z"^^xsd:dateTime ;
+        iow:statusModified  "2023-05-10T11:58:56.13Z"^^xsd:dateTime ;
+        owl:versionInfo     "DRAFT" ;
+        sh:description      "test"@fi ;
+        sh:name             "Tietoaineisto"@fi , "Invalid"@fr;
+        sh:targetClass      dcat:Dataset .
+
+<urn:uuid:88caff9f-b060-449b-a8b2-26a276e1fdce>
+          a                sh:PropertyShape ;
+          dcterms:type     owl:ObjectProperty ;
+          iow:localName    "primaryTopic" ;
+          owl:versionInfo  "DRAFT" ;
+          sh:description   "Liittää kuvailutietueen siinä kuvattavaan tietoaineistoon"@fi , "Links a data record to the dataset it describes"@en ;
+          sh:maxCount      3 ;
+          sh:minCount      2 ;
+          sh:name          "aihe"@fi , "primary topic"@en ;
+          sh:node          fi-dcatap:Dataset ;
+          sh:order         4 ;
+          sh:path          foaf:primaryTopic .
+
+<urn:uuid:81f75fa1-561c-477e-b942-eb29edb05033>
+          a                sh:PropertyShape ;
+          dcterms:type     owl:DatatypeProperty ;
+          iow:localName    "modified" ;
+          owl:versionInfo  "DRAFT" ;
+          sh:datatype      xsd:dateTime ;
+          sh:description   "The most recent date on which the Catalogue entry was changed or modified"@en , "Viimeisin kuvailutietueen päivitys- tai muokkauspäivä"@fi ;
+          sh:maxCount      1 ;
+          sh:minCount      1 ;
+          sh:name          "Date Modified"@en , "Viimeksi muokattu"@fi ;
+          sh:order         0 ;
+          sh:path          dcterms:modified ;
+          dcam:memberOf    <http://uri.suomi.fi/codelist/test> ;
+          sh:in            ( "test" "test2" ) ;
+          sh:pattern       "pattern" ;
+          sh:defaultValue  "default" ;
+          sh:maxLength     10 ;
+          sh:minLength     1 .
