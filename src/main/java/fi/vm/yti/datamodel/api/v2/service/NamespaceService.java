@@ -43,8 +43,8 @@ public class NamespaceService {
             Map.entry("shsh", "http://www.w3.org/ns/shacl-shacl"),
             Map.entry("foaf", "http://xmlns.com/foaf/0.1/"),
             Map.entry("vcard", "http://www.w3.org/2006/vcard/ns#"),
-            Map.entry("elm", "https://publications.europa.eu/resource/authority/snb/model/elm"),
-            Map.entry("uncefact", "https://vocabulary.uncefact.org/")
+            Map.entry("elm", "http://data.europa.eu/snb/model/elm"),
+            Map.entry("unece", "https://vocabulary.uncefact.org/")
     );
 
     public void resolveDefaultNamespaces() {

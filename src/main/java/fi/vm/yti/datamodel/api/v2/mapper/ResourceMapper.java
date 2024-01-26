@@ -13,6 +13,7 @@ import org.apache.jena.vocabulary.*;
 import org.topbraid.shacl.vocabulary.SH;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Consumer;
 
 public class ResourceMapper {
@@ -338,8 +339,10 @@ public class ResourceMapper {
         indexResource.setIsDefinedBy(MapperUtils.propertyToString(resource, RDFS.isDefinedBy));
         indexResource.setStatus(Status.VALID);
 
-        var uri = DataModelURI.fromURI(resource.getURI());
-        indexResource.setCurie(uri.getCurie(resource.getModel().getGraph().getPrefixMapping()));
+        if (!resource.isAnon()) {
+            var uri = DataModelURI.fromURI(resource.getURI());
+            indexResource.setCurie(uri.getCurie(resource.getModel().getGraph().getPrefixMapping()));
+        }
 
         if (resource.hasProperty(RDFS.comment)) {
             indexResource.setNote(MapperUtils.localizedPropertyToMap(resource, RDFS.comment));
@@ -356,9 +359,6 @@ public class ResourceMapper {
         }
 
         var resourceType = getExternalResourceType(resource);
-        if (resourceType == null) {
-            return null;
-        }
 
         indexResource.setResourceType(resourceType);
         return indexResource;
@@ -461,7 +461,7 @@ public class ResourceMapper {
         return rangeResource.getNameSpace().equals(xsdNs);
     }
 
-    private static ResourceType getExternalResourceType(Resource resource) {
+    public static ResourceType getExternalResourceType(Resource resource) {
 
         if (MapperUtils.hasType(resource, OWL.DatatypeProperty, OWL.AnnotationProperty) || hasLiteralRange(resource)) {
             // DatatypeProperties, AnnotationProperties and range with literal value (e.g. xsd:string)
@@ -474,8 +474,10 @@ public class ResourceMapper {
             return ResourceType.CLASS;
         } else if (resource.hasProperty(RDF.type)) {
             // Try to find type from current ontology
-            var typeResource = resource.getProperty(RDF.type).getResource();
-            return getExternalResourceType(typeResource);
+            var type = resource.listProperties(RDF.type)
+                    .mapWith(s -> getExternalResourceType(s.getResource()))
+                    .filterKeep(Objects::nonNull);
+            return type.hasNext() ? type.next() : null;
         } else if(resource.hasProperty(OWL.inverseOf)) {
             var inverseOf = resource.getProperty(OWL.inverseOf).getResource();
             return getExternalResourceType(inverseOf);

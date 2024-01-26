@@ -4,6 +4,7 @@ import com.google.common.collect.Iterables;
 import fi.vm.yti.datamodel.api.index.OpenSearchConnector;
 import fi.vm.yti.datamodel.api.security.AuthorizationManager;
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
+import fi.vm.yti.datamodel.api.v2.dto.ResourceType;
 import fi.vm.yti.datamodel.api.v2.mapper.ModelMapper;
 import fi.vm.yti.datamodel.api.v2.mapper.ResourceMapper;
 import fi.vm.yti.datamodel.api.v2.opensearch.queries.QueryFactoryUtils;
@@ -276,27 +277,64 @@ public class OpenSearchIndexer {
     }
 
     public void initExternalResourceIndex() {
-        var builder = new ConstructBuilder()
-                .addPrefixes(NamespaceService.DEFAULT_NAMESPACES);
+        NamespaceService.DEFAULT_NAMESPACES.forEach((prefix, graphURI) -> {
+            logger.info("Indexing external namespace {}", graphURI);
+            var builder = new ConstructBuilder()
+                    .addPrefix(prefix, graphURI)
+                    .addPrefixes(ModelConstants.PREFIXES)
+                    .from(graphURI);
 
-        SparqlUtils.addConstructOptional("?s", builder, RDFS.label, "?label");
-        SparqlUtils.addConstructOptional("?s", builder, RDFS.isDefinedBy, "?isDefinedBy");
-        SparqlUtils.addConstructOptional("?s", builder, RDFS.comment, "?comment");
-        SparqlUtils.addConstructOptional("?s", builder, RDF.type, "?type");
-        SparqlUtils.addConstructOptional("?s", builder, OWL.inverseOf, "?inverseOf");
+            SparqlUtils.addConstructOptional("?s", builder, RDFS.label, "?label");
+            SparqlUtils.addConstructOptional("?s", builder, RDFS.isDefinedBy, "?isDefinedBy");
+            SparqlUtils.addConstructOptional("?s", builder, RDFS.comment, "?comment");
+            SparqlUtils.addConstructOptional("?s", builder, RDF.type, "?type");
+            SparqlUtils.addConstructOptional("?s", builder, OWL.inverseOf, "?inverseOf");
 
-        var result = importsRepository.queryConstruct(builder.build());
-        var list = new ArrayList<IndexBase>();
-        result.listSubjects().forEach(resource -> {
-            var indexClass = ResourceMapper.mapExternalToIndexResource(resource);
-            if (indexClass == null) {
-                logger.info("Could not determine required properties for resource {}", resource.getURI());
-                return;
-            }
-            list.add(indexClass);
+            var result = importsRepository.queryConstruct(builder.build());
+            var list = new ArrayList<IndexBase>();
+            result.listSubjects().forEach(resource -> {
+                var indexResource = ResourceMapper.mapExternalToIndexResource(resource);
+                if (indexResource == null) {
+                    logger.info("Could not determine required properties for resource {}", resource.getURI());
+                    return;
+                }
+
+                // try to find type from other graphs in imports dataset
+                if (indexResource.getResourceType() == null && resource.hasProperty(RDF.type)) {
+                    var select = new SelectBuilder()
+                        .addPrefixes(ModelConstants.PREFIXES)
+                        .addVar("?t");
+
+                    var where = new WhereBuilder();
+                    var typeProperties = resource.listProperties(RDF.type);
+                    typeProperties.forEach(t -> where.addUnion(
+                            new WhereBuilder().addWhere(t.getObject(), RDF.type, "?t")
+                    ));
+                    select.addWhere(where).addGroupBy("?t");
+
+                    var types = new ArrayList<RDFNode>();
+                    importsRepository.querySelect(select.build(), (res -> types.add(res.get("t"))));
+
+                    if (types.contains(OWL.Class) || types.contains(RDFS.Class)) {
+                        indexResource.setResourceType(ResourceType.CLASS);
+                    } else if (types.contains(OWL.DatatypeProperty)) {
+                        indexResource.setResourceType(ResourceType.ATTRIBUTE);
+                    } else if (types.contains(OWL.ObjectProperty)) {
+                        indexResource.setResourceType(ResourceType.ASSOCIATION);
+                    } else {
+                        logger.warn("Cannot determine type for resource {}, types: {}", resource,
+                                String.join(", ", typeProperties
+                                        .mapWith(t -> t.getObject().toString())
+                                        .toList())
+                        );
+                        return;
+                    }
+                }
+                list.add(indexResource);
+            });
+            logger.info("Indexing {} items to index {},", list.size(), OPEN_SEARCH_INDEX_EXTERNAL);
+            bulkInsert(OPEN_SEARCH_INDEX_EXTERNAL, list);
         });
-        logger.info("Indexing {} items to index {},", list.size(), OPEN_SEARCH_INDEX_EXTERNAL);
-        bulkInsert(OPEN_SEARCH_INDEX_EXTERNAL, list);
     }
 
     public <T extends IndexBase> void bulkInsert(String indexName,

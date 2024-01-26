@@ -71,7 +71,12 @@ public class NamespaceResolver {
                     .lang(Lang.RDFXML)
                     .acceptHeader(accept)
                     .parse(model);
-            if (!model.isEmpty()){
+            if (!model.isEmpty()) {
+
+                // add resource separator if not exist
+                if (!(namespace.endsWith("/") || namespace.endsWith("#"))) {
+                    namespace += "/";
+                }
                 importsRepository.put(namespace, model);
                 var indexResources = model.listSubjects()
                         .mapWith(ResourceMapper::mapExternalToIndexResource)
