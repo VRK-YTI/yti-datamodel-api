@@ -143,7 +143,7 @@ public class ResourceQueryFactory {
             builder.should(QueryFactoryUtils.termsQuery("isDefinedBy", request.getIncludeDraftFrom()));
         }
 
-        builder.should(QueryFactoryUtils.termsQuery("isDefinedBy", externalNamespaces))
+        builder.should(QueryFactoryUtils.termsQuery("namespace", externalNamespaces))
             .should(QueryFactoryUtils.termsQuery("versionIri", internalNamespacesCondition))
             .should(QueryFactoryUtils.termsQuery("id", request.getAdditionalResources() != null
                     ? request.getAdditionalResources()

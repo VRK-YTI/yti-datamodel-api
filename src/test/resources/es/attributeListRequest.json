@@ -33,7 +33,7 @@
               },
               {
                 "terms": {
-                  "isDefinedBy": []
+                  "namespace": []
                 }
               },
               {

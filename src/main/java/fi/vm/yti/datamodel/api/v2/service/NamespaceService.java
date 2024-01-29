@@ -24,7 +24,7 @@ public class NamespaceService {
         this.importsRepository = importsRepository;
     }
 
-    private static final Map<String, String> DEFAULT_NAMESPACES = Map.ofEntries(
+    public static final Map<String, String> DEFAULT_NAMESPACES = Map.ofEntries(
             Map.entry("oa", "http://www.w3.org/ns/oa#"),
             Map.entry("dcterms", "http://purl.org/dc/terms/"),
             Map.entry("skos", "http://www.w3.org/2004/02/skos/core#"),
@@ -41,7 +41,10 @@ public class NamespaceService {
             Map.entry("sd", "http://www.w3.org/ns/sparql-service-description#"),
             Map.entry("sh", "http://www.w3.org/ns/shacl#"),
             Map.entry("shsh", "http://www.w3.org/ns/shacl-shacl"),
-            Map.entry("foaf", "http://xmlns.com/foaf/0.1/")
+            Map.entry("foaf", "http://xmlns.com/foaf/0.1/"),
+            Map.entry("vcard", "http://www.w3.org/2006/vcard/ns#"),
+            Map.entry("elm", "http://data.europa.eu/snb/model/elm"),
+            Map.entry("unece", "https://vocabulary.uncefact.org/")
     );
 
     public void resolveDefaultNamespaces() {

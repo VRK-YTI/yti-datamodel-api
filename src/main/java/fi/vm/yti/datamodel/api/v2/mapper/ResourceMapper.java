@@ -13,6 +13,7 @@ import org.apache.jena.vocabulary.*;
 import org.topbraid.shacl.vocabulary.SH;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Consumer;
 
 public class ResourceMapper {
@@ -329,7 +330,7 @@ public class ResourceMapper {
         return indexResource;
     }
 
-    public static IndexResource mapExternalToIndexResource(Model model, Resource resource) {
+    public static IndexResource mapExternalToIndexResource(Resource resource) {
         var indexResource = new IndexResource();
 
         indexResource.setId(resource.getURI());
@@ -337,6 +338,11 @@ public class ResourceMapper {
         indexResource.setNamespace(resource.getNameSpace());
         indexResource.setIsDefinedBy(MapperUtils.propertyToString(resource, RDFS.isDefinedBy));
         indexResource.setStatus(Status.VALID);
+
+        if (!resource.isAnon()) {
+            var uri = DataModelURI.fromURI(resource.getURI());
+            indexResource.setCurie(uri.getCurie(resource.getModel().getGraph().getPrefixMapping()));
+        }
 
         if (resource.hasProperty(RDFS.comment)) {
             indexResource.setNote(MapperUtils.localizedPropertyToMap(resource, RDFS.comment));
@@ -352,10 +358,7 @@ public class ResourceMapper {
             return null;
         }
 
-        var resourceType = getExternalResourceType(model, resource);
-        if (resourceType == null) {
-            return null;
-        }
+        var resourceType = getExternalResourceType(resource);
 
         indexResource.setResourceType(resourceType);
         return indexResource;
@@ -458,19 +461,7 @@ public class ResourceMapper {
         return rangeResource.getNameSpace().equals(xsdNs);
     }
 
-    private static ResourceType getInverseOfResource(Resource resource){
-        var uri = resource.getProperty(OWL.inverseOf).getResource();
-        if(MapperUtils.hasType(uri, OWL.DatatypeProperty, OWL.AnnotationProperty)){
-            return ResourceType.ATTRIBUTE;
-        }else if(MapperUtils.hasType(uri, OWL.ObjectProperty, RDF.Property)){
-            return ResourceType.ASSOCIATION;
-        }else if(MapperUtils.hasType(uri, OWL.Class, RDFS.Class, RDFS.Resource)){
-            return ResourceType.CLASS;
-        }
-        return null;
-    }
-
-    private static ResourceType getExternalResourceType(Model model, Resource resource) {
+    public static ResourceType getExternalResourceType(Resource resource) {
 
         if (MapperUtils.hasType(resource, OWL.DatatypeProperty, OWL.AnnotationProperty) || hasLiteralRange(resource)) {
             // DatatypeProperties, AnnotationProperties and range with literal value (e.g. xsd:string)
@@ -483,10 +474,13 @@ public class ResourceMapper {
             return ResourceType.CLASS;
         } else if (resource.hasProperty(RDF.type)) {
             // Try to find type from current ontology
-            var typeResource = model.getResource(resource.getProperty(RDF.type).getResource().getURI());
-            return getExternalResourceType(model, typeResource);
-        }else if(resource.hasProperty(OWL.inverseOf)){
-            return getInverseOfResource(resource);
+            var type = resource.listProperties(RDF.type)
+                    .mapWith(s -> getExternalResourceType(s.getResource()))
+                    .filterKeep(Objects::nonNull);
+            return type.hasNext() ? type.next() : null;
+        } else if(resource.hasProperty(OWL.inverseOf)) {
+            var inverseOf = resource.getProperty(OWL.inverseOf).getResource();
+            return getExternalResourceType(inverseOf);
         }
         return null;
     }

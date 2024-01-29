@@ -714,8 +714,8 @@ class ResourceMapperTest {
         var resource1 = model.getResource("http://www.w3.org/ns/oa#describing");
         var resource2 = model.getResource("http://www.w3.org/ns/oa#Motivation");
 
-        var indexResource1 = ResourceMapper.mapExternalToIndexResource(model, resource1);
-        var indexResource2 = ResourceMapper.mapExternalToIndexResource(model, resource2);
+        var indexResource1 = ResourceMapper.mapExternalToIndexResource(resource1);
+        var indexResource2 = ResourceMapper.mapExternalToIndexResource(resource2);
 
         assertNotNull(indexResource1);
         assertNotNull(indexResource2);
@@ -729,6 +729,7 @@ class ResourceMapperTest {
         assertEquals("http://www.w3.org/ns/oa#", indexResource1.getIsDefinedBy());
         assertEquals("Label describing", indexResource1.getLabel().get("en"));
         assertEquals("Test comment describing", indexResource1.getNote().get("en"));
+        assertEquals("oa:describing", indexResource1.getCurie());
     }
 
     @Test
@@ -737,8 +738,8 @@ class ResourceMapperTest {
         var resource1 = model.getResource("http://www.w3.org/ns/oa#exact");
         var resource2 = model.getResource("http://www.w3.org/ns/oa#hasEndSelector");
 
-        var indexResource1 = ResourceMapper.mapExternalToIndexResource(model, resource1);
-        var indexResource2 = ResourceMapper.mapExternalToIndexResource(model, resource2);
+        var indexResource1 = ResourceMapper.mapExternalToIndexResource(resource1);
+        var indexResource2 = ResourceMapper.mapExternalToIndexResource(resource2);
 
         assertNotNull(indexResource1);
         assertNotNull(indexResource2);

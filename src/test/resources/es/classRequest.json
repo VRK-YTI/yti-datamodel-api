@@ -18,7 +18,7 @@
             "should": [
               {
                 "terms": {
-                  "isDefinedBy": [
+                  "namespace": [
                     "http://external-data.com/test"
                   ]
                 }
