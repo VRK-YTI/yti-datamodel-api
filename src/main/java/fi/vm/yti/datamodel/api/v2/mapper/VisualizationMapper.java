@@ -265,7 +265,7 @@ public class VisualizationMapper {
                 handledElements.add(positionResource.getLocalName());
 
                 path.addFirst(positionResource.getLocalName());
-                hiddenElements.add(mapHiddenNode(positionResource, reference.getReferenceType()));
+                hiddenElements.add(mapHiddenNode(positionResource, reference, sourceIdentifier));
 
                 var references = positions.listSubjectsWithProperty(SuomiMeta.referenceTarget, positionResource.getLocalName()).toList();
 
@@ -284,13 +284,19 @@ public class VisualizationMapper {
         return List.of(reference.getReferenceTarget());
     }
 
-    private static VisualizationHiddenNodeDTO mapHiddenNode(Resource position, VisualizationReferenceType referenceType) {
+    private static VisualizationHiddenNodeDTO mapHiddenNode(Resource position, VisualizationReferenceDTO reference, String sourceIdentifier) {
         var dto = new VisualizationHiddenNodeDTO();
 
         dto.setIdentifier(MapperUtils.propertyToString(position, DCTerms.identifier));
         dto.setPosition(getPositionFromResource(position));
         dto.setReferenceTarget(MapperUtils.propertyToString(position, SuomiMeta.referenceTarget));
-        dto.setReferenceType(referenceType);
+        dto.setReferenceType(reference.getReferenceType());
+
+        if (reference.getReferenceType().equals(VisualizationReferenceType.ASSOCIATION)) {
+            dto.setOrigin(reference.getIdentifier());
+        } else {
+            dto.setOrigin(sourceIdentifier);
+        }
 
         return dto;
     }

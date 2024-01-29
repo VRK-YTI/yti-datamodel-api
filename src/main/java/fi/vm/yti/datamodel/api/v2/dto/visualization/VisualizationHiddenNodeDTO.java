@@ -7,6 +7,7 @@ public class VisualizationHiddenNodeDTO {
     private PositionDTO position;
     private String referenceTarget;
     private VisualizationReferenceType referenceType;
+    private String origin;
 
     public String getIdentifier() {
         return identifier;
@@ -38,6 +39,14 @@ public class VisualizationHiddenNodeDTO {
 
     public void setReferenceType(VisualizationReferenceType referenceType) {
         this.referenceType = referenceType;
+    }
+
+    public String getOrigin() {
+        return origin;
+    }
+
+    public void setOrigin(String origin) {
+        this.origin = origin;
     }
 
     @Override

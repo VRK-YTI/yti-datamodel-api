@@ -421,6 +421,7 @@ class VisualizationDataMapperTest {
         var association = new VisualizationReferenceDTO();
         association.setReferenceTarget("class-1");
         association.setIdentifier("assoc-1");
+        association.setReferenceType(VisualizationReferenceType.ASSOCIATION);
 
         var node1 = new PositionDataDTO();
         node1.setIdentifier("class-1");
