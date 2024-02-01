@@ -813,4 +813,22 @@ class ResourceMapperTest {
 
         assertEquals(2, model.getResource(uri.getModelURI()).listProperties(DCTerms.requires).toList().size());
     }
+
+    @Test
+    void testMapResourceReferences() {
+        var resultModel = MapperTestUtils.getModelFromFile("/references-result.ttl");
+
+        var references = ResourceMapper.mapToResourceReference(resultModel);
+
+        var refClass = references.get(ResourceType.CLASS).get(0);
+        var refAssociation = references.get(ResourceType.ASSOCIATION).get(0);
+
+        assertEquals("https://iri.suomi.fi/model/model-1/1.0.0/class-1", refClass.getResourceURI().getUri());
+        assertEquals("rdfs:subClassOf", refClass.getProperty());
+        assertEquals("Class-fi", refClass.getResourceURI().getLabel().get("fi"));
+        assertEquals("model-1:class-1", refClass.getResourceURI().getCurie());
+
+        assertEquals("https://iri.suomi.fi/model/model-1/test-association", refAssociation.getResourceURI().getUri());
+        assertEquals("https://example.com/ns/some-property", refAssociation.getProperty());
+    }
 }
