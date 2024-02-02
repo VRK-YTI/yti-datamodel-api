@@ -41,6 +41,7 @@ import java.net.URISyntaxException;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static fi.vm.yti.security.AuthorizationException.check;
 
@@ -287,6 +288,12 @@ abstract class BaseResourceService {
         List.of("resource", "predicate", "type", "label", "contributor", "version")
                 .forEach(select::addVar);
 
+        var restrictionPath = Stream.of(
+                PathFactory.pathLink(OWL.intersectionOf.asNode()),
+                PathFactory.pathZeroOrMoreN(PathFactory.pathLink(RDF.rest.asNode())),
+                PathFactory.pathLink(RDF.first.asNode())
+        ).reduce(PathFactory::pathSeq).orElseThrow();
+
         try {
             select.addPrefixes(ModelConstants.PREFIXES)
                     .addWhereValueVar("?object", objects.toArray())
@@ -296,9 +303,8 @@ abstract class BaseResourceService {
 
                             // reference as a restriction (blank node) in library class
                             .addOptional(new WhereBuilder()
-                                    .addWhere("?restriction", "?i", "?subject")
-                                    .addWhere("?equivalent", "?e", "?restriction")
-                                    .addWhere("?classSubj", OWL.equivalentClass, "?equivalent")
+                                    .addWhere("?restriction", restrictionPath, "?subject")
+                                    .addWhere("?classSubj", OWL.equivalentClass, "?restriction")
                                     .addWhere("?classSubj", RDFS.label, "?label")
                                     .addBind("?classSubj", "?resource")
                             )
