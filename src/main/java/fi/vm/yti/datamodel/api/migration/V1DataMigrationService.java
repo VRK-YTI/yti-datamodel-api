@@ -530,10 +530,17 @@ public class V1DataMigrationService {
         } else if (prefix.equals("fi-nsipap")) {
             var skos = new ExternalNamespaceDTO();
             skos.setName(Map.of("en", "skos"));
-            skos.setNamespace("http://www.w3.org/2004/02/skos/core# ");
+            skos.setNamespace("http://www.w3.org/2004/02/skos/core#");
             skos.setPrefix("skos");
 
             dataModel.getExternalNamespaces().add(skos);
+        } else if (List.of("eftica", "eftirc", "eftiav", "efti2", "eftiwa", "eftidg", "eftict").contains(prefix)) {
+            var unece = new ExternalNamespaceDTO();
+            unece.setName(Map.of("en", "unece"));
+            unece.setNamespace("https://vocabulary.uncefact.org/");
+            unece.setPrefix("unece");
+
+            dataModel.getExternalNamespaces().add(unece);
         }
     }
 }
