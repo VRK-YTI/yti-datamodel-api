@@ -17,6 +17,7 @@ import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDF;
+import org.apache.jena.vocabulary.RDFS;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -29,6 +30,7 @@ import org.topbraid.shacl.vocabulary.SH;
 
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -64,7 +66,8 @@ class VisualizationServiceTest {
         var extResourceURI = "https://www.example.com/ns/external/testAssociation";
         var extResource = findResoureceModel
                 .createResource(extResourceURI)
-                .addProperty(RDF.type, OWL.ObjectProperty);
+                .addProperty(RDF.type, OWL.ObjectProperty)
+                .addProperty(RDFS.label, "Ext label");
         when(resourceService.findResource(eq(extResourceURI), anySet())).thenReturn(extResource);
 
         var visualizationData = visualizationService.getVisualizationData("visu", null);
@@ -81,6 +84,11 @@ class VisualizationServiceTest {
         assertEquals(1, cls.getReferences().size());
         assertEquals(1, cls.getAttributes().size());
         assertEquals(3, cls.getAssociations().size());
+
+        var labels = cls.getAssociations().stream()
+                .map(a -> a.getLabel().getOrDefault("fi", a.getLabel().get("en")))
+                .toList();
+        assertEquals(List.of("Ext label", "onOsoite", "onOsoite"), labels);
 
         var extClass = findClass(visualizationData.getNodes(), "ext:Person");
         assertNotNull(extClass);
