@@ -88,6 +88,11 @@ public class OpenSearchIndexer {
             initModelIndex();
             initResourceIndex();
 
+            if (!openSearchConnector.indexExists(OPEN_SEARCH_INDEX_EXTERNAL)) {
+                openSearchConnector.createIndex(OPEN_SEARCH_INDEX_EXTERNAL, getExternalResourceMappings());
+                initExternalResourceIndex();
+            }
+
             logger.info("Indexes initialized");
         } catch (IOException ex) {
             logger.warn("Index initialization failed!", ex);

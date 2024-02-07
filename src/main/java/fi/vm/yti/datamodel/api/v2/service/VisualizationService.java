@@ -2,10 +2,7 @@ package fi.vm.yti.datamodel.api.v2.service;
 
 import fi.vm.yti.datamodel.api.security.AuthorizationManager;
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
-import fi.vm.yti.datamodel.api.v2.dto.visualization.PositionDataDTO;
-import fi.vm.yti.datamodel.api.v2.dto.visualization.VisualizationClassDTO;
-import fi.vm.yti.datamodel.api.v2.dto.visualization.VisualizationNodeDTO;
-import fi.vm.yti.datamodel.api.v2.dto.visualization.VisualizationResultDTO;
+import fi.vm.yti.datamodel.api.v2.dto.visualization.*;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
 import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.mapper.VisualizationMapper;
@@ -23,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.topbraid.shacl.vocabulary.SH;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static fi.vm.yti.security.AuthorizationException.check;
@@ -62,6 +60,12 @@ public class VisualizationService {
         DataModelUtils.addPrefixesToModel(modelResource.getURI(), model);
         var nodes = new HashSet<VisualizationNodeDTO>();
 
+        // sort resource by label for now, since there are no custom sorting
+        Function<VisualizationItemDTO, String> labelComparator = item ->
+                item.getLabel().containsKey("fi")
+                        ? item.getLabel().get("fi")
+                        : item.getLabel().getOrDefault("en", "");
+
         while (classURIs.hasNext()) {
             var subject = classURIs.next().getSubject();
             if (subject.isAnon()) {
@@ -93,6 +97,8 @@ public class VisualizationService {
                     }
                 );
             }
+            classDTO.getAttributes().sort(Comparator.comparing(labelComparator));
+            classDTO.getAssociations().sort(Comparator.comparing(labelComparator));
 
             // add dummy classes for external classes
             addExternalClasses(classDTO, languages, nodes);
