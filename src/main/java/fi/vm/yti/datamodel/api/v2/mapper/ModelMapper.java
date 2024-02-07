@@ -378,23 +378,29 @@ public class ModelMapper {
      * @param resource Data model resource to add linking property (OWL.imports or DCTerms.requires)
      */
     private void addExternalNamespaceToDatamodel(DataModelDTO modelDTO, Model model, Resource resource){
-            modelDTO.getExternalNamespaces().forEach(namespace -> {
-                var nsUri = namespace.getNamespace();
-                var nsRes = model.createResource(nsUri);
+        // remove existing external namespaces before adding new ones
+        var oldNamespaces = model.listSubjectsWithProperty(DCAP.preferredXMLNamespacePrefix)
+                .filterDrop(s -> s.getURI().startsWith(ModelConstants.SUOMI_FI_NAMESPACE))
+                .toList();
+        oldNamespaces.forEach(ns -> model.removeAll(ns, null, null));
 
-                MapperUtils.updateLocalizedProperty(modelDTO.getLanguages(), namespace.getName(), nsRes, RDFS.label, model);
-                nsRes.addProperty(DCAP.preferredXMLNamespacePrefix, namespace.getPrefix());
+        modelDTO.getExternalNamespaces().forEach(namespace -> {
+            var nsUri = namespace.getNamespace();
+            var nsRes = model.createResource(nsUri);
 
-                try{
-                    var resolvedNs = importsRepository.fetch(nsUri);
-                    var extRes = resolvedNs.getResource(nsUri);
-                    var nsType = MapperUtils.getModelTypeFromResource(extRes);
-                    var modelType = MapperUtils.getModelTypeFromResource(resource);
-                    resource.addProperty(getNamespacePropertyFromType(modelType, nsType), nsRes);
-                }catch(Exception e){
-                    //If namespace wasn't resolved just add it as dcterms:requires
-                    resource.addProperty(DCTerms.requires, nsRes);
-                }
+            MapperUtils.updateLocalizedProperty(modelDTO.getLanguages(), namespace.getName(), nsRes, RDFS.label, model);
+            nsRes.addProperty(DCAP.preferredXMLNamespacePrefix, namespace.getPrefix());
+
+            try{
+                var resolvedNs = importsRepository.fetch(nsUri);
+                var extRes = resolvedNs.getResource(nsUri);
+                var nsType = MapperUtils.getModelTypeFromResource(extRes);
+                var modelType = MapperUtils.getModelTypeFromResource(resource);
+                resource.addProperty(getNamespacePropertyFromType(modelType, nsType), nsRes);
+            }catch(Exception e){
+                //If namespace wasn't resolved just add it as dcterms:requires
+                resource.addProperty(DCTerms.requires, nsRes);
+            }
         });
     }
 
