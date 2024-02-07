@@ -12,9 +12,9 @@ import org.apache.jena.rdf.model.*;
 import org.apache.jena.vocabulary.*;
 import org.topbraid.shacl.vocabulary.SH;
 
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 public class ResourceMapper {
 
@@ -483,5 +483,33 @@ public class ResourceMapper {
             return getExternalResourceType(inverseOf);
         }
         return null;
+    }
+
+    public static Map<ResourceType, List<ResourceReferenceDTO>> mapToResourceReference(Model model) {
+        var result = new HashSet<ResourceReferenceDTO>();
+        model.listSubjectsWithProperty(RDF.type).forEach((var subject) -> {
+            var dto = new ResourceReferenceDTO();
+            dto.setResourceURI(MapperUtils.uriToURIDTO(subject.getURI(), model));
+
+            var pred = subject.getProperty(DCTerms.references).getObject().asResource();
+            var prefix = model.getGraph().getPrefixMapping().getNsURIPrefix(pred.getNameSpace());
+
+            if (prefix != null) {
+                dto.setProperty(String.format("%s:%s", prefix, pred.getLocalName()));
+            } else {
+                dto.setProperty(pred.getURI());
+            }
+
+            if (MapperUtils.hasType(subject, OWL.DatatypeProperty)) {
+                dto.setType(ResourceType.ATTRIBUTE);
+            } else if (MapperUtils.hasType(subject, OWL.ObjectProperty)) {
+                dto.setType(ResourceType.ASSOCIATION);
+            } else if (MapperUtils.hasType(subject, OWL.Class, SH.NodeShape, OWL.Restriction)) {
+                dto.setType(ResourceType.CLASS);
+            }
+            result.add(dto);
+        });
+        return result.stream()
+                .collect(Collectors.groupingBy(ResourceReferenceDTO::getType));
     }
 }

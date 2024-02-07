@@ -1,5 +1,6 @@
 package fi.vm.yti.datamodel.api.v2.service;
 
+import fi.vm.yti.datamodel.api.mapper.MapperTestUtils;
 import fi.vm.yti.datamodel.api.security.AuthorizationManager;
 import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.endpoint.EndpointUtils;
@@ -15,8 +16,10 @@ import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import fi.vm.yti.datamodel.api.v2.repository.ImportsRepository;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
 import fi.vm.yti.security.AuthenticatedUserProvider;
+import fi.vm.yti.security.Role;
 import fi.vm.yti.security.YtiUser;
 import org.apache.jena.query.Query;
+import org.apache.jena.query.QuerySolution;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.ResourceFactory;
@@ -39,6 +42,7 @@ import java.net.URISyntaxException;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -385,6 +389,65 @@ class ResourceServiceTest {
         when(coreRepository.resourceExistsInGraph(uri.getGraphURI(), uri.getModelURI() + "foo")).thenReturn(true);
 
         assertThrows(MappingError.class, () -> resourceService.renameResource("test", "resource-1", "foo"));
+    }
+
+    @Test
+    void testGetResourceReferences() {
+        var organizationId = USER.getOrganizations(Role.DATA_MODEL_EDITOR).iterator().next();
+        var qs = mock(QuerySolution.class);
+
+        when(qs.get("resource")).thenReturn(ResourceFactory.createResource("https://iri.suomi.fi/model/ref/test-ref"));
+        when(qs.contains("version")).thenReturn(true);
+        when(qs.get("version")).thenReturn(ResourceFactory.createTypedLiteral("1.0.0"));
+        when(qs.get("contributor")).thenReturn(ResourceFactory.createTypedLiteral(organizationId));
+        when(qs.get("label")).thenReturn(ResourceFactory.createLangLiteral("test label", "fi"));
+        when(qs.get("type")).thenReturn(OWL.Class);
+        when(qs.get("predicate")).thenReturn(RDFS.subClassOf);
+
+        doAnswer(ans -> {
+            Consumer<QuerySolution> cons = ans.getArgument(1, Consumer.class);
+            cons.accept(qs);
+            return null;
+        }).when(coreRepository).querySelect(any(Query.class), any(Consumer.class));
+
+        var captor = ArgumentCaptor.forClass(Model.class);
+
+        try(var mapper = mockStatic(ResourceMapper.class)) {
+            resourceService.getResourceReferences("https://iri.suomi.fi/model/ref/test");
+            mapper.verify(() -> ResourceMapper.mapToResourceReference(captor.capture()));
+        }
+
+        var model = captor.getValue();
+        var resource = model.getResource("https://iri.suomi.fi/model/ref/1.0.0/test-ref");
+
+        assertTrue(resource.listProperties().hasNext());
+        assertEquals(OWL.Class, resource.getProperty(RDF.type).getObject());
+        assertEquals("test label", resource.getProperty(RDFS.label).getString());
+        assertEquals(RDFS.subClassOf, resource.getProperty(DCTerms.references).getObject());
+    }
+
+    @Test
+    void testMapDraftResourceReferences() {
+        var qs = mock(QuerySolution.class);
+
+        // no version found (=draft) and user has no permissions
+        when(qs.get("res")).thenReturn(ResourceFactory.createResource("https://iri.suomi.fi/model/ref/child"));
+        when(qs.get("contributor")).thenReturn(ResourceFactory.createTypedLiteral(UUID.randomUUID().toString()));
+
+        doAnswer(ans -> {
+            Consumer<QuerySolution> cons = ans.getArgument(1, Consumer.class);
+            cons.accept(qs);
+            return null;
+        }).when(coreRepository).querySelect(any(Query.class), any(Consumer.class));
+
+        var captor = ArgumentCaptor.forClass(Model.class);
+
+        try(var mapper = mockStatic(ResourceMapper.class)) {
+            resourceService.getResourceReferences("https://iri.suomi.fi/model/ref/parent");
+            mapper.verify(() -> ResourceMapper.mapToResourceReference(captor.capture()));
+        }
+
+        assertTrue(captor.getValue().isEmpty());
     }
 
     private static ResourceDTO createResourceDTO(boolean update, ResourceType resourceType){

@@ -19,6 +19,8 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URISyntaxException;
+import java.util.List;
+import java.util.Map;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
@@ -250,6 +252,12 @@ public class ResourceController {
                                               @RequestParam @Parameter(description = "New identifier") @ValidResourceIdentifier String newIdentifier) throws URISyntaxException {
         var newURI = resourceService.renameResource(prefix, identifier, newIdentifier);
         return ResponseEntity.created(newURI).build();
+    }
+
+    @Operation(summary = "Gets resource references in other graphs")
+    @GetMapping(value = "/references", produces = APPLICATION_JSON_VALUE)
+    public ResponseEntity<Map<ResourceType, List<ResourceReferenceDTO>>> getResourceReferences(@RequestParam @Parameter(description = "Resource URI") String uri) {
+        return ResponseEntity.ok(resourceService.getResourceReferences(uri));
     }
 
 }

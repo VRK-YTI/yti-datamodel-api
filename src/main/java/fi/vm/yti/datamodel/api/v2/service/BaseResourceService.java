@@ -2,6 +2,8 @@ package fi.vm.yti.datamodel.api.v2.service;
 
 import fi.vm.yti.datamodel.api.security.AuthorizationManager;
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
+import fi.vm.yti.datamodel.api.v2.dto.ResourceReferenceDTO;
+import fi.vm.yti.datamodel.api.v2.dto.ResourceType;
 import fi.vm.yti.datamodel.api.v2.dto.UriDTO;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
@@ -14,21 +16,24 @@ import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelUtils;
 import fi.vm.yti.datamodel.api.v2.utils.SparqlUtils;
 import fi.vm.yti.security.AuthenticatedUserProvider;
+import fi.vm.yti.security.Role;
+import fi.vm.yti.security.YtiUser;
 import org.apache.jena.arq.querybuilder.AskBuilder;
 import org.apache.jena.arq.querybuilder.ConstructBuilder;
 import org.apache.jena.arq.querybuilder.SelectBuilder;
 import org.apache.jena.arq.querybuilder.WhereBuilder;
 import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.query.Query;
+import org.apache.jena.query.QuerySolution;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.ResourceFactory;
+import org.apache.jena.sparql.lang.sparql_11.ParseException;
 import org.apache.jena.sparql.path.PathFactory;
-import org.apache.jena.vocabulary.DCTerms;
-import org.apache.jena.vocabulary.OWL2;
-import org.apache.jena.vocabulary.RDF;
-import org.apache.jena.vocabulary.RDFS;
+import org.apache.jena.vocabulary.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.topbraid.shacl.vocabulary.SH;
 
 import java.net.URI;
@@ -36,11 +41,13 @@ import java.net.URISyntaxException;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static fi.vm.yti.security.AuthorizationException.check;
 
 abstract class BaseResourceService {
 
+    private static final Logger LOG = LoggerFactory.getLogger(BaseResourceService.class);
     private final AuditService auditService;
 
     private final CoreRepository coreRepository;
@@ -259,5 +266,99 @@ abstract class BaseResourceService {
             openSearchIndexer.createResourceToIndex(indexClass);
         }
     }
-    
+
+    public Map<ResourceType, List<ResourceReferenceDTO>> getResourceReferences(String uri) {
+        var u = DataModelURI.fromURI(uri);
+
+        // search references for both versioned (other graphs) and non versioned (current graph) resource
+        var objects = new ArrayList<>();
+        objects.add(NodeFactory.createURI(uri));
+        if (u.getVersion() != null) {
+            objects.add(NodeFactory.createURI(u.getResourceURI()));
+        }
+
+        var user = userProvider.getUser();
+        var roles = user.getOrganizations(Role.ADMIN, Role.DATA_MODEL_EDITOR).stream()
+                .map(UUID::toString)
+                .toList();
+
+        var select = new SelectBuilder();
+        var exp = select.getExprFactory();
+
+        List.of("resource", "predicate", "type", "label", "contributor", "version")
+                .forEach(select::addVar);
+
+        var restrictionPath = Stream.of(
+                PathFactory.pathLink(OWL.intersectionOf.asNode()),
+                PathFactory.pathZeroOrMoreN(PathFactory.pathLink(RDF.rest.asNode())),
+                PathFactory.pathLink(RDF.first.asNode())
+        ).reduce(PathFactory::pathSeq).orElseThrow();
+
+        try {
+            select.addPrefixes(ModelConstants.PREFIXES)
+                    .addWhereValueVar("?object", objects.toArray())
+                    .addGraph("?graph", new WhereBuilder()
+                            .addWhere("?subject", "?predicate", "?object")
+                            .addWhere("?subject", RDF.type, "?type")
+
+                            // reference as a restriction (blank node) in library class
+                            .addOptional(new WhereBuilder()
+                                    .addWhere("?restriction", restrictionPath, "?subject")
+                                    .addWhere("?classSubj", OWL.equivalentClass, "?restriction")
+                                    .addWhere("?classSubj", RDFS.label, "?label")
+                                    .addBind("?classSubj", "?resource")
+                            )
+
+                            // reference as an object
+                            .addOptional(new WhereBuilder()
+                                    .addWhere("?subject", RDFS.label, "?label")
+                                    .addBind("?subject", "?resource")
+                            )
+                            .addWhere("?resource", RDFS.isDefinedBy, "?model")
+                            .addWhere("?model", DCTerms.contributor, "?contributor")
+                            .addOptional("?model", OWL.versionInfo, "?version")
+                    );
+        } catch (ParseException e) {
+            LOG.error(e.getMessage(), e);
+            throw new JenaQueryException("Error getting resource references: " + uri);
+        }
+
+        if (u.isDataModelURI()) {
+            select.addFilter(exp.or(
+                    exp.eq(exp.str("?graph"), u.getGraphURI()),
+                    exp.not(exp.strstarts(exp.str("?graph"), u.getModelURI()))
+            ));
+        }
+
+        var resultModel = ModelFactory.createDefaultModel();
+        resultModel.setNsPrefixes(ModelConstants.PREFIXES);
+
+        // add subjects (versioned resource URIs) as a resource to jena model
+        coreRepository.querySelect(select.build(),
+                (var row) -> mapReferencesToModel(row, user, roles, resultModel));
+
+        return ResourceMapper.mapToResourceReference(resultModel);
+    }
+
+    private static void mapReferencesToModel(QuerySolution row, YtiUser user, List<String> roles, Model resultModel) {
+        String version = row.contains("version")
+                ? row.get("version").toString()
+                : null;
+        var contributor = row.get("contributor").toString()
+                .replace(ModelConstants.URN_UUID, "");
+
+        // skip rows without label and draft resources if user has no permissions
+        if (row.get("label") == null
+            || (version == null && !user.isSuperuser() && !roles.contains(contributor))
+        ) {
+            return;
+        }
+
+        var dataModelURI = DataModelURI.fromURI(row.get("resource").toString());
+        var resource = DataModelURI.createResourceURI(dataModelURI.getModelId(), dataModelURI.getResourceId(), version);
+        resultModel.getResource(resource.getResourceVersionURI())
+                .addProperty(RDFS.label, row.get("label"))
+                .addProperty(RDF.type, row.get("type"))
+                .addProperty(DCTerms.references, row.get("predicate"));
+    }
 }
