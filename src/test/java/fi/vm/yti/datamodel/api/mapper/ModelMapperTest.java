@@ -288,6 +288,19 @@ class ModelMapperTest {
     }
 
     @Test
+    void testRemoveExternalNamespace() {
+        var m = MapperTestUtils.getModelFromFile("/test_datamodel_library.ttl");
+        var uri = DataModelURI.createModelURI("test");
+        var dto = new DataModelDTO();
+
+        mapper.mapToUpdateJenaModel(uri.getGraphURI(), dto, m, EndpointUtils.mockUser);
+
+        assertTrue(m.listSubjects().toList().stream()
+                .noneMatch(s -> s.getURI().equals("https://www.example.com/ns/ext/"))
+        );
+    }
+
+    @Test
     void testMapToDatamodelDTO() {
         var m = MapperTestUtils.getModelFromFile("/test_datamodel_library.ttl");
         var nsModel = MapperTestUtils.getModelFromFile("/test_datamodel_internal_reference.ttl");
