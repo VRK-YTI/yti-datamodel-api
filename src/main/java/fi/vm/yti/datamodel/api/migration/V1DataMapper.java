@@ -122,6 +122,10 @@ public class V1DataMapper {
 
         dto.setDocumentation(MapperUtils.localizedPropertyToMap(modelResource, DOCUMENTATION));
 
+        // make sure that label exists in all languages
+        var defaultName = dto.getLabel().getOrDefault("fi", "Name placeholder");
+        languages.forEach(lang -> dto.getLabel().putIfAbsent(lang, defaultName));
+
         return dto;
     }
 
