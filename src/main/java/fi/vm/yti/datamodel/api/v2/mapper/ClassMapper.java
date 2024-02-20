@@ -298,6 +298,7 @@ public class ClassMapper {
                 restriction.setCurie(res.getCurie());
                 restriction.setLabel(res.getLabel());
                 restriction.setIdentifier(res.getIdentifier());
+                restriction.setNote(res.getNote());
                 if (res.getResourceType().equals(ResourceType.ATTRIBUTE)) {
                     dto.getAttribute().add(restriction);
                 } else if (res.getResourceType().equals(ResourceType.ASSOCIATION)) {
@@ -368,6 +369,7 @@ public class ClassMapper {
             dto.setModelId(uri.getModelId());
             dto.setLabel(MapperUtils.localizedPropertyToMap(resource, RDFS.label));
             dto.setIdentifier(resource.getLocalName());
+            dto.setCurie(String.format("%s:%s", uri.getModelId(), resource.getLocalName()));
             dto.setDeactivated(deactivatedURIs.contains(resource.getURI()));
             if (MapperUtils.hasType(resource, OWL.DatatypeProperty)) {
                 nodeShapeDTO.getAttribute().add(dto);

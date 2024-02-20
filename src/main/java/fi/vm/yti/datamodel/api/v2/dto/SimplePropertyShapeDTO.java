@@ -10,6 +10,7 @@ public class SimplePropertyShapeDTO {
     private Map<String, String> label;
     private boolean deactivated;
     private boolean fromShNode;
+    private String curie;
 
     public String getIdentifier() {
         return identifier;
@@ -65,5 +66,13 @@ public class SimplePropertyShapeDTO {
 
     public void setVersion(String version) {
         this.version = version;
+    }
+
+    public String getCurie() {
+        return curie;
+    }
+
+    public void setCurie(String curie) {
+        this.curie = curie;
     }
 }
