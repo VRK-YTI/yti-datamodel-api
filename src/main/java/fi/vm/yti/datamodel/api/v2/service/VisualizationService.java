@@ -34,15 +34,19 @@ public class VisualizationService {
     private final CoreRepository coreRepository;
     private final AuthorizationManager authorizationManager;
     private final AuthenticatedUserProvider userProvider;
+    private final SearchIndexService searchIndexService;
+
     public VisualizationService(ResourceService resourceService,
                                 CoreRepository coreRepository,
-                                AuthorizationManager authorizationManager, AuthenticatedUserProvider userProvider) {
+                                AuthorizationManager authorizationManager,
+                                AuthenticatedUserProvider userProvider,
+                                SearchIndexService searchIndexService) {
         this.resourceService = resourceService;
         this.coreRepository = coreRepository;
         this.authorizationManager = authorizationManager;
         this.userProvider = userProvider;
+        this.searchIndexService = searchIndexService;
     }
-
 
     public VisualizationResultDTO getVisualizationData(String prefix, String version) {
 
@@ -79,12 +83,21 @@ public class VisualizationService {
             if (MapperUtils.isLibrary(modelResource)) {
                 VisualizationMapper.mapLibraryClassResources(classDTO, model, classResource, externalResources, namespaces);
                 VisualizationMapper.mapAssociationsWithDomain(classDTO, model, classResource, namespaces);
+
+                var ext = externalResources.stream()
+                        .map(e -> MapperUtils.propertyToString(e, OWL.onProperty))
+                        .collect(Collectors.toSet());
+
+                var extResult = searchIndexService.findResourcesByURI(ext, null).getResponseObjects();
+
                 externalResources.forEach(restrictionResource -> {
                     var onProperty = MapperUtils.propertyToString(restrictionResource, OWL.onProperty);
-                    var externalResource = resourceService.findResource(onProperty, namespaces.keySet());
-                    if (externalResource != null) {
-                        VisualizationMapper.mapLibraryResource(classDTO, restrictionResource, externalResource, namespaces);
-                    }
+                    var externalResource = extResult.stream()
+                            .filter(e -> e.getId().equals(onProperty) || e.getUri().equals(onProperty))
+                            .findFirst();
+
+                    externalResource.ifPresent(indexResource ->
+                            VisualizationMapper.mapLibraryIndexResource(classDTO, restrictionResource, indexResource, namespaces));
                 });
             } else {
                 VisualizationMapper.mapNodeShapeResources(classDTO, classResource, model, externalResources, namespaces);
