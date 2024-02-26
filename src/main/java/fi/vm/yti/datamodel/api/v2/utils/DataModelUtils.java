@@ -70,6 +70,8 @@ public class DataModelUtils {
     public static String removeVersionFromURI(String uri) {
         if (uri == null) {
             return null;
+        } else if (!uri.startsWith(ModelConstants.SUOMI_FI_NAMESPACE)) {
+            return uri;
         }
         return uri.replaceAll("/[\\d.]+(.*)/", "/");
     }
