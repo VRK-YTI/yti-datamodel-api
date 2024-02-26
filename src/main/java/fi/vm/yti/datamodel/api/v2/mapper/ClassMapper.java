@@ -497,7 +497,8 @@ public class ClassMapper {
             var someValuesFrom = MapperUtils.propertyToString(rdfNode.asResource(), OWL.someValuesFrom);
 
             if (propertyResource.getURI().equals(onProperty) && (
-                    MapperUtils.hasType(propertyResource, OWL.DatatypeProperty) || Objects.equals(target, someValuesFrom))
+                    MapperUtils.hasType(propertyResource, OWL.DatatypeProperty, OWL.AnnotationProperty)
+                    || Objects.equals(target, someValuesFrom))
             ) {
                 removed = rdfNode;
                 continue;

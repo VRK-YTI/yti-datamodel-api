@@ -7,6 +7,7 @@ import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.rdf.model.*;
 import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.OWL;
+import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -132,7 +133,7 @@ public class VisualizationMapper {
         var someValuesFrom = MapperUtils.propertyToString(restrictionResource, OWL.someValuesFrom);
         var resourceURI = MapperUtils.propertyToString(restrictionResource, OWL.onProperty);
         var label = MapperUtils.localizedPropertyToMap(resource, RDFS.label);
-        if (MapperUtils.hasType(resource, OWL.DatatypeProperty)) {
+        if (MapperUtils.hasType(resource, OWL.DatatypeProperty, OWL.AnnotationProperty)) {
             var attribute = new VisualizationAttributeDTO();
             attribute.setIdentifier(getReferenceIdentifier(resourceURI, namespaces));
             attribute.setLabel(label);
@@ -142,7 +143,7 @@ public class VisualizationMapper {
                 attribute.setDataType(uriDTO.getCurie());
             }
             classDTO.addAttribute(attribute);
-        } else if (MapperUtils.hasType(resource, OWL.ObjectProperty)) {
+        } else if (MapperUtils.hasType(resource, OWL.ObjectProperty, RDF.Property)) {
             var association = new VisualizationReferenceDTO();
             association.setIdentifier(getReferenceIdentifier(resourceURI, namespaces));
             association.setLabel(label);
