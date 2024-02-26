@@ -334,6 +334,7 @@ public class ResourceMapper {
         var indexResource = new IndexResource();
 
         indexResource.setId(resource.getURI());
+        indexResource.setUri(resource.getURI());
         indexResource.setIdentifier(resource.getLocalName());
         indexResource.setNamespace(resource.getNameSpace());
         indexResource.setIsDefinedBy(MapperUtils.propertyToString(resource, RDFS.isDefinedBy));

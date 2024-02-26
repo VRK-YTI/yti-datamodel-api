@@ -93,7 +93,7 @@ public class VisualizationService {
                 externalResources.forEach(restrictionResource -> {
                     var onProperty = MapperUtils.propertyToString(restrictionResource, OWL.onProperty);
                     var externalResource = extResult.stream()
-                            .filter(e -> e.getId().equals(onProperty) || e.getUri().equals(onProperty))
+                            .filter(e -> onProperty != null && onProperty.equals(e.getUri()))
                             .findFirst();
 
                     externalResource.ifPresent(indexResource ->
