@@ -13,6 +13,7 @@ import fi.vm.yti.datamodel.api.v2.service.DataModelService;
 import fi.vm.yti.datamodel.api.v2.service.ResourceService;
 import fi.vm.yti.datamodel.api.v2.service.VisualizationService;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
+import fi.vm.yti.datamodel.api.v2.utils.DataModelUtils;
 import org.apache.jena.arq.querybuilder.UpdateBuilder;
 import org.apache.jena.arq.querybuilder.WhereBuilder;
 import org.apache.jena.graph.NodeFactory;
@@ -28,6 +29,7 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.topbraid.shacl.vocabulary.SH;
 
@@ -55,6 +57,9 @@ public class V1DataMigrationService {
     private final Set<String> renamedResources = new HashSet<>();
 
     private final Map<String, String> propertyShapeIdMap = new HashMap<>();
+
+    @Value("${datamodel.v1.migration.url:https://tietomallit.dev.yti.cloud.dvv.fi}")
+    String serviceURL;
 
     public V1DataMigrationService(DataModelService dataModelService,
                                   ClassService classService,
@@ -95,6 +100,34 @@ public class V1DataMigrationService {
                     }""", res);
             coreRepository.queryUpdate(query);
         }
+    }
+
+    @Async
+    public void startMigrationAsync(String prefix) {
+        var prefixes = prefix.split(",");
+
+        for (var p : prefixes) {
+            var oldData = ModelFactory.createDefaultModel();
+            var modelURI = OLD_NAMESPACE + p;
+            LOG.info("Fetching model {}", modelURI);
+            try {
+                RDFParser.create()
+                        .source(serviceURL + "/datamodel-api/api/v1/exportModel?graph=" + DataModelUtils.encode(modelURI))
+                        .lang(Lang.JSONLD)
+                        .acceptHeader("application/ld+json")
+                        .parse(oldData);
+                migrateDatamodel(p, oldData);
+                //migrateVisualization(p);
+            } catch (Exception e) {
+                LOG.error(e.getMessage(), e);
+            }
+        }
+
+        renameResources();
+
+        var errors = V1DataMapper.getErrors();
+        LOG.info("Done, errors: {}", errors);
+
     }
 
     public void migrateDatamodel(String prefix, Model oldData) throws URISyntaxException {

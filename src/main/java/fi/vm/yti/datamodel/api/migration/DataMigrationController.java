@@ -86,7 +86,7 @@ public class DataMigrationController {
     }
 
     @PostMapping("/prefix")
-    public ResponseEntity<Map<String, List<String>>> migrate(@RequestParam String prefix) throws URISyntaxException {
+    public ResponseEntity<Void> migrate(@RequestParam String prefix) throws URISyntaxException {
         check(authorizationManager.hasRightToDoMigration());
 
         migrationService.initMigration();
@@ -98,31 +98,9 @@ public class DataMigrationController {
         migrationService.migrateDatamodel(prefix, oldData);
  */
 
-        var prefixes = prefix.split(",");
+        migrationService.startMigrationAsync(prefix);
 
-        for (var p : prefixes) {
-            var oldData = ModelFactory.createDefaultModel();
-            var modelURI = OLD_NAMESPACE + p;
-            LOG.info("Fetching model {}", modelURI);
-            try {
-                RDFParser.create()
-                        .source(serviceURL + "/datamodel-api/api/v1/exportModel?graph=" + DataModelUtils.encode(modelURI))
-                        .lang(Lang.JSONLD)
-                        .acceptHeader("application/ld+json")
-                        .parse(oldData);
-                migrationService.migrateDatamodel(p, oldData);
-                migrateVisualization(p);
-            } catch (Exception e) {
-                LOG.error(e.getMessage(), e);
-            }
-        }
-
-        migrationService.renameResources();
-
-        var errors = V1DataMapper.getErrors();
-        LOG.info("Done, errors: {}", errors);
-
-        return ResponseEntity.ok(errors);
+        return ResponseEntity.ok().build();
     }
 
     @PostMapping("/positions")
