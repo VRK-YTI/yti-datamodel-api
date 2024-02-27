@@ -108,6 +108,7 @@ public class V1DataMigrationService {
 
         for (var p : prefixes) {
             var oldData = ModelFactory.createDefaultModel();
+            var oldVisualization = ModelFactory.createDefaultModel();
             var modelURI = OLD_NAMESPACE + p;
             LOG.info("Fetching model {}", modelURI);
             try {
@@ -116,8 +117,17 @@ public class V1DataMigrationService {
                         .lang(Lang.JSONLD)
                         .acceptHeader("application/ld+json")
                         .parse(oldData);
+
                 migrateDatamodel(p, oldData);
-                //migrateVisualization(p);
+
+                LOG.info("Fetching visualization for model {}", modelURI);
+                RDFParser.create()
+                        .source(serviceURL + "/datamodel-api/api/v1/modelPositions?model=" + DataModelUtils.encode(modelURI))
+                        .lang(Lang.JSONLD)
+                        .acceptHeader("application/ld+json")
+                        .parse(oldVisualization);
+
+                migratePositions(p, oldVisualization, oldData.getGraph().getPrefixMapping());
             } catch (Exception e) {
                 LOG.error(e.getMessage(), e);
             }
@@ -127,7 +137,6 @@ public class V1DataMigrationService {
 
         var errors = V1DataMapper.getErrors();
         LOG.info("Done, errors: {}", errors);
-
     }
 
     public void migrateDatamodel(String prefix, Model oldData) throws URISyntaxException {
