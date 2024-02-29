@@ -14,11 +14,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.net.URISyntaxException;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-
 import static fi.vm.yti.datamodel.api.migration.V1DataMigrationService.OLD_NAMESPACE;
 import static fi.vm.yti.security.AuthorizationException.check;
 
@@ -63,44 +58,14 @@ public class DataMigrationController {
 
     @PostMapping
     public ResponseEntity<Void> migrateAll() {
-        check(authorizationManager.hasRightToDoMigration());
-
-        migrationService.initMigration();
-
-        var prefixes = Arrays.asList(PREFIXES.split(","));
-        prefixes.forEach(prefix -> {
-            LOG.info("Start migrating model {}", prefix);
-            try {
-                migrate(prefix);
-                migrateVisualization(prefix);
-            } catch(Exception e) {
-                LOG.error("Error migrating data model {}", prefix);
-                LOG.error(e.getMessage(), e);
-            }
-        });
-
-        prefixes.forEach(migrationService::createVersions);
-
-        migrationService.renameResources();
-        return ResponseEntity.noContent().build();
+        return migrate(PREFIXES);
     }
 
     @PostMapping("/prefix")
-    public ResponseEntity<Void> migrate(@RequestParam String prefix) throws URISyntaxException {
+    public ResponseEntity<Void> migrate(@RequestParam String prefix) {
         check(authorizationManager.hasRightToDoMigration());
-
-        migrationService.initMigration();
-
-        /* Use static file
-        var oldData = ModelFactory.createDefaultModel();
-        var stream = getClass().getResourceAsStream("/isa2core-org.ttl");
-        RDFDataMgr.read(oldData, stream, RDFLanguages.TURTLE);
-        migrationService.migrateDatamodel(prefix, oldData);
- */
-
         migrationService.startMigrationAsync(prefix);
-
-        return ResponseEntity.ok().build();
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/positions")
