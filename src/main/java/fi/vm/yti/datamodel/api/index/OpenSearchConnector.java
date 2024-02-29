@@ -106,7 +106,7 @@ public class OpenSearchConnector {
 
             logPayload(indexReq, index);
             client.index(indexReq);
-            logger.info("Indexed {} to {}}", id, index);
+            logger.debug("Indexed {} to {}}", id, index);
         } catch (IOException | OpenSearchException e) {
             logger.warn("Could not add to index: " + id, e);
         }
@@ -125,7 +125,7 @@ public class OpenSearchConnector {
                     .build();
             logPayload(request, index);
             client.update(request, String.class);
-            logger.info("Updated {} to {}", id, index);
+            logger.debug("Updated {} to {}", id, index);
         } catch (IOException | OpenSearchException e) {
             logger.warn("Could not update to index: " + id, e);
         }
