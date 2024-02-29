@@ -1,4 +1,4 @@
-package fi.vm.yti.datamodel.api.migration;
+package fi.vm.yti.datamodel.api.config;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.AsyncConfigurer;
