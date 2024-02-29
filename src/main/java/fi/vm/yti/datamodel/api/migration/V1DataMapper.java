@@ -87,11 +87,11 @@ public class V1DataMapper {
                         ext.setNamespace(ns);
                         var label = MapperUtils.localizedPropertyToMap(extResource, RDFS.label);
                         var prefix = MapperUtils.propertyToString(extResource, DCAP.preferredXMLNamespacePrefix);
-                        if (label.isEmpty() && prefix != null) {
-                            ext.setName(Map.of("fi", prefix));
-                        } else {
-                            ext.setName(label);
-                        }
+
+                        languages.forEach(l -> label.putIfAbsent(l, prefix));
+                        label.keySet().removeIf(key -> !languages.contains(key));
+
+                        ext.setName(label);
                         ext.setPrefix(prefix);
                         externalNamespaces.add(ext);
                     }
@@ -102,7 +102,9 @@ public class V1DataMapper {
         if (c == 0) {
             var e = new ExternalNamespaceDTO();
             e.setPrefix("owl");
-            e.setName(Map.of("fi", "owl"));
+            var name = new HashMap<String, String>();
+            languages.forEach(l -> name.put(l, "owl"));
+            e.setName(name);
             e.setNamespace("http://www.w3.org/2002/07/owl#");
             externalNamespaces.add(e);
         }
@@ -123,7 +125,12 @@ public class V1DataMapper {
         dto.setDocumentation(MapperUtils.localizedPropertyToMap(modelResource, DOCUMENTATION));
 
         // make sure that label exists in all languages
-        var defaultName = dto.getLabel().getOrDefault("fi", "Name placeholder");
+        String defaultName;
+        if (dto.getLabel().containsKey("fi")) {
+            defaultName = dto.getLabel().get("fi");
+        } else {
+            defaultName = dto.getLabel().getOrDefault("en", "Name placeholder");
+        }
         languages.forEach(lang -> dto.getLabel().putIfAbsent(lang, defaultName));
 
         return dto;

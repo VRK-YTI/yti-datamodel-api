@@ -13,6 +13,7 @@ import fi.vm.yti.datamodel.api.v2.service.DataModelService;
 import fi.vm.yti.datamodel.api.v2.service.ResourceService;
 import fi.vm.yti.datamodel.api.v2.service.VisualizationService;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
+import fi.vm.yti.datamodel.api.v2.utils.DataModelUtils;
 import org.apache.jena.arq.querybuilder.UpdateBuilder;
 import org.apache.jena.arq.querybuilder.WhereBuilder;
 import org.apache.jena.graph.NodeFactory;
@@ -28,6 +29,7 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.topbraid.shacl.vocabulary.SH;
 
@@ -52,9 +54,12 @@ public class V1DataMigrationService {
     @Value("${datamodel.v1.migration.defaultOrganization:}")
     private String defaultOrganization;
 
-    private final Set<String> renamedResources = new HashSet<>();
+    private final Map<String, String> renamedResourcesMap = new HashMap<>();
 
     private final Map<String, String> propertyShapeIdMap = new HashMap<>();
+
+    @Value("${datamodel.v1.migration.url:https://tietomallit.dev.yti.cloud.dvv.fi}")
+    String serviceURL;
 
     public V1DataMigrationService(DataModelService dataModelService,
                                   ClassService classService,
@@ -68,16 +73,18 @@ public class V1DataMigrationService {
         this.visualizationService = visualizationService;
     }
 
-    public void initMigration() {
-        renamedResources.clear();
+    private void initMigration() {
+        renamedResourcesMap.clear();
         propertyShapeIdMap.clear();
         V1DataMapper.clearErrors();
     }
 
     public void renameResources() {
 
-        for (String res : renamedResources) {
-            LOG.info("Renaming references {}", res);
+        for (Map.Entry<String, String> entry : renamedResourcesMap.entrySet()) {
+            var newURI = entry.getValue();
+            var old = entry.getKey();
+            LOG.info("Renaming references {} to {}", old, newURI);
             var query = String.format("""
                     delete { graph ?g {
                         ?s ?p ?o
@@ -90,11 +97,59 @@ public class V1DataMigrationService {
                     where { graph ?g {
                         ?s ?p ?o .
                         filter(str(?o) = "%s")
-                        bind (iri(str(?o) + "_") as ?newURI)
+                        bind (iri("%s") as ?newURI)
                       }
-                    }""", res);
+                    }""", old, newURI);
             coreRepository.queryUpdate(query);
         }
+    }
+
+    @Async
+    public void startMigrationAsync(String prefix) {
+        initMigration();
+        var prefixes = prefix.split(",");
+
+        /* Use static file
+        var oldData = ModelFactory.createDefaultModel();
+        var stream = getClass().getResourceAsStream("/isa2core-org.ttl");
+        RDFDataMgr.read(oldData, stream, RDFLanguages.TURTLE);
+        migrationService.migrateDatamodel(prefix, oldData);
+        */
+
+        for (var p : prefixes) {
+            var oldData = ModelFactory.createDefaultModel();
+            var oldVisualization = ModelFactory.createDefaultModel();
+            var modelURI = OLD_NAMESPACE + p;
+            LOG.info("Fetching model {}", modelURI);
+            try {
+                RDFParser.create()
+                        .source(serviceURL + "/datamodel-api/api/v1/exportModel?graph=" + DataModelUtils.encode(modelURI))
+                        .lang(Lang.JSONLD)
+                        .acceptHeader("application/ld+json")
+                        .parse(oldData);
+
+                migrateDatamodel(p, oldData);
+            } catch (Exception e) {
+                LOG.error("Error migrating model " + p + ": " + e.getMessage(), e);
+            }
+            try {
+                LOG.info("Fetching visualization for model {}", modelURI);
+                RDFParser.create()
+                        .source(serviceURL + "/datamodel-api/api/v1/modelPositions?model=" + DataModelUtils.encode(modelURI))
+                        .lang(Lang.JSONLD)
+                        .acceptHeader("application/ld+json")
+                        .parse(oldVisualization);
+
+                migratePositions(p, oldVisualization, oldData.getGraph().getPrefixMapping());
+            } catch (Exception e) {
+                LOG.error("Error migrating visualization " + p + ": " + e.getMessage(), e);
+            }
+        }
+
+        renameResources();
+
+        var errors = V1DataMapper.getErrors();
+        LOG.info("Done, errors: {}", errors);
     }
 
     public void migrateDatamodel(String prefix, Model oldData) throws URISyntaxException {
@@ -377,18 +432,14 @@ public class V1DataMigrationService {
                 return;
             }
 
-            var newResourceURI = DataModelURI.createResourceURI(prefix, resource.getLocalName());
-
             try {
-                var exists = coreRepository.resourceExistsInGraph(newModelURI.getGraphURI(), newResourceURI.getResourceURI(), false);
-
                 if (type.equals(ResourceType.CLASS)) {
                     var dto = V1DataMapper.mapLibraryClass(resource);
-                    handleExists(prefix, resource, exists, dto);
+                    handleExists(prefix, resource, dto);
                     classService.create(prefix, dto, false);
                 } else {
                     var dto = V1DataMapper.mapLibraryResource(resource);
-                    handleExists(prefix, resource, exists, dto);
+                    handleExists(prefix, resource, dto);
                     resourceService.create(prefix, dto, type, false);
                 }
                 handleModifiedInfo(newModelURI.getModelURI(), resource);
@@ -399,15 +450,22 @@ public class V1DataMigrationService {
         });
     }
 
-    private void handleExists(String prefix, Resource resource, boolean exists, BaseDTO dto) {
-        if (exists) {
-            var newIdentifier = resource.getLocalName() + "_";
+    private void handleExists(String prefix, Resource resource, BaseDTO dto) {
+        var graphURI = DataModelURI.createModelURI(prefix).getGraphURI();
+        var newResourceURI = DataModelURI.createResourceURI(prefix, dto.getIdentifier()).getResourceURI();
+
+        var hasRenamed = false;
+        while (coreRepository.resourceExistsInGraph(graphURI, newResourceURI, false)) {
+            var newIdentifier = dto.getIdentifier() + "_";
             dto.setIdentifier(newIdentifier);
-            var renamedURI = DataModelURI.createResourceURI(prefix, resource.getLocalName()).getResourceURI();
-            var renamedVersionURI = DataModelURI.createResourceURI(prefix, resource.getLocalName(), "1.0.0").getResourceVersionURI();
-            LOG.info("Renamed resource {}, new URI {}", resource.getURI(), renamedURI);
-            renamedResources.add(renamedURI);
-            renamedResources.add(renamedVersionURI);
+            newResourceURI = DataModelURI.createResourceURI(prefix, newIdentifier).getResourceURI();
+            hasRenamed = true;
+        }
+
+        if (hasRenamed) {
+            var oldResourceURI = DataModelURI.createResourceURI(prefix, resource.getLocalName()).getResourceURI();
+            LOG.info("Renamed resource {}, new URI {}", resource.getURI(), newResourceURI);
+            renamedResourcesMap.put(oldResourceURI, newResourceURI);
         }
     }
 
@@ -512,15 +570,13 @@ public class V1DataMigrationService {
         }
     }
 
-
-
     private void addModelSpecificInfo(String prefix, DataModelDTO dataModel) {
-        if (prefix.equals("fi-dcatap")) {
-            var rdfs = new ExternalNamespaceDTO();
-            rdfs.setName(Map.of("en", "rdfs"));
-            rdfs.setNamespace("http://www.w3.org/2000/01/rdf-schema#");
-            rdfs.setPrefix("rdfs");
+        var rdfs = new ExternalNamespaceDTO();
+        rdfs.setName(Map.of("en", "rdfs"));
+        rdfs.setNamespace("http://www.w3.org/2000/01/rdf-schema#");
+        rdfs.setPrefix("rdfs");
 
+        if (prefix.equals("fi-dcatap")) {
             var spdx = new ExternalNamespaceDTO();
             spdx.setName(Map.of("en", "spdx"));
             spdx.setNamespace("http://spdx.org/rdf/terms#");
@@ -534,13 +590,39 @@ public class V1DataMigrationService {
             skos.setPrefix("skos");
 
             dataModel.getExternalNamespaces().add(skos);
-        } else if (List.of("eftica", "eftirc", "eftiav", "efti2", "eftiwa", "eftidg", "eftict").contains(prefix)) {
+        } else if (prefix.startsWith("efti")) {
             var unece = new ExternalNamespaceDTO();
             unece.setName(Map.of("en", "unece"));
             unece.setNamespace("https://vocabulary.uncefact.org/");
             unece.setPrefix("unece");
 
             dataModel.getExternalNamespaces().add(unece);
+        } else if (prefix.startsWith("ttv")) {
+            var org = new ExternalNamespaceDTO();
+            org.setName(Map.of("en", "org"));
+            org.setNamespace("http://www.w3.org/ns/org#");
+            org.setPrefix("org");
+
+            var foaf = new ExternalNamespaceDTO();
+            foaf.setName(Map.of("en", "foaf"));
+            foaf.setNamespace("http://xmlns.com/foaf/0.1/");
+            foaf.setPrefix("foaf");
+
+            dataModel.getExternalNamespaces().addAll(Set.of(foaf, org));
+        } else if (prefix.equals("agent2")) {
+            var semic = new ExternalNamespaceDTO();
+            semic.setName(Map.of("en", "locn"));
+            semic.setNamespace("https://semiceu.github.io/Core-Location-Vocabulary/releases/w3c/#");
+            semic.setPrefix("locn");
+
+            dataModel.getExternalNamespaces().add(semic);
+        } else if (prefix.equals("emrex")) {
+            var vcard = new ExternalNamespaceDTO();
+            vcard.setName(Map.of("en", "org"));
+            vcard.setNamespace("http://www.w3.org/2001/vcard-rdf/");
+            vcard.setPrefix("vcard");
+
+            dataModel.getExternalNamespaces().addAll(Set.of(rdfs, vcard));
         }
     }
 }

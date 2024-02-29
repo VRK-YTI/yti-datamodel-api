@@ -161,7 +161,7 @@ public class OpenSearchIndexer {
      * @param model Model to index
      */
     public void createModelToIndex(IndexModel model) {
-        logger.info("Indexing: {}", model.getId());
+        logger.debug("Indexing: {}", model.getId());
         openSearchConnector.putToIndex(OPEN_SEARCH_INDEX_MODEL, model.getId(), model);
     }
 
