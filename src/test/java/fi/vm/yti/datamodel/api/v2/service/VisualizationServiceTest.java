@@ -3,10 +3,13 @@ package fi.vm.yti.datamodel.api.v2.service;
 import fi.vm.yti.datamodel.api.mapper.MapperTestUtils;
 import fi.vm.yti.datamodel.api.security.AuthorizationManager;
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
+import fi.vm.yti.datamodel.api.v2.dto.ResourceType;
 import fi.vm.yti.datamodel.api.v2.dto.visualization.PositionDataDTO;
 import fi.vm.yti.datamodel.api.v2.dto.visualization.VisualizationClassDTO;
 import fi.vm.yti.datamodel.api.v2.dto.visualization.VisualizationNodeDTO;
 import fi.vm.yti.datamodel.api.v2.dto.visualization.VisualizationNodeType;
+import fi.vm.yti.datamodel.api.v2.opensearch.dto.SearchResponseDTO;
+import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexResource;
 import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import fi.vm.yti.security.AuthenticatedUserProvider;
@@ -17,7 +20,6 @@ import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDF;
-import org.apache.jena.vocabulary.RDFS;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -29,8 +31,8 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.topbraid.shacl.vocabulary.SH;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -50,25 +52,31 @@ class VisualizationServiceTest {
     private AuthorizationManager authorizationManager;
     @MockBean
     private AuthenticatedUserProvider userProvider;
+    @MockBean
+    private SearchIndexService searchIndexService;
     @Captor
     private ArgumentCaptor<Model> modelCaptor;
 
     @Autowired
     private VisualizationService visualizationService;
 
-
     @Test
     void testMapVisualizationDataLibrary() {
         var model = MapperTestUtils.getModelFromFile("/models/test_datamodel_library_visualization.ttl");
         when(coreRepository.fetch(anyString())).thenReturn(model);
 
-        var findResoureceModel = ModelFactory.createDefaultModel();
         var extResourceURI = "https://www.example.com/ns/external/testAssociation";
-        var extResource = findResoureceModel
-                .createResource(extResourceURI)
-                .addProperty(RDF.type, OWL.ObjectProperty)
-                .addProperty(RDFS.label, "Ext label");
-        when(resourceService.findResource(eq(extResourceURI), anySet())).thenReturn(extResource);
+
+        var extResource = new IndexResource();
+        extResource.setUri(extResourceURI);
+        extResource.setId(extResourceURI);
+        extResource.setResourceType(ResourceType.ASSOCIATION);
+        extResource.setLabel(Map.of("fi", "Ext label"));
+
+        var response = new SearchResponseDTO<IndexResource>();
+        response.setResponseObjects(List.of(extResource));
+        when(searchIndexService.findResourcesByURI(Set.of(), null)).thenReturn(new SearchResponseDTO<>());
+        when(searchIndexService.findResourcesByURI(Set.of(extResourceURI), null)).thenReturn(response);
 
         var visualizationData = visualizationService.getVisualizationData("visu", null);
 

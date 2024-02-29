@@ -1,7 +1,9 @@
 package fi.vm.yti.datamodel.api.v2.mapper;
 
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
+import fi.vm.yti.datamodel.api.v2.dto.ResourceType;
 import fi.vm.yti.datamodel.api.v2.dto.visualization.*;
+import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexResource;
 import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
 import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.rdf.model.*;
@@ -54,7 +56,7 @@ public class VisualizationMapper {
                         externalResources.add(r.asResource());
                         return;
                     }
-                    mapLibraryResource(classDTO, r.asResource(), resource, namespaces);
+                    mapLibraryJenaResource(classDTO, r.asResource(), resource, namespaces);
                 });
     }
 
@@ -126,24 +128,48 @@ public class VisualizationMapper {
         return dto;
     }
 
-    public static void mapLibraryResource(VisualizationClassDTO classDTO,
-                                          Resource restrictionResource,
-                                          Resource resource,
-                                          Map<String, String> namespaces) {
-        var someValuesFrom = MapperUtils.propertyToString(restrictionResource, OWL.someValuesFrom);
-        var resourceURI = MapperUtils.propertyToString(restrictionResource, OWL.onProperty);
+    public static void mapLibraryJenaResource(VisualizationClassDTO classDTO,
+                                              Resource restrictionResource,
+                                              Resource resource,
+                                              Map<String, String> namespaces) {
         var label = MapperUtils.localizedPropertyToMap(resource, RDFS.label);
         if (MapperUtils.hasType(resource, OWL.DatatypeProperty, OWL.AnnotationProperty)) {
+            mapLibraryResource(classDTO, restrictionResource, namespaces, label, true);
+        } else if (MapperUtils.hasType(resource, OWL.ObjectProperty, RDF.Property)) {
+            mapLibraryResource(classDTO, restrictionResource, namespaces, label, false);
+        }
+    }
+
+    public static void mapLibraryIndexResource(VisualizationClassDTO classDTO,
+                                               Resource restrictionResource,
+                                               IndexResource resource,
+                                               Map<String, String> namespaces) {
+        var label = resource.getLabel();
+        if (ResourceType.ATTRIBUTE.equals(resource.getResourceType())) {
+            mapLibraryResource(classDTO, restrictionResource, namespaces, label, true);
+        } else if (ResourceType.ASSOCIATION.equals(resource.getResourceType())) {
+            mapLibraryResource(classDTO, restrictionResource, namespaces, label, false);
+        }
+    }
+
+    private static void mapLibraryResource(VisualizationClassDTO classDTO,
+                                          Resource restrictionResource,
+                                          Map<String, String> namespaces,
+                                          Map<String, String> label,
+                                          boolean isAttribute) {
+        var someValuesFrom = MapperUtils.propertyToString(restrictionResource, OWL.someValuesFrom);
+        var resourceURI = MapperUtils.propertyToString(restrictionResource, OWL.onProperty);
+        if (isAttribute) {
             var attribute = new VisualizationAttributeDTO();
             attribute.setIdentifier(getReferenceIdentifier(resourceURI, namespaces));
             attribute.setLabel(label);
             attribute.setUri(resourceURI);
             if (someValuesFrom != null) {
-                var uriDTO = MapperUtils.uriToURIDTO(someValuesFrom, resource.getModel());
+                var uriDTO = MapperUtils.uriToURIDTO(someValuesFrom, restrictionResource.getModel());
                 attribute.setDataType(uriDTO.getCurie());
             }
             classDTO.addAttribute(attribute);
-        } else if (MapperUtils.hasType(resource, OWL.ObjectProperty, RDF.Property)) {
+        } else {
             var association = new VisualizationReferenceDTO();
             association.setIdentifier(getReferenceIdentifier(resourceURI, namespaces));
             association.setLabel(label);
