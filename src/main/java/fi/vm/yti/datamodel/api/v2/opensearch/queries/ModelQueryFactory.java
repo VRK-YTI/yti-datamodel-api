@@ -78,47 +78,52 @@ public class ModelQueryFactory {
     }
 
     private static Query getModelBaseQuery(ModelSearchRequest request, boolean isSuperUser) {
-        var must = new ArrayList<Query>();
-        var should = new ArrayList<Query>();
+        var allQueries = new ArrayList<Query>();
+
+        // match to data model label OR match to resource query done earlier (additionalModelIds)
+        var textQueries = new ArrayList<Query>();
+
+        // status is not draft OR organization is some of user's organizations
+        var excludeDrafts = new ArrayList<Query>();
 
         var draftFrom = request.getIncludeDraftFrom();
         if (draftFrom != null && !draftFrom.isEmpty()) {
             var incompleteFromQuery = QueryFactoryUtils.termsQuery("contributor", draftFrom.stream().map(UUID::toString).toList());
-            must.add(incompleteFromQuery);
+            excludeDrafts.add(incompleteFromQuery);
         }
 
         if (!isSuperUser) {
-            must.add(QueryFactoryUtils.hideDraftStatusQuery());
+            excludeDrafts.add(QueryFactoryUtils.hideDraftStatusQuery());
         }
 
         var modelType = request.getType();
         if (modelType != null && !modelType.isEmpty()) {
             var modelTypeQuery = QueryFactoryUtils.termsQuery("type", modelType.stream().map(ModelType::name).toList());
-            must.add(modelTypeQuery);
+            allQueries.add(modelTypeQuery);
         }
 
         var groups = request.getGroups();
         if (groups != null && !groups.isEmpty()) {
             var groupsQuery = QueryFactoryUtils.termsQuery("isPartOf", groups);
-            must.add(groupsQuery);
+            allQueries.add(groupsQuery);
         }
 
         var organizations = request.getOrganizations();
         if (organizations != null && !organizations.isEmpty()) {
             var orgsQuery = QueryFactoryUtils.termsQuery("contributor", organizations.stream().map(UUID::toString).toList());
-            must.add(orgsQuery);
+            allQueries.add(orgsQuery);
         }
 
         var language = request.getLanguage();
         if (language != null && !language.isBlank()) {
             var languageQuery = QueryFactoryUtils.termQuery("language", language);
-            must.add(languageQuery);
+            allQueries.add(languageQuery);
         }
 
         var status = request.getStatus();
         if (status != null && !status.isEmpty()) {
             var statusQuery = QueryFactoryUtils.termsQuery("status", status.stream().map(Status::name).toList());
-            must.add(statusQuery);
+            allQueries.add(statusQuery);
         }
 
         var additionalModelIds = request.getAdditionalModelIds();
@@ -128,27 +133,37 @@ public class ModelQueryFactory {
         }
 
         if (additionalModelIdsQuery != null) {
-            should.add(additionalModelIdsQuery);
+            textQueries.add(additionalModelIdsQuery);
         }
 
         var queryString = request.getQuery();
         if (queryString != null && !queryString.isBlank()) {
-            should.add(QueryFactoryUtils.labelQuery(queryString));
+            textQueries.add(QueryFactoryUtils.labelQuery(queryString));
         }
 
-        if (should.size() == 1) {
-            // no need to build a "should" query from a single expression
-            must.add(should.get(0));
-        } else if (should.size() > 1) {
-            // build a "should" query from all entries and add to the "must"
-            must.add(QueryBuilders.bool()
-                    .should(should)
+        if (excludeDrafts.size() == 1) {
+            allQueries.add(excludeDrafts.get(0));
+        } else if (excludeDrafts.size() > 1) {
+            allQueries.add(QueryBuilders.bool()
+                    .should(excludeDrafts)
                     .minimumShouldMatch("1")
                     .build()
                     ._toQuery());
         }
 
-        return QueryBuilders.bool().must(must).build()._toQuery();
+        if (textQueries.size() == 1) {
+            // no need to build a "should" query from a single expression
+            allQueries.add(textQueries.get(0));
+        } else if (textQueries.size() > 1) {
+            // build a "should" query from all entries and add to the "must"
+            allQueries.add(QueryBuilders.bool()
+                    .should(textQueries)
+                    .minimumShouldMatch("1")
+                    .build()
+                    ._toQuery());
+        }
+
+        return QueryBuilders.bool().must(allQueries).build()._toQuery();
     }
 
     private static Aggregation getAggregation(String fieldName) {
