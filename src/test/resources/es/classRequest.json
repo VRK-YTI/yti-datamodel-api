@@ -26,7 +26,31 @@
               {
                 "terms": {
                   "versionIri": [
-                    "https://iri.suomi.fi/model/addedNs/"
+                    "https://iri.suomi.fi/model/addedNs/1.0.0/"
+                  ]
+                }
+              },
+              {
+                "bool": {
+                  "must": [
+                    {
+                      "terms": {
+                        "isDefinedBy": [
+                          "https://iri.suomi.fi/model/draft_model/"
+                        ]
+                      }
+                    },
+                    {
+                      "bool": {
+                        "must_not": [
+                          {
+                            "exists": {
+                              "field": "fromVersion"
+                            }
+                          }
+                        ]
+                      }
+                    }
                   ]
                 }
               },

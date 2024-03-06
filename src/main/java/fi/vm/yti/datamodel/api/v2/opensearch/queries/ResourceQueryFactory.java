@@ -139,7 +139,19 @@ public class ResourceQueryFactory {
             builder.should(addCurrentModelQuery(request));
         }
 
-        if(request.getIncludeDraftFrom() != null && !request.getIncludeDraftFrom().isEmpty()) {
+        var linkedDraftModels = new ArrayList<String>();
+        internalNamespaces.stream()
+                .filter(ns -> !ns.matches("(.*)\\.\\d+/$"))
+                .forEach(linkedDraftModels::add);
+
+        if (!linkedDraftModels.isEmpty()) {
+            BoolQuery.Builder draftBuilder = new BoolQuery.Builder();
+            draftBuilder.must(QueryFactoryUtils.termsQuery("isDefinedBy", linkedDraftModels));
+            draftBuilder.must(QueryFactoryUtils.existsQuery("fromVersion", true));
+            builder.should(draftBuilder.build()._toQuery());
+        }
+
+        if (request.getIncludeDraftFrom() != null && !request.getIncludeDraftFrom().isEmpty()) {
             builder.should(QueryFactoryUtils.termsQuery("isDefinedBy", request.getIncludeDraftFrom()));
         }
 
