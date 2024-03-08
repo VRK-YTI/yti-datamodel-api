@@ -35,8 +35,8 @@ class ResourceQueryFactoryTest {
         request.setTargetClass(modelURI + "TestClass");
         request.setResourceTypes(Set.of(ResourceType.ATTRIBUTE, ResourceType.ASSOCIATION));
 
-        var groupNamespaces = List.of(ModelConstants.SUOMI_FI_NAMESPACE + "groupNs/", ModelConstants.SUOMI_FI_NAMESPACE + "addedNs/");
-        var internalNamespaces = List.of(ModelConstants.SUOMI_FI_NAMESPACE + "addedNs/");
+        var groupNamespaces = List.of(ModelConstants.SUOMI_FI_NAMESPACE + "groupNs/1.0.0/", ModelConstants.SUOMI_FI_NAMESPACE + "addedNs/1.0.0/");
+        var internalNamespaces = List.of(ModelConstants.SUOMI_FI_NAMESPACE + "addedNs/1.0.0/", ModelConstants.SUOMI_FI_NAMESPACE + "draft_model/");
         var externalNamespaces = List.of("http://external-data.com/test");
 
         var allowedIncompleteDataModels = Set.of(modelURI);
