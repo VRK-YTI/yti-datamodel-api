@@ -312,7 +312,9 @@ public class V1DataMapper {
     }
 
     private static void mapCommon(BaseDTO dto, Resource resource) {
-        if (resource.hasProperty(LOCAL_NAME)) {
+        if (dto instanceof NodeShapeDTO || dto instanceof ClassDTO) {
+            dto.setIdentifier(resource.getLocalName());
+        } else if (resource.hasProperty(LOCAL_NAME)) {
             dto.setIdentifier(MapperUtils.propertyToString(resource, LOCAL_NAME));
         } else if (dto instanceof PropertyShapeDTO && !resource.hasProperty(LOCAL_NAME)) {
             // Property shapes without localName are in uuid format.
