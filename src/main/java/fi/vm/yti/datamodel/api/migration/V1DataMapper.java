@@ -340,7 +340,7 @@ public class V1DataMapper {
         }
     }
 
-    private static String fixNamespace(String uri) {
+    public static String fixNamespace(String uri) {
         if (uri != null && uri.contains("uri.suomi.fi")) {
             return uri
                     .replace(OLD_NAMESPACE, ModelConstants.SUOMI_FI_NAMESPACE)
