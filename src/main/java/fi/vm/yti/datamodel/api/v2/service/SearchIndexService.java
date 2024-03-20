@@ -2,6 +2,7 @@ package fi.vm.yti.datamodel.api.v2.service;
 
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
 import fi.vm.yti.datamodel.api.v2.dto.ModelSearchResultDTO;
+import fi.vm.yti.datamodel.api.v2.dto.ModelType;
 import fi.vm.yti.datamodel.api.v2.dto.ResourceType;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.OpenSearchException;
 import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
@@ -57,9 +58,7 @@ public class SearchIndexService {
                 resourceSearchRequest,
                 Collections.emptyList(),
                 Collections.emptyList());
-        var resources = client.search(resourceQuery, IndexResource.class);
-
-        return resources;
+        return client.search(resourceQuery, IndexResource.class);
     }
 
     /**
@@ -119,7 +118,7 @@ public class SearchIndexService {
                         .filter(o -> (o.getVersionIri() != null ?
                                 o.getVersionIri() :
                                 o.getIsDefinedBy()).equals(searchResult.getId()))
-                        .forEach(o -> searchResult.addMatchingResource(o));
+                        .forEach(searchResult::addMatchingResource);
             }
         }
 
@@ -134,6 +133,9 @@ public class SearchIndexService {
             modelRequest.setPageSize(QueryFactoryUtils.INTERNAL_SEARCH_PAGE_SIZE);
             modelRequest.setOrganizations(organizations);
             modelRequest.setIncludeDraftFrom(organizations);
+            if (request.getLimitToModelType() != null) {
+                modelRequest.setType(Set.of(request.getLimitToModelType()));
+            }
             var build = ModelQueryFactory.createModelQuery(modelRequest, user.isSuperuser());
             var response = client.search(build, IndexModel.class);
             allowedDatamodels = response.getResponseObjects().stream()
@@ -191,7 +193,7 @@ public class SearchIndexService {
             if (request.getLimitToDataModel() == null) {
                 throw new OpenSearchException("limitToDataModel cannot be empty if getting from added namespace", OpenSearchIndexer.OPEN_SEARCH_INDEX_RESOURCE);
             }
-            getNamespacesFromModel(request.getLimitToDataModel(), internalNamespaces, externalNamespaces);
+            getNamespacesFromModel(request, internalNamespaces, externalNamespaces);
         }
 
         List<String> restrictedDataModels = null;
@@ -241,19 +243,22 @@ public class SearchIndexService {
                 .toList();
     }
 
-    private void getNamespacesFromModel(String graphUri, List<String> internalNamespaces, List<String> externalNamespaces){
-        var uri = DataModelURI.fromURI(graphUri);
+    private void getNamespacesFromModel(ResourceSearchRequest request, List<String> internalNamespaces, List<String> externalNamespaces){
+        var uri = DataModelURI.fromURI(request.getLimitToDataModel());
         var model = coreRepository.fetch(uri.getGraphURI());
         var resource = model.getResource(uri.getModelURI());
-        var allNamespaces = new ArrayList<String>();
+        var allNamespaces = new ArrayList<>(MapperUtils.arrayPropertyToList(resource, OWL.imports));
 
-        allNamespaces.addAll(MapperUtils.arrayPropertyToList(resource, OWL.imports));
-        allNamespaces.addAll(MapperUtils.arrayPropertyToList(resource, DCTerms.requires));
+        if (!ModelType.PROFILE.equals(request.getLimitToModelType())) {
+            allNamespaces.addAll(MapperUtils.arrayPropertyToList(resource, DCTerms.requires));
 
-        // resource from external models are searched by isDefinedBy property
-        externalNamespaces.addAll(allNamespaces.stream().filter(ns -> !ns.contains(ModelConstants.SUOMI_FI_DOMAIN)
-                && !ns.contains(ModelConstants.SUOMI_FI_NAMESPACE))
-                .toList());
+            // resource from external models are searched by isDefinedBy property (include only if searching LIBRARY resources)
+            externalNamespaces.addAll(allNamespaces.stream()
+                    .filter(ns -> !ns.contains(ModelConstants.SUOMI_FI_DOMAIN)
+                                  && !ns.contains(ModelConstants.SUOMI_FI_NAMESPACE))
+                    .toList());
+        }
+
         // internal namespaces are searched by versionIRI
         internalNamespaces.addAll(allNamespaces.stream().filter(ns -> ns.startsWith(ModelConstants.SUOMI_FI_NAMESPACE)).toList());
     }
