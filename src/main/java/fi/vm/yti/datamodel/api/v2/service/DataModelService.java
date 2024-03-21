@@ -331,8 +331,8 @@ public class DataModelService {
         if (MapperUtils.isApplicationProfile(model.getResource(datamodelURI.getModelURI()))) {
             var invalidResources = new ArrayList<Resource>();
             invalidResources.addAll(model.listSubjectsWithProperty(SH.targetClass, OWL.Thing).toList());
-            invalidResources.addAll(model.listSubjectsWithProperty(SH.path, OWL.DatatypeProperty).toList());
-            invalidResources.addAll(model.listSubjectsWithProperty(SH.path, OWL.ObjectProperty).toList());
+            invalidResources.addAll(model.listSubjectsWithProperty(SH.path, OWL2.topDataProperty).toList());
+            invalidResources.addAll(model.listSubjectsWithProperty(SH.path, OWL2.topObjectProperty).toList());
 
             var uriDTOs = MapperUtils.uriToURIDTOs(invalidResources.stream().map(Resource::getURI).toList(), model);
 
