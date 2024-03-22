@@ -19,7 +19,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.Collection;
 
@@ -101,7 +100,7 @@ public class ClassController {
     })
     @GetMapping(value = "/library/{prefix}/{classIdentifier}", produces = APPLICATION_JSON_VALUE)
     public ClassInfoDTO getClass(@PathVariable @Parameter(description = "Data model prefix") String prefix,
-                                 @PathVariable @Parameter(description = "Class identifier") @ValidResourceIdentifier String classIdentifier,
+                                 @PathVariable @Parameter(description = "Class identifier") String classIdentifier,
                                  @RequestParam(required = false) @Parameter(description = "Version") @ValidSemanticVersion String version) {
         return (ClassInfoDTO) classService.get(prefix, version, classIdentifier);
     }
@@ -233,7 +232,7 @@ public class ClassController {
     @Operation(summary = "Get all node shapes based on given targetClass")
     @ApiResponse(responseCode = "200", description = "List of node shapes fetched successfully")
     @GetMapping(value = "/nodeshapes", produces = APPLICATION_JSON_VALUE)
-    public Collection<IndexResourceInfo> getNodeShapes(@RequestParam @Parameter(description = "Target class") String targetClass) throws IOException {
+    public Collection<IndexResourceInfo> getNodeShapes(@RequestParam @Parameter(description = "Target class") String targetClass) {
         return classService.getNodeShapes(targetClass);
     }
 
