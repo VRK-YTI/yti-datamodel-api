@@ -21,10 +21,7 @@ import org.apache.jena.rdf.model.*;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFParser;
 import org.apache.jena.shared.PrefixMapping;
-import org.apache.jena.vocabulary.DCTerms;
-import org.apache.jena.vocabulary.OWL;
-import org.apache.jena.vocabulary.RDF;
-import org.apache.jena.vocabulary.RDFS;
+import org.apache.jena.vocabulary.*;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,6 +57,9 @@ public class V1DataMigrationService {
 
     @Value("${datamodel.v1.migration.url:https://tietomallit.dev.yti.cloud.dvv.fi}")
     String serviceURL;
+
+    private static final Property API_PATH =
+            ResourceFactory.createProperty("http://www.w3.org/2011/http#absolutePath");
 
     public V1DataMigrationService(DataModelService dataModelService,
                                   ClassService classService,
@@ -186,6 +186,8 @@ public class V1DataMigrationService {
         // add references with separate query, because they might not exist yet (causes validation error)
         updateRequires(dataModelURI.toString(), modelResource);
 
+        addCustomProperty(modelURI, modelResource, VOID.rootResource);
+
         // update created and modified info from the original resource. Remove creator and modifier properties,
         // because they are not defined in the older application version
         handleModifiedInfo(modelURI, modelResource);
@@ -225,6 +227,7 @@ public class V1DataMigrationService {
             try {
                 classService.create(prefix, dto, true);
                 handleModifiedInfo(newModelURI, nodeShape);
+                addCustomProperty(newModelURI, nodeShape, API_PATH);
             } catch (Exception e) {
                 LOG.warn("MIGRATION ERROR: Error creating node shape {} to model {}, cause: {}", dto.getIdentifier(), prefix, e.getMessage());
                 V1DataMapper.addError(prefix, String.format("Error creating node shape %s, cause: %s", dto.getIdentifier(), e.getMessage()));
@@ -549,6 +552,29 @@ public class V1DataMigrationService {
         }
 
         builder.addGraph(graph, whereBuilder);
+
+        coreRepository.queryUpdate(builder.buildRequest());
+    }
+
+    private void addCustomProperty(String graphURI, Resource resource, Property property) {
+        if (!resource.hasProperty(property)) {
+            return;
+        }
+        var object = resource.getProperty(property).getObject();
+
+        Object value;
+        if (object.isLiteral()) {
+            value = object.toString();
+        } else {
+            value = NodeFactory.createURI(V1DataMapper.fixNamespace(object.toString()));
+        }
+
+        var resourceURI = V1DataMapper.fixNamespace(resource.getURI());
+        if (MapperUtils.hasType(resource, OWL.Ontology)) {
+            resourceURI += "/";
+        }
+        var builder = new UpdateBuilder();
+        builder.addInsert(NodeFactory.createURI(graphURI), NodeFactory.createURI(resourceURI), property, value);
 
         coreRepository.queryUpdate(builder.buildRequest());
     }
