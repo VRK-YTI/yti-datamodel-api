@@ -63,7 +63,12 @@ public class ClassMapper {
         nodeShapeResource.addProperty(RDF.type, SH.NodeShape);
 
         var modelResource = model.getResource(uri.getModelURI());
-        MapperUtils.addResourceRelationship(modelResource, nodeShapeResource, SH.targetClass, dto.getTargetClass());
+
+        if (dto.getTargetClass() == null && dto.getTargetNode() == null) {
+            nodeShapeResource.addProperty(SH.targetClass, OWL.Thing);
+        } else {
+            MapperUtils.addResourceRelationship(modelResource, nodeShapeResource, SH.targetClass, dto.getTargetClass());
+        }
         MapperUtils.addResourceRelationship(modelResource, nodeShapeResource, SH.node, dto.getTargetNode());
 
         MapperUtils.addTerminologyReference(dto, modelResource);
@@ -165,7 +170,10 @@ public class ClassMapper {
 
         MapperUtils.updateCommonResourceInfo(model, classResource, modelResource, nodeShapeDTO);
 
-        if (nodeShapeDTO.getTargetClass() == null) {
+        // either sh:node or sh:targetClass must be defined. If not, add owl:Thing as targetClass
+        if (nodeShapeDTO.getTargetClass() == null && nodeShapeDTO.getTargetNode() == null) {
+            classResource.addProperty(SH.targetClass, OWL.Thing);
+        } else if (nodeShapeDTO.getTargetClass() == null && nodeShapeDTO.getTargetNode() != null) {
             classResource.removeAll(SH.targetClass);
         } else {
             MapperUtils.updateUriPropertyAndAddReferenceNamespaces(modelResource, classResource, SH.targetClass, nodeShapeDTO.getTargetClass());

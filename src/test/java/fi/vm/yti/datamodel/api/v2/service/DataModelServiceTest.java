@@ -9,6 +9,7 @@ import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
 import fi.vm.yti.datamodel.api.v2.mapper.ModelMapper;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexModel;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
+import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
 import fi.vm.yti.security.AuthenticatedUserProvider;
@@ -19,6 +20,8 @@ import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.vocabulary.OWL;
+import org.apache.jena.vocabulary.RDF;
+import org.apache.jena.vocabulary.RDFS;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -28,6 +31,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.topbraid.shacl.vocabulary.SH;
 
 import java.net.URISyntaxException;
 import java.util.Map;
@@ -337,6 +341,29 @@ class DataModelServiceTest {
         verify(openSearchIndexer).updateModelToIndex(any(IndexModel.class));
     }
 
+    @Test
+    void testValidateRelease() {
+        var dataModelURI = DataModelURI.createResourceURI("test", "incomplete");
+        var model = ModelFactory.createDefaultModel();
+        model.createResource(dataModelURI.getModelURI())
+                        .addProperty(RDF.type, SuomiMeta.ApplicationProfile);
+
+        model.createResource(dataModelURI.getResourceURI())
+                        .addProperty(RDFS.label, "incomplete resource")
+                        .addProperty(SH.targetClass, OWL.Thing);
+
+        when(coreRepository.fetch(dataModelURI.getGraphURI())).thenReturn(model);
+
+        var validationResult = dataModelService.validateRelease("test");
+
+        var errors = validationResult.get("missing-reference-to-library");
+        var error = errors.iterator().next();
+
+        assertNotNull(errors);
+        assertEquals(1, errors.size());
+        assertEquals("incomplete resource", error.getLabel().get("en"));
+        assertEquals("https://iri.suomi.fi/model/test/incomplete", error.getUri());
+    }
 
     /**
      * Create Datamodel DTO for testing

@@ -57,10 +57,6 @@ public class PropertyShapeValidator extends BaseValidator implements ConstraintV
     private void checkPath(ConstraintValidatorContext context, PropertyShapeDTO dto) {
         var path = dto.getPath();
 
-        if (path == null || path.isBlank()) {
-            addConstraintViolation(context, ValidationConstants.MSG_VALUE_MISSING, "path");
-        }
-
         if (path != null && !path.isBlank()
                 && !resourceService.checkIfResourceIsOneOfTypes(path, List.of(OWL.ObjectProperty, OWL.DatatypeProperty, RDF.Property))) {
             addConstraintViolation(context, "not-property-or-doesnt-exist", "path");

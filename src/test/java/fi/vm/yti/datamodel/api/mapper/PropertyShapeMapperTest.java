@@ -7,8 +7,10 @@ import fi.vm.yti.datamodel.api.v2.mapper.ResourceMapper;
 import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
 import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.OWL;
+import org.apache.jena.vocabulary.OWL2;
 import org.apache.jena.vocabulary.RDFS;
 import org.junit.jupiter.api.Test;
 import org.topbraid.shacl.vocabulary.SH;
@@ -92,6 +94,15 @@ class PropertyShapeMapperTest {
         assertEquals(10, MapperUtils.getLiteral(resource, SH.maxCount, Integer.class));
         assertEquals(1, MapperUtils.getLiteral(resource, SH.minCount, Integer.class));
         assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "test/TestClass", MapperUtils.propertyToString(resource, SH.class_));
+
+        // should add default sh:path
+        model.removeAll(ResourceFactory.createResource(ModelConstants.SUOMI_FI_NAMESPACE + "test/ps-1"), null, null);
+        dto.setPath(null);
+
+        ResourceMapper.mapToPropertyShapeResource(uri, model, dto, ResourceType.ASSOCIATION, mockUser);
+        resource = model.getResource(ModelConstants.SUOMI_FI_NAMESPACE + "test/ps-1");
+
+        assertEquals(OWL2.topObjectProperty.getURI(), MapperUtils.propertyToString(resource, SH.path));
     }
 
 

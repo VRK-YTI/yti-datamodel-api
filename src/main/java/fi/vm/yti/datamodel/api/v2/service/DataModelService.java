@@ -20,10 +20,7 @@ import org.apache.jena.arq.querybuilder.ConstructBuilder;
 import org.apache.jena.arq.querybuilder.UpdateBuilder;
 import org.apache.jena.arq.querybuilder.WhereBuilder;
 import org.apache.jena.graph.NodeFactory;
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.ModelFactory;
-import org.apache.jena.rdf.model.RDFNode;
-import org.apache.jena.rdf.model.SimpleSelector;
+import org.apache.jena.rdf.model.*;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.vocabulary.*;
@@ -38,8 +35,7 @@ import org.topbraid.shacl.vocabulary.SH;
 import java.io.StringWriter;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 import static fi.vm.yti.security.AuthorizationException.check;
 
@@ -325,6 +321,26 @@ public class DataModelService {
                         .addFilter(e.not(e.strstarts(e.str("?g"), graph)));
 
         coreRepository.queryUpdate(builder.buildRequest());
+    }
+
+    public Map<String, Set<UriDTO>> validateRelease(String prefix) {
+        var datamodelURI = DataModelURI.createModelURI(prefix);
+        var model = coreRepository.fetch(datamodelURI.getGraphURI());
+
+        var result = new HashMap<String, Set<UriDTO>>();
+        if (MapperUtils.isApplicationProfile(model.getResource(datamodelURI.getModelURI()))) {
+            var invalidResources = new ArrayList<Resource>();
+            invalidResources.addAll(model.listSubjectsWithProperty(SH.targetClass, OWL.Thing).toList());
+            invalidResources.addAll(model.listSubjectsWithProperty(SH.path, OWL2.topDataProperty).toList());
+            invalidResources.addAll(model.listSubjectsWithProperty(SH.path, OWL2.topObjectProperty).toList());
+
+            var uriDTOs = MapperUtils.uriToURIDTOs(invalidResources.stream().map(Resource::getURI).toList(), model);
+
+            if (!uriDTOs.isEmpty()) {
+                result.put("missing-reference-to-library", uriDTOs);
+            }
+        }
+        return result;
     }
 
     private void addPrefixes(Model model, DataModelDTO dto) {

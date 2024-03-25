@@ -19,6 +19,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.net.URISyntaxException;
 import java.util.Collection;
+import java.util.Map;
+import java.util.Set;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
@@ -154,5 +156,9 @@ public class DataModelController {
         return ResponseEntity.noContent().build();
     }
 
-
+    @Operation(summary = "")
+    @GetMapping("/{prefix}/validate")
+    public ResponseEntity<Map<String, Set<UriDTO>>> validateRelease(@PathVariable @Parameter(description = "Data model prefix") String prefix) {
+        return ResponseEntity.ok(dataModelService.validateRelease(prefix));
+    }
 }

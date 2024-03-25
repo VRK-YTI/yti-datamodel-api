@@ -66,12 +66,22 @@ public class ResourceMapper {
         var resource = MapperUtils.addCommonResourceInfo(model, uri, dto);
         var modelResource = model.getResource(uri.getModelURI());
 
-        resource.addProperty(RDF.type, SH.PropertyShape);
-        resource.addProperty(RDF.type, resourceType.equals(ResourceType.ASSOCIATION)
+        Resource typeResource = resourceType.equals(ResourceType.ASSOCIATION)
                 ? OWL.ObjectProperty
-                : OWL.DatatypeProperty);
+                : OWL.DatatypeProperty;
 
-        MapperUtils.addResourceRelationship(modelResource, resource, SH.path, dto.getPath());
+        Resource defaultPathResource = resourceType.equals(ResourceType.ASSOCIATION)
+                ? OWL2.topObjectProperty
+                : OWL2.topDataProperty;
+
+        resource.addProperty(RDF.type, SH.PropertyShape);
+        resource.addProperty(RDF.type, typeResource);
+
+        if (dto.getPath() == null) {
+            resource.addProperty(SH.path, defaultPathResource);
+        } else {
+            MapperUtils.addResourceRelationship(modelResource, resource, SH.path, dto.getPath());
+        }
         MapperUtils.addLiteral(resource, SH.minCount, dto.getMinCount());
         MapperUtils.addLiteral(resource, SH.maxCount, dto.getMaxCount());
 
@@ -171,7 +181,16 @@ public class ResourceMapper {
 
         MapperUtils.updateCommonResourceInfo(model,resource, modelResource, dto);
 
-        MapperUtils.updateUriPropertyAndAddReferenceNamespaces(modelResource, resource, SH.path, dto.getPath());
+        var defaultPathResource = MapperUtils.hasType(resource, OWL.ObjectProperty)
+                ? OWL2.topObjectProperty
+                : OWL2.topDataProperty;
+
+        if (dto.getPath() == null) {
+            resource.addProperty(SH.path, defaultPathResource);
+        } else {
+            MapperUtils.updateUriPropertyAndAddReferenceNamespaces(modelResource, resource, SH.path, dto.getPath());
+        }
+
         MapperUtils.updateLiteral(resource, SH.minCount, dto.getMinCount());
         MapperUtils.updateLiteral(resource, SH.maxCount, dto.getMaxCount());
 
