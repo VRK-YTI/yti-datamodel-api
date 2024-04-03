@@ -5,7 +5,6 @@ import fi.vm.yti.datamodel.api.v2.opensearch.dto.CountSearchResponse;
 import fi.vm.yti.datamodel.api.v2.opensearch.dto.ModelSearchRequest;
 import fi.vm.yti.datamodel.api.v2.opensearch.dto.ResourceSearchRequest;
 import fi.vm.yti.datamodel.api.v2.opensearch.dto.SearchResponseDTO;
-import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexModel;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexResource;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexResourceInfo;
 import fi.vm.yti.datamodel.api.v2.service.FrontendService;
