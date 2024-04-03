@@ -250,19 +250,21 @@ class ResourceServiceTest {
         verify(coreRepository).resourceExistsInGraph(anyString(), anyString());
         verify(coreRepository).resourceExistsInGraph(anyString(), anyString(), eq(false));
         verify(coreRepository, times(2)).fetch(anyString());
-        verify(authorizationManager, times(2)).hasRightToModel(anyString(), any(Model.class));
+        verify(authorizationManager).hasRightToModel(anyString(), any(Model.class));
     }
 
     @Test
     void failCopyPropertyShapeNotExists() {
+        when(coreRepository.fetch(anyString())).thenReturn(ModelFactory.createDefaultModel());
         assertThrows(ResourceNotFoundException.class, () -> resourceService.copyPropertyShape("test", "Identifier", "newTest", "newId"));
     }
 
     @Test
     void failCopyPropertyShapeIdInUse() {
+        when(coreRepository.fetch(anyString())).thenReturn(ModelFactory.createDefaultModel());
         when(coreRepository.resourceExistsInGraph(anyString(), anyString())).thenReturn(true);
         when(coreRepository.resourceExistsInGraph(anyString(), anyString(), eq(false))).thenReturn(true);
-        var error = assertThrows(MappingError.class, () ->resourceService.copyPropertyShape("test", "Identifier", "newTest", "newId"));
+        var error = assertThrows(MappingError.class, () -> resourceService.copyPropertyShape("test", "Identifier", "newTest", "newId"));
         assertEquals("Error during mapping: Identifier in use", error.getMessage());
 
     }

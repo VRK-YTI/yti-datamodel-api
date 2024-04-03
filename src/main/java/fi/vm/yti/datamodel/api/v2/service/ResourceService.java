@@ -170,31 +170,42 @@ public class ResourceService extends BaseResourceService {
     }
 
     public URI copyPropertyShape(String prefix, String propertyShapeIdentifier, String targetPrefix, String newIdentifier) throws URISyntaxException {
-        var source = DataModelURI.createResourceURI(prefix, propertyShapeIdentifier);
         var target = DataModelURI.createResourceURI(targetPrefix, newIdentifier);
-
-        var graphUri = source.getModelURI();
-
         var targetGraph = target.getModelURI();
+        var targetModel = coreRepository.fetch(targetGraph);
         var targetResource = target.getResourceURI();
 
-        if(!coreRepository.resourceExistsInGraph(graphUri, source.getResourceURI())){
+        // determine version which graph the resource will be copied from
+        var namespaces = DataModelUtils
+                .getInternalReferenceModels(targetGraph, targetModel.getResource(targetGraph)).stream()
+                .filter(ns -> ns.startsWith(ModelConstants.SUOMI_FI_NAMESPACE + prefix))
+                .findFirst();
+
+        DataModelURI source;
+        if (namespaces.isPresent()) {
+            var version = DataModelURI.fromURI(namespaces.get()).getVersion();
+            source = DataModelURI.createResourceURI(prefix, propertyShapeIdentifier, version);
+        } else {
+            source = DataModelURI.createResourceURI(prefix, propertyShapeIdentifier);
+        }
+
+        var sourceGraphUri = source.getGraphURI();
+
+        if (!coreRepository.resourceExistsInGraph(sourceGraphUri, source.getResourceURI())) {
             throw new ResourceNotFoundException(propertyShapeIdentifier);
         }
-        if(coreRepository.resourceExistsInGraph(targetGraph, targetResource, false)){
+        if (coreRepository.resourceExistsInGraph(targetGraph, targetResource, false)) {
             throw new MappingError("Identifier in use");
         }
 
-        var model = coreRepository.fetch(graphUri);
-        var targetModel = coreRepository.fetch(targetGraph);
+        var sourceModel = coreRepository.fetch(sourceGraphUri);
 
-        if(!MapperUtils.isApplicationProfile(model.getResource(graphUri)) || !MapperUtils.isApplicationProfile(targetModel.getResource(targetGraph))){
+        if (!MapperUtils.isApplicationProfile(sourceModel.getResource(source.getModelURI())) || !MapperUtils.isApplicationProfile(targetModel.getResource(targetGraph))){
             throw new MappingError("Both data models have to be application profiles");
         }
-        check(authorizationManager.hasRightToModel(prefix, model));
         check(authorizationManager.hasRightToModel(targetPrefix, targetModel));
 
-        ResourceMapper.mapToCopyToLocalPropertyShape(graphUri, model, propertyShapeIdentifier, targetModel, targetGraph, newIdentifier, userProvider.getUser());
+        ResourceMapper.mapToCopyToLocalPropertyShape(sourceModel, source, targetModel, target, userProvider.getUser());
 
         saveResource(targetModel, targetGraph, targetResource, false);
         AUDIT_SERVICE.log(AuditService.ActionType.CREATE, targetResource, userProvider.getUser());
