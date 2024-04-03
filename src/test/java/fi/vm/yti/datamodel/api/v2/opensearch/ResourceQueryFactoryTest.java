@@ -39,7 +39,7 @@ class ResourceQueryFactoryTest {
         var internalNamespaces = List.of(ModelConstants.SUOMI_FI_NAMESPACE + "addedNs/1.0.0/", ModelConstants.SUOMI_FI_NAMESPACE + "draft_model/");
         var externalNamespaces = List.of("http://external-data.com/test");
 
-        var allowedIncompleteDataModels = Set.of(modelURI);
+        var allowedIncompleteDataModels = Set.of(modelURI, ModelConstants.SUOMI_FI_NAMESPACE + "draft_model/");
 
         var classQuery = ResourceQueryFactory.createInternalResourceQuery(request, externalNamespaces, internalNamespaces,
                 groupNamespaces, allowedIncompleteDataModels);

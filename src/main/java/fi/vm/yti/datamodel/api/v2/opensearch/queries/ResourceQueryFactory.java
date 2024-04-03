@@ -143,7 +143,7 @@ public class ResourceQueryFactory {
 
         // Add draft models to the separate list. Draft models do not have version,
         // published model's URI ends with version, e.g. /model/test-prefix/1.2.3/
-        internalNamespaces.stream()
+        internalNamespacesCondition.stream()
                 .filter(ns -> !ns.matches("(.*)\\.\\d+/$"))
                 .forEach(linkedDraftModels::add);
 

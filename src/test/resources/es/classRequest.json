@@ -31,30 +31,6 @@
                 }
               },
               {
-                "bool": {
-                  "must": [
-                    {
-                      "terms": {
-                        "isDefinedBy": [
-                          "https://iri.suomi.fi/model/draft_model/"
-                        ]
-                      }
-                    },
-                    {
-                      "bool": {
-                        "must_not": [
-                          {
-                            "exists": {
-                              "field": "fromVersion"
-                            }
-                          }
-                        ]
-                      }
-                    }
-                  ]
-                }
-              },
-              {
                 "terms": {
                   "id": []
                 }
@@ -64,7 +40,10 @@
         },
         {
           "terms": {
-            "resourceType": ["ASSOCIATION", "ATTRIBUTE"]
+            "resourceType": [
+              "ATTRIBUTE",
+              "ASSOCIATION"
+            ]
           }
         },
         {
@@ -79,7 +58,8 @@
         {
           "terms": {
             "isDefinedBy": [
-              "https://iri.suomi.fi/model/test/"
+              "https://iri.suomi.fi/model/test/",
+              "https://iri.suomi.fi/model/draft_model/"
             ]
           }
         },
@@ -99,6 +79,7 @@
       ]
     }
   },
+  "size": 100,
   "sort": [
     {
       "label.en.keyword": {
