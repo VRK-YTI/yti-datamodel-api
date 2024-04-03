@@ -5,13 +5,17 @@ import fi.vm.yti.datamodel.api.security.AuthorizationManager;
 import fi.vm.yti.datamodel.api.v2.dto.ClassDTO;
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
 import fi.vm.yti.datamodel.api.v2.dto.NodeShapeDTO;
+import fi.vm.yti.datamodel.api.v2.dto.Status;
 import fi.vm.yti.datamodel.api.v2.endpoint.EndpointUtils;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
 import fi.vm.yti.datamodel.api.v2.mapper.ClassMapper;
+import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.mapper.ResourceMapper;
+import fi.vm.yti.datamodel.api.v2.opensearch.dto.SearchResponseDTO;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexResource;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
 import fi.vm.yti.datamodel.api.v2.properties.DCAP;
+import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import fi.vm.yti.datamodel.api.v2.repository.ImportsRepository;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
@@ -22,10 +26,7 @@ import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.ResourceFactory;
-import org.apache.jena.vocabulary.OWL;
-import org.apache.jena.vocabulary.RDF;
-import org.apache.jena.vocabulary.RDFS;
-import org.apache.jena.vocabulary.XSD;
+import org.apache.jena.vocabulary.*;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -34,8 +35,10 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.topbraid.shacl.vocabulary.SH;
 
 import java.net.URISyntaxException;
+import java.util.Date;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -81,14 +84,24 @@ class ClassServiceTest {
     ClassService classService;
 
     @Test
-    void get() {
-        when(coreRepository.resourceExistsInGraph(anyString(), anyString())).thenReturn(true);
-        when(coreRepository.fetch(anyString())).thenReturn(ModelFactory.createDefaultModel());
-        when(terminologyService.mapConcept()).thenReturn(mock(Consumer.class));
+    void getLibraryClass() {
+        var model = ModelFactory.createDefaultModel();
 
-        try(var mapper = mockStatic(ClassMapper.class)) {
-            classService.get("test", null, "TestClass");
-        }
+        var resourceURI = DataModelURI.createResourceURI("test", "TestClass");
+        model.createResource(resourceURI.getModelURI())
+                .addProperty(RDF.type, OWL.Ontology)
+                .addProperty(SuomiMeta.publicationStatus, MapperUtils.getStatusUri(Status.DRAFT));
+
+        var resource = model.createResource(resourceURI.getResourceURI())
+                .addProperty(SuomiMeta.publicationStatus, MapperUtils.getStatusUri(Status.DRAFT));
+        MapperUtils.addCreationMetadata(resource, EndpointUtils.mockUser);
+
+        when(coreRepository.resourceExistsInGraph(anyString(), anyString())).thenReturn(true);
+        when(coreRepository.fetch(anyString())).thenReturn(model);
+        when(terminologyService.mapConcept()).thenReturn(mock(Consumer.class));
+        when(searchIndexService.findResourcesByURI(anySet(), eq(null))).thenReturn(new SearchResponseDTO<>());
+
+        classService.get(resourceURI.getModelId(), null, resourceURI.getResourceId());
 
         var graphURI = ModelConstants.SUOMI_FI_NAMESPACE + "test" + ModelConstants.RESOURCE_SEPARATOR;
         verify(coreRepository).resourceExistsInGraph(graphURI, ModelConstants.SUOMI_FI_NAMESPACE + "test/TestClass");
@@ -99,13 +112,24 @@ class ClassServiceTest {
 
     @Test
     void getWithVersion() {
-        when(coreRepository.resourceExistsInGraph(anyString(), anyString())).thenReturn(true);
-        when(coreRepository.fetch(anyString())).thenReturn(ModelFactory.createDefaultModel());
-        when(terminologyService.mapConcept()).thenReturn(mock(Consumer.class));
+        var model = ModelFactory.createDefaultModel();
 
-        try(var mapper = mockStatic(ClassMapper.class)) {
-            classService.get("test", "1.0.1", "TestClass");
-        }
+        var resourceURI = DataModelURI.createResourceURI("test", "TestClass", "1.0.1");
+        model.createResource(resourceURI.getModelURI())
+                .addProperty(RDF.type, OWL.Ontology)
+                .addProperty(SuomiMeta.publicationStatus, MapperUtils.getStatusUri(Status.DRAFT));
+
+        var resource = model.createResource(resourceURI.getResourceURI())
+                .addProperty(SuomiMeta.publicationStatus, MapperUtils.getStatusUri(Status.DRAFT));
+        MapperUtils.addCreationMetadata(resource, EndpointUtils.mockUser);
+
+        when(coreRepository.resourceExistsInGraph(anyString(), anyString())).thenReturn(true);
+        when(coreRepository.fetch(anyString())).thenReturn(model);
+        when(terminologyService.mapConcept()).thenReturn(mock(Consumer.class));
+        when(searchIndexService.findResourcesByURI(anySet(), anyString())).thenReturn(new SearchResponseDTO<>());
+        when(searchIndexService.findResourcesByURI(anySet(), eq(null))).thenReturn(new SearchResponseDTO<>());
+
+        classService.get(resourceURI.getModelId(), resourceURI.getVersion(), resourceURI.getResourceId());
 
         verify(coreRepository).resourceExistsInGraph(ModelConstants.SUOMI_FI_NAMESPACE + "test/1.0.1/", ModelConstants.SUOMI_FI_NAMESPACE + "test/TestClass");
         verify(coreRepository).fetch(ModelConstants.SUOMI_FI_NAMESPACE + "test/1.0.1/");
@@ -138,17 +162,28 @@ class ClassServiceTest {
 
     @Test
     void createNodeShape() throws URISyntaxException {
-        when(coreRepository.fetch(anyString())).thenReturn(ModelFactory.createDefaultModel());
+        var resourceURI = DataModelURI.createResourceURI("test", "node-shape-1");
+        var nodeRefURI = DataModelURI.createResourceURI("foo", "bar", "1.2.3");
+
+        var model = ModelFactory.createDefaultModel();
+        model.createResource(resourceURI.getModelURI())
+                .addProperty(SuomiMeta.publicationStatus, MapperUtils.getStatusUri(Status.DRAFT))
+                .addProperty(DCTerms.requires, ResourceFactory.createResource(nodeRefURI.getGraphURI()));
+
+        when(coreRepository.fetch(anyString())).thenReturn(model);
         when(authorizationManager.hasRightToModel(anyString(), any(Model.class))).thenReturn(true);
         when(userProvider.getUser()).thenReturn(EndpointUtils.mockUser);
+
+        // mock fetching properties based on sh:node reference
+        var nodeReferenceResult = ModelFactory.createDefaultModel();
+        nodeReferenceResult.createResource(nodeRefURI.getResourceURI())
+                .addProperty(SH.property, ResourceFactory.createResource(nodeRefURI.getModelURI() + "node-property"));
+        when(coreRepository.queryConstruct(any(Query.class))).thenReturn(nodeReferenceResult);
+
         var dto = createNodeShapeDTO(false);
-        try(var mapper = mockStatic(ClassMapper.class);
-            var resMapper = mockStatic(ResourceMapper.class)) {
-            resMapper.when(() -> ResourceMapper.mapToIndexResource(any(Model.class), anyString())).thenReturn(new IndexResource());
-            var uri = classService.create("test", dto,true);
-            assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "test/node-shape-1", uri.toString());
-            mapper.verify(() -> ClassMapper.createNodeShapeAndMapToModel(any(DataModelURI.class), any(Model.class), any(NodeShapeDTO.class), any(YtiUser.class)));
-        }
+        dto.setTargetNode(nodeRefURI.getResourceVersionURI());
+
+        var uri = classService.create("test", dto,true);
 
         verify(coreRepository).resourceExistsInGraph(anyString(), anyString(), eq(false));
         verify(coreRepository).fetch(anyString());
@@ -156,7 +191,15 @@ class ClassServiceTest {
         verify(terminologyService).resolveConcept(anyString());
         verify(coreRepository).put(anyString(), any(Model.class));
         verify(openSearchIndexer).createResourceToIndex(any(IndexResource.class));
+
+        var result = model.getResource(uri.toString());
+        assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "test/node-shape-1", uri.toString());
+
+        var expectedPropertyURI = DataModelURI.createResourceURI(nodeRefURI.getModelId(), "node-property", nodeRefURI.getVersion());
+        assertEquals(expectedPropertyURI.getResourceVersionURI(), result.listProperties(SH.property).toList().get(0).getObject().toString());
+        assertEquals(nodeRefURI.getResourceVersionURI(), result.getProperty(SH.node).getObject().toString());
     }
+
     @Test
     void updateClass() {
         when(coreRepository.resourceExistsInGraph(anyString(), anyString())).thenReturn(true);

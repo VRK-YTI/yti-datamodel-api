@@ -46,14 +46,14 @@ test:TestClass  rdf:type     sh:NodeShape ;
         rdfs:comment         "test technical description fi"@fi, "test technical description en"@en ;
         suomi-meta:creator          "2a5c075f-0d0e-4688-90e0-29af1eebbf6d" ;
         suomi-meta:modifier         "2a5c075f-0d0e-4688-90e0-29af1eebbf6d" ;
-        sh:property          <https://iri.suomi.fi/model/test/TestPropertyShape> , <https://iri.suomi.fi/model/test/DeactivatedPropertyShape> ;
+        sh:property          <https://iri.suomi.fi/model/test/TestAttributeRestriction> , <https://iri.suomi.fi/model/test/DeactivatedPropertyShape> ;
         sh:targetClass       <https://iri.suomi.fi/model/target/Class> .
 
 test:TestAttributeRestriction  rdf:type  sh:PropertyShape ;
         rdf:type             owl:DatatypeProperty ;
         rdfs:isDefinedBy     <https://iri.suomi.fi/model/test/> ;
         dcterms:subject      <http://uri.suomi.fi/terminology/test/test1> ;
-        dcterms:identifier   "TestPropertyShape"^^xsd:NCName ;
+        dcterms:identifier   "TestAttributeRestriction"^^xsd:NCName ;
         dcterms:created      "2023-02-03T11:46:36.404Z"^^xsd:dateTime ;
         dcterms:modified     "2023-02-03T11:46:36.404Z"^^xsd:dateTime ;
         rdfs:label           "test property shape"@fi ;
@@ -77,7 +77,7 @@ test:TestAssociationRestriction  rdf:type  sh:PropertyShape ;
         rdf:type             owl:ObjectProperty ;
         rdfs:isDefinedBy     <https://iri.suomi.fi/model/test/> ;
         dcterms:subject      <http://uri.suomi.fi/terminology/test/test1> ;
-        dcterms:identifier   "TestPropertyShape"^^xsd:NCName ;
+        dcterms:identifier   "TestAssociationRestriction"^^xsd:NCName ;
         dcterms:created      "2023-02-03T11:46:36.404Z"^^xsd:dateTime ;
         dcterms:modified     "2023-02-03T11:46:36.404Z"^^xsd:dateTime ;
         rdfs:label           "test property shape"@fi ;

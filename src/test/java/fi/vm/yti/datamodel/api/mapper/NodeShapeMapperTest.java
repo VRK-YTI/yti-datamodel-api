@@ -5,6 +5,7 @@ import fi.vm.yti.datamodel.api.v2.endpoint.EndpointUtils;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
 import fi.vm.yti.datamodel.api.v2.mapper.ClassMapper;
 import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
+import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexResource;
 import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
@@ -121,7 +122,7 @@ class NodeShapeMapperTest {
     @Test
     void testMapReferencePropertyShapes() {
         var model = MapperTestUtils.getModelFromFile("/models/test_datamodel_profile_with_resources.ttl");
-        // var propertiesQueryResult = MapperTestUtils.getModelFromFile("/properties_result.ttl");
+
         ClassMapper.mapNodeShapeProperties(model, ModelConstants.SUOMI_FI_NAMESPACE + "test/TestClass",
                 Set.of(ModelConstants.SUOMI_FI_NAMESPACE + "test_lib/attribute-1", ModelConstants.SUOMI_FI_NAMESPACE + "test_lib/association-1")
         );
@@ -135,7 +136,7 @@ class NodeShapeMapperTest {
         assertTrue(propertyShapes.containsAll(List.of(
                 ModelConstants.SUOMI_FI_NAMESPACE + "test_lib/attribute-1",
                 ModelConstants.SUOMI_FI_NAMESPACE + "test_lib/association-1",
-                ModelConstants.SUOMI_FI_NAMESPACE + "test/TestPropertyShape",
+                ModelConstants.SUOMI_FI_NAMESPACE + "test/TestAttributeRestriction",
                 ModelConstants.SUOMI_FI_NAMESPACE + "test/DeactivatedPropertyShape"))
         );
     }
@@ -183,14 +184,24 @@ class NodeShapeMapperTest {
     @Test
     void testMapNodeShapeResources() {
         var model = MapperTestUtils.getModelFromFile("/models/test_datamodel_profile_with_resources.ttl");
-        var propertyShapeResult = MapperTestUtils.getModelFromFile("/property_shapes_result.ttl");
 
         var uri = DataModelURI.createResourceURI("test", "TestClass");
+        var deactivatedURI = DataModelURI.createResourceURI("test", "DeactivatedPropertyShape");
         var resource = model.getResource(uri.getResourceURI());
         var dto = new NodeShapeInfoDTO();
         dto.setUri(resource.getURI());
 
-        ClassMapper.addNodeShapeResourcesToDTO(model, propertyShapeResult, dto, Collections.emptySet());
+        var extResourceURI = DataModelURI.createResourceURI("test_profile", "ps-1", "1.0.0");
+        var externalPropertyShape = new IndexResource();
+        externalPropertyShape.setResourceType(ResourceType.ATTRIBUTE);
+        externalPropertyShape.setIdentifier(extResourceURI.getResourceId());
+        externalPropertyShape.setUri(extResourceURI.getResourceVersionURI());
+        externalPropertyShape.setFromVersion(extResourceURI.getVersion());
+        externalPropertyShape.setLabel(Map.of("fi", "Test Ext"));
+
+        ClassMapper.addCurrentModelNodeShapeResources(model, resource, dto);
+        ClassMapper.addExternalNodeShapeResource(List.of(externalPropertyShape), dto);
+        ClassMapper.updateNodeShapeResourceRestrictions(model, dto.getAttribute(), Set.of(deactivatedURI.getResourceURI()));
 
         var attributes = dto.getAttribute();
         assertEquals(3, attributes.size());
@@ -214,6 +225,7 @@ class NodeShapeMapperTest {
             var ext = result2.get();
             assertEquals("ps-1", ext.getIdentifier());
             assertEquals("test_profile", ext.getModelId());
+            assertEquals("1.0.0", ext.getVersion());
             assertFalse(ext.isDeactivated());
         } else {
             fail("No external property shape found");
@@ -266,7 +278,7 @@ class NodeShapeMapperTest {
     void testRemoveNodeShapeProperty() {
         var model = MapperTestUtils.getModelFromFile("/models/test_datamodel_profile_with_resources.ttl");
         var classResource = model.getResource(ModelConstants.SUOMI_FI_NAMESPACE + "test/TestClass");
-        var propertyURI = ModelConstants.SUOMI_FI_NAMESPACE + "test/TestPropertyShape";
+        var propertyURI = ModelConstants.SUOMI_FI_NAMESPACE + "test/TestAttributeRestriction";
 
         assertEquals(2, classResource.listProperties(SH.property).toList().size());
 
