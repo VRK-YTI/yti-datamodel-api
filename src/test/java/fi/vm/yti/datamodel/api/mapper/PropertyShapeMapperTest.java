@@ -225,14 +225,16 @@ class PropertyShapeMapperTest {
 
     @Test
     void testMapToCopyToLocalPropertyShape(){
-        var model = MapperTestUtils.getModelFromFile("/models/test_datamodel_profile_with_resources.ttl");
-        var newModel = ModelFactory.createDefaultModel();
+        var sourceModel = MapperTestUtils.getModelFromFile("/models/test_datamodel_profile_with_resources.ttl");
+        var targetModel = ModelFactory.createDefaultModel();
 
-        ResourceMapper.mapToCopyToLocalPropertyShape(ModelConstants.SUOMI_FI_NAMESPACE + "test", model, "DeactivatedPropertyShape", newModel, ModelConstants.SUOMI_FI_NAMESPACE + "new", "NewShape", EndpointUtils.mockUser);
+        var source = DataModelURI.createResourceURI("test", "DeactivatedPropertyShape");
+        var target = DataModelURI.createResourceURI("new", "NewShape");
+        ResourceMapper.mapToCopyToLocalPropertyShape(sourceModel, source, targetModel, target, EndpointUtils.mockUser);
 
-        var resource = newModel.getResource(ModelConstants.SUOMI_FI_NAMESPACE + "new/NewShape");
+        var resource = targetModel.getResource(ModelConstants.SUOMI_FI_NAMESPACE + "new/NewShape");
         assertEquals("NewShape", resource.getProperty(DCTerms.identifier).getLiteral().getString());
-        assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "new", MapperUtils.propertyToString(resource, RDFS.isDefinedBy));
+        assertEquals(target.getModelURI(), MapperUtils.propertyToString(resource, RDFS.isDefinedBy));
         assertTrue(MapperUtils.hasType(resource, OWL.DatatypeProperty, SH.PropertyShape));
         assertEquals("deactivated property shape", MapperUtils.localizedPropertyToMap(resource, RDFS.label).get("fi"));
     }
