@@ -254,18 +254,6 @@ public class ResourceService extends BaseResourceService {
         return !coreRepository.queryAsk(askBuilder.build());
     }
 
-    public Resource findResource(String uri, Set<String> graphsIncluded) {
-        if (uri == null) {
-            return null;
-        }
-        var resourceURI = DataModelURI.fromURI(uri).getResourceURI();
-        var result = findResources(Set.of(resourceURI), graphsIncluded).getResource(resourceURI);
-        if (result.listProperties().hasNext()) {
-            return result;
-        }
-        return null;
-     }
-
      public Set<String> findNodeShapeExternalProperties(String graphURI, Resource resourceType) {
          var externalResources = new HashSet<String>();
          if (resourceType == null) {

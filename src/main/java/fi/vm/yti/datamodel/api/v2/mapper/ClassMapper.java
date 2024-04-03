@@ -273,19 +273,6 @@ public class ClassMapper {
         return constructBuilder.build();
     }
 
-    public static Query getNodeShapeResourcesQuery(String nodeShapeURI) {
-        var constructBuilder = new ConstructBuilder();
-        var resourceName = "?resource";
-        var uri = NodeFactory.createURI(nodeShapeURI);
-        SparqlUtils.addConstructProperty(resourceName, constructBuilder, RDF.type, "?type");
-        SparqlUtils.addConstructProperty(resourceName, constructBuilder, RDFS.label, "?label");
-        SparqlUtils.addConstructOptional(resourceName, constructBuilder, DCTerms.identifier, "?identifier");
-        SparqlUtils.addConstructProperty(resourceName, constructBuilder, RDFS.isDefinedBy, "?isDefinedBy");
-        constructBuilder.addWhere(uri, SH.property, resourceName);
-
-        return constructBuilder.build();
-    }
-
     public static void addClassResourcesToDTO(List<IndexResource> uriResult, Set<SimpleResourceDTO> restrictions, ClassInfoDTO dto) {
         for (var restriction : restrictions) {
             var uri = DataModelURI.fromURI(restriction.getUri());

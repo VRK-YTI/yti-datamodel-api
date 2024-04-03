@@ -2,10 +2,7 @@ package fi.vm.yti.datamodel.api.v2.service;
 
 import fi.vm.yti.datamodel.api.mapper.MapperTestUtils;
 import fi.vm.yti.datamodel.api.security.AuthorizationManager;
-import fi.vm.yti.datamodel.api.v2.dto.ClassDTO;
-import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
-import fi.vm.yti.datamodel.api.v2.dto.NodeShapeDTO;
-import fi.vm.yti.datamodel.api.v2.dto.Status;
+import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.endpoint.EndpointUtils;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
 import fi.vm.yti.datamodel.api.v2.mapper.ClassMapper;
@@ -38,7 +35,6 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.topbraid.shacl.vocabulary.SH;
 
 import java.net.URISyntaxException;
-import java.util.Date;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -83,6 +79,8 @@ class ClassServiceTest {
     @Autowired
     ClassService classService;
 
+    Consumer<ResourceInfoBaseDTO> conceptMapper = (resource) -> {};
+
     @Test
     void getLibraryClass() {
         var model = ModelFactory.createDefaultModel();
@@ -98,7 +96,7 @@ class ClassServiceTest {
 
         when(coreRepository.resourceExistsInGraph(anyString(), anyString())).thenReturn(true);
         when(coreRepository.fetch(anyString())).thenReturn(model);
-        when(terminologyService.mapConcept()).thenReturn(mock(Consumer.class));
+        when(terminologyService.mapConcept()).thenReturn(conceptMapper);
         when(searchIndexService.findResourcesByURI(anySet(), eq(null))).thenReturn(new SearchResponseDTO<>());
 
         classService.get(resourceURI.getModelId(), null, resourceURI.getResourceId());
@@ -125,7 +123,7 @@ class ClassServiceTest {
 
         when(coreRepository.resourceExistsInGraph(anyString(), anyString())).thenReturn(true);
         when(coreRepository.fetch(anyString())).thenReturn(model);
-        when(terminologyService.mapConcept()).thenReturn(mock(Consumer.class));
+        when(terminologyService.mapConcept()).thenReturn(conceptMapper);
         when(searchIndexService.findResourcesByURI(anySet(), anyString())).thenReturn(new SearchResponseDTO<>());
         when(searchIndexService.findResourcesByURI(anySet(), eq(null))).thenReturn(new SearchResponseDTO<>());
 

@@ -77,8 +77,7 @@ public class ResourceQueryFactory {
     }
 
     public static SearchRequest createResourceQuery(ResourceSearchRequest request,
-                                                    List<String> externalNamespaces,
-                                                    List<String> internalNamespaces) {
+                                                    List<String> externalNamespaces) {
         var must = new ArrayList<Query>();
         var should = new ArrayList<Query>();
 

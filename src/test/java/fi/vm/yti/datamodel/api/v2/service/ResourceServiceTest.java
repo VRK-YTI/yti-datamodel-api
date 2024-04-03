@@ -1,6 +1,5 @@
 package fi.vm.yti.datamodel.api.v2.service;
 
-import fi.vm.yti.datamodel.api.mapper.MapperTestUtils;
 import fi.vm.yti.datamodel.api.security.AuthorizationManager;
 import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.endpoint.EndpointUtils;
@@ -90,7 +89,7 @@ class ResourceServiceTest {
     void get() {
         when(coreRepository.resourceExistsInGraph(anyString(), anyString())).thenReturn(true);
         when(coreRepository.fetch(anyString())).thenReturn(EndpointUtils.getMockModel(OWL.Ontology));
-        when(terminologyService.mapConcept()).thenReturn(mock(Consumer.class));
+        when(terminologyService.mapConcept()).thenReturn(conceptMapper);
 
         try(var mapper = mockStatic(ResourceMapper.class)) {
             resourceService.get("test", null, "TestResource");
@@ -108,7 +107,7 @@ class ResourceServiceTest {
     void getWithVersion() {
         when(coreRepository.resourceExistsInGraph(anyString(), anyString())).thenReturn(true);
         when(coreRepository.fetch(anyString())).thenReturn(EndpointUtils.getMockModel(OWL.Ontology));
-        when(terminologyService.mapConcept()).thenReturn(mock(Consumer.class));
+        when(terminologyService.mapConcept()).thenReturn(conceptMapper);
 
         try(var mapper = mockStatic(ResourceMapper.class)) {
             resourceService.get("test", "1.0.1", "TestResource");
