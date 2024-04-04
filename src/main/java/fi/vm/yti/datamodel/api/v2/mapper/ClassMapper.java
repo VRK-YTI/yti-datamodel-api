@@ -3,6 +3,7 @@ package fi.vm.yti.datamodel.api.v2.mapper;
 import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexResource;
+import fi.vm.yti.datamodel.api.v2.properties.HTTP;
 import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
 import fi.vm.yti.datamodel.api.v2.utils.SparqlUtils;
@@ -70,7 +71,7 @@ public class ClassMapper {
             MapperUtils.addResourceRelationship(modelResource, nodeShapeResource, SH.targetClass, dto.getTargetClass());
         }
         MapperUtils.addResourceRelationship(modelResource, nodeShapeResource, SH.node, dto.getTargetNode());
-
+        MapperUtils.addOptionalStringProperty(nodeShapeResource, HTTP.API_PATH, dto.getApiPath());
         MapperUtils.addTerminologyReference(dto, modelResource);
     }
 
@@ -187,7 +188,7 @@ public class ClassMapper {
 
         classResource.removeAll(SH.property);
         mapNodeShapeProperties(model, classResource.getURI(), properties);
-
+        MapperUtils.updateStringProperty(classResource, HTTP.API_PATH, nodeShapeDTO.getApiPath());
         MapperUtils.addUpdateMetadata(classResource, user);
     }
 
@@ -238,7 +239,7 @@ public class ClassMapper {
                 MapperUtils.propertyToString(nodeShapeResource, SH.targetClass), model));
         dto.setTargetNode(MapperUtils.uriToURIDTO(
                 MapperUtils.propertyToString(nodeShapeResource, SH.node), model));
-
+        dto.setApiPath(MapperUtils.propertyToString(nodeShapeResource, HTTP.API_PATH));
         return dto;
     }
 

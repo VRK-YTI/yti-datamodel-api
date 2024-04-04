@@ -8,7 +8,7 @@
 @prefix skos:     <http://www.w3.org/2004/02/skos/core#> .
 @prefix sh:      <http://www.w3.org/ns/shacl#>
 @prefix suomi-meta: <https://iri.suomi.fi/model/suomi-meta/> .
-
+@prefix http:    <http://www.w3.org/2011/http#> .
 
 <https://iri.suomi.fi/model/test/>
 a                               suomi-meta:ApplicationProfile , owl:Ontology ;
@@ -47,6 +47,7 @@ test:TestClass  rdf:type     sh:NodeShape ;
         suomi-meta:creator          "2a5c075f-0d0e-4688-90e0-29af1eebbf6d" ;
         suomi-meta:modifier         "2a5c075f-0d0e-4688-90e0-29af1eebbf6d" ;
         sh:property          <https://iri.suomi.fi/model/test/TestAttributeRestriction> , <https://iri.suomi.fi/model/test/DeactivatedPropertyShape> ;
+        http:absolutePath    "/api/path/" ;
         sh:targetClass       <https://iri.suomi.fi/model/target/Class> .
 
 test:TestAttributeRestriction  rdf:type  sh:PropertyShape ;

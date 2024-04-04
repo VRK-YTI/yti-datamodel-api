@@ -6,6 +6,7 @@ import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
 import fi.vm.yti.datamodel.api.v2.mapper.ClassMapper;
 import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexResource;
+import fi.vm.yti.datamodel.api.v2.properties.HTTP;
 import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
@@ -44,6 +45,7 @@ class NodeShapeMapperTest {
         dto.setLabel(Map.of("fi", "test label"));
         dto.setNote(Map.of("fi", "test note"));
         dto.setTargetClass(ModelConstants.SUOMI_FI_NAMESPACE + "target/Class");
+        dto.setApiPath("/api/path/");
 
         var uri = DataModelURI.createResourceURI("test", "TestClass");
         ClassMapper.createNodeShapeAndMapToModel(uri, model, dto, mockUser);
@@ -91,6 +93,7 @@ class NodeShapeMapperTest {
                 propertyShapeAttribute.getProperty(SH.path).getObject().toString());
         assertEquals(Status.DRAFT, MapperUtils.getStatusFromUri(MapperUtils.propertyToString(propertyShapeAttribute, SuomiMeta.publicationStatus)));
         assertEquals("Attribute attribute-1", MapperUtils.localizedPropertyToMap(propertyShapeAttribute, RDFS.label).get("fi"));
+        assertEquals("/api/path/", MapperUtils.propertyToString(classResource, HTTP.API_PATH));
     }
 
     @Test
@@ -116,6 +119,7 @@ class NodeShapeMapperTest {
         assertEquals(MapperTestUtils.TEST_ORG_ID.toString(), dto.getContributor().stream().findFirst().orElseThrow().getId());
         assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "test/TestClass", dto.getUri());
         assertEquals(new UriDTO(ModelConstants.SUOMI_FI_NAMESPACE + "target/Class"), dto.getTargetClass());
+        assertEquals("/api/path/", dto.getApiPath());
     }
 
     @Test

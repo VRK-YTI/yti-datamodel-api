@@ -30,7 +30,8 @@ public class ModelConstants {
             "xsd", "http://www.w3.org/2001/XMLSchema#",
             "suomi-meta", "https://iri.suomi.fi/model/suomi-meta/",
             "skos", "http://www.w3.org/2004/02/skos/core#",
-            "sh", "http://www.w3.org/ns/shacl#"
+            "sh", "http://www.w3.org/ns/shacl#",
+            "http", "http://www.w3.org/2011/http#"
     );
     public static final List<String> SUPPORTED_DATA_TYPES = List.of(
             "http://www.w3.org/2002/07/owl#rational",

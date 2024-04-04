@@ -8,6 +8,7 @@ public class NodeShapeInfoDTO extends ResourceInfoBaseDTO {
     private UriDTO targetNode;
     private List<SimplePropertyShapeDTO> attribute = new ArrayList<>();
     private List<SimplePropertyShapeDTO> association = new ArrayList<>();
+    private String apiPath;
 
     public UriDTO getTargetClass() {
         return targetClass;
@@ -39,5 +40,13 @@ public class NodeShapeInfoDTO extends ResourceInfoBaseDTO {
 
     public void setAssociation(List<SimplePropertyShapeDTO> association) {
         this.association = association;
+    }
+
+    public String getApiPath() {
+        return apiPath;
+    }
+
+    public void setApiPath(String apiPath) {
+        this.apiPath = apiPath;
     }
 }
