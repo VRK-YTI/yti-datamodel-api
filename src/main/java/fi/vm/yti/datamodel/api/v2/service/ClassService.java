@@ -85,12 +85,12 @@ public class ClassService extends BaseResourceService {
 
         ResourceInfoBaseDTO dto;
         var modelResource = model.getResource(modelURI);
+        var classResource = model.getResource(classURI);
         var includedNamespaces = DataModelUtils.getInternalReferenceModels(uri.getGraphURI(), modelResource);
 
         if (MapperUtils.isLibrary(modelResource)) {
             dto = ClassMapper.mapToClassDTO(model, uri, orgModel, hasRightToModel, userMapper);
 
-            var classResource = model.getResource(classURI);
             var restrictions = ClassMapper.getClassRestrictionList(model, classResource)
                     .stream()
                     .filter(r -> r.hasProperty(OWL.onProperty))
@@ -117,9 +117,25 @@ public class ClassService extends BaseResourceService {
             ClassMapper.addClassResourcesToDTO(uriResultExternal.getResponseObjects(), restrictions, (ClassInfoDTO) dto);
         } else {
             dto = ClassMapper.mapToNodeShapeDTO(model, uri, orgModel, hasRightToModel, userMapper);
-            var existingProperties = getTargetNodeProperties(MapperUtils.propertyToString(model.getResource(classURI), SH.node), includedNamespaces);
-            var nodeShapeResources = coreRepository.queryConstruct(ClassMapper.getNodeShapeResourcesQuery(classURI));
-            ClassMapper.addNodeShapeResourcesToDTO(model, nodeShapeResources, (NodeShapeInfoDTO) dto, existingProperties);
+            var shNodeProperties = getTargetNodeProperties(MapperUtils.propertyToString(model.getResource(classURI), SH.node), includedNamespaces);
+
+            var allProperties = new HashSet<>(shNodeProperties);
+            classResource.listProperties(SH.property)
+                    .mapWith(p -> p.getObject().toString())
+                    .forEach(allProperties::add);
+
+            // Find external resources from OpenSearch,
+            // resources from current data model are fetched from model's resources
+            var externalResult = searchIndexService.findResourcesByURI(allProperties.stream()
+                    .filter(p -> !p.startsWith(modelURI))
+                    .collect(Collectors.toSet()), null)
+                .getResponseObjects();
+
+            var nodeShapeDTO = (NodeShapeInfoDTO) dto;
+            ClassMapper.addCurrentModelNodeShapeResources(model, classResource, nodeShapeDTO);
+            ClassMapper.addExternalNodeShapeResource(externalResult, nodeShapeDTO);
+            ClassMapper.updateNodeShapeResourceRestrictions(model, nodeShapeDTO.getAttribute(), shNodeProperties);
+            ClassMapper.updateNodeShapeResourceRestrictions(model, nodeShapeDTO.getAssociation(), shNodeProperties);
         }
 
         terminologyService.mapConcept().accept(dto);
@@ -268,17 +284,30 @@ public class ClassService extends BaseResourceService {
 
         // collect recursively all property shape uris from target node
         while (targetNode != null) {
-            var targetNodeURI = DataModelURI.fromURI(targetNode).getResourceURI();
+            var targetNodeURI = DataModelURI.fromURI(targetNode);
             if (handledNodeShapes.contains(targetNode)) {
                 throw new MappingError("Circular dependency, cannot add sh:node reference");
             }
             handledNodeShapes.add(targetNode);
 
             var nodeModel = findResources(Set.of(targetNode), graphsIncluded);
-            var nodeResource = nodeModel.getResource(targetNodeURI);
+            var nodeResource = nodeModel.getResource(targetNodeURI.getResourceURI());
 
             propertyShapes.addAll(nodeResource.listProperties(SH.property)
-                    .mapWith((var stmt) -> stmt.getResource().getURI())
+                    .mapWith((var stmt) -> {
+                        var uri = stmt.getResource().getURI();
+
+                        // external reference, return uri as is
+                        if (!uri.startsWith(nodeResource.getNameSpace())) {
+                            return uri;
+                        }
+
+                        // add version to property URIs
+                        var propertyURI = DataModelURI.fromURI(uri);
+                        return DataModelURI.createResourceURI(propertyURI.getModelId(),
+                                propertyURI.getResourceId(),
+                                targetNodeURI.getVersion()).getResourceVersionURI();
+                    })
                     .toList());
 
             if (!nodeResource.hasProperty(SH.node)) {
@@ -290,6 +319,9 @@ public class ClassService extends BaseResourceService {
     }
 
     private Set<String> getNodeShapeTargetClassProperties(NodeShapeDTO nodeShapeDTO, Model model, String classURI) {
+        if (nodeShapeDTO.getProperties() == null || nodeShapeDTO.getProperties().isEmpty()) {
+            return new HashSet<>();
+        }
         // skip creating new resource if there is already resource with sh:path reference to the property
         var existingProperties = nodeShapeDTO.getProperties().stream()
                 .map(p -> {

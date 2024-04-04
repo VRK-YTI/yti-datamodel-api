@@ -273,19 +273,6 @@ public class ClassMapper {
         return constructBuilder.build();
     }
 
-    public static Query getNodeShapeResourcesQuery(String nodeShapeURI) {
-        var constructBuilder = new ConstructBuilder();
-        var resourceName = "?resource";
-        var uri = NodeFactory.createURI(nodeShapeURI);
-        SparqlUtils.addConstructProperty(resourceName, constructBuilder, RDF.type, "?type");
-        SparqlUtils.addConstructProperty(resourceName, constructBuilder, RDFS.label, "?label");
-        SparqlUtils.addConstructOptional(resourceName, constructBuilder, DCTerms.identifier, "?identifier");
-        SparqlUtils.addConstructProperty(resourceName, constructBuilder, RDFS.isDefinedBy, "?isDefinedBy");
-        constructBuilder.addWhere(uri, SH.property, resourceName);
-
-        return constructBuilder.build();
-    }
-
     public static void addClassResourcesToDTO(List<IndexResource> uriResult, Set<SimpleResourceDTO> restrictions, ClassInfoDTO dto) {
         for (var restriction : restrictions) {
             var uri = DataModelURI.fromURI(restriction.getUri());
@@ -356,33 +343,63 @@ public class ClassMapper {
         });
     }
 
-    public static void addNodeShapeResourcesToDTO(Model model, Model propertyShapeResources, NodeShapeInfoDTO nodeShapeDTO, Set<String> restrictedProperties) {
-        var deactivatedURIs = model.listSubjectsWithProperty(SH.deactivated)
-                .mapWith(Resource::getURI).toList();
+    public static void addCurrentModelNodeShapeResources(Model model, Resource nodeShapeResource, NodeShapeInfoDTO nodeShapeDTO) {
 
-        propertyShapeResources.listSubjects().forEach(resource -> {
+        nodeShapeResource.listProperties(SH.property).forEach(p -> {
+            var resource = model.getResource(p.getObject().toString());
+
+            if (!resource.listProperties().hasNext()) {
+                return;
+            }
+
             var dto = new SimplePropertyShapeDTO();
+            var uri = DataModelURI.fromURI(resource.getURI());
 
-            var modelUri = MapperUtils.propertyToString(resource, RDFS.isDefinedBy);
-            if (modelUri == null) {
-                throw new MappingError("ModelUri null for resource");
-            }
-
-            var uri = DataModelURI.fromURI(modelUri);
-            if(restrictedProperties.contains(resource.getURI())){
-                dto.setFromShNode(true);
-            }
-
-            dto.setUri(resource.getURI());
-            dto.setModelId(uri.getModelId());
-            dto.setLabel(MapperUtils.localizedPropertyToMap(resource, RDFS.label));
+            dto.setUri(uri.getResourceURI());
             dto.setIdentifier(resource.getLocalName());
-            dto.setCurie(String.format("%s:%s", uri.getModelId(), resource.getLocalName()));
-            dto.setDeactivated(deactivatedURIs.contains(resource.getURI()));
+            dto.setModelId(uri.getModelId());
+            dto.setCurie(uri.getCurie(model.getGraph().getPrefixMapping()));
+            dto.setLabel(MapperUtils.localizedPropertyToMap(resource, RDFS.label));
+
             if (MapperUtils.hasType(resource, OWL.DatatypeProperty)) {
                 nodeShapeDTO.getAttribute().add(dto);
             } else if (MapperUtils.hasType(resource, OWL.ObjectProperty)) {
                 nodeShapeDTO.getAssociation().add(dto);
+            }
+        });
+    }
+
+    public static void addExternalNodeShapeResource(List<IndexResource> resources, NodeShapeInfoDTO nodeShapeDTO) {
+        resources.forEach(r -> {
+            var dto = new SimplePropertyShapeDTO();
+
+            var modelURI = DataModelURI.fromURI(r.getUri());
+            dto.setUri(r.getUri());
+            dto.setIdentifier(r.getIdentifier());
+            dto.setModelId(modelURI.getModelId());
+            dto.setCurie(r.getCurie());
+            dto.setLabel(r.getLabel());
+            dto.setVersion(r.getFromVersion());
+
+            if (r.getResourceType().equals(ResourceType.ATTRIBUTE)) {
+                nodeShapeDTO.getAttribute().add(dto);
+            } else if (r.getResourceType().equals(ResourceType.ASSOCIATION)) {
+                nodeShapeDTO.getAssociation().add(dto);
+            }
+        });
+    }
+
+    public static void updateNodeShapeResourceRestrictions(Model model, List<SimplePropertyShapeDTO> properties, Set<String> shNodeProperties) {
+        var deactivatedURIs = model.listSubjectsWithProperty(SH.deactivated)
+                .mapWith(Resource::getURI).toList();
+
+        properties.forEach(p -> {
+            if (deactivatedURIs.contains(p.getUri())) {
+                p.setDeactivated(true);
+            }
+
+            if (shNodeProperties.contains(p.getUri())) {
+                p.setFromShNode(true);
             }
         });
     }

@@ -49,14 +49,13 @@ public class SearchIndexService {
      * Search resources with the same keyword that was used to search a model
      * @return response containing resources
      */
-    private SearchResponseDTO<IndexResource> getMatchingResources(ModelSearchRequest request, YtiUser user) {
+    private SearchResponseDTO<IndexResource> getMatchingResources(ModelSearchRequest request) {
         var resourceSearchRequest = new ResourceSearchRequest();
         // use the same query string for resources that was used for models
         resourceSearchRequest.setQuery(request.getQuery());
 
         var resourceQuery = ResourceQueryFactory.createResourceQuery(
                 resourceSearchRequest,
-                Collections.emptyList(),
                 Collections.emptyList());
         return client.search(resourceQuery, IndexResource.class);
     }
@@ -71,9 +70,8 @@ public class SearchIndexService {
         }
 
         // if we were provided a search string, let's search for resources with the same string
-        SearchResponseDTO<IndexResource> resources = null;
         if (searchRequest.getQuery() != null && !searchRequest.getQuery().isBlank()) {
-            resources = this.getMatchingResources(searchRequest, user);
+            SearchResponseDTO<IndexResource> resources = this.getMatchingResources(searchRequest);
 
             // now let's add those matching models to the model search request
             searchRequest.setAdditionalModelIds(resources
@@ -97,7 +95,7 @@ public class SearchIndexService {
         // if we were provided a search string, let's search for resources with the same string
         SearchResponseDTO<IndexResource> resources = null;
         if (request.getQuery() != null && !request.getQuery().isBlank()) {
-            resources = this.getMatchingResources(request, user);
+            resources = this.getMatchingResources(request);
 
             // now let's add those matching models to the model search request
             request.setAdditionalModelIds(resources

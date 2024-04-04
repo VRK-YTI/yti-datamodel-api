@@ -231,18 +231,18 @@ public class ResourceMapper {
         dto.getLanguageIn().forEach(lang -> MapperUtils.addOptionalStringProperty(resource, SH.languageIn, lang));
     }
 
-    public static void mapToCopyToLocalPropertyShape(String graphUri, Model model, String resourceIdentifier, Model targetModel, String targetGraph, String targetIdentifier, YtiUser user){
-        var resource = model.getResource(graphUri + ModelConstants.RESOURCE_SEPARATOR + resourceIdentifier);
-        var newResource = targetModel.createResource(targetGraph + ModelConstants.RESOURCE_SEPARATOR + targetIdentifier);
+    public static void mapToCopyToLocalPropertyShape(Model sourceModel, DataModelURI sourceURI, Model targetModel, DataModelURI targetURI, YtiUser user){
+        var resource = sourceModel.getResource(sourceURI.getResourceURI());
+        var newResource = targetModel.createResource(targetURI.getResourceURI());
         resource.listProperties().forEach(prop -> {
             var pred = prop.getPredicate();
             var obj = prop.getObject();
             newResource.addProperty(pred, obj);
-        }
-        );
+        });
 
-        MapperUtils.updateUriProperty(newResource, RDFS.isDefinedBy, targetGraph);
-        MapperUtils.updateLiteral(newResource, DCTerms.identifier, XSDDatatype.XSDNCName.parse(targetIdentifier));
+        MapperUtils.updateUriProperty(newResource, SuomiMeta.publicationStatus, MapperUtils.getStatusUri(Status.DRAFT));
+        MapperUtils.updateUriProperty(newResource, RDFS.isDefinedBy, targetURI.getModelURI());
+        MapperUtils.updateLiteral(newResource, DCTerms.identifier, XSDDatatype.XSDNCName.parse(targetURI.getResourceId()));
 
         newResource.removeAll(DCTerms.modified);
         newResource.removeAll(DCTerms.created);

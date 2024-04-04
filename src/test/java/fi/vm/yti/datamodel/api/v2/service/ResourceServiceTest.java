@@ -1,6 +1,5 @@
 package fi.vm.yti.datamodel.api.v2.service;
 
-import fi.vm.yti.datamodel.api.mapper.MapperTestUtils;
 import fi.vm.yti.datamodel.api.security.AuthorizationManager;
 import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.endpoint.EndpointUtils;
@@ -90,7 +89,7 @@ class ResourceServiceTest {
     void get() {
         when(coreRepository.resourceExistsInGraph(anyString(), anyString())).thenReturn(true);
         when(coreRepository.fetch(anyString())).thenReturn(EndpointUtils.getMockModel(OWL.Ontology));
-        when(terminologyService.mapConcept()).thenReturn(mock(Consumer.class));
+        when(terminologyService.mapConcept()).thenReturn(conceptMapper);
 
         try(var mapper = mockStatic(ResourceMapper.class)) {
             resourceService.get("test", null, "TestResource");
@@ -108,7 +107,7 @@ class ResourceServiceTest {
     void getWithVersion() {
         when(coreRepository.resourceExistsInGraph(anyString(), anyString())).thenReturn(true);
         when(coreRepository.fetch(anyString())).thenReturn(EndpointUtils.getMockModel(OWL.Ontology));
-        when(terminologyService.mapConcept()).thenReturn(mock(Consumer.class));
+        when(terminologyService.mapConcept()).thenReturn(conceptMapper);
 
         try(var mapper = mockStatic(ResourceMapper.class)) {
             resourceService.get("test", "1.0.1", "TestResource");
@@ -250,19 +249,21 @@ class ResourceServiceTest {
         verify(coreRepository).resourceExistsInGraph(anyString(), anyString());
         verify(coreRepository).resourceExistsInGraph(anyString(), anyString(), eq(false));
         verify(coreRepository, times(2)).fetch(anyString());
-        verify(authorizationManager, times(2)).hasRightToModel(anyString(), any(Model.class));
+        verify(authorizationManager).hasRightToModel(anyString(), any(Model.class));
     }
 
     @Test
     void failCopyPropertyShapeNotExists() {
+        when(coreRepository.fetch(anyString())).thenReturn(ModelFactory.createDefaultModel());
         assertThrows(ResourceNotFoundException.class, () -> resourceService.copyPropertyShape("test", "Identifier", "newTest", "newId"));
     }
 
     @Test
     void failCopyPropertyShapeIdInUse() {
+        when(coreRepository.fetch(anyString())).thenReturn(ModelFactory.createDefaultModel());
         when(coreRepository.resourceExistsInGraph(anyString(), anyString())).thenReturn(true);
         when(coreRepository.resourceExistsInGraph(anyString(), anyString(), eq(false))).thenReturn(true);
-        var error = assertThrows(MappingError.class, () ->resourceService.copyPropertyShape("test", "Identifier", "newTest", "newId"));
+        var error = assertThrows(MappingError.class, () -> resourceService.copyPropertyShape("test", "Identifier", "newTest", "newId"));
         assertEquals("Error during mapping: Identifier in use", error.getMessage());
 
     }
