@@ -1,6 +1,7 @@
 package fi.vm.yti.datamodel.api.v2.opensearch;
 
 import fi.vm.yti.datamodel.api.index.OpenSearchUtils;
+import fi.vm.yti.datamodel.api.mapper.MapperTestUtils;
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
 import fi.vm.yti.datamodel.api.v2.dto.ResourceType;
 import fi.vm.yti.datamodel.api.v2.dto.Status;
@@ -44,7 +45,7 @@ class ResourceQueryFactoryTest {
         var classQuery = ResourceQueryFactory.createInternalResourceQuery(request, externalNamespaces, internalNamespaces,
                 groupNamespaces, allowedIncompleteDataModels);
 
-        String expected = OpenSearchUtils.getJsonString("/es/classRequest.json");
+        String expected = MapperTestUtils.getJsonString("/es/classRequest.json");
         JSONAssert.assertEquals(expected, OpenSearchUtils.getPayload(classQuery), JSONCompareMode.LENIENT);
 
         assertEquals("Page from value not matching", 1, classQuery.from());
@@ -63,7 +64,7 @@ class ResourceQueryFactoryTest {
 
         var attributeListQuery = ResourceQueryFactory.createInternalResourceQuery(request, new ArrayList<>(), new ArrayList<>(),
                 null, new HashSet<>());
-        String expected = OpenSearchUtils.getJsonString("/es/attributeListRequest.json");
+        String expected = MapperTestUtils.getJsonString("/es/attributeListRequest.json");
         JSONAssert.assertEquals(expected, OpenSearchUtils.getPayload(attributeListQuery), JSONCompareMode.LENIENT);
     }
 
@@ -79,7 +80,7 @@ class ResourceQueryFactoryTest {
 
         var query = ResourceQueryFactory.createInternalResourceQuery(request, new ArrayList<>(), new ArrayList<>(),
                 null, new HashSet<>());
-        String expected = OpenSearchUtils.getJsonString("/es/classesByVersion.json");
+        String expected = MapperTestUtils.getJsonString("/es/classesByVersion.json");
         JSONAssert.assertEquals(expected, OpenSearchUtils.getPayload(query), JSONCompareMode.LENIENT);
     }
 

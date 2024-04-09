@@ -8,16 +8,10 @@ import org.opensearch.client.opensearch._types.ShardStatistics;
 import org.opensearch.client.opensearch.core.SearchResponse;
 
 import java.io.ByteArrayOutputStream;
-import java.nio.charset.StandardCharsets;
 
 public class OpenSearchUtils {
 
     private static final JsonpMapper MAPPER = new JacksonJsonpMapper();
-
-    public static String getJsonString(String file) throws Exception {
-        return new String(OpenSearchUtils.class
-                .getResourceAsStream(file).readAllBytes(), StandardCharsets.UTF_8);
-    }
 
     /**
      * Serialize object to JSON

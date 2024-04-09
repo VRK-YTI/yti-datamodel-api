@@ -1,0 +1,152 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Model label",
+    "description": "Model info",
+    "version": "1.0.0"
+  },
+  "externalDocs": {
+    "url": "https://iri.suomi.fi/model/test/1.0.0/"
+  },
+  "paths": {
+    "/path/{var1}/{var2}": {
+      "parameters": [
+        {
+          "name": "var1",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": ""
+          }
+        },
+        {
+          "name": "var2",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": ""
+          }
+        },
+        {
+          "name": "q",
+          "in": "query",
+          "schema": {
+            "type": ""
+          }
+        }
+      ],
+      "get": {
+        "tags": [
+          "Node shape label"
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/class-1"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Node shape label"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/class-1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful operation"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Node shape label"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/class-1"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Successful operation"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Node shape label"
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful operation"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "class-2": {
+        "title": "Target node",
+        "description": "",
+        "type": "object",
+        "externalDocs": {
+          "url": "https://iri.suomi.fi/model/test/1.0.0/class-2"
+        }
+      },
+      "class-1": {
+        "title": "Node shape label",
+        "description": "Property shape info",
+        "type": "object",
+        "externalDocs": {
+          "url": "https://iri.suomi.fi/model/test/1.0.0/class-1"
+        },
+        "properties": {
+          "property-3": {
+            "title": "Property label 3",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/class-2"
+            }
+          },
+          "property-2": {
+            "title": "Property label 2",
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "property-1": {
+            "title": "Property label",
+            "type": "string",
+            "enum": [
+              "01",
+              "02"
+            ]
+          }
+        },
+        "required": [
+          "property-1"
+        ]
+      }
+    }
+  }
+}

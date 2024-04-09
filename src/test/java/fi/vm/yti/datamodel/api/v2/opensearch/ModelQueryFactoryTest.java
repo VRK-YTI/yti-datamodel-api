@@ -1,6 +1,7 @@
 package fi.vm.yti.datamodel.api.v2.opensearch;
 
 import fi.vm.yti.datamodel.api.index.OpenSearchUtils;
+import fi.vm.yti.datamodel.api.mapper.MapperTestUtils;
 import fi.vm.yti.datamodel.api.v2.dto.ModelType;
 import fi.vm.yti.datamodel.api.v2.dto.Status;
 import fi.vm.yti.datamodel.api.v2.opensearch.dto.ModelSearchRequest;
@@ -33,7 +34,7 @@ class ModelQueryFactoryTest {
 
         var modelQuery = ModelQueryFactory.createModelQuery(request, false);
 
-        String expected = OpenSearchUtils.getJsonString("/es/modelrequest.json");
+        String expected = MapperTestUtils.getJsonString("/es/modelrequest.json");
         JSONAssert.assertEquals(expected, OpenSearchUtils.getPayload(modelQuery), JSONCompareMode.LENIENT);
 
         assertEquals("Page from value not matching", 1, modelQuery.from());

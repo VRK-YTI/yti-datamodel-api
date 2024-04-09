@@ -208,7 +208,7 @@ class DataModelServiceTest {
         when(coreRepository.fetch(anyString())).thenReturn(model);
         when(authorizationManager.hasRightToModel(anyString(), any(Model.class))).thenReturn(true);
 
-        var response = dataModelService.export("test", null, "text/turtle", false);
+        var response = dataModelService.export("test", null, "text/turtle", false, "fi");
         assertNotNull(response.getBody());
         assertTrue(response.getBody().contains("test:TestClass"));
         assertTrue(response.getBody().contains("test:TestAttribute"));
@@ -220,7 +220,7 @@ class DataModelServiceTest {
     void shouldGetModelWithAcceptHeader(String accept) {
         when(coreRepository.fetch(anyString())).thenReturn(ModelFactory.createDefaultModel());
 
-        var response = dataModelService.export("test", null, accept, false);
+        var response = dataModelService.export("test", null, accept, false, "fi");
         assertTrue(response.getStatusCode().is2xxSuccessful());
         //TODO can this be fixed
     }
@@ -230,7 +230,7 @@ class DataModelServiceTest {
         var model = MapperTestUtils.getModelFromFile("/models/test_datamodel_library_with_resources.ttl");
         when(coreRepository.fetch(anyString())).thenReturn(model);
         when(authorizationManager.hasRightToModel(anyString(), any(Model.class))).thenReturn(false);
-        var response = dataModelService.export("test", null, "text/turtle", false);
+        var response = dataModelService.export("test", null, "text/turtle", false, "fi");
         assertTrue(response.getStatusCode().is2xxSuccessful());
         assertNotNull(response.getBody());
         assertFalse(response.getBody().contains("skos:editorialNote"));

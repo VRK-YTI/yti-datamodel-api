@@ -1,10 +1,12 @@
 package fi.vm.yti.datamodel.api.mapper;
 
+import fi.vm.yti.datamodel.api.index.OpenSearchUtils;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.riot.RDFLanguages;
 
+import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -31,5 +33,10 @@ public class MapperTestUtils {
 
     public static Model getMockGroups(){
         return getModelFromFile("/service-categories.ttl");
+    }
+
+    public static String getJsonString(String file) throws Exception {
+        return new String(OpenSearchUtils.class
+                .getResourceAsStream(file).readAllBytes(), StandardCharsets.UTF_8);
     }
 }

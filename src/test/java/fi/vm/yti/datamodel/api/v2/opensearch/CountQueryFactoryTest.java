@@ -1,6 +1,7 @@
 package fi.vm.yti.datamodel.api.v2.opensearch;
 
 import fi.vm.yti.datamodel.api.index.OpenSearchUtils;
+import fi.vm.yti.datamodel.api.mapper.MapperTestUtils;
 import fi.vm.yti.datamodel.api.v2.dto.Status;
 import fi.vm.yti.datamodel.api.v2.opensearch.dto.CountSearchResponse;
 import fi.vm.yti.datamodel.api.v2.opensearch.dto.ModelSearchRequest;
@@ -29,7 +30,7 @@ class CountQueryFactoryTest {
 
     @Test
     void testModelCounts() throws Exception {
-        String expected = OpenSearchUtils.getJsonString("/es/models_count_request.json");
+        String expected = MapperTestUtils.getJsonString("/es/models_count_request.json");
 
         SearchRequest request = ModelQueryFactory.createModelCountQuery(new ModelSearchRequest(), false);
 
