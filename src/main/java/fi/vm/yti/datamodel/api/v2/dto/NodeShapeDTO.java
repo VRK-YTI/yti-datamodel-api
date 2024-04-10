@@ -6,6 +6,7 @@ public class NodeShapeDTO extends BaseDTO {
     private String targetClass;
     private String targetNode;
     private Set<String> properties;
+    private String apiPath;
 
     public String getTargetNode() {
         return targetNode;
@@ -29,5 +30,13 @@ public class NodeShapeDTO extends BaseDTO {
 
     public void setTargetClass(String targetClass) {
         this.targetClass = targetClass;
+    }
+
+    public String getApiPath() {
+        return apiPath;
+    }
+
+    public void setApiPath(String apiPath) {
+        this.apiPath = apiPath;
     }
 }

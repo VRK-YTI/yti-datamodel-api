@@ -36,6 +36,7 @@ public class NodeShapeValidator extends BaseValidator implements
         checkReservedIdentifier(context, nodeShapeDTO);
         checkTargetClass(context, nodeShapeDTO);
         checkTargetNode(context, nodeShapeDTO);
+        checkCommonTextField(context, nodeShapeDTO.getApiPath(), "apiPath");
 
         return !isConstraintViolationAdded();
     }
