@@ -3,6 +3,7 @@ package fi.vm.yti.datamodel.api.v2.service;
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
 import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.properties.DCAP;
+import fi.vm.yti.datamodel.api.v2.properties.HTTP;
 import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
 import io.swagger.v3.core.util.Json;
@@ -18,7 +19,6 @@ import io.swagger.v3.oas.models.responses.ApiResponses;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.Resource;
-import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.vocabulary.*;
 import org.springframework.web.util.UriComponentsBuilder;
 import org.topbraid.shacl.vocabulary.SH;
@@ -37,13 +37,11 @@ public class OpenAPIBuilder {
     private static final String RESPONSE_DESCRIPTION = "Successful operation";
     private static final String OBJECT = "object";
     private static final String ARRAY = "array";
-    public static final String NUMBER = "number";
-    public static final String INTEGER = "integer";
-    public static final String BOOLEAN = "boolean";
-    public static final String STRING = "string";
+    private static final String NUMBER = "number";
+    private static final String INTEGER = "integer";
+    private static final String BOOLEAN = "boolean";
+    private static final String STRING = "string";
 
-    // TODO: use HTTP.java (PR#288)
-    private static final Property httpProp = ResourceFactory.createProperty("http://www.w3.org/2011/http#absolutePath");
     private static final String OPEN_API_VERSION = "3.1.0";
     private static final Pattern pathVariableRegex = Pattern.compile("\\{(\\w+)\\}");
     private static final List<PathItem.HttpMethod> methods = Arrays.asList(
@@ -86,7 +84,7 @@ public class OpenAPIBuilder {
                 : language;
 
         var nodeShapes = model.listSubjectsWithProperty(RDF.type, SH.NodeShape);
-        var pathSubjects = model.listSubjectsWithProperty(httpProp);
+        var pathSubjects = model.listSubjectsWithProperty(HTTP.API_PATH);
 
         var modelResource = model.getResource(modelSubj.next().getURI());
         var prefix = MapperUtils.propertyToString(modelResource, DCAP.preferredXMLNamespacePrefix);
@@ -116,7 +114,7 @@ public class OpenAPIBuilder {
 
         // /paths
         pathSubjects.forEach(pathResource -> {
-            var path = MapperUtils.propertyToString(pathResource, httpProp);
+            var path = MapperUtils.propertyToString(pathResource, HTTP.API_PATH);
             if (path == null || path.isBlank()) {
                 return;
             }
