@@ -50,10 +50,17 @@ public class DataModelUtils {
         );
     }
 
+    public static Set<String> getInternalReferenceModels(Resource modelResource) {
+        return getInternalReferenceModels(null, modelResource);
+    }
+
     public static Set<String> getInternalReferenceModels(String versionUri, Resource modelResource) {
         var includedNamespaces = MapperUtils.arrayPropertyToSet(modelResource, OWL.imports);
         includedNamespaces.addAll(MapperUtils.arrayPropertyToSet(modelResource, DCTerms.requires));
-        includedNamespaces.add(versionUri);
+
+        if (versionUri != null) {
+            includedNamespaces.add(versionUri);
+        }
 
         return includedNamespaces.stream()
                 .filter(ns -> ns.startsWith(ModelConstants.SUOMI_FI_NAMESPACE))
