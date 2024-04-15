@@ -132,7 +132,7 @@ public class DataModelService {
                 .ifPresent(oldNS -> versionChangedNamespaces.put(oldNS.getGraphURI(), newNS.getGraphURI()))
         );
 
-        // rename old namespace with the new one, all references will be updated to new version
+        // change version of the dependency model, all references will be updated to new version
         handleNamespaceVersionChange(model, versionChangedNamespaces);
 
         // check if dependency model with references is removed,

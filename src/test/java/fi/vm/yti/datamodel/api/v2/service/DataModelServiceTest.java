@@ -492,7 +492,14 @@ class DataModelServiceTest {
 
         // error message should contain linked resources
         assertTrue(error.getMessage().contains(resourceURI.getResourceURI()));
+
+        // linked model without any references should get removed
+        dto.setInternalNamespaces(Set.of(linkedResourceURI_1.getGraphURI()));
+        dataModelService.update(prefix, dto);
+
+        verify(coreRepository).put(anyString(), any(Model.class));
     }
+
     private Predicate<RDFNode> containsReferences(String ns) {
         return (var o) -> o.isResource() && o.asResource().getNameSpace().equals(ns);
     }
