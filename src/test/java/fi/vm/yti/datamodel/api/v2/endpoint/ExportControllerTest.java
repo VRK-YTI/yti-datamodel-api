@@ -45,7 +45,7 @@ class ExportControllerTest {
         mvc.perform(get("/v2/export/test")
                 .header("Accept", "application/ld+json"))
                 .andExpect(status().isOk());
-        verify(dataModelService).export("test", null, "application/ld+json", false);
+        verify(dataModelService).export("test", null, "application/ld+json", false, null);
     }
 
     @Test
@@ -54,7 +54,7 @@ class ExportControllerTest {
                         .header("Accept", "application/ld+json")
                         .param("version", "1.0.0"))
                 .andExpect(status().isOk());
-        verify(dataModelService).export("test", "1.0.0","application/ld+json", false);
+        verify(dataModelService).export("test", "1.0.0","application/ld+json", false, null);
     }
 
     @Test

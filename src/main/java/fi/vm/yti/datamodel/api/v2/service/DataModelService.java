@@ -142,7 +142,7 @@ public class DataModelService {
         return coreRepository.graphExists(DataModelURI.createModelURI(prefix).getModelURI());
     }
 
-    public ResponseEntity<String> export(String prefix, String version, String accept, boolean showAsFile) {
+    public ResponseEntity<String> export(String prefix, String version, String accept, boolean showAsFile, String language) {
         var uri = DataModelURI.createModelURI(prefix, version);
 
         Model exportedModel;
@@ -187,6 +187,10 @@ public class DataModelService {
             case "application/rdf+xml":
                 fileExtension = ".rdf";
                 RDFDataMgr.write(stringWriter, exportedModel, Lang.RDFXML);
+                break;
+            case "application/vnd+oai+openapi+json":
+                fileExtension = ".json";
+                OpenAPIBuilder.export(stringWriter, exportedModel, language);
                 break;
             case "application/ld+json":
             default:
