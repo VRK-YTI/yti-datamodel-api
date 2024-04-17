@@ -4,6 +4,7 @@ import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
 import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.shared.PrefixMapping;
 
+import java.util.Objects;
 import java.util.regex.Pattern;
 
 public class DataModelURI {
@@ -189,5 +190,26 @@ public class DataModelURI {
 
     public boolean isTerminologyURI() {
         return this.namespace.startsWith(ModelConstants.TERMINOLOGY_NAMESPACE);
+    }
+
+    public boolean isSameModel(DataModelURI other) {
+        if (other == null) {
+            return false;
+        }
+        return Objects.equals(other.getModelId(), this.getModelId())
+                && !Objects.equals(other.getVersion(), this.getVersion());
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        DataModelURI that = (DataModelURI) o;
+        return Objects.equals(modelId, that.modelId) && Objects.equals(resourceId, that.resourceId) && Objects.equals(version, that.version);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(modelId, resourceId, version);
     }
 }

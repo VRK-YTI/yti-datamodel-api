@@ -36,6 +36,8 @@ import java.io.StringWriter;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.*;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import static fi.vm.yti.security.AuthorizationException.check;
 
@@ -110,7 +112,33 @@ public class DataModelService {
 
         terminologyService.resolveTerminology(dto.getTerminologies());
         codeListService.resolveCodelistScheme(dto.getCodeLists());
+
+        var modelResource = model.getResource(graphUri);
+
+        var oldNamespaces = DataModelUtils.getInternalReferenceModels(modelResource).stream()
+                .map(DataModelURI::fromURI)
+                .toList();
+        var newNamespaces = dto.getInternalNamespaces().stream()
+                .map(DataModelURI::fromURI)
+                .toList();
+
         mapper.mapToUpdateJenaModel(graphUri, dto, model, userProvider.getUser());
+
+        // check if version of some dependency model has changed
+        var versionChangedNamespaces = new HashMap<String, String>();
+        newNamespaces.forEach(newNS -> oldNamespaces.stream()
+                .filter(oldNS -> oldNS.isSameModel(newNS))
+                .findFirst()
+                .ifPresent(oldNS -> versionChangedNamespaces.put(oldNS.getGraphURI(), newNS.getGraphURI()))
+        );
+
+        // change version of the dependency model, all references will be updated to new version
+        handleNamespaceVersionChange(model, versionChangedNamespaces);
+
+        // check if dependency model with references is removed,
+        // removing is not allowed if there are any references to the namespace being removed
+        handleNamespaceRemove(model, newNamespaces, oldNamespaces, versionChangedNamespaces);
+
         addPrefixes(model, dto);
 
         coreRepository.put(graphUri, model);
@@ -349,5 +377,89 @@ public class DataModelService {
 
     private void addPrefixes(Model model, DataModelDTO dto) {
         dto.getExternalNamespaces().forEach(ns -> model.getGraph().getPrefixMapping().setNsPrefix(ns.getPrefix(), ns.getNamespace()));
+    }
+
+    private static void handleNamespaceRemove(Model model,
+                                               List<DataModelURI> newNamespaces,
+                                               List<DataModelURI> oldNamespaces,
+                                               HashMap<String, String> versionChangedNamespaces) {
+        Set<String> removedNamespaces = new HashSet<>();
+        if (newNamespaces.isEmpty()) {
+            removedNamespaces = oldNamespaces.stream()
+                    .map(DataModelURI::getGraphURI)
+                    .collect(Collectors.toSet());
+        } else if (!oldNamespaces.isEmpty()) {
+            oldNamespaces.stream()
+                    .filter(oldNs -> !newNamespaces.contains(oldNs)
+                                     && !versionChangedNamespaces.containsKey(oldNs.getGraphURI()))
+                    .map(DataModelURI::getGraphURI)
+                    .forEach(removedNamespaces::add);
+        }
+
+        // throw an error if there are references to removed linked model
+        removedNamespaces.forEach(removed -> {
+            var stmtList = model.listStatements()
+                    .filterDrop(s -> s.getObject().toString().equals(removed))
+                    .filterKeep(objectHasNamespace(removed))
+                    .toList();
+
+            if (!stmtList.isEmpty()) {
+                throw new MappingError(getNamespaceRemoveErrorMessage(model, stmtList));
+            }
+        });
+    }
+
+    private static void handleNamespaceVersionChange(Model model, HashMap<String, String> versionChangedNamespaces) {
+        versionChangedNamespaces.forEach((oldNS, newNS) -> {
+            var stmtList = model.listStatements()
+                    // need to drop triple "subj owl:imports <newNs>" because otherwise it will be removed when changing from draft to published version
+                    .filterDrop(s -> s.getObject().toString().equals(newNS))
+                    .filterKeep(objectHasNamespace(oldNS))
+                    .toList();
+
+            stmtList.forEach(s -> {
+                var newStatement = ResourceFactory.createStatement(
+                        s.getSubject(),
+                        s.getPredicate(),
+                        ResourceFactory.createResource(newNS + s.getObject().asResource().getLocalName())
+                );
+                model.add(newStatement);
+            });
+            model.remove(stmtList);
+        });
+    }
+
+    private static String getNamespaceRemoveErrorMessage(Model model, List<Statement> stmtList) {
+        var resources = stmtList.stream()
+                .limit(5)
+                .map(s -> {
+                    var subj = s.getSubject();
+                    if (subj.isAnon()) {
+                        while (subj.isAnon()) {
+                            var stmt = model.listStatements(null, null, subj).next();
+                            subj = stmt.getSubject();
+                        }
+                        return subj.getURI();
+                    } else {
+                        return subj.getURI();
+                    }
+                })
+                .collect(Collectors.toSet());
+
+        var message = new StringBuilder("Cannot remove namespace, because it has existing references: ")
+                .append(String.join(", ", resources));
+        if (stmtList.size() > 5) {
+            message.append(" ... ")
+                    .append(stmtList.size() - 5)
+                    .append(" other resources");
+        }
+        return message.toString();
+    }
+
+    private static Predicate<Statement> objectHasNamespace(String ns) {
+        return stmt -> {
+            var s = stmt.getObject();
+            return s.isResource() && s.toString().startsWith(ns);
+        };
     }
 }

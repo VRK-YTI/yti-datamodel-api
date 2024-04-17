@@ -16,9 +16,7 @@ import fi.vm.yti.security.AuthenticatedUserProvider;
 import fi.vm.yti.security.AuthorizationException;
 import fi.vm.yti.security.YtiUser;
 import org.apache.jena.query.Query;
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.ModelFactory;
-import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.rdf.model.*;
 import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
@@ -37,6 +35,7 @@ import java.net.URISyntaxException;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Predicate;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -363,6 +362,146 @@ class DataModelServiceTest {
         assertEquals(1, errors.size());
         assertEquals("incomplete resource", error.getLabel().get("en"));
         assertEquals("https://iri.suomi.fi/model/test/incomplete", error.getUri());
+    }
+
+    @Test
+    void changeLinkedModelVersions() {
+        var resourceURI = DataModelURI.createResourceURI("test", "class-1");
+        var linkedResourceURI_1 = DataModelURI.createResourceURI("linked", "link-1", "1.0.0");
+        var linkedResourceURI_2 = DataModelURI.createResourceURI("linked", "link-1", "2.0.0");
+        var linkedResourceURI_3 = DataModelURI.createResourceURI("foo", "bar-1", "1.0.0");
+        var model = ModelFactory.createDefaultModel();
+        var prefix = resourceURI.getModelId();
+
+        // create model with one class with some references to other models' classes
+        model.createResource(resourceURI.getModelURI())
+                .addProperty(RDF.type, OWL.Ontology)
+                .addProperty(OWL.imports, ResourceFactory.createResource(linkedResourceURI_1.getGraphURI()));
+
+        model.createResource(resourceURI.getResourceURI())
+                .addProperty(RDFS.subClassOf, ResourceFactory.createResource(linkedResourceURI_1.getResourceVersionURI()))
+                .addProperty(OWL.disjointWith, ResourceFactory.createResource(linkedResourceURI_3.getResourceVersionURI()));
+
+        when(coreRepository.fetch(resourceURI.getGraphURI())).thenReturn(model);
+        when(authorizationManager.hasRightToModel(eq(prefix), any(Model.class))).thenReturn(true);
+        when(userProvider.getUser()).thenReturn(EndpointUtils.mockUser);
+
+        var dto = new DataModelDTO();
+        var resourceSubject = ResourceFactory.createResource(resourceURI.getResourceURI());
+        var modelSubject = ResourceFactory.createResource(resourceURI.getModelURI());
+
+        // should change references to version 2.0.0
+        dto.setInternalNamespaces(Set.of(linkedResourceURI_2.getGraphURI()));
+
+        dataModelService.update(prefix, dto);
+
+        // rdfs:subClassOf -> version 2.0.0
+        assertTrue(model.contains(
+                resourceSubject,
+                RDFS.subClassOf,
+                ResourceFactory.createResource(linkedResourceURI_2.getResourceVersionURI())));
+
+        // references to other models should not change
+        assertTrue(model.contains(
+                resourceSubject,
+                OWL.disjointWith,
+                ResourceFactory.createResource(linkedResourceURI_3.getResourceVersionURI())));
+
+        // owl:imports -> version 2.0.0
+        assertTrue(model.contains(
+                modelSubject,
+                OWL.imports,
+                ResourceFactory.createResource(linkedResourceURI_2.getGraphURI())));
+
+        // model doesn't contain any references to version 1.0.0
+        assertTrue(model.listObjects().toList().stream()
+                .noneMatch(containsReferences(linkedResourceURI_1.getGraphURI())));
+
+        // change reference to draft version
+        dto.setInternalNamespaces(Set.of(linkedResourceURI_2.getDraftGraphURI()));
+        dataModelService.update(prefix, dto);
+
+        // rdfs:subClassOf -> draft version (without version number)
+        assertTrue(model.contains(
+                resourceSubject,
+                RDFS.subClassOf,
+                ResourceFactory.createResource(linkedResourceURI_2.getResourceURI())));
+
+        assertTrue(model.contains(
+                resourceSubject,
+                OWL.disjointWith,
+                ResourceFactory.createResource(linkedResourceURI_3.getResourceVersionURI())));
+
+        assertTrue(model.contains(
+                modelSubject,
+                OWL.imports,
+                ResourceFactory.createResource(linkedResourceURI_2.getDraftGraphURI())));
+
+        // model doesn't contain any references to version 2.0.0
+        assertTrue(model.listObjects().toList().stream()
+                .noneMatch(containsReferences(linkedResourceURI_2.getGraphURI())));
+
+        // change back to version 1.0.0
+        dto.setInternalNamespaces(Set.of(linkedResourceURI_1.getGraphURI()));
+        dataModelService.update(prefix, dto);
+
+        assertTrue(model.contains(
+                resourceSubject,
+                RDFS.subClassOf,
+                ResourceFactory.createResource(linkedResourceURI_1.getResourceVersionURI())));
+
+        assertTrue(model.contains(
+                resourceSubject,
+                OWL.disjointWith,
+                ResourceFactory.createResource(linkedResourceURI_3.getResourceVersionURI())));
+
+        assertTrue(model.contains(
+                modelSubject,
+                OWL.imports,
+                ResourceFactory.createResource(linkedResourceURI_1.getGraphURI())));
+
+        // model doesn't contain any references to draft version
+        assertTrue(model.listObjects().toList().stream()
+                .noneMatch(containsReferences(linkedResourceURI_1.getDraftGraphURI())));
+    }
+
+    @Test
+    void testRemoveLinkedNamespace() {
+        var resourceURI = DataModelURI.createResourceURI("test", "class-1");
+        var linkedResourceURI_1 = DataModelURI.createResourceURI("linked", "link-1", "1.0.0");
+        var linkedNsWithoutReferences = DataModelURI.createModelURI("foo", "1.0.0").getGraphURI();
+        var model = ModelFactory.createDefaultModel();
+        var prefix = resourceURI.getModelId();
+
+        model.createResource(resourceURI.getModelURI())
+                .addProperty(RDF.type, OWL.Ontology)
+                .addProperty(OWL.imports, ResourceFactory.createResource(linkedResourceURI_1.getGraphURI()))
+                .addProperty(OWL.imports, ResourceFactory.createResource(linkedNsWithoutReferences));
+
+        model.createResource(resourceURI.getResourceURI())
+                .addProperty(RDFS.subClassOf, ResourceFactory.createResource(linkedResourceURI_1.getResourceVersionURI()));
+
+        when(coreRepository.fetch(resourceURI.getGraphURI())).thenReturn(model);
+        when(authorizationManager.hasRightToModel(eq(prefix), any(Model.class))).thenReturn(true);
+        when(userProvider.getUser()).thenReturn(EndpointUtils.mockUser);
+
+        var dto = new DataModelDTO();
+        dto.setInternalNamespaces(Set.of(linkedNsWithoutReferences));
+
+        var error = assertThrows(MappingError.class, () -> dataModelService.update(prefix, dto));
+
+        // error message should contain linked resources
+        assertTrue(error.getMessage().contains(resourceURI.getResourceURI()));
+
+        // linked model without any references should get removed
+        dto.setInternalNamespaces(Set.of(linkedResourceURI_1.getGraphURI()));
+        dataModelService.update(prefix, dto);
+
+        verify(coreRepository).put(anyString(), any(Model.class));
+    }
+
+    private Predicate<RDFNode> containsReferences(String ns) {
+        return (var o) -> o.isResource() && o.asResource().getNameSpace().equals(ns);
     }
 
     /**
