@@ -341,30 +341,6 @@ class DataModelServiceTest {
     }
 
     @Test
-    void testValidateRelease() {
-        var dataModelURI = DataModelURI.createResourceURI("test", "incomplete");
-        var model = ModelFactory.createDefaultModel();
-        model.createResource(dataModelURI.getModelURI())
-                        .addProperty(RDF.type, SuomiMeta.ApplicationProfile);
-
-        model.createResource(dataModelURI.getResourceURI())
-                        .addProperty(RDFS.label, "incomplete resource")
-                        .addProperty(SH.targetClass, OWL.Thing);
-
-        when(coreRepository.fetch(dataModelURI.getGraphURI())).thenReturn(model);
-
-        var validationResult = dataModelService.validateRelease("test");
-
-        var errors = validationResult.get("missing-reference-to-library");
-        var error = errors.iterator().next();
-
-        assertNotNull(errors);
-        assertEquals(1, errors.size());
-        assertEquals("incomplete resource", error.getLabel().get("en"));
-        assertEquals("https://iri.suomi.fi/model/test/incomplete", error.getUri());
-    }
-
-    @Test
     void changeLinkedModelVersions() {
         var resourceURI = DataModelURI.createResourceURI("test", "class-1");
         var linkedResourceURI_1 = DataModelURI.createResourceURI("linked", "link-1", "1.0.0");

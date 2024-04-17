@@ -355,26 +355,6 @@ public class DataModelService {
         coreRepository.queryUpdate(builder.buildRequest());
     }
 
-    public Map<String, Set<UriDTO>> validateRelease(String prefix) {
-        var datamodelURI = DataModelURI.createModelURI(prefix);
-        var model = coreRepository.fetch(datamodelURI.getGraphURI());
-
-        var result = new HashMap<String, Set<UriDTO>>();
-        if (MapperUtils.isApplicationProfile(model.getResource(datamodelURI.getModelURI()))) {
-            var invalidResources = new ArrayList<Resource>();
-            invalidResources.addAll(model.listSubjectsWithProperty(SH.targetClass, OWL.Thing).toList());
-            invalidResources.addAll(model.listSubjectsWithProperty(SH.path, OWL2.topDataProperty).toList());
-            invalidResources.addAll(model.listSubjectsWithProperty(SH.path, OWL2.topObjectProperty).toList());
-
-            var uriDTOs = MapperUtils.uriToURIDTOs(invalidResources.stream().map(Resource::getURI).toList(), model);
-
-            if (!uriDTOs.isEmpty()) {
-                result.put("missing-reference-to-library", uriDTOs);
-            }
-        }
-        return result;
-    }
-
     private void addPrefixes(Model model, DataModelDTO dto) {
         dto.getExternalNamespaces().forEach(ns -> model.getGraph().getPrefixMapping().setNsPrefix(ns.getPrefix(), ns.getNamespace()));
     }
@@ -433,16 +413,8 @@ public class DataModelService {
         var resources = stmtList.stream()
                 .limit(5)
                 .map(s -> {
-                    var subj = s.getSubject();
-                    if (subj.isAnon()) {
-                        while (subj.isAnon()) {
-                            var stmt = model.listStatements(null, null, subj).next();
-                            subj = stmt.getSubject();
-                        }
-                        return subj.getURI();
-                    } else {
-                        return subj.getURI();
-                    }
+                    var subj = DataModelUtils.findSubjectForObject(s, model);
+                    return subj.getURI();
                 })
                 .collect(Collectors.toSet());
 

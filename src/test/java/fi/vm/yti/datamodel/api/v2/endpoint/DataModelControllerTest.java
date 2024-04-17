@@ -4,6 +4,7 @@ import fi.vm.yti.datamodel.api.mapper.MapperTestUtils;
 import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import fi.vm.yti.datamodel.api.v2.service.DataModelService;
+import fi.vm.yti.datamodel.api.v2.service.ReleaseValidationService;
 import fi.vm.yti.datamodel.api.v2.validator.ExceptionHandlerAdvice;
 import fi.vm.yti.datamodel.api.v2.validator.ValidationConstants;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -48,6 +49,9 @@ class DataModelControllerTest {
 
     @MockBean
     private CoreRepository coreRepository;
+
+    @MockBean
+    private ReleaseValidationService releaseValidationService;
 
     @Autowired
     private DataModelController dataModelController;

@@ -3,6 +3,7 @@ package fi.vm.yti.datamodel.api.v2.endpoint;
 import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.ApiError;
 import fi.vm.yti.datamodel.api.v2.service.DataModelService;
+import fi.vm.yti.datamodel.api.v2.service.ReleaseValidationService;
 import fi.vm.yti.datamodel.api.v2.validator.ValidDatamodel;
 import fi.vm.yti.datamodel.api.v2.validator.ValidSemanticVersion;
 import fi.vm.yti.datamodel.api.v2.validator.ValidVersionedDatamodel;
@@ -31,9 +32,11 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 public class DataModelController {
 
     private final DataModelService dataModelService;
+    private final ReleaseValidationService releaseValidationService;
 
-    public DataModelController(DataModelService dataModelService) {
+    public DataModelController(DataModelService dataModelService, ReleaseValidationService releaseValidationService) {
         this.dataModelService = dataModelService;
+        this.releaseValidationService = releaseValidationService;
     }
 
     @Operation(summary = "Create a new library")
@@ -158,7 +161,7 @@ public class DataModelController {
 
     @Operation(summary = "")
     @GetMapping("/{prefix}/validate")
-    public ResponseEntity<Map<String, Set<UriDTO>>> validateRelease(@PathVariable @Parameter(description = "Data model prefix") String prefix) {
-        return ResponseEntity.ok(dataModelService.validateRelease(prefix));
+    public ResponseEntity<Map<String, Set<ResourceReferenceDTO>>> validateRelease(@PathVariable @Parameter(description = "Data model prefix") String prefix) {
+        return ResponseEntity.ok(releaseValidationService.validateRelease(prefix));
     }
 }
