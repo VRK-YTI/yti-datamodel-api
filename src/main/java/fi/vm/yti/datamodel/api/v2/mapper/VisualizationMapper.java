@@ -274,12 +274,7 @@ public class VisualizationMapper {
             while (positionResource.hasProperty(SuomiMeta.referenceTarget)) {
                 var identifier = MapperUtils.propertyToString(positionResource, DCTerms.identifier);
 
-                if (identifier != null && !identifier.startsWith("corner-") && !identifier.equals(sourceIdentifier)) {
-                    // if there is an element in the path, that is not a hidden node and not the same as source node,
-                    // this is the wrong path. Jump to the next resource
-                    break;
-                } else if (handledElements.contains(identifier)) {
-                    // already handled
+                if (shouldSkip(positions, sourceIdentifier, handledElements, identifier)) {
                     break;
                 } else if (sourceIdentifier.equals(identifier)) {
                     // reached the source node
@@ -309,6 +304,28 @@ public class VisualizationMapper {
         }
         // no hidden nodes between source and target
         return List.of(reference.getReferenceTarget());
+    }
+
+    private static boolean shouldSkip(Model positions, String sourceIdentifier, Set<String> handledElements, String identifier) {
+        if (identifier == null) {
+            return true;
+        } else if (!identifier.startsWith(ModelConstants.CORNER_PREFIX) && !identifier.equals(sourceIdentifier)) {
+            // if there is an element in the path, that is not a hidden node and not the same as source node,
+            // this is the wrong path. Jump to the next resource
+            return true;
+        } else if (handledElements.contains(identifier)) {
+            // already handled
+            return true;
+        } else if (identifier.startsWith(ModelConstants.CORNER_PREFIX)) {
+            // find starting point of hidden node, it should equal to sourceIdentifier
+            var i = identifier;
+            while (i.startsWith(ModelConstants.CORNER_PREFIX)) {
+                var s = positions.listSubjectsWithProperty(SuomiMeta.referenceTarget, i).next();
+                i = s.getLocalName();
+            }
+            return !i.equals(sourceIdentifier);
+        }
+        return false;
     }
 
     private static VisualizationHiddenNodeDTO mapHiddenNode(Resource position, VisualizationReferenceDTO reference, String sourceIdentifier) {
