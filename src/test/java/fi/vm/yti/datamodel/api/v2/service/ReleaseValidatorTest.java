@@ -46,12 +46,12 @@ class ReleaseValidatorTest {
 
     @Test
     void testExternalReferencesExists() {
-        var model = MapperTestUtils.getModelFromFile("/invalid-model.ttl");
+        var model = MapperTestUtils.getModelFromFile("/model-with-missing-references.ttl");
 
-        var notExist_1 = "https://iri.suomi.fi/model/linked/1.0.0/not-exists-1";
-        var notExist_2 = "https://iri.suomi.fi/model/linked/1.0.0/not-exists-2";
-        var solution_1 = mockQueryResult(notExist_1);
-        var solution_2 = mockQueryResult(notExist_2);
+        var notExist_1 = DataModelURI.createResourceURI("linked", "not-exists-1", "1.0.0");
+        var notExist_2 = DataModelURI.createResourceURI("linked", "not-exists-2", "1.0.0");
+        var solution_1 = mockQueryResult(notExist_1.getResourceURI());
+        var solution_2 = mockQueryResult(notExist_2.getResourceURI());
 
         // mock querySelect consumer, first row returns resource "notExist_1" and second one "notExist_2"
         doAnswer(a -> {
@@ -75,11 +75,11 @@ class ReleaseValidatorTest {
 
         assertTrue(testClass.isPresent());
         assertEquals("owl:onProperty", testClass.get().getProperty());
-        assertEquals(notExist_2, testClass.get().getTarget());
+        assertEquals("linked:not-exists-2", testClass.get().getTarget());
 
         assertTrue(testAttr.isPresent());
         assertEquals("rdfs:subPropertyOf", testAttr.get().getProperty());
-        assertEquals(notExist_1, testAttr.get().getTarget());
+        assertEquals("linked:not-exists-1", testAttr.get().getTarget());
     }
 
     @Test
@@ -101,8 +101,8 @@ class ReleaseValidatorTest {
         var reference = result.iterator().next();
 
         assertEquals("rdfs:subClassOf", reference.getProperty());
-        assertEquals(dataModelURI + "not-exists", reference.getTarget());
-        assertEquals(dataModelURI + "test-class", reference.getResourceURI().getUri());
+        assertEquals("test:not-exists", reference.getTarget());
+        assertEquals("test:test-class", reference.getResourceURI().getCurie());
     }
 
     @Test

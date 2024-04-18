@@ -9,6 +9,7 @@ import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelUtils;
 import org.apache.jena.arq.querybuilder.SelectBuilder;
 import org.apache.jena.arq.querybuilder.WhereBuilder;
+import org.apache.jena.query.Query;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.ResourceFactory;
@@ -17,8 +18,8 @@ import org.apache.jena.util.iterator.ExtendedIterator;
 import org.apache.jena.vocabulary.OWL;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Service
@@ -36,75 +37,82 @@ public class ReferencesExistsValidator extends ReleaseValidator {
                 .filterKeep(s -> s.getNameSpace().startsWith(ModelConstants.SUOMI_FI_NAMESPACE))
                 .next().getURI();
 
-        var dependencies = DataModelUtils.getInternalReferenceModels(model.getResource(graph));
+        DataModelUtils.addPrefixesToModel(graph, model);
+        var dependencies = DataModelUtils.getInternalReferenceModels(model.getResource(graph)).stream()
+                .map(DataModelURI::fromURI)
+                .toList();
 
         // check that all references inside the model exists
         var notExistCurrent = getInternalReferences(model)
                 .filterKeep(s -> s.getObject().toString().startsWith(graph))
                 .filterKeep(s -> !model.contains(s.getObject().asResource(), null))
-                .mapWith(s -> {
-                    var ref = new ResourceReferenceDTO();
-                    ref.setProperty(MapperUtils.getCurie(s.getPredicate().asResource(), model));
-                    ref.setTarget(MapperUtils.getCurie(s.getObject().asResource(), model));
-
-                    var subj = DataModelUtils.findSubjectForObject(s, model);
-                    ref.setResourceURI(MapperUtils.uriToURIDTO(subj.getURI(), model));
-                    return ref;
-                })
+                .mapWith(s -> mapResourceReference(model, s))
                 .toSet();
 
         Set<ResourceReferenceDTO> missingObjects = new HashSet<>(notExistCurrent);
 
         // check that all external references (to other models in Interoperability platform) exists
+        // for checking, version must be removed from the resource URI
         var otherReferences = getInternalReferences(model)
                 .filterKeep(r -> !r.getObject().toString().startsWith(graph))
                 .mapWith(r -> DataModelURI.fromURI(r.getObject().toString()).getResourceURI())
                 .mapWith(ResourceFactory::createResource)
-                .toList();
+                .toSet();
 
         if (!dependencies.isEmpty() && !otherReferences.isEmpty()) {
-            var select = new SelectBuilder();
-            var exprFactory = select.getExprFactory();
+            var missingExternalReferences = new HashSet<Resource>();
 
-            // finds all objects which doesn't exist in the database
-            var missingExternalReferences = new ArrayList<Resource>();
-            select
-                    .addVar("?ext_subj")
-                    .addVar(exprFactory.exists(
-                                    new WhereBuilder().addWhere("?ext_subj", "?ext_pred", "?ext_obj")),
-                            "?exists")
-                    .addWhereValueVar("?ext_subj", otherReferences.toArray());
-
-            coreRepository.querySelect(select.build(), (var row) -> {
+            // query for finding all objects which don't exist in the database
+            var query = getExistsQuery(dependencies, otherReferences);
+            coreRepository.querySelect(query, (var row) -> {
                 if (!row.get("exists").asLiteral().getBoolean()) {
                     var r = row.get("ext_subj").asResource();
                     dependencies.stream()
-                            .filter(d -> r.getURI().startsWith(d))
+                            .filter(d -> r.getNameSpace().equals(d.getNamespace()))
                             .findFirst()
                             .ifPresent(d -> {
-                                var dmURI = DataModelURI.fromURI(d);
-                                var resURI = DataModelURI.createResourceURI(dmURI.getModelId(), r.getLocalName(), dmURI.getVersion());
+                                var resURI = DataModelURI.createResourceURI(d.getModelId(), r.getLocalName(), d.getVersion());
                                 missingExternalReferences.add(ResourceFactory.createResource(resURI.getResourceVersionURI()));
                             });
                 }
             });
 
-            missingExternalReferences.forEach(m -> model.listStatements(null, null, m).forEach(stmt -> {
-                var ref = new ResourceReferenceDTO();
-                var subj = DataModelUtils.findSubjectForObject(stmt, model);
-                ref.setResourceURI(MapperUtils.uriToURIDTO(subj.getURI(), model));
-                ref.setProperty(MapperUtils.getCurie(stmt.getPredicate(), model));
-                ref.setTarget(stmt.getObject().asResource().getURI());
-                missingObjects.add(ref);
-            }));
+            for (var missingRef : missingExternalReferences) {
+                model.listStatements(null, null, missingRef)
+                        .forEach(stmt -> missingObjects.add(mapResourceReference(model, stmt)));
+            }
         }
-
         return missingObjects;
     }
 
     @Override
     public String getErrorKey() {
         return "references-not-exist";
+    }
+
+    private static ResourceReferenceDTO mapResourceReference(Model model, Statement s) {
+        var ref = new ResourceReferenceDTO();
+        ref.setProperty(MapperUtils.getCurie(s.getPredicate().asResource(), model));
+        ref.setTarget(MapperUtils.getCurie(s.getObject().asResource(), model));
+
+        var subj = DataModelUtils.findSubjectForObject(s, model);
+        ref.setResourceURI(MapperUtils.uriToURIDTO(subj.getURI(), model));
+        return ref;
+    }
+
+    private static Query getExistsQuery(List<DataModelURI> dependencies, Set<Resource> otherReferences) {
+        var select = new SelectBuilder();
+        var exprFactory = select.getExprFactory();
+        var extVar = "?ext_subj";
+
+        return select
+                .addVar(extVar)
+                .addVar(exprFactory.exists(
+                                new WhereBuilder().addWhere(extVar, "?ext_pred", "?ext_obj")),
+                        "?exists")
+                .from(dependencies.stream().map(DataModelURI::getGraphURI).toList())
+                .addWhereValueVar(extVar, otherReferences.toArray())
+                .build();
     }
 
     private static ExtendedIterator<Statement> getInternalReferences(Model model) {
