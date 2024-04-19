@@ -245,8 +245,8 @@ public class OpenAPIBuilder {
             if (targetClass != null) {
                 schema.items(new Schema<>().$ref(getRef(targetClass)));
             }
-        } else {
-            schema.type(OBJECT);
+        } else if (targetClass != null) {
+            schema.$ref(getRef(targetClass));
         }
     }
 

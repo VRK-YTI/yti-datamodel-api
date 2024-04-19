@@ -9,35 +9,6 @@
 @prefix xsd:        <http://www.w3.org/2001/XMLSchema#> .
 @prefix http:       <http://www.w3.org/2011/http#> .
 
-test:property-1  rdf:type   owl:DatatypeProperty ;
-        rdfs:label          "Property label"@en ;
-        dcterms:identifier  "property-1" ;
-        sh:datatype         "http://www.w3.org/2001/XMLSchema#string" ;
-        sh:in               "02" , "01" ;
-        sh:minCount         "1"^^xsd:long .
-
-test:class-2  rdf:type      sh:NodeShape ;
-        rdfs:label          "Target node"@en ;
-        dcterms:identifier  "class-2" ;
-        sh:targetClass      "https://iri.suomi.fi/model/test_lib/2.0.0/class-2" .
-
-test:property-4  rdf:type   owl:ObjectProperty ;
-        dcterms:identifier  "property-3" ;
-        sh:deactivated      true .
-
-test:property-2  rdf:type   owl:DatatypeProperty ;
-        rdfs:label          "Property label 2"@en ;
-        dcterms:identifier  "property-2" ;
-        sh:datatype         "http://www.w3.org/2001/XMLSchema#integer" ;
-        sh:maxCount         "5"^^xsd:long .
-
-test:class-1  rdf:type      sh:NodeShape ;
-        rdfs:comment        "Property shape info"@en ;
-        rdfs:label          "Node shape label"@en ;
-        dcterms:identifier  "class-1" ;
-        http:absolutePath   "/path/{var1}/{var2}?q=123" ;
-        sh:property         test:property-4 , test:property-3 , test:property-2 , test:property-1 .
-
 test:   rdf:type         suomi-meta:ApplicationProfile ;
         rdfs:comment     "Model info"@en ;
         rdfs:label       "Model label"@en ;
@@ -46,8 +17,47 @@ test:   rdf:type         suomi-meta:ApplicationProfile ;
         owl:versionIRI   "https://iri.suomi.fi/model/test/1.0.0/" ;
         owl:versionInfo  "1.0.0" .
 
+test:class-1  rdf:type      sh:NodeShape ;
+        rdfs:comment        "Property shape info"@en ;
+        rdfs:label          "Node shape label"@en ;
+        dcterms:identifier  "class-1" ;
+        http:absolutePath   "/path/{var1}/{var2}?q=123" ;
+        sh:property         test:property-5 , test:property-4 , test:property-3 , test:property-2 , test:property-1 .
+
+test:class-2  rdf:type      sh:NodeShape ;
+        rdfs:label          "Target node"@en ;
+        dcterms:identifier  "class-2" ;
+        sh:targetClass      "https://iri.suomi.fi/model/test_lib/2.0.0/class-2" .
+
+test:class-3  rdf:type      sh:NodeShape ;
+        rdfs:label          "Target node"@en ;
+        dcterms:identifier  "class-2" ;
+        sh:targetClass      "https://iri.suomi.fi/model/test_lib/2.0.0/class-3" .
+
+test:property-1  rdf:type   owl:DatatypeProperty ;
+        rdfs:label          "Property label"@en ;
+        dcterms:identifier  "property-1" ;
+        sh:datatype         "http://www.w3.org/2001/XMLSchema#string" ;
+        sh:in               "02" , "01" ;
+        sh:minCount         "1"^^xsd:long .
+
+test:property-2  rdf:type   owl:DatatypeProperty ;
+        rdfs:label          "Property label 2"@en ;
+        dcterms:identifier  "property-2" ;
+        sh:datatype         "http://www.w3.org/2001/XMLSchema#integer" ;
+        sh:maxCount         "5"^^xsd:long .
+
 test:property-3  rdf:type   owl:ObjectProperty ;
         rdfs:label          "Property label 3"@en ;
         dcterms:identifier  "property-3" ;
         sh:class            "https://iri.suomi.fi/model/test_lib/2.0.0/class-2" ;
         sh:maxCount         "2"^^xsd:long .
+
+test:property-4  rdf:type   owl:ObjectProperty ;
+        rdfs:label          "Property label 4"@en ;
+        dcterms:identifier  "property-4" ;
+        sh:class            "https://iri.suomi.fi/model/test_lib/2.0.0/class-3" .
+
+test:property-5  rdf:type   owl:ObjectProperty ;
+        dcterms:identifier  "property-5" ;
+        sh:deactivated      true .

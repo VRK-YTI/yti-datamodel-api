@@ -104,6 +104,14 @@
   },
   "components": {
     "schemas": {
+      "class-3": {
+        "title": "Target node",
+        "description": "",
+        "type": "object",
+        "externalDocs": {
+          "url": "https://iri.suomi.fi/model/test/1.0.0/class-3"
+        }
+      },
       "class-2": {
         "title": "Target node",
         "description": "",
@@ -120,6 +128,9 @@
           "url": "https://iri.suomi.fi/model/test/1.0.0/class-1"
         },
         "properties": {
+          "property-4": {
+            "$ref": "#/components/schemas/class-3"
+          },
           "property-3": {
             "title": "Property label 3",
             "type": "array",
