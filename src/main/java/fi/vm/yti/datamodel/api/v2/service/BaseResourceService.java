@@ -105,7 +105,7 @@ abstract class BaseResourceService {
 
     public boolean exists(String prefix, String identifier) {
         // identifiers e.g. corner-abcd1234 are reserved for visualization
-        if(identifier.startsWith("corner-")) {
+        if(identifier.startsWith(ModelConstants.CORNER_PREFIX)) {
             return true;
         }
         var uri = DataModelURI.createResourceURI(prefix, identifier);

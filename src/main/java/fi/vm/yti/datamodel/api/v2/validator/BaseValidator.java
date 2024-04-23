@@ -1,6 +1,7 @@
 package fi.vm.yti.datamodel.api.v2.validator;
 
 import fi.vm.yti.datamodel.api.v2.dto.BaseDTO;
+import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
 import fi.vm.yti.datamodel.api.v2.dto.Status;
 import jakarta.validation.ConstraintValidatorContext;
 
@@ -82,7 +83,7 @@ public abstract class BaseValidator implements Annotation{
     }
 
     public void checkReservedIdentifier(ConstraintValidatorContext context, BaseDTO dto) {
-        if (dto.getIdentifier() != null && dto.getIdentifier().startsWith("corner-")) {
+        if (dto.getIdentifier() != null && dto.getIdentifier().startsWith(ModelConstants.CORNER_PREFIX)) {
             addConstraintViolation(context, "reserved-identifier", "identifier");
         }
     }
