@@ -1,0 +1,35 @@
+@prefix dcap:       <http://purl.org/ws-mmi-dc/terms/> .
+@prefix dcterms:    <http://purl.org/dc/terms/> .
+@prefix linked:     <https://iri.suomi.fi/model/linked/1.0.0/> .
+@prefix owl:        <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:        <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:       <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix suomi-meta: <https://iri.suomi.fi/model/suomi-meta/> .
+@prefix xsd:        <http://www.w3.org/2001/XMLSchema#> .
+@prefix test-lib:   <https://iri.suomi.fi/model/test-lib/> .
+
+test-lib:   rdf:type                      owl:Ontology ;
+            rdfs:label                    "Test library"@fi ;
+            owl:imports                   linked: ;
+            dcap:preferredXMLNamespace    "https://iri.suomi.fi/model/test-lib/" ;
+            dcap:preferredXMLNamespacePrefix
+                    "test-lib" .
+
+test-lib:test-attr  rdf:type              owl:DatatypeProperty ;
+            rdfs:domain                   linked:test-1 ;
+            rdfs:isDefinedBy              test-lib: ;
+            rdfs:label                    "Testi attr"@fi ;
+            rdfs:subPropertyOf            linked:not-exists-1 ;
+            dcterms:identifier            "test-attr"^^xsd:NCName .
+
+test-lib:test-class  rdf:type             owl:Class ;
+            rdfs:isDefinedBy              test-lib: ;
+            rdfs:label                    "Test"@fi ;
+            dcterms:identifier            "test-class"^^xsd:NCName ;
+            owl:equivalentClass           [ rdf:type            owl:Class ;
+                                            owl:intersectionOf  ( [ rdf:type            owl:Restriction ;
+                                                                    owl:onProperty      linked:not-exists-2 ;
+                                                                    owl:someValuesFrom  rdfs:Literal
+                                                                  ]
+                                                                )
+                                          ] .

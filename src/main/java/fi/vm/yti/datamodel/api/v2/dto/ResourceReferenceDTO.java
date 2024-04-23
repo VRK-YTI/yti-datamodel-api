@@ -1,12 +1,14 @@
 package fi.vm.yti.datamodel.api.v2.dto;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import java.util.Objects;
 
 public class ResourceReferenceDTO {
     private UriDTO resourceURI;
     private String property;
+    private String target;
     private ResourceType type;
 
     public UriDTO getResourceURI() {
@@ -25,6 +27,14 @@ public class ResourceReferenceDTO {
         this.property = property;
     }
 
+    public String getTarget() {
+        return target;
+    }
+
+    public void setTarget(String target) {
+        this.target = target;
+    }
+
     public ResourceType getType() {
         return type;
     }
@@ -41,5 +51,10 @@ public class ResourceReferenceDTO {
     @Override
     public int hashCode() {
         return Objects.hash(resourceURI, property, type);
+    }
+
+    @Override
+    public String toString() {
+        return ToStringBuilder.reflectionToString(this);
     }
 }

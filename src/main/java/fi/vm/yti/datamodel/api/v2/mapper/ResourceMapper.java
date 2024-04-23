@@ -511,14 +511,8 @@ public class ResourceMapper {
             var dto = new ResourceReferenceDTO();
             dto.setResourceURI(MapperUtils.uriToURIDTO(subject.getURI(), model));
 
-            var pred = subject.getProperty(DCTerms.references).getObject().asResource();
-            var prefix = model.getGraph().getPrefixMapping().getNsURIPrefix(pred.getNameSpace());
-
-            if (prefix != null) {
-                dto.setProperty(String.format("%s:%s", prefix, pred.getLocalName()));
-            } else {
-                dto.setProperty(pred.getURI());
-            }
+            var pred = subject.getProperty(DCTerms.references).getObject();
+            dto.setProperty(MapperUtils.getCurie(pred.asResource(), model));
 
             if (MapperUtils.hasType(subject, OWL.DatatypeProperty)) {
                 dto.setType(ResourceType.ATTRIBUTE);

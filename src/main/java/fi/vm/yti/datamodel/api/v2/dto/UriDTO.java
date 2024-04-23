@@ -1,6 +1,7 @@
 package fi.vm.yti.datamodel.api.v2.dto;
 
 import com.google.common.base.Objects;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import java.util.Map;
 
@@ -55,5 +56,10 @@ public class UriDTO {
     @Override
     public int hashCode() {
         return Objects.hashCode(uri);
+    }
+
+    @Override
+    public String toString() {
+        return ToStringBuilder.reflectionToString(this);
     }
 }

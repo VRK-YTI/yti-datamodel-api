@@ -516,4 +516,20 @@ public class MapperUtils {
         resource.addProperty(DCTerms.identifier, ResourceFactory.createTypedLiteral(newIdentifier, XSDDatatype.XSDNCName));
         return ResourceUtils.renameResource(resource, resource.getNameSpace() + newIdentifier);
     }
+
+    /**
+     * Return curie for any resource based on model's prefix mapping. If prefix not found, return resource's uri
+     * @param resource resource
+     * @param model model with prefix mapping
+     * @return curie e.g. prefix:localName
+     */
+    public static String getCurie(Resource resource, Model model) {
+        var prefixMapping = model.getGraph().getPrefixMapping();
+        var prefix = prefixMapping.getNsURIPrefix(resource.getNameSpace());
+        if (prefix != null) {
+            return String.format("%s:%s", prefix, resource.getLocalName());
+        } else {
+            return resource.getURI();
+        }
+    }
 }

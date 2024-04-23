@@ -5,6 +5,7 @@ import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.properties.DCAP;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.rdf.model.Statement;
 import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.OWL;
 
@@ -81,5 +82,22 @@ public class DataModelUtils {
             return uri;
         }
         return uri.replaceAll("/[\\d.]+(.*)/", "/");
+    }
+
+    /**
+     * Recursively find subject for object in case it is anonymous resource (e.g. a part of RDF list)
+     * @param statement statement
+     * @param model model
+     * @return subject for object
+     */
+    public static Resource findSubjectForObject(Statement statement, Model model) {
+        var subj = statement.getSubject();
+        if (subj.isAnon()) {
+            while (subj.isAnon()) {
+                var stmt = model.listStatements(null, null, subj).next();
+                subj = stmt.getSubject();
+            }
+        }
+        return subj;
     }
 }
