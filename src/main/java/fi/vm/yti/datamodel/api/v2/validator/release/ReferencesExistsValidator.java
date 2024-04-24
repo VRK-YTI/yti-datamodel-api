@@ -15,17 +15,27 @@ import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.rdf.model.Statement;
 import org.apache.jena.util.iterator.ExtendedIterator;
+import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.OWL;
+import org.apache.jena.vocabulary.RDF;
 import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 @Service
 public class ReferencesExistsValidator extends ReleaseValidator {
 
     private final CoreRepository coreRepository;
+
+    private static final List<Resource> SKIP_PREDICATES = List.of(
+            OWL.imports,
+            OWL.priorVersion,
+            DCTerms.requires,
+            RDF.type
+    );
 
     public ReferencesExistsValidator(CoreRepository coreRepository) {
         this.coreRepository = coreRepository;
@@ -56,6 +66,7 @@ public class ReferencesExistsValidator extends ReleaseValidator {
         var otherReferences = getInternalReferences(model)
                 .filterKeep(r -> !r.getObject().toString().startsWith(graph))
                 .mapWith(r -> DataModelURI.fromURI(r.getObject().toString()).getResourceURI())
+                .filterKeep(Objects::nonNull)
                 .mapWith(ResourceFactory::createResource)
                 .toSet();
 
@@ -117,8 +128,7 @@ public class ReferencesExistsValidator extends ReleaseValidator {
 
     private static ExtendedIterator<Statement> getInternalReferences(Model model) {
         return model.listStatements()
-                .filterDrop(s -> s.getPredicate().equals(OWL.imports)
-                                 || s.getPredicate().equals(OWL.priorVersion))
+                .filterDrop(s -> SKIP_PREDICATES.contains(s.getPredicate()))
                 .filterKeep(s -> s.getObject().isResource()
                                  && s.getObject().toString().startsWith(ModelConstants.SUOMI_FI_NAMESPACE));
     }
