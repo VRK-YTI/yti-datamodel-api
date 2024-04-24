@@ -1,0 +1,35 @@
+{
+  "description": "Model info",
+  "type": "object",
+  "title": "Model label",
+  "properties": {
+    "class-2": {
+      "description": "",
+      "type": "object",
+      "title": "Target node"
+    },
+    "class-1": {
+      "description": "Property shape info",
+      "type": "object",
+      "title": "Node shape label",
+      "properties": {
+        "property-1": {
+          "description": "",
+          "type": "string",
+          "title": "Property label"
+        },
+        "property-3": {
+          "description": "",
+          "type": "array",
+          "title": "Property label 3",
+          "items": [{"$ref": "/properties/class-2"}]
+        },
+        "property-2": {
+          "description": "",
+          "type": "number",
+          "title": "Property label 2"
+        }
+      }
+    }
+  }
+}

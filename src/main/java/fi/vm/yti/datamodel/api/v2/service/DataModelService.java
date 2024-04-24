@@ -220,6 +220,10 @@ public class DataModelService {
                 fileExtension = ".json";
                 OpenAPIBuilder.export(stringWriter, exportedModel, language);
                 break;
+            case "application/schema+json":
+                fileExtension = ".json";
+                JSONSchemaBuilder.export(stringWriter, exportedModel, language);
+                break;
             case "application/ld+json":
             default:
                 RDFDataMgr.write(stringWriter, exportedModel, Lang.JSONLD);

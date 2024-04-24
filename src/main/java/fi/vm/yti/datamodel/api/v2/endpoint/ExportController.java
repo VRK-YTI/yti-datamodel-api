@@ -34,7 +34,7 @@ public class ExportController {
             @ApiResponse(responseCode = "404", description = "Model or Resource not found", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ApiError.class))})
     })
     @GetMapping(value = {"{prefix}", "/{prefix}/{resourceIdentifier}"},
-            produces = {"application/ld+json;charset=utf-8", "text/turtle;charset=utf-8", "application/rdf+xml;charset=utf-8", "application/vnd+oai+openapi+json;charset=utf-8"})
+            produces = {"application/ld+json;charset=utf-8", "text/turtle;charset=utf-8", "application/rdf+xml;charset=utf-8", "application/vnd+oai+openapi+json;charset=utf-8", "application/schema+json"})
     public ResponseEntity<String> export(@PathVariable @Parameter(description = "Data model prefix") String prefix,
                                          @RequestParam(required = false) @Parameter(description = "Version") @ValidSemanticVersion String version,
                                          @RequestParam(required = false) @Parameter(description = "Content type") String contentType,
