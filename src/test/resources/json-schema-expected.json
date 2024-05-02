@@ -22,7 +22,7 @@
           "description": "",
           "type": "array",
           "title": "Property label 3",
-          "items": [{"$ref": "/properties/class-2"}]
+          "items": [{"$ref": "#/properties/class-2"}]
         },
         "property-2": {
           "description": "",

@@ -162,29 +162,29 @@ public class JSONSchemaBuilder {
             String language) {
         var description = getLocalizedValue(propertyResource, RDFS.comment, language);
         var title = getLocalizedValue(propertyResource, RDFS.label, language);
+        var minCount = MapperUtils.getLiteral(propertyResource, SH.minCount, Integer.class);
+        var maxCount = MapperUtils.getLiteral(propertyResource, SH.maxCount, Integer.class);
         var type = getDatatype(MapperUtils.propertyToString(propertyResource, SH.datatype));
-        switch (type) {
-            case NUMBER, INTEGER:
-                return NumberSchema.builder()
-                        .description(description)
-                        .title(title)
-                        .build();
-            case STRING:
-                return StringSchema.builder()
-                        .description(description)
-                        .title(title)
-                        .build();
-            case BOOLEAN:
-                return BooleanSchema.builder()
-                        .description(description)
-                        .title(title)
-                        .build();
-            default:
-                return ObjectSchema.builder()
-                        .description(description)
-                        .title(title)
-                        .build();
+        var builder =
+            (type == SchemaType.NUMBER || type == SchemaType.INTEGER) ? NumberSchema.builder() :
+            type == SchemaType.STRING ? StringSchema.builder() :
+            type == SchemaType.BOOLEAN ? BooleanSchema.builder() :
+            ObjectSchema.builder();
+
+        if (minCount != null && minCount > 0) {
+            var arraySchemaBuilder = ArraySchema.builder()
+                    .allItemSchema(builder.build())
+                    .minItems(minCount);
+            if (maxCount != null) {
+                arraySchemaBuilder.maxItems(maxCount);
+            }
+            builder = arraySchemaBuilder;
         }
+
+        builder = builder
+                .description(description)
+                .title(title);
+        return builder.build();
     }
 
     private static String getLocalizedValue(Resource resource, Property property, String language) {
@@ -197,7 +197,7 @@ public class JSONSchemaBuilder {
     }
 
     private static String getRef(Resource pathResource) {
-        return "/properties/" + pathResource.getLocalName();
+        return "#/properties/" + pathResource.getLocalName();
     }
 
     private static SchemaType getDatatype(String typeURI) {
