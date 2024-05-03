@@ -31,7 +31,7 @@ test:class-2  rdf:type      sh:NodeShape ;
 
 test:class-3  rdf:type      sh:NodeShape ;
         rdfs:label          "Target node"@en ;
-        dcterms:identifier  "class-2" ;
+        dcterms:identifier  "class-3" ;
         sh:targetClass      "https://iri.suomi.fi/model/test_lib/2.0.0/class-3" .
 
 test:property-1  rdf:type   owl:DatatypeProperty ;

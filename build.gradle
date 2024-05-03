@@ -91,6 +91,10 @@ dependencies {
     implementation "org.apache.jena:jena-querybuilder:4.6.1"
     implementation "com.google.guava:guava:31.1-jre"
 
+    // library for programmatically generating json schema
+    // NOTE: the project is in maintenance mode
+    implementation "com.github.erosb:everit-json-schema:1.14.4"
+
     compileOnly "org.springframework.boot:spring-boot-configuration-processor"
     compileOnly "org.jetbrains:annotations:23.0.0"
 
