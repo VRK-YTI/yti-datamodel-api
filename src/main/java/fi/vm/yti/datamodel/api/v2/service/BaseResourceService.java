@@ -75,29 +75,23 @@ abstract class BaseResourceService {
         var uri = DataModelURI.createResourceURI(prefix, resourceIdentifier);
         var graphUri = uri.getGraphURI();
         var resourceUri = uri.getResourceURI();
-        if(!coreRepository.resourceExistsInGraph(graphUri, resourceUri)) {
+        if (!coreRepository.resourceExistsInGraph(graphUri, resourceUri)) {
             throw new ResourceNotFoundException(resourceUri);
         }
 
-        var selectBuilder = new SelectBuilder()
-                .addPrefixes(ModelConstants.PREFIXES);
-        var exprFactory = selectBuilder.getExprFactory();
-        var expr = exprFactory.notexists(new WhereBuilder().addWhere("?s", DCTerms.hasPart, "?o"));
-        selectBuilder.addFilter(expr);
-        selectBuilder.addGraph(NodeFactory.createURI(graphUri), "?s", "?p", "?o");
-        selectBuilder.addWhere("?s", "?p", NodeFactory.createURI(resourceUri));
+        var model = coreRepository.fetch(graphUri);
+        check(authorizationManager.hasRightToModel(prefix, model));
 
-        var references = new ArrayList<String>();
-        coreRepository.querySelect(selectBuilder.build(), res -> references.add(res.get("s").toString()));
-        if(!references.isEmpty()) {
-            //Cannot list subjects in error message because we cannot list blank nodes
-            //TODO is it possible to do?
-            throw new MappingError("referenced-by-others");
+        var references = getResourceReferences(resourceUri, true);
+        if (!references.isEmpty()) {
+            var refList = references.keySet().stream()
+                    .flatMap(r -> references.get(r).stream())
+                    .map(r -> r.getResourceURI().getUri())
+                    .limit(10)
+                    .collect(Collectors.joining(", "));
+            throw new MappingError("Cannot remove because other resources refer to it: " + refList);
         }
 
-        var model = coreRepository.fetch(graphUri);
-
-        check(authorizationManager.hasRightToModel(prefix, model));
         coreRepository.deleteResource(resourceUri);
         openSearchIndexer.deleteResourceFromIndex(resourceUri);
         auditService.log(AuditService.ActionType.DELETE, resourceUri, userProvider.getUser());
@@ -268,13 +262,21 @@ abstract class BaseResourceService {
     }
 
     public Map<ResourceType, List<ResourceReferenceDTO>> getResourceReferences(String uri) {
-        var u = DataModelURI.fromURI(uri);
+        return getResourceReferences(uri, false);
+    }
 
-        // search references for both versioned (other graphs) and non versioned (current graph) resource
+    public Map<ResourceType, List<ResourceReferenceDTO>> getResourceReferences(String uri, boolean currentGraph) {
+        var u = DataModelURI.fromURI(uri);
         var objects = new ArrayList<>();
-        objects.add(NodeFactory.createURI(uri));
-        if (u.getVersion() != null) {
+
+        if (currentGraph) {
             objects.add(NodeFactory.createURI(u.getResourceURI()));
+        } else {
+            // search references for both versioned (other graphs) and non versioned (current graph) resource
+            objects.add(NodeFactory.createURI(uri));
+            if (u.getVersion() != null) {
+                objects.add(NodeFactory.createURI(u.getResourceURI()));
+            }
         }
 
         var user = userProvider.getUser();
@@ -294,10 +296,11 @@ abstract class BaseResourceService {
                 PathFactory.pathLink(RDF.first.asNode())
         ).reduce(PathFactory::pathSeq).orElseThrow();
 
+        var graphVar = currentGraph ? NodeFactory.createURI(u.getGraphURI()) : "?graph";
         try {
             select.addPrefixes(ModelConstants.PREFIXES)
                     .addWhereValueVar("?object", objects.toArray())
-                    .addGraph("?graph", new WhereBuilder()
+                    .addGraph(graphVar, new WhereBuilder()
                             .addWhere("?subject", "?predicate", "?object")
                             .addWhere("?subject", RDF.type, "?type")
 
@@ -323,7 +326,7 @@ abstract class BaseResourceService {
             throw new JenaQueryException("Error getting resource references: " + uri);
         }
 
-        if (u.isDataModelURI()) {
+        if (u.isDataModelURI() && !currentGraph) {
             select.addFilter(exp.or(
                     exp.eq(exp.str("?graph"), u.getGraphURI()),
                     exp.not(exp.strstarts(exp.str("?graph"), u.getModelURI()))
