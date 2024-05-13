@@ -4,6 +4,7 @@ import fi.vm.yti.datamodel.api.v2.dto.DataModelDTO;
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
 import fi.vm.yti.datamodel.api.v2.dto.ModelType;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
+import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import org.apache.jena.rdf.model.ResourceFactory;
@@ -60,7 +61,7 @@ public class DataModelValidator extends BaseValidator implements
         // Check prefix text content
         checkPrefixContent(context, prefix, prefixPropertyLabel, false);
 
-        if (coreRepository.graphExists(ModelConstants.SUOMI_FI_NAMESPACE + prefix)) {
+        if (coreRepository.graphExists(DataModelURI.createModelURI(prefix).getGraphURI())) {
             // Checking if in use is different for data models and its resources so it is not in the above function
             addConstraintViolation(context, "prefix-in-use", prefixPropertyLabel);
         }
