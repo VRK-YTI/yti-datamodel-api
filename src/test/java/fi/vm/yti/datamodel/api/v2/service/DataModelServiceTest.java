@@ -23,6 +23,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
@@ -69,6 +70,9 @@ class DataModelServiceTest {
 
     @MockBean
     AuthenticatedUserProvider userProvider;
+
+    @MockBean
+    DataModelSubscriptionService dataModelSubscriptionService;
 
     @Autowired
     DataModelService dataModelService;
@@ -303,6 +307,11 @@ class DataModelServiceTest {
         verify(modelMapper).mapToIndexModel(eq(ModelConstants.SUOMI_FI_NAMESPACE + "test/"), any(Model.class));
         verify(openSearchIndexer).createModelToIndex(any(IndexModel.class));
         verify(visualizationService).saveVersionedPositions("test", "1.0.1");
+
+        var captor = ArgumentCaptor.forClass(String.class);
+        verify(dataModelSubscriptionService).publish(eq("test"), anyString(), captor.capture());
+        assertTrue(captor.getValue().contains("version 1.0.1"), "version not included to the message");
+        assertTrue(captor.getValue().contains("testlabel"), "label not included to the message");
     }
 
     @Test

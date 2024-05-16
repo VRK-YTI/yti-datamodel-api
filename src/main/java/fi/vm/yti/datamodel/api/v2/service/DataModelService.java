@@ -35,6 +35,7 @@ import org.topbraid.shacl.vocabulary.SH;
 import java.io.StringWriter;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -56,6 +57,7 @@ public class DataModelService {
     private final CodeListService codeListService;
     private final OpenSearchIndexer openSearchIndexer;
     private final AuthenticatedUserProvider userProvider;
+    private final DataModelSubscriptionService dataModelSubscriptionService;
 
     @Autowired
     public DataModelService(CoreRepository coreRepository,
@@ -66,7 +68,7 @@ public class DataModelService {
                             VisualizationService visualizationService,
                             CodeListService codeListService,
                             OpenSearchIndexer openSearchIndexer,
-                            AuthenticatedUserProvider userProvider) {
+                            AuthenticatedUserProvider userProvider, DataModelSubscriptionService dataModelSubscriptionService) {
         this.coreRepository = coreRepository;
         this.authorizationManager = authorizationManager;
         this.groupManagementService = groupManagementService;
@@ -76,6 +78,7 @@ public class DataModelService {
         this.codeListService = codeListService;
         this.openSearchIndexer = openSearchIndexer;
         this.userProvider = userProvider;
+        this.dataModelSubscriptionService = dataModelSubscriptionService;
     }
 
     public DataModelInfoDTO get(String prefix, String version) {
@@ -312,10 +315,11 @@ public class DataModelService {
         openSearchIndexer.bulkInsert(OpenSearchIndexer.OPEN_SEARCH_INDEX_RESOURCE, list);
         visualisationService.saveVersionedPositions(prefix, version);
         auditService.log(AuditService.ActionType.CREATE, modelVersionURI.getGraphURI(), userProvider.getUser());
+
+        sendNotification(model, modelVersionURI);
         //Draft model does not need to be indexed since opensearch specific properties on it did not change
         return new URI(modelVersionURI.getGraphURI());
     }
-
 
     public List<ModelVersionInfo> getPriorVersions(String prefix, String version){
 
@@ -415,6 +419,26 @@ public class DataModelService {
 
     private void addPrefixes(Model model, DataModelDTO dto) {
         dto.getExternalNamespaces().forEach(ns -> model.getGraph().getPrefixMapping().setNsPrefix(ns.getPrefix(), ns.getNamespace()));
+    }
+
+    private void sendNotification(Model model, DataModelURI modelVersionURI) {
+        try {
+            var stream = DataModelService.class.getResourceAsStream("/release-notification-template.html");
+            if (stream != null) {
+                var label = MapperUtils.localizedPropertyToMap(model.getResource(modelVersionURI.getModelURI()), RDFS.label);
+                var defaultLabel = label.getOrDefault("fi", label.entrySet().iterator().next().getValue());
+                var message = new String(stream.readAllBytes(), StandardCharsets.UTF_8)
+                        .replace("%VERSION%", modelVersionURI.getVersion())
+                        .replace("%URI%", modelVersionURI.getGraphURI())
+                        .replace("%LABEL_FI%", defaultLabel)
+                        .replace("%LABEL_SV%", label.getOrDefault("sv", defaultLabel))
+                        .replace("%LABEL_EN%", label.getOrDefault("en", defaultLabel));
+
+                dataModelSubscriptionService.publish(modelVersionURI.getModelId(), ModelConstants.EMAIL_NOTIFICATION_TITLE, message);
+            }
+        } catch (Exception e) {
+            logger.error("Error sending notification", e);
+        }
     }
 
     private static void handleNamespaceRemove(Model model,
