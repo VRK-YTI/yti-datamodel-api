@@ -522,7 +522,9 @@ public class ClassMapper {
             String onProperty = MapperUtils.propertyToString(rdfNode.asResource(), OWL.onProperty);
             var someValuesFrom = MapperUtils.propertyToString(rdfNode.asResource(), OWL.someValuesFrom);
 
-            if (propertyResource.getURI().equals(onProperty) && (
+            // check that removed is still null, because in migrated data there might be more than one
+            // association with the same uri and target
+            if (removed == null && propertyResource.getURI().equals(onProperty) && (
                     MapperUtils.hasType(propertyResource, OWL.DatatypeProperty, OWL.AnnotationProperty)
                     || Objects.equals(target, someValuesFrom))
             ) {
