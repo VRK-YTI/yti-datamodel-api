@@ -6,7 +6,7 @@ public class PositionDataDTO {
     private String identifier;
     private Double x;
     private Double y;
-    private Set<String> referenceTargets;
+    private Set<ReferenceTarget> referenceTargets = Set.of();
 
     public String getIdentifier() {
         return identifier;
@@ -32,11 +32,13 @@ public class PositionDataDTO {
         this.y = y;
     }
 
-    public Set<String> getReferenceTargets() {
+    public Set<ReferenceTarget> getReferenceTargets() {
         return referenceTargets;
     }
 
-    public void setReferenceTargets(Set<String> referenceTargets) {
+    public void setReferenceTargets(Set<ReferenceTarget> referenceTargets) {
         this.referenceTargets = referenceTargets;
     }
+
+    public record ReferenceTarget(String target, String origin) {}
 }
