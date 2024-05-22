@@ -217,21 +217,24 @@ public class VisualizationMapper {
 
     public static Model mapPositionDataToModel(String positionBaseURI, List<PositionDataDTO> positions) {
         var positionModel = ModelFactory.createDefaultModel();
-        positions.forEach(node -> mapPosition(positionModel, positionBaseURI, node));
+        positions.forEach(node -> {
+            var resource = mapPosition(positionModel, positionBaseURI, node);
+            node.getReferenceTargets().forEach(t -> {
+                var targetResource = positionModel.createResource();
+                targetResource.addProperty(SuomiMeta.target, t.target());
+                handleTargetOrigin(positions, t, targetResource);
+                resource.addProperty(SuomiMeta.referenceTarget, targetResource);
+            });
+        });
         return positionModel;
     }
 
-    public static void mapPosition(Model positionModel, String positionBaseURI, PositionDataDTO node) {
+    public static Resource mapPosition(Model positionModel, String positionBaseURI, PositionDataDTO node) {
         var resource = positionModel.createResource(positionBaseURI + node.getIdentifier());
         resource.addLiteral(SuomiMeta.posX, node.getX());
         resource.addLiteral(SuomiMeta.posY, node.getY());
         resource.addProperty(DCTerms.identifier, node.getIdentifier());
-        node.getReferenceTargets().forEach(target -> {
-            var anon = positionModel.createResource();
-            anon.addProperty(SuomiMeta.target, target.target());
-            anon.addProperty(SuomiMeta.origin, target.origin());
-            resource.addProperty(SuomiMeta.referenceTarget, anon);
-        });
+        return resource;
     }
 
     public static Set<VisualizationHiddenNodeDTO> mapPositionsDataToDTOsAndCreateHiddenNodes(
@@ -270,8 +273,7 @@ public class VisualizationMapper {
                                            Set<VisualizationHiddenNodeDTO> hiddenElements) {
         var targetResources = positions.listSubjectsWithProperty(SuomiMeta.target, reference.getReferenceTarget()).toList();
         for (Resource targetResource : targetResources) {
-            var origin = MapperUtils.propertyToString(targetResource, SuomiMeta.origin);
-            if (!reference.getIdentifier().equals(origin)) {
+            if (!isSameOrigin(sourceIdentifier, reference, targetResource)) {
                 continue;
             }
 
@@ -306,6 +308,16 @@ public class VisualizationMapper {
         }
         // no hidden nodes between source and target
         return List.of(reference.getReferenceTarget());
+    }
+
+    private static boolean isSameOrigin(String sourceIdentifier, VisualizationReferenceDTO reference, Resource targetResource) {
+        var origin = MapperUtils.propertyToString(targetResource, SuomiMeta.origin);
+
+        if (reference.getReferenceType().equals(VisualizationReferenceType.PARENT_CLASS) && sourceIdentifier.equals(origin)) {
+            return true;
+        } else {
+            return reference.getReferenceType().equals(VisualizationReferenceType.ASSOCIATION) && reference.getIdentifier().equals(origin);
+        }
     }
 
     private static VisualizationHiddenNodeDTO mapHiddenNode(Resource position, VisualizationReferenceDTO reference, String sourceIdentifier) {
@@ -410,4 +422,17 @@ public class VisualizationMapper {
         }
     }
 
+    private static void handleTargetOrigin(List<PositionDataDTO> positions, PositionDataDTO.ReferenceTarget t, Resource res) {
+        var origin = t.origin();
+        if (origin == null) {
+            positions.stream().filter(p -> p.getIdentifier().equals(t.target())).findFirst().ifPresent(target -> {
+                var refs = target.getReferenceTargets().iterator();
+                if (refs.hasNext()) {
+                    res.addProperty(SuomiMeta.origin, refs.next().origin());
+                }
+            });
+        } else {
+            res.addProperty(SuomiMeta.origin, origin);
+        }
+    }
 }

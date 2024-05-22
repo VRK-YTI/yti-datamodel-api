@@ -1,12 +1,15 @@
 @prefix dcterms:    <http://purl.org/dc/terms/> .
-@prefix suomi-meta:        <https://iri.suomi.fi/model/suomi-meta/> .
+@prefix suomi-meta: <https://iri.suomi.fi/model/suomi-meta/> .
 @prefix visuprof:   <https://iri.suomi.fi/model-positions/visuprof/> .
 
 visuprof:person
         dcterms:identifier      "person" ;
         suomi-meta:posX                "1.0"^^<http://www.w3.org/2001/XMLSchema#double> ;
         suomi-meta:posY                "2.0"^^<http://www.w3.org/2001/XMLSchema#double> ;
-        suomi-meta:referenceTarget     "corner-1" .
+        suomi-meta:referenceTarget     [
+                                            suomi-meta:target  "corner-1" ;
+                                            suomi-meta:origin  "is-address" ;
+                                       ].
 
 visuprof:address
         dcterms:identifier      "address" ;
@@ -17,4 +20,7 @@ visuprof:corner-1
         dcterms:identifier      "corner-1" ;
         suomi-meta:posX                "6.0"^^<http://www.w3.org/2001/XMLSchema#double> ;
         suomi-meta:posY                "7.0"^^<http://www.w3.org/2001/XMLSchema#double> ;
-        suomi-meta:referenceTarget     "address" .
+        suomi-meta:referenceTarget     [
+                                           suomi-meta:target  "address" ;
+                                           suomi-meta:origin  "is-address" ;
+                                       ].

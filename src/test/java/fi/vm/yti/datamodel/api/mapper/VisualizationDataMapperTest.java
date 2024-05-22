@@ -194,6 +194,7 @@ class VisualizationDataMapperTest {
         assertEquals("address", mappedAssociation.getReferenceTarget());
     }
 
+
     @Test
     void mapPositionDataToGraph() {
         var positionGraphURI = ModelConstants.MODEL_POSITIONS_NAMESPACE + "test-model" + ModelConstants.RESOURCE_SEPARATOR;
@@ -202,7 +203,7 @@ class VisualizationDataMapperTest {
         position.setIdentifier("class-1");
         position.setX(3.0);
         position.setY(5.0);
-        position.setReferenceTargets(Set.of("class-2"));
+        position.setReferenceTargets(Set.of(new PositionDataDTO.ReferenceTarget("corner-123", "association-1")));
 
         var positionModel = VisualizationMapper.mapPositionDataToModel(positionGraphURI, List.of(position));
 
@@ -211,7 +212,9 @@ class VisualizationDataMapperTest {
         assertEquals("class-1", resource.getProperty(DCTerms.identifier).getString());
         assertEquals(3.0, resource.getProperty(SuomiMeta.posX).getLiteral().getDouble());
         assertEquals(5.0, resource.getProperty(SuomiMeta.posY).getLiteral().getDouble());
-        assertEquals("class-2", resource.listProperties(SuomiMeta.referenceTarget).toList().get(0).getString());
+        var target = resource.listProperties(SuomiMeta.referenceTarget).toList().get(0).getObject().asResource();
+        assertEquals("corner-123", target.getProperty(SuomiMeta.target).getString());
+        assertEquals("association-1", target.getProperty(SuomiMeta.origin).getString());
     }
 
     @Test
@@ -223,7 +226,6 @@ class VisualizationDataMapperTest {
         node1.setIdentifier("class-1");
         node1.setX(1.0);
         node1.setY(2.0);
-        node1.setReferenceTargets(Set.of("class-2"));
 
         var node2 = new PositionDataDTO();
         node2.setIdentifier("class-2");
@@ -264,7 +266,7 @@ class VisualizationDataMapperTest {
         node1.setIdentifier("class-1");
         node1.setX(1.0);
         node1.setY(2.0);
-        node1.setReferenceTargets(Set.of("corner-1"));
+        node1.setReferenceTargets(Set.of(new PositionDataDTO.ReferenceTarget("corner-1", "class-1")));
 
         var node2 = new PositionDataDTO();
         node2.setIdentifier("class-2");
@@ -275,7 +277,7 @@ class VisualizationDataMapperTest {
         corner1.setIdentifier("corner-1");
         corner1.setX(0.0);
         corner1.setY(0.0);
-        corner1.setReferenceTargets(Set.of("class-2"));
+        corner1.setReferenceTargets(Set.of(new PositionDataDTO.ReferenceTarget("class-2", "class-1")));
 
         var positionModel = VisualizationMapper.mapPositionDataToModel(positionGraphURI,
                 List.of(node1, node2, corner1));
@@ -315,13 +317,15 @@ class VisualizationDataMapperTest {
         node1.setIdentifier("class-1");
         node1.setX(1.0);
         node1.setY(2.0);
-        node1.setReferenceTargets(Set.of("corner-1", "corner-3"));
+        node1.setReferenceTargets(Set.of(
+                new PositionDataDTO.ReferenceTarget("corner-1", "class-1"),
+                new PositionDataDTO.ReferenceTarget("corner-3", "class-3-assoc"))
+        );
 
         var node2 = new PositionDataDTO();
         node2.setIdentifier("class-2");
         node2.setX(0.0);
         node2.setY(10.0);
-        node2.setReferenceTargets(Set.of("class-3"));
 
         var node3 = new PositionDataDTO();
         node3.setIdentifier("class-3");
@@ -332,19 +336,19 @@ class VisualizationDataMapperTest {
         corner1.setX(6.0);
         corner1.setY(7.0);
         corner1.setIdentifier("corner-1");
-        corner1.setReferenceTargets(Set.of("corner-2"));
+        corner1.setReferenceTargets(Set.of(new PositionDataDTO.ReferenceTarget("corner-2", "class-1")));
 
         var corner2 = new PositionDataDTO();
         corner2.setX(3.0);
         corner2.setY(6.0);
         corner2.setIdentifier("corner-2");
-        corner2.setReferenceTargets(Set.of("class-2"));
+        corner2.setReferenceTargets(Set.of(new PositionDataDTO.ReferenceTarget("class-2", "class-1")));
 
         var corner3 = new PositionDataDTO();
         corner3.setX(3.0);
         corner3.setY(6.0);
         corner3.setIdentifier("corner-3");
-        corner3.setReferenceTargets(Set.of("class-3"));
+        corner3.setReferenceTargets(Set.of(new PositionDataDTO.ReferenceTarget("class-3", "class-3-assoc")));
 
         var positionModel = VisualizationMapper.mapPositionDataToModel(positionGraphURI,
                 List.of(node1, node2, node3, corner1, corner2, corner3));
@@ -383,7 +387,7 @@ class VisualizationDataMapperTest {
         assertEquals(2, classItem.getReferences().size());
         assertEquals(1, classItem2.getReferences().size());
 
-        var ref1 = findItem(classItem.getReferences(), "class-3", VisualizationReferenceDTO.class);
+        var ref1 = findItem(classItem.getReferences(), "class-3-assoc", VisualizationReferenceDTO.class);
         var ref2 = findItem(classItem.getReferences(), "class-2", VisualizationReferenceDTO.class);
         var ref3 = findItem(classItem2.getReferences(), "class-3", VisualizationReferenceDTO.class);
 
@@ -403,14 +407,17 @@ class VisualizationDataMapperTest {
         assertEquals(6.0, cornerItem1.getPosition().getX());
         assertEquals(7.0, cornerItem1.getPosition().getY());
         assertEquals("corner-2", cornerItem1.getReferenceTarget());
+        assertEquals("class-1", cornerItem1.getOrigin());
 
         var cornerItem2 = findHiddenNode(hiddenNodes, "corner-2");
         assertNotNull(cornerItem2);
         assertEquals("class-2", cornerItem2.getReferenceTarget());
+        assertEquals("class-1", cornerItem2.getOrigin());
 
         var cornerItem3 = findHiddenNode(hiddenNodes, "corner-3");
         assertNotNull(cornerItem3);
         assertEquals("class-3", cornerItem3.getReferenceTarget());
+        assertEquals("class-3-assoc", cornerItem3.getOrigin());
     }
 
     @Test
@@ -427,19 +434,19 @@ class VisualizationDataMapperTest {
         node1.setIdentifier("class-1");
         node1.setX(1.0);
         node1.setY(2.0);
-        node1.setReferenceTargets(Set.of("corner-1"));
+        node1.setReferenceTargets(Set.of(new PositionDataDTO.ReferenceTarget("corner-1", "assoc-1")));
 
         var corner1 = new PositionDataDTO();
         corner1.setX(6.0);
         corner1.setY(7.0);
         corner1.setIdentifier("corner-1");
-        corner1.setReferenceTargets(Set.of("corner-2"));
+        corner1.setReferenceTargets(Set.of(new PositionDataDTO.ReferenceTarget("corner-2", "assoc-1")));
 
         var corner2 = new PositionDataDTO();
         corner2.setX(6.0);
         corner2.setY(7.0);
         corner2.setIdentifier("corner-2");
-        corner2.setReferenceTargets(Set.of("class-1"));
+        corner2.setReferenceTargets(Set.of(new PositionDataDTO.ReferenceTarget("class-1", "assoc-1")));
 
         var positionModel = VisualizationMapper.mapPositionDataToModel(positionGraphURI,
                 List.of(node1, corner1, corner2));
@@ -459,7 +466,11 @@ class VisualizationDataMapperTest {
 
     private static VisualizationReferenceDTO getReference(String target, VisualizationReferenceType type) {
         var ref = new VisualizationReferenceDTO();
-        ref.setIdentifier(target);
+        if (type.equals(VisualizationReferenceType.PARENT_CLASS)) {
+            ref.setIdentifier(target);
+        } else {
+            ref.setIdentifier(target + "-assoc");
+        }
         ref.setReferenceTarget(target);
         ref.setReferenceType(type);
 
