@@ -149,17 +149,42 @@ public class DataModelService {
     }
 
     public void delete(String prefix, String version) {
-        check(userProvider.getUser().isSuperuser());
+        var dataModelURI = DataModelURI.createModelURI(prefix, version);
+        var graphUri = dataModelURI.getGraphURI();
 
-        var modelUri = DataModelURI.createModelURI(prefix, version);
-        var graphUri = modelUri.getGraphURI();
-        if(!coreRepository.graphExists(graphUri)) {
+        var model = coreRepository.fetch(graphUri);
+
+        if (!coreRepository.graphExists(graphUri)) {
             throw new ResourceNotFoundException(graphUri);
         }
 
+        check(authorizationManager.hasRightToModel(prefix, model));
+
+        var modelResource = model.getResource(dataModelURI.getModelURI());
+        var priorVersion = MapperUtils.propertyToString(modelResource, OWL.priorVersion);
+        var superUser = userProvider.getUser().isSuperuser();
+
+        if (version == null && priorVersion != null) {
+            throw new MappingError("Cannot remove draft data model with published versions: " + graphUri);
+        }
+
+        // only superuser can remove published models
+        if (!superUser && version != null) {
+            throw new MappingError("Cannot remove published data model: " + graphUri);
+        }
+
+        // cannot remove the model if there are any references to that
+        checkReferrerModels(graphUri);
+
         coreRepository.delete(graphUri);
+
+        // ensure the integrity of owl:priorVersion information
+        if (version != null) {
+            updatePriorVersions(graphUri, priorVersion);
+        }
+
         openSearchIndexer.deleteModelFromIndex(graphUri);
-        openSearchIndexer.removeResourceIndexesByDataModel(modelUri.getModelURI(), version);
+        openSearchIndexer.removeResourceIndexesByDataModel(dataModelURI.getModelURI(), version);
         auditService.log(AuditService.ActionType.DELETE, graphUri, userProvider.getUser());
     }
 
@@ -357,6 +382,35 @@ public class DataModelService {
                         .addFilter(e.not(e.strstarts(e.str("?g"), graph)));
 
         coreRepository.queryUpdate(builder.buildRequest());
+    }
+
+
+    private void updatePriorVersions(String graphUri, String priorVersion) {
+        var update = new UpdateBuilder();
+        update.addDelete("?g", "?s", OWL.priorVersion, NodeFactory.createURI(graphUri));
+        if (priorVersion != null) {
+            update.addInsert("?g", "?s", OWL.priorVersion, NodeFactory.createURI(priorVersion));
+        }
+        update.addGraph("?g", new WhereBuilder()
+                .addWhere("?s", OWL.priorVersion, NodeFactory.createURI(graphUri)));
+
+        coreRepository.queryUpdate(update.buildRequest());
+    }
+
+    private void checkReferrerModels(String graphUri) {
+        var refProperty = "?property";
+        var construct = new ConstructBuilder()
+                .addConstruct("?s", refProperty, NodeFactory.createURI(graphUri))
+                .addWhere(new WhereBuilder()
+                        .addWhere("?s", refProperty, NodeFactory.createURI(graphUri)))
+                .addValueVar(refProperty, OWL.imports, DCTerms.requires);
+
+        var result = coreRepository.queryConstruct(construct.build());
+
+        if (!result.isEmpty()) {
+            throw new MappingError("Cannot remove data model. It's already in use: "
+                                   + result.listSubjects().mapWith(Resource::getURI).toList());
+        }
     }
 
     private void addPrefixes(Model model, DataModelDTO dto) {

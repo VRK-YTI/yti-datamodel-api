@@ -9,11 +9,9 @@ import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
 import fi.vm.yti.datamodel.api.v2.mapper.ModelMapper;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexModel;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
-import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
 import fi.vm.yti.security.AuthenticatedUserProvider;
-import fi.vm.yti.security.AuthorizationException;
 import fi.vm.yti.security.YtiUser;
 import org.apache.jena.query.Query;
 import org.apache.jena.rdf.model.*;
@@ -29,7 +27,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.topbraid.shacl.vocabulary.SH;
 
 import java.net.URISyntaxException;
 import java.util.Map;
@@ -140,40 +137,83 @@ class DataModelServiceTest {
     }
 
     @Test
-    void delete() {
-        when(coreRepository.graphExists(anyString())).thenReturn(true);
-        when(coreRepository.fetch(anyString())).thenReturn(ModelFactory.createDefaultModel());
-        var mockUser = spy(EndpointUtils.mockSuperUser);
-        when(userProvider.getUser()).thenReturn(mockUser);
-        dataModelService.delete("test", null);
+    void deleteDraftModelWithPublishedVersion() {
+        var model = ModelFactory.createDefaultModel();
+        var dataModelURI = DataModelURI.createModelURI("test");
+        model.createResource(dataModelURI.getModelURI())
+            .addProperty(OWL.priorVersion, DataModelURI.createModelURI("test", "1.0.0").getGraphURI());
 
-        verify(coreRepository).graphExists(anyString());
-        verify(mockUser).isSuperuser();
-        verify(coreRepository).delete(anyString());
-        verify(openSearchIndexer).deleteModelFromIndex(anyString());
-        verify(openSearchIndexer).removeResourceIndexesByDataModel(anyString(), eq(null));
+        when(userProvider.getUser()).thenReturn(EndpointUtils.mockSuperUser);
+        when(authorizationManager.hasRightToModel(eq(dataModelURI.getModelId()), any(Model.class))).thenReturn(true);
+        when(coreRepository.graphExists(dataModelURI.getGraphURI())).thenReturn(true);
+        when(coreRepository.fetch(dataModelURI.getGraphURI())).thenReturn(model);
+
+        var error = assertThrows(MappingError.class, () -> dataModelService.delete("test", null));
+
+        assertTrue(error.getMessage().contains("Cannot remove draft data model with published versions"),
+                "Unexpected error message: " + error.getMessage());
+
+        verify(coreRepository, never()).delete(anyString());
+        verify(openSearchIndexer, never()).deleteModelFromIndex(anyString());
+        verify(openSearchIndexer, never()).removeResourceIndexesByDataModel(anyString(), eq(null));
+    }
+
+    @Test
+    void deleteModelWithReferences() {
+        var model = ModelFactory.createDefaultModel();
+        var dataModelURI = DataModelURI.createModelURI("test", "1.0.0");
+
+        when(userProvider.getUser()).thenReturn(EndpointUtils.mockSuperUser);
+        when(authorizationManager.hasRightToModel(eq(dataModelURI.getModelId()), any(Model.class))).thenReturn(true);
+        when(coreRepository.graphExists(dataModelURI.getGraphURI())).thenReturn(true);
+        when(coreRepository.fetch(dataModelURI.getGraphURI())).thenReturn(model);
+
+        var refCheckResult = ModelFactory.createDefaultModel();
+        refCheckResult.createResource("https://iri.suomi.fi/model/some-ref-model/")
+                .addProperty(OWL.imports, ResourceFactory.createResource(dataModelURI.getGraphURI()));
+
+        when(coreRepository.queryConstruct(any(Query.class))).thenReturn(refCheckResult);
+
+        var error = assertThrows(MappingError.class, () -> dataModelService.delete("test", "1.0.0"));
+
+        assertTrue(error.getMessage().contains("Cannot remove data model. It's already in use"),
+                "Unexpected error message: " + error.getMessage());
     }
 
     @Test
     void deleteVersionedModel() {
         when(coreRepository.graphExists(anyString())).thenReturn(true);
         when(coreRepository.fetch(anyString())).thenReturn(ModelFactory.createDefaultModel());
-        var mockUser = spy(EndpointUtils.mockSuperUser);
-        when(userProvider.getUser()).thenReturn(mockUser);
-        dataModelService.delete("test", "1.0.1");
+        when(userProvider.getUser()).thenReturn(EndpointUtils.mockUser);
+        when(authorizationManager.hasRightToModel(anyString(), any(Model.class))).thenReturn(true);
+
+        var error = assertThrows(MappingError.class, () -> dataModelService.delete("test", "1.0.1"));
+
+        assertTrue(error.getMessage().contains("Cannot remove published data model"),
+                "Unexpected error message: " + error.getMessage());
 
         verify(coreRepository).graphExists(anyString());
-        verify(mockUser).isSuperuser();
-        verify(coreRepository).delete(anyString());
-        verify(openSearchIndexer).deleteModelFromIndex(anyString());
-        verify(openSearchIndexer).removeResourceIndexesByDataModel(anyString(), eq("1.0.1"));
+        verify(coreRepository, never()).delete(anyString());
+        verify(openSearchIndexer, never()).deleteModelFromIndex(anyString());
+        verify(openSearchIndexer, never()).removeResourceIndexesByDataModel(anyString(), eq("1.0.1"));
     }
 
     @Test
-    void deleteNotSuperUser() {
-        when(userProvider.getUser()).thenReturn(mock(YtiUser.class));
-        assertThrows(AuthorizationException.class, () -> dataModelService.delete("test", null));
-        assertThrows(AuthorizationException.class, () -> dataModelService.delete("test", "1.0.1"));
+    void deleteDraftModelWithoutReferencesOrPublishedVersions() {
+        var model = ModelFactory.createDefaultModel();
+        var dataModelURI = DataModelURI.createModelURI("test");
+
+        when(userProvider.getUser()).thenReturn(EndpointUtils.mockUser);
+        when(authorizationManager.hasRightToModel(eq(dataModelURI.getModelId()), any(Model.class))).thenReturn(true);
+        when(coreRepository.graphExists(dataModelURI.getGraphURI())).thenReturn(true);
+        when(coreRepository.fetch(dataModelURI.getGraphURI())).thenReturn(model);
+        when(coreRepository.queryConstruct(any(Query.class))).thenReturn(ModelFactory.createDefaultModel());
+
+        dataModelService.delete(dataModelURI.getModelId(), null);
+
+        verify(coreRepository).delete(anyString());
+        verify(openSearchIndexer).deleteModelFromIndex(anyString());
+        verify(openSearchIndexer).removeResourceIndexesByDataModel(anyString(), eq(null));
     }
 
     @Test
