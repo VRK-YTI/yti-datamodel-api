@@ -37,10 +37,10 @@ public class SubscriptionService implements SnsService {
         if (profiles.contains("localSNS")) {
             // If you need to test sending notifications from local environment,
             // switch to profile localSNS and run following commands before starting the application
-            // aws sso login --profile dvv-yti-dev
-            // export AWS_PROFILE=dvv-yti-dev
+            // aws sso login --profile <profile>
+            // export AWS_PROFILE=<profile>
             snsClientBuilder.credentialsProvider(
-                    ProfileCredentialsProvider.builder().profileName("dvv-yti-dev").build());
+                    ProfileCredentialsProvider.builder().profileName("profile").build());
         }
 
         this.snsClient = snsClientBuilder.build();

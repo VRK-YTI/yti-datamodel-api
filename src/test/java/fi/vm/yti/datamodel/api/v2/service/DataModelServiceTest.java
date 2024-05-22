@@ -218,6 +218,7 @@ class DataModelServiceTest {
         verify(coreRepository).delete(anyString());
         verify(openSearchIndexer).deleteModelFromIndex(anyString());
         verify(openSearchIndexer).removeResourceIndexesByDataModel(anyString(), eq(null));
+        verify(dataModelSubscriptionService).deleteTopic("test");
     }
 
     @Test

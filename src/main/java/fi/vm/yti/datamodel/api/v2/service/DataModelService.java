@@ -182,8 +182,11 @@ public class DataModelService {
         coreRepository.delete(graphUri);
 
         // ensure the integrity of owl:priorVersion information
+        // if removing draft version, also notification topic will be removed
         if (version != null) {
             updatePriorVersions(graphUri, priorVersion);
+        } else {
+            dataModelSubscriptionService.deleteTopic(prefix);
         }
 
         openSearchIndexer.deleteModelFromIndex(graphUri);
