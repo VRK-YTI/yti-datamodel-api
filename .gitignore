@@ -7,7 +7,7 @@
 .classpath
 .project
 *.log
-/src/main/resources/config/application-local.properties
+/src/main/resources/config/application-local*.properties
 out
 build
 bin

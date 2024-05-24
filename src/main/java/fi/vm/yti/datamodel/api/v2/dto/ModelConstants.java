@@ -70,4 +70,9 @@ public class ModelConstants {
             "http://www.w3.org/2001/XMLSchema#unsignedLong",
             "http://www.w3.org/2001/XMLSchema#unsignedShort"
     );
+
+    public static final String EMAIL_NOTIFICATION_TITLE = "Tietomalli julkaistu " +
+                                                          "/ Informationsmodellen har publicerats " +
+                                                          "/ Data model has been published";
 }
+
