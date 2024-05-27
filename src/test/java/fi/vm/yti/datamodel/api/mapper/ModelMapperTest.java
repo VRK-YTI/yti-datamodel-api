@@ -20,6 +20,7 @@ import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.sparql.vocabulary.FOAF;
 import org.apache.jena.vocabulary.*;
+import org.bouncycastle.math.raw.Mod;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -490,6 +491,30 @@ class ModelMapperTest {
         dto.setDocumentation(Map.of("fi", "new documentation"));
         var error = assertThrows(MappingError.class, () -> mapper.mapUpdateVersionedModel(m, graphUri, dto, EndpointUtils.mockUser));
         assertEquals("Error during mapping: Cannot change status from VALID to " + status.name(), error.getMessage());
+    }
+
+    @Test
+    void mapChildOrganization() {
+        var mockUser = EndpointUtils.mockUser;
+        var dataModelURI = DataModelURI.createModelURI("test");
+        var parent = "74776e94-7f51-48dc-aeec-c084c4defa09";
+        var child = "8fab2816-03c5-48cd-9d48-b61048f435da";
+
+        var dto = new DataModelDTO();
+        dto.setPrefix(dataModelURI.getModelId());
+        dto.setOrganizations(Set.of(UUID.fromString(child)));
+
+        var model = mapper.mapToJenaModel(dto, ModelType.LIBRARY, mockUser);
+
+        var organizations = MapperUtils.arrayPropertyToList(model.getResource(dataModelURI.getGraphURI()),
+                DCTerms.contributor);
+
+        // parent organization should be added automatically
+        assertEquals(2, organizations.size());
+        assertTrue(organizations.containsAll(List.of(
+                ModelConstants.URN_UUID + parent,
+                ModelConstants.URN_UUID + child))
+        );
     }
 
 }
