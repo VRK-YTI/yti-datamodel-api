@@ -298,9 +298,15 @@ public class ModelMapper {
         var organizationsModel = coreRepository.getOrganizations();
         organizations.forEach(org -> {
             var orgUri = ModelConstants.URN_UUID + org;
-            var queryRes = ResourceFactory.createResource(orgUri);
-            if(organizationsModel.containsResource(queryRes)){
-                modelResource.addProperty(DCTerms.contributor, organizationsModel.getResource(orgUri));
+            var orgResource = organizationsModel.getResource(orgUri);
+            if (organizationsModel.containsResource(orgResource)) {
+                modelResource.addProperty(DCTerms.contributor, orgResource);
+
+                var parent = MapperUtils.propertyToString(orgResource, SuomiMeta.parentOrganization);
+
+                if (parent != null && !parent.isEmpty() && !organizations.contains(MapperUtils.getUUID(parent))) {
+                    modelResource.addProperty(DCTerms.contributor, ResourceFactory.createResource(parent));
+                }
             }
         });
     }
