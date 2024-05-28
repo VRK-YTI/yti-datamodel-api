@@ -2,13 +2,12 @@ package fi.vm.yti.datamodel.api.v2.service;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import fi.vm.yti.datamodel.api.v2.dto.GroupManagementOrganizationDTO;
-import fi.vm.yti.datamodel.api.v2.dto.GroupManagementUserDTO;
-import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
-import fi.vm.yti.datamodel.api.v2.dto.ResourceCommonDTO;
+import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
+import fi.vm.yti.security.AuthenticatedUserProvider;
+import fi.vm.yti.security.AuthorizationException;
 import fi.vm.yti.security.YtiUser;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.slf4j.Logger;
@@ -32,6 +31,7 @@ public class GroupManagementService {
 
     private static final Logger LOG = LoggerFactory.getLogger(GroupManagementService.class);
     private final CoreRepository coreRepository;
+    private final AuthenticatedUserProvider userProvider;
 
     private final WebClient webClient;
 
@@ -42,9 +42,10 @@ public class GroupManagementService {
 
     public GroupManagementService(
             @Qualifier("groupManagementClient") WebClient webClient,
-            CoreRepository coreRepository) {
+            CoreRepository coreRepository, AuthenticatedUserProvider userProvider) {
         this.webClient = webClient;
         this.coreRepository = coreRepository;
+        this.userProvider = userProvider;
         userCache = CacheBuilder.newBuilder().build();
     }
 
@@ -202,6 +203,40 @@ public class GroupManagementService {
 
         orgIds.addAll(childOrganizationIds);
         return orgIds;
+    }
+
+    public List<GroupManagementUserRequestDTO> getUserRequests() {
+        var user = userProvider.getUser();
+
+        if (user.isAnonymous()) {
+            throw new AuthorizationException("User not authenticated");
+        }
+
+        return webClient.get().uri(builder -> builder
+                .pathSegment("private-api", "requests")
+                .queryParam("userId", user.getId())
+                .build())
+            .retrieve()
+            .bodyToMono(new ParameterizedTypeReference<List<GroupManagementUserRequestDTO>>() {
+            }).block();
+    }
+
+    public void sendRequest(UUID organizationId, String[] roles) {
+        var user = userProvider.getUser();
+
+        if (user.isAnonymous()) {
+            throw new AuthorizationException("User not authenticated");
+        }
+
+        webClient.post().uri(builder -> builder
+                    .pathSegment("private-api", "request")
+                    .queryParam("userId", user.getId())
+                    .queryParam("organizationId", organizationId)
+                    .queryParam("role", Arrays.asList(roles))
+                    .build())
+                .retrieve()
+                .bodyToMono(Void.class)
+                .block();
     }
 
     private static final class GroupManagementException extends RuntimeException{
