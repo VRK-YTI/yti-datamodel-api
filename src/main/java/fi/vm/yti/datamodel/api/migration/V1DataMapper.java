@@ -38,6 +38,9 @@ public class V1DataMapper {
     private static final Property LOCAL_NAME =
             ResourceFactory.createProperty("http://uri.suomi.fi/datamodel/ns/iow#localName");
 
+    private static final Property preferredXMLNamespaceName =
+            ResourceFactory.createProperty("http://purl.org/ws-mmi-dc/terms/preferredXMLNamespaceName");
+
     private static final Map<String, List<String>> ERRORS = new HashMap<>();
 
     public static DataModelDTO getLibraryMetadata(String modelURI, Model oldData, Model serviceCategories, String defaultOrganization) {
@@ -82,7 +85,12 @@ public class V1DataMapper {
                         var ext = new ExternalNamespaceDTO();
 
                         if (!ns.endsWith("/") && !ns.endsWith("#")) {
-                            ns = ns + "/";
+                            var nsResource = oldData.getResource(ns);
+                            if (nsResource.hasProperty(preferredXMLNamespaceName)) {
+                                ns = MapperUtils.propertyToString(nsResource, preferredXMLNamespaceName);
+                            } else {
+                                ns = ns + "/";
+                            }
                         }
                         ext.setNamespace(ns);
                         var label = MapperUtils.localizedPropertyToMap(extResource, RDFS.label);
