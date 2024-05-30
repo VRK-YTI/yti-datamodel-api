@@ -12,7 +12,7 @@ import java.util.Map;
 import java.util.UUID;
 
 @Service
-@Profile({"junit", "local"})
+@Profile({"junit", "local", "docker"})
 public class MockSnsService implements SnsService {
 
     private static final Logger LOG = LoggerFactory.getLogger(MockSnsService.class);
