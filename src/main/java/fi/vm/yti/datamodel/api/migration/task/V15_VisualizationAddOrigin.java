@@ -40,8 +40,7 @@ public class V15_VisualizationAddOrigin implements MigrationTask {
                    filter strstarts(str(?g), "https://iri.suomi.fi/model/")
                 }
                 """;
-        // TODO: uncomment when doing migration
-        // repository.querySelect(graphsQuery, row -> graphs.add(row.get("g").toString()));
+        repository.querySelect(graphsQuery, row -> graphs.add(row.get("g").toString()));
 
         for (var graph : graphs) {
             LOG.info("Migrating visualization for {}", graph);
@@ -100,9 +99,6 @@ public class V15_VisualizationAddOrigin implements MigrationTask {
             model.setNsPrefixes(ModelConstants.PREFIXES);
 
             var targetGraph = getPositionGraphURI(dataModelURI.getModelId(), dataModelURI.getVersion());
-
-            // store in test graph at first?
-            // targetGraph = targetGraph.replace("iri.suomi.fi/model-positions/", "iri.suomi.fi/model-positions-test/");
 
             repository.put(targetGraph, model);
         }
