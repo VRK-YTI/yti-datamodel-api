@@ -56,11 +56,6 @@ public class V15_VisualizationAddOrigin implements MigrationTask {
                 continue;
             }
 
-            // backup old data
-            var backUpGraph = getPositionGraphURI(dataModelURI.getModelId(), dataModelURI.getVersion())
-                    .replace("iri.suomi.fi/model-positions/", "iri.suomi.fi/model-positions-backup/");
-            repository.put(backUpGraph, positions);
-
             var hiddenNodes = mapPathAndCreateHiddenNodes(positions, visuData.getNodes());
 
             visuData.setHiddenNodes(hiddenNodes);

@@ -285,13 +285,24 @@ public class VisualizationMapper {
             while (positionSubject.hasProperty(SuomiMeta.referenceTarget)) {
                 var identifier = MapperUtils.propertyToString(positionSubject, DCTerms.identifier);
 
+                // if there is an element in the path, that is not a hidden node and not the same as source node,
+                // this is the wrong path. Jump to the next resource
+                if (identifier != null
+                        && !identifier.startsWith(ModelConstants.CORNER_PREFIX)
+                        && !sourceIdentifier.equals(identifier)) {
+                    break;
+                }
+
                 // reached the source node
                 if (sourceIdentifier.equals(identifier)) {
                     return path;
                 }
 
                 path.addFirst(positionSubject.getLocalName());
-                hiddenElements.add(mapHiddenNode(positionSubject, reference, sourceIdentifier));
+
+                if (positionSubject.getLocalName().startsWith(ModelConstants.CORNER_PREFIX)) {
+                    hiddenElements.add(mapHiddenNode(positionSubject, reference, sourceIdentifier));
+                }
 
                 var references = positions.listSubjectsWithProperty(SuomiMeta.target, positionSubject.getLocalName()).toList();
 
