@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -29,6 +30,16 @@ public class ResolveController {
     public ResponseEntity<String> resolve(@RequestParam @Parameter(description = "Resource IRI") String iri,
                                           @RequestHeader(value = HttpHeaders.ACCEPT) String accept) {
         return uriResolveService.resolve(iri, accept);
+    }
+
+    @GetMapping("/v1")
+    public ResponseEntity<Void> resolveV1URL(@RequestParam String modelId, @RequestParam(required = false) String resourceId) {
+        HttpHeaders headers = new HttpHeaders();
+
+        var url = uriResolveService.resolveLegacyURL(modelId, resourceId);
+        headers.add(HttpHeaders.LOCATION, url);
+
+        return new ResponseEntity<>(headers, HttpStatus.MOVED_PERMANENTLY);
     }
 
 }

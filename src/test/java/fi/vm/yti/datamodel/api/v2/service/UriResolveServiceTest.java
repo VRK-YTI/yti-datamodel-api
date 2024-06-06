@@ -1,8 +1,14 @@
 package fi.vm.yti.datamodel.api.v2.service;
 
 import fi.vm.yti.datamodel.api.mapper.MapperTestUtils;
+import fi.vm.yti.datamodel.api.security.AuthorizationManager;
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
+import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.rdf.model.ResourceFactory;
+import org.apache.jena.vocabulary.OWL;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -17,7 +23,7 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(SpringExtension.class)
@@ -28,6 +34,8 @@ class UriResolveServiceTest {
 
     @MockBean
     private CoreRepository coreRepository;
+    @MockBean
+    private AuthorizationManager authorizationManager;
     @Autowired
     private UriResolveService service;
 
@@ -35,6 +43,7 @@ class UriResolveServiceTest {
     void init() {
         MockHttpServletRequest request = new MockHttpServletRequest();
         RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
+        when(authorizationManager.hasRightToModel(eq("test"), any(Model.class))).thenReturn(false);
     }
     @Test
     void testRedirectSiteModel() {
@@ -87,5 +96,39 @@ class UriResolveServiceTest {
         assertTrue(response.getStatusCode().is3xxRedirection());
         assertNotNull(response.getHeaders().getLocation());
         assertTrue(response.getHeaders().getLocation().toString().contains("contentType=text/turtle"));
+    }
+
+    @Test
+    void testV1RedirectsPublishedVersion() {
+        var uri = DataModelURI.createModelURI("test", "1.0.0");
+        var model = ModelFactory.createDefaultModel();
+        model.createResource(uri.getModelURI())
+                        .addProperty(OWL.priorVersion, ResourceFactory.createResource(uri.getGraphURI()));
+
+        when(coreRepository.fetch(uri.getDraftGraphURI())).thenReturn(model);
+
+        var modelUrl = service.resolveLegacyURL("test", null);
+        var resourceUrl = service.resolveLegacyURL("test", "class-1");
+        var fragmentUrl = service.resolveLegacyURL("test#class-1", null);
+
+        assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "test/1.0.0/", modelUrl);
+        assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "test/1.0.0/class-1", resourceUrl);
+        assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "test/1.0.0/class-1", fragmentUrl);
+    }
+
+    @Test
+    void testV1RedirectsDraftVersion() {
+        var uri = DataModelURI.createModelURI("test");
+        var model = ModelFactory.createDefaultModel();
+
+        when(coreRepository.fetch(uri.getDraftGraphURI())).thenReturn(model);
+
+        var modelUrl = service.resolveLegacyURL("test", null);
+        var resourceUrl = service.resolveLegacyURL("test", "class-1");
+        var fragmentUrl = service.resolveLegacyURL("test#class-1", null);
+
+        assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "test/", modelUrl);
+        assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "test/class-1", resourceUrl);
+        assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "test/class-1", fragmentUrl);
     }
 }

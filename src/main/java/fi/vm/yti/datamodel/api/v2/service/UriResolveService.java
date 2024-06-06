@@ -1,5 +1,6 @@
 package fi.vm.yti.datamodel.api.v2.service;
 
+import fi.vm.yti.datamodel.api.security.AuthorizationManager;
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
 import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
@@ -8,10 +9,12 @@ import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIFactory;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.vocabulary.OWL;
+import org.apache.jena.vocabulary.OWL2;
 import org.apache.jena.vocabulary.RDF;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,9 +30,15 @@ public class UriResolveService {
     private final Logger logger = LoggerFactory.getLogger(UriResolveService.class);
     private static final IRIFactory iriFactory = IRIFactory.iriImplementation();
     private final CoreRepository coreRepository;
+    private final AuthorizationManager authorizationManager;
 
-    public UriResolveService(CoreRepository coreRepository) {
+    @Value("${env:}")
+    private String awsEnv;
+
+    public UriResolveService(CoreRepository coreRepository,
+                             AuthorizationManager authorizationManager) {
         this.coreRepository = coreRepository;
+        this.authorizationManager = authorizationManager;
     }
 
     public ResponseEntity<String> resolve(String iri, String accept) {
@@ -57,6 +66,38 @@ public class UriResolveService {
                 .status(HttpStatus.SEE_OTHER)
                 .header(HttpHeaders.LOCATION, redirectURL)
                 .build();
+    }
+
+    public String resolveLegacyURL(String modelId, String resourceId) {
+        logger.info("Resolving legacy url for {}, {}", modelId, resourceId);
+
+        // handle fragment, e.g. http://uri.suomi.fi/datamodel/ns/model-id#resource-id
+        if (modelId.contains("#")) {
+            var parts = modelId.split("#");
+            modelId = parts[0];
+            resourceId = parts[1];
+        }
+
+        var uri = DataModelURI.createModelURI(modelId);
+
+        var model = coreRepository.fetch(uri.getGraphURI());
+        var hasRights = authorizationManager.hasRightToModel(uri.getModelId(), model);
+
+        String version = null;
+        var versionIRI = MapperUtils.propertyToString(model.getResource(uri.getModelURI()), OWL2.priorVersion);
+        if (versionIRI != null && !hasRights) {
+            version = DataModelURI.fromURI(versionIRI).getVersion();
+        }
+
+        var resolvedURI = resourceId != null
+                ? DataModelURI.createResourceURI(modelId, resourceId, version).getResourceVersionURI()
+                : DataModelURI.createModelURI(modelId, version).getGraphURI();
+
+        if (!awsEnv.isBlank()) {
+            return resolvedURI + "?env=" + awsEnv;
+        }
+
+        return resolvedURI;
     }
 
     @NotNull
