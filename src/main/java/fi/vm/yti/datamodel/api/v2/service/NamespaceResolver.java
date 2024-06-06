@@ -59,6 +59,9 @@ public class NamespaceResolver {
     public boolean resolveNamespace(String namespace){
         logger.info("Resolving namespace: {}", namespace);
         var model = ModelFactory.createDefaultModel();
+
+        // resolvable URI is different from graph name
+        var resolvableURI = NamespaceService.DEFAULT_NAMESPACE_RESOLVABLE_URIS.getOrDefault(namespace, namespace);
         try{
             var accept = String.join(", ", ACCEPT_TYPES);
 
@@ -67,7 +70,7 @@ public class NamespaceResolver {
                 accept = "application/ld+json";
             }
             RDFParser.create()
-                    .source(namespace)
+                    .source(resolvableURI)
                     .lang(Lang.RDFXML)
                     .acceptHeader(accept)
                     .parse(model);

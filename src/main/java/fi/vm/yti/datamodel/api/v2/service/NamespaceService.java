@@ -44,7 +44,13 @@ public class NamespaceService {
             Map.entry("foaf", "http://xmlns.com/foaf/0.1/"),
             Map.entry("vcard", "http://www.w3.org/2006/vcard/ns#"),
             Map.entry("elm", "http://data.europa.eu/snb/model/elm"),
-            Map.entry("unece", "https://vocabulary.uncefact.org/")
+            Map.entry("unece", "https://vocabulary.uncefact.org/"),
+            Map.entry("gs1", "https://gs1.org/voc/")
+    );
+
+    // Resolvable URIs by namespace name
+    public static final Map<String, String> DEFAULT_NAMESPACE_RESOLVABLE_URIS = Map.of(
+            "https://gs1.org/voc/", "https://www.gs1.org/docs/gs1-smartsearch/gs1Voc_v1_10.ttl"
     );
 
     public void resolveDefaultNamespaces() {
