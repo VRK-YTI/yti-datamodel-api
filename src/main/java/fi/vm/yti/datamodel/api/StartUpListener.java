@@ -44,11 +44,11 @@ public class StartUpListener {
     public void contextInitialized() {
         logger.info("System is starting ...");
 
-        initDefaultNamespaces();
         initOrganizations();
         initUsers();
         initServiceCategories();
         initOpenSearchIndices();
+        initDefaultNamespaces();
     }
 
     private void initOrganizations() {
