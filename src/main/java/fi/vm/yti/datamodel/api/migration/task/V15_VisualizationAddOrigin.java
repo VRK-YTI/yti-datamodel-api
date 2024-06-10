@@ -48,9 +48,10 @@ public class V15_VisualizationAddOrigin implements MigrationTask {
             var dataModelURI = DataModelURI.fromURI(graph);
             VisualizationResultDTO visuData;
             Model positions;
+            var positionGraphURI = getPositionGraphURI(dataModelURI.getModelId(), dataModelURI.getVersion());
             try {
                 visuData = visualizationService.getVisualizationData(dataModelURI.getModelId(), dataModelURI.getVersion());
-                positions = repository.fetch(getPositionGraphURI(dataModelURI.getModelId(), dataModelURI.getVersion()));
+                positions = repository.fetch(positionGraphURI);
             } catch (Exception e) {
                 LOG.info("No visualization data for graph {}", dataModelURI.getModelURI());
                 continue;
@@ -89,13 +90,11 @@ public class V15_VisualizationAddOrigin implements MigrationTask {
                 positionData.add(position);
             });
 
-            var model = VisualizationMapper.mapPositionDataToModel(
-                    getPositionGraphURI(dataModelURI.getModelId(), dataModelURI.getVersion()),  positionData);
+            var positionBase = ModelConstants.MODEL_POSITIONS_NAMESPACE + dataModelURI.getModelId() + ModelConstants.RESOURCE_SEPARATOR;
+            var model = VisualizationMapper.mapPositionDataToModel(positionBase, positionData);
             model.setNsPrefixes(ModelConstants.PREFIXES);
 
-            var targetGraph = getPositionGraphURI(dataModelURI.getModelId(), dataModelURI.getVersion());
-
-            repository.put(targetGraph, model);
+            repository.put(positionGraphURI, model);
         }
     }
 
@@ -192,8 +191,12 @@ public class V15_VisualizationAddOrigin implements MigrationTask {
             // find starting point of hidden node, it should equal to sourceIdentifier
             var i = identifier;
             while (i.startsWith(ModelConstants.CORNER_PREFIX)) {
-                var s = positions.listSubjectsWithProperty(SuomiMeta.referenceTarget, i).next();
-                i = s.getLocalName();
+                var s = positions.listSubjectsWithProperty(SuomiMeta.referenceTarget, i);
+                if (s.hasNext()) {
+                    i = s.next().getLocalName();
+                } else {
+                    break;
+                }
             }
             return !i.equals(sourceIdentifier);
         }
