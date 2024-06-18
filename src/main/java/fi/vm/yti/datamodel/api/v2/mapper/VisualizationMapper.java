@@ -21,6 +21,10 @@ import java.util.*;
 public class VisualizationMapper {
     private static final Logger LOG = LoggerFactory.getLogger(VisualizationMapper.class);
 
+    private static final List<VisualizationReferenceType> CLASS_REF_TYPES = List.of(
+            VisualizationReferenceType.PARENT_CLASS,
+            VisualizationReferenceType.ATTRIBUTE_DOMAIN);
+
     private VisualizationMapper() {
     }
 
@@ -324,7 +328,7 @@ public class VisualizationMapper {
     private static boolean isSameOrigin(String sourceIdentifier, VisualizationReferenceDTO reference, Resource targetResource) {
         var origin = MapperUtils.propertyToString(targetResource, SuomiMeta.origin);
 
-        if (reference.getReferenceType().equals(VisualizationReferenceType.PARENT_CLASS) && sourceIdentifier.equals(origin)) {
+        if (CLASS_REF_TYPES.contains(reference.getReferenceType()) && sourceIdentifier.equals(origin)) {
             return true;
         } else {
             return reference.getReferenceType().equals(VisualizationReferenceType.ASSOCIATION) && reference.getIdentifier().equals(origin);
