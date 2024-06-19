@@ -2,6 +2,7 @@ package fi.vm.yti.datamodel.api.migration;
 
 import fi.vm.yti.datamodel.api.security.AuthorizationManager;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelUtils;
+import io.swagger.v3.oas.annotations.Hidden;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFParser;
@@ -19,6 +20,7 @@ import static fi.vm.yti.security.AuthorizationException.check;
 
 @RestController
 @RequestMapping("v2/migration")
+@Hidden
 public class DataMigrationController {
 
     private static final Logger LOG = LoggerFactory.getLogger(DataMigrationController.class);
