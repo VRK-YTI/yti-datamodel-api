@@ -262,4 +262,31 @@ public class ClassController {
         return ResponseEntity.created(newURI).build();
     }
 
+    @Operation(summary = "Add code lists for library class' attribute")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Code list successfully"),
+            @ApiResponse(responseCode = "401", description = "Current user does not have rights for this model"),
+            @ApiResponse(responseCode = "404", description = "Resource not found", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ApiError.class))})
+    })
+    @PutMapping(value = "/library/{prefix}/{classIdentifier}/codeList", consumes = APPLICATION_JSON_VALUE)
+    public void addCodeList(@PathVariable @Parameter(description = "Data model prefix") String prefix,
+                            @PathVariable @Parameter(description = "Class whose attribute code list will be added") String classIdentifier,
+                            @RequestBody AddCodeListPayloadDTO payload) {
+        classService.addCodeList(prefix, classIdentifier, payload.getAttributeUri(), payload.getCodeLists());
+    }
+
+    @Operation(summary = "Remove code list from library class' attribute")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Code list removed successfully"),
+            @ApiResponse(responseCode = "401", description = "Current user does not have rights for this model"),
+            @ApiResponse(responseCode = "404", description = "Resource not found", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ApiError.class))})
+    })
+    @DeleteMapping(value = "/library/{prefix}/{classIdentifier}/codeList")
+    public void removeCodeList(@PathVariable @Parameter(description = "Data model prefix") String prefix,
+                               @PathVariable @Parameter(description = "Class whose attribute code list will be removed") String classIdentifier,
+                               @RequestParam @Parameter(description = "Attribute to which code list will be removed") String attributeUri,
+                               @RequestParam @Parameter(description = "Code list URI") String codeListUri) {
+        classService.removeCodeList(prefix, classIdentifier, attributeUri, codeListUri);
+    }
+
 }

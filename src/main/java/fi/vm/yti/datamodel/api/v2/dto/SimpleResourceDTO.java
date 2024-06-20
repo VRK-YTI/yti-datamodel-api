@@ -1,6 +1,7 @@
 package fi.vm.yti.datamodel.api.v2.dto;
 
 import java.util.Map;
+import java.util.Set;
 
 public class SimpleResourceDTO {
 
@@ -14,6 +15,7 @@ public class SimpleResourceDTO {
     private ConceptDTO concept;
     private Map<String, String> note;
     private UriDTO range;
+    private Set<String> codeLists = Set.of();
 
     public String getUri() {
         return uri;
@@ -93,5 +95,13 @@ public class SimpleResourceDTO {
 
     public void setRange(UriDTO range) {
         this.range = range;
+    }
+
+    public Set<String> getCodeLists() {
+        return codeLists;
+    }
+
+    public void setCodeLists(Set<String> codeLists) {
+        this.codeLists = codeLists;
     }
 }

@@ -47,10 +47,16 @@ class NodeShapeMapperTest {
         dto.setTargetClass(ModelConstants.SUOMI_FI_NAMESPACE + "target/Class");
         dto.setApiPath("/api/path/");
 
+        var attributeRestriction = new SimpleResourceDTO();
+        attributeRestriction.setUri(DataModelURI
+                .createResourceURI("test_lib","attribute-1", "1.0.0")
+                .getResourceVersionURI());
+        attributeRestriction.setCodeLists(Set.of("http://uri.suomi.fi/codelist/test"));
+
         var uri = DataModelURI.createResourceURI("test", "TestClass");
         ClassMapper.createNodeShapeAndMapToModel(uri, model, dto, mockUser);
         ClassMapper.mapPlaceholderPropertyShapes(model, uri.getResourceURI(),
-                propertiesQueryResult, mockUser, freePrefixCheck);
+                propertiesQueryResult, mockUser, freePrefixCheck, List.of(attributeRestriction));
 
         Resource modelResource = model.getResource(uri.getModelURI());
         Resource classResource = model.getResource(uri.getResourceURI());
@@ -94,6 +100,7 @@ class NodeShapeMapperTest {
         assertEquals(Status.DRAFT, MapperUtils.getStatusFromUri(MapperUtils.propertyToString(propertyShapeAttribute, SuomiMeta.publicationStatus)));
         assertEquals("Attribute attribute-1", MapperUtils.localizedPropertyToMap(propertyShapeAttribute, RDFS.label).get("fi"));
         assertEquals("/api/path/", MapperUtils.propertyToString(classResource, HTTP.API_PATH));
+        assertEquals(Set.of("http://uri.suomi.fi/codelist/test"), MapperUtils.arrayPropertyToSet(propertyShapeAttribute, SuomiMeta.codeList));
     }
 
     @Test
