@@ -103,8 +103,19 @@ public class DataModelController {
     })
     @GetMapping(value = "/{prefix}", produces = APPLICATION_JSON_VALUE)
     public DataModelInfoDTO getModel(@PathVariable @Parameter(description = "Data model prefix") String prefix,
-                                     @RequestParam(required = false) @Parameter(description = "Model version, if empty gets the draft version") @ValidSemanticVersion String version) {
+                                     @RequestParam(required = false) @Parameter(description = "Model version, if empty gets the latest version") @ValidSemanticVersion String version) {
         return dataModelService.get(prefix, version);
+    }
+
+    @ApiResponse(responseCode = "200", description = "Datamodel object for the found draft model")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Draft data model found"),
+            @ApiResponse(responseCode = "401", description = "User has no permissions to the model"),
+            @ApiResponse(responseCode = "404", description = "Data model was not found", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ApiError.class))}),
+    })
+    @GetMapping(value = "/{prefix}/draft", produces = APPLICATION_JSON_VALUE)
+    public DataModelInfoDTO getDraftModel(@PathVariable @Parameter(description = "Data model prefix") String prefix) {
+        return dataModelService.getDraft(prefix);
     }
 
     @Operation(summary = "Check if prefix already exists")

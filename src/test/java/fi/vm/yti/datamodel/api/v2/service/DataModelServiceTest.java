@@ -14,6 +14,7 @@ import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
 import fi.vm.yti.security.AuthenticatedUserProvider;
 import fi.vm.yti.security.YtiUser;
 import org.apache.jena.query.Query;
+import org.apache.jena.query.QuerySolution;
 import org.apache.jena.rdf.model.*;
 import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDF;
@@ -33,6 +34,7 @@ import java.net.URISyntaxException;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -80,14 +82,29 @@ class DataModelServiceTest {
     private static final UUID RANDOM_ORG = UUID.randomUUID();
 
     @Test
-    void get() {
+    void getWithoutVersion() {
         when(coreRepository.fetch(anyString())).thenReturn(ModelFactory.createDefaultModel());
+        assertThrows(ResourceNotFoundException.class, () -> dataModelService.get("test", null));
+    }
+
+    @Test
+    void getLatest() {
+        var versionIri = "https://iri.suomi.fi/model/test/1.0.0/";
+
+        var solution = mock(QuerySolution.class);
+        var rdfNode = mock(RDFNode.class);
+        when(rdfNode.toString()).thenReturn(versionIri);
+        when(solution.get("version")).thenReturn(rdfNode);
+
+        doAnswer(a -> {
+            var arg = a.getArgument(1, Consumer.class);
+            arg.accept(solution);
+            return null;
+        }).when(coreRepository).querySelect(any(Query.class), any(Consumer.class));
 
         dataModelService.get("test", null);
 
-        verify(coreRepository).fetch(ModelConstants.SUOMI_FI_NAMESPACE + "test" + ModelConstants.RESOURCE_SEPARATOR);
-        verify(authorizationManager).hasRightToModel(eq("test"), any(Model.class));
-        verify(modelMapper).mapToDataModelDTO(anyString(), any(Model.class), eq(null));
+        verify(coreRepository).fetch(versionIri);
     }
 
     @Test

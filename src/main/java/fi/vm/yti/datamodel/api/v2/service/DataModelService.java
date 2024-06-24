@@ -17,6 +17,7 @@ import fi.vm.yti.datamodel.api.v2.utils.SemVer;
 import fi.vm.yti.datamodel.api.v2.validator.ValidationConstants;
 import fi.vm.yti.security.AuthenticatedUserProvider;
 import org.apache.jena.arq.querybuilder.ConstructBuilder;
+import org.apache.jena.arq.querybuilder.SelectBuilder;
 import org.apache.jena.arq.querybuilder.UpdateBuilder;
 import org.apache.jena.arq.querybuilder.WhereBuilder;
 import org.apache.jena.graph.NodeFactory;
@@ -81,9 +82,29 @@ public class DataModelService {
         this.dataModelSubscriptionService = dataModelSubscriptionService;
     }
 
+    public DataModelInfoDTO getDraft(String prefix) {
+        var uri = DataModelURI.createModelURI(prefix);
+        var model = coreRepository.fetch(uri.getGraphURI());
+        check(authorizationManager.hasRightToModel(prefix, model));
+        return mapper.mapToDataModelDTO(prefix, model, groupManagementService.mapUser());
+    }
+
     public DataModelInfoDTO get(String prefix, String version) {
         var uri = DataModelURI.createModelURI(prefix, version);
-        var model = coreRepository.fetch(uri.getGraphURI());
+        if (version == null) {
+            var g = NodeFactory.createURI(uri.getGraphURI());
+            var builder = new SelectBuilder().addWhere(
+                    new WhereBuilder().addGraph(g, g, OWL.priorVersion, "?version"));
+            var versionIRI = new ArrayList<String>();
+            coreRepository.querySelect(builder.build(),
+                    result -> versionIRI.add(result.get("version").toString()));
+
+            if (versionIRI.isEmpty()) {
+                throw new ResourceNotFoundException(prefix);
+            }
+            version = DataModelURI.fromURI(versionIRI.get(0)).getVersion();
+        }
+        var model = coreRepository.fetch(DataModelURI.createModelURI(prefix, version).getGraphURI());
         var hasRightsToModel = authorizationManager.hasRightToModel(prefix, model);
 
         var userMapper = hasRightsToModel ? groupManagementService.mapUser() : null;
