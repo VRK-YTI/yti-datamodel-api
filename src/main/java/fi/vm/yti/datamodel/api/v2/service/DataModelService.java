@@ -92,23 +92,29 @@ public class DataModelService {
     public DataModelInfoDTO get(String prefix, String version) {
         var uri = DataModelURI.createModelURI(prefix, version);
         if (version == null) {
-            var g = NodeFactory.createURI(uri.getGraphURI());
-            var builder = new SelectBuilder().addWhere(
-                    new WhereBuilder().addGraph(g, g, OWL.priorVersion, "?version"));
-            var versionIRI = new ArrayList<String>();
-            coreRepository.querySelect(builder.build(),
-                    result -> versionIRI.add(result.get("version").toString()));
-
-            if (versionIRI.isEmpty()) {
-                throw new ResourceNotFoundException(prefix);
-            }
-            version = DataModelURI.fromURI(versionIRI.get(0)).getVersion();
+            version = getLatestVersion(uri);
         }
         var model = coreRepository.fetch(DataModelURI.createModelURI(prefix, version).getGraphURI());
         var hasRightsToModel = authorizationManager.hasRightToModel(prefix, model);
 
         var userMapper = hasRightsToModel ? groupManagementService.mapUser() : null;
         return mapper.mapToDataModelDTO(prefix, model, userMapper);
+    }
+
+    public String getLatestVersion(DataModelURI uri) {
+        String version;
+        var g = NodeFactory.createURI(uri.getGraphURI());
+        var builder = new SelectBuilder().addWhere(
+                new WhereBuilder().addGraph(g, g, OWL.priorVersion, "?version"));
+        var versionIRI = new ArrayList<String>();
+        coreRepository.querySelect(builder.build(),
+                result -> versionIRI.add(result.get("version").toString()));
+
+        if (versionIRI.isEmpty()) {
+            throw new ResourceNotFoundException(uri.getModelId());
+        }
+        version = DataModelURI.fromURI(versionIRI.get(0)).getVersion();
+        return version;
     }
 
     public URI create(DataModelDTO dto, ModelType modelType) throws URISyntaxException {

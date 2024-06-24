@@ -3,6 +3,7 @@ package fi.vm.yti.datamodel.api.v2.service;
 import fi.vm.yti.datamodel.api.mapper.MapperTestUtils;
 import fi.vm.yti.datamodel.api.security.AuthorizationManager;
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
+import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
 import org.apache.jena.rdf.model.Model;
@@ -36,6 +37,9 @@ class UriResolveServiceTest {
     private CoreRepository coreRepository;
     @MockBean
     private AuthorizationManager authorizationManager;
+    @MockBean
+    private DataModelService dataModelService;
+
     @Autowired
     private UriResolveService service;
 
@@ -96,6 +100,32 @@ class UriResolveServiceTest {
         assertTrue(response.getStatusCode().is3xxRedirection());
         assertNotNull(response.getHeaders().getLocation());
         assertTrue(response.getHeaders().getLocation().toString().contains("contentType=text/turtle"));
+    }
+
+    @Test
+    void testRedirectLatestVersion() {
+        var uri = DataModelURI.createModelURI("test");
+
+        when(dataModelService.getLatestVersion(any(DataModelURI.class))).thenReturn("1.0.0");
+
+        var response = service.resolve(uri.getGraphURI(), "text/html");
+
+        assertTrue(response.getStatusCode().is3xxRedirection());
+        assertNotNull(response.getHeaders().getLocation());
+        assertTrue(response.getHeaders().getLocation().toString().endsWith("/model/test?ver=1.0.0"));
+    }
+
+    @Test
+    void testRedirectDraftVersion() {
+        var uri = DataModelURI.createModelURI("test");
+
+        when(dataModelService.getLatestVersion(any(DataModelURI.class))).thenThrow(new ResourceNotFoundException("test"));
+
+        var response = service.resolve(uri.getGraphURI(), "text/html");
+
+        assertTrue(response.getStatusCode().is3xxRedirection());
+        assertNotNull(response.getHeaders().getLocation());
+        assertTrue(response.getHeaders().getLocation().toString().endsWith("/model/test?draft"));
     }
 
     @Test
