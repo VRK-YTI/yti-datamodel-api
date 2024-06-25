@@ -24,6 +24,7 @@ import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.vocabulary.*;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -403,6 +404,39 @@ class ClassServiceTest {
                         """,
                 captor.getValue().toString());
     }
+
+    @Test
+    void testAddAndRemoveCodeListToLibraryAttribute() {
+        var classURI = DataModelURI.createResourceURI("test", "TestClass");
+        var attributeURI = DataModelURI.createResourceURI("test", "TestAttribute");
+        var codeListURI = "http://uri.suomi.fi/codelist/test-code-list";
+
+        var model = MapperTestUtils.getModelFromFile("/models/test_datamodel_library_with_resources.ttl");
+
+        when(coreRepository.fetch(classURI.getGraphURI())).thenReturn(model);
+        when(authorizationManager.hasRightToModel(eq("test"), any(Model.class))).thenReturn(true);
+        when(coreRepository.resourceExistsInGraph(classURI.getGraphURI(), classURI.getResourceURI()))
+                .thenReturn(true);
+
+        // add code list
+        classService.addCodeList("test", "TestClass", attributeURI.getResourceURI(), Set.of(codeListURI));
+
+        ClassMapper.getClassRestrictionList(model, model.getResource(classURI.getResourceURI()))
+                .stream()
+                .filter(r -> attributeURI.getResourceURI().equals(MapperUtils.propertyToString(r, OWL.onProperty)))
+                .findFirst()
+                .ifPresentOrElse(
+                        r -> {
+                            assertEquals(codeListURI, MapperUtils.propertyToString(r, SuomiMeta.codeList));
+                            assertEquals(XSD.anyURI, r.getProperty(OWL.someValuesFrom).getObject());
+                        },
+                        Assertions::fail);
+
+        // remove code list
+        classService.removeCodeList("test", "TestClass", attributeURI.getResourceURI(), codeListURI);
+        assertEquals(0, model.listSubjectsWithProperty(SuomiMeta.codeList).toList().size());
+    }
+
 
     private static ClassDTO createClassDTO(boolean update){
         var dto = new ClassDTO();

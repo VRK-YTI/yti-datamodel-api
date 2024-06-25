@@ -76,8 +76,8 @@ public class ClassMapper {
     }
 
     public static List<String> mapPlaceholderPropertyShapes(Model applicationProfileModel, String classURI,
-                                                            Model propertiesModel, YtiUser user,
-                                                            Predicate<String> checkFreeIdentifier) {
+                                                            Model propertiesModel, YtiUser user, Predicate<String> checkFreeIdentifier,
+                                                            List<SimpleResourceDTO> attributeRestrictions) {
         var iterator = propertiesModel.listSubjectsWithProperty(RDFS.isDefinedBy);
         var classResource = applicationProfileModel.getResource(classURI);
         var propertyResourceURIs = new ArrayList<String>();
@@ -121,6 +121,12 @@ public class ClassMapper {
                     .addProperty(RDF.type, targetResource.getProperty(RDF.type).getObject())
                     .addProperty(RDFS.isDefinedBy, classResource.getProperty(RDFS.isDefinedBy).getObject())
                     .addProperty(SuomiMeta.publicationStatus, ResourceFactory.createResource(MapperUtils.getStatusUri(Status.DRAFT)));
+
+            // add code list if added to library class' attribute restriction
+            var attributeRestriction = attributeRestrictions.stream().filter(r -> pathURI.equals(r.getUri())).findFirst();
+            attributeRestriction.ifPresent(
+                    a -> a.getCodeLists().forEach(c -> propertyShapeResource.addProperty(SuomiMeta.codeList, c))
+            );
 
             MapperUtils.addCreationMetadata(propertyShapeResource, user);
 

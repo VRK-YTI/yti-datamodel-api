@@ -10,6 +10,7 @@ import fi.vm.yti.datamodel.api.v2.mapper.ResourceMapper;
 import fi.vm.yti.datamodel.api.v2.opensearch.dto.ResourceSearchRequest;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexResourceInfo;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
+import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import fi.vm.yti.datamodel.api.v2.repository.ImportsRepository;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
@@ -20,6 +21,7 @@ import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.rdf.model.*;
 import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDFS;
+import org.apache.jena.vocabulary.XSD;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.topbraid.shacl.vocabulary.SH;
@@ -27,6 +29,7 @@ import org.topbraid.shacl.vocabulary.SH;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -99,6 +102,7 @@ public class ClassService extends BaseResourceService {
                         restrictionDTO.setUri(MapperUtils.propertyToString(restriction, OWL.onProperty));
                         restrictionDTO.setRange(MapperUtils.uriToURIDTO(
                                 MapperUtils.propertyToString(restriction, OWL.someValuesFrom), model));
+                        restrictionDTO.setCodeLists(MapperUtils.arrayPropertyToSet(restriction, SuomiMeta.codeList));
                         return restrictionDTO;
                     }).collect(Collectors.toSet());
 
@@ -333,6 +337,13 @@ public class ClassService extends BaseResourceService {
                 .filter(Objects::nonNull)
                 .toList();
 
+        List<SimpleResourceDTO> attributeRestrictions = new ArrayList<>();
+        if (nodeShapeDTO.getTargetClass() != null) {
+            var targetClassURI = DataModelURI.fromURI(nodeShapeDTO.getTargetClass());
+            var targetClass = (ClassInfoDTO) get(targetClassURI.getModelId(), targetClassURI.getVersion(), targetClassURI.getResourceId());
+            attributeRestrictions = targetClass.getAttribute();
+        }
+
         var dataModelURI = DataModelURI.fromURI(classURI);
         var included = DataModelUtils.getInternalReferenceModels(dataModelURI.getGraphURI(), model.getResource(dataModelURI.getModelURI()));
         var newProperties = nodeShapeDTO.getProperties().stream()
@@ -345,7 +356,7 @@ public class ClassService extends BaseResourceService {
 
         // create new property shape resources to the model
         var createdProperties = ClassMapper.mapPlaceholderPropertyShapes(model, classURI, newPropertiesModel,
-                userProvider.getUser(), checkFreeIdentifier);
+                userProvider.getUser(), checkFreeIdentifier, attributeRestrictions);
 
         var allProperties = new HashSet<String>();
         allProperties.addAll(existingProperties);
@@ -477,6 +488,75 @@ public class ClassService extends BaseResourceService {
         ClassMapper.toggleAndMapDeactivatedProperty(model, propertyUri, externalExists);
         AUDIT_SERVICE.log(AuditService.ActionType.UPDATE, propertyUri, userProvider.getUser());
         coreRepository.put(graphURI, model);
+    }
+
+    public void addCodeList(String prefix, String classIdentifier, String attributeUri, Set<String> codeLists) {
+
+        Consumer<Resource> action = resource -> {
+            var dataModelURI = DataModelURI.createResourceURI(prefix, classIdentifier);
+            var isValid = codeLists.stream().allMatch(c -> c.startsWith(ModelConstants.CODELIST_NAMESPACE));
+            if (!isValid) {
+                throw new MappingError("Invalid code list URI");
+            }
+
+            var model = resource.getModel();
+            Resource restrictionResource;
+            if (model.contains(ResourceFactory.createResource(attributeUri), null)) {
+                restrictionResource = model.getResource(attributeUri);
+            } else if (attributeUri.startsWith(ModelConstants.SUOMI_FI_NAMESPACE)) {
+                var modelResource = model.getResource(dataModelURI.getModelURI());
+                var includedNamespaces = DataModelUtils.getInternalReferenceModels(dataModelURI.getGraphURI(), modelResource);
+                restrictionResource = getResourceWithVersion(attributeUri, includedNamespaces);
+            } else {
+                restrictionResource = findResources(Set.of(attributeUri), Set.of()).getResource(attributeUri);
+            }
+
+            if (!MapperUtils.hasType(restrictionResource, OWL.DatatypeProperty)) {
+                throw new MappingError("Resource is not an attribute");
+            }
+
+            var existingCodeLists = MapperUtils.arrayPropertyToSet(resource, SuomiMeta.codeList);
+            resource.removeAll(OWL.someValuesFrom);
+            resource.addProperty(OWL.someValuesFrom, XSD.anyURI);
+
+            codeLists.stream()
+                    .filter(c -> !existingCodeLists.contains(c))
+                    .forEach(c -> resource.addProperty(SuomiMeta.codeList, c));
+        };
+
+        handleCodeLists(prefix, classIdentifier, attributeUri, action);
+    }
+
+    public void removeCodeList(String prefix, String classIdentifier, String attributeUri, String codeListUri) {
+        Consumer<Resource> action = resource -> resource.getModel()
+                .remove(resource, SuomiMeta.codeList, ResourceFactory.createStringLiteral(codeListUri));
+
+        handleCodeLists(prefix, classIdentifier, attributeUri, action);
+    }
+
+    private void handleCodeLists(String prefix, String classIdentifier, String attributeUri, Consumer<Resource> action) {
+        var dataModelURI = DataModelURI.createResourceURI(prefix, classIdentifier);
+
+        var model = coreRepository.fetch(dataModelURI.getGraphURI());
+        check(authorizationManager.hasRightToModel(prefix, model));
+
+        if (!coreRepository.resourceExistsInGraph(dataModelURI.getGraphURI(), dataModelURI.getResourceURI())) {
+            throw new ResourceNotFoundException(dataModelURI.getResourceURI());
+        }
+
+        var classResource = model.getResource(dataModelURI.getResourceURI());
+
+        var classRestrictions = ClassMapper.getClassRestrictionList(model, classResource);
+
+        classRestrictions.stream()
+                .filter(r -> attributeUri.equals(MapperUtils.propertyToString(r, OWL.onProperty)))
+                .findFirst()
+                .ifPresentOrElse(action,
+                        () -> {
+                            throw new MappingError(String.format("%s not added to the class", attributeUri));
+                        });
+
+        coreRepository.put(dataModelURI.getGraphURI(), model);
     }
 
     /**
