@@ -44,7 +44,7 @@ public class ValidationConstants {
             Map.entry("oa", "http://www.w3.org/ns/oa#"),
             Map.entry("activitystreams", "https://www.w3.org/ns/activitystreams#"),
             Map.entry("csvw", "http://www.w3.org/ns/csvw#")
-    );
+        );
 
 
     public static final List<String> RESERVED_WORDS = List.of(

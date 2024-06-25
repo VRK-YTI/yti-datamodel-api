@@ -215,7 +215,7 @@ class DataModelControllerTest {
 
         //Prefix over max length
         dataModelDTO = createDatamodelDTO(false);
-        dataModelDTO.setPrefix(RandomStringUtils.randomAlphanumeric( 121));
+        dataModelDTO.setPrefix(RandomStringUtils.randomAlphanumeric(121));
         args.add(dataModelDTO);
 
         dataModelDTO = createDatamodelDTO(false);
