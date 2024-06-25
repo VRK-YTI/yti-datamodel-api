@@ -138,10 +138,6 @@ public abstract class BaseValidator implements Annotation{
             addConstraintViolation(context, ValidationConstants.MSG_VALUE_MISSING, propertyName);
         } else if (value != null && !value.matches(regexp)) {
             addConstraintViolation(context, ValidationConstants.MSG_VALUE_INVALID, propertyName);
-        } else if (value != null && (
-                value.length() < ValidationConstants.PREFIX_MIN_LENGTH
-                        || value.length() > ValidationConstants.PREFIX_MAX_LENGTH)) {
-            addConstraintViolation(context, propertyName + "-character-count-mismatch", propertyName);
         }
     }
 }
