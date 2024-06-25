@@ -264,7 +264,7 @@ public class ClassController {
 
     @Operation(summary = "Add code lists for library class' attribute")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Code list successfully"),
+            @ApiResponse(responseCode = "200", description = "Code list added successfully"),
             @ApiResponse(responseCode = "401", description = "Current user does not have rights for this model"),
             @ApiResponse(responseCode = "404", description = "Resource not found", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ApiError.class))})
     })
