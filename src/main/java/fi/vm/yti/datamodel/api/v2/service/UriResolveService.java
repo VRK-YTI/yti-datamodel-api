@@ -2,12 +2,13 @@ package fi.vm.yti.datamodel.api.v2.service;
 
 import fi.vm.yti.datamodel.api.security.AuthorizationManager;
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
+import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
 import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
 import org.apache.jena.iri.IRI;
 import org.apache.jena.iri.IRIFactory;
-import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.OWL2;
 import org.apache.jena.vocabulary.RDF;
@@ -31,14 +32,16 @@ public class UriResolveService {
     private static final IRIFactory iriFactory = IRIFactory.iriImplementation();
     private final CoreRepository coreRepository;
     private final AuthorizationManager authorizationManager;
+    private final DataModelService dataModelService;
 
     @Value("${env:}")
     private String awsEnv;
 
     public UriResolveService(CoreRepository coreRepository,
-                             AuthorizationManager authorizationManager) {
+                             AuthorizationManager authorizationManager, DataModelService dataModelService) {
         this.coreRepository = coreRepository;
         this.authorizationManager = authorizationManager;
+        this.dataModelService = dataModelService;
     }
 
     public ResponseEntity<String> resolve(String iri, String accept) {
@@ -116,11 +119,27 @@ public class UriResolveService {
         }
 
         if (isHtml(accept)) {
-            // redirect to the site
+            // redirect to the site (latest if no version specified)
             redirectURL.pathSegment("model", modelPrefix);
-            appendResource(redirectURL, modelPrefix, uri.getResourceId(), version);
+
+            if (version == null) {
+                try {
+                    version = dataModelService.getLatestVersion(uri);
+                } catch (ResourceNotFoundException e) {
+                    // no published version -> redirect to draft
+                }
+            }
+
+            var dataModel = coreRepository.fetch(DataModelURI.createModelURI(modelPrefix, version).getGraphURI());
+
+            if (uri.getResourceURI() != null) {
+                var resource = dataModel.getResource(uri.getResourceURI());
+                appendResource(redirectURL, resource, uri.getResourceId());
+            }
             if (version != null) {
                 redirectURL.queryParam("ver", version);
+            } else {
+                redirectURL.queryParam("draft");
             }
         } else {
             // redirect to serialized resource
@@ -140,31 +159,20 @@ public class UriResolveService {
         return accept != null && accept.contains(MimeTypeUtils.TEXT_HTML_VALUE);
     }
 
-    private void appendResource(UriComponentsBuilder redirectURL, String modelPrefix, String resource, String version) {
-        if (resource != null) {
-            var uri = DataModelURI.createResourceURI(modelPrefix, resource, version);
-            Model dataModel;
-            try {
-                dataModel = coreRepository.fetch(uri.getGraphURI());
-            } catch (Exception e) {
-                return;
-            }
-
-            var dataModelResource = dataModel.getResource(uri.getResourceURI());
-
-            if (MapperUtils.hasType(dataModelResource, OWL.Class, SH.NodeShape)) {
-                redirectURL.pathSegment("class");
-            } else if (MapperUtils.hasType(dataModelResource, OWL.DatatypeProperty)) {
-                redirectURL.pathSegment("attribute");
-            } else if (MapperUtils.hasType(dataModelResource, OWL.ObjectProperty)) {
-                redirectURL.pathSegment("association");
-            } else {
-                logger.warn("No valid type found from resource {}, {}", dataModelResource.getURI(),
-                        dataModelResource.getProperty(RDF.type));
-                return;
-            }
-            redirectURL.pathSegment(resource);
+    private void appendResource(UriComponentsBuilder redirectURL, Resource dataModelResource, String resource) {
+        if (MapperUtils.hasType(dataModelResource, OWL.Class, SH.NodeShape)) {
+            redirectURL.pathSegment("class");
+        } else if (MapperUtils.hasType(dataModelResource, OWL.DatatypeProperty)) {
+            redirectURL.pathSegment("attribute");
+        } else if (MapperUtils.hasType(dataModelResource, OWL.ObjectProperty)) {
+            redirectURL.pathSegment("association");
+        } else {
+            logger.warn("No valid type found from resource {}, {}", dataModelResource.getURI(),
+                    dataModelResource.getProperty(RDF.type));
+            return;
         }
+        redirectURL.pathSegment(resource);
+
     }
 
     private static boolean checkIRI(IRI iri) {
