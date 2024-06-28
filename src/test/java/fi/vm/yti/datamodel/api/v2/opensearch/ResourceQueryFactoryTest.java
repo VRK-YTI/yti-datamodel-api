@@ -10,6 +10,7 @@ import fi.vm.yti.datamodel.api.v2.opensearch.queries.QueryFactoryUtils;
 import fi.vm.yti.datamodel.api.v2.opensearch.queries.ResourceQueryFactory;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
 import org.junit.jupiter.api.Test;
+import org.opensearch.client.opensearch.core.SearchRequest;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.skyscreamer.jsonassert.JSONCompareMode;
 
@@ -48,7 +49,7 @@ class ResourceQueryFactoryTest {
         String expected = MapperTestUtils.getJsonString("/es/classRequest.json");
         JSONAssert.assertEquals(expected, OpenSearchUtils.getPayload(classQuery), JSONCompareMode.LENIENT);
 
-        assertEquals("Page from value not matching", 1, classQuery.from());
+        assertEquals("Page from value not matching", 0, classQuery.from());
         assertEquals("Page size value not matching", 100, classQuery.size());
     }
 
@@ -93,5 +94,33 @@ class ResourceQueryFactoryTest {
         assertEquals("Page from value not matching", QueryFactoryUtils.DEFAULT_PAGE_FROM, classQuery.from());
         assertEquals("Page size value not matching", QueryFactoryUtils.DEFAULT_PAGE_SIZE, classQuery.size());
         assertEquals("Label should be sorted in finnish by default", "label.fi.keyword", classQuery.sort().get(0).field().field());
+    }
+
+    @Test
+    void testPagination() {
+        var request1 = getPaginationQuery(null, null);
+        assertEquals("Incorrect page start from", 0, request1.from());
+        assertEquals("Incorrect page size", 10, request1.size());
+
+        var request2 = getPaginationQuery(1, 20);
+        assertEquals("Incorrect page start from", 0, request2.from());
+        assertEquals("Incorrect page size", 20, request2.size());
+
+        var request3 = getPaginationQuery(3, null);
+        assertEquals("Incorrect page start from", 20, request3.from());
+        assertEquals("Incorrect page size", 10, request3.size());
+    }
+
+    private SearchRequest getPaginationQuery(Integer page, Integer size) {
+        var request = new ResourceSearchRequest();
+        request.setLimitToDataModel(modelURI);
+        request.setPageFrom(page);
+        request.setPageSize(size);
+
+        return ResourceQueryFactory.createInternalResourceQuery(request,
+                new ArrayList<>(),
+                new ArrayList<>(),
+                null,
+                new HashSet<>());
     }
 }

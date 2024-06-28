@@ -37,7 +37,7 @@ class ModelQueryFactoryTest {
         String expected = MapperTestUtils.getJsonString("/es/modelrequest.json");
         JSONAssert.assertEquals(expected, OpenSearchUtils.getPayload(modelQuery), JSONCompareMode.LENIENT);
 
-        assertEquals("Page from value not matching", 1, modelQuery.from());
+        assertEquals("Page from value not matching", 0, modelQuery.from());
         assertEquals("Page size value not matching", 100, modelQuery.size());
     }
 

@@ -66,7 +66,7 @@ public class ResourceQueryFactory {
         }
 
         SearchRequest sr = new SearchRequest.Builder()
-                .from(QueryFactoryUtils.pageFrom(request.getPageFrom()))
+                .from(QueryFactoryUtils.pageFrom(request))
                 .size(QueryFactoryUtils.pageSize(request.getPageSize()))
                 .index(indices)
                 .query(finalQuery)
@@ -116,7 +116,7 @@ public class ResourceQueryFactory {
                 .preTags("<b>")
                 .postTags("</b>");
         SearchRequest sr = new SearchRequest.Builder()
-                .from(QueryFactoryUtils.pageFrom(request.getPageFrom()))
+                .from(QueryFactoryUtils.pageFrom(request))
                 .size(QueryFactoryUtils.pageSize(request.getPageSize()))
                 .index(indices)
                 .query(finalQuery)
