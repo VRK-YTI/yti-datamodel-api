@@ -93,7 +93,7 @@ public class VisualizationService {
                 externalResources.forEach(restrictionResource -> {
                     var onProperty = MapperUtils.propertyToString(restrictionResource, OWL.onProperty);
                     var externalResource = extResult.stream()
-                            .filter(e -> onProperty != null && onProperty.equals(e.getUri()))
+                            .filter(e -> onProperty != null && onProperty.equals(e.getId()))
                             .findFirst();
 
                     externalResource.ifPresent(indexResource ->
@@ -191,9 +191,11 @@ public class VisualizationService {
     }
 
     private static void addExternalClasses(VisualizationClassDTO classDTO, Set<String> languages, HashSet<VisualizationNodeDTO> result) {
-        classDTO.getReferences().forEach(parent -> {
-            if (parent.getIdentifier().contains(":")) {
-                result.add(VisualizationMapper.mapExternalClass(parent.getIdentifier(), languages));
+        classDTO.getReferences().forEach(ref -> {
+            if (ref.getIdentifier().contains(":")) {
+                result.add(VisualizationMapper.mapExternalClass(ref.getIdentifier(), languages));
+            } else if (ref.getReferenceTarget().contains(":")) {
+                result.add(VisualizationMapper.mapExternalClass(ref.getReferenceTarget(), languages));
             }
         });
         classDTO.getAssociations().forEach(association -> {
