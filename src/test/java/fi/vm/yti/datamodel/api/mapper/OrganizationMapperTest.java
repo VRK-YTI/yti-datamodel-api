@@ -25,7 +25,7 @@ class OrganizationMapperTest {
         var model = MapperTestUtils.getModelFromFile("/organizations.ttl");
         var organizations = OrganizationMapper.mapToListOrganizationDTO(model);
 
-        assertEquals(3, organizations.size());
+        assertEquals(4, organizations.size());
 
         var org = organizations.stream()
                 .filter(o -> o.getId().equals("7d3a3c00-5a6b-489b-a3ed-63bb58c26a63"))

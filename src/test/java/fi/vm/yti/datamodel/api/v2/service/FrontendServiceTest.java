@@ -39,8 +39,10 @@ class FrontendServiceTest {
                 .map(o -> o.getLabel().get(sortLanguage))
                 .collect(Collectors.toList());
 
-        assertEquals(2, organizations.size());
-        assertEquals(List.of("Interoperability platform developers", "Test organization"), orgNames);
+        assertEquals(3, organizations.size());
+
+        // organizations should be sorted by lower case label
+        assertEquals(List.of("Interoperability platform developers", "Test organization", "TF organization"), orgNames);
     }
 
     @Test
@@ -52,7 +54,7 @@ class FrontendServiceTest {
 
         var organizations = service.getOrganizations(sortLanguage, true);
 
-        assertEquals(3, organizations.size());
+        assertEquals(4, organizations.size());
         assertEquals(1, organizations.stream().filter(o -> o.getParentOrganization() != null).count());
     }
 

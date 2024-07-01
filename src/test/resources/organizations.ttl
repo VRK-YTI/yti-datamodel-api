@@ -12,6 +12,11 @@
         skos:prefLabel       "Testiorganisaatio"@fi , "Test organization"@en  ;
         <http://xmlns.com/foaf/0.1/homepage> "http://testi.fi" .
 
+<urn:uuid:76776e94-7f51-48dc-aeec-c084c4defa09>
+        a                    <http://xmlns.com/foaf/0.1/Organization> ;
+        suomi-meta:parentOrganization "" ;
+        skos:prefLabel       "TF organization"@fi , "TF organization"@en .
+
 <urn:uuid:7d3a3c00-5a6b-489b-a3ed-63bb58c26a63>
         a               <http://xmlns.com/foaf/0.1/Organization> ;
         suomi-meta:parentOrganization "" ;
