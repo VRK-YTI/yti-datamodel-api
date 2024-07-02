@@ -47,12 +47,12 @@ public class ResourceMapper {
         }
 
         MapperUtils.addResourceRelationship(modelResource, resourceResource, RDFS.domain, dto.getDomain());
-        MapperUtils.addBooleanResourceType(resourceResource, OWL.FunctionalProperty, dto.getFunctionalProperty());
         if (resourceType.equals(ResourceType.ASSOCIATION)) {
             MapperUtils.addResourceRelationship(modelResource, resourceResource, RDFS.range, dto.getRange());
             MapperUtils.addBooleanResourceType(resourceResource, OWL.TransitiveProperty, dto.getTransitiveProperty());
             MapperUtils.addBooleanResourceType(resourceResource, OWL2.ReflexiveProperty, dto.getReflexiveProperty());
         } else {
+            MapperUtils.addBooleanResourceType(resourceResource, OWL.FunctionalProperty, dto.getFunctionalProperty());
             MapperUtils.addOptionalUriProperty(resourceResource, RDFS.range, dto.getRange());
         }
 

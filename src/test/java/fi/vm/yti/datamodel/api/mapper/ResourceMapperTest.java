@@ -43,7 +43,6 @@ class ResourceMapperTest {
         dto.setNote(Map.of("fi", "test note"));
         dto.setDomain("http://www.w3.org/2002/07/owl#Class");
         dto.setRange(ModelConstants.SUOMI_FI_NAMESPACE + "test/RangeClass");
-        dto.setFunctionalProperty(true);
         dto.setReflexiveProperty(true);
         dto.setTransitiveProperty(true);
 
@@ -84,7 +83,6 @@ class ResourceMapperTest {
         assertEquals("http://www.w3.org/2002/07/owl#Class", MapperUtils.propertyToString(resourceResource, RDFS.domain));
         assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "test/RangeClass", MapperUtils.propertyToString(resourceResource, RDFS.range));
 
-        assertTrue(MapperUtils.hasType(resourceResource, OWL.FunctionalProperty));
         assertTrue(MapperUtils.hasType(resourceResource, OWL2.ReflexiveProperty));
         assertTrue(MapperUtils.hasType(resourceResource, OWL.TransitiveProperty));
     }
