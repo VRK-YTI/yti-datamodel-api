@@ -37,7 +37,7 @@ public class ModelQueryFactory {
         var sr = new SearchRequest.Builder()
                 .index(OpenSearchIndexer.OPEN_SEARCH_INDEX_MODEL)
                 .size(QueryFactoryUtils.pageSize(request.getPageSize()))
-                .from(QueryFactoryUtils.pageFrom(request.getPageFrom()))
+                .from(QueryFactoryUtils.pageFrom(request))
                 .sort(QueryFactoryUtils.getLangSortOptions(request.getSortLang()))
                 .highlight(highlight.build())
                 .query(modelQuery)
