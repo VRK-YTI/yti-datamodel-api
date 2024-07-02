@@ -25,8 +25,8 @@ public class FrontendService {
         var dtos = OrganizationMapper.mapToListOrganizationDTO(organizations);
 
         dtos.sort((a, b) -> {
-            var labelA = a.getLabel().getOrDefault(sortLanguage, a.getLabel().get(DEFAULT_LANGUAGE));
-            var labelB = b.getLabel().getOrDefault(sortLanguage, b.getLabel().get(DEFAULT_LANGUAGE));
+            var labelA = a.getLabel().getOrDefault(sortLanguage, a.getLabel().get(DEFAULT_LANGUAGE)).toLowerCase();
+            var labelB = b.getLabel().getOrDefault(sortLanguage, b.getLabel().get(DEFAULT_LANGUAGE)).toLowerCase();
             return labelA.compareTo(labelB);
         });
 
