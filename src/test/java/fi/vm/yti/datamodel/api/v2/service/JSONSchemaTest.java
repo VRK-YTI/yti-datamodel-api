@@ -14,7 +14,7 @@ import java.nio.charset.StandardCharsets;
 import java.io.*;
 import java.util.stream.Collectors;
 
-public class JSONSchemaTest {
+class JSONSchemaTest {
 
     @Test
     void testJSONSchemaGeneration() throws Exception {
@@ -37,8 +37,8 @@ public class JSONSchemaTest {
         var jsonToValidate = new JSONObject("""
 {
   "class-1": {
-    "property-1": ["Test"],
-    "property-2": 4,
+    "property-1": "Test",
+    "property-2": [1,2,3,4],
     "property-3": [{}]
   }
 }
