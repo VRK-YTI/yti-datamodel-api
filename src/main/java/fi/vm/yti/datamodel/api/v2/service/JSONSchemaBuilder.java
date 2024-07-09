@@ -1,7 +1,6 @@
 package fi.vm.yti.datamodel.api.v2.service;
 
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
-import fi.vm.yti.datamodel.api.v2.mapper.ClassMapper;
 import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
 import org.apache.jena.rdf.model.Model;
@@ -21,7 +20,7 @@ import java.util.Map;
 
 public class JSONSchemaBuilder {
 
-    private static final Logger logger = LoggerFactory.getLogger(ClassMapper.class);
+    private static final Logger logger = LoggerFactory.getLogger(JSONSchemaBuilder.class);
 
     private enum SchemaType {
         UNKNOWN,
@@ -131,27 +130,31 @@ public class JSONSchemaBuilder {
 
         Resource targetClass = null;
         var maxCount = MapperUtils.getLiteral(propertyResource, SH.maxCount, Integer.class);
-        var shClass = MapperUtils.propertyToString(propertyResource, SH.class_);
+        var minCount = MapperUtils.getLiteral(propertyResource, SH.minCount, Integer.class);
+        var shClass = propertyResource.getProperty(SH.class_);
 
         if (shClass != null) {
-            var target = model.listSubjectsWithProperty(SH.targetClass, shClass);
+            var target = model.listSubjectsWithProperty(SH.targetClass, shClass.getObject());
             targetClass = target.hasNext() ? target.next() : null;
         }
 
-        BooleanSchema referredSchema = BooleanSchema.builder().build();
+        var subjectBuilder = ReferenceSchema.builder();
+        if (targetClass != null) {
+            subjectBuilder.refValue(getRef(targetClass));
+        }
 
-        ReferenceSchema subject = ReferenceSchema.builder()
-                .refValue(getRef(targetClass))
+        var subject = subjectBuilder
+                .title(title)
+                .description(description)
                 .build();
         subject.setReferredSchema(EmptySchema.builder().build());
 
-        if (maxCount != null && maxCount > 0) {
-            ArraySchema schema = ArraySchema.builder()
+        if ((maxCount != null && maxCount > 1) || (minCount != null && minCount > 1)) {
+            return ArraySchema.builder()
                     .addItemSchema(subject)
                     .description(description)
                     .title(title)
                     .build();
-            return schema;
         } else {
             return subject;
         }
@@ -165,23 +168,33 @@ public class JSONSchemaBuilder {
         var minCount = MapperUtils.getLiteral(propertyResource, SH.minCount, Integer.class);
         var maxCount = MapperUtils.getLiteral(propertyResource, SH.maxCount, Integer.class);
         var type = getDatatype(MapperUtils.propertyToString(propertyResource, SH.datatype));
-        var builder =
-            (type == SchemaType.NUMBER || type == SchemaType.INTEGER) ? NumberSchema.builder() :
-            type == SchemaType.STRING ? StringSchema.builder() :
-            type == SchemaType.BOOLEAN ? BooleanSchema.builder() :
-            ObjectSchema.builder();
 
-        if (minCount != null && minCount > 0) {
+        Schema.Builder<? extends Schema> builder;
+        if (type == SchemaType.NUMBER || type == SchemaType.INTEGER){
+            builder = NumberSchema.builder();
+        } else if (type == SchemaType.STRING) {
+            builder = StringSchema.builder();
+        } else if (type == SchemaType.BOOLEAN)  {
+            builder = BooleanSchema.builder();
+        } else {
+            builder = ObjectSchema.builder();
+        }
+
+        // handle property as an array if either minCount or maxCount > 1
+        if ((minCount != null && minCount > 1) || (maxCount != null && maxCount > 1)) {
             var arraySchemaBuilder = ArraySchema.builder()
-                    .allItemSchema(builder.build())
-                    .minItems(minCount);
+                    .allItemSchema(builder.build());
+
+            if (minCount != null) {
+                arraySchemaBuilder.minItems(minCount);
+            }
             if (maxCount != null) {
                 arraySchemaBuilder.maxItems(maxCount);
             }
             builder = arraySchemaBuilder;
         }
 
-        builder = builder
+        builder
                 .description(description)
                 .title(title);
         return builder.build();

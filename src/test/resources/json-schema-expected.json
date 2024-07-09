@@ -14,11 +14,9 @@
       "title": "Node shape label",
       "properties": {
         "property-1": {
-          "minItems": 1,
           "description": "",
-          "type": "array",
-          "title": "Property label",
-          "items": {"type": "string"}
+          "type": "string",
+          "title": "Property label"
         },
         "property-3": {
           "description": "",
@@ -28,7 +26,7 @@
         },
         "property-2": {
           "description": "",
-          "type": "number",
+          "type": "array",
           "title": "Property label 2"
         }
       }
