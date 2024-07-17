@@ -127,13 +127,7 @@ test {
     useJUnitPlatform()
 }
 
-dependencyCheck {
-    format = 'ALL'
-    autoUpdate = false
-    analyzers {
-        centralEnabled = false
-    }
-    data {
-        directory = System.getenv('OWASP_DATA_DIR')
-    }
+tasks.register('copyDependencies', Copy) {
+    from configurations.default
+    into 'dependencies'
 }
