@@ -320,7 +320,6 @@ class ClassMapperTest {
 
         String ns = "http://purl.org/ontology/mo/";
         var dto = ClassMapper.mapExternalClassToDTO(m, ns + "AudioFile");
-        ClassMapper.addExternalClassResourcesToDTO(m, dto);
 
         assertEquals("audio file", dto.getLabel().get("en"));
         assertEquals(ns + "AudioFile", dto.getUri());

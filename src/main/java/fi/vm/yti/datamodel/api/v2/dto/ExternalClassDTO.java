@@ -5,6 +5,7 @@ import java.util.Map;
 
 public class ExternalClassDTO {
     private Map<String, String> label;
+    private Map<String, String> description;
     private String uri;
     private List<ExternalResourceDTO> attributes;
     private List<ExternalResourceDTO> associations;
@@ -15,6 +16,14 @@ public class ExternalClassDTO {
 
     public void setLabel(Map<String, String> label) {
         this.label = label;
+    }
+
+    public Map<String, String> getDescription() {
+        return description;
+    }
+
+    public void setDescription(Map<String, String> description) {
+        this.description = description;
     }
 
     public String getUri() {
