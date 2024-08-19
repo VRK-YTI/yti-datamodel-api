@@ -90,6 +90,14 @@ public class ClassMapper {
             }
             var targetResource = propertiesModel.getResource(uri);
             var propertyShapeResource = applicationProfileModel.createResource(classResource.getNameSpace() + currentIdentifier);
+
+            var resourceType = ResourceMapper.getExternalResourceType(targetResource);
+            if (ResourceType.ATTRIBUTE.equals(resourceType)) {
+                propertyShapeResource.addProperty(RDF.type, OWL.DatatypeProperty);
+            } else {
+                propertyShapeResource.addProperty(RDF.type, OWL.ObjectProperty);
+            }
+
             var label = MapperUtils.localizedPropertyToMap(targetResource, RDFS.label);
 
             if (!label.isEmpty()) {
@@ -123,7 +131,6 @@ public class ClassMapper {
             propertyShapeResource.addProperty(SH.path, ResourceFactory.createResource(pathURI))
                     .addProperty(DCTerms.identifier, ResourceFactory.createTypedLiteral(currentIdentifier, XSDDatatype.XSDNCName))
                     .addProperty(RDF.type, SH.PropertyShape)
-                    .addProperty(RDF.type, targetResource.getProperty(RDF.type).getObject())
                     .addProperty(RDFS.isDefinedBy, classResource.getProperty(RDFS.isDefinedBy).getObject())
                     .addProperty(SuomiMeta.publicationStatus, ResourceFactory.createResource(MapperUtils.getStatusUri(Status.DRAFT)));
 
@@ -272,9 +279,10 @@ public class ClassMapper {
             resourceDTO.setUri(res.getURI());
             resourceDTO.setLabel(MapperUtils.localizedPropertyToMap(res, RDFS.label));
             resourceDTO.setDescription(MapperUtils.localizedPropertyToMap(res, RDFS.comment));
-            if (MapperUtils.hasType(res, OWL.ObjectProperty)) {
+            var resourceType = ResourceMapper.getExternalResourceType(res);
+            if (ResourceType.ASSOCIATION.equals(resourceType)) {
                 associations.add(resourceDTO);
-            } else if (MapperUtils.hasType(res, OWL.DatatypeProperty)) {
+            } else if (ResourceType.ATTRIBUTE.equals(resourceType)) {
                 attributes.add(resourceDTO);
             }
         });
