@@ -6,6 +6,7 @@ import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexResource;
 import fi.vm.yti.datamodel.api.v2.properties.HTTP;
 import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
+import fi.vm.yti.datamodel.api.v2.utils.DataModelUtils;
 import fi.vm.yti.security.YtiUser;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.graph.NodeFactory;
@@ -76,6 +77,7 @@ public class ClassMapper {
                                                             List<SimpleResourceDTO> attributeRestrictions) {
         var iterator = propertiesModel.listSubjectsWithProperty(RDFS.isDefinedBy);
         var classResource = applicationProfileModel.getResource(classURI);
+        var modelResource = applicationProfileModel.getResource(classResource.getNameSpace());
         var propertyResourceURIs = new ArrayList<String>();
         while (iterator.hasNext()) {
             var uri = iterator.next().getURI();
@@ -88,19 +90,26 @@ public class ClassMapper {
             }
             var targetResource = propertiesModel.getResource(uri);
             var propertyShapeResource = applicationProfileModel.createResource(classResource.getNameSpace() + currentIdentifier);
-            var label = targetResource.getProperty(RDFS.label);
+            var label = MapperUtils.localizedPropertyToMap(targetResource, RDFS.label);
 
-            if (label != null) {
-                // external class labels are defined often in only one language
-                if (label.getLanguage().isEmpty()) {
-                    MapperUtils.addLocalizedProperty(Set.of("en"),
-                            Map.of("en", label.getObject().toString()),
-                            propertyShapeResource,
-                            RDFS.label,
-                            applicationProfileModel);
-                } else {
-                    propertyShapeResource.addProperty(RDFS.label, label.getObject());
+            if (!label.isEmpty()) {
+                var languages = MapperUtils.arrayPropertyToSet(modelResource, DCTerms.language);
+                var labelValue = new HashMap<String, String>();
+
+                label.keySet().stream()
+                        .filter(languages::contains)
+                        .forEach(key -> labelValue.put(key, label.get(key)));
+
+                // define label at least in one language to avoid validation errors
+                if (labelValue.isEmpty()) {
+                    labelValue.put(languages.iterator().next(), label.entrySet().iterator().next().getValue());
                 }
+
+                MapperUtils.addLocalizedProperty(languages,
+                        labelValue,
+                        propertyShapeResource,
+                        RDFS.label,
+                        applicationProfileModel);
             }
 
             var u = NodeFactory.createURI(uri);
@@ -233,6 +242,8 @@ public class ClassMapper {
         var nodeShapeURI = uri.getResourceURI();
         var nodeShapeResource = model.getResource(nodeShapeURI);
         var modelResource = model.getResource(uri.getModelURI());
+
+        DataModelUtils.addPrefixesToModel(modelResource.getURI(), model);
 
         MapperUtils.addCommonResourceDtoInfo(dto, nodeShapeResource, modelResource, orgModel, hasRightToModel);
         MapperUtils.mapCreationInfo(dto, nodeShapeResource, userMapper);
