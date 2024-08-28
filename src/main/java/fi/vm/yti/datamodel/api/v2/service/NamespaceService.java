@@ -45,12 +45,14 @@ public class NamespaceService {
             Map.entry("vcard", "http://www.w3.org/2006/vcard/ns#"),
             Map.entry("elm", "http://data.europa.eu/snb/model/elm"),
             Map.entry("unece", "https://vocabulary.uncefact.org/"),
-            Map.entry("gs1", "https://gs1.org/voc/")
+            Map.entry("gs1", "https://gs1.org/voc/"),
+            Map.entry("m8g", "http://data.europa.eu/m8g")
     );
 
     // Resolvable URIs by namespace name
     public static final Map<String, String> DEFAULT_NAMESPACE_RESOLVABLE_URIS = Map.of(
-            "https://gs1.org/voc/", "https://www.gs1.org/docs/gs1-smartsearch/gs1Voc_v1_10.ttl"
+            "https://gs1.org/voc/", "https://www.gs1.org/docs/gs1-smartsearch/gs1Voc_v1_10.ttl",
+            "http://data.europa.eu/949/", "https://data-interop.era.europa.eu/era-vocabulary/ontology.ttl"
     );
 
     public void resolveDefaultNamespaces() {

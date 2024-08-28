@@ -6,6 +6,7 @@ import fi.vm.yti.datamodel.api.v2.opensearch.index.*;
 import fi.vm.yti.datamodel.api.v2.properties.DCAP;
 import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
+import fi.vm.yti.datamodel.api.v2.utils.DataModelUtils;
 import fi.vm.yti.security.YtiUser;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.rdf.model.*;
@@ -425,6 +426,7 @@ public class ResourceMapper {
                                                                  boolean hasRightToModel, Consumer<ResourceCommonDTO> userMapper ) {
         var dto = new PropertyShapeInfoDTO();
         var resource = model.getResource(uri.getResourceURI());
+        DataModelUtils.addPrefixesToModel(resource.getNameSpace(), model);
 
         MapperUtils.addCommonResourceDtoInfo(dto, resource, model.getResource(uri.getModelURI()), orgModel, hasRightToModel);
 

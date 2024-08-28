@@ -17,6 +17,7 @@ import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelUtils;
 import fi.vm.yti.security.AuthenticatedUserProvider;
 import org.apache.jena.arq.querybuilder.AskBuilder;
+import org.apache.jena.arq.querybuilder.ConstructBuilder;
 import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.rdf.model.*;
 import org.apache.jena.vocabulary.OWL;
@@ -148,14 +149,19 @@ public class ClassService extends BaseResourceService {
     }
 
     public ExternalClassDTO getExternal(String uri) {
-        var namespace = NodeFactory.createURI(uri).getNameSpace();
-        var model = importsRepository.fetch(namespace);
+        var subject = NodeFactory.createURI(uri);
+        var resource = "?resource";
 
-        var dto = ClassMapper.mapExternalClassToDTO(model, uri);
-        var resources = importsRepository.queryConstruct(ClassMapper.getClassResourcesQuery(uri, true));
-        ClassMapper.addExternalClassResourcesToDTO(resources, dto);
+        var query = new ConstructBuilder()
+                .addConstruct(subject, "?p", "?o")
+                .addConstruct(resource, "?pr", "?or")
+                .addWhere(subject, "?p", "?o")
+                .addWhere(resource, RDFS.domain, subject)
+                .addWhere(resource, "?pr", "?or")
+                .build();
+        var model = importsRepository.queryConstruct(query);
 
-        return dto;
+        return ClassMapper.mapExternalClassToDTO(model, uri);
     }
 
     public List<IndexResourceInfo> getNodeShapes(String targetClass) {
@@ -340,8 +346,10 @@ public class ClassService extends BaseResourceService {
         List<SimpleResourceDTO> attributeRestrictions = new ArrayList<>();
         if (nodeShapeDTO.getTargetClass() != null) {
             var targetClassURI = DataModelURI.fromURI(nodeShapeDTO.getTargetClass());
-            var targetClass = (ClassInfoDTO) get(targetClassURI.getModelId(), targetClassURI.getVersion(), targetClassURI.getResourceId());
-            attributeRestrictions = targetClass.getAttribute();
+            if (targetClassURI.isDataModelURI()) {
+                var targetClass = (ClassInfoDTO) get(targetClassURI.getModelId(), targetClassURI.getVersion(), targetClassURI.getResourceId());
+                attributeRestrictions = targetClass.getAttribute();
+            }
         }
 
         var dataModelURI = DataModelURI.fromURI(classURI);
