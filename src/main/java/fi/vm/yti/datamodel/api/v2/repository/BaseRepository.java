@@ -1,7 +1,9 @@
 package fi.vm.yti.datamodel.api.v2.repository;
 
+import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
 import fi.vm.yti.datamodel.api.v2.service.JenaQueryException;
+import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
 import org.apache.jena.arq.querybuilder.AskBuilder;
 import org.apache.jena.arq.querybuilder.UpdateBuilder;
 import org.apache.jena.arq.querybuilder.WhereBuilder;
@@ -70,17 +72,24 @@ public abstract class BaseRepository {
         }
     }
 
-    public void deleteResource(String resource) {
+    public void deleteResource(DataModelURI uri) {
+        if (uri.getVersion() != null) {
+            throw new MappingError("Cannot delete resource from published graph");
+        }
+        var graph = uri.getGraphURI();
         var deleteBuilder = new UpdateBuilder();
         var expr = deleteBuilder.getExprFactory();
-        var filter = expr.or(expr.eq("?s", NodeFactory.createURI(resource)), expr.eq("?o", NodeFactory.createURI(resource)));
-        deleteBuilder.addDelete("?g", "?s", "?p", "?o")
-                .addGraph("?g", new WhereBuilder().addWhere("?s", "?p", "?o").addFilter(filter));
+        var filter = expr.or(
+                expr.eq("?s", NodeFactory.createURI(uri.getResourceURI())),
+                expr.eq("?o", NodeFactory.createURI(uri.getResourceURI()))
+        );
+        deleteBuilder.addDelete(NodeFactory.createURI(graph), "?s", "?p", "?o")
+                .addGraph(NodeFactory.createURI(graph), new WhereBuilder().addWhere("?s", "?p", "?o").addFilter(filter));
         try {
             update.update(deleteBuilder.buildRequest());
         } catch (HttpException ex) {
             if (ex.getStatusCode() == HttpStatus.NOT_FOUND.value()) {
-                throw new ResourceNotFoundException(resource);
+                throw new ResourceNotFoundException(uri.getResourceURI());
             } else {
                 throw new JenaQueryException();
             }
