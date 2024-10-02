@@ -2,6 +2,7 @@ package fi.vm.yti.datamodel.api.v2.mapper;
 
 import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
+import fi.vm.yti.datamodel.api.v2.properties.DCAP;
 import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelUtils;
@@ -531,5 +532,65 @@ public class MapperUtils {
         } else {
             return resource.getURI();
         }
+    }
+
+    /**
+     * Create a copy of given model and renames all resource URIs to given new prefix.
+     * All version related information and creating / modifying metadata will be reset.
+     * @param model model to be copied
+     * @param user copier user
+     * @param oldURI old graph
+     * @param newURI new graph
+     * @return copied model
+     */
+    public static Model mapCopyModel(Model model, YtiUser user, DataModelURI oldURI, DataModelURI newURI) {
+        var copy = ModelFactory.createDefaultModel().add(model);
+
+        var now = ResourceFactory.createTypedLiteral(new XSDDateTime(Calendar.getInstance()));
+        var newStatus = MapperUtils.getStatusUri(Status.DRAFT);
+
+        // rename all resources with new prefix
+        copy.listSubjects()
+                .filterDrop(RDFNode::isAnon)
+                .filterKeep(subject -> subject.getNameSpace().equals(oldURI.getNamespace()))
+                .forEach(subject -> {
+                    var newSubject = DataModelURI.createResourceURI(newURI.getModelId(), subject.getLocalName()).getResourceURI();
+                    MapperUtils.addUpdateMetadata(subject, user);
+                    subject.removeAll(DCTerms.created);
+                    subject.removeAll(DCTerms.creator);
+                    subject.addProperty(DCTerms.created, now);
+                    subject.addProperty(DCTerms.creator, user.getId().toString());
+                    MapperUtils.updateUriProperty(subject, SuomiMeta.publicationStatus, newStatus);
+
+                    ResourceUtils.renameResource(subject, newSubject);
+                });
+
+        var modelResource = copy.getResource(newURI.getModelURI());
+
+        // add suffix (Copy) to data model's label
+        var label = MapperUtils.localizedPropertyToMap(modelResource, RDFS.label);
+        modelResource.removeAll(RDFS.label);
+        label.forEach((lang, value) ->
+                modelResource.addProperty(RDFS.label, ResourceFactory.createLangLiteral(value + " (Copy)", lang)));
+
+        MapperUtils.updateStringProperty(modelResource, DCAP.preferredXMLNamespace, newURI.getGraphURI());
+        MapperUtils.updateStringProperty(modelResource, DCAP.preferredXMLNamespacePrefix, newURI.getModelId());
+        MapperUtils.updateUriProperty(modelResource, SuomiMeta.publicationStatus, newStatus);
+
+        // remove creator and all version related information
+        modelResource.removeAll(OWL.priorVersion)
+                .removeAll(OWL.versionInfo)
+                .removeAll(OWL2.versionIRI)
+                .removeAll(DCTerms.created)
+                .removeAll(DCTerms.creator)
+                .removeAll(SuomiMeta.contentModified);
+
+        MapperUtils.addUpdateMetadata(modelResource, user);
+        modelResource.addProperty(SuomiMeta.contentModified, now);
+        modelResource.addProperty(DCTerms.created, now);
+        modelResource.addProperty(DCTerms.creator, user.getId().toString());
+
+        MapperUtils.updateStringProperty(modelResource, SuomiMeta.copiedFrom, oldURI.getGraphURI());
+        return copy;
     }
 }

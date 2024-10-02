@@ -20,6 +20,7 @@ import fi.vm.yti.security.AuthenticatedUserProvider;
 import org.apache.jena.arq.querybuilder.ConstructBuilder;
 import org.apache.jena.arq.querybuilder.SelectBuilder;
 import org.apache.jena.arq.querybuilder.WhereBuilder;
+import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.vocabulary.*;
@@ -267,18 +268,22 @@ public class OpenSearchIndexer {
 
         graphs.forEach(graph -> {
             var model = coreRepository.fetch(graph);
-            //list resources with type Class, Property, DatatypeProperty, NodeShape
-            var resources = model.listSubjectsWithProperty(RDF.type, OWL.Class)
-                    .andThen(model.listSubjectsWithProperty(RDF.type, OWL.ObjectProperty))
-                    .andThen(model.listSubjectsWithProperty(RDF.type, OWL.DatatypeProperty))
-                    .andThen(model.listSubjectsWithProperty(RDF.type, SH.NodeShape))
-                    .filterDrop(RDFNode::isAnon);
-            var list = resources.mapWith(resource -> ResourceMapper.mapToIndexResource(model, resource.getURI())).toList();
-            //we should bulk insert resources for each model separately if there are a lot of resources otherwise might cause memory issues
-            if(!list.isEmpty()){
-                bulkInsert(OPEN_SEARCH_INDEX_RESOURCE, list);
-            }
+            indexGraphResource(model);
         });
+    }
+
+    public void indexGraphResource(Model model) {
+        // list resources with type Class, Property, DatatypeProperty, NodeShape
+        var resources = model.listSubjectsWithProperty(RDF.type, OWL.Class)
+                .andThen(model.listSubjectsWithProperty(RDF.type, OWL.ObjectProperty))
+                .andThen(model.listSubjectsWithProperty(RDF.type, OWL.DatatypeProperty))
+                .andThen(model.listSubjectsWithProperty(RDF.type, SH.NodeShape))
+                .filterDrop(RDFNode::isAnon);
+        var list = resources.mapWith(resource -> ResourceMapper.mapToIndexResource(model, resource.getURI())).toList();
+        // we should bulk insert resources for each model separately if there are a lot of resources otherwise might cause memory issues
+        if (!list.isEmpty()) {
+            bulkInsert(OPEN_SEARCH_INDEX_RESOURCE, list);
+        }
     }
 
     public void initExternalResourceIndex() {
