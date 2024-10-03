@@ -535,7 +535,7 @@ public class MapperUtils {
     }
 
     /**
-     * Create a copy of given model and renames all resource URIs to given new prefix.
+     * Creates a copy of given model and renames all resource URIs to given new prefix.
      * All version related information and creating / modifying metadata will be reset.
      * @param model model to be copied
      * @param user copier user

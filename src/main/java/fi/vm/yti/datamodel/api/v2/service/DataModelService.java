@@ -426,15 +426,16 @@ public class DataModelService {
 
         var model = coreRepository.fetch(oldURI.getGraphURI());
 
-        var user = userProvider.getUser();
-        check(authorizationManager.hasRightToModel(oldPrefix, model));
-
+        // check that old graph exists and new prefix is not in use
         if (!coreRepository.graphExists(oldURI.getGraphURI())) {
             throw new ResourceNotFoundException(oldURI.getGraphURI());
         }
         if (coreRepository.graphExists(newURI.getGraphURI())) {
             throw new MappingError("Prefix in use");
         }
+
+        var user = userProvider.getUser();
+        check(authorizationManager.hasRightToModel(oldPrefix, model));
 
         var copy = MapperUtils.mapCopyModel(model, user, oldURI, newURI);
 
