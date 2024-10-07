@@ -557,9 +557,9 @@ public class MapperUtils {
                     var newSubject = DataModelURI.createResourceURI(newURI.getModelId(), subject.getLocalName()).getResourceURI();
                     MapperUtils.addUpdateMetadata(subject, user);
                     subject.removeAll(DCTerms.created);
-                    subject.removeAll(DCTerms.creator);
+                    subject.removeAll(SuomiMeta.creator);
                     subject.addProperty(DCTerms.created, now);
-                    subject.addProperty(DCTerms.creator, user.getId().toString());
+                    subject.addProperty(SuomiMeta.creator, user.getId().toString());
                     MapperUtils.updateUriProperty(subject, SuomiMeta.publicationStatus, newStatus);
 
                     ResourceUtils.renameResource(subject, newSubject);
@@ -582,13 +582,13 @@ public class MapperUtils {
                 .removeAll(OWL.versionInfo)
                 .removeAll(OWL2.versionIRI)
                 .removeAll(DCTerms.created)
-                .removeAll(DCTerms.creator)
+                .removeAll(SuomiMeta.creator)
                 .removeAll(SuomiMeta.contentModified);
 
         MapperUtils.addUpdateMetadata(modelResource, user);
         modelResource.addProperty(SuomiMeta.contentModified, now);
         modelResource.addProperty(DCTerms.created, now);
-        modelResource.addProperty(DCTerms.creator, user.getId().toString());
+        modelResource.addProperty(SuomiMeta.creator, user.getId().toString());
 
         MapperUtils.updateStringProperty(modelResource, SuomiMeta.copiedFrom, oldURI.getGraphURI());
         return copy;

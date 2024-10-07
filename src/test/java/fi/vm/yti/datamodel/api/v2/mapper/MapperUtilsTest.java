@@ -85,7 +85,7 @@ class MapperUtilsTest {
         assertTrue(resources.stream().allMatch(r -> {
             var validURI = r.getURI().startsWith(newGraphURI.getGraphURI());
             var validStatus = MapperUtils.getStatusUri(Status.DRAFT).equals(MapperUtils.propertyToString(r, SuomiMeta.publicationStatus));
-            var validCreator = mockUser.getId().toString().equals(MapperUtils.propertyToString(r, DCTerms.creator));
+            var validCreator = mockUser.getId().toString().equals(MapperUtils.propertyToString(r, SuomiMeta.creator));
             var validModifier = mockUser.getId().toString().equals(MapperUtils.propertyToString(r, SuomiMeta.modifier));
 
             var created = MapperUtils.propertyToString(r, DCTerms.created);
