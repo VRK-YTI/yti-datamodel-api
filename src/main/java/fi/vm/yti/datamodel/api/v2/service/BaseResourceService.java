@@ -92,7 +92,7 @@ abstract class BaseResourceService {
             throw new MappingError("Cannot remove because other resources refer to it: " + refList);
         }
 
-        coreRepository.deleteResource(resourceUri);
+        coreRepository.deleteResource(uri);
         openSearchIndexer.deleteResourceFromIndex(resourceUri);
         auditService.log(AuditService.ActionType.DELETE, resourceUri, userProvider.getUser());
     }
