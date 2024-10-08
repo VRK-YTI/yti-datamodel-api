@@ -17,6 +17,7 @@ import fi.vm.yti.security.AuthorizationException;
 import fi.vm.yti.security.YtiUser;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDF;
@@ -223,6 +224,30 @@ class VisualizationServiceTest {
         // new position x = 0, y = existing minimum y coordinate - 50
         assertEquals(0.0, positionResource.getProperty(SuomiMeta.posX).getDouble());
         assertEquals(-60.0, positionResource.getProperty(SuomiMeta.posY).getDouble());
+    }
+
+    @Test
+    void testCopyVisualization() {
+        var positionModel = MapperTestUtils.getModelFromFile("/positions.ttl");
+        var oldGraphURI = ModelConstants.MODEL_POSITIONS_NAMESPACE + "visuprof" + ModelConstants.RESOURCE_SEPARATOR;
+        var newGraphURI = ModelConstants.MODEL_POSITIONS_NAMESPACE + "new_visu" + ModelConstants.RESOURCE_SEPARATOR;
+
+        when(coreRepository.fetch(oldGraphURI)).thenReturn(positionModel);
+        var captor = ArgumentCaptor.forClass(Model.class);
+
+        visualizationService.copyVisualization("visuprof", null, "new_visu");
+
+        verify(coreRepository).put(eq(newGraphURI), captor.capture());
+
+        var positionsCopy = captor.getValue();
+
+        positionsCopy.listSubjects()
+                .filterDrop(RDFNode::isAnon)
+                .forEach(s -> {
+                    assertTrue(s.getURI().startsWith(newGraphURI));
+                    assertTrue(s.hasProperty(SuomiMeta.posX));
+                    assertTrue(s.hasProperty(SuomiMeta.posY));
+                });
     }
 
     private static Model getExternalPropertiesResult() {

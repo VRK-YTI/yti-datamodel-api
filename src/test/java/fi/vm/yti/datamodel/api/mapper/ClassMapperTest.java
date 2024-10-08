@@ -110,7 +110,8 @@ class ClassMapperTest {
         assertEquals(1, dto.getEquivalentClass().size());
         assertEquals(new UriDTO(ModelConstants.SUOMI_FI_NAMESPACE + "test/EqClass"), dto.getEquivalentClass().stream().findFirst().orElse(null));
         assertEquals(1, dto.getSubClassOf().size());
-        assertEquals(new UriDTO(ModelConstants.SUOMI_FI_NAMESPACE + "test/SubClass"), dto.getSubClassOf().stream().findFirst().orElse(null));
+        assertEquals(new UriDTO(ModelConstants.SUOMI_FI_NAMESPACE + "test/1.0.1/SubClass", "test:SubClass"),
+                dto.getSubClassOf().stream().findFirst().orElse(null));
         assertEquals(1, dto.getLabel().size());
         assertEquals("test label", dto.getLabel().get("fi"));
         assertEquals("http://uri.suomi.fi/terminology/test/test1", dto.getSubject().getConceptURI());

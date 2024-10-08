@@ -13,6 +13,7 @@ import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelUtils;
 import fi.vm.yti.security.AuthenticatedUserProvider;
 import org.apache.jena.rdf.model.*;
+import org.apache.jena.util.ResourceUtils;
 import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDF;
@@ -188,6 +189,21 @@ public class VisualizationService {
         }catch (ResourceNotFoundException e){
             //if no positions found, do nothing
         }
+    }
+
+    public void copyVisualization(String oldPrefix, String version, String newPrefix) {
+        var positions = getPositions(oldPrefix, version);
+        var positionsCopy = ModelFactory.createDefaultModel().add(positions);
+        var positionGraphURI = getPositionGraphURI(newPrefix, null);
+
+        positionsCopy.listSubjects()
+                .filterDrop(RDFNode::isAnon)
+                .forEach(subject -> {
+                    var newSubject = positionGraphURI + MapperUtils.propertyToString(subject, DCTerms.identifier);
+                    ResourceUtils.renameResource(subject, newSubject);
+                });
+
+        coreRepository.put(positionGraphURI, positionsCopy);
     }
 
     private static void addExternalClasses(VisualizationClassDTO classDTO, Set<String> languages, HashSet<VisualizationNodeDTO> result) {

@@ -21,7 +21,7 @@ dcterms:language                "fi" ;
 owl:imports                     <https://iri.suomi.fi/model/int/> ;
 dcterms:requires                <https://www.example.com/ns/ext/> ;
 dcterms:modified                "2023-01-03T12:44:45.799Z"^^xsd:dateTime ;
-dcap:preferredXMLNamespaceName  "https://iri.suomi.fi/model/test" ;
+dcap:preferredXMLNamespace      "https://iri.suomi.fi/model/test" ;
 dcap:preferredXMLNamespacePrefix
 "test" ;
 suomi-meta:contentModified             "2023-01-03T12:44:45.799Z"^^xsd:dateTime ;
@@ -94,7 +94,8 @@ test:TestAssociation  rdf:type     owl:ObjectProperty, owl:FunctionalProperty ;
 
 test:DomainClass    rdf:type    owl:Class .
 
-test:RangeClass    rdf:type    owl:Class ;
+test:RangeClass    rdf:type    owl:Class .
 
+test:SubClass      rdf:type    owl:Class ;
 
 
