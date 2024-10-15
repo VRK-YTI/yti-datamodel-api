@@ -22,17 +22,18 @@ public class ModelConstants {
     public static final List<String> USED_LANGUAGES = List.of("fi", "sv", "en");
     public static final String ORGANIZATION_GRAPH = "urn:yti:organizations";
     public static final String SERVICE_CATEGORY_GRAPH = "urn:yti:servicecategories";
-    public static final Map<String, String> PREFIXES = Map.of(
-            "rdfs", "http://www.w3.org/2000/01/rdf-schema#",
-            "rdf", "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-            "dcterms", "http://purl.org/dc/terms/",
-            "owl", "http://www.w3.org/2002/07/owl#",
-            "dcap", "http://purl.org/ws-mmi-dc/terms/",
-            "xsd", "http://www.w3.org/2001/XMLSchema#",
-            "suomi-meta", "https://iri.suomi.fi/model/suomi-meta/",
-            "skos", "http://www.w3.org/2004/02/skos/core#",
-            "sh", "http://www.w3.org/ns/shacl#",
-            "http", "http://www.w3.org/2011/http#"
+    public static final Map<String, String> PREFIXES = Map.ofEntries(
+            Map.entry("rdfs", "http://www.w3.org/2000/01/rdf-schema#"),
+            Map.entry("rdf", "http://www.w3.org/1999/02/22-rdf-syntax-ns#"),
+            Map.entry("dcterms", "http://purl.org/dc/terms/"),
+            Map.entry("owl", "http://www.w3.org/2002/07/owl#"),
+            Map.entry("dcap", "http://purl.org/ws-mmi-dc/terms/"),
+            Map.entry("xsd", "http://www.w3.org/2001/XMLSchema#"),
+            Map.entry("suomi-meta", "https://iri.suomi.fi/model/suomi-meta/"),
+            Map.entry("skos", "http://www.w3.org/2004/02/skos/core#"),
+            Map.entry("sh", "http://www.w3.org/ns/shacl#"),
+            Map.entry("http", "http://www.w3.org/2011/http#"),
+            Map.entry("geo", "http://www.opengis.net/ont/geosparql#")
     );
     public static final List<String> SUPPORTED_DATA_TYPES = List.of(
             "http://www.w3.org/2002/07/owl#rational",
@@ -69,6 +70,13 @@ public class ModelConstants {
             "http://www.w3.org/2001/XMLSchema#unsignedInt",
             "http://www.w3.org/2001/XMLSchema#unsignedLong",
             "http://www.w3.org/2001/XMLSchema#unsignedShort"
+    );
+
+    public static final List<String> APPLICATION_PROFILE_DATA_TYPES = List.of(
+            "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString",
+            "http://www.opengis.net/ont/geosparql#gmlLiteral",
+            "http://www.opengis.net/ont/geosparql#wktLiteral",
+            "http://www.w3.org/2001/XMLSchema#date"
     );
 
     public static final String EMAIL_NOTIFICATION_TITLE = "Tietomalli julkaistu " +
