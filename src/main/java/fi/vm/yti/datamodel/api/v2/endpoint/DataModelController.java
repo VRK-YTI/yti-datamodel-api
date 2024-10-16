@@ -5,6 +5,7 @@ import fi.vm.yti.datamodel.api.v2.endpoint.error.ApiError;
 import fi.vm.yti.datamodel.api.v2.service.DataModelService;
 import fi.vm.yti.datamodel.api.v2.service.ReleaseValidationService;
 import fi.vm.yti.datamodel.api.v2.validator.ValidDatamodel;
+import fi.vm.yti.datamodel.api.v2.validator.ValidPrefix;
 import fi.vm.yti.datamodel.api.v2.validator.ValidSemanticVersion;
 import fi.vm.yti.datamodel.api.v2.validator.ValidVersionedDatamodel;
 import io.swagger.v3.oas.annotations.Operation;
@@ -185,7 +186,7 @@ public class DataModelController {
     public ResponseEntity<Void> copyDataModel(
             @PathVariable @Parameter(description = "Data model's current prefix") String prefix,
             @RequestParam(required = false) @Parameter(description = "Version of the data model to be copied") @ValidSemanticVersion String version,
-            @RequestParam @Parameter(description = "New prefix") String newPrefix) {
+            @RequestParam @Parameter(description = "New prefix") @ValidPrefix String newPrefix) {
         var newURI = dataModelService.copyDataModel(prefix, version, newPrefix);
         return ResponseEntity
                 .created(URI.create(newURI))
