@@ -10,11 +10,24 @@
 @prefix http:       <http://www.w3.org/2011/http#> .
 
 test:property-1  rdf:type   owl:DatatypeProperty ;
-        rdfs:label          "Property label"@en ;
+        rdfs:label          "String property"@en ;
         dcterms:identifier  "property-1" ;
         sh:datatype         "http://www.w3.org/2001/XMLSchema#string" ;
-        sh:in               "02" , "01" ;
+        sh:pattern          "[a-zA-Z]" ;
+        sh:minLength        1 ;
+        sh:maxLength        100 ;
+        sh:defaultValue     "default value" ;
         sh:minCount         "1"^^xsd:long .
+
+test:property-5 rdf:type  owl:DatatypeProperty ;
+        rdfs:label          "Property with enum"@en ;
+        dcterms:identifier  "property-5" ;
+        sh:in               "Value1" , "Value2" .
+
+test:property-6 rdf:type  owl:DatatypeProperty ;
+        rdfs:label          "Property with required value"@en ;
+        dcterms:identifier  "property-6" ;
+        sh:hasValue         "required value" .
 
 test:class-2  rdf:type      sh:NodeShape ;
         rdfs:label          "Target node"@en ;
@@ -26,17 +39,22 @@ test:property-4  rdf:type   owl:ObjectProperty ;
         sh:deactivated      true .
 
 test:property-2  rdf:type   owl:DatatypeProperty ;
-        rdfs:label          "Property label 2"@en ;
+        rdfs:label          "Numeric property"@en ;
         dcterms:identifier  "property-2" ;
         sh:datatype         "http://www.w3.org/2001/XMLSchema#integer" ;
-        sh:maxCount         "5"^^xsd:long .
+        sh:maxCount         "5"^^xsd:long ;
+        sh:defaultValue     1 ;
+        sh:minInclusive     1 ;
+        sh:minExclusive     0 ;
+        sh:maxInclusive     5 ;
+        sh:maxExclusive     6 .
 
 test:class-1  rdf:type      sh:NodeShape ;
         rdfs:comment        "Property shape info"@en ;
         rdfs:label          "Node shape label"@en ;
         dcterms:identifier  "class-1" ;
         http:absolutePath   "/path/{var1}/{var2}?q=123" ;
-        sh:property         test:property-4 , test:property-3 , test:property-2 , test:property-1 .
+        sh:property         test:property-6 , test:property-5 , test:property-4 , test:property-3 , test:property-2 , test:property-1 .
 
 test:   rdf:type         suomi-meta:ApplicationProfile ;
         rdfs:comment     "Model info"@en ;

@@ -22,6 +22,7 @@ class JSONSchemaTest {
         var writer = new StringWriter();
         JSONSchemaBuilder.export(writer, model, "en");
 
+        System.out.println(writer);
         var expected = MapperTestUtils.getJsonString("/json-schema-expected.json");
 
         JSONAssert.assertEquals(expected, writer.toString(), JSONCompareMode.LENIENT);
