@@ -71,8 +71,10 @@ public class PropertyShapeValidator extends BaseValidator implements ConstraintV
     }
 
     private void checkDataType(ConstraintValidatorContext context, AttributeRestriction dto) {
-        if (dto.getDataType() != null && !ModelConstants.SUPPORTED_DATA_TYPES.contains(dto.getDataType())) {
-            addConstraintViolation(context, "unsupported-datatype", "dataType");
+        if (dto.getDataType() != null
+            && !ModelConstants.SUPPORTED_DATA_TYPES.contains(dto.getDataType())
+            && !ModelConstants.APPLICATION_PROFILE_DATA_TYPES.contains(dto.getDataType())) {
+                addConstraintViolation(context, "unsupported-datatype", "dataType");
         }
     }
 

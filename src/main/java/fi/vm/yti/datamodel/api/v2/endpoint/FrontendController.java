@@ -24,9 +24,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Collection;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
@@ -100,15 +98,23 @@ public class FrontendController {
     @Operation(summary = "Get supported data types")
     @ApiResponse(responseCode = "200", description = "List of supported data types")
     @GetMapping(path = "/data-types", produces = APPLICATION_JSON_VALUE)
-    public Collection<UriDTO> getSupportedDataTypes() {
+    public Collection<UriDTO> getSupportedDataTypes(@RequestParam(required = false) @Parameter(description = "If application profile data types are requested") boolean applicationProfile) {
         var namespaceURIs = ModelConstants.PREFIXES.entrySet().stream()
                 .collect(Collectors.toMap(Map.Entry::getValue, Map.Entry::getKey));
 
-        return ModelConstants.SUPPORTED_DATA_TYPES.stream().map(dataType -> {
+        List<String> supportedDataTypes = new ArrayList<>(ModelConstants.SUPPORTED_DATA_TYPES);
+
+        if (applicationProfile) {
+            supportedDataTypes.addAll(ModelConstants.APPLICATION_PROFILE_DATA_TYPES);
+        }
+
+        return supportedDataTypes.stream().map(dataType -> {
             var uri = NodeFactory.createURI(dataType);
             var prefix = namespaceURIs.get(uri.getNameSpace());
             return new UriDTO(dataType, String.format("%s:%s", prefix, uri.getLocalName()));
-        }).collect(Collectors.toSet());
+        })
+                .sorted(Comparator.comparing(a -> a.getCurie().toLowerCase()))
+                .toList();
     }
 
     @Operation(summary = "Get resolved external namespaces")
