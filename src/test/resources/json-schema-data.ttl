@@ -17,17 +17,20 @@ test:property-1  rdf:type   owl:DatatypeProperty ;
         sh:minLength        1 ;
         sh:maxLength        100 ;
         sh:defaultValue     "default value" ;
-        sh:minCount         "1"^^xsd:long .
+        sh:minCount         "1"^^xsd:long ;
+        sh:maxCount         "1"^^xsd:long .
 
 test:property-5 rdf:type  owl:DatatypeProperty ;
         rdfs:label          "Property with enum"@en ;
         dcterms:identifier  "property-5" ;
-        sh:in               "Value1" , "Value2" .
+        sh:in               "Value1" , "Value2" ;
+        sh:maxCount         "1"^^xsd:long .
 
 test:property-6 rdf:type  owl:DatatypeProperty ;
         rdfs:label          "Property with required value"@en ;
         dcterms:identifier  "property-6" ;
-        sh:hasValue         "required value" .
+        sh:hasValue         "required value" ;
+        sh:maxCount         "1"^^xsd:long .
 
 test:class-2  rdf:type      sh:NodeShape ;
         rdfs:label          "Target node"@en ;

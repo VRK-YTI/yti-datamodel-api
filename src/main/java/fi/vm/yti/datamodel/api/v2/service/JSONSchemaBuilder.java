@@ -158,9 +158,17 @@ public class JSONSchemaBuilder {
                 .build();
         subject.setReferredSchema(EmptySchema.builder().build());
 
-        if ((maxCount != null && maxCount > 1) || (minCount != null && minCount > 1)) {
-            return ArraySchema.builder()
-                    .addItemSchema(subject)
+        if (isArraySchema(minCount, maxCount)) {
+            var arraySchemaBuilder = ArraySchema.builder()
+                    .addItemSchema(subject);
+
+            if (minCount != null) {
+                arraySchemaBuilder.minItems(minCount);
+            }
+            if (maxCount != null) {
+                arraySchemaBuilder.maxItems(maxCount);
+            }
+            return arraySchemaBuilder
                     .description(description)
                     .title(title)
                     .build();
@@ -198,8 +206,7 @@ public class JSONSchemaBuilder {
 
         addRestrictions(builder, propertyResource);
 
-        // handle property as an array if either minCount or maxCount > 1
-        if ((minCount != null && minCount > 1) || (maxCount != null && maxCount > 1)) {
+        if (isArraySchema(minCount, maxCount)) {
             var arraySchemaBuilder = ArraySchema.builder()
                     .allItemSchema(builder.build());
 
@@ -267,6 +274,18 @@ public class JSONSchemaBuilder {
         } else if (dto.getDefaultValue() != null) {
             builder.defaultValue(dto.getDefaultValue());
         }
+    }
+
+    /**
+     * Handle property as an array if
+     * - maxCount is empty or > 1
+     * - minCount > 1
+     *
+     * @param minCount sh:minCount
+     * @param maxCount sh:maxCount
+     */
+    private static boolean isArraySchema(Integer minCount, Integer maxCount) {
+        return (maxCount == null || maxCount > 1) || (minCount != null && minCount > 1);
     }
 
     private static String getLocalizedValue(Resource resource, Property property, String language) {
