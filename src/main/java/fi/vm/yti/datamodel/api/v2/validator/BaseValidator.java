@@ -1,8 +1,6 @@
 package fi.vm.yti.datamodel.api.v2.validator;
 
-import fi.vm.yti.datamodel.api.v2.dto.BaseDTO;
-import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
-import fi.vm.yti.datamodel.api.v2.dto.Status;
+import fi.vm.yti.datamodel.api.v2.dto.*;
 import jakarta.validation.ConstraintValidatorContext;
 
 import java.lang.annotation.Annotation;
@@ -129,6 +127,15 @@ public abstract class BaseValidator implements Annotation{
         } else {
             value.forEach((lang, v) -> checkCommonTextField(context, v, property));
         }
+    }
+
+    public void checkDocumentation(ConstraintValidatorContext context, ModelMetaData dataModel) {
+        dataModel.getDocumentation().forEach((lang, value) -> {
+            if (value != null && value.length() > ValidationConstants.DOCUMENTATION_MAX_LENGTH) {
+                addConstraintViolation(context, ValidationConstants.MSG_OVER_CHARACTER_LIMIT
+                                                + ValidationConstants.DOCUMENTATION_MAX_LENGTH, "documentation");
+            }
+        });
     }
 
     private void checkPrefixOrIdentifier(ConstraintValidatorContext context, String value, String propertyName, String regexp, boolean update) {

@@ -453,9 +453,9 @@ class DataModelControllerTest {
 
         //documentation over character limit
         dto = new VersionedModelDTO();
-        expected = new String[]{"updateVersionedModel.dto.documentation: value-over-character-limit.5000"};
+        expected = new String[]{"updateVersionedModel.dto.documentation: value-over-character-limit.50000"};
         dto.setDocumentation(Map.of("fi", RandomStringUtils.randomAlphanumeric(
-                ValidationConstants.TEXT_AREA_MAX_LENGTH + 1)));
+                ValidationConstants.DOCUMENTATION_MAX_LENGTH + 1)));
         dto.setStatus(Status.VALID);
         args.add(Pair.of(dto, expected));
 
