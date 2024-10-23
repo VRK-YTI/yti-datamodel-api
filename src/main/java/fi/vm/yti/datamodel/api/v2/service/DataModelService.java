@@ -418,6 +418,37 @@ public class DataModelService {
         coreRepository.queryUpdate(builder.buildRequest());
     }
 
+    public String copyDataModel(String oldPrefix, String version, String newPrefix) {
+        var oldURI = DataModelURI.createModelURI(oldPrefix, version);
+        var newURI = DataModelURI.createModelURI(newPrefix);
+
+        logger.info("Copying graph {}, new prefix {}", oldURI.getGraphURI(), newPrefix);
+
+        var model = coreRepository.fetch(oldURI.getGraphURI());
+
+        // check that old graph exists and new prefix is not in use
+        if (!coreRepository.graphExists(oldURI.getGraphURI())) {
+            throw new ResourceNotFoundException(oldURI.getGraphURI());
+        }
+        if (coreRepository.graphExists(newURI.getGraphURI())) {
+            throw new MappingError("Prefix in use");
+        }
+
+        var user = userProvider.getUser();
+        check(authorizationManager.hasRightToModel(oldPrefix, model));
+
+        var copy = MapperUtils.mapCopyModel(model, user, oldURI, newURI);
+
+        coreRepository.put(newURI.getGraphURI(), copy);
+        visualisationService.copyVisualization(oldPrefix, version, newPrefix);
+
+        openSearchIndexer.createModelToIndex(mapper.mapToIndexModel(newURI.getModelURI(), copy));
+        openSearchIndexer.indexGraphResource(copy);
+
+        auditService.log(AuditService.ActionType.CREATE, newURI.getGraphURI(), userProvider.getUser());
+
+        return newURI.getGraphURI();
+    }
 
     private void updatePriorVersions(String graphUri, String priorVersion) {
         var update = new UpdateBuilder();

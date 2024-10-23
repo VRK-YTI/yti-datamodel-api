@@ -28,4 +28,6 @@ public class SuomiMeta {
     public static final Property referenceTarget = ResourceFactory.createProperty(URI, "referenceTarget");
     public static final Property target = ResourceFactory.createProperty(URI, "target");
     public static final Property origin = ResourceFactory.createProperty(URI, "origin");
+
+    public static final Property copiedFrom = ResourceFactory.createProperty(URI, "copiedFrom");
 }

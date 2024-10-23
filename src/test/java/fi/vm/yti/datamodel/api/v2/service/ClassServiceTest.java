@@ -251,7 +251,7 @@ class ClassServiceTest {
 
         verify(coreRepository).fetch(anyString());
         verify(authorizationManager).hasRightToModel(anyString(), any(Model.class));
-        verify(coreRepository).deleteResource(anyString());
+        verify(coreRepository).deleteResource(DataModelURI.createResourceURI("test", "Identifier"));
         verify(openSearchIndexer).deleteResourceFromIndex(anyString());
     }
 

@@ -6,8 +6,6 @@ import jakarta.validation.ConstraintValidatorContext;
 
 public class VersionedModelValidator extends BaseValidator implements ConstraintValidator<ValidVersionedDatamodel, VersionedModelDTO> {
 
-
-
     @Override
     public boolean isValid(VersionedModelDTO value, ConstraintValidatorContext context) {
         setConstraintViolationAdded(false);
@@ -16,9 +14,5 @@ public class VersionedModelValidator extends BaseValidator implements Constraint
         checkDocumentation(context, value);
 
         return !isConstraintViolationAdded();
-    }
-
-    private void checkDocumentation(ConstraintValidatorContext context, VersionedModelDTO dataModel) {
-        dataModel.getDocumentation().forEach((lang, value) -> checkCommonTextArea(context, value, "documentation"));
     }
 }

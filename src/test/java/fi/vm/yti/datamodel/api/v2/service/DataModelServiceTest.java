@@ -17,6 +17,7 @@ import org.apache.jena.query.Query;
 import org.apache.jena.query.QuerySolution;
 import org.apache.jena.rdf.model.*;
 import org.apache.jena.vocabulary.OWL;
+import org.apache.jena.vocabulary.OWL2;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
 import org.junit.jupiter.api.Test;
@@ -541,6 +542,40 @@ class DataModelServiceTest {
         dataModelService.update(prefix, dto);
 
         verify(coreRepository).put(anyString(), any(Model.class));
+    }
+
+    @Test
+    void testCopyGraph() {
+        var oldGraphURI = DataModelURI.createModelURI("test", "1.0.0");
+        var newGraphURI = DataModelURI.createModelURI("new_prefix");
+        var model = MapperTestUtils.getModelFromFile("/models/test_datamodel_library_with_resources.ttl");
+        var mockUser = EndpointUtils.mockUser;
+
+        when(userProvider.getUser()).thenReturn(mockUser);
+        when(coreRepository.fetch(oldGraphURI.getGraphURI())).thenReturn(model);
+        when(authorizationManager.hasRightToModel(eq(oldGraphURI.getModelId()), any(Model.class))).thenReturn(true);
+        when(coreRepository.graphExists(oldGraphURI.getGraphURI())).thenReturn(true);
+        when(coreRepository.graphExists(newGraphURI.getGraphURI())).thenReturn(false);
+        when(modelMapper.mapToIndexModel(eq(newGraphURI.getModelURI()), any(Model.class))).thenReturn(new IndexModel());
+
+        dataModelService.copyDataModel(oldGraphURI.getModelId(), "1.0.0", newGraphURI.getModelId());
+
+        var captor = ArgumentCaptor.forClass(Model.class);
+
+        verify(coreRepository).put(eq(newGraphURI.getGraphURI()), captor.capture());
+        verify(visualizationService).copyVisualization("test", "1.0.0", "new_prefix");
+        verify(openSearchIndexer).createModelToIndex(any(IndexModel.class));
+        verify(openSearchIndexer).indexGraphResource(any(Model.class));
+
+        var copy = captor.getValue();
+        var modelResource = copy.getResource(newGraphURI.getModelURI());
+
+        // Subject count should match in original and copied
+        assertEquals(model.listSubjects().toList().size(), copy.listSubjects().toList().size());
+
+        // All version related triples should be removed
+        assertFalse(modelResource.hasProperty(OWL.versionInfo));
+        assertFalse(modelResource.hasProperty(OWL2.versionIRI));
     }
 
     private Predicate<RDFNode> containsReferences(String ns) {

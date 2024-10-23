@@ -5,6 +5,7 @@ import fi.vm.yti.datamodel.api.v2.endpoint.error.ApiError;
 import fi.vm.yti.datamodel.api.v2.service.DataModelService;
 import fi.vm.yti.datamodel.api.v2.service.ReleaseValidationService;
 import fi.vm.yti.datamodel.api.v2.validator.ValidDatamodel;
+import fi.vm.yti.datamodel.api.v2.validator.ValidPrefix;
 import fi.vm.yti.datamodel.api.v2.validator.ValidSemanticVersion;
 import fi.vm.yti.datamodel.api.v2.validator.ValidVersionedDatamodel;
 import io.swagger.v3.oas.annotations.Operation;
@@ -18,6 +19,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Collection;
 import java.util.Map;
@@ -174,5 +176,20 @@ public class DataModelController {
     @GetMapping("/{prefix}/validate")
     public ResponseEntity<Map<String, Set<ResourceReferenceDTO>>> validateRelease(@PathVariable @Parameter(description = "Data model prefix") String prefix) {
         return ResponseEntity.ok(releaseValidationService.validateRelease(prefix));
+    }
+
+    @Operation(summary = "Copies the datamodel to a new prefix")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Copy of the data model has been created with a new prefix"),
+    })
+    @PostMapping("/{prefix}/copy")
+    public ResponseEntity<Void> copyDataModel(
+            @PathVariable @Parameter(description = "Data model's current prefix") String prefix,
+            @RequestParam(required = false) @Parameter(description = "Version of the data model to be copied") @ValidSemanticVersion String version,
+            @RequestParam @Parameter(description = "New prefix") @ValidPrefix String newPrefix) {
+        var newURI = dataModelService.copyDataModel(prefix, version, newPrefix);
+        return ResponseEntity
+                .created(URI.create(newURI))
+                .build();
     }
 }
