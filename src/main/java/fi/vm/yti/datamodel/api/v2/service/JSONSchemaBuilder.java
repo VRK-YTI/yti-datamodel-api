@@ -10,6 +10,7 @@ import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.vocabulary.OWL;
+import org.apache.jena.vocabulary.OWL2;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
 import org.everit.json.schema.*;
@@ -72,6 +73,10 @@ public class JSONSchemaBuilder {
                 : language;
 
         var schemaBuilder = ObjectSchema.builder();
+
+        schemaBuilder.id(modelResource.hasProperty(OWL2.versionIRI)
+                ? MapperUtils.propertyToString(modelResource, OWL2.versionIRI)
+                : modelResource.getURI());
         schemaBuilder.description(getLocalizedValue(modelResource, RDFS.comment, language));
         schemaBuilder.title(getLocalizedValue(modelResource, RDFS.label, language));
 
