@@ -437,16 +437,25 @@ public class ResourceMapper {
         }else{
             throw new MappingError("Unsupported rdf:type");
         }
-        dto.setAllowedValues(MapperUtils.arrayPropertyToList(resource, SH.in));
+
         dto.setClassType(MapperUtils.uriToURIDTO(
                 MapperUtils.propertyToString(resource, SH.class_), model)
         );
         dto.setDataType(MapperUtils.uriToURIDTO(MapperUtils.propertyToString(resource, SH.datatype), model));
-        dto.setDefaultValue(MapperUtils.propertyToString(resource, SH.defaultValue));
-        dto.setHasValue(MapperUtils.propertyToString(resource, SH.hasValue));
         dto.setPath(MapperUtils.uriToURIDTO(
                 MapperUtils.propertyToString(resource, SH.path), model)
         );
+        dto.setCodeLists(MapperUtils.arrayPropertyToList(resource, SuomiMeta.codeList));
+        mapPropertyShapeRestrictions(dto, resource);
+        MapperUtils.mapCreationInfo(dto, resource, userMapper);
+
+        return dto;
+    }
+
+    public static void mapPropertyShapeRestrictions(PropertyShapeInfoDTO dto, Resource resource) {
+        dto.setAllowedValues(MapperUtils.arrayPropertyToList(resource, SH.in));
+        dto.setDefaultValue(MapperUtils.propertyToString(resource, SH.defaultValue));
+        dto.setHasValue(MapperUtils.propertyToString(resource, SH.hasValue));
         dto.setMaxCount(MapperUtils.getLiteral(resource, SH.maxCount, Integer.class));
         dto.setMinCount(MapperUtils.getLiteral(resource, SH.minCount, Integer.class));
         dto.setMaxLength(MapperUtils.getLiteral(resource, SH.maxLength, Integer.class));
@@ -457,10 +466,6 @@ public class ResourceMapper {
         dto.setMaxExclusive(MapperUtils.getLiteral(resource, SH.maxExclusive, Integer.class));
         dto.setPattern(MapperUtils.propertyToString(resource, SH.pattern));
         dto.setLanguageIn(MapperUtils.arrayPropertyToSet(resource, SH.languageIn));
-        dto.setCodeLists(MapperUtils.arrayPropertyToList(resource, SuomiMeta.codeList));
-        MapperUtils.mapCreationInfo(dto, resource, userMapper);
-
-        return dto;
     }
 
     public static ExternalResourceDTO mapToExternalResource(Resource resource) {

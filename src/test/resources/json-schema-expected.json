@@ -12,22 +12,53 @@
       "description": "Property shape info",
       "type": "object",
       "title": "Node shape label",
+      "required": ["property-1"],
       "properties": {
+        "property-5": {
+          "description": "",
+          "title": "Property with enum",
+          "enum": [
+            "Value1",
+            "Value2"
+          ]
+        },
+        "property-6": {
+          "const": "required value",
+          "description": "",
+          "title": "Property with required value"
+        },
         "property-1": {
+          "default": "default value",
+          "minLength": 1,
+          "pattern": "[a-zA-Z]",
           "description": "",
           "type": "string",
-          "title": "Property label"
+          "title": "String property",
+          "maxLength": 100
         },
         "property-3": {
           "description": "",
           "type": "array",
           "title": "Property label 3",
-          "items": [{"$ref": "#/properties/class-2"}]
+          "items": [{
+            "description": "",
+            "title": "Property label 3",
+            "$ref": "#/properties/class-2"
+          }]
         },
         "property-2": {
+          "maxItems": 5,
           "description": "",
           "type": "array",
-          "title": "Property label 2"
+          "title": "Numeric property",
+          "items": {
+            "exclusiveMaximum": true,
+            "default": 1,
+            "maximum": 6,
+            "type": "number",
+            "exclusiveMinimum": true,
+            "minimum": 0
+          }
         }
       }
     }
