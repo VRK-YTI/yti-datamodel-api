@@ -10,6 +10,7 @@ import fi.vm.yti.datamodel.api.v2.properties.HTTP;
 import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
+import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.vocabulary.*;
@@ -31,8 +32,25 @@ class NodeShapeMapperTest {
     @Test
     void testCreateNodeShapeAndMapToProfile() {
         var model = MapperTestUtils.getModelFromFile("/test_datamodel_profile.ttl");
-        var propertiesQueryResult = MapperTestUtils.getModelFromFile("/properties_result.ttl");
+
         var mockUser = EndpointUtils.mockUser;
+
+        var property1 = new IndexResource();
+        property1.setId(DataModelURI.createResourceURI(
+                "test_lib", "association-1", "1.0.0").getResourceVersionURI());
+        property1.setIdentifier("association-1");
+        property1.setResourceType(ResourceType.ASSOCIATION);
+        property1.setLabel(Map.of(
+                "fi", "Association association-1",
+                "en", "Association EN")
+        );
+
+        var property2 = new IndexResource();
+        property2.setId(DataModelURI.createResourceURI(
+                "test_lib", "attribute-1", "1.0.0").getResourceVersionURI());
+        property2.setIdentifier("attribute-1");
+        property2.setResourceType(ResourceType.ATTRIBUTE);
+        property2.setLabel(Map.of("fi", "Attribute attribute-1"));
 
         // assume there is a resource with identifier association-1 defined in the model
         // suffix -1 should be added when creating new property shape resource
@@ -56,7 +74,7 @@ class NodeShapeMapperTest {
         var uri = DataModelURI.createResourceURI("test", "TestClass");
         ClassMapper.createNodeShapeAndMapToModel(uri, model, dto, mockUser);
         ClassMapper.mapPlaceholderPropertyShapes(model, uri.getResourceURI(),
-                propertiesQueryResult, mockUser, freePrefixCheck, List.of(attributeRestriction));
+                List.of(property1, property2), mockUser, freePrefixCheck, List.of(attributeRestriction));
 
         Resource modelResource = model.getResource(uri.getModelURI());
         Resource classResource = model.getResource(uri.getResourceURI());
@@ -81,6 +99,10 @@ class NodeShapeMapperTest {
         assertEquals(mockUser.getId().toString(), MapperUtils.propertyToString(classResource, SuomiMeta.modifier));
         assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "target/Class", classResource.getProperty(SH.targetClass).getObject().toString());
 
+        checkPropertyShapes(classResource, model);
+    }
+
+    private static void checkPropertyShapes(Resource classResource, Model model) {
         assertEquals(2, classResource.listProperties(SH.property).toList().size());
         var propertyShapeAttribute = model.getResource(ModelConstants.SUOMI_FI_NAMESPACE + "test/attribute-1");
         var propertyShapeAssociation = model.getResource(ModelConstants.SUOMI_FI_NAMESPACE + "test/association-1-1");
@@ -99,6 +121,7 @@ class NodeShapeMapperTest {
                 propertyShapeAttribute.getProperty(SH.path).getObject().toString());
         assertEquals(Status.DRAFT, MapperUtils.getStatusFromUri(MapperUtils.propertyToString(propertyShapeAttribute, SuomiMeta.publicationStatus)));
         assertEquals("Attribute attribute-1", MapperUtils.localizedPropertyToMap(propertyShapeAttribute, RDFS.label).get("fi"));
+        assertEquals("Association EN", MapperUtils.localizedPropertyToMap(propertyShapeAssociation, RDFS.label).get("en"));
         assertEquals("/api/path/", MapperUtils.propertyToString(classResource, HTTP.API_PATH));
         assertEquals(Set.of("http://uri.suomi.fi/codelist/test"), MapperUtils.arrayPropertyToSet(propertyShapeAttribute, SuomiMeta.codeList));
     }

@@ -332,13 +332,20 @@ public class ClassService extends BaseResourceService {
         if (nodeShapeDTO.getProperties() == null || nodeShapeDTO.getProperties().isEmpty()) {
             return new HashSet<>();
         }
-        // skip creating new resource if there is already resource with sh:path reference to the property
-        var existingProperties = nodeShapeDTO.getProperties().stream()
+
+        var existingProperties = new ArrayList<String>();
+        // skip creating new resource if there is already resource with sh:path reference with the same identifier to the property
+        var existingPathReferences = nodeShapeDTO.getProperties().stream()
                 .map(p -> {
-                    var iter = model.listStatements(new SimpleSelector(null, SH.path, ResourceFactory.createResource(p)));
-                    return iter.hasNext()
-                            ? iter.next().getSubject().getURI()
-                            : null;
+                    var propertyLocalName = NodeFactory.createURI(p).getLocalName();
+                    var existing = model.listSubjectsWithProperty(SH.path, ResourceFactory.createResource(p))
+                            .filterKeep(s -> s.getLocalName().equals(propertyLocalName))
+                            .nextOptional();
+                    if (existing.isPresent()) {
+                        existingProperties.add(existing.get().getURI());
+                        return p;
+                    }
+                    return null;
                 })
                 .filter(Objects::nonNull)
                 .toList();
@@ -352,19 +359,18 @@ public class ClassService extends BaseResourceService {
             }
         }
 
-        var dataModelURI = DataModelURI.fromURI(classURI);
-        var included = DataModelUtils.getInternalReferenceModels(dataModelURI.getGraphURI(), model.getResource(dataModelURI.getModelURI()));
         var newProperties = nodeShapeDTO.getProperties().stream()
-                .filter(p -> !existingProperties.contains(p))
+                .filter(p -> !existingPathReferences.contains(p))
                 .collect(Collectors.toSet());
-        var newPropertiesModel = findResources(newProperties, included);
+        var resources = searchIndexService.findResourcesByURI(newProperties, null);
 
         Predicate<String> checkFreeIdentifier =
                 (var uri) -> coreRepository.resourceExistsInGraph(model.getResource(classURI).getNameSpace(), uri);
 
         // create new property shape resources to the model
-        var createdProperties = ClassMapper.mapPlaceholderPropertyShapes(model, classURI, newPropertiesModel,
-                userProvider.getUser(), checkFreeIdentifier, attributeRestrictions);
+        var createdProperties = ClassMapper.mapPlaceholderPropertyShapes(model, classURI,
+                resources.getResponseObjects(), userProvider.getUser(),
+                checkFreeIdentifier, attributeRestrictions);
 
         var allProperties = new HashSet<String>();
         allProperties.addAll(existingProperties);
