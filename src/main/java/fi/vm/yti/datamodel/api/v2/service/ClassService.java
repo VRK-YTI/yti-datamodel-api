@@ -1,16 +1,20 @@
 package fi.vm.yti.datamodel.api.v2.service;
 
-import fi.vm.yti.datamodel.api.security.AuthorizationManager;
+import fi.vm.yti.common.Constants;
+import fi.vm.yti.common.enums.Status;
+import fi.vm.yti.common.properties.SuomiMeta;
+import fi.vm.yti.common.service.AuditService;
+import fi.vm.yti.common.service.GroupManagementService;
+import fi.vm.yti.common.util.MapperUtils;
+import fi.vm.yti.datamodel.api.v2.security.DataModelAuthorizationManager;
+import fi.vm.yti.datamodel.api.v2.utils.DataModelMapperUtils;
 import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
-import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
+import fi.vm.yti.common.exception.ResourceNotFoundException;
 import fi.vm.yti.datamodel.api.v2.mapper.ClassMapper;
-import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.mapper.ResourceMapper;
 import fi.vm.yti.datamodel.api.v2.opensearch.dto.ResourceSearchRequest;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexResourceInfo;
-import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
-import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import fi.vm.yti.datamodel.api.v2.repository.ImportsRepository;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
@@ -46,32 +50,32 @@ public class ClassService extends BaseResourceService {
     
     private final CoreRepository coreRepository;
     private final ImportsRepository importsRepository;
-    private final AuthorizationManager authorizationManager;
+    private final DataModelAuthorizationManager authorizationManager;
     private final AuthenticatedUserProvider userProvider;
     private final TerminologyService terminologyService;
     private final GroupManagementService groupManagementService;
-    private final OpenSearchIndexer openSearchIndexer;
+    private final IndexService indexService;
     private final SearchIndexService searchIndexService;
     private final VisualizationService visualizationService;
 
     @Autowired
     public ClassService(CoreRepository coreRepository,
                         ImportsRepository importsRepository,
-                        AuthorizationManager authorizationManager,
+                        DataModelAuthorizationManager authorizationManager,
                         AuthenticatedUserProvider userProvider,
                         TerminologyService terminologyService,
                         GroupManagementService groupManagementService,
-                        OpenSearchIndexer openSearchIndexer,
+                        IndexService indexService,
                         SearchIndexService searchIndexService,
                         VisualizationService visualizationService) {
-        super(coreRepository, importsRepository, authorizationManager, openSearchIndexer, AUDIT_SERVICE, userProvider);
+        super(coreRepository, importsRepository, authorizationManager, indexService, AUDIT_SERVICE, userProvider);
         this.coreRepository = coreRepository;
         this.importsRepository = importsRepository;
         this.authorizationManager = authorizationManager;
         this.userProvider = userProvider;
         this.terminologyService = terminologyService;
         this.groupManagementService = groupManagementService;
-        this.openSearchIndexer = openSearchIndexer;
+        this.indexService = indexService;
         this.searchIndexService = searchIndexService;
         this.visualizationService = visualizationService;
     }
@@ -104,7 +108,7 @@ public class ClassService extends BaseResourceService {
                     .map(restriction -> {
                         var restrictionDTO = new SimpleResourceDTO();
                         restrictionDTO.setUri(MapperUtils.propertyToString(restriction, OWL.onProperty));
-                        restrictionDTO.setRange(MapperUtils.uriToURIDTO(
+                        restrictionDTO.setRange(DataModelMapperUtils.uriToURIDTO(
                                 MapperUtils.propertyToString(restriction, OWL.someValuesFrom), model));
                         restrictionDTO.setCodeLists(MapperUtils.arrayPropertyToSet(restriction, SuomiMeta.codeList));
                         return restrictionDTO;
@@ -147,7 +151,7 @@ public class ClassService extends BaseResourceService {
         }
 
         terminologyService.mapConcept().accept(dto);
-        MapperUtils.addLabelsToURIs(dto, mapUriLabels(includedNamespaces));
+        DataModelMapperUtils.addLabelsToURIs(dto, mapUriLabels(includedNamespaces));
         return dto;
     }
 
@@ -176,7 +180,7 @@ public class ClassService extends BaseResourceService {
                 .getResponseObjects();
     }
 
-    public URI create(String prefix, BaseDTO dto, boolean applicationProfile) throws URISyntaxException {
+    public URI create(String prefix, DataModelBaseDTO dto, boolean applicationProfile) throws URISyntaxException {
         var uri = DataModelURI.createResourceURI(prefix, dto.getIdentifier());
         var graphUri = uri.getGraphURI();
         var classUri = uri.getResourceURI();
@@ -214,7 +218,7 @@ public class ClassService extends BaseResourceService {
         ClassMapper.mapNodeShapeProperties(model, classUri, allProperties);
     }
 
-    public void checkDataModelType(Resource modelResource, BaseDTO dto) {
+    public void checkDataModelType(Resource modelResource, DataModelBaseDTO dto) {
         if (dto instanceof NodeShapeDTO && MapperUtils.isLibrary(modelResource)) {
             throw new MappingError("Cannot add node shape to ontology");
         } else if (dto instanceof ClassDTO && MapperUtils.isApplicationProfile(modelResource)) {
@@ -222,7 +226,7 @@ public class ClassService extends BaseResourceService {
         }
     }
 
-    public void update(String prefix, String classIdentifier, BaseDTO dto) {
+    public void update(String prefix, String classIdentifier, DataModelBaseDTO dto) {
         var uri = DataModelURI.createResourceURI(prefix, classIdentifier);
         var graph = uri.getGraphURI();
         var classURI = uri.getResourceURI();
@@ -375,7 +379,7 @@ public class ClassService extends BaseResourceService {
         allProperties.addAll(createdProperties);
 
         // index new resources
-        openSearchIndexer.bulkInsert(OpenSearchIndexer.OPEN_SEARCH_INDEX_RESOURCE,
+        indexService.bulkInsert(IndexService.OPEN_SEARCH_INDEX_RESOURCE,
                 createdProperties.stream()
                         .map(p -> ResourceMapper.mapToIndexResource(model, p))
                         .toList());
@@ -467,7 +471,7 @@ public class ClassService extends BaseResourceService {
         Resource restrictionResource;
         if (model.contains(ResourceFactory.createResource(uri), null)) {
             restrictionResource = model.getResource(uri);
-        } else if (uri.startsWith(ModelConstants.SUOMI_FI_NAMESPACE)) {
+        } else if (uri.startsWith(Constants.DATA_MODEL_NAMESPACE)) {
             var includedNamespaces = DataModelUtils.getInternalReferenceModels(graphURI, modelResource);
             restrictionResource = getResourceWithVersion(uri, includedNamespaces);
         } else {
@@ -515,7 +519,7 @@ public class ClassService extends BaseResourceService {
             Resource restrictionResource;
             if (model.contains(ResourceFactory.createResource(attributeUri), null)) {
                 restrictionResource = model.getResource(attributeUri);
-            } else if (attributeUri.startsWith(ModelConstants.SUOMI_FI_NAMESPACE)) {
+            } else if (attributeUri.startsWith(Constants.DATA_MODEL_NAMESPACE)) {
                 var modelResource = model.getResource(dataModelURI.getModelURI());
                 var includedNamespaces = DataModelUtils.getInternalReferenceModels(dataModelURI.getGraphURI(), modelResource);
                 restrictionResource = getResourceWithVersion(attributeUri, includedNamespaces);

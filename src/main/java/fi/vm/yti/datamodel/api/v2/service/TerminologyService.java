@@ -1,12 +1,12 @@
 package fi.vm.yti.datamodel.api.v2.service;
 
+import fi.vm.yti.common.Constants;
+import fi.vm.yti.common.properties.SuomiMeta;
 import fi.vm.yti.datamodel.api.v2.dto.ConceptDTO;
-import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
 import fi.vm.yti.datamodel.api.v2.dto.ResourceInfoBaseDTO;
 import fi.vm.yti.datamodel.api.v2.dto.SimpleResourceDTO;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
 import fi.vm.yti.datamodel.api.v2.mapper.TerminologyMapper;
-import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
 import fi.vm.yti.datamodel.api.v2.repository.TerminologyRepository;
 import org.apache.jena.arq.querybuilder.AskBuilder;
 import org.apache.jena.arq.querybuilder.ConstructBuilder;
@@ -69,8 +69,8 @@ public class TerminologyService {
     }
 
     public Model getTerminology(String uri) {
-        if (uri != null && !uri.endsWith(ModelConstants.RESOURCE_SEPARATOR)) {
-            uri = uri + ModelConstants.RESOURCE_SEPARATOR;
+        if (uri != null && !uri.endsWith(Constants.RESOURCE_SEPARATOR)) {
+            uri = uri + Constants.RESOURCE_SEPARATOR;
         }
         var builder = new ConstructBuilder()
                 .addConstruct("?s", SKOS.prefLabel, "?label")

@@ -4,7 +4,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import java.util.Set;
 
-public class ResourceDTO extends BaseDTO {
+public class ResourceDTO extends DataModelBaseDTO {
 
     private Set<String> subResourceOf = Set.of();
     private Set<String> equivalentResource = Set.of();

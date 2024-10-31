@@ -1,16 +1,26 @@
 package fi.vm.yti.datamodel.api.v2.opensearch.index;
 
+import fi.vm.yti.common.opensearch.IndexBase;
 import fi.vm.yti.datamodel.api.v2.dto.ResourceType;
 
 import java.util.Map;
 
 public class IndexResourceInfo extends IndexBase {
+    private String curie;
     private Map<String, String> note;
     private ResourceType resourceType;
     private String namespace;
     private String identifier;
     private ConceptInfo conceptInfo;
     private DatamodelInfo dataModelInfo;
+
+    public String getCurie() {
+        return curie;
+    }
+
+    public void setCurie(String curie) {
+        this.curie = curie;
+    }
 
     public Map<String, String> getNote() {
         return note;

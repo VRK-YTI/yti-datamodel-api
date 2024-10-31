@@ -1,5 +1,7 @@
 package fi.vm.yti.datamodel.api.v2.validator;
 
+import fi.vm.yti.common.exception.MappingError;
+import fi.vm.yti.common.exception.ResourceNotFoundException;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.*;
 import fi.vm.yti.security.AuthorizationException;
 import jakarta.servlet.http.HttpServletRequest;

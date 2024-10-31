@@ -1,9 +1,9 @@
 package fi.vm.yti.datamodel.api.v2.service;
 
-import fi.vm.yti.datamodel.api.mapper.MapperTestUtils;
-import fi.vm.yti.datamodel.api.security.AuthorizationManager;
-import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
-import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
+import fi.vm.yti.common.Constants;
+import fi.vm.yti.datamodel.api.v2.mapper.MapperTestUtils;
+import fi.vm.yti.datamodel.api.v2.security.DataModelAuthorizationManager;
+import fi.vm.yti.common.exception.ResourceNotFoundException;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
 import org.apache.jena.rdf.model.Model;
@@ -36,7 +36,7 @@ class UriResolveServiceTest {
     @MockBean
     private CoreRepository coreRepository;
     @MockBean
-    private AuthorizationManager authorizationManager;
+    private DataModelAuthorizationManager authorizationManager;
     @MockBean
     private DataModelService dataModelService;
 
@@ -52,7 +52,7 @@ class UriResolveServiceTest {
     @Test
     void testRedirectSiteModel() {
         var accept = "text/html";
-        var response = service.resolve(ModelConstants.SUOMI_FI_NAMESPACE + "test/1.0.1/", accept);
+        var response = service.resolve(Constants.DATA_MODEL_NAMESPACE + "test/1.0.1/", accept);
         assertTrue(response.getStatusCode().is3xxRedirection());
         assertNotNull(response.getHeaders().getLocation());
         assertTrue(response.getHeaders().getLocation().toString().endsWith("/model/test?ver=1.0.1"));
@@ -64,9 +64,9 @@ class UriResolveServiceTest {
         when(coreRepository.fetch(anyString())).thenReturn(model);
 
         var pathMap = Map.of(
-                ModelConstants.SUOMI_FI_NAMESPACE + "test/1.0.1/TestClass", "/model/test/class/TestClass?ver=1.0.1",
-                ModelConstants.SUOMI_FI_NAMESPACE + "test/1.0.1/TestAttribute", "/model/test/attribute/TestAttribute?ver=1.0.1",
-                ModelConstants.SUOMI_FI_NAMESPACE + "test/1.0.1/TestAssociation", "/model/test/association/TestAssociation?ver=1.0.1"
+                Constants.DATA_MODEL_NAMESPACE + "test/1.0.1/TestClass", "/model/test/class/TestClass?ver=1.0.1",
+                Constants.DATA_MODEL_NAMESPACE + "test/1.0.1/TestAttribute", "/model/test/attribute/TestAttribute?ver=1.0.1",
+                Constants.DATA_MODEL_NAMESPACE + "test/1.0.1/TestAssociation", "/model/test/association/TestAssociation?ver=1.0.1"
         );
         var accept = "text/html";
         for (var key : pathMap.keySet()) {
@@ -83,7 +83,7 @@ class UriResolveServiceTest {
         when(coreRepository.fetch(anyString())).thenReturn(model);
 
         var accept = "text/turtle";
-        var response = service.resolve(ModelConstants.SUOMI_FI_NAMESPACE + "test/1.0.1/TestClass", accept);
+        var response = service.resolve(Constants.DATA_MODEL_NAMESPACE + "test/1.0.1/TestClass", accept);
         assertTrue(response.getStatusCode().is4xxClientError());
     }
 
@@ -96,7 +96,7 @@ class UriResolveServiceTest {
 
     @Test
     void testFile() {
-        var response = service.resolve(ModelConstants.SUOMI_FI_NAMESPACE + "test/1.0.0/test.ttl", null);
+        var response = service.resolve(Constants.DATA_MODEL_NAMESPACE + "test/1.0.0/test.ttl", null);
         assertTrue(response.getStatusCode().is3xxRedirection());
         assertNotNull(response.getHeaders().getLocation());
         assertTrue(response.getHeaders().getLocation().toString().contains("contentType=text/turtle"));
@@ -141,9 +141,9 @@ class UriResolveServiceTest {
         var resourceUrl = service.resolveLegacyURL("test", "class-1");
         var fragmentUrl = service.resolveLegacyURL("test#class-1", null);
 
-        assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "test/1.0.0/", modelUrl);
-        assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "test/1.0.0/class-1", resourceUrl);
-        assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "test/1.0.0/class-1", fragmentUrl);
+        assertEquals(Constants.DATA_MODEL_NAMESPACE + "test/1.0.0/", modelUrl);
+        assertEquals(Constants.DATA_MODEL_NAMESPACE + "test/1.0.0/class-1", resourceUrl);
+        assertEquals(Constants.DATA_MODEL_NAMESPACE + "test/1.0.0/class-1", fragmentUrl);
     }
 
     @Test
@@ -157,8 +157,8 @@ class UriResolveServiceTest {
         var resourceUrl = service.resolveLegacyURL("test", "class-1");
         var fragmentUrl = service.resolveLegacyURL("test#class-1", null);
 
-        assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "test/", modelUrl);
-        assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "test/class-1", resourceUrl);
-        assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "test/class-1", fragmentUrl);
+        assertEquals(Constants.DATA_MODEL_NAMESPACE + "test/", modelUrl);
+        assertEquals(Constants.DATA_MODEL_NAMESPACE + "test/class-1", resourceUrl);
+        assertEquals(Constants.DATA_MODEL_NAMESPACE + "test/class-1", fragmentUrl);
     }
 }

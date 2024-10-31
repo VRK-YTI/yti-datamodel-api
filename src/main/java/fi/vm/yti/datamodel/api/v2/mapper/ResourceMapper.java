@@ -1,10 +1,14 @@
 package fi.vm.yti.datamodel.api.v2.mapper;
 
+import fi.vm.yti.common.dto.ResourceCommonInfoDTO;
+import fi.vm.yti.common.enums.Status;
+import fi.vm.yti.common.properties.SuomiMeta;
+import fi.vm.yti.common.util.MapperUtils;
+import fi.vm.yti.datamodel.api.v2.utils.DataModelMapperUtils;
 import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.*;
 import fi.vm.yti.datamodel.api.v2.properties.DCAP;
-import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelUtils;
 import fi.vm.yti.security.YtiUser;
@@ -13,7 +17,10 @@ import org.apache.jena.rdf.model.*;
 import org.apache.jena.vocabulary.*;
 import org.topbraid.shacl.vocabulary.SH;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -24,7 +31,7 @@ public class ResourceMapper {
     }
 
     public static String mapToResource(DataModelURI uri, Model model, ResourceDTO dto, ResourceType resourceType, YtiUser user){
-        var resourceResource = MapperUtils.addCommonResourceInfo(model, uri, dto);
+        var resourceResource = DataModelMapperUtils.addCommonResourceInfo(model, uri, dto);
 
         resourceResource.addProperty(RDF.type, resourceType.equals(ResourceType.ASSOCIATION)
                 ? OWL.ObjectProperty
@@ -34,7 +41,7 @@ public class ResourceMapper {
 
         //Equivalent resource
         if(dto.getEquivalentResource() != null){
-            dto.getEquivalentResource().forEach(eq -> MapperUtils.addResourceRelationship(modelResource, resourceResource, OWL.equivalentProperty, eq));
+            dto.getEquivalentResource().forEach(eq -> DataModelMapperUtils.addResourceRelationship(modelResource, resourceResource, OWL.equivalentProperty, eq));
         }
         //Sub Class
         if(dto.getSubResourceOf() == null || dto.getSubResourceOf().isEmpty()){
@@ -44,16 +51,16 @@ public class ResourceMapper {
                 resourceResource.addProperty(RDFS.subPropertyOf, OWL2.topDataProperty); //Add OWL:TopDataProperty if nothing else is specified
             }
         }else{
-            dto.getSubResourceOf().forEach(sub -> MapperUtils.addResourceRelationship(modelResource, resourceResource, RDFS.subPropertyOf, sub));
+            dto.getSubResourceOf().forEach(sub -> DataModelMapperUtils.addResourceRelationship(modelResource, resourceResource, RDFS.subPropertyOf, sub));
         }
 
-        MapperUtils.addResourceRelationship(modelResource, resourceResource, RDFS.domain, dto.getDomain());
+        DataModelMapperUtils.addResourceRelationship(modelResource, resourceResource, RDFS.domain, dto.getDomain());
         if (resourceType.equals(ResourceType.ASSOCIATION)) {
-            MapperUtils.addResourceRelationship(modelResource, resourceResource, RDFS.range, dto.getRange());
-            MapperUtils.addBooleanResourceType(resourceResource, OWL.TransitiveProperty, dto.getTransitiveProperty());
-            MapperUtils.addBooleanResourceType(resourceResource, OWL2.ReflexiveProperty, dto.getReflexiveProperty());
+            DataModelMapperUtils.addResourceRelationship(modelResource, resourceResource, RDFS.range, dto.getRange());
+            DataModelMapperUtils.addBooleanResourceType(resourceResource, OWL.TransitiveProperty, dto.getTransitiveProperty());
+            DataModelMapperUtils.addBooleanResourceType(resourceResource, OWL2.ReflexiveProperty, dto.getReflexiveProperty());
         } else {
-            MapperUtils.addBooleanResourceType(resourceResource, OWL.FunctionalProperty, dto.getFunctionalProperty());
+            DataModelMapperUtils.addBooleanResourceType(resourceResource, OWL.FunctionalProperty, dto.getFunctionalProperty());
             MapperUtils.addOptionalUriProperty(resourceResource, RDFS.range, dto.getRange());
         }
 
@@ -64,7 +71,7 @@ public class ResourceMapper {
     }
 
     public static String mapToPropertyShapeResource(DataModelURI uri, Model model, PropertyShapeDTO dto, ResourceType resourceType, YtiUser user) {
-        var resource = MapperUtils.addCommonResourceInfo(model, uri, dto);
+        var resource = DataModelMapperUtils.addCommonResourceInfo(model, uri, dto);
         var modelResource = model.getResource(uri.getModelURI());
 
         Resource typeResource = resourceType.equals(ResourceType.ASSOCIATION)
@@ -81,13 +88,13 @@ public class ResourceMapper {
         if (dto.getPath() == null) {
             resource.addProperty(SH.path, defaultPathResource);
         } else {
-            MapperUtils.addResourceRelationship(modelResource, resource, SH.path, dto.getPath());
+            DataModelMapperUtils.addResourceRelationship(modelResource, resource, SH.path, dto.getPath());
         }
         MapperUtils.addLiteral(resource, SH.minCount, dto.getMinCount());
         MapperUtils.addLiteral(resource, SH.maxCount, dto.getMaxCount());
 
         if(resourceType.equals(ResourceType.ASSOCIATION)){
-            MapperUtils.addResourceRelationship(modelResource, resource, SH.class_, ((AssociationRestriction) dto).getClassType());
+            DataModelMapperUtils.addResourceRelationship(modelResource, resource, SH.class_, ((AssociationRestriction) dto).getClassType());
         }else{
             addAttributeRestrictionProperties(resource, (AttributeRestriction) dto, modelResource);
         }
@@ -124,10 +131,10 @@ public class ResourceMapper {
         var modelResource = model.getResource(uri.getModelURI());
         var resource = model.getResource(uri.getResourceURI());
 
-        MapperUtils.updateCommonResourceInfo(model, resource, modelResource, dto);
+        DataModelMapperUtils.updateCommonResourceInfo(model, resource, modelResource, dto);
 
         resource.removeAll(OWL.equivalentProperty);
-        dto.getEquivalentResource().forEach(eq -> MapperUtils.addResourceRelationship(modelResource, resource, OWL.equivalentProperty, eq));
+        dto.getEquivalentResource().forEach(eq -> DataModelMapperUtils.addResourceRelationship(modelResource, resource, OWL.equivalentProperty, eq));
 
         var getSubResourceOf = dto.getSubResourceOf();
         resource.removeAll(RDFS.subPropertyOf);
@@ -138,18 +145,18 @@ public class ResourceMapper {
                 resource.addProperty(RDFS.subPropertyOf, OWL2.topDataProperty); //Add OWL:TopDataProperty if nothing else is specified
             }
         }else{
-            getSubResourceOf.forEach(sub -> MapperUtils.addResourceRelationship(modelResource, resource, RDFS.subPropertyOf, sub));
+            getSubResourceOf.forEach(sub -> DataModelMapperUtils.addResourceRelationship(modelResource, resource, RDFS.subPropertyOf, sub));
         }
 
-        MapperUtils.addTerminologyReference(dto, modelResource);
-        MapperUtils.updateUriPropertyAndAddReferenceNamespaces(modelResource, resource, RDFS.domain, dto.getDomain());
+        DataModelMapperUtils.addTerminologyReference(dto, modelResource);
+        DataModelMapperUtils.updateUriPropertyAndAddReferenceNamespaces(modelResource, resource, RDFS.domain, dto.getDomain());
 
-        MapperUtils.updateBooleanTypeProperty(model, resource, OWL.FunctionalProperty, dto.getFunctionalProperty());
+        DataModelMapperUtils.updateBooleanTypeProperty(model, resource, OWL.FunctionalProperty, dto.getFunctionalProperty());
         //Object property meaning association
         if (MapperUtils.hasType(resource, OWL.ObjectProperty)) {
-            MapperUtils.updateUriPropertyAndAddReferenceNamespaces(modelResource, resource, RDFS.range, dto.getRange());
-            MapperUtils.updateBooleanTypeProperty(model, resource, OWL.TransitiveProperty, dto.getTransitiveProperty());
-            MapperUtils.updateBooleanTypeProperty(model, resource, OWL2.ReflexiveProperty, dto.getReflexiveProperty());
+            DataModelMapperUtils.updateUriPropertyAndAddReferenceNamespaces(modelResource, resource, RDFS.range, dto.getRange());
+            DataModelMapperUtils.updateBooleanTypeProperty(model, resource, OWL.TransitiveProperty, dto.getTransitiveProperty());
+            DataModelMapperUtils.updateBooleanTypeProperty(model, resource, OWL2.ReflexiveProperty, dto.getReflexiveProperty());
         } else {
             MapperUtils.updateUriProperty(resource, RDFS.range, dto.getRange());
         }
@@ -180,7 +187,7 @@ public class ResourceMapper {
             throw new MappingError("Class cannot be updated through this endpoint");
         }
 
-        MapperUtils.updateCommonResourceInfo(model,resource, modelResource, dto);
+        DataModelMapperUtils.updateCommonResourceInfo(model,resource, modelResource, dto);
 
         var defaultPathResource = MapperUtils.hasType(resource, OWL.ObjectProperty)
                 ? OWL2.topObjectProperty
@@ -189,20 +196,20 @@ public class ResourceMapper {
         if (dto.getPath() == null) {
             resource.addProperty(SH.path, defaultPathResource);
         } else {
-            MapperUtils.updateUriPropertyAndAddReferenceNamespaces(modelResource, resource, SH.path, dto.getPath());
+            DataModelMapperUtils.updateUriPropertyAndAddReferenceNamespaces(modelResource, resource, SH.path, dto.getPath());
         }
 
         MapperUtils.updateLiteral(resource, SH.minCount, dto.getMinCount());
         MapperUtils.updateLiteral(resource, SH.maxCount, dto.getMaxCount());
 
         if(MapperUtils.hasType(resource, OWL.ObjectProperty)) {
-            MapperUtils.updateUriPropertyAndAddReferenceNamespaces(modelResource, resource, SH.class_,
+            DataModelMapperUtils.updateUriPropertyAndAddReferenceNamespaces(modelResource, resource, SH.class_,
                     ((AssociationRestriction) dto).getClassType());
         }else{
             updateAttributeRestrictionProperties(resource, (AttributeRestriction) dto, modelResource);
         }
 
-        MapperUtils.addTerminologyReference(dto, modelResource);
+        DataModelMapperUtils.addTerminologyReference(dto, modelResource);
         MapperUtils.addUpdateMetadata(resource, user);
     }
 
@@ -270,7 +277,7 @@ public class ResourceMapper {
 
         indexResource.setId(id.getResourceVersionURI());
         indexResource.setUri(resourceUri);
-        indexResource.setCurie(MapperUtils.uriToURIDTO(resourceUri, model).getCurie());
+        indexResource.setCurie(DataModelMapperUtils.uriToURIDTO(resourceUri, model).getCurie());
         indexResource.setLabel(MapperUtils.localizedPropertyToMap(resource, RDFS.label));
         indexResource.setStatus(MapperUtils.getStatusFromUri(MapperUtils.propertyToString(resource, SuomiMeta.publicationStatus)));
         indexResource.setIsDefinedBy(MapperUtils.propertyToString(resource, RDFS.isDefinedBy));
@@ -386,12 +393,12 @@ public class ResourceMapper {
     }
 
     public static ResourceInfoDTO mapToResourceInfoDTO(Model model, DataModelURI uri, Model orgModel,
-                                                       boolean hasRightToModel, Consumer<ResourceCommonDTO> userMapper) {
+                                                       boolean hasRightToModel, Consumer<ResourceCommonInfoDTO> userMapper) {
         var dto = new ResourceInfoDTO();
         var resourceUri = uri.getResourceURI();
         var resourceResource = model.getResource(resourceUri);
 
-        MapperUtils.addCommonResourceDtoInfo(dto, resourceResource, model.getResource(uri.getModelURI()), orgModel, hasRightToModel);
+        DataModelMapperUtils.addCommonResourceDtoInfo(dto, resourceResource, model.getResource(uri.getModelURI()), orgModel, hasRightToModel);
 
         if(MapperUtils.hasType(resourceResource, OWL.ObjectProperty)){
             dto.setType(ResourceType.ASSOCIATION);
@@ -406,10 +413,10 @@ public class ResourceMapper {
         var domain = MapperUtils.propertyToString(resourceResource, RDFS.domain);
         var range = MapperUtils.propertyToString(resourceResource, RDFS.range);
 
-        dto.setSubResourceOf(MapperUtils.uriToURIDTOs(subProperties, model));
-        dto.setEquivalentResource(MapperUtils.uriToURIDTOs(equivalentProperties, model));
-        dto.setDomain(MapperUtils.uriToURIDTO(domain, model));
-        dto.setRange(MapperUtils.uriToURIDTO(range, model));
+        dto.setSubResourceOf(DataModelMapperUtils.uriToURIDTOs(subProperties, model));
+        dto.setEquivalentResource(DataModelMapperUtils.uriToURIDTOs(equivalentProperties, model));
+        dto.setDomain(DataModelMapperUtils.uriToURIDTO(domain, model));
+        dto.setRange(DataModelMapperUtils.uriToURIDTO(range, model));
 
         dto.setFunctionalProperty(MapperUtils.hasType(resourceResource, OWL.FunctionalProperty));
 
@@ -423,12 +430,12 @@ public class ResourceMapper {
     }
 
     public static PropertyShapeInfoDTO mapToPropertyShapeInfoDTO(Model model, DataModelURI uri, Model orgModel,
-                                                                 boolean hasRightToModel, Consumer<ResourceCommonDTO> userMapper ) {
+                                                                 boolean hasRightToModel, Consumer<ResourceCommonInfoDTO> userMapper ) {
         var dto = new PropertyShapeInfoDTO();
         var resource = model.getResource(uri.getResourceURI());
         DataModelUtils.addPrefixesToModel(resource.getNameSpace(), model);
 
-        MapperUtils.addCommonResourceDtoInfo(dto, resource, model.getResource(uri.getModelURI()), orgModel, hasRightToModel);
+        DataModelMapperUtils.addCommonResourceDtoInfo(dto, resource, model.getResource(uri.getModelURI()), orgModel, hasRightToModel);
 
         if(MapperUtils.hasType(resource, OWL.ObjectProperty)){
             dto.setType(ResourceType.ASSOCIATION);
@@ -438,11 +445,11 @@ public class ResourceMapper {
             throw new MappingError("Unsupported rdf:type");
         }
 
-        dto.setClassType(MapperUtils.uriToURIDTO(
+        dto.setClassType(DataModelMapperUtils.uriToURIDTO(
                 MapperUtils.propertyToString(resource, SH.class_), model)
         );
-        dto.setDataType(MapperUtils.uriToURIDTO(MapperUtils.propertyToString(resource, SH.datatype), model));
-        dto.setPath(MapperUtils.uriToURIDTO(
+        dto.setDataType(DataModelMapperUtils.uriToURIDTO(MapperUtils.propertyToString(resource, SH.datatype), model));
+        dto.setPath(DataModelMapperUtils.uriToURIDTO(
                 MapperUtils.propertyToString(resource, SH.path), model)
         );
         dto.setCodeLists(MapperUtils.arrayPropertyToList(resource, SuomiMeta.codeList));
@@ -516,10 +523,10 @@ public class ResourceMapper {
         var result = new HashSet<ResourceReferenceDTO>();
         model.listSubjectsWithProperty(RDF.type).forEach((var subject) -> {
             var dto = new ResourceReferenceDTO();
-            dto.setResourceURI(MapperUtils.uriToURIDTO(subject.getURI(), model));
+            dto.setResourceURI(DataModelMapperUtils.uriToURIDTO(subject.getURI(), model));
 
             var pred = subject.getProperty(DCTerms.references).getObject();
-            dto.setProperty(MapperUtils.getCurie(pred.asResource(), model));
+            dto.setProperty(DataModelMapperUtils.getCurie(pred.asResource(), model));
 
             if (MapperUtils.hasType(subject, OWL.DatatypeProperty)) {
                 dto.setType(ResourceType.ATTRIBUTE);

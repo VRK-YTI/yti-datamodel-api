@@ -1,7 +1,8 @@
 package fi.vm.yti.datamodel.api.v2.utils;
 
+import fi.vm.yti.common.Constants;
+import fi.vm.yti.common.util.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
-import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.properties.DCAP;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Resource;
@@ -64,7 +65,7 @@ public class DataModelUtils {
         }
 
         return includedNamespaces.stream()
-                .filter(ns -> ns.startsWith(ModelConstants.SUOMI_FI_NAMESPACE))
+                .filter(ns -> ns.startsWith(Constants.DATA_MODEL_NAMESPACE))
                 .collect(Collectors.toSet());
     }
 
@@ -78,7 +79,7 @@ public class DataModelUtils {
     public static String removeVersionFromURI(String uri) {
         if (uri == null) {
             return null;
-        } else if (!uri.startsWith(ModelConstants.SUOMI_FI_NAMESPACE)) {
+        } else if (!uri.startsWith(Constants.DATA_MODEL_NAMESPACE)) {
             return uri;
         }
         return uri.replaceAll("/[\\d.]+(.*)/", "/");

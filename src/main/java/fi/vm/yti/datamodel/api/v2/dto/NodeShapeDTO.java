@@ -2,7 +2,7 @@ package fi.vm.yti.datamodel.api.v2.dto;
 
 import java.util.Set;
 
-public class NodeShapeDTO extends BaseDTO {
+public class NodeShapeDTO extends DataModelBaseDTO {
     private String targetClass;
     private String targetNode;
     private Set<String> properties;

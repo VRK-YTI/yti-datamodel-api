@@ -1,8 +1,9 @@
 package fi.vm.yti.datamodel.api.v2.opensearch.queries;
 
+import fi.vm.yti.common.opensearch.QueryFactoryUtils;
 import fi.vm.yti.datamodel.api.v2.dto.ResourceType;
 import fi.vm.yti.datamodel.api.v2.opensearch.dto.ResourceSearchRequest;
-import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
+import fi.vm.yti.datamodel.api.v2.service.IndexService;
 import org.opensearch.client.opensearch._types.query_dsl.BoolQuery;
 import org.opensearch.client.opensearch._types.query_dsl.ExistsQuery;
 import org.opensearch.client.opensearch._types.query_dsl.Query;
@@ -15,7 +16,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-import static fi.vm.yti.datamodel.api.v2.opensearch.OpenSearchUtil.logPayload;
+import static fi.vm.yti.common.opensearch.OpenSearchUtil.logPayload;
 
 public class ResourceQueryFactory {
 
@@ -58,14 +59,14 @@ public class ResourceQueryFactory {
                 .must(must)
                 .should(should)
                 .build()
-                ._toQuery();
+                .toQuery();
 
         var indices = new ArrayList<String>();
-        indices.add(OpenSearchIndexer.OPEN_SEARCH_INDEX_RESOURCE);
+        indices.add(IndexService.OPEN_SEARCH_INDEX_RESOURCE);
 
         // include external models only if there are no Interoperability platform specific conditions
         if (!externalNamespaces.isEmpty() && request.getGroups() == null) {
-            indices.add(OpenSearchIndexer.OPEN_SEARCH_INDEX_EXTERNAL);
+            indices.add(IndexService.OPEN_SEARCH_INDEX_EXTERNAL);
         }
 
         var builder = new SearchRequest.Builder()
@@ -108,14 +109,14 @@ public class ResourceQueryFactory {
                 .must(must)
                 .should(should)
                 .build()
-                ._toQuery();
+                .toQuery();
 
         var indices = new ArrayList<String>();
-        indices.add(OpenSearchIndexer.OPEN_SEARCH_INDEX_RESOURCE);
+        indices.add(IndexService.OPEN_SEARCH_INDEX_RESOURCE);
 
         // include external models only if there are no Interoperability platform specific conditions
         if (!externalNamespaces.isEmpty() && request.getGroups() == null) {
-            indices.add(OpenSearchIndexer.OPEN_SEARCH_INDEX_EXTERNAL);
+            indices.add(IndexService.OPEN_SEARCH_INDEX_EXTERNAL);
         }
 
         Highlight.Builder highlight = new Highlight.Builder()
@@ -161,7 +162,7 @@ public class ResourceQueryFactory {
             BoolQuery.Builder draftBuilder = new BoolQuery.Builder();
             draftBuilder.must(QueryFactoryUtils.termsQuery("isDefinedBy", linkedDraftModels));
             draftBuilder.must(QueryFactoryUtils.existsQuery("fromVersion", true));
-            builder.should(draftBuilder.build()._toQuery());
+            builder.should(draftBuilder.build().toQuery());
         }
 
         if (request.getIncludeDraftFrom() != null && !request.getIncludeDraftFrom().isEmpty()) {
@@ -173,7 +174,7 @@ public class ResourceQueryFactory {
             .should(QueryFactoryUtils.termsQuery("id", request.getAdditionalResources() != null
                     ? request.getAdditionalResources()
                     : Collections.emptyList()));
-        return builder.build()._toQuery();
+        return builder.build().toQuery();
     }
 
     /**
@@ -189,7 +190,7 @@ public class ResourceQueryFactory {
         } else {
             builder.must(QueryFactoryUtils.existsQuery("fromVersion", true));
         }
-        return builder.build()._toQuery();
+        return builder.build().toQuery();
     }
 
     public static SearchRequest createFindResourcesByURIQuery(Set<String> resourceURIs, String versionURI) {
@@ -198,17 +199,17 @@ public class ResourceQueryFactory {
         queries.add(QueryFactoryUtils.termsQuery(field, resourceURIs));
 
         if (versionURI != null) {
-            queries.add(ExistsQuery.of(q -> q.field("versionIri"))._toQuery());
+            queries.add(ExistsQuery.of(q -> q.field("versionIri")).toQuery());
         }
 
         var req = new SearchRequest.Builder()
-                .index(OpenSearchIndexer.OPEN_SEARCH_INDEX_RESOURCE, OpenSearchIndexer.OPEN_SEARCH_INDEX_EXTERNAL)
+                .index(IndexService.OPEN_SEARCH_INDEX_RESOURCE, IndexService.OPEN_SEARCH_INDEX_EXTERNAL)
                 .size(1000)
                 .query(QueryBuilders
                         .bool()
                         .must(queries)
                         .build()
-                        ._toQuery())
+                        .toQuery())
                 .build();
         logPayload(req, "resources_v2");
         return req;

@@ -3,7 +3,7 @@ package fi.vm.yti.datamodel.api.v2.dto;
 import java.util.HashSet;
 import java.util.Set;
 
-public class ClassDTO extends BaseDTO {
+public class ClassDTO extends DataModelBaseDTO {
 
     private Set<String> equivalentClass = new HashSet<>();
     private Set<String> subClassOf = new HashSet<>();

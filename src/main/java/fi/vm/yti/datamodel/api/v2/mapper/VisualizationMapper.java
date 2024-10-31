@@ -1,10 +1,13 @@
 package fi.vm.yti.datamodel.api.v2.mapper;
 
+import fi.vm.yti.common.Constants;
+import fi.vm.yti.common.properties.SuomiMeta;
+import fi.vm.yti.common.util.MapperUtils;
+import fi.vm.yti.datamodel.api.v2.utils.DataModelMapperUtils;
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
 import fi.vm.yti.datamodel.api.v2.dto.ResourceType;
 import fi.vm.yti.datamodel.api.v2.dto.visualization.*;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexResource;
-import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
 import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.rdf.model.*;
 import org.apache.jena.vocabulary.DCTerms;
@@ -83,7 +86,7 @@ public class VisualizationMapper {
                 .mapWith(r -> {
                     var nodeDTO = new VisualizationAttributeNodeDTO();
                     nodeDTO.setType(VisualizationNodeType.ATTRIBUTE);
-                    var range = MapperUtils.uriToURIDTO(MapperUtils.propertyToString(r.getSubject(), RDFS.range), model);
+                    var range = DataModelMapperUtils.uriToURIDTO(MapperUtils.propertyToString(r.getSubject(), RDFS.range), model);
                     if (range != null) {
                         nodeDTO.setDataType(range.getCurie());
                     }
@@ -169,7 +172,7 @@ public class VisualizationMapper {
             attribute.setLabel(label);
             attribute.setUri(resourceURI);
             if (someValuesFrom != null) {
-                var uriDTO = MapperUtils.uriToURIDTO(someValuesFrom, restrictionResource.getModel());
+                var uriDTO = DataModelMapperUtils.uriToURIDTO(someValuesFrom, restrictionResource.getModel());
                 attribute.setDataType(uriDTO.getCurie());
             }
             classDTO.addAttribute(attribute);
@@ -199,7 +202,7 @@ public class VisualizationMapper {
             attribute.setUri(versionedResourceURI);
             var dataType = MapperUtils.propertyToString(resource, SH.datatype);
             if (dataType != null) {
-                var uriDTO = MapperUtils.uriToURIDTO(dataType, model);
+                var uriDTO = DataModelMapperUtils.uriToURIDTO(dataType, model);
                 attribute.setDataType(uriDTO.getCurie());
             }
             attribute.setMaxCount(MapperUtils.getLiteral(resource, SH.maxCount, Integer.class));
@@ -247,8 +250,8 @@ public class VisualizationMapper {
 
         classes.forEach(dto -> {
             var positionResource = positions.getResource(ModelConstants.MODEL_POSITIONS_NAMESPACE + modelPrefix
-                    + ModelConstants.RESOURCE_SEPARATOR
-                    + dto.getIdentifier());
+                                                         + Constants.RESOURCE_SEPARATOR
+                                                         + dto.getIdentifier());
             dto.setPosition(getPositionFromResource(positionResource));
 
             // check if there are hidden nodes between parent relations

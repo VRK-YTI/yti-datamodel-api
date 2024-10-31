@@ -1,17 +1,18 @@
 package fi.vm.yti.datamodel.api.v2.opensearch.dto;
 
-import fi.vm.yti.datamodel.api.v2.dto.ModelType;
+import fi.vm.yti.common.enums.GraphType;
+import fi.vm.yti.common.opensearch.BaseSearchRequest;
 import fi.vm.yti.datamodel.api.v2.dto.ResourceType;
 
 import java.util.Set;
 
-public class ResourceSearchRequest extends BaseSearchRequest{
+public class ResourceSearchRequest extends BaseSearchRequest {
 
     private String limitToDataModel;
     private boolean fromAddedNamespaces;
     private Set<String> groups;
     private Set<ResourceType> resourceTypes;
-    private ModelType limitToModelType;
+    private GraphType limitToModelType;
     private String targetClass;
     private Set<String> additionalResources;
     private String fromVersion;
@@ -49,11 +50,11 @@ public class ResourceSearchRequest extends BaseSearchRequest{
         this.resourceTypes = resourceTypes;
     }
 
-    public ModelType getLimitToModelType() {
+    public GraphType getLimitToModelType() {
         return limitToModelType;
     }
 
-    public void setLimitToModelType(ModelType limitToModelType) {
+    public void setLimitToModelType(GraphType limitToModelType) {
         this.limitToModelType = limitToModelType;
     }
 

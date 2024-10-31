@@ -1,16 +1,17 @@
 package fi.vm.yti.datamodel.api.v2.service;
 
-import fi.vm.yti.datamodel.api.mapper.MapperTestUtils;
-import fi.vm.yti.datamodel.api.security.AuthorizationManager;
+import fi.vm.yti.common.Constants;
+import fi.vm.yti.common.opensearch.SearchResponseDTO;
+import fi.vm.yti.common.properties.SuomiMeta;
+import fi.vm.yti.datamodel.api.v2.mapper.MapperTestUtils;
+import fi.vm.yti.datamodel.api.v2.security.DataModelAuthorizationManager;
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
 import fi.vm.yti.datamodel.api.v2.dto.ResourceType;
 import fi.vm.yti.datamodel.api.v2.dto.visualization.PositionDataDTO;
 import fi.vm.yti.datamodel.api.v2.dto.visualization.VisualizationClassDTO;
 import fi.vm.yti.datamodel.api.v2.dto.visualization.VisualizationNodeDTO;
 import fi.vm.yti.datamodel.api.v2.dto.visualization.VisualizationNodeType;
-import fi.vm.yti.datamodel.api.v2.opensearch.dto.SearchResponseDTO;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexResource;
-import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import fi.vm.yti.security.AuthenticatedUserProvider;
 import fi.vm.yti.security.AuthorizationException;
@@ -50,7 +51,7 @@ class VisualizationServiceTest {
     @MockBean
     private CoreRepository coreRepository;
     @MockBean
-    private AuthorizationManager authorizationManager;
+    private DataModelAuthorizationManager authorizationManager;
     @MockBean
     private AuthenticatedUserProvider userProvider;
     @MockBean
@@ -110,7 +111,7 @@ class VisualizationServiceTest {
         var model = MapperTestUtils.getModelFromFile("/models/test_application_profile_visualization.ttl");
         var positionModel = MapperTestUtils.getModelFromFile("/positions.ttl");
         var externalPropertiesModel = getExternalPropertiesResult();
-        var graph = ModelConstants.MODEL_POSITIONS_NAMESPACE + "visuprof" + ModelConstants.RESOURCE_SEPARATOR;
+        var graph = ModelConstants.MODEL_POSITIONS_NAMESPACE + "visuprof" + Constants.RESOURCE_SEPARATOR;
 
         when(coreRepository.fetch(anyString())).thenReturn(model);
         when(coreRepository.fetch(graph)).thenReturn(positionModel);
@@ -145,7 +146,7 @@ class VisualizationServiceTest {
 
     @Test
     void savePositions() {
-        var graphURI = ModelConstants.MODEL_POSITIONS_NAMESPACE + "test-model" + ModelConstants.RESOURCE_SEPARATOR;
+        var graphURI = ModelConstants.MODEL_POSITIONS_NAMESPACE + "test-model" + Constants.RESOURCE_SEPARATOR;
         when(coreRepository.graphExists(graphURI)).thenReturn(true);
         when(coreRepository.fetch(anyString())).thenReturn(ModelFactory.createDefaultModel());
         when(authorizationManager.hasRightToModel(anyString(), any(Model.class))).thenReturn(true);
@@ -167,7 +168,7 @@ class VisualizationServiceTest {
 
     @Test
     void savePositionsVersion() {
-        var graphURI = ModelConstants.MODEL_POSITIONS_NAMESPACE + "test-model/1.2.3" + ModelConstants.RESOURCE_SEPARATOR;
+        var graphURI = ModelConstants.MODEL_POSITIONS_NAMESPACE + "test-model/1.2.3" + Constants.RESOURCE_SEPARATOR;
         when(coreRepository.graphExists(graphURI)).thenReturn(true);
         when(coreRepository.fetch(anyString())).thenReturn(ModelFactory.createDefaultModel());
         when(authorizationManager.hasRightToModel(anyString(), any(Model.class))).thenReturn(true);
@@ -183,7 +184,7 @@ class VisualizationServiceTest {
         verify(coreRepository).put(eq(graphURI), modelCaptor.capture());
 
         var resourceURI = ModelConstants.MODEL_POSITIONS_NAMESPACE + "test-model"
-                + ModelConstants.RESOURCE_SEPARATOR
+                + Constants.RESOURCE_SEPARATOR
                 + positionData.getIdentifier();
         var resource = modelCaptor.getValue().getResource(resourceURI);
         assertEquals("pos-1", resource.getProperty(DCTerms.identifier).getString());
@@ -191,19 +192,19 @@ class VisualizationServiceTest {
 
     @Test
     void saveVersionedPositions() {
-        var graphURI = ModelConstants.MODEL_POSITIONS_NAMESPACE + "test-model" + ModelConstants.RESOURCE_SEPARATOR;
+        var graphURI = ModelConstants.MODEL_POSITIONS_NAMESPACE + "test-model" + Constants.RESOURCE_SEPARATOR;
         when(coreRepository.fetch(anyString())).thenReturn(ModelFactory.createDefaultModel());
         when(authorizationManager.hasRightToModel(anyString(), any(Model.class))).thenReturn(true);
 
         visualizationService.saveVersionedPositions("test-model", "1.0.0");
 
         verify(coreRepository).fetch(graphURI);
-        verify(coreRepository).put(eq(graphURI + "1.0.0" + ModelConstants.RESOURCE_SEPARATOR), any(Model.class));
+        verify(coreRepository).put(eq(graphURI + "1.0.0" + Constants.RESOURCE_SEPARATOR), any(Model.class));
     }
 
     @Test
     void testAddDefaultPosition() {
-        var positionURI = ModelConstants.MODEL_POSITIONS_NAMESPACE + "test" + ModelConstants.RESOURCE_SEPARATOR;
+        var positionURI = ModelConstants.MODEL_POSITIONS_NAMESPACE + "test" + Constants.RESOURCE_SEPARATOR;
         var positionModel = ModelFactory.createDefaultModel();
 
         positionModel.createResource(positionURI + "res1")
@@ -229,8 +230,8 @@ class VisualizationServiceTest {
     @Test
     void testCopyVisualization() {
         var positionModel = MapperTestUtils.getModelFromFile("/positions.ttl");
-        var oldGraphURI = ModelConstants.MODEL_POSITIONS_NAMESPACE + "visuprof" + ModelConstants.RESOURCE_SEPARATOR;
-        var newGraphURI = ModelConstants.MODEL_POSITIONS_NAMESPACE + "new_visu" + ModelConstants.RESOURCE_SEPARATOR;
+        var oldGraphURI = ModelConstants.MODEL_POSITIONS_NAMESPACE + "visuprof" + Constants.RESOURCE_SEPARATOR;
+        var newGraphURI = ModelConstants.MODEL_POSITIONS_NAMESPACE + "new_visu" + Constants.RESOURCE_SEPARATOR;
 
         when(coreRepository.fetch(oldGraphURI)).thenReturn(positionModel);
         var captor = ArgumentCaptor.forClass(Model.class);
@@ -253,12 +254,12 @@ class VisualizationServiceTest {
     private static Model getExternalPropertiesResult() {
         var externalPropertiesModel = ModelFactory.createDefaultModel();
 
-        var resource1 = externalPropertiesModel.createResource(ModelConstants.SUOMI_FI_NAMESPACE + "personprof/street");
+        var resource1 = externalPropertiesModel.createResource(Constants.DATA_MODEL_NAMESPACE + "personprof/street");
         resource1.addProperty(DCTerms.identifier, "street");
         resource1.addProperty(RDF.type, OWL.DatatypeProperty);
         resource1.addProperty(RDF.type, SH.PropertyShape);
 
-        var resource2 = externalPropertiesModel.createResource(ModelConstants.SUOMI_FI_NAMESPACE + "personprof/zipcode");
+        var resource2 = externalPropertiesModel.createResource(Constants.DATA_MODEL_NAMESPACE + "personprof/zipcode");
         resource2.addProperty(DCTerms.identifier, "zipcode");
         resource2.addProperty(RDF.type, OWL.DatatypeProperty);
         resource2.addProperty(RDF.type, SH.PropertyShape);

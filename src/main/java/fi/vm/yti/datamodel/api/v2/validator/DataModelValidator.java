@@ -1,8 +1,8 @@
 package fi.vm.yti.datamodel.api.v2.validator;
 
+import fi.vm.yti.common.Constants;
+import fi.vm.yti.common.enums.GraphType;
 import fi.vm.yti.datamodel.api.v2.dto.DataModelDTO;
-import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
-import fi.vm.yti.datamodel.api.v2.dto.ModelType;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
 import jakarta.validation.ConstraintValidator;
@@ -18,7 +18,7 @@ public class DataModelValidator extends BaseValidator implements
     private CoreRepository coreRepository;
 
     boolean updateModel;
-    ModelType modelType;
+    GraphType modelType;
 
     @Override
     public void initialize(ValidDatamodel constraintAnnotation) {
@@ -136,7 +136,7 @@ public class DataModelValidator extends BaseValidator implements
         }
         var existingOrgs = coreRepository.getOrganizations();
         organizations.forEach(org -> {
-            var queryRes = ResourceFactory.createResource(ModelConstants.URN_UUID + org.toString());
+            var queryRes = ResourceFactory.createResource(Constants.URN_UUID + org.toString());
             if(!existingOrgs.containsResource(queryRes)){
                 addConstraintViolation(context, "does-not-exist." + org, "organizations");
             }
@@ -183,7 +183,7 @@ public class DataModelValidator extends BaseValidator implements
      */
     private void checkInternalNamespaces(ConstraintValidatorContext context, DataModelDTO dataModel){
         var namespaces = dataModel.getInternalNamespaces();
-        if(namespaces.stream().anyMatch(ns -> !ns.startsWith(ModelConstants.SUOMI_FI_NAMESPACE))){
+        if(namespaces.stream().anyMatch(ns -> !ns.startsWith(Constants.DATA_MODEL_NAMESPACE))){
             addConstraintViolation(context, "namespace-not-internal", "internalNamespaces");
         }
     }
@@ -203,7 +203,7 @@ public class DataModelValidator extends BaseValidator implements
                 addConstraintViolation(context, "namespace-missing-value", externalNamespace);
             }else {
                 checkPrefix(context, namespace.getPrefix(), externalNamespace, false);
-                if(namespace.getNamespace().startsWith(ModelConstants.SUOMI_FI_NAMESPACE)){
+                if(namespace.getNamespace().startsWith(Constants.DATA_MODEL_NAMESPACE)){
                     addConstraintViolation(context, "namespace-not-external", externalNamespace);
                 }
                 checkPrefixContent(context, namespace.getPrefix(), externalNamespace, true);
@@ -235,8 +235,8 @@ public class DataModelValidator extends BaseValidator implements
         }
     }
 
-    private void checkCodeLists(ConstraintValidatorContext context, DataModelDTO dataModel, ModelType modelType) {
-        if(modelType.equals(ModelType.LIBRARY) && !dataModel.getCodeLists().isEmpty()){
+    private void checkCodeLists(ConstraintValidatorContext context, DataModelDTO dataModel, GraphType modelType) {
+        if(modelType.equals(GraphType.LIBRARY) && !dataModel.getCodeLists().isEmpty()){
             addConstraintViolation(context, "library-not-supported", "codeLists");
         }
 

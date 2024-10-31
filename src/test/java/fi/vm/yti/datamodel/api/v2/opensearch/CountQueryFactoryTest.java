@@ -1,8 +1,7 @@
 package fi.vm.yti.datamodel.api.v2.opensearch;
 
-import fi.vm.yti.datamodel.api.index.OpenSearchUtils;
-import fi.vm.yti.datamodel.api.mapper.MapperTestUtils;
-import fi.vm.yti.datamodel.api.v2.dto.Status;
+import fi.vm.yti.common.enums.Status;
+import fi.vm.yti.datamodel.api.v2.mapper.MapperTestUtils;
 import fi.vm.yti.datamodel.api.v2.opensearch.dto.CountSearchResponse;
 import fi.vm.yti.datamodel.api.v2.opensearch.dto.ModelSearchRequest;
 import fi.vm.yti.datamodel.api.v2.opensearch.queries.ModelQueryFactory;

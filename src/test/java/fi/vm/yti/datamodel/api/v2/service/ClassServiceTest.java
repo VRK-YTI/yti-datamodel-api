@@ -1,18 +1,22 @@
 package fi.vm.yti.datamodel.api.v2.service;
 
-import fi.vm.yti.datamodel.api.mapper.MapperTestUtils;
-import fi.vm.yti.datamodel.api.security.AuthorizationManager;
-import fi.vm.yti.datamodel.api.v2.dto.*;
+import fi.vm.yti.common.Constants;
+import fi.vm.yti.common.enums.Status;
+import fi.vm.yti.common.opensearch.SearchResponseDTO;
+import fi.vm.yti.common.properties.SuomiMeta;
+import fi.vm.yti.common.service.GroupManagementService;
+import fi.vm.yti.common.util.MapperUtils;
+import fi.vm.yti.datamodel.api.v2.mapper.MapperTestUtils;
+import fi.vm.yti.datamodel.api.v2.security.DataModelAuthorizationManager;
+import fi.vm.yti.datamodel.api.v2.dto.ClassDTO;
+import fi.vm.yti.datamodel.api.v2.dto.NodeShapeDTO;
+import fi.vm.yti.datamodel.api.v2.dto.ResourceInfoBaseDTO;
 import fi.vm.yti.datamodel.api.v2.endpoint.EndpointUtils;
-import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
+import fi.vm.yti.common.exception.ResourceNotFoundException;
 import fi.vm.yti.datamodel.api.v2.mapper.ClassMapper;
-import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.mapper.ResourceMapper;
-import fi.vm.yti.datamodel.api.v2.opensearch.dto.SearchResponseDTO;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexResource;
-import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
 import fi.vm.yti.datamodel.api.v2.properties.DCAP;
-import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import fi.vm.yti.datamodel.api.v2.repository.ImportsRepository;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
@@ -55,7 +59,7 @@ class ClassServiceTest {
     CoreRepository coreRepository;
 
     @MockBean
-    AuthorizationManager authorizationManager;
+    DataModelAuthorizationManager authorizationManager;
 
     @MockBean
     ImportsRepository importsRepository;
@@ -70,7 +74,7 @@ class ClassServiceTest {
     GroupManagementService groupManagementService;
 
     @MockBean
-    OpenSearchIndexer openSearchIndexer;
+    IndexService indexService;
 
     @MockBean
     SearchIndexService searchIndexService;
@@ -104,8 +108,8 @@ class ClassServiceTest {
 
         classService.get(resourceURI.getModelId(), null, resourceURI.getResourceId());
 
-        var graphURI = ModelConstants.SUOMI_FI_NAMESPACE + "test" + ModelConstants.RESOURCE_SEPARATOR;
-        verify(coreRepository).resourceExistsInGraph(graphURI, ModelConstants.SUOMI_FI_NAMESPACE + "test/TestClass");
+        var graphURI = Constants.DATA_MODEL_NAMESPACE + "test" + Constants.RESOURCE_SEPARATOR;
+        verify(coreRepository).resourceExistsInGraph(graphURI, Constants.DATA_MODEL_NAMESPACE + "test/TestClass");
         verify(coreRepository).fetch(graphURI);
         verify(authorizationManager).hasRightToModel(anyString(), any(Model.class));
         verify(coreRepository).getOrganizations();
@@ -132,8 +136,8 @@ class ClassServiceTest {
 
         classService.get(resourceURI.getModelId(), resourceURI.getVersion(), resourceURI.getResourceId());
 
-        verify(coreRepository).resourceExistsInGraph(ModelConstants.SUOMI_FI_NAMESPACE + "test/1.0.1/", ModelConstants.SUOMI_FI_NAMESPACE + "test/TestClass");
-        verify(coreRepository).fetch(ModelConstants.SUOMI_FI_NAMESPACE + "test/1.0.1/");
+        verify(coreRepository).resourceExistsInGraph(Constants.DATA_MODEL_NAMESPACE + "test/1.0.1/", Constants.DATA_MODEL_NAMESPACE + "test/TestClass");
+        verify(coreRepository).fetch(Constants.DATA_MODEL_NAMESPACE + "test/1.0.1/");
         verify(authorizationManager).hasRightToModel(eq("test"), any(Model.class));
         verify(coreRepository).getOrganizations();
     }
@@ -148,7 +152,7 @@ class ClassServiceTest {
             var resMapper = mockStatic(ResourceMapper.class)) {
             resMapper.when(() -> ResourceMapper.mapToIndexResource(any(Model.class), anyString())).thenReturn(new IndexResource());
             var uri = classService.create("test", dto,false);
-            assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "test/Identifier", uri.toString());
+            assertEquals(Constants.DATA_MODEL_NAMESPACE + "test/Identifier", uri.toString());
             mapper.verify(() -> ClassMapper.createOntologyClassAndMapToModel(any(DataModelURI.class), any(Model.class), any(ClassDTO.class), any(YtiUser.class)));
         }
 
@@ -157,7 +161,7 @@ class ClassServiceTest {
         verify(authorizationManager).hasRightToModel(anyString(), any(Model.class));
         verify(terminologyService).resolveConcept(anyString());
         verify(coreRepository).put(anyString(), any(Model.class));
-        verify(openSearchIndexer).createResourceToIndex(any(IndexResource.class));
+        verify(indexService).createResourceToIndex(any(IndexResource.class));
         verify(visualizationService).addNewResourceDefaultPosition("test","Identifier");
     }
 
@@ -191,10 +195,10 @@ class ClassServiceTest {
         verify(authorizationManager).hasRightToModel(anyString(), any(Model.class));
         verify(terminologyService).resolveConcept(anyString());
         verify(coreRepository).put(anyString(), any(Model.class));
-        verify(openSearchIndexer).createResourceToIndex(any(IndexResource.class));
+        verify(indexService).createResourceToIndex(any(IndexResource.class));
 
         var result = model.getResource(uri.toString());
-        assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "test/node-shape-1", uri.toString());
+        assertEquals(Constants.DATA_MODEL_NAMESPACE + "test/node-shape-1", uri.toString());
 
         var expectedPropertyURI = DataModelURI.createResourceURI(nodeRefURI.getModelId(), "node-property", nodeRefURI.getVersion());
         assertEquals(expectedPropertyURI.getResourceVersionURI(), result.listProperties(SH.property).toList().get(0).getObject().toString());
@@ -300,7 +304,7 @@ class ClassServiceTest {
         verify(authorizationManager).hasRightToModel(anyString(), any(Model.class));
         verify(terminologyService).resolveConcept(anyString());
         verify(coreRepository).put(anyString(), any(Model.class));
-        verify(openSearchIndexer).updateResourceToIndex(any(IndexResource.class));
+        verify(indexService).updateResourceToIndex(any(IndexResource.class));
     }
 
     @Test
@@ -321,7 +325,7 @@ class ClassServiceTest {
         verify(authorizationManager).hasRightToModel(anyString(), any(Model.class));
         verify(terminologyService).resolveConcept(anyString());
         verify(coreRepository).put(anyString(), any(Model.class));
-        verify(openSearchIndexer).updateResourceToIndex(any(IndexResource.class));
+        verify(indexService).updateResourceToIndex(any(IndexResource.class));
     }
 
     @Test
@@ -334,8 +338,10 @@ class ClassServiceTest {
 
         verify(coreRepository).fetch(anyString());
         verify(authorizationManager).hasRightToModel(anyString(), any(Model.class));
-        verify(coreRepository).deleteResource(DataModelURI.createResourceURI("test", "Identifier"));
-        verify(openSearchIndexer).deleteResourceFromIndex(anyString());
+        verify(coreRepository).deleteResource(DataModelURI
+                .createResourceURI("test", "Identifier")
+                .getResourceURI());
+        verify(indexService).deleteResourceFromIndex(anyString());
     }
 
     @Test
@@ -364,7 +370,7 @@ class ClassServiceTest {
         when(authorizationManager.hasRightToModel(anyString(), any(Model.class))).thenReturn(true);
         when(userProvider.getUser()).thenReturn(YtiUser.ANONYMOUS_USER);
         try(var mapper = mockStatic(ClassMapper.class)) {
-            classService.handlePropertyShapeReference("test", "node-shape-1", ModelConstants.SUOMI_FI_NAMESPACE + "test/ref-1", false);
+            classService.handlePropertyShapeReference("test", "node-shape-1", Constants.DATA_MODEL_NAMESPACE + "test/ref-1", false);
             mapper.verify(() -> ClassMapper.mapAppendNodeShapeProperty( any(Resource.class), anyString(), anySet()));
         }
 
@@ -379,7 +385,7 @@ class ClassServiceTest {
         when(authorizationManager.hasRightToModel(anyString(), any(Model.class))).thenReturn(true);
         when(userProvider.getUser()).thenReturn(YtiUser.ANONYMOUS_USER);
         try(var mapper = mockStatic(ClassMapper.class)) {
-            classService.handlePropertyShapeReference("test", "node-shape-1", ModelConstants.SUOMI_FI_NAMESPACE + "test/ref-1", true);
+            classService.handlePropertyShapeReference("test", "node-shape-1", Constants.DATA_MODEL_NAMESPACE + "test/ref-1", true);
             mapper.verify(() -> ClassMapper.mapRemoveNodeShapeProperty(any(Model.class), any(Resource.class), anyString(), anySet()));
         }
 
@@ -395,7 +401,7 @@ class ClassServiceTest {
         when(authorizationManager.hasRightToModel(anyString(), any(Model.class))).thenReturn(true);
         when(userProvider.getUser()).thenReturn(YtiUser.ANONYMOUS_USER);
         try(var mapper = mockStatic(ClassMapper.class)) {
-            classService.togglePropertyShape("test", ModelConstants.SUOMI_FI_NAMESPACE + "test/Uri");
+            classService.togglePropertyShape("test", Constants.DATA_MODEL_NAMESPACE + "test/Uri");
             mapper.verify(() -> ClassMapper.toggleAndMapDeactivatedProperty( any(Model.class), anyString(), anyBoolean()));
         }
 
@@ -408,9 +414,9 @@ class ClassServiceTest {
     @Test
     void testAddClassRestriction() {
         var model = MapperTestUtils.getModelFromFile("/model_with_owl_restrictions.ttl");
-        var modelURI = ModelConstants.SUOMI_FI_NAMESPACE + "model" + ModelConstants.RESOURCE_SEPARATOR;
+        var modelURI = Constants.DATA_MODEL_NAMESPACE + "model" + Constants.RESOURCE_SEPARATOR;
 
-        String attributeURI = modelURI + ModelConstants.RESOURCE_SEPARATOR + "attribute-1";
+        String attributeURI = modelURI + Constants.RESOURCE_SEPARATOR + "attribute-1";
 
         var restrictionQueryResult = ModelFactory.createDefaultModel();
         restrictionQueryResult.createResource(attributeURI)
@@ -442,7 +448,7 @@ class ClassServiceTest {
     @Test
     void testUpdateClassRestrictionTarget() {
         var model = MapperTestUtils.getModelFromFile("/model_with_owl_restrictions.ttl");
-        var modelURI = ModelConstants.SUOMI_FI_NAMESPACE + "model" + ModelConstants.RESOURCE_SEPARATOR;
+        var modelURI = Constants.DATA_MODEL_NAMESPACE + "model" + Constants.RESOURCE_SEPARATOR;
 
         var restrictionQueryResult = ModelFactory.createDefaultModel();
         var restrictionResource = restrictionQueryResult.createResource(modelURI + "association-1")
@@ -476,7 +482,7 @@ class ClassServiceTest {
 
     @Test
     void testCheckCyclicalReferences() {
-        classService.checkCyclicalReference(ModelConstants.SUOMI_FI_NAMESPACE + "Model-2/Class-1", OWL.equivalentClass, ModelConstants.SUOMI_FI_NAMESPACE + "Model-1/class-1");
+        classService.checkCyclicalReference(Constants.DATA_MODEL_NAMESPACE + "Model-2/Class-1", OWL.equivalentClass, Constants.DATA_MODEL_NAMESPACE + "Model-1/class-1");
 
         var captor = ArgumentCaptor.forClass(Query.class);
         verify(coreRepository).queryAsk(captor.capture());
@@ -529,8 +535,8 @@ class ClassServiceTest {
         }
         dto.setSubject("http://uri.suomi.fi/terminology/notrealurl");
         dto.setLabel(Map.of("fi", "test label"));
-        dto.setEquivalentClass(Set.of(ModelConstants.SUOMI_FI_NAMESPACE + "notrealns/FakeClass"));
-        dto.setSubClassOf(Set.of(ModelConstants.SUOMI_FI_NAMESPACE + "notrealns/FakeClass"));
+        dto.setEquivalentClass(Set.of(Constants.DATA_MODEL_NAMESPACE + "notrealns/FakeClass"));
+        dto.setSubClassOf(Set.of(Constants.DATA_MODEL_NAMESPACE + "notrealns/FakeClass"));
         dto.setNote(Map.of("fi", "test note"));
         return dto;
     }

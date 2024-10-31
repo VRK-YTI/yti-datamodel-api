@@ -1,7 +1,7 @@
 package fi.vm.yti.datamodel.api.v2.opensearch.dto;
 
-import fi.vm.yti.datamodel.api.v2.dto.ModelType;
-import fi.vm.yti.datamodel.api.v2.dto.Status;
+import fi.vm.yti.common.enums.GraphType;
+import fi.vm.yti.common.enums.Status;
 
 import java.util.Set;
 import java.util.UUID;
@@ -9,7 +9,7 @@ import java.util.UUID;
 public class CountRequest {
     private String query;
     private String language;
-    private Set<ModelType> type;
+    private Set<GraphType> type;
     private Set<Status> status;
     private Set<UUID> organizations;
     private Set<String> groups;
@@ -31,11 +31,11 @@ public class CountRequest {
         this.language = language;
     }
 
-    public Set<ModelType> getType() {
+    public Set<GraphType> getType() {
         return type;
     }
 
-    public void setType(Set<ModelType> type) {
+    public void setType(Set<GraphType> type) {
         this.type = type;
     }
 

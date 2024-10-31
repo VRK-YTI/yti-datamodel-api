@@ -1,8 +1,10 @@
 package fi.vm.yti.datamodel.api.v2.migration;
 
-import fi.vm.yti.datamodel.api.mapper.MapperTestUtils;
-import fi.vm.yti.datamodel.api.migration.V1DataMigrationService;
-import fi.vm.yti.datamodel.api.v2.dto.*;
+import fi.vm.yti.common.enums.GraphType;
+import fi.vm.yti.datamodel.api.v2.mapper.MapperTestUtils;
+import fi.vm.yti.datamodel.api.v2.dto.DataModelBaseDTO;
+import fi.vm.yti.datamodel.api.v2.dto.DataModelDTO;
+import fi.vm.yti.datamodel.api.v2.dto.ResourceType;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import fi.vm.yti.datamodel.api.v2.service.ClassService;
 import fi.vm.yti.datamodel.api.v2.service.DataModelService;
@@ -17,7 +19,8 @@ import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDFS;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.*;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
@@ -27,8 +30,9 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
-import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(SpringExtension.class)
 @Import({
@@ -49,7 +53,7 @@ class DataMigrationTest {
     @Captor
     ArgumentCaptor<DataModelDTO> dataModelCaptor;
     @Captor
-    ArgumentCaptor<BaseDTO> baseDtoCaptor;
+    ArgumentCaptor<DataModelBaseDTO> baseDtoCaptor;
     @Captor
     ArgumentCaptor<Model> modelCaptor;
 
@@ -70,7 +74,7 @@ class DataMigrationTest {
         var refResource = refModel.getResource("http://uri.suomi.fi/datamodel/ns/tihatos#kohdistuu");
         refResource.addProperty(RDFS.range, "http://uri.suomi.fi/datamodel/ns/tihatos#Asia");
         when(coreRepository.fetch("http://uri.suomi.fi/datamodel/ns/tihatos")).thenReturn(refModel);
-        when(dataModelService.create(any(DataModelDTO.class), any(ModelType.class))).thenReturn(new URI(newModelURI));
+        when(dataModelService.create(any(DataModelDTO.class), any(GraphType.class))).thenReturn(new URI(newModelURI));
 
         var newModel = ModelFactory.createDefaultModel();
         newModel.createResource(newModelURI + "MerialuesuunnitelmanKohde");
@@ -79,7 +83,7 @@ class DataMigrationTest {
 
         migrationService.migrateDatamodel(prefix, oldData);
 
-        verify(dataModelService).create(dataModelCaptor.capture(), eq(ModelType.LIBRARY));
+        verify(dataModelService).create(dataModelCaptor.capture(), eq(GraphType.LIBRARY));
         verify(classService, times(2)).create(eq(prefix), baseDtoCaptor.capture(), eq(false));
         verify(resourceService).create(eq(prefix), baseDtoCaptor.capture(), eq(ResourceType.ATTRIBUTE), eq(false));
         verify(resourceService).create(eq(prefix), baseDtoCaptor.capture(), eq(ResourceType.ASSOCIATION), eq(false));
@@ -87,7 +91,7 @@ class DataMigrationTest {
 
         assertEquals(prefix, dataModelCaptor.getValue().getPrefix());
 
-        var resourcePrefixes = baseDtoCaptor.getAllValues().stream().map(BaseDTO::getIdentifier).toList();
+        var resourcePrefixes = baseDtoCaptor.getAllValues().stream().map(DataModelBaseDTO::getIdentifier).toList();
 
         assertEquals(4, resourcePrefixes.size());
         assertTrue(resourcePrefixes.containsAll(List.of("koostuu", "kohdenimi", "Lahtotietoaineisto", "MerialuesuunnitelmanKohde")));
@@ -113,17 +117,17 @@ class DataMigrationTest {
 
         when(coreRepository.fetch(newModelURI)).thenReturn(newModel);
         when(resourceService.exists(prefix, "primaryTopic")).thenReturn(true);
-        when(dataModelService.create(any(DataModelDTO.class), any(ModelType.class))).thenReturn(new URI(newModelURI));
+        when(dataModelService.create(any(DataModelDTO.class), any(GraphType.class))).thenReturn(new URI(newModelURI));
 
         migrationService.migrateDatamodel(prefix, oldData);
 
-        verify(dataModelService).create(dataModelCaptor.capture(), eq(ModelType.PROFILE));
+        verify(dataModelService).create(dataModelCaptor.capture(), eq(GraphType.PROFILE));
         verify(classService, times(2)).create(eq(prefix), baseDtoCaptor.capture(), eq(true));
         verify(resourceService).create(eq(prefix), baseDtoCaptor.capture(), eq(ResourceType.ATTRIBUTE), eq(true));
         verify(resourceService).create(eq(prefix), baseDtoCaptor.capture(), eq(ResourceType.ASSOCIATION), eq(true));
         verify(coreRepository).put(eq(newModelURI), modelCaptor.capture());
 
-        var identifiers = baseDtoCaptor.getAllValues().stream().map(BaseDTO::getIdentifier).toList();
+        var identifiers = baseDtoCaptor.getAllValues().stream().map(DataModelBaseDTO::getIdentifier).toList();
         var datasetNodeShape = baseDtoCaptor.getAllValues().stream().filter(b -> b.getIdentifier().equals("Dataset")).findFirst();
         var createdModel = modelCaptor.getValue();
         var nodeShapeResource = createdModel.getResource(DataModelURI.createResourceURI(prefix, "CatalogRecord").getResourceURI());

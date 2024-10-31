@@ -1,6 +1,6 @@
 package fi.vm.yti.datamodel.api.v2.endpoint;
 
-import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
+import fi.vm.yti.datamodel.api.v2.service.IndexService;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -17,10 +17,10 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "Index" )
 public class IndexController {
 
-    private final OpenSearchIndexer indexer;
+    private final IndexService indexService;
 
-    public IndexController(OpenSearchIndexer indexer) {
-        this.indexer = indexer;
+    public IndexController(IndexService indexService) {
+        this.indexService = indexService;
     }
 
     @Hidden
@@ -31,6 +31,6 @@ public class IndexController {
     })
     @PostMapping(value = "/reindex")
     public void reIndex(@RequestParam(required = false) @Parameter(description = "OpenSearch index") String index) {
-        indexer.reindex(index);
+        indexService.reindex(index);
     }
 }

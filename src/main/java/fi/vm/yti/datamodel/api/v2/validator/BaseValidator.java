@@ -1,6 +1,9 @@
 package fi.vm.yti.datamodel.api.v2.validator;
 
-import fi.vm.yti.datamodel.api.v2.dto.*;
+import fi.vm.yti.common.enums.Status;
+import fi.vm.yti.datamodel.api.v2.dto.DataModelBaseDTO;
+import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
+import fi.vm.yti.datamodel.api.v2.dto.ModelMetaData;
 import jakarta.validation.ConstraintValidatorContext;
 
 import java.lang.annotation.Annotation;
@@ -42,16 +45,16 @@ public abstract class BaseValidator implements Annotation{
         this.constraintViolationAdded = constraintViolationAdded;
     }
 
-    public void checkLabel(ConstraintValidatorContext context, BaseDTO dto){
+    public void checkLabel(ConstraintValidatorContext context, DataModelBaseDTO dto){
         checkRequiredLocalizedValue(context, dto.getLabel(), "label");
     }
 
-    public void checkEditorialNote(ConstraintValidatorContext context, BaseDTO dto){
+    public void checkEditorialNote(ConstraintValidatorContext context, DataModelBaseDTO dto){
         var editorialNote = dto.getEditorialNote();
         checkCommonTextArea(context, editorialNote, "editorialNote");
     }
 
-    public void checkNote(ConstraintValidatorContext context, BaseDTO dto) {
+    public void checkNote(ConstraintValidatorContext context, DataModelBaseDTO dto) {
         var notes = dto.getNote();
         if(notes != null){
             notes.forEach((lang, value) -> checkCommonTextArea(context, value, "note"));
@@ -65,7 +68,7 @@ public abstract class BaseValidator implements Annotation{
         }
     }
 
-    public void checkSubject(ConstraintValidatorContext context, BaseDTO dto){
+    public void checkSubject(ConstraintValidatorContext context, DataModelBaseDTO dto){
         var subject = dto.getSubject();
         if (subject != null && !subject.matches("^https?://iri.suomi.fi/terminology/(.*)")) {
             addConstraintViolation(context, "invalid-terminology-uri", "subject");
@@ -80,7 +83,7 @@ public abstract class BaseValidator implements Annotation{
         checkPrefixOrIdentifier(context, value, propertyName, ValidationConstants.PREFIX_REGEX, update);
     }
 
-    public void checkReservedIdentifier(ConstraintValidatorContext context, BaseDTO dto) {
+    public void checkReservedIdentifier(ConstraintValidatorContext context, DataModelBaseDTO dto) {
         if (dto.getIdentifier() != null && dto.getIdentifier().startsWith(ModelConstants.CORNER_PREFIX)) {
             addConstraintViolation(context, "reserved-identifier", "identifier");
         }
