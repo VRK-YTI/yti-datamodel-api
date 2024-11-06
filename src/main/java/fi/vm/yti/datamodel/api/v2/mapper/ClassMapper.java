@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
 
 public class ClassMapper {
 
-    private ClassMapper(){
+    private ClassMapper() {
         //Static class
     }
 
@@ -45,9 +45,9 @@ public class ClassMapper {
         //Equivalent class
         dto.getEquivalentClass().forEach(eq -> DataModelMapperUtils.addResourceRelationship(modelResource, resource, OWL.equivalentClass, eq));
 
-        if(dto.getSubClassOf().isEmpty()){
+        if (dto.getSubClassOf().isEmpty()) {
             resource.addProperty(RDFS.subClassOf, OWL.Thing); //Add OWL:Thing if nothing else is specified
-        }else{
+        } else {
             dto.getSubClassOf().forEach(sub -> DataModelMapperUtils.addResourceRelationship(modelResource, resource, RDFS.subClassOf, sub));
         }
         dto.getDisjointWith().forEach(disjoint -> DataModelMapperUtils.addResourceRelationship(modelResource, resource, OWL.disjointWith, disjoint));
@@ -153,7 +153,7 @@ public class ClassMapper {
         logger.info("Updating class in graph {}", modelUri);
         var modelResource = model.getResource(modelUri);
 
-        DataModelMapperUtils.updateCommonResourceInfo(model, classResource, modelResource, classDTO);
+        DataModelMapperUtils.updateCommonResourceInfo(classResource, modelResource, classDTO);
 
         var eqProps = classResource.listProperties(OWL.equivalentClass)
                 .filterDrop(p -> p.getObject().isAnon())
@@ -165,9 +165,9 @@ public class ClassMapper {
 
         var subClassOf = classDTO.getSubClassOf();
         classResource.removeAll(RDFS.subClassOf);
-        if(subClassOf.isEmpty()){
+        if (subClassOf.isEmpty()) {
             classResource.addProperty(RDFS.subClassOf, OWL.Thing); //Add OWL:Thing if no subClassOf is specified
-        }else{
+        } else {
             subClassOf.forEach(sub -> DataModelMapperUtils.addResourceRelationship(modelResource, classResource, RDFS.subClassOf, sub));
         }
 
@@ -181,7 +181,7 @@ public class ClassMapper {
         logger.info("Updating node shape in graph {}", graph);
         var modelResource = model.getResource(graph);
 
-        DataModelMapperUtils.updateCommonResourceInfo(model, classResource, modelResource, nodeShapeDTO);
+        DataModelMapperUtils.updateCommonResourceInfo(classResource, modelResource, nodeShapeDTO);
 
         // either sh:node or sh:targetClass must be defined. If not, add owl:Thing as targetClass
         if (nodeShapeDTO.getTargetClass() == null && nodeShapeDTO.getTargetNode() == null) {
@@ -207,16 +207,16 @@ public class ClassMapper {
     /**
      * Map model with given prefix and class identifier
      *
-     * @param model Model
-     * @param uri DataModelURI
-     * @param orgModel Model of organisations
+     * @param model           Model
+     * @param uri             DataModelURI
+     * @param orgModel        Model of organisations
      * @param hasRightToModel does current user have right to model
      * @return Class DTO
      */
     public static ClassInfoDTO mapToClassDTO(Model model, DataModelURI uri,
                                              Model orgModel,
                                              boolean hasRightToModel,
-                                             Consumer<ResourceCommonInfoDTO> userMapper){
+                                             Consumer<ResourceCommonInfoDTO> userMapper) {
         var dto = new ClassInfoDTO();
         var classResource = model.getResource(uri.getResourceURI());
         var modelResource = model.getResource(uri.getModelURI());
@@ -565,16 +565,16 @@ public class ClassMapper {
         }
 
         var updated = restrictions.stream().filter(r -> {
-            var onProperty = MapperUtils.propertyToString(r, OWL.onProperty);
-            var someValuesFrom = MapperUtils.propertyToString(r, OWL.someValuesFrom);
+                    var onProperty = MapperUtils.propertyToString(r, OWL.onProperty);
+                    var someValuesFrom = MapperUtils.propertyToString(r, OWL.someValuesFrom);
 
-            return oldTarget == null
-                ? restrictionURI.equals(onProperty) && someValuesFrom == null
-                : restrictionURI.equals(onProperty) && oldTarget.equals(someValuesFrom);
-        })
+                    return oldTarget == null
+                            ? restrictionURI.equals(onProperty) && someValuesFrom == null
+                            : restrictionURI.equals(onProperty) && oldTarget.equals(someValuesFrom);
+                })
                 .findFirst()
                 .orElseThrow(() ->
-                new MappingError(String.format("Restriction for %s not found with type %s", restrictionURI, oldTarget)));
+                        new MappingError(String.format("Restriction for %s not found with type %s", restrictionURI, oldTarget)));
 
         var modelResource = DataModelMapperUtils.getModelResourceFromVersion(model);
         DataModelMapperUtils.updateUriPropertyAndAddReferenceNamespaces(modelResource, updated, OWL.someValuesFrom, newTarget);

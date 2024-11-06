@@ -1,6 +1,6 @@
 package fi.vm.yti.datamodel.api.v2.dto;
 
-public class PropertyShapeDTO extends DataModelBaseDTO {
+public class PropertyShapeDTO extends BaseDTO {
     private String path;
     private Integer maxCount;
     private Integer minCount;

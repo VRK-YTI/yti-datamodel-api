@@ -180,7 +180,7 @@ public class ClassService extends BaseResourceService {
                 .getResponseObjects();
     }
 
-    public URI create(String prefix, DataModelBaseDTO dto, boolean applicationProfile) throws URISyntaxException {
+    public URI create(String prefix, BaseDTO dto, boolean applicationProfile) throws URISyntaxException {
         var uri = DataModelURI.createResourceURI(prefix, dto.getIdentifier());
         var graphUri = uri.getGraphURI();
         var classUri = uri.getResourceURI();
@@ -218,7 +218,7 @@ public class ClassService extends BaseResourceService {
         ClassMapper.mapNodeShapeProperties(model, classUri, allProperties);
     }
 
-    public void checkDataModelType(Resource modelResource, DataModelBaseDTO dto) {
+    public void checkDataModelType(Resource modelResource, BaseDTO dto) {
         if (dto instanceof NodeShapeDTO && MapperUtils.isLibrary(modelResource)) {
             throw new MappingError("Cannot add node shape to ontology");
         } else if (dto instanceof ClassDTO && MapperUtils.isApplicationProfile(modelResource)) {
@@ -226,7 +226,7 @@ public class ClassService extends BaseResourceService {
         }
     }
 
-    public void update(String prefix, String classIdentifier, DataModelBaseDTO dto) {
+    public void update(String prefix, String classIdentifier, BaseDTO dto) {
         var uri = DataModelURI.createResourceURI(prefix, classIdentifier);
         var graph = uri.getGraphURI();
         var classURI = uri.getResourceURI();

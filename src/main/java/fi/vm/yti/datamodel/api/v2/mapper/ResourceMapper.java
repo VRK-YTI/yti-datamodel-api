@@ -131,7 +131,7 @@ public class ResourceMapper {
         var modelResource = model.getResource(uri.getModelURI());
         var resource = model.getResource(uri.getResourceURI());
 
-        DataModelMapperUtils.updateCommonResourceInfo(model, resource, modelResource, dto);
+        DataModelMapperUtils.updateCommonResourceInfo(resource, modelResource, dto);
 
         resource.removeAll(OWL.equivalentProperty);
         dto.getEquivalentResource().forEach(eq -> DataModelMapperUtils.addResourceRelationship(modelResource, resource, OWL.equivalentProperty, eq));
@@ -187,7 +187,7 @@ public class ResourceMapper {
             throw new MappingError("Class cannot be updated through this endpoint");
         }
 
-        DataModelMapperUtils.updateCommonResourceInfo(model,resource, modelResource, dto);
+        DataModelMapperUtils.updateCommonResourceInfo(resource, modelResource, dto);
 
         var defaultPathResource = MapperUtils.hasType(resource, OWL.ObjectProperty)
                 ? OWL2.topObjectProperty

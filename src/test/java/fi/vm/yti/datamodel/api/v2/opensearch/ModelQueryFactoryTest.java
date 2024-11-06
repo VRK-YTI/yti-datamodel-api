@@ -48,7 +48,7 @@ class ModelQueryFactoryTest {
 
         assertEquals("Page from value not matching", 0, modelQuery.from());
         assertEquals("Page size value not matching", 10, modelQuery.size());
-        assertEquals("Label should be sorted in finnish by default", "label.fi.keyword", modelQuery.sort().get(0).field().field());
+        assertEquals("Label should be sorted in finnish by default", "label.fi.sortKey", modelQuery.sort().get(0).field().field());
 
     }
 

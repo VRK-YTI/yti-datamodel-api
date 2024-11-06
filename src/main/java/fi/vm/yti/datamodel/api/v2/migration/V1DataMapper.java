@@ -319,7 +319,7 @@ public class V1DataMapper {
         return positions;
     }
 
-    private static void mapCommon(DataModelBaseDTO dto, Resource resource) {
+    private static void mapCommon(BaseDTO dto, Resource resource) {
         if (dto instanceof NodeShapeDTO || dto instanceof ClassDTO) {
             dto.setIdentifier(resource.getLocalName());
         } else if (resource.hasProperty(LOCAL_NAME)) {

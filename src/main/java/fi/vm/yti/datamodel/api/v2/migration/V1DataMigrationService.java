@@ -459,7 +459,7 @@ public class V1DataMigrationService {
         });
     }
 
-    private void handleExists(String prefix, Resource resource, DataModelBaseDTO dto) {
+    private void handleExists(String prefix, Resource resource, BaseDTO dto) {
         var graphURI = DataModelURI.createModelURI(prefix).getGraphURI();
         var newResourceURI = DataModelURI.createResourceURI(prefix, dto.getIdentifier()).getResourceURI();
 

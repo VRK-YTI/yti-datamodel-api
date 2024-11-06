@@ -92,7 +92,7 @@ class ResourceQueryFactoryTest {
 
         assertEquals("Page from value not matching", QueryFactoryUtils.DEFAULT_PAGE_FROM, classQuery.from());
         assertEquals("Page size value not matching", QueryFactoryUtils.DEFAULT_PAGE_SIZE, classQuery.size());
-        assertEquals("Label should be sorted in finnish by default", "label.fi.keyword", classQuery.sort().get(0).field().field());
+        assertEquals("Label should be sorted in finnish by default", "label.fi.sortKey", classQuery.sort().get(0).field().field());
     }
 
     @Test

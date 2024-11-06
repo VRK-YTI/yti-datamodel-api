@@ -1,14 +1,15 @@
 package fi.vm.yti.datamodel.api.v2.dto;
 
-import fi.vm.yti.common.dto.BaseDTO;
-import org.apache.commons.lang3.builder.ToStringBuilder;
+    import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import java.util.Map;
 
-public abstract class DataModelBaseDTO extends BaseDTO {
+public abstract class BaseDTO {
     private Map<String, String> label;
+    private String identifier;
     private String subject;
     private Map<String, String> note;
+    private String editorialNote;
 
     public Map<String, String> getLabel() {
         return label;
@@ -16,6 +17,14 @@ public abstract class DataModelBaseDTO extends BaseDTO {
 
     public void setLabel(Map<String, String> label) {
         this.label = label;
+    }
+
+    public String getIdentifier() {
+        return identifier;
+    }
+
+    public void setIdentifier(String identifier) {
+        this.identifier = identifier;
     }
 
     public String getSubject() {
@@ -32,6 +41,14 @@ public abstract class DataModelBaseDTO extends BaseDTO {
 
     public void setNote(Map<String, String> note) {
         this.note = note;
+    }
+
+    public String getEditorialNote() {
+        return editorialNote;
+    }
+
+    public void setEditorialNote(String editorialNote) {
+        this.editorialNote = editorialNote;
     }
 
     @Override

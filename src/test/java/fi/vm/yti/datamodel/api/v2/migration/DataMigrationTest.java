@@ -2,7 +2,7 @@ package fi.vm.yti.datamodel.api.v2.migration;
 
 import fi.vm.yti.common.enums.GraphType;
 import fi.vm.yti.datamodel.api.v2.mapper.MapperTestUtils;
-import fi.vm.yti.datamodel.api.v2.dto.DataModelBaseDTO;
+import fi.vm.yti.datamodel.api.v2.dto.BaseDTO;
 import fi.vm.yti.datamodel.api.v2.dto.DataModelDTO;
 import fi.vm.yti.datamodel.api.v2.dto.ResourceType;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
@@ -53,7 +53,7 @@ class DataMigrationTest {
     @Captor
     ArgumentCaptor<DataModelDTO> dataModelCaptor;
     @Captor
-    ArgumentCaptor<DataModelBaseDTO> baseDtoCaptor;
+    ArgumentCaptor<BaseDTO> baseDtoCaptor;
     @Captor
     ArgumentCaptor<Model> modelCaptor;
 
@@ -91,7 +91,7 @@ class DataMigrationTest {
 
         assertEquals(prefix, dataModelCaptor.getValue().getPrefix());
 
-        var resourcePrefixes = baseDtoCaptor.getAllValues().stream().map(DataModelBaseDTO::getIdentifier).toList();
+        var resourcePrefixes = baseDtoCaptor.getAllValues().stream().map(BaseDTO::getIdentifier).toList();
 
         assertEquals(4, resourcePrefixes.size());
         assertTrue(resourcePrefixes.containsAll(List.of("koostuu", "kohdenimi", "Lahtotietoaineisto", "MerialuesuunnitelmanKohde")));
@@ -127,7 +127,7 @@ class DataMigrationTest {
         verify(resourceService).create(eq(prefix), baseDtoCaptor.capture(), eq(ResourceType.ASSOCIATION), eq(true));
         verify(coreRepository).put(eq(newModelURI), modelCaptor.capture());
 
-        var identifiers = baseDtoCaptor.getAllValues().stream().map(DataModelBaseDTO::getIdentifier).toList();
+        var identifiers = baseDtoCaptor.getAllValues().stream().map(BaseDTO::getIdentifier).toList();
         var datasetNodeShape = baseDtoCaptor.getAllValues().stream().filter(b -> b.getIdentifier().equals("Dataset")).findFirst();
         var createdModel = modelCaptor.getValue();
         var nodeShapeResource = createdModel.getResource(DataModelURI.createResourceURI(prefix, "CatalogRecord").getResourceURI());

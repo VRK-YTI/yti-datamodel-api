@@ -15,13 +15,6 @@ public class V1_Initial implements MigrationTask {
     public void migrate() {
 
         logger.info("v1");
-        /*
-        graphManager.createDefaultGraph();
-        graphManager.initServiceCategories();
 
-        if (!graphManager.testDefaultGraph()) {
-            throw new RuntimeException("Failed to create default graph");
-        }
-         */
     }
 }

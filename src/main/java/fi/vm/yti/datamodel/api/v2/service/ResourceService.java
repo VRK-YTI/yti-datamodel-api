@@ -108,7 +108,7 @@ public class ResourceService extends BaseResourceService {
         return ResourceMapper.mapToExternalResource(resource);
     }
 
-    public URI create(String prefix, DataModelBaseDTO dto, @Nonnull ResourceType resourceType, boolean applicationProfile) throws URISyntaxException {
+    public URI create(String prefix, BaseDTO dto, @Nonnull ResourceType resourceType, boolean applicationProfile) throws URISyntaxException {
         var dataModelURI = DataModelURI.createResourceURI(prefix, dto.getIdentifier());
         var graphUri = dataModelURI.getGraphURI();
         var resourceUri = dataModelURI.getResourceURI();
@@ -136,7 +136,7 @@ public class ResourceService extends BaseResourceService {
         return new URI(resourceUri);
     }
 
-    public void update(String prefix, String identifier, DataModelBaseDTO dto) {
+    public void update(String prefix, String identifier, BaseDTO dto) {
         var dataModelURI = DataModelURI.createResourceURI(prefix, identifier);
         var graphUri = dataModelURI.getGraphURI();
         var resourceUri = dataModelURI.getResourceURI();
@@ -211,7 +211,7 @@ public class ResourceService extends BaseResourceService {
         return new URI(targetResource);
     }
 
-    private void checkDataModelType(Resource modelResource, DataModelBaseDTO dto) {
+    private void checkDataModelType(Resource modelResource, BaseDTO dto) {
         if (dto instanceof PropertyShapeDTO && MapperUtils.isLibrary(modelResource)) {
             throw new MappingError("Cannot add property shape to ontology");
         } else if (dto instanceof ResourceDTO && MapperUtils.isApplicationProfile(modelResource)) {
