@@ -9,7 +9,6 @@ import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelUtils;
 import fi.vm.yti.security.YtiUser;
 import org.apache.jena.datatypes.xsd.XSDDatatype;
-import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.rdf.model.*;
 import org.apache.jena.vocabulary.*;
 import org.slf4j.Logger;
@@ -19,6 +18,7 @@ import org.topbraid.shacl.vocabulary.SH;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 public class ClassMapper {
 
@@ -72,41 +72,37 @@ public class ClassMapper {
         MapperUtils.addTerminologyReference(dto, modelResource);
     }
 
-    public static List<String> mapPlaceholderPropertyShapes(Model applicationProfileModel, String classURI,
-                                                            Model propertiesModel, YtiUser user, Predicate<String> checkFreeIdentifier,
+    public static List<String> mapPlaceholderPropertyShapes(Model applicationProfileModel, String classURI, List<IndexResource> properties,
+                                                            YtiUser user, Predicate<String> checkFreeIdentifier,
                                                             List<SimpleResourceDTO> attributeRestrictions) {
-        var iterator = propertiesModel.listSubjectsWithProperty(RDFS.isDefinedBy);
         var classResource = applicationProfileModel.getResource(classURI);
         var modelResource = applicationProfileModel.getResource(classResource.getNameSpace());
         var propertyResourceURIs = new ArrayList<String>();
-        while (iterator.hasNext()) {
-            var uri = iterator.next().getURI();
-            var identifier = NodeFactory.createURI(uri).getLocalName();
+
+        for (var property : properties) {
+            var identifier = property.getIdentifier();
 
             var currentIdentifier = identifier;
             var count = 0;
             while (checkFreeIdentifier.test(classResource.getNameSpace() + currentIdentifier)) {
                 currentIdentifier = identifier + String.format("-%d", ++count);
             }
-            var targetResource = propertiesModel.getResource(uri);
             var propertyShapeResource = applicationProfileModel.createResource(classResource.getNameSpace() + currentIdentifier);
 
-            var resourceType = ResourceMapper.getExternalResourceType(targetResource);
+            var resourceType = property.getResourceType();
             if (ResourceType.ATTRIBUTE.equals(resourceType)) {
                 propertyShapeResource.addProperty(RDF.type, OWL.DatatypeProperty);
             } else {
                 propertyShapeResource.addProperty(RDF.type, OWL.ObjectProperty);
             }
 
-            var label = MapperUtils.localizedPropertyToMap(targetResource, RDFS.label);
+            var label = property.getLabel();
 
             if (!label.isEmpty()) {
                 var languages = MapperUtils.arrayPropertyToSet(modelResource, DCTerms.language);
-                var labelValue = new HashMap<String, String>();
-
-                label.keySet().stream()
+                var labelValue = label.keySet().stream()
                         .filter(languages::contains)
-                        .forEach(key -> labelValue.put(key, label.get(key)));
+                        .collect(Collectors.toMap(lang -> lang, label::get));
 
                 // define label at least in one language to avoid validation errors
                 if (labelValue.isEmpty()) {
@@ -120,22 +116,16 @@ public class ClassMapper {
                         applicationProfileModel);
             }
 
-            var u = NodeFactory.createURI(uri);
-            var versionResource = propertiesModel.listSubjectsWithProperty(OWL2.versionIRI);
-            String pathURI;
-            if (versionResource.hasNext()) {
-                pathURI = versionResource.next().getProperty(OWL2.versionIRI).getObject().toString() + u.getLocalName();
-            } else {
-                pathURI = uri;
-            }
-            propertyShapeResource.addProperty(SH.path, ResourceFactory.createResource(pathURI))
+            propertyShapeResource.addProperty(SH.path, ResourceFactory.createResource(property.getId()))
                     .addProperty(DCTerms.identifier, ResourceFactory.createTypedLiteral(currentIdentifier, XSDDatatype.XSDNCName))
                     .addProperty(RDF.type, SH.PropertyShape)
                     .addProperty(RDFS.isDefinedBy, classResource.getProperty(RDFS.isDefinedBy).getObject())
                     .addProperty(SuomiMeta.publicationStatus, ResourceFactory.createResource(MapperUtils.getStatusUri(Status.DRAFT)));
 
             // add code list if added to library class' attribute restriction
-            var attributeRestriction = attributeRestrictions.stream().filter(r -> pathURI.equals(r.getUri())).findFirst();
+            var attributeRestriction = attributeRestrictions.stream()
+                    .filter(r -> property.getId().equals(r.getUri()))
+                    .findFirst();
             attributeRestriction.ifPresent(
                     a -> a.getCodeLists().forEach(c -> propertyShapeResource.addProperty(SuomiMeta.codeList, c))
             );
