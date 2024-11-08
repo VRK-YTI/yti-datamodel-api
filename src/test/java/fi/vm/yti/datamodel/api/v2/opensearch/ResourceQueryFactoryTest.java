@@ -26,7 +26,7 @@ class ResourceQueryFactoryTest {
     @Test
     void createInternalClassQueryValues() throws Exception {
         var request = new ResourceSearchRequest();
-        request.setQuery("test query");
+        request.setQuery("test");
         request.setGroups(Set.of("P11", "P1"));
         request.setLimitToDataModel(modelURI);
         request.setFromAddedNamespaces(true);
