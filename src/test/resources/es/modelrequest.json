@@ -77,8 +77,7 @@
             "fields": [
               "label.*"
             ],
-            "fuzziness": "2",
-            "query": "*test query*"
+            "query": "\"test query\""
           }
         }
       ]
