@@ -2,19 +2,19 @@ package fi.vm.yti.datamodel.api.v2.service;
 
 import fi.vm.yti.common.enums.GraphType;
 import fi.vm.yti.common.enums.Status;
+import fi.vm.yti.common.exception.ResourceNotFoundException;
 import fi.vm.yti.common.properties.SuomiMeta;
 import fi.vm.yti.common.service.AuditService;
 import fi.vm.yti.common.service.GroupManagementService;
 import fi.vm.yti.common.util.MapperUtils;
-import fi.vm.yti.datamodel.api.v2.security.DataModelAuthorizationManager;
-import fi.vm.yti.datamodel.api.v2.utils.DataModelMapperUtils;
 import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
-import fi.vm.yti.common.exception.ResourceNotFoundException;
 import fi.vm.yti.datamodel.api.v2.mapper.ModelMapper;
 import fi.vm.yti.datamodel.api.v2.mapper.ResourceMapper;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexResource;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
+import fi.vm.yti.datamodel.api.v2.security.DataModelAuthorizationManager;
+import fi.vm.yti.datamodel.api.v2.utils.DataModelMapperUtils;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelUtils;
 import fi.vm.yti.datamodel.api.v2.utils.SemVer;
@@ -89,7 +89,7 @@ public class DataModelService {
     public DataModelInfoDTO getDraft(String prefix) {
         var uri = DataModelURI.createModelURI(prefix);
         var model = coreRepository.fetch(uri.getGraphURI());
-        check(authorizationManager.hasRightToModel(prefix, model));
+        check(authorizationManager.hasRightToModel(prefix, model, true));
         return mapper.mapToDataModelDTO(prefix, model, groupManagementService.mapUser());
     }
 

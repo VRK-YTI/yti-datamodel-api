@@ -17,8 +17,15 @@ public class DataModelAuthorizationManager extends BaseAuthorizationManagerImpl 
     }
 
     public boolean hasRightToModel(String prefix, Model model) {
+        return hasRightToModel(prefix, model, false);
+    }
+
+    public boolean hasRightToModel(String prefix, Model model, boolean viewRights) {
         var graphURI = DataModelURI.createModelURI(prefix).getGraphURI();
-        return hasRightToModel(graphURI, model, Role.DATA_MODEL_EDITOR);
+
+        return viewRights
+                ? hasRightToModel(graphURI, model, Role.DATA_MODEL_EDITOR, Role.MEMBER)
+                : hasRightToModel(graphURI, model, Role.DATA_MODEL_EDITOR);
     }
 
     public boolean hasRightToDoMigration() {
