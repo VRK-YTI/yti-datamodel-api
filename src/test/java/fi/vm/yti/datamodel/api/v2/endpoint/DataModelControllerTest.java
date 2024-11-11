@@ -189,7 +189,7 @@ class DataModelControllerTest {
         if(!updateModel){
             dataModelDTO.setPrefix("test");
         }
-        dataModelDTO.setTerminologies(Set.of("http://uri.suomi.fi/terminology/test"));
+        dataModelDTO.setTerminologies(Set.of("https://iri.suomi.fi/terminology/test/"));
         var linkDTO = new LinkDTO();
         linkDTO.setName(Map.of("fi", "test link"));
         linkDTO.setDescription(Map.of("fi", "link description"));

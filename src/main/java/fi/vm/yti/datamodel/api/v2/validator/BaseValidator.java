@@ -67,7 +67,7 @@ public abstract class BaseValidator implements Annotation{
 
     public void checkSubject(ConstraintValidatorContext context, BaseDTO dto){
         var subject = dto.getSubject();
-        if (subject != null && !subject.matches("^https?://uri.suomi.fi/terminology/(.*)")) {
+        if (subject != null && !subject.matches("^https?://iri.suomi.fi/terminology/(.*)")) {
             addConstraintViolation(context, "invalid-terminology-uri", "subject");
         }
     }

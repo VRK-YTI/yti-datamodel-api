@@ -11,7 +11,7 @@ public class ModelConstants {
 
     public static final String SUOMI_FI_NAMESPACE = "https://iri.suomi.fi/model/";
     public static final String CODELIST_NAMESPACE = "http://uri.suomi.fi/codelist/";
-    public static final String TERMINOLOGY_NAMESPACE = "http://uri.suomi.fi/terminology/";
+    public static final String TERMINOLOGY_NAMESPACE = "https://iri.suomi.fi/terminology/";
     public static final String MODEL_POSITIONS_NAMESPACE = "https://iri.suomi.fi/model-positions/";
     public static final String CORNER_PREFIX = "corner-";
     public static final String SUOMI_FI_DOMAIN = "uri.suomi.fi";
