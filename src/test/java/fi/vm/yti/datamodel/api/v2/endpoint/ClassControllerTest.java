@@ -233,7 +233,7 @@ class ClassControllerTest {
         if(!update){
             dto.setIdentifier("Identifier");
         }
-        dto.setSubject("http://uri.suomi.fi/terminology/notrealurl");
+        dto.setSubject("https://iri.suomi.fi/terminology/notrealurl");
         dto.setLabel(Map.of("fi", "test label"));
         dto.setEquivalentClass(Set.of("http://uri.suomi.fi/datamodel/ns/notrealns/FakeClass"));
         dto.setSubClassOf(Set.of("http://uri.suomi.fi/datamodel/ns/notrealns/FakeClass"));
@@ -245,7 +245,7 @@ class ClassControllerTest {
         var dto = new NodeShapeDTO();
         dto.setLabel(Map.of("fi", "node label"));
         dto.setIdentifier("node-shape-1");
-        dto.setSubject("http://uri.suomi.fi/terminology/concept-123");
+        dto.setSubject("https://iri.suomi.fi/terminology/concept-123");
 
         return dto;
     }

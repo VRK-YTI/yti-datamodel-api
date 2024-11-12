@@ -230,7 +230,7 @@ public class DataModelValidator extends BaseValidator implements
     }
 
     private void checkTerminologies(ConstraintValidatorContext context, DataModelDTO dataModel) {
-        if (!dataModel.getTerminologies().stream().allMatch(uri -> uri.matches("^https?://uri.suomi.fi/terminology/(.*)"))) {
+        if (!dataModel.getTerminologies().stream().allMatch(uri -> uri.matches("^https?://iri.suomi.fi/terminology/(.*)"))) {
             addConstraintViolation(context, "invalid-terminology-uri", "terminologies");
         }
     }
