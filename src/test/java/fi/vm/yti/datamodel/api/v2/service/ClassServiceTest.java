@@ -36,6 +36,8 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.topbraid.shacl.vocabulary.SH;
 
 import java.net.URISyntaxException;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -197,6 +199,87 @@ class ClassServiceTest {
         var expectedPropertyURI = DataModelURI.createResourceURI(nodeRefURI.getModelId(), "node-property", nodeRefURI.getVersion());
         assertEquals(expectedPropertyURI.getResourceVersionURI(), result.listProperties(SH.property).toList().get(0).getObject().toString());
         assertEquals(nodeRefURI.getResourceVersionURI(), result.getProperty(SH.node).getObject().toString());
+    }
+
+    @Test
+    void createNodeShapeWithTargetClassProperties() throws URISyntaxException {
+        var model = ModelFactory.createDefaultModel();
+        var profilePrefix = "test-profile";
+        var libPrefix = "test";
+
+        var nodeShapeURI = DataModelURI.createResourceURI(profilePrefix, "node-shape-1");
+        var targetClassURI = DataModelURI.createResourceURI(libPrefix, "class-1", "1.0.0");
+
+        var modelResource = model.createResource(nodeShapeURI.getModelURI())
+                .addProperty(SuomiMeta.publicationStatus, MapperUtils.getStatusUri(Status.DRAFT))
+                .addProperty(DCAP.preferredXMLNamespacePrefix, profilePrefix)
+                .addProperty(DCTerms.language, "fi");
+        var targetClass = ResourceFactory.createResource(targetClassURI.getResourceVersionURI());
+
+        var targetProperty1 = DataModelURI.createResourceURI(libPrefix, "attribute-1", "1.0.0");
+        var targetProperty2 = DataModelURI.createResourceURI(libPrefix, "other-property", "1.0.0");
+
+        // create resource with sh:path reference to library's attribute-1 resource
+        // new property based on test:attribute-1 should not be created
+        model.createResource(DataModelURI.createResourceURI(profilePrefix, "attribute-1").getResourceURI())
+                .addProperty(SH.path, ResourceFactory.createResource(targetProperty1.getResourceVersionURI()));
+
+        var dto = new NodeShapeDTO();
+        dto.setIdentifier(nodeShapeURI.getResourceId());
+        dto.setTargetClass(targetClass.getURI());
+        dto.setProperties(Set.of(targetProperty1.getResourceVersionURI(), targetProperty2.getResourceVersionURI()));
+
+        when(coreRepository.fetch(modelResource.getURI())).thenReturn(model);
+        when(authorizationManager.hasRightToModel(anyString(), any(Model.class))).thenReturn(true);
+        when(userProvider.getUser()).thenReturn(EndpointUtils.mockUser);
+
+        // mock fetching target class info
+        var libModel = EndpointUtils.getMockModel(OWL.Ontology);
+        var searchResult = new SearchResponseDTO<IndexResource>();
+        searchResult.setResponseObjects(List.of());
+        libModel.createResource(targetClassURI.getResourceURI())
+                .addProperty(SuomiMeta.publicationStatus, Status.DRAFT.name())
+                .addProperty(DCTerms.created, "created")
+                .addProperty(DCTerms.modified, "modified");
+        when(coreRepository.resourceExistsInGraph(targetClass.getNameSpace(), targetClassURI.getResourceURI())).thenReturn(true);
+        when(coreRepository.fetch(targetClass.getNameSpace())).thenReturn(libModel);
+        when(coreRepository.getOrganizations()).thenReturn(ModelFactory.createDefaultModel());
+        when(searchIndexService.findResourcesByURI(new HashSet<>(), null)).thenReturn(searchResult);
+        when(terminologyService.mapConcept()).thenReturn(conceptMapper);
+
+        var propertyResult = new SearchResponseDTO<IndexResource>();
+        var indexResource = new IndexResource();
+        indexResource.setId(targetProperty2.getResourceVersionURI());
+        indexResource.setIdentifier(targetProperty2.getResourceId());
+        indexResource.setResourceType(ResourceType.ATTRIBUTE);
+        indexResource.setLabel(Map.of("fi", "other target resource"));
+        propertyResult.setResponseObjects(List.of(indexResource));
+
+        // should fetch the property not yet added to the application profile
+        when(searchIndexService.findResourcesByURI(Set.of(targetProperty2.getResourceVersionURI()),null))
+                .thenReturn(propertyResult);
+
+        classService.create(profilePrefix, dto, true);
+
+        // node shape properties should contain both existing and new property
+        var nodeShapeResult = model.getResource(nodeShapeURI.getResourceURI());
+        var nodeShapeProperties = MapperUtils.arrayPropertyToList(nodeShapeResult, SH.property);
+        assertEquals(2, nodeShapeProperties.size());
+        assertTrue(List.of(
+                DataModelURI.createResourceURI(profilePrefix, "other-property").getResourceURI(),
+                DataModelURI.createResourceURI(profilePrefix, "attribute-1").getResourceURI()
+            ).containsAll(nodeShapeProperties));
+
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<List<IndexResource>> indexCaptor = ArgumentCaptor.forClass(List.class);
+
+        // should index non-existing new property (other-property)
+        verify(openSearchIndexer).bulkInsert(anyString(), indexCaptor.capture());
+
+        var indexedProperties = indexCaptor.getValue();
+        assertEquals(1, indexedProperties.size());
+        assertEquals(DataModelURI.createResourceURI(
+                profilePrefix, "other-property").getResourceURI(), indexedProperties.get(0).getId());
     }
 
     @Test

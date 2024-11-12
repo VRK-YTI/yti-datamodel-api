@@ -8,8 +8,7 @@
             "fields": [
               "label.*"
             ],
-            "fuzziness": "2",
-            "query": "*test query*"
+            "query": "test~1 *test*"
           }
         },
         {

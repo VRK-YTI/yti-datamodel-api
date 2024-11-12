@@ -175,8 +175,14 @@ public class MapperUtils {
             return null;
         }
         var object = prop.getObject();
-        //null check for object
-        return object == null ? null : object.toString();
+
+        if (object == null) {
+            return null;
+        } else if (object.isLiteral()) {
+            return object.asLiteral().getString();
+        } else {
+            return object.toString();
+        }
     }
 
     public static <T> T getLiteral(Resource resource, Property property, Class<T> type) {

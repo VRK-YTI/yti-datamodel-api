@@ -1,12 +1,16 @@
 package fi.vm.yti.datamodel.api.v2.service;
 
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
+import fi.vm.yti.datamodel.api.v2.dto.PropertyShapeInfoDTO;
 import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
+import fi.vm.yti.datamodel.api.v2.mapper.ResourceMapper;
 import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.vocabulary.OWL;
+import org.apache.jena.vocabulary.OWL2;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
 import org.everit.json.schema.*;
@@ -16,7 +20,7 @@ import org.slf4j.LoggerFactory;
 import org.topbraid.shacl.vocabulary.SH;
 
 import java.io.StringWriter;
-import java.util.Map;
+import java.util.*;
 
 public class JSONSchemaBuilder {
 
@@ -69,6 +73,10 @@ public class JSONSchemaBuilder {
                 : language;
 
         var schemaBuilder = ObjectSchema.builder();
+
+        schemaBuilder.id(modelResource.hasProperty(OWL2.versionIRI)
+                ? MapperUtils.propertyToString(modelResource, OWL2.versionIRI)
+                : modelResource.getURI());
         schemaBuilder.description(getLocalizedValue(modelResource, RDFS.comment, language));
         schemaBuilder.title(getLocalizedValue(modelResource, RDFS.label, language));
 
@@ -114,6 +122,12 @@ public class JSONSchemaBuilder {
                     ? handleAttribute(propertyResource, language)
                     : handleAssociation(model, propertyResource, language);
 
+            var minCount = MapperUtils.getLiteral(propertyResource, SH.minCount, Integer.class);
+
+            if (minCount != null && minCount > 0) {
+                schemaBuilder.addRequiredProperty(propertyResource.getLocalName());
+            }
+
             schemaBuilder.addPropertySchema(
                     propertyResource.getLocalName(),
                     propertySchema);
@@ -149,9 +163,17 @@ public class JSONSchemaBuilder {
                 .build();
         subject.setReferredSchema(EmptySchema.builder().build());
 
-        if ((maxCount != null && maxCount > 1) || (minCount != null && minCount > 1)) {
-            return ArraySchema.builder()
-                    .addItemSchema(subject)
+        if (isArraySchema(minCount, maxCount)) {
+            var arraySchemaBuilder = ArraySchema.builder()
+                    .addItemSchema(subject);
+
+            if (minCount != null) {
+                arraySchemaBuilder.minItems(minCount);
+            }
+            if (maxCount != null) {
+                arraySchemaBuilder.maxItems(maxCount);
+            }
+            return arraySchemaBuilder
                     .description(description)
                     .title(title)
                     .build();
@@ -167,21 +189,29 @@ public class JSONSchemaBuilder {
         var title = getLocalizedValue(propertyResource, RDFS.label, language);
         var minCount = MapperUtils.getLiteral(propertyResource, SH.minCount, Integer.class);
         var maxCount = MapperUtils.getLiteral(propertyResource, SH.maxCount, Integer.class);
+        var allowed = MapperUtils.arrayPropertyToList(propertyResource, SH.in);
+        var requiredValue = MapperUtils.propertyToString(propertyResource, SH.hasValue);
+
         var type = getDatatype(MapperUtils.propertyToString(propertyResource, SH.datatype));
 
         Schema.Builder<? extends Schema> builder;
-        if (type == SchemaType.NUMBER || type == SchemaType.INTEGER){
+        if (requiredValue != null) {
+            builder = ConstSchema.builder().permittedValue(requiredValue);
+        } else if (!allowed.isEmpty()) {
+            builder = EnumSchema.builder().possibleValues(new ArrayList<>(allowed));
+        } else if (type == SchemaType.NUMBER || type == SchemaType.INTEGER) {
             builder = NumberSchema.builder();
         } else if (type == SchemaType.STRING) {
             builder = StringSchema.builder();
-        } else if (type == SchemaType.BOOLEAN)  {
+        } else if (type == SchemaType.BOOLEAN) {
             builder = BooleanSchema.builder();
         } else {
             builder = ObjectSchema.builder();
         }
 
-        // handle property as an array if either minCount or maxCount > 1
-        if ((minCount != null && minCount > 1) || (maxCount != null && maxCount > 1)) {
+        addRestrictions(builder, propertyResource);
+
+        if (isArraySchema(minCount, maxCount)) {
             var arraySchemaBuilder = ArraySchema.builder()
                     .allItemSchema(builder.build());
 
@@ -198,6 +228,69 @@ public class JSONSchemaBuilder {
                 .description(description)
                 .title(title);
         return builder.build();
+    }
+
+    private static void addRestrictions(Schema.Builder<? extends Schema> builder, Resource propertyResource) {
+        var dto = new PropertyShapeInfoDTO();
+        ResourceMapper.mapPropertyShapeRestrictions(dto, propertyResource);
+
+        if (builder instanceof StringSchema.Builder stringBuilder) {
+            if (dto.getPattern() != null) {
+                stringBuilder.pattern(dto.getPattern());
+            }
+            if (dto.getMinLength() != null) {
+                stringBuilder.minLength(dto.getMinLength());
+            }
+            if (dto.getMaxLength() != null) {
+                stringBuilder.maxLength(dto.getMaxLength());
+            }
+            if (dto.getDefaultValue() != null) {
+                stringBuilder.defaultValue(MapperUtils.propertyToString(propertyResource, SH.defaultValue));
+            }
+        } else if (builder instanceof NumberSchema.Builder numberSchema) {
+            // x >= minInclusive
+            if (dto.getMinInclusive() != null) {
+                numberSchema.minimum(dto.getMinInclusive());
+                numberSchema.exclusiveMinimum(false);
+            }
+            // x <= maxInclusive
+            if (dto.getMaxInclusive() != null) {
+                numberSchema.maximum(dto.getMaxInclusive());
+                numberSchema.exclusiveMaximum(false);
+            }
+            // x > minExclusive
+            if (dto.getMinExclusive() != null) {
+                numberSchema.minimum(dto.getMinExclusive());
+                numberSchema.exclusiveMinimum(true);
+            }
+            // x < maxExclusive
+            if (dto.getMaxExclusive() != null) {
+                numberSchema.maximum(dto.getMaxExclusive());
+                numberSchema.exclusiveMaximum(true);
+            }
+
+            if (dto.getDefaultValue() != null) {
+                try {
+                    numberSchema.defaultValue(NumberUtils.createNumber(dto.getDefaultValue()));
+                } catch (NumberFormatException nfe) {
+                    logger.warn("Invalid number as a default value: {}, uri: {}", dto.getDefaultValue(), propertyResource.getURI());
+                }
+            }
+        } else if (dto.getDefaultValue() != null) {
+            builder.defaultValue(dto.getDefaultValue());
+        }
+    }
+
+    /**
+     * Handle property as an array if
+     * - maxCount is empty or > 1
+     * - minCount > 1
+     *
+     * @param minCount sh:minCount
+     * @param maxCount sh:maxCount
+     */
+    private static boolean isArraySchema(Integer minCount, Integer maxCount) {
+        return (maxCount == null || maxCount > 1) || (minCount != null && minCount > 1);
     }
 
     private static String getLocalizedValue(Resource resource, Property property, String language) {
