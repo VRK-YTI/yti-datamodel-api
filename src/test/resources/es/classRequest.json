@@ -8,7 +8,8 @@
             "fields": [
               "label.*"
             ],
-            "query": "test~1 *test*"
+            "query": "test~1 *test*",
+            "default_operator": "or"
           }
         },
         {
@@ -78,13 +79,5 @@
       ]
     }
   },
-  "size": 100,
-  "sort": [
-    {
-      "label.en.keyword": {
-        "order": "asc",
-        "unmapped_type": "keyword"
-      }
-    }
-  ]
+  "size": 100
 }

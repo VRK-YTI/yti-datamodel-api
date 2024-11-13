@@ -10,7 +10,10 @@ import org.opensearch.client.opensearch._types.query_dsl.QueryBuilders;
 import org.opensearch.client.opensearch.core.SearchRequest;
 import org.opensearch.client.opensearch.core.search.Highlight;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
 
 import static fi.vm.yti.datamodel.api.v2.opensearch.OpenSearchUtil.logPayload;
 
@@ -65,13 +68,17 @@ public class ResourceQueryFactory {
             indices.add(OpenSearchIndexer.OPEN_SEARCH_INDEX_EXTERNAL);
         }
 
-        SearchRequest sr = new SearchRequest.Builder()
+        var builder = new SearchRequest.Builder()
                 .from(QueryFactoryUtils.pageFrom(request))
                 .size(QueryFactoryUtils.pageSize(request.getPageSize()))
                 .index(indices)
-                .query(finalQuery)
-                .sort(QueryFactoryUtils.getLangSortOptions(request.getSortLang()))
-                .build();
+                .query(finalQuery);
+
+        if (request.getQuery() == null || request.getQuery().isBlank()) {
+            builder.sort(QueryFactoryUtils.getLangSortOptions(request.getSortLang()));
+        }
+        var sr = builder.build();
+
         logPayload(sr, String.join(", ", indices));
         return sr;
     }
@@ -115,14 +122,18 @@ public class ResourceQueryFactory {
                 .fields("label.*", f -> f)
                 .preTags("<b>")
                 .postTags("</b>");
-        SearchRequest sr = new SearchRequest.Builder()
+        var builder = new SearchRequest.Builder()
                 .from(QueryFactoryUtils.pageFrom(request))
                 .size(QueryFactoryUtils.pageSize(request.getPageSize()))
                 .index(indices)
                 .query(finalQuery)
-                .highlight(highlight.build())
-                .sort(QueryFactoryUtils.getLangSortOptions(request.getSortLang()))
-                .build();
+                .highlight(highlight.build());
+
+        if (request.getQuery() == null || request.getQuery().isBlank()) {
+            builder.sort(QueryFactoryUtils.getLangSortOptions(request.getSortLang()));
+        }
+
+        var sr = builder.build();
         logPayload(sr, String.join(", ", indices));
         return sr;
     }
