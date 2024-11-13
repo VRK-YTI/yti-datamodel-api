@@ -10,7 +10,9 @@ import org.opensearch.client.opensearch._types.SortOrder;
 import org.opensearch.client.opensearch._types.mapping.FieldType;
 import org.opensearch.client.opensearch._types.query_dsl.*;
 
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.stream.Collectors;
 
 public class QueryFactoryUtils {
 
@@ -98,7 +100,9 @@ public class QueryFactoryUtils {
     public static Query labelQuery(String query) {
         var trimmed = query.trim();
         final var qs = trimmed.contains(" ")
-                ? String.format("*%s*", trimmed)
+                ? Arrays.stream(trimmed.split("\\s+"))
+                    .map(q -> String.format("*%s*", q))
+                    .collect(Collectors.joining(" "))
                 : String.format("%s~1 *%s*", trimmed, trimmed);
         return QueryStringQuery.of(q-> q
                 .query(qs)

@@ -77,19 +77,12 @@
             "fields": [
               "label.*"
             ],
-            "query": "\"test query\""
+            "query": "*test* *query*",
+            "default_operator": "and"
           }
         }
       ]
     }
   },
-  "size": 100,
-  "sort": [
-    {
-      "label.en.keyword": {
-        "order": "asc",
-        "unmapped_type": "keyword"
-      }
-    }
-  ]
+  "size": 100
 }
