@@ -169,8 +169,13 @@ public class SearchIndexService {
 
         searchModels(modelRequest, user).getResponseObjects()
                 .forEach(o -> dataModels.put(o.getId(), o));
-        var concepts = terminologyService.getAllConcepts();
 
+        var conceptURIs = dto.getResponseObjects().stream()
+                .map(IndexResource::getSubject)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+
+        var concepts = terminologyService.getConcepts(conceptURIs);
         var response = new SearchResponseDTO<IndexResourceInfo>();
         response.setTotalHitCount(dto.getTotalHitCount());
         response.setResponseObjects(dto.getResponseObjects().stream()

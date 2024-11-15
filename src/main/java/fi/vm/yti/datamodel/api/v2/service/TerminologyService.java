@@ -1,132 +1,54 @@
 package fi.vm.yti.datamodel.api.v2.service;
 
-import fi.vm.yti.datamodel.api.v2.dto.*;
-import fi.vm.yti.datamodel.api.v2.endpoint.error.ResolvingException;
+import fi.vm.yti.datamodel.api.v2.dto.ConceptDTO;
+import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
+import fi.vm.yti.datamodel.api.v2.dto.ResourceInfoBaseDTO;
+import fi.vm.yti.datamodel.api.v2.dto.SimpleResourceDTO;
+import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
 import fi.vm.yti.datamodel.api.v2.mapper.TerminologyMapper;
 import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
-import fi.vm.yti.datamodel.api.v2.repository.ConceptRepository;
-import fi.vm.yti.datamodel.api.v2.utils.SparqlUtils;
+import fi.vm.yti.datamodel.api.v2.repository.TerminologyRepository;
+import org.apache.jena.arq.querybuilder.AskBuilder;
 import org.apache.jena.arq.querybuilder.ConstructBuilder;
+import org.apache.jena.arq.querybuilder.WhereBuilder;
+import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.ResourceFactory;
-import org.apache.jena.vocabulary.RDFS;
+import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.SKOS;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.MediaType;
+import org.apache.jena.vocabulary.SKOSXL;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
 
-import java.net.URI;
-import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 
 @Service
 public class TerminologyService {
-    private static final Logger LOG = LoggerFactory.getLogger(TerminologyService.class);
 
-    /**
-     * Control which environment is used for resolving terminology uris.
-     * Possible values: awsdev, awstest and awslocal. Resolve from prod if empty
-     */
-    @Value("${env:}")
-    private String awsEnv;
-    private final WebClient client;
-    private final ConceptRepository conceptRepository;
+    private final TerminologyRepository terminologyRepository;
 
-    public TerminologyService(
-            @Qualifier("uriResolveClient") WebClient webClient,
-            ConceptRepository conceptRepository) {
-        this.conceptRepository = conceptRepository;
-        this.client = webClient;
+    public TerminologyService(TerminologyRepository terminologyRepository) {
+        this.terminologyRepository = terminologyRepository;
     }
 
-    /**
-     * Fetch terminology information and persist to Fuseki
-     * @param terminologyUris set of uris
-     */
-    public void resolveTerminology(Set<String> terminologyUris) {
-
-        for (String u : terminologyUris) {
-            var terminologyURI = u.replaceAll("/?$", "");
-            var terminologyModel = conceptRepository.fetch(terminologyURI);
-
-            if (terminologyModel != null) {
-                LOG.info("Use existing terminology {}", terminologyURI);
-                continue;
-            }
-
-            var uri = URI.create(u);
-            LOG.debug("Fetching terminology {} from env {}", uri, awsEnv);
-            try {
-                var result = client.get().uri(uriBuilder -> uriBuilder
-                                .path(uri.getPath())
-                                .queryParam("env", awsEnv)
-                                .build()
-                        )
-                        .accept(MediaType.APPLICATION_JSON)
-                        .retrieve()
-                        .bodyToMono(new ParameterizedTypeReference<List<TerminologyNodeDTO>>() {
-                        })
-                        .block();
-
-                if (result == null) {
-                    continue;
-                }
-                var node = result.stream()
-                        .filter(n -> n.getType().getId().equals("TerminologicalVocabulary"))
-                        .findFirst();
-
-                if (node.isPresent()) {
-                    var model = TerminologyMapper.mapTerminologyToJenaModel(terminologyURI, node.get());
-                    conceptRepository.put(terminologyURI, model);
-                } else {
-                    LOG.warn("Could not find node with type TerminologicalVocabulary from {}", uri);
-                }
-            } catch (Exception e) {
-                LOG.warn("Could not resolve terminology {}, {}", uri, e.getMessage());
-            }
-        }
-    }
-
-    public void resolveConcept(String conceptURI) {
-        if (conceptURI == null || conceptURI.isBlank()) {
+    public void resolveConcept(String uri) {
+        if (uri == null) {
             return;
         }
-
-        var uri = URI.create(conceptURI);
-        LOG.debug("Fetching concept {} from env {}", uri, awsEnv);
-
-        List<TerminologyNodeDTO> result;
-        try {
-            result = client.get().uri(uriBuilder -> uriBuilder
-                            .path(uri.getPath())
-                            .queryParam("env", awsEnv)
-                            .build()
-                    )
-                    .accept(MediaType.APPLICATION_JSON)
-                    .retrieve()
-                    .bodyToMono(new ParameterizedTypeReference<List<TerminologyNodeDTO>>() {})
-                    .block();
-        } catch(Exception e) {
-            LOG.warn("Could not resolve concept uri {}", uri);
-            throw new ResolvingException("Concept not found", String.format("Concept %s not found in env %s", conceptURI, awsEnv));
+        var exists = terminologyRepository.queryAsk(
+                new AskBuilder().addGraph("?g",
+                            new WhereBuilder().addWhere(NodeFactory.createURI(uri), "?p", "?o"))
+                        .build());
+        if (!exists) {
+            throw new ResourceNotFoundException(uri);
         }
+    }
 
-        if (result != null) {
-            var terminologyURI = conceptURI.substring(0, conceptURI.lastIndexOf("/"));
-            if (!conceptRepository.graphExists(terminologyURI)) {
-                resolveTerminology(Set.of(terminologyURI));
+    public void resolveTerminology(Set<String> uris) {
+        for (var uri : uris) {
+            var exists = terminologyRepository.graphExists(uri);
+            if (!exists) {
+                throw new ResourceNotFoundException(uri);
             }
-            var terminologyModel = conceptRepository.fetch(terminologyURI);
-            TerminologyMapper.mapConceptToTerminologyModel(terminologyModel, terminologyURI,
-                    conceptURI, result.get(0));
-
-            conceptRepository.put(terminologyURI, terminologyModel);
         }
     }
 
@@ -146,37 +68,51 @@ public class TerminologyService {
         return TerminologyMapper.mapToConceptDTO(conceptModel, dto.getConceptURI());
     }
 
-    public Model getConcept(String conceptURI) {
-        var builder = new ConstructBuilder();
-        var res = ResourceFactory.createResource(conceptURI);
+    public Model getTerminology(String uri) {
+        if (uri != null && !uri.endsWith(ModelConstants.RESOURCE_SEPARATOR)) {
+            uri = uri + ModelConstants.RESOURCE_SEPARATOR;
+        }
+        var builder = new ConstructBuilder()
+                .addConstruct("?s", SKOS.prefLabel, "?label")
+                .addGraph(NodeFactory.createURI(uri), new WhereBuilder()
+                        .addWhere("?s", RDF.type, SKOS.ConceptScheme)
+                        .addWhere("?s", SKOS.prefLabel, "?label"));
 
-        var label = "?label";
-        var inScheme = "?inScheme";
-        var definition = "?definition";
-        var terminologyLabel = "?terminologyLabel";
-        var status = "?status";
-
-        builder.addPrefixes(ModelConstants.PREFIXES)
-                .addConstruct(res, SKOS.prefLabel, label)
-                .addConstruct(res, SKOS.inScheme, inScheme)
-                .addConstruct(res, SKOS.definition, definition)
-                .addConstruct(res, SuomiMeta.publicationStatus, status)
-                .addConstruct(res, RDFS.label, terminologyLabel)
-                .addWhere(res, SKOS.prefLabel, label)
-                .addWhere(res, SKOS.inScheme, inScheme)
-                .addOptional(res, SKOS.definition, definition)
-                .addWhere(res, SuomiMeta.publicationStatus, status)
-                .addWhere(inScheme, RDFS.label, terminologyLabel);
-
-        return conceptRepository.queryConstruct(builder.build());
+        return terminologyRepository.queryConstruct(builder.build());
     }
 
-    public Model getAllConcepts() {
-        var builder = new ConstructBuilder().addPrefixes(ModelConstants.PREFIXES);
-        SparqlUtils.addConstructProperty("?concept", builder, SKOS.prefLabel, "?label");
-        SparqlUtils.addConstructProperty("?concept", builder, SKOS.inScheme, "?terminology");
-        SparqlUtils.addConstructProperty("?terminology", builder, RDFS.label, "?terminologyLabel");
-        return conceptRepository.queryConstruct(builder.build());
+    public Model getConcept(String uri) {
+        var concept = NodeFactory.createURI(uri);
+        var builder = new ConstructBuilder()
+                .addConstruct(concept, SKOS.definition, "?definition")
+                .addConstruct(concept, SuomiMeta.publicationStatus, "?status")
+                .addConstruct(concept, SKOS.prefLabel, "?label")
+                .addConstruct("?g", SKOS.prefLabel, "?terminology")
+                .addGraph("?g", new WhereBuilder()
+                        .addOptional(concept, SKOS.definition, "?definition")
+                        .addWhere(concept, SuomiMeta.publicationStatus, "?status")
+                        .addWhere(concept, SKOS.prefLabel, "?recommendedTerm")
+                        .addWhere("?recommendedTerm", SKOSXL.literalForm, "?label")
+                        .addWhere("?g", SKOS.prefLabel, "?terminology"));
+
+        return terminologyRepository.queryConstruct(builder.build());
     }
 
+    public Model getConcepts(Set<String> conceptURIs) {
+        var resources = conceptURIs.stream()
+                .map(NodeFactory::createURI)
+                .toList()
+                .toArray();
+
+        var builder = new ConstructBuilder()
+                .addConstruct("?concept", SKOS.prefLabel, "?conceptLabel")
+                .addConstruct("?g", SKOS.prefLabel, "?terminologyLabel")
+                .addGraph("?g", new WhereBuilder()
+                        .addWhere("?concept", SKOS.prefLabel, "?prefLabel")
+                        .addWhere("?prefLabel", SKOSXL.literalForm, "?conceptLabel")
+                        .addWhere("?g", SKOS.prefLabel, "?terminologyLabel"))
+                .addValueVar("concept", resources);
+
+        return terminologyRepository.queryConstruct(builder.build());
+    }
 }

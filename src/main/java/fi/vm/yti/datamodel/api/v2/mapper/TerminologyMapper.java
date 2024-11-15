@@ -1,9 +1,6 @@
 package fi.vm.yti.datamodel.api.v2.mapper;
 
-import fi.vm.yti.datamodel.api.v2.dto.ConceptDTO;
-import fi.vm.yti.datamodel.api.v2.dto.Status;
-import fi.vm.yti.datamodel.api.v2.dto.TerminologyDTO;
-import fi.vm.yti.datamodel.api.v2.dto.TerminologyNodeDTO;
+import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
@@ -30,8 +27,11 @@ public class TerminologyMapper {
     }
 
     public static TerminologyDTO mapToTerminologyDTO(String graph, Model model) {
+        if (!graph.endsWith(ModelConstants.RESOURCE_SEPARATOR)) {
+            graph = graph + ModelConstants.RESOURCE_SEPARATOR;
+        }
         var dto = new TerminologyDTO(graph);
-        var label = MapperUtils.localizedPropertyToMap(model.getResource(graph), RDFS.label);
+        var label = MapperUtils.localizedPropertyToMap(model.getResource(graph), SKOS.prefLabel);
         dto.setLabel(label);
         return dto;
     }
@@ -82,8 +82,9 @@ public class TerminologyMapper {
         dto.setLabel(MapperUtils.localizedPropertyToMap(resource, SKOS.prefLabel));
         dto.setDefinition(MapperUtils.localizedPropertyToMap(resource, SKOS.definition));
 
-        var terminology = new TerminologyDTO(MapperUtils.propertyToString(resource, SKOS.inScheme));
-        terminology.setLabel(MapperUtils.localizedPropertyToMap(resource, RDFS.label));
+        var terminologyResource = model.getResource(resource.getNameSpace());
+        var terminology = new TerminologyDTO(terminologyResource.getURI());
+        terminology.setLabel(MapperUtils.localizedPropertyToMap(terminologyResource, SKOS.prefLabel));
         dto.setTerminology(terminology);
         return dto;
     }
