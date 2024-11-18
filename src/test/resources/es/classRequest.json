@@ -8,8 +8,7 @@
             "fields": [
               "label.*"
             ],
-            "query": "test~1 *test*",
-            "default_operator": "or"
+            "query": "test~1 *test*"
           }
         },
         {

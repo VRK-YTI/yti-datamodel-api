@@ -2,23 +2,24 @@ package fi.vm.yti.datamodel.api.v2.service;
 
 import fi.vm.yti.common.Constants;
 import fi.vm.yti.common.enums.Status;
+import fi.vm.yti.common.exception.ResourceNotFoundException;
 import fi.vm.yti.common.opensearch.SearchResponseDTO;
 import fi.vm.yti.common.properties.SuomiMeta;
 import fi.vm.yti.common.service.GroupManagementService;
 import fi.vm.yti.common.util.MapperUtils;
-import fi.vm.yti.datamodel.api.v2.mapper.MapperTestUtils;
-import fi.vm.yti.datamodel.api.v2.security.DataModelAuthorizationManager;
 import fi.vm.yti.datamodel.api.v2.dto.ClassDTO;
 import fi.vm.yti.datamodel.api.v2.dto.NodeShapeDTO;
 import fi.vm.yti.datamodel.api.v2.dto.ResourceInfoBaseDTO;
+import fi.vm.yti.datamodel.api.v2.dto.ResourceType;
 import fi.vm.yti.datamodel.api.v2.endpoint.EndpointUtils;
-import fi.vm.yti.common.exception.ResourceNotFoundException;
 import fi.vm.yti.datamodel.api.v2.mapper.ClassMapper;
+import fi.vm.yti.datamodel.api.v2.mapper.MapperTestUtils;
 import fi.vm.yti.datamodel.api.v2.mapper.ResourceMapper;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexResource;
 import fi.vm.yti.datamodel.api.v2.properties.DCAP;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import fi.vm.yti.datamodel.api.v2.repository.ImportsRepository;
+import fi.vm.yti.datamodel.api.v2.security.DataModelAuthorizationManager;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
 import fi.vm.yti.security.AuthenticatedUserProvider;
 import fi.vm.yti.security.YtiUser;
@@ -278,7 +279,7 @@ class ClassServiceTest {
         ArgumentCaptor<List<IndexResource>> indexCaptor = ArgumentCaptor.forClass(List.class);
 
         // should index non-existing new property (other-property)
-        verify(openSearchIndexer).bulkInsert(anyString(), indexCaptor.capture());
+        verify(indexService).bulkInsert(anyString(), indexCaptor.capture());
 
         var indexedProperties = indexCaptor.getValue();
         assertEquals(1, indexedProperties.size());

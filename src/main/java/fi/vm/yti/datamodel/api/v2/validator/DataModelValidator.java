@@ -2,6 +2,7 @@ package fi.vm.yti.datamodel.api.v2.validator;
 
 import fi.vm.yti.common.Constants;
 import fi.vm.yti.common.enums.GraphType;
+import fi.vm.yti.common.enums.Status;
 import fi.vm.yti.datamodel.api.v2.dto.DataModelDTO;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
@@ -41,7 +42,7 @@ public class DataModelValidator extends BaseValidator implements
 
         checkInternalNamespaces(context, dataModel);
         checkExternalNamespaces(context, dataModel);
-
+        checkStatus(context, dataModel);
 
         checkTerminologies(context, dataModel);
         checkCodeLists(context, dataModel, modelType);
@@ -251,5 +252,12 @@ public class DataModelValidator extends BaseValidator implements
             checkNotNull(context, linkDTO.getUri(), "links.uri");
             linkDTO.getDescription().forEach((description, value) -> checkCommonTextArea(context, value, "links.description"));
         });
+    }
+
+    private void checkStatus(ConstraintValidatorContext context, DataModelDTO dataModel) {
+        // don't allow other statuses than draft
+        if (dataModel.getStatus() != null && !dataModel.getStatus().equals(Status.DRAFT)) {
+            addConstraintViolation(context, ValidationConstants.MSG_VALUE_INVALID, "status");
+        }
     }
 }

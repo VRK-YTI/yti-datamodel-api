@@ -20,6 +20,7 @@ import fi.vm.yti.datamodel.api.v2.utils.DataModelUtils;
 import fi.vm.yti.datamodel.api.v2.utils.SemVer;
 import fi.vm.yti.datamodel.api.v2.validator.ValidationConstants;
 import fi.vm.yti.security.AuthenticatedUserProvider;
+import fi.vm.yti.security.Role;
 import org.apache.jena.arq.querybuilder.ConstructBuilder;
 import org.apache.jena.arq.querybuilder.SelectBuilder;
 import org.apache.jena.arq.querybuilder.UpdateBuilder;
@@ -122,7 +123,7 @@ public class DataModelService {
     }
 
     public URI create(DataModelDTO dto, GraphType modelType) throws URISyntaxException {
-        check(authorizationManager.hasRightToAnyOrganization(dto.getOrganizations()));
+        check(authorizationManager.hasRightToAnyOrganization(dto.getOrganizations(), Role.DATA_MODEL_EDITOR));
         var graphUri = DataModelURI.createModelURI(dto.getPrefix()).getGraphURI();
 
         terminologyService.resolveTerminology(dto.getTerminologies());
