@@ -18,6 +18,7 @@ import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexModel;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
 import fi.vm.yti.security.AuthenticatedUserProvider;
+import fi.vm.yti.security.Role;
 import fi.vm.yti.security.YtiUser;
 import org.apache.jena.query.Query;
 import org.apache.jena.query.QuerySolution;
@@ -127,7 +128,7 @@ class DataModelServiceTest {
 
     @Test
     void create() throws URISyntaxException {
-        when(authorizationManager.hasRightToAnyOrganization(anyCollection())).thenReturn(true);
+        when(authorizationManager.hasRightToAnyOrganization(anyCollection(), eq(Role.DATA_MODEL_EDITOR))).thenReturn(true);
         when(userProvider.getUser()).thenReturn(EndpointUtils.mockUser);
         when(modelMapper.mapToJenaModel(any(DataModelDTO.class), any(GraphType.class), any(YtiUser.class))).thenReturn(ModelFactory.createDefaultModel());
         when(modelMapper.mapToIndexModel(anyString(), any(Model.class))).thenReturn(new IndexModel());
@@ -135,7 +136,7 @@ class DataModelServiceTest {
         var uri = dataModelService.create(dto, GraphType.LIBRARY);
         assertEquals(Constants.DATA_MODEL_NAMESPACE + "test/", uri.toString());
 
-        verify(authorizationManager).hasRightToAnyOrganization(anyCollection());
+        verify(authorizationManager).hasRightToAnyOrganization(anyCollection(), eq(Role.DATA_MODEL_EDITOR));
         verify(terminologyService).resolveTerminology(anySet());
         verify(codeListService).resolveCodelistScheme(anySet());
         verify(modelMapper).mapToJenaModel(any(DataModelDTO.class), any(GraphType.class), any(YtiUser.class));
