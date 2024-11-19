@@ -5,10 +5,10 @@ import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexModel;
 import fi.vm.yti.datamodel.api.v2.properties.DCAP;
 import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
-import fi.vm.yti.datamodel.api.v2.repository.ConceptRepository;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import fi.vm.yti.datamodel.api.v2.repository.ImportsRepository;
 import fi.vm.yti.datamodel.api.v2.repository.SchemesRepository;
+import fi.vm.yti.datamodel.api.v2.service.TerminologyService;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
 import fi.vm.yti.security.YtiUser;
 import org.apache.jena.datatypes.xsd.XSDDateTime;
@@ -26,19 +26,19 @@ import java.util.stream.Collectors;
 public class ModelMapper {
 
     private final CoreRepository coreRepository;
-    private final ConceptRepository conceptRepository;
     private final ImportsRepository importsRepository;
     private final SchemesRepository schemesRepository;
+    private final TerminologyService terminologyService;
 
 
     public ModelMapper (CoreRepository coreRepository,
-                        ConceptRepository conceptRepository,
                         ImportsRepository importsRepository,
-                        SchemesRepository schemesRepository){
+                        SchemesRepository schemesRepository,
+                        TerminologyService terminologyService){
         this.coreRepository = coreRepository;
-        this.conceptRepository = conceptRepository;
         this.importsRepository = importsRepository;
         this.schemesRepository = schemesRepository;
+        this.terminologyService = terminologyService;
     }
 
     /**
@@ -198,7 +198,7 @@ public class ModelMapper {
         var terminologies = MapperUtils.arrayPropertyToSet(modelResource, DCTerms.requires)
                 .stream().filter(val -> val.startsWith(ModelConstants.TERMINOLOGY_NAMESPACE))
                 .map(ref -> {
-                    var terminologyModel = conceptRepository.fetch(ref);
+                    var terminologyModel = terminologyService.getTerminology(ref);
                     if (terminologyModel == null) {
                         return new TerminologyDTO(ref);
                     }

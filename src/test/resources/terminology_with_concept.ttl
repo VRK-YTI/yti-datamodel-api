@@ -4,10 +4,12 @@
 @prefix skos:    <http://www.w3.org/2004/02/skos/core#> .
 @prefix suomi-meta: <http://uri.suomi.fi/datamodel/ns/suomi-meta/> .
 
-<http://uri.suomi.fi/terminology/dd0e10ed/concept-1>
-        rdfs:label       "Testisanasto"@fi , "Test terminology"@en ;
+<https://iri.suomi.fi/terminology/dd0e10ed/concept-1>
         suomi-meta:publicationStatus  <http://uri.suomi.fi/codelist/interoperabilityplatform/interoperabilityplatform_status/code/DRAFT> ;
         skos:inScheme    <http://uri.suomi.fi/terminology/dd0e10ed/> ;
         skos:prefLabel   "käsite"@fi , "concept"@en ;
         skos:definition  "määritelmä"@fi , "definition"@en .
+
+<https://iri.suomi.fi/terminology/dd0e10ed/>
+        skos:prefLabel       "Testisanasto"@fi , "Test terminology"@en .
 

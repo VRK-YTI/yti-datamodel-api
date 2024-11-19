@@ -42,7 +42,7 @@ class TerminologyMapperTest {
         var model = MapperTestUtils.getModelFromFile("/terminology.ttl");
 
         var terminologyDTO = TerminologyMapper.mapToTerminologyDTO(
-                "http://uri.suomi.fi/terminology/test/terminological-vocabulary-0", model);
+                "http://uri.suomi.fi/terminology/test/", model);
 
         assertEquals(Map.of("fi", "Testisanasto", "en", "Test terminology"), terminologyDTO.getLabel());
     }
@@ -93,7 +93,7 @@ class TerminologyMapperTest {
 
     @Test
     void mapToConceptDTO() {
-        var conceptURI = "http://uri.suomi.fi/terminology/dd0e10ed/concept-1";
+        var conceptURI = "https://iri.suomi.fi/terminology/dd0e10ed/concept-1";
         var model = MapperTestUtils.getModelFromFile("/terminology_with_concept.ttl");
 
         var conceptDTO = TerminologyMapper.mapToConceptDTO(model, conceptURI);

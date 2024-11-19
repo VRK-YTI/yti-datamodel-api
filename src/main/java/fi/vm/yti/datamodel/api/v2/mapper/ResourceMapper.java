@@ -339,11 +339,11 @@ public class ResourceMapper {
 
         if (resource.getSubject() != null) {
             var conceptResource = concepts.getResource(resource.getSubject());
-            var terminologyResource = concepts.getResource(MapperUtils.propertyToString(conceptResource, SKOS.inScheme));
+            var terminologyResource = concepts.getResource(conceptResource.getNameSpace());
 
             var conceptInfo = new ConceptInfo();
             conceptInfo.setConceptURI(conceptResource.getURI());
-            conceptInfo.setTerminologyLabel(MapperUtils.localizedPropertyToMap(terminologyResource, RDFS.label));
+            conceptInfo.setTerminologyLabel(MapperUtils.localizedPropertyToMap(terminologyResource, SKOS.prefLabel));
             conceptInfo.setConceptLabel(MapperUtils.localizedPropertyToMap(conceptResource, SKOS.prefLabel));
             indexResource.setConceptInfo(conceptInfo);
         }
