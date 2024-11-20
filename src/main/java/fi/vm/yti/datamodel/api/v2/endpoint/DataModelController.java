@@ -6,6 +6,7 @@ import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.ApiError;
 import fi.vm.yti.datamodel.api.v2.service.DataModelService;
 import fi.vm.yti.datamodel.api.v2.service.ReleaseValidationService;
+import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
 import fi.vm.yti.datamodel.api.v2.validator.ValidDatamodel;
 import fi.vm.yti.datamodel.api.v2.validator.ValidPrefix;
 import fi.vm.yti.datamodel.api.v2.validator.ValidSemanticVersion;
@@ -24,6 +25,7 @@ import org.springframework.web.bind.annotation.*;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -193,5 +195,15 @@ public class DataModelController {
         return ResponseEntity
                 .created(URI.create(newURI))
                 .build();
+    }
+
+    @Operation(summary = "Get referrer models")
+    @GetMapping("/{prefix}/referrers")
+    public ResponseEntity<List<String>> getReferrerModels(
+            @PathVariable @Parameter(description = "Data model prefix") String prefix,
+            @RequestParam(required = false) @Parameter(description = "Version of the data model") @ValidSemanticVersion String version) {
+        return ResponseEntity.ok(dataModelService.getReferrerModels(DataModelURI
+                        .createModelURI(prefix, version)
+                        .getGraphURI()));
     }
 }

@@ -193,31 +193,29 @@ public class DataModelService {
             throw new ResourceNotFoundException(graphUri);
         }
 
-        check(authorizationManager.hasRightToModel(prefix, model));
+        check(authorizationManager.hasAdminRightToModel(prefix, model));
 
         var modelResource = model.getResource(dataModelURI.getModelURI());
         var priorVersion = MapperUtils.propertyToString(modelResource, OWL.priorVersion);
+        var status = MapperUtils.getStatus(modelResource);
         var superUser = userProvider.getUser().isSuperuser();
+        var referrers = getReferrerModels(graphUri);
 
-        if (version == null && priorVersion != null) {
-            throw new MappingError("Cannot remove draft data model with published versions: " + graphUri);
+        if (!superUser) {
+            if (Status.VALID.equals(status)) {
+                throw new MappingError("Cannot remove data model with status VALID");
+            } else if (List.of(Status.RETIRED, Status.SUPERSEDED).contains(status) && !referrers.isEmpty()) {
+                throw new MappingError("Cannot remove data model with references: " + referrers);
+            }
         }
-
-        // only superuser can remove published models
-        if (!superUser && version != null) {
-            throw new MappingError("Cannot remove published data model: " + graphUri);
-        }
-
-        // cannot remove the model if there are any references to that
-        checkReferrerModels(graphUri);
 
         coreRepository.delete(graphUri);
 
         // ensure the integrity of owl:priorVersion information
-        // if removing draft version, also notification topic will be removed
+        // if removing draft version without any published versions, also notification topic will be removed
         if (version != null) {
             updatePriorVersions(graphUri, priorVersion);
-        } else {
+        } else if (priorVersion == null) {
             dataModelSubscriptionService.deleteTopic(prefix);
         }
 
@@ -467,7 +465,7 @@ public class DataModelService {
         coreRepository.queryUpdate(update.buildRequest());
     }
 
-    private void checkReferrerModels(String graphUri) {
+    public List<String> getReferrerModels(String graphUri) {
         var refProperty = "?property";
         var construct = new ConstructBuilder()
                 .addConstruct("?s", refProperty, NodeFactory.createURI(graphUri))
@@ -477,10 +475,7 @@ public class DataModelService {
 
         var result = coreRepository.queryConstruct(construct.build());
 
-        if (!result.isEmpty()) {
-            throw new MappingError("Cannot remove data model. It's already in use: "
-                                   + result.listSubjects().mapWith(Resource::getURI).toList());
-        }
+        return result.listSubjects().mapWith(Resource::getURI).toList();
     }
 
     private void addPrefixes(Model model, DataModelDTO dto) {
