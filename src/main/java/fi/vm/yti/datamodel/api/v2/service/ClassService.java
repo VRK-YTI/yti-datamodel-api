@@ -19,7 +19,10 @@ import fi.vm.yti.security.AuthenticatedUserProvider;
 import org.apache.jena.arq.querybuilder.AskBuilder;
 import org.apache.jena.arq.querybuilder.ConstructBuilder;
 import org.apache.jena.graph.NodeFactory;
-import org.apache.jena.rdf.model.*;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDFS;
 import org.apache.jena.vocabulary.XSD;
@@ -184,12 +187,7 @@ public class ClassService extends BaseResourceService {
         var modelResource = model.getResource(uri.getModelURI());
         check(authorizationManager.hasRightToModel(prefix, model));
         checkDataModelType(modelResource, dto);
-        try {
-            terminologyService.resolveConcept(dto.getSubject());
-        } catch (Exception e) {
-            // TODO remove try catch after migration
-            dto.setSubject(null);
-        }
+        terminologyService.resolveConcept(dto.getSubject());
 
         var includedNamespaces = DataModelUtils.getInternalReferenceModels(graphUri, modelResource);
 

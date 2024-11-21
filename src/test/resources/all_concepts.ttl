@@ -8,9 +8,8 @@
 @prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
 
 <http://uri.suomi.fi/terminology/dd0e10ed/concept-1>
-        skos:inScheme   <http://uri.suomi.fi/terminology/dd0e10ed/> ;
         skos:prefLabel  "concept"@en , "käsite"@fi .
 
 <http://uri.suomi.fi/terminology/dd0e10ed/>
-        rdfs:label  "Testisanasto"@fi , "Test terminology"@en .
+        skos:prefLabel  "Testisanasto"@fi , "Test terminology"@en .
 

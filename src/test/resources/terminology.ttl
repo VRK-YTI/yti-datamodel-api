@@ -1,6 +1,6 @@
 @prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix skos:  <http://www.w3.org/2004/02/skos/core#> .
 
-<http://uri.suomi.fi/terminology/test/terminological-vocabulary-0>
+<http://uri.suomi.fi/terminology/test/>
     a               skos:ConceptScheme ;
-    rdfs:label      "Testisanasto"@fi , "Test terminology"@en  .
+    skos:prefLabel      "Testisanasto"@fi , "Test terminology"@en  .
