@@ -13,6 +13,7 @@ import org.apache.jena.arq.querybuilder.ConstructBuilder;
 import org.apache.jena.arq.querybuilder.WhereBuilder;
 import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.SKOS;
 import org.apache.jena.vocabulary.SKOSXL;
@@ -99,6 +100,9 @@ public class TerminologyService {
     }
 
     public Model getConcepts(Set<String> conceptURIs) {
+        if (conceptURIs.isEmpty()) {
+            return ModelFactory.createDefaultModel();
+        }
         var resources = conceptURIs.stream()
                 .map(NodeFactory::createURI)
                 .toList()
