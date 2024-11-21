@@ -453,6 +453,35 @@ public class DataModelService {
         return newURI.getGraphURI();
     }
 
+    /**
+     * Creates a new draft from given version. Old draft will be deleted if exists.
+     * @param prefix model prefix
+     * @param version model version
+     */
+    public void createDraft(String prefix, String version) {
+        logger.info("Create new draft from datamodel {} version {}", prefix, version);
+
+        var versionURI = DataModelURI.createModelURI(prefix, version);
+        var model = coreRepository.fetch(versionURI.getGraphURI());
+
+        check(authorizationManager.hasAdminRightToModel(prefix, model));
+
+        var newDraft = mapper.mapNewDraft(model, versionURI);
+
+        try {
+            // delete old draft version
+            delete(prefix, null);
+        } catch (ResourceNotFoundException e) {
+            // ignore, no draft version exist
+        }
+
+        coreRepository.put(versionURI.getDraftGraphURI(), newDraft);
+        visualisationService.copyVisualization(prefix, version, prefix);
+        indexService.createModelToIndex(mapper.mapToIndexModel(versionURI.getDraftGraphURI(), newDraft));
+        indexService.indexGraphResource(newDraft);
+        auditService.log(AuditService.ActionType.CREATE, versionURI.getDraftGraphURI(), userProvider.getUser());
+    }
+
     private void updatePriorVersions(String graphUri, String priorVersion) {
         var update = new UpdateBuilder();
         update.addDelete("?g", "?s", OWL.priorVersion, NodeFactory.createURI(graphUri));
