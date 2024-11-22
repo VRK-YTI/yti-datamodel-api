@@ -46,6 +46,18 @@ public class EndpointUtils {
             "",
             "");
 
+    public static final YtiUser mockAdminUser = new YtiUser("admin@localhost",
+            "super",
+            "user",
+            UUID.randomUUID(),
+            false,
+            false,
+            LocalDateTime.of(2001, 1, 1, 0,0),
+            LocalDateTime.of(2001, 1, 1, 0,0),
+            new HashMap<>(Map.of(UUID.randomUUID(), Set.of(Role.ADMIN))),
+            "",
+            "");
+
     public static Model getMockModel(Resource type) {
         var mockModel = ModelFactory.createDefaultModel();
         mockModel.createResource("https://iri.suomi.fi/model/test/")
