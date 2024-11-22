@@ -197,6 +197,21 @@ public class DataModelController {
                 .build();
     }
 
+    @Operation(summary = "Creates a new draft from given version")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "New draft has been created"),
+    })
+    @PostMapping("/{prefix}/create-draft")
+    public ResponseEntity<Void> createDraft(
+            @PathVariable @Parameter(description = "Data model's prefix") String prefix,
+            @RequestParam @Parameter(description = "Version of the data model to be copied") @ValidSemanticVersion String version) {
+        dataModelService.createDraft(prefix, version);
+        var draftURI = DataModelURI.createModelURI(prefix).getGraphURI();
+        return ResponseEntity
+                .created(URI.create(draftURI))
+                .build();
+    }
+
     @Operation(summary = "Get referrer models")
     @GetMapping("/{prefix}/referrers")
     public ResponseEntity<List<String>> getReferrerModels(

@@ -23,6 +23,7 @@ import fi.vm.yti.security.YtiUser;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.sparql.vocabulary.FOAF;
 import org.apache.jena.vocabulary.*;
 import org.junit.jupiter.api.BeforeEach;
@@ -519,6 +520,30 @@ class ModelMapperTest {
                 Constants.URN_UUID + parent,
                 Constants.URN_UUID + child))
         );
+    }
+
+    @Test
+    void testMapNewDraft() {
+        var graphURI = DataModelURI.createModelURI("test", "1.0.0");
+
+        var version = ModelFactory.createDefaultModel();
+        version.createResource(graphURI.getModelURI())
+                .addProperty(OWL.versionInfo, "1.0.0")
+                .addProperty(OWL2.versionIRI, DataModelURI.createModelURI("test", "1.0.0").getGraphURI());
+        version.createResource(DataModelURI.createResourceURI("test", "class-1").getResourceURI())
+                .addProperty(RDF.type, OWL.Class);
+
+        var newDraft = mapper.mapNewDraft(version, graphURI);
+        var newDraftModelResource = newDraft.getResource(graphURI.getModelURI());
+
+        // check version info
+        assertNull(MapperUtils.propertyToString(newDraftModelResource, OWL.versionInfo));
+        assertNull(MapperUtils.propertyToString(newDraftModelResource, OWL2.versionIRI));
+        assertEquals(graphURI.getGraphURI(), MapperUtils.propertyToString(newDraftModelResource, OWL.priorVersion));
+
+        // check that resource defined in version 1.0.0 exists in new draft and old draft resource is removed
+        assertTrue(newDraft.contains(
+                ResourceFactory.createResource(DataModelURI.createResourceURI("test", "class-1").getResourceURI()), null));
     }
 
 }

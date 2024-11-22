@@ -298,6 +298,24 @@ public class ModelMapper {
         return indexModel;
     }
 
+    public Model mapNewDraft(Model model, DataModelURI versionURI) {
+
+        var newDraft = ModelFactory.createDefaultModel().add(model);
+        var modelResource = newDraft.getResource(versionURI.getModelURI());
+
+        // new prior version is the version from which the new draft is created
+        MapperUtils.updateUriProperty(modelResource, OWL.priorVersion, versionURI.getGraphURI());
+        modelResource.removeAll(OWL.versionInfo);
+        modelResource.removeAll(OWL2.versionIRI);
+
+        // change all statuses to DRAFT
+        newDraft.listSubjectsWithProperty(SuomiMeta.publicationStatus)
+                .forEach(resource -> MapperUtils.updateUriProperty(
+                        resource, SuomiMeta.publicationStatus, MapperUtils.getStatusUri(Status.DRAFT))
+                );
+        return newDraft;
+    }
+
     /**
      * Add organizations to a model
      * @param organizations Organizations

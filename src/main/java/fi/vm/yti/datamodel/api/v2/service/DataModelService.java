@@ -453,6 +453,34 @@ public class DataModelService {
         return newURI.getGraphURI();
     }
 
+    /**
+     * Creates a new draft from given version.
+     * @param prefix model prefix
+     * @param version model version
+     */
+    public void createDraft(String prefix, String version) {
+        logger.info("Create new draft from datamodel {} version {}", prefix, version);
+
+        var versionURI = DataModelURI.createModelURI(prefix, version);
+
+        // the old draft graph should be removed before creating new one
+        if (coreRepository.graphExists(versionURI.getDraftGraphURI())) {
+            throw new MappingError("Draft graph exists");
+        }
+
+        var model = coreRepository.fetch(versionURI.getGraphURI());
+        check(authorizationManager.hasAdminRightToModel(prefix, model));
+
+        var newDraft = mapper.mapNewDraft(model, versionURI);
+        coreRepository.put(versionURI.getDraftGraphURI(), newDraft);
+        // copy version's visualization data
+        visualisationService.copyVisualization(prefix, version, prefix);
+
+        indexService.createModelToIndex(mapper.mapToIndexModel(versionURI.getDraftGraphURI(), newDraft));
+        indexService.indexGraphResource(newDraft);
+        auditService.log(AuditService.ActionType.CREATE, versionURI.getDraftGraphURI(), userProvider.getUser());
+    }
+
     private void updatePriorVersions(String graphUri, String priorVersion) {
         var update = new UpdateBuilder();
         update.addDelete("?g", "?s", OWL.priorVersion, NodeFactory.createURI(graphUri));
