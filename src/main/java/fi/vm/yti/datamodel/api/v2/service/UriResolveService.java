@@ -1,9 +1,9 @@
 package fi.vm.yti.datamodel.api.v2.service;
 
-import fi.vm.yti.datamodel.api.security.AuthorizationManager;
-import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
-import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
-import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
+import fi.vm.yti.common.Constants;
+import fi.vm.yti.common.util.MapperUtils;
+import fi.vm.yti.datamodel.api.v2.security.DataModelAuthorizationManager;
+import fi.vm.yti.common.exception.ResourceNotFoundException;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
 import org.apache.jena.iri.IRI;
@@ -31,14 +31,14 @@ public class UriResolveService {
     private final Logger logger = LoggerFactory.getLogger(UriResolveService.class);
     private static final IRIFactory iriFactory = IRIFactory.iriImplementation();
     private final CoreRepository coreRepository;
-    private final AuthorizationManager authorizationManager;
+    private final DataModelAuthorizationManager authorizationManager;
     private final DataModelService dataModelService;
 
     @Value("${env:}")
     private String awsEnv;
 
     public UriResolveService(CoreRepository coreRepository,
-                             AuthorizationManager authorizationManager, DataModelService dataModelService) {
+                             DataModelAuthorizationManager authorizationManager, DataModelService dataModelService) {
         this.coreRepository = coreRepository;
         this.authorizationManager = authorizationManager;
         this.dataModelService = dataModelService;
@@ -57,7 +57,7 @@ public class UriResolveService {
         } else if (datamodelURI.getContentType() == null && datamodelURI.getResourceId() != null && !isHtml(accept)) {
             // do not support serializing single resource
             return ResponseEntity.notFound().build();
-        } else if (datamodelURI.getContentType() == null && datamodelURI.getResourceId() == null && !iri.endsWith(ModelConstants.RESOURCE_SEPARATOR)) {
+        } else if (datamodelURI.getContentType() == null && datamodelURI.getResourceId() == null && !iri.endsWith(Constants.RESOURCE_SEPARATOR)) {
             // iri must end with slash except when requesting with file extension, e.g. /model/ns/1.2.3/ns.ttl
             return ResponseEntity.notFound().build();
         }
@@ -177,6 +177,6 @@ public class UriResolveService {
 
     private static boolean checkIRI(IRI iri) {
         return !iri.hasViolation(false)
-                && iri.toString().startsWith(ModelConstants.SUOMI_FI_NAMESPACE);
+                && iri.toString().startsWith(Constants.DATA_MODEL_NAMESPACE);
     }
 }

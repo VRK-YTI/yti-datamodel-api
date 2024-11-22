@@ -1,17 +1,25 @@
 package fi.vm.yti.datamodel.api.v2.service;
 
+import fi.vm.yti.common.Constants;
+import fi.vm.yti.common.enums.GraphType;
+import fi.vm.yti.common.opensearch.IndexBase;
+import fi.vm.yti.common.opensearch.OpenSearchClientWrapper;
+import fi.vm.yti.common.opensearch.QueryFactoryUtils;
+import fi.vm.yti.common.opensearch.SearchResponseDTO;
+import fi.vm.yti.common.service.GroupManagementService;
+import fi.vm.yti.common.util.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
 import fi.vm.yti.datamodel.api.v2.dto.ModelSearchResultDTO;
-import fi.vm.yti.datamodel.api.v2.dto.ModelType;
 import fi.vm.yti.datamodel.api.v2.dto.ResourceType;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.OpenSearchException;
-import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.mapper.ResourceMapper;
-import fi.vm.yti.datamodel.api.v2.opensearch.OpenSearchClientWrapper;
-import fi.vm.yti.datamodel.api.v2.opensearch.dto.*;
-import fi.vm.yti.datamodel.api.v2.opensearch.index.*;
+import fi.vm.yti.datamodel.api.v2.opensearch.dto.CountSearchResponse;
+import fi.vm.yti.datamodel.api.v2.opensearch.dto.ModelSearchRequest;
+import fi.vm.yti.datamodel.api.v2.opensearch.dto.ResourceSearchRequest;
+import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexModel;
+import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexResource;
+import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexResourceInfo;
 import fi.vm.yti.datamodel.api.v2.opensearch.queries.ModelQueryFactory;
-import fi.vm.yti.datamodel.api.v2.opensearch.queries.QueryFactoryUtils;
 import fi.vm.yti.datamodel.api.v2.opensearch.queries.ResourceQueryFactory;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
@@ -194,7 +202,7 @@ public class SearchIndexService {
 
         if (request.isFromAddedNamespaces()) {
             if (request.getLimitToDataModel() == null) {
-                throw new OpenSearchException("limitToDataModel cannot be empty if getting from added namespace", OpenSearchIndexer.OPEN_SEARCH_INDEX_RESOURCE);
+                throw new OpenSearchException("limitToDataModel cannot be empty if getting from added namespace", IndexService.OPEN_SEARCH_INDEX_RESOURCE);
             }
             getNamespacesFromModel(request, internalNamespaces, externalNamespaces);
         }
@@ -252,17 +260,17 @@ public class SearchIndexService {
         var resource = model.getResource(uri.getModelURI());
         var allNamespaces = new ArrayList<>(MapperUtils.arrayPropertyToList(resource, OWL.imports));
 
-        if (!ModelType.PROFILE.equals(request.getLimitToModelType())) {
+        if (!GraphType.PROFILE.equals(request.getLimitToModelType())) {
             allNamespaces.addAll(MapperUtils.arrayPropertyToList(resource, DCTerms.requires));
 
             // resource from external models are searched by isDefinedBy property (include only if searching LIBRARY resources)
             externalNamespaces.addAll(allNamespaces.stream()
                     .filter(ns -> !ns.contains(ModelConstants.SUOMI_FI_DOMAIN)
-                                  && !ns.contains(ModelConstants.SUOMI_FI_NAMESPACE))
+                                  && !ns.contains(Constants.DATA_MODEL_NAMESPACE))
                     .toList());
         }
 
         // internal namespaces are searched by versionIRI
-        internalNamespaces.addAll(allNamespaces.stream().filter(ns -> ns.startsWith(ModelConstants.SUOMI_FI_NAMESPACE)).toList());
+        internalNamespaces.addAll(allNamespaces.stream().filter(ns -> ns.startsWith(Constants.DATA_MODEL_NAMESPACE)).toList());
     }
 }

@@ -1,7 +1,7 @@
 package fi.vm.yti.datamodel.api.v2.endpoint;
 
-import fi.vm.yti.datamodel.api.v2.dto.GroupManagementUserRequestDTO;
-import fi.vm.yti.datamodel.api.v2.service.GroupManagementService;
+import fi.vm.yti.common.dto.GroupManagementUserRequestDTO;
+import fi.vm.yti.common.service.GroupManagementService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;

@@ -2,6 +2,7 @@ package fi.vm.yti.datamodel.api.v2.repository;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import fi.vm.yti.common.repository.BaseRepository;
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
 import org.apache.jena.arq.querybuilder.ConstructBuilder;
 import org.apache.jena.arq.querybuilder.ExprFactory;
@@ -21,16 +22,14 @@ import org.springframework.stereotype.Repository;
 import java.util.concurrent.TimeUnit;
 
 @Repository
-public class CoreRepository extends BaseRepository{
+public class CoreRepository extends BaseRepository {
 
     private final Logger logger = LoggerFactory.getLogger(CoreRepository.class);
 
     private final Cache<String, Model> modelCache;
 
-
-
-    public CoreRepository(@Value(("${endpoint}")) String endpoint,
-                          @Value("${model.cache.expiration:1800}") Long cacheExpireTime){
+    public CoreRepository(@Value(("${fuseki.url}")) String endpoint,
+                          @Value("${fuseki.cache.common.expiration:1800}") Long cacheExpireTime){
         super(RDFConnection.connect(endpoint + "/core/get"),
               RDFConnection.connect(endpoint + "/core/data"),
               RDFConnection.connect(endpoint + "/core/sparql"),

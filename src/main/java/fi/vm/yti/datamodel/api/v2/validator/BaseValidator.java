@@ -1,6 +1,9 @@
 package fi.vm.yti.datamodel.api.v2.validator;
 
-import fi.vm.yti.datamodel.api.v2.dto.*;
+import fi.vm.yti.common.enums.Status;
+import fi.vm.yti.datamodel.api.v2.dto.BaseDTO;
+import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
+import fi.vm.yti.datamodel.api.v2.dto.ModelMetaData;
 import jakarta.validation.ConstraintValidatorContext;
 
 import java.lang.annotation.Annotation;

@@ -1,9 +1,9 @@
 package fi.vm.yti.datamodel.api.v2.service;
 
-import fi.vm.yti.datamodel.api.mapper.MapperTestUtils;
+import fi.vm.yti.common.properties.SuomiMeta;
+import fi.vm.yti.datamodel.api.v2.mapper.MapperTestUtils;
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
 import fi.vm.yti.datamodel.api.v2.properties.DCAP;
-import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
 import fi.vm.yti.datamodel.api.v2.validator.release.LibraryReferenceValidator;
@@ -13,7 +13,6 @@ import org.apache.jena.query.QuerySolution;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.ResourceFactory;
-
 import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.OWL2;
 import org.apache.jena.vocabulary.RDF;
@@ -28,9 +27,10 @@ import org.topbraid.shacl.vocabulary.SH;
 
 import java.util.function.Consumer;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
-import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(SpringExtension.class)
 @Import({

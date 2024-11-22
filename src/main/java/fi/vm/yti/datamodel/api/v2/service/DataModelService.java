@@ -1,21 +1,26 @@
 package fi.vm.yti.datamodel.api.v2.service;
 
-import fi.vm.yti.datamodel.api.security.AuthorizationManager;
+import fi.vm.yti.common.enums.GraphType;
+import fi.vm.yti.common.enums.Status;
+import fi.vm.yti.common.exception.ResourceNotFoundException;
+import fi.vm.yti.common.properties.SuomiMeta;
+import fi.vm.yti.common.service.AuditService;
+import fi.vm.yti.common.service.GroupManagementService;
+import fi.vm.yti.common.util.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
-import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
-import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.mapper.ModelMapper;
 import fi.vm.yti.datamodel.api.v2.mapper.ResourceMapper;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexResource;
-import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
-import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
+import fi.vm.yti.datamodel.api.v2.security.DataModelAuthorizationManager;
+import fi.vm.yti.datamodel.api.v2.utils.DataModelMapperUtils;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelUtils;
 import fi.vm.yti.datamodel.api.v2.utils.SemVer;
 import fi.vm.yti.datamodel.api.v2.validator.ValidationConstants;
 import fi.vm.yti.security.AuthenticatedUserProvider;
+import fi.vm.yti.security.Role;
 import org.apache.jena.arq.querybuilder.ConstructBuilder;
 import org.apache.jena.arq.querybuilder.SelectBuilder;
 import org.apache.jena.arq.querybuilder.UpdateBuilder;
@@ -50,25 +55,25 @@ public class DataModelService {
     private final Logger logger = LoggerFactory.getLogger(DataModelService.class);
 
     private final CoreRepository coreRepository;
-    private final AuthorizationManager authorizationManager;
+    private final DataModelAuthorizationManager authorizationManager;
     private final GroupManagementService groupManagementService;
     private final ModelMapper mapper;
     private final TerminologyService terminologyService;
     private final VisualizationService visualisationService;
     private final CodeListService codeListService;
-    private final OpenSearchIndexer openSearchIndexer;
+    private final IndexService indexService;
     private final AuthenticatedUserProvider userProvider;
     private final DataModelSubscriptionService dataModelSubscriptionService;
 
     @Autowired
     public DataModelService(CoreRepository coreRepository,
-                            AuthorizationManager authorizationManager,
+                            DataModelAuthorizationManager authorizationManager,
                             GroupManagementService groupManagementService,
                             ModelMapper modelMapper,
                             TerminologyService terminologyService,
                             VisualizationService visualizationService,
                             CodeListService codeListService,
-                            OpenSearchIndexer openSearchIndexer,
+                            IndexService indexService,
                             AuthenticatedUserProvider userProvider, DataModelSubscriptionService dataModelSubscriptionService) {
         this.coreRepository = coreRepository;
         this.authorizationManager = authorizationManager;
@@ -77,7 +82,7 @@ public class DataModelService {
         this.terminologyService = terminologyService;
         this.visualisationService = visualizationService;
         this.codeListService = codeListService;
-        this.openSearchIndexer = openSearchIndexer;
+        this.indexService = indexService;
         this.userProvider = userProvider;
         this.dataModelSubscriptionService = dataModelSubscriptionService;
     }
@@ -85,7 +90,7 @@ public class DataModelService {
     public DataModelInfoDTO getDraft(String prefix) {
         var uri = DataModelURI.createModelURI(prefix);
         var model = coreRepository.fetch(uri.getGraphURI());
-        check(authorizationManager.hasRightToModel(prefix, model));
+        check(authorizationManager.hasRightToModel(prefix, model, true));
         return mapper.mapToDataModelDTO(prefix, model, groupManagementService.mapUser());
     }
 
@@ -117,8 +122,8 @@ public class DataModelService {
         return version;
     }
 
-    public URI create(DataModelDTO dto, ModelType modelType) throws URISyntaxException {
-        check(authorizationManager.hasRightToAnyOrganization(dto.getOrganizations()));
+    public URI create(DataModelDTO dto, GraphType modelType) throws URISyntaxException {
+        check(authorizationManager.hasRightToAnyOrganization(dto.getOrganizations(), Role.DATA_MODEL_EDITOR));
         var graphUri = DataModelURI.createModelURI(dto.getPrefix()).getGraphURI();
 
         terminologyService.resolveTerminology(dto.getTerminologies());
@@ -129,7 +134,7 @@ public class DataModelService {
         coreRepository.put(graphUri, jenaModel);
 
         var indexModel = mapper.mapToIndexModel(graphUri, jenaModel);
-        openSearchIndexer.createModelToIndex(indexModel);
+        indexService.createModelToIndex(indexModel);
         auditService.log(AuditService.ActionType.CREATE, graphUri, userProvider.getUser());
         return new URI(graphUri);
     }
@@ -174,7 +179,7 @@ public class DataModelService {
         coreRepository.put(graphUri, model);
 
         var indexModel = mapper.mapToIndexModel(graphUri, model);
-        openSearchIndexer.updateModelToIndex(indexModel);
+        indexService.updateModelToIndex(indexModel);
         auditService.log(AuditService.ActionType.UPDATE, graphUri, userProvider.getUser());
     }
 
@@ -216,8 +221,8 @@ public class DataModelService {
             dataModelSubscriptionService.deleteTopic(prefix);
         }
 
-        openSearchIndexer.deleteModelFromIndex(graphUri);
-        openSearchIndexer.removeResourceIndexesByDataModel(dataModelURI.getModelURI(), version);
+        indexService.deleteModelFromIndex(graphUri);
+        indexService.removeResourceIndexesByDataModel(dataModelURI.getModelURI(), version);
         auditService.log(AuditService.ActionType.DELETE, graphUri, userProvider.getUser());
     }
 
@@ -334,7 +339,7 @@ public class DataModelService {
         updateDraftReferences(modelUri, version);
 
         var newVersion = mapper.mapToIndexModel(modelUri, model);
-        openSearchIndexer.createModelToIndex(newVersion);
+        indexService.createModelToIndex(newVersion);
         var list = new ArrayList<IndexResource>();
         var resources = model.listSubjectsWithProperty(RDF.type, OWL.Class)
                 .andThen(model.listSubjectsWithProperty(RDF.type, OWL.ObjectProperty))
@@ -342,7 +347,7 @@ public class DataModelService {
                 .andThen(model.listSubjectsWithProperty(RDF.type, SH.NodeShape))
                 .filterDrop(RDFNode::isAnon);
         resources.forEach(resource -> list.add(ResourceMapper.mapToIndexResource(model, resource.getURI())));
-        openSearchIndexer.bulkInsert(OpenSearchIndexer.OPEN_SEARCH_INDEX_RESOURCE, list);
+        indexService.bulkInsert(IndexService.OPEN_SEARCH_INDEX_RESOURCE, list);
         visualisationService.saveVersionedPositions(prefix, version);
         auditService.log(AuditService.ActionType.CREATE, modelVersionURI.getGraphURI(), userProvider.getUser());
 
@@ -392,7 +397,7 @@ public class DataModelService {
         coreRepository.put(uri.getGraphURI(), model);
 
         var indexModel = mapper.mapToIndexModel(uri.getModelURI(), model);
-        openSearchIndexer.updateModelToIndex(indexModel);
+        indexService.updateModelToIndex(indexModel);
         auditService.log(AuditService.ActionType.UPDATE, uri.getGraphURI(), userProvider.getUser());
     }
 
@@ -437,13 +442,13 @@ public class DataModelService {
         var user = userProvider.getUser();
         check(authorizationManager.hasRightToModel(oldPrefix, model));
 
-        var copy = MapperUtils.mapCopyModel(model, user, oldURI, newURI);
+        var copy = DataModelMapperUtils.mapCopyModel(model, user, oldURI, newURI);
 
         coreRepository.put(newURI.getGraphURI(), copy);
         visualisationService.copyVisualization(oldPrefix, version, newPrefix);
 
-        openSearchIndexer.createModelToIndex(mapper.mapToIndexModel(newURI.getModelURI(), copy));
-        openSearchIndexer.indexGraphResource(copy);
+        indexService.createModelToIndex(mapper.mapToIndexModel(newURI.getModelURI(), copy));
+        indexService.indexGraphResource(copy);
 
         auditService.log(AuditService.ActionType.CREATE, newURI.getGraphURI(), userProvider.getUser());
 

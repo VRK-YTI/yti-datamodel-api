@@ -1,10 +1,13 @@
 package fi.vm.yti.datamodel.api.v2.dto;
 
+import fi.vm.yti.common.dto.OrganizationDTO;
+import fi.vm.yti.common.dto.ResourceCommonInfoDTO;
+import fi.vm.yti.common.enums.Status;
+
 import java.util.Map;
 import java.util.Set;
 
-public class ResourceInfoBaseDTO extends ResourceCommonDTO {
-    private Map<String, String> label;
+public class ResourceInfoBaseDTO extends ResourceCommonInfoDTO {
     private String editorialNote;
     private Status status;
     private ConceptDTO subject;
@@ -13,14 +16,6 @@ public class ResourceInfoBaseDTO extends ResourceCommonDTO {
     private String curie;
     private Set<OrganizationDTO> contributor;
     private String contact;
-
-    public Map<String, String> getLabel() {
-        return label;
-    }
-
-    public void setLabel(Map<String, String> label) {
-        this.label = label;
-    }
 
     public String getEditorialNote() {
         return editorialNote;

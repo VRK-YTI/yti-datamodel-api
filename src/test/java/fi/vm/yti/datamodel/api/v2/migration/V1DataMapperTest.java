@@ -1,7 +1,6 @@
 package fi.vm.yti.datamodel.api.v2.migration;
 
-import fi.vm.yti.datamodel.api.mapper.MapperTestUtils;
-import fi.vm.yti.datamodel.api.migration.V1DataMapper;
+import fi.vm.yti.datamodel.api.v2.mapper.MapperTestUtils;
 import fi.vm.yti.datamodel.api.v2.dto.AssociationRestriction;
 import fi.vm.yti.datamodel.api.v2.dto.AttributeRestriction;
 import org.apache.jena.vocabulary.OWL;

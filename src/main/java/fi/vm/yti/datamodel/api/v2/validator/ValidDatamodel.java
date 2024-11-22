@@ -1,8 +1,9 @@
 package fi.vm.yti.datamodel.api.v2.validator;
 
-import fi.vm.yti.datamodel.api.v2.dto.ModelType;
+import fi.vm.yti.common.enums.GraphType;
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -24,6 +25,6 @@ public @interface ValidDatamodel {
     Class<?>[] groups() default {};
 
     boolean updateModel() default false;
-    ModelType modelType();
+    GraphType modelType();
     Class<? extends Payload>[] payload() default {};
 }

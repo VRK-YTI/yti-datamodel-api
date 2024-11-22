@@ -1,9 +1,8 @@
 package fi.vm.yti.datamodel.api.v2.opensearch;
 
-import fi.vm.yti.datamodel.api.index.OpenSearchUtils;
-import fi.vm.yti.datamodel.api.mapper.MapperTestUtils;
-import fi.vm.yti.datamodel.api.v2.dto.ModelType;
-import fi.vm.yti.datamodel.api.v2.dto.Status;
+import fi.vm.yti.common.enums.GraphType;
+import fi.vm.yti.common.enums.Status;
+import fi.vm.yti.datamodel.api.v2.mapper.MapperTestUtils;
 import fi.vm.yti.datamodel.api.v2.opensearch.dto.ModelSearchRequest;
 import fi.vm.yti.datamodel.api.v2.opensearch.queries.ModelQueryFactory;
 import org.junit.jupiter.api.Test;
@@ -22,7 +21,7 @@ class ModelQueryFactoryTest {
         var request = new ModelSearchRequest();
         request.setQuery("test query");
         request.setGroups(Set.of("P11", "P1"));
-        request.setType(Set.of(ModelType.PROFILE));
+        request.setType(Set.of(GraphType.PROFILE));
         request.setSearchResources(true);
         request.setOrganizations(Set.of(UUID.fromString("7d3a3c00-5a6b-489b-a3ed-63bb58c26a63")));
         request.setLanguage("en");
@@ -49,7 +48,7 @@ class ModelQueryFactoryTest {
 
         assertEquals("Page from value not matching", 0, modelQuery.from());
         assertEquals("Page size value not matching", 10, modelQuery.size());
-        assertEquals("Label should be sorted in finnish by default", "label.fi.keyword", modelQuery.sort().get(0).field().field());
+        assertEquals("Label should be sorted in finnish by default", "label.fi.sortKey", modelQuery.sort().get(0).field().field());
 
     }
 

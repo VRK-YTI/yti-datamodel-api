@@ -1,15 +1,18 @@
 package fi.vm.yti.datamodel.api.v2.service;
 
-import fi.vm.yti.datamodel.api.security.AuthorizationManager;
+import fi.vm.yti.common.Constants;
+import fi.vm.yti.common.exception.JenaQueryException;
+import fi.vm.yti.common.service.AuditService;
+import fi.vm.yti.common.util.MapperUtils;
+import fi.vm.yti.datamodel.api.v2.security.DataModelAuthorizationManager;
+import fi.vm.yti.datamodel.api.v2.utils.DataModelMapperUtils;
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
 import fi.vm.yti.datamodel.api.v2.dto.ResourceReferenceDTO;
 import fi.vm.yti.datamodel.api.v2.dto.ResourceType;
 import fi.vm.yti.datamodel.api.v2.dto.UriDTO;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
-import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
-import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
+import fi.vm.yti.common.exception.ResourceNotFoundException;
 import fi.vm.yti.datamodel.api.v2.mapper.ResourceMapper;
-import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import fi.vm.yti.datamodel.api.v2.repository.ImportsRepository;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
@@ -29,7 +32,6 @@ import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.ResourceFactory;
-import org.apache.jena.sparql.lang.sparql_11.ParseException;
 import org.apache.jena.sparql.path.PathFactory;
 import org.apache.jena.vocabulary.*;
 import org.slf4j.Logger;
@@ -52,24 +54,23 @@ abstract class BaseResourceService {
 
     private final CoreRepository coreRepository;
     private final ImportsRepository importsRepository;
-    private final AuthorizationManager authorizationManager;
+    private final DataModelAuthorizationManager authorizationManager;
     private final AuthenticatedUserProvider userProvider;
-    private final OpenSearchIndexer openSearchIndexer;
+    private final IndexService indexService;
 
     BaseResourceService(CoreRepository coreRepository,
                         ImportsRepository importsRepository,
-                        AuthorizationManager authorizationManager,
-                        OpenSearchIndexer openSearchIndexer,
+                        DataModelAuthorizationManager authorizationManager,
+                        IndexService indexService,
                         AuditService auditService,
                         AuthenticatedUserProvider userProvider) {
         this.coreRepository = coreRepository;
         this.importsRepository = importsRepository;
         this.authorizationManager = authorizationManager;
-        this.openSearchIndexer = openSearchIndexer;
+        this.indexService = indexService;
         this.auditService = auditService;
         this.userProvider = userProvider;
     }
-
 
     public void delete(String prefix, String resourceIdentifier) {
         var uri = DataModelURI.createResourceURI(prefix, resourceIdentifier);
@@ -92,8 +93,8 @@ abstract class BaseResourceService {
             throw new MappingError("Cannot remove because other resources refer to it: " + refList);
         }
 
-        coreRepository.deleteResource(uri);
-        openSearchIndexer.deleteResourceFromIndex(resourceUri);
+        coreRepository.deleteResource(uri.getResourceURI());
+        indexService.deleteResourceFromIndex(resourceUri);
         auditService.log(AuditService.ActionType.DELETE, resourceUri, userProvider.getUser());
     }
 
@@ -125,21 +126,21 @@ abstract class BaseResourceService {
         check(authorizationManager.hasRightToModel(prefix, model));
 
 
-        var newResource = MapperUtils.renameResource(model.getResource(resourceURI), newIdentifier);
+        var newResource = DataModelMapperUtils.renameResource(model.getResource(resourceURI), newIdentifier);
         coreRepository.put(graphURI, model);
 
         // rename visualization resource as well
         var visualizationModelUri = ModelConstants.MODEL_POSITIONS_NAMESPACE + prefix;
-        var visualizationResourceUri = visualizationModelUri + ModelConstants.RESOURCE_SEPARATOR + oldIdentifier;
+        var visualizationResourceUri = visualizationModelUri + Constants.RESOURCE_SEPARATOR + oldIdentifier;
         if(coreRepository.resourceExistsInGraph(visualizationModelUri, visualizationResourceUri)) {
             var visualizationModel = coreRepository.fetch(visualizationModelUri);
-            MapperUtils.renameResource(visualizationModel.getResource(visualizationResourceUri), newIdentifier);
+            DataModelMapperUtils.renameResource(visualizationModel.getResource(visualizationResourceUri), newIdentifier);
             coreRepository.put(visualizationModelUri, visualizationModel);
         }
 
 
-        openSearchIndexer.deleteResourceFromIndex(resourceURI);
-        openSearchIndexer.createResourceToIndex(ResourceMapper.mapToIndexResource(model, newResourceURI));
+        indexService.deleteResourceFromIndex(resourceURI);
+        indexService.createResourceToIndex(ResourceMapper.mapToIndexResource(model, newResourceURI));
         auditService.log(AuditService.ActionType.UPDATE, resourceURI, userProvider.getUser());
         return new URI(newResource.getURI());
     }
@@ -192,13 +193,13 @@ abstract class BaseResourceService {
             var uri = iterator.next();
 
             // fetch resources without version number
-            if(uri.startsWith(ModelConstants.SUOMI_FI_NAMESPACE)) {
+            if(uri.startsWith(Constants.DATA_MODEL_NAMESPACE)) {
                 uri = DataModelUtils.removeVersionFromURI(uri);
             }
             var resource = ResourceFactory.createResource(uri);
             for(var pred : predicates) {
                 var obj = "?" + pred.getLocalName() + count;
-                if(uri.startsWith(ModelConstants.SUOMI_FI_NAMESPACE)) {
+                if(uri.startsWith(Constants.DATA_MODEL_NAMESPACE)) {
                     coreBuilder.addConstruct(resource, pred, obj);
                     coreBuilder.addOptional(resource, pred, obj);
                 } else {
@@ -255,9 +256,9 @@ abstract class BaseResourceService {
         coreRepository.put(graphUri, model);
         var indexClass = ResourceMapper.mapToIndexResource(model, resourceUri);
         if(update) {
-            openSearchIndexer.updateResourceToIndex(indexClass);
+            indexService.updateResourceToIndex(indexClass);
         } else {
-            openSearchIndexer.createResourceToIndex(indexClass);
+            indexService.createResourceToIndex(indexClass);
         }
     }
 
@@ -321,7 +322,7 @@ abstract class BaseResourceService {
                             .addWhere("?model", DCTerms.contributor, "?contributor")
                             .addOptional("?model", OWL.versionInfo, "?version")
                     );
-        } catch (ParseException e) {
+        } catch (Exception e) {
             LOG.error(e.getMessage(), e);
             throw new JenaQueryException("Error getting resource references: " + uri);
         }
@@ -348,7 +349,7 @@ abstract class BaseResourceService {
                 ? row.get("version").toString()
                 : null;
         var contributor = row.get("contributor").toString()
-                .replace(ModelConstants.URN_UUID, "");
+                .replace(Constants.URN_UUID, "");
 
         // skip rows without label and draft resources if user has no permissions
         if (row.get("label") == null

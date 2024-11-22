@@ -1,13 +1,15 @@
 package fi.vm.yti.datamodel.api.v2.service;
 
-import fi.vm.yti.datamodel.api.security.AuthorizationManager;
+import fi.vm.yti.common.Constants;
+import fi.vm.yti.common.properties.SuomiMeta;
+import fi.vm.yti.common.service.AuditService;
+import fi.vm.yti.common.util.MapperUtils;
+import fi.vm.yti.datamodel.api.v2.security.DataModelAuthorizationManager;
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
 import fi.vm.yti.datamodel.api.v2.dto.visualization.*;
-import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
-import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
+import fi.vm.yti.common.exception.ResourceNotFoundException;
 import fi.vm.yti.datamodel.api.v2.mapper.VisualizationMapper;
 import fi.vm.yti.datamodel.api.v2.properties.DCAP;
-import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelUtils;
@@ -33,13 +35,13 @@ public class VisualizationService {
 
     private final ResourceService resourceService;
     private final CoreRepository coreRepository;
-    private final AuthorizationManager authorizationManager;
+    private final DataModelAuthorizationManager authorizationManager;
     private final AuthenticatedUserProvider userProvider;
     private final SearchIndexService searchIndexService;
 
     public VisualizationService(ResourceService resourceService,
                                 CoreRepository coreRepository,
-                                AuthorizationManager authorizationManager,
+                                DataModelAuthorizationManager authorizationManager,
                                 AuthenticatedUserProvider userProvider,
                                 SearchIndexService searchIndexService) {
         this.resourceService = resourceService;
@@ -145,7 +147,7 @@ public class VisualizationService {
 
     public void savePositionData(String prefix, List<PositionDataDTO> positions, String version) {
         var uri = DataModelURI.createModelURI(prefix, version);
-        var positionBaseURI = ModelConstants.MODEL_POSITIONS_NAMESPACE + prefix + ModelConstants.RESOURCE_SEPARATOR;
+        var positionBaseURI = ModelConstants.MODEL_POSITIONS_NAMESPACE + prefix + Constants.RESOURCE_SEPARATOR;
         var positionGraphURI = getPositionGraphURI(prefix, version);
 
         var dataModel = coreRepository.fetch(uri.getGraphURI());

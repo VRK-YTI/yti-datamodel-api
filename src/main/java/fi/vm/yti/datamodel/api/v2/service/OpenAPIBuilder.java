@@ -1,10 +1,10 @@
 package fi.vm.yti.datamodel.api.v2.service;
 
-import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
-import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
+import fi.vm.yti.common.Constants;
+import fi.vm.yti.common.properties.SuomiMeta;
+import fi.vm.yti.common.util.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.properties.DCAP;
 import fi.vm.yti.datamodel.api.v2.properties.HTTP;
-import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
 import io.swagger.v3.core.util.Json;
 import io.swagger.v3.oas.models.*;
@@ -19,12 +19,17 @@ import io.swagger.v3.oas.models.responses.ApiResponses;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.Resource;
-import org.apache.jena.vocabulary.*;
+import org.apache.jena.vocabulary.OWL;
+import org.apache.jena.vocabulary.OWL2;
+import org.apache.jena.vocabulary.RDF;
+import org.apache.jena.vocabulary.RDFS;
 import org.springframework.web.util.UriComponentsBuilder;
 import org.topbraid.shacl.vocabulary.SH;
 
 import java.io.StringWriter;
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -80,7 +85,7 @@ public class OpenAPIBuilder {
         var openAPI = new OpenAPI();
 
         final var lang = language == null
-                ? ModelConstants.DEFAULT_LANGUAGE
+                ? Constants.DEFAULT_LANGUAGE
                 : language;
 
         var nodeShapes = model.listSubjectsWithProperty(RDF.type, SH.NodeShape);

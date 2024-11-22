@@ -2,6 +2,7 @@ package fi.vm.yti.datamodel.api.v2.validator;
 
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;

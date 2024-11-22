@@ -72,7 +72,7 @@ dependencies {
     implementation "org.springframework.boot:spring-boot-starter-webflux"
 
     implementation "fi.vm.yti:yti-spring-security:0.4.0"
-    implementation "fi.vm.yti:yti-spring-migration:0.2.0"
+    implementation "fi.vm.yti:yti-spring-migration:0.3.0"
 
     implementation "org.springframework.cloud:spring-cloud-starter-config"
 
@@ -80,20 +80,22 @@ dependencies {
     implementation "net.logstash.logback:logstash-logback-encoder:7.2"
     implementation "jakarta.validation:jakarta.validation-api:3.0.2"
 
-    implementation "org.opensearch.client:opensearch-java:2.2.0"
-    implementation "org.opensearch.client:opensearch-rest-client:2.3.0"
+    implementation "org.opensearch.client:opensearch-java:2.9.1"
+    implementation "org.opensearch.client:opensearch-rest-client:2.12.0"
     implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:2.0.2"
 
     implementation "org.topbraid:shacl:1.4.2"
-    implementation "org.apache.jena:jena-core:4.6.1"
-    implementation "org.apache.jena:jena-arq:4.6.1"
-    implementation "org.apache.jena:jena-rdfconnection:4.6.1"
-    implementation "org.apache.jena:jena-querybuilder:4.6.1"
+    implementation "org.apache.jena:jena-core:4.10.0"
+    implementation "org.apache.jena:jena-arq:4.10.0"
+    implementation "org.apache.jena:jena-rdfconnection:4.10.0"
+    implementation "org.apache.jena:jena-querybuilder:4.10.0"
     implementation "com.google.guava:guava:31.1-jre"
 
     // library for programmatically generating json schema
     // NOTE: the project is in maintenance mode
     implementation "com.github.erosb:everit-json-schema:1.14.4"
+
+    implementation "fi.vm.yti:yti-common-backend:0.3.0-SNAPSHOT"
 
     compileOnly "org.springframework.boot:spring-boot-configuration-processor"
     compileOnly "org.jetbrains:annotations:23.0.0"

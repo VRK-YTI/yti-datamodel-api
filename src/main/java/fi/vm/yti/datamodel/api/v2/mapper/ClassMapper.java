@@ -1,10 +1,15 @@
 package fi.vm.yti.datamodel.api.v2.mapper;
 
+import fi.vm.yti.common.Constants;
+import fi.vm.yti.common.dto.ResourceCommonInfoDTO;
+import fi.vm.yti.common.enums.Status;
+import fi.vm.yti.common.properties.SuomiMeta;
+import fi.vm.yti.common.util.MapperUtils;
+import fi.vm.yti.datamodel.api.v2.utils.DataModelMapperUtils;
 import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexResource;
 import fi.vm.yti.datamodel.api.v2.properties.HTTP;
-import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelUtils;
 import fi.vm.yti.security.YtiUser;
@@ -22,7 +27,7 @@ import java.util.stream.Collectors;
 
 public class ClassMapper {
 
-    private ClassMapper(){
+    private ClassMapper() {
         //Static class
     }
 
@@ -32,30 +37,30 @@ public class ClassMapper {
         logger.info("Adding class to {}", uri.getModelURI());
         var modelResource = model.getResource(uri.getModelURI());
 
-        var resource = MapperUtils.addCommonResourceInfo(model, uri, dto);
+        var resource = DataModelMapperUtils.addCommonResourceInfo(model, uri, dto);
         MapperUtils.addCreationMetadata(resource, user);
 
         resource.addProperty(RDF.type, OWL.Class);
 
         //Equivalent class
-        dto.getEquivalentClass().forEach(eq -> MapperUtils.addResourceRelationship(modelResource, resource, OWL.equivalentClass, eq));
+        dto.getEquivalentClass().forEach(eq -> DataModelMapperUtils.addResourceRelationship(modelResource, resource, OWL.equivalentClass, eq));
 
-        if(dto.getSubClassOf().isEmpty()){
+        if (dto.getSubClassOf().isEmpty()) {
             resource.addProperty(RDFS.subClassOf, OWL.Thing); //Add OWL:Thing if nothing else is specified
-        }else{
-            dto.getSubClassOf().forEach(sub -> MapperUtils.addResourceRelationship(modelResource, resource, RDFS.subClassOf, sub));
+        } else {
+            dto.getSubClassOf().forEach(sub -> DataModelMapperUtils.addResourceRelationship(modelResource, resource, RDFS.subClassOf, sub));
         }
-        dto.getDisjointWith().forEach(disjoint -> MapperUtils.addResourceRelationship(modelResource, resource, OWL.disjointWith, disjoint));
+        dto.getDisjointWith().forEach(disjoint -> DataModelMapperUtils.addResourceRelationship(modelResource, resource, OWL.disjointWith, disjoint));
         modelResource.addProperty(DCTerms.hasPart, resource);
 
-        MapperUtils.addTerminologyReference(dto, modelResource);
+        DataModelMapperUtils.addTerminologyReference(dto, modelResource);
     }
 
     public static void createNodeShapeAndMapToModel(DataModelURI uri, Model model, NodeShapeDTO dto, YtiUser user) {
         logger.info("Adding node shape to {}", uri.getGraphURI());
 
         // var uri = DataModelURI.createResourceURI()
-        var nodeShapeResource = MapperUtils.addCommonResourceInfo(model, uri, dto);
+        var nodeShapeResource = DataModelMapperUtils.addCommonResourceInfo(model, uri, dto);
         MapperUtils.addCreationMetadata(nodeShapeResource, user);
 
         nodeShapeResource.addProperty(RDF.type, SH.NodeShape);
@@ -65,11 +70,11 @@ public class ClassMapper {
         if (dto.getTargetClass() == null && dto.getTargetNode() == null) {
             nodeShapeResource.addProperty(SH.targetClass, OWL.Thing);
         } else {
-            MapperUtils.addResourceRelationship(modelResource, nodeShapeResource, SH.targetClass, dto.getTargetClass());
+            DataModelMapperUtils.addResourceRelationship(modelResource, nodeShapeResource, SH.targetClass, dto.getTargetClass());
         }
-        MapperUtils.addResourceRelationship(modelResource, nodeShapeResource, SH.node, dto.getTargetNode());
+        DataModelMapperUtils.addResourceRelationship(modelResource, nodeShapeResource, SH.node, dto.getTargetNode());
         MapperUtils.addOptionalStringProperty(nodeShapeResource, HTTP.API_PATH, dto.getApiPath());
-        MapperUtils.addTerminologyReference(dto, modelResource);
+        DataModelMapperUtils.addTerminologyReference(dto, modelResource);
     }
 
     public static List<String> mapPlaceholderPropertyShapes(Model applicationProfileModel, String classURI, List<IndexResource> properties,
@@ -112,8 +117,7 @@ public class ClassMapper {
                 MapperUtils.addLocalizedProperty(languages,
                         labelValue,
                         propertyShapeResource,
-                        RDFS.label,
-                        applicationProfileModel);
+                        RDFS.label);
             }
 
             propertyShapeResource.addProperty(SH.path, ResourceFactory.createResource(property.getId()))
@@ -149,7 +153,7 @@ public class ClassMapper {
         logger.info("Updating class in graph {}", modelUri);
         var modelResource = model.getResource(modelUri);
 
-        MapperUtils.updateCommonResourceInfo(model, classResource, modelResource, classDTO);
+        DataModelMapperUtils.updateCommonResourceInfo(classResource, modelResource, classDTO);
 
         var eqProps = classResource.listProperties(OWL.equivalentClass)
                 .filterDrop(p -> p.getObject().isAnon())
@@ -157,19 +161,19 @@ public class ClassMapper {
         model.remove(eqProps);
 
         classDTO.getEquivalentClass().forEach(eq ->
-                MapperUtils.addResourceRelationship(modelResource, classResource, OWL.equivalentClass, eq));
+                DataModelMapperUtils.addResourceRelationship(modelResource, classResource, OWL.equivalentClass, eq));
 
         var subClassOf = classDTO.getSubClassOf();
         classResource.removeAll(RDFS.subClassOf);
-        if(subClassOf.isEmpty()){
+        if (subClassOf.isEmpty()) {
             classResource.addProperty(RDFS.subClassOf, OWL.Thing); //Add OWL:Thing if no subClassOf is specified
-        }else{
-            subClassOf.forEach(sub -> MapperUtils.addResourceRelationship(modelResource, classResource, RDFS.subClassOf, sub));
+        } else {
+            subClassOf.forEach(sub -> DataModelMapperUtils.addResourceRelationship(modelResource, classResource, RDFS.subClassOf, sub));
         }
 
         classResource.removeAll(OWL.disjointWith);
         classDTO.getDisjointWith().forEach(disjoint ->
-                MapperUtils.addResourceRelationship(modelResource, classResource, OWL.disjointWith, disjoint));
+                DataModelMapperUtils.addResourceRelationship(modelResource, classResource, OWL.disjointWith, disjoint));
         MapperUtils.addUpdateMetadata(classResource, user);
     }
 
@@ -177,7 +181,7 @@ public class ClassMapper {
         logger.info("Updating node shape in graph {}", graph);
         var modelResource = model.getResource(graph);
 
-        MapperUtils.updateCommonResourceInfo(model, classResource, modelResource, nodeShapeDTO);
+        DataModelMapperUtils.updateCommonResourceInfo(classResource, modelResource, nodeShapeDTO);
 
         // either sh:node or sh:targetClass must be defined. If not, add owl:Thing as targetClass
         if (nodeShapeDTO.getTargetClass() == null && nodeShapeDTO.getTargetNode() == null) {
@@ -185,13 +189,13 @@ public class ClassMapper {
         } else if (nodeShapeDTO.getTargetClass() == null && nodeShapeDTO.getTargetNode() != null) {
             classResource.removeAll(SH.targetClass);
         } else {
-            MapperUtils.updateUriPropertyAndAddReferenceNamespaces(modelResource, classResource, SH.targetClass, nodeShapeDTO.getTargetClass());
+            DataModelMapperUtils.updateUriPropertyAndAddReferenceNamespaces(modelResource, classResource, SH.targetClass, nodeShapeDTO.getTargetClass());
         }
 
         if (nodeShapeDTO.getTargetNode() == null) {
             classResource.removeAll(SH.node);
         } else {
-            MapperUtils.updateUriPropertyAndAddReferenceNamespaces(modelResource, classResource, SH.node, nodeShapeDTO.getTargetNode());
+            DataModelMapperUtils.updateUriPropertyAndAddReferenceNamespaces(modelResource, classResource, SH.node, nodeShapeDTO.getTargetNode());
         }
 
         classResource.removeAll(SH.property);
@@ -203,30 +207,30 @@ public class ClassMapper {
     /**
      * Map model with given prefix and class identifier
      *
-     * @param model Model
-     * @param uri DataModelURI
-     * @param orgModel Model of organisations
+     * @param model           Model
+     * @param uri             DataModelURI
+     * @param orgModel        Model of organisations
      * @param hasRightToModel does current user have right to model
      * @return Class DTO
      */
     public static ClassInfoDTO mapToClassDTO(Model model, DataModelURI uri,
                                              Model orgModel,
                                              boolean hasRightToModel,
-                                             Consumer<ResourceCommonDTO> userMapper){
+                                             Consumer<ResourceCommonInfoDTO> userMapper) {
         var dto = new ClassInfoDTO();
         var classResource = model.getResource(uri.getResourceURI());
         var modelResource = model.getResource(uri.getModelURI());
 
-        MapperUtils.addCommonResourceDtoInfo(dto, classResource, modelResource, orgModel, hasRightToModel);
+        DataModelMapperUtils.addCommonResourceDtoInfo(dto, classResource, modelResource, orgModel, hasRightToModel);
         MapperUtils.mapCreationInfo(dto, classResource, userMapper);
 
         var subClasses = MapperUtils.arrayPropertyToSet(classResource, RDFS.subClassOf);
         var equivalentClasses = MapperUtils.arrayPropertyToSet(classResource, OWL.equivalentClass);
         var disjointWith = MapperUtils.arrayPropertyToSet(classResource, OWL.disjointWith);
 
-        dto.setSubClassOf(MapperUtils.uriToURIDTOs(subClasses, model));
-        dto.setEquivalentClass(MapperUtils.uriToURIDTOs(equivalentClasses, model));
-        dto.setDisjointWith(MapperUtils.uriToURIDTOs(disjointWith, model));
+        dto.setSubClassOf(DataModelMapperUtils.uriToURIDTOs(subClasses, model));
+        dto.setEquivalentClass(DataModelMapperUtils.uriToURIDTOs(equivalentClasses, model));
+        dto.setDisjointWith(DataModelMapperUtils.uriToURIDTOs(disjointWith, model));
 
         return dto;
     }
@@ -234,7 +238,7 @@ public class ClassMapper {
     public static NodeShapeInfoDTO mapToNodeShapeDTO(Model model, DataModelURI uri,
                                                      Model orgModel,
                                                      boolean hasRightToModel,
-                                                     Consumer<ResourceCommonDTO> userMapper) {
+                                                     Consumer<ResourceCommonInfoDTO> userMapper) {
         var dto = new NodeShapeInfoDTO();
         var nodeShapeURI = uri.getResourceURI();
         var nodeShapeResource = model.getResource(nodeShapeURI);
@@ -242,12 +246,12 @@ public class ClassMapper {
 
         DataModelUtils.addPrefixesToModel(modelResource.getURI(), model);
 
-        MapperUtils.addCommonResourceDtoInfo(dto, nodeShapeResource, modelResource, orgModel, hasRightToModel);
+        DataModelMapperUtils.addCommonResourceDtoInfo(dto, nodeShapeResource, modelResource, orgModel, hasRightToModel);
         MapperUtils.mapCreationInfo(dto, nodeShapeResource, userMapper);
 
-        dto.setTargetClass(MapperUtils.uriToURIDTO(
+        dto.setTargetClass(DataModelMapperUtils.uriToURIDTO(
                 MapperUtils.propertyToString(nodeShapeResource, SH.targetClass), model));
-        dto.setTargetNode(MapperUtils.uriToURIDTO(
+        dto.setTargetNode(DataModelMapperUtils.uriToURIDTO(
                 MapperUtils.propertyToString(nodeShapeResource, SH.node), model));
         dto.setApiPath(MapperUtils.propertyToString(nodeShapeResource, HTTP.API_PATH));
         return dto;
@@ -290,7 +294,7 @@ public class ClassMapper {
 
             resource.ifPresent(res -> {
                 var modelUri = res.getIsDefinedBy();
-                if (modelUri != null && modelUri.startsWith(ModelConstants.SUOMI_FI_NAMESPACE)) {
+                if (modelUri != null && modelUri.startsWith(Constants.DATA_MODEL_NAMESPACE)) {
                     restriction.setModelId(uri.getModelId());
                     var versionIRI = res.getVersionIri();
                     if (versionIRI != null) {
@@ -323,7 +327,7 @@ public class ClassMapper {
             restriction.setIdentifier(MapperUtils.getLiteral(resource, DCTerms.identifier, String.class));
             restriction.setLabel(MapperUtils.localizedPropertyToMap(resource, RDFS.label));
 
-            if (modelUri != null && modelUri.startsWith(ModelConstants.SUOMI_FI_NAMESPACE)) {
+            if (modelUri != null && modelUri.startsWith(Constants.DATA_MODEL_NAMESPACE)) {
                 restriction.setModelId(uri.getModelId());
                 var ns = uri.getModelURI();
                 var versionIRI = MapperUtils.propertyToString(model.getResource(ns), OWL2.versionIRI);
@@ -334,7 +338,7 @@ public class ClassMapper {
             }
 
             restriction.setNote(MapperUtils.localizedPropertyToMap(resource, RDFS.comment));
-            restriction.setCurie(MapperUtils.uriToURIDTO(resource.getURI(), model).getCurie());
+            restriction.setCurie(DataModelMapperUtils.uriToURIDTO(resource.getURI(), model).getCurie());
             var conceptDTO = new ConceptDTO();
             conceptDTO.setConceptURI(MapperUtils.propertyToString(resource, DCTerms.subject));
             restriction.setConcept(conceptDTO);
@@ -477,7 +481,7 @@ public class ClassMapper {
 
         if (existingEqClassResource.hasNext()) {
             var res = existingEqClassResource.next();
-            rdfList = MapperUtils.getList(model, res, OWL.intersectionOf);
+            rdfList = MapperUtils.getList(res, OWL.intersectionOf);
             rdfList.add(restrictionResource);
         } else {
             Resource equvalentClassResource = model.createResource();
@@ -502,7 +506,7 @@ public class ClassMapper {
         // construct new list of anonymous owl:restriction resources,
         // because RDFList.remove() doesn't work as expected in this scenario
         var eq = eqResource.next();
-        var restrictionList = MapperUtils.getList(model, eq, OWL.intersectionOf);
+        var restrictionList = MapperUtils.getList(eq, OWL.intersectionOf);
 
         var remainingNodes = new ArrayList<RDFNode>();
         RDFNode removed = null;
@@ -561,19 +565,19 @@ public class ClassMapper {
         }
 
         var updated = restrictions.stream().filter(r -> {
-            var onProperty = MapperUtils.propertyToString(r, OWL.onProperty);
-            var someValuesFrom = MapperUtils.propertyToString(r, OWL.someValuesFrom);
+                    var onProperty = MapperUtils.propertyToString(r, OWL.onProperty);
+                    var someValuesFrom = MapperUtils.propertyToString(r, OWL.someValuesFrom);
 
-            return oldTarget == null
-                ? restrictionURI.equals(onProperty) && someValuesFrom == null
-                : restrictionURI.equals(onProperty) && oldTarget.equals(someValuesFrom);
-        })
+                    return oldTarget == null
+                            ? restrictionURI.equals(onProperty) && someValuesFrom == null
+                            : restrictionURI.equals(onProperty) && oldTarget.equals(someValuesFrom);
+                })
                 .findFirst()
                 .orElseThrow(() ->
-                new MappingError(String.format("Restriction for %s not found with type %s", restrictionURI, oldTarget)));
+                        new MappingError(String.format("Restriction for %s not found with type %s", restrictionURI, oldTarget)));
 
-        var modelResource = MapperUtils.getModelResourceFromVersion(model);
-        MapperUtils.updateUriPropertyAndAddReferenceNamespaces(modelResource, updated, OWL.someValuesFrom, newTarget);
+        var modelResource = DataModelMapperUtils.getModelResourceFromVersion(model);
+        DataModelMapperUtils.updateUriPropertyAndAddReferenceNamespaces(modelResource, updated, OWL.someValuesFrom, newTarget);
     }
 
     public static List<Resource> getClassRestrictionList(Model model, Resource classResource) {
@@ -583,7 +587,7 @@ public class ClassMapper {
 
         if (eqResource.hasNext()) {
             var eq = eqResource.next();
-            return MapperUtils.getList(model, eq, OWL.intersectionOf)
+            return MapperUtils.getList(eq, OWL.intersectionOf)
                     .mapWith(RDFNode::asResource)
                     .toList();
         } else {

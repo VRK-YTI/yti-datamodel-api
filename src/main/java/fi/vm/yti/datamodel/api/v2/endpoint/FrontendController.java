@@ -1,13 +1,18 @@
 package fi.vm.yti.datamodel.api.v2.endpoint;
 
-import fi.vm.yti.datamodel.api.v2.dto.*;
+import fi.vm.yti.common.Constants;
+import fi.vm.yti.common.dto.OrganizationDTO;
+import fi.vm.yti.common.dto.ServiceCategoryDTO;
+import fi.vm.yti.common.opensearch.SearchResponseDTO;
+import fi.vm.yti.common.service.FrontendService;
+import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
+import fi.vm.yti.datamodel.api.v2.dto.ModelSearchResultDTO;
+import fi.vm.yti.datamodel.api.v2.dto.UriDTO;
 import fi.vm.yti.datamodel.api.v2.opensearch.dto.CountSearchResponse;
 import fi.vm.yti.datamodel.api.v2.opensearch.dto.ModelSearchRequest;
 import fi.vm.yti.datamodel.api.v2.opensearch.dto.ResourceSearchRequest;
-import fi.vm.yti.datamodel.api.v2.opensearch.dto.SearchResponseDTO;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexResource;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexResourceInfo;
-import fi.vm.yti.datamodel.api.v2.service.FrontendService;
 import fi.vm.yti.datamodel.api.v2.service.NamespaceService;
 import fi.vm.yti.datamodel.api.v2.service.SearchIndexService;
 import fi.vm.yti.security.AuthenticatedUserProvider;
@@ -62,7 +67,7 @@ public class FrontendController {
     @ApiResponse(responseCode = "200", description = "Organization list as JSON")
     @GetMapping(path = "/organizations", produces = MediaType.APPLICATION_JSON_VALUE)
     public Collection<OrganizationDTO> getOrganizations(
-            @RequestParam(required = false, defaultValue = ModelConstants.DEFAULT_LANGUAGE) @Parameter(description = "Alphabetical sorting language") String sortLang,
+            @RequestParam(required = false, defaultValue = Constants.DEFAULT_LANGUAGE) @Parameter(description = "Alphabetical sorting language") String sortLang,
             @RequestParam(required = false) @Parameter(description = "Include child organizations in response") boolean includeChildOrganizations) {
         return frontendService.getOrganizations(sortLang, includeChildOrganizations);
     }
@@ -70,7 +75,7 @@ public class FrontendController {
     @Operation(summary = "Get service categories", description = "List of service categories sorted by name")
     @ApiResponse(responseCode = "200", description = "Service categories as JSON")
     @GetMapping(path = "/service-categories", produces = MediaType.APPLICATION_JSON_VALUE)
-    public Collection<ServiceCategoryDTO> getServiceCategories(@RequestParam(required = false, defaultValue = ModelConstants.DEFAULT_LANGUAGE) @Parameter(description = "Alphabetical sorting language") String sortLang) {
+    public Collection<ServiceCategoryDTO> getServiceCategories(@RequestParam(required = false, defaultValue = Constants.DEFAULT_LANGUAGE) @Parameter(description = "Alphabetical sorting language") String sortLang) {
         return frontendService.getServiceCategories(sortLang);
     }
 

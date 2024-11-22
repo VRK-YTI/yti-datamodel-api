@@ -1,8 +1,8 @@
 package fi.vm.yti.datamodel.api.v2.service;
 
+import fi.vm.yti.common.service.AuditService;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.ResolvingException;
 import fi.vm.yti.datamodel.api.v2.mapper.ResourceMapper;
-import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
 import fi.vm.yti.datamodel.api.v2.repository.ImportsRepository;
 import fi.vm.yti.datamodel.api.v2.validator.ValidationConstants;
 import fi.vm.yti.security.AuthenticatedUserProvider;
@@ -28,14 +28,14 @@ public class NamespaceResolver {
     private final Logger logger = LoggerFactory.getLogger(NamespaceResolver.class);
 
     private final ImportsRepository importsRepository;
-    private final OpenSearchIndexer indexer;
+    private final IndexService indexService;
     private final AuthenticatedUserProvider userProvider;
     private static final List<String> ACCEPT_TYPES = List.of("application/rdf+xml;q=1.0", "text/turtle", "application/n-triples", "application/ld+json", "text/trig", "application/n-quads", "application/trix+xml", "application/rdf+thrift", "application/rdf+protobuf");
 
     public NamespaceResolver(ImportsRepository importsRepository,
-                             OpenSearchIndexer indexer, AuthenticatedUserProvider userProvider) {
+                             IndexService indexService, AuthenticatedUserProvider userProvider) {
         this.importsRepository = importsRepository;
-        this.indexer = indexer;
+        this.indexService = indexService;
         this.userProvider = userProvider;
     }
 
@@ -87,7 +87,7 @@ public class NamespaceResolver {
                         .stream().filter(Objects::nonNull)
                         .toList();
                 logger.info("Namespace {} resolved, add {} items to index", namespace, indexResources.size());
-                indexer.bulkInsert(OpenSearchIndexer.OPEN_SEARCH_INDEX_EXTERNAL, indexResources);
+                indexService.bulkInsert(IndexService.OPEN_SEARCH_INDEX_EXTERNAL, indexResources);
 
                 return true;
             }

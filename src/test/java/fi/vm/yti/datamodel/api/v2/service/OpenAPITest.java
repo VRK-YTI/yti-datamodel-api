@@ -1,8 +1,8 @@
 package fi.vm.yti.datamodel.api.v2.service;
 
-import fi.vm.yti.datamodel.api.mapper.MapperTestUtils;
-import org.skyscreamer.jsonassert.JSONAssert;
+import fi.vm.yti.datamodel.api.v2.mapper.MapperTestUtils;
 import org.junit.jupiter.api.Test;
+import org.skyscreamer.jsonassert.JSONAssert;
 import org.skyscreamer.jsonassert.JSONCompareMode;
 
 import java.io.StringWriter;

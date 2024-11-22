@@ -1,7 +1,7 @@
 package fi.vm.yti.datamodel.api.v2.opensearch.index;
 
-import fi.vm.yti.datamodel.api.v2.dto.ModelType;
-import fi.vm.yti.datamodel.api.v2.dto.Status;
+import fi.vm.yti.common.enums.GraphType;
+import fi.vm.yti.common.enums.Status;
 
 import java.util.List;
 import java.util.Map;
@@ -10,7 +10,7 @@ public class DatamodelInfo {
     private Map<String, String> label;
     private List<String> groups;
     private Status status;
-    private ModelType modelType;
+    private GraphType modelType;
     private String uri;
     private String version;
 
@@ -38,11 +38,11 @@ public class DatamodelInfo {
         this.status = status;
     }
 
-    public ModelType getModelType() {
+    public GraphType getModelType() {
         return modelType;
     }
 
-    public void setModelType(ModelType modelType) {
+    public void setModelType(GraphType modelType) {
         this.modelType = modelType;
     }
 

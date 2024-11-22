@@ -1,8 +1,8 @@
 package fi.vm.yti.datamodel.api.v2.endpoint;
 
+import fi.vm.yti.common.service.FrontendService;
 import fi.vm.yti.datamodel.api.v2.opensearch.dto.ModelSearchRequest;
 import fi.vm.yti.datamodel.api.v2.opensearch.dto.ResourceSearchRequest;
-import fi.vm.yti.datamodel.api.v2.service.FrontendService;
 import fi.vm.yti.datamodel.api.v2.service.NamespaceService;
 import fi.vm.yti.datamodel.api.v2.service.SearchIndexService;
 import fi.vm.yti.datamodel.api.v2.validator.ExceptionHandlerAdvice;

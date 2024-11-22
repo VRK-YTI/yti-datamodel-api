@@ -1,16 +1,18 @@
 package fi.vm.yti.datamodel.api.v2.service;
 
-import fi.vm.yti.datamodel.api.security.AuthorizationManager;
+import fi.vm.yti.common.dto.ResourceCommonInfoDTO;
+import fi.vm.yti.common.enums.Status;
+import fi.vm.yti.common.properties.SuomiMeta;
+import fi.vm.yti.common.service.GroupManagementService;
+import fi.vm.yti.common.util.MapperUtils;
+import fi.vm.yti.datamodel.api.v2.security.DataModelAuthorizationManager;
 import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.endpoint.EndpointUtils;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
-import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
-import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
+import fi.vm.yti.common.exception.ResourceNotFoundException;
 import fi.vm.yti.datamodel.api.v2.mapper.ResourceMapper;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexResource;
-import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
 import fi.vm.yti.datamodel.api.v2.properties.DCAP;
-import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import fi.vm.yti.datamodel.api.v2.repository.ImportsRepository;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
@@ -58,7 +60,7 @@ class ResourceServiceTest {
     @MockBean
     ImportsRepository importsRepository;
     @MockBean
-    AuthorizationManager authorizationManager;
+    DataModelAuthorizationManager authorizationManager;
     @MockBean
     GroupManagementService groupManagementService;
     @MockBean
@@ -68,18 +70,18 @@ class ResourceServiceTest {
     @MockBean
     AuthenticatedUserProvider userProvider;
     @MockBean
-    OpenSearchIndexer openSearchIndexer;
+    IndexService indexService;
 
     @Autowired
     ResourceService resourceService;
 
     private static final YtiUser USER = EndpointUtils.mockUser;
-    private final Consumer<ResourceCommonDTO> userMapper = (var dto) -> {};
+    private final Consumer<ResourceCommonInfoDTO> userMapper = (var dto) -> {};
     private final Consumer<ResourceInfoBaseDTO> conceptMapper = (var dto) -> {};
     @BeforeEach
     public void setup() {
         when(authorizationManager.hasRightToAnyOrganization(anyCollection())).thenReturn(true);
-        when(authorizationManager.hasRightToModel(any(), any())).thenReturn(true);
+        when(authorizationManager.hasRightToModel(anyString(), any(Model.class))).thenReturn(true);
         when(userProvider.getUser()).thenReturn(USER);
         when(groupManagementService.mapUser()).thenReturn(userMapper);
         when(terminologyService.mapConcept()).thenReturn(conceptMapper);
@@ -143,7 +145,7 @@ class ResourceServiceTest {
         verify(terminologyService).resolveConcept(anyString());
         verify(terminologyService).resolveConcept(anyString());
         verify(coreRepository).put(anyString(), any(Model.class));
-        verify(openSearchIndexer).createResourceToIndex(any(IndexResource.class));
+        verify(indexService).createResourceToIndex(any(IndexResource.class));
     }
 
     @Test
@@ -167,7 +169,7 @@ class ResourceServiceTest {
         verify(terminologyService).resolveConcept(anyString());
         verify(terminologyService).resolveConcept(anyString());
         verify(coreRepository).put(anyString(), any(Model.class));
-        verify(openSearchIndexer).createResourceToIndex(any(IndexResource.class));
+        verify(indexService).createResourceToIndex(any(IndexResource.class));
     }
 
     @Test
@@ -187,7 +189,7 @@ class ResourceServiceTest {
         verify(authorizationManager).hasRightToModel(anyString(), any(Model.class));
         verify(terminologyService).resolveConcept(anyString());
         verify(coreRepository).put(anyString(), any(Model.class));
-        verify(openSearchIndexer).updateResourceToIndex(any(IndexResource.class));
+        verify(indexService).updateResourceToIndex(any(IndexResource.class));
     }
 
     @Test
@@ -207,7 +209,7 @@ class ResourceServiceTest {
         verify(authorizationManager).hasRightToModel(anyString(), any(Model.class));
         verify(terminologyService).resolveConcept(anyString());
         verify(coreRepository).put(anyString(), any(Model.class));
-        verify(openSearchIndexer).updateResourceToIndex(any(IndexResource.class));
+        verify(indexService).updateResourceToIndex(any(IndexResource.class));
     }
 
 
@@ -223,8 +225,10 @@ class ResourceServiceTest {
 
         verify(coreRepository).fetch(anyString());
         verify(authorizationManager).hasRightToModel(anyString(), any(Model.class));
-        verify(coreRepository).deleteResource(DataModelURI.createResourceURI("test", "identifier"));
-        verify(openSearchIndexer).deleteResourceFromIndex(anyString());
+        verify(coreRepository).deleteResource(DataModelURI
+                .createResourceURI("test", "identifier")
+                .getResourceURI());
+        verify(indexService).deleteResourceFromIndex(anyString());
     }
 
 
@@ -311,7 +315,7 @@ class ResourceServiceTest {
     void mapUriLabels() {
         var model = ModelFactory.createDefaultModel();
         var res = model.createResource("http://uri.suomi.fi/datamodel/ns/test_lib/attribute-1");
-        MapperUtils.addLocalizedProperty(Set.of("en"), Map.of("en", "Class label"), res, RDFS.label, model);
+        MapperUtils.addLocalizedProperty(Set.of("en"), Map.of("en", "Class label"), res, RDFS.label);
 
         var uri1 = new UriDTO("http://uri.suomi.fi/datamodel/ns/test_lib/attribute-1", "test_lib:attribute-1", null);
         var uri2 = new UriDTO("http://uri.suomi.fi/datamodel/ns/test_lib/attribute-2", "test_lib:attribute-2", null);
@@ -372,8 +376,8 @@ class ResourceServiceTest {
         resourceService.renameResource("test", "resource-1", "resource-1-new");
 
         ArgumentCaptor<IndexResource> indexCaptor = ArgumentCaptor.forClass(IndexResource.class);
-        verify(openSearchIndexer).deleteResourceFromIndex(uri.getResourceURI());
-        verify(openSearchIndexer).createResourceToIndex(indexCaptor.capture());
+        verify(indexService).deleteResourceFromIndex(uri.getResourceURI());
+        verify(indexService).createResourceToIndex(indexCaptor.capture());
 
         var renamed = model.getResource(newClassURI);
 

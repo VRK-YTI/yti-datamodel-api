@@ -1,8 +1,8 @@
 package fi.vm.yti.datamodel.api.v2.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import fi.vm.yti.common.util.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.dto.CodeListDTO;
-import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.repository.SchemesRepository;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.vocabulary.RDFS;

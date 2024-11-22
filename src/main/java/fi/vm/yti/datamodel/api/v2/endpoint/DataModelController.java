@@ -1,5 +1,7 @@
 package fi.vm.yti.datamodel.api.v2.endpoint;
 
+import fi.vm.yti.common.enums.GraphType;
+import fi.vm.yti.common.enums.Status;
 import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.ApiError;
 import fi.vm.yti.datamodel.api.v2.service.DataModelService;
@@ -49,8 +51,8 @@ public class DataModelController {
             @ApiResponse(responseCode = "401", description = "Current user does not have rights for this model"),
     })
     @PostMapping(path = "/library", produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
-    public ResponseEntity<String> createLibrary(@ValidDatamodel(modelType = ModelType.LIBRARY) @RequestBody DataModelDTO modelDTO) throws URISyntaxException {
-        var uri = dataModelService.create(modelDTO, ModelType.LIBRARY);
+    public ResponseEntity<String> createLibrary(@ValidDatamodel(modelType = GraphType.LIBRARY) @RequestBody DataModelDTO modelDTO) throws URISyntaxException {
+        var uri = dataModelService.create(modelDTO, GraphType.LIBRARY);
         return ResponseEntity.created(uri).build();
     }
 
@@ -62,8 +64,8 @@ public class DataModelController {
             @ApiResponse(responseCode = "401", description = "Current user does not have rights for this model"),
     })
     @PostMapping(path = "/profile", produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
-    public ResponseEntity<String> createProfile(@ValidDatamodel(modelType = ModelType.PROFILE) @RequestBody DataModelDTO modelDTO) throws URISyntaxException {
-        var uri = dataModelService.create(modelDTO, ModelType.PROFILE);
+    public ResponseEntity<String> createProfile(@ValidDatamodel(modelType = GraphType.PROFILE) @RequestBody DataModelDTO modelDTO) throws URISyntaxException {
+        var uri = dataModelService.create(modelDTO, GraphType.PROFILE);
         return ResponseEntity.created(uri).build();
     }
 
@@ -76,7 +78,7 @@ public class DataModelController {
             @ApiResponse(responseCode = "404", description = "Library was not found", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ApiError.class))}),
     })
     @PutMapping(path = "/library/{prefix}", produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
-    public ResponseEntity<Void> updateLibrary(@ValidDatamodel(modelType = ModelType.LIBRARY, updateModel = true) @RequestBody DataModelDTO modelDTO,
+    public ResponseEntity<Void> updateLibrary(@ValidDatamodel(modelType = GraphType.LIBRARY, updateModel = true) @RequestBody DataModelDTO modelDTO,
                                            @PathVariable @Parameter(description = "Library prefix") String prefix) {
         dataModelService.update(prefix, modelDTO);
         return ResponseEntity.noContent().build();
@@ -91,7 +93,7 @@ public class DataModelController {
             @ApiResponse(responseCode = "404", description = "Application profile was not found", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ApiError.class))}),
     })
     @PutMapping(path = "/profile/{prefix}", produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
-    public ResponseEntity<Void> updateProfile(@ValidDatamodel(modelType = ModelType.PROFILE, updateModel = true) @RequestBody DataModelDTO modelDTO,
+    public ResponseEntity<Void> updateProfile(@ValidDatamodel(modelType = GraphType.PROFILE, updateModel = true) @RequestBody DataModelDTO modelDTO,
                               @PathVariable @Parameter(description = "Application profile prefix") String prefix) {
         dataModelService.update(prefix, modelDTO);
         return ResponseEntity.noContent().build();

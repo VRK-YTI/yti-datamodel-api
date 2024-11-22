@@ -74,11 +74,11 @@
         },
         {
           "query_string": {
+            "default_operator": "and",
             "fields": [
               "label.*"
             ],
-            "query": "*test* *query*",
-            "default_operator": "and"
+            "query": "*test* *query*"
           }
         }
       ]

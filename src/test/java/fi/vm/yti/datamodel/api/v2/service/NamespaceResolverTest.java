@@ -2,7 +2,6 @@ package fi.vm.yti.datamodel.api.v2.service;
 
 import fi.vm.yti.datamodel.api.v2.endpoint.EndpointUtils;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.ResolvingException;
-import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
 import fi.vm.yti.datamodel.api.v2.repository.ImportsRepository;
 import fi.vm.yti.datamodel.api.v2.validator.ValidationConstants;
 import fi.vm.yti.security.AuthenticatedUserProvider;
@@ -32,7 +31,7 @@ class NamespaceResolverTest {
     ImportsRepository importsRepository;
 
     @MockBean
-    OpenSearchIndexer openSearchIndexer;
+    IndexService indexService;
 
     @MockBean
     AuthenticatedUserProvider userProvider;

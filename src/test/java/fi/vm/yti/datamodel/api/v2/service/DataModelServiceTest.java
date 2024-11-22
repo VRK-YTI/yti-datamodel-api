@@ -1,17 +1,24 @@
 package fi.vm.yti.datamodel.api.v2.service;
 
-import fi.vm.yti.datamodel.api.mapper.MapperTestUtils;
-import fi.vm.yti.datamodel.api.security.AuthorizationManager;
-import fi.vm.yti.datamodel.api.v2.dto.*;
+import fi.vm.yti.common.Constants;
+import fi.vm.yti.common.enums.GraphType;
+import fi.vm.yti.common.enums.Status;
+import fi.vm.yti.common.service.GroupManagementService;
+import fi.vm.yti.datamodel.api.v2.mapper.MapperTestUtils;
+import fi.vm.yti.datamodel.api.v2.security.DataModelAuthorizationManager;
+import fi.vm.yti.datamodel.api.v2.dto.DataModelDTO;
+import fi.vm.yti.datamodel.api.v2.dto.ExternalNamespaceDTO;
+import fi.vm.yti.datamodel.api.v2.dto.ModelVersionInfo;
+import fi.vm.yti.datamodel.api.v2.dto.VersionedModelDTO;
 import fi.vm.yti.datamodel.api.v2.endpoint.EndpointUtils;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
-import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
+import fi.vm.yti.common.exception.ResourceNotFoundException;
 import fi.vm.yti.datamodel.api.v2.mapper.ModelMapper;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexModel;
-import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
 import fi.vm.yti.security.AuthenticatedUserProvider;
+import fi.vm.yti.security.Role;
 import fi.vm.yti.security.YtiUser;
 import org.apache.jena.query.Query;
 import org.apache.jena.query.QuerySolution;
@@ -51,7 +58,7 @@ class DataModelServiceTest {
     CoreRepository coreRepository;
 
     @MockBean
-    AuthorizationManager authorizationManager;
+    DataModelAuthorizationManager authorizationManager;
 
     @MockBean
     GroupManagementService groupManagementService;
@@ -69,7 +76,7 @@ class DataModelServiceTest {
     CodeListService codeListService;
 
     @MockBean
-    OpenSearchIndexer openSearchIndexer;
+    IndexService indexService;
 
     @MockBean
     AuthenticatedUserProvider userProvider;
@@ -114,28 +121,28 @@ class DataModelServiceTest {
 
         dataModelService.get("test", "1.0.1");
 
-        verify(coreRepository).fetch(ModelConstants.SUOMI_FI_NAMESPACE + "test/1.0.1" + ModelConstants.RESOURCE_SEPARATOR);
+        verify(coreRepository).fetch(Constants.DATA_MODEL_NAMESPACE + "test/1.0.1" + Constants.RESOURCE_SEPARATOR);
         verify(authorizationManager).hasRightToModel(eq("test"), any(Model.class));
         verify(modelMapper).mapToDataModelDTO(anyString(), any(Model.class), eq(null));
     }
 
     @Test
     void create() throws URISyntaxException {
-        when(authorizationManager.hasRightToAnyOrganization(anyCollection())).thenReturn(true);
+        when(authorizationManager.hasRightToAnyOrganization(anyCollection(), eq(Role.DATA_MODEL_EDITOR))).thenReturn(true);
         when(userProvider.getUser()).thenReturn(EndpointUtils.mockUser);
-        when(modelMapper.mapToJenaModel(any(DataModelDTO.class), any(ModelType.class), any(YtiUser.class))).thenReturn(ModelFactory.createDefaultModel());
+        when(modelMapper.mapToJenaModel(any(DataModelDTO.class), any(GraphType.class), any(YtiUser.class))).thenReturn(ModelFactory.createDefaultModel());
         when(modelMapper.mapToIndexModel(anyString(), any(Model.class))).thenReturn(new IndexModel());
         var dto = createDatamodelDTO(false);
-        var uri = dataModelService.create(dto, ModelType.LIBRARY);
-        assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "test/", uri.toString());
+        var uri = dataModelService.create(dto, GraphType.LIBRARY);
+        assertEquals(Constants.DATA_MODEL_NAMESPACE + "test/", uri.toString());
 
-        verify(authorizationManager).hasRightToAnyOrganization(anyCollection());
+        verify(authorizationManager).hasRightToAnyOrganization(anyCollection(), eq(Role.DATA_MODEL_EDITOR));
         verify(terminologyService).resolveTerminology(anySet());
         verify(codeListService).resolveCodelistScheme(anySet());
-        verify(modelMapper).mapToJenaModel(any(DataModelDTO.class), any(ModelType.class), any(YtiUser.class));
+        verify(modelMapper).mapToJenaModel(any(DataModelDTO.class), any(GraphType.class), any(YtiUser.class));
         verify(coreRepository).put(anyString(), any(Model.class));
         verify(modelMapper).mapToIndexModel(anyString(), any(Model.class));
-        verify(openSearchIndexer).createModelToIndex(any(IndexModel.class));
+        verify(indexService).createModelToIndex(any(IndexModel.class));
     }
 
     @Test
@@ -155,7 +162,7 @@ class DataModelServiceTest {
         verify(modelMapper).mapToUpdateJenaModel(anyString(), any(DataModelDTO.class), any(Model.class), any(YtiUser.class));
         verify(coreRepository).put(anyString(), any(Model.class));
         verify(modelMapper).mapToIndexModel(anyString(), any(Model.class));
-        verify(openSearchIndexer).updateModelToIndex(any(IndexModel.class));
+        verify(indexService).updateModelToIndex(any(IndexModel.class));
     }
 
     @Test
@@ -176,8 +183,8 @@ class DataModelServiceTest {
                 "Unexpected error message: " + error.getMessage());
 
         verify(coreRepository, never()).delete(anyString());
-        verify(openSearchIndexer, never()).deleteModelFromIndex(anyString());
-        verify(openSearchIndexer, never()).removeResourceIndexesByDataModel(anyString(), eq(null));
+        verify(indexService, never()).deleteModelFromIndex(anyString());
+        verify(indexService, never()).removeResourceIndexesByDataModel(anyString(), eq(null));
     }
 
     @Test
@@ -216,8 +223,8 @@ class DataModelServiceTest {
 
         verify(coreRepository).graphExists(anyString());
         verify(coreRepository, never()).delete(anyString());
-        verify(openSearchIndexer, never()).deleteModelFromIndex(anyString());
-        verify(openSearchIndexer, never()).removeResourceIndexesByDataModel(anyString(), eq("1.0.1"));
+        verify(indexService, never()).deleteModelFromIndex(anyString());
+        verify(indexService, never()).removeResourceIndexesByDataModel(anyString(), eq("1.0.1"));
     }
 
     @Test
@@ -234,8 +241,8 @@ class DataModelServiceTest {
         dataModelService.delete(dataModelURI.getModelId(), null);
 
         verify(coreRepository).delete(anyString());
-        verify(openSearchIndexer).deleteModelFromIndex(anyString());
-        verify(openSearchIndexer).removeResourceIndexesByDataModel(anyString(), eq(null));
+        verify(indexService).deleteModelFromIndex(anyString());
+        verify(indexService).removeResourceIndexesByDataModel(anyString(), eq(null));
         verify(dataModelSubscriptionService).deleteTopic("test");
     }
 
@@ -246,7 +253,7 @@ class DataModelServiceTest {
         assertThrows(ResourceNotFoundException.class, () -> dataModelService.delete("test", null));
 
         verify(coreRepository, never()).delete(anyString());
-        verifyNoInteractions(openSearchIndexer);
+        verifyNoInteractions(indexService);
     }
 
     @Test
@@ -304,7 +311,7 @@ class DataModelServiceTest {
         var model = MapperTestUtils.getModelFromFile("/test_datamodel_library.ttl");
         when(authorizationManager.hasRightToModel(anyString(), any(Model.class))).thenReturn(true);
         //remove prior version property since we want to test without
-        model.getResource(ModelConstants.SUOMI_FI_NAMESPACE + "test").removeAll(OWL.priorVersion);
+        model.getResource(Constants.DATA_MODEL_NAMESPACE + "test").removeAll(OWL.priorVersion);
         when(coreRepository.fetch(anyString())).thenReturn(model);
         when(modelMapper.mapToIndexModel(anyString(), any(Model.class))).thenReturn(mock(IndexModel.class));
         when(userProvider.getUser()).thenReturn(YtiUser.ANONYMOUS_USER);
@@ -317,14 +324,14 @@ class DataModelServiceTest {
                 any(DataModelURI.class),
                 eq(Status.VALID));
         verify(modelMapper).mapPriorVersion(any(Model.class),
-                                            eq(ModelConstants.SUOMI_FI_NAMESPACE + "test/"),
-                                            eq(ModelConstants.SUOMI_FI_NAMESPACE + "test/1.0.1/"));
+                                            eq(Constants.DATA_MODEL_NAMESPACE + "test/"),
+                                            eq(Constants.DATA_MODEL_NAMESPACE + "test/1.0.1/"));
 
-        verify(coreRepository).put(eq(ModelConstants.SUOMI_FI_NAMESPACE + "test/1.0.1/"), any(Model.class));
-        verify(coreRepository).put(eq(ModelConstants.SUOMI_FI_NAMESPACE + "test/"), any(Model.class));
+        verify(coreRepository).put(eq(Constants.DATA_MODEL_NAMESPACE + "test/1.0.1/"), any(Model.class));
+        verify(coreRepository).put(eq(Constants.DATA_MODEL_NAMESPACE + "test/"), any(Model.class));
 
-        verify(modelMapper).mapToIndexModel(eq(ModelConstants.SUOMI_FI_NAMESPACE + "test/"), any(Model.class));
-        verify(openSearchIndexer).createModelToIndex(any(IndexModel.class));
+        verify(modelMapper).mapToIndexModel(eq(Constants.DATA_MODEL_NAMESPACE + "test/"), any(Model.class));
+        verify(indexService).createModelToIndex(any(IndexModel.class));
         verify(visualizationService).saveVersionedPositions("test", "1.0.1");
 
         var captor = ArgumentCaptor.forClass(String.class);
@@ -380,7 +387,7 @@ class DataModelServiceTest {
         var mockVersionInfo = new ModelVersionInfo();
         mockVersionInfo.setVersion("1.0.2");
         mockVersionInfo.setStatus(Status.VALID);
-        mockVersionInfo.setVersionIRI(ModelConstants.SUOMI_FI_NAMESPACE + "test/1.0.2");
+        mockVersionInfo.setVersionIRI(Constants.DATA_MODEL_NAMESPACE + "test/1.0.2");
         when(modelMapper.mapModelVersionInfo(any(Resource.class))).thenReturn(mockVersionInfo);
         when(coreRepository.queryConstruct(any(Query.class))).thenReturn(model);
         var result = dataModelService.getPriorVersions("test", "1.0.1");
@@ -405,7 +412,7 @@ class DataModelServiceTest {
         verify(modelMapper).mapUpdateVersionedModel(any(Model.class), anyString(), any(VersionedModelDTO.class), any(YtiUser.class));
         verify(coreRepository).put(anyString(), any(Model.class));
         verify(modelMapper).mapToIndexModel(anyString(), any(Model.class));
-        verify(openSearchIndexer).updateModelToIndex(any(IndexModel.class));
+        verify(indexService).updateModelToIndex(any(IndexModel.class));
     }
 
     @Test
@@ -564,8 +571,8 @@ class DataModelServiceTest {
 
         verify(coreRepository).put(eq(newGraphURI.getGraphURI()), captor.capture());
         verify(visualizationService).copyVisualization("test", "1.0.0", "new_prefix");
-        verify(openSearchIndexer).createModelToIndex(any(IndexModel.class));
-        verify(openSearchIndexer).indexGraphResource(any(Model.class));
+        verify(indexService).createModelToIndex(any(IndexModel.class));
+        verify(indexService).indexGraphResource(any(Model.class));
 
         var copy = captor.getValue();
         var modelResource = copy.getResource(newGraphURI.getModelURI());
@@ -594,7 +601,7 @@ class DataModelServiceTest {
         dataModelDTO.setGroups(Set.of("P11"));
         dataModelDTO.setLanguages(Set.of("fi"));
         dataModelDTO.setOrganizations(Set.of(RANDOM_ORG));
-        dataModelDTO.setInternalNamespaces(Set.of(ModelConstants.SUOMI_FI_NAMESPACE + "test"));
+        dataModelDTO.setInternalNamespaces(Set.of(Constants.DATA_MODEL_NAMESPACE + "test"));
         var extNs = new ExternalNamespaceDTO();
         extNs.setName(Map.of("fi", "test external namespace"));
         extNs.setPrefix("testprefix");

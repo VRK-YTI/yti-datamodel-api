@@ -1,11 +1,12 @@
 package fi.vm.yti.datamodel.api.v2.mapper;
 
-import fi.vm.yti.datamodel.api.mapper.MapperTestUtils;
-import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
-import fi.vm.yti.datamodel.api.v2.dto.Status;
+import fi.vm.yti.common.Constants;
+import fi.vm.yti.common.enums.Status;
+import fi.vm.yti.common.properties.SuomiMeta;
+import fi.vm.yti.common.util.MapperUtils;
+import fi.vm.yti.datamodel.api.v2.utils.DataModelMapperUtils;
 import fi.vm.yti.datamodel.api.v2.endpoint.EndpointUtils;
 import fi.vm.yti.datamodel.api.v2.properties.DCAP;
-import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.vocabulary.*;
@@ -30,9 +31,9 @@ class MapperUtilsTest {
         assertEquals(uri.getResourceURI(), resource.getURI());
         assertEquals(uri.getResourceId(), MapperUtils.getLiteral(resource, DCTerms.identifier, String.class));
 
-        resource = MapperUtils.renameResource(m.getResource(uri.getResourceURI()), "NewClass");
+        resource = DataModelMapperUtils.renameResource(m.getResource(uri.getResourceURI()), "NewClass");
 
-        assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "test/NewClass", resource.getURI());
+        assertEquals(Constants.DATA_MODEL_NAMESPACE + "test/NewClass", resource.getURI());
         assertEquals("NewClass", MapperUtils.getLiteral(resource, DCTerms.identifier, String.class));
     }
 
@@ -43,7 +44,7 @@ class MapperUtilsTest {
         var model = MapperTestUtils.getModelFromFile("/models/test_datamodel_library_with_resources.ttl");
         var mockUser = EndpointUtils.mockUser;
 
-        var copy = MapperUtils.mapCopyModel(model, mockUser, oldGraphURI, newGraphURI);
+        var copy = DataModelMapperUtils.mapCopyModel(model, mockUser, oldGraphURI, newGraphURI);
 
         var resources = copy.listSubjectsWithProperty(RDF.type, OWL.Class)
                 .andThen(copy.listSubjectsWithProperty(RDF.type, OWL.DatatypeProperty))
