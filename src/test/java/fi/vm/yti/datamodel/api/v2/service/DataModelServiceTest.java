@@ -612,25 +612,38 @@ class DataModelServiceTest {
 
         when(userProvider.getUser()).thenReturn(EndpointUtils.mockAdminUser);
         when(coreRepository.fetch(graphURI.getGraphURI())).thenReturn(version);
-        when(coreRepository.fetch(graphURI.getDraftGraphURI())).thenReturn(draft);
-        when(coreRepository.graphExists(graphURI.getDraftGraphURI())).thenReturn(true);
-        when(coreRepository.queryConstruct(any(Query.class))).thenReturn(ModelFactory.createDefaultModel());
+        when(coreRepository.graphExists(graphURI.getDraftGraphURI())).thenReturn(false);
         when(authorizationManager.hasAdminRightToModel(eq(graphURI.getModelId()), any(Model.class))).thenReturn(true);
         when(modelMapper.mapToIndexModel(anyString(), any(Model.class))).thenReturn(new IndexModel());
         when(modelMapper.mapNewDraft(any(Model.class), any(DataModelURI.class))).thenReturn(ModelFactory.createDefaultModel());
 
         dataModelService.createDraft(graphURI.getModelId(), graphURI.getVersion());
 
-        // old draft should be deleted
-        verify(coreRepository).delete(graphURI.getDraftGraphURI());
         // new draft should be saved
         verify(coreRepository).put(eq(graphURI.getDraftGraphURI()), any(Model.class));
-        // remove old draft from index
-        verify(indexService).deleteModelFromIndex(graphURI.getDraftGraphURI());
-        verify(indexService).removeResourceIndexesByDataModel(graphURI.getDraftGraphURI(), null);
         // add new draft to index
         verify(indexService).createModelToIndex(any(IndexModel.class));
         verify(indexService).indexGraphResource(any(Model.class));
+    }
+
+    @Test
+    void testCreateNewDraftExisting() {
+        var graphURI = DataModelURI.createModelURI("test", "1.0.0");
+
+        when(coreRepository.graphExists(graphURI.getDraftGraphURI())).thenReturn(true);
+
+        var error = assertThrows(MappingError.class,
+                () -> dataModelService.createDraft("test", "1.0.0"));
+
+        assertTrue(error.getMessage().contains("Draft graph exists"),
+                "Unexpected error creating new draft with existing one.");
+
+        // new draft should be saved
+        verify(coreRepository, never()).put(anyString(), any(Model.class));
+        // add new draft to index
+        verify(indexService, never()).createModelToIndex(any(IndexModel.class));
+        verify(indexService, never()).indexGraphResource(any(Model.class));
+
     }
 
     private Predicate<RDFNode> containsReferences(String ns) {
