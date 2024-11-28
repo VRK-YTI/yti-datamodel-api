@@ -162,6 +162,9 @@ public class IndexService extends OpenSearchInitializer {
 
     public void initExternalResourceIndex() {
         NamespaceService.DEFAULT_NAMESPACES.forEach((prefix, graphURI) -> {
+            if (!(graphURI.endsWith("#") || graphURI.endsWith("/"))) {
+                graphURI = graphURI + Constants.RESOURCE_SEPARATOR;
+            }
             LOG.info("Indexing external namespace {}", graphURI);
             var builder = new ConstructBuilder()
                     .addPrefix(prefix, graphURI)
@@ -321,7 +324,7 @@ public class IndexService extends OpenSearchInitializer {
                 break;
             } case OPEN_SEARCH_INDEX_EXTERNAL: {
                 mappings.put(OPEN_SEARCH_INDEX_EXTERNAL, getExternalResourceMappings());
-                super.initIndexes(this::initResourceIndex, mappings, true);
+                super.initIndexes(this::initExternalResourceIndex, mappings, true);
                 break;
             }
             default: {
