@@ -82,8 +82,7 @@ public class IndexService extends OpenSearchInitializer {
 
         var indexConfig = Map.of(
                 OPEN_SEARCH_INDEX_MODEL, getModelMappings(),
-                OPEN_SEARCH_INDEX_RESOURCE, getResourceMappings(),
-                OPEN_SEARCH_INDEX_EXTERNAL, getExternalResourceMappings()
+                OPEN_SEARCH_INDEX_RESOURCE, getResourceMappings()
         );
         super.initIndexes(fn, indexConfig);
     }
