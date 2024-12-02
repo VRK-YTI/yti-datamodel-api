@@ -2,6 +2,7 @@ package fi.vm.yti.datamodel.api.v2.repository;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import fi.vm.yti.common.repository.BaseRepository;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdfconnection.RDFConnection;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,8 +15,8 @@ public class SchemesRepository extends BaseRepository {
 
     private final Cache<String, Model> modelCache;
 
-    public SchemesRepository(@Value(("${endpoint}")) String endpoint,
-                             @Value("${model.cache.expiration:1800}") Long cacheExpireTime) {
+    public SchemesRepository(@Value(("${fuseki.url}")) String endpoint,
+                             @Value("${fuseki.cache.common.expiration:1800}") Long cacheExpireTime) {
         super(
                 RDFConnection.connect(endpoint + "/scheme/get"),
                 RDFConnection.connect(endpoint + "/scheme/data"),
@@ -32,7 +33,7 @@ public class SchemesRepository extends BaseRepository {
     @Override
     public Model fetch(String graph){
         try {
-            return modelCache.get(graph, () -> read.fetch(graph));
+            return modelCache.get(graph, () -> super.fetch(graph));
         } catch (Exception e) {
             return null;
         }

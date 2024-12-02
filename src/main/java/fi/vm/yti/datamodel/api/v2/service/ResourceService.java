@@ -1,12 +1,15 @@
 package fi.vm.yti.datamodel.api.v2.service;
 
-import fi.vm.yti.datamodel.api.security.AuthorizationManager;
+import fi.vm.yti.common.Constants;
+import fi.vm.yti.common.service.AuditService;
+import fi.vm.yti.common.service.GroupManagementService;
+import fi.vm.yti.common.util.MapperUtils;
+import fi.vm.yti.datamodel.api.v2.security.DataModelAuthorizationManager;
+import fi.vm.yti.datamodel.api.v2.utils.DataModelMapperUtils;
 import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
-import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
-import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
+import fi.vm.yti.common.exception.ResourceNotFoundException;
 import fi.vm.yti.datamodel.api.v2.mapper.ResourceMapper;
-import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import fi.vm.yti.datamodel.api.v2.repository.ImportsRepository;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
@@ -41,7 +44,7 @@ public class ResourceService extends BaseResourceService {
     private static final AuditService AUDIT_SERVICE = new AuditService("RESOURCE");
     private final CoreRepository coreRepository;
     private final ImportsRepository importsRepository;
-    private final AuthorizationManager authorizationManager;
+    private final DataModelAuthorizationManager authorizationManager;
     private final GroupManagementService groupManagementService;
     private final TerminologyService terminologyService;
     private final CodeListService codeListService;
@@ -50,13 +53,13 @@ public class ResourceService extends BaseResourceService {
     @Autowired
     public ResourceService(CoreRepository coreRepository,
                            ImportsRepository importsRepository,
-                           AuthorizationManager authorizationManager,
+                           DataModelAuthorizationManager authorizationManager,
                            GroupManagementService groupManagementService,
                            TerminologyService terminologyService,
                            CodeListService codeListService,
                            AuthenticatedUserProvider userProvider,
-                           OpenSearchIndexer openSearchIndexer){
-        super(coreRepository, importsRepository, authorizationManager, openSearchIndexer, AUDIT_SERVICE, userProvider);
+                           IndexService indexService){
+        super(coreRepository, importsRepository, authorizationManager, indexService, AUDIT_SERVICE, userProvider);
         this.coreRepository = coreRepository;
         this.importsRepository = importsRepository;
         this.authorizationManager = authorizationManager;
@@ -90,7 +93,7 @@ public class ResourceService extends BaseResourceService {
             throw new MappingError("Invalid model");
         }
 
-        MapperUtils.addLabelsToURIs(dto, mapUriLabels(includedNamespaces));
+        DataModelMapperUtils.addLabelsToURIs(dto, mapUriLabels(includedNamespaces));
         terminologyService.mapConcept().accept(dto);
         return dto;
     }
@@ -174,7 +177,7 @@ public class ResourceService extends BaseResourceService {
         // determine version which graph the resource will be copied from
         var namespaces = DataModelUtils
                 .getInternalReferenceModels(targetGraph, targetModel.getResource(targetGraph)).stream()
-                .filter(ns -> ns.startsWith(ModelConstants.SUOMI_FI_NAMESPACE + prefix))
+                .filter(ns -> ns.startsWith(Constants.DATA_MODEL_NAMESPACE + prefix))
                 .findFirst();
 
         DataModelURI source;

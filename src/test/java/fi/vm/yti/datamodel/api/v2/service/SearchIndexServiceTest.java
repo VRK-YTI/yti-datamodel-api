@@ -1,17 +1,18 @@
 package fi.vm.yti.datamodel.api.v2.service;
 
-import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
-import fi.vm.yti.datamodel.api.v2.dto.ModelType;
+import fi.vm.yti.common.Constants;
+import fi.vm.yti.common.enums.GraphType;
+import fi.vm.yti.common.enums.Status;
+import fi.vm.yti.common.opensearch.OpenSearchClientWrapper;
+import fi.vm.yti.common.opensearch.QueryFactoryUtils;
+import fi.vm.yti.common.opensearch.SearchResponseDTO;
+import fi.vm.yti.common.service.GroupManagementService;
 import fi.vm.yti.datamodel.api.v2.dto.ResourceType;
-import fi.vm.yti.datamodel.api.v2.dto.Status;
 import fi.vm.yti.datamodel.api.v2.endpoint.EndpointUtils;
-import fi.vm.yti.datamodel.api.v2.opensearch.OpenSearchClientWrapper;
 import fi.vm.yti.datamodel.api.v2.opensearch.dto.ModelSearchRequest;
 import fi.vm.yti.datamodel.api.v2.opensearch.dto.ResourceSearchRequest;
-import fi.vm.yti.datamodel.api.v2.opensearch.dto.SearchResponseDTO;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexModel;
 import fi.vm.yti.datamodel.api.v2.opensearch.queries.ModelQueryFactory;
-import fi.vm.yti.datamodel.api.v2.opensearch.queries.QueryFactoryUtils;
 import fi.vm.yti.datamodel.api.v2.opensearch.queries.ResourceQueryFactory;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import fi.vm.yti.security.YtiUser;
@@ -21,7 +22,8 @@ import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.OWL;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.*;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.opensearch.client.opensearch._types.query_dsl.QueryBuilders;
 import org.opensearch.client.opensearch.core.SearchRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,8 +35,9 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.*;
-import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(SpringExtension.class)
 @Import({
@@ -71,7 +74,7 @@ class SearchIndexServiceTest {
     @Autowired
     SearchIndexService searchIndexService;
 
-    private static final String DATA_MODEL_URI = ModelConstants.SUOMI_FI_NAMESPACE + "profile" + ModelConstants.RESOURCE_SEPARATOR;
+    private static final String DATA_MODEL_URI = Constants.DATA_MODEL_NAMESPACE + "profile" + Constants.RESOURCE_SEPARATOR;
 
     private static final UUID ORGANIZATION_ID = UUID.randomUUID();
 
@@ -117,7 +120,7 @@ class SearchIndexServiceTest {
 
         doSearch(request);
 
-        assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "model", internalNamespaceCaptor.getValue().iterator().next());
+        assertEquals(Constants.DATA_MODEL_NAMESPACE + "model", internalNamespaceCaptor.getValue().iterator().next());
         assertEquals("http://ext.org/datamodel", externalNamespaceCaptor.getValue().iterator().next());
     }
 
@@ -125,7 +128,7 @@ class SearchIndexServiceTest {
     void findWithDataModelRestrictions() {
         var request = new ResourceSearchRequest();
         request.setGroups(Set.of("group-1"));
-        request.setLimitToModelType(ModelType.LIBRARY);
+        request.setLimitToModelType(GraphType.LIBRARY);
         request.setStatus(Set.of(Status.VALID));
         request.setResourceTypes(Set.of(ResourceType.CLASS));
         request.setLimitToDataModel(DATA_MODEL_URI);
@@ -137,7 +140,7 @@ class SearchIndexServiceTest {
 
         assertEquals("group-1", modelRestrictionSearch.getGroups().iterator().next());
         assertEquals(Status.VALID, modelRestrictionSearch.getStatus().iterator().next());
-        assertEquals(ModelType.LIBRARY, modelRestrictionSearch.getType().iterator().next());
+        assertEquals(GraphType.LIBRARY, modelRestrictionSearch.getType().iterator().next());
         assertEquals(1, externalNamespaceCaptor.getValue().size());
         assertEquals(1, internalNamespaceCaptor.getValue().size());
         assertEquals("2", restrictedDataModelsCaptor.getValue().iterator().next());
@@ -155,7 +158,7 @@ class SearchIndexServiceTest {
         // model's namespaces
         var model = ModelFactory.createDefaultModel();
         model.createResource(DATA_MODEL_URI)
-                .addProperty(OWL.imports, ResourceFactory.createResource(ModelConstants.SUOMI_FI_NAMESPACE + "model"))
+                .addProperty(OWL.imports, ResourceFactory.createResource(Constants.DATA_MODEL_NAMESPACE + "model"))
                 .addProperty(OWL.imports, ResourceFactory.createResource("http://ext.org/datamodel"))
                 .addProperty(DCTerms.requires, ResourceFactory.createResource("http://uri.suomi.fi/terminology/test-123"));
         when(coreRepository.fetch(DATA_MODEL_URI)).thenReturn(model);
@@ -179,7 +182,7 @@ class SearchIndexServiceTest {
         try (var resourceQueryFactory = mockStatic(ResourceQueryFactory.class);
              var modelQueryFactory = mockStatic(ModelQueryFactory.class)) {
 
-            var emptyQuery = QueryBuilders.bool().must(List.of()).build()._toQuery();
+            var emptyQuery = QueryBuilders.bool().must(List.of()).build().toQuery();
 
             // resource query
             resourceQueryFactory.when(() -> ResourceQueryFactory.createInternalResourceQuery(
@@ -198,7 +201,7 @@ class SearchIndexServiceTest {
             // models by search criteria
             var modelQuery = QueryBuilders.bool()
                     .must(QueryFactoryUtils.termsQuery("isPartOf", Set.of("group-1")))
-                    .build()._toQuery();
+                    .build().toQuery();
 
             modelQueryFactory.when(() -> ModelQueryFactory.createModelQuery(
                             argThat(r -> r.getGroups() != null), eq(false)))

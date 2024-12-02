@@ -73,7 +73,7 @@
   "size": 100,
   "sort": [
     {
-      "label.fi.keyword": {
+      "label.fi.sortKey": {
         "order": "asc",
         "unmapped_type": "keyword"
       }

@@ -1,5 +1,6 @@
 package fi.vm.yti.datamodel.api.v2.utils;
 
+import fi.vm.yti.common.Constants;
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
 import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.shared.PrefixMapping;
@@ -110,14 +111,14 @@ public class DataModelURI {
      * Model resource. Used when fetching model's metadata, e.g. status, languages etc.
      */
     public String getModelURI() {
-        return ModelConstants.SUOMI_FI_NAMESPACE + this.modelId + ModelConstants.RESOURCE_SEPARATOR;
+        return Constants.DATA_MODEL_NAMESPACE + this.modelId + Constants.RESOURCE_SEPARATOR;
     }
 
     /**
      * TODO: is this needed (should model resource be saved with or without trailing slash)?
      */
     public String getDraftGraphURI() {
-        return ModelConstants.SUOMI_FI_NAMESPACE + this.modelId + ModelConstants.RESOURCE_SEPARATOR;
+        return Constants.DATA_MODEL_NAMESPACE + this.modelId + Constants.RESOURCE_SEPARATOR;
     }
 
     /**
@@ -129,7 +130,7 @@ public class DataModelURI {
                 : this.namespace;
 
         if (this.version != null) {
-            return uri + this.version + ModelConstants.RESOURCE_SEPARATOR;
+            return uri + this.version + Constants.RESOURCE_SEPARATOR;
         }
         return uri;
     }
@@ -181,7 +182,7 @@ public class DataModelURI {
     }
 
     public boolean isDataModelURI() {
-        return this.namespace.startsWith(ModelConstants.SUOMI_FI_NAMESPACE);
+        return this.namespace.startsWith(Constants.DATA_MODEL_NAMESPACE);
     }
 
     public boolean isCodeListURI() {
@@ -189,7 +190,7 @@ public class DataModelURI {
     }
 
     public boolean isTerminologyURI() {
-        return this.namespace.startsWith(ModelConstants.TERMINOLOGY_NAMESPACE);
+        return this.namespace.startsWith(Constants.TERMINOLOGY_NAMESPACE);
     }
 
     public boolean isSameModel(DataModelURI other) {

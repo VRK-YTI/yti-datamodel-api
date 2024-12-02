@@ -1,11 +1,13 @@
 package fi.vm.yti.datamodel.api.v2.opensearch.index;
 
+import fi.vm.yti.common.opensearch.IndexBase;
 import fi.vm.yti.datamodel.api.v2.dto.ResourceType;
 
 import java.util.Map;
 
 public class IndexResource extends IndexBase {
 
+    private String curie;
     private ResourceType resourceType;
     private String isDefinedBy;
     private String contentModified;
@@ -18,6 +20,14 @@ public class IndexResource extends IndexBase {
     private String targetClass;
     private String fromVersion;
     private String versionIri;
+
+    public String getCurie() {
+        return curie;
+    }
+
+    public void setCurie(String curie) {
+        this.curie = curie;
+    }
 
     public ResourceType getResourceType() {
         return resourceType;

@@ -1,11 +1,12 @@
 package fi.vm.yti.datamodel.api.v2.opensearch.queries;
 
-import fi.vm.yti.datamodel.api.v2.dto.ModelType;
-import fi.vm.yti.datamodel.api.v2.dto.Status;
+import fi.vm.yti.common.enums.GraphType;
+import fi.vm.yti.common.enums.Status;
+import fi.vm.yti.common.opensearch.QueryFactoryUtils;
 import fi.vm.yti.datamodel.api.v2.opensearch.dto.CountDTO;
 import fi.vm.yti.datamodel.api.v2.opensearch.dto.CountSearchResponse;
 import fi.vm.yti.datamodel.api.v2.opensearch.dto.ModelSearchRequest;
-import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
+import fi.vm.yti.datamodel.api.v2.service.IndexService;
 import org.opensearch.client.opensearch._types.aggregations.Aggregation;
 import org.opensearch.client.opensearch._types.aggregations.AggregationBuilders;
 import org.opensearch.client.opensearch._types.aggregations.StringTermsBucket;
@@ -21,7 +22,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import static fi.vm.yti.datamodel.api.v2.opensearch.OpenSearchUtil.logPayload;
+import static fi.vm.yti.common.opensearch.OpenSearchUtil.logPayload;
 
 public class ModelQueryFactory {
 
@@ -35,7 +36,7 @@ public class ModelQueryFactory {
         Highlight.Builder highlight = new Highlight.Builder();
         highlight.fields("label.*", f -> f);
         var sr = new SearchRequest.Builder()
-                .index(OpenSearchIndexer.OPEN_SEARCH_INDEX_MODEL)
+                .index(IndexService.OPEN_SEARCH_INDEX_MODEL)
                 .size(QueryFactoryUtils.pageSize(request.getPageSize()))
                 .from(QueryFactoryUtils.pageFrom(request))
                 .sort(QueryFactoryUtils.getLangSortOptions(request.getSortLang()))
@@ -43,7 +44,7 @@ public class ModelQueryFactory {
                 .query(modelQuery)
                 .build();
 
-        logPayload(sr, OpenSearchIndexer.OPEN_SEARCH_INDEX_MODEL);
+        logPayload(sr, IndexService.OPEN_SEARCH_INDEX_MODEL);
         return sr;
     }
 
@@ -51,7 +52,7 @@ public class ModelQueryFactory {
         var modelQuery = getModelBaseQuery(request, isSuperUser);
 
         var sr = new SearchRequest.Builder()
-                .index(OpenSearchIndexer.OPEN_SEARCH_INDEX_MODEL)
+                .index(IndexService.OPEN_SEARCH_INDEX_MODEL)
                 .size(0)
                 .query(modelQuery)
                 .aggregations("statuses", getAggregation("status"))
@@ -60,7 +61,7 @@ public class ModelQueryFactory {
                 .aggregations("groups", getAggregation("isPartOf"))
                 .build();
 
-        logPayload(sr, OpenSearchIndexer.OPEN_SEARCH_INDEX_MODEL);
+        logPayload(sr, IndexService.OPEN_SEARCH_INDEX_MODEL);
         return sr;
     }
 
@@ -98,7 +99,7 @@ public class ModelQueryFactory {
 
         var modelType = request.getType();
         if (modelType != null && !modelType.isEmpty()) {
-            var modelTypeQuery = QueryFactoryUtils.termsQuery("type", modelType.stream().map(ModelType::name).toList());
+            var modelTypeQuery = QueryFactoryUtils.termsQuery("type", modelType.stream().map(GraphType::name).toList());
             allQueries.add(modelTypeQuery);
         }
 
@@ -148,7 +149,7 @@ public class ModelQueryFactory {
                     .should(excludeDrafts)
                     .minimumShouldMatch("1")
                     .build()
-                    ._toQuery());
+                    .toQuery());
         }
 
         if (textQueries.size() == 1) {
@@ -160,10 +161,10 @@ public class ModelQueryFactory {
                     .should(textQueries)
                     .minimumShouldMatch("1")
                     .build()
-                    ._toQuery());
+                    .toQuery());
         }
 
-        return QueryBuilders.bool().must(allQueries).build()._toQuery();
+        return QueryBuilders.bool().must(allQueries).build().toQuery();
     }
 
     private static Aggregation getAggregation(String fieldName) {

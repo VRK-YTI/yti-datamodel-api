@@ -6,28 +6,10 @@ import java.util.Set;
 
 public class DataModelDTO extends ModelMetaData {
 
-    private String prefix;
-    private Set<String> languages = Set.of();
     private Set<String> internalNamespaces = Set.of();
     private Set<ExternalNamespaceDTO> externalNamespaces = Set.of();
     private Set<String> terminologies = Set.of();
     private Set<String> codeLists = Set.of();
-
-    public String getPrefix() {
-        return prefix;
-    }
-
-    public void setPrefix(String prefix) {
-        this.prefix = prefix;
-    }
-
-    public Set<String> getLanguages() {
-        return languages;
-    }
-
-    public void setLanguages(Set<String> languages) {
-        this.languages = languages;
-    }
 
     @Override
     public String toString() {

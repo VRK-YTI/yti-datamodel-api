@@ -1,6 +1,6 @@
 package fi.vm.yti.datamodel.api.v2.service;
 
-import fi.vm.yti.datamodel.api.security.AuthorizationManager;
+import fi.vm.yti.datamodel.api.v2.security.DataModelAuthorizationManager;
 import fi.vm.yti.datamodel.api.v2.dto.ResourceReferenceDTO;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
@@ -21,11 +21,11 @@ public class ReleaseValidationService {
     private static final Logger LOG = LoggerFactory.getLogger(ReleaseValidationService.class);
 
     private final CoreRepository coreRepository;
-    private final AuthorizationManager authorizationManager;
+    private final DataModelAuthorizationManager authorizationManager;
     private final List<ReleaseValidator> validators = new ArrayList<>();
 
     public ReleaseValidationService(CoreRepository coreRepository,
-                                    AuthorizationManager authorizationManager,
+                                    DataModelAuthorizationManager authorizationManager,
                                     ReferencesExistsValidator referencesExistsValidator) {
         this.coreRepository = coreRepository;
         this.authorizationManager = authorizationManager;

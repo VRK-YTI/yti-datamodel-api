@@ -1,7 +1,14 @@
 package fi.vm.yti.datamodel.api.v2.endpoint;
 
-import fi.vm.yti.datamodel.api.mapper.MapperTestUtils;
-import fi.vm.yti.datamodel.api.v2.dto.*;
+import fi.vm.yti.common.Constants;
+import fi.vm.yti.common.dto.LinkDTO;
+import fi.vm.yti.common.enums.GraphType;
+import fi.vm.yti.common.enums.Status;
+import fi.vm.yti.datamodel.api.v2.mapper.MapperTestUtils;
+import fi.vm.yti.datamodel.api.v2.dto.DataModelDTO;
+import fi.vm.yti.datamodel.api.v2.dto.DataModelInfoDTO;
+import fi.vm.yti.datamodel.api.v2.dto.ExternalNamespaceDTO;
+import fi.vm.yti.datamodel.api.v2.dto.VersionedModelDTO;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import fi.vm.yti.datamodel.api.v2.service.DataModelService;
 import fi.vm.yti.datamodel.api.v2.service.ReleaseValidationService;
@@ -78,7 +85,7 @@ class DataModelControllerTest {
                 .andExpect(status().isCreated());
 
         //Check that functions are called
-        verify(dataModelService).create(any(DataModelDTO.class), any(ModelType.class));
+        verify(dataModelService).create(any(DataModelDTO.class), any(GraphType.class));
         verifyNoMoreInteractions(this.dataModelService);
     }
 
@@ -180,7 +187,7 @@ class DataModelControllerTest {
         dataModelDTO.setGroups(Set.of("P11"));
         dataModelDTO.setLanguages(Set.of("fi"));
         dataModelDTO.setOrganizations(Set.of(MapperTestUtils.TEST_ORG_ID));
-        dataModelDTO.setInternalNamespaces(Set.of(ModelConstants.SUOMI_FI_NAMESPACE + "test"));
+        dataModelDTO.setInternalNamespaces(Set.of(Constants.DATA_MODEL_NAMESPACE + "test"));
         var extNs = new ExternalNamespaceDTO();
         extNs.setName(Map.of("fi", "test external namespace"));
         extNs.setPrefix("testprefix");
@@ -313,7 +320,7 @@ class DataModelControllerTest {
         invalidExtRes.setName(Map.of("fi", "this is invalid"));
         //uri.suomi.fi cannot be set as external namespace
         invalidExtRes.setPrefix("test");
-        invalidExtRes.setNamespace(ModelConstants.SUOMI_FI_NAMESPACE + "test");
+        invalidExtRes.setNamespace(Constants.DATA_MODEL_NAMESPACE + "test");
         dataModelDTO.setExternalNamespaces(Set.of(invalidExtRes));
         args.add(dataModelDTO);
 

@@ -1,18 +1,14 @@
 package fi.vm.yti.datamodel.api.v2.service;
 
-import fi.vm.yti.datamodel.api.index.OpenSearchUtils;
+import fi.vm.yti.datamodel.api.v2.mapper.MapperTestUtils;
 import org.everit.json.schema.ValidationException;
 import org.everit.json.schema.loader.SchemaLoader;
 import org.json.JSONObject;
-import org.skyscreamer.jsonassert.JSONAssert;
-import fi.vm.yti.datamodel.api.mapper.MapperTestUtils;
 import org.junit.jupiter.api.Test;
+import org.skyscreamer.jsonassert.JSONAssert;
 import org.skyscreamer.jsonassert.JSONCompareMode;
 
 import java.io.StringWriter;
-import java.nio.charset.StandardCharsets;
-import java.io.*;
-import java.util.stream.Collectors;
 
 class JSONSchemaTest {
 

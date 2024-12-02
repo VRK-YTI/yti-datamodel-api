@@ -1,12 +1,11 @@
 package fi.vm.yti.datamodel.api.v2.opensearch;
 
-import fi.vm.yti.datamodel.api.index.OpenSearchUtils;
-import fi.vm.yti.datamodel.api.mapper.MapperTestUtils;
-import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
+import fi.vm.yti.common.Constants;
+import fi.vm.yti.common.enums.Status;
+import fi.vm.yti.common.opensearch.QueryFactoryUtils;
+import fi.vm.yti.datamodel.api.v2.mapper.MapperTestUtils;
 import fi.vm.yti.datamodel.api.v2.dto.ResourceType;
-import fi.vm.yti.datamodel.api.v2.dto.Status;
 import fi.vm.yti.datamodel.api.v2.opensearch.dto.ResourceSearchRequest;
-import fi.vm.yti.datamodel.api.v2.opensearch.queries.QueryFactoryUtils;
 import fi.vm.yti.datamodel.api.v2.opensearch.queries.ResourceQueryFactory;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
 import org.junit.jupiter.api.Test;
@@ -37,11 +36,11 @@ class ResourceQueryFactoryTest {
         request.setTargetClass(modelURI + "TestClass");
         request.setResourceTypes(Set.of(ResourceType.ATTRIBUTE, ResourceType.ASSOCIATION));
 
-        var groupNamespaces = List.of(ModelConstants.SUOMI_FI_NAMESPACE + "groupNs/1.0.0/", ModelConstants.SUOMI_FI_NAMESPACE + "addedNs/1.0.0/");
-        var internalNamespaces = List.of(ModelConstants.SUOMI_FI_NAMESPACE + "addedNs/1.0.0/", ModelConstants.SUOMI_FI_NAMESPACE + "draft_model/");
+        var groupNamespaces = List.of(Constants.DATA_MODEL_NAMESPACE + "groupNs/1.0.0/", Constants.DATA_MODEL_NAMESPACE + "addedNs/1.0.0/");
+        var internalNamespaces = List.of(Constants.DATA_MODEL_NAMESPACE + "addedNs/1.0.0/", Constants.DATA_MODEL_NAMESPACE + "draft_model/");
         var externalNamespaces = List.of("http://external-data.com/test");
 
-        var allowedIncompleteDataModels = Set.of(modelURI, ModelConstants.SUOMI_FI_NAMESPACE + "draft_model/");
+        var allowedIncompleteDataModels = Set.of(modelURI, Constants.DATA_MODEL_NAMESPACE + "draft_model/");
 
         var classQuery = ResourceQueryFactory.createInternalResourceQuery(request, externalNamespaces, internalNamespaces,
                 groupNamespaces, allowedIncompleteDataModels);
@@ -61,7 +60,7 @@ class ResourceQueryFactoryTest {
         request.setPageSize(100);
         request.setLimitToDataModel(modelURI);
         request.setResourceTypes(Set.of(ResourceType.ATTRIBUTE));
-        request.setAdditionalResources(Set.of(ModelConstants.SUOMI_FI_NAMESPACE + "ext/some-property"));
+        request.setAdditionalResources(Set.of(Constants.DATA_MODEL_NAMESPACE + "ext/some-property"));
 
         var attributeListQuery = ResourceQueryFactory.createInternalResourceQuery(request, new ArrayList<>(), new ArrayList<>(),
                 null, new HashSet<>());
@@ -93,7 +92,7 @@ class ResourceQueryFactoryTest {
 
         assertEquals("Page from value not matching", QueryFactoryUtils.DEFAULT_PAGE_FROM, classQuery.from());
         assertEquals("Page size value not matching", QueryFactoryUtils.DEFAULT_PAGE_SIZE, classQuery.size());
-        assertEquals("Label should be sorted in finnish by default", "label.fi.keyword", classQuery.sort().get(0).field().field());
+        assertEquals("Label should be sorted in finnish by default", "label.fi.sortKey", classQuery.sort().get(0).field().field());
     }
 
     @Test

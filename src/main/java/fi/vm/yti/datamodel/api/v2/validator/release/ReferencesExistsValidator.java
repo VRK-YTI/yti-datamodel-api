@@ -1,8 +1,8 @@
 package fi.vm.yti.datamodel.api.v2.validator.release;
 
-import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
+import fi.vm.yti.common.Constants;
+import fi.vm.yti.datamodel.api.v2.utils.DataModelMapperUtils;
 import fi.vm.yti.datamodel.api.v2.dto.ResourceReferenceDTO;
-import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.properties.DCAP;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
@@ -44,7 +44,7 @@ public class ReferencesExistsValidator extends ReleaseValidator {
     @Override
     public Set<ResourceReferenceDTO> validate(Model model) {
         var graph = model.listSubjectsWithProperty(DCAP.preferredXMLNamespace)
-                .filterKeep(s -> s.getNameSpace().startsWith(ModelConstants.SUOMI_FI_NAMESPACE))
+                .filterKeep(s -> s.getNameSpace().startsWith(Constants.DATA_MODEL_NAMESPACE))
                 .next().getURI();
 
         DataModelUtils.addPrefixesToModel(graph, model);
@@ -103,11 +103,11 @@ public class ReferencesExistsValidator extends ReleaseValidator {
 
     private static ResourceReferenceDTO mapResourceReference(Model model, Statement s) {
         var ref = new ResourceReferenceDTO();
-        ref.setProperty(MapperUtils.getCurie(s.getPredicate().asResource(), model));
-        ref.setTarget(MapperUtils.getCurie(s.getObject().asResource(), model));
+        ref.setProperty(DataModelMapperUtils.getCurie(s.getPredicate().asResource(), model));
+        ref.setTarget(DataModelMapperUtils.getCurie(s.getObject().asResource(), model));
 
         var subj = DataModelUtils.findSubjectForObject(s, model);
-        ref.setResourceURI(MapperUtils.uriToURIDTO(subj.getURI(), model));
+        ref.setResourceURI(DataModelMapperUtils.uriToURIDTO(subj.getURI(), model));
         return ref;
     }
 
@@ -130,6 +130,6 @@ public class ReferencesExistsValidator extends ReleaseValidator {
         return model.listStatements()
                 .filterDrop(s -> SKIP_PREDICATES.contains(s.getPredicate()))
                 .filterKeep(s -> s.getObject().isResource()
-                                 && s.getObject().toString().startsWith(ModelConstants.SUOMI_FI_NAMESPACE));
+                                 && s.getObject().toString().startsWith(Constants.DATA_MODEL_NAMESPACE));
     }
 }

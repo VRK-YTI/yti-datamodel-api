@@ -1,6 +1,7 @@
 package fi.vm.yti.datamodel.api.v2.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import fi.vm.yti.common.enums.Status;
 
 import java.util.Map;
 

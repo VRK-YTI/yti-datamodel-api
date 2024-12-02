@@ -1,8 +1,8 @@
 package fi.vm.yti.datamodel.api.v2.service;
 
+import fi.vm.yti.common.util.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.dto.SubscriptionDTO;
-import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
-import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
+import fi.vm.yti.common.exception.ResourceNotFoundException;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import fi.vm.yti.datamodel.api.v2.service.sns.SnsService;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;

@@ -1,10 +1,19 @@
 package fi.vm.yti.datamodel.api.v2.mapper;
 
+import fi.vm.yti.common.Constants;
+import fi.vm.yti.common.dto.LinkDTO;
+import fi.vm.yti.common.dto.ResourceCommonInfoDTO;
+import fi.vm.yti.common.enums.GraphType;
+import fi.vm.yti.common.enums.Status;
+import fi.vm.yti.common.mapper.OrganizationMapper;
+import fi.vm.yti.common.mapper.ServiceCategoryMapper;
+import fi.vm.yti.common.properties.SuomiMeta;
+import fi.vm.yti.common.util.MapperUtils;
+import fi.vm.yti.datamodel.api.v2.utils.DataModelMapperUtils;
 import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexModel;
 import fi.vm.yti.datamodel.api.v2.properties.DCAP;
-import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import fi.vm.yti.datamodel.api.v2.repository.ImportsRepository;
 import fi.vm.yti.datamodel.api.v2.repository.SchemesRepository;
@@ -46,14 +55,14 @@ public class ModelMapper {
      * @param modelDTO Data Model DTO
      * @return Model
      */
-    public Model mapToJenaModel(DataModelDTO modelDTO, ModelType modelType, YtiUser user) {
+    public Model mapToJenaModel(DataModelDTO modelDTO, GraphType modelType, YtiUser user) {
         var model = ModelFactory.createDefaultModel();
         var modelUri = DataModelURI.createModelURI(modelDTO.getPrefix()).getModelURI();
 
         var creationDate = new XSDDateTime(Calendar.getInstance());
         var modelResource = model.createResource(modelUri)
                 .addProperty(RDF.type, OWL.Ontology)
-                .addProperty(SuomiMeta.publicationStatus, ResourceFactory.createResource(MapperUtils.getStatusUri(Status.DRAFT)))
+                .addProperty(SuomiMeta.publicationStatus, ResourceFactory.createResource(MapperUtils.getStatusUri(fi.vm.yti.common.enums.Status.DRAFT)))
                 .addProperty(DCTerms.identifier, UUID.randomUUID().toString())
                 .addProperty(SuomiMeta.contentModified, ResourceFactory.createTypedLiteral(creationDate))
                 .addProperty(DCAP.preferredXMLNamespacePrefix, modelDTO.getPrefix())
@@ -61,16 +70,16 @@ public class ModelMapper {
 
         MapperUtils.addCreationMetadata(modelResource, user);
 
-        if (modelType.equals(ModelType.PROFILE)) {
+        if (modelType.equals(GraphType.PROFILE)) {
             modelResource.addProperty(RDF.type, SuomiMeta.ApplicationProfile);
         }
 
         modelDTO.getLanguages().forEach(lang -> modelResource.addProperty(DCTerms.language, lang));
 
         MapperUtils.addOptionalStringProperty(modelResource, SuomiMeta.contact, modelDTO.getContact());
-        MapperUtils.addLocalizedProperty(modelDTO.getLanguages(), modelDTO.getDocumentation(), modelResource, SuomiMeta.documentation, model);
-        MapperUtils.addLocalizedProperty(modelDTO.getLanguages(), modelDTO.getLabel(), modelResource, RDFS.label, model);
-        MapperUtils.addLocalizedProperty(modelDTO.getLanguages(), modelDTO.getDescription(), modelResource, RDFS.comment, model);
+        MapperUtils.addLocalizedProperty(modelDTO.getLanguages(), modelDTO.getDocumentation(), modelResource, SuomiMeta.documentation);
+        MapperUtils.addLocalizedProperty(modelDTO.getLanguages(), modelDTO.getLabel(), modelResource, RDFS.label);
+        MapperUtils.addLocalizedProperty(modelDTO.getLanguages(), modelDTO.getDescription(), modelResource, RDFS.comment);
 
         var groupModel = coreRepository.getServiceCategories();
         modelDTO.getGroups().forEach(group -> {
@@ -89,7 +98,7 @@ public class ModelMapper {
 
         modelDTO.getTerminologies().forEach(terminology -> MapperUtils.addOptionalUriProperty(modelResource, DCTerms.requires, terminology));
 
-        if(modelType.equals(ModelType.PROFILE)) {
+        if(modelType.equals(GraphType.PROFILE)) {
             modelDTO.getCodeLists().forEach(codeList -> MapperUtils.addOptionalUriProperty(modelResource, DCTerms.requires, codeList));
         }
 
@@ -106,19 +115,19 @@ public class ModelMapper {
         modelResource.removeAll(DCTerms.language);
         dataModelDTO.getLanguages().forEach(lang -> modelResource.addProperty(DCTerms.language, lang));
 
-        removeFromIterator(modelResource.listProperties(DCTerms.requires), val -> val.startsWith(ModelConstants.SUOMI_FI_NAMESPACE));
-        removeFromIterator(modelResource.listProperties(OWL.imports), val -> val.startsWith(ModelConstants.SUOMI_FI_NAMESPACE));
+        removeFromIterator(modelResource.listProperties(DCTerms.requires), val -> val.startsWith(Constants.DATA_MODEL_NAMESPACE));
+        removeFromIterator(modelResource.listProperties(OWL.imports), val -> val.startsWith(Constants.DATA_MODEL_NAMESPACE));
         addInternalNamespaceToDatamodel(dataModelDTO, modelResource);
 
-        removeFromIterator(modelResource.listProperties(DCTerms.requires), val -> !val.startsWith(ModelConstants.SUOMI_FI_NAMESPACE)
-                && !val.startsWith(ModelConstants.CODELIST_NAMESPACE) && !val.startsWith(ModelConstants.TERMINOLOGY_NAMESPACE));
-        removeFromIterator(modelResource.listProperties(OWL.imports), val -> !val.startsWith(ModelConstants.SUOMI_FI_NAMESPACE)
-                && !val.startsWith(ModelConstants.CODELIST_NAMESPACE) && !val.startsWith(ModelConstants.TERMINOLOGY_NAMESPACE));
+        removeFromIterator(modelResource.listProperties(DCTerms.requires), val -> !val.startsWith(Constants.DATA_MODEL_NAMESPACE)
+                && !val.startsWith(ModelConstants.CODELIST_NAMESPACE) && !val.startsWith(Constants.TERMINOLOGY_NAMESPACE));
+        removeFromIterator(modelResource.listProperties(OWL.imports), val -> !val.startsWith(Constants.DATA_MODEL_NAMESPACE)
+                && !val.startsWith(ModelConstants.CODELIST_NAMESPACE) && !val.startsWith(Constants.TERMINOLOGY_NAMESPACE));
         addExternalNamespaceToDatamodel(dataModelDTO, model, modelResource);
 
 
         removeFromIterator(modelResource.listProperties(DCTerms.requires), val ->
-                val.startsWith(ModelConstants.TERMINOLOGY_NAMESPACE));
+                val.startsWith(Constants.TERMINOLOGY_NAMESPACE));
         dataModelDTO.getTerminologies().forEach(terminology -> MapperUtils.addOptionalUriProperty(modelResource, DCTerms.requires, terminology));
 
         if(MapperUtils.isApplicationProfile(modelResource)){
@@ -143,8 +152,8 @@ public class ModelMapper {
     private void addLinkToModel(Model model, Resource modelResource, LinkDTO linkDTO) {
         var blankNode = model.createResource();
         var languages = MapperUtils.arrayPropertyToSet(modelResource, DCTerms.language);
-        MapperUtils.addLocalizedProperty(languages, linkDTO.getName(), blankNode, DCTerms.title, model);
-        MapperUtils.addLocalizedProperty(languages, linkDTO.getDescription(), blankNode, DCTerms.description, model);
+        MapperUtils.addLocalizedProperty(languages, linkDTO.getName(), blankNode, DCTerms.title);
+        MapperUtils.addLocalizedProperty(languages, linkDTO.getDescription(), blankNode, DCTerms.description);
         blankNode.addProperty(FOAF.homepage, linkDTO.getUri());
         modelResource.addProperty(RDFS.seeAlso, blankNode);
     }
@@ -156,7 +165,7 @@ public class ModelMapper {
      * @param model  Model
      * @return Data Model DTO
      */
-    public DataModelInfoDTO mapToDataModelDTO(String prefix, Model model, Consumer<ResourceCommonDTO> userMapper) {
+    public DataModelInfoDTO mapToDataModelDTO(String prefix, Model model, Consumer<ResourceCommonInfoDTO> userMapper) {
 
         var uri = DataModelURI.createModelURI(prefix);
         var datamodelDTO = new DataModelInfoDTO();
@@ -168,9 +177,9 @@ public class ModelMapper {
         datamodelDTO.setVersion(MapperUtils.propertyToString(modelResource, OWL.versionInfo));
         datamodelDTO.setVersionIri(MapperUtils.propertyToString(modelResource, OWL2.versionIRI));
         if(MapperUtils.isApplicationProfile(modelResource)){
-            datamodelDTO.setType(ModelType.PROFILE);
+            datamodelDTO.setGraphType(GraphType.PROFILE);
         }else if(MapperUtils.isLibrary(modelResource)){
-            datamodelDTO.setType(ModelType.LIBRARY);
+            datamodelDTO.setGraphType(GraphType.LIBRARY);
         }else{
             throw new MappingError("RDF:type not supported for data model");
         }
@@ -196,7 +205,7 @@ public class ModelMapper {
         datamodelDTO.setExternalNamespaces(externalNamespaces);
 
         var terminologies = MapperUtils.arrayPropertyToSet(modelResource, DCTerms.requires)
-                .stream().filter(val -> val.startsWith(ModelConstants.TERMINOLOGY_NAMESPACE))
+                .stream().filter(val -> val.startsWith(Constants.TERMINOLOGY_NAMESPACE))
                 .map(ref -> {
                     var terminologyModel = terminologyService.getTerminology(ref);
                     if (terminologyModel == null) {
@@ -267,9 +276,9 @@ public class ModelMapper {
         }
 
         if(MapperUtils.isApplicationProfile(resource)){
-            indexModel.setType(ModelType.PROFILE);
+            indexModel.setType(GraphType.PROFILE);
         }else if(MapperUtils.isLibrary(resource)){
-            indexModel.setType(ModelType.LIBRARY);
+            indexModel.setType(GraphType.LIBRARY);
         }else{
             throw new MappingError("RDF:type not supported for data model");
         }
@@ -289,6 +298,24 @@ public class ModelMapper {
         return indexModel;
     }
 
+    public Model mapNewDraft(Model model, DataModelURI versionURI) {
+
+        var newDraft = ModelFactory.createDefaultModel().add(model);
+        var modelResource = newDraft.getResource(versionURI.getModelURI());
+
+        // new prior version is the version from which the new draft is created
+        MapperUtils.updateUriProperty(modelResource, OWL.priorVersion, versionURI.getGraphURI());
+        modelResource.removeAll(OWL.versionInfo);
+        modelResource.removeAll(OWL2.versionIRI);
+
+        // change all statuses to DRAFT
+        newDraft.listSubjectsWithProperty(SuomiMeta.publicationStatus)
+                .forEach(resource -> MapperUtils.updateUriProperty(
+                        resource, SuomiMeta.publicationStatus, MapperUtils.getStatusUri(Status.DRAFT))
+                );
+        return newDraft;
+    }
+
     /**
      * Add organizations to a model
      * @param organizations Organizations
@@ -297,7 +324,7 @@ public class ModelMapper {
     private void addOrgsToModel(Set<UUID> organizations, Resource modelResource) {
         var organizationsModel = coreRepository.getOrganizations();
         organizations.forEach(org -> {
-            var orgUri = ModelConstants.URN_UUID + org;
+            var orgUri = Constants.URN_UUID + org;
             var orgResource = organizationsModel.getResource(orgUri);
             if (organizationsModel.containsResource(orgResource)) {
                 modelResource.addProperty(DCTerms.contributor, orgResource);
@@ -313,7 +340,7 @@ public class ModelMapper {
 
     /**
      * Add namespaces from model to two sets
-     * @param intNs Internal namespaces set - Defined by having {@link ModelConstants#SUOMI_FI_NAMESPACE} as the namespace
+     * @param intNs Internal namespaces set - Defined by having {@link Constants#DATA_MODEL_NAMESPACE} as the namespace
      * @param extNs External namespaces set - Everything not internal
      * @param model Model to get external namespace information from
      * @param resource Model resource where the given property lies
@@ -323,15 +350,15 @@ public class ModelMapper {
         resource.listProperties(property)
                 .filterDrop(prop -> {
                     var string = prop.getObject().toString();
-                    return string.startsWith(ModelConstants.CODELIST_NAMESPACE) || string.startsWith(ModelConstants.TERMINOLOGY_NAMESPACE);
+                    return string.startsWith(ModelConstants.CODELIST_NAMESPACE) || string.startsWith(Constants.TERMINOLOGY_NAMESPACE);
                 })
                 .forEach(prop -> {
             var ns = prop.getObject().toString();
-            if(ns.startsWith(ModelConstants.SUOMI_FI_NAMESPACE)){
+            if(ns.startsWith(Constants.DATA_MODEL_NAMESPACE)){
                 var dto = new InternalNamespaceDTO();
                 try {
                     var nsModel = coreRepository.fetch(ns);
-                    var nsResource = MapperUtils.getModelResourceFromVersion(nsModel);
+                    var nsResource = DataModelMapperUtils.getModelResourceFromVersion(nsModel);
                     dto.setNamespace(ns);
                     dto.setPrefix(MapperUtils.propertyToString(nsResource, DCAP.preferredXMLNamespacePrefix));
                     dto.setName(MapperUtils.localizedPropertyToMap(nsResource, RDFS.label));
@@ -358,19 +385,19 @@ public class ModelMapper {
     private void addInternalNamespaceToDatamodel(DataModelDTO modelDTO, Resource resource) {
         modelDTO.getInternalNamespaces().forEach(namespace -> {
             var ns = coreRepository.fetch(namespace);
-            var nsRes = MapperUtils.getModelResourceFromVersion(ns);
-            var nsType = MapperUtils.getModelTypeFromResource(nsRes);
-            var modelType = MapperUtils.getModelTypeFromResource(resource);
+            var nsRes = DataModelMapperUtils.getModelResourceFromVersion(ns);
+            var nsType = DataModelMapperUtils.getModelTypeFromResource(nsRes);
+            var modelType = DataModelMapperUtils.getModelTypeFromResource(resource);
             resource.addProperty(getNamespacePropertyFromType(modelType, nsType), ResourceFactory.createResource(namespace));
         });
     }
 
-    private Property getNamespacePropertyFromType(ModelType modelType, ModelType nsType){
-        if(modelType.equals(ModelType.LIBRARY) && nsType.equals(ModelType.LIBRARY)){
+    private Property getNamespacePropertyFromType(GraphType modelType, GraphType nsType){
+        if(modelType.equals(GraphType.LIBRARY) && nsType.equals(GraphType.LIBRARY)){
             return OWL.imports;
-        }else if(modelType.equals(ModelType.PROFILE) && nsType.equals(ModelType.LIBRARY)){
+        }else if(modelType.equals(GraphType.PROFILE) && nsType.equals(GraphType.LIBRARY)){
             return DCTerms.requires;
-        }else if(modelType.equals(ModelType.PROFILE) && nsType.equals(ModelType.PROFILE)){
+        }else if(modelType.equals(GraphType.PROFILE) && nsType.equals(GraphType.PROFILE)){
             return OWL.imports;
         }else{
             return DCTerms.requires;
@@ -386,7 +413,7 @@ public class ModelMapper {
     private void addExternalNamespaceToDatamodel(DataModelDTO modelDTO, Model model, Resource resource){
         // remove existing external namespaces before adding new ones
         var oldNamespaces = model.listSubjectsWithProperty(DCAP.preferredXMLNamespacePrefix)
-                .filterDrop(s -> s.getURI().startsWith(ModelConstants.SUOMI_FI_NAMESPACE))
+                .filterDrop(s -> s.getURI().startsWith(Constants.DATA_MODEL_NAMESPACE))
                 .toList();
         oldNamespaces.forEach(ns -> model.removeAll(ns, null, null));
 
@@ -394,14 +421,14 @@ public class ModelMapper {
             var nsUri = namespace.getNamespace();
             var nsRes = model.createResource(nsUri);
 
-            MapperUtils.updateLocalizedProperty(modelDTO.getLanguages(), namespace.getName(), nsRes, RDFS.label, model);
+            MapperUtils.updateLocalizedProperty(modelDTO.getLanguages(), namespace.getName(), nsRes, RDFS.label);
             nsRes.addProperty(DCAP.preferredXMLNamespacePrefix, namespace.getPrefix());
 
             try{
                 var resolvedNs = importsRepository.fetch(nsUri);
                 var extRes = resolvedNs.getResource(nsUri);
-                var nsType = MapperUtils.getModelTypeFromResource(extRes);
-                var modelType = MapperUtils.getModelTypeFromResource(resource);
+                var nsType = DataModelMapperUtils.getModelTypeFromResource(extRes);
+                var modelType = DataModelMapperUtils.getModelTypeFromResource(resource);
                 resource.addProperty(getNamespacePropertyFromType(modelType, nsType), nsRes);
             }catch(Exception e){
                 //If namespace wasn't resolved just add it as dcterms:requires
@@ -414,7 +441,8 @@ public class ModelMapper {
         var res = model.getResource(uri.getModelURI());
         res.addProperty(OWL2.versionIRI, ResourceFactory.createResource(uri.getGraphURI()));
         res.addProperty(OWL.versionInfo, uri.getVersion());
-        model.listSubjectsWithProperty(SuomiMeta.publicationStatus).forEach(subject -> MapperUtils.updateUriProperty(subject, SuomiMeta.publicationStatus, MapperUtils.getStatusUri(status)));
+        model.listSubjectsWithProperty(SuomiMeta.publicationStatus).forEach(subject ->
+                MapperUtils.updateUriProperty(subject, SuomiMeta.publicationStatus, MapperUtils.getStatusUri(status)));
     }
 
     public void mapPriorVersion(Model model, String modelUri, String priorVersionUri) {
@@ -435,10 +463,10 @@ public class ModelMapper {
     public void updateCommonMetaData(Model model, Resource resource, ModelMetaData dto, YtiUser user) {
         var langs = MapperUtils.arrayPropertyToSet(resource, DCTerms.language);
 
-        MapperUtils.updateLocalizedProperty(langs, dto.getLabel(), resource, RDFS.label, model);
-        MapperUtils.updateLocalizedProperty(langs, dto.getDescription(), resource, RDFS.comment, model);
+        MapperUtils.updateLocalizedProperty(langs, dto.getLabel(), resource, RDFS.label);
+        MapperUtils.updateLocalizedProperty(langs, dto.getDescription(), resource, RDFS.comment);
         MapperUtils.updateStringProperty(resource, SuomiMeta.contact, dto.getContact());
-        MapperUtils.updateLocalizedProperty(langs, dto.getDocumentation(), resource, SuomiMeta.documentation, model);
+        MapperUtils.updateLocalizedProperty(langs, dto.getDocumentation(), resource, SuomiMeta.documentation);
 
         resource.removeAll(DCTerms.contributor);
         addOrgsToModel(dto.getOrganizations(), resource);

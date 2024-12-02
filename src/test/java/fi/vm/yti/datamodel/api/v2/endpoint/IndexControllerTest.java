@@ -1,7 +1,7 @@
 package fi.vm.yti.datamodel.api.v2.endpoint;
 
-import fi.vm.yti.datamodel.api.security.AuthorizationManager;
-import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
+import fi.vm.yti.datamodel.api.v2.security.DataModelAuthorizationManager;
+import fi.vm.yti.datamodel.api.v2.service.IndexService;
 import fi.vm.yti.datamodel.api.v2.validator.ExceptionHandlerAdvice;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,10 +29,10 @@ class IndexControllerTest {
     private MockMvc mvc;
 
     @MockBean
-    private AuthorizationManager authorizationManager;
+    private DataModelAuthorizationManager authorizationManager;
 
     @MockBean
-    private OpenSearchIndexer openSearchIndexer;
+    private IndexService indexService;
 
     @Autowired
     private IndexController indexController;
@@ -52,12 +52,12 @@ class IndexControllerTest {
         mvc.perform(post("/v2/index/reindex"))
             .andExpect(status().isOk());
 
-        verify(openSearchIndexer).reindex(null);
+        verify(indexService).reindex(null);
 
         mvc.perform(post("/v2/index/reindex")
                     .param("index", "models_v2"))
             .andExpect(status().isOk());
 
-        verify(openSearchIndexer).reindex("models_v2");
+        verify(indexService).reindex("models_v2");
     }
 }

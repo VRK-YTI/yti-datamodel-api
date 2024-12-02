@@ -1,10 +1,10 @@
 package fi.vm.yti.datamodel.api.v2.service;
 
-import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
+import fi.vm.yti.common.Constants;
+import fi.vm.yti.common.properties.SuomiMeta;
+import fi.vm.yti.common.util.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.dto.PropertyShapeInfoDTO;
-import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.mapper.ResourceMapper;
-import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Property;
@@ -20,7 +20,8 @@ import org.slf4j.LoggerFactory;
 import org.topbraid.shacl.vocabulary.SH;
 
 import java.io.StringWriter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Map;
 
 public class JSONSchemaBuilder {
 
@@ -69,7 +70,7 @@ public class JSONSchemaBuilder {
         var modelResource = model.getResource(modelSubj.next().getURI());
 
         final var lang = language == null
-                ? ModelConstants.DEFAULT_LANGUAGE
+                ? Constants.DEFAULT_LANGUAGE
                 : language;
 
         var schemaBuilder = ObjectSchema.builder();

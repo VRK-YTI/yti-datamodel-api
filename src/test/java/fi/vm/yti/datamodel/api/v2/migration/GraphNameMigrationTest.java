@@ -1,13 +1,13 @@
 package fi.vm.yti.datamodel.api.v2.migration;
 
-import fi.vm.yti.datamodel.api.mapper.MapperTestUtils;
-import fi.vm.yti.datamodel.api.migration.task.V10_RenameURIs;
+import fi.vm.yti.common.Constants;
+import fi.vm.yti.datamodel.api.v2.mapper.MapperTestUtils;
+import fi.vm.yti.datamodel.api.v2.migration.task.V10_RenameURIs;
 import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import org.apache.jena.query.QuerySolution;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.RDFNode;
-
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -19,8 +19,9 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.function.Consumer;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
-import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(SpringExtension.class)
 @Import({
@@ -51,7 +52,7 @@ class GraphNameMigrationTest {
 
         uriMigration.migrate();
 
-        verify(coreRepository).put(eq(ModelConstants.SUOMI_FI_NAMESPACE + "test/"), captor.capture());
+        verify(coreRepository).put(eq(Constants.DATA_MODEL_NAMESPACE + "test/"), captor.capture());
         verify(coreRepository).delete(oldGraphURI);
 
         // there should not exist any subject, predicate or object in the model containing old namespace
@@ -61,11 +62,11 @@ class GraphNameMigrationTest {
                         || !s.getPredicate().toString().contains(OLD_NS)
                         || !s.getObject().toString().contains(OLD_NS));
         // model resource
-        assertTrue(model.getResource(ModelConstants.SUOMI_FI_NAMESPACE + "test/").listProperties().hasNext());
+        assertTrue(model.getResource(Constants.DATA_MODEL_NAMESPACE + "test/").listProperties().hasNext());
         // class resource
-        assertTrue(model.getResource(ModelConstants.SUOMI_FI_NAMESPACE + "test/TestClass").listProperties().hasNext());
+        assertTrue(model.getResource(Constants.DATA_MODEL_NAMESPACE + "test/TestClass").listProperties().hasNext());
         // Attribute resource
-        assertTrue(model.getResource(ModelConstants.SUOMI_FI_NAMESPACE + "test/TestAttributeRestriction").listProperties().hasNext());
+        assertTrue(model.getResource(Constants.DATA_MODEL_NAMESPACE + "test/TestAttributeRestriction").listProperties().hasNext());
         // No resources with old namespace
         assertFalse(containsOldNS);
     }
@@ -81,7 +82,7 @@ class GraphNameMigrationTest {
 
         uriMigration.migrate();
 
-        verify(coreRepository).put(eq(ModelConstants.SUOMI_FI_NAMESPACE + "test/1.0.0/"), captor.capture());
+        verify(coreRepository).put(eq(Constants.DATA_MODEL_NAMESPACE + "test/1.0.0/"), captor.capture());
         verify(coreRepository).delete(oldGraphURI);
 
         // there should not exist any subject, predicate or object in the model containing old namespace
@@ -92,11 +93,11 @@ class GraphNameMigrationTest {
                         || !s.getObject().toString().contains(OLD_NS));
 
         // model resource
-        assertTrue(model.getResource(ModelConstants.SUOMI_FI_NAMESPACE + "test/").listProperties().hasNext());
+        assertTrue(model.getResource(Constants.DATA_MODEL_NAMESPACE + "test/").listProperties().hasNext());
         // class resource
-        assertTrue(model.getResource(ModelConstants.SUOMI_FI_NAMESPACE + "test/TestClass").listProperties().hasNext());
+        assertTrue(model.getResource(Constants.DATA_MODEL_NAMESPACE + "test/TestClass").listProperties().hasNext());
         // Attribute resource
-        assertTrue(model.getResource(ModelConstants.SUOMI_FI_NAMESPACE + "test/TestAttributeRestriction").listProperties().hasNext());
+        assertTrue(model.getResource(Constants.DATA_MODEL_NAMESPACE + "test/TestAttributeRestriction").listProperties().hasNext());
         // No resources with old namespace
         assertFalse(containsOldNS);
     }

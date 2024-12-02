@@ -1,7 +1,12 @@
 package fi.vm.yti.datamodel.api.v2.mapper;
 
-import fi.vm.yti.datamodel.api.v2.dto.*;
-import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
+import fi.vm.yti.common.Constants;
+import fi.vm.yti.common.enums.Status;
+import fi.vm.yti.common.properties.SuomiMeta;
+import fi.vm.yti.common.util.MapperUtils;
+import fi.vm.yti.datamodel.api.v2.dto.ConceptDTO;
+import fi.vm.yti.datamodel.api.v2.dto.TerminologyDTO;
+import fi.vm.yti.datamodel.api.v2.dto.TerminologyNodeDTO;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.ResourceFactory;
@@ -27,8 +32,8 @@ public class TerminologyMapper {
     }
 
     public static TerminologyDTO mapToTerminologyDTO(String graph, Model model) {
-        if (!graph.endsWith(ModelConstants.RESOURCE_SEPARATOR)) {
-            graph = graph + ModelConstants.RESOURCE_SEPARATOR;
+        if (!graph.endsWith(Constants.RESOURCE_SEPARATOR)) {
+            graph = graph + Constants.RESOURCE_SEPARATOR;
         }
         var dto = new TerminologyDTO(graph);
         var label = MapperUtils.localizedPropertyToMap(model.getResource(graph), SKOS.prefLabel);

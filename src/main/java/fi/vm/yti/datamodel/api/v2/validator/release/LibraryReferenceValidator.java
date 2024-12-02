@@ -1,8 +1,8 @@
 package fi.vm.yti.datamodel.api.v2.validator.release;
 
+import fi.vm.yti.common.properties.SuomiMeta;
+import fi.vm.yti.datamodel.api.v2.utils.DataModelMapperUtils;
 import fi.vm.yti.datamodel.api.v2.dto.ResourceReferenceDTO;
-import fi.vm.yti.datamodel.api.v2.mapper.MapperUtils;
-import fi.vm.yti.datamodel.api.v2.properties.SuomiMeta;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.Resource;
@@ -39,9 +39,9 @@ public class LibraryReferenceValidator extends ReleaseValidator {
         return model.listSubjectsWithProperty(property, object)
                 .mapWith(resource -> {
                     var dto = new ResourceReferenceDTO();
-                    dto.setResourceURI(MapperUtils.uriToURIDTO(resource.getURI(), model));
-                    dto.setProperty(MapperUtils.getCurie(property, model));
-                    dto.setTarget(MapperUtils.getCurie(object, model));
+                    dto.setResourceURI(DataModelMapperUtils.uriToURIDTO(resource.getURI(), model));
+                    dto.setProperty(DataModelMapperUtils.getCurie(property, model));
+                    dto.setTarget(DataModelMapperUtils.getCurie(object, model));
                     return dto;
                 }).toList();
     }

@@ -1,6 +1,6 @@
 package fi.vm.yti.datamodel.api.v2.dto;
 
-import org.apache.commons.lang3.builder.ToStringBuilder;
+    import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import java.util.Map;
 
@@ -35,20 +35,20 @@ public abstract class BaseDTO {
         this.subject = subject;
     }
 
-    public String getEditorialNote() {
-        return editorialNote;
-    }
-
-    public void setEditorialNote(String editorialNote) {
-        this.editorialNote = editorialNote;
-    }
-
     public Map<String, String> getNote() {
         return note;
     }
 
     public void setNote(Map<String, String> note) {
         this.note = note;
+    }
+
+    public String getEditorialNote() {
+        return editorialNote;
+    }
+
+    public void setEditorialNote(String editorialNote) {
+        this.editorialNote = editorialNote;
     }
 
     @Override

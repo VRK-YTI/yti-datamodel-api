@@ -1,17 +1,27 @@
 package fi.vm.yti.datamodel.api.v2.service;
 
-import fi.vm.yti.datamodel.api.mapper.MapperTestUtils;
-import fi.vm.yti.datamodel.api.security.AuthorizationManager;
-import fi.vm.yti.datamodel.api.v2.dto.*;
+import fi.vm.yti.common.Constants;
+import fi.vm.yti.common.enums.GraphType;
+import fi.vm.yti.common.enums.Status;
+import fi.vm.yti.common.properties.SuomiMeta;
+import fi.vm.yti.common.service.GroupManagementService;
+import fi.vm.yti.common.util.MapperUtils;
+import fi.vm.yti.datamodel.api.v2.mapper.MapperTestUtils;
+import fi.vm.yti.datamodel.api.v2.security.DataModelAuthorizationManager;
+import fi.vm.yti.datamodel.api.v2.dto.DataModelDTO;
+import fi.vm.yti.datamodel.api.v2.dto.ExternalNamespaceDTO;
+import fi.vm.yti.datamodel.api.v2.dto.ModelVersionInfo;
+import fi.vm.yti.datamodel.api.v2.dto.VersionedModelDTO;
 import fi.vm.yti.datamodel.api.v2.endpoint.EndpointUtils;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
-import fi.vm.yti.datamodel.api.v2.endpoint.error.ResourceNotFoundException;
+import fi.vm.yti.common.exception.ResourceNotFoundException;
 import fi.vm.yti.datamodel.api.v2.mapper.ModelMapper;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexModel;
-import fi.vm.yti.datamodel.api.v2.opensearch.index.OpenSearchIndexer;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
 import fi.vm.yti.security.AuthenticatedUserProvider;
+import fi.vm.yti.security.AuthorizationException;
+import fi.vm.yti.security.Role;
 import fi.vm.yti.security.YtiUser;
 import org.apache.jena.query.Query;
 import org.apache.jena.query.QuerySolution;
@@ -23,6 +33,7 @@ import org.apache.jena.vocabulary.RDFS;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
@@ -32,6 +43,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.net.URISyntaxException;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -51,7 +63,7 @@ class DataModelServiceTest {
     CoreRepository coreRepository;
 
     @MockBean
-    AuthorizationManager authorizationManager;
+    DataModelAuthorizationManager authorizationManager;
 
     @MockBean
     GroupManagementService groupManagementService;
@@ -69,7 +81,7 @@ class DataModelServiceTest {
     CodeListService codeListService;
 
     @MockBean
-    OpenSearchIndexer openSearchIndexer;
+    IndexService indexService;
 
     @MockBean
     AuthenticatedUserProvider userProvider;
@@ -114,28 +126,28 @@ class DataModelServiceTest {
 
         dataModelService.get("test", "1.0.1");
 
-        verify(coreRepository).fetch(ModelConstants.SUOMI_FI_NAMESPACE + "test/1.0.1" + ModelConstants.RESOURCE_SEPARATOR);
+        verify(coreRepository).fetch(Constants.DATA_MODEL_NAMESPACE + "test/1.0.1" + Constants.RESOURCE_SEPARATOR);
         verify(authorizationManager).hasRightToModel(eq("test"), any(Model.class));
         verify(modelMapper).mapToDataModelDTO(anyString(), any(Model.class), eq(null));
     }
 
     @Test
     void create() throws URISyntaxException {
-        when(authorizationManager.hasRightToAnyOrganization(anyCollection())).thenReturn(true);
+        when(authorizationManager.hasRightToAnyOrganization(anyCollection(), eq(Role.DATA_MODEL_EDITOR))).thenReturn(true);
         when(userProvider.getUser()).thenReturn(EndpointUtils.mockUser);
-        when(modelMapper.mapToJenaModel(any(DataModelDTO.class), any(ModelType.class), any(YtiUser.class))).thenReturn(ModelFactory.createDefaultModel());
+        when(modelMapper.mapToJenaModel(any(DataModelDTO.class), any(GraphType.class), any(YtiUser.class))).thenReturn(ModelFactory.createDefaultModel());
         when(modelMapper.mapToIndexModel(anyString(), any(Model.class))).thenReturn(new IndexModel());
         var dto = createDatamodelDTO(false);
-        var uri = dataModelService.create(dto, ModelType.LIBRARY);
-        assertEquals(ModelConstants.SUOMI_FI_NAMESPACE + "test/", uri.toString());
+        var uri = dataModelService.create(dto, GraphType.LIBRARY);
+        assertEquals(Constants.DATA_MODEL_NAMESPACE + "test/", uri.toString());
 
-        verify(authorizationManager).hasRightToAnyOrganization(anyCollection());
+        verify(authorizationManager).hasRightToAnyOrganization(anyCollection(), eq(Role.DATA_MODEL_EDITOR));
         verify(terminologyService).resolveTerminology(anySet());
         verify(codeListService).resolveCodelistScheme(anySet());
-        verify(modelMapper).mapToJenaModel(any(DataModelDTO.class), any(ModelType.class), any(YtiUser.class));
+        verify(modelMapper).mapToJenaModel(any(DataModelDTO.class), any(GraphType.class), any(YtiUser.class));
         verify(coreRepository).put(anyString(), any(Model.class));
         verify(modelMapper).mapToIndexModel(anyString(), any(Model.class));
-        verify(openSearchIndexer).createModelToIndex(any(IndexModel.class));
+        verify(indexService).createModelToIndex(any(IndexModel.class));
     }
 
     @Test
@@ -155,38 +167,44 @@ class DataModelServiceTest {
         verify(modelMapper).mapToUpdateJenaModel(anyString(), any(DataModelDTO.class), any(Model.class), any(YtiUser.class));
         verify(coreRepository).put(anyString(), any(Model.class));
         verify(modelMapper).mapToIndexModel(anyString(), any(Model.class));
-        verify(openSearchIndexer).updateModelToIndex(any(IndexModel.class));
+        verify(indexService).updateModelToIndex(any(IndexModel.class));
     }
 
     @Test
-    void deleteDraftModelWithPublishedVersion() {
-        var model = ModelFactory.createDefaultModel();
-        var dataModelURI = DataModelURI.createModelURI("test");
-        model.createResource(dataModelURI.getModelURI())
-            .addProperty(OWL.priorVersion, DataModelURI.createModelURI("test", "1.0.0").getGraphURI());
+    void deleteValidModel() {
+        var dataModelURI = DataModelURI.createModelURI("test", "1.0.0");
 
-        when(userProvider.getUser()).thenReturn(EndpointUtils.mockSuperUser);
-        when(authorizationManager.hasRightToModel(eq(dataModelURI.getModelId()), any(Model.class))).thenReturn(true);
+        var model = ModelFactory.createDefaultModel();
+        model.createResource(dataModelURI.getModelURI())
+                .addProperty(SuomiMeta.publicationStatus, MapperUtils.getStatusUri(Status.VALID));
+
         when(coreRepository.graphExists(dataModelURI.getGraphURI())).thenReturn(true);
         when(coreRepository.fetch(dataModelURI.getGraphURI())).thenReturn(model);
+        when(userProvider.getUser()).thenReturn(EndpointUtils.mockAdminUser);
+        when(authorizationManager.hasAdminRightToModel(eq(dataModelURI.getModelId()), any(Model.class))).thenReturn(true);
+        when(coreRepository.queryConstruct(any(Query.class))).thenReturn(ModelFactory.createDefaultModel());
 
-        var error = assertThrows(MappingError.class, () -> dataModelService.delete("test", null));
+        var error = assertThrows(MappingError.class, () -> dataModelService.delete("test", "1.0.0"));
 
-        assertTrue(error.getMessage().contains("Cannot remove draft data model with published versions"),
+        assertTrue(error.getMessage().contains("Cannot remove data model with status VALID"),
                 "Unexpected error message: " + error.getMessage());
 
         verify(coreRepository, never()).delete(anyString());
-        verify(openSearchIndexer, never()).deleteModelFromIndex(anyString());
-        verify(openSearchIndexer, never()).removeResourceIndexesByDataModel(anyString(), eq(null));
+        verify(indexService, never()).deleteModelFromIndex(anyString());
+        verify(indexService, never()).removeResourceIndexesByDataModel(anyString(), anyString());
     }
 
-    @Test
-    void deleteModelWithReferences() {
-        var model = ModelFactory.createDefaultModel();
+    @ParameterizedTest
+    @CsvSource({ "RETIRED", "SUPERSEDED", "SUGGESTED", "DRAFT" })
+    void deleteVersionedModelWithReferrers(String status) {
         var dataModelURI = DataModelURI.createModelURI("test", "1.0.0");
 
-        when(userProvider.getUser()).thenReturn(EndpointUtils.mockSuperUser);
-        when(authorizationManager.hasRightToModel(eq(dataModelURI.getModelId()), any(Model.class))).thenReturn(true);
+        var model = ModelFactory.createDefaultModel();
+        model.createResource(dataModelURI.getModelURI())
+                .addProperty(SuomiMeta.publicationStatus, MapperUtils.getStatusUri(Status.valueOf(status)));
+
+        when(userProvider.getUser()).thenReturn(EndpointUtils.mockAdminUser);
+        when(authorizationManager.hasAdminRightToModel(eq(dataModelURI.getModelId()), any(Model.class))).thenReturn(true);
         when(coreRepository.graphExists(dataModelURI.getGraphURI())).thenReturn(true);
         when(coreRepository.fetch(dataModelURI.getGraphURI())).thenReturn(model);
 
@@ -196,47 +214,50 @@ class DataModelServiceTest {
 
         when(coreRepository.queryConstruct(any(Query.class))).thenReturn(refCheckResult);
 
-        var error = assertThrows(MappingError.class, () -> dataModelService.delete("test", "1.0.0"));
-
-        assertTrue(error.getMessage().contains("Cannot remove data model. It's already in use"),
-                "Unexpected error message: " + error.getMessage());
+        // draft and suggested can be removed even if there are referrers
+        if (List.of("DRAFT", "SUGGESTED").contains(status)) {
+            dataModelService.delete("test", "1.0.0");
+            verify(coreRepository).delete(dataModelURI.getGraphURI());
+            verify(indexService).deleteModelFromIndex(dataModelURI.getGraphURI());
+            verify(indexService).removeResourceIndexesByDataModel(dataModelURI.getModelURI(), "1.0.0");
+        } else {
+            var error = assertThrows(MappingError.class, () -> dataModelService.delete("test", "1.0.0"));
+            assertTrue(error.getMessage().contains("Cannot remove data model with references"),
+                    "Unexpected error message: " + error.getMessage());
+        }
     }
 
-    @Test
-    void deleteVersionedModel() {
-        when(coreRepository.graphExists(anyString())).thenReturn(true);
-        when(coreRepository.fetch(anyString())).thenReturn(ModelFactory.createDefaultModel());
-        when(userProvider.getUser()).thenReturn(EndpointUtils.mockUser);
-        when(authorizationManager.hasRightToModel(anyString(), any(Model.class))).thenReturn(true);
+    @ParameterizedTest
+    @CsvSource({ "RETIRED", "SUPERSEDED", "SUGGESTED", "DRAFT" })
+    void deleteVersionedModelWithoutReferrers(String status) {
+        var dataModelURI = DataModelURI.createModelURI("test", "1.0.0");
 
-        var error = assertThrows(MappingError.class, () -> dataModelService.delete("test", "1.0.1"));
-
-        assertTrue(error.getMessage().contains("Cannot remove published data model"),
-                "Unexpected error message: " + error.getMessage());
-
-        verify(coreRepository).graphExists(anyString());
-        verify(coreRepository, never()).delete(anyString());
-        verify(openSearchIndexer, never()).deleteModelFromIndex(anyString());
-        verify(openSearchIndexer, never()).removeResourceIndexesByDataModel(anyString(), eq("1.0.1"));
-    }
-
-    @Test
-    void deleteDraftModelWithoutReferencesOrPublishedVersions() {
         var model = ModelFactory.createDefaultModel();
-        var dataModelURI = DataModelURI.createModelURI("test");
+        model.createResource(dataModelURI.getModelURI())
+                .addProperty(SuomiMeta.publicationStatus, MapperUtils.getStatusUri(Status.valueOf(status)));
 
-        when(userProvider.getUser()).thenReturn(EndpointUtils.mockUser);
-        when(authorizationManager.hasRightToModel(eq(dataModelURI.getModelId()), any(Model.class))).thenReturn(true);
+        when(userProvider.getUser()).thenReturn(EndpointUtils.mockAdminUser);
+        when(authorizationManager.hasAdminRightToModel(eq(dataModelURI.getModelId()), any(Model.class))).thenReturn(true);
         when(coreRepository.graphExists(dataModelURI.getGraphURI())).thenReturn(true);
         when(coreRepository.fetch(dataModelURI.getGraphURI())).thenReturn(model);
         when(coreRepository.queryConstruct(any(Query.class))).thenReturn(ModelFactory.createDefaultModel());
 
-        dataModelService.delete(dataModelURI.getModelId(), null);
+        dataModelService.delete("test", "1.0.0");
+        verify(coreRepository).delete(dataModelURI.getGraphURI());
+        verify(indexService).deleteModelFromIndex(dataModelURI.getGraphURI());
+        verify(indexService).removeResourceIndexesByDataModel(dataModelURI.getModelURI(), "1.0.0");
+    }
 
-        verify(coreRepository).delete(anyString());
-        verify(openSearchIndexer).deleteModelFromIndex(anyString());
-        verify(openSearchIndexer).removeResourceIndexesByDataModel(anyString(), eq(null));
-        verify(dataModelSubscriptionService).deleteTopic("test");
+    @Test
+    void deleteUnauthorized() {
+        when(coreRepository.graphExists(anyString())).thenReturn(true);
+        when(coreRepository.fetch(anyString())).thenReturn(ModelFactory.createDefaultModel());
+        when(authorizationManager.hasAdminRightToModel(anyString(), any(Model.class))).thenReturn(false);
+
+        assertThrows(AuthorizationException.class, () -> dataModelService.delete("test", null));
+
+        verify(coreRepository, never()).delete(anyString());
+        verifyNoInteractions(indexService);
     }
 
     @Test
@@ -246,7 +267,7 @@ class DataModelServiceTest {
         assertThrows(ResourceNotFoundException.class, () -> dataModelService.delete("test", null));
 
         verify(coreRepository, never()).delete(anyString());
-        verifyNoInteractions(openSearchIndexer);
+        verifyNoInteractions(indexService);
     }
 
     @Test
@@ -304,7 +325,7 @@ class DataModelServiceTest {
         var model = MapperTestUtils.getModelFromFile("/test_datamodel_library.ttl");
         when(authorizationManager.hasRightToModel(anyString(), any(Model.class))).thenReturn(true);
         //remove prior version property since we want to test without
-        model.getResource(ModelConstants.SUOMI_FI_NAMESPACE + "test").removeAll(OWL.priorVersion);
+        model.getResource(Constants.DATA_MODEL_NAMESPACE + "test").removeAll(OWL.priorVersion);
         when(coreRepository.fetch(anyString())).thenReturn(model);
         when(modelMapper.mapToIndexModel(anyString(), any(Model.class))).thenReturn(mock(IndexModel.class));
         when(userProvider.getUser()).thenReturn(YtiUser.ANONYMOUS_USER);
@@ -317,14 +338,14 @@ class DataModelServiceTest {
                 any(DataModelURI.class),
                 eq(Status.VALID));
         verify(modelMapper).mapPriorVersion(any(Model.class),
-                                            eq(ModelConstants.SUOMI_FI_NAMESPACE + "test/"),
-                                            eq(ModelConstants.SUOMI_FI_NAMESPACE + "test/1.0.1/"));
+                                            eq(Constants.DATA_MODEL_NAMESPACE + "test/"),
+                                            eq(Constants.DATA_MODEL_NAMESPACE + "test/1.0.1/"));
 
-        verify(coreRepository).put(eq(ModelConstants.SUOMI_FI_NAMESPACE + "test/1.0.1/"), any(Model.class));
-        verify(coreRepository).put(eq(ModelConstants.SUOMI_FI_NAMESPACE + "test/"), any(Model.class));
+        verify(coreRepository).put(eq(Constants.DATA_MODEL_NAMESPACE + "test/1.0.1/"), any(Model.class));
+        verify(coreRepository).put(eq(Constants.DATA_MODEL_NAMESPACE + "test/"), any(Model.class));
 
-        verify(modelMapper).mapToIndexModel(eq(ModelConstants.SUOMI_FI_NAMESPACE + "test/"), any(Model.class));
-        verify(openSearchIndexer).createModelToIndex(any(IndexModel.class));
+        verify(modelMapper).mapToIndexModel(eq(Constants.DATA_MODEL_NAMESPACE + "test/"), any(Model.class));
+        verify(indexService).createModelToIndex(any(IndexModel.class));
         verify(visualizationService).saveVersionedPositions("test", "1.0.1");
 
         var captor = ArgumentCaptor.forClass(String.class);
@@ -380,7 +401,7 @@ class DataModelServiceTest {
         var mockVersionInfo = new ModelVersionInfo();
         mockVersionInfo.setVersion("1.0.2");
         mockVersionInfo.setStatus(Status.VALID);
-        mockVersionInfo.setVersionIRI(ModelConstants.SUOMI_FI_NAMESPACE + "test/1.0.2");
+        mockVersionInfo.setVersionIRI(Constants.DATA_MODEL_NAMESPACE + "test/1.0.2");
         when(modelMapper.mapModelVersionInfo(any(Resource.class))).thenReturn(mockVersionInfo);
         when(coreRepository.queryConstruct(any(Query.class))).thenReturn(model);
         var result = dataModelService.getPriorVersions("test", "1.0.1");
@@ -405,7 +426,7 @@ class DataModelServiceTest {
         verify(modelMapper).mapUpdateVersionedModel(any(Model.class), anyString(), any(VersionedModelDTO.class), any(YtiUser.class));
         verify(coreRepository).put(anyString(), any(Model.class));
         verify(modelMapper).mapToIndexModel(anyString(), any(Model.class));
-        verify(openSearchIndexer).updateModelToIndex(any(IndexModel.class));
+        verify(indexService).updateModelToIndex(any(IndexModel.class));
     }
 
     @Test
@@ -564,8 +585,8 @@ class DataModelServiceTest {
 
         verify(coreRepository).put(eq(newGraphURI.getGraphURI()), captor.capture());
         verify(visualizationService).copyVisualization("test", "1.0.0", "new_prefix");
-        verify(openSearchIndexer).createModelToIndex(any(IndexModel.class));
-        verify(openSearchIndexer).indexGraphResource(any(Model.class));
+        verify(indexService).createModelToIndex(any(IndexModel.class));
+        verify(indexService).indexGraphResource(any(Model.class));
 
         var copy = captor.getValue();
         var modelResource = copy.getResource(newGraphURI.getModelURI());
@@ -576,6 +597,53 @@ class DataModelServiceTest {
         // All version related triples should be removed
         assertFalse(modelResource.hasProperty(OWL.versionInfo));
         assertFalse(modelResource.hasProperty(OWL2.versionIRI));
+    }
+
+    @Test
+    void testCreateNewDraft() {
+        // create new draft from version 1.0.0
+        var graphURI = DataModelURI.createModelURI("test", "1.0.0");
+
+        var draft = ModelFactory.createDefaultModel();
+        var version = ModelFactory.createDefaultModel();
+
+        draft.createResource(graphURI.getModelURI())
+                .addProperty(SuomiMeta.publicationStatus, MapperUtils.getStatusUri(Status.DRAFT));
+
+        when(userProvider.getUser()).thenReturn(EndpointUtils.mockAdminUser);
+        when(coreRepository.fetch(graphURI.getGraphURI())).thenReturn(version);
+        when(coreRepository.graphExists(graphURI.getDraftGraphURI())).thenReturn(false);
+        when(authorizationManager.hasAdminRightToModel(eq(graphURI.getModelId()), any(Model.class))).thenReturn(true);
+        when(modelMapper.mapToIndexModel(anyString(), any(Model.class))).thenReturn(new IndexModel());
+        when(modelMapper.mapNewDraft(any(Model.class), any(DataModelURI.class))).thenReturn(ModelFactory.createDefaultModel());
+
+        dataModelService.createDraft(graphURI.getModelId(), graphURI.getVersion());
+
+        // new draft should be saved
+        verify(coreRepository).put(eq(graphURI.getDraftGraphURI()), any(Model.class));
+        // add new draft to index
+        verify(indexService).createModelToIndex(any(IndexModel.class));
+        verify(indexService).indexGraphResource(any(Model.class));
+    }
+
+    @Test
+    void testCreateNewDraftExisting() {
+        var graphURI = DataModelURI.createModelURI("test", "1.0.0");
+
+        when(coreRepository.graphExists(graphURI.getDraftGraphURI())).thenReturn(true);
+
+        var error = assertThrows(MappingError.class,
+                () -> dataModelService.createDraft("test", "1.0.0"));
+
+        assertTrue(error.getMessage().contains("Draft graph exists"),
+                "Unexpected error creating new draft with existing one.");
+
+        // new draft should be saved
+        verify(coreRepository, never()).put(anyString(), any(Model.class));
+        // add new draft to index
+        verify(indexService, never()).createModelToIndex(any(IndexModel.class));
+        verify(indexService, never()).indexGraphResource(any(Model.class));
+
     }
 
     private Predicate<RDFNode> containsReferences(String ns) {
@@ -594,7 +662,7 @@ class DataModelServiceTest {
         dataModelDTO.setGroups(Set.of("P11"));
         dataModelDTO.setLanguages(Set.of("fi"));
         dataModelDTO.setOrganizations(Set.of(RANDOM_ORG));
-        dataModelDTO.setInternalNamespaces(Set.of(ModelConstants.SUOMI_FI_NAMESPACE + "test"));
+        dataModelDTO.setInternalNamespaces(Set.of(Constants.DATA_MODEL_NAMESPACE + "test"));
         var extNs = new ExternalNamespaceDTO();
         extNs.setName(Map.of("fi", "test external namespace"));
         extNs.setPrefix("testprefix");

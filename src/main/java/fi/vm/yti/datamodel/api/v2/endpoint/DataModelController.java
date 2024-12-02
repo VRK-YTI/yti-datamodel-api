@@ -1,9 +1,12 @@
 package fi.vm.yti.datamodel.api.v2.endpoint;
 
+import fi.vm.yti.common.enums.GraphType;
+import fi.vm.yti.common.enums.Status;
 import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.endpoint.error.ApiError;
 import fi.vm.yti.datamodel.api.v2.service.DataModelService;
 import fi.vm.yti.datamodel.api.v2.service.ReleaseValidationService;
+import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
 import fi.vm.yti.datamodel.api.v2.validator.ValidDatamodel;
 import fi.vm.yti.datamodel.api.v2.validator.ValidPrefix;
 import fi.vm.yti.datamodel.api.v2.validator.ValidSemanticVersion;
@@ -22,6 +25,7 @@ import org.springframework.web.bind.annotation.*;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -49,8 +53,8 @@ public class DataModelController {
             @ApiResponse(responseCode = "401", description = "Current user does not have rights for this model"),
     })
     @PostMapping(path = "/library", produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
-    public ResponseEntity<String> createLibrary(@ValidDatamodel(modelType = ModelType.LIBRARY) @RequestBody DataModelDTO modelDTO) throws URISyntaxException {
-        var uri = dataModelService.create(modelDTO, ModelType.LIBRARY);
+    public ResponseEntity<String> createLibrary(@ValidDatamodel(modelType = GraphType.LIBRARY) @RequestBody DataModelDTO modelDTO) throws URISyntaxException {
+        var uri = dataModelService.create(modelDTO, GraphType.LIBRARY);
         return ResponseEntity.created(uri).build();
     }
 
@@ -62,8 +66,8 @@ public class DataModelController {
             @ApiResponse(responseCode = "401", description = "Current user does not have rights for this model"),
     })
     @PostMapping(path = "/profile", produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
-    public ResponseEntity<String> createProfile(@ValidDatamodel(modelType = ModelType.PROFILE) @RequestBody DataModelDTO modelDTO) throws URISyntaxException {
-        var uri = dataModelService.create(modelDTO, ModelType.PROFILE);
+    public ResponseEntity<String> createProfile(@ValidDatamodel(modelType = GraphType.PROFILE) @RequestBody DataModelDTO modelDTO) throws URISyntaxException {
+        var uri = dataModelService.create(modelDTO, GraphType.PROFILE);
         return ResponseEntity.created(uri).build();
     }
 
@@ -76,7 +80,7 @@ public class DataModelController {
             @ApiResponse(responseCode = "404", description = "Library was not found", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ApiError.class))}),
     })
     @PutMapping(path = "/library/{prefix}", produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
-    public ResponseEntity<Void> updateLibrary(@ValidDatamodel(modelType = ModelType.LIBRARY, updateModel = true) @RequestBody DataModelDTO modelDTO,
+    public ResponseEntity<Void> updateLibrary(@ValidDatamodel(modelType = GraphType.LIBRARY, updateModel = true) @RequestBody DataModelDTO modelDTO,
                                            @PathVariable @Parameter(description = "Library prefix") String prefix) {
         dataModelService.update(prefix, modelDTO);
         return ResponseEntity.noContent().build();
@@ -91,7 +95,7 @@ public class DataModelController {
             @ApiResponse(responseCode = "404", description = "Application profile was not found", content = {@Content(mediaType = "application/json", schema = @Schema(implementation = ApiError.class))}),
     })
     @PutMapping(path = "/profile/{prefix}", produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
-    public ResponseEntity<Void> updateProfile(@ValidDatamodel(modelType = ModelType.PROFILE, updateModel = true) @RequestBody DataModelDTO modelDTO,
+    public ResponseEntity<Void> updateProfile(@ValidDatamodel(modelType = GraphType.PROFILE, updateModel = true) @RequestBody DataModelDTO modelDTO,
                               @PathVariable @Parameter(description = "Application profile prefix") String prefix) {
         dataModelService.update(prefix, modelDTO);
         return ResponseEntity.noContent().build();
@@ -191,5 +195,30 @@ public class DataModelController {
         return ResponseEntity
                 .created(URI.create(newURI))
                 .build();
+    }
+
+    @Operation(summary = "Creates a new draft from given version")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "New draft has been created"),
+    })
+    @PostMapping("/{prefix}/create-draft")
+    public ResponseEntity<Void> createDraft(
+            @PathVariable @Parameter(description = "Data model's prefix") String prefix,
+            @RequestParam @Parameter(description = "Version of the data model to be copied") @ValidSemanticVersion String version) {
+        dataModelService.createDraft(prefix, version);
+        var draftURI = DataModelURI.createModelURI(prefix).getGraphURI();
+        return ResponseEntity
+                .created(URI.create(draftURI))
+                .build();
+    }
+
+    @Operation(summary = "Get referrer models")
+    @GetMapping("/{prefix}/referrers")
+    public ResponseEntity<List<String>> getReferrerModels(
+            @PathVariable @Parameter(description = "Data model prefix") String prefix,
+            @RequestParam(required = false) @Parameter(description = "Version of the data model") @ValidSemanticVersion String version) {
+        return ResponseEntity.ok(dataModelService.getReferrerModels(DataModelURI
+                        .createModelURI(prefix, version)
+                        .getGraphURI()));
     }
 }
