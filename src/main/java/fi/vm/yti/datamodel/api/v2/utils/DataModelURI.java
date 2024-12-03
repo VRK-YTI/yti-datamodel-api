@@ -114,9 +114,6 @@ public class DataModelURI {
         return Constants.DATA_MODEL_NAMESPACE + this.modelId + Constants.RESOURCE_SEPARATOR;
     }
 
-    /**
-     * TODO: is this needed (should model resource be saved with or without trailing slash)?
-     */
     public String getDraftGraphURI() {
         return Constants.DATA_MODEL_NAMESPACE + this.modelId + Constants.RESOURCE_SEPARATOR;
     }
