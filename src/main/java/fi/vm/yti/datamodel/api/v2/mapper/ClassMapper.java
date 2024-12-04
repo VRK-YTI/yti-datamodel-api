@@ -472,8 +472,7 @@ public class ClassMapper {
         restrictionResource.addProperty(RDF.type, OWL.Restriction);
         restrictionResource.addProperty(OWL.onProperty, propertyResource);
 
-        // TODO after migration: enable type check
-        if (range != null) { //  && !MapperUtils.hasType(propertyResource, OWL.ObjectProperty)) {
+        if (range != null && !MapperUtils.hasType(propertyResource, OWL.ObjectProperty)) {
             restrictionResource.addProperty(OWL.someValuesFrom, ResourceFactory.createResource(range));
         }
 
