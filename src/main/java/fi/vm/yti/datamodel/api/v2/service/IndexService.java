@@ -367,7 +367,7 @@ public class IndexService extends OpenSearchInitializer {
 
     private List<Map<String, DynamicTemplate>> getModelDynamicTemplates() {
         return List.of(
-                getDynamicTemplate("label", "label.*"),
+                getDynamicTemplateWithSortKey("label", "label.*"),
                 getDynamicTemplate("comment", "comment.*"),
                 getDynamicTemplate("documentation", "documentation.*")
         );
@@ -375,14 +375,14 @@ public class IndexService extends OpenSearchInitializer {
 
     private List<Map<String, DynamicTemplate>> getClassDynamicTemplates() {
         return List.of(
-                getDynamicTemplate("label", "label.*"),
+                getDynamicTemplateWithSortKey("label", "label.*"),
                 getDynamicTemplate("note", "note.*")
         );
     }
 
     private List<Map<String, DynamicTemplate>> geExternalResourcesDynamicTemplates() {
         return List.of(
-                getDynamicTemplate("label", "label.*")
+                getDynamicTemplateWithSortKey("label", "label.*")
         );
     }
 
