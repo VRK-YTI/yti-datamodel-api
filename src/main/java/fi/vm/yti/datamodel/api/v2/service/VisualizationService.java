@@ -100,18 +100,25 @@ public class VisualizationService {
                             .findFirst();
 
                     externalResource.ifPresent(indexResource ->
-                            VisualizationMapper.mapLibraryIndexResource(classDTO, restrictionResource, indexResource, namespaces));
+                            VisualizationMapper.mapLibraryIndexResource(
+                                    classDTO,
+                                    restrictionResource,
+                                    indexResource,
+                                    namespaces));
                 });
             } else {
                 VisualizationMapper.mapNodeShapeResources(classDTO, classResource, model, externalResources, namespaces);
-                var propertyURIs = externalResources.stream().map(Resource::getURI).collect(Collectors.toSet());
-                var externalResourceResult = resourceService.findResources(propertyURIs, namespaces.keySet());
                 externalResources.forEach(ext -> {
+                    // search each external resource separately to avoid creating a slow query
+                    var externalResource = resourceService.findResources(Set.of(ext.getURI()), namespaces.keySet());
                     var resourceURI = DataModelUtils.removeVersionFromURI(ext.getURI());
-                    VisualizationMapper
-                            .mapProfileResource(classDTO, externalResourceResult.getResource(resourceURI), ext.getURI(), model, namespaces);
-                    }
-                );
+                    VisualizationMapper.mapProfileResource(
+                            classDTO,
+                            externalResource.getResource(resourceURI),
+                            ext.getURI(),
+                            model,
+                            namespaces);
+                });
             }
             classDTO.getAttributes().sort(Comparator.comparing(labelComparator));
             classDTO.getAssociations().sort(Comparator.comparing(labelComparator));
