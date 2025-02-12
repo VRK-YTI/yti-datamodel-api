@@ -84,6 +84,13 @@ abstract class BaseResourceService {
         check(authorizationManager.hasRightToModel(prefix, model));
 
         var references = getResourceReferences(resourceUri, true);
+
+        // If the references include the resource being deleted, remove it so it won't prevent deletion
+        references.forEach((type, refs) -> {
+            refs.removeIf(r -> r.getResourceURI().getUri().equals(resourceUri));
+        });
+        references.entrySet().removeIf(entry -> entry.getValue().isEmpty());
+
         if (!references.isEmpty()) {
             var refList = references.keySet().stream()
                     .flatMap(r -> references.get(r).stream())
