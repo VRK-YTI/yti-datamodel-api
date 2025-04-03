@@ -46,3 +46,13 @@ fake.login.lastName=Testaaja
 
 spring.elasticsearch.uris=http://localhost:9002
 management.endpoints.web.exposure.include=health,info
+
+# custom health indicators are enabled by default
+#health.opensearch.enabled=false
+#health.fuseki.enabled=false
+
+#management.endpoint.health.show-details=always
+
+# add health indicators to appropriate groups for use with readiness/liveness checks
+management.endpoint.health.group.readiness.include=ping,openSearchHealthChecker,fusekiHealthChecker
+management.endpoint.health.group.liveness.include=ping
