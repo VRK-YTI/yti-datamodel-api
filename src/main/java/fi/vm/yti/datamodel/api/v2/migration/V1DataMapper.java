@@ -283,7 +283,7 @@ public class V1DataMapper {
             id = resource.getURI()
                     .replace(Constants.URN_UUID, "uuid-");
         }
-        return DataModelURI.createResourceURI(prefix, id).getResourceURI();
+        return DataModelURI.Factory.createResourceURI(prefix, id).getResourceURI();
     }
 
     public static List<Resource> findResourcesByType(Model oldData, Resource type) {

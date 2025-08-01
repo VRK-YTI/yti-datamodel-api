@@ -48,7 +48,7 @@ class PropertyShapeMapperTest {
         dto.setMinExclusive(6);
         dto.setMaxExclusive(8);
         dto.setCodeLists(List.of("http://uri.suomi.fi/codelist/test/testcodelist"));
-        var uri = DataModelURI.createResourceURI("test", dto.getIdentifier());
+        var uri = DataModelURI.Factory.createResourceURI("test", dto.getIdentifier());
         ResourceMapper.mapToPropertyShapeResource(uri, model, dto, ResourceType.ATTRIBUTE, mockUser);
 
         var resource = model.getResource(Constants.DATA_MODEL_NAMESPACE + "test/ps-1");
@@ -86,7 +86,7 @@ class PropertyShapeMapperTest {
         dto.setMinCount(1);
         dto.setClassType(Constants.DATA_MODEL_NAMESPACE + "test/TestClass");
 
-        var uri = DataModelURI.createResourceURI("test", dto.getIdentifier());
+        var uri = DataModelURI.Factory.createResourceURI("test", dto.getIdentifier());
         ResourceMapper.mapToPropertyShapeResource(uri, model, dto, ResourceType.ASSOCIATION, mockUser);
 
         var resource = model.getResource(Constants.DATA_MODEL_NAMESPACE + "test/ps-1");
@@ -114,7 +114,7 @@ class PropertyShapeMapperTest {
     void testMapToAttributeRestrictionDTO() {
         var model = MapperTestUtils.getModelFromFile("/models/test_datamodel_profile_with_resources.ttl");
 
-        var uri = DataModelURI.createResourceURI("test", "TestAttributeRestriction");
+        var uri = DataModelURI.Factory.createResourceURI("test", "TestAttributeRestriction");
         var dto = ResourceMapper.mapToPropertyShapeInfoDTO(model, uri, MapperTestUtils.getMockOrganizations(),
                 false, null);
 
@@ -145,7 +145,7 @@ class PropertyShapeMapperTest {
     void testMapToAssociationRestrictionDTO() {
         var model = MapperTestUtils.getModelFromFile("/models/test_datamodel_profile_with_resources.ttl");
 
-        var uri = DataModelURI.createResourceURI("test", "TestAssociationRestriction");
+        var uri = DataModelURI.Factory.createResourceURI("test", "TestAssociationRestriction");
         var dto = ResourceMapper.mapToPropertyShapeInfoDTO(model, uri, MapperTestUtils.getMockOrganizations(),
                 false, null);
 
@@ -187,7 +187,7 @@ class PropertyShapeMapperTest {
         dto.setMaxLength(200);
         dto.setMinLength(5);
 
-        var uri = DataModelURI.createResourceURI("test", "TestAttributeRestriction");
+        var uri = DataModelURI.Factory.createResourceURI("test", "TestAttributeRestriction");
         ResourceMapper.mapToUpdatePropertyShape(uri, model, dto, EndpointUtils.mockUser);
 
         var resource = model.getResource(uri.getResourceURI());
@@ -216,7 +216,7 @@ class PropertyShapeMapperTest {
         dto.setMinCount(2);
         dto.setClassType(Constants.DATA_MODEL_NAMESPACE + "test/TestClass");
 
-        var uri = DataModelURI.createResourceURI("test", "TestAssociationRestriction");
+        var uri = DataModelURI.Factory.createResourceURI("test", "TestAssociationRestriction");
         ResourceMapper.mapToUpdatePropertyShape(uri, model, dto, EndpointUtils.mockUser);
 
         var resource = model.getResource(uri.getResourceURI());
@@ -232,8 +232,8 @@ class PropertyShapeMapperTest {
         var sourceModel = MapperTestUtils.getModelFromFile("/models/test_datamodel_profile_with_resources.ttl");
         var targetModel = ModelFactory.createDefaultModel();
 
-        var source = DataModelURI.createResourceURI("test", "DeactivatedPropertyShape");
-        var target = DataModelURI.createResourceURI("new", "NewShape");
+        var source = DataModelURI.Factory.createResourceURI("test", "DeactivatedPropertyShape");
+        var target = DataModelURI.Factory.createResourceURI("new", "NewShape");
         ResourceMapper.mapToCopyToLocalPropertyShape(sourceModel, source, targetModel, target, EndpointUtils.mockUser);
 
         var resource = targetModel.getResource(Constants.DATA_MODEL_NAMESPACE + "new/NewShape");

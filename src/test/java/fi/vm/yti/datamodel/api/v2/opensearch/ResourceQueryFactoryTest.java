@@ -20,7 +20,7 @@ import static org.springframework.test.util.AssertionErrors.assertEquals;
 
 class ResourceQueryFactoryTest {
 
-    static String modelURI = DataModelURI.createModelURI("test").getModelURI();
+    static String modelURI = DataModelURI.Factory.createModelURI("test").getModelURI();
 
     @Test
     void createInternalClassQueryValues() throws Exception {

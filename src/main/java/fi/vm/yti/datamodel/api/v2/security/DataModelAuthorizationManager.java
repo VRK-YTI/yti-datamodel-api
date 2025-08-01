@@ -17,7 +17,7 @@ public class DataModelAuthorizationManager extends BaseAuthorizationManagerImpl 
     }
 
     public boolean hasAdminRightToModel(String prefix, Model model) {
-        var graphURI = DataModelURI.createModelURI(prefix).getGraphURI();
+        var graphURI = DataModelURI.Factory.createModelURI(prefix).getGraphURI();
         return super.hasRightToModel(graphURI, model);
     }
 
@@ -26,7 +26,7 @@ public class DataModelAuthorizationManager extends BaseAuthorizationManagerImpl 
     }
 
     public boolean hasRightToModel(String prefix, Model model, boolean viewRights) {
-        var graphURI = DataModelURI.createModelURI(prefix).getGraphURI();
+        var graphURI = DataModelURI.Factory.createModelURI(prefix).getGraphURI();
 
         return viewRights
                 ? super.hasRightToModel(graphURI, model, Role.DATA_MODEL_EDITOR, Role.MEMBER)

@@ -71,7 +71,7 @@ public class V7_VersionDraft implements MigrationTask {
                     newVersion = previousNumber.getMajor() + "." + previousNumber.getMinor() + "." + (previousNumber.getPatch() + 1);
                 }
 
-                var versionUri = DataModelURI.createModelURI(prefix, newVersion);
+                var versionUri = DataModelURI.Factory.createModelURI(prefix, newVersion);
                 modelMapper.mapReleaseProperties(model, versionUri, Status.SUGGESTED);
                 //Map new newest release to draft model
                 modelMapper.mapPriorVersion(newDraft, graph, versionUri.getGraphURI());

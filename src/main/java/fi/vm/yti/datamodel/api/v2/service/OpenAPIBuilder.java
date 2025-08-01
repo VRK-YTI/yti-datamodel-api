@@ -112,7 +112,7 @@ public class OpenAPIBuilder {
         nodeShapes.forEach(nodeShape -> {
             var schema = getNodeShapeSchema(nodeShape, model, lang);
             schema.externalDocs(new ExternalDocumentation().url(
-                    DataModelURI.createResourceURI(prefix, nodeShape.getLocalName(), version).getResourceVersionURI()
+                    DataModelURI.Factory.createResourceURI(prefix, nodeShape.getLocalName(), version).getResourceVersionURI()
             ));
             openAPI.schema(nodeShape.getLocalName(), schema);
         });

@@ -104,7 +104,7 @@ class UriResolveServiceTest {
 
     @Test
     void testRedirectLatestVersion() {
-        var uri = DataModelURI.createModelURI("test");
+        var uri = DataModelURI.Factory.createModelURI("test");
 
         when(dataModelService.getLatestVersion(any(DataModelURI.class))).thenReturn("1.0.0");
 
@@ -117,7 +117,7 @@ class UriResolveServiceTest {
 
     @Test
     void testRedirectDraftVersion() {
-        var uri = DataModelURI.createModelURI("test");
+        var uri = DataModelURI.Factory.createModelURI("test");
 
         when(dataModelService.getLatestVersion(any(DataModelURI.class))).thenThrow(new ResourceNotFoundException("test"));
 
@@ -130,7 +130,7 @@ class UriResolveServiceTest {
 
     @Test
     void testV1RedirectsPublishedVersion() {
-        var uri = DataModelURI.createModelURI("test", "1.0.0");
+        var uri = DataModelURI.Factory.createModelURI("test", "1.0.0");
         var model = ModelFactory.createDefaultModel();
         model.createResource(uri.getModelURI())
                         .addProperty(OWL.priorVersion, ResourceFactory.createResource(uri.getGraphURI()));
@@ -148,7 +148,7 @@ class UriResolveServiceTest {
 
     @Test
     void testV1RedirectsDraftVersion() {
-        var uri = DataModelURI.createModelURI("test");
+        var uri = DataModelURI.Factory.createModelURI("test");
         var model = ModelFactory.createDefaultModel();
 
         when(coreRepository.fetch(uri.getDraftGraphURI())).thenReturn(model);

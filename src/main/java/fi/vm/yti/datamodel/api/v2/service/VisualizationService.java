@@ -53,7 +53,7 @@ public class VisualizationService {
 
     public VisualizationResultDTO getVisualizationData(String prefix, String version) {
 
-        var dataModelURI = DataModelURI.createModelURI(prefix, version);
+        var dataModelURI = DataModelURI.Factory.createModelURI(prefix, version);
         var graph = dataModelURI.getModelURI();
 
         var model = coreRepository.fetch(dataModelURI.getGraphURI());
@@ -153,7 +153,7 @@ public class VisualizationService {
     }
 
     public void savePositionData(String prefix, List<PositionDataDTO> positions, String version) {
-        var uri = DataModelURI.createModelURI(prefix, version);
+        var uri = DataModelURI.Factory.createModelURI(prefix, version);
         var positionBaseURI = ModelConstants.MODEL_POSITIONS_NAMESPACE + prefix + Constants.RESOURCE_SEPARATOR;
         var positionGraphURI = getPositionGraphURI(prefix, version);
 
@@ -250,7 +250,7 @@ public class VisualizationService {
         var modelResource = model.getResource(graph);
         Arrays.asList(OWL.imports, DCTerms.requires)
                 .forEach(prop -> modelResource.listProperties(prop).toList().forEach(ns -> {
-                    var uri = DataModelURI.fromURI(ns.getObject().toString());
+                    var uri = DataModelURI.Factory.fromURI(ns.getObject().toString());
                     if (uri.isDataModelURI()) {
                         namespaces.put(uri.getGraphURI(), uri.getModelId());
                     } else if (!uri.isTerminologyURI() && !uri.isCodeListURI()) {

@@ -2,11 +2,11 @@ package fi.vm.yti.datamodel.api.v2.mapper;
 
 import fi.vm.yti.common.Constants;
 import fi.vm.yti.common.enums.Status;
+import fi.vm.yti.common.exception.MappingError;
 import fi.vm.yti.common.properties.SuomiMeta;
 import fi.vm.yti.common.util.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.dto.*;
 import fi.vm.yti.datamodel.api.v2.endpoint.EndpointUtils;
-import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexResource;
 import fi.vm.yti.datamodel.api.v2.properties.HTTP;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelURI;
@@ -37,7 +37,7 @@ class NodeShapeMapperTest {
         var mockUser = EndpointUtils.mockUser;
 
         var property1 = new IndexResource();
-        property1.setId(DataModelURI.createResourceURI(
+        property1.setId(DataModelURI.Factory.createResourceURI(
                 "test_lib", "association-1", "1.0.0").getResourceVersionURI());
         property1.setIdentifier("association-1");
         property1.setResourceType(ResourceType.ASSOCIATION);
@@ -47,7 +47,7 @@ class NodeShapeMapperTest {
         );
 
         var property2 = new IndexResource();
-        property2.setId(DataModelURI.createResourceURI(
+        property2.setId(DataModelURI.Factory.createResourceURI(
                 "test_lib", "attribute-1", "1.0.0").getResourceVersionURI());
         property2.setIdentifier("attribute-1");
         property2.setResourceType(ResourceType.ATTRIBUTE);
@@ -67,12 +67,12 @@ class NodeShapeMapperTest {
         dto.setApiPath("/api/path/");
 
         var attributeRestriction = new SimpleResourceDTO();
-        attributeRestriction.setUri(DataModelURI
+        attributeRestriction.setUri(DataModelURI.Factory
                 .createResourceURI("test_lib","attribute-1", "1.0.0")
                 .getResourceVersionURI());
         attributeRestriction.setCodeLists(Set.of("http://uri.suomi.fi/codelist/test"));
 
-        var uri = DataModelURI.createResourceURI("test", "TestClass");
+        var uri = DataModelURI.Factory.createResourceURI("test", "TestClass");
         ClassMapper.createNodeShapeAndMapToModel(uri, model, dto, mockUser);
         ClassMapper.mapPlaceholderPropertyShapes(model, uri.getResourceURI(),
                 List.of(property1, property2), mockUser, freePrefixCheck, List.of(attributeRestriction));
@@ -131,7 +131,7 @@ class NodeShapeMapperTest {
     void testMapNodeShapeToClassDTO(){
         var m = MapperTestUtils.getModelFromFile("/models/test_datamodel_profile_with_resources.ttl");
 
-        var uri = DataModelURI.createResourceURI("test", "TestClass");
+        var uri = DataModelURI.Factory.createResourceURI("test", "TestClass");
         var dto = ClassMapper.mapToNodeShapeDTO(m, uri, MapperTestUtils.getMockOrganizations(), false, null);
 
         // not authenticated
@@ -178,7 +178,7 @@ class NodeShapeMapperTest {
     @Test
     void testMapToUpdateClassProfile(){
         var m = MapperTestUtils.getModelFromFile("/models/test_datamodel_profile_with_resources.ttl");
-        var uri = DataModelURI.createResourceURI("test", "TestClass");
+        var uri = DataModelURI.Factory.createResourceURI("test", "TestClass");
         var resource = m.getResource(uri.getResourceURI());
         var mockUser = EndpointUtils.mockUser;
 
@@ -219,13 +219,13 @@ class NodeShapeMapperTest {
     void testMapNodeShapeResources() {
         var model = MapperTestUtils.getModelFromFile("/models/test_datamodel_profile_with_resources.ttl");
 
-        var uri = DataModelURI.createResourceURI("test", "TestClass");
-        var deactivatedURI = DataModelURI.createResourceURI("test", "DeactivatedPropertyShape");
+        var uri = DataModelURI.Factory.createResourceURI("test", "TestClass");
+        var deactivatedURI = DataModelURI.Factory.createResourceURI("test", "DeactivatedPropertyShape");
         var resource = model.getResource(uri.getResourceURI());
         var dto = new NodeShapeInfoDTO();
         dto.setUri(resource.getURI());
 
-        var extResourceURI = DataModelURI.createResourceURI("test_profile", "ps-1", "1.0.0");
+        var extResourceURI = DataModelURI.Factory.createResourceURI("test_profile", "ps-1", "1.0.0");
         var externalPropertyShape = new IndexResource();
         externalPropertyShape.setResourceType(ResourceType.ATTRIBUTE);
         externalPropertyShape.setIdentifier(extResourceURI.getResourceId());
@@ -326,7 +326,7 @@ class NodeShapeMapperTest {
     @Test
     void testMapReferenceResourceAndAddNamespace() {
         var model = ModelFactory.createDefaultModel();
-        var uri = DataModelURI.createModelURI("test");
+        var uri = DataModelURI.Factory.createModelURI("test");
 
         model.createResource(uri.getModelURI())
                 .addProperty(RDF.type, SuomiMeta.ApplicationProfile)

@@ -30,14 +30,14 @@ public class DataModelUtils {
         model.clearNsPrefixMap();
         model.setNsPrefixes(ModelConstants.PREFIXES);
 
-        var dataModelURI = DataModelURI.fromURI(modelURI);
+        var dataModelURI = DataModelURI.Factory.fromURI(modelURI);
         model.setNsPrefix(dataModelURI.getModelId(), dataModelURI.getNamespace());
 
         var modelResource = model.getResource(dataModelURI.getModelURI());
 
         List.of(OWL.imports, DCTerms.requires).forEach(property ->
                 modelResource.listProperties(property).forEach(res -> {
-                    var uri = DataModelURI.fromURI(res.getObject().toString());
+                    var uri = DataModelURI.Factory.fromURI(res.getObject().toString());
                     if (uri.isDataModelURI()) {
                         model.setNsPrefix(uri.getModelId(), uri.getGraphURI());
                     } else if (!uri.isTerminologyURI() && !uri.isCodeListURI()) {

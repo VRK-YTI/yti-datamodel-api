@@ -5,13 +5,13 @@ import fi.vm.yti.common.dto.LinkDTO;
 import fi.vm.yti.common.dto.ResourceCommonInfoDTO;
 import fi.vm.yti.common.enums.GraphType;
 import fi.vm.yti.common.enums.Status;
+import fi.vm.yti.common.exception.MappingError;
 import fi.vm.yti.common.mapper.OrganizationMapper;
 import fi.vm.yti.common.mapper.ServiceCategoryMapper;
 import fi.vm.yti.common.properties.SuomiMeta;
 import fi.vm.yti.common.util.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.utils.DataModelMapperUtils;
 import fi.vm.yti.datamodel.api.v2.dto.*;
-import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexModel;
 import fi.vm.yti.datamodel.api.v2.properties.DCAP;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
@@ -57,7 +57,7 @@ public class ModelMapper {
      */
     public Model mapToJenaModel(DataModelDTO modelDTO, GraphType modelType, YtiUser user) {
         var model = ModelFactory.createDefaultModel();
-        var modelUri = DataModelURI.createModelURI(modelDTO.getPrefix()).getModelURI();
+        var modelUri = DataModelURI.Factory.createModelURI(modelDTO.getPrefix()).getModelURI();
 
         var creationDate = new XSDDateTime(Calendar.getInstance());
         var modelResource = model.createResource(modelUri)
@@ -167,7 +167,7 @@ public class ModelMapper {
      */
     public DataModelInfoDTO mapToDataModelDTO(String prefix, Model model, Consumer<ResourceCommonInfoDTO> userMapper) {
 
-        var uri = DataModelURI.createModelURI(prefix);
+        var uri = DataModelURI.Factory.createModelURI(prefix);
         var datamodelDTO = new DataModelInfoDTO();
         datamodelDTO.setPrefix(prefix);
         datamodelDTO.setUri(uri.getGraphURI());

@@ -3,6 +3,7 @@ package fi.vm.yti.datamodel.api.v2.service;
 import fi.vm.yti.common.Constants;
 import fi.vm.yti.common.enums.GraphType;
 import fi.vm.yti.common.enums.Status;
+import fi.vm.yti.common.exception.MappingError;
 import fi.vm.yti.common.properties.SuomiMeta;
 import fi.vm.yti.common.service.GroupManagementService;
 import fi.vm.yti.common.util.MapperUtils;
@@ -13,7 +14,6 @@ import fi.vm.yti.datamodel.api.v2.dto.ExternalNamespaceDTO;
 import fi.vm.yti.datamodel.api.v2.dto.ModelVersionInfo;
 import fi.vm.yti.datamodel.api.v2.dto.VersionedModelDTO;
 import fi.vm.yti.datamodel.api.v2.endpoint.EndpointUtils;
-import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
 import fi.vm.yti.common.exception.ResourceNotFoundException;
 import fi.vm.yti.datamodel.api.v2.mapper.ModelMapper;
 import fi.vm.yti.datamodel.api.v2.opensearch.index.IndexModel;
@@ -172,7 +172,7 @@ class DataModelServiceTest {
 
     @Test
     void deleteValidModel() {
-        var dataModelURI = DataModelURI.createModelURI("test", "1.0.0");
+        var dataModelURI = DataModelURI.Factory.createModelURI("test", "1.0.0");
 
         var model = ModelFactory.createDefaultModel();
         model.createResource(dataModelURI.getModelURI())
@@ -197,7 +197,7 @@ class DataModelServiceTest {
     @ParameterizedTest
     @CsvSource({ "RETIRED", "SUPERSEDED", "SUGGESTED", "DRAFT" })
     void deleteVersionedModelWithReferrers(String status) {
-        var dataModelURI = DataModelURI.createModelURI("test", "1.0.0");
+        var dataModelURI = DataModelURI.Factory.createModelURI("test", "1.0.0");
 
         var model = ModelFactory.createDefaultModel();
         model.createResource(dataModelURI.getModelURI())
@@ -230,7 +230,7 @@ class DataModelServiceTest {
     @ParameterizedTest
     @CsvSource({ "RETIRED", "SUPERSEDED", "SUGGESTED", "DRAFT" })
     void deleteVersionedModelWithoutReferrers(String status) {
-        var dataModelURI = DataModelURI.createModelURI("test", "1.0.0");
+        var dataModelURI = DataModelURI.Factory.createModelURI("test", "1.0.0");
 
         var model = ModelFactory.createDefaultModel();
         model.createResource(dataModelURI.getModelURI())
@@ -431,10 +431,10 @@ class DataModelServiceTest {
 
     @Test
     void changeLinkedModelVersions() {
-        var resourceURI = DataModelURI.createResourceURI("test", "class-1");
-        var linkedResourceURI_1 = DataModelURI.createResourceURI("linked", "link-1", "1.0.0");
-        var linkedResourceURI_2 = DataModelURI.createResourceURI("linked", "link-1", "2.0.0");
-        var linkedResourceURI_3 = DataModelURI.createResourceURI("foo", "bar-1", "1.0.0");
+        var resourceURI = DataModelURI.Factory.createResourceURI("test", "class-1");
+        var linkedResourceURI_1 = DataModelURI.Factory.createResourceURI("linked", "link-1", "1.0.0");
+        var linkedResourceURI_2 = DataModelURI.Factory.createResourceURI("linked", "link-1", "2.0.0");
+        var linkedResourceURI_3 = DataModelURI.Factory.createResourceURI("foo", "bar-1", "1.0.0");
         var model = ModelFactory.createDefaultModel();
         var prefix = resourceURI.getModelId();
 
@@ -532,9 +532,9 @@ class DataModelServiceTest {
 
     @Test
     void testRemoveLinkedNamespace() {
-        var resourceURI = DataModelURI.createResourceURI("test", "class-1");
-        var linkedResourceURI_1 = DataModelURI.createResourceURI("linked", "link-1", "1.0.0");
-        var linkedNsWithoutReferences = DataModelURI.createModelURI("foo", "1.0.0").getGraphURI();
+        var resourceURI = DataModelURI.Factory.createResourceURI("test", "class-1");
+        var linkedResourceURI_1 = DataModelURI.Factory.createResourceURI("linked", "link-1", "1.0.0");
+        var linkedNsWithoutReferences = DataModelURI.Factory.createModelURI("foo", "1.0.0").getGraphURI();
         var model = ModelFactory.createDefaultModel();
         var prefix = resourceURI.getModelId();
 
@@ -567,8 +567,8 @@ class DataModelServiceTest {
 
     @Test
     void testCopyGraph() {
-        var oldGraphURI = DataModelURI.createModelURI("test", "1.0.0");
-        var newGraphURI = DataModelURI.createModelURI("new_prefix");
+        var oldGraphURI = DataModelURI.Factory.createModelURI("test", "1.0.0");
+        var newGraphURI = DataModelURI.Factory.createModelURI("new_prefix");
         var model = MapperTestUtils.getModelFromFile("/models/test_datamodel_library_with_resources.ttl");
         var mockUser = EndpointUtils.mockUser;
 
@@ -602,7 +602,7 @@ class DataModelServiceTest {
     @Test
     void testCreateNewDraft() {
         // create new draft from version 1.0.0
-        var graphURI = DataModelURI.createModelURI("test", "1.0.0");
+        var graphURI = DataModelURI.Factory.createModelURI("test", "1.0.0");
 
         var draft = ModelFactory.createDefaultModel();
         var version = ModelFactory.createDefaultModel();
@@ -628,7 +628,7 @@ class DataModelServiceTest {
 
     @Test
     void testCreateNewDraftExisting() {
-        var graphURI = DataModelURI.createModelURI("test", "1.0.0");
+        var graphURI = DataModelURI.Factory.createModelURI("test", "1.0.0");
 
         when(coreRepository.graphExists(graphURI.getDraftGraphURI())).thenReturn(true);
 

@@ -51,7 +51,7 @@ public class UriResolveService {
             return ResponseEntity.badRequest().build();
         }
 
-        var datamodelURI = DataModelURI.fromURI(iri);
+        var datamodelURI = DataModelURI.Factory.fromURI(iri);
         if (datamodelURI.getModelId() == null) {
             return ResponseEntity.badRequest().build();
         } else if (datamodelURI.getContentType() == null && datamodelURI.getResourceId() != null && !isHtml(accept)) {
@@ -81,7 +81,7 @@ public class UriResolveService {
             resourceId = parts[1];
         }
 
-        var uri = DataModelURI.createModelURI(modelId);
+        var uri = DataModelURI.Factory.createModelURI(modelId);
 
         var model = coreRepository.fetch(uri.getGraphURI());
         var hasRights = authorizationManager.hasRightToModel(uri.getModelId(), model);
@@ -89,12 +89,12 @@ public class UriResolveService {
         String version = null;
         var versionIRI = MapperUtils.propertyToString(model.getResource(uri.getModelURI()), OWL2.priorVersion);
         if (versionIRI != null && !hasRights) {
-            version = DataModelURI.fromURI(versionIRI).getVersion();
+            version = DataModelURI.Factory.fromURI(versionIRI).getVersion();
         }
 
         var resolvedURI = resourceId != null
-                ? DataModelURI.createResourceURI(modelId, resourceId, version).getResourceVersionURI()
-                : DataModelURI.createModelURI(modelId, version).getGraphURI();
+                ? DataModelURI.Factory.createResourceURI(modelId, resourceId, version).getResourceVersionURI()
+                : DataModelURI.Factory.createModelURI(modelId, version).getGraphURI();
 
         if (!awsEnv.isBlank()) {
             return resolvedURI + "?env=" + awsEnv;
@@ -130,7 +130,7 @@ public class UriResolveService {
                 }
             }
 
-            var dataModel = coreRepository.fetch(DataModelURI.createModelURI(modelPrefix, version).getGraphURI());
+            var dataModel = coreRepository.fetch(DataModelURI.Factory.createModelURI(modelPrefix, version).getGraphURI());
 
             if (uri.getResourceURI() != null) {
                 var resource = dataModel.getResource(uri.getResourceURI());

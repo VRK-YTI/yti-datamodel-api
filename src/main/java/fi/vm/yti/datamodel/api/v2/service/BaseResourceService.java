@@ -2,6 +2,7 @@ package fi.vm.yti.datamodel.api.v2.service;
 
 import fi.vm.yti.common.Constants;
 import fi.vm.yti.common.exception.JenaQueryException;
+import fi.vm.yti.common.exception.MappingError;
 import fi.vm.yti.common.service.AuditService;
 import fi.vm.yti.common.util.MapperUtils;
 import fi.vm.yti.datamodel.api.v2.security.DataModelAuthorizationManager;
@@ -10,7 +11,6 @@ import fi.vm.yti.datamodel.api.v2.dto.ModelConstants;
 import fi.vm.yti.datamodel.api.v2.dto.ResourceReferenceDTO;
 import fi.vm.yti.datamodel.api.v2.dto.ResourceType;
 import fi.vm.yti.datamodel.api.v2.dto.UriDTO;
-import fi.vm.yti.datamodel.api.v2.endpoint.error.MappingError;
 import fi.vm.yti.common.exception.ResourceNotFoundException;
 import fi.vm.yti.datamodel.api.v2.mapper.ResourceMapper;
 import fi.vm.yti.datamodel.api.v2.repository.CoreRepository;
@@ -73,7 +73,7 @@ abstract class BaseResourceService {
     }
 
     public void delete(String prefix, String resourceIdentifier) {
-        var uri = DataModelURI.createResourceURI(prefix, resourceIdentifier);
+        var uri = DataModelURI.Factory.createResourceURI(prefix, resourceIdentifier);
         var graphUri = uri.getGraphURI();
         var resourceUri = uri.getResourceURI();
         if (!coreRepository.resourceExistsInGraph(graphUri, resourceUri)) {
@@ -110,15 +110,15 @@ abstract class BaseResourceService {
         if(identifier.startsWith(ModelConstants.CORNER_PREFIX)) {
             return true;
         }
-        var uri = DataModelURI.createResourceURI(prefix, identifier);
+        var uri = DataModelURI.Factory.createResourceURI(prefix, identifier);
         return coreRepository.resourceExistsInGraph(uri.getModelURI(), uri.getResourceURI(), false);
     }
 
     public URI renameResource(String prefix, String oldIdentifier, String newIdentifier) throws URISyntaxException {
-        var uri = DataModelURI.createResourceURI(prefix, oldIdentifier);
+        var uri = DataModelURI.Factory.createResourceURI(prefix, oldIdentifier);
         var graphURI = uri.getGraphURI();
         var resourceURI = uri.getResourceURI();
-        var newResourceURI = DataModelURI.createResourceURI(prefix, newIdentifier).getResourceURI();
+        var newResourceURI = DataModelURI.Factory.createResourceURI(prefix, newIdentifier).getResourceURI();
 
         var model = coreRepository.fetch(graphURI);
 
@@ -274,7 +274,7 @@ abstract class BaseResourceService {
     }
 
     public Map<ResourceType, List<ResourceReferenceDTO>> getResourceReferences(String uri, boolean currentGraph) {
-        var u = DataModelURI.fromURI(uri);
+        var u = DataModelURI.Factory.fromURI(uri);
         var objects = new ArrayList<>();
 
         if (currentGraph) {
@@ -365,8 +365,8 @@ abstract class BaseResourceService {
             return;
         }
 
-        var dataModelURI = DataModelURI.fromURI(row.get("resource").toString());
-        var resource = DataModelURI.createResourceURI(dataModelURI.getModelId(), dataModelURI.getResourceId(), version);
+        var dataModelURI = DataModelURI.Factory.fromURI(row.get("resource").toString());
+        var resource = DataModelURI.Factory.createResourceURI(dataModelURI.getModelId(), dataModelURI.getResourceId(), version);
         resultModel.getResource(resource.getResourceVersionURI())
                 .addProperty(RDFS.label, row.get("label"))
                 .addProperty(RDF.type, row.get("type"))
